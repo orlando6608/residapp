@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ResidApp.Application\ResidApp.Application.csproj" />
+    <ProjectReference Include="..\ResidApp.Infrastructure\ResidApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\ResidApp.Shared\ResidApp.Shared.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

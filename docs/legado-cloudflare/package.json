@@ -1,0 +1,58 @@
+{
+  "name": "connect-residencias",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=24.20.0 <25",
+    "pnpm": "11.19.0"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.20.0",
+      "onFail": "download"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:next": "next dev",
+    "build": "vite build",
+    "build:next": "next build",
+    "db:check": "drizzle-kit check",
+    "db:generate": "drizzle-kit generate --name=resident_baseline_foundation",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:test": "node --conditions=react-server --experimental-strip-types --test tests/db-persistence.test.ts",
+    "preview": "vite preview",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "node --conditions=react-server --experimental-strip-types --test \"tests/**/*.test.ts\"",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build:next && pnpm build"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-server-dom-webpack": "19.2.8",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.54.3",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "@vitejs/plugin-react": "6.1.0",
+    "@vitejs/plugin-rsc": "0.5.34",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.4",
+    "miniflare": "5.20260831.0-alpha",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vinext": "1.0.0-beta.9",
+    "vite": "8.2.2",
+    "wrangler": "4.128.0"
+  }
+}

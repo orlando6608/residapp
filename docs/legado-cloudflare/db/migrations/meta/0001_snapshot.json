@@ -1,0 +1,4107 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "7321db14-8f29-4519-a75c-6d3ff6b9f18a",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "audit_events": {
+      "name": "audit_events",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "active_profile": {
+          "name": "active_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unit_id": {
+          "name": "unit_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resource_type": {
+          "name": "resource_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "action_code": {
+          "name": "action_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "purpose_code": {
+          "name": "purpose_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "audit_events_scope_time_idx": {
+          "name": "audit_events_scope_time_idx",
+          "columns": [
+            "center_id",
+            "unit_id",
+            "resident_id",
+            "occurred_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "audit_events_account_id_accounts_id_fk": {
+          "name": "audit_events_account_id_accounts_id_fk",
+          "tableFrom": "audit_events",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "audit_events_center_id_centers_id_fk": {
+          "name": "audit_events_center_id_centers_id_fk",
+          "tableFrom": "audit_events",
+          "tableTo": "centers",
+          "columnsFrom": [
+            "center_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "audit_events_unit_center_fk": {
+          "name": "audit_events_unit_center_fk",
+          "tableFrom": "audit_events",
+          "tableTo": "units",
+          "columnsFrom": [
+            "center_id",
+            "unit_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "audit_events_resident_center_fk": {
+          "name": "audit_events_resident_center_fk",
+          "tableFrom": "audit_events",
+          "tableTo": "residents",
+          "columnsFrom": [
+            "center_id",
+            "resident_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "audit_events_profile_check": {
+          "name": "audit_events_profile_check",
+          "value": "\"audit_events\".\"active_profile\" in ('AUXILIAR', 'ENFERMERIA', 'MEDICINA', 'FAMILIAR', 'ADMINISTRACION', 'DIRECCION_CLINICA')"
+        },
+        "audit_events_direction_read_check": {
+          "name": "audit_events_direction_read_check",
+          "value": "\"audit_events\".\"action_code\" <> 'CLINICAL_DETAIL_READ'\n        or (\"audit_events\".\"active_profile\" = 'DIRECCION_CLINICA'\n          and \"audit_events\".\"purpose_code\" = 'SUPERVISION_CLINICA'\n          and \"audit_events\".\"unit_id\" is not null\n          and \"audit_events\".\"resident_id\" is not null)"
+        }
+      }
+    },
+    "idempotency_operations": {
+      "name": "idempotency_operations",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "action_code": {
+          "name": "action_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "operation_id": {
+          "name": "operation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "request_hash": {
+          "name": "request_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'IN_PROGRESS'"
+        },
+        "result_resource_id": {
+          "name": "result_resource_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "result_json": {
+          "name": "result_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idempotency_operation_unique": {
+          "name": "idempotency_operation_unique",
+          "columns": [
+            "account_id",
+            "action_code",
+            "operation_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "idempotency_operations_account_id_accounts_id_fk": {
+          "name": "idempotency_operations_account_id_accounts_id_fk",
+          "tableFrom": "idempotency_operations",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "idempotency_action_check": {
+          "name": "idempotency_action_check",
+          "value": "\"idempotency_operations\".\"action_code\" in ('RESIDENT_CREATE', 'BASELINE_SIGN', 'CLINICAL_DETAIL_READ')"
+        },
+        "idempotency_status_check": {
+          "name": "idempotency_status_check",
+          "value": "\"idempotency_operations\".\"status\" in ('IN_PROGRESS', 'SUCCEEDED')"
+        },
+        "idempotency_result_check": {
+          "name": "idempotency_result_check",
+          "value": "(\"idempotency_operations\".\"status\" = 'IN_PROGRESS'\n          and \"idempotency_operations\".\"result_resource_id\" is null\n          and \"idempotency_operations\".\"result_json\" is null\n          and \"idempotency_operations\".\"completed_at\" is null)\n        or (\"idempotency_operations\".\"status\" = 'SUCCEEDED'\n          and \"idempotency_operations\".\"result_resource_id\" is not null\n          and \"idempotency_operations\".\"result_json\" is not null\n          and json_valid(\"idempotency_operations\".\"result_json\")\n          and \"idempotency_operations\".\"completed_at\" is not null)"
+        }
+      }
+    },
+    "profile_permissions": {
+      "name": "profile_permissions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "profile_scope_id": {
+          "name": "profile_scope_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "permission_code": {
+          "name": "permission_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "granted_by_account_id": {
+          "name": "granted_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revoked_by_account_id": {
+          "name": "revoked_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "profile_permissions_active_unique": {
+          "name": "profile_permissions_active_unique",
+          "columns": [
+            "profile_scope_id",
+            "permission_code"
+          ],
+          "isUnique": true,
+          "where": "\"profile_permissions\".\"revoked_at\" is null"
+        },
+        "profile_permissions_lookup_idx": {
+          "name": "profile_permissions_lookup_idx",
+          "columns": [
+            "center_id",
+            "profile_scope_id",
+            "permission_code",
+            "revoked_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "profile_permissions_granted_by_account_id_accounts_id_fk": {
+          "name": "profile_permissions_granted_by_account_id_accounts_id_fk",
+          "tableFrom": "profile_permissions",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "granted_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_permissions_revoked_by_account_id_accounts_id_fk": {
+          "name": "profile_permissions_revoked_by_account_id_accounts_id_fk",
+          "tableFrom": "profile_permissions",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "revoked_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_permissions_profile_center_fk": {
+          "name": "profile_permissions_profile_center_fk",
+          "tableFrom": "profile_permissions",
+          "tableTo": "profile_scopes",
+          "columnsFrom": [
+            "profile_scope_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "profile_permissions_code_check": {
+          "name": "profile_permissions_code_check",
+          "value": "\"profile_permissions\".\"permission_code\" in ('RESIDENT_IDENTITY_CREATE', 'BASELINE_INITIAL_COMPLETE', 'BASELINE_REEVALUATE', 'BASELINE_DRAFT_CONTRIBUTE', 'CLINICAL_DETAIL_READ')"
+        },
+        "profile_permissions_revocation_check": {
+          "name": "profile_permissions_revocation_check",
+          "value": "(\"profile_permissions\".\"revoked_at\" is null and \"profile_permissions\".\"revoked_by_account_id\" is null)\n        or (\"profile_permissions\".\"revoked_at\" is not null and \"profile_permissions\".\"revoked_by_account_id\" is not null)"
+        }
+      }
+    },
+    "profile_resident_scopes": {
+      "name": "profile_resident_scopes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "profile_scope_id": {
+          "name": "profile_scope_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "granted_by_account_id": {
+          "name": "granted_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revoked_by_account_id": {
+          "name": "revoked_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "profile_resident_scopes_active_unique": {
+          "name": "profile_resident_scopes_active_unique",
+          "columns": [
+            "profile_scope_id",
+            "resident_id"
+          ],
+          "isUnique": true,
+          "where": "\"profile_resident_scopes\".\"revoked_at\" is null"
+        },
+        "profile_resident_scopes_lookup_idx": {
+          "name": "profile_resident_scopes_lookup_idx",
+          "columns": [
+            "center_id",
+            "resident_id",
+            "profile_scope_id",
+            "revoked_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "profile_resident_scopes_granted_by_account_id_accounts_id_fk": {
+          "name": "profile_resident_scopes_granted_by_account_id_accounts_id_fk",
+          "tableFrom": "profile_resident_scopes",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "granted_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_resident_scopes_revoked_by_account_id_accounts_id_fk": {
+          "name": "profile_resident_scopes_revoked_by_account_id_accounts_id_fk",
+          "tableFrom": "profile_resident_scopes",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "revoked_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_resident_scopes_profile_center_fk": {
+          "name": "profile_resident_scopes_profile_center_fk",
+          "tableFrom": "profile_resident_scopes",
+          "tableTo": "profile_scopes",
+          "columnsFrom": [
+            "profile_scope_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_resident_scopes_resident_center_fk": {
+          "name": "profile_resident_scopes_resident_center_fk",
+          "tableFrom": "profile_resident_scopes",
+          "tableTo": "residents",
+          "columnsFrom": [
+            "center_id",
+            "resident_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "profile_resident_scopes_revocation_check": {
+          "name": "profile_resident_scopes_revocation_check",
+          "value": "(\"profile_resident_scopes\".\"revoked_at\" is null and \"profile_resident_scopes\".\"revoked_by_account_id\" is null)\n        or (\"profile_resident_scopes\".\"revoked_at\" is not null and \"profile_resident_scopes\".\"revoked_by_account_id\" is not null)"
+        }
+      }
+    },
+    "profile_scopes": {
+      "name": "profile_scopes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "profile_code": {
+          "name": "profile_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ACTIVE'"
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "granted_by_account_id": {
+          "name": "granted_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revoked_by_account_id": {
+          "name": "revoked_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "profile_scopes_id_center_unique": {
+          "name": "profile_scopes_id_center_unique",
+          "columns": [
+            "id",
+            "center_id"
+          ],
+          "isUnique": true
+        },
+        "profile_scopes_active_unique": {
+          "name": "profile_scopes_active_unique",
+          "columns": [
+            "account_id",
+            "center_id",
+            "profile_code"
+          ],
+          "isUnique": true,
+          "where": "\"profile_scopes\".\"status\" = 'ACTIVE'"
+        },
+        "profile_scopes_authorization_lookup_idx": {
+          "name": "profile_scopes_authorization_lookup_idx",
+          "columns": [
+            "center_id",
+            "profile_code",
+            "account_id",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "profile_scopes_account_id_accounts_id_fk": {
+          "name": "profile_scopes_account_id_accounts_id_fk",
+          "tableFrom": "profile_scopes",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_scopes_center_id_centers_id_fk": {
+          "name": "profile_scopes_center_id_centers_id_fk",
+          "tableFrom": "profile_scopes",
+          "tableTo": "centers",
+          "columnsFrom": [
+            "center_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_scopes_granted_by_account_id_accounts_id_fk": {
+          "name": "profile_scopes_granted_by_account_id_accounts_id_fk",
+          "tableFrom": "profile_scopes",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "granted_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_scopes_revoked_by_account_id_accounts_id_fk": {
+          "name": "profile_scopes_revoked_by_account_id_accounts_id_fk",
+          "tableFrom": "profile_scopes",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "revoked_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "profile_scopes_profile_check": {
+          "name": "profile_scopes_profile_check",
+          "value": "\"profile_scopes\".\"profile_code\" in ('AUXILIAR', 'ENFERMERIA', 'MEDICINA', 'FAMILIAR', 'ADMINISTRACION', 'DIRECCION_CLINICA')"
+        },
+        "profile_scopes_status_check": {
+          "name": "profile_scopes_status_check",
+          "value": "\"profile_scopes\".\"status\" in ('ACTIVE', 'REVOKED')"
+        },
+        "profile_scopes_revocation_check": {
+          "name": "profile_scopes_revocation_check",
+          "value": "(\"profile_scopes\".\"status\" = 'ACTIVE' and \"profile_scopes\".\"revoked_at\" is null and \"profile_scopes\".\"revoked_by_account_id\" is null)\n        or (\"profile_scopes\".\"status\" = 'REVOKED' and \"profile_scopes\".\"revoked_at\" is not null and \"profile_scopes\".\"revoked_by_account_id\" is not null)"
+        }
+      }
+    },
+    "profile_unit_scopes": {
+      "name": "profile_unit_scopes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "profile_scope_id": {
+          "name": "profile_scope_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unit_id": {
+          "name": "unit_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "granted_by_account_id": {
+          "name": "granted_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revoked_by_account_id": {
+          "name": "revoked_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "profile_unit_scopes_active_unique": {
+          "name": "profile_unit_scopes_active_unique",
+          "columns": [
+            "profile_scope_id",
+            "unit_id"
+          ],
+          "isUnique": true,
+          "where": "\"profile_unit_scopes\".\"revoked_at\" is null"
+        },
+        "profile_unit_scopes_lookup_idx": {
+          "name": "profile_unit_scopes_lookup_idx",
+          "columns": [
+            "center_id",
+            "unit_id",
+            "profile_scope_id",
+            "revoked_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "profile_unit_scopes_granted_by_account_id_accounts_id_fk": {
+          "name": "profile_unit_scopes_granted_by_account_id_accounts_id_fk",
+          "tableFrom": "profile_unit_scopes",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "granted_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_unit_scopes_revoked_by_account_id_accounts_id_fk": {
+          "name": "profile_unit_scopes_revoked_by_account_id_accounts_id_fk",
+          "tableFrom": "profile_unit_scopes",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "revoked_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_unit_scopes_profile_center_fk": {
+          "name": "profile_unit_scopes_profile_center_fk",
+          "tableFrom": "profile_unit_scopes",
+          "tableTo": "profile_scopes",
+          "columnsFrom": [
+            "profile_scope_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "profile_unit_scopes_unit_center_fk": {
+          "name": "profile_unit_scopes_unit_center_fk",
+          "tableFrom": "profile_unit_scopes",
+          "tableTo": "units",
+          "columnsFrom": [
+            "center_id",
+            "unit_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "profile_unit_scopes_revocation_check": {
+          "name": "profile_unit_scopes_revocation_check",
+          "value": "(\"profile_unit_scopes\".\"revoked_at\" is null and \"profile_unit_scopes\".\"revoked_by_account_id\" is null)\n        or (\"profile_unit_scopes\".\"revoked_at\" is not null and \"profile_unit_scopes\".\"revoked_by_account_id\" is not null)"
+        }
+      }
+    },
+    "barthel_catalog_options": {
+      "name": "barthel_catalog_options",
+      "columns": {
+        "instrument_version_code": {
+          "name": "instrument_version_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "item_code": {
+          "name": "item_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "option_code": {
+          "name": "option_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "awarded_score": {
+          "name": "awarded_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "barthel_catalog_options_pk": {
+          "columns": [
+            "instrument_version_code",
+            "item_code",
+            "option_code",
+            "awarded_score"
+          ],
+          "name": "barthel_catalog_options_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "barthel_catalog_instrument_check": {
+          "name": "barthel_catalog_instrument_check",
+          "value": "\"barthel_catalog_options\".\"instrument_version_code\" = 'BARTHEL_COMUN_V0_1'"
+        },
+        "barthel_catalog_item_check": {
+          "name": "barthel_catalog_item_check",
+          "value": "\"barthel_catalog_options\".\"item_code\" in ('COMER', 'LAVARSE', 'VESTIRSE', 'ARREGLARSE', 'DEPOSICION', 'MICCION', 'USO_RETRETE', 'TRASLADO_CAMA_SILLON', 'DEAMBULACION', 'ESCALERAS')"
+        },
+        "barthel_catalog_score_check": {
+          "name": "barthel_catalog_score_check",
+          "value": "\"barthel_catalog_options\".\"awarded_score\" in (0, 5, 10, 15)"
+        }
+      }
+    },
+    "baseline_draft_areas": {
+      "name": "baseline_draft_areas",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "draft_id": {
+          "name": "draft_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "area_code": {
+          "name": "area_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "catalog_version_code": {
+          "name": "catalog_version_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'BASAL_AREAS_V0_1'"
+        },
+        "answer_payload": {
+          "name": "answer_payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "observation": {
+          "name": "observation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "information_source_override_code": {
+          "name": "information_source_override_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "information_source_override_other_text": {
+          "name": "information_source_override_other_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "information_date_override": {
+          "name": "information_date_override",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "recorded_by_account_id": {
+          "name": "recorded_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recorded_by_profile": {
+          "name": "recorded_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "baseline_draft_areas_area_unique": {
+          "name": "baseline_draft_areas_area_unique",
+          "columns": [
+            "draft_id",
+            "area_code"
+          ],
+          "isUnique": true
+        },
+        "baseline_draft_areas_scope_idx": {
+          "name": "baseline_draft_areas_scope_idx",
+          "columns": [
+            "center_id",
+            "resident_id",
+            "draft_id",
+            "area_code"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "baseline_draft_areas_recorded_by_account_id_accounts_id_fk": {
+          "name": "baseline_draft_areas_recorded_by_account_id_accounts_id_fk",
+          "tableFrom": "baseline_draft_areas",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "recorded_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_draft_areas_draft_scope_fk": {
+          "name": "baseline_draft_areas_draft_scope_fk",
+          "tableFrom": "baseline_draft_areas",
+          "tableTo": "baseline_drafts",
+          "columnsFrom": [
+            "draft_id",
+            "resident_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "baseline_draft_areas_area_check": {
+          "name": "baseline_draft_areas_area_check",
+          "value": "\"baseline_draft_areas\".\"area_code\" in ('MOVILIDAD', 'ALIMENTACION', 'CONTINENCIA', 'ASEO_HIGIENE', 'COGNICION', 'COMUNICACION', 'CONDUCTA', 'SUENO', 'AYUDAS_HABITUALES')"
+        },
+        "baseline_draft_areas_catalog_check": {
+          "name": "baseline_draft_areas_catalog_check",
+          "value": "\"baseline_draft_areas\".\"catalog_version_code\" = 'BASAL_AREAS_V0_1'"
+        },
+        "baseline_draft_areas_json_check": {
+          "name": "baseline_draft_areas_json_check",
+          "value": "json_valid(\"baseline_draft_areas\".\"answer_payload\")"
+        },
+        "baseline_draft_areas_source_check": {
+          "name": "baseline_draft_areas_source_check",
+          "value": "\"baseline_draft_areas\".\"information_source_override_code\" is null or \"baseline_draft_areas\".\"information_source_override_code\" in ('VALORACION_DIRECTA', 'HISTORIA_O_INFORME_CLINICO', 'PERSONAL_DEL_CENTRO', 'FAMILIAR_O_CUIDADOR', 'FUENTES_COMBINADAS', 'OTRA', 'NO_DOCUMENTADO')"
+        },
+        "baseline_draft_areas_source_other_check": {
+          "name": "baseline_draft_areas_source_other_check",
+          "value": "(\"baseline_draft_areas\".\"information_source_override_code\" = 'OTRA'\n          and length(trim(\"baseline_draft_areas\".\"information_source_override_other_text\")) > 0)\n        or (coalesce(\"baseline_draft_areas\".\"information_source_override_code\", '') <> 'OTRA'\n          and coalesce(length(trim(\"baseline_draft_areas\".\"information_source_override_other_text\")), 0) = 0)"
+        },
+        "baseline_draft_areas_profile_check": {
+          "name": "baseline_draft_areas_profile_check",
+          "value": "\"baseline_draft_areas\".\"recorded_by_profile\" in ('ENFERMERIA', 'MEDICINA')"
+        },
+        "baseline_draft_areas_mobility_aid_check": {
+          "name": "baseline_draft_areas_mobility_aid_check",
+          "value": "\"baseline_draft_areas\".\"area_code\" <> 'MOVILIDAD'\n        or json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.technicalAidCode') is null\n        or json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.technicalAidCode') in ('NINGUNA', 'BASTON', 'MULETA_O_MULETAS', 'ANDADOR_4_RUEDAS', 'ANDADOR_2_RUEDAS', 'ANDADOR_FIJO_SIN_RUEDAS', 'OTRA', 'NO_DOCUMENTADO')"
+        },
+        "baseline_draft_areas_mobility_other_check": {
+          "name": "baseline_draft_areas_mobility_other_check",
+          "value": "\"baseline_draft_areas\".\"area_code\" <> 'MOVILIDAD'\n        or (json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.technicalAidCode') = 'OTRA'\n          and length(trim(json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.technicalAidOtherText'))) > 0)\n        or (coalesce(json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.technicalAidCode'), '') <> 'OTRA'\n          and coalesce(length(trim(json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.technicalAidOtherText'))), 0) = 0)"
+        },
+        "baseline_draft_areas_feeding_enteral_check": {
+          "name": "baseline_draft_areas_feeding_enteral_check",
+          "value": "\"baseline_draft_areas\".\"area_code\" <> 'ALIMENTACION'\n        or ((coalesce(json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.foodTextureCode'), '') <> 'NO_APLICA'\n            and coalesce(json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.liquidConsistencyCode'), '') <> 'NO_APLICA')\n          or json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.routeCode') = 'ENTERAL')"
+        },
+        "baseline_draft_areas_feeding_other_check": {
+          "name": "baseline_draft_areas_feeding_other_check",
+          "value": "\"baseline_draft_areas\".\"area_code\" <> 'ALIMENTACION'\n        or (json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.foodTextureCode') = 'OTRA_TEXTURA_ADAPTADA'\n          and length(trim(json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.foodTextureOtherText'))) > 0)\n        or (coalesce(json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.foodTextureCode'), '') <> 'OTRA_TEXTURA_ADAPTADA'\n          and coalesce(length(trim(json_extract(\"baseline_draft_areas\".\"answer_payload\", '$.foodTextureOtherText'))), 0) = 0)"
+        }
+      }
+    },
+    "baseline_draft_barthel": {
+      "name": "baseline_draft_barthel",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "draft_id": {
+          "name": "draft_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "instrument_version_code": {
+          "name": "instrument_version_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'BARTHEL_COMUN_V0_1'"
+        },
+        "assessment_date": {
+          "name": "assessment_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "total_score": {
+          "name": "total_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "recorded_by_account_id": {
+          "name": "recorded_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recorded_by_profile": {
+          "name": "recorded_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "baseline_draft_barthel_draft_unique": {
+          "name": "baseline_draft_barthel_draft_unique",
+          "columns": [
+            "draft_id"
+          ],
+          "isUnique": true
+        },
+        "baseline_draft_barthel_scope_unique": {
+          "name": "baseline_draft_barthel_scope_unique",
+          "columns": [
+            "id",
+            "draft_id",
+            "resident_id",
+            "center_id",
+            "instrument_version_code"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "baseline_draft_barthel_recorded_by_account_id_accounts_id_fk": {
+          "name": "baseline_draft_barthel_recorded_by_account_id_accounts_id_fk",
+          "tableFrom": "baseline_draft_barthel",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "recorded_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_draft_barthel_draft_scope_fk": {
+          "name": "baseline_draft_barthel_draft_scope_fk",
+          "tableFrom": "baseline_draft_barthel",
+          "tableTo": "baseline_drafts",
+          "columnsFrom": [
+            "draft_id",
+            "resident_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "baseline_draft_barthel_instrument_check": {
+          "name": "baseline_draft_barthel_instrument_check",
+          "value": "\"baseline_draft_barthel\".\"instrument_version_code\" = 'BARTHEL_COMUN_V0_1'"
+        },
+        "baseline_draft_barthel_total_check": {
+          "name": "baseline_draft_barthel_total_check",
+          "value": "\"baseline_draft_barthel\".\"total_score\" is null or \"baseline_draft_barthel\".\"total_score\" between 0 and 100"
+        },
+        "baseline_draft_barthel_profile_check": {
+          "name": "baseline_draft_barthel_profile_check",
+          "value": "\"baseline_draft_barthel\".\"recorded_by_profile\" in ('ENFERMERIA', 'MEDICINA')"
+        }
+      }
+    },
+    "baseline_draft_barthel_items": {
+      "name": "baseline_draft_barthel_items",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "barthel_id": {
+          "name": "barthel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "draft_id": {
+          "name": "draft_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "instrument_version_code": {
+          "name": "instrument_version_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "item_code": {
+          "name": "item_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "selected_option_code": {
+          "name": "selected_option_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "awarded_score": {
+          "name": "awarded_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "baseline_draft_barthel_items_item_unique": {
+          "name": "baseline_draft_barthel_items_item_unique",
+          "columns": [
+            "barthel_id",
+            "item_code"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "baseline_draft_barthel_items_assessment_scope_fk": {
+          "name": "baseline_draft_barthel_items_assessment_scope_fk",
+          "tableFrom": "baseline_draft_barthel_items",
+          "tableTo": "baseline_draft_barthel",
+          "columnsFrom": [
+            "barthel_id",
+            "draft_id",
+            "resident_id",
+            "center_id",
+            "instrument_version_code"
+          ],
+          "columnsTo": [
+            "id",
+            "draft_id",
+            "resident_id",
+            "center_id",
+            "instrument_version_code"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_draft_barthel_items_catalog_fk": {
+          "name": "baseline_draft_barthel_items_catalog_fk",
+          "tableFrom": "baseline_draft_barthel_items",
+          "tableTo": "barthel_catalog_options",
+          "columnsFrom": [
+            "instrument_version_code",
+            "item_code",
+            "selected_option_code",
+            "awarded_score"
+          ],
+          "columnsTo": [
+            "instrument_version_code",
+            "item_code",
+            "option_code",
+            "awarded_score"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "baseline_draft_contributions": {
+      "name": "baseline_draft_contributions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "draft_id": {
+          "name": "draft_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unit_id": {
+          "name": "unit_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "area_code": {
+          "name": "area_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "component_code": {
+          "name": "component_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "change_payload": {
+          "name": "change_payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "active_profile": {
+          "name": "active_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "draft_revision": {
+          "name": "draft_revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "contributed_at": {
+          "name": "contributed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "baseline_draft_contributions_scope_idx": {
+          "name": "baseline_draft_contributions_scope_idx",
+          "columns": [
+            "center_id",
+            "unit_id",
+            "resident_id",
+            "draft_id",
+            "contributed_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "baseline_draft_contributions_account_id_accounts_id_fk": {
+          "name": "baseline_draft_contributions_account_id_accounts_id_fk",
+          "tableFrom": "baseline_draft_contributions",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_draft_contributions_draft_scope_fk": {
+          "name": "baseline_draft_contributions_draft_scope_fk",
+          "tableFrom": "baseline_draft_contributions",
+          "tableTo": "baseline_drafts",
+          "columnsFrom": [
+            "draft_id",
+            "resident_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_draft_contributions_unit_center_fk": {
+          "name": "baseline_draft_contributions_unit_center_fk",
+          "tableFrom": "baseline_draft_contributions",
+          "tableTo": "units",
+          "columnsFrom": [
+            "center_id",
+            "unit_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "baseline_draft_contributions_area_check": {
+          "name": "baseline_draft_contributions_area_check",
+          "value": "\"baseline_draft_contributions\".\"area_code\" in ('MOVILIDAD', 'ALIMENTACION', 'CONTINENCIA', 'ASEO_HIGIENE', 'COGNICION', 'COMUNICACION', 'CONDUCTA', 'SUENO', 'AYUDAS_HABITUALES', 'BARTHEL', 'VERSION')"
+        },
+        "baseline_draft_contributions_json_check": {
+          "name": "baseline_draft_contributions_json_check",
+          "value": "json_valid(\"baseline_draft_contributions\".\"change_payload\")"
+        },
+        "baseline_draft_contributions_profile_check": {
+          "name": "baseline_draft_contributions_profile_check",
+          "value": "\"baseline_draft_contributions\".\"active_profile\" in ('ENFERMERIA', 'MEDICINA')"
+        }
+      }
+    },
+    "baseline_drafts": {
+      "name": "baseline_drafts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_in_unit_id": {
+          "name": "created_in_unit_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ACTIVE'"
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "common_information_source_code": {
+          "name": "common_information_source_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "common_information_source_other_text": {
+          "name": "common_information_source_other_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "common_information_date": {
+          "name": "common_information_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_by_account_id": {
+          "name": "created_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_by_profile": {
+          "name": "created_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_by_account_id": {
+          "name": "updated_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_by_profile": {
+          "name": "updated_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "draft_revision": {
+          "name": "draft_revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "cancelled_at": {
+          "name": "cancelled_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "cancelled_by_account_id": {
+          "name": "cancelled_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "cancelled_by_profile": {
+          "name": "cancelled_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "cancellation_reason": {
+          "name": "cancellation_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "baseline_drafts_scope_unique": {
+          "name": "baseline_drafts_scope_unique",
+          "columns": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "isUnique": true
+        },
+        "baseline_drafts_active_unique": {
+          "name": "baseline_drafts_active_unique",
+          "columns": [
+            "resident_id"
+          ],
+          "isUnique": true,
+          "where": "\"baseline_drafts\".\"status\" = 'ACTIVE'"
+        },
+        "baseline_drafts_scope_status_idx": {
+          "name": "baseline_drafts_scope_status_idx",
+          "columns": [
+            "center_id",
+            "created_in_unit_id",
+            "resident_id",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "baseline_drafts_created_by_account_id_accounts_id_fk": {
+          "name": "baseline_drafts_created_by_account_id_accounts_id_fk",
+          "tableFrom": "baseline_drafts",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "created_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_drafts_updated_by_account_id_accounts_id_fk": {
+          "name": "baseline_drafts_updated_by_account_id_accounts_id_fk",
+          "tableFrom": "baseline_drafts",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "updated_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_drafts_cancelled_by_account_id_accounts_id_fk": {
+          "name": "baseline_drafts_cancelled_by_account_id_accounts_id_fk",
+          "tableFrom": "baseline_drafts",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "cancelled_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_drafts_resident_center_fk": {
+          "name": "baseline_drafts_resident_center_fk",
+          "tableFrom": "baseline_drafts",
+          "tableTo": "residents",
+          "columnsFrom": [
+            "center_id",
+            "resident_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_drafts_unit_center_fk": {
+          "name": "baseline_drafts_unit_center_fk",
+          "tableFrom": "baseline_drafts",
+          "tableTo": "units",
+          "columnsFrom": [
+            "center_id",
+            "created_in_unit_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "baseline_drafts_status_check": {
+          "name": "baseline_drafts_status_check",
+          "value": "\"baseline_drafts\".\"status\" in ('ACTIVE', 'CANCELLED', 'SIGNED')"
+        },
+        "baseline_drafts_reason_check": {
+          "name": "baseline_drafts_reason_check",
+          "value": "\"baseline_drafts\".\"reason_code\" is null or \"baseline_drafts\".\"reason_code\" in ('ALTA', 'REVISION_PROGRAMADA', 'CAMBIO_FUNCIONAL_CONSOLIDADO')"
+        },
+        "baseline_drafts_source_check": {
+          "name": "baseline_drafts_source_check",
+          "value": "\"baseline_drafts\".\"common_information_source_code\" is null or \"baseline_drafts\".\"common_information_source_code\" in ('VALORACION_DIRECTA', 'HISTORIA_O_INFORME_CLINICO', 'PERSONAL_DEL_CENTRO', 'FAMILIAR_O_CUIDADOR', 'FUENTES_COMBINADAS', 'OTRA', 'NO_DOCUMENTADO')"
+        },
+        "baseline_drafts_source_other_check": {
+          "name": "baseline_drafts_source_other_check",
+          "value": "(\"baseline_drafts\".\"common_information_source_code\" = 'OTRA'\n          and length(trim(\"baseline_drafts\".\"common_information_source_other_text\")) > 0)\n        or (coalesce(\"baseline_drafts\".\"common_information_source_code\", '') <> 'OTRA'\n          and coalesce(length(trim(\"baseline_drafts\".\"common_information_source_other_text\")), 0) = 0)"
+        },
+        "baseline_drafts_profiles_check": {
+          "name": "baseline_drafts_profiles_check",
+          "value": "\"baseline_drafts\".\"created_by_profile\" in ('ENFERMERIA', 'MEDICINA')\n        and \"baseline_drafts\".\"updated_by_profile\" in ('ENFERMERIA', 'MEDICINA')"
+        },
+        "baseline_drafts_revision_check": {
+          "name": "baseline_drafts_revision_check",
+          "value": "\"baseline_drafts\".\"draft_revision\" >= 1"
+        },
+        "baseline_drafts_cancellation_check": {
+          "name": "baseline_drafts_cancellation_check",
+          "value": "(\"baseline_drafts\".\"status\" <> 'CANCELLED'\n          and \"baseline_drafts\".\"cancelled_at\" is null\n          and \"baseline_drafts\".\"cancelled_by_account_id\" is null\n          and \"baseline_drafts\".\"cancelled_by_profile\" is null\n          and \"baseline_drafts\".\"cancellation_reason\" is null)\n        or (\"baseline_drafts\".\"status\" = 'CANCELLED'\n          and \"baseline_drafts\".\"cancelled_at\" is not null\n          and \"baseline_drafts\".\"cancelled_by_account_id\" = \"baseline_drafts\".\"created_by_account_id\"\n          and \"baseline_drafts\".\"cancelled_by_profile\" = \"baseline_drafts\".\"created_by_profile\"\n          and length(trim(\"baseline_drafts\".\"cancellation_reason\")) > 0)"
+        }
+      }
+    },
+    "baseline_supersessions": {
+      "name": "baseline_supersessions",
+      "columns": {
+        "previous_version_id": {
+          "name": "previous_version_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "new_version_id": {
+          "name": "new_version_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "superseded_at": {
+          "name": "superseded_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "baseline_supersessions_new_unique": {
+          "name": "baseline_supersessions_new_unique",
+          "columns": [
+            "new_version_id"
+          ],
+          "isUnique": true
+        },
+        "baseline_supersessions_scope_idx": {
+          "name": "baseline_supersessions_scope_idx",
+          "columns": [
+            "center_id",
+            "resident_id",
+            "superseded_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "baseline_supersessions_previous_scope_fk": {
+          "name": "baseline_supersessions_previous_scope_fk",
+          "tableFrom": "baseline_supersessions",
+          "tableTo": "baseline_versions",
+          "columnsFrom": [
+            "previous_version_id",
+            "resident_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_supersessions_new_scope_fk": {
+          "name": "baseline_supersessions_new_scope_fk",
+          "tableFrom": "baseline_supersessions",
+          "tableTo": "baseline_versions",
+          "columnsFrom": [
+            "new_version_id",
+            "resident_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "baseline_supersessions_distinct_check": {
+          "name": "baseline_supersessions_distinct_check",
+          "value": "\"baseline_supersessions\".\"previous_version_id\" <> \"baseline_supersessions\".\"new_version_id\""
+        }
+      }
+    },
+    "baseline_version_areas": {
+      "name": "baseline_version_areas",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "baseline_version_id": {
+          "name": "baseline_version_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "area_code": {
+          "name": "area_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "catalog_version_code": {
+          "name": "catalog_version_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "answer_payload": {
+          "name": "answer_payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "observation": {
+          "name": "observation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "information_source_override_code": {
+          "name": "information_source_override_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "information_source_override_other_text": {
+          "name": "information_source_override_other_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "information_date_override": {
+          "name": "information_date_override",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "recorded_by_account_id": {
+          "name": "recorded_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recorded_by_profile": {
+          "name": "recorded_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "baseline_version_areas_area_unique": {
+          "name": "baseline_version_areas_area_unique",
+          "columns": [
+            "baseline_version_id",
+            "area_code"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "baseline_version_areas_recorded_by_account_id_accounts_id_fk": {
+          "name": "baseline_version_areas_recorded_by_account_id_accounts_id_fk",
+          "tableFrom": "baseline_version_areas",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "recorded_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_version_areas_version_scope_fk": {
+          "name": "baseline_version_areas_version_scope_fk",
+          "tableFrom": "baseline_version_areas",
+          "tableTo": "baseline_versions",
+          "columnsFrom": [
+            "baseline_version_id",
+            "resident_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "baseline_version_areas_area_check": {
+          "name": "baseline_version_areas_area_check",
+          "value": "\"baseline_version_areas\".\"area_code\" in ('MOVILIDAD', 'ALIMENTACION', 'CONTINENCIA', 'ASEO_HIGIENE', 'COGNICION', 'COMUNICACION', 'CONDUCTA', 'SUENO', 'AYUDAS_HABITUALES')"
+        },
+        "baseline_version_areas_catalog_check": {
+          "name": "baseline_version_areas_catalog_check",
+          "value": "\"baseline_version_areas\".\"catalog_version_code\" = 'BASAL_AREAS_V0_1'"
+        },
+        "baseline_version_areas_json_check": {
+          "name": "baseline_version_areas_json_check",
+          "value": "json_valid(\"baseline_version_areas\".\"answer_payload\")"
+        },
+        "baseline_version_areas_profile_check": {
+          "name": "baseline_version_areas_profile_check",
+          "value": "\"baseline_version_areas\".\"recorded_by_profile\" in ('ENFERMERIA', 'MEDICINA')"
+        }
+      }
+    },
+    "baseline_version_barthel": {
+      "name": "baseline_version_barthel",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "baseline_version_id": {
+          "name": "baseline_version_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "instrument_version_code": {
+          "name": "instrument_version_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "assessment_date": {
+          "name": "assessment_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "total_score": {
+          "name": "total_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recorded_by_account_id": {
+          "name": "recorded_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recorded_by_profile": {
+          "name": "recorded_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "baseline_version_barthel_version_unique": {
+          "name": "baseline_version_barthel_version_unique",
+          "columns": [
+            "baseline_version_id"
+          ],
+          "isUnique": true
+        },
+        "baseline_version_barthel_scope_unique": {
+          "name": "baseline_version_barthel_scope_unique",
+          "columns": [
+            "id",
+            "baseline_version_id",
+            "resident_id",
+            "center_id",
+            "instrument_version_code"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "baseline_version_barthel_recorded_by_account_id_accounts_id_fk": {
+          "name": "baseline_version_barthel_recorded_by_account_id_accounts_id_fk",
+          "tableFrom": "baseline_version_barthel",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "recorded_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_version_barthel_version_scope_fk": {
+          "name": "baseline_version_barthel_version_scope_fk",
+          "tableFrom": "baseline_version_barthel",
+          "tableTo": "baseline_versions",
+          "columnsFrom": [
+            "baseline_version_id",
+            "resident_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "baseline_version_barthel_instrument_check": {
+          "name": "baseline_version_barthel_instrument_check",
+          "value": "\"baseline_version_barthel\".\"instrument_version_code\" = 'BARTHEL_COMUN_V0_1'"
+        },
+        "baseline_version_barthel_total_check": {
+          "name": "baseline_version_barthel_total_check",
+          "value": "\"baseline_version_barthel\".\"total_score\" between 0 and 100"
+        },
+        "baseline_version_barthel_profile_check": {
+          "name": "baseline_version_barthel_profile_check",
+          "value": "\"baseline_version_barthel\".\"recorded_by_profile\" in ('ENFERMERIA', 'MEDICINA')"
+        }
+      }
+    },
+    "baseline_version_barthel_items": {
+      "name": "baseline_version_barthel_items",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "barthel_id": {
+          "name": "barthel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "baseline_version_id": {
+          "name": "baseline_version_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "instrument_version_code": {
+          "name": "instrument_version_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "item_code": {
+          "name": "item_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "selected_option_code": {
+          "name": "selected_option_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "awarded_score": {
+          "name": "awarded_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "baseline_version_barthel_items_item_unique": {
+          "name": "baseline_version_barthel_items_item_unique",
+          "columns": [
+            "barthel_id",
+            "item_code"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "baseline_version_barthel_items_assessment_scope_fk": {
+          "name": "baseline_version_barthel_items_assessment_scope_fk",
+          "tableFrom": "baseline_version_barthel_items",
+          "tableTo": "baseline_version_barthel",
+          "columnsFrom": [
+            "barthel_id",
+            "baseline_version_id",
+            "resident_id",
+            "center_id",
+            "instrument_version_code"
+          ],
+          "columnsTo": [
+            "id",
+            "baseline_version_id",
+            "resident_id",
+            "center_id",
+            "instrument_version_code"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_version_barthel_items_catalog_fk": {
+          "name": "baseline_version_barthel_items_catalog_fk",
+          "tableFrom": "baseline_version_barthel_items",
+          "tableTo": "barthel_catalog_options",
+          "columnsFrom": [
+            "instrument_version_code",
+            "item_code",
+            "selected_option_code",
+            "awarded_score"
+          ],
+          "columnsTo": [
+            "instrument_version_code",
+            "item_code",
+            "option_code",
+            "awarded_score"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "baseline_versions": {
+      "name": "baseline_versions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_draft_id": {
+          "name": "source_draft_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_in_unit_id": {
+          "name": "created_in_unit_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "version_number": {
+          "name": "version_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "common_information_source_code": {
+          "name": "common_information_source_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "common_information_source_other_text": {
+          "name": "common_information_source_other_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "common_information_date": {
+          "name": "common_information_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_by_account_id": {
+          "name": "created_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_by_profile": {
+          "name": "created_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "signed_by_account_id": {
+          "name": "signed_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "signed_by_profile": {
+          "name": "signed_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "signed_at": {
+          "name": "signed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "valid_from": {
+          "name": "valid_from",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "activation_operation_id": {
+          "name": "activation_operation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "baseline_versions_source_draft_unique": {
+          "name": "baseline_versions_source_draft_unique",
+          "columns": [
+            "source_draft_id"
+          ],
+          "isUnique": true
+        },
+        "baseline_versions_resident_number_unique": {
+          "name": "baseline_versions_resident_number_unique",
+          "columns": [
+            "resident_id",
+            "version_number"
+          ],
+          "isUnique": true
+        },
+        "baseline_versions_activation_operation_unique": {
+          "name": "baseline_versions_activation_operation_unique",
+          "columns": [
+            "activation_operation_id"
+          ],
+          "isUnique": true
+        },
+        "baseline_versions_scope_unique": {
+          "name": "baseline_versions_scope_unique",
+          "columns": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "isUnique": true
+        },
+        "baseline_versions_scope_time_idx": {
+          "name": "baseline_versions_scope_time_idx",
+          "columns": [
+            "center_id",
+            "resident_id",
+            "version_number",
+            "signed_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "baseline_versions_source_draft_id_baseline_drafts_id_fk": {
+          "name": "baseline_versions_source_draft_id_baseline_drafts_id_fk",
+          "tableFrom": "baseline_versions",
+          "tableTo": "baseline_drafts",
+          "columnsFrom": [
+            "source_draft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_versions_created_by_account_id_accounts_id_fk": {
+          "name": "baseline_versions_created_by_account_id_accounts_id_fk",
+          "tableFrom": "baseline_versions",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "created_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_versions_signed_by_account_id_accounts_id_fk": {
+          "name": "baseline_versions_signed_by_account_id_accounts_id_fk",
+          "tableFrom": "baseline_versions",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "signed_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_versions_resident_center_fk": {
+          "name": "baseline_versions_resident_center_fk",
+          "tableFrom": "baseline_versions",
+          "tableTo": "residents",
+          "columnsFrom": [
+            "center_id",
+            "resident_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "baseline_versions_unit_center_fk": {
+          "name": "baseline_versions_unit_center_fk",
+          "tableFrom": "baseline_versions",
+          "tableTo": "units",
+          "columnsFrom": [
+            "center_id",
+            "created_in_unit_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "baseline_versions_number_check": {
+          "name": "baseline_versions_number_check",
+          "value": "\"baseline_versions\".\"version_number\" >= 1"
+        },
+        "baseline_versions_reason_check": {
+          "name": "baseline_versions_reason_check",
+          "value": "\"baseline_versions\".\"reason_code\" in ('ALTA', 'REVISION_PROGRAMADA', 'CAMBIO_FUNCIONAL_CONSOLIDADO')"
+        },
+        "baseline_versions_source_check": {
+          "name": "baseline_versions_source_check",
+          "value": "\"baseline_versions\".\"common_information_source_code\" in ('VALORACION_DIRECTA', 'HISTORIA_O_INFORME_CLINICO', 'PERSONAL_DEL_CENTRO', 'FAMILIAR_O_CUIDADOR', 'FUENTES_COMBINADAS', 'OTRA', 'NO_DOCUMENTADO')"
+        },
+        "baseline_versions_source_other_check": {
+          "name": "baseline_versions_source_other_check",
+          "value": "(\"baseline_versions\".\"common_information_source_code\" = 'OTRA'\n          and length(trim(\"baseline_versions\".\"common_information_source_other_text\")) > 0)\n        or (\"baseline_versions\".\"common_information_source_code\" <> 'OTRA'\n          and coalesce(length(trim(\"baseline_versions\".\"common_information_source_other_text\")), 0) = 0)"
+        },
+        "baseline_versions_signer_check": {
+          "name": "baseline_versions_signer_check",
+          "value": "\"baseline_versions\".\"created_by_account_id\" = \"baseline_versions\".\"signed_by_account_id\"\n        and \"baseline_versions\".\"created_by_profile\" = \"baseline_versions\".\"signed_by_profile\"\n        and \"baseline_versions\".\"signed_by_profile\" in ('ENFERMERIA', 'MEDICINA')"
+        },
+        "baseline_versions_time_check": {
+          "name": "baseline_versions_time_check",
+          "value": "\"baseline_versions\".\"signed_at\" >= \"baseline_versions\".\"created_at\" and \"baseline_versions\".\"valid_from\" = \"baseline_versions\".\"signed_at\""
+        }
+      }
+    },
+    "resident_current_baselines": {
+      "name": "resident_current_baselines",
+      "columns": {
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "baseline_version_id": {
+          "name": "baseline_version_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "activated_at": {
+          "name": "activated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "resident_current_baselines_version_unique": {
+          "name": "resident_current_baselines_version_unique",
+          "columns": [
+            "baseline_version_id"
+          ],
+          "isUnique": true
+        },
+        "resident_current_baselines_scope_idx": {
+          "name": "resident_current_baselines_scope_idx",
+          "columns": [
+            "center_id",
+            "resident_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "resident_current_baselines_resident_center_fk": {
+          "name": "resident_current_baselines_resident_center_fk",
+          "tableFrom": "resident_current_baselines",
+          "tableTo": "residents",
+          "columnsFrom": [
+            "center_id",
+            "resident_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "resident_current_baselines_version_scope_fk": {
+          "name": "resident_current_baselines_version_scope_fk",
+          "tableFrom": "resident_current_baselines",
+          "tableTo": "baseline_versions",
+          "columnsFrom": [
+            "baseline_version_id",
+            "resident_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "accounts": {
+      "name": "accounts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "external_subject": {
+          "name": "external_subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ACTIVE'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "accounts_external_subject_unique": {
+          "name": "accounts_external_subject_unique",
+          "columns": [
+            "external_subject"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "accounts_status_check": {
+          "name": "accounts_status_check",
+          "value": "\"accounts\".\"status\" in ('ACTIVE', 'SUSPENDED')"
+        }
+      }
+    },
+    "buildings": {
+      "name": "buildings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ACTIVE'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "buildings_center_code_unique": {
+          "name": "buildings_center_code_unique",
+          "columns": [
+            "center_id",
+            "code"
+          ],
+          "isUnique": true
+        },
+        "buildings_center_id_unique": {
+          "name": "buildings_center_id_unique",
+          "columns": [
+            "center_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "buildings_center_id_centers_id_fk": {
+          "name": "buildings_center_id_centers_id_fk",
+          "tableFrom": "buildings",
+          "tableTo": "centers",
+          "columnsFrom": [
+            "center_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "buildings_status_check": {
+          "name": "buildings_status_check",
+          "value": "\"buildings\".\"status\" in ('ACTIVE', 'INACTIVE')"
+        }
+      }
+    },
+    "center_location_config_versions": {
+      "name": "center_location_config_versions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "version_number": {
+          "name": "version_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rooms_enabled": {
+          "name": "rooms_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rooms_required": {
+          "name": "rooms_required",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "places_enabled": {
+          "name": "places_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "places_required": {
+          "name": "places_required",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "valid_from": {
+          "name": "valid_from",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "valid_until": {
+          "name": "valid_until",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "center_location_config_version_unique": {
+          "name": "center_location_config_version_unique",
+          "columns": [
+            "center_id",
+            "version_number"
+          ],
+          "isUnique": true
+        },
+        "center_location_config_current_unique": {
+          "name": "center_location_config_current_unique",
+          "columns": [
+            "center_id"
+          ],
+          "isUnique": true,
+          "where": "\"center_location_config_versions\".\"valid_until\" is null"
+        },
+        "center_location_config_lookup_idx": {
+          "name": "center_location_config_lookup_idx",
+          "columns": [
+            "center_id",
+            "valid_from",
+            "valid_until"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "center_location_config_versions_center_id_centers_id_fk": {
+          "name": "center_location_config_versions_center_id_centers_id_fk",
+          "tableFrom": "center_location_config_versions",
+          "tableTo": "centers",
+          "columnsFrom": [
+            "center_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "center_location_config_flags_check": {
+          "name": "center_location_config_flags_check",
+          "value": "(\"center_location_config_versions\".\"rooms_required\" = 0 or \"center_location_config_versions\".\"rooms_enabled\" = 1)\n        and (\"center_location_config_versions\".\"places_required\" = 0 or (\"center_location_config_versions\".\"places_enabled\" = 1 and \"center_location_config_versions\".\"rooms_enabled\" = 1))\n        and (\"center_location_config_versions\".\"places_enabled\" = 0 or \"center_location_config_versions\".\"rooms_enabled\" = 1)"
+        },
+        "center_location_config_time_check": {
+          "name": "center_location_config_time_check",
+          "value": "\"center_location_config_versions\".\"valid_until\" is null or \"center_location_config_versions\".\"valid_until\" > \"center_location_config_versions\".\"valid_from\""
+        }
+      }
+    },
+    "centers": {
+      "name": "centers",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ACTIVE'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "centers_code_unique": {
+          "name": "centers_code_unique",
+          "columns": [
+            "code"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "centers_status_check": {
+          "name": "centers_status_check",
+          "value": "\"centers\".\"status\" in ('ACTIVE', 'INACTIVE')"
+        }
+      }
+    },
+    "floors": {
+      "name": "floors",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "building_id": {
+          "name": "building_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ACTIVE'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "floors_building_code_unique": {
+          "name": "floors_building_code_unique",
+          "columns": [
+            "building_id",
+            "code"
+          ],
+          "isUnique": true
+        },
+        "floors_center_building_id_unique": {
+          "name": "floors_center_building_id_unique",
+          "columns": [
+            "center_id",
+            "building_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "floors_building_center_fk": {
+          "name": "floors_building_center_fk",
+          "tableFrom": "floors",
+          "tableTo": "buildings",
+          "columnsFrom": [
+            "center_id",
+            "building_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "floors_status_check": {
+          "name": "floors_status_check",
+          "value": "\"floors\".\"status\" in ('ACTIVE', 'INACTIVE')"
+        }
+      }
+    },
+    "places": {
+      "name": "places",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ACTIVE'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "places_room_code_unique": {
+          "name": "places_room_code_unique",
+          "columns": [
+            "room_id",
+            "code"
+          ],
+          "isUnique": true
+        },
+        "places_center_room_id_unique": {
+          "name": "places_center_room_id_unique",
+          "columns": [
+            "center_id",
+            "room_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "places_room_center_fk": {
+          "name": "places_room_center_fk",
+          "tableFrom": "places",
+          "tableTo": "rooms",
+          "columnsFrom": [
+            "center_id",
+            "room_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "places_status_check": {
+          "name": "places_status_check",
+          "value": "\"places\".\"status\" in ('ACTIVE', 'INACTIVE')"
+        }
+      }
+    },
+    "rooms": {
+      "name": "rooms",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unit_id": {
+          "name": "unit_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ACTIVE'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "rooms_unit_code_unique": {
+          "name": "rooms_unit_code_unique",
+          "columns": [
+            "unit_id",
+            "code"
+          ],
+          "isUnique": true
+        },
+        "rooms_center_unit_id_unique": {
+          "name": "rooms_center_unit_id_unique",
+          "columns": [
+            "center_id",
+            "unit_id",
+            "id"
+          ],
+          "isUnique": true
+        },
+        "rooms_center_id_unique": {
+          "name": "rooms_center_id_unique",
+          "columns": [
+            "center_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "rooms_unit_center_fk": {
+          "name": "rooms_unit_center_fk",
+          "tableFrom": "rooms",
+          "tableTo": "units",
+          "columnsFrom": [
+            "center_id",
+            "unit_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "rooms_status_check": {
+          "name": "rooms_status_check",
+          "value": "\"rooms\".\"status\" in ('ACTIVE', 'INACTIVE')"
+        }
+      }
+    },
+    "units": {
+      "name": "units",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "building_id": {
+          "name": "building_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "floor_id": {
+          "name": "floor_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ACTIVE'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "units_center_code_unique": {
+          "name": "units_center_code_unique",
+          "columns": [
+            "center_id",
+            "code"
+          ],
+          "isUnique": true
+        },
+        "units_center_id_unique": {
+          "name": "units_center_id_unique",
+          "columns": [
+            "center_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "units_center_id_centers_id_fk": {
+          "name": "units_center_id_centers_id_fk",
+          "tableFrom": "units",
+          "tableTo": "centers",
+          "columnsFrom": [
+            "center_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "units_building_center_fk": {
+          "name": "units_building_center_fk",
+          "tableFrom": "units",
+          "tableTo": "buildings",
+          "columnsFrom": [
+            "center_id",
+            "building_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "units_floor_building_center_fk": {
+          "name": "units_floor_building_center_fk",
+          "tableFrom": "units",
+          "tableTo": "floors",
+          "columnsFrom": [
+            "center_id",
+            "building_id",
+            "floor_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "building_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "units_floor_requires_building_check": {
+          "name": "units_floor_requires_building_check",
+          "value": "\"units\".\"floor_id\" is null or \"units\".\"building_id\" is not null"
+        },
+        "units_status_check": {
+          "name": "units_status_check",
+          "value": "\"units\".\"status\" in ('ACTIVE', 'INACTIVE')"
+        }
+      }
+    },
+    "resident_center_episodes": {
+      "name": "resident_center_episodes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "internal_reference": {
+          "name": "internal_reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "valid_from": {
+          "name": "valid_from",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "valid_until": {
+          "name": "valid_until",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_by_account_id": {
+          "name": "created_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_by_profile": {
+          "name": "created_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "resident_center_episodes_scope_unique": {
+          "name": "resident_center_episodes_scope_unique",
+          "columns": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "isUnique": true
+        },
+        "resident_center_episodes_active_unique": {
+          "name": "resident_center_episodes_active_unique",
+          "columns": [
+            "resident_id"
+          ],
+          "isUnique": true,
+          "where": "\"resident_center_episodes\".\"valid_until\" is null"
+        },
+        "resident_center_episodes_lookup_idx": {
+          "name": "resident_center_episodes_lookup_idx",
+          "columns": [
+            "center_id",
+            "resident_id",
+            "valid_from"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "resident_center_episodes_created_by_account_id_accounts_id_fk": {
+          "name": "resident_center_episodes_created_by_account_id_accounts_id_fk",
+          "tableFrom": "resident_center_episodes",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "created_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "resident_center_episodes_resident_center_fk": {
+          "name": "resident_center_episodes_resident_center_fk",
+          "tableFrom": "resident_center_episodes",
+          "tableTo": "residents",
+          "columnsFrom": [
+            "center_id",
+            "resident_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "resident_center_episodes_time_check": {
+          "name": "resident_center_episodes_time_check",
+          "value": "\"resident_center_episodes\".\"valid_until\" is null or \"resident_center_episodes\".\"valid_until\" > \"resident_center_episodes\".\"valid_from\""
+        },
+        "resident_center_episodes_profile_check": {
+          "name": "resident_center_episodes_profile_check",
+          "value": "\"resident_center_episodes\".\"created_by_profile\" in ('ADMINISTRACION', 'ENFERMERIA')"
+        }
+      }
+    },
+    "resident_location_intervals": {
+      "name": "resident_location_intervals",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resident_id": {
+          "name": "resident_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "episode_id": {
+          "name": "episode_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unit_id": {
+          "name": "unit_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "building_id": {
+          "name": "building_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "floor_id": {
+          "name": "floor_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "place_id": {
+          "name": "place_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "valid_from": {
+          "name": "valid_from",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "valid_until": {
+          "name": "valid_until",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "changed_at": {
+          "name": "changed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "changed_by_account_id": {
+          "name": "changed_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "changed_by_profile": {
+          "name": "changed_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "resident_location_intervals_active_unique": {
+          "name": "resident_location_intervals_active_unique",
+          "columns": [
+            "resident_id"
+          ],
+          "isUnique": true,
+          "where": "\"resident_location_intervals\".\"valid_until\" is null"
+        },
+        "resident_location_intervals_current_lookup_idx": {
+          "name": "resident_location_intervals_current_lookup_idx",
+          "columns": [
+            "center_id",
+            "unit_id",
+            "resident_id",
+            "valid_until"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "resident_location_intervals_changed_by_account_id_accounts_id_fk": {
+          "name": "resident_location_intervals_changed_by_account_id_accounts_id_fk",
+          "tableFrom": "resident_location_intervals",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "changed_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "resident_location_intervals_episode_scope_fk": {
+          "name": "resident_location_intervals_episode_scope_fk",
+          "tableFrom": "resident_location_intervals",
+          "tableTo": "resident_center_episodes",
+          "columnsFrom": [
+            "episode_id",
+            "resident_id",
+            "center_id"
+          ],
+          "columnsTo": [
+            "id",
+            "resident_id",
+            "center_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "resident_location_intervals_unit_center_fk": {
+          "name": "resident_location_intervals_unit_center_fk",
+          "tableFrom": "resident_location_intervals",
+          "tableTo": "units",
+          "columnsFrom": [
+            "center_id",
+            "unit_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "resident_location_intervals_building_center_fk": {
+          "name": "resident_location_intervals_building_center_fk",
+          "tableFrom": "resident_location_intervals",
+          "tableTo": "buildings",
+          "columnsFrom": [
+            "center_id",
+            "building_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "resident_location_intervals_floor_branch_fk": {
+          "name": "resident_location_intervals_floor_branch_fk",
+          "tableFrom": "resident_location_intervals",
+          "tableTo": "floors",
+          "columnsFrom": [
+            "center_id",
+            "building_id",
+            "floor_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "building_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "resident_location_intervals_room_unit_fk": {
+          "name": "resident_location_intervals_room_unit_fk",
+          "tableFrom": "resident_location_intervals",
+          "tableTo": "rooms",
+          "columnsFrom": [
+            "center_id",
+            "unit_id",
+            "room_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "unit_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "resident_location_intervals_place_room_fk": {
+          "name": "resident_location_intervals_place_room_fk",
+          "tableFrom": "resident_location_intervals",
+          "tableTo": "places",
+          "columnsFrom": [
+            "center_id",
+            "room_id",
+            "place_id"
+          ],
+          "columnsTo": [
+            "center_id",
+            "room_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "resident_location_intervals_time_check": {
+          "name": "resident_location_intervals_time_check",
+          "value": "\"resident_location_intervals\".\"valid_until\" is null or \"resident_location_intervals\".\"valid_until\" > \"resident_location_intervals\".\"valid_from\""
+        },
+        "resident_location_intervals_hierarchy_check": {
+          "name": "resident_location_intervals_hierarchy_check",
+          "value": "(\"resident_location_intervals\".\"floor_id\" is null or \"resident_location_intervals\".\"building_id\" is not null)\n        and (\"resident_location_intervals\".\"place_id\" is null or \"resident_location_intervals\".\"room_id\" is not null)"
+        },
+        "resident_location_intervals_profile_check": {
+          "name": "resident_location_intervals_profile_check",
+          "value": "\"resident_location_intervals\".\"changed_by_profile\" in ('ADMINISTRACION', 'ENFERMERIA')"
+        }
+      }
+    },
+    "residents": {
+      "name": "residents",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "center_id": {
+          "name": "center_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "birth_date": {
+          "name": "birth_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "documented_sex_code": {
+          "name": "documented_sex_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ACTIVE'"
+        },
+        "inactivation_reason": {
+          "name": "inactivation_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "inactivated_at": {
+          "name": "inactivated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "inactivated_by_account_id": {
+          "name": "inactivated_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "inactivated_by_profile": {
+          "name": "inactivated_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_by_account_id": {
+          "name": "created_by_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_by_profile": {
+          "name": "created_by_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "residents_center_id_unique": {
+          "name": "residents_center_id_unique",
+          "columns": [
+            "center_id",
+            "id"
+          ],
+          "isUnique": true
+        },
+        "residents_center_status_idx": {
+          "name": "residents_center_status_idx",
+          "columns": [
+            "center_id",
+            "status",
+            "id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "residents_center_id_centers_id_fk": {
+          "name": "residents_center_id_centers_id_fk",
+          "tableFrom": "residents",
+          "tableTo": "centers",
+          "columnsFrom": [
+            "center_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "residents_inactivated_by_account_id_accounts_id_fk": {
+          "name": "residents_inactivated_by_account_id_accounts_id_fk",
+          "tableFrom": "residents",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "inactivated_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "residents_created_by_account_id_accounts_id_fk": {
+          "name": "residents_created_by_account_id_accounts_id_fk",
+          "tableFrom": "residents",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "created_by_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "residents_documented_sex_check": {
+          "name": "residents_documented_sex_check",
+          "value": "\"residents\".\"documented_sex_code\" in ('male', 'female', 'other', 'unknown')"
+        },
+        "residents_status_check": {
+          "name": "residents_status_check",
+          "value": "\"residents\".\"status\" in ('ACTIVE', 'INACTIVE')"
+        },
+        "residents_created_profile_check": {
+          "name": "residents_created_profile_check",
+          "value": "\"residents\".\"created_by_profile\" in ('ADMINISTRACION', 'ENFERMERIA')"
+        },
+        "residents_inactivation_fields_check": {
+          "name": "residents_inactivation_fields_check",
+          "value": "(\"residents\".\"status\" = 'ACTIVE'\n          and \"residents\".\"inactivation_reason\" is null\n          and \"residents\".\"inactivated_at\" is null\n          and \"residents\".\"inactivated_by_account_id\" is null\n          and \"residents\".\"inactivated_by_profile\" is null)\n        or (\"residents\".\"status\" = 'INACTIVE'\n          and length(trim(\"residents\".\"inactivation_reason\")) > 0\n          and \"residents\".\"inactivated_at\" is not null\n          and \"residents\".\"inactivated_by_account_id\" is not null\n          and \"residents\".\"inactivated_by_profile\" = 'ADMINISTRACION')"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

@@ -1,0 +1,47 @@
+name: D1 and Drizzle 0001
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate local-only D1 migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm 11.19.0
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+          run_install: false
+
+      - name: Use Node 24.20.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.20.0
+          cache: pnpm
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check Drizzle migration metadata
+        run: pnpm db:check
+
+      - name: Test disposable local D1
+        run: pnpm db:test
+
+      - name: Run repository quality gate
+        run: pnpm check
+
+      - name: Check whitespace errors
+        run: git diff --check "${{ github.event.pull_request.base.sha }}...HEAD"
