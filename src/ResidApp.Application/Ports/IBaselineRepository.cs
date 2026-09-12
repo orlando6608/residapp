@@ -13,10 +13,14 @@ public sealed record SignBaselineDraftInput(
 /// <summary>Traduce SignBaselineDraftResult de baseline-repository.ts.</summary>
 public sealed record SignBaselineDraftResult(BaselineVersionId BaselineVersionId, int VersionNumber);
 
-/// <summary>Traduce ClinicalDirectionReadInput de db/repositories/audit-repository.ts.</summary>
+/// <summary>Traduce ClinicalDirectionReadInput de db/repositories/audit-repository.ts. OperationId es una
+/// desviación deliberada del original (que no lo tenía): el esquema SQL ya reservaba 'CLINICAL_DETAIL_READ'
+/// como action_code válido en idempotency_operations sin que ningún código lo usara — un reintento desde
+/// una tablet con cobertura inestable duplicaba la fila de auditoría. Ver
+/// docs/decisiones-arquitectura/directrices-pwa-movil.md, punto 4.</summary>
 public sealed record ClinicalDirectionReadInput(
     AccountId AccountId, CenterId CenterId, UnitId UnitId, ResidentId ResidentId,
-    ClinicalResourceType ResourceType, ClinicalDetailAccessPurpose Purpose);
+    ClinicalResourceType ResourceType, ClinicalDetailAccessPurpose Purpose, Guid OperationId);
 
 /// <summary>Traduce AuditedBaselineHeader de audit-repository.ts.</summary>
 public sealed record AuditedBaselineHeader(BaselineVersionId Id, int VersionNumber, BaselineReason ReasonCode, DateTimeOffset SignedAt);

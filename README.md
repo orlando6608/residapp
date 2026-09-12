@@ -6,9 +6,9 @@ Plataforma web para residencias geriátricas que estructura el registro cotidian
 
 ## Estado del proyecto
 
-- **Fecha de referencia:** 11 de septiembre de 2026.
+- **Fecha de referencia:** 12 de septiembre de 2026.
 - **Arquitectura:** monolito **ASP.NET Core MVC (.NET 10) / SQL Server**, en migración activa desde un prototipo previo sobre Cloudflare Workers/D1, conservado íntegro en [`docs/legado-cloudflare/`](docs/legado-cloudflare/) como evidencia histórica.
-- **Estado funcional:** solo el vertical **Residente/Basal** está en construcción; el resto de verticales (Auxiliar, Enfermería, Medicina, Familia/Portal Familiar, Administración, Dirección/Coordinación Clínica) no se ha iniciado. Ver el detalle en [Hoja de ruta](#hoja-de-ruta).
+- **Estado funcional:** solo el vertical **Residente/Basal** está en construcción; el resto de verticales (Auxiliar, Enfermería, Medicina, Familia/Portal Familiar, Administración, Dirección/Coordinación Clínica) no se ha iniciado. El alta de residente funciona de extremo a extremo (verificada contra SQL Server real); la firma de basal está cableada pero no es demostrable todavía (ver [Limitaciones actuales conocidas](#ejecución-local)). Ver el detalle en [Hoja de ruta](#hoja-de-ruta).
 - **Ámbito inicial:** residencias geriátricas.
 - **Datos permitidos en esta fase:** exclusivamente ficticios.
 
@@ -139,7 +139,7 @@ Las siguientes metas son hipótesis de validación del piloto, no estándares cl
 
 - **ASP.NET Core MVC** sobre **.NET 10**, en **C# 14**, como monolito (sin backend independiente).
 - Persistencia en **SQL Server** con acceso mediante **Dapper** (sin ORM), dentro de transacciones ACID explícitas.
-- Identificadores fuertemente tipados (`readonly record struct` envolviendo `Guid`) y autorización por perfil basada en Claims-Based Authorization de ASP.NET Core, con denegación por defecto.
+- Identificadores fuertemente tipados (`readonly record struct` envolviendo `Guid`) y un motor de autorización propio deny-by-default (`ResidentBaselinePolicy`), evaluado desde la capa de aplicación — no delega en el pipeline de autorización de ASP.NET Core.
 
 Estructura del repositorio:
 
@@ -157,6 +157,7 @@ tests/
   FunctionalTests/          Pruebas funcionales (xUnit)
 database/
   scripts/                  Scripts DDL de SQL Server
+  seed/                     Datos de desarrollo exclusivamente ficticios
 docs/
   producto/                 Documentación funcional viva (propósito, alcance, objetivos, roadmap)
   decisiones-arquitectura/  Decisiones técnicas de la migración a .NET
@@ -181,11 +182,15 @@ Si `dotnet test` falla por resolución de workloads (por ejemplo, un manifiesto 
 dotnet test src/ResidApp.sln -p:MSBuildEnableWorkloadResolver=false
 ```
 
+`database/scripts/0001_init_sqlserver.sql` ya se ha ejecutado y verificado contra una instancia real de SQL Server (22 tablas, 27 triggers, 51 checks, 224 índices); ver `dev_seed_residente_basal.sql` en [`database/seed/`](database/seed/) para poblarla con datos ficticios mínimos.
+
 **Limitaciones actuales conocidas** (no ocultarlas ni darlas por resueltas):
 
-- `ResidApp.Web` sigue siendo la plantilla en blanco de `dotnet new mvc`: sin inyección de dependencias registrada, sin cadena de conexión a SQL Server, sin controladores ni vistas propios del dominio, y sin autenticación real.
-- `database/scripts/0001_init_sqlserver.sql` (22 tablas, triggers, índices y checks) nunca se ha ejecutado contra una instancia real de SQL Server; los triggers de inmutabilidad y las validaciones de contenido JSON no están verificados en un motor real.
-- No existen todavía tests propios del vertical Residente/Basal (validación, motor de autorización, casos de uso, repositorios contra una instancia real); los proyectos de test solo contienen la plantilla generada por `dotnet new xunit`.
+- No existe, ni en este puerto ni en el prototipo legado, un caso de uso para crear el contenido de un borrador de basal (las 9 áreas + Barthel): `BaselineController/Sign` y `/Direction` están cableados contra la aplicación pero no se pueden demostrar de extremo a extremo hasta que exista esa capacidad (pertenece al vertical Enfermería/Medicina).
+- La identidad de sesión de `ResidApp.Web` (`DevAuthController`) es un selector de cuenta ficticia por cookie, no autenticación real; la decisión de proveedor productivo sigue abierta (ver [Decisiones pendientes](#decisiones-pendientes)).
+- Verificación uno por uno del resto de los 27 triggers (más allá de lo que ya cubren los tests de integración) sigue pendiente — bloqueada por el primer punto.
+
+Detalle completo, incluidos los bugs de producción encontrados y corregidos al ejecutar por primera vez contra un motor real, en [`docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`](docs/tareas/alta-prioridad/pendientes-migracion-inicial.md).
 
 No deben añadirse secretos, credenciales ni datos personales reales al repositorio, los fixtures, las pruebas, los logs, las capturas o las demostraciones.
 
@@ -203,7 +208,7 @@ El orden funcional de migración de los bloques verticales se hereda del prototi
 | Administración | No iniciado |
 | Dirección / Coordinación Clínica | No iniciado |
 
-Detalle del vertical Residente/Basal — completado: andamiaje de la solución, identificadores y enums compartidos, dominio asistencial (Resident/Baseline con validaciones), capa de aplicación e infraestructura Dapper/SQL Server, `dotnet build` sin errores. Pendiente crítico: el resto se detalla en [Ejecución local](#ejecución-local) y en [`docs/producto/roadmap.md`](docs/producto/roadmap.md).
+Detalle del vertical Residente/Basal — completado: andamiaje de la solución, identificadores y enums compartidos, dominio asistencial (Resident/Baseline con validaciones), capa de aplicación e infraestructura Dapper/SQL Server verificada contra un motor real, alta de residente funcionando de extremo a extremo en `ResidApp.Web`, 47 tests reales en verde. Pendiente crítico: el resto se detalla en [Ejecución local](#ejecución-local) y en [`docs/producto/roadmap.md`](docs/producto/roadmap.md).
 
 ## Decisiones pendientes
 

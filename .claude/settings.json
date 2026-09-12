@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet run --no-launch-profile --urls http://localhost:5299)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:5299/)",
+      "Read(//c/tmp/**)",
+      "Bash(curl -s -c cookies.txt -b cookies.txt http://localhost:5299/Residents/Confirmation)",
+      "Bash(sqlcmd -S ACER-ORLANDO -E -C -I -d ResidApp -Q \"SELECT id, display_name, birth_date, documented_sex_code, status FROM dbo.residents;\")",
+      "Bash(sqlcmd -S ACER-ORLANDO -E -C -I -d ResidApp -Q \"SELECT resource_type, action_code, resident_id FROM dbo.audit_events; SELECT action_code, status FROM dbo.idempotency_operations;\")",
+      "Bash(dotnet user-secrets *)",
+      "Read(//c/Users/logik/AppData/Roaming/Microsoft/UserSecrets/**)",
+      "Bash(curl -s -D - http://localhost:5299/manifest.json -o /tmp/manifest.json)",
+      "Read(//tmp/**)",
+      "Bash(curl -s -D - http://localhost:5299/sw.js -o /tmp/sw.js)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} - %{content_type}\\\\n\" http://localhost:5299/icons/icon.svg)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5299/Home/Offline)",
+      "Bash(curl -s http://localhost:5299/Home/Offline)",
+      "Bash(curl -s http://localhost:5299/)"
+    ]
+  }
+}

@@ -18,7 +18,7 @@ La hoja de ruta original del prototipo legado (consolidación documental → lí
 
 ## Estado detallado del vertical Residente / Basal
 
-Estado a fecha 2026-09-11.
+Estado a fecha 2026-09-12.
 
 **Completado:**
 
@@ -26,13 +26,17 @@ Estado a fecha 2026-09-11.
 - Identificadores fuertemente tipados y enums compartidos.
 - Dominio asistencial (entidades Resident/Baseline con sus validaciones).
 - Capa de aplicación e infraestructura de persistencia (Dapper + SQL Server) para este vertical.
-- `dotnet build` compila sin errores.
+- Script de base de datos ejecutado y verificado contra una instancia real de SQL Server (22 tablas, 27 triggers, 51 checks, 224 índices).
+- `ResidApp.Web` cableado para el alta de residente: inyección de dependencias, cadena de conexión, identidad de sesión de desarrollo (no autenticación real) y pantalla funcionando de extremo a extremo.
+- 47 tests reales en verde (unitarios, de integración contra SQL Server real y funcionales a través de la Web), sustituyendo a los placeholders.
+- 3 bugs de producción encontrados al ejecutar por primera vez contra un motor real, corregidos (detalle en `docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`, punto 6).
+- `dotnet build` compila sin errores ni avisos.
 
 **Pendiente crítico:**
 
-- El script de base de datos (22 tablas, triggers y checks) nunca se ha ejecutado contra una instancia real de SQL Server: los triggers de inmutabilidad y las validaciones de contenido JSON no están verificados.
-- `ResidApp.Web` sigue siendo la plantilla en blanco: sin inyección de dependencias registrada, sin cadena de conexión, sin controladores ni vistas del dominio, y sin autenticación real.
-- No existen tests propios del vertical (reglas de validación, motor de autorización por perfil, casos de uso, repositorios contra una instancia real).
+- No existe, ni en este puerto ni en el prototipo legado, un caso de uso para crear el contenido de un borrador de basal (las 9 áreas + Barthel); sin él, `BaselineController/Sign` y `/Direction` están cableados pero no se pueden demostrar end-to-end. Construir esa capacidad pertenece al vertical Enfermería/Medicina (`gestion-basal-barthel.md`), no a este.
+- Verificación uno por uno del resto de los 27 triggers (inmutabilidad, transición de estados) sigue pendiente — bloqueada por el punto anterior.
+- Detalle completo en `docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`.
 
 ## Decisiones abiertas heredadas del legado
 
@@ -47,4 +51,9 @@ Estado a fecha 2026-09-11.
 
 ## Próximos pasos
 
-Cerrar los pendientes críticos del vertical Residente/Basal (validar el script de base de datos contra una instancia real de SQL Server, exponer pantallas mínimas en `ResidApp.Web`, añadir tests propios) antes de iniciar la migración del siguiente bloque vertical, Auxiliar, siguiendo el orden indicado arriba. Las decisiones de arquitectura técnica para cada paso se documentan en `docs/decisiones-arquitectura/instrucciones-migracion-net10.md`, no en este roadmap.
+El vertical Residente/Basal ya está verificado contra un motor real y con pantallas y tests propios; el
+único pendiente crítico que le queda (autoría de borrador de basal) pertenece al vertical
+Enfermería/Medicina, no bloquea empezar Auxiliar. Antes de iniciar cualquier vertical nuevo sigue
+faltando: preparar el despliegue en Azure (App Service + Azure SQL) y un pipeline de CI/CD mínimo, hoy
+inexistentes. Las decisiones de arquitectura técnica para cada paso se documentan en
+`docs/decisiones-arquitectura/instrucciones-migracion-net10.md`, no en este roadmap.

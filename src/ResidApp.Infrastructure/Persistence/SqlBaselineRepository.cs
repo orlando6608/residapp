@@ -214,14 +214,36 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
         }
     }
 
+    /// <summary>Envuelve la lectura auditada de Dirección Clínica en el mismo patrón de idempotencia que
+    /// CreateWithInitialLocationAsync/SignDraftAsync: sin esto, un reintento desde una tablet con
+    /// cobertura inestable duplicaba la fila de auditoría (dbo.idempotency_operations ya reservaba
+    /// 'CLINICAL_DETAIL_READ' como action_code válido sin que nada lo usara). Ver
+    /// docs/decisiones-arquitectura/directrices-pwa-movil.md, punto 4.</summary>
     public async Task<IReadOnlyList<AuditedBaselineHeader>> ReadAsClinicalDirectionAsync(
         ClinicalDirectionReadInput input, CancellationToken ct = default)
     {
+        var requestHash = ReadRequestHash.Of(input);
         using var connection = await connections.OpenAsync(ct);
+
+        var previous = await FindReadIdempotencyAsync(connection, null, input.AccountId.Value, input.OperationId, requestHash, ct);
+        if (previous is not null)
+        {
+            return previous;
+        }
+
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
         try
         {
             var occurredAt = DateTimeOffset.UtcNow;
+
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.idempotency_operations (id, account_id, action_code, operation_id, request_hash, status, created_at)
+                VALUES (@Id, @AccountId, 'CLINICAL_DETAIL_READ', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
+                """, new
+            {
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+
             var isCurrent = input.ResourceType == ClinicalResourceType.BaselineCurrent;
             var resourceSql = isCurrent
                 ? "SELECT version.id FROM dbo.resident_current_baselines current JOIN dbo.baseline_versions version ON version.id = current.baseline_version_id WHERE current.center_id = @CenterId AND current.resident_id = @ResidentId"
@@ -287,12 +309,29 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
                     BaselineVersionId.From(row.Id), row.VersionNumber, EnumCode.ParseCode<BaselineReason>(row.ReasonCode), row.SignedAt))
                 .ToList();
 
+            var resultJson = JsonSerializer.Serialize(headers, ResidAppJson.Options);
+            await connection.ExecuteAsync(new CommandDefinition("""
+                UPDATE dbo.idempotency_operations
+                   SET status = 'SUCCEEDED', result_resource_id = @ResidentId, result_json = @ResultJson, completed_at = @OccurredAt
+                 WHERE account_id = @AccountId AND action_code = 'CLINICAL_DETAIL_READ'
+                   AND operation_id = @OperationId AND request_hash = @RequestHash AND status = 'IN_PROGRESS'
+                """, new
+            {
+                ResidentId = input.ResidentId.Value, ResultJson = resultJson, OccurredAt = occurredAt,
+                AccountId = input.AccountId.Value, input.OperationId, RequestHash = requestHash,
+            }, transaction, cancellationToken: ct));
+
             transaction.Commit();
             return headers;
         }
         catch
         {
             transaction.Rollback();
+            var recovered = await FindReadIdempotencyAsync(connection, null, input.AccountId.Value, input.OperationId, requestHash, ct);
+            if (recovered is not null)
+            {
+                return recovered;
+            }
             throw;
         }
     }
@@ -379,7 +418,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
         var row = await connection.QuerySingleOrDefaultAsync<IdempotencyRow>(new CommandDefinition("""
             SELECT request_hash AS RequestHash, status AS Status, result_json AS ResultJson
               FROM dbo.idempotency_operations WHERE account_id = @AccountId AND action_code = 'BASELINE_SIGN' AND operation_id = @OperationId
-            """, new { input.AccountId.Value, input.OperationId }, transaction, cancellationToken: ct));
+            """, new { AccountId = input.AccountId.Value, input.OperationId }, transaction, cancellationToken: ct));
         if (row is null)
         {
             return null;
@@ -390,6 +429,26 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
         }
         return row.Status == "SUCCEEDED" && row.ResultJson is not null
             ? JsonSerializer.Deserialize<SignBaselineDraftResult>(row.ResultJson, ResidAppJson.Options)
+            : null;
+    }
+
+    private static async Task<IReadOnlyList<AuditedBaselineHeader>?> FindReadIdempotencyAsync(
+        IDbConnection connection, IDbTransaction? transaction, Guid accountId, Guid operationId, string requestHash, CancellationToken ct)
+    {
+        var row = await connection.QuerySingleOrDefaultAsync<IdempotencyRow>(new CommandDefinition("""
+            SELECT request_hash AS RequestHash, status AS Status, result_json AS ResultJson
+              FROM dbo.idempotency_operations WHERE account_id = @AccountId AND action_code = 'CLINICAL_DETAIL_READ' AND operation_id = @OperationId
+            """, new { AccountId = accountId, OperationId = operationId }, transaction, cancellationToken: ct));
+        if (row is null)
+        {
+            return null;
+        }
+        if (row.RequestHash != requestHash)
+        {
+            throw new DomainValidationException("IDEMPOTENCY_KEY_REUSED");
+        }
+        return row.Status == "SUCCEEDED" && row.ResultJson is not null
+            ? JsonSerializer.Deserialize<IReadOnlyList<AuditedBaselineHeader>>(row.ResultJson, ResidAppJson.Options)
             : null;
     }
 
@@ -423,6 +482,19 @@ file static class SignRequestHash
         {
             input.AccountId.Value, input.ActiveProfile.ToCode(), input.CenterId.Value, input.UnitId.Value,
             input.ResidentId.Value, input.DraftId.Value, input.ExpectedDraftRevision, input.OperationId,
+        });
+        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
+    }
+}
+
+file static class ReadRequestHash
+{
+    public static string Of(ClinicalDirectionReadInput input)
+    {
+        var canonical = JsonSerializer.Serialize(new object[]
+        {
+            input.AccountId.Value, input.CenterId.Value, input.UnitId.Value, input.ResidentId.Value,
+            input.ResourceType.ToCode(), input.Purpose.ToCode(), input.OperationId,
         });
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }

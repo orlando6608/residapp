@@ -1,0 +1,52 @@
+@model ResidApp.Web.Models.SignBaselineFormModel
+@{
+    ViewData["Title"] = "Firmar borrador de basal";
+}
+
+<h1>Firmar borrador de basal</h1>
+<div class="alert alert-warning">
+    Todavía no existe un caso de uso para crear el contenido de un borrador de basal (las 9 áreas más
+    Barthel), ni en este puerto ni en el prototipo legado. Sin un <code>DraftId</code> real ya existente en
+    <code>dbo.baseline_drafts</code>, esta operación devolverá un fallo de aplicación. El cableado queda
+    listo para cuando exista esa capacidad.
+</div>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-controller="Baseline" asp-action="Sign" method="post">
+    <input type="hidden" asp-for="OperationId" />
+
+    <div class="mb-3">
+        <label asp-for="ProfileScopeId" class="form-label"></label>
+        <input asp-for="ProfileScopeId" class="form-control form-control-lg" />
+        <span asp-validation-for="ProfileScopeId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="CenterId" class="form-label"></label>
+        <input asp-for="CenterId" class="form-control form-control-lg" />
+        <span asp-validation-for="CenterId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ResidentId" class="form-label"></label>
+        <input asp-for="ResidentId" class="form-control form-control-lg" />
+        <span asp-validation-for="ResidentId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="DraftId" class="form-label"></label>
+        <input asp-for="DraftId" class="form-control form-control-lg" />
+        <span asp-validation-for="DraftId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ExpectedDraftRevision" class="form-label"></label>
+        <input asp-for="ExpectedDraftRevision" type="number" inputmode="numeric" class="form-control form-control-lg" />
+        <span asp-validation-for="ExpectedDraftRevision" class="text-danger"></span>
+    </div>
+
+    <div class="d-grid d-md-block">
+        <button type="submit" class="btn btn-primary btn-lg">Firmar</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

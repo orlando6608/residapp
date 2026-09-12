@@ -1,8 +1,24 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "ResidApp";
+    var devSubject = Context.Request.Cookies[ResidApp.Web.Security.DevSessionIdentityProvider.CookieName];
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h1>ResidApp — vertical Residente/Basal</h1>
+<p>
+    Identidad de desarrollo activa:
+    @if (string.IsNullOrWhiteSpace(devSubject))
+    {
+        <span class="text-danger">ninguna</span>
+    }
+    else
+    {
+        <code>@devSubject</code>
+    }
+    — <a asp-controller="DevAuth" asp-action="Login">cambiar</a>
+</p>
+
+<ul>
+    <li><a asp-controller="Residents" asp-action="Create">Alta de residente</a></li>
+    <li><a asp-controller="Baseline" asp-action="Sign">Firmar borrador de basal</a></li>
+    <li><a asp-controller="Baseline" asp-action="Direction">Consulta de Dirección Clínica</a></li>
+</ul>

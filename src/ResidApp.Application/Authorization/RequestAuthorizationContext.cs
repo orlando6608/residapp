@@ -16,6 +16,11 @@ public sealed record ResidentCreatePayload(
 /// <summary>Traduce el payload de executeBaselineSign en request-context.ts.</summary>
 public sealed record BaselineSignPayload(int ExpectedDraftRevision, Guid OperationId);
 
+/// <summary>No existía en el original executeDirectionBaselineRead de request-context.ts (que no recibía
+/// payload alguno): se añade para poder pasar OperationId sin romper la firma pública existente de
+/// ExecuteDirectionBaselineReadAsync con un parámetro suelto.</summary>
+public sealed record ClinicalDirectionReadPayload(Guid OperationId);
+
 /// <summary>
 /// Traduce RequestAuthorizationContext/resolveRequestContext/operationFor/execute* de
 /// lib/authorization/request-context.ts. En TS la autoridad vive en un WeakMap privado, indexado por un
@@ -141,7 +146,7 @@ public static class RequestAuthorizationContextResolver
 
     /// <summary>Traduce executeDirectionBaselineRead de request-context.ts.</summary>
     public static async Task<IReadOnlyList<AuditedBaselineHeader>> ExecuteDirectionBaselineReadAsync(
-        RequestAuthorizationContext context, IBaselineRepository repository, CancellationToken ct = default)
+        RequestAuthorizationContext context, IBaselineRepository repository, ClinicalDirectionReadPayload payload, CancellationToken ct = default)
     {
         var operation = RequireTarget<AuthorizationTarget.Read>(context);
         if (operation.Decision.Obligations.Count == 0)
@@ -151,7 +156,7 @@ public static class RequestAuthorizationContextResolver
         var obligation = operation.Decision.Obligations[0];
         var input = new ClinicalDirectionReadInput(
             obligation.AccountId, obligation.CenterId, obligation.UnitId, obligation.ResidentId,
-            obligation.ResourceType, obligation.Purpose);
+            obligation.ResourceType, obligation.Purpose, payload.OperationId);
         return await repository.ReadAsClinicalDirectionAsync(input, ct);
     }
 

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace ResidApp.Shared;
 
 /// <summary>
@@ -18,6 +20,12 @@ internal static class OpaqueId
     }
 }
 
+/// <summary>[method: JsonConstructor] en los 6 identificadores de este fichero: sin él, System.Text.Json
+/// deserializa estos readonly record struct dejando Value en Guid.Empty (usa el constructor sin
+/// parámetros implícito de todo struct en vez del primario), silenciosamente y sin lanzar excepción — bug
+/// real encontrado en el primer test de integración que ejercitó la relectura de result_json en
+/// idempotency_operations (ver SqlResidentRepositoryTests/SqlBaselineRepositoryTests).</summary>
+[method: JsonConstructor]
 public readonly record struct AccountId(Guid Value)
 {
     public Guid Value { get; } = OpaqueId.Validate(Value, nameof(Value));
@@ -27,6 +35,7 @@ public readonly record struct AccountId(Guid Value)
     public override string ToString() => Value.ToString();
 }
 
+[method: JsonConstructor]
 public readonly record struct CenterId(Guid Value)
 {
     public Guid Value { get; } = OpaqueId.Validate(Value, nameof(Value));
@@ -36,6 +45,7 @@ public readonly record struct CenterId(Guid Value)
     public override string ToString() => Value.ToString();
 }
 
+[method: JsonConstructor]
 public readonly record struct UnitId(Guid Value)
 {
     public Guid Value { get; } = OpaqueId.Validate(Value, nameof(Value));
@@ -45,6 +55,7 @@ public readonly record struct UnitId(Guid Value)
     public override string ToString() => Value.ToString();
 }
 
+[method: JsonConstructor]
 public readonly record struct ResidentId(Guid Value)
 {
     public Guid Value { get; } = OpaqueId.Validate(Value, nameof(Value));
@@ -54,6 +65,7 @@ public readonly record struct ResidentId(Guid Value)
     public override string ToString() => Value.ToString();
 }
 
+[method: JsonConstructor]
 public readonly record struct BaselineVersionId(Guid Value)
 {
     public Guid Value { get; } = OpaqueId.Validate(Value, nameof(Value));
@@ -68,6 +80,7 @@ public readonly record struct BaselineVersionId(Guid Value)
 /// solo por isOpaqueEntityId); se añade aquí por fidelidad de patrón, ya que se usa como opaco en todo
 /// el flujo de firma del basal.
 /// </summary>
+[method: JsonConstructor]
 public readonly record struct BaselineDraftId(Guid Value)
 {
     public Guid Value { get; } = OpaqueId.Validate(Value, nameof(Value));

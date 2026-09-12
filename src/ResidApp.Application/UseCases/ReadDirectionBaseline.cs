@@ -10,7 +10,7 @@ namespace ResidApp.Application.UseCases;
 /// viaja como texto libre (igual que en TS): la política es quien decide si vale "SUPERVISION_CLINICA",
 /// no se pre-valida ni se fija aquí, para que ACCESS_PURPOSE_REQUIRED siga siendo una ruta alcanzable.</summary>
 public sealed record ReadDirectionBaselineCommand(
-    Guid ProfileScopeId, CenterId CenterId, ResidentId ResidentId, string ResourceType, string? Purpose);
+    Guid ProfileScopeId, CenterId CenterId, ResidentId ResidentId, string ResourceType, string? Purpose, Guid OperationId);
 
 /// <summary>Traduce readDirectionBaseline de lib/application/resident-baseline-service.ts.</summary>
 public sealed class ReadDirectionBaseline(
@@ -31,6 +31,7 @@ public sealed class ReadDirectionBaseline(
             var selection = new AuthorizationSelection(command.ProfileScopeId, command.CenterId);
             var context = await RequestAuthorizationContextResolver.ResolveAsync(
                 evidenceProvider, session, selection, new AuthorizationTarget.Read(command.ResidentId), resourceType, purpose, ct);
-            return await RequestAuthorizationContextResolver.ExecuteDirectionBaselineReadAsync(context, repository, ct);
+            var payload = new ClinicalDirectionReadPayload(command.OperationId);
+            return await RequestAuthorizationContextResolver.ExecuteDirectionBaselineReadAsync(context, repository, payload, ct);
         });
 }

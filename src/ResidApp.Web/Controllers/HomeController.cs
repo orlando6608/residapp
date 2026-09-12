@@ -16,6 +16,15 @@ public class HomeController : Controller
         return View();
     }
 
+    /// <summary>Fallback de navegación del service worker (wwwroot/sw.js) cuando no hay red — puramente
+    /// informativa, sin formularios ni datos locales. Ver docs/decisiones-arquitectura/directrices-pwa-movil.md,
+    /// punto 5: no es un modo de trabajo offline.</summary>
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Offline()
+    {
+        return View();
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
