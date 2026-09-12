@@ -46,3 +46,5 @@ appsettings.*.local.json
 # SO
 Thumbs.db
 .DS_Store
+
+.fake
