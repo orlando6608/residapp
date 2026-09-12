@@ -15,5 +15,5 @@ Este documento recoge las reglas de trabajo que rigen cualquier colaboración so
 - `docs\decisiones-arquitectura\` — directrices técnicas de la migración a .NET 10.
 - `docs\producto\` — visión, objetivos y alcance del producto, y estado de la migración.
 - `docs\flujos-clinicos\` — procesos asistenciales paso a paso.
-- `docs\historias-usuario\` — requisitos funcionales en formato de historia de usuario.
+- `docs\historias-usuarios\` — requisitos funcionales en formato de historia de usuario.
 - `docs\legado-cloudflare\` — prototipo funcional de referencia (congelado), fuente original de las reglas de negocio del producto.

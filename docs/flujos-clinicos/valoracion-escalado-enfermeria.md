@@ -8,7 +8,7 @@ Este flujo cubre la gestión de bandejas, la valoración y la decisión asistenc
 
 - La gestión del estado basal y la escala Barthel (ver [gestion-basal-barthel.md](gestion-basal-barthel.md)).
 - El detalle del informe de derivación a Urgencias, que es un módulo común con Medicina (ver [derivacion-urgencias.md](derivacion-urgencias.md)).
-- El proceso completo de redacción, aprobación y publicación de la comunicación familiar: aquí solo se documenta la decisión inicial de comunicar o no (ver `docs\historias-usuario\portal-familiar.md` para el resto).
+- El proceso completo de redacción, aprobación y publicación de la comunicación familiar: aquí solo se documenta la decisión inicial de comunicar o no (ver `docs\historias-usuarios\portal-familiar.md` para el resto).
 
 ## Glosario mínimo
 

@@ -3,7 +3,7 @@
 Esta carpeta documenta, paso a paso, los procesos asistenciales de ResidApp: cómo un profesional observa, valora, decide y cierra una situación de un residente, y cómo se gestiona el estado basal que sirve de referencia a todo lo anterior.
 
 Es complementaria a otras dos carpetas de `docs\`:
-- `docs\historias-usuario\` da la perspectiva de negocio (qué quiere lograr cada perfil y cómo se verifica), agrupando los mismos requisitos en historias de usuario.
+- `docs\historias-usuarios\` da la perspectiva de negocio (qué quiere lograr cada perfil y cómo se verifica), agrupando los mismos requisitos en historias de usuario.
 - `docs\producto\` da la visión general del producto, sus objetivos y su alcance, sin entrar en el detalle operativo de cada pantalla.
 
 ## Mapa del circuito clínico completo
@@ -12,18 +12,18 @@ El circuito funcional completo del producto es:
 
 **Alta administrativa → basal profesional → registro cotidiano o evento → revisión de Enfermería → seguimiento o escalado → valoración médica e indicaciones → derivación si procede → cierre → texto familiar → aprobación → publicación → consulta familiar.**
 
-Los ficheros de esta carpeta cubren los tramos asistenciales de ese circuito (desde el basal profesional hasta el cierre y la decisión de comunicar); el alta administrativa, la aprobación/publicación del texto familiar y la consulta familiar se documentan como historias de usuario en `docs\historias-usuario\administracion.md` y `docs\historias-usuario\portal-familiar.md`.
+Los ficheros de esta carpeta cubren los tramos asistenciales de ese circuito (desde el basal profesional hasta el cierre y la decisión de comunicar); el alta administrativa, la aprobación/publicación del texto familiar y la consulta familiar se documentan como historias de usuario en `docs\historias-usuarios\administracion.md` y `docs\historias-usuarios\portal-familiar.md`.
 
 ## Tabla de ficheros
 
 | Fichero | Perfil(es) | Códigos PRD cubiertos | Qué NO cubre |
 | --- | --- | --- | --- |
 | `registro-cotidiano-auxiliar.md` | Auxiliar | `AUX-01` a `AUX-13` | La valoración clínica del evento (ver `valoracion-escalado-enfermeria.md`); la edición del basal, que el Auxiliar solo consulta resumido |
-| `valoracion-escalado-enfermeria.md` | Enfermería | `ENF-01` a `ENF-16` | La gestión del basal (ver `gestion-basal-barthel.md`); el detalle del informe de derivación (ver `derivacion-urgencias.md`); la redacción/aprobación completa de la publicación familiar (ver `docs\historias-usuario\portal-familiar.md`) |
+| `valoracion-escalado-enfermeria.md` | Enfermería | `ENF-01` a `ENF-16` | La gestión del basal (ver `gestion-basal-barthel.md`); el detalle del informe de derivación (ver `derivacion-urgencias.md`); la redacción/aprobación completa de la publicación familiar (ver `docs\historias-usuarios\portal-familiar.md`) |
 | `valoracion-conducta-medicina.md` | Medicina | `MED-01` a `MED-18` | La gestión del basal (ver `gestion-basal-barthel.md`); el detalle del informe de derivación (ver `derivacion-urgencias.md`) |
 | `derivacion-urgencias.md` | Enfermería y Medicina (módulo común) | `DER-01` a `DER-06` | Cómo se llega hasta el protocolo urgente (ver los dos ficheros anteriores) |
-| `gestion-basal-barthel.md` | Enfermería y Medicina (módulo común); Auxiliar y Dirección como lectores limitados | `BAS-01` a `BAS-19` | El alta administrativa que deja el basal pendiente (ver `docs\historias-usuario\administracion.md`); el registro cotidiano del Auxiliar (ver `registro-cotidiano-auxiliar.md`) |
-| `supervision-clinica-direccion.md` | Dirección/Coordinación Clínica | `DIR-01` a `DIR-16` | La parte administrativa de Dirección —ámbito de supervisión, acceso denegado— (ver `docs\historias-usuario\direccion-coordinacion-clinica.md`) |
+| `gestion-basal-barthel.md` | Enfermería y Medicina (módulo común); Auxiliar y Dirección como lectores limitados | `BAS-01` a `BAS-19` | El alta administrativa que deja el basal pendiente (ver `docs\historias-usuarios\administracion.md`); el registro cotidiano del Auxiliar (ver `registro-cotidiano-auxiliar.md`) |
+| `supervision-clinica-direccion.md` | Dirección/Coordinación Clínica | `DIR-01` a `DIR-16` | La parte administrativa de Dirección —ámbito de supervisión, acceso denegado— (ver `docs\historias-usuarios\direccion-coordinacion-clinica.md`) |
 
 ## Glosario transversal
 

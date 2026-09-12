@@ -4,7 +4,7 @@ Dirección/Coordinación Clínica es un perfil de supervisión pura: observa el 
 
 ## Alcance y exclusiones
 
-Este fichero documenta la parte clínica de la supervisión: el acceso condicionado a detalle clínico, los indicadores agregados, y la consulta de derivaciones y comunicación familiar en solo lectura. La parte puramente administrativa de este perfil (ámbito de supervisión, gestión de accesos denegados) se resume brevemente al final; el detalle completo vive en `docs\historias-usuario\direccion-coordinacion-clinica.md`.
+Este fichero documenta la parte clínica de la supervisión: el acceso condicionado a detalle clínico, los indicadores agregados, y la consulta de derivaciones y comunicación familiar en solo lectura. La parte puramente administrativa de este perfil (ámbito de supervisión, gestión de accesos denegados) se resume brevemente al final; el detalle completo vive en `docs\historias-usuarios\direccion-coordinacion-clinica.md`.
 
 ## Glosario mínimo
 
@@ -35,7 +35,7 @@ Este fichero documenta la parte clínica de la supervisión: el acceso condicion
 
 ## Resumen de la parte administrativa de Dirección
 
-Además de la supervisión clínica, Dirección conoce su propio ámbito de supervisión (centros, unidades y permisos vigentes del perfil activo) y recibe mensajes neutros ante un acceso denegado, sin que estos revelen contenido ni la existencia de información fuera de su ámbito. El detalle completo de estas dos capacidades se documenta en `docs\historias-usuario\direccion-coordinacion-clinica.md`.
+Además de la supervisión clínica, Dirección conoce su propio ámbito de supervisión (centros, unidades y permisos vigentes del perfil activo) y recibe mensajes neutros ante un acceso denegado, sin que estos revelen contenido ni la existencia de información fuera de su ámbito. El detalle completo de estas dos capacidades se documenta en `docs\historias-usuarios\direccion-coordinacion-clinica.md`.
 
 ## Trazabilidad
 

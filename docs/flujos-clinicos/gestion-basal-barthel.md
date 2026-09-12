@@ -6,7 +6,7 @@ El estado basal es la referencia habitual de cada residente: nueve áreas asiste
 
 Este flujo cubre la creación, edición, firma e historial del estado basal. No cubre:
 
-- El alta administrativa que deja el basal en estado pendiente (ver `docs\historias-usuario\administracion.md`).
+- El alta administrativa que deja el basal en estado pendiente (ver `docs\historias-usuarios\administracion.md`).
 - El registro cotidiano del Auxiliar, que solo consulta un resumen del basal vigente (ver [registro-cotidiano-auxiliar.md](registro-cotidiano-auxiliar.md)).
 - El acceso de Dirección al basal, que es siempre de solo lectura y condicionado a permiso (ver [supervision-clinica-direccion.md](supervision-clinica-direccion.md)).
 
