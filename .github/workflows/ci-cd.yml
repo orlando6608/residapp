@@ -1,0 +1,88 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: ${{ secrets.CI_SQL_SA_PASSWORD }}
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P $MSSQL_SA_PASSWORD -Q 'SELECT 1'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Instalar sqlcmd
+        run: |
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
+          curl -sSL https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
+          echo "/opt/mssql-tools18/bin" >> "$GITHUB_PATH"
+
+      - name: Crear base de datos de pruebas
+        env:
+          SA_PASSWORD: ${{ secrets.CI_SQL_SA_PASSWORD }}
+        run: |
+          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -Q "CREATE DATABASE ResidAppTest"
+          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0001_init_sqlserver.sql
+
+      - name: Restore
+        run: dotnet restore src/ResidApp.sln
+
+      - name: Build
+        run: dotnet build src/ResidApp.sln --no-restore --configuration Release
+
+      - name: Test
+        env:
+          RESIDAPP_TEST_CONNECTION_STRING: "Server=localhost,1433;Database=ResidAppTest;User Id=sa;Password=${{ secrets.CI_SQL_SA_PASSWORD }};TrustServerCertificate=True;MultipleActiveResultSets=true;"
+        run: dotnet test src/ResidApp.sln --no-build --configuration Release
+
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publish
+        run: dotnet publish src/ResidApp.Web/ResidApp.Web.csproj --configuration Release --output ./publish
+
+      - name: Azure login (OIDC federado, sin secretos de larga duración)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Desplegar en Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-residapp-dev
+          package: ./publish
