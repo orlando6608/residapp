@@ -2,7 +2,6 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 using ResidApp.Infrastructure.Persistence;
 
 namespace ResidApp.FunctionalTests;
@@ -91,10 +90,12 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             Environment.GetEnvironmentVariable("RESIDAPP_TEST_CONNECTION_STRING")
             ?? "Server=ACER-ORLANDO;Database=ResidApp;Integrated Security=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
-        protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder) =>
-            builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["ConnectionStrings:ResidApp"] = TestConnectionString,
-            }));
+        // Program.cs lee ConnectionStrings:ResidApp directamente sobre builder.Configuration antes de
+        // builder.Build() (falla rápido si falta). Las sobrescrituras de WebApplicationFactory vía
+        // ConfigureWebHost/ConfigureAppConfiguration solo se aplican en el momento de Build(), demasiado
+        // tarde para ese chequeo — por eso se fija aquí como variable de entorno del proceso, que
+        // CreateBuilder(args) sí incorpora desde el arranque, sea cual sea el entorno (Development o no).
+        public WebAppFactory() =>
+            Environment.SetEnvironmentVariable("ConnectionStrings__ResidApp", TestConnectionString);
     }
 }
