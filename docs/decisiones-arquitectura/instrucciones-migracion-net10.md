@@ -25,12 +25,23 @@ El script `0001_resident_baseline_foundation.sql` contiene triggers complejos de
 * Mantener la unicidad indexada condicional (ej: solo un borrador activo por residente).
 
 ### D. Motor de Autorización Deny-By-Default
-Traduce de forma exacta el comportamiento del motor puro `authorizeResidentBaseline` (`policy.ts`) utilizando la infraestructura de **Claims-Based Authorization** y políticas personalizadas de ASP.NET Core 10:
+Traduce de forma exacta el comportamiento del motor puro `authorizeResidentBaseline` (`policy.ts`) como un
+**motor de decisión propio** (`ResidentBaselinePolicy`, en `ResidApp.Application/Authorization/`),
+evaluado explícitamente desde la capa de aplicación (`RequestAuthorizationContextResolver`, en el mismo
+directorio) — **no** mediante la infraestructura de Claims-Based Authorization de ASP.NET Core
+(`IAuthorizationHandler`, `AuthorizationPolicy`, atributos `[Authorize]`). Esta versión reemplaza una
+redacción anterior de este mismo punto que sí mencionaba Claims-Based Authorization; se corrige aquí
+porque no es lo que se acabó construyendo ni lo que conviene construir: el motor original es una función
+pura que devuelve una decisión estructurada (permitido/denegado, motivo de denegación, obligaciones), y
+forzarla dentro del pipeline de autorización de ASP.NET Core habría exigido envolverla en código a medida
+igualmente, sin ganar nada a cambio. `app.UseAuthorization()` sigue registrado en `Program.cs` por ser
+parte del scaffold MVC estándar, pero ninguna ruta de este vertical depende de él — la autorización real
+ocurre enteramente dentro de `RequestAuthorizationContextResolver.ResolveAsync`.
 * Toda petición debe validar el contexto del `AuthorizationSubject`: cuenta activa, autenticada y mapeo del perfil activo exclusivo por operación.
 * Implementar la obligación de auditoría médica (`ClinicalDetailAuditObligation`): si el perfil es `DIRECCION_CLINICA` y lee un historial, la operación se aprueba pero exige escribir de forma atómica e inmutable un registro en la tabla `audit_events`.
 
 ## 3. Mapeo de Archivos para la Migración
 * `docs/legado-cloudflare/lib/domain/shared/identifiers.ts` ──> `src/ResidApp.Shared/Identifiers.cs`
-* `docs/legado-cloudflare/lib/authorization/policy.ts` ──> `src/ResidApp.Infrastructure/Security/AuthorizationPolicies.cs`
-* `docs/legado-cloudflare/lib/application/resident-baseline-service.ts` ──> `src/ResidApp.Application/Services/BaselineService.cs`
+* `docs/legado-cloudflare/lib/authorization/policy.ts` ──> `src/ResidApp.Application/Authorization/ResidentBaselinePolicy.cs`
+* `docs/legado-cloudflare/lib/application/resident-baseline-service.ts` ──> `src/ResidApp.Application/UseCases/ResidentBaselineApplicationService.cs`
 * `database/migrations/0001_resident_baseline_foundation.sql` ──> Portar estructura relacional adaptada a tipos SQL Server en `database/scripts/0001_init_sqlserver.sql`
