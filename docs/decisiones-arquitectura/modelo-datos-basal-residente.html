@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Modelo de datos — Residente y Basal</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    color: #1f2937;
+    font-size: 11.5px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  h1 { font-size: 22px; color: #0f3d5c; margin: 0 0 4px; }
+  h2 {
+    font-size: 16px; color: #0f3d5c; margin: 26px 0 10px;
+    border-bottom: 2px solid #0f3d5c; padding-bottom: 4px;
+    page-break-after: avoid;
+  }
+  h3 { font-size: 13px; color: #14532d; margin: 18px 0 6px; page-break-after: avoid; }
+  h4 { font-size: 12px; color: #374151; margin: 12px 0 4px; page-break-after: avoid; }
+  .subtitle { color: #4b5563; font-size: 13px; margin: 0 0 18px; }
+  .cover {
+    text-align: center; padding-top: 60mm;
+  }
+  .cover h1 { font-size: 30px; }
+  .cover .subtitle { font-size: 15px; }
+  .cover .meta { margin-top: 40px; color: #6b7280; font-size: 11px; }
+  .page-break { page-break-before: always; }
+  p { margin: 6px 0; text-align: justify; }
+  code, .mono { font-family: "Consolas", "Courier New", monospace; font-size: 10.5px; background: #f1f5f9; padding: 1px 4px; border-radius: 3px; color: #0f3d5c; }
+  .box {
+    background: #f8fafc; border: 1px solid #dbe4ee; border-left: 4px solid #0f3d5c;
+    border-radius: 4px; padding: 10px 14px; margin: 10px 0; page-break-inside: avoid;
+  }
+  .box.verde { border-left-color: #14532d; background: #f4faf6; }
+  .box.ambar { border-left-color: #92400e; background: #fffaf0; }
+  .box strong.label { color: #0f3d5c; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; page-break-inside: auto; }
+  table.entidad { page-break-inside: avoid; }
+  th, td { border: 1px solid #d1d9e0; padding: 4px 7px; text-align: left; vertical-align: top; font-size: 10.5px; }
+  th { background: #0f3d5c; color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .tabla-bloque {
+    page-break-inside: avoid; margin-bottom: 22px;
+  }
+  ul, ol { margin: 6px 0; padding-left: 22px; }
+  li { margin: 3px 0; }
+  .leyenda-svg { font-size: 10px; color: #6b7280; margin-top: 4px; }
+  .nota {
+    font-size: 10px; color: #6b7280; font-style: italic;
+  }
+  .indice { margin-top: 30px; }
+  .indice a { color: #0f3d5c; text-decoration: none; }
+  .indice ol > li { margin: 6px 0; }
+  svg { display: block; margin: 10px auto; max-width: 100%; }
+  .part-title {
+    background: #0f3d5c; color: white; padding: 14px 18px; border-radius: 6px;
+    margin: 30px 0 18px;
+  }
+  .part-title h2 { color: white; border: none; margin: 0 0 4px; }
+  .part-title p { color: #dbe4ee; margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div class="cover">
+  <h1>El modelo de datos de Residente y Estado Basal</h1>
+  <p class="subtitle">Por qué se llama "Baseline", qué entidades lo forman y una propuesta<br>para nombrarlo en español</p>
+  <div class="meta">
+    ResidApp — documento de arquitectura<br>
+    Preparado para CJ (Product Owner) y para cualquier desarrollador que se incorpore al proyecto<br>
+    Septiembre de 2026
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<h2>Índice</h2>
+<div class="indice">
+<ol>
+  <li>Por qué llamamos "Baseline"</li>
+  <li>Cómo está organizado el modelo: seis bloques funcionales</li>
+  <li>Diagrama general de relaciones</li>
+  <li>Cada bloque explicado, entidad por entidad</li>
+  <li>El ciclo de vida del estado basal: borrador → versión firmada → histórico</li>
+  <li>Parte 2 — Propuesta de renombrado a español</li>
+</ol>
+</div>
+
+<div class="page-break"></div>
+
+<h2>1. Por qué llamamos "Baseline"</h2>
+
+<p>La palabra aparece en el código (clases, tablas, columnas) pero no en el lenguaje con el que hablamos del producto en español, donde siempre decimos "basal" o "estado basal". Hay dos motivos completamente distintos por los que la palabra "Baseline" aparece en el proyecto, y conviene no mezclarlos:</p>
+
+<div class="box verde">
+<strong class="label">1. El "Baseline" clínico — el que importa para este documento.</strong>
+<p>Es la traducción, nunca hecha, de "estado basal" o "valoración basal" del residente: su situación funcional habitual — cómo se mueve, cómo come, si es continente, cómo se asea, cómo está su cognición, cómo se comunica, su conducta, su sueño y las ayudas que usa habitualmente, más el índice de Barthel (una escala clínica estándar de dependencia para las actividades básicas de la vida diaria). Este "estado basal" es la fotografía de referencia contra la que después se comparan los cambios del residente.</p>
+<p>La aplicación se construyó primero como un prototipo en TypeScript, y en ese prototipo la carpeta y las clases de dominio ya se llamaban <code>baseline</code>. Al migrar ese prototipo a .NET, se tradujo la lógica pero se conservó literalmente el nombre de las clases y tablas — de ahí <code>BaselineModels.cs</code>, <code>baseline_drafts</code>, <code>BaselineArea</code>, etc. Lo curioso es que los <em>valores</em> de negocio dentro de esas clases sí que ya están en español desde el principio: el área de basal <code>Movilidad</code> se guarda en la base de datos con el código <code>MOVILIDAD</code>, el motivo de revisión <code>CAMBIO_FUNCIONAL_CONSOLIDADO</code>, etc. Es decir: el negocio siempre habló de "basal" en español; solo el "andamiaje" de código (nombres de clases, tablas y columnas) se quedó en inglés porque nadie lo tradujo al portar el prototipo.</p>
+</div>
+
+<div class="box ambar">
+<strong class="label">2. El "Baseline" documental — no tiene nada que ver con el modelo de datos.</strong>
+<p>En la documentación del proyecto existe además el concepto de "Línea Base Funcional" (a veces abreviado LBF, y con nombres de fichero como <code>LBF-CONNECT-2026-09-06-V1.1</code>). Esto es una práctica de gestión de proyecto: cuando se aprueba una versión del documento de requisitos o de los bocetos de pantalla, se "congela" como referencia para no perder de vista qué se aprobó. Es la acepción de "baseline" que se usa en ingeniería de software en general (línea base de requisitos), y no tiene relación alguna con el residente ni con las tablas de base de datos. Se menciona aquí solo para que, si alguien encuentra la palabra "baseline" en un documento de producto, sepa que puede tratarse de esto y no de la valoración clínica.</p>
+</div>
+
+<p><strong>En resumen:</strong> cuando en este documento (y en el código) aparece "Baseline" referido a tablas o clases, se refiere siempre al primer sentido — la valoración basal del residente. Es un nombre heredado de la traducción literal del prototipo original, no una decisión de diseño tomada para este proyecto en .NET.</p>
+
+<div class="page-break"></div>
+
+<h2>2. Cómo está organizado el modelo: seis bloques funcionales</h2>
+
+<p>La base de datos actual (<code>database\scripts\0001_init_sqlserver.sql</code>) tiene 22 tablas. En vez de leerlas una a una sin orden, conviene verlas agrupadas en seis bloques, cada uno respondiendo a una pregunta distinta:</p>
+
+<table>
+<tr><th>Bloque</th><th>Pregunta que responde</th><th>Tablas</th></tr>
+<tr><td><strong>Identidad y organización</strong></td><td>¿Quién trabaja aquí, en qué centro, y quién es cada residente?</td><td><code>accounts</code>, <code>centers</code>, <code>units</code>, <code>residents</code></td></tr>
+<tr><td><strong>Autorización</strong></td><td>¿Qué puede ver y hacer cada cuenta, con qué perfil, en qué centro/unidad/residente?</td><td><code>profile_scopes</code>, <code>profile_unit_scopes</code>, <code>profile_resident_scopes</code>, <code>profile_permissions</code></td></tr>
+<tr><td><strong>Episodios y ubicación</strong></td><td>¿Desde cuándo está el residente en este centro, y dónde está ahora mismo dentro de él?</td><td><code>resident_center_episodes</code>, <code>resident_location_intervals</code></td></tr>
+<tr><td><strong>Basal — borrador</strong></td><td>¿Qué se está valorando ahora mismo, todavía sin firmar?</td><td><code>baseline_drafts</code>, <code>baseline_draft_areas</code>, <code>baseline_draft_barthel</code>, <code>baseline_draft_barthel_items</code></td></tr>
+<tr><td><strong>Basal — versión firmada</strong></td><td>¿Cuál fue (y es) la valoración basal oficial de cada residente, con quién la firmó y cuándo?</td><td><code>baseline_versions</code>, <code>baseline_version_areas</code>, <code>baseline_version_barthel</code>, <code>baseline_version_barthel_items</code>, <code>resident_current_baselines</code>, <code>baseline_supersessions</code></td></tr>
+<tr><td><strong>Auditoría e idempotencia</strong></td><td>¿Quién hizo qué, cuándo, y cómo evitamos que una petición repetida duplique un cambio?</td><td><code>audit_events</code>, <code>idempotency_operations</code></td></tr>
+</table>
+
+<p class="nota">Nota: <code>BaselineModels.cs</code> (el fichero que motivó la pregunta inicial) no es una de estas tablas — es un modelo de formulario web (MVC) que recoge los datos que llegan desde la pantalla para firmar un borrador o consultar el histórico. Vive en <code>src\ResidApp.Web\Models\</code>, una capa por encima de las tablas.</p>
+
+<div class="page-break"></div>
+
+<h2>3. Diagrama general de relaciones</h2>
+
+<p>Este primer diagrama muestra cómo se conectan los seis bloques entre sí, sin entrar todavía en el detalle de cada tabla:</p>
+
+<svg viewBox="0 0 1000 260" width="100%" height="290">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#374151"/>
+    </marker>
+  </defs>
+  <!-- boxes top row -->
+  <rect x="20" y="20" width="200" height="70" rx="6" fill="#eef4fa" stroke="#0f3d5c" stroke-width="1.5"/>
+  <text x="120" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#0f3d5c">Identidad y</text>
+  <text x="120" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#0f3d5c">organización</text>
+
+  <rect x="280" y="20" width="210" height="70" rx="6" fill="#eef4fa" stroke="#0f3d5c" stroke-width="1.5"/>
+  <text x="385" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#0f3d5c">Basal</text>
+  <text x="385" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#0f3d5c">borrador</text>
+
+  <rect x="540" y="20" width="220" height="70" rx="6" fill="#eef4fa" stroke="#0f3d5c" stroke-width="1.5"/>
+  <text x="650" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#0f3d5c">Basal</text>
+  <text x="650" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#0f3d5c">versión firmada</text>
+
+  <rect x="810" y="20" width="170" height="70" rx="6" fill="#eef4fa" stroke="#0f3d5c" stroke-width="1.5"/>
+  <text x="895" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#0f3d5c">Auditoría e</text>
+  <text x="895" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#0f3d5c">idempotencia</text>
+
+  <!-- boxes bottom row -->
+  <rect x="20" y="170" width="200" height="70" rx="6" fill="#f4faf6" stroke="#14532d" stroke-width="1.5"/>
+  <text x="120" y="200" text-anchor="middle" font-size="13" font-weight="600" fill="#14532d">Autorización</text>
+  <text x="120" y="216" text-anchor="middle" font-size="10.5" fill="#14532d">(perfiles, permisos)</text>
+
+  <rect x="280" y="170" width="200" height="70" rx="6" fill="#f4faf6" stroke="#14532d" stroke-width="1.5"/>
+  <text x="380" y="200" text-anchor="middle" font-size="13" font-weight="600" fill="#14532d">Episodios y</text>
+  <text x="380" y="216" text-anchor="middle" font-size="13" font-weight="600" fill="#14532d">ubicación</text>
+
+  <!-- arrows top row -->
+  <line x1="220" y1="55" x2="278" y2="55" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="249" y="48" text-anchor="middle" font-size="9.5" fill="#374151">al firmar</text>
+  <line x1="490" y1="55" x2="538" y2="55" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="760" y1="55" x2="808" y2="55" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="784" y="48" text-anchor="middle" font-size="9.5" fill="#374151">registra</text>
+
+  <!-- arrows down to bottom row -->
+  <line x1="90" y1="90" x2="90" y2="168" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="150" y1="90" x2="330" y2="168" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow)"/>
+</svg>
+<p class="leyenda-svg">Toda la actividad parte de "Identidad y organización" (quién existe): de ahí cuelgan los permisos de cada cuenta, la ubicación del residente, y el propio ciclo de la valoración basal. La valoración basal nace como borrador editable, se convierte en versión firmada e inmutable, y cada acción relevante queda registrada en auditoría.</p>
+
+<div class="page-break"></div>
+
+<h2>4. Cada bloque explicado, entidad por entidad</h2>
+
+<h3>4.1 Identidad y organización</h3>
+<table class="entidad">
+<tr><th>Tabla</th><th>Qué representa</th></tr>
+<tr><td><code>accounts</code></td><td>Una cuenta de acceso (una persona que entra en la aplicación). No indica por sí sola qué puede hacer — eso lo dan los "ámbitos de perfil" del siguiente bloque.</td></tr>
+<tr><td><code>centers</code></td><td>Una residencia/centro. Es la unidad organizativa de más alto nivel: casi todo lo demás cuelga de un centro.</td></tr>
+<tr><td><code>units</code></td><td>Una unidad dentro de un centro (p. ej. una planta o módulo asistencial). Puede colgar de un edificio/planta, aunque esas entidades (edificios, plantas, habitaciones) todavía no se han portado del prototipo original.</td></tr>
+<tr><td><code>residents</code></td><td>Una persona residente. Guarda su identidad básica y su estado (activo/inactivo), con quién y cuándo se le dio de baja si procede.</td></tr>
+</table>
+
+<h3>4.2 Autorización</h3>
+<p>Este bloque separa dos preguntas que se confunden fácilmente: "¿qué perfil tiene esta cuenta?" y "¿a qué residentes/unidades concretas puede acceder con ese perfil?". Por eso hay cuatro tablas en vez de una:</p>
+<table class="entidad">
+<tr><th>Tabla</th><th>Qué representa</th></tr>
+<tr><td><code>profile_scopes</code></td><td>Que una cuenta tiene un perfil concreto (Enfermería, Medicina, Auxiliar, Familiar, Administración, Dirección Clínica) en un centro. Es el "carné" base.</td></tr>
+<tr><td><code>profile_unit_scopes</code></td><td>Restringe ese carné a unidades concretas del centro (si no se restringe, se entiende que aplica a todo el centro).</td></tr>
+<tr><td><code>profile_resident_scopes</code></td><td>Igual que la anterior pero restringiendo a residentes concretos, por ejemplo para un familiar que solo debe ver a su familiar.</td></tr>
+<tr><td><code>profile_permissions</code></td><td>Qué acciones concretas habilita ese perfil (crear residente, completar basal inicial, reevaluar, leer detalle clínico...).</td></tr>
+</table>
+<p>Estas cuatro tablas comparten una regla poco habitual pero deliberada: <strong>nunca se borra un permiso o un perfil, solo se revoca</strong> (columna <code>revoked_at</code>/<code>status = REVOKED</code>). La base de datos lo impone con disparadores (<em>triggers</em>) que bloquean el <code>DELETE</code> directamente. Esto es clave para poder responder después "¿qué podía ver esta persona el día X?" — algo que en un contexto asistencial hay que poder demostrar.</p>
+
+<h3>4.3 Episodios y ubicación</h3>
+<table class="entidad">
+<tr><th>Tabla</th><th>Qué representa</th></tr>
+<tr><td><code>resident_center_episodes</code></td><td>Un periodo de estancia del residente en un centro (desde cuándo, y hasta cuándo si ya terminó). Como mucho un episodio "abierto" (sin fecha de fin) por residente.</td></tr>
+<tr><td><code>resident_location_intervals</code></td><td>Dónde está el residente dentro del centro en cada momento (unidad, y en el futuro habitación/plaza). También como mucho un intervalo abierto por residente: la ubicación "actual".</td></tr>
+</table>
+<p>Ambas tablas siguen el mismo patrón que la autorización: no se borran filas, solo se "cierran" (se les pone fecha de fin) y se abre una nueva. Así queda un historial completo de por dónde ha pasado el residente, en vez de solo saber dónde está ahora.</p>
+
+<h3>4.4 y 4.5 — Basal (borrador y versión firmada)</h3>
+<p>Este es el bloque central del modelo, y se explica con detalle en la sección 5 porque su lógica (por qué hay dos "copias" del mismo contenido) no se entiende bien tabla por tabla, sino como un flujo completo.</p>
+
+<h3>4.6 Auditoría e idempotencia</h3>
+<table class="entidad">
+<tr><th>Tabla</th><th>Qué representa</th></tr>
+<tr><td><code>audit_events</code></td><td>Un registro de "quién hizo qué, sobre qué recurso, cuándo y con qué perfil activo". Es inmutable (no se puede editar ni borrar) por diseño: es la base para poder auditar el uso de datos clínicos sensibles.</td></tr>
+<tr><td><code>idempotency_operations</code></td><td>Evita que una misma acción (p. ej. "firmar este borrador") se ejecute dos veces si la petición llega repetida por un reintento de red. Cada operación sensible viaja con un identificador único (<code>OperationId</code> — es justo el campo que aparece en <code>BaselineModels.cs</code>) y esta tabla recuerda si esa operación ya se completó.</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2>5. El ciclo de vida del estado basal: borrador → versión firmada → histórico</h2>
+
+<p>La pregunta que de verdad explica el diseño de este bloque es: <strong>¿por qué no hay una sola tabla "basal" con los datos del residente, que se va actualizando?</strong> La respuesta es que una valoración clínica firmada no se puede "editar" después sin dejar rastro — igual que no se tacha una anotación en una historia clínica en papel, se añade una entrada nueva. Por eso el modelo separa claramente dos mundos:</p>
+
+<div class="box">
+<strong class="label">Mundo 1 — el borrador (mutable, de trabajo).</strong>
+<p>Mientras Enfermería o Medicina están rellenando las 9 áreas funcionales y el índice de Barthel, todo vive en <code>baseline_drafts</code> (la cabecera) y sus tablas hijas <code>baseline_draft_areas</code> y <code>baseline_draft_barthel</code>/<code>baseline_draft_barthel_items</code>. Aquí sí se puede corregir, porque todavía no es una valoración oficial. La base de datos solo permite <strong>un borrador activo por residente a la vez</strong> (para no tener dos personas rellenando basales distintos en paralelo sin saberlo), y ese límite está protegido a nivel de base de datos, no solo en el código de la aplicación.</p>
+</div>
+
+<div class="box verde">
+<strong class="label">Mundo 2 — la versión firmada (inmutable, para siempre).</strong>
+<p>Cuando se firma el borrador, su contenido se copia tal cual a <code>baseline_versions</code> y sus tablas hijas <code>baseline_version_areas</code> y <code>baseline_version_barthel</code>/<code>baseline_version_barthel_items</code>. A partir de ahí esas filas no se pueden ni actualizar ni borrar — la base de datos lo impide directamente (disparadores "append-only"). Cada firma añade una versión nueva (<code>version_number</code>), nunca sustituye a la anterior por encima: la anterior queda registrada como histórica.</p>
+</div>
+
+<p>Dos tablas más completan el ciclo:</p>
+<ul>
+  <li><code>resident_current_baselines</code> — un "puntero" con una sola fila por residente que dice cuál es la versión firmada <em>vigente ahora mismo</em>. Sin esta tabla, cada consulta tendría que calcular "la versión con el número más alto", lo cual es más lento y más fácil de hacer mal.</li>
+  <li><code>baseline_supersessions</code> — cuando una versión reemplaza a otra, aquí queda constancia de qué versión sustituyó a cuál y cuándo. Es lo que permite reconstruir la línea temporal completa de basales de un residente, no solo la última.</li>
+</ul>
+
+<svg viewBox="0 0 900 500" width="100%" height="500">
+  <defs>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <rect x="330" y="10" width="220" height="50" rx="6" fill="#eef4fa" stroke="#0f3d5c" stroke-width="1.5"/>
+  <text x="440" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#0f3d5c">residents</text>
+
+  <rect x="300" y="100" width="280" height="55" rx="6" fill="#fff7ed" stroke="#92400e" stroke-width="1.5"/>
+  <text x="440" y="122" text-anchor="middle" font-size="12" font-weight="600" fill="#92400e">baseline_drafts</text>
+  <text x="440" y="138" text-anchor="middle" font-size="10" fill="#92400e">BORRADOR — mutable, uno activo por residente</text>
+
+  <rect x="630" y="90" width="230" height="42" rx="6" fill="#fff7ed" stroke="#92400e" stroke-width="1.2"/>
+  <text x="745" y="115" text-anchor="middle" font-size="10.5" fill="#92400e">baseline_draft_areas (x9 áreas)</text>
+
+  <rect x="630" y="150" width="230" height="42" rx="6" fill="#fff7ed" stroke="#92400e" stroke-width="1.2"/>
+  <text x="745" y="175" text-anchor="middle" font-size="10.5" fill="#92400e">baseline_draft_barthel(+items)</text>
+
+  <rect x="300" y="270" width="280" height="55" rx="6" fill="#f4faf6" stroke="#14532d" stroke-width="1.5"/>
+  <text x="440" y="292" text-anchor="middle" font-size="12" font-weight="600" fill="#14532d">baseline_versions</text>
+  <text x="440" y="308" text-anchor="middle" font-size="10" fill="#14532d">VERSIÓN FIRMADA — inmutable, append-only</text>
+
+  <rect x="630" y="260" width="230" height="42" rx="6" fill="#f4faf6" stroke="#14532d" stroke-width="1.2"/>
+  <text x="745" y="285" text-anchor="middle" font-size="10.5" fill="#14532d">baseline_version_areas</text>
+
+  <rect x="630" y="320" width="230" height="42" rx="6" fill="#f4faf6" stroke="#14532d" stroke-width="1.2"/>
+  <text x="745" y="345" text-anchor="middle" font-size="10.5" fill="#14532d">baseline_version_barthel(+items)</text>
+
+  <rect x="300" y="410" width="280" height="50" rx="6" fill="#eef4fa" stroke="#0f3d5c" stroke-width="1.5"/>
+  <text x="440" y="432" text-anchor="middle" font-size="11" font-weight="600" fill="#0f3d5c">resident_current_baselines</text>
+  <text x="440" y="447" text-anchor="middle" font-size="9.5" fill="#0f3d5c">puntero a la versión vigente</text>
+
+  <rect x="20" y="410" width="240" height="50" rx="6" fill="#f8fafc" stroke="#6b7280" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <text x="140" y="432" text-anchor="middle" font-size="11" font-weight="600" fill="#4b5563">baseline_supersessions</text>
+  <text x="140" y="447" text-anchor="middle" font-size="9.5" fill="#4b5563">historial de reemplazos</text>
+
+  <!-- arrows -->
+  <line x1="440" y1="60" x2="440" y2="98" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow2)"/>
+  <line x1="580" y1="120" x2="628" y2="111" stroke="#374151" stroke-width="1.2" marker-end="url(#arrow2)"/>
+  <line x1="580" y1="140" x2="628" y2="171" stroke="#374151" stroke-width="1.2" marker-end="url(#arrow2)"/>
+
+  <line x1="440" y1="155" x2="440" y2="268" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow2)"/>
+  <text x="455" y="215" font-size="10" fill="#374151">al firmar</text>
+
+  <line x1="580" y1="288" x2="628" y2="281" stroke="#374151" stroke-width="1.2" marker-end="url(#arrow2)"/>
+  <line x1="580" y1="310" x2="628" y2="341" stroke="#374151" stroke-width="1.2" marker-end="url(#arrow2)"/>
+
+  <line x1="440" y1="325" x2="440" y2="408" stroke="#374151" stroke-width="1.5" marker-end="url(#arrow2)"/>
+  <line x1="330" y1="315" x2="200" y2="408" stroke="#374151" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arrow2)"/>
+</svg>
+<p class="leyenda-svg">Flechas continuas: relación directa (clave foránea). Flecha discontinua: <code>baseline_supersessions</code> enlaza dos versiones firmadas entre sí (la anterior y la nueva), no nace directamente del residente.</p>
+
+<div class="part-title">
+<h2>Parte 2 — Propuesta de renombrado a español</h2>
+<p>Tablas y columnas, sin ñ, sin tildes ni diéresis. Es una propuesta de diseño para decidir; no se ha ejecutado ningún cambio en la base de datos ni en el código como parte de este documento.</p>
+</div>
+
+<h3>Convención de nomenclatura</h3>
+<ul>
+  <li><code>snake_case</code> en minúsculas, igual que ahora — no cambia el estilo, solo el idioma.</li>
+  <li>Solo caracteres ASCII: las vocales pierden la tilde (<code>versión</code> → <code>version</code>) y la ñ se sustituye por <code>n</code> o <code>ni</code> según se lea mejor (<code>diseño</code> → <code>diseno</code>; ningún nombre de este esquema usa hoy la ñ, así que no se ha necesitado aplicar esta regla en la práctica).</li>
+  <li>Se reutiliza el mismo criterio que el propio dominio ya usa en sus valores de catálogo, que llevan años en español sin diacríticos: <code>MOVILIDAD</code>, <code>ALIMENTACION</code>, <code>SUENO</code>, <code>REVISION_PROGRAMADA</code>. Este documento extiende ese mismo criterio a los nombres estructurales (tabla/columna), que hasta ahora se habían quedado en inglés.</li>
+  <li>Los <em>valores</em> guardados dentro de las columnas de código (<code>area_code</code>, <code>reason_code</code>, los perfiles, los ítems de Barthel...) ya están en español y no cambian — esta propuesta solo afecta a los nombres de tabla y columna, no al contenido.</li>
+</ul>
+
+<h3>Mapeo de tablas (22)</h3>
+<table>
+<tr><th>Tabla actual</th><th>Propuesta en español</th></tr>
+<tr><td><code>accounts</code></td><td><code>cuentas</code></td></tr>
+<tr><td><code>centers</code></td><td><code>centros</code></td></tr>
+<tr><td><code>units</code></td><td><code>unidades</code></td></tr>
+<tr><td><code>residents</code></td><td><code>residentes</code></td></tr>
+<tr><td><code>profile_scopes</code></td><td><code>ambitos_perfil</code></td></tr>
+<tr><td><code>profile_unit_scopes</code></td><td><code>ambitos_perfil_unidad</code></td></tr>
+<tr><td><code>profile_resident_scopes</code></td><td><code>ambitos_perfil_residente</code></td></tr>
+<tr><td><code>profile_permissions</code></td><td><code>permisos_perfil</code></td></tr>
+<tr><td><code>resident_center_episodes</code></td><td><code>episodios_residente_centro</code></td></tr>
+<tr><td><code>resident_location_intervals</code></td><td><code>intervalos_ubicacion_residente</code></td></tr>
+<tr><td><code>baseline_drafts</code></td><td><code>basales_borrador</code></td></tr>
+<tr><td><code>baseline_draft_areas</code></td><td><code>basales_borrador_areas</code></td></tr>
+<tr><td><code>baseline_draft_barthel</code></td><td><code>basales_borrador_barthel</code></td></tr>
+<tr><td><code>baseline_draft_barthel_items</code></td><td><code>basales_borrador_barthel_items</code></td></tr>
+<tr><td><code>baseline_versions</code></td><td><code>basales_version</code></td></tr>
+<tr><td><code>baseline_version_areas</code></td><td><code>basales_version_areas</code></td></tr>
+<tr><td><code>baseline_version_barthel</code></td><td><code>basales_version_barthel</code></td></tr>
+<tr><td><code>baseline_version_barthel_items</code></td><td><code>basales_version_barthel_items</code></td></tr>
+<tr><td><code>resident_current_baselines</code></td><td><code>basales_vigentes_residente</code></td></tr>
+<tr><td><code>baseline_supersessions</code></td><td><code>basales_sustituciones</code></td></tr>
+<tr><td><code>audit_events</code></td><td><code>eventos_auditoria</code></td></tr>
+<tr><td><code>idempotency_operations</code></td><td><code>operaciones_idempotencia</code></td></tr>
+</table>
+
+<h3>Mapeo de columnas, tabla por tabla</h3>
+
+<div class="tabla-bloque">
+<h4><code>accounts</code> → <code>cuentas</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>external_subject</code></td><td><code>sujeto_externo</code></td></tr>
+<tr><td><code>status</code></td><td><code>estado</code></td></tr>
+<tr><td><code>created_at</code></td><td><code>creado_en</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>centers</code> → <code>centros</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>code</code></td><td><code>codigo</code></td></tr>
+<tr><td><code>display_name</code></td><td><code>nombre_visible</code></td></tr>
+<tr><td><code>status</code></td><td><code>estado</code></td></tr>
+<tr><td><code>created_at</code></td><td><code>creado_en</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>units</code> → <code>unidades</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>building_id</code></td><td><code>edificio_id</code></td></tr>
+<tr><td><code>floor_id</code></td><td><code>planta_id</code></td></tr>
+<tr><td><code>code</code></td><td><code>codigo</code></td></tr>
+<tr><td><code>display_name</code></td><td><code>nombre_visible</code></td></tr>
+<tr><td><code>status</code></td><td><code>estado</code></td></tr>
+<tr><td><code>created_at</code></td><td><code>creado_en</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>residents</code> → <code>residentes</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>display_name</code></td><td><code>nombre_visible</code></td></tr>
+<tr><td><code>birth_date</code></td><td><code>fecha_nacimiento</code></td></tr>
+<tr><td><code>documented_sex_code</code></td><td><code>sexo_documentado_codigo</code></td></tr>
+<tr><td><code>status</code></td><td><code>estado</code></td></tr>
+<tr><td><code>inactivation_reason</code></td><td><code>motivo_inactivacion</code></td></tr>
+<tr><td><code>inactivated_at</code></td><td><code>inactivado_en</code></td></tr>
+<tr><td><code>inactivated_by_account_id</code></td><td><code>inactivado_por_cuenta_id</code></td></tr>
+<tr><td><code>inactivated_by_profile</code></td><td><code>inactivado_por_perfil</code></td></tr>
+<tr><td><code>created_at</code></td><td><code>creado_en</code></td></tr>
+<tr><td><code>created_by_account_id</code></td><td><code>creado_por_cuenta_id</code></td></tr>
+<tr><td><code>created_by_profile</code></td><td><code>creado_por_perfil</code></td></tr>
+</table>
+</div>
+
+<div class="page-break"></div>
+
+<div class="tabla-bloque">
+<h4><code>profile_scopes</code> → <code>ambitos_perfil</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>account_id</code></td><td><code>cuenta_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>profile_code</code></td><td><code>perfil_codigo</code></td></tr>
+<tr><td><code>status</code></td><td><code>estado</code></td></tr>
+<tr><td><code>granted_at</code></td><td><code>concedido_en</code></td></tr>
+<tr><td><code>granted_by_account_id</code></td><td><code>concedido_por_cuenta_id</code></td></tr>
+<tr><td><code>revoked_at</code></td><td><code>revocado_en</code></td></tr>
+<tr><td><code>revoked_by_account_id</code></td><td><code>revocado_por_cuenta_id</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>profile_unit_scopes</code> → <code>ambitos_perfil_unidad</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>profile_scope_id</code></td><td><code>ambito_perfil_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>unit_id</code></td><td><code>unidad_id</code></td></tr>
+<tr><td><code>granted_at</code></td><td><code>concedido_en</code></td></tr>
+<tr><td><code>granted_by_account_id</code></td><td><code>concedido_por_cuenta_id</code></td></tr>
+<tr><td><code>revoked_at</code></td><td><code>revocado_en</code></td></tr>
+<tr><td><code>revoked_by_account_id</code></td><td><code>revocado_por_cuenta_id</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>profile_resident_scopes</code> → <code>ambitos_perfil_residente</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>profile_scope_id</code></td><td><code>ambito_perfil_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>granted_at</code></td><td><code>concedido_en</code></td></tr>
+<tr><td><code>granted_by_account_id</code></td><td><code>concedido_por_cuenta_id</code></td></tr>
+<tr><td><code>revoked_at</code></td><td><code>revocado_en</code></td></tr>
+<tr><td><code>revoked_by_account_id</code></td><td><code>revocado_por_cuenta_id</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>profile_permissions</code> → <code>permisos_perfil</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>profile_scope_id</code></td><td><code>ambito_perfil_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>permission_code</code></td><td><code>permiso_codigo</code></td></tr>
+<tr><td><code>granted_at</code></td><td><code>concedido_en</code></td></tr>
+<tr><td><code>granted_by_account_id</code></td><td><code>concedido_por_cuenta_id</code></td></tr>
+<tr><td><code>revoked_at</code></td><td><code>revocado_en</code></td></tr>
+<tr><td><code>revoked_by_account_id</code></td><td><code>revocado_por_cuenta_id</code></td></tr>
+</table>
+</div>
+
+<div class="page-break"></div>
+
+<div class="tabla-bloque">
+<h4><code>resident_center_episodes</code> → <code>episodios_residente_centro</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>internal_reference</code></td><td><code>referencia_interna</code></td></tr>
+<tr><td><code>valid_from</code></td><td><code>vigente_desde</code></td></tr>
+<tr><td><code>valid_until</code></td><td><code>vigente_hasta</code></td></tr>
+<tr><td><code>created_at</code></td><td><code>creado_en</code></td></tr>
+<tr><td><code>created_by_account_id</code></td><td><code>creado_por_cuenta_id</code></td></tr>
+<tr><td><code>created_by_profile</code></td><td><code>creado_por_perfil</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>resident_location_intervals</code> → <code>intervalos_ubicacion_residente</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>episode_id</code></td><td><code>episodio_id</code></td></tr>
+<tr><td><code>unit_id</code></td><td><code>unidad_id</code></td></tr>
+<tr><td><code>building_id</code></td><td><code>edificio_id</code></td></tr>
+<tr><td><code>floor_id</code></td><td><code>planta_id</code></td></tr>
+<tr><td><code>room_id</code></td><td><code>habitacion_id</code></td></tr>
+<tr><td><code>place_id</code></td><td><code>plaza_id</code></td></tr>
+<tr><td><code>valid_from</code></td><td><code>vigente_desde</code></td></tr>
+<tr><td><code>valid_until</code></td><td><code>vigente_hasta</code></td></tr>
+<tr><td><code>changed_at</code></td><td><code>modificado_en</code></td></tr>
+<tr><td><code>changed_by_account_id</code></td><td><code>modificado_por_cuenta_id</code></td></tr>
+<tr><td><code>changed_by_profile</code></td><td><code>modificado_por_perfil</code></td></tr>
+</table>
+</div>
+
+<div class="page-break"></div>
+
+<div class="tabla-bloque">
+<h4><code>baseline_drafts</code> → <code>basales_borrador</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>created_in_unit_id</code></td><td><code>creado_en_unidad_id</code></td></tr>
+<tr><td><code>status</code></td><td><code>estado</code></td></tr>
+<tr><td><code>reason_code</code></td><td><code>motivo_codigo</code></td></tr>
+<tr><td><code>common_information_source_code</code></td><td><code>fuente_informacion_comun_codigo</code></td></tr>
+<tr><td><code>common_information_source_other_text</code></td><td><code>fuente_informacion_comun_otro_texto</code></td></tr>
+<tr><td><code>common_information_date</code></td><td><code>fecha_informacion_comun</code></td></tr>
+<tr><td><code>created_by_account_id</code></td><td><code>creado_por_cuenta_id</code></td></tr>
+<tr><td><code>created_by_profile</code></td><td><code>creado_por_perfil</code></td></tr>
+<tr><td><code>created_at</code></td><td><code>creado_en</code></td></tr>
+<tr><td><code>updated_by_account_id</code></td><td><code>actualizado_por_cuenta_id</code></td></tr>
+<tr><td><code>updated_by_profile</code></td><td><code>actualizado_por_perfil</code></td></tr>
+<tr><td><code>updated_at</code></td><td><code>actualizado_en</code></td></tr>
+<tr><td><code>draft_revision</code></td><td><code>revision_borrador</code></td></tr>
+<tr><td><code>cancelled_at</code></td><td><code>cancelado_en</code></td></tr>
+<tr><td><code>cancelled_by_account_id</code></td><td><code>cancelado_por_cuenta_id</code></td></tr>
+<tr><td><code>cancelled_by_profile</code></td><td><code>cancelado_por_perfil</code></td></tr>
+<tr><td><code>cancellation_reason</code></td><td><code>motivo_cancelacion</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>baseline_draft_areas</code> → <code>basales_borrador_areas</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>draft_id</code></td><td><code>borrador_id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>area_code</code></td><td><code>area_codigo</code></td></tr>
+<tr><td><code>catalog_version_code</code></td><td><code>catalogo_version_codigo</code></td></tr>
+<tr><td><code>answer_payload</code></td><td><code>respuestas_json</code></td></tr>
+<tr><td><code>observation</code></td><td><code>observacion</code></td></tr>
+<tr><td><code>information_source_override_code</code></td><td><code>fuente_informacion_sustituta_codigo</code></td></tr>
+<tr><td><code>information_source_override_other_text</code></td><td><code>fuente_informacion_sustituta_otro_texto</code></td></tr>
+<tr><td><code>information_date_override</code></td><td><code>fecha_informacion_sustituta</code></td></tr>
+<tr><td><code>recorded_by_account_id</code></td><td><code>registrado_por_cuenta_id</code></td></tr>
+<tr><td><code>recorded_by_profile</code></td><td><code>registrado_por_perfil</code></td></tr>
+<tr><td><code>recorded_at</code></td><td><code>registrado_en</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>baseline_draft_barthel</code> → <code>basales_borrador_barthel</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>draft_id</code></td><td><code>borrador_id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>instrument_version_code</code></td><td><code>instrumento_version_codigo</code></td></tr>
+<tr><td><code>assessment_date</code></td><td><code>fecha_valoracion</code></td></tr>
+<tr><td><code>total_score</code></td><td><code>puntuacion_total</code></td></tr>
+<tr><td><code>recorded_by_account_id</code></td><td><code>registrado_por_cuenta_id</code></td></tr>
+<tr><td><code>recorded_by_profile</code></td><td><code>registrado_por_perfil</code></td></tr>
+<tr><td><code>recorded_at</code></td><td><code>registrado_en</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>baseline_draft_barthel_items</code> → <code>basales_borrador_barthel_items</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>barthel_id</code></td><td><code>barthel_id</code></td></tr>
+<tr><td><code>draft_id</code></td><td><code>borrador_id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>instrument_version_code</code></td><td><code>instrumento_version_codigo</code></td></tr>
+<tr><td><code>item_code</code></td><td><code>item_codigo</code></td></tr>
+<tr><td><code>selected_option_code</code></td><td><code>opcion_seleccionada_codigo</code></td></tr>
+<tr><td><code>awarded_score</code></td><td><code>puntuacion_otorgada</code></td></tr>
+</table>
+</div>
+
+<div class="page-break"></div>
+
+<div class="tabla-bloque">
+<h4><code>baseline_versions</code> → <code>basales_version</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>source_draft_id</code></td><td><code>borrador_origen_id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>created_in_unit_id</code></td><td><code>creado_en_unidad_id</code></td></tr>
+<tr><td><code>version_number</code></td><td><code>numero_version</code></td></tr>
+<tr><td><code>reason_code</code></td><td><code>motivo_codigo</code></td></tr>
+<tr><td><code>common_information_source_code</code></td><td><code>fuente_informacion_comun_codigo</code></td></tr>
+<tr><td><code>common_information_source_other_text</code></td><td><code>fuente_informacion_comun_otro_texto</code></td></tr>
+<tr><td><code>common_information_date</code></td><td><code>fecha_informacion_comun</code></td></tr>
+<tr><td><code>created_by_account_id</code></td><td><code>creado_por_cuenta_id</code></td></tr>
+<tr><td><code>created_by_profile</code></td><td><code>creado_por_perfil</code></td></tr>
+<tr><td><code>created_at</code></td><td><code>creado_en</code></td></tr>
+<tr><td><code>signed_by_account_id</code></td><td><code>firmado_por_cuenta_id</code></td></tr>
+<tr><td><code>signed_by_profile</code></td><td><code>firmado_por_perfil</code></td></tr>
+<tr><td><code>signed_at</code></td><td><code>firmado_en</code></td></tr>
+<tr><td><code>valid_from</code></td><td><code>vigente_desde</code></td></tr>
+<tr><td><code>activation_operation_id</code></td><td><code>operacion_activacion_id</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>baseline_version_areas</code> → <code>basales_version_areas</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>baseline_version_id</code></td><td><code>version_basal_id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>area_code</code></td><td><code>area_codigo</code></td></tr>
+<tr><td><code>catalog_version_code</code></td><td><code>catalogo_version_codigo</code></td></tr>
+<tr><td><code>answer_payload</code></td><td><code>respuestas_json</code></td></tr>
+<tr><td><code>observation</code></td><td><code>observacion</code></td></tr>
+<tr><td><code>information_source_override_code</code></td><td><code>fuente_informacion_sustituta_codigo</code></td></tr>
+<tr><td><code>information_source_override_other_text</code></td><td><code>fuente_informacion_sustituta_otro_texto</code></td></tr>
+<tr><td><code>information_date_override</code></td><td><code>fecha_informacion_sustituta</code></td></tr>
+<tr><td><code>recorded_by_account_id</code></td><td><code>registrado_por_cuenta_id</code></td></tr>
+<tr><td><code>recorded_by_profile</code></td><td><code>registrado_por_perfil</code></td></tr>
+<tr><td><code>recorded_at</code></td><td><code>registrado_en</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>baseline_version_barthel</code> → <code>basales_version_barthel</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>baseline_version_id</code></td><td><code>version_basal_id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>instrument_version_code</code></td><td><code>instrumento_version_codigo</code></td></tr>
+<tr><td><code>assessment_date</code></td><td><code>fecha_valoracion</code></td></tr>
+<tr><td><code>total_score</code></td><td><code>puntuacion_total</code></td></tr>
+<tr><td><code>recorded_by_account_id</code></td><td><code>registrado_por_cuenta_id</code></td></tr>
+<tr><td><code>recorded_by_profile</code></td><td><code>registrado_por_perfil</code></td></tr>
+<tr><td><code>recorded_at</code></td><td><code>registrado_en</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>baseline_version_barthel_items</code> → <code>basales_version_barthel_items</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>barthel_id</code></td><td><code>barthel_id</code></td></tr>
+<tr><td><code>baseline_version_id</code></td><td><code>version_basal_id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>instrument_version_code</code></td><td><code>instrumento_version_codigo</code></td></tr>
+<tr><td><code>item_code</code></td><td><code>item_codigo</code></td></tr>
+<tr><td><code>selected_option_code</code></td><td><code>opcion_seleccionada_codigo</code></td></tr>
+<tr><td><code>awarded_score</code></td><td><code>puntuacion_otorgada</code></td></tr>
+</table>
+</div>
+
+<div class="page-break"></div>
+
+<div class="tabla-bloque">
+<h4><code>resident_current_baselines</code> → <code>basales_vigentes_residente</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>baseline_version_id</code></td><td><code>version_basal_id</code></td></tr>
+<tr><td><code>activated_at</code></td><td><code>activado_en</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>baseline_supersessions</code> → <code>basales_sustituciones</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>previous_version_id</code></td><td><code>version_anterior_id</code></td></tr>
+<tr><td><code>new_version_id</code></td><td><code>version_nueva_id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>superseded_at</code></td><td><code>sustituido_en</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>audit_events</code> → <code>eventos_auditoria</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>account_id</code></td><td><code>cuenta_id</code></td></tr>
+<tr><td><code>active_profile</code></td><td><code>perfil_activo</code></td></tr>
+<tr><td><code>center_id</code></td><td><code>centro_id</code></td></tr>
+<tr><td><code>unit_id</code></td><td><code>unidad_id</code></td></tr>
+<tr><td><code>resident_id</code></td><td><code>residente_id</code></td></tr>
+<tr><td><code>resource_type</code></td><td><code>tipo_recurso</code></td></tr>
+<tr><td><code>resource_id</code></td><td><code>recurso_id</code></td></tr>
+<tr><td><code>action_code</code></td><td><code>accion_codigo</code></td></tr>
+<tr><td><code>purpose_code</code></td><td><code>proposito_codigo</code></td></tr>
+<tr><td><code>occurred_at</code></td><td><code>ocurrido_en</code></td></tr>
+</table>
+</div>
+
+<div class="tabla-bloque">
+<h4><code>idempotency_operations</code> → <code>operaciones_idempotencia</code></h4>
+<table><tr><th>Actual</th><th>Propuesta</th></tr>
+<tr><td><code>id</code></td><td><code>id</code></td></tr>
+<tr><td><code>account_id</code></td><td><code>cuenta_id</code></td></tr>
+<tr><td><code>action_code</code></td><td><code>accion_codigo</code></td></tr>
+<tr><td><code>operation_id</code></td><td><code>operacion_id</code></td></tr>
+<tr><td><code>request_hash</code></td><td><code>hash_solicitud</code></td></tr>
+<tr><td><code>status</code></td><td><code>estado</code></td></tr>
+<tr><td><code>result_resource_id</code></td><td><code>recurso_resultado_id</code></td></tr>
+<tr><td><code>result_json</code></td><td><code>resultado_json</code></td></tr>
+<tr><td><code>created_at</code></td><td><code>creado_en</code></td></tr>
+<tr><td><code>completed_at</code></td><td><code>completado_en</code></td></tr>
+</table>
+</div>
+
+<h3>Qué haría falta para aplicar esta propuesta</h3>
+<div class="box ambar">
+<p>Como el proyecto no usa Entity Framework Core sino Dapper con SQL directo (un único script <code>database\scripts\0001_init_sqlserver.sql</code>, sin carpeta de migraciones EF), aplicar este renombrado no sería "generar una migración" en el sentido de Entity Framework, sino:</p>
+<ol>
+  <li>Escribir un nuevo script T-SQL que renombre tablas y columnas (con <code>sp_rename</code> si hay que conservar datos, o recreando el esquema si no los hay).</li>
+  <li>Renombrar en paralelo las clases, propiedades y consultas SQL equivalentes en <code>ResidApp.Domain.Baseline</code>, <code>ResidApp.Application</code>, <code>src\ResidApp.Infrastructure\Persistence\SqlBaselineRepository.cs</code> y las vistas <code>Views\Baseline\*</code> — del orden de 30 archivos, a día de hoy con pruebas en verde sobre los nombres actuales.</li>
+</ol>
+<p>Es, por tanto, un cambio amplio que conviene planificar y aprobar como un trabajo aparte, una vez que esta propuesta de nombres esté validada.</p>
+</div>
+
+</body>
+</html>
