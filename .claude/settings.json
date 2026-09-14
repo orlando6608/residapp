@@ -46,7 +46,9 @@
       "Bash(awk '/=> Send data/{flag=1; next} /^\\(<=|\\\\* \\)/{flag=0} flag' /tmp/trace.txt)",
       "Bash(taskkill //F //IM dotnet.exe //FI \"WINDOWTITLE eq*\")",
       "Bash(netstat -ano)",
-      "Bash(taskkill //F //PID 21032)"
+      "Bash(taskkill //F //PID 21032)",
+      "Bash(git rev-list *)",
+      "Bash(git fetch *)"
     ]
   }
 }
