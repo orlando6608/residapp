@@ -1,3 +1,4 @@
+@model ResidApp.Web.Models.EnfermeriaInicioViewModel
 @{
     ViewData["Title"] = "Inicio de Enfermería";
 }
@@ -21,20 +22,20 @@
         </a>
     </div>
     <div class="col-12 col-md-4">
-        <div class="card h-100 text-muted">
+        <a asp-action="Prioritarios" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Bandeja prioritaria</h2>
-                <p class="card-text mb-0">Próximamente: cambios prioritarios enviados por Auxiliar.</p>
+                <p class="card-text mb-0"><span class="badge text-bg-danger">@Model.Prioritarios</span> cambio(s) prioritario(s) pendiente(s).</p>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-12 col-md-4">
-        <div class="card h-100 text-muted">
+        <a asp-action="Ordinarios" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Cambios ordinarios</h2>
-                <p class="card-text mb-0">Próximamente: cambios ordinarios enviados por Auxiliar.</p>
+                <p class="card-text mb-0"><span class="badge text-bg-secondary">@Model.Ordinarios</span> cambio(s) ordinario(s) pendiente(s).</p>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-12 col-md-4">
         <div class="card h-100 text-muted">

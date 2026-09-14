@@ -50,5 +50,5 @@ CREATE INDEX IX_ec_resident_time ON dbo.eventos_clinicos (centro_id, residente_i
 GO
 
 CREATE TRIGGER dbo.TR_ec_immutable ON dbo.eventos_clinicos INSTEAD OF UPDATE, DELETE AS
-    THROW 50302, 'CLINICAL_EVENT_IMMUTABLE', 1;
+    THROW 50303, 'CLINICAL_EVENT_IMMUTABLE', 1;
 GO

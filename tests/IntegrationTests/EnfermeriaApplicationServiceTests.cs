@@ -24,12 +24,15 @@ public class EnfermeriaApplicationServiceTests
         var session = new FixedSessionIdentityProvider(externalSubject);
 
         var events = new SqlClinicalEventRepository(TestDatabase.ConnectionFactory);
+        var changeInbox = new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory);
         var listScopeResidents = new ListScopeResidents(scopes, directory, session);
         return new EnfermeriaApplicationService(
             listScopeResidents,
             new FindScopeResident(listScopeResidents),
             new ReadCurrentBaseline(evidenceProvider, session, baselines),
-            new RegisterClinicalEvent(scopes, directory, session, events));
+            new RegisterClinicalEvent(scopes, directory, session, events),
+            new ListPendingChanges(scopes, changeInbox, session),
+            new FindPendingChangeDetail(scopes, changeInbox, session));
     }
 
     [Fact]
@@ -155,6 +158,57 @@ public class EnfermeriaApplicationServiceTests
 
         Assert.False(result.Ok);
         Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task ListPendingChangesAsync_ConAuxiliarProfile_ReturnsAccessDenied()
+    {
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Auxiliar);
+        var service = BuildService(seed.ExternalSubject);
+
+        var result = await service.ListPendingChangesAsync(new ListPendingChangesCommand(
+            seed.ProfileScopeId, seed.CenterId, DailyChangeClassification.Ordinario));
+
+        Assert.False(result.Ok);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task ListPendingChangesAsync_ConEnfermeriaProfile_DevuelveElCambioDeSuUnidad()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var auxiliarSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, adminSeed.CenterId, adminSeed.UnitId);
+        var enfermeriaSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, adminSeed.CenterId, adminSeed.UnitId);
+        var residents = new SqlResidentRepository(TestDatabase.ConnectionFactory);
+        var resident = await residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Bandeja Servicio Aplicación", new DateOnly(1957, 7, 17), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+        var closures = new SqlDailyClosureRepository(TestDatabase.ConnectionFactory);
+        await closures.RegisterChangeAsync(new RegisterDailyChangeInput(
+            auxiliarSeed.AccountId, adminSeed.CenterId, adminSeed.UnitId, resident.ResidentId,
+            [new DailyChangeAreaInput(DailyChangeAreaCode.AnimoConducta, [], "Más apagado de lo habitual")],
+            null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid()));
+        var service = BuildService(enfermeriaSeed.ExternalSubject);
+
+        var result = await service.ListPendingChangesAsync(new ListPendingChangesCommand(
+            enfermeriaSeed.ProfileScopeId, enfermeriaSeed.CenterId, DailyChangeClassification.Ordinario));
+
+        Assert.True(result.Ok);
+        Assert.Single(result.Value!);
+        Assert.Equal(resident.ResidentId, result.Value![0].ResidentId);
+    }
+
+    [Fact]
+    public async Task FindPendingChangeDetailAsync_FueraDeAmbito_ReturnsNullWithoutError()
+    {
+        var enfermeriaSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+        var service = BuildService(enfermeriaSeed.ExternalSubject);
+
+        var result = await service.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(
+            enfermeriaSeed.ProfileScopeId, enfermeriaSeed.CenterId, Guid.NewGuid()));
+
+        Assert.True(result.Ok);
+        Assert.Null(result.Value);
     }
 }
 

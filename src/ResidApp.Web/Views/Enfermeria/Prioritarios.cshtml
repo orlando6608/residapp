@@ -1,0 +1,60 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model IReadOnlyList<PendingChangeSummary>
+@{
+    ViewData["Title"] = "Bandeja prioritaria";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Bandeja prioritaria</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Bandeja prioritaria</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="alert alert-info">
+    La clasificación inicial organiza la atención; no constituye un diagnóstico.
+</div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No hay cambios prioritarios pendientes.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Residente</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Motivo inicial</th>
+                    <th scope="col">Aviso directo documentado</th>
+                    <th scope="col">Antigüedad</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.ResidentDisplayName</td>
+                        <td>@(item.UnitName ?? "Sin unidad")</td>
+                        <td>@(item.PriorityReason is null ? "—" : DailyChangePriorityReasonDisplay.Label(item.PriorityReason.Value))</td>
+                        <td>@(item.DirectNoticeNotes ?? "—")</td>
+                        <td>@ElapsedTimeDisplay.Since(item.OccurredAt)</td>
+                        <td><span class="badge text-bg-danger">Pendiente</span></td>
+                        <td>
+                            <a asp-action="DetalleCambio" asp-route-cierreId="@item.ClosureId" class="btn btn-outline-primary btn-sm">Ver detalle</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

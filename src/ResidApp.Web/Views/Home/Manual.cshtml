@@ -10,9 +10,9 @@
     ni sustituye protocolos clínicos.</strong> La app está en desarrollo: hoy funcionan de principio a fin
     el vertical <strong>Residente / Basal</strong> (incluida la creación, autoría de las nueve áreas, el
     índice de Barthel y la firma del estado basal) y el vertical <strong>Auxiliar</strong>; del vertical
-    <strong>Enfermería</strong> funciona la navegación, la autoría completa del basal y el registro de un
-    evento propio, pero todavía no las bandejas de trabajo ni la valoración de eventos. El resto de módulos
-    aparece descrito al final
+    <strong>Enfermería</strong> funciona la navegación, la autoría completa del basal, el registro de un
+    evento propio y las bandejas de cambios ordinarios y prioritarios que Auxiliar genera, pero todavía no
+    la valoración de esos eventos. El resto de módulos aparece descrito al final
     como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
     inicio de sesión con usuario y contraseña definitivo).
 </div>
@@ -28,6 +28,7 @@
             <a class="list-group-item list-group-item-action" href="#mis-residentes-auxiliar">Mis residentes (Auxiliar)</a>
             <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#registrar-evento-enfermeria">Registrar evento (Enfermería)</a>
+            <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas de cambios (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
         </div>
@@ -146,8 +147,7 @@
         Al abrir un residente ves su identidad, su unidad, el resumen del basal vigente y el acceso para
         crear un borrador de basal o iniciar una reevaluación (ver "Crear, completar y firmar el estado
         basal") y para registrar un evento propio (ver siguiente sección). Todavía no está disponible desde
-        aquí que un segundo profesional aporte a un borrador ajeno; tampoco existen aún las bandejas de
-        trabajo (ver "Próximamente").
+        aquí que un segundo profesional aporte a un borrador ajeno.
     </p>
 </section>
 
@@ -163,8 +163,30 @@
     </p>
     <p class="mb-0">
         La observación queda registrada de forma permanente y no se puede editar después. Por ahora el
-        evento queda solo guardado, pendiente de valoración: la bandeja de trabajo y la pantalla de
-        valoración que lo continuarían todavía no están disponibles (ver "Próximamente").
+        evento queda solo guardado, pendiente de valoración: todavía no aparece en ninguna bandeja (ni
+        siquiera en las de la siguiente sección, que por ahora solo muestran lo que registra Auxiliar) ni
+        tiene pantalla de valoración propia (ver "Próximamente").
+    </p>
+</section>
+
+<section id="bandejas-enfermeria" class="mb-4">
+    <h2 class="h5">
+        Bandejas de cambios
+        <span class="badge text-bg-secondary align-middle">Perfil: Enfermería</span>
+    </h2>
+    <p>
+        Desde Inicio (o directamente) puedes abrir la <strong>bandeja prioritaria</strong> y la de
+        <strong>cambios ordinarios</strong>: los cambios que Auxiliar registra sobre residentes de tu
+        unidad al cerrar el registro cotidiano ("Registrar cambio"), compartidos por todo el equipo de
+        Enfermería de esa unidad. Cada fila muestra el residente, la unidad, el área observada (o el
+        motivo inicial y el aviso directo documentado en la prioritaria), quién lo registró, cuándo y su
+        antigüedad, ordenados siempre de más antiguo a más reciente.
+    </p>
+    <p class="mb-0">
+        Al abrir el detalle de un cambio ves la observación original completa (inmutable), la temperatura
+        si se registró, y el basal vigente resumido del residente. Empezar la valoración y desplegar la
+        línea temporal todavía no están disponibles desde aquí (ver "Próximamente"); por ahora, un cambio
+        recibido queda siempre en estado "Pendiente".
     </p>
 </section>
 
@@ -204,7 +226,7 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Bandejas, valoración de eventos, seguimiento y escalado (Enfermería y Medicina).</li>
+        <li>Valoración de eventos, seguimiento y escalado a Medicina (Enfermería y Medicina); las bandejas de cambios ordinarios/prioritarios ya existen, pero solo muestran lectura, sin valorar.</li>
         <li>Derivación a Urgencias con informe firmado en PDF.</li>
         <li>Publicaciones para familias y su aprobación.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>

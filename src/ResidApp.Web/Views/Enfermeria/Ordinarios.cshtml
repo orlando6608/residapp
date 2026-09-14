@@ -1,0 +1,58 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model IReadOnlyList<PendingChangeSummary>
+@{
+    ViewData["Title"] = "Bandeja de cambios ordinarios";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cambios ordinarios</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Bandeja de cambios ordinarios</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No hay cambios ordinarios pendientes.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Residente</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Área observada</th>
+                    <th scope="col">Autor</th>
+                    <th scope="col">Fecha/hora</th>
+                    <th scope="col">Antigüedad</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.ResidentDisplayName</td>
+                        <td>@(item.UnitName ?? "Sin unidad")</td>
+                        <td>@string.Join(", ", item.Areas.Select(DailyChangeAreaDisplay.Label))</td>
+                        <td>@SystemProfileDisplay.Label(item.AuthorProfile)</td>
+                        <td>@item.OccurredAt.ToLocalTime().ToString("g")</td>
+                        <td>@ElapsedTimeDisplay.Since(item.OccurredAt)</td>
+                        <td><span class="badge text-bg-secondary">Pendiente</span></td>
+                        <td>
+                            <a asp-action="DetalleCambio" asp-route-cierreId="@item.ClosureId" class="btn btn-outline-primary btn-sm">Ver detalle</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

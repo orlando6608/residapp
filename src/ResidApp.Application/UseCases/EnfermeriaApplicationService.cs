@@ -10,7 +10,7 @@ namespace ResidApp.Application.UseCases;
 /// </summary>
 public sealed class EnfermeriaApplicationService(
     ListScopeResidents listScopeResidents, FindScopeResident findScopeResident, ReadCurrentBaseline readCurrentBaseline,
-    RegisterClinicalEvent registerClinicalEvent)
+    RegisterClinicalEvent registerClinicalEvent, ListPendingChanges listPendingChanges, FindPendingChangeDetail findPendingChangeDetail)
 {
     public Task<ApplicationResult<IReadOnlyList<ScopeResidentSummary>>> ListScopeResidentsAsync(
         ListScopeResidentsCommand command, CancellationToken ct = default) =>
@@ -27,4 +27,12 @@ public sealed class EnfermeriaApplicationService(
     public Task<ApplicationResult<ClinicalEventResult>> RegisterClinicalEventAsync(
         RegisterClinicalEventCommand command, CancellationToken ct = default) =>
         registerClinicalEvent.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<IReadOnlyList<PendingChangeSummary>>> ListPendingChangesAsync(
+        ListPendingChangesCommand command, CancellationToken ct = default) =>
+        listPendingChanges.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<PendingChangeDetail?>> FindPendingChangeDetailAsync(
+        FindPendingChangeDetailCommand command, CancellationToken ct = default) =>
+        findPendingChangeDetail.ExecuteAsync(command, ct);
 }
