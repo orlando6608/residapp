@@ -29,7 +29,12 @@
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} - %{content_type}\\\\n\" http://localhost:5299/images/logo-maskable.svg)",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5299/icons/icon.svg)",
       "Bash(taskkill //F //IM dotnet.exe)",
-      "Read(//c/Users/logik/**)"
+      "Read(//c/Users/logik/**)",
+      "Bash(sqlcmd -?)",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -C -Q \"SELECT \\(SELECT COUNT\\(*\\) FROM dbo.accounts\\) AS cuentas, \\(SELECT COUNT\\(*\\) FROM dbo.residents\\) AS residentes, \\(SELECT COUNT\\(*\\) FROM dbo.baseline_versions\\) AS basales_firmados;\")",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -C -I -i database/scripts/0002_renombrado_espanol_sqlserver.sql)",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -C -Q \"SELECT name FROM sys.tables ORDER BY name;\")",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -C -Q \"SELECT \\(SELECT COUNT\\(*\\) FROM sys.triggers\\) AS triggers, \\(SELECT COUNT\\(*\\) FROM sys.check_constraints\\) AS checks, \\(SELECT COUNT\\(*\\) FROM sys.indexes WHERE is_hypothetical=0 AND type>0\\) AS indexes;\")"
     ]
   }
 }
