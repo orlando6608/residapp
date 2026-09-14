@@ -8,6 +8,7 @@ using ResidApp.Application.Authorization;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Baseline;
 using ResidApp.Domain.Baseline.Answers;
+using ResidApp.Domain.Baseline.Catalogs;
 using ResidApp.Shared;
 
 namespace ResidApp.Infrastructure.Persistence;
@@ -171,7 +172,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
                  WHERE id = @DraftId AND estado = 'ACTIVE' AND revision_borrador = @ExpectedDraftRevision
                 """, new
             {
-                input.AccountId.Value, ActiveProfile = input.ActiveProfile.ToCode(), OccurredAt = occurredAt,
+                AccountId = input.AccountId.Value, ActiveProfile = input.ActiveProfile.ToCode(), OccurredAt = occurredAt,
                 DraftId = draft.Id, input.ExpectedDraftRevision,
             }, transaction, cancellationToken: ct));
             if (closedRows != 1)
@@ -197,7 +198,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
                 """, new
             {
                 VersionId = versionId.Value, ResultJson = resultJson, OccurredAt = occurredAt,
-                input.AccountId.Value, input.OperationId, RequestHash = requestHash,
+                AccountId = input.AccountId.Value, input.OperationId, RequestHash = requestHash,
             }, transaction, cancellationToken: ct));
 
             transaction.Commit();
@@ -307,7 +308,8 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             var headers = (await connection.QueryAsync<AuditedHeaderRow>(
                 new CommandDefinition(sql, parameters, transaction, cancellationToken: ct)))
                 .Select(row => new AuditedBaselineHeader(
-                    BaselineVersionId.From(row.Id), row.VersionNumber, EnumCode.ParseCode<BaselineReason>(row.ReasonCode), row.SignedAt))
+                    BaselineVersionId.From(row.Id), row.VersionNumber, EnumCode.ParseCode<BaselineReason>(row.ReasonCode),
+                    new DateTimeOffset(row.SignedAt, TimeSpan.Zero)))
                 .ToList();
 
             var resultJson = JsonSerializer.Serialize(headers, ResidAppJson.Options);
@@ -374,8 +376,321 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
 
         return new CurrentBaselineSummary(
             BaselineVersionId.From(version.Id), version.VersionNumber, EnumCode.ParseCode<BaselineReason>(version.ReasonCode),
-            version.SignedAt, areas, barthelTotal);
+            new DateTimeOffset(version.SignedAt, TimeSpan.Zero), areas, barthelTotal);
     }
+
+    /// <summary>Traduce ENF-19/ENF-20 "crear borrador": comprueba primero, en aplicación, que no exista ya
+    /// un borrador activo para el residente (UX_bd_active es la defensa en profundidad si esta
+    /// comprobación se saltara) e inserta el borrador con los campos comunes de versión ya completos.</summary>
+    public async Task<CreateBaselineDraftResult> CreateDraftAsync(CreateBaselineDraftInput input, CancellationToken ct = default)
+    {
+        var requestHash = CreateDraftRequestHash.Of(input);
+        using var connection = await connections.OpenAsync(ct);
+
+        var previous = await FindCreateDraftIdempotencyAsync(connection, null, input.AccountId.Value, input.OperationId, requestHash, ct);
+        if (previous is not null)
+        {
+            return previous;
+        }
+
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        try
+        {
+            var alreadyActive = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition("""
+                SELECT id FROM dbo.basales_borrador WHERE residente_id = @ResidentId AND centro_id = @CenterId AND estado = 'ACTIVE'
+                """, new { ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value }, transaction, cancellationToken: ct));
+            if (alreadyActive is not null)
+            {
+                throw new DomainValidationException("BASELINE_DRAFT_ALREADY_ACTIVE");
+            }
+
+            var occurredAt = DateTimeOffset.UtcNow;
+            var draftId = BaselineDraftId.New();
+            var result = new CreateBaselineDraftResult(draftId, 1);
+
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
+                VALUES (@Id, @AccountId, 'BASELINE_DRAFT_CREATE', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
+                """, new
+            {
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+
+            var activeProfileCode = input.ActiveProfile.ToCode();
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.basales_borrador
+                    (id, residente_id, centro_id, creado_en_unidad_id, estado, motivo_codigo, fuente_informacion_comun_codigo,
+                     fuente_informacion_comun_otro_texto, fecha_informacion_comun, creado_por_cuenta_id, creado_por_perfil, creado_en,
+                     actualizado_por_cuenta_id, actualizado_por_perfil, actualizado_en, revision_borrador)
+                VALUES (@DraftId, @ResidentId, @CenterId, @UnitId, 'ACTIVE', @ReasonCode, @SourceCode,
+                     @SourceOtherText, @InformationDate, @AccountId, @ActiveProfile, @OccurredAt,
+                     @AccountId, @ActiveProfile, @OccurredAt, 1)
+                """, new
+            {
+                DraftId = draftId.Value, ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value, UnitId = input.UnitId.Value,
+                ReasonCode = input.ReasonCode.ToCode(), SourceCode = input.CommonInformationSourceCode.ToCode(),
+                SourceOtherText = input.CommonInformationSourceOtherText, InformationDate = input.CommonInformationDate,
+                AccountId = input.AccountId.Value, ActiveProfile = activeProfileCode, OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.eventos_auditoria (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
+                VALUES (@Id, @AccountId, @ActiveProfile, @CenterId, @UnitId, @ResidentId, 'BASELINE_DRAFT', @DraftId, 'BASELINE_DRAFT_CREATE', @OccurredAt)
+                """, new
+            {
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, ActiveProfile = activeProfileCode, CenterId = input.CenterId.Value,
+                UnitId = input.UnitId.Value, ResidentId = input.ResidentId.Value, DraftId = draftId.Value, OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+
+            var resultJson = JsonSerializer.Serialize(result, ResidAppJson.Options);
+            await connection.ExecuteAsync(new CommandDefinition("""
+                UPDATE dbo.operaciones_idempotencia
+                   SET estado = 'SUCCEEDED', recurso_resultado_id = @DraftId, resultado_json = @ResultJson, completado_en = @OccurredAt
+                 WHERE cuenta_id = @AccountId AND accion_codigo = 'BASELINE_DRAFT_CREATE'
+                   AND operacion_id = @OperationId AND hash_solicitud = @RequestHash AND estado = 'IN_PROGRESS'
+                """, new
+            {
+                DraftId = draftId.Value, ResultJson = resultJson, OccurredAt = occurredAt,
+                AccountId = input.AccountId.Value, input.OperationId, RequestHash = requestHash,
+            }, transaction, cancellationToken: ct));
+
+            transaction.Commit();
+            return result;
+        }
+        catch
+        {
+            transaction.Rollback();
+            var recovered = await FindCreateDraftIdempotencyAsync(connection, null, input.AccountId.Value, input.OperationId, requestHash, ct);
+            if (recovered is not null)
+            {
+                return recovered;
+            }
+            throw;
+        }
+    }
+
+    /// <summary>ENF-20/ENF-21/ENF-22: el estado completo del borrador activo propio, o null si no hay
+    /// ninguno (o el que hay no es propio/autorizado). A diferencia de LoadAuthorizedDraftAsync (que exige
+    /// completitud porque lo usa la firma), aquí se devuelve lo que exista, aunque esté a medias.</summary>
+    public async Task<BaselineDraftDetail?> LoadOwnedDraftAsync(OwnedActiveDraftInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var draft = await LoadOwnedDraftRowAsync(connection, null, input, ct);
+        if (draft is null)
+        {
+            return null;
+        }
+
+        var areas = await LoadAreasAsync(connection, null!, draft.Id, ct);
+        var barthel = await TryLoadBarthelAsync(connection, null, draft.Id, ct);
+        var barthelItems = barthel is null ? [] : await LoadBarthelItemsAsync(connection, null!, barthel.Id, ct);
+
+        return new BaselineDraftDetail(
+            BaselineDraftId.From(draft.Id), input.ResidentId, draft.DraftRevision, EnumCode.ParseCode<BaselineReason>(draft.ReasonCode!),
+            EnumCode.ParseCode<InformationSourceCode>(draft.CommonInformationSourceCode!), draft.CommonInformationSourceOtherText,
+            DateOnly.FromDateTime(draft.CommonInformationDate!.Value), new DateTimeOffset(draft.CreatedAt, TimeSpan.Zero),
+            areas.Select(a => new BaselineDraftAreaDetail(
+                EnumCode.ParseCode<BaselineArea>(a.AreaCode), BaselineAreaAnswerReader.Parse(EnumCode.ParseCode<BaselineArea>(a.AreaCode), a.AnswerPayload), a.Observation)).ToList(),
+            new BaselineDraftBarthelDetail(
+                barthel?.AssessmentDate is { } assessmentDate ? DateOnly.FromDateTime(assessmentDate) : null, barthel?.TotalScore,
+                barthelItems.Select(i => new BarthelItem(EnumCode.ParseCode<BarthelItemCode>(i.ItemCode), i.SelectedOptionCode, i.AwardedScore)).ToList()));
+    }
+
+    /// <summary>ENF-20: guarda (crea o reemplaza) la respuesta de una de las nueve áreas. Upsert por
+    /// borrado+inserción, seguro porque la clave única es (borrador_id, area_codigo) y nada referencia a
+    /// estas filas como padre.</summary>
+    public async Task SaveAreaAsync(SaveBaselineDraftAreaInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        try
+        {
+            var draft = await LoadOwnedDraftRowAsync(connection, transaction, input.Owner, ct)
+                ?? throw new DomainValidationException("BASELINE_DRAFT_NOT_AUTHORIZED");
+
+            await connection.ExecuteAsync(new CommandDefinition("""
+                DELETE FROM dbo.basales_borrador_areas WHERE borrador_id = @DraftId AND area_codigo = @AreaCode
+                """, new { DraftId = draft.Id, AreaCode = input.AreaCode.ToCode() }, transaction, cancellationToken: ct));
+
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.basales_borrador_areas
+                    (id, borrador_id, residente_id, centro_id, area_codigo, catalogo_version_codigo, respuestas_json,
+                     observacion, registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
+                VALUES (@Id, @DraftId, @ResidentId, @CenterId, @AreaCode, 'BASAL_AREAS_V0_1', @AnswerPayload,
+                     @Observation, @AccountId, @ActiveProfile, @OccurredAt)
+                """, new
+            {
+                Id = Guid.NewGuid(), DraftId = draft.Id, ResidentId = input.Owner.ResidentId.Value, CenterId = input.Owner.CenterId.Value,
+                AreaCode = input.AreaCode.ToCode(), AnswerPayload = JsonSerializer.Serialize(input.Answer, input.Answer.GetType(), ResidAppJson.Options),
+                input.Observation, AccountId = input.Owner.AccountId.Value, ActiveProfile = input.Owner.ActiveProfile.ToCode(),
+                OccurredAt = DateTimeOffset.UtcNow,
+            }, transaction, cancellationToken: ct));
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    /// <summary>ENF-21: guarda (crea o reemplaza) los diez ítems de Barthel y su total, derivado siempre en
+    /// servidor a partir del catálogo (BarthelCatalog), nunca aceptado como dato de entrada.</summary>
+    public async Task SaveBarthelAsync(SaveBaselineDraftBarthelInput input, CancellationToken ct = default)
+    {
+        // La construcción valida completitud/consistencia (BASELINE_BARTHEL_INCOMPLETE si falla) antes de tocar la base de datos.
+        var totalScore = input.Items.Sum(i => i.AwardedScore);
+        _ = new BarthelAssessment(input.AssessmentDate.ToString("yyyy-MM-dd"), totalScore, input.Items);
+
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        try
+        {
+            var draft = await LoadOwnedDraftRowAsync(connection, transaction, input.Owner, ct)
+                ?? throw new DomainValidationException("BASELINE_DRAFT_NOT_AUTHORIZED");
+            var occurredAt = DateTimeOffset.UtcNow;
+
+            await connection.ExecuteAsync(new CommandDefinition("""
+                DELETE FROM dbo.basales_borrador_barthel WHERE borrador_id = @DraftId
+                """, new { DraftId = draft.Id }, transaction, cancellationToken: ct));
+
+            var barthelId = Guid.NewGuid();
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.basales_borrador_barthel
+                    (id, borrador_id, residente_id, centro_id, instrumento_version_codigo, fecha_valoracion, puntuacion_total,
+                     registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
+                VALUES (@Id, @DraftId, @ResidentId, @CenterId, @Instrument, @AssessmentDate, @TotalScore,
+                     @AccountId, @ActiveProfile, @OccurredAt)
+                """, new
+            {
+                Id = barthelId, DraftId = draft.Id, ResidentId = input.Owner.ResidentId.Value, CenterId = input.Owner.CenterId.Value,
+                Instrument = BarthelInstrument, AssessmentDate = input.AssessmentDate, TotalScore = totalScore,
+                AccountId = input.Owner.AccountId.Value, ActiveProfile = input.Owner.ActiveProfile.ToCode(), OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+
+            foreach (var item in input.Items)
+            {
+                await connection.ExecuteAsync(new CommandDefinition("""
+                    INSERT INTO dbo.basales_borrador_barthel_items
+                        (id, barthel_id, borrador_id, residente_id, centro_id, instrumento_version_codigo,
+                         item_codigo, opcion_seleccionada_codigo, puntuacion_otorgada)
+                    VALUES (@Id, @BarthelId, @DraftId, @ResidentId, @CenterId, @Instrument, @ItemCode, @SelectedOptionCode, @AwardedScore)
+                    """, new
+                {
+                    Id = Guid.NewGuid(), BarthelId = barthelId, DraftId = draft.Id, ResidentId = input.Owner.ResidentId.Value,
+                    CenterId = input.Owner.CenterId.Value, Instrument = BarthelInstrument,
+                    ItemCode = item.ItemCode.ToCode(), item.SelectedOptionCode, item.AwardedScore,
+                }, transaction, cancellationToken: ct));
+            }
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    /// <summary>ENF-20 "cancelar el borrador propio con motivo": mantiene revision_borrador sin cambios
+    /// (TR_bd_transition_guard lo exige así fuera de una transición ACTIVE-a-ACTIVE).</summary>
+    public async Task CancelDraftAsync(CancelBaselineDraftInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        try
+        {
+            var draft = await LoadOwnedDraftRowAsync(connection, transaction, input.Owner, ct)
+                ?? throw new DomainValidationException("BASELINE_DRAFT_NOT_AUTHORIZED");
+            var occurredAt = DateTimeOffset.UtcNow;
+
+            var updatedRows = await connection.ExecuteAsync(new CommandDefinition("""
+                UPDATE dbo.basales_borrador
+                   SET estado = 'CANCELLED', cancelado_en = @OccurredAt, cancelado_por_cuenta_id = @AccountId,
+                       cancelado_por_perfil = @ActiveProfile, motivo_cancelacion = @Reason
+                 WHERE id = @DraftId AND estado = 'ACTIVE'
+                """, new
+            {
+                DraftId = draft.Id, OccurredAt = occurredAt, AccountId = input.Owner.AccountId.Value,
+                ActiveProfile = input.Owner.ActiveProfile.ToCode(), input.Reason,
+            }, transaction, cancellationToken: ct));
+            if (updatedRows != 1)
+            {
+                throw new DomainValidationException("BASELINE_DRAFT_NOT_AUTHORIZED");
+            }
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    /// <summary>Comparte el mismo criterio de propiedad y permiso vigente que LoadAuthorizedDraftAsync
+    /// exige para firmar, pero sin requerir completitud ni una revisión esperada concreta: "el borrador
+    /// activo que esta cuenta, con este perfil, creó para este residente".</summary>
+    private static async Task<OwnedDraftRow?> LoadOwnedDraftRowAsync(
+        IDbConnection connection, IDbTransaction? transaction, OwnedActiveDraftInput input, CancellationToken ct) =>
+        await connection.QuerySingleOrDefaultAsync<OwnedDraftRow>(new CommandDefinition("""
+            SELECT d.id AS Id, d.revision_borrador AS DraftRevision, d.motivo_codigo AS ReasonCode,
+                   d.fuente_informacion_comun_codigo AS CommonInformationSourceCode,
+                   d.fuente_informacion_comun_otro_texto AS CommonInformationSourceOtherText,
+                   d.fecha_informacion_comun AS CommonInformationDate, d.creado_en AS CreatedAt
+              FROM dbo.basales_borrador d
+             WHERE d.residente_id = @ResidentId AND d.centro_id = @CenterId AND d.estado = 'ACTIVE'
+               AND d.creado_por_cuenta_id = @AccountId AND d.creado_por_perfil = @ActiveProfile
+               AND EXISTS (
+                 SELECT 1 FROM dbo.ambitos_perfil ps
+                 JOIN dbo.ambitos_perfil_unidad pus ON pus.ambito_perfil_id = ps.id AND pus.centro_id = ps.centro_id
+                      AND pus.unidad_id = d.creado_en_unidad_id AND pus.revocado_en IS NULL
+                 JOIN dbo.permisos_perfil pp ON pp.ambito_perfil_id = ps.id AND pp.centro_id = ps.centro_id AND pp.revocado_en IS NULL
+                WHERE ps.cuenta_id = @AccountId AND ps.centro_id = @CenterId AND ps.perfil_codigo = @ActiveProfile AND ps.estado = 'ACTIVE'
+                  AND pp.permiso_codigo = CASE WHEN d.motivo_codigo = 'ALTA' THEN 'BASELINE_INITIAL_COMPLETE' ELSE 'BASELINE_REEVALUATE' END)
+            """, new
+        {
+            AccountId = input.AccountId.Value, ActiveProfile = input.ActiveProfile.ToCode(),
+            CenterId = input.CenterId.Value, ResidentId = input.ResidentId.Value,
+        }, transaction, cancellationToken: ct));
+
+    private static async Task<BarthelRow?> TryLoadBarthelAsync(IDbConnection c, IDbTransaction? t, Guid draftId, CancellationToken ct) =>
+        await c.QuerySingleOrDefaultAsync<BarthelRow>(new CommandDefinition("""
+            SELECT id AS Id, fecha_valoracion AS AssessmentDate, puntuacion_total AS TotalScore,
+                   registrado_por_cuenta_id AS RecordedByAccountId, registrado_por_perfil AS RecordedByProfile, registrado_en AS RecordedAt
+              FROM dbo.basales_borrador_barthel WHERE borrador_id = @DraftId
+            """, new { DraftId = draftId }, t, cancellationToken: ct));
+
+    private static async Task<CreateBaselineDraftResult?> FindCreateDraftIdempotencyAsync(
+        IDbConnection connection, IDbTransaction? transaction, Guid accountId, Guid operationId, string requestHash, CancellationToken ct)
+    {
+        var row = await connection.QuerySingleOrDefaultAsync<IdempotencyRow>(new CommandDefinition("""
+            SELECT hash_solicitud AS RequestHash, estado AS Status, resultado_json AS ResultJson
+              FROM dbo.operaciones_idempotencia WHERE cuenta_id = @AccountId AND accion_codigo = 'BASELINE_DRAFT_CREATE' AND operacion_id = @OperationId
+            """, new { AccountId = accountId, OperationId = operationId }, transaction, cancellationToken: ct));
+        if (row is null)
+        {
+            return null;
+        }
+        if (row.RequestHash != requestHash)
+        {
+            throw new DomainValidationException("IDEMPOTENCY_KEY_REUSED");
+        }
+        return row.Status == "SUCCEEDED" && row.ResultJson is not null
+            ? JsonSerializer.Deserialize<CreateBaselineDraftResult>(row.ResultJson, ResidAppJson.Options)
+            : null;
+    }
+
+    // CommonInformationDate/AssessmentDate/InformationDateOverride se leen como DateTime, no DateOnly: el
+    // deserializador de Dapper basado en constructor (records) no aplica DapperDateOnlyTypeHandler para
+    // materializar parámetros — solo lo aplica al enlazar parámetros de escritura. Descubierto al ejecutar
+    // por primera vez el ciclo completo crear-borrador -> firmar contra SQL Server real (antes de este
+    // grupo, SignDraftAsync nunca se había ejercido con un borrador real). La conversión a DateOnly ocurre
+    // en el código que consume la fila, no en la fila misma.
+    private sealed record OwnedDraftRow(
+        Guid Id, int DraftRevision, string? ReasonCode, string? CommonInformationSourceCode,
+        string? CommonInformationSourceOtherText, DateTime? CommonInformationDate, DateTime CreatedAt);
 
     private static async Task<DraftRow?> LoadAuthorizedDraftAsync(
         IDbConnection connection, IDbTransaction transaction, SignBaselineDraftInput input, CancellationToken ct) =>
@@ -495,28 +810,32 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
 
     private sealed record CurrentRow(Guid BaselineVersionId, int VersionNumber);
 
-    private sealed record CurrentVersionRow(Guid Id, int VersionNumber, string ReasonCode, DateTimeOffset SignedAt);
+    // DateTimeOffset tampoco lo acepta el deserializador de Dapper basado en constructor (records): igual
+    // que DateOnly (ver comentario junto a OwnedDraftRow), solo System.DateTime "tal cual" viene de una
+    // columna DATETIME2 en esta ruta. La conversión a DateTimeOffset ocurre donde el valor sale hacia un
+    // tipo de dominio/puerto público.
+    private sealed record CurrentVersionRow(Guid Id, int VersionNumber, string ReasonCode, DateTime SignedAt);
 
     private sealed record CurrentAreaRow(string AreaCode, string AnswerPayload, string? Observation);
 
     private sealed record DraftRow(
         Guid Id, Guid ResidentId, Guid CenterId, Guid CreatedInUnitId, string ReasonCode, string CommonInformationSourceCode,
-        string? CommonInformationSourceOtherText, DateOnly CommonInformationDate, Guid CreatedByAccountId,
-        string CreatedByProfile, DateTimeOffset CreatedAt, int DraftRevision);
+        string? CommonInformationSourceOtherText, DateTime CommonInformationDate, Guid CreatedByAccountId,
+        string CreatedByProfile, DateTime CreatedAt, int DraftRevision);
 
     private sealed record AreaRow(
         Guid Id, string AreaCode, string CatalogVersionCode, string AnswerPayload, string? Observation,
-        string? InformationSourceOverrideCode, string? InformationSourceOverrideOtherText, DateOnly? InformationDateOverride,
-        Guid RecordedByAccountId, string RecordedByProfile, DateTimeOffset RecordedAt);
+        string? InformationSourceOverrideCode, string? InformationSourceOverrideOtherText, DateTime? InformationDateOverride,
+        Guid RecordedByAccountId, string RecordedByProfile, DateTime RecordedAt);
 
     private sealed record BarthelRow(
-        Guid Id, DateOnly? AssessmentDate, int? TotalScore, Guid RecordedByAccountId, string RecordedByProfile, DateTimeOffset RecordedAt);
+        Guid Id, DateTime? AssessmentDate, int? TotalScore, Guid RecordedByAccountId, string RecordedByProfile, DateTime RecordedAt);
 
     private sealed record BarthelItemRow(string ItemCode, string SelectedOptionCode, int AwardedScore);
 
     private sealed record IdempotencyRow(string RequestHash, string Status, string? ResultJson);
 
-    private sealed record AuditedHeaderRow(Guid Id, int VersionNumber, string ReasonCode, DateTimeOffset SignedAt);
+    private sealed record AuditedHeaderRow(Guid Id, int VersionNumber, string ReasonCode, DateTime SignedAt);
 }
 
 file static class SignRequestHash
@@ -527,6 +846,20 @@ file static class SignRequestHash
         {
             input.AccountId.Value, input.ActiveProfile.ToCode(), input.CenterId.Value, input.UnitId.Value,
             input.ResidentId.Value, input.DraftId.Value, input.ExpectedDraftRevision, input.OperationId,
+        });
+        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
+    }
+}
+
+file static class CreateDraftRequestHash
+{
+    public static string Of(CreateBaselineDraftInput input)
+    {
+        var canonical = JsonSerializer.Serialize(new object?[]
+        {
+            input.AccountId.Value, input.ActiveProfile.ToCode(), input.CenterId.Value, input.UnitId.Value, input.ResidentId.Value,
+            input.ReasonCode.ToCode(), input.CommonInformationSourceCode.ToCode(), input.CommonInformationSourceOtherText,
+            input.CommonInformationDate.ToString("yyyy-MM-dd"), input.OperationId,
         });
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }

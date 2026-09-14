@@ -1,13 +1,15 @@
 /*
- * Datos semilla de desarrollo para el vertical Enfermería (grupo E1: ENF-01/ENF-17/ENF-18) —
- * exclusivamente ficticios. NO ejecutar contra un entorno con datos reales. Idempotente: si la cuenta
- * 'dev-enfermeria' ya existe, no inserta nada.
+ * Datos semilla de desarrollo para el vertical Enfermería (grupo E1: ENF-01/ENF-17/ENF-18; grupo E2:
+ * ENF-19 a ENF-22) — exclusivamente ficticios. NO ejecutar contra un entorno con datos reales. Idempotente:
+ * si la cuenta 'dev-enfermeria' ya existe, no repite el alta; los permisos se conceden en un bloque
+ * separado, también idempotente, para que una base ya sembrada en el grupo E1 los reciba igual al
+ * reaplicar este script.
  *
  * A diferencia de dev_seed_auxiliar.sql, aquí NO se concede ninguna fila en ambitos_perfil_residente:
  * Enfermería sigue la regla de "ámbito por defecto" (SqlEnfermeriaResidentDirectory /
  * SqlAuthorizationEvidenceProvider) — sin restricciones explícitas, ve todos los residentes de su unidad
- * concedida. Ninguno tiene basal vigente todavía: la autoría/firma del basal (ENF-19 a ENF-22) es el
- * siguiente grupo del vertical Enfermería.
+ * concedida. Ninguno tiene basal vigente todavía: crear y firmar un borrador real se prueba a mano desde
+ * la propia app.
  */
 
 IF NOT EXISTS (SELECT 1 FROM dbo.cuentas WHERE sujeto_externo = 'dev-enfermeria')
@@ -61,6 +63,25 @@ BEGIN
     END;
     CLOSE residents_cursor;
     DEALLOCATE residents_cursor;
+END
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM dbo.permisos_perfil pp
+    JOIN dbo.ambitos_perfil ap ON ap.id = pp.ambito_perfil_id
+    JOIN dbo.cuentas c ON c.id = ap.cuenta_id
+    WHERE c.sujeto_externo = 'dev-enfermeria' AND pp.permiso_codigo = 'BASELINE_INITIAL_COMPLETE')
+BEGIN
+    DECLARE @GrantAccountId UNIQUEIDENTIFIER, @GrantProfileScopeId UNIQUEIDENTIFIER;
+    SELECT @GrantAccountId = c.id, @GrantProfileScopeId = ap.id
+      FROM dbo.cuentas c JOIN dbo.ambitos_perfil ap ON ap.cuenta_id = c.id
+     WHERE c.sujeto_externo = 'dev-enfermeria';
+
+    INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+    SELECT NEWID(), @GrantProfileScopeId, ap.centro_id, permiso.codigo, SYSUTCDATETIME(), @GrantAccountId
+      FROM dbo.ambitos_perfil ap
+      CROSS JOIN (VALUES ('BASELINE_INITIAL_COMPLETE'), ('BASELINE_REEVALUATE')) AS permiso(codigo)
+     WHERE ap.id = @GrantProfileScopeId;
 END
 GO
 

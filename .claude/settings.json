@@ -98,7 +98,22 @@
       "Bash(curl -s -c /tmp/enf_cookies.txt -b /tmp/enf_cookies.txt -L http://localhost:5203/Enfermeria/Residente?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966 -D /tmp/enf_detail_headers.txt -o /tmp/enf_detail.html)",
       "Bash(curl -s -c /tmp/enf_cookies.txt -b /tmp/enf_cookies.txt -L http://localhost:5203/Enfermeria/Residente?residenteId=00000000-0000-0000-0000-000000000001 -D /tmp/enf_bad_headers.txt -o /tmp/enf_bad.html)",
       "Bash(curl -s -c /tmp/enf_cookies.txt -b /tmp/enf_cookies.txt -L http://localhost:5203/Enfermeria/Residente?residenteId=00000000-0000-0000-0000-000000000000 -o /tmp/enf_empty.html -w 'HTTP:%{http_code}\\\\n')",
-      "Bash(taskkill //PID 11000 //F)"
+      "Bash(taskkill //PID 11000 //F)",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -I -i database/scripts/0005_enfermeria_borrador_basal.sql)",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -Q \"SELECT definition FROM sys.check_constraints WHERE name = 'CK_idem_action'\")",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -Q \"SELECT max_length/2 AS chars FROM sys.columns WHERE object_id = OBJECT_ID\\('dbo.basales_borrador_barthel_items'\\) AND name = 'opcion_seleccionada_codigo'\")",
+      "Bash(grep -rn \"^\\\\s*input\\\\.\\\\w\\\\+\\\\.Value,\\\\|^\\\\s*[a-zA-Z]\\\\+\\\\.\\\\w\\\\+\\\\.Value,$\" C:/repoCJ/residapp/src/ResidApp.Infrastructure/)",
+      "Bash(grep -n \"\\\\.Value,\\\\|\\\\.Value$\\\\|\\\\.Value }\" C:/repoCJ/residapp/src/ResidApp.Infrastructure/Persistence/SqlBaselineRepository.cs)",
+      "Bash(\nBASE=http://localhost:5203\nCOOKIES=/tmp/enf2_cookies.txt\nRID=e116fc83-2962-4374-a80f-f374a8e0e966\n\ngrep -o 'name=\"OperacionId\"[^/]*' /tmp/enf2_draft0.html\n)",
+      "Bash(grep -n \"createForm\\\\|input type=\\\\\"hidden\\\\\"\" /tmp/enf2_draft0.html | head -20)",
+      "Bash(taskkill //PID 10320 //F)",
+      "Bash(curl -s -c /tmp/enf3_cookies.txt -b /tmp/enf3_cookies.txt 'http://localhost:5203/EnfermeriaBasal/Area?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966&areaCode=Movilidad' -o /tmp/enf3_area_mov.html)",
+      "Bash(grep -o 'name=\"[A-Za-z]*\"' /tmp/enf3_area_mov.html | sort -u)",
+      "Bash(curl -s -c /tmp/enf3_cookies.txt -b /tmp/enf3_cookies.txt -L http://localhost:5203/EnfermeriaBasal/Draft?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966 -o /tmp/enf3_draft2.html)",
+      "Bash(curl -s -c /tmp/enf3_cookies.txt -b /tmp/enf3_cookies.txt http://localhost:5203/Enfermeria/Residente?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966 -o /tmp/enf3_ficha.html)",
+      "Bash(curl -s -c /tmp/enf3_cookies.txt -b /tmp/enf3_cookies.txt http://localhost:5203/Enfermeria/Residentes -o /tmp/enf3_lista.html)",
+      "Bash(curl -s -c /tmp/enf3_cookies.txt -b /tmp/enf3_cookies.txt http://localhost:5203/EnfermeriaBasal/Draft?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966 -o /tmp/enf3_draft4.html)",
+      "Bash(taskkill //PID 26176 //F)"
     ],
     "additionalDirectories": [
       "\\tmp"

@@ -1,6 +1,7 @@
 using ResidApp.Application.Authorization;
 using ResidApp.Domain.Baseline;
 using ResidApp.Domain.Baseline.Answers;
+using ResidApp.Domain.Baseline.Catalogs;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
@@ -42,11 +43,56 @@ public sealed record CurrentBaselineSummary(
     BaselineVersionId Id, int VersionNumber, BaselineReason ReasonCode, DateTimeOffset SignedAt,
     IReadOnlyList<BaselineAreaSummary> Areas, int BarthelTotal);
 
+/// <summary>Entrada de ENF-19/ENF-20 "crear borrador": los campos comunes de versión se exigen desde la
+/// creación (no hay un paso posterior para editarlos en este alcance), así que viajan aquí en vez de como
+/// una actualización separada del borrador.</summary>
+public sealed record CreateBaselineDraftInput(
+    AccountId AccountId, SystemProfile ActiveProfile, CenterId CenterId, UnitId UnitId, ResidentId ResidentId,
+    BaselineReason ReasonCode, InformationSourceCode CommonInformationSourceCode, string? CommonInformationSourceOtherText,
+    DateOnly CommonInformationDate, Guid OperationId);
+
+public sealed record CreateBaselineDraftResult(BaselineDraftId DraftId, int DraftRevision);
+
+/// <summary>Entrada compartida por LoadDraftAsync/SaveAreaAsync/SaveBarthelAsync/CancelDraftAsync: "el
+/// borrador activo que yo mismo (esta cuenta, con este perfil) creé para este residente" — la misma
+/// comprobación de propiedad y permiso vigente que LoadAuthorizedDraftAsync ya hace para la firma.</summary>
+public sealed record OwnedActiveDraftInput(AccountId AccountId, SystemProfile ActiveProfile, CenterId CenterId, ResidentId ResidentId);
+
+public sealed record BaselineDraftAreaDetail(BaselineArea AreaCode, IBaselineAreaAnswer Answer, string? Observation);
+
+public sealed record BaselineDraftBarthelDetail(DateOnly? AssessmentDate, int? TotalScore, IReadOnlyList<BarthelItem> Items);
+
+/// <summary>Estado completo del borrador activo propio (ENF-20/ENF-21/ENF-22): las áreas ya completadas
+/// (nunca las 9 rellenas de null — el llamador decide cómo mostrar las que faltan) y el Barthel si ya
+/// tiene fecha y algún ítem.</summary>
+public sealed record BaselineDraftDetail(
+    BaselineDraftId Id, ResidentId ResidentId, int DraftRevision, BaselineReason ReasonCode,
+    InformationSourceCode CommonInformationSourceCode, string? CommonInformationSourceOtherText, DateOnly CommonInformationDate,
+    DateTimeOffset CreatedAt, IReadOnlyList<BaselineDraftAreaDetail> Areas, BaselineDraftBarthelDetail Barthel);
+
+public sealed record SaveBaselineDraftAreaInput(OwnedActiveDraftInput Owner, BaselineArea AreaCode, IBaselineAreaAnswer Answer, string? Observation);
+
+public sealed record SaveBaselineDraftBarthelInput(OwnedActiveDraftInput Owner, DateOnly AssessmentDate, IReadOnlyList<BarthelItem> Items);
+
+public sealed record CancelBaselineDraftInput(OwnedActiveDraftInput Owner, string Reason);
+
 /// <summary>Traduce signBaselineDraft y readBaselineAsClinicalDirection (baseline-repository.ts y
 /// audit-repository.ts): ambas operaciones combinan lectura autorizada, validación de dominio y escritura
-/// atómica dentro de la misma transacción SQL Server.</summary>
+/// atómica dentro de la misma transacción SQL Server. CreateDraftAsync/LoadOwnedDraftAsync/SaveAreaAsync/
+/// SaveBarthelAsync/CancelDraftAsync (ENF-19 a ENF-22) completan el hueco: crear y editar el contenido de
+/// un borrador antes de poder firmarlo.</summary>
 public interface IBaselineRepository
 {
+    Task<CreateBaselineDraftResult> CreateDraftAsync(CreateBaselineDraftInput input, CancellationToken ct = default);
+
+    Task<BaselineDraftDetail?> LoadOwnedDraftAsync(OwnedActiveDraftInput input, CancellationToken ct = default);
+
+    Task SaveAreaAsync(SaveBaselineDraftAreaInput input, CancellationToken ct = default);
+
+    Task SaveBarthelAsync(SaveBaselineDraftBarthelInput input, CancellationToken ct = default);
+
+    Task CancelDraftAsync(CancelBaselineDraftInput input, CancellationToken ct = default);
+
     Task<SignBaselineDraftResult> SignDraftAsync(SignBaselineDraftInput input, CancellationToken ct = default);
 
     Task<IReadOnlyList<AuditedBaselineHeader>> ReadAsClinicalDirectionAsync(

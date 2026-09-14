@@ -1,0 +1,56 @@
+@using ResidApp.Domain.Baseline
+@using ResidApp.Shared
+@model ResidApp.Web.Models.BarthelFormModel
+@{
+    ViewData["Title"] = "Índice de Barthel";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Enfermeria" asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="Draft" asp-route-residenteId="@Model.ResidenteId">Estado basal</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Índice de Barthel</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Índice de Barthel</h1>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<form asp-controller="EnfermeriaBasal" asp-action="Barthel" method="post">
+    <input type="hidden" asp-for="ResidenteId" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <label asp-for="FechaValoracion" class="form-label"></label>
+            <input asp-for="FechaValoracion" type="date" class="form-control" style="max-width: 220px;" />
+        </div>
+    </div>
+
+    @foreach (var item in Enum.GetValues<BarthelItemCode>())
+    {
+        var seleccionada = Model.Opciones.GetValueOrDefault(item.ToCode());
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h6 card-title">@item</h2>
+                @foreach (var opcion in BarthelCatalog.Options[item])
+                {
+                    var inputId = $"{item.ToCode()}-{opcion.OptionCode}";
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="Opciones[@item.ToCode()]" id="@inputId"
+                               value="@opcion.OptionCode" checked="@(seleccionada == opcion.OptionCode)" />
+                        <label class="form-check-label" for="@inputId">@opcion.Label (@opcion.Score puntos)</label>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="d-grid d-md-flex justify-content-md-end">
+        <button type="submit" class="btn btn-primary btn-lg">Guardar Barthel</button>
+    </div>
+</form>

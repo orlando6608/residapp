@@ -9,7 +9,9 @@ namespace ResidApp.Application.UseCases;
 /// ResidApp.Web y es lo único que los controladores MVC deberían inyectar de este vertical.
 /// </summary>
 public sealed class ResidentBaselineApplicationService(
-    CreateResident createResident, SignBaseline signBaseline, ReadDirectionBaseline readDirectionBaseline)
+    CreateResident createResident, SignBaseline signBaseline, ReadDirectionBaseline readDirectionBaseline,
+    CreateBaselineDraft createBaselineDraft, LoadBaselineDraft loadBaselineDraft, SaveBaselineDraftArea saveBaselineDraftArea,
+    SaveBaselineDraftBarthel saveBaselineDraftBarthel, CancelBaselineDraft cancelBaselineDraft)
 {
     public Task<ApplicationResult<CreateResidentResult>> CreateResidentAsync(
         CreateResidentCommand command, CancellationToken ct = default) =>
@@ -22,4 +24,24 @@ public sealed class ResidentBaselineApplicationService(
     public Task<ApplicationResult<IReadOnlyList<AuditedBaselineHeader>>> ReadDirectionBaselineAsync(
         ReadDirectionBaselineCommand command, CancellationToken ct = default) =>
         readDirectionBaseline.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<CreateBaselineDraftResult>> CreateBaselineDraftAsync(
+        CreateBaselineDraftCommand command, CancellationToken ct = default) =>
+        createBaselineDraft.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<BaselineDraftDetail?>> LoadBaselineDraftAsync(
+        LoadBaselineDraftCommand command, CancellationToken ct = default) =>
+        loadBaselineDraft.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<bool>> SaveBaselineDraftAreaAsync(
+        SaveBaselineDraftAreaCommand command, CancellationToken ct = default) =>
+        saveBaselineDraftArea.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<bool>> SaveBaselineDraftBarthelAsync(
+        SaveBaselineDraftBarthelCommand command, CancellationToken ct = default) =>
+        saveBaselineDraftBarthel.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<bool>> CancelBaselineDraftAsync(
+        CancelBaselineDraftCommand command, CancellationToken ct = default) =>
+        cancelBaselineDraft.ExecuteAsync(command, ct);
 }

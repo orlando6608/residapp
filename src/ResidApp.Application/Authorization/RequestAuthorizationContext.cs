@@ -21,6 +21,13 @@ public sealed record BaselineSignPayload(int ExpectedDraftRevision, Guid Operati
 /// ExecuteDirectionBaselineReadAsync con un parámetro suelto.</summary>
 public sealed record ClinicalDirectionReadPayload(Guid OperationId);
 
+/// <summary>Traduce los campos de entrada a ENF-19/ENF-20 "crear borrador": los campos comunes de versión
+/// (motivo, fuente y fecha de la información) que el flujo exige desde el momento de crear el borrador, no
+/// como un paso separado editable después.</summary>
+public sealed record BaselineDraftCreatePayload(
+    Domain.Baseline.Catalogs.InformationSourceCode CommonInformationSourceCode,
+    string? CommonInformationSourceOtherText, DateOnly CommonInformationDate, Guid OperationId);
+
 /// <summary>
 /// Traduce RequestAuthorizationContext/resolveRequestContext/operationFor/execute* de
 /// lib/authorization/request-context.ts. En TS la autoridad vive en un WeakMap privado, indexado por un
@@ -104,6 +111,9 @@ public static class RequestAuthorizationContextResolver
             AuthorizationTarget.Read => resourceType == ClinicalResourceType.BaselineCurrent
                 ? ResidentBaselineAction.BaselineCurrentRead
                 : ResidentBaselineAction.BaselineHistoryRead,
+            AuthorizationTarget.Draft draft => draft.Reason == BaselineReason.Alta
+                ? ResidentBaselineAction.BaselineInitialComplete
+                : ResidentBaselineAction.BaselineReevaluate,
             _ => throw new AccessDeniedException(),
         };
 
@@ -183,6 +193,23 @@ public static class RequestAuthorizationContextResolver
         var operation = RequireTarget<AuthorizationTarget.Read>(context);
         var input = new ReadCurrentBaselineSummaryInput(operation.CenterId, operation.ResidentId!.Value);
         return await repository.ReadCurrentSummaryAsync(input, ct);
+    }
+
+    /// <summary>ENF-19/ENF-20: crea el contenido de un borrador de basal, ya autorizado (permiso
+    /// BASELINE_INITIAL_COMPLETE o BASELINE_REEVALUATE según el motivo elegido, comprobado en
+    /// ResolveAsync). Sin obligación de auditoría propia: la propia fila del borrador, con su autoría y
+    /// ámbito, es la evidencia.</summary>
+    public static async Task<CreateBaselineDraftResult> ExecuteBaselineDraftCreateAsync(
+        RequestAuthorizationContext context, IBaselineRepository repository, BaselineDraftCreatePayload payload, CancellationToken ct = default)
+    {
+        var operation = RequireTarget<AuthorizationTarget.Draft>(context);
+        var activeProfile = operation.Subject.ActiveProfile!.Value;
+        var draftTarget = (AuthorizationTarget.Draft)operation.Target;
+        var input = new CreateBaselineDraftInput(
+            operation.Subject.AccountId!.Value, activeProfile, operation.CenterId, operation.UnitId, draftTarget.ResidentId,
+            draftTarget.Reason, payload.CommonInformationSourceCode, payload.CommonInformationSourceOtherText,
+            payload.CommonInformationDate, payload.OperationId);
+        return await repository.CreateDraftAsync(input, ct);
     }
 
     private static AuthorizedOperation RequireTarget<TTarget>(RequestAuthorizationContext context) where TTarget : AuthorizationTarget =>

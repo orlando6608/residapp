@@ -1,0 +1,257 @@
+@using ResidApp.Domain.Baseline
+@using ResidApp.Domain.Baseline.Catalogs
+@using ResidApp.Web.Models
+@model BaselineAreaFormModel
+@{
+    ViewData["Title"] = "Área — " + BaselineAreaDisplay.Label(Model.AreaCode);
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Enfermeria" asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="Draft" asp-route-residenteId="@Model.ResidenteId">Estado basal</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@BaselineAreaDisplay.Label(Model.AreaCode)</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@BaselineAreaDisplay.Label(Model.AreaCode)</h1>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<form asp-controller="EnfermeriaBasal" asp-action="Area" method="post">
+    <input type="hidden" asp-for="ResidenteId" />
+    <input type="hidden" asp-for="AreaCode" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            @switch (Model.AreaCode)
+            {
+                case BaselineArea.Movilidad:
+                    <div class="mb-3">
+                        <label asp-for="DisplacementModeCode" class="form-label">Forma de desplazamiento</label>
+                        <select asp-for="DisplacementModeCode" class="form-select" asp-items="Html.GetEnumSelectList<MobilityDisplacementCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="TechnicalAidCode" class="form-label">Ayuda técnica</label>
+                        <select asp-for="TechnicalAidCode" class="form-select" asp-items="Html.GetEnumSelectList<MobilityAidCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="TechnicalAidOtherText" class="form-label">Ayuda técnica — especificar (solo si «Otra»)</label>
+                        <input asp-for="TechnicalAidOtherText" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="TransferCode" class="form-label">Traslados</label>
+                        <select asp-for="TransferCode" class="form-select" asp-items="Html.GetEnumSelectList<MobilityTransferCode>()"></select>
+                    </div>
+                    break;
+
+                case BaselineArea.Alimentacion:
+                    <div class="mb-3">
+                        <label asp-for="RouteCode" class="form-label">Vía de alimentación</label>
+                        <select asp-for="RouteCode" class="form-select" asp-items="Html.GetEnumSelectList<FeedingRouteCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="FoodTextureCode" class="form-label">Textura de los alimentos</label>
+                        <select asp-for="FoodTextureCode" class="form-select" asp-items="Html.GetEnumSelectList<FoodTextureCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="FoodTextureOtherText" class="form-label">Textura — especificar (solo si «Otra textura adaptada»)</label>
+                        <input asp-for="FoodTextureOtherText" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="LiquidConsistencyCode" class="form-label">Consistencia de líquidos</label>
+                        <select asp-for="LiquidConsistencyCode" class="form-select" asp-items="Html.GetEnumSelectList<LiquidConsistencyCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="AssistanceCode" class="form-label">Ayuda para alimentarse</label>
+                        <select asp-for="AssistanceCode" class="form-select" asp-items="Html.GetEnumSelectList<FeedingAssistanceCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="SwallowingPrecautionsCode" class="form-label">Precauciones de deglución</label>
+                        <select asp-for="SwallowingPrecautionsCode" class="form-select" asp-items="Html.GetEnumSelectList<SwallowingPrecautionsCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="SwallowingPrecautionsText" class="form-label">Precauciones — especificar (solo si «Documentadas»)</label>
+                        <input asp-for="SwallowingPrecautionsText" class="form-control" />
+                    </div>
+                    break;
+
+                case BaselineArea.Continencia:
+                    <div class="mb-3">
+                        <label asp-for="UrinationCode" class="form-label">Continencia urinaria</label>
+                        <select asp-for="UrinationCode" class="form-select" asp-items="Html.GetEnumSelectList<ContinenceValueCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="BowelCode" class="form-label">Continencia fecal</label>
+                        <select asp-for="BowelCode" class="form-select" asp-items="Html.GetEnumSelectList<ContinenceValueCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Manejo</label>
+                        @foreach (var option in Enum.GetValues<ContinenceManagementCode>())
+                        {
+                            var checkboxId = $"management-{option}";
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="ManagementCodes" id="@checkboxId"
+                                       value="@option" checked="@(Model.ManagementCodes.Contains(option))" />
+                                <label class="form-check-label" for="@checkboxId">@option</label>
+                            </div>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ManagementOtherText" class="form-label">Manejo — especificar (solo si «Otro»)</label>
+                        <input asp-for="ManagementOtherText" class="form-control" />
+                    </div>
+                    break;
+
+                case BaselineArea.AseoHigiene:
+                    <div class="mb-3">
+                        <label asp-for="PersonalCareAssistanceCode" class="form-label">Aseo personal</label>
+                        <select asp-for="PersonalCareAssistanceCode" class="form-select" asp-items="Html.GetEnumSelectList<PersonalCareCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="BathingAssistanceCode" class="form-label">Baño/ducha</label>
+                        <select asp-for="BathingAssistanceCode" class="form-select" asp-items="Html.GetEnumSelectList<BathingCode>()"></select>
+                    </div>
+                    break;
+
+                case BaselineArea.Cognicion:
+                    <div class="mb-3">
+                        <label asp-for="CategoryCode" class="form-label">Categoría cognitiva</label>
+                        <select asp-for="CategoryCode" class="form-select" asp-items="Html.GetEnumSelectList<CognitionCategoryCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="EtiologyCode" class="form-label">Etiología (solo si demencia documentada)</label>
+                        <select asp-for="EtiologyCode" class="form-select" asp-items="Html.GetEnumSelectList<EtiologyCode>()">
+                            <option value="">— Ninguna —</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="EtiologyOtherText" class="form-label">Etiología — especificar (solo si «Otra»)</label>
+                        <input asp-for="EtiologyOtherText" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="GdsCode" class="form-label">Escala GDS</label>
+                        <select asp-for="GdsCode" class="form-select" asp-items="Html.GetEnumSelectList<GdsCode>()">
+                            <option value="">— Sin dato —</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ClinicalReferenceSourceCode" class="form-label">Fuente de la referencia clínica (obligatoria si hay etiología o GDS)</label>
+                        <select asp-for="ClinicalReferenceSourceCode" class="form-select" asp-items="Html.GetEnumSelectList<InformationSourceCode>()">
+                            <option value="">— Sin dato —</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ClinicalReferenceSourceOtherText" class="form-label">Fuente — especificar (solo si «Otra»)</label>
+                        <input asp-for="ClinicalReferenceSourceOtherText" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ClinicalReferenceDate" class="form-label">Fecha de la referencia clínica</label>
+                        <input asp-for="ClinicalReferenceDate" class="form-control" placeholder="AAAA-MM-DD" />
+                    </div>
+                    break;
+
+                case BaselineArea.Comunicacion:
+                    <div class="mb-3">
+                        <label asp-for="ComprehensionCode" class="form-label">Comprensión</label>
+                        <select asp-for="ComprehensionCode" class="form-select" asp-items="Html.GetEnumSelectList<ComprehensionCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ExpressionCode" class="form-label">Expresión</label>
+                        <select asp-for="ExpressionCode" class="form-select" asp-items="Html.GetEnumSelectList<ExpressionCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Formas habituales de comunicación</label>
+                        @foreach (var option in Enum.GetValues<CommunicationFormCode>())
+                        {
+                            var checkboxId = $"forms-{option}";
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="UsualFormsCodes" id="@checkboxId"
+                                       value="@option" checked="@(Model.UsualFormsCodes.Contains(option))" />
+                                <label class="form-check-label" for="@checkboxId">@option</label>
+                            </div>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="UsualFormOtherText" class="form-label">Forma — especificar (solo si «Otra»)</label>
+                        <input asp-for="UsualFormOtherText" class="form-control" />
+                    </div>
+                    break;
+
+                case BaselineArea.Conducta:
+                    <div class="mb-3">
+                        <label asp-for="StatusCode" class="form-label">Estado conductual</label>
+                        <select asp-for="StatusCode" class="form-select" asp-items="Html.GetEnumSelectList<BehaviorStatusCode>()"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Patrones (solo si hay patrones conductuales habituales)</label>
+                        @foreach (var option in Enum.GetValues<BehaviorPatternCode>())
+                        {
+                            var checkboxId = $"patterns-{option}";
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="PatternCodes" id="@checkboxId"
+                                       value="@option" checked="@(Model.PatternCodes.Contains(option))" />
+                                <label class="form-check-label" for="@checkboxId">@option</label>
+                            </div>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="PatternOtherText" class="form-label">Patrón — especificar (solo si «Otra»)</label>
+                        <input asp-for="PatternOtherText" class="form-control" />
+                    </div>
+                    break;
+
+                case BaselineArea.Sueno:
+                    <div class="mb-3">
+                        <label class="form-label">Patrón de sueño</label>
+                        @foreach (var option in Enum.GetValues<SleepPatternCode>())
+                        {
+                            var checkboxId = $"sleep-{option}";
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="SleepPatternCodes" id="@checkboxId"
+                                       value="@option" checked="@(Model.SleepPatternCodes.Contains(option))" />
+                                <label class="form-check-label" for="@checkboxId">@option</label>
+                            </div>
+                        }
+                    </div>
+                    break;
+
+                case BaselineArea.AyudasHabituales:
+                    <div class="mb-3">
+                        <label class="form-label">Ayudas habituales</label>
+                        @foreach (var option in Enum.GetValues<UsualAidCode>())
+                        {
+                            var checkboxId = $"aids-{option}";
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="AidCodes" id="@checkboxId"
+                                       value="@option" checked="@(Model.AidCodes.Contains(option))" />
+                                <label class="form-check-label" for="@checkboxId">@option</label>
+                            </div>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="OtherSupportProductText" class="form-label">Otro producto de apoyo — especificar</label>
+                        <input asp-for="OtherSupportProductText" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="OtherSupportText" class="form-label">Otra ayuda — especificar</label>
+                        <input asp-for="OtherSupportText" class="form-control" />
+                    </div>
+                    break;
+            }
+
+            <div class="mb-0">
+                <label asp-for="Observacion" class="form-label"></label>
+                <textarea asp-for="Observacion" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-grid d-md-flex justify-content-md-end">
+        <button type="submit" class="btn btn-primary btn-lg">Guardar área</button>
+    </div>
+</form>

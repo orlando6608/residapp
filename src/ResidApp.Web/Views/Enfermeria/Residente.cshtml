@@ -28,10 +28,13 @@
             <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
             <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
         }
+        <a asp-controller="EnfermeriaBasal" asp-action="Draft" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-primary btn-lg mt-3">
+            @(Model.Baseline is null ? "Crear borrador de basal" : "Iniciar reevaluación")
+        </a>
     </div>
 </div>
 
 <div class="alert alert-info mb-0">
-    Todavía no está disponible desde aquí crear un borrador de basal, iniciar una reevaluación ni
-    registrar un evento propio: esas pantallas llegan en el siguiente grupo del vertical Enfermería.
+    Todavía no está disponible desde aquí registrar un evento propio: esa pantalla llega en un grupo
+    posterior del vertical Enfermería.
 </div>

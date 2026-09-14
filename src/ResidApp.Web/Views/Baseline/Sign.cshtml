@@ -11,11 +11,11 @@
 </nav>
 
 <h1 class="h3">Firmar borrador de basal</h1>
-<div class="alert alert-warning">
-    Todavía no existe un caso de uso para crear el contenido de un borrador de basal (las 9 áreas más
-    Barthel), ni en este puerto ni en el prototipo legado. Sin un <code>BorradorId</code> real ya existente
-    en <code>dbo.basales_borrador</code>, esta operación devolverá un fallo de aplicación. El cableado queda
-    listo para cuando exista esa capacidad.
+<div class="alert alert-info">
+    Esta pantalla firma directamente un borrador ya identificado por sus datos técnicos. Para crear el
+    contenido del borrador (las nueve áreas y el índice de Barthel) y llegar aquí ya con los datos
+    rellenados, entra por <a asp-controller="Enfermeria" asp-action="Residentes">Enfermería → Residentes</a>
+    y abre «Estado basal» sobre el residente correspondiente.
 </div>
 
 <div class="card">

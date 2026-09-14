@@ -1,0 +1,130 @@
+@using ResidApp.Domain.Baseline
+@using ResidApp.Web.Models
+@model BaselineDraftHubViewModel
+@{
+    ViewData["Title"] = "Estado basal";
+    var createForm = (CreateBaselineDraftFormModel)ViewBag.CreateForm;
+    var cancelForm = (CancelBaselineDraftFormModel)ViewBag.CancelForm;
+    var completedAreas = Model.Draft?.Areas.Select(a => a.AreaCode).ToHashSet() ?? [];
+    var allAreasComplete = completedAreas.Count == Enum.GetValues<BaselineArea>().Length;
+    var barthelComplete = Model.Draft?.Barthel.TotalScore is not null;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Enfermeria" asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Enfermeria" asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Enfermeria" asp-action="Residente" asp-route-residenteId="@Model.Resident.ResidentId.Value">@Model.Resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Estado basal</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Estado basal — @Model.Resident.DisplayName</h1>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+@if (Model.Draft is null)
+{
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h5 card-title">Crear borrador</h2>
+            <p class="text-muted">No hay ningún borrador activo para este residente. Solo puede existir uno a la vez.</p>
+            <form asp-controller="EnfermeriaBasal" asp-action="CrearBorrador" method="post">
+                <input type="hidden" asp-for="@createForm.ResidenteId" />
+                <input type="hidden" asp-for="@createForm.OperacionId" />
+                <div class="mb-3">
+                    <label asp-for="@createForm.Motivo" class="form-label"></label>
+                    <select asp-for="@createForm.Motivo" class="form-select" asp-items="Html.GetEnumSelectList<BaselineReason>()">
+                        <option value="">— Elige un motivo —</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="@createForm.FuenteInformacionComun" class="form-label"></label>
+                    <select asp-for="@createForm.FuenteInformacionComun" class="form-select" asp-items="Html.GetEnumSelectList<ResidApp.Domain.Baseline.Catalogs.InformationSourceCode>()">
+                        <option value="">— Elige una fuente —</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="@createForm.FuenteInformacionComunOtroTexto" class="form-label"></label>
+                    <input asp-for="@createForm.FuenteInformacionComunOtroTexto" class="form-control" placeholder="Solo si la fuente es «Otra»" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="@createForm.FechaInformacionComun" class="form-label"></label>
+                    <input asp-for="@createForm.FechaInformacionComun" type="date" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">Crear borrador</button>
+            </form>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Borrador activo</h2>
+            <p class="mb-1">Motivo: <strong>@Model.Draft.ReasonCode</strong></p>
+            <p class="mb-1">Fuente de la información: <strong>@Model.Draft.CommonInformationSourceCode@(Model.Draft.CommonInformationSourceOtherText is null ? "" : $" ({Model.Draft.CommonInformationSourceOtherText})")</strong></p>
+            <p class="mb-0">Fecha de la información: <strong>@Model.Draft.CommonInformationDate.ToString("dd/MM/yyyy")</strong></p>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        @foreach (var area in Enum.GetValues<BaselineArea>())
+        {
+            var done = completedAreas.Contains(area);
+            <div class="col-12 col-md-6 col-lg-4">
+                <a asp-action="Area" asp-route-residenteId="@Model.Resident.ResidentId.Value" asp-route-areaCode="@area"
+                   class="card text-decoration-none h-100 border-start border-4 @(done ? "border-success" : "border-secondary")">
+                    <div class="card-body">
+                        <h3 class="h6 card-title mb-1">@BaselineAreaDisplay.Label(area)</h3>
+                        <span class="badge @(done ? "text-bg-success" : "text-bg-light")">@(done ? "Completada" : "Pendiente")</span>
+                    </div>
+                </a>
+            </div>
+        }
+        <div class="col-12 col-md-6 col-lg-4">
+            <a asp-action="Barthel" asp-route-residenteId="@Model.Resident.ResidentId.Value"
+               class="card text-decoration-none h-100 border-start border-4 @(barthelComplete ? "border-success" : "border-secondary")">
+                <div class="card-body">
+                    <h3 class="h6 card-title mb-1">Índice de Barthel</h3>
+                    <span class="badge @(barthelComplete ? "text-bg-success" : "text-bg-light")">
+                        @(barthelComplete ? $"Completado ({Model.Draft.Barthel.TotalScore}/100)" : "Pendiente")
+                    </span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    @if (allAreasComplete && barthelComplete)
+    {
+        <a asp-action="Confirmar" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-success btn-lg mb-3">
+            Confirmar y firmar
+        </a>
+    }
+    else
+    {
+        <p class="text-muted">Completa las nueve áreas y el índice de Barthel para poder confirmar y firmar.</p>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h6 card-title">Cancelar borrador</h2>
+            <form asp-controller="EnfermeriaBasal" asp-action="CancelarBorrador" method="post">
+                <input type="hidden" asp-for="@cancelForm.ResidenteId" />
+                <div class="mb-3">
+                    <label asp-for="@cancelForm.Motivo" class="form-label"></label>
+                    <textarea asp-for="@cancelForm.Motivo" class="form-control" rows="2"></textarea>
+                </div>
+                <button type="submit" class="btn btn-outline-danger">Cancelar borrador</button>
+            </form>
+        </div>
+    </div>
+}

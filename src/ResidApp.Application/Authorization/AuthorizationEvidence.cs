@@ -11,6 +11,11 @@ public abstract record AuthorizationTarget
     public sealed record Create(UnitId UnitId) : AuthorizationTarget;
     public sealed record Read(ResidentId ResidentId) : AuthorizationTarget;
     public sealed record Sign(ResidentId ResidentId, BaselineDraftId DraftId) : AuthorizationTarget;
+
+    /// <summary>ENF-19/ENF-20: crear un borrador de basal (inicial o reevaluación). A diferencia de Sign
+    /// (donde el motivo se lee del borrador ya existente), aquí el motivo lo elige quien lo crea, así que
+    /// viaja como dato de entrada del propio target.</summary>
+    public sealed record Draft(ResidentId ResidentId, BaselineReason Reason) : AuthorizationTarget;
 }
 
 /// <summary>Traduce AuthorizationSelection de authorization-subject-repository.ts. profileScopeId viaja

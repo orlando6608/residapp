@@ -8,11 +8,12 @@
     ResidApp es un registro trazable del estado cotidiano de los residentes, pensado para dar continuidad
     entre turnos y perfiles profesionales, y para mantener informadas a las familias. <strong>No diagnostica
     ni sustituye protocolos clínicos.</strong> La app está en desarrollo: hoy funcionan de principio a fin
-    el vertical <strong>Residente / Basal</strong> y el vertical <strong>Auxiliar</strong>; del vertical
-    <strong>Enfermería</strong> solo funciona todavía la navegación básica (ver tus residentes y su
-    ficha). El resto de módulos aparece descrito al final como "Próximamente". El acceso actual es en
-    <strong>modo de desarrollo</strong> (no hay todavía un inicio de sesión con usuario y contraseña
-    definitivo).
+    el vertical <strong>Residente / Basal</strong> (incluida la creación, autoría de las nueve áreas, el
+    índice de Barthel y la firma del estado basal) y el vertical <strong>Auxiliar</strong>; del vertical
+    <strong>Enfermería</strong> funciona la navegación y la autoría completa del basal, pero todavía no las
+    bandejas de trabajo ni el registro de eventos propios. El resto de módulos aparece descrito al final
+    como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
+    inicio de sesión con usuario y contraseña definitivo).
 </div>
 
 <div class="card mb-4">
@@ -21,7 +22,7 @@
         <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action" href="#entrar-ambito">Entrar y elegir tu ámbito de trabajo</a>
             <a class="list-group-item list-group-item-action" href="#alta-residente">Dar de alta un residente</a>
-            <a class="list-group-item list-group-item-action" href="#firmar-basal">Firmar el estado basal</a>
+            <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
             <a class="list-group-item list-group-item-action" href="#mis-residentes-auxiliar">Mis residentes (Auxiliar)</a>
             <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
@@ -65,19 +66,27 @@
 
 <section id="firmar-basal" class="mb-4">
     <h2 class="h5">
-        Firmar el estado basal
+        Crear, completar y firmar el estado basal
         <span class="badge text-bg-secondary align-middle">Perfil: Enfermería / Medicina</span>
     </h2>
     <p>
         El <strong>basal</strong> es el estado habitual de referencia de un residente, valorado en 9 áreas
-        más la escala <strong>Barthel</strong> (autonomía funcional). Solo puede firmarlo la misma cuenta que
-        creó el borrador, con el mismo perfil.
+        más la escala <strong>Barthel</strong> (autonomía funcional). Desde la ficha del residente (ver
+        "Residentes (Enfermería)") puedes crear un borrador indicando el motivo (alta, revisión programada
+        o cambio funcional consolidado), la fuente de la información y su fecha. Solo puede existir un
+        borrador activo por residente a la vez.
     </p>
-    <div class="alert alert-warning mb-0">
-        Ahora mismo solo existe la pantalla para <strong>firmar</strong> un borrador de basal ya preparado;
-        todavía no hay una pantalla para completar las 9 áreas y la escala Barthel desde cero. Esta parte del
-        manual se actualizará en cuanto esa pantalla exista.
-    </div>
+    <p>
+        Una vez creado, completas las nueve áreas una por una (cada una queda marcada como completada) y el
+        índice de Barthel (diez ítems con puntuación automática sobre 100). Puedes cancelar el borrador con
+        un motivo en cualquier momento antes de firmarlo.
+    </p>
+    <p class="mb-0">
+        Cuando las nueve áreas y Barthel están completos, la pantalla de confirmación muestra un resumen
+        completo antes de firmar. Solo puede firmar la misma cuenta que creó el borrador, con el mismo
+        perfil; al firmar, la versión anterior (si existía) pasa a histórica y la nueva a vigente, en una
+        sola operación atómica e inmediata.
+    </p>
 </section>
 
 <section id="consulta-direccion" class="mb-4">
@@ -131,11 +140,13 @@
         si tu ámbito tiene restringido el acceso a residentes concretos, solo esos. Cada tarjeta indica si
         el residente ya tiene un estado basal vigente (verde) o sigue pendiente (rojo).
     </p>
-    <div class="alert alert-warning mb-0">
-        Al abrir un residente solo puedes consultar su identidad, su unidad y el resumen del basal vigente.
-        Todavía no está disponible desde aquí crear un borrador de basal, iniciar una reevaluación ni
-        registrar un evento propio; tampoco existen aún las bandejas de trabajo (ver "Próximamente").
-    </div>
+    <p class="mb-0">
+        Al abrir un residente ves su identidad, su unidad, el resumen del basal vigente y el acceso para
+        crear un borrador de basal o iniciar una reevaluación (ver "Crear, completar y firmar el estado
+        basal"). Todavía no está disponible desde aquí que un segundo profesional aporte a un borrador
+        ajeno, ni registrar un evento propio; tampoco existen aún las bandejas de trabajo (ver
+        "Próximamente").
+    </p>
 </section>
 
 <section id="glosario" class="mb-4">
