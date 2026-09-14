@@ -1,4 +1,5 @@
 using Dapper;
+using ResidApp.Application.Authorization;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Baseline;
 using ResidApp.Domain.Baseline.Answers;
@@ -146,6 +147,19 @@ public class SqlBaselineRepositoryDraftTests
         Assert.NotNull(current);
         Assert.Equal(9, current!.Areas.Count);
         Assert.Equal(100, current.BarthelTotal);
+
+        // Regresión: ReadAsClinicalDirectionAsync con ClinicalResourceType.BaselineCurrent nunca se había
+        // ejercitado contra un basal realmente firmado (ReadCurrentSummaryAsync, arriba, usa un alias de
+        // tabla distinto y seguro). El SQL de este camino usaba "current" como alias — palabra reservada
+        // en T-SQL — y fallaba con "Incorrect syntax near the keyword 'current'" en cuanto había una fila
+        // real que leer. Descubierto al montar el escenario integrado de pruebas para CJ.
+        var directionSeed = await SeedFixture.AddProfileToCenterAsync(
+            SystemProfile.DireccionClinica, seed.CenterId, seed.UnitId, [ResidentBaselinePermission.ClinicalDetailRead.ToCode()]);
+        var headers = await _repository.ReadAsClinicalDirectionAsync(new ClinicalDirectionReadInput(
+            directionSeed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
+            ClinicalResourceType.BaselineCurrent, ClinicalDetailAccessPurpose.SupervisionClinica, Guid.NewGuid()));
+        Assert.Single(headers);
+        Assert.Equal(1, headers[0].VersionNumber);
     }
 
     private static List<BarthelItem> FullBarthelItems() =>

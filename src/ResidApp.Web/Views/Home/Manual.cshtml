@@ -22,6 +22,7 @@
         <h2 class="h6 card-title mb-3">Índice</h2>
         <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action" href="#entrar-ambito">Entrar y elegir tu ámbito de trabajo</a>
+            <a class="list-group-item list-group-item-action" href="#cuentas-prueba">Cuentas de prueba y cómo cambiar de usuario</a>
             <a class="list-group-item list-group-item-action" href="#alta-residente">Dar de alta un residente</a>
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
@@ -47,6 +48,103 @@
     <p class="mb-0">
         Desde cualquier pantalla que dependa del ámbito activo puedes pulsar <strong>«Cambiar ámbito»</strong>
         para volver a elegir con qué perfil o centro quieres trabajar.
+    </p>
+</section>
+
+<section id="cuentas-prueba" class="mb-4">
+    <h2 class="h5">Cuentas de prueba y cómo cambiar de usuario</h2>
+    <p>
+        El acceso actual es de desarrollo: en <a asp-controller="DevAuth" asp-action="Login">/DevAuth/Login</a>
+        escribes el nombre de una cuenta ya sembrada (por ejemplo <code>dev-admin</code>) y entras
+        directamente con ella, sin contraseña. Para <strong>cambiar de usuario</strong> no hace falta cerrar
+        sesión antes: vuelve a <code>/DevAuth/Login</code> y escribe el nombre de otra cuenta — el propio
+        login sustituye tu identidad y limpia el ámbito activo, así que la app te pedirá elegirlo de nuevo
+        si esa cuenta tiene más de uno.
+    </p>
+
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Cuenta</th>
+                    <th scope="col">Perfil(es)</th>
+                    <th scope="col">Para qué sirve</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>dev-admin</code></td>
+                    <td>Administración</td>
+                    <td>Dar de alta un residente nuevo.</td>
+                </tr>
+                <tr>
+                    <td><code>dev-auxiliar</code></td>
+                    <td>Auxiliar</td>
+                    <td>Mis residentes (2 asignados), registro cotidiano y registrar cambio.</td>
+                </tr>
+                <tr>
+                    <td><code>dev-enfermeria</code></td>
+                    <td>Enfermería</td>
+                    <td>Residentes del ámbito (2 visibles), crear/firmar basal, registrar evento propio, bandejas.</td>
+                </tr>
+                <tr>
+                    <td><code>dev-multi</code></td>
+                    <td>Enfermería y Medicina (mismo centro); Dirección Clínica y Familiar (otro centro)</td>
+                    <td>
+                        Ver la pantalla de selección de ámbito con varias opciones a la vez. Medicina y
+                        Familiar todavía no tienen ninguna pantalla propia: solo demuestran que el selector
+                        también funciona con ellos.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <code>dev-integrado-auxiliar</code><br />
+                        <code>dev-integrado-enfermeria</code><br />
+                        <code>dev-integrado-direccion</code>
+                    </td>
+                    <td>Auxiliar, Enfermería y Dirección Clínica (mismo centro y unidad)</td>
+                    <td>Recorrido guiado de extremo a extremo cruzando los tres perfiles — ver más abajo.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="h6 mt-4">Recorrido guiado: un cambio cruza tres perfiles</h3>
+    <p>
+        Las tres cuentas <code>dev-integrado-*</code> comparten un mismo centro y unidad ficticios, con dos
+        residentes ("Residente Integrado Uno" y "Residente Integrado Dos"), para poder seguir en persona el
+        mismo caso a través de los tres perfiles que ya intervienen en él:
+    </p>
+    <ol>
+        <li>
+            Entra como <code>dev-integrado-auxiliar</code>. Abre "Residente Integrado Uno" y
+            <strong>Registrar cambio</strong>: completa un área con texto libre, clasifícalo como
+            <em>Prioritario</em> (elige un motivo y documenta el aviso directo) y confirma.
+        </li>
+        <li>
+            Cambia a <code>dev-integrado-enfermeria</code>. Abre la <strong>Bandeja prioritaria</strong> desde
+            Inicio: verás ahí el cambio que acabas de registrar. Desde el residente, pulsa
+            "Crear borrador de basal", completa las nueve áreas (puedes dejarlas todas en su valor por
+            defecto) y el índice de Barthel, y fírmalo desde "Confirmar y firmar".
+        </li>
+        <li>
+            Cambia a <code>dev-integrado-direccion</code> y abre
+            <a asp-controller="Baseline" asp-action="Direction">Consultar el histórico de basal</a>. Pega
+            estos tres valores (son fijos, siempre los mismos mientras no se reescriba el script de datos
+            semilla) y elige "BASELINE_CURRENT" como tipo de recurso:
+            <ul>
+                <li>Ámbito de perfil: <code>a1000000-0000-0000-0000-000000000003</code></li>
+                <li>Centro: <code>a1000000-0000-0000-0000-000000000001</code></li>
+                <li>Residente: <code>a1000000-0000-0000-0000-000000000002</code></li>
+            </ul>
+            Verás el basal que acabas de firmar, en modo de solo lectura y auditado.
+        </li>
+    </ol>
+    <p class="mb-0">
+        "Residente Integrado Dos" no tiene un identificador fijo: si quieres repetir el recorrido desde cero
+        con él, abre su ficha como Auxiliar o Enfermería y copia el identificador que aparece al final de la
+        dirección web (<code>...?residenteId=...</code>) para poder pegarlo después en la consulta de
+        Dirección Clínica.
     </p>
 </section>
 
