@@ -22,6 +22,7 @@ builder.Services.AddScoped<IBaselineRepository, SqlBaselineRepository>();
 builder.Services.AddScoped<IAuthorizationEvidenceProvider, SqlAuthorizationEvidenceProvider>();
 builder.Services.AddScoped<IProfileScopeDirectoryProvider, SqlProfileScopeDirectoryProvider>();
 builder.Services.AddScoped<IAssignedResidentDirectory, SqlAssignedResidentDirectory>();
+builder.Services.AddScoped<IEnfermeriaResidentDirectory, SqlEnfermeriaResidentDirectory>();
 builder.Services.AddScoped<IDailyClosureRepository, SqlDailyClosureRepository>();
 builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
 
@@ -37,6 +38,10 @@ builder.Services.AddScoped<ReadCurrentBaseline>();
 builder.Services.AddScoped<RegisterDailyClosure>();
 builder.Services.AddScoped<RegisterDailyChange>();
 builder.Services.AddScoped<AuxiliarApplicationService>();
+
+builder.Services.AddScoped<ListScopeResidents>();
+builder.Services.AddScoped<FindScopeResident>();
+builder.Services.AddScoped<EnfermeriaApplicationService>();
 
 var app = builder.Build();
 

@@ -90,7 +90,15 @@
       "Bash(grep -i \"alert\\\\|error\\\\|documenta\" /tmp/after_reject.html | head -10)",
       "Bash(curl -s -b /tmp/cookies.txt -c /tmp/cookies.txt http://localhost:5299/Auxiliar -o /tmp/aux_final.html)",
       "Bash(grep -i \"error\\\\|exception\\\\|fail\" /tmp/residapp_web.log)",
-      "Bash(taskkill //PID 32780 //F)"
+      "Bash(taskkill //PID 32780 //F)",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -I -i database/seed/dev_seed_enfermeria.sql)",
+      "Bash(sleep 4; cat /tmp/enf_server.log)",
+      "Bash(curl -s -c /tmp/enf_cookies.txt -b /tmp/enf_cookies.txt -L http://localhost:5203/Enfermeria/Index -D /tmp/enf_index_headers.txt -o /tmp/enf_index.html)",
+      "Bash(curl -s -c /tmp/enf_cookies.txt -b /tmp/enf_cookies.txt -L http://localhost:5203/Enfermeria/Residentes -D /tmp/enf_residentes_headers.txt -o /tmp/enf_residentes.html)",
+      "Bash(curl -s -c /tmp/enf_cookies.txt -b /tmp/enf_cookies.txt -L http://localhost:5203/Enfermeria/Residente?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966 -D /tmp/enf_detail_headers.txt -o /tmp/enf_detail.html)",
+      "Bash(curl -s -c /tmp/enf_cookies.txt -b /tmp/enf_cookies.txt -L http://localhost:5203/Enfermeria/Residente?residenteId=00000000-0000-0000-0000-000000000001 -D /tmp/enf_bad_headers.txt -o /tmp/enf_bad.html)",
+      "Bash(curl -s -c /tmp/enf_cookies.txt -b /tmp/enf_cookies.txt -L http://localhost:5203/Enfermeria/Residente?residenteId=00000000-0000-0000-0000-000000000000 -o /tmp/enf_empty.html -w 'HTTP:%{http_code}\\\\n')",
+      "Bash(taskkill //PID 11000 //F)"
     ],
     "additionalDirectories": [
       "\\tmp"

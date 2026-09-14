@@ -1,0 +1,37 @@
+@using ResidApp.Web.Models
+@model EnfermeriaResidentDetailViewModel
+@{
+    ViewData["Title"] = "Ficha del residente";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Resident.DisplayName</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@Model.Resident.DisplayName</h1>
+<p class="text-muted">@(Model.Resident.UnitName ?? "Sin unidad")</p>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Estado basal vigente</h2>
+        @if (Model.Baseline is null)
+        {
+            <p class="text-muted mb-0">Sin basal vigente registrado.</p>
+        }
+        else
+        {
+            <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
+            <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
+        }
+    </div>
+</div>
+
+<div class="alert alert-info mb-0">
+    Todavía no está disponible desde aquí crear un borrador de basal, iniciar una reevaluación ni
+    registrar un evento propio: esas pantallas llegan en el siguiente grupo del vertical Enfermería.
+</div>

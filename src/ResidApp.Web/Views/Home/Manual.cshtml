@@ -8,9 +8,11 @@
     ResidApp es un registro trazable del estado cotidiano de los residentes, pensado para dar continuidad
     entre turnos y perfiles profesionales, y para mantener informadas a las familias. <strong>No diagnostica
     ni sustituye protocolos clínicos.</strong> La app está en desarrollo: hoy funcionan de principio a fin
-    el vertical <strong>Residente / Basal</strong> y el vertical <strong>Auxiliar</strong>; el resto de
-    módulos aparece descrito al final como "Próximamente". El acceso actual es en <strong>modo de
-    desarrollo</strong> (no hay todavía un inicio de sesión con usuario y contraseña definitivo).
+    el vertical <strong>Residente / Basal</strong> y el vertical <strong>Auxiliar</strong>; del vertical
+    <strong>Enfermería</strong> solo funciona todavía la navegación básica (ver tus residentes y su
+    ficha). El resto de módulos aparece descrito al final como "Próximamente". El acceso actual es en
+    <strong>modo de desarrollo</strong> (no hay todavía un inicio de sesión con usuario y contraseña
+    definitivo).
 </div>
 
 <div class="card mb-4">
@@ -22,6 +24,7 @@
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
             <a class="list-group-item list-group-item-action" href="#mis-residentes-auxiliar">Mis residentes (Auxiliar)</a>
+            <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
         </div>
@@ -116,6 +119,23 @@
         (exige elegir un motivo de una lista cerrada y documentar el aviso directo antes de confirmar;
         pasa a la bandeja prioritaria). Antes de enviarlo se muestra siempre un resumen para revisar.
     </p>
+</section>
+
+<section id="residentes-enfermeria" class="mb-4">
+    <h2 class="h5">
+        Residentes
+        <span class="badge text-bg-secondary align-middle">Perfil: Enfermería</span>
+    </h2>
+    <p>
+        Muestra los residentes de tu ámbito: por defecto, todos los que están en tus unidades concedidas;
+        si tu ámbito tiene restringido el acceso a residentes concretos, solo esos. Cada tarjeta indica si
+        el residente ya tiene un estado basal vigente (verde) o sigue pendiente (rojo).
+    </p>
+    <div class="alert alert-warning mb-0">
+        Al abrir un residente solo puedes consultar su identidad, su unidad y el resumen del basal vigente.
+        Todavía no está disponible desde aquí crear un borrador de basal, iniciar una reevaluación ni
+        registrar un evento propio; tampoco existen aún las bandejas de trabajo (ver "Próximamente").
+    </div>
 </section>
 
 <section id="glosario" class="mb-4">

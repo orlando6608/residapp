@@ -1,0 +1,44 @@
+@model IReadOnlyList<ResidApp.Application.Ports.ScopeResidentSummary>
+@{
+    ViewData["Title"] = "Residentes";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Residentes</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Residentes</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No hay residentes en tu ámbito.</p>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var resident in Model)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-start border-4 @(resident.TieneBasalVigente ? "border-success" : "border-danger")">
+                    <div class="card-body">
+                        <h2 class="h5 card-title mb-1">@resident.DisplayName</h2>
+                        <p class="card-text text-muted mb-2">@(resident.UnitName ?? "Sin unidad")</p>
+                        <p class="mb-2">
+                            <span class="badge @(resident.TieneBasalVigente ? "text-bg-success" : "text-bg-danger")">
+                                @(resident.TieneBasalVigente ? "Basal vigente" : "Basal pendiente")
+                            </span>
+                        </p>
+                        <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-primary btn-lg w-100">
+                            Abrir ficha
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
