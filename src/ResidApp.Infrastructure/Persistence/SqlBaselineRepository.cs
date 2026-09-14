@@ -337,6 +337,46 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
         }
     }
 
+    /// <summary>Traduce AUX-03/ENF-20/MED-21: lectura resumida del basal vigente, sin auditoría (a
+    /// diferencia de ReadAsClinicalDirectionAsync) porque ResidentBaselinePolicy.AuthorizeBaselineCurrentRead
+    /// ya lo permite a Auxiliar/Enfermería/Medicina sin esa obligación. Reutiliza BaselineAreaAnswerReader
+    /// (el mismo parser que valida el borrador al firmar) para devolver cada área ya tipada, nunca el
+    /// Barthel detallado por ítem.</summary>
+    public async Task<CurrentBaselineSummary?> ReadCurrentSummaryAsync(
+        ReadCurrentBaselineSummaryInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+
+        var version = await connection.QuerySingleOrDefaultAsync<CurrentVersionRow>(new CommandDefinition("""
+            SELECT v.id AS Id, v.numero_version AS VersionNumber, v.motivo_codigo AS ReasonCode, v.firmado_en AS SignedAt
+              FROM dbo.basales_vigentes_residente cur
+              JOIN dbo.basales_version v ON v.id = cur.version_basal_id AND v.residente_id = cur.residente_id AND v.centro_id = cur.centro_id
+             WHERE cur.residente_id = @ResidentId AND cur.centro_id = @CenterId
+            """, new { ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value }, cancellationToken: ct));
+        if (version is null)
+        {
+            return null;
+        }
+
+        var areas = (await connection.QueryAsync<CurrentAreaRow>(new CommandDefinition("""
+            SELECT area_codigo AS AreaCode, respuestas_json AS AnswerPayload, observacion AS Observation
+              FROM dbo.basales_version_areas WHERE version_basal_id = @VersionId ORDER BY area_codigo
+            """, new { VersionId = version.Id }, cancellationToken: ct)))
+            .Select(area => new BaselineAreaSummary(
+                EnumCode.ParseCode<BaselineArea>(area.AreaCode),
+                BaselineAreaAnswerReader.Parse(EnumCode.ParseCode<BaselineArea>(area.AreaCode), area.AnswerPayload),
+                area.Observation))
+            .ToList();
+
+        var barthelTotal = await connection.QuerySingleAsync<int>(new CommandDefinition("""
+            SELECT puntuacion_total FROM dbo.basales_version_barthel WHERE version_basal_id = @VersionId
+            """, new { VersionId = version.Id }, cancellationToken: ct));
+
+        return new CurrentBaselineSummary(
+            BaselineVersionId.From(version.Id), version.VersionNumber, EnumCode.ParseCode<BaselineReason>(version.ReasonCode),
+            version.SignedAt, areas, barthelTotal);
+    }
+
     private static async Task<DraftRow?> LoadAuthorizedDraftAsync(
         IDbConnection connection, IDbTransaction transaction, SignBaselineDraftInput input, CancellationToken ct) =>
         await connection.QuerySingleOrDefaultAsync<DraftRow>(new CommandDefinition("""
@@ -454,6 +494,10 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
     }
 
     private sealed record CurrentRow(Guid BaselineVersionId, int VersionNumber);
+
+    private sealed record CurrentVersionRow(Guid Id, int VersionNumber, string ReasonCode, DateTimeOffset SignedAt);
+
+    private sealed record CurrentAreaRow(string AreaCode, string AnswerPayload, string? Observation);
 
     private sealed record DraftRow(
         Guid Id, Guid ResidentId, Guid CenterId, Guid CreatedInUnitId, string ReasonCode, string CommonInformationSourceCode,

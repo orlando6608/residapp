@@ -69,4 +69,18 @@ public class SqlBaselineRepositoryTests
         var retryEx = await Assert.ThrowsAsync<SqlException>(() => _repository.ReadAsClinicalDirectionAsync(input));
         Assert.Contains("CLINICAL_DETAIL_READ_NOT_AUTHORIZED", retryEx.Message);
     }
+
+    [Fact]
+    public async Task ReadCurrentSummaryAsync_WhenNoBaselineVersionExists_ReturnsNull()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Sin Basal Para Auxiliar", new DateOnly(1946, 2, 2), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+
+        var summary = await _repository.ReadCurrentSummaryAsync(
+            new ReadCurrentBaselineSummaryInput(adminSeed.CenterId, resident.ResidentId));
+
+        Assert.Null(summary);
+    }
 }

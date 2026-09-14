@@ -50,7 +50,33 @@
       "Bash(git rev-list *)",
       "Bash(git fetch *)",
       "Bash(git remote *)",
-      "Bash(curl -s \"https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main&per_page=3\")"
+      "Bash(curl -s \"https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main&per_page=3\")",
+      "Bash(dotnet run *)",
+      "Bash(curl -s -o /tmp/manual.html -w \"%{http_code}\\\\n\" http://localhost:5299/Home/Manual)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5299/Home/Manual)",
+      "Bash(curl -s http://localhost:5299/Home/Manual)",
+      "Bash(powershell -NoProfile -Command 'Get-CimInstance Win32_Process -Filter \"Name='\\\\''dotnet.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*ResidApp.Web*'\\\\'' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 3 http://localhost:5299/)",
+      "Bash(powershell -NoProfile -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='dotnet.exe'\\\\\" | Select-Object ProcessId, CommandLine | Format-List\")",
+      "Bash(powershell -NoProfile -Command 'Get-CimInstance Win32_Process | Where-Object { $_.Name -match '\\\\''ResidApp'\\\\'' -or $_.ProcessId -eq 16600 } | Select-Object ProcessId,Name,CommandLine | Format-List; Get-CimInstance Win32_Process -Filter \"ParentProcessId=16600\" | Select-Object ProcessId,Name,CommandLine | Format-List')",
+      "Bash(powershell -NoProfile -Command \"Stop-Process -Id 27616,16600 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -I -i database/seed/dev_seed_auxiliar.sql)",
+      "Bash(sleep 4 && cat /tmp/residapp_web.log | tail -n 40)",
+      "Bash(curl -s -b /tmp/cookies.txt -c /tmp/cookies.txt -L http://localhost:5299/Auxiliar/Index -D - -o /tmp/aux_index.html)",
+      "Bash(curl -s -b /tmp/cookies.txt -c /tmp/cookies.txt http://localhost:5299/Auxiliar/Registro?residenteId=34e80280-b10a-469e-8d95-d9a0f2cb7ba3 -o /tmp/aux_registro.html -w 'HTTP %{http_code}\\\\n')",
+      "Bash(curl -s -b /tmp/cookies.txt -c /tmp/cookies.txt http://localhost:5299/Auxiliar/Basal?residenteId=34e80280-b10a-469e-8d95-d9a0f2cb7ba3 -o /tmp/aux_basal.html -w 'HTTP %{http_code}\\\\n')",
+      "Read(//proc/sys/kernel/random/**)",
+      "Bash(curl -s -b /tmp/cookies.txt -c /tmp/cookies.txt http://localhost:5299/Auxiliar/Registro?residenteId=__CMDSUB_OUTPUT__ -D - -o /tmp/aux_denied.html)",
+      "Bash(tail -n 60 /tmp/residapp_web.log)",
+      "Bash(RANDOM_ID=$\\(powershell -NoProfile -Command \"[guid]::NewGuid\\(\\).ToString\\(\\)\" 2>/dev/null | tr -d '\\\\r'\\) *)",
+      "Bash(taskkill //PID 28240 //F)",
+      "Bash(curl -s -b /tmp/cookies.txt -c /tmp/cookies.txt http://localhost:5299/Auxiliar/Basal?residenteId=34e80280-b10a-469e-8d95-d9a0f2cb7ba3 -w '\\\\nHTTP %{http_code}\\\\n' -o /tmp/final_basal.html)",
+      "Bash(powershell -NoProfile -Command 'Get-Process dotnet | Where-Object { $_.MainWindowTitle -eq '\\\\'''\\\\'' } | Select-Object Id,StartTime')",
+      "Bash(pkill -f \"dotnet.*ResidApp.Web\")",
+      "Bash(taskkill //PID 3424 //F)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

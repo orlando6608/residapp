@@ -21,6 +21,7 @@ builder.Services.AddScoped<IResidentRepository, SqlResidentRepository>();
 builder.Services.AddScoped<IBaselineRepository, SqlBaselineRepository>();
 builder.Services.AddScoped<IAuthorizationEvidenceProvider, SqlAuthorizationEvidenceProvider>();
 builder.Services.AddScoped<IProfileScopeDirectoryProvider, SqlProfileScopeDirectoryProvider>();
+builder.Services.AddScoped<IAssignedResidentDirectory, SqlAssignedResidentDirectory>();
 builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
 
 builder.Services.AddScoped<CreateResident>();
@@ -28,6 +29,11 @@ builder.Services.AddScoped<SignBaseline>();
 builder.Services.AddScoped<ReadDirectionBaseline>();
 builder.Services.AddScoped<ListActiveProfileScopes>();
 builder.Services.AddScoped<ResidentBaselineApplicationService>();
+
+builder.Services.AddScoped<ListAssignedResidents>();
+builder.Services.AddScoped<FindAssignedResident>();
+builder.Services.AddScoped<ReadCurrentBaseline>();
+builder.Services.AddScoped<AuxiliarApplicationService>();
 
 var app = builder.Build();
 

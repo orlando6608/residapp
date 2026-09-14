@@ -1,0 +1,45 @@
+@model ResidApp.Web.Models.AuxiliarResidentDetailViewModel
+@{
+    ViewData["Title"] = "Registro cotidiano";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Mis residentes</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Registro cotidiano</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@Model.Resident.DisplayName</h1>
+<p class="text-muted">@(Model.Resident.UnitName ?? "Sin unidad")</p>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Estado basal vigente</h2>
+        @if (Model.Baseline is null)
+        {
+            <p class="text-muted mb-0">Sin basal vigente registrado.</p>
+        }
+        else
+        {
+            <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
+            <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
+        }
+        <a asp-action="Basal" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-secondary btn-lg mt-3">
+            Consultar estado basal
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h2 class="h5 card-title">Acciones del turno</h2>
+        <p class="text-muted">Disponibles en la siguiente iteración de este vertical.</p>
+        <div class="d-grid gap-2 d-md-flex">
+            <button type="button" class="btn btn-success btn-lg" disabled title="Disponible en la siguiente iteración">Sin cambios</button>
+            <button type="button" class="btn btn-warning btn-lg" disabled title="Disponible en la siguiente iteración">No valorable</button>
+            <button type="button" class="btn btn-primary btn-lg" disabled title="Disponible en la siguiente iteración">Registrar cambio</button>
+        </div>
+    </div>
+</div>

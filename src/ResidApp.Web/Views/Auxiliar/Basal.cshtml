@@ -1,0 +1,57 @@
+@using ResidApp.Web.Models
+@model AuxiliarResidentDetailViewModel
+@{
+    ViewData["Title"] = "Consulta del estado basal";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Mis residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Registro" asp-route-residenteId="@Model.Resident.ResidentId.Value">@Model.Resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Estado basal</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Estado basal — @Model.Resident.DisplayName</h1>
+
+@if (Model.Baseline is null)
+{
+    <p class="text-muted">Sin basal vigente registrado para este residente.</p>
+}
+else
+{
+    <p class="text-muted">
+        Versión @Model.Baseline.VersionNumber · firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")
+    </p>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Índice de Barthel</h2>
+            <p class="mb-0"><strong>@Model.Baseline.BarthelTotal / 100</strong></p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var area in Model.Baseline.Areas)
+        {
+            <div class="col-12 col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="h6 card-title">@BaselineAreaDisplay.Label(area.AreaCode)</h3>
+                        <ul class="mb-0">
+                            @foreach (var value in BaselineAreaDisplay.Summarize(area.Answer))
+                            {
+                                <li>@value</li>
+                            }
+                        </ul>
+                        @if (!string.IsNullOrWhiteSpace(area.Observation))
+                        {
+                            <p class="text-muted mt-2 mb-0">@area.Observation</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

@@ -59,9 +59,22 @@ public static class RequestAuthorizationContextResolver
             throw new AccessDeniedException();
         }
 
-        if (target is AuthorizationTarget.Read && (evidence.Profile != SystemProfile.DireccionClinica || resourceType is null))
+        if (target is AuthorizationTarget.Read)
         {
-            throw new AccessDeniedException();
+            if (resourceType is null)
+            {
+                throw new AccessDeniedException();
+            }
+            // ResidentBaselinePolicy.AuthorizeBaselineCurrentRead ya permite Auxiliar/Enfermeria/Medicina
+            // sin permiso ni auditoría (a diferencia de Dirección Clínica); hasta ahora esa rama estaba
+            // documentada como inalcanzable (pendientes-migracion-inicial.md, punto 5) porque aquí se
+            // cortaba antes de llegar a la política. Se habilita solo para BaselineCurrent (AUX-03/ENF-20).
+            var directCareRead = resourceType == ClinicalResourceType.BaselineCurrent
+                && evidence.Profile is SystemProfile.Auxiliar or SystemProfile.Enfermeria or SystemProfile.Medicina;
+            if (evidence.Profile != SystemProfile.DireccionClinica && !directCareRead)
+            {
+                throw new AccessDeniedException();
+            }
         }
         if (target is AuthorizationTarget.Sign && evidence.DraftReason is null)
         {
@@ -158,6 +171,18 @@ public static class RequestAuthorizationContextResolver
             obligation.AccountId, obligation.CenterId, obligation.UnitId, obligation.ResidentId,
             obligation.ResourceType, obligation.Purpose, payload.OperationId);
         return await repository.ReadAsClinicalDirectionAsync(input, ct);
+    }
+
+    /// <summary>Lectura resumida del basal vigente para el cuidado cotidiano (AUX-03/ENF-20/MED-21): a
+    /// diferencia de ExecuteDirectionBaselineReadAsync (Dirección Clínica, con obligación de auditoría),
+    /// AuthorizeBaselineCurrentRead permite a Auxiliar/Enfermería/Medicina sin permiso ni auditoría
+    /// adicional, así que aquí no se exige ninguna obligación.</summary>
+    public static async Task<CurrentBaselineSummary?> ExecuteBaselineCurrentReadAsync(
+        RequestAuthorizationContext context, IBaselineRepository repository, CancellationToken ct = default)
+    {
+        var operation = RequireTarget<AuthorizationTarget.Read>(context);
+        var input = new ReadCurrentBaselineSummaryInput(operation.CenterId, operation.ResidentId!.Value);
+        return await repository.ReadCurrentSummaryAsync(input, ct);
     }
 
     private static AuthorizedOperation RequireTarget<TTarget>(RequestAuthorizationContext context) where TTarget : AuthorizationTarget =>

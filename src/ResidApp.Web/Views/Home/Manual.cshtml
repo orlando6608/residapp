@@ -1,0 +1,155 @@
+@{
+    ViewData["Title"] = "Manual de usuario";
+}
+
+<h1 class="h3 mb-3">Manual de usuario</h1>
+
+<div class="alert alert-info">
+    ResidApp es un registro trazable del estado cotidiano de los residentes, pensado para dar continuidad
+    entre turnos y perfiles profesionales, y para mantener informadas a las familias. <strong>No diagnostica
+    ni sustituye protocolos clínicos.</strong> La app está en desarrollo: hoy solo funciona de principio a fin
+    el vertical <strong>Residente / Basal</strong>; el resto de módulos aparece descrito al final como
+    "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un inicio de
+    sesión con usuario y contraseña definitivo).
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h6 card-title mb-3">Índice</h2>
+        <div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action" href="#entrar-ambito">Entrar y elegir tu ámbito de trabajo</a>
+            <a class="list-group-item list-group-item-action" href="#alta-residente">Dar de alta un residente</a>
+            <a class="list-group-item list-group-item-action" href="#firmar-basal">Firmar el estado basal</a>
+            <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
+            <a class="list-group-item list-group-item-action" href="#mis-residentes-auxiliar">Mis residentes (Auxiliar)</a>
+            <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
+            <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
+        </div>
+    </div>
+</div>
+
+<section id="entrar-ambito" class="mb-4">
+    <h2 class="h5">Entrar y elegir tu ámbito de trabajo</h2>
+    <p>
+        Al entrar en la app, si tu cuenta puede actuar con un único perfil (por ejemplo, Enfermería) en un
+        único centro, ese ámbito se selecciona automáticamente. Si tu cuenta tiene varias combinaciones
+        posibles de centro y perfil, se te muestra una pantalla para elegir con cuál vas a trabajar en ese
+        momento. Si tu cuenta no tiene ningún ámbito activo, la app te lo indica y debes contactar con
+        Administración.
+    </p>
+    <p class="mb-0">
+        Desde cualquier pantalla que dependa del ámbito activo puedes pulsar <strong>«Cambiar ámbito»</strong>
+        para volver a elegir con qué perfil o centro quieres trabajar.
+    </p>
+</section>
+
+<section id="alta-residente" class="mb-4">
+    <h2 class="h5">
+        Dar de alta un residente
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+    </h2>
+    <p>
+        Este paso crea la ficha administrativa de un residente nuevo: unidad donde vive, nombre visible,
+        fecha de nacimiento, sexo documentado y una referencia interna. Al completarlo, el residente queda
+        dado de alta pero su estado basal queda <strong>pendiente</strong> hasta que Enfermería o Medicina lo
+        complete y firme.
+    </p>
+    <p class="mb-0">
+        Administración nunca ve contenido clínico desde esta pantalla; solo gestiona el dato administrativo
+        de identidad y ubicación.
+    </p>
+</section>
+
+<section id="firmar-basal" class="mb-4">
+    <h2 class="h5">
+        Firmar el estado basal
+        <span class="badge text-bg-secondary align-middle">Perfil: Enfermería / Medicina</span>
+    </h2>
+    <p>
+        El <strong>basal</strong> es el estado habitual de referencia de un residente, valorado en 9 áreas
+        más la escala <strong>Barthel</strong> (autonomía funcional). Solo puede firmarlo la misma cuenta que
+        creó el borrador, con el mismo perfil.
+    </p>
+    <div class="alert alert-warning mb-0">
+        Ahora mismo solo existe la pantalla para <strong>firmar</strong> un borrador de basal ya preparado;
+        todavía no hay una pantalla para completar las 9 áreas y la escala Barthel desde cero. Esta parte del
+        manual se actualizará en cuanto esa pantalla exista.
+    </div>
+</section>
+
+<section id="consulta-direccion" class="mb-4">
+    <h2 class="h5">
+        Consultar el histórico de basal
+        <span class="badge text-bg-secondary align-middle">Perfil: Dirección Clínica</span>
+    </h2>
+    <p class="mb-0">
+        Dirección Clínica puede consultar, en modo de solo lectura, el basal vigente o el histórico de
+        versiones de un residente. Cada consulta requiere indicar un propósito y queda registrada
+        obligatoriamente en auditoría.
+    </p>
+</section>
+
+<section id="mis-residentes-auxiliar" class="mb-4">
+    <h2 class="h5">
+        Mis residentes
+        <span class="badge text-bg-secondary align-middle">Perfil: Auxiliar</span>
+    </h2>
+    <p>
+        Muestra únicamente los residentes con asignación vigente para tu ámbito de trabajo. Cada tarjeta
+        indica si el residente ya tiene un estado basal vigente (verde) o sigue pendiente (rojo). Al abrir
+        un residente ves su registro cotidiano: identidad mínima y un resumen del basal vigente (nunca
+        versiones históricas, borradores, respuestas detalladas de Barthel, firma ni corrección), con acceso
+        a la consulta completa de las nueve áreas y el total de Barthel.
+    </p>
+    <div class="alert alert-warning mb-0">
+        Ahora mismo solo existe la consulta; las tres acciones de cierre del turno (<strong>Sin cambios</strong>,
+        <strong>No valorable</strong> y <strong>Registrar cambio</strong>) todavía no están disponibles. Esta
+        parte del manual se actualizará en cuanto existan.
+    </div>
+</section>
+
+<section id="glosario" class="mb-4">
+    <h2 class="h5">Glosario</h2>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Término</th>
+                    <th scope="col">Qué significa</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ámbito</td>
+                    <td>La combinación de centro y perfil con la que estás trabajando en cada momento.</td>
+                </tr>
+                <tr>
+                    <td>Basal</td>
+                    <td>Estado habitual de referencia del residente, en 9 áreas más la escala Barthel; existe en versión vigente y versiones históricas.</td>
+                </tr>
+                <tr>
+                    <td>Barthel</td>
+                    <td>Escala funcional común de 10 ítems, con puntuación y total automático, vinculada a una versión del basal.</td>
+                </tr>
+                <tr>
+                    <td>Borrador</td>
+                    <td>El basal antes de firmarse; una vez firmado se convierte en la versión vigente y la anterior pasa a histórica.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section id="proximamente" class="mb-4">
+    <h2 class="h5">Próximamente</h2>
+    <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
+    <ul class="mb-0">
+        <li>Acciones del turno: confirmar sin cambios, marcar no valorable y registrar un cambio observado (Auxiliar).</li>
+        <li>Bandejas, valoración de eventos, seguimiento y escalado (Enfermería y Medicina).</li>
+        <li>Derivación a Urgencias con informe firmado en PDF.</li>
+        <li>Publicaciones para familias y su aprobación.</li>
+        <li>Portal Familiar (consulta de publicaciones y citas).</li>
+        <li>Gestión administrativa completa (autorizaciones, turnos, citas, auditoría).</li>
+        <li>Supervisión clínica agregada e indicadores de Dirección.</li>
+    </ul>
+</section>
