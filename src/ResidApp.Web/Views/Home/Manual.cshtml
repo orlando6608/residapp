@@ -7,10 +7,10 @@
 <div class="alert alert-info">
     ResidApp es un registro trazable del estado cotidiano de los residentes, pensado para dar continuidad
     entre turnos y perfiles profesionales, y para mantener informadas a las familias. <strong>No diagnostica
-    ni sustituye protocolos clínicos.</strong> La app está en desarrollo: hoy solo funciona de principio a fin
-    el vertical <strong>Residente / Basal</strong>; el resto de módulos aparece descrito al final como
-    "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un inicio de
-    sesión con usuario y contraseña definitivo).
+    ni sustituye protocolos clínicos.</strong> La app está en desarrollo: hoy funcionan de principio a fin
+    el vertical <strong>Residente / Basal</strong> y el vertical <strong>Auxiliar</strong>; el resto de
+    módulos aparece descrito al final como "Próximamente". El acceso actual es en <strong>modo de
+    desarrollo</strong> (no hay todavía un inicio de sesión con usuario y contraseña definitivo).
 </div>
 
 <div class="card mb-4">
@@ -101,11 +101,20 @@
         versiones históricas, borradores, respuestas detalladas de Barthel, firma ni corrección), con acceso
         a la consulta completa de las nueve áreas y el total de Barthel.
     </p>
-    <div class="alert alert-warning mb-0">
-        Ahora mismo solo existe la consulta; las tres acciones de cierre del turno (<strong>Sin cambios</strong>,
-        <strong>No valorable</strong> y <strong>Registrar cambio</strong>) todavía no están disponibles. Esta
-        parte del manual se actualizará en cuanto existan.
-    </div>
+    <p class="mb-0">
+        Desde el registro cotidiano puedes cerrar el turno de dos formas: <strong>Sin cambios</strong>
+        (confirma que la situación habitual se mantiene; no genera tarea para Enfermería) o
+        <strong>No valorable</strong> (exige indicar un motivo; nunca se interpreta como estabilidad
+        clínica). La tarjeta de "Mis residentes" muestra si el turno de hoy ya está cerrado.
+    </p>
+    <p class="mb-0">
+        La tercera forma de cerrar el turno es <strong>Registrar cambio</strong>: documenta el cambio en
+        una o varias de las diez áreas de observación cotidiana (de momento solo texto libre, sin
+        opciones rápidas predefinidas), añade la temperatura si procede y clasifícalo como
+        <strong>ordinario</strong> (pasa a la bandeja ordinaria de Enfermería) o <strong>prioritario</strong>
+        (exige elegir un motivo de una lista cerrada y documentar el aviso directo antes de confirmar;
+        pasa a la bandeja prioritaria). Antes de enviarlo se muestra siempre un resumen para revisar.
+    </p>
 </section>
 
 <section id="glosario" class="mb-4">
@@ -144,7 +153,6 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Acciones del turno: confirmar sin cambios, marcar no valorable y registrar un cambio observado (Auxiliar).</li>
         <li>Bandejas, valoración de eventos, seguimiento y escalado (Enfermería y Medicina).</li>
         <li>Derivación a Urgencias con informe firmado en PDF.</li>
         <li>Publicaciones para familias y su aprobación.</li>

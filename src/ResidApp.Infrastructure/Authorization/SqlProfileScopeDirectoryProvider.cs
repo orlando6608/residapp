@@ -14,7 +14,7 @@ public sealed class SqlProfileScopeDirectoryProvider(SqlConnectionFactory connec
     {
         using var connection = await connections.OpenAsync(ct);
         var rows = await connection.QueryAsync<Row>(new CommandDefinition("""
-            SELECT profile.id AS ProfileScopeId, profile.centro_id AS CenterId,
+            SELECT profile.id AS ProfileScopeId, account.id AS AccountId, profile.centro_id AS CenterId,
                    center.nombre_visible AS CenterName, profile.perfil_codigo AS Profile
               FROM dbo.cuentas account
               JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id
@@ -26,9 +26,10 @@ public sealed class SqlProfileScopeDirectoryProvider(SqlConnectionFactory connec
 
         return rows
             .Select(row => new ActiveProfileScope(
-                row.ProfileScopeId, CenterId.From(row.CenterId), row.CenterName, EnumCode.ParseCode<SystemProfile>(row.Profile)))
+                row.ProfileScopeId, AccountId.From(row.AccountId), CenterId.From(row.CenterId), row.CenterName,
+                EnumCode.ParseCode<SystemProfile>(row.Profile)))
             .ToList();
     }
 
-    private sealed record Row(Guid ProfileScopeId, Guid CenterId, string CenterName, string Profile);
+    private sealed record Row(Guid ProfileScopeId, Guid AccountId, Guid CenterId, string CenterName, string Profile);
 }

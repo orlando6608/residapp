@@ -9,7 +9,8 @@ namespace ResidApp.Application.UseCases;
 /// ResidentBaselineApplicationService para Residente/Basal.
 /// </summary>
 public sealed class AuxiliarApplicationService(
-    ListAssignedResidents listAssignedResidents, FindAssignedResident findAssignedResident, ReadCurrentBaseline readCurrentBaseline)
+    ListAssignedResidents listAssignedResidents, FindAssignedResident findAssignedResident,
+    ReadCurrentBaseline readCurrentBaseline, RegisterDailyClosure registerDailyClosure, RegisterDailyChange registerDailyChange)
 {
     public Task<ApplicationResult<IReadOnlyList<AssignedResidentSummary>>> ListAssignedResidentsAsync(
         ListAssignedResidentsCommand command, CancellationToken ct = default) =>
@@ -22,4 +23,12 @@ public sealed class AuxiliarApplicationService(
     public Task<ApplicationResult<CurrentBaselineSummary?>> ReadCurrentBaselineAsync(
         ReadCurrentBaselineCommand command, CancellationToken ct = default) =>
         readCurrentBaseline.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<DailyClosureResult>> RegisterDailyClosureAsync(
+        RegisterDailyClosureCommand command, CancellationToken ct = default) =>
+        registerDailyClosure.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<DailyClosureResult>> RegisterDailyChangeAsync(
+        RegisterDailyChangeCommand command, CancellationToken ct = default) =>
+        registerDailyChange.ExecuteAsync(command, ct);
 }

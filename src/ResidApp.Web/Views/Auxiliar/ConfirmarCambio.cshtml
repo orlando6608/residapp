@@ -1,0 +1,78 @@
+@using ResidApp.Domain.Auxiliar
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model RegistrarCambioFormModel
+@{
+    ViewData["Title"] = "Confirmar cambio";
+    var resident = (ResidApp.Application.Ports.AssignedResidentSummary)ViewBag.Resident;
+    var esPrioritario = Model.Clasificacion == DailyChangeClassification.Prioritario;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Mis residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Registro" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Confirmar cambio</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Confirmar cambio — @resident.DisplayName</h1>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Resumen</h2>
+        <dl class="row mb-0">
+            @foreach (var (code, texto) in Model.AreaTexto.Where(kv => !string.IsNullOrWhiteSpace(kv.Value)))
+            {
+                <dt class="col-sm-4">@DailyChangeAreaDisplay.Label(EnumCode.ParseCode<DailyChangeAreaCode>(code))</dt>
+                <dd class="col-sm-8">@texto</dd>
+            }
+            @if (Model.Temperatura is not null)
+            {
+                <dt class="col-sm-4">Temperatura</dt>
+                <dd class="col-sm-8">@Model.Temperatura °C</dd>
+            }
+            <dt class="col-sm-4">Clasificación</dt>
+            <dd class="col-sm-8">@(esPrioritario ? "Prioritario" : "Ordinario")</dd>
+            @if (esPrioritario && Model.MotivoPrioritario is not null)
+            {
+                <dt class="col-sm-4">Motivo prioritario</dt>
+                <dd class="col-sm-8">@DailyChangePriorityReasonDisplay.Label(Model.MotivoPrioritario.Value)</dd>
+            }
+        </dl>
+    </div>
+</div>
+
+<form asp-action="ConfirmarCambio" method="post">
+    <input type="hidden" asp-for="ResidenteId" />
+    <input type="hidden" asp-for="OperacionId" />
+    <input type="hidden" asp-for="Temperatura" />
+    <input type="hidden" asp-for="Clasificacion" />
+    <input type="hidden" asp-for="MotivoPrioritario" />
+    @foreach (var (code, texto) in Model.AreaTexto.Where(kv => !string.IsNullOrWhiteSpace(kv.Value)))
+    {
+        <input type="hidden" name="AreaTexto[@code]" value="@texto" />
+    }
+
+    @if (esPrioritario)
+    {
+        <div class="alert alert-warning">
+            Evento prioritario: recuerda aplicar el protocolo del centro. Antes de confirmar, documenta el aviso directo.
+        </div>
+        <div class="mb-3">
+            <label asp-for="AvisoDirecto" class="form-label"></label>
+            <textarea asp-for="AvisoDirecto" class="form-control" rows="3" required></textarea>
+            <span asp-validation-for="AvisoDirecto" class="text-danger"></span>
+        </div>
+    }
+
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <a asp-action="RegistrarCambio" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-secondary btn-lg">Volver a editar</a>
+        <button type="submit" class="btn @(esPrioritario ? "btn-danger" : "btn-success") btn-lg">Confirmar y enviar</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

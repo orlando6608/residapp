@@ -1,4 +1,4 @@
-@model ResidApp.Web.Models.AuxiliarResidentDetailViewModel
+@model ResidApp.Web.Models.AuxiliarRegistroViewModel
 @{
     ViewData["Title"] = "Registro cotidiano";
 }
@@ -12,7 +12,22 @@
 </nav>
 
 <h1 class="h3">@Model.Resident.DisplayName</h1>
-<p class="text-muted">@(Model.Resident.UnitName ?? "Sin unidad")</p>
+<p class="text-muted">
+    @(Model.Resident.UnitName ?? "Sin unidad")
+    @if (Model.Resident.CerradoHoy)
+    {
+        <span class="badge text-bg-success align-middle">Turno ya cerrado hoy</span>
+    }
+</p>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
 
 <div class="card mb-3">
     <div class="card-body">
@@ -32,14 +47,45 @@
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <h2 class="h5 card-title">Acciones del turno</h2>
-        <p class="text-muted">Disponibles en la siguiente iteración de este vertical.</p>
-        <div class="d-grid gap-2 d-md-flex">
-            <button type="button" class="btn btn-success btn-lg" disabled title="Disponible en la siguiente iteración">Sin cambios</button>
-            <button type="button" class="btn btn-warning btn-lg" disabled title="Disponible en la siguiente iteración">No valorable</button>
-            <button type="button" class="btn btn-primary btn-lg" disabled title="Disponible en la siguiente iteración">Registrar cambio</button>
+<div class="row g-3">
+    <div class="col-12 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Sin cambios</h2>
+                <p class="text-muted">Confirma que la situación habitual del residente se mantiene. No genera tarea para Enfermería.</p>
+                <form asp-action="SinCambios" method="post">
+                    <input type="hidden" name="residenteId" value="@Model.Resident.ResidentId.Value" />
+                    <input type="hidden" name="operacionId" value="@Model.SinCambiosOperacionId" />
+                    <button type="submit" class="btn btn-success btn-lg w-100">Confirmar sin cambios</button>
+                </form>
+            </div>
         </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">No valorable</h2>
+                <p class="text-muted">Indica que no fue posible valorar al residente en este turno. Nunca equivale a estabilidad clínica.</p>
+                <form asp-controller="Auxiliar" asp-action="NoValorable" method="post">
+                    <input type="hidden" name="OperacionId" value="@Model.NoValorableOperacionId" />
+                    <input type="hidden" name="ResidenteId" value="@Model.Resident.ResidentId.Value" />
+                    <div class="mb-3">
+                        <label for="Motivo" class="form-label">Motivo</label>
+                        <textarea name="Motivo" id="Motivo" class="form-control" rows="2" required maxlength="500"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning btn-lg w-100">Marcar no valorable</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Registrar cambio</h2>
+        <p class="text-muted">Documenta cambios observados en una o varias áreas y clasifícalos como ordinarios o prioritarios.</p>
+        <a asp-action="RegistrarCambio" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-primary btn-lg">
+            Registrar cambio
+        </a>
     </div>
 </div>

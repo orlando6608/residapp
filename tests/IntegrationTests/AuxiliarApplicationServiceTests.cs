@@ -2,6 +2,7 @@ using Dapper;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
+using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Persistence;
@@ -21,13 +22,16 @@ public class AuxiliarApplicationServiceTests
         var directory = new SqlAssignedResidentDirectory(TestDatabase.ConnectionFactory);
         var evidenceProvider = new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory);
         var baselines = new SqlBaselineRepository(TestDatabase.ConnectionFactory);
+        var closures = new SqlDailyClosureRepository(TestDatabase.ConnectionFactory);
         var session = new FixedSessionIdentityProvider(externalSubject);
 
         var listAssignedResidents = new ListAssignedResidents(scopes, directory, session);
         return new AuxiliarApplicationService(
             listAssignedResidents,
             new FindAssignedResident(listAssignedResidents),
-            new ReadCurrentBaseline(evidenceProvider, session, baselines));
+            new ReadCurrentBaseline(evidenceProvider, session, baselines),
+            new RegisterDailyClosure(scopes, directory, session, closures),
+            new RegisterDailyChange(scopes, directory, session, closures));
     }
 
     [Fact]
@@ -94,6 +98,120 @@ public class AuxiliarApplicationServiceTests
 
         Assert.True(result.Ok);
         Assert.Null(result.Value);
+    }
+
+    [Fact]
+    public async Task RegisterDailyClosureAsync_SinCambiosParaResidenteAsignado_Succeeds()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var auxiliarSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, adminSeed.CenterId, adminSeed.UnitId);
+        var residents = new SqlResidentRepository(TestDatabase.ConnectionFactory);
+        var resident = await residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Cierre Aplicación", new DateOnly(1946, 6, 6), DocumentedSexCode.Hombre, null, null, null, null, null, Guid.NewGuid()));
+        await AssignAsync(auxiliarSeed.ProfileScopeId, adminSeed.CenterId, resident.ResidentId, adminSeed.AccountId);
+        var service = BuildService(auxiliarSeed.ExternalSubject);
+
+        var result = await service.RegisterDailyClosureAsync(new RegisterDailyClosureCommand(
+            auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, resident.ResidentId, DailyClosureType.SinCambios, null, Guid.NewGuid()));
+
+        Assert.True(result.Ok);
+    }
+
+    [Fact]
+    public async Task RegisterDailyClosureAsync_NoValorableSinMotivo_ReturnsInvalidInput()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var auxiliarSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, adminSeed.CenterId, adminSeed.UnitId);
+        var residents = new SqlResidentRepository(TestDatabase.ConnectionFactory);
+        var resident = await residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Cierre Sin Motivo Aplicación", new DateOnly(1946, 6, 16), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+        await AssignAsync(auxiliarSeed.ProfileScopeId, adminSeed.CenterId, resident.ResidentId, adminSeed.AccountId);
+        var service = BuildService(auxiliarSeed.ExternalSubject);
+
+        var result = await service.RegisterDailyClosureAsync(new RegisterDailyClosureCommand(
+            auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, resident.ResidentId, DailyClosureType.NoValorable, "   ", Guid.NewGuid()));
+
+        Assert.False(result.Ok);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task RegisterDailyClosureAsync_ResidenteNoAsignado_ReturnsAccessDenied()
+    {
+        var auxiliarSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Auxiliar);
+        var service = BuildService(auxiliarSeed.ExternalSubject);
+
+        var result = await service.RegisterDailyClosureAsync(new RegisterDailyClosureCommand(
+            auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, ResidentId.New(), DailyClosureType.SinCambios, null, Guid.NewGuid()));
+
+        Assert.False(result.Ok);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task RegisterDailyChangeAsync_OrdinarioConAreas_Succeeds()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var auxiliarSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, adminSeed.CenterId, adminSeed.UnitId);
+        var residents = new SqlResidentRepository(TestDatabase.ConnectionFactory);
+        var resident = await residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Cambio Aplicación", new DateOnly(1952, 2, 2), DocumentedSexCode.Hombre, null, null, null, null, null, Guid.NewGuid()));
+        await AssignAsync(auxiliarSeed.ProfileScopeId, adminSeed.CenterId, resident.ResidentId, adminSeed.AccountId);
+        var service = BuildService(auxiliarSeed.ExternalSubject);
+
+        var result = await service.RegisterDailyChangeAsync(new RegisterDailyChangeCommand(
+            auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, resident.ResidentId,
+            [new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.HecesDiuresis, "Diuresis escasa esta tarde")],
+            null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid()));
+
+        Assert.True(result.Ok);
+    }
+
+    [Fact]
+    public async Task RegisterDailyChangeAsync_SinAreas_ReturnsInvalidInput()
+    {
+        var auxiliarSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Auxiliar);
+        var service = BuildService(auxiliarSeed.ExternalSubject);
+
+        var result = await service.RegisterDailyChangeAsync(new RegisterDailyChangeCommand(
+            auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, ResidentId.New(),
+            [], null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid()));
+
+        Assert.False(result.Ok);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task RegisterDailyChangeAsync_PrioritarioSinDocumentacion_ReturnsInvalidInput()
+    {
+        var auxiliarSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Auxiliar);
+        var service = BuildService(auxiliarSeed.ExternalSubject);
+
+        var result = await service.RegisterDailyChangeAsync(new RegisterDailyChangeCommand(
+            auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, ResidentId.New(),
+            [new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.IncidenciasCaidas, "Casi se cae al levantarse")],
+            null, DailyChangeClassification.Prioritario, null, null, Guid.NewGuid()));
+
+        Assert.False(result.Ok);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task RegisterDailyChangeAsync_ResidenteNoAsignado_ReturnsAccessDenied()
+    {
+        var auxiliarSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Auxiliar);
+        var service = BuildService(auxiliarSeed.ExternalSubject);
+
+        var result = await service.RegisterDailyChangeAsync(new RegisterDailyChangeCommand(
+            auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, ResidentId.New(),
+            [new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.AnimoConducta, "Más irritable de lo habitual")],
+            null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid()));
+
+        Assert.False(result.Ok);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
     }
 
     private static async Task AssignAsync(Guid profileScopeId, CenterId centerId, ResidentId residentId, AccountId accountId)

@@ -1,0 +1,90 @@
+@using ResidApp.Domain.Auxiliar
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model RegistrarCambioFormModel
+@{
+    ViewData["Title"] = "Registrar cambio";
+    var resident = (ResidApp.Application.Ports.AssignedResidentSummary)ViewBag.Resident;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Mis residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Registro" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Registrar cambio</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Registrar cambio — @resident.DisplayName</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<form asp-action="RegistrarCambio" method="post">
+    <input type="hidden" asp-for="ResidenteId" />
+    <input type="hidden" asp-for="OperacionId" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Áreas observadas</h2>
+            <p class="text-muted">Completa al menos una. Deja vacías las que no correspondan.</p>
+            @foreach (var area in Enum.GetValues<DailyChangeAreaCode>())
+            {
+                var code = area.ToCode();
+                <div class="mb-3">
+                    <label for="area-@code" class="form-label">@DailyChangeAreaDisplay.Label(area)</label>
+                    <textarea name="AreaTexto[@code]" id="area-@code" class="form-control" rows="2" maxlength="1000">@Model.AreaTexto.GetValueOrDefault(code)</textarea>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Temperatura</h2>
+            <div class="mb-0">
+                <label asp-for="Temperatura" class="form-label"></label>
+                <div class="input-group" style="max-width: 220px;">
+                    <input asp-for="Temperatura" class="form-control" />
+                    <span class="input-group-text">°C</span>
+                </div>
+                <span asp-validation-for="Temperatura" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Clasificación</h2>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="Clasificacion" id="clasificacion-ordinario"
+                       value="@DailyChangeClassification.Ordinario" checked="@(Model.Clasificacion != DailyChangeClassification.Prioritario)" />
+                <label class="form-check-label" for="clasificacion-ordinario">Ordinario</label>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="radio" name="Clasificacion" id="clasificacion-prioritario"
+                       value="@DailyChangeClassification.Prioritario" checked="@(Model.Clasificacion == DailyChangeClassification.Prioritario)" />
+                <label class="form-check-label" for="clasificacion-prioritario">Prioritario</label>
+            </div>
+            <div class="mb-0">
+                <label asp-for="MotivoPrioritario" class="form-label"></label>
+                <select asp-for="MotivoPrioritario" class="form-select" asp-items="Html.GetEnumSelectList<DailyChangePriorityReason>()">
+                    <option value="">— Solo si es prioritario —</option>
+                </select>
+                <span asp-validation-for="MotivoPrioritario" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-grid d-md-flex justify-content-md-end">
+        <button type="submit" class="btn btn-primary btn-lg">Continuar</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

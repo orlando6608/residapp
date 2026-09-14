@@ -19,8 +19,9 @@ public sealed class SqlAssignedResidentDirectory(SqlConnectionFactory connection
     {
         using var connection = await connections.OpenAsync(ct);
         var rows = await connection.QueryAsync<Row>(new CommandDefinition("""
-            SELECT resident.id AS ResidentId, resident.nombre_visible AS DisplayName, unit.nombre_visible AS UnitName,
-                   CAST(CASE WHEN current_baseline.residente_id IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS TieneBasalVigente
+            SELECT resident.id AS ResidentId, resident.nombre_visible AS DisplayName, unit.id AS UnitId, unit.nombre_visible AS UnitName,
+                   CAST(CASE WHEN current_baseline.residente_id IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS TieneBasalVigente,
+                   CAST(CASE WHEN closure_today.id IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS CerradoHoy
               FROM dbo.ambitos_perfil profile
               JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
                    AND unit_scope.centro_id = profile.centro_id AND unit_scope.revocado_en IS NULL
@@ -33,6 +34,12 @@ public sealed class SqlAssignedResidentDirectory(SqlConnectionFactory connection
                    AND location.centro_id = profile.centro_id AND location.unidad_id = unit.id AND location.vigente_hasta IS NULL
               LEFT JOIN dbo.basales_vigentes_residente current_baseline ON current_baseline.residente_id = resident.id
                    AND current_baseline.centro_id = profile.centro_id
+              OUTER APPLY (
+                  SELECT TOP 1 cc.id
+                    FROM dbo.cierres_cotidianos_residente cc
+                   WHERE cc.residente_id = resident.id AND cc.centro_id = profile.centro_id
+                     AND CAST(cc.ocurrido_en AS DATE) = CAST(SYSUTCDATETIME() AS DATE)
+              ) closure_today
              WHERE profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
                AND profile.perfil_codigo = 'AUXILIAR' AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
              ORDER BY resident.nombre_visible
@@ -40,9 +47,11 @@ public sealed class SqlAssignedResidentDirectory(SqlConnectionFactory connection
 
         return rows
             .Select(row => new AssignedResidentSummary(
-                ResidentId.From(row.ResidentId), row.DisplayName, row.UnitName, row.TieneBasalVigente))
+                ResidentId.From(row.ResidentId), row.DisplayName, UnitId.From(row.UnitId), row.UnitName,
+                row.TieneBasalVigente, row.CerradoHoy))
             .ToList();
     }
 
-    private sealed record Row(Guid ResidentId, string DisplayName, string? UnitName, bool TieneBasalVigente);
+    private sealed record Row(
+        Guid ResidentId, string DisplayName, Guid UnitId, string? UnitName, bool TieneBasalVigente, bool CerradoHoy);
 }

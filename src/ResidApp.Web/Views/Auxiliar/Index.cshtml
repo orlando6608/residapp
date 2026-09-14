@@ -13,6 +13,15 @@
 <h1 class="h3">Mis residentes</h1>
 <div asp-validation-summary="All" class="text-danger"></div>
 
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
 @if (Model.Count == 0)
 {
     <p class="text-muted">No tienes residentes asignados.</p>
@@ -31,7 +40,9 @@ else
                             <span class="badge @(resident.TieneBasalVigente ? "text-bg-success" : "text-bg-danger")">
                                 @(resident.TieneBasalVigente ? "Basal vigente" : "Basal pendiente")
                             </span>
-                            <span class="badge text-bg-light">Cierre cotidiano: Pendiente</span>
+                            <span class="badge @(resident.CerradoHoy ? "text-bg-success" : "text-bg-light")">
+                                Cierre cotidiano: @(resident.CerradoHoy ? "Cerrado hoy" : "Pendiente")
+                            </span>
                         </p>
                         <a asp-action="Registro" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-primary btn-lg w-100">
                             Abrir registro cotidiano
