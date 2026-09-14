@@ -47,6 +47,7 @@ jobs:
         run: |
           sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -Q "CREATE DATABASE ResidAppTest"
           sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0001_init_sqlserver.sql
+          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0002_renombrado_espanol_sqlserver.sql
 
       - name: Restore
         run: dotnet restore src/ResidApp.sln
