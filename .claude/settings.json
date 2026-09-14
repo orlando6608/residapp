@@ -34,7 +34,19 @@
       "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -C -Q \"SELECT \\(SELECT COUNT\\(*\\) FROM dbo.accounts\\) AS cuentas, \\(SELECT COUNT\\(*\\) FROM dbo.residents\\) AS residentes, \\(SELECT COUNT\\(*\\) FROM dbo.baseline_versions\\) AS basales_firmados;\")",
       "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -C -I -i database/scripts/0002_renombrado_espanol_sqlserver.sql)",
       "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -C -Q \"SELECT name FROM sys.tables ORDER BY name;\")",
-      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -C -Q \"SELECT \\(SELECT COUNT\\(*\\) FROM sys.triggers\\) AS triggers, \\(SELECT COUNT\\(*\\) FROM sys.check_constraints\\) AS checks, \\(SELECT COUNT\\(*\\) FROM sys.indexes WHERE is_hypothetical=0 AND type>0\\) AS indexes;\")"
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -C -Q \"SELECT \\(SELECT COUNT\\(*\\) FROM sys.triggers\\) AS triggers, \\(SELECT COUNT\\(*\\) FROM sys.check_constraints\\) AS checks, \\(SELECT COUNT\\(*\\) FROM sys.indexes WHERE is_hypothetical=0 AND type>0\\) AS indexes;\")",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -i database/seed/dev_seed_multi_ambito.sql -C)",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -i database/seed/dev_seed_multi_ambito.sql -C -I)",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -Q \"SELECT sujeto_externo FROM dbo.cuentas WHERE sujeto_externo IN \\('dev-admin','dev-multi'\\)\" -C -I)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5231/)",
+      "Bash(break)",
+      "Bash(grep -A2 'Ámbito activo' /tmp/create-admin.html)",
+      "Bash(grep -o 'name=\"returnUrl\" value=\"[^\"]*\"' /tmp/select-multi.html)",
+      "Bash(python3 -)",
+      "Bash(awk '/=> Send data/{flag=1; next} /^\\(<=|\\\\* \\)/{flag=0} flag' /tmp/trace.txt)",
+      "Bash(taskkill //F //IM dotnet.exe //FI \"WINDOWTITLE eq*\")",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //F //PID 21032)"
     ]
   }
 }

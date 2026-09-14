@@ -12,28 +12,25 @@
 
 <h1 class="h3">Alta de residente</h1>
 <p class="text-muted">
-    Vertical Residente/Basal. Los identificadores de perfil, centro y unidad deben corresponder a datos ya
-    sembrados (ver <code>database/seed/dev_seed_residente_basal.sql</code>); no se listan aquí porque
-    todavía no existe una pantalla de selección de organización.
+    Vertical Residente/Basal. El identificador de unidad debe corresponder a datos ya sembrados (ver
+    <code>database/seed/dev_seed_residente_basal.sql</code>); no se lista aquí porque todavía no existe una
+    pantalla de selección de unidad.
 </p>
 
 <div class="card">
     <div class="card-body">
         <div asp-validation-summary="All" class="text-danger"></div>
 
+        <p>
+            Ámbito activo: <strong>@ViewBag.AmbitoPerfilLabel</strong> · @ViewBag.AmbitoCentroNombre
+            (<a asp-controller="ProfileScope" asp-action="Select" asp-route-returnUrl="@Url.Action("Create", "Residents")">Cambiar ámbito</a>)
+        </p>
+
         <form asp-controller="Residents" asp-action="Create" method="post">
             <input type="hidden" asp-for="OperacionId" />
+            <input type="hidden" asp-for="AmbitoPerfilId" />
+            <input type="hidden" asp-for="CentroId" />
 
-            <div class="mb-3">
-                <label asp-for="AmbitoPerfilId" class="form-label"></label>
-                <input asp-for="AmbitoPerfilId" class="form-control form-control-lg" />
-                <span asp-validation-for="AmbitoPerfilId" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="CentroId" class="form-label"></label>
-                <input asp-for="CentroId" class="form-control form-control-lg" />
-                <span asp-validation-for="CentroId" class="text-danger"></span>
-            </div>
             <div class="mb-3">
                 <label asp-for="UnidadId" class="form-label"></label>
                 <input asp-for="UnidadId" class="form-control form-control-lg" />

@@ -16,6 +16,7 @@
 <body>
     @{
         var devSubjectLayout = Context.Request.Cookies[ResidApp.Web.Security.DevSessionIdentityProvider.CookieName];
+        var activeScopeLayout = ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request);
     }
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark navbar-residapp border-bottom box-shadow mb-3">
@@ -40,6 +41,13 @@
                     @if (!string.IsNullOrWhiteSpace(devSubjectLayout))
                     {
                         <span class="badge text-bg-light">Identidad: @devSubjectLayout</span>
+                    }
+                    @if (activeScopeLayout is not null)
+                    {
+                        <span class="badge text-bg-light">
+                            Ámbito: @ResidApp.Web.Models.SystemProfileDisplay.Label(activeScopeLayout.Profile) · @activeScopeLayout.CenterName
+                        </span>
+                        <a asp-controller="ProfileScope" asp-action="Select" class="nav-link">Cambiar ámbito</a>
                     }
                 </div>
             </div>

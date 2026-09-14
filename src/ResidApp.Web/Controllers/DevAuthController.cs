@@ -30,6 +30,7 @@ public sealed class DevAuthController : Controller
             SameSite = SameSiteMode.Lax,
             IsEssential = true,
         });
+        ActiveProfileScopeCookie.Clear(Response);
         return RedirectToAction("Index", "Home");
     }
 
@@ -38,6 +39,7 @@ public sealed class DevAuthController : Controller
     public IActionResult Logout()
     {
         Response.Cookies.Delete(DevSessionIdentityProvider.CookieName);
+        ActiveProfileScopeCookie.Clear(Response);
         return RedirectToAction("Index", "Home");
     }
 

@@ -20,11 +20,13 @@ builder.Services.AddSingleton(new SqlConnectionFactory(connectionString));
 builder.Services.AddScoped<IResidentRepository, SqlResidentRepository>();
 builder.Services.AddScoped<IBaselineRepository, SqlBaselineRepository>();
 builder.Services.AddScoped<IAuthorizationEvidenceProvider, SqlAuthorizationEvidenceProvider>();
+builder.Services.AddScoped<IProfileScopeDirectoryProvider, SqlProfileScopeDirectoryProvider>();
 builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
 
 builder.Services.AddScoped<CreateResident>();
 builder.Services.AddScoped<SignBaseline>();
 builder.Services.AddScoped<ReadDirectionBaseline>();
+builder.Services.AddScoped<ListActiveProfileScopes>();
 builder.Services.AddScoped<ResidentBaselineApplicationService>();
 
 var app = builder.Build();

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ResidApp.Application.UseCases;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
+using ResidApp.Web.Security;
 
 namespace ResidApp.Web.Controllers;
 
@@ -10,7 +11,22 @@ namespace ResidApp.Web.Controllers;
 /// ResidentBaselineApplicationService, no aquí.</summary>
 public sealed class ResidentsController(ResidentBaselineApplicationService service) : Controller
 {
-    public IActionResult Create() => View(new CreateResidentFormModel { OperacionId = Guid.NewGuid() });
+    public IActionResult Create()
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Create)) });
+        }
+
+        ShowActiveScope(activeScope);
+        return View(new CreateResidentFormModel
+        {
+            OperacionId = Guid.NewGuid(),
+            AmbitoPerfilId = activeScope.ProfileScopeId,
+            CentroId = activeScope.CenterId,
+        });
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -18,6 +34,7 @@ public sealed class ResidentsController(ResidentBaselineApplicationService servi
     {
         if (!ModelState.IsValid)
         {
+            ShowActiveScope(ActiveProfileScopeCookie.Read(Request));
             return View(form);
         }
 
@@ -30,6 +47,7 @@ public sealed class ResidentsController(ResidentBaselineApplicationService servi
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
+            ShowActiveScope(ActiveProfileScopeCookie.Read(Request));
             return View(form);
         }
 
@@ -41,5 +59,11 @@ public sealed class ResidentsController(ResidentBaselineApplicationService servi
     {
         ViewBag.ResidentId = TempData["ResidentId"];
         return View();
+    }
+
+    private void ShowActiveScope(ActiveProfileScopeCookieValue? activeScope)
+    {
+        ViewBag.AmbitoCentroNombre = activeScope?.CenterName;
+        ViewBag.AmbitoPerfilLabel = activeScope is null ? null : SystemProfileDisplay.Label(activeScope.Profile);
     }
 }
