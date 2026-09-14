@@ -164,10 +164,49 @@ public class AuxiliarApplicationServiceTests
 
         var result = await service.RegisterDailyChangeAsync(new RegisterDailyChangeCommand(
             auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, resident.ResidentId,
-            [new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.HecesDiuresis, "Diuresis escasa esta tarde")],
+            [new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.HecesDiuresis, [], "Diuresis escasa esta tarde")],
             null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid()));
 
         Assert.True(result.Ok);
+    }
+
+    [Fact]
+    public async Task RegisterDailyChangeAsync_ConOpcionRapidaSinTexto_Succeeds()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var auxiliarSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, adminSeed.CenterId, adminSeed.UnitId);
+        var residents = new SqlResidentRepository(TestDatabase.ConnectionFactory);
+        var resident = await residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Cambio Opción Rápida", new DateOnly(1952, 3, 3), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+        await AssignAsync(auxiliarSeed.ProfileScopeId, adminSeed.CenterId, resident.ResidentId, adminSeed.AccountId);
+        var service = BuildService(auxiliarSeed.ExternalSubject);
+
+        // AUX-07: un área con checklist se puede completar solo con opciones rápidas, sin texto libre.
+        var result = await service.RegisterDailyChangeAsync(new RegisterDailyChangeCommand(
+            auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, resident.ResidentId,
+            [new RegisterDailyChangeAreaCommand(
+                DailyChangeAreaCode.Sueno, [DailyChangeAreaOptionCode.Insomnio, DailyChangeAreaOptionCode.Somnolencia], null)],
+            null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid()));
+
+        Assert.True(result.Ok);
+    }
+
+    [Fact]
+    public async Task RegisterDailyChangeAsync_OpcionNoPerteneceAlArea_ReturnsInvalidInput()
+    {
+        var auxiliarSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Auxiliar);
+        var service = BuildService(auxiliarSeed.ExternalSubject);
+
+        // Insomnio es del catálogo de Sueño, no del de Dolor/malestar (DailyChangeAreaOptionsCatalog):
+        // debe rechazarse antes de comprobar autorización o residente asignado.
+        var result = await service.RegisterDailyChangeAsync(new RegisterDailyChangeCommand(
+            auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, ResidentId.New(),
+            [new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.DolorMalestar, [DailyChangeAreaOptionCode.Insomnio], null)],
+            null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid()));
+
+        Assert.False(result.Ok);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, result.Error!.Code);
     }
 
     [Fact]
@@ -192,7 +231,7 @@ public class AuxiliarApplicationServiceTests
 
         var result = await service.RegisterDailyChangeAsync(new RegisterDailyChangeCommand(
             auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, ResidentId.New(),
-            [new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.IncidenciasCaidas, "Casi se cae al levantarse")],
+            [new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.IncidenciasCaidas, [], "Casi se cae al levantarse")],
             null, DailyChangeClassification.Prioritario, null, null, Guid.NewGuid()));
 
         Assert.False(result.Ok);
@@ -207,7 +246,7 @@ public class AuxiliarApplicationServiceTests
 
         var result = await service.RegisterDailyChangeAsync(new RegisterDailyChangeCommand(
             auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, ResidentId.New(),
-            [new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.AnimoConducta, "Más irritable de lo habitual")],
+            [new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.AnimoConducta, [], "Más irritable de lo habitual")],
             null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid()));
 
         Assert.False(result.Ok);

@@ -13,9 +13,12 @@ public sealed record RegisterDailyClosureInput(
 
 public sealed record DailyClosureResult(Guid ClosureId, DateTimeOffset OccurredAt);
 
-/// <summary>Una de las áreas observadas de "Registrar cambio" (AUX-06/AUX-07). FreeText nunca vacío:
-/// RegisterDailyChange lo exige antes de llegar aquí, la migración lo repite como CHECK.</summary>
-public sealed record DailyChangeAreaInput(DailyChangeAreaCode AreaCode, string FreeText);
+/// <summary>Una de las áreas observadas de "Registrar cambio" (AUX-06/AUX-07): opciones rápidas marcadas
+/// del catálogo cerrado de DailyChangeAreaOptionsCatalog, texto libre, o ambas. RegisterDailyChange ya
+/// exige que al menos una de las dos llegue con contenido (texto obligatorio en las tres áreas sin
+/// checklist) antes de llegar aquí; la migración lo repite como CHECK donde es posible.</summary>
+public sealed record DailyChangeAreaInput(
+    DailyChangeAreaCode AreaCode, IReadOnlyList<DailyChangeAreaOptionCode> Options, string? FreeText);
 
 /// <summary>Traduce el registro de "Registrar cambio" (AUX-06 a AUX-12): Areas exige al menos una
 /// (AUX-06); PriorityReason/DirectNoticeNotes solo se persisten cuando Classification es Prioritario

@@ -142,14 +142,27 @@ public sealed class SqlDailyClosureRepository(SqlConnectionFactory connections) 
 
             foreach (var area in input.Areas)
             {
+                var areaId = Guid.NewGuid();
+                var areaCode = area.AreaCode.ToCode();
                 await connection.ExecuteAsync(new CommandDefinition("""
                     INSERT INTO dbo.cierres_cotidianos_cambio_areas (id, cierre_id, residente_id, centro_id, area_codigo, texto_libre)
                     VALUES (@Id, @ClosureId, @ResidentId, @CenterId, @AreaCode, @FreeText)
                     """, new
                 {
-                    Id = Guid.NewGuid(), ClosureId = closureId, ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value,
-                    AreaCode = area.AreaCode.ToCode(), area.FreeText,
+                    Id = areaId, ClosureId = closureId, ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value,
+                    AreaCode = areaCode, area.FreeText,
                 }, transaction, cancellationToken: ct));
+
+                foreach (var opcion in area.Options)
+                {
+                    await connection.ExecuteAsync(new CommandDefinition("""
+                        INSERT INTO dbo.cierres_cotidianos_cambio_area_opciones (id, area_id, area_codigo, opcion_codigo)
+                        VALUES (@Id, @AreaId, @AreaCode, @OptionCode)
+                        """, new
+                    {
+                        Id = Guid.NewGuid(), AreaId = areaId, AreaCode = areaCode, OptionCode = opcion.ToCode(),
+                    }, transaction, cancellationToken: ct));
+                }
             }
 
             await connection.ExecuteAsync(new CommandDefinition("""
@@ -234,7 +247,12 @@ file static class RequestHash
     {
         var areas = input.Areas
             .OrderBy(a => a.AreaCode.ToCode(), StringComparer.Ordinal)
-            .Select(a => new object[] { a.AreaCode.ToCode(), a.FreeText });
+            .Select(a => new object?[]
+            {
+                a.AreaCode.ToCode(),
+                a.Options.Select(o => o.ToCode()).OrderBy(c => c, StringComparer.Ordinal).ToList(),
+                a.FreeText,
+            });
         var canonical = JsonSerializer.Serialize(new object?[]
         {
             input.AccountId.Value, input.CenterId.Value, input.UnitId.Value, input.ResidentId.Value,

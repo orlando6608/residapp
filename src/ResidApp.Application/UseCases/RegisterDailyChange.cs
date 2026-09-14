@@ -5,7 +5,8 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record RegisterDailyChangeAreaCommand(DailyChangeAreaCode AreaCode, string Texto);
+public sealed record RegisterDailyChangeAreaCommand(
+    DailyChangeAreaCode AreaCode, IReadOnlyList<DailyChangeAreaOptionCode> Opciones, string? Texto);
 
 public sealed record RegisterDailyChangeCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId,
@@ -27,15 +28,25 @@ public sealed class RegisterDailyChange(
         RegisterDailyChangeCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
-            // AUX-06: exige al menos un área. AUX-07: ningún área seleccionada sin contenido (el texto
-            // libre ES el contenido, al no existir todavía opciones rápidas predefinidas).
+            // AUX-06: exige al menos un área. AUX-07: cada área con contenido, ya sea alguna opción rápida
+            // del catálogo cerrado de esa área (DailyChangeAreaOptionsCatalog) o texto libre; las tres
+            // áreas sin checklist (8, 9, 10) solo admiten texto libre, así que su catálogo está vacío y
+            // exigen texto por descarte.
             if (command.Areas.Count == 0)
             {
                 throw new DomainValidationException("DAILY_CHANGE_AREAS_REQUIRED");
             }
-            if (command.Areas.Any(a => string.IsNullOrWhiteSpace(a.Texto)))
+            foreach (var area in command.Areas)
             {
-                throw new DomainValidationException("DAILY_CHANGE_AREA_CONTENT_REQUIRED");
+                var catalogo = DailyChangeAreaOptionsCatalog.OptionsFor(area.AreaCode);
+                if (area.Opciones.Any(o => !catalogo.Contains(o)))
+                {
+                    throw new DomainValidationException("DAILY_CHANGE_AREA_OPTION_INVALID");
+                }
+                if (area.Opciones.Count == 0 && string.IsNullOrWhiteSpace(area.Texto))
+                {
+                    throw new DomainValidationException("DAILY_CHANGE_AREA_CONTENT_REQUIRED");
+                }
             }
             if (command.Areas.Select(a => a.AreaCode).Distinct().Count() != command.Areas.Count)
             {
@@ -76,7 +87,7 @@ public sealed class RegisterDailyChange(
 
             var input = new RegisterDailyChangeInput(
                 scope.AccountId, command.CentroId, assigned.UnitId, command.ResidenteId,
-                command.Areas.Select(a => new DailyChangeAreaInput(a.AreaCode, a.Texto)).ToList(),
+                command.Areas.Select(a => new DailyChangeAreaInput(a.AreaCode, a.Opciones, a.Texto)).ToList(),
                 command.TemperaturaCelsius, command.Clasificacion, motivoPrioritario, avisoDirecto, command.OperacionId);
             return await repository.RegisterChangeAsync(input, ct);
         });

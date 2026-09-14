@@ -43,10 +43,15 @@ public sealed class RegistrarCambioFormModel
     [Required]
     public Guid OperacionId { get; set; }
 
-    /// <summary>Una entrada por cada una de las diez áreas con contenido (AUX-06/AUX-07): sin catálogo de
-    /// opciones rápidas todavía, el texto libre es el contenido. Una entrada vacía o ausente equivale a
-    /// "no seleccionada".</summary>
+    /// <summary>Una entrada por cada una de las diez áreas con texto (AUX-06/AUX-07): opcional en las
+    /// siete áreas con checklist (donde basta con AreaOpciones), obligatorio en las tres sin checklist.
+    /// Una entrada vacía o ausente equivale a "sin texto".</summary>
     public Dictionary<string, string> AreaTexto { get; set; } = new();
+
+    /// <summary>Opciones rápidas marcadas (AUX-07), una entrada por checkbox activado codificada como
+    /// "AREA_CODE:OPCION_CODE" — evita el bindeo anidado Dictionary&lt;string, List&lt;string&gt;&gt;, más
+    /// frágil desde checkboxes HTML. AuxiliarController la separa por área al construir el comando.</summary>
+    public List<string> AreaOpciones { get; set; } = new();
 
     [Display(Name = "Temperatura (°C)")]
     public decimal? Temperatura { get; set; }
@@ -92,6 +97,40 @@ public static class DailyChangeAreaDisplay
         DailyChangeAreaCode.IncidenciasCaidas => "Incidencias / caídas",
         DailyChangeAreaCode.EstadoConciencia => "Estado de conciencia",
         _ => area.ToString(),
+    };
+}
+
+public static class DailyChangeAreaOptionDisplay
+{
+    public static string Label(DailyChangeAreaOptionCode option) => option switch
+    {
+        DailyChangeAreaOptionCode.NulaIngesta => "Nula ingesta",
+        DailyChangeAreaOptionCode.RechazaIngesta => "Rechaza ingesta",
+        DailyChangeAreaOptionCode.DisminucionIngestaLiquidos => "Disminución de ingesta de líquidos",
+        DailyChangeAreaOptionCode.Atragantamiento => "Atragantamiento",
+        DailyChangeAreaOptionCode.NoQuiereLevantarse => "No quiere levantarse",
+        DailyChangeAreaOptionCode.IncapacidadCaminar => "Incapacidad para caminar",
+        DailyChangeAreaOptionCode.CaminaConDificultad => "Camina con dificultad",
+        DailyChangeAreaOptionCode.DebilidadGeneralizada => "Debilidad generalizada",
+        DailyChangeAreaOptionCode.DisminucionAnimo => "Disminución del ánimo",
+        DailyChangeAreaOptionCode.Irritabilidad => "Irritabilidad",
+        DailyChangeAreaOptionCode.Agresividad => "Agresividad",
+        DailyChangeAreaOptionCode.Hiperreactividad => "Hiperreactividad",
+        DailyChangeAreaOptionCode.Cefalea => "Cefalea",
+        DailyChangeAreaOptionCode.DolorMmss => "Dolor MMSS",
+        DailyChangeAreaOptionCode.DolorMmii => "Dolor MMII",
+        DailyChangeAreaOptionCode.DolorAbdominal => "Dolor abdominal",
+        DailyChangeAreaOptionCode.DolorOtro => "Otro",
+        DailyChangeAreaOptionCode.Diarrea => "Diarrea",
+        DailyChangeAreaOptionCode.Estrenimiento => "Estreñimiento",
+        DailyChangeAreaOptionCode.DisminucionDiuresis => "Disminución de diuresis",
+        DailyChangeAreaOptionCode.CambiosColoracionOrina => "Cambios de coloración de la orina",
+        DailyChangeAreaOptionCode.Insomnio => "Insomnio",
+        DailyChangeAreaOptionCode.Somnolencia => "Somnolencia",
+        DailyChangeAreaOptionCode.Herida => "Herida",
+        DailyChangeAreaOptionCode.Upp => "UPP",
+        DailyChangeAreaOptionCode.Hematoma => "Hematoma",
+        _ => option.ToString(),
     };
 }
 

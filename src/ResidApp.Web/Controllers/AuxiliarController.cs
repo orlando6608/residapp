@@ -102,9 +102,9 @@ public sealed class AuxiliarController(AuxiliarApplicationService service) : Con
         return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>AUX-06/AUX-07/AUX-08/AUX-09/AUX-10 (grupo A3): una sola pantalla con las diez áreas (solo
-    /// texto libre, sin catálogo de opciones rápidas todavía), temperatura opcional y clasificación. No
-    /// persiste nada — eso solo ocurre al confirmar (ConfirmarCambio, grupo A4).</summary>
+    /// <summary>AUX-06/AUX-07/AUX-08/AUX-09/AUX-10 (grupo A3): una sola pantalla con las diez áreas
+    /// (checklist de opciones rápidas en siete de ellas, texto libre en todas), temperatura opcional y
+    /// clasificación. No persiste nada — eso solo ocurre al confirmar (ConfirmarCambio, grupo A4).</summary>
     public async Task<IActionResult> RegistrarCambio(Guid residenteId, CancellationToken ct)
     {
         var resolved = await ResolveAssignedResidentAsync(residenteId, ct);
@@ -127,10 +127,11 @@ public sealed class AuxiliarController(AuxiliarApplicationService service) : Con
             return RedirectToAction(nameof(Index));
         }
 
-        // AUX-06: exige al menos un área con contenido. AUX-10: un prioritario exige motivo de catálogo
-        // cerrado. Comprobación temprana para no llegar a AUX-11A/11B con datos incompletos; el
-        // caso de uso (ConfirmarCambio) vuelve a exigir esto igual, por si se salta este paso.
-        if (form.AreaTexto.Values.All(string.IsNullOrWhiteSpace))
+        // AUX-06: exige al menos un área con contenido (texto u opción marcada). AUX-10: un prioritario
+        // exige motivo de catálogo cerrado. Comprobación temprana para no llegar a AUX-11A/11B con datos
+        // incompletos; el caso de uso (ConfirmarCambio) vuelve a exigir esto igual, por si se salta este
+        // paso.
+        if (BuildAreas(form).Count == 0)
         {
             ModelState.AddModelError(string.Empty, "Selecciona al menos un área con contenido.");
         }
@@ -165,10 +166,7 @@ public sealed class AuxiliarController(AuxiliarApplicationService service) : Con
             return RedirectToAction(nameof(RegistrarCambio), new { residenteId = form.ResidenteId });
         }
 
-        var areas = form.AreaTexto
-            .Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
-            .Select(kv => new RegisterDailyChangeAreaCommand(EnumCode.ParseCode<DailyChangeAreaCode>(kv.Key), kv.Value))
-            .ToList();
+        var areas = BuildAreas(form);
         var command = new RegisterDailyChangeCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId),
             areas, form.Temperatura, form.Clasificacion!.Value, form.MotivoPrioritario, form.AvisoDirecto, form.OperacionId);
@@ -178,6 +176,43 @@ public sealed class AuxiliarController(AuxiliarApplicationService service) : Con
             ? $"Cambio registrado: enviado a la bandeja {(form.Clasificacion == DailyChangeClassification.Prioritario ? "prioritaria" : "ordinaria")} de Enfermería."
             : result.Error!.Message;
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>Traduce AreaTexto + AreaOpciones (AUX-07) a la lista de áreas con contenido: cada opción
+    /// marcada llega como "AREA_CODE:OPCION_CODE" (ver RegistrarCambioFormModel.AreaOpciones); una entrada
+    /// con código de área o de opción desconocido se descarta en vez de fallar, ya que el propio caso de
+    /// uso vuelve a validar contra el catálogo cerrado.</summary>
+    private static List<RegisterDailyChangeAreaCommand> BuildAreas(RegistrarCambioFormModel form)
+    {
+        var opcionesPorArea = new Dictionary<DailyChangeAreaCode, List<DailyChangeAreaOptionCode>>();
+        foreach (var entrada in form.AreaOpciones)
+        {
+            var partes = entrada.Split(':', 2);
+            if (partes.Length != 2 ||
+                !EnumCode.TryParseCode<DailyChangeAreaCode>(partes[0], out var area) ||
+                !EnumCode.TryParseCode<DailyChangeAreaOptionCode>(partes[1], out var opcion))
+            {
+                continue;
+            }
+            if (!opcionesPorArea.TryGetValue(area, out var lista))
+            {
+                opcionesPorArea[area] = lista = [];
+            }
+            lista.Add(opcion);
+        }
+
+        var areas = new List<RegisterDailyChangeAreaCommand>();
+        foreach (var area in Enum.GetValues<DailyChangeAreaCode>())
+        {
+            var texto = form.AreaTexto.GetValueOrDefault(area.ToCode());
+            var opciones = (IReadOnlyList<DailyChangeAreaOptionCode>)opcionesPorArea.GetValueOrDefault(area, []);
+            if (opciones.Count == 0 && string.IsNullOrWhiteSpace(texto))
+            {
+                continue;
+            }
+            areas.Add(new RegisterDailyChangeAreaCommand(area, opciones, string.IsNullOrWhiteSpace(texto) ? null : texto));
+        }
+        return areas;
     }
 
     /// <summary>Compartido por AUX-02, AUX-03 y RegistrarCambio: confirma que el residente está asignado

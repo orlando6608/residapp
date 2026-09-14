@@ -26,7 +26,7 @@ public class SqlDailyClosureRepositoryChangeTests
 
         var input = new RegisterDailyChangeInput(
             seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
-            [new DailyChangeAreaInput(DailyChangeAreaCode.DolorMalestar, "Se queja de dolor en rodilla derecha")],
+            [new DailyChangeAreaInput(DailyChangeAreaCode.DolorMalestar, [], "Se queja de dolor en rodilla derecha")],
             37.2m, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid());
 
         var result = await _repository.RegisterChangeAsync(input);
@@ -45,6 +45,36 @@ public class SqlDailyClosureRepositoryChangeTests
     }
 
     [Fact]
+    public async Task RegisterChangeAsync_ConOpcionesRapidas_PersistsOptionsAndAllowsNullFreeText()
+    {
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            seed.AccountId, SystemProfile.Administracion, seed.CenterId, seed.UnitId,
+            "Residente Cambio Opciones Rápidas", new DateOnly(1951, 5, 15), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+
+        // AUX-07: área con checklist, sin texto libre — las opciones rápidas ya son el contenido.
+        var input = new RegisterDailyChangeInput(
+            seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
+            [new DailyChangeAreaInput(
+                DailyChangeAreaCode.AlimentacionHidratacion,
+                [DailyChangeAreaOptionCode.RechazaIngesta, DailyChangeAreaOptionCode.Atragantamiento], null)],
+            null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid());
+
+        var result = await _repository.RegisterChangeAsync(input);
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var area = await connection.QuerySingleAsync<(Guid Id, string? TextoLibre)>(
+            "SELECT id AS Id, texto_libre AS TextoLibre FROM dbo.cierres_cotidianos_cambio_areas WHERE cierre_id = @Id",
+            new { Id = result.ClosureId });
+        Assert.Null(area.TextoLibre);
+
+        var opciones = (await connection.QueryAsync<string>(
+            "SELECT opcion_codigo FROM dbo.cierres_cotidianos_cambio_area_opciones WHERE area_id = @AreaId ORDER BY opcion_codigo",
+            new { AreaId = area.Id })).ToList();
+        Assert.Equal(["ATRAGANTAMIENTO", "RECHAZA_INGESTA"], opciones);
+    }
+
+    [Fact]
     public async Task RegisterChangeAsync_Prioritario_PersistsReasonAndDirectNotice()
     {
         var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
@@ -55,8 +85,8 @@ public class SqlDailyClosureRepositoryChangeTests
         var input = new RegisterDailyChangeInput(
             seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
             [
-                new DailyChangeAreaInput(DailyChangeAreaCode.IncidenciasCaidas, "Caída en el baño a las 10:00"),
-                new DailyChangeAreaInput(DailyChangeAreaCode.EstadoConciencia, "Algo desorientada tras la caída"),
+                new DailyChangeAreaInput(DailyChangeAreaCode.IncidenciasCaidas, [], "Caída en el baño a las 10:00"),
+                new DailyChangeAreaInput(DailyChangeAreaCode.EstadoConciencia, [], "Algo desorientada tras la caída"),
             ],
             null, DailyChangeClassification.Prioritario, DailyChangePriorityReason.CaidaLesionTraumatismo,
             "Avisado el enfermero de guardia por teléfono a las 10:05", Guid.NewGuid());
@@ -85,7 +115,7 @@ public class SqlDailyClosureRepositoryChangeTests
         var operationId = Guid.NewGuid();
         var input = new RegisterDailyChangeInput(
             seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
-            [new DailyChangeAreaInput(DailyChangeAreaCode.Sueno, "Durmió mal, se despertó varias veces")],
+            [new DailyChangeAreaInput(DailyChangeAreaCode.Sueno, [], "Durmió mal, se despertó varias veces")],
             null, DailyChangeClassification.Ordinario, null, null, operationId);
 
         var first = await _repository.RegisterChangeAsync(input);
@@ -111,8 +141,27 @@ public class SqlDailyClosureRepositoryChangeTests
 
         var input = new RegisterDailyChangeInput(
             seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
-            [new DailyChangeAreaInput(DailyChangeAreaCode.EstadoConciencia, "Dificultad para respirar tras el almuerzo")],
+            [new DailyChangeAreaInput(DailyChangeAreaCode.EstadoConciencia, [], "Dificultad para respirar tras el almuerzo")],
             null, DailyChangeClassification.Prioritario, DailyChangePriorityReason.DificultadRespiratoria, null, Guid.NewGuid());
+
+        await Assert.ThrowsAsync<SqlException>(() => _repository.RegisterChangeAsync(input));
+    }
+
+    [Fact]
+    public async Task RegisterChangeAsync_AreaSinChecklistSinTexto_ViolaElCheckDeDefensaEnProfundidad()
+    {
+        // RegisterDailyChange (capa de aplicación) ya exige texto en las áreas sin checklist (AUX-07:
+        // participación/relación social, incidencias/caídas, estado de conciencia) antes de llegar aquí;
+        // este test comprueba que, si algo la saltara, el propio esquema SQL lo rechaza igual (CK_ccca_text).
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            seed.AccountId, SystemProfile.Administracion, seed.CenterId, seed.UnitId,
+            "Residente Cambio Sin Texto", new DateOnly(1951, 6, 16), DocumentedSexCode.Hombre, null, null, null, null, null, Guid.NewGuid()));
+
+        var input = new RegisterDailyChangeInput(
+            seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
+            [new DailyChangeAreaInput(DailyChangeAreaCode.IncidenciasCaidas, [], null)],
+            null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid());
 
         await Assert.ThrowsAsync<SqlException>(() => _repository.RegisterChangeAsync(input));
     }

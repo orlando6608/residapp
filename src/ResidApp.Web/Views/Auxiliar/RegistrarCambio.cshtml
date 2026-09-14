@@ -35,9 +35,28 @@
             @foreach (var area in Enum.GetValues<DailyChangeAreaCode>())
             {
                 var code = area.ToCode();
-                <div class="mb-3">
-                    <label for="area-@code" class="form-label">@DailyChangeAreaDisplay.Label(area)</label>
-                    <textarea name="AreaTexto[@code]" id="area-@code" class="form-control" rows="2" maxlength="1000">@Model.AreaTexto.GetValueOrDefault(code)</textarea>
+                var opciones = DailyChangeAreaOptionsCatalog.OptionsFor(area);
+                <div class="mb-4">
+                    <p class="form-label fw-semibold mb-2">@DailyChangeAreaDisplay.Label(area)</p>
+                    @if (opciones.Count > 0)
+                    {
+                        <div class="mb-2">
+                            @foreach (var opcion in opciones)
+                            {
+                                var opcionCode = opcion.ToCode();
+                                var inputId = $"opcion-{code}-{opcionCode}";
+                                var entrada = $"{code}:{opcionCode}";
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="@inputId" name="AreaOpciones" value="@entrada"
+                                           checked="@Model.AreaOpciones.Contains(entrada)" />
+                                    <label class="form-check-label" for="@inputId">@DailyChangeAreaOptionDisplay.Label(opcion)</label>
+                                </div>
+                            }
+                        </div>
+                    }
+                    <label for="area-@code" class="form-label visually-hidden">Observaciones — @DailyChangeAreaDisplay.Label(area)</label>
+                    <textarea name="AreaTexto[@code]" id="area-@code" class="form-control" rows="2" maxlength="1000"
+                              placeholder="@(opciones.Count > 0 ? "Observaciones opcionales" : "Explica lo sucedido")">@Model.AreaTexto.GetValueOrDefault(code)</textarea>
                 </div>
             }
         </div>

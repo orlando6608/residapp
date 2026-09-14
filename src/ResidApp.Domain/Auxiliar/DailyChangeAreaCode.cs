@@ -4,9 +4,9 @@ namespace ResidApp.Domain.Auxiliar;
 
 /// <summary>Las diez áreas de "Registrar cambio" (AUX-06/AUX-07), distintas de las nueve áreas del basal
 /// clínico (BaselineArea): estas son de observación cotidiana, no de valoración clínica.
-/// docs/flujos-clinicos/registro-cotidiano-auxiliar.md. Sin catálogo de opciones rápidas todavía (el PDF
-/// legado que las detallaba no se pudo leer en esta sesión) — por ahora cada área solo admite texto
-/// libre; añadir opciones rápidas después es un cambio aditivo.</summary>
+/// docs/flujos-clinicos/registro-cotidiano-auxiliar.md. El catálogo de opciones rápidas predefinidas por
+/// área vive en <see cref="DailyChangeAreaOptionsCatalog"/>; siete áreas lo tienen, las tres últimas solo
+/// admiten texto libre.</summary>
 public enum DailyChangeAreaCode
 {
     [Code("ALIMENTACION_HIDRATACION")] AlimentacionHidratacion,

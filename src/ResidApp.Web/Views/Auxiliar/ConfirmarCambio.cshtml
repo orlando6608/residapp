@@ -6,6 +6,15 @@
     ViewData["Title"] = "Confirmar cambio";
     var resident = (ResidApp.Application.Ports.AssignedResidentSummary)ViewBag.Resident;
     var esPrioritario = Model.Clasificacion == DailyChangeClassification.Prioritario;
+
+    var opcionesPorArea = Model.AreaOpciones
+        .Select(entrada => entrada.Split(':', 2))
+        .Where(partes => partes.Length == 2 && EnumCode.TryParseCode<DailyChangeAreaCode>(partes[0], out _))
+        .GroupBy(partes => partes[0], partes => partes[1])
+        .ToDictionary(g => g.Key, g => g.ToList());
+    var areasConContenido = Enum.GetValues<DailyChangeAreaCode>()
+        .Select(area => area.ToCode())
+        .Where(code => opcionesPorArea.ContainsKey(code) || !string.IsNullOrWhiteSpace(Model.AreaTexto.GetValueOrDefault(code)));
 }
 
 <nav aria-label="breadcrumb">
@@ -23,10 +32,22 @@
     <div class="card-body">
         <h2 class="h5 card-title">Resumen</h2>
         <dl class="row mb-0">
-            @foreach (var (code, texto) in Model.AreaTexto.Where(kv => !string.IsNullOrWhiteSpace(kv.Value)))
+            @foreach (var code in areasConContenido)
             {
-                <dt class="col-sm-4">@DailyChangeAreaDisplay.Label(EnumCode.ParseCode<DailyChangeAreaCode>(code))</dt>
-                <dd class="col-sm-8">@texto</dd>
+                var area = EnumCode.ParseCode<DailyChangeAreaCode>(code);
+                var texto = Model.AreaTexto.GetValueOrDefault(code);
+                var opciones = opcionesPorArea.GetValueOrDefault(code, []);
+                <dt class="col-sm-4">@DailyChangeAreaDisplay.Label(area)</dt>
+                <dd class="col-sm-8">
+                    @if (opciones.Count > 0)
+                    {
+                        <div>@string.Join(", ", opciones.Select(o => DailyChangeAreaOptionDisplay.Label(EnumCode.ParseCode<DailyChangeAreaOptionCode>(o))))</div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(texto))
+                    {
+                        <div>@texto</div>
+                    }
+                </dd>
             }
             @if (Model.Temperatura is not null)
             {
@@ -53,6 +74,10 @@
     @foreach (var (code, texto) in Model.AreaTexto.Where(kv => !string.IsNullOrWhiteSpace(kv.Value)))
     {
         <input type="hidden" name="AreaTexto[@code]" value="@texto" />
+    }
+    @foreach (var opcion in Model.AreaOpciones)
+    {
+        <input type="hidden" name="AreaOpciones" value="@opcion" />
     }
 
     @if (esPrioritario)
