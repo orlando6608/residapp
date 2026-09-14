@@ -22,6 +22,9 @@ Toda vista nueva bajo `src/ResidApp.Web/Views/`:
   `type="tel"`, `type="number"`, etc.), no siempre `type="text"`.
 - Tablas de datos densas se muestran como listas de tarjetas (`.card`) en viewports estrechos (por
   ejemplo `d-none d-md-table-row` / `d-md-none`), no solo con scroll horizontal.
+- La paleta de colores, el contraste (WCAG 2.2 AA) y el mapeo a clases utilitarias de Bootstrap 5
+  siguen `docs/bocetos-pantallas/guia-diseno-sistema-visual.md` — es la directriz vinculante para
+  cualquier vista nueva o modificada.
 
 Las vistas ya construidas (`Residents/Create`, `Baseline/Sign`, `Baseline/Direction`, `DevAuth/Login`)
 ya aplican esta directriz: controles `-lg`, `type`/`inputmode` correctos, botones en `d-grid d-md-block`
@@ -40,10 +43,12 @@ viewport.
   fallback de navegación cuando no hay red. **No** cachea ni reintenta envíos de formularios clínicos —
   eso es responsabilidad de la idempotencia del punto 4, no del service worker.
 
-Estado actual: hecho. `manifest.json` (nombre, iconos placeholder en `wwwroot/icons/icon.svg`,
-`display: standalone`) y `sw.js` (shell cacheado, fallback de navegación a `/Home/Offline`, ignora todo
-lo que no sea `GET`) están enlazados desde `_Layout.cshtml`. Los iconos son un placeholder genérico
-(cuadrado azul con una cruz) — la marca comercial definitiva sigue sin decidir (ver `README.md`).
+Estado actual: hecho. `manifest.json` (nombre, iconos en `wwwroot/images/logo.svg` /
+`wwwroot/images/logo-maskable.svg`, `display: standalone`) y `sw.js` (shell cacheado, fallback de
+navegación a `/Home/Offline`, ignora todo lo que no sea `GET`) están enlazados desde `_Layout.cshtml`.
+Los iconos ya son la marca comercial definitiva (gradiente azul/teal, ver
+`docs/bocetos-pantallas/guia-diseno-sistema-visual.md`), con una variante `logo-maskable.svg` de fondo
+opaco para el `purpose: "maskable"` del manifest.
 
 ## 4. Idempotencia como defensa ante pérdida de cobertura
 

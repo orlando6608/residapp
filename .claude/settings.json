@@ -12,7 +12,7 @@
       "Bash(curl -s -D - http://localhost:5299/manifest.json -o /tmp/manifest.json)",
       "Read(//tmp/**)",
       "Bash(curl -s -D - http://localhost:5299/sw.js -o /tmp/sw.js)",
-      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} - %{content_type}\\\\n\" http://localhost:5299/icons/icon.svg)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} - %{content_type}\\\\n\" http://localhost:5299/images/logo.svg)",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5299/Home/Offline)",
       "Bash(curl -s http://localhost:5299/Home/Offline)",
       "Bash(curl -s http://localhost:5299/)",
@@ -20,7 +20,16 @@
       "Bash('/c/Program Files \\(x86\\)/Microsoft/Edge/Application/msedge.exe' --headless --disable-gpu --hide-scrollbars --window-size=1200,2200 --screenshot=/c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/preview_mid2.png /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/tmp_mid.html)",
       "Bash(cp /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/modelo-datos-basal-residente.pdf /c/repoCJ/residapp/docs/decisiones-arquitectura/modelo-datos-basal-residente.pdf)",
       "Bash(cp /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/modelo-datos-basal-residente.html /c/repoCJ/residapp/docs/decisiones-arquitectura/modelo-datos-basal-residente.html)",
-      "Bash(rm -f /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/preview_full.png /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/preview_top.png /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/preview_mid.png /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/preview_mid2.png /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/tmp_mid.html /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/scroll.js)"
+      "Bash(rm -f /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/preview_full.png /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/preview_top.png /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/preview_mid.png /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/preview_mid2.png /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/tmp_mid.html /c/Users/logik/AppData/Local/Temp/claude/c--repoCJ-residapp/eec7aff6-7067-43a4-988c-1b83b26e6748/scratchpad/scroll.js)",
+      "Bash(python -c \"import json; json.load\\(open\\('src/ResidApp.Web/wwwroot/manifest.json'\\)\\)\")",
+      "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/ResidApp.Web --no-launch-profile --urls http://localhost:5299)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(cat /tmp/dotnet-run.log 2>&1 | tail -50)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5299/)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} - %{content_type}\\\\n\" http://localhost:5299/images/logo-maskable.svg)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5299/icons/icon.svg)",
+      "Bash(taskkill //F //IM dotnet.exe)",
+      "Read(//c/Users/logik/**)"
     ]
   }
 }

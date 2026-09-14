@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D6EFD" />
+      <stop offset="100%" stop-color="#0A58CA" />
+    </linearGradient>
+    <linearGradient id="tealGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#198754" />
+      <stop offset="100%" stop-color="#20c997" />
+    </linearGradient>
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0A58CA" flood-opacity="0.15" />
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#FFFFFF" />
+  <g filter="url(#dropShadow)">
+    <path d="M 160 210 C 160 140, 210 90, 280 90 C 330 90, 370 120, 390 160 L 320 200 C 310 180, 295 170, 280 170 C 255 170, 240 185, 240 210 L 240 270 L 160 270 Z" fill="url(#blueGrad)" />
+    <path d="M 352 302 C 352 372, 302 422, 232 422 C 182 422, 142 392, 122 352 L 192 312 C 202 332, 217 342, 232 342 C 257 342, 272 327, 272 302 L 272 242 L 352 242 Z" fill="url(#tealGrad)" />
+    <rect x="240" y="242" width="32" height="28" fill="#FFFFFF" />
+  </g>
+</svg>
