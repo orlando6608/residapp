@@ -6,11 +6,11 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-/// <summary>Traduce los campos de entrada de resident-baseline-service.ts::readDirectionBaseline. Purpose
+/// <summary>Traduce los campos de entrada de resident-baseline-service.ts::readDirectionBaseline. Proposito
 /// viaja como texto libre (igual que en TS): la política es quien decide si vale "SUPERVISION_CLINICA",
 /// no se pre-valida ni se fija aquí, para que ACCESS_PURPOSE_REQUIRED siga siendo una ruta alcanzable.</summary>
 public sealed record ReadDirectionBaselineCommand(
-    Guid ProfileScopeId, CenterId CenterId, ResidentId ResidentId, string ResourceType, string? Purpose, Guid OperationId);
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, string TipoRecurso, string? Proposito, Guid OperacionId);
 
 /// <summary>Traduce readDirectionBaseline de lib/application/resident-baseline-service.ts.</summary>
 public sealed class ReadDirectionBaseline(
@@ -20,18 +20,18 @@ public sealed class ReadDirectionBaseline(
         ReadDirectionBaselineCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
-            if (!EnumCode.TryParseCode<ClinicalResourceType>(command.ResourceType, out var resourceType))
+            if (!EnumCode.TryParseCode<ClinicalResourceType>(command.TipoRecurso, out var resourceType))
             {
                 throw new AccessDeniedException();
             }
-            var purpose = command.Purpose is not null && EnumCode.TryParseCode<ClinicalDetailAccessPurpose>(command.Purpose, out var parsedPurpose)
+            var purpose = command.Proposito is not null && EnumCode.TryParseCode<ClinicalDetailAccessPurpose>(command.Proposito, out var parsedPurpose)
                 ? parsedPurpose
                 : (ClinicalDetailAccessPurpose?)null;
 
-            var selection = new AuthorizationSelection(command.ProfileScopeId, command.CenterId);
+            var selection = new AuthorizationSelection(command.AmbitoPerfilId, command.CentroId);
             var context = await RequestAuthorizationContextResolver.ResolveAsync(
-                evidenceProvider, session, selection, new AuthorizationTarget.Read(command.ResidentId), resourceType, purpose, ct);
-            var payload = new ClinicalDirectionReadPayload(command.OperationId);
+                evidenceProvider, session, selection, new AuthorizationTarget.Read(command.ResidenteId), resourceType, purpose, ct);
+            var payload = new ClinicalDirectionReadPayload(command.OperacionId);
             return await RequestAuthorizationContextResolver.ExecuteDirectionBaselineReadAsync(context, repository, payload, ct);
         });
 }

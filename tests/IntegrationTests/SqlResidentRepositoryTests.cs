@@ -29,11 +29,11 @@ public class SqlResidentRepositoryTests
 
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var status = await connection.QuerySingleAsync<string>(
-            "SELECT status FROM dbo.residents WHERE id = @Id", new { Id = result.ResidentId.Value });
+            "SELECT estado FROM dbo.residentes WHERE id = @Id", new { Id = result.ResidentId.Value });
         Assert.Equal("ACTIVE", status);
 
         var auditCount = await connection.QuerySingleAsync<int>(
-            "SELECT COUNT(*) FROM dbo.audit_events WHERE resident_id = @Id AND action_code = 'RESIDENT_CREATE'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'RESIDENT_CREATE'",
             new { Id = result.ResidentId.Value });
         Assert.Equal(1, auditCount);
     }
@@ -51,7 +51,7 @@ public class SqlResidentRepositoryTests
 
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var count = await connection.QuerySingleAsync<int>(
-            "SELECT COUNT(*) FROM dbo.residents WHERE id = @Id", new { Id = first.ResidentId.Value });
+            "SELECT COUNT(*) FROM dbo.residentes WHERE id = @Id", new { Id = first.ResidentId.Value });
         Assert.Equal(1, count);
     }
 

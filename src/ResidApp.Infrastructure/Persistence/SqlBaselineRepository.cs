@@ -14,7 +14,8 @@ namespace ResidApp.Infrastructure.Persistence;
 
 /// <summary>
 /// Traduce signBaselineDraft (db/repositories/baseline-repository.ts) y readBaselineAsClinicalDirection
-/// (db/repositories/audit-repository.ts).
+/// (db/repositories/audit-repository.ts). Tablas/columnas en español desde
+/// database/scripts/0002_renombrado_espanol_sqlserver.sql.
 /// </summary>
 public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IBaselineRepository
 {
@@ -48,10 +49,10 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
                 barthelItems.Select(i => new BarthelItem(EnumCode.ParseCode<BarthelItemCode>(i.ItemCode), i.SelectedOptionCode, i.AwardedScore)).ToList());
 
             var current = await connection.QuerySingleOrDefaultAsync<CurrentRow>(new CommandDefinition("""
-                SELECT cb.baseline_version_id AS BaselineVersionId, bv.version_number AS VersionNumber
-                  FROM dbo.resident_current_baselines cb
-                  JOIN dbo.baseline_versions bv ON bv.id = cb.baseline_version_id
-                 WHERE cb.center_id = @CenterId AND cb.resident_id = @ResidentId
+                SELECT cb.version_basal_id AS BaselineVersionId, bv.numero_version AS VersionNumber
+                  FROM dbo.basales_vigentes_residente cb
+                  JOIN dbo.basales_version bv ON bv.id = cb.version_basal_id
+                 WHERE cb.centro_id = @CenterId AND cb.residente_id = @ResidentId
                 """, new { CenterId = input.CenterId.Value, ResidentId = input.ResidentId.Value }, transaction, cancellationToken: ct));
 
             var versionNumber = (current?.VersionNumber ?? 0) + 1;
@@ -61,7 +62,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             var result = new SignBaselineDraftResult(versionId, versionNumber);
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.idempotency_operations (id, account_id, action_code, operation_id, request_hash, status, created_at)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
                 VALUES (@Id, @AccountId, 'BASELINE_SIGN', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
                 """, new
             {
@@ -69,11 +70,11 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             }, transaction, cancellationToken: ct));
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.baseline_versions
-                    (id, source_draft_id, resident_id, center_id, created_in_unit_id, version_number, reason_code,
-                     common_information_source_code, common_information_source_other_text, common_information_date,
-                     created_by_account_id, created_by_profile, created_at,
-                     signed_by_account_id, signed_by_profile, signed_at, valid_from, activation_operation_id)
+                INSERT INTO dbo.basales_version
+                    (id, borrador_origen_id, residente_id, centro_id, creado_en_unidad_id, numero_version, motivo_codigo,
+                     fuente_informacion_comun_codigo, fuente_informacion_comun_otro_texto, fecha_informacion_comun,
+                     creado_por_cuenta_id, creado_por_perfil, creado_en,
+                     firmado_por_cuenta_id, firmado_por_perfil, firmado_en, vigente_desde, operacion_activacion_id)
                 VALUES (@VersionId, @DraftId, @ResidentId, @CenterId, @UnitId, @VersionNumber, @ReasonCode,
                      @SourceCode, @SourceOtherText, @InformationDate,
                      @AccountId, @ActiveProfile, @CreatedAt, @AccountId, @ActiveProfile, @OccurredAt, @OccurredAt, @OperationId)
@@ -89,10 +90,10 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             foreach (var area in areas)
             {
                 await connection.ExecuteAsync(new CommandDefinition("""
-                    INSERT INTO dbo.baseline_version_areas
-                        (id, baseline_version_id, resident_id, center_id, area_code, catalog_version_code, answer_payload,
-                         observation, information_source_override_code, information_source_override_other_text,
-                         information_date_override, recorded_by_account_id, recorded_by_profile, recorded_at)
+                    INSERT INTO dbo.basales_version_areas
+                        (id, version_basal_id, residente_id, centro_id, area_codigo, catalogo_version_codigo, respuestas_json,
+                         observacion, fuente_informacion_sustituta_codigo, fuente_informacion_sustituta_otro_texto,
+                         fecha_informacion_sustituta, registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
                     VALUES (@Id, @VersionId, @ResidentId, @CenterId, @AreaCode, @CatalogVersionCode, @AnswerPayload,
                          @Observation, @SourceOverrideCode, @SourceOverrideOtherText, @DateOverride,
                          @RecordedByAccountId, @RecordedByProfile, @RecordedAt)
@@ -106,9 +107,9 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             }
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.baseline_version_barthel
-                    (id, baseline_version_id, resident_id, center_id, instrument_version_code, assessment_date, total_score,
-                     recorded_by_account_id, recorded_by_profile, recorded_at)
+                INSERT INTO dbo.basales_version_barthel
+                    (id, version_basal_id, residente_id, centro_id, instrumento_version_codigo, fecha_valoracion, puntuacion_total,
+                     registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
                 VALUES (@Id, @VersionId, @ResidentId, @CenterId, @Instrument, @AssessmentDate, @TotalScore,
                      @RecordedByAccountId, @RecordedByProfile, @RecordedAt)
                 """, new
@@ -121,9 +122,9 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             foreach (var item in barthelItems)
             {
                 await connection.ExecuteAsync(new CommandDefinition("""
-                    INSERT INTO dbo.baseline_version_barthel_items
-                        (id, barthel_id, baseline_version_id, resident_id, center_id, instrument_version_code,
-                         item_code, selected_option_code, awarded_score)
+                    INSERT INTO dbo.basales_version_barthel_items
+                        (id, barthel_id, version_basal_id, residente_id, centro_id, instrumento_version_codigo,
+                         item_codigo, opcion_seleccionada_codigo, puntuacion_otorgada)
                     VALUES (@Id, @BarthelVersionId, @VersionId, @ResidentId, @CenterId, @Instrument,
                          @ItemCode, @SelectedOptionCode, @AwardedScore)
                     """, new
@@ -137,7 +138,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             if (current is not null)
             {
                 await connection.ExecuteAsync(new CommandDefinition("""
-                    INSERT INTO dbo.baseline_supersessions (previous_version_id, new_version_id, resident_id, center_id, superseded_at)
+                    INSERT INTO dbo.basales_sustituciones (version_anterior_id, version_nueva_id, residente_id, centro_id, sustituido_en)
                     VALUES (@Previous, @New, @ResidentId, @CenterId, @OccurredAt)
                     """, new
                 {
@@ -145,8 +146,8 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
                 }, transaction, cancellationToken: ct));
 
                 await connection.ExecuteAsync(new CommandDefinition("""
-                    UPDATE dbo.resident_current_baselines SET baseline_version_id = @New, activated_at = @OccurredAt
-                     WHERE center_id = @CenterId AND resident_id = @ResidentId AND baseline_version_id = @Previous
+                    UPDATE dbo.basales_vigentes_residente SET version_basal_id = @New, activado_en = @OccurredAt
+                     WHERE centro_id = @CenterId AND residente_id = @ResidentId AND version_basal_id = @Previous
                     """, new
                 {
                     New = versionId.Value, OccurredAt = occurredAt, CenterId = input.CenterId.Value, ResidentId = input.ResidentId.Value, Previous = current.BaselineVersionId,
@@ -155,7 +156,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             else
             {
                 await connection.ExecuteAsync(new CommandDefinition("""
-                    INSERT INTO dbo.resident_current_baselines (resident_id, center_id, baseline_version_id, activated_at)
+                    INSERT INTO dbo.basales_vigentes_residente (residente_id, centro_id, version_basal_id, activado_en)
                     VALUES (@ResidentId, @CenterId, @VersionId, @OccurredAt)
                     """, new { ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value, VersionId = versionId.Value, OccurredAt = occurredAt },
                     transaction, cancellationToken: ct));
@@ -165,9 +166,9 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             // Riesgos del plan — ventana TOCTOU teórica). Aquí se exige además RowsAffected==1 en el propio
             // UPDATE de cierre, dentro de la misma transacción: corrección deliberada, no solo un puerto fiel.
             var closedRows = await connection.ExecuteAsync(new CommandDefinition("""
-                UPDATE dbo.baseline_drafts
-                   SET status = 'SIGNED', updated_by_account_id = @AccountId, updated_by_profile = @ActiveProfile, updated_at = @OccurredAt
-                 WHERE id = @DraftId AND status = 'ACTIVE' AND draft_revision = @ExpectedDraftRevision
+                UPDATE dbo.basales_borrador
+                   SET estado = 'SIGNED', actualizado_por_cuenta_id = @AccountId, actualizado_por_perfil = @ActiveProfile, actualizado_en = @OccurredAt
+                 WHERE id = @DraftId AND estado = 'ACTIVE' AND revision_borrador = @ExpectedDraftRevision
                 """, new
             {
                 input.AccountId.Value, ActiveProfile = input.ActiveProfile.ToCode(), OccurredAt = occurredAt,
@@ -179,7 +180,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             }
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.audit_events (id, account_id, active_profile, center_id, unit_id, resident_id, resource_type, resource_id, action_code, occurred_at)
+                INSERT INTO dbo.eventos_auditoria (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
                 VALUES (@Id, @AccountId, @ActiveProfile, @CenterId, @UnitId, @ResidentId, 'BASELINE_VERSION', @VersionId, 'BASELINE_SIGN', @OccurredAt)
                 """, new
             {
@@ -189,10 +190,10 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
 
             var resultJson = JsonSerializer.Serialize(result, ResidAppJson.Options);
             await connection.ExecuteAsync(new CommandDefinition("""
-                UPDATE dbo.idempotency_operations
-                   SET status = 'SUCCEEDED', result_resource_id = @VersionId, result_json = @ResultJson, completed_at = @OccurredAt
-                 WHERE account_id = @AccountId AND action_code = 'BASELINE_SIGN'
-                   AND operation_id = @OperationId AND request_hash = @RequestHash AND status = 'IN_PROGRESS'
+                UPDATE dbo.operaciones_idempotencia
+                   SET estado = 'SUCCEEDED', recurso_resultado_id = @VersionId, resultado_json = @ResultJson, completado_en = @OccurredAt
+                 WHERE cuenta_id = @AccountId AND accion_codigo = 'BASELINE_SIGN'
+                   AND operacion_id = @OperationId AND hash_solicitud = @RequestHash AND estado = 'IN_PROGRESS'
                 """, new
             {
                 VersionId = versionId.Value, ResultJson = resultJson, OccurredAt = occurredAt,
@@ -216,8 +217,8 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
 
     /// <summary>Envuelve la lectura auditada de Dirección Clínica en el mismo patrón de idempotencia que
     /// CreateWithInitialLocationAsync/SignDraftAsync: sin esto, un reintento desde una tablet con
-    /// cobertura inestable duplicaba la fila de auditoría (dbo.idempotency_operations ya reservaba
-    /// 'CLINICAL_DETAIL_READ' como action_code válido sin que nada lo usara). Ver
+    /// cobertura inestable duplicaba la fila de auditoría (dbo.operaciones_idempotencia ya reservaba
+    /// 'CLINICAL_DETAIL_READ' como accion_codigo válido sin que nada lo usara). Ver
     /// docs/decisiones-arquitectura/directrices-pwa-movil.md, punto 4.</summary>
     public async Task<IReadOnlyList<AuditedBaselineHeader>> ReadAsClinicalDirectionAsync(
         ClinicalDirectionReadInput input, CancellationToken ct = default)
@@ -237,7 +238,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             var occurredAt = DateTimeOffset.UtcNow;
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.idempotency_operations (id, account_id, action_code, operation_id, request_hash, status, created_at)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
                 VALUES (@Id, @AccountId, 'CLINICAL_DETAIL_READ', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
                 """, new
             {
@@ -246,22 +247,22 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
 
             var isCurrent = input.ResourceType == ClinicalResourceType.BaselineCurrent;
             var resourceSql = isCurrent
-                ? "SELECT version.id FROM dbo.resident_current_baselines current JOIN dbo.baseline_versions version ON version.id = current.baseline_version_id WHERE current.center_id = @CenterId AND current.resident_id = @ResidentId"
-                : "SELECT version.id FROM dbo.baseline_versions version WHERE version.center_id = @CenterId AND version.resident_id = @ResidentId";
+                ? "SELECT version.id FROM dbo.basales_vigentes_residente current JOIN dbo.basales_version version ON version.id = current.version_basal_id WHERE current.centro_id = @CenterId AND current.residente_id = @ResidentId"
+                : "SELECT version.id FROM dbo.basales_version version WHERE version.centro_id = @CenterId AND version.residente_id = @ResidentId";
             var finalSelect = isCurrent
                 ? """
-                  SELECT version.id AS Id, version.version_number AS VersionNumber, version.reason_code AS ReasonCode, version.signed_at AS SignedAt
-                    FROM dbo.resident_current_baselines current
-                    JOIN dbo.baseline_versions version ON version.id = current.baseline_version_id
+                  SELECT version.id AS Id, version.numero_version AS VersionNumber, version.motivo_codigo AS ReasonCode, version.firmado_en AS SignedAt
+                    FROM dbo.basales_vigentes_residente current
+                    JOIN dbo.basales_version version ON version.id = current.version_basal_id
                     JOIN @AuditedResourceIds audited ON audited.ResourceId = version.id
-                   WHERE current.center_id = @CenterId AND current.resident_id = @ResidentId
+                   WHERE current.centro_id = @CenterId AND current.residente_id = @ResidentId
                   """
                 : """
-                  SELECT version.id AS Id, version.version_number AS VersionNumber, version.reason_code AS ReasonCode, version.signed_at AS SignedAt
-                    FROM dbo.baseline_versions version
+                  SELECT version.id AS Id, version.numero_version AS VersionNumber, version.motivo_codigo AS ReasonCode, version.firmado_en AS SignedAt
+                    FROM dbo.basales_version version
                     JOIN @AuditedResourceIds audited ON audited.ResourceId = version.id
-                   WHERE version.center_id = @CenterId AND version.resident_id = @ResidentId
-                   ORDER BY version.version_number DESC
+                   WHERE version.centro_id = @CenterId AND version.residente_id = @ResidentId
+                   ORDER BY version.numero_version DESC
                   """;
 
             // Patrón "auditoría o nada": el SELECT final solo ve resource_id que ESTE INSERT acaba de
@@ -271,25 +272,25 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             var sql = $"""
                 DECLARE @AuditedResourceIds TABLE (ResourceId UNIQUEIDENTIFIER PRIMARY KEY);
 
-                INSERT INTO dbo.audit_events
-                    (id, account_id, active_profile, center_id, unit_id, resident_id, resource_type, resource_id, action_code, purpose_code, occurred_at)
-                OUTPUT inserted.resource_id INTO @AuditedResourceIds
+                INSERT INTO dbo.eventos_auditoria
+                    (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, proposito_codigo, ocurrido_en)
+                OUTPUT inserted.recurso_id INTO @AuditedResourceIds
                 SELECT NEWID(), @AccountId, 'DIRECCION_CLINICA', @CenterId, @UnitId, @ResidentId, @ResourceType, resource.id,
                        'CLINICAL_DETAIL_READ', 'SUPERVISION_CLINICA', @OccurredAt
                   FROM ({resourceSql}) resource
                  WHERE EXISTS (
-                    SELECT 1 FROM dbo.accounts account
-                    JOIN dbo.profile_scopes profile ON profile.account_id = account.id AND profile.center_id = @CenterId
-                         AND profile.profile_code = 'DIRECCION_CLINICA' AND profile.status = 'ACTIVE'
-                    JOIN dbo.profile_unit_scopes unit_scope ON unit_scope.profile_scope_id = profile.id
-                         AND unit_scope.center_id = profile.center_id AND unit_scope.unit_id = @UnitId AND unit_scope.revoked_at IS NULL
-                    JOIN dbo.profile_permissions permission ON permission.profile_scope_id = profile.id
-                         AND permission.center_id = profile.center_id AND permission.permission_code = 'CLINICAL_DETAIL_READ'
-                         AND permission.revoked_at IS NULL
-                    JOIN dbo.residents resident ON resident.id = @ResidentId AND resident.center_id = profile.center_id AND resident.status = 'ACTIVE'
-                    JOIN dbo.resident_location_intervals location ON location.resident_id = resident.id
-                         AND location.center_id = resident.center_id AND location.unit_id = unit_scope.unit_id AND location.valid_until IS NULL
-                   WHERE account.id = @AccountId AND account.status = 'ACTIVE'
+                    SELECT 1 FROM dbo.cuentas account
+                    JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id AND profile.centro_id = @CenterId
+                         AND profile.perfil_codigo = 'DIRECCION_CLINICA' AND profile.estado = 'ACTIVE'
+                    JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
+                         AND unit_scope.centro_id = profile.centro_id AND unit_scope.unidad_id = @UnitId AND unit_scope.revocado_en IS NULL
+                    JOIN dbo.permisos_perfil permission ON permission.ambito_perfil_id = profile.id
+                         AND permission.centro_id = profile.centro_id AND permission.permiso_codigo = 'CLINICAL_DETAIL_READ'
+                         AND permission.revocado_en IS NULL
+                    JOIN dbo.residentes resident ON resident.id = @ResidentId AND resident.centro_id = profile.centro_id AND resident.estado = 'ACTIVE'
+                    JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id
+                         AND location.centro_id = resident.centro_id AND location.unidad_id = unit_scope.unidad_id AND location.vigente_hasta IS NULL
+                   WHERE account.id = @AccountId AND account.estado = 'ACTIVE'
                  );
 
                 IF (SELECT COUNT(*) FROM @AuditedResourceIds) < 1
@@ -311,10 +312,10 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
 
             var resultJson = JsonSerializer.Serialize(headers, ResidAppJson.Options);
             await connection.ExecuteAsync(new CommandDefinition("""
-                UPDATE dbo.idempotency_operations
-                   SET status = 'SUCCEEDED', result_resource_id = @ResidentId, result_json = @ResultJson, completed_at = @OccurredAt
-                 WHERE account_id = @AccountId AND action_code = 'CLINICAL_DETAIL_READ'
-                   AND operation_id = @OperationId AND request_hash = @RequestHash AND status = 'IN_PROGRESS'
+                UPDATE dbo.operaciones_idempotencia
+                   SET estado = 'SUCCEEDED', recurso_resultado_id = @ResidentId, resultado_json = @ResultJson, completado_en = @OccurredAt
+                 WHERE cuenta_id = @AccountId AND accion_codigo = 'CLINICAL_DETAIL_READ'
+                   AND operacion_id = @OperationId AND hash_solicitud = @RequestHash AND estado = 'IN_PROGRESS'
                 """, new
             {
                 ResidentId = input.ResidentId.Value, ResultJson = resultJson, OccurredAt = occurredAt,
@@ -339,28 +340,28 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
     private static async Task<DraftRow?> LoadAuthorizedDraftAsync(
         IDbConnection connection, IDbTransaction transaction, SignBaselineDraftInput input, CancellationToken ct) =>
         await connection.QuerySingleOrDefaultAsync<DraftRow>(new CommandDefinition("""
-            SELECT d.id AS Id, d.resident_id AS ResidentId, d.center_id AS CenterId, d.created_in_unit_id AS CreatedInUnitId,
-                   d.reason_code AS ReasonCode, d.common_information_source_code AS CommonInformationSourceCode,
-                   d.common_information_source_other_text AS CommonInformationSourceOtherText,
-                   d.common_information_date AS CommonInformationDate, d.created_by_account_id AS CreatedByAccountId,
-                   d.created_by_profile AS CreatedByProfile, d.created_at AS CreatedAt, d.draft_revision AS DraftRevision
-              FROM dbo.baseline_drafts d
-              JOIN dbo.residents r ON r.id = d.resident_id AND r.center_id = d.center_id
-              JOIN dbo.resident_location_intervals li ON li.resident_id = d.resident_id AND li.center_id = d.center_id AND li.valid_until IS NULL
-              JOIN dbo.accounts a ON a.id = @AccountId AND a.status = 'ACTIVE'
-             WHERE d.id = @DraftId AND d.center_id = @CenterId AND d.resident_id = @ResidentId
-               AND d.created_in_unit_id = @UnitId AND li.unit_id = @UnitId
-               AND d.status = 'ACTIVE' AND d.draft_revision = @ExpectedDraftRevision
-               AND d.created_by_account_id = @AccountId AND d.created_by_profile = @ActiveProfile
-               AND r.status = 'ACTIVE'
-               AND d.reason_code IS NOT NULL AND d.common_information_source_code IS NOT NULL AND d.common_information_date IS NOT NULL
+            SELECT d.id AS Id, d.residente_id AS ResidentId, d.centro_id AS CenterId, d.creado_en_unidad_id AS CreatedInUnitId,
+                   d.motivo_codigo AS ReasonCode, d.fuente_informacion_comun_codigo AS CommonInformationSourceCode,
+                   d.fuente_informacion_comun_otro_texto AS CommonInformationSourceOtherText,
+                   d.fecha_informacion_comun AS CommonInformationDate, d.creado_por_cuenta_id AS CreatedByAccountId,
+                   d.creado_por_perfil AS CreatedByProfile, d.creado_en AS CreatedAt, d.revision_borrador AS DraftRevision
+              FROM dbo.basales_borrador d
+              JOIN dbo.residentes r ON r.id = d.residente_id AND r.centro_id = d.centro_id
+              JOIN dbo.intervalos_ubicacion_residente li ON li.residente_id = d.residente_id AND li.centro_id = d.centro_id AND li.vigente_hasta IS NULL
+              JOIN dbo.cuentas a ON a.id = @AccountId AND a.estado = 'ACTIVE'
+             WHERE d.id = @DraftId AND d.centro_id = @CenterId AND d.residente_id = @ResidentId
+               AND d.creado_en_unidad_id = @UnitId AND li.unidad_id = @UnitId
+               AND d.estado = 'ACTIVE' AND d.revision_borrador = @ExpectedDraftRevision
+               AND d.creado_por_cuenta_id = @AccountId AND d.creado_por_perfil = @ActiveProfile
+               AND r.estado = 'ACTIVE'
+               AND d.motivo_codigo IS NOT NULL AND d.fuente_informacion_comun_codigo IS NOT NULL AND d.fecha_informacion_comun IS NOT NULL
                AND EXISTS (
-                 SELECT 1 FROM dbo.profile_scopes ps
-                 JOIN dbo.profile_unit_scopes pus ON pus.profile_scope_id = ps.id AND pus.center_id = ps.center_id
-                      AND pus.unit_id = @UnitId AND pus.revoked_at IS NULL
-                 JOIN dbo.profile_permissions pp ON pp.profile_scope_id = ps.id AND pp.center_id = ps.center_id AND pp.revoked_at IS NULL
-                WHERE ps.account_id = @AccountId AND ps.center_id = @CenterId AND ps.profile_code = @ActiveProfile AND ps.status = 'ACTIVE'
-                  AND pp.permission_code = CASE WHEN d.reason_code = 'ALTA' THEN 'BASELINE_INITIAL_COMPLETE' ELSE 'BASELINE_REEVALUATE' END)
+                 SELECT 1 FROM dbo.ambitos_perfil ps
+                 JOIN dbo.ambitos_perfil_unidad pus ON pus.ambito_perfil_id = ps.id AND pus.centro_id = ps.centro_id
+                      AND pus.unidad_id = @UnitId AND pus.revocado_en IS NULL
+                 JOIN dbo.permisos_perfil pp ON pp.ambito_perfil_id = ps.id AND pp.centro_id = ps.centro_id AND pp.revocado_en IS NULL
+                WHERE ps.cuenta_id = @AccountId AND ps.centro_id = @CenterId AND ps.perfil_codigo = @ActiveProfile AND ps.estado = 'ACTIVE'
+                  AND pp.permiso_codigo = CASE WHEN d.motivo_codigo = 'ALTA' THEN 'BASELINE_INITIAL_COMPLETE' ELSE 'BASELINE_REEVALUATE' END)
             """, new
         {
             AccountId = input.AccountId.Value, DraftId = input.DraftId.Value, CenterId = input.CenterId.Value,
@@ -370,20 +371,20 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
 
     private static async Task<IReadOnlyList<AreaRow>> LoadAreasAsync(IDbConnection c, IDbTransaction t, Guid draftId, CancellationToken ct) =>
         (await c.QueryAsync<AreaRow>(new CommandDefinition("""
-            SELECT id AS Id, area_code AS AreaCode, catalog_version_code AS CatalogVersionCode, answer_payload AS AnswerPayload,
-                   observation AS Observation, information_source_override_code AS InformationSourceOverrideCode,
-                   information_source_override_other_text AS InformationSourceOverrideOtherText,
-                   information_date_override AS InformationDateOverride, recorded_by_account_id AS RecordedByAccountId,
-                   recorded_by_profile AS RecordedByProfile, recorded_at AS RecordedAt
-              FROM dbo.baseline_draft_areas WHERE draft_id = @DraftId ORDER BY area_code
+            SELECT id AS Id, area_codigo AS AreaCode, catalogo_version_codigo AS CatalogVersionCode, respuestas_json AS AnswerPayload,
+                   observacion AS Observation, fuente_informacion_sustituta_codigo AS InformationSourceOverrideCode,
+                   fuente_informacion_sustituta_otro_texto AS InformationSourceOverrideOtherText,
+                   fecha_informacion_sustituta AS InformationDateOverride, registrado_por_cuenta_id AS RecordedByAccountId,
+                   registrado_por_perfil AS RecordedByProfile, registrado_en AS RecordedAt
+              FROM dbo.basales_borrador_areas WHERE borrador_id = @DraftId ORDER BY area_codigo
             """, new { DraftId = draftId }, t, cancellationToken: ct))).ToList();
 
     private static async Task<BarthelRow> LoadBarthelAsync(IDbConnection c, IDbTransaction t, Guid draftId, CancellationToken ct)
     {
         var row = await c.QuerySingleOrDefaultAsync<BarthelRow>(new CommandDefinition("""
-            SELECT id AS Id, assessment_date AS AssessmentDate, total_score AS TotalScore,
-                   recorded_by_account_id AS RecordedByAccountId, recorded_by_profile AS RecordedByProfile, recorded_at AS RecordedAt
-              FROM dbo.baseline_draft_barthel WHERE draft_id = @DraftId
+            SELECT id AS Id, fecha_valoracion AS AssessmentDate, puntuacion_total AS TotalScore,
+                   registrado_por_cuenta_id AS RecordedByAccountId, registrado_por_perfil AS RecordedByProfile, registrado_en AS RecordedAt
+              FROM dbo.basales_borrador_barthel WHERE borrador_id = @DraftId
             """, new { DraftId = draftId }, t, cancellationToken: ct));
         return row is null || row.AssessmentDate is null || row.TotalScore is null
             ? throw new DomainValidationException("BASELINE_BARTHEL_INCOMPLETE")
@@ -392,8 +393,8 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
 
     private static async Task<IReadOnlyList<BarthelItemRow>> LoadBarthelItemsAsync(IDbConnection c, IDbTransaction t, Guid barthelId, CancellationToken ct) =>
         (await c.QueryAsync<BarthelItemRow>(new CommandDefinition("""
-            SELECT item_code AS ItemCode, selected_option_code AS SelectedOptionCode, awarded_score AS AwardedScore
-              FROM dbo.baseline_draft_barthel_items WHERE barthel_id = @BarthelId ORDER BY item_code
+            SELECT item_codigo AS ItemCode, opcion_seleccionada_codigo AS SelectedOptionCode, puntuacion_otorgada AS AwardedScore
+              FROM dbo.basales_borrador_barthel_items WHERE barthel_id = @BarthelId ORDER BY item_codigo
             """, new { BarthelId = barthelId }, t, cancellationToken: ct))).ToList();
 
     /// <summary>Traduce assertAllBaselineAreasComplete de validation.ts: 9 áreas, sin duplicados, cada
@@ -416,8 +417,8 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
         IDbConnection connection, IDbTransaction? transaction, SignBaselineDraftInput input, string requestHash, CancellationToken ct)
     {
         var row = await connection.QuerySingleOrDefaultAsync<IdempotencyRow>(new CommandDefinition("""
-            SELECT request_hash AS RequestHash, status AS Status, result_json AS ResultJson
-              FROM dbo.idempotency_operations WHERE account_id = @AccountId AND action_code = 'BASELINE_SIGN' AND operation_id = @OperationId
+            SELECT hash_solicitud AS RequestHash, estado AS Status, resultado_json AS ResultJson
+              FROM dbo.operaciones_idempotencia WHERE cuenta_id = @AccountId AND accion_codigo = 'BASELINE_SIGN' AND operacion_id = @OperationId
             """, new { AccountId = input.AccountId.Value, input.OperationId }, transaction, cancellationToken: ct));
         if (row is null)
         {
@@ -436,8 +437,8 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
         IDbConnection connection, IDbTransaction? transaction, Guid accountId, Guid operationId, string requestHash, CancellationToken ct)
     {
         var row = await connection.QuerySingleOrDefaultAsync<IdempotencyRow>(new CommandDefinition("""
-            SELECT request_hash AS RequestHash, status AS Status, result_json AS ResultJson
-              FROM dbo.idempotency_operations WHERE account_id = @AccountId AND action_code = 'CLINICAL_DETAIL_READ' AND operation_id = @OperationId
+            SELECT hash_solicitud AS RequestHash, estado AS Status, resultado_json AS ResultJson
+              FROM dbo.operaciones_idempotencia WHERE cuenta_id = @AccountId AND accion_codigo = 'CLINICAL_DETAIL_READ' AND operacion_id = @OperationId
             """, new { AccountId = accountId, OperationId = operationId }, transaction, cancellationToken: ct));
         if (row is null)
         {

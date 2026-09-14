@@ -10,7 +10,7 @@ namespace ResidApp.Web.Controllers;
 /// ResidentBaselineApplicationService, no aquí.</summary>
 public sealed class ResidentsController(ResidentBaselineApplicationService service) : Controller
 {
-    public IActionResult Create() => View(new CreateResidentFormModel { OperationId = Guid.NewGuid() });
+    public IActionResult Create() => View(new CreateResidentFormModel { OperacionId = Guid.NewGuid() });
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -22,9 +22,9 @@ public sealed class ResidentsController(ResidentBaselineApplicationService servi
         }
 
         var command = new CreateResidentCommand(
-            form.ProfileScopeId, CenterId.From(form.CenterId), UnitId.From(form.UnitId), form.DisplayName,
-            form.BirthDate!.Value, form.DocumentedSexCode, form.InternalReference,
-            BuildingId: null, FloorId: null, RoomId: null, PlaceId: null, form.OperationId);
+            form.AmbitoPerfilId, CenterId.From(form.CentroId), UnitId.From(form.UnidadId), form.NombreVisible,
+            form.FechaNacimiento!.Value, form.SexoDocumentadoCodigo, form.ReferenciaInterna,
+            EdificioId: null, PlantaId: null, HabitacionId: null, PlazaId: null, form.OperacionId);
 
         var result = await service.CreateResidentAsync(command, ct);
         if (!result.Ok)

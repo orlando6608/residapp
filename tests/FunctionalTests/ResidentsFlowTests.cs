@@ -34,13 +34,13 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var response = await client.PostAsync("/Residents/Create", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = ExtractValue(createPage, "__RequestVerificationToken"),
-            ["OperationId"] = ExtractValue(createPage, "OperationId"),
-            ["ProfileScopeId"] = seed.ProfileScopeId.ToString(),
-            ["CenterId"] = seed.CenterId.ToString(),
-            ["UnitId"] = seed.UnitId.ToString(),
-            ["DisplayName"] = "Residente Funcional",
-            ["BirthDate"] = "1938-02-20",
-            ["DocumentedSexCode"] = "Male",
+            ["OperacionId"] = ExtractValue(createPage, "OperacionId"),
+            ["AmbitoPerfilId"] = seed.ProfileScopeId.ToString(),
+            ["CentroId"] = seed.CenterId.ToString(),
+            ["UnidadId"] = seed.UnitId.ToString(),
+            ["NombreVisible"] = "Residente Funcional",
+            ["FechaNacimiento"] = "1938-02-20",
+            ["SexoDocumentadoCodigo"] = "Male",
         }));
 
         var body = await response.Content.ReadAsStringAsync();
@@ -64,20 +64,20 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         using var connection = await connections.OpenAsync();
 
         await connection.ExecuteAsync(
-            "INSERT INTO dbo.accounts (id, external_subject, status, created_at) VALUES (@accountId, @externalSubject, 'ACTIVE', @now)",
+            "INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@accountId, @externalSubject, 'ACTIVE', @now)",
             new { accountId, externalSubject, now });
         await connection.ExecuteAsync(
-            "INSERT INTO dbo.centers (id, code, display_name, status, created_at) VALUES (@centerId, @code, @code, 'ACTIVE', @now)",
+            "INSERT INTO dbo.centros (id, codigo, nombre_visible, estado, creado_en) VALUES (@centerId, @code, @code, 'ACTIVE', @now)",
             new { centerId, code = $"FUNC-CENTER-{suffix}", now });
         await connection.ExecuteAsync(
-            "INSERT INTO dbo.units (id, center_id, code, display_name, status, created_at) VALUES (@unitId, @centerId, @code, @code, 'ACTIVE', @now)",
+            "INSERT INTO dbo.unidades (id, centro_id, codigo, nombre_visible, estado, creado_en) VALUES (@unitId, @centerId, @code, @code, 'ACTIVE', @now)",
             new { unitId, centerId, code = $"FUNC-UNIT-{suffix}", now });
         await connection.ExecuteAsync("""
-            INSERT INTO dbo.profile_scopes (id, account_id, center_id, profile_code, status, granted_at, granted_by_account_id)
+            INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
             VALUES (@profileScopeId, @accountId, @centerId, 'ADMINISTRACION', 'ACTIVE', @now, @accountId)
             """, new { profileScopeId, accountId, centerId, now });
         await connection.ExecuteAsync("""
-            INSERT INTO dbo.profile_unit_scopes (id, profile_scope_id, center_id, unit_id, granted_at, granted_by_account_id)
+            INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
             VALUES (@id, @profileScopeId, @centerId, @unitId, @now, @accountId)
             """, new { id = Guid.NewGuid(), profileScopeId, centerId, unitId, now, accountId });
 

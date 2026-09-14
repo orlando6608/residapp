@@ -8,44 +8,54 @@ namespace ResidApp.Web.Models;
 public sealed class SignBaselineFormModel
 {
     [Required]
-    public Guid ProfileScopeId { get; set; }
+    [Display(Name = "Ámbito de perfil")]
+    public Guid AmbitoPerfilId { get; set; }
 
     [Required]
-    public Guid CenterId { get; set; }
+    [Display(Name = "Centro")]
+    public Guid CentroId { get; set; }
 
     [Required]
-    public Guid ResidentId { get; set; }
+    [Display(Name = "Residente")]
+    public Guid ResidenteId { get; set; }
 
     [Required]
-    public Guid DraftId { get; set; }
+    [Display(Name = "Borrador")]
+    public Guid BorradorId { get; set; }
 
     [Required]
     [Range(1, int.MaxValue)]
-    public int ExpectedDraftRevision { get; set; } = 1;
+    [Display(Name = "Revisión de borrador esperada")]
+    public int RevisionBorradorEsperada { get; set; } = 1;
 
     [Required]
-    public Guid OperationId { get; set; }
+    public Guid OperacionId { get; set; }
 }
 
 /// <summary>Modelo de la consulta de historial/estado basal vigente para el perfil Dirección Clínica.
-/// ResourceType/Purpose viajan como texto libre, igual que en el caso de uso: es la política quien decide
+/// TipoRecurso/Proposito viajan como texto libre, igual que en el caso de uso: es la política quien decide
 /// si son válidos, no este formulario.</summary>
 public sealed class DirectionBaselineQueryModel
 {
     [Required]
-    public Guid ProfileScopeId { get; set; }
+    [Display(Name = "Ámbito de perfil")]
+    public Guid AmbitoPerfilId { get; set; }
 
     [Required]
-    public Guid CenterId { get; set; }
+    [Display(Name = "Centro")]
+    public Guid CentroId { get; set; }
 
     [Required]
-    public Guid ResidentId { get; set; }
+    [Display(Name = "Residente")]
+    public Guid ResidenteId { get; set; }
 
     [Required]
-    public string ResourceType { get; set; } = "BASELINE_HISTORY";
+    [Display(Name = "Tipo de recurso")]
+    public string TipoRecurso { get; set; } = "BASELINE_HISTORY";
 
-    public string? Purpose { get; set; } = "SUPERVISION_CLINICA";
+    [Display(Name = "Propósito")]
+    public string? Proposito { get; set; } = "SUPERVISION_CLINICA";
 
     [Required]
-    public Guid OperationId { get; set; }
+    public Guid OperacionId { get; set; }
 }

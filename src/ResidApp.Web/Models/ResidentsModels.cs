@@ -8,30 +8,37 @@ namespace ResidApp.Web.Models;
 public sealed class CreateResidentFormModel
 {
     [Required]
-    public Guid ProfileScopeId { get; set; }
+    [Display(Name = "Ámbito de perfil")]
+    public Guid AmbitoPerfilId { get; set; }
 
     [Required]
-    public Guid CenterId { get; set; }
+    [Display(Name = "Centro")]
+    public Guid CentroId { get; set; }
 
     [Required]
-    public Guid UnitId { get; set; }
+    [Display(Name = "Unidad")]
+    public Guid UnidadId { get; set; }
 
     [Required]
     [StringLength(200)]
-    public string DisplayName { get; set; } = string.Empty;
+    [Display(Name = "Nombre completo")]
+    public string NombreVisible { get; set; } = string.Empty;
 
     [Required]
     [DataType(DataType.Date)]
-    public DateOnly? BirthDate { get; set; }
+    [Display(Name = "Fecha de nacimiento")]
+    public DateOnly? FechaNacimiento { get; set; }
 
     [Required]
-    public DocumentedSexCode DocumentedSexCode { get; set; }
+    [Display(Name = "Sexo documentado")]
+    public DocumentedSexCode SexoDocumentadoCodigo { get; set; }
 
     [StringLength(200)]
-    public string? InternalReference { get; set; }
+    [Display(Name = "Referencia interna")]
+    public string? ReferenciaInterna { get; set; }
 
     /// <summary>Se genera al mostrar el formulario y viaja oculto: da soporte a la idempotencia del caso de
-    /// uso (un reenvío accidental con el mismo OperationId no duplica el alta).</summary>
+    /// uso (un reenvío accidental con el mismo OperacionId no duplica el alta).</summary>
     [Required]
-    public Guid OperationId { get; set; }
+    public Guid OperacionId { get; set; }
 }

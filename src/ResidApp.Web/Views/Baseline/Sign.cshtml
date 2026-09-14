@@ -3,49 +3,60 @@
     ViewData["Title"] = "Firmar borrador de basal";
 }
 
-<h1>Firmar borrador de basal</h1>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Firmar borrador de basal</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Firmar borrador de basal</h1>
 <div class="alert alert-warning">
     Todavía no existe un caso de uso para crear el contenido de un borrador de basal (las 9 áreas más
-    Barthel), ni en este puerto ni en el prototipo legado. Sin un <code>DraftId</code> real ya existente en
-    <code>dbo.baseline_drafts</code>, esta operación devolverá un fallo de aplicación. El cableado queda
+    Barthel), ni en este puerto ni en el prototipo legado. Sin un <code>BorradorId</code> real ya existente
+    en <code>dbo.basales_borrador</code>, esta operación devolverá un fallo de aplicación. El cableado queda
     listo para cuando exista esa capacidad.
 </div>
 
-<div asp-validation-summary="All" class="text-danger"></div>
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
 
-<form asp-controller="Baseline" asp-action="Sign" method="post">
-    <input type="hidden" asp-for="OperationId" />
+        <form asp-controller="Baseline" asp-action="Sign" method="post">
+            <input type="hidden" asp-for="OperacionId" />
 
-    <div class="mb-3">
-        <label asp-for="ProfileScopeId" class="form-label"></label>
-        <input asp-for="ProfileScopeId" class="form-control form-control-lg" />
-        <span asp-validation-for="ProfileScopeId" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="CenterId" class="form-label"></label>
-        <input asp-for="CenterId" class="form-control form-control-lg" />
-        <span asp-validation-for="CenterId" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="ResidentId" class="form-label"></label>
-        <input asp-for="ResidentId" class="form-control form-control-lg" />
-        <span asp-validation-for="ResidentId" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="DraftId" class="form-label"></label>
-        <input asp-for="DraftId" class="form-control form-control-lg" />
-        <span asp-validation-for="DraftId" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="ExpectedDraftRevision" class="form-label"></label>
-        <input asp-for="ExpectedDraftRevision" type="number" inputmode="numeric" class="form-control form-control-lg" />
-        <span asp-validation-for="ExpectedDraftRevision" class="text-danger"></span>
-    </div>
+            <div class="mb-3">
+                <label asp-for="AmbitoPerfilId" class="form-label"></label>
+                <input asp-for="AmbitoPerfilId" class="form-control form-control-lg" />
+                <span asp-validation-for="AmbitoPerfilId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="CentroId" class="form-label"></label>
+                <input asp-for="CentroId" class="form-control form-control-lg" />
+                <span asp-validation-for="CentroId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ResidenteId" class="form-label"></label>
+                <input asp-for="ResidenteId" class="form-control form-control-lg" />
+                <span asp-validation-for="ResidenteId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="BorradorId" class="form-label"></label>
+                <input asp-for="BorradorId" class="form-control form-control-lg" />
+                <span asp-validation-for="BorradorId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="RevisionBorradorEsperada" class="form-label"></label>
+                <input asp-for="RevisionBorradorEsperada" type="number" inputmode="numeric" class="form-control form-control-lg" />
+                <span asp-validation-for="RevisionBorradorEsperada" class="text-danger"></span>
+            </div>
 
-    <div class="d-grid d-md-block">
-        <button type="submit" class="btn btn-primary btn-lg">Firmar</button>
+            <div class="d-grid d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-success btn-lg">Firmar estado basal</button>
+            </div>
+        </form>
     </div>
-</form>
+</div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

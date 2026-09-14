@@ -3,49 +3,60 @@
     ViewData["Title"] = "Consulta de Dirección Clínica";
 }
 
-<h1>Consulta auditada de basal (Dirección Clínica)</h1>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Consulta de Dirección Clínica</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Consulta auditada de basal (Dirección Clínica)</h1>
 <p class="text-muted">
     Requiere perfil activo Dirección Clínica con permiso <code>CLINICAL_DETAIL_READ</code>; cada consulta
-    autorizada queda registrada en <code>audit_events</code> de forma obligatoria.
+    autorizada queda registrada en <code>eventos_auditoria</code> de forma obligatoria.
 </p>
 
-<div asp-validation-summary="All" class="text-danger"></div>
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
 
-<form asp-controller="Baseline" asp-action="Direction" method="post">
-    <input type="hidden" asp-for="OperationId" />
+        <form asp-controller="Baseline" asp-action="Direction" method="post">
+            <input type="hidden" asp-for="OperacionId" />
 
-    <div class="mb-3">
-        <label asp-for="ProfileScopeId" class="form-label"></label>
-        <input asp-for="ProfileScopeId" class="form-control form-control-lg" />
-        <span asp-validation-for="ProfileScopeId" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="CenterId" class="form-label"></label>
-        <input asp-for="CenterId" class="form-control form-control-lg" />
-        <span asp-validation-for="CenterId" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="ResidentId" class="form-label"></label>
-        <input asp-for="ResidentId" class="form-control form-control-lg" />
-        <span asp-validation-for="ResidentId" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="ResourceType" class="form-label"></label>
-        <select asp-for="ResourceType" class="form-select form-select-lg">
-            <option value="BASELINE_CURRENT">BASELINE_CURRENT</option>
-            <option value="BASELINE_HISTORY">BASELINE_HISTORY</option>
-        </select>
-    </div>
-    <div class="mb-3">
-        <label asp-for="Purpose" class="form-label"></label>
-        <input asp-for="Purpose" class="form-control form-control-lg" />
-        <span asp-validation-for="Purpose" class="text-danger"></span>
-    </div>
+            <div class="mb-3">
+                <label asp-for="AmbitoPerfilId" class="form-label"></label>
+                <input asp-for="AmbitoPerfilId" class="form-control form-control-lg" />
+                <span asp-validation-for="AmbitoPerfilId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="CentroId" class="form-label"></label>
+                <input asp-for="CentroId" class="form-control form-control-lg" />
+                <span asp-validation-for="CentroId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ResidenteId" class="form-label"></label>
+                <input asp-for="ResidenteId" class="form-control form-control-lg" />
+                <span asp-validation-for="ResidenteId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="TipoRecurso" class="form-label"></label>
+                <select asp-for="TipoRecurso" class="form-select form-select-lg">
+                    <option value="BASELINE_CURRENT">BASELINE_CURRENT</option>
+                    <option value="BASELINE_HISTORY">BASELINE_HISTORY</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Proposito" class="form-label"></label>
+                <input asp-for="Proposito" class="form-control form-control-lg" />
+                <span asp-validation-for="Proposito" class="text-danger"></span>
+            </div>
 
-    <div class="d-grid d-md-block">
-        <button type="submit" class="btn btn-primary btn-lg">Consultar</button>
+            <div class="d-grid d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary btn-lg">Consultar</button>
+            </div>
+        </form>
     </div>
-</form>
+</div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

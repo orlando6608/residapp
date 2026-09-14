@@ -1,0 +1,70 @@
+/*
+ * Directiva de diseño visual de ResidApp — ver docs/bocetos-pantallas/guia-diseno-sistema-visual.md.
+ * Paleta y reglas de aplicación tomadas literalmente de ese documento (vinculante).
+ */
+:root {
+  /* Colores principales (marca, rigor técnico y seguridad) */
+  --color-primary-brand: #0D6EFD;
+  --color-primary-dark: #0A58CA;
+
+  /* Colores secundarios (toque clínico asistencial) */
+  --color-secondary-teal: #198754;
+  --color-secondary-light: #20C997;
+
+  /* Neutros de superficie */
+  --color-bg-main: #F8F9FA;
+  --color-bg-card: #FFFFFF;
+  --color-text-dark: #212529;
+  --color-text-muted: #6C757D;
+
+  /* Sistema semafórico de alertas clínicas */
+  --color-alert-danger: #DC3545;
+  --color-alert-warning: #FFC107;
+  --color-alert-info: #0DCAF0;
+}
+
+body {
+  background-color: var(--color-bg-main);
+  color: var(--color-text-dark);
+}
+
+/* Cabecera: fondo azul oscuro corporativo con isotipo en blanco (guía, sección 2.B). */
+.navbar-residapp {
+  background-color: var(--color-primary-dark);
+}
+
+.navbar-residapp .navbar-brand,
+.navbar-residapp .nav-link {
+  color: #FFFFFF;
+}
+
+.navbar-residapp .nav-link:hover,
+.navbar-residapp .nav-link:focus {
+  color: #FFFFFF;
+  opacity: 0.85;
+}
+
+.navbar-residapp .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Tarjetas de contenido sobre el fondo gris claro (guía, secciones 2.B y 2.C). */
+.card {
+  background-color: var(--color-bg-card);
+}
+
+.text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+/* Accesibilidad WCAG 2.2 AA: texto en negro sobre fondo de alerta amarillo (guía, sección 3.1). */
+.alert-warning {
+  color: #000000;
+}
+
+/* Accesibilidad WCAG 2.2 AA: altura táctil mínima de 48px en controles interactivos (guía, sección 3.2). */
+.form-control-lg,
+.form-select-lg,
+.btn-lg {
+  min-height: 48px;
+}

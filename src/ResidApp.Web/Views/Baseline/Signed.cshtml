@@ -2,9 +2,14 @@
     ViewData["Title"] = "Basal firmado";
 }
 
-<h1>Basal firmado</h1>
-<p>Versión número: <code>@ViewBag.VersionNumber</code></p>
-<p>Id de versión: <code>@ViewBag.BaselineVersionId</code></p>
-<div class="d-grid d-md-block">
-    <a asp-controller="Baseline" asp-action="Sign" class="btn btn-secondary btn-lg">Firmar otro borrador</a>
+<div class="card border-success">
+    <div class="card-body">
+        <h1 class="h4 text-success">✓ Basal firmado</h1>
+        <p>Versión número: <code>@ViewBag.VersionNumber</code></p>
+        <p>Id de versión: <code>@ViewBag.BaselineVersionId</code></p>
+        <div class="d-grid d-md-flex">
+            <a asp-controller="Baseline" asp-action="Sign" class="btn btn-primary btn-lg">Firmar otro borrador</a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg">Volver al inicio</a>
+        </div>
+    </div>
 </div>

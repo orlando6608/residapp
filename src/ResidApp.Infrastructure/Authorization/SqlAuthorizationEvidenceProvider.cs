@@ -13,6 +13,7 @@ namespace ResidApp.Infrastructure.Authorization;
 /// db/repositories/authorization-subject-repository.ts. En vez de construir un único JSON en T-SQL
 /// (json_object en SQLite), aquí son dos consultas Dapper en la misma conexión: la fila de evidencia y,
 /// aparte, sus permisos vigentes — más robusto entre versiones de motor y más fácil de leer.
+/// Tablas/columnas en español desde database/scripts/0002_renombrado_espanol_sqlserver.sql.
 /// </summary>
 public sealed class SqlAuthorizationEvidenceProvider(SqlConnectionFactory connections) : IAuthorizationEvidenceProvider
 {
@@ -38,10 +39,10 @@ public sealed class SqlAuthorizationEvidenceProvider(SqlConnectionFactory connec
         }
 
         var permissions = (await connection.QueryAsync<AuthorizationPermission>(new CommandDefinition("""
-            SELECT id AS Id, permission_code AS Code
-              FROM dbo.profile_permissions
-             WHERE profile_scope_id = @ProfileScopeId AND center_id = @CenterId AND revoked_at IS NULL
-             ORDER BY permission_code, id
+            SELECT id AS Id, permiso_codigo AS Code
+              FROM dbo.permisos_perfil
+             WHERE ambito_perfil_id = @ProfileScopeId AND centro_id = @CenterId AND revocado_en IS NULL
+             ORDER BY permiso_codigo, id
             """, new { row.ProfileScopeId, row.CenterId }, transaction, cancellationToken: ct))).ToList();
 
         return new AuthorizationEvidence(
@@ -58,52 +59,52 @@ public sealed class SqlAuthorizationEvidenceProvider(SqlConnectionFactory connec
         var hasResident = target is not AuthorizationTarget.Create;
 
         var residentJoin = hasResident ? """
-            JOIN dbo.residents resident ON resident.id = @ResidentId
-                AND resident.center_id = profile.center_id AND resident.status = 'ACTIVE'
-            JOIN dbo.resident_location_intervals location ON location.resident_id = resident.id
-                AND location.center_id = profile.center_id AND location.unit_id = unit.id AND location.valid_until IS NULL
-            JOIN dbo.resident_center_episodes episode ON episode.id = location.episode_id
-                AND episode.center_id = profile.center_id AND episode.resident_id = resident.id AND episode.valid_until IS NULL
-            LEFT JOIN dbo.profile_resident_scopes resident_scope ON resident_scope.profile_scope_id = profile.id
-                AND resident_scope.center_id = profile.center_id AND resident_scope.resident_id = resident.id
-                AND resident_scope.revoked_at IS NULL
+            JOIN dbo.residentes resident ON resident.id = @ResidentId
+                AND resident.centro_id = profile.centro_id AND resident.estado = 'ACTIVE'
+            JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id
+                AND location.centro_id = profile.centro_id AND location.unidad_id = unit.id AND location.vigente_hasta IS NULL
+            JOIN dbo.episodios_residente_centro episode ON episode.id = location.episodio_id
+                AND episode.centro_id = profile.centro_id AND episode.residente_id = resident.id AND episode.vigente_hasta IS NULL
+            LEFT JOIN dbo.ambitos_perfil_residente resident_scope ON resident_scope.ambito_perfil_id = profile.id
+                AND resident_scope.centro_id = profile.centro_id AND resident_scope.residente_id = resident.id
+                AND resident_scope.revocado_en IS NULL
             """ : "";
 
         var draftJoin = target is AuthorizationTarget.Sign ? """
-            JOIN dbo.baseline_drafts draft ON draft.id = @DraftId AND draft.resident_id = resident.id
-                AND draft.center_id = profile.center_id AND draft.created_in_unit_id = unit.id
-                AND draft.created_by_account_id = account.id AND draft.created_by_profile = profile.profile_code
+            JOIN dbo.basales_borrador draft ON draft.id = @DraftId AND draft.residente_id = resident.id
+                AND draft.centro_id = profile.centro_id AND draft.creado_en_unidad_id = unit.id
+                AND draft.creado_por_cuenta_id = account.id AND draft.creado_por_perfil = profile.perfil_codigo
             """ : "";
 
         var residentPredicate = hasResident
             ? """
               AND (resident_scope.id IS NOT NULL OR (
-                  profile.profile_code IN ('ADMINISTRACION', 'ENFERMERIA', 'MEDICINA', 'DIRECCION_CLINICA')
+                  profile.perfil_codigo IN ('ADMINISTRACION', 'ENFERMERIA', 'MEDICINA', 'DIRECCION_CLINICA')
                   AND NOT EXISTS (
-                      SELECT 1 FROM dbo.profile_resident_scopes restriction
-                       WHERE restriction.profile_scope_id = profile.id AND restriction.center_id = profile.center_id)))
+                      SELECT 1 FROM dbo.ambitos_perfil_residente restriction
+                       WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id)))
               """
             : "AND unit.id = @CreateUnitId";
 
         var sql = $"""
             SELECT
-                account.id AS AccountId, profile.id AS ProfileScopeId, profile.profile_code AS Profile,
-                profile.center_id AS CenterId, unit.id AS UnitId, unit_scope.id AS UnitScopeId,
+                account.id AS AccountId, profile.id AS ProfileScopeId, profile.perfil_codigo AS Profile,
+                profile.centro_id AS CenterId, unit.id AS UnitId, unit_scope.id AS UnitScopeId,
                 {(hasResident ? "resident.id" : "CAST(NULL AS UNIQUEIDENTIFIER)")} AS ResidentId,
                 {(hasResident ? "location.id" : "CAST(NULL AS UNIQUEIDENTIFIER)")} AS LocationId,
                 {(hasResident ? "resident_scope.id" : "CAST(NULL AS UNIQUEIDENTIFIER)")} AS ResidentScopeId,
-                {(target is AuthorizationTarget.Sign ? "draft.reason_code" : "CAST(NULL AS NVARCHAR(32))")} AS DraftReason
-              FROM dbo.accounts account
-              JOIN dbo.profile_scopes profile ON profile.account_id = account.id
-                  AND profile.id = @ProfileScopeId AND profile.center_id = @CenterId
-                  AND profile.status = 'ACTIVE' AND profile.revoked_at IS NULL
-              JOIN dbo.centers center ON center.id = profile.center_id AND center.status = 'ACTIVE'
-              JOIN dbo.profile_unit_scopes unit_scope ON unit_scope.profile_scope_id = profile.id
-                  AND unit_scope.center_id = profile.center_id AND unit_scope.revoked_at IS NULL
-              JOIN dbo.units unit ON unit.id = unit_scope.unit_id AND unit.center_id = profile.center_id AND unit.status = 'ACTIVE'
+                {(target is AuthorizationTarget.Sign ? "draft.motivo_codigo" : "CAST(NULL AS NVARCHAR(32))")} AS DraftReason
+              FROM dbo.cuentas account
+              JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id
+                  AND profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
+                  AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+              JOIN dbo.centros center ON center.id = profile.centro_id AND center.estado = 'ACTIVE'
+              JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
+                  AND unit_scope.centro_id = profile.centro_id AND unit_scope.revocado_en IS NULL
+              JOIN dbo.unidades unit ON unit.id = unit_scope.unidad_id AND unit.centro_id = profile.centro_id AND unit.estado = 'ACTIVE'
               {residentJoin}
               {draftJoin}
-             WHERE account.external_subject = @ExternalSubject AND account.status = 'ACTIVE'
+             WHERE account.sujeto_externo = @ExternalSubject AND account.estado = 'ACTIVE'
              {residentPredicate}
             """;
 

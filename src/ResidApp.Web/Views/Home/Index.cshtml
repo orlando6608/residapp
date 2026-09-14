@@ -3,22 +3,46 @@
     var devSubject = Context.Request.Cookies[ResidApp.Web.Security.DevSessionIdentityProvider.CookieName];
 }
 
-<h1>ResidApp — vertical Residente/Basal</h1>
-<p>
-    Identidad de desarrollo activa:
-    @if (string.IsNullOrWhiteSpace(devSubject))
-    {
-        <span class="text-danger">ninguna</span>
-    }
-    else
-    {
-        <code>@devSubject</code>
-    }
-    — <a asp-controller="DevAuth" asp-action="Login">cambiar</a>
-</p>
+<h1 class="h3 mb-3">ResidApp — vertical Residente/Basal</h1>
 
-<ul>
-    <li><a asp-controller="Residents" asp-action="Create">Alta de residente</a></li>
-    <li><a asp-controller="Baseline" asp-action="Sign">Firmar borrador de basal</a></li>
-    <li><a asp-controller="Baseline" asp-action="Direction">Consulta de Dirección Clínica</a></li>
-</ul>
+@if (string.IsNullOrWhiteSpace(devSubject))
+{
+    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+        <span>No hay ninguna identidad de desarrollo activa.</span>
+        <a asp-controller="DevAuth" asp-action="Login" class="btn btn-primary btn-sm">Iniciar sesión</a>
+    </div>
+}
+else
+{
+    <p class="text-muted">
+        Identidad de desarrollo activa: <code>@devSubject</code> —
+        <a asp-controller="DevAuth" asp-action="Login">cambiar</a>
+    </p>
+}
+
+<div class="row g-3">
+    <div class="col-12 col-md-4">
+        <a asp-controller="Residents" asp-action="Create" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Alta de residente</h2>
+                <p class="card-text text-muted mb-0">Registrar un nuevo residente en el centro.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
+        <a asp-controller="Baseline" asp-action="Sign" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Firmar borrador de basal</h2>
+                <p class="card-text text-muted mb-0">Firmar un borrador de estado basal ya existente.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
+        <a asp-controller="Baseline" asp-action="Direction" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Consulta de Dirección Clínica</h2>
+                <p class="card-text text-muted mb-0">Consulta auditada del historial de basal de un residente.</p>
+            </div>
+        </a>
+    </div>
+</div>

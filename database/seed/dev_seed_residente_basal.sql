@@ -8,7 +8,7 @@
  * permite dar de alta residentes sin necesidad de permisos adicionales en dbo.profile_permissions.
  */
 
-IF NOT EXISTS (SELECT 1 FROM dbo.accounts WHERE external_subject = 'dev-admin')
+IF NOT EXISTS (SELECT 1 FROM dbo.cuentas WHERE sujeto_externo = 'dev-admin')
 BEGIN
     DECLARE @AccountId UNIQUEIDENTIFIER = NEWID();
     DECLARE @CenterId UNIQUEIDENTIFIER = NEWID();
@@ -16,30 +16,30 @@ BEGIN
     DECLARE @ProfileScopeId UNIQUEIDENTIFIER = NEWID();
     DECLARE @Now DATETIME2(3) = SYSUTCDATETIME();
 
-    INSERT INTO dbo.accounts (id, external_subject, status, created_at)
+    INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en)
     VALUES (@AccountId, 'dev-admin', 'ACTIVE', @Now);
 
-    INSERT INTO dbo.centers (id, code, display_name, status, created_at)
+    INSERT INTO dbo.centros (id, codigo, nombre_visible, estado, creado_en)
     VALUES (@CenterId, 'CENTRO-DEV', 'Centro de desarrollo (datos ficticios)', 'ACTIVE', @Now);
 
-    INSERT INTO dbo.units (id, center_id, code, display_name, status, created_at)
+    INSERT INTO dbo.unidades (id, centro_id, codigo, nombre_visible, estado, creado_en)
     VALUES (@UnitId, @CenterId, 'UNIDAD-DEV', 'Unidad de desarrollo', 'ACTIVE', @Now);
 
-    INSERT INTO dbo.profile_scopes (id, account_id, center_id, profile_code, status, granted_at, granted_by_account_id)
+    INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
     VALUES (@ProfileScopeId, @AccountId, @CenterId, 'ADMINISTRACION', 'ACTIVE', @Now, @AccountId);
 
-    INSERT INTO dbo.profile_unit_scopes (id, profile_scope_id, center_id, unit_id, granted_at, granted_by_account_id)
+    INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
     VALUES (NEWID(), @ProfileScopeId, @CenterId, @UnitId, @Now, @AccountId);
 END
 GO
 
 SELECT
-    account.external_subject AS ExternalSubject,
+    account.sujeto_externo AS ExternalSubject,
     profile.id AS ProfileScopeId,
-    profile.center_id AS CenterId,
+    profile.centro_id AS CenterId,
     unit.id AS UnitId
-  FROM dbo.accounts account
-  JOIN dbo.profile_scopes profile ON profile.account_id = account.id
-  JOIN dbo.profile_unit_scopes unit_scope ON unit_scope.profile_scope_id = profile.id
-  JOIN dbo.units unit ON unit.id = unit_scope.unit_id
- WHERE account.external_subject = 'dev-admin';
+  FROM dbo.cuentas account
+  JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id
+  JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
+  JOIN dbo.unidades unit ON unit.id = unit_scope.unidad_id
+ WHERE account.sujeto_externo = 'dev-admin';

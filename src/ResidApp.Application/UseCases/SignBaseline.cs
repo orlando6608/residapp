@@ -8,8 +8,8 @@ namespace ResidApp.Application.UseCases;
 
 /// <summary>Traduce los campos de entrada de resident-baseline-service.ts::signBaseline.</summary>
 public sealed record SignBaselineCommand(
-    Guid ProfileScopeId, CenterId CenterId, ResidentId ResidentId, BaselineDraftId DraftId,
-    int ExpectedDraftRevision, Guid OperationId);
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, BaselineDraftId BorradorId,
+    int RevisionBorradorEsperada, Guid OperacionId);
 
 /// <summary>Traduce signBaseline de lib/application/resident-baseline-service.ts.</summary>
 public sealed class SignBaseline(
@@ -18,11 +18,11 @@ public sealed class SignBaseline(
     public Task<ApplicationResult<SignBaselineDraftResult>> ExecuteAsync(SignBaselineCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
-            var selection = new AuthorizationSelection(command.ProfileScopeId, command.CenterId);
+            var selection = new AuthorizationSelection(command.AmbitoPerfilId, command.CentroId);
             var context = await RequestAuthorizationContextResolver.ResolveAsync(
                 evidenceProvider, session, selection,
-                new AuthorizationTarget.Sign(command.ResidentId, command.DraftId), ct: ct);
-            var payload = new BaselineSignPayload(command.ExpectedDraftRevision, command.OperationId);
+                new AuthorizationTarget.Sign(command.ResidenteId, command.BorradorId), ct: ct);
+            var payload = new BaselineSignPayload(command.RevisionBorradorEsperada, command.OperacionId);
             return await RequestAuthorizationContextResolver.ExecuteBaselineSignAsync(context, repository, payload, ct);
         });
 }

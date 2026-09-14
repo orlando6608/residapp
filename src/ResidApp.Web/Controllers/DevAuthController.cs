@@ -5,8 +5,8 @@ namespace ResidApp.Web.Controllers;
 
 /// <summary>
 /// Selector de identidad ficticia para desarrollo local, no autenticación real (ver
-/// DevSessionIdentityProvider). Permite escribir el external_subject de una cuenta ya sembrada en
-/// dbo.accounts (por ejemplo, "dev-admin" del script database/seed/dev_seed_residente_basal.sql) para
+/// DevSessionIdentityProvider). Permite escribir el sujeto_externo de una cuenta ya sembrada en
+/// dbo.cuentas (por ejemplo, "dev-admin" del script database/seed/dev_seed_residente_basal.sql) para
 /// ejercitar el motor de autorización deny-by-default sin depender de un proveedor productivo todavía sin
 /// decidir.
 /// </summary>
@@ -40,4 +40,9 @@ public sealed class DevAuthController : Controller
         Response.Cookies.Delete(DevSessionIdentityProvider.CookieName);
         return RedirectToAction("Index", "Home");
     }
+
+    /// <summary>Maqueta visual, no funcional: la creación de cuentas depende del proveedor de
+    /// autenticación productivo, todavía sin decidir (ver docs/producto/roadmap.md, "Decisiones
+    /// abiertas"), y de la gestión de identidades del vertical Administración, aún no iniciado.</summary>
+    public IActionResult Register() => View();
 }

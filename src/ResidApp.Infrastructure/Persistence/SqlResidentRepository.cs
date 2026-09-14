@@ -13,6 +13,7 @@ namespace ResidApp.Infrastructure.Persistence;
 /// Traduce createResidentWithInitialLocation de db/repositories/resident-repository.ts: alta de residente
 /// idempotente por hash de petición, con 5 escrituras atómicas (idempotencia en curso, residente,
 /// episodio, ubicación inicial, evento de auditoría, cierre de idempotencia) dentro de una SqlTransaction.
+/// Tablas/columnas en español desde database/scripts/0002_renombrado_espanol_sqlserver.sql.
 /// </summary>
 public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IResidentRepository
 {
@@ -38,7 +39,7 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
             var activeProfileCode = input.ActiveProfile.ToCode();
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.idempotency_operations (id, account_id, action_code, operation_id, request_hash, status, created_at)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
                 VALUES (@Id, @AccountId, 'RESIDENT_CREATE', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
                 """, new
             {
@@ -46,8 +47,8 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
             }, transaction, cancellationToken: ct));
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.residents
-                    (id, center_id, display_name, birth_date, documented_sex_code, status, created_at, created_by_account_id, created_by_profile)
+                INSERT INTO dbo.residentes
+                    (id, centro_id, nombre_visible, fecha_nacimiento, sexo_documentado_codigo, estado, creado_en, creado_por_cuenta_id, creado_por_perfil)
                 VALUES (@ResidentId, @CenterId, @DisplayName, @BirthDate, @DocumentedSexCode, 'ACTIVE', @OccurredAt, @AccountId, @ActiveProfile)
                 """, new
             {
@@ -57,8 +58,8 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
             }, transaction, cancellationToken: ct));
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.resident_center_episodes
-                    (id, resident_id, center_id, internal_reference, valid_from, created_at, created_by_account_id, created_by_profile)
+                INSERT INTO dbo.episodios_residente_centro
+                    (id, residente_id, centro_id, referencia_interna, vigente_desde, creado_en, creado_por_cuenta_id, creado_por_perfil)
                 VALUES (@EpisodeId, @ResidentId, @CenterId, @InternalReference, @OccurredAt, @OccurredAt, @AccountId, @ActiveProfile)
                 """, new
             {
@@ -67,9 +68,9 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
             }, transaction, cancellationToken: ct));
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.resident_location_intervals
-                    (id, resident_id, center_id, episode_id, unit_id, building_id, floor_id, room_id, place_id,
-                     valid_from, changed_at, changed_by_account_id, changed_by_profile)
+                INSERT INTO dbo.intervalos_ubicacion_residente
+                    (id, residente_id, centro_id, episodio_id, unidad_id, edificio_id, planta_id, habitacion_id, plaza_id,
+                     vigente_desde, modificado_en, modificado_por_cuenta_id, modificado_por_perfil)
                 VALUES (@LocationIntervalId, @ResidentId, @CenterId, @EpisodeId, @UnitId, @BuildingId, @FloorId, @RoomId, @PlaceId,
                      @OccurredAt, @OccurredAt, @AccountId, @ActiveProfile)
                 """, new
@@ -80,8 +81,8 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
             }, transaction, cancellationToken: ct));
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.audit_events
-                    (id, account_id, active_profile, center_id, unit_id, resident_id, resource_type, resource_id, action_code, occurred_at)
+                INSERT INTO dbo.eventos_auditoria
+                    (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
                 VALUES (@Id, @AccountId, @ActiveProfile, @CenterId, @UnitId, @ResidentId, 'RESIDENT', @ResidentId, 'RESIDENT_CREATE', @OccurredAt)
                 """, new
             {
@@ -91,10 +92,10 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
 
             var resultJson = JsonSerializer.Serialize(result, ResidAppJson.Options);
             await connection.ExecuteAsync(new CommandDefinition("""
-                UPDATE dbo.idempotency_operations
-                   SET status = 'SUCCEEDED', result_resource_id = @ResidentId, result_json = @ResultJson, completed_at = @OccurredAt
-                 WHERE account_id = @AccountId AND action_code = 'RESIDENT_CREATE'
-                   AND operation_id = @OperationId AND request_hash = @RequestHash AND status = 'IN_PROGRESS'
+                UPDATE dbo.operaciones_idempotencia
+                   SET estado = 'SUCCEEDED', recurso_resultado_id = @ResidentId, resultado_json = @ResultJson, completado_en = @OccurredAt
+                 WHERE cuenta_id = @AccountId AND accion_codigo = 'RESIDENT_CREATE'
+                   AND operacion_id = @OperationId AND hash_solicitud = @RequestHash AND estado = 'IN_PROGRESS'
                 """, new
             {
                 ResidentId = residentId.Value, ResultJson = resultJson, OccurredAt = occurredAt,
@@ -120,9 +121,9 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
         IDbConnection connection, IDbTransaction? transaction, Guid accountId, Guid operationId, string requestHash, CancellationToken ct)
     {
         var row = await connection.QuerySingleOrDefaultAsync<IdempotencyRow>(new CommandDefinition("""
-            SELECT request_hash AS RequestHash, status AS Status, result_json AS ResultJson
-              FROM dbo.idempotency_operations
-             WHERE account_id = @AccountId AND action_code = 'RESIDENT_CREATE' AND operation_id = @OperationId
+            SELECT hash_solicitud AS RequestHash, estado AS Status, resultado_json AS ResultJson
+              FROM dbo.operaciones_idempotencia
+             WHERE cuenta_id = @AccountId AND accion_codigo = 'RESIDENT_CREATE' AND operacion_id = @OperationId
             """, new { AccountId = accountId, OperationId = operationId }, transaction, cancellationToken: ct));
         if (row is null)
         {

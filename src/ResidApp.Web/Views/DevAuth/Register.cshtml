@@ -1,0 +1,49 @@
+@{
+    ViewData["Title"] = "Solicitar acceso";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <img src="~/images/logo.svg" alt="ResidApp" style="max-width: 120px; width: 100%;" />
+                </div>
+
+                <h1 class="h4 text-center mb-3">Solicitar acceso</h1>
+
+                <div class="alert alert-warning">
+                    Maqueta visual, todavía no funcional: la creación de cuentas de usuario depende de
+                    decisiones aún abiertas (proveedor de autenticación productivo, gestión de identidades
+                    del vertical Administración). Esta pantalla muestra cómo se verá el flujo completo.
+                </div>
+
+                <form>
+                    <div class="mb-3">
+                        <label for="nombreCompleto" class="form-label">Nombre completo</label>
+                        <input type="text" class="form-control form-control-lg" id="nombreCompleto" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label for="correo" class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control form-control-lg" id="correo" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label for="contrasena" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control form-control-lg" id="contrasena" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmarContrasena" class="form-label">Confirmar contraseña</label>
+                        <input type="password" class="form-control form-control-lg" id="confirmarContrasena" disabled />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" disabled>Crear cuenta</button>
+                    </div>
+                </form>
+
+                <p class="text-center small mt-3 mb-0">
+                    ¿Ya tienes cuenta? <a asp-controller="DevAuth" asp-action="Login">Inicia sesión</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

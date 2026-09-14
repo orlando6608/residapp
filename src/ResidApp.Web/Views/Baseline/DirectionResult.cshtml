@@ -4,7 +4,15 @@
     var headers = (IReadOnlyList<ResidApp.Application.Ports.AuditedBaselineHeader>)ViewBag.Headers;
 }
 
-<h1>Historial de basal auditado</h1>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Baseline" asp-action="Direction">Consulta de Dirección Clínica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Resultado</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Historial de basal auditado</h1>
 
 @if (headers.Count == 0)
 {

@@ -8,9 +8,9 @@ namespace ResidApp.Application.UseCases;
 
 /// <summary>Traduce los campos de entrada de resident-baseline-service.ts::createResident.</summary>
 public sealed record CreateResidentCommand(
-    Guid ProfileScopeId, CenterId CenterId, UnitId UnitId, string DisplayName, DateOnly BirthDate,
-    DocumentedSexCode DocumentedSexCode, string? InternalReference, Guid? BuildingId, Guid? FloorId,
-    Guid? RoomId, Guid? PlaceId, Guid OperationId);
+    Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, string NombreVisible, DateOnly FechaNacimiento,
+    DocumentedSexCode SexoDocumentadoCodigo, string? ReferenciaInterna, Guid? EdificioId, Guid? PlantaId,
+    Guid? HabitacionId, Guid? PlazaId, Guid OperacionId);
 
 /// <summary>
 /// Traduce createResident de lib/application/resident-baseline-service.ts. Composición interna por
@@ -23,12 +23,12 @@ public sealed class CreateResident(
     public Task<ApplicationResult<CreateResidentResult>> ExecuteAsync(CreateResidentCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
-            var selection = new AuthorizationSelection(command.ProfileScopeId, command.CenterId);
+            var selection = new AuthorizationSelection(command.AmbitoPerfilId, command.CentroId);
             var context = await RequestAuthorizationContextResolver.ResolveAsync(
-                evidenceProvider, session, selection, new AuthorizationTarget.Create(command.UnitId), ct: ct);
+                evidenceProvider, session, selection, new AuthorizationTarget.Create(command.UnidadId), ct: ct);
             var payload = new ResidentCreatePayload(
-                command.DisplayName, command.BirthDate, command.DocumentedSexCode, command.InternalReference,
-                command.BuildingId, command.FloorId, command.RoomId, command.PlaceId, command.OperationId);
+                command.NombreVisible, command.FechaNacimiento, command.SexoDocumentadoCodigo, command.ReferenciaInterna,
+                command.EdificioId, command.PlantaId, command.HabitacionId, command.PlazaId, command.OperacionId);
             return await RequestAuthorizationContextResolver.ExecuteResidentCreateAsync(context, repository, payload, ct);
         });
 }

@@ -15,7 +15,7 @@ namespace ResidApp.Web.Controllers;
 /// </summary>
 public sealed class BaselineController(ResidentBaselineApplicationService service) : Controller
 {
-    public IActionResult Sign() => View(new SignBaselineFormModel { OperationId = Guid.NewGuid() });
+    public IActionResult Sign() => View(new SignBaselineFormModel { OperacionId = Guid.NewGuid() });
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -27,8 +27,8 @@ public sealed class BaselineController(ResidentBaselineApplicationService servic
         }
 
         var command = new SignBaselineCommand(
-            form.ProfileScopeId, CenterId.From(form.CenterId), ResidentId.From(form.ResidentId),
-            BaselineDraftId.From(form.DraftId), form.ExpectedDraftRevision, form.OperationId);
+            form.AmbitoPerfilId, CenterId.From(form.CentroId), ResidentId.From(form.ResidenteId),
+            BaselineDraftId.From(form.BorradorId), form.RevisionBorradorEsperada, form.OperacionId);
 
         var result = await service.SignBaselineAsync(command, ct);
         if (!result.Ok)
@@ -42,7 +42,7 @@ public sealed class BaselineController(ResidentBaselineApplicationService servic
         return View("Signed");
     }
 
-    public IActionResult Direction() => View(new DirectionBaselineQueryModel { OperationId = Guid.NewGuid() });
+    public IActionResult Direction() => View(new DirectionBaselineQueryModel { OperacionId = Guid.NewGuid() });
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -54,8 +54,8 @@ public sealed class BaselineController(ResidentBaselineApplicationService servic
         }
 
         var command = new ReadDirectionBaselineCommand(
-            form.ProfileScopeId, CenterId.From(form.CenterId), ResidentId.From(form.ResidentId),
-            form.ResourceType, form.Purpose, form.OperationId);
+            form.AmbitoPerfilId, CenterId.From(form.CentroId), ResidentId.From(form.ResidenteId),
+            form.TipoRecurso, form.Proposito, form.OperacionId);
 
         var result = await service.ReadDirectionBaselineAsync(command, ct);
         if (!result.Ok)

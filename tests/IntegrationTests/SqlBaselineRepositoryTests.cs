@@ -54,7 +54,7 @@ public class SqlBaselineRepositoryTests
 
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var auditCount = await connection.QuerySingleAsync<int>(
-            "SELECT COUNT(*) FROM dbo.audit_events WHERE resident_id = @Id AND action_code = 'CLINICAL_DETAIL_READ'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ'",
             new { Id = resident.ResidentId.Value });
         Assert.Equal(0, auditCount);
 
@@ -62,7 +62,7 @@ public class SqlBaselineRepositoryTests
         // (incluida la fila IN_PROGRESS) se revierte, así que un reintento con el mismo operationId
         // vuelve a fallar igual, no devuelve un resultado inventado.
         var idempotencyCount = await connection.QuerySingleAsync<int>(
-            "SELECT COUNT(*) FROM dbo.idempotency_operations WHERE account_id = @AccountId AND operation_id = @OperationId",
+            "SELECT COUNT(*) FROM dbo.operaciones_idempotencia WHERE cuenta_id = @AccountId AND operacion_id = @OperationId",
             new { AccountId = directionSeed.AccountId.Value, OperationId = operationId });
         Assert.Equal(0, idempotencyCount);
 

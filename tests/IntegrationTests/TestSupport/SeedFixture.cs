@@ -36,36 +36,36 @@ internal static class SeedFixture
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
 
         await connection.ExecuteAsync(
-            "INSERT INTO dbo.accounts (id, external_subject, status, created_at) VALUES (@accountId, @externalSubject, 'ACTIVE', @now)",
+            "INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@accountId, @externalSubject, 'ACTIVE', @now)",
             new { accountId, externalSubject, now });
 
         if (centerId is null)
         {
             await connection.ExecuteAsync(
-                "INSERT INTO dbo.centers (id, code, display_name, status, created_at) VALUES (@id, @code, @code, 'ACTIVE', @now)",
+                "INSERT INTO dbo.centros (id, codigo, nombre_visible, estado, creado_en) VALUES (@id, @code, @code, 'ACTIVE', @now)",
                 new { id = resolvedCenterId, code = $"TEST-CENTER-{suffix}", now });
         }
         if (unitId is null)
         {
             await connection.ExecuteAsync(
-                "INSERT INTO dbo.units (id, center_id, code, display_name, status, created_at) VALUES (@id, @centerId, @code, @code, 'ACTIVE', @now)",
+                "INSERT INTO dbo.unidades (id, centro_id, codigo, nombre_visible, estado, creado_en) VALUES (@id, @centerId, @code, @code, 'ACTIVE', @now)",
                 new { id = resolvedUnitId, centerId = resolvedCenterId, code = $"TEST-UNIT-{suffix}", now });
         }
 
         await connection.ExecuteAsync("""
-            INSERT INTO dbo.profile_scopes (id, account_id, center_id, profile_code, status, granted_at, granted_by_account_id)
+            INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
             VALUES (@profileScopeId, @accountId, @centerId, @profileCode, 'ACTIVE', @now, @accountId)
             """, new { profileScopeId, accountId, centerId = resolvedCenterId, profileCode = profile.ToCode(), now });
 
         await connection.ExecuteAsync("""
-            INSERT INTO dbo.profile_unit_scopes (id, profile_scope_id, center_id, unit_id, granted_at, granted_by_account_id)
+            INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
             VALUES (@id, @profileScopeId, @centerId, @unitId, @now, @accountId)
             """, new { id = Guid.NewGuid(), profileScopeId, centerId = resolvedCenterId, unitId = resolvedUnitId, now, accountId });
 
         foreach (var permissionCode in permissionCodes ?? [])
         {
             await connection.ExecuteAsync("""
-                INSERT INTO dbo.profile_permissions (id, profile_scope_id, center_id, permission_code, granted_at, granted_by_account_id)
+                INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
                 VALUES (@id, @profileScopeId, @centerId, @permissionCode, @now, @accountId)
                 """, new { id = Guid.NewGuid(), profileScopeId, centerId = resolvedCenterId, permissionCode, now, accountId });
         }
