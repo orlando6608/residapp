@@ -9,7 +9,8 @@ namespace ResidApp.Application.UseCases;
 /// AuxiliarApplicationService para Auxiliar.
 /// </summary>
 public sealed class EnfermeriaApplicationService(
-    ListScopeResidents listScopeResidents, FindScopeResident findScopeResident, ReadCurrentBaseline readCurrentBaseline)
+    ListScopeResidents listScopeResidents, FindScopeResident findScopeResident, ReadCurrentBaseline readCurrentBaseline,
+    RegisterClinicalEvent registerClinicalEvent)
 {
     public Task<ApplicationResult<IReadOnlyList<ScopeResidentSummary>>> ListScopeResidentsAsync(
         ListScopeResidentsCommand command, CancellationToken ct = default) =>
@@ -22,4 +23,8 @@ public sealed class EnfermeriaApplicationService(
     public Task<ApplicationResult<CurrentBaselineSummary?>> ReadCurrentBaselineAsync(
         ReadCurrentBaselineCommand command, CancellationToken ct = default) =>
         readCurrentBaseline.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<ClinicalEventResult>> RegisterClinicalEventAsync(
+        RegisterClinicalEventCommand command, CancellationToken ct = default) =>
+        registerClinicalEvent.ExecuteAsync(command, ct);
 }

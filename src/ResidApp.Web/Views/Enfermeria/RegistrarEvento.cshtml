@@ -1,0 +1,59 @@
+@using ResidApp.Web.Models
+@model RegistrarEventoFormModel
+@{
+    ViewData["Title"] = "Registrar evento";
+    var resident = (ResidApp.Application.Ports.ScopeResidentSummary)ViewBag.Resident;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Registrar evento</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Registrar evento — @resident.DisplayName</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="alert alert-info">
+    La observación no se puede editar una vez guardada. Este evento sigue el mismo criterio de
+    valoración que uno recibido de Auxiliar; la pantalla de valoración todavía no está disponible, así
+    que por ahora solo queda registrado y pendiente.
+</div>
+
+<form asp-action="RegistrarEvento" method="post">
+    <input type="hidden" asp-for="ResidenteId" />
+    <input type="hidden" asp-for="OperacionId" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="mb-3">
+                <label asp-for="Observacion" class="form-label"></label>
+                <textarea asp-for="Observacion" class="form-control" rows="4" placeholder="Qué se observa, cuándo y en qué circunstancias"></textarea>
+                <span asp-validation-for="Observacion" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Clasificacion" class="form-label"></label>
+                <select asp-for="Clasificacion" class="form-select" asp-items="Html.GetEnumSelectList<ResidApp.Domain.Auxiliar.DailyChangeClassification>()"></select>
+                <span asp-validation-for="Clasificacion" class="text-danger"></span>
+            </div>
+
+            <div class="mb-0">
+                <label asp-for="DatosClinicosPertinentes" class="form-label"></label>
+                <textarea asp-for="DatosClinicosPertinentes" class="form-control" rows="3" placeholder="Constantes u otros datos relevantes (opcional)"></textarea>
+                <span asp-validation-for="DatosClinicosPertinentes" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-grid d-md-flex justify-content-md-end">
+        <button type="submit" class="btn btn-primary btn-lg">Guardar evento</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

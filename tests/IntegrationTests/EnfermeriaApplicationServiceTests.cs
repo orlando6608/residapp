@@ -1,6 +1,7 @@
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
+using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Persistence;
@@ -22,11 +23,13 @@ public class EnfermeriaApplicationServiceTests
         var baselines = new SqlBaselineRepository(TestDatabase.ConnectionFactory);
         var session = new FixedSessionIdentityProvider(externalSubject);
 
+        var events = new SqlClinicalEventRepository(TestDatabase.ConnectionFactory);
         var listScopeResidents = new ListScopeResidents(scopes, directory, session);
         return new EnfermeriaApplicationService(
             listScopeResidents,
             new FindScopeResident(listScopeResidents),
-            new ReadCurrentBaseline(evidenceProvider, session, baselines));
+            new ReadCurrentBaseline(evidenceProvider, session, baselines),
+            new RegisterClinicalEvent(scopes, directory, session, events));
     }
 
     [Fact]
@@ -91,6 +94,67 @@ public class EnfermeriaApplicationServiceTests
 
         Assert.True(result.Ok);
         Assert.Null(result.Value);
+    }
+
+    [Fact]
+    public async Task RegisterClinicalEventAsync_ResidenteEnAmbito_Succeeds()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var enfermeriaSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, adminSeed.CenterId, adminSeed.UnitId);
+        var residents = new SqlResidentRepository(TestDatabase.ConnectionFactory);
+        var resident = await residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Evento Enfermería", new DateOnly(1950, 1, 1), DocumentedSexCode.Hombre, null, null, null, null, null, Guid.NewGuid()));
+        var service = BuildService(enfermeriaSeed.ExternalSubject);
+
+        var result = await service.RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+            enfermeriaSeed.ProfileScopeId, enfermeriaSeed.CenterId, resident.ResidentId,
+            "Se observa desorientación de inicio brusco durante la ronda de tarde.",
+            DailyChangeClassification.Prioritario, "Constantes estables, sin fiebre.", Guid.NewGuid()));
+
+        Assert.True(result.Ok);
+    }
+
+    [Fact]
+    public async Task RegisterClinicalEventAsync_SinObservacion_ReturnsInvalidInput()
+    {
+        var enfermeriaSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+        var service = BuildService(enfermeriaSeed.ExternalSubject);
+
+        var result = await service.RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+            enfermeriaSeed.ProfileScopeId, enfermeriaSeed.CenterId, ResidentId.New(),
+            "   ", DailyChangeClassification.Ordinario, null, Guid.NewGuid()));
+
+        Assert.False(result.Ok);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task RegisterClinicalEventAsync_ResidenteFueraDeAmbito_ReturnsAccessDenied()
+    {
+        var enfermeriaSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+        var service = BuildService(enfermeriaSeed.ExternalSubject);
+
+        var result = await service.RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+            enfermeriaSeed.ProfileScopeId, enfermeriaSeed.CenterId, ResidentId.New(),
+            "Observación sobre un residente fuera de ámbito.", DailyChangeClassification.Ordinario, null, Guid.NewGuid()));
+
+        Assert.False(result.Ok);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task RegisterClinicalEventAsync_ConAuxiliarProfile_ReturnsAccessDenied()
+    {
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Auxiliar);
+        var service = BuildService(seed.ExternalSubject);
+
+        var result = await service.RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+            seed.ProfileScopeId, seed.CenterId, ResidentId.New(),
+            "Observación con perfil incorrecto.", DailyChangeClassification.Ordinario, null, Guid.NewGuid()));
+
+        Assert.False(result.Ok);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
     }
 }
 

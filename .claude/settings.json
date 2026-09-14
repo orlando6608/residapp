@@ -113,7 +113,24 @@
       "Bash(curl -s -c /tmp/enf3_cookies.txt -b /tmp/enf3_cookies.txt http://localhost:5203/Enfermeria/Residente?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966 -o /tmp/enf3_ficha.html)",
       "Bash(curl -s -c /tmp/enf3_cookies.txt -b /tmp/enf3_cookies.txt http://localhost:5203/Enfermeria/Residentes -o /tmp/enf3_lista.html)",
       "Bash(curl -s -c /tmp/enf3_cookies.txt -b /tmp/enf3_cookies.txt http://localhost:5203/EnfermeriaBasal/Draft?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966 -o /tmp/enf3_draft4.html)",
-      "Bash(taskkill //PID 26176 //F)"
+      "Bash(taskkill //PID 26176 //F)",
+      "Bash(xargs grep -l \"struct ResidentId\\\\|record ResidentId\")",
+      "Bash(command -v sqlcmd)",
+      "Bash(command -v /opt/mssql-tools/bin/sqlcmd)",
+      "Bash(sqlcmd -S ACER-ORLANDO -d ResidApp -E -C -i database/scripts/0006_enfermeria_evento_propio.sql)",
+      "Bash(sleep 4; cat /tmp/residapp_web.log)",
+      "Bash(rm -f /tmp/cookies.txt)",
+      "Bash(curl -s -c /tmp/cookies.txt -b /tmp/cookies.txt \"http://localhost:5297/DevAuth/Login\")",
+      "Bash(curl -s -c /tmp/cookies.txt -b /tmp/cookies.txt \"http://localhost:5297/Enfermeria/Residentes\" -D - -o /tmp/residentes.html)",
+      "Bash(curl -s -c /tmp/cookies.txt -b /tmp/cookies.txt \"http://localhost:5297/ProfileScope/Select?returnUrl=%2FEnfermeria%2FResidentes\" -D - -o /tmp/select.html)",
+      "Bash(curl -s -c /tmp/cookies.txt -b /tmp/cookies.txt \"http://localhost:5297/Enfermeria/Residentes\" -o /tmp/residentes.html)",
+      "Bash(curl -s -c /tmp/cookies.txt -b /tmp/cookies.txt http://localhost:5297/Enfermeria/Residente?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966 -o /tmp/ficha.html)",
+      "Bash(curl -s -c /tmp/cookies.txt -b /tmp/cookies.txt http://localhost:5297/Enfermeria/RegistrarEvento?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966 -o /tmp/registrar_get.html)",
+      "Bash(grep -A3 'name=\"Clasificacion\"' /tmp/registrar_get.html)",
+      "Bash(pkill -f \"ResidApp.Web.dll\")",
+      "Bash(taskkill //F //PID 17928)",
+      "Bash(tasklist //FI \"IMAGENAME eq ResidApp.Web.exe\")",
+      "Bash(curl -s -c /tmp/cookies.txt -b /tmp/cookies.txt http://localhost:5297/Enfermeria/Residente?residenteId=e116fc83-2962-4374-a80f-f374a8e0e966 -o /tmp/ficha2.html)"
     ],
     "additionalDirectories": [
       "\\tmp"

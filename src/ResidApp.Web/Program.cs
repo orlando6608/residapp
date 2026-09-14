@@ -24,6 +24,7 @@ builder.Services.AddScoped<IProfileScopeDirectoryProvider, SqlProfileScopeDirect
 builder.Services.AddScoped<IAssignedResidentDirectory, SqlAssignedResidentDirectory>();
 builder.Services.AddScoped<IEnfermeriaResidentDirectory, SqlEnfermeriaResidentDirectory>();
 builder.Services.AddScoped<IDailyClosureRepository, SqlDailyClosureRepository>();
+builder.Services.AddScoped<IClinicalEventRepository, SqlClinicalEventRepository>();
 builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
 
 builder.Services.AddScoped<CreateResident>();
@@ -46,6 +47,7 @@ builder.Services.AddScoped<AuxiliarApplicationService>();
 
 builder.Services.AddScoped<ListScopeResidents>();
 builder.Services.AddScoped<FindScopeResident>();
+builder.Services.AddScoped<RegisterClinicalEvent>();
 builder.Services.AddScoped<EnfermeriaApplicationService>();
 
 var app = builder.Build();

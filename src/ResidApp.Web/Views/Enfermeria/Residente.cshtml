@@ -16,6 +16,15 @@
 <h1 class="h3">@Model.Resident.DisplayName</h1>
 <p class="text-muted">@(Model.Resident.UnitName ?? "Sin unidad")</p>
 
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
 <div class="card mb-3">
     <div class="card-body">
         <h2 class="h5 card-title">Estado basal vigente</h2>
@@ -34,7 +43,19 @@
     </div>
 </div>
 
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Registrar evento</h2>
+        <p class="text-muted">
+            Documenta directamente un evento que observas, sin que pase primero por Auxiliar.
+        </p>
+        <a asp-action="RegistrarEvento" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">
+            Registrar evento
+        </a>
+    </div>
+</div>
+
 <div class="alert alert-info mb-0">
-    Todavía no está disponible desde aquí registrar un evento propio: esa pantalla llega en un grupo
+    Todavía no está disponible la bandeja de trabajo ni la valoración de eventos: llegan en un grupo
     posterior del vertical Enfermería.
 </div>
