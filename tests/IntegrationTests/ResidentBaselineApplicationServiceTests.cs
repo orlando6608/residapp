@@ -29,7 +29,7 @@ public class ResidentBaselineApplicationServiceTests
 
     private static CreateResidentCommand Command(SeededProfile seed, string displayName = "Residente de Aplicación") =>
         new(seed.ProfileScopeId, seed.CenterId, seed.UnitId, displayName, new DateOnly(1942, 3, 3),
-            DocumentedSexCode.Other, null, null, null, null, null, Guid.NewGuid());
+            DocumentedSexCode.OtraCategoriaDocumentada, null, null, null, null, null, Guid.NewGuid());
 
     [Fact]
     public async Task CreateResidentAsync_WithAdministracionProfile_Succeeds()

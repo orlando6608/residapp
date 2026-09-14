@@ -39,7 +39,7 @@ public class SqlBaselineRepositoryTests
         var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
             adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
-            "Residente Sin Basal Firmado", new DateOnly(1945, 6, 1), DocumentedSexCode.Male, null, null, null, null, null, Guid.NewGuid()));
+            "Residente Sin Basal Firmado", new DateOnly(1945, 6, 1), DocumentedSexCode.Hombre, null, null, null, null, null, Guid.NewGuid()));
 
         var directionSeed = await SeedFixture.AddProfileToCenterAsync(
             SystemProfile.DireccionClinica, adminSeed.CenterId, adminSeed.UnitId, [ResidentBaselinePermission.ClinicalDetailRead.ToCode()]);

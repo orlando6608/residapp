@@ -12,7 +12,7 @@ public class ResidentTests
         UnitId = UnitId.New(),
         DisplayName = displayName,
         BirthDate = birthDate,
-        DocumentedSex = DocumentedSexCode.Unknown,
+        DocumentedSex = DocumentedSexCode.NoConsta,
         Status = ResidentStatus.Active,
     };
 

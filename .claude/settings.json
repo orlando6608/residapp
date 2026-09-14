@@ -48,7 +48,9 @@
       "Bash(netstat -ano)",
       "Bash(taskkill //F //PID 21032)",
       "Bash(git rev-list *)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(git remote *)",
+      "Bash(curl -s \"https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main&per_page=3\")"
     ]
   }
 }

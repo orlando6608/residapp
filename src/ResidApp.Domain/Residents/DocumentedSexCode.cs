@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using ResidApp.Shared;
 
 namespace ResidApp.Domain.Residents;
@@ -6,10 +7,10 @@ namespace ResidApp.Domain.Residents;
 /// administrativa, nunca se infiere y no admite texto libre.</summary>
 public enum DocumentedSexCode
 {
-    [Code("male")] Male,
-    [Code("female")] Female,
-    [Code("other")] Other,
-    [Code("unknown")] Unknown,
+    [Code("male")] [Display(Name = "Hombre")] Hombre,
+    [Code("female")] [Display(Name = "Mujer")] Mujer,
+    [Code("other")] [Display(Name = "Otra categoría documentada")] OtraCategoriaDocumentada,
+    [Code("unknown")] [Display(Name = "No consta")] NoConsta,
 }
 
 /// <summary>

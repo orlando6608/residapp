@@ -40,7 +40,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["UnidadId"] = seed.UnitId.ToString(),
             ["NombreVisible"] = "Residente Funcional",
             ["FechaNacimiento"] = "1938-02-20",
-            ["SexoDocumentadoCodigo"] = "Male",
+            ["SexoDocumentadoCodigo"] = "Hombre",
         }));
 
         var body = await response.Content.ReadAsStringAsync();

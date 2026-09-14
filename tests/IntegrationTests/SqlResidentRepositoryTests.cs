@@ -16,7 +16,7 @@ public class SqlResidentRepositoryTests
 
     private static CreateResidentInput Input(SeededProfile seed, Guid operationId, string displayName = "Residente de Prueba") =>
         new(seed.AccountId, SystemProfile.Administracion, seed.CenterId, seed.UnitId, displayName,
-            new DateOnly(1940, 1, 1), DocumentedSexCode.Female, "EXP-TEST", null, null, null, null, operationId);
+            new DateOnly(1940, 1, 1), DocumentedSexCode.Mujer, "EXP-TEST", null, null, null, null, operationId);
 
     [Fact]
     public async Task CreateWithInitialLocationAsync_PersistsResidentAndAuditEvent()
