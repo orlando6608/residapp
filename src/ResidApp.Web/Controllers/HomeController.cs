@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ResidApp.Web.Models;
+using ResidApp.Web.Security;
 
 namespace ResidApp.Web.Controllers;
 
@@ -8,6 +9,12 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
+        var devSubject = Request.Cookies[DevSessionIdentityProvider.CookieName];
+        if (!string.IsNullOrWhiteSpace(devSubject) && ActiveProfileScopeCookie.Read(Request) is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Index)) });
+        }
+
         return View();
     }
 
