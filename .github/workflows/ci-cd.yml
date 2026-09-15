@@ -48,6 +48,11 @@ jobs:
           sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -Q "CREATE DATABASE ResidAppTest"
           sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0001_init_sqlserver.sql
           sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0002_renombrado_espanol_sqlserver.sql
+          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0003_auxiliar_cierre_cotidiano.sql
+          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0004_auxiliar_registrar_cambio.sql
+          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0005_auxiliar_opciones_rapidas.sql
+          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0005_enfermeria_borrador_basal.sql
+          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0006_enfermeria_evento_propio.sql
 
       - name: Restore
         run: dotnet restore src/ResidApp.sln
