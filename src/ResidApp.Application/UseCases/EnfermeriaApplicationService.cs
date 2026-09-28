@@ -10,8 +10,17 @@ namespace ResidApp.Application.UseCases;
 /// </summary>
 public sealed class EnfermeriaApplicationService(
     ListScopeResidents listScopeResidents, FindScopeResident findScopeResident, ReadCurrentBaseline readCurrentBaseline,
-    RegisterClinicalEvent registerClinicalEvent, ListPendingChanges listPendingChanges, FindPendingChangeDetail findPendingChangeDetail)
+    RegisterClinicalEvent registerClinicalEvent, ListPendingChanges listPendingChanges, FindPendingChangeDetail findPendingChangeDetail,
+    StartNursingAssessment startNursingAssessment, SaveNursingAssessment saveNursingAssessment)
 {
+    public Task<ApplicationResult<int>> StartNursingAssessmentAsync(
+        StartNursingAssessmentCommand command, CancellationToken ct = default) =>
+        startNursingAssessment.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<int>> SaveNursingAssessmentAsync(
+        SaveNursingAssessmentCommand command, CancellationToken ct = default) =>
+        saveNursingAssessment.ExecuteAsync(command, ct);
+
     public Task<ApplicationResult<IReadOnlyList<ScopeResidentSummary>>> ListScopeResidentsAsync(
         ListScopeResidentsCommand command, CancellationToken ct = default) =>
         listScopeResidents.ExecuteAsync(command, ct);

@@ -1,4 +1,5 @@
 @using ResidApp.Application.Ports
+@using ResidApp.Domain.Enfermeria
 @using ResidApp.Web.Models
 @model IReadOnlyList<PendingChangeSummary>
 @{
@@ -22,7 +23,7 @@
 
 @if (Model.Count == 0)
 {
-    <p class="text-muted">No hay cambios prioritarios pendientes.</p>
+    <p class="text-muted">No hay eventos prioritarios abiertos.</p>
 }
 else
 {
@@ -45,12 +46,12 @@ else
                     <tr>
                         <td>@item.ResidentDisplayName</td>
                         <td>@(item.UnitName ?? "Sin unidad")</td>
-                        <td>@(item.PriorityReason is null ? "—" : DailyChangePriorityReasonDisplay.Label(item.PriorityReason.Value))</td>
+                        <td>@(item.Origin == ClinicalEventOrigin.EventoEnfermeria ? "Evento observado por Enfermería" : item.PriorityReason is null ? "—" : DailyChangePriorityReasonDisplay.Label(item.PriorityReason.Value))</td>
                         <td>@(item.DirectNoticeNotes ?? "—")</td>
                         <td>@ElapsedTimeDisplay.Since(item.OccurredAt)</td>
-                        <td><span class="badge text-bg-danger">Pendiente</span></td>
+                        <td><span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, prioritario: true)">@ClinicalEventStatusDisplay.Label(item.Status)</span></td>
                         <td>
-                            <a asp-action="DetalleCambio" asp-route-cierreId="@item.ClosureId" class="btn btn-outline-primary btn-sm">Ver detalle</a>
+                            <a asp-action="DetalleCambio" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle</a>
                         </td>
                     </tr>
                 }

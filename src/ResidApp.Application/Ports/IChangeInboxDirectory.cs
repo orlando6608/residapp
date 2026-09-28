@@ -1,4 +1,5 @@
 using ResidApp.Domain.Auxiliar;
+using ResidApp.Domain.Enfermeria;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
@@ -9,36 +10,43 @@ namespace ResidApp.Application.Ports;
 public sealed record PendingChangeAreaSummary(
     DailyChangeAreaCode AreaCode, IReadOnlyList<DailyChangeAreaOptionCode> Options, string? FreeText);
 
-/// <summary>ENF-02/ENF-03: una fila de bandeja (cambio ordinario o prioritario). Areas solo lleva los
-/// códigos (la propia bandeja no necesita el detalle completo, ENF-04 sí). Estado no es un campo propio
-/// todavía: mientras no exista la valoración (ENF-05, grupo E5), todo elemento de esta bandeja está,
-/// invariablemente, "Pendiente" — el llamador lo pinta como constante.</summary>
+/// <summary>ENF-02/ENF-03: una fila de bandeja, sea un cambio de Auxiliar o un evento propio de Enfermería
+/// (dbo.eventos_asistenciales). Areas solo lleva los códigos y solo existe para los cambios de Auxiliar;
+/// Observation solo para los eventos propios. La propia bandeja no necesita el detalle completo (ENF-04 sí).</summary>
 public sealed record PendingChangeSummary(
-    Guid ClosureId, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string? UnitName,
-    IReadOnlyList<DailyChangeAreaCode> Areas, SystemProfile AuthorProfile, DateTimeOffset OccurredAt,
-    DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes);
+    Guid EventId, ClinicalEventOrigin Origin, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string? UnitName,
+    IReadOnlyList<DailyChangeAreaCode> Areas, string? Observation, SystemProfile AuthorProfile, DateTimeOffset OccurredAt,
+    DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes, ClinicalEventStatus Status);
 
-/// <summary>ENF-04: detalle completo de un cambio recibido (observación original íntegra, con opciones y
-/// texto libre por área).</summary>
+/// <summary>ENF-05: borrador de la valoración de Enfermería, con quién lo tocó por última vez (solo si fue la
+/// cuenta del ámbito que consulta; el nombre de otros profesionales no se expone).</summary>
+public sealed record NursingAssessmentDraft(
+    NursingAssessmentContent Content, bool LastUpdatedByCurrentAccount, DateTimeOffset LastUpdatedAt);
+
+/// <summary>ENF-04: detalle completo de un evento recibido. Según el origen trae las áreas y la temperatura
+/// del cambio de Auxiliar, o la observación y los datos clínicos del evento propio; en ambos casos la
+/// observación original es inmutable. Revision es la que hay que devolver al empezar o guardar la
+/// valoración (concurrencia optimista).</summary>
 public sealed record PendingChangeDetail(
-    Guid ClosureId, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string? UnitName,
+    Guid EventId, ClinicalEventOrigin Origin, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string? UnitName,
     DailyChangeClassification Classification, IReadOnlyList<PendingChangeAreaSummary> Areas, decimal? TemperatureCelsius,
-    SystemProfile AuthorProfile, DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes, DateTimeOffset OccurredAt);
+    string? Observation, string? ClinicalData,
+    SystemProfile AuthorProfile, DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes, DateTimeOffset OccurredAt,
+    ClinicalEventStatus Status, int Revision, bool? AssessmentStartedByCurrentAccount, DateTimeOffset? AssessmentStartedAt,
+    NursingAssessmentDraft? Assessment);
 
 /// <summary>
-/// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04. Alcance
-/// mínimo acordado para el grupo E4: solo consume lo que Auxiliar ya genera (AUX-11A/AUX-12,
-/// dbo.cierres_cotidianos_residente); los eventos propios de Enfermería (ENF-16, dbo.eventos_clinicos)
-/// todavía no aparecen aquí — quedan pendientes de unificar cuando exista la valoración (ENF-05, grupo E5),
-/// que necesitará de todas formas una noción común de "evento" sobre ambos orígenes. Mismo criterio de
-/// ámbito "por defecto o restringido" que IEnfermeriaResidentDirectory, porque una bandeja "compartida por
-/// unidad" (docs/flujos-clinicos/valoracion-escalado-enfermeria.md) no debe mostrar más residentes de los
-/// que el ámbito ya autoriza a nivel individual.
+/// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre
+/// dbo.eventos_asistenciales: los cambios que registra Auxiliar y los eventos que observa Enfermería
+/// (ENF-16) siguen el mismo ciclo. Mismo criterio de ámbito "por defecto o restringido" que
+/// IEnfermeriaResidentDirectory, porque una bandeja "compartida por unidad"
+/// (docs/flujos-clinicos/valoracion-escalado-enfermeria.md) no debe mostrar más residentes de los que el
+/// ámbito ya autoriza a nivel individual.
 /// </summary>
 public interface IChangeInboxDirectory
 {
     Task<IReadOnlyList<PendingChangeSummary>> ListAsync(
         Guid profileScopeId, CenterId centerId, DailyChangeClassification classification, CancellationToken ct = default);
 
-    Task<PendingChangeDetail?> FindAsync(Guid profileScopeId, CenterId centerId, Guid closureId, CancellationToken ct = default);
+    Task<PendingChangeDetail?> FindAsync(Guid profileScopeId, CenterId centerId, Guid eventId, CancellationToken ct = default);
 }

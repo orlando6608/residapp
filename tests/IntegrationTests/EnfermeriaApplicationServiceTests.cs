@@ -1,7 +1,10 @@
+using Dapper;
+using Microsoft.Data.SqlClient;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Auxiliar;
+using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Persistence;
@@ -25,6 +28,7 @@ public class EnfermeriaApplicationServiceTests
 
         var events = new SqlClinicalEventRepository(TestDatabase.ConnectionFactory);
         var changeInbox = new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory);
+        var assessments = new SqlNursingAssessmentRepository(TestDatabase.ConnectionFactory);
         var listScopeResidents = new ListScopeResidents(scopes, directory, session);
         return new EnfermeriaApplicationService(
             listScopeResidents,
@@ -32,7 +36,146 @@ public class EnfermeriaApplicationServiceTests
             new ReadCurrentBaseline(evidenceProvider, session, baselines),
             new RegisterClinicalEvent(scopes, directory, session, events),
             new ListPendingChanges(scopes, changeInbox, session),
-            new FindPendingChangeDetail(scopes, changeInbox, session));
+            new FindPendingChangeDetail(scopes, changeInbox, session),
+            new StartNursingAssessment(scopes, changeInbox, session, assessments),
+            new SaveNursingAssessment(scopes, changeInbox, session, assessments));
+    }
+
+    /// <summary>Un residente en la unidad de dos profesionales de Enfermería y un evento propio de la
+    /// primera, para recorrer la valoración y la concurrencia entre ambas.</summary>
+    private static async Task<(SeededProfile Enfermera, SeededProfile Companera, Guid EventId)> SeedOwnEventAsync(
+        DailyChangeClassification classification = DailyChangeClassification.Ordinario)
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var enfermera = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, adminSeed.CenterId, adminSeed.UnitId);
+        var companera = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, adminSeed.CenterId, adminSeed.UnitId);
+        var resident = await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Valoración Enfermería", new DateOnly(1944, 4, 4), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+        var registered = await BuildService(enfermera.ExternalSubject).RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, resident.ResidentId,
+            "Tos productiva desde la mañana.", classification, null, Guid.NewGuid()));
+        return (enfermera, companera, registered.Value!.EventId);
+    }
+
+    private static SaveNursingAssessmentCommand SaveCommand(SeededProfile seed, Guid eventId, int revision, string? hallazgos = "Crepitantes en base derecha.") =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, hallazgos, null, "Se incorpora a 45º.", null, null,
+            37.8m, 130, 80, 92, 22, 93, RespiratorySupportCode.AireAmbiente, null, null, null, null, null);
+
+    [Fact]
+    public async Task RegisterClinicalEvent_EntraEnLaBandejaComoPendiente_ConSuAutoriaReal()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync(DailyChangeClassification.Prioritario);
+        var service = BuildService(enfermera.ExternalSubject);
+
+        var result = await service.ListPendingChangesAsync(new ListPendingChangesCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, DailyChangeClassification.Prioritario));
+
+        var item = Assert.Single(result.Value!);
+        Assert.Equal(eventId, item.EventId);
+        Assert.Equal(ClinicalEventOrigin.EventoEnfermeria, item.Origin);
+        Assert.Equal(SystemProfile.Enfermeria, item.AuthorProfile);
+        Assert.Equal("Tos productiva desde la mañana.", item.Observation);
+        Assert.Equal(ClinicalEventStatus.Pendiente, item.Status);
+    }
+
+    [Fact]
+    public async Task StartAndSaveAssessment_RegistraQuienEmpiezaYConservaElBorrador()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var before = (await service.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
+
+        var started = await service.StartNursingAssessmentAsync(new StartNursingAssessmentCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, before.Revision));
+        Assert.True(started.Ok);
+        var saved = await service.SaveNursingAssessmentAsync(SaveCommand(enfermera, eventId, started.Value));
+        Assert.True(saved.Ok);
+
+        var detail = (await service.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
+        Assert.Equal(ClinicalEventStatus.EnValoracion, detail.Status);
+        Assert.Equal(before.Revision + 2, detail.Revision);
+        Assert.True(detail.AssessmentStartedByCurrentAccount);
+        Assert.Equal("Tos productiva desde la mañana.", detail.Observation);
+        Assert.Equal("Crepitantes en base derecha.", detail.Assessment!.Content.Findings);
+        Assert.Equal(93, detail.Assessment.Content.Vitals.OxygenSaturationPct);
+        Assert.Equal(RespiratorySupportCode.AireAmbiente, detail.Assessment.Content.Vitals.RespiratorySupport);
+
+        // Sin propiedad permanente: otra enfermera de la unidad ve quién empezó y puede continuar.
+        var otherView = (await BuildService(companera.ExternalSubject).FindPendingChangeDetailAsync(
+            new FindPendingChangeDetailCommand(companera.ProfileScopeId, companera.CenterId, eventId))).Value!;
+        Assert.False(otherView.AssessmentStartedByCurrentAccount);
+        Assert.False(otherView.Assessment!.LastUpdatedByCurrentAccount);
+        var continued = await BuildService(companera.ExternalSubject).SaveNursingAssessmentAsync(
+            SaveCommand(companera, eventId, otherView.Revision, "Crepitantes bilaterales."));
+        Assert.True(continued.Ok);
+    }
+
+    [Fact]
+    public async Task StaleRevision_ExigeRecargar_YNoSobrescribeElTrabajoAjeno()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var mine = BuildService(enfermera.ExternalSubject);
+        var theirs = BuildService(companera.ExternalSubject);
+        var openedByBoth = (await mine.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!.Revision;
+
+        var theirStart = await theirs.StartNursingAssessmentAsync(new StartNursingAssessmentCommand(companera.ProfileScopeId, companera.CenterId, eventId, openedByBoth));
+        Assert.True(theirStart.Ok);
+        var myStart = await mine.StartNursingAssessmentAsync(new StartNursingAssessmentCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId, openedByBoth));
+        Assert.Equal(ApplicationFailureCode.Conflict, myStart.Error!.Code);
+
+        Assert.True((await theirs.SaveNursingAssessmentAsync(SaveCommand(companera, eventId, theirStart.Value, "Su valoración."))).Ok);
+        var myStaleSave = await mine.SaveNursingAssessmentAsync(SaveCommand(enfermera, eventId, theirStart.Value, "Mi valoración."));
+        Assert.Equal(ApplicationFailureCode.Conflict, myStaleSave.Error!.Code);
+
+        var detail = (await mine.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
+        Assert.Equal("Su valoración.", detail.Assessment!.Content.Findings);
+    }
+
+    [Fact]
+    public async Task SaveAssessment_SinEmpezar_EsConflicto_YVacia_EsInvalida()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+
+        var notStarted = await service.SaveNursingAssessmentAsync(SaveCommand(enfermera, eventId, 1));
+        Assert.Equal(ApplicationFailureCode.Conflict, notStarted.Error!.Code);
+
+        var started = await service.StartNursingAssessmentAsync(new StartNursingAssessmentCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId, 1));
+        var empty = await service.SaveNursingAssessmentAsync(new SaveNursingAssessmentCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, started.Value,
+            "  ", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, empty.Error!.Code);
+    }
+
+    [Fact]
+    public async Task StartAssessment_ConAuxiliarOFueraDeAmbito_ReturnsAccessDenied()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var auxiliar = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, enfermera.CenterId, enfermera.UnitId);
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+
+        var byAuxiliar = await BuildService(auxiliar.ExternalSubject).StartNursingAssessmentAsync(
+            new StartNursingAssessmentCommand(auxiliar.ProfileScopeId, auxiliar.CenterId, eventId, 1));
+        var byOutsider = await BuildService(outsider.ExternalSubject).StartNursingAssessmentAsync(
+            new StartNursingAssessmentCommand(outsider.ProfileScopeId, outsider.CenterId, eventId, 1));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byAuxiliar.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOutsider.Error!.Code);
+    }
+
+    [Fact]
+    public async Task EventoAsistencial_LaBaseDeDatosRechazaSaltarRevisionYBorrar()
+    {
+        var (_, _, eventId) = await SeedOwnEventAsync();
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+
+        var skipped = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.eventos_asistenciales SET revision = revision + 2 WHERE id = @EventId", new { EventId = eventId }));
+        Assert.Contains("CLINICAL_EVENT_TRANSITION_INVALID", skipped.Message);
+        var deleted = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "DELETE FROM dbo.eventos_asistenciales WHERE id = @EventId", new { EventId = eventId }));
+        Assert.Contains("CLINICAL_EVENT_DELETE_FORBIDDEN", deleted.Message);
     }
 
     [Fact]

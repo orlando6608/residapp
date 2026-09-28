@@ -1,0 +1,162 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model ValoracionViewModel
+@{
+    ViewData["Title"] = "Valoración de Enfermería";
+    var evento = Model.Event;
+    var esPropio = evento.Origin == ClinicalEventOrigin.EventoEnfermeria;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId">Detalle</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Valoración</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Valoración — @evento.ResidentDisplayName</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="card mb-3 border-start border-4 border-secondary">
+    <div class="card-body">
+        <h2 class="h6 card-title">Observación original (no editable)</h2>
+        @if (esPropio)
+        {
+            <p class="mb-0" style="white-space: pre-line">@evento.Observation</p>
+        }
+        else
+        {
+            <p class="mb-0">
+                @string.Join(" · ", evento.Areas.Select(a => DailyChangeAreaDisplay.Label(a.AreaCode)))
+                @if (evento.TemperatureCelsius is not null)
+                {
+                    <span>· Temperatura @evento.TemperatureCelsius.Value.ToString("0.0")°C</span>
+                }
+            </p>
+            <a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId">Ver la observación completa</a>
+        }
+    </div>
+</div>
+
+<form asp-action="Valoracion" method="post">
+    <input type="hidden" asp-for="Form.EventoId" />
+    <input type="hidden" asp-for="Form.Revision" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Valoración</h2>
+            <div class="mb-3">
+                <label asp-for="Form.Hallazgos" class="form-label"></label>
+                <textarea asp-for="Form.Hallazgos" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.Hallazgos" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Valoracion" class="form-label"></label>
+                <textarea asp-for="Form.Valoracion" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.Valoracion" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Actuaciones" class="form-label"></label>
+                <textarea asp-for="Form.Actuaciones" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.Actuaciones" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Comunicaciones" class="form-label"></label>
+                <textarea asp-for="Form.Comunicaciones" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="Form.Comunicaciones" class="text-danger"></span>
+            </div>
+            <div class="mb-0">
+                <label asp-for="Form.Resultado" class="form-label"></label>
+                <textarea asp-for="Form.Resultado" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="Form.Resultado" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Constantes <span class="text-muted fs-6">(opcionales)</span></h2>
+            <div class="row g-3">
+                <div class="col-6 col-md-4">
+                    <label asp-for="Form.TemperaturaCelsius" class="form-label"></label>
+                    <input asp-for="Form.TemperaturaCelsius" type="number" class="form-control form-control-lg" inputmode="decimal" step="0.1" />
+                    <span asp-validation-for="Form.TemperaturaCelsius" class="text-danger"></span>
+                </div>
+                <div class="col-6 col-md-4">
+                    <label asp-for="Form.TensionSistolica" class="form-label"></label>
+                    <input asp-for="Form.TensionSistolica" class="form-control form-control-lg" inputmode="numeric" />
+                    <span asp-validation-for="Form.TensionSistolica" class="text-danger"></span>
+                </div>
+                <div class="col-6 col-md-4">
+                    <label asp-for="Form.TensionDiastolica" class="form-label"></label>
+                    <input asp-for="Form.TensionDiastolica" class="form-control form-control-lg" inputmode="numeric" />
+                    <span asp-validation-for="Form.TensionDiastolica" class="text-danger"></span>
+                </div>
+                <div class="col-6 col-md-4">
+                    <label asp-for="Form.FrecuenciaCardiaca" class="form-label"></label>
+                    <input asp-for="Form.FrecuenciaCardiaca" class="form-control form-control-lg" inputmode="numeric" />
+                    <span asp-validation-for="Form.FrecuenciaCardiaca" class="text-danger"></span>
+                </div>
+                <div class="col-6 col-md-4">
+                    <label asp-for="Form.FrecuenciaRespiratoria" class="form-label"></label>
+                    <input asp-for="Form.FrecuenciaRespiratoria" class="form-control form-control-lg" inputmode="numeric" />
+                    <span asp-validation-for="Form.FrecuenciaRespiratoria" class="text-danger"></span>
+                </div>
+                <div class="col-6 col-md-4">
+                    <label asp-for="Form.SaturacionO2" class="form-label"></label>
+                    <input asp-for="Form.SaturacionO2" class="form-control form-control-lg" inputmode="numeric" />
+                    <span asp-validation-for="Form.SaturacionO2" class="text-danger"></span>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label asp-for="Form.SoporteRespiratorio" class="form-label"></label>
+                    <select asp-for="Form.SoporteRespiratorio" class="form-select form-select-lg"
+                            asp-items="Html.GetEnumSelectList<RespiratorySupportCode>()">
+                        <option value="">Sin indicar</option>
+                    </select>
+                    <span asp-validation-for="Form.SoporteRespiratorio" class="text-danger"></span>
+                </div>
+                <div class="col-6 col-md-4">
+                    <label asp-for="Form.FlujoO2" class="form-label"></label>
+                    <input asp-for="Form.FlujoO2" type="number" class="form-control form-control-lg" inputmode="decimal" step="0.1" />
+                    <div class="form-text">Solo con oxigenoterapia.</div>
+                    <span asp-validation-for="Form.FlujoO2" class="text-danger"></span>
+                </div>
+                <div class="col-6 col-md-4">
+                    <label asp-for="Form.Glucemia" class="form-label"></label>
+                    <input asp-for="Form.Glucemia" class="form-control form-control-lg" inputmode="numeric" />
+                    <span asp-validation-for="Form.Glucemia" class="text-danger"></span>
+                </div>
+            </div>
+
+            <h3 class="h6 mt-4">Otra constante</h3>
+            <div class="row g-3">
+                <div class="col-12 col-md-5">
+                    <label asp-for="Form.OtraConstanteNombre" class="form-label"></label>
+                    <input asp-for="Form.OtraConstanteNombre" class="form-control form-control-lg" />
+                    <span asp-validation-for="Form.OtraConstanteNombre" class="text-danger"></span>
+                </div>
+                <div class="col-6 col-md-4">
+                    <label asp-for="Form.OtraConstanteValor" class="form-label"></label>
+                    <input asp-for="Form.OtraConstanteValor" class="form-control form-control-lg" />
+                    <span asp-validation-for="Form.OtraConstanteValor" class="text-danger"></span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label asp-for="Form.OtraConstanteUnidad" class="form-label"></label>
+                    <input asp-for="Form.OtraConstanteUnidad" class="form-control form-control-lg" />
+                    <span asp-validation-for="Form.OtraConstanteUnidad" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin guardar</a>
+        <button type="submit" class="btn btn-primary btn-lg">Guardar borrador</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -29,7 +29,7 @@
             <a class="list-group-item list-group-item-action" href="#mis-residentes-auxiliar">Mis residentes (Auxiliar)</a>
             <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#registrar-evento-enfermeria">Registrar evento (Enfermería)</a>
-            <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas de cambios (Enfermería)</a>
+            <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas y valoración de eventos (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
         </div>
@@ -260,31 +260,47 @@
         prioritario) y, si procede, datos clínicos pertinentes.
     </p>
     <p class="mb-0">
-        La observación queda registrada de forma permanente y no se puede editar después. Por ahora el
-        evento queda solo guardado, pendiente de valoración: todavía no aparece en ninguna bandeja (ni
-        siquiera en las de la siguiente sección, que por ahora solo muestran lo que registra Auxiliar) ni
-        tiene pantalla de valoración propia (ver "Próximamente").
+        La observación queda registrada de forma permanente y no se puede editar después. Al guardar pasas
+        directamente al detalle del evento, desde donde puedes empezar su valoración. El evento aparece
+        también en la bandeja que corresponda a su clasificación (ver la siguiente sección), identificado
+        como "Evento observado por Enfermería", sin aparentar que lo registró Auxiliar.
     </p>
 </section>
 
 <section id="bandejas-enfermeria" class="mb-4">
     <h2 class="h5">
-        Bandejas de cambios
+        Bandejas y valoración de eventos
         <span class="badge text-bg-secondary align-middle">Perfil: Enfermería</span>
     </h2>
     <p>
         Desde Inicio (o directamente) puedes abrir la <strong>bandeja prioritaria</strong> y la de
         <strong>cambios ordinarios</strong>: los cambios que Auxiliar registra sobre residentes de tu
-        unidad al cerrar el registro cotidiano ("Registrar cambio"), compartidos por todo el equipo de
-        Enfermería de esa unidad. Cada fila muestra el residente, la unidad, el área observada (o el
-        motivo inicial y el aviso directo documentado en la prioritaria), quién lo registró, cuándo y su
-        antigüedad, ordenados siempre de más antiguo a más reciente.
+        unidad al cerrar el registro cotidiano ("Registrar cambio") y los eventos que registra el propio
+        equipo de Enfermería, compartidos por todo el equipo de Enfermería de esa unidad. Cada fila muestra
+        el residente, la unidad, el área observada (o el motivo inicial y el aviso directo documentado en
+        la prioritaria), quién lo registró, cuándo, su antigüedad y su estado ("Pendiente" o "En
+        valoración"), ordenados siempre de más antiguo a más reciente.
+    </p>
+    <p>
+        Al abrir el detalle de un evento ves la observación original completa (inmutable), la temperatura
+        si se registró, y el basal vigente resumido del residente. Si está pendiente, pulsa
+        <strong>Empezar valoración</strong>: queda registrado quién la empieza y a qué hora, sin que eso te
+        haga responsable exclusivo del evento; cualquier profesional de Enfermería de la unidad puede
+        continuarla.
+    </p>
+    <p>
+        En la pantalla de <strong>valoración</strong> anotas hallazgos, valoración, actuaciones,
+        comunicaciones y resultado, y las constantes que quieras: temperatura, presión arterial (las dos
+        cifras), frecuencias cardíaca y respiratoria, saturación de oxígeno, si respira aire ambiente u
+        oxigenoterapia (con su flujo), glucemia y otra constante con nombre, valor y unidad. Todas son
+        opcionales, pero hay que guardar al menos un dato. <strong>Guardar borrador</strong> conserva lo
+        escrito y vuelve al detalle, donde se ve el resumen y quién lo guardó por última vez.
     </p>
     <p class="mb-0">
-        Al abrir el detalle de un cambio ves la observación original completa (inmutable), la temperatura
-        si se registró, y el basal vigente resumido del residente. Empezar la valoración y desplegar la
-        línea temporal todavía no están disponibles desde aquí (ver "Próximamente"); por ahora, un cambio
-        recibido queda siempre en estado "Pendiente".
+        Si otra persona modifica el evento mientras lo tienes abierto, al guardar se te pedirá recargar
+        para ver la versión actual; lo que habías escrito sigue en pantalla para que puedas copiarlo, y
+        nunca se sobrescribe el trabajo ajeno. La decisión asistencial (cerrar, seguimiento, escalar,
+        protocolo urgente) y la línea temporal todavía no están disponibles (ver "Próximamente").
     </p>
 </section>
 
@@ -324,7 +340,7 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Valoración de eventos, seguimiento y escalado a Medicina (Enfermería y Medicina); las bandejas de cambios ordinarios/prioritarios ya existen, pero solo muestran lectura, sin valorar.</li>
+        <li>Decisión asistencial sobre un evento ya valorado: cerrarlo (con la decisión de comunicación familiar), iniciar seguimiento, escalar a Medicina o activar el protocolo urgente; y la línea temporal e historial de eventos.</li>
         <li>Derivación a Urgencias con informe firmado en PDF.</li>
         <li>Publicaciones para familias y su aprobación.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>

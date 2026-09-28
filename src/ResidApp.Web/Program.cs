@@ -26,6 +26,7 @@ builder.Services.AddScoped<IEnfermeriaResidentDirectory, SqlEnfermeriaResidentDi
 builder.Services.AddScoped<IDailyClosureRepository, SqlDailyClosureRepository>();
 builder.Services.AddScoped<IClinicalEventRepository, SqlClinicalEventRepository>();
 builder.Services.AddScoped<IChangeInboxDirectory, SqlChangeInboxDirectory>();
+builder.Services.AddScoped<INursingAssessmentRepository, SqlNursingAssessmentRepository>();
 builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
 
 builder.Services.AddScoped<CreateResident>();
@@ -51,6 +52,8 @@ builder.Services.AddScoped<FindScopeResident>();
 builder.Services.AddScoped<RegisterClinicalEvent>();
 builder.Services.AddScoped<ListPendingChanges>();
 builder.Services.AddScoped<FindPendingChangeDetail>();
+builder.Services.AddScoped<StartNursingAssessment>();
+builder.Services.AddScoped<SaveNursingAssessment>();
 builder.Services.AddScoped<EnfermeriaApplicationService>();
 
 var app = builder.Build();

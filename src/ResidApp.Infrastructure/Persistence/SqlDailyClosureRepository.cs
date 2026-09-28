@@ -140,6 +140,17 @@ public sealed class SqlDailyClosureRepository(SqlConnectionFactory connections) 
                 AccountId = input.AccountId.Value, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
+            // El cambio entra en las bandejas de Enfermería como evento asistencial pendiente (mismo id).
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.eventos_asistenciales
+                    (id, residente_id, centro_id, unidad_id, origen_codigo, cierre_id, clasificacion_codigo, recibido_en)
+                VALUES (@ClosureId, @ResidentId, @CenterId, @UnitId, 'CAMBIO_AUXILIAR', @ClosureId, @ClassificationCode, @OccurredAt)
+                """, new
+            {
+                ClosureId = closureId, ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value, UnitId = input.UnitId.Value,
+                ClassificationCode = input.Classification.ToCode(), OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+
             foreach (var area in input.Areas)
             {
                 var areaId = Guid.NewGuid();

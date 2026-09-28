@@ -4,9 +4,9 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record FindPendingChangeDetailCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid ClosureId);
+public sealed record FindPendingChangeDetailCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId);
 
-/// <summary>ENF-04: detalle de un elemento de bandeja. Null (sin error) si el cambio no existe o no está
+/// <summary>ENF-04: detalle de un elemento de bandeja. Null (sin error) si el evento no existe o no está
 /// en el ámbito, igual que FindScopeResident — el llamador no distingue "no existe" de "no autorizado".</summary>
 public sealed class FindPendingChangeDetail(
     IProfileScopeDirectoryProvider scopes, IChangeInboxDirectory directory, ISessionIdentityProvider session)
@@ -28,6 +28,6 @@ public sealed class FindPendingChangeDetail(
                 throw new AccessDeniedException();
             }
 
-            return await directory.FindAsync(command.AmbitoPerfilId, command.CentroId, command.ClosureId, ct);
+            return await directory.FindAsync(command.AmbitoPerfilId, command.CentroId, command.EventoId, ct);
         });
 }

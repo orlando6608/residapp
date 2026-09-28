@@ -1,8 +1,11 @@
+@using ResidApp.Domain.Enfermeria
 @using ResidApp.Web.Models
 @model EnfermeriaChangeDetailViewModel
 @{
     ViewData["Title"] = "Detalle del evento recibido";
-    var esPrioritario = Model.Change.Classification == ResidApp.Domain.Auxiliar.DailyChangeClassification.Prioritario;
+    var evento = Model.Change;
+    var esPrioritario = evento.Classification == ResidApp.Domain.Auxiliar.DailyChangeClassification.Prioritario;
+    var esPropio = evento.Origin == ClinicalEventOrigin.EventoEnfermeria;
 }
 
 <nav aria-label="breadcrumb">
@@ -14,23 +17,33 @@
     </ol>
 </nav>
 
-<h1 class="h3">@Model.Change.ResidentDisplayName</h1>
+<h1 class="h3">@evento.ResidentDisplayName</h1>
 <p class="text-muted">
-    @(Model.Change.UnitName ?? "Sin unidad") ·
+    @(evento.UnitName ?? "Sin unidad") ·
     <span class="badge @(esPrioritario ? "text-bg-danger" : "text-bg-secondary")">@(esPrioritario ? "Prioritario" : "Ordinario")</span>
-    · Registrado por @SystemProfileDisplay.Label(Model.Change.AuthorProfile) el @Model.Change.OccurredAt.ToLocalTime().ToString("g")
-    (@ElapsedTimeDisplay.Since(Model.Change.OccurredAt))
+    <span class="badge @ClinicalEventStatusDisplay.BadgeClass(evento.Status, esPrioritario)">@ClinicalEventStatusDisplay.Label(evento.Status)</span>
+    · @(esPropio ? "Observado" : "Registrado") por @SystemProfileDisplay.Label(evento.AuthorProfile) el @evento.OccurredAt.ToLocalTime().ToString("g")
+    (@ElapsedTimeDisplay.Since(evento.OccurredAt))
 </p>
 
-@if (esPrioritario)
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+@if (esPrioritario && !esPropio)
 {
     <div class="card mb-3">
         <div class="card-body">
             <h2 class="h5 card-title">Motivo inicial y aviso directo</h2>
             <p class="mb-1">
-                Motivo: <strong>@(Model.Change.PriorityReason is null ? "—" : DailyChangePriorityReasonDisplay.Label(Model.Change.PriorityReason.Value))</strong>
+                Motivo: <strong>@(evento.PriorityReason is null ? "—" : DailyChangePriorityReasonDisplay.Label(evento.PriorityReason.Value))</strong>
             </p>
-            <p class="mb-0">Aviso directo documentado: @(Model.Change.DirectNoticeNotes ?? "—")</p>
+            <p class="mb-0">Aviso directo documentado: @(evento.DirectNoticeNotes ?? "—")</p>
         </div>
     </div>
 }
@@ -39,28 +52,40 @@
     <div class="card-body">
         <h2 class="h5 card-title">Observación original</h2>
         <p class="text-muted">La observación original es inmutable; no se modifica al valorarla.</p>
-        @if (Model.Change.TemperatureCelsius is not null)
+        @if (esPropio)
         {
-            <p class="mb-3">Temperatura: <strong>@Model.Change.TemperatureCelsius.Value.ToString("0.0")°C</strong></p>
+            <p class="mb-3" style="white-space: pre-line">@evento.Observation</p>
+            @if (!string.IsNullOrWhiteSpace(evento.ClinicalData))
+            {
+                <p class="fw-semibold mb-1">Datos clínicos pertinentes</p>
+                <p class="mb-0" style="white-space: pre-line">@evento.ClinicalData</p>
+            }
         }
-        @foreach (var area in Model.Change.Areas)
+        else
         {
-            <div class="mb-3">
-                <p class="fw-semibold mb-1">@DailyChangeAreaDisplay.Label(area.AreaCode)</p>
-                @if (area.Options.Count > 0)
-                {
-                    <ul class="mb-1">
-                        @foreach (var option in area.Options)
-                        {
-                            <li>@DailyChangeAreaOptionDisplay.Label(option)</li>
-                        }
-                    </ul>
-                }
-                @if (!string.IsNullOrWhiteSpace(area.FreeText))
-                {
-                    <p class="mb-0">@area.FreeText</p>
-                }
-            </div>
+            @if (evento.TemperatureCelsius is not null)
+            {
+                <p class="mb-3">Temperatura: <strong>@evento.TemperatureCelsius.Value.ToString("0.0")°C</strong></p>
+            }
+            @foreach (var area in evento.Areas)
+            {
+                <div class="mb-3">
+                    <p class="fw-semibold mb-1">@DailyChangeAreaDisplay.Label(area.AreaCode)</p>
+                    @if (area.Options.Count > 0)
+                    {
+                        <ul class="mb-1">
+                            @foreach (var option in area.Options)
+                            {
+                                <li>@DailyChangeAreaOptionDisplay.Label(option)</li>
+                            }
+                        </ul>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(area.FreeText))
+                    {
+                        <p class="mb-0">@area.FreeText</p>
+                    }
+                </div>
+            }
         }
     </div>
 </div>
@@ -80,7 +105,68 @@
     </div>
 </div>
 
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Valoración de Enfermería</h2>
+        @if (evento.Status == ClinicalEventStatus.Pendiente)
+        {
+            <p class="mb-0">Todavía no se ha empezado a valorar. Al empezar se registra quién lo hace y a qué hora; no te convierte en responsable exclusivo del evento.</p>
+        }
+        else
+        {
+            <p class="mb-2">
+                Valoración iniciada @(evento.AssessmentStartedByCurrentAccount == true ? "por ti" : "por otro profesional de Enfermería")
+                el @evento.AssessmentStartedAt?.ToLocalTime().ToString("g").
+            </p>
+            @if (evento.Assessment is null)
+            {
+                <p class="text-muted mb-0">Sin borrador guardado todavía.</p>
+            }
+            else
+            {
+                var content = evento.Assessment.Content;
+                <p class="text-muted">
+                    Último guardado @(evento.Assessment.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
+                    el @evento.Assessment.LastUpdatedAt.ToLocalTime().ToString("g").
+                </p>
+                <dl class="row mb-0">
+                    @foreach (var (etiqueta, texto) in new[] { ("Hallazgos", content.Findings), ("Valoración", content.Assessment), ("Actuaciones", content.Actions), ("Comunicaciones", content.Communications), ("Resultado", content.Outcome) })
+                    {
+                        if (texto is not null)
+                        {
+                            <dt class="col-sm-3">@etiqueta</dt>
+                            <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                        }
+                    }
+                    @if (!content.Vitals.IsEmpty)
+                    {
+                        <dt class="col-sm-3">Constantes</dt>
+                        <dd class="col-sm-9">@VitalSignsDisplay.Summary(content.Vitals)</dd>
+                    }
+                </dl>
+            }
+        }
+    </div>
+</div>
+
+<div class="d-grid d-md-flex justify-content-md-end gap-2 mb-3">
+    @if (evento.Status == ClinicalEventStatus.Pendiente)
+    {
+        <form asp-action="EmpezarValoracion" method="post">
+            <input type="hidden" name="eventoId" value="@evento.EventId" />
+            <input type="hidden" name="revision" value="@evento.Revision" />
+            <button type="submit" class="btn btn-primary btn-lg w-100">Empezar valoración</button>
+        </form>
+    }
+    else
+    {
+        <a asp-action="Valoracion" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">
+            @(evento.Assessment is null ? "Completar valoración" : "Continuar valoración")
+        </a>
+    }
+</div>
+
 <div class="alert alert-info mb-0">
-    Todavía no está disponible empezar la valoración ni desplegar la línea temporal desde aquí: llegan en
-    un grupo posterior del vertical Enfermería. Por ahora, sin actuaciones registradas.
+    La decisión asistencial (cerrar, iniciar seguimiento, escalar a Medicina o activar el protocolo urgente)
+    y la línea temporal del evento todavía no están disponibles: llegan en próximos bloques del vertical Enfermería.
 </div>

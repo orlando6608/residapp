@@ -1,4 +1,5 @@
 @using ResidApp.Application.Ports
+@using ResidApp.Domain.Enfermeria
 @using ResidApp.Web.Models
 @model IReadOnlyList<PendingChangeSummary>
 @{
@@ -18,7 +19,7 @@
 
 @if (Model.Count == 0)
 {
-    <p class="text-muted">No hay cambios ordinarios pendientes.</p>
+    <p class="text-muted">No hay eventos ordinarios abiertos.</p>
 }
 else
 {
@@ -28,7 +29,7 @@ else
                 <tr>
                     <th scope="col">Residente</th>
                     <th scope="col">Unidad</th>
-                    <th scope="col">Área observada</th>
+                    <th scope="col">Área observada o evento</th>
                     <th scope="col">Autor</th>
                     <th scope="col">Fecha/hora</th>
                     <th scope="col">Antigüedad</th>
@@ -42,17 +43,22 @@ else
                     <tr>
                         <td>@item.ResidentDisplayName</td>
                         <td>@(item.UnitName ?? "Sin unidad")</td>
-                        <td>@string.Join(", ", item.Areas.Select(DailyChangeAreaDisplay.Label))</td>
+                        <td>@(item.Origin == ClinicalEventOrigin.EventoEnfermeria ? $"Evento observado por Enfermería: {EventExcerpt(item.Observation)}" : string.Join(", ", item.Areas.Select(DailyChangeAreaDisplay.Label)))</td>
                         <td>@SystemProfileDisplay.Label(item.AuthorProfile)</td>
                         <td>@item.OccurredAt.ToLocalTime().ToString("g")</td>
                         <td>@ElapsedTimeDisplay.Since(item.OccurredAt)</td>
-                        <td><span class="badge text-bg-secondary">Pendiente</span></td>
+                        <td><span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, prioritario: false)">@ClinicalEventStatusDisplay.Label(item.Status)</span></td>
                         <td>
-                            <a asp-action="DetalleCambio" asp-route-cierreId="@item.ClosureId" class="btn btn-outline-primary btn-sm">Ver detalle</a>
+                            <a asp-action="DetalleCambio" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle</a>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+}
+
+@functions {
+    private static string EventExcerpt(string? observation) =>
+        observation is null ? "—" : observation.Length <= 80 ? observation : observation[..80] + "…";
 }

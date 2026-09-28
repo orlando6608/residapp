@@ -53,10 +53,11 @@ Sin pendiente crítico propio. Detalle en `docs/tareas/alta-prioridad/pendientes
 
 ## Próximos pasos
 
-Residente/Basal y Auxiliar están construidos; Enfermería está en curso (bandejas en solo lectura,
-evento propio y gestión del basal hechos; valoración, cierre, seguimiento, escalado, indicaciones,
-derivación e historial pendientes — ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md`). El
-siguiente bloque funcional es la valoración de eventos (historia 2 de Enfermería).
+Residente/Basal y Auxiliar están construidos; Enfermería está en curso (bandejas, evento propio,
+valoración de eventos y gestión del basal hechos; decisión asistencial, seguimiento, escalado,
+indicaciones, derivación e historial pendientes — ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md`).
+El siguiente bloque funcional es cerrar un evento y decidir la comunicación familiar (historia 3 de
+Enfermería).
 
 El despliegue en Azure (App Service `app-residapp-dev` + Azure SQL `sqldb-residapp-dev`) y el pipeline
 de CI/CD (build + tests contra SQL Server real, y deploy que aplica el esquema y los datos ficticios de

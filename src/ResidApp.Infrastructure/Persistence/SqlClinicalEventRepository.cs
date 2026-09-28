@@ -56,6 +56,17 @@ public sealed class SqlClinicalEventRepository(SqlConnectionFactory connections)
                 AccountId = input.AccountId.Value, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
+            // Mismo ciclo de valoración que un cambio de Auxiliar (ENF-16), conservando su propia autoría.
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.eventos_asistenciales
+                    (id, residente_id, centro_id, unidad_id, origen_codigo, evento_clinico_id, clasificacion_codigo, recibido_en)
+                VALUES (@EventId, @ResidentId, @CenterId, @UnitId, 'EVENTO_ENFERMERIA', @EventId, @ClassificationCode, @OccurredAt)
+                """, new
+            {
+                EventId = eventId, ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value, UnitId = input.UnitId.Value,
+                ClassificationCode = input.Classification.ToCode(), OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.eventos_auditoria
                     (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Auxiliar;
+using ResidApp.Domain.Enfermeria;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
@@ -11,9 +13,10 @@ namespace ResidApp.Web.Controllers;
 /// <summary>
 /// Vertical Enfermería, grupo E1 (navegación base): ENF-01 (inicio, con contadores de las bandejas ya
 /// construidas), ENF-17 (residentes del ámbito) y ENF-18 (ficha del residente, con el mismo resumen de
-/// basal vigente que AUX-03); grupo E3: ENF-16 (registrar evento propio, solo alta y guardado); grupo E4:
-/// ENF-02/ENF-03/ENF-04 (bandejas de cambios ordinarios/prioritarios que Auxiliar ya genera, y su
-/// detalle). Traduce a EnfermeriaApplicationService; la autorización y las reglas de negocio no viven aquí.
+/// basal vigente que AUX-03); grupo E3: ENF-16 (registrar evento propio); grupo E4: ENF-02/ENF-03/ENF-04
+/// (bandejas de ordinarios/prioritarios con los cambios de Auxiliar y los eventos propios, y su detalle);
+/// grupo E5: ENF-03 a ENF-05 (empezar y guardar la valoración). Traduce a EnfermeriaApplicationService; la
+/// autorización y las reglas de negocio no viven aquí.
 /// </summary>
 public sealed class EnfermeriaController(EnfermeriaApplicationService service) : Controller
 {
@@ -34,8 +37,7 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0));
     }
 
-    /// <summary>ENF-02: bandeja de cambios ordinarios (AUX-11A). Alcance E4: solo lo que Auxiliar genera;
-    /// los eventos propios de Enfermería (ENF-16) todavía no aparecen aquí.</summary>
+    /// <summary>ENF-02: bandeja de cambios ordinarios (AUX-11A) y eventos propios ordinarios (ENF-16).</summary>
     public async Task<IActionResult> Ordinarios(CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -75,23 +77,23 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         return View(result.Value);
     }
 
-    /// <summary>ENF-04: detalle de un cambio recibido, con el basal vigente resumido del residente.
-    /// "Empezar valoración" y la línea temporal quedan pendientes del grupo E5.</summary>
-    public async Task<IActionResult> DetalleCambio(Guid cierreId, CancellationToken ct)
+    /// <summary>ENF-04: detalle de un evento recibido (cambio de Auxiliar o evento propio), con el basal
+    /// vigente resumido del residente y el estado de su valoración. La línea temporal queda pendiente.</summary>
+    public async Task<IActionResult> DetalleCambio(Guid eventoId, CancellationToken ct)
     {
-        if (cierreId == Guid.Empty)
+        if (eventoId == Guid.Empty)
         {
             return RedirectToAction(nameof(Index));
         }
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(DetalleCambio), new { cierreId }) });
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(DetalleCambio), new { eventoId }) });
         }
 
         var centroId = CenterId.From(activeScope.CenterId);
         var detailResult = await service.FindPendingChangeDetailAsync(
-            new FindPendingChangeDetailCommand(activeScope.ProfileScopeId, centroId, cierreId), ct);
+            new FindPendingChangeDetailCommand(activeScope.ProfileScopeId, centroId, eventoId), ct);
         if (!detailResult.Ok || detailResult.Value is null)
         {
             return RedirectToAction(nameof(Index));
@@ -100,6 +102,95 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         var baselineResult = await service.ReadCurrentBaselineAsync(
             new ReadCurrentBaselineCommand(activeScope.ProfileScopeId, centroId, detailResult.Value.ResidentId), ct);
         return View(new EnfermeriaChangeDetailViewModel(detailResult.Value, baselineResult.Ok ? baselineResult.Value : null));
+    }
+
+    /// <summary>ENF-03 "empezar valoración": registra profesional y hora en servidor. Si el evento cambió
+    /// desde que se abrió el detalle, no se empieza y se vuelve al detalle ya recargado.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EmpezarValoracion(Guid eventoId, int revision, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null || eventoId == Guid.Empty)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await service.StartNursingAssessmentAsync(
+            new StartNursingAssessmentCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), eventoId, revision), ct);
+        if (result.Ok)
+        {
+            return RedirectToAction(nameof(Valoracion), new { eventoId });
+        }
+
+        TempData["Error"] = result.Error!.Code == ApplicationFailureCode.Conflict ? ConcurrencyMessage : result.Error.Message;
+        return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+    }
+
+    /// <summary>ENF-05: formulario de valoración, solo sobre un evento cuya valoración ya se empezó.</summary>
+    public async Task<IActionResult> Valoracion(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (detail.Status != ClinicalEventStatus.EnValoracion)
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        return View(new ValoracionViewModel(detail, ValoracionFormModel.From(detail)));
+    }
+
+    /// <summary>ENF-05 "guardar borrador". Ante un conflicto de concurrencia no se sobrescribe el trabajo
+    /// ajeno: se vuelve a mostrar lo escrito, con la revisión antigua, y se pide recargar.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Valoracion([Bind(Prefix = "Form")] ValoracionFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new ValoracionViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.SaveNursingAssessmentAsync(new SaveNursingAssessmentCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision,
+            form.Hallazgos, form.Valoracion, form.Actuaciones, form.Comunicaciones, form.Resultado,
+            form.TemperaturaCelsius, form.TensionSistolica, form.TensionDiastolica, form.FrecuenciaCardiaca,
+            form.FrecuenciaRespiratoria, form.SaturacionO2, form.SoporteRespiratorio, form.FlujoO2, form.Glucemia,
+            form.OtraConstanteNombre, form.OtraConstanteValor, form.OtraConstanteUnidad), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Valoración guardada.";
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code == ApplicationFailureCode.Conflict
+            ? ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo."
+            : "Revisa los datos: la valoración necesita al menos un dato, la PA con ambas cifras, el flujo de O₂ solo con oxigenoterapia y la otra constante con nombre y valor.");
+        return View(new ValoracionViewModel(detail, form));
+    }
+
+    private const string ConcurrencyMessage =
+        "Este evento ha cambiado desde que lo abriste (otro profesional, u otra pestaña o pulsación tuya). Recarga para ver la versión actual antes de continuar.";
+
+    private async Task<PendingChangeDetail?> FindEventAsync(Guid eventoId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null || eventoId == Guid.Empty)
+        {
+            return null;
+        }
+        var result = await service.FindPendingChangeDetailAsync(
+            new FindPendingChangeDetailCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), eventoId), ct);
+        return result.Ok ? result.Value : null;
     }
 
     public async Task<IActionResult> Residentes(CancellationToken ct)
@@ -146,8 +237,8 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         return View(new EnfermeriaResidentDetailViewModel(findResult.Value, baselineResult.Ok ? baselineResult.Value : null));
     }
 
-    /// <summary>ENF-16: formulario de alta. "Continuar directamente la valoración" queda pendiente hasta
-    /// que exista esa pantalla (grupo E5); por ahora, guardar vuelve a la ficha del residente.</summary>
+    /// <summary>ENF-16: formulario de alta. Al guardar se continúa en el detalle del evento, desde donde
+    /// se empieza su valoración.</summary>
     public async Task<IActionResult> RegistrarEvento(Guid residenteId, CancellationToken ct)
     {
         var resolved = await ResolveScopeResidentAsync(residenteId, ct);
@@ -179,11 +270,15 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             resolved.Value.Scope.ProfileScopeId, CenterId.From(resolved.Value.Scope.CenterId), ResidentId.From(form.ResidenteId),
             form.Observacion, form.Clasificacion, form.DatosClinicosPertinentes, form.OperacionId);
         var result = await service.RegisterClinicalEventAsync(command, ct);
+        if (!result.Ok)
+        {
+            TempData["Error"] = result.Error!.Message;
+            return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
+        }
 
-        TempData[result.Ok ? "Mensaje" : "Error"] = result.Ok
-            ? "Evento registrado. La valoración se completará cuando exista la bandeja correspondiente."
-            : result.Error!.Message;
-        return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
+        // ENF-16 "guardar y continuar directamente la valoración": al detalle del evento recién creado.
+        TempData["Mensaje"] = "Evento registrado. Ya puedes empezar su valoración.";
+        return RedirectToAction(nameof(DetalleCambio), new { eventoId = result.Value!.EventId });
     }
 
     /// <summary>Compartido por Residente y RegistrarEvento: confirma que el residente está en el ámbito
