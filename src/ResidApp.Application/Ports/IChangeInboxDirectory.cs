@@ -26,14 +26,15 @@ public sealed record NursingAssessmentDraft(
 /// <summary>ENF-04: detalle completo de un evento recibido. Según el origen trae las áreas y la temperatura
 /// del cambio de Auxiliar, o la observación y los datos clínicos del evento propio; en ambos casos la
 /// observación original es inmutable. Revision es la que hay que devolver al empezar o guardar la
-/// valoración (concurrencia optimista).</summary>
+/// valoración (concurrencia optimista). ReferenceRanges son los rangos de referencia de constantes del
+/// centro (vacío si no hay ninguno configurado), para el aviso visual de ENF-05.</summary>
 public sealed record PendingChangeDetail(
     Guid EventId, ClinicalEventOrigin Origin, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string? UnitName,
     DailyChangeClassification Classification, IReadOnlyList<PendingChangeAreaSummary> Areas, decimal? TemperatureCelsius,
     string? Observation, string? ClinicalData,
     SystemProfile AuthorProfile, DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes, DateTimeOffset OccurredAt,
     ClinicalEventStatus Status, int Revision, bool? AssessmentStartedByCurrentAccount, DateTimeOffset? AssessmentStartedAt,
-    NursingAssessmentDraft? Assessment);
+    NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre

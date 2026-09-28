@@ -165,6 +165,42 @@ public class EnfermeriaApplicationServiceTests
     }
 
     [Fact]
+    public async Task FindPendingChangeDetail_DevuelveSoloLosRangosDeReferenciaDeSuCentro()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var otherCenter = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.rangos_referencia_constantes (centro_id, constante_codigo, minimo, maximo)
+                VALUES (@CenterId, 'SATURACION_O2', 92, NULL), (@CenterId, 'TEMPERATURA', 35, 38), (@OtherCenterId, 'GLUCEMIA', 70, 180)
+                """, new { CenterId = enfermera.CenterId.Value, OtherCenterId = otherCenter.CenterId.Value });
+        }
+        var service = BuildService(enfermera.ExternalSubject);
+
+        var detail = (await service.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
+
+        Assert.Equal(2, detail.ReferenceRanges.Count);
+        Assert.Contains(new VitalSignRange(VitalSignCode.SaturacionO2, 92m, null), detail.ReferenceRanges);
+        Assert.Contains(new VitalSignRange(VitalSignCode.Temperatura, 35m, 38m), detail.ReferenceRanges);
+    }
+
+    [Fact]
+    public async Task RangoDeReferencia_LaBaseDeDatosRechazaLimitesIncoherentes()
+    {
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+
+        foreach (var (min, max) in new (decimal?, decimal?)[] { (null, null), (38m, 35m) })
+        {
+            var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+                "INSERT INTO dbo.rangos_referencia_constantes (centro_id, constante_codigo, minimo, maximo) VALUES (@CenterId, 'TEMPERATURA', @Min, @Max)",
+                new { CenterId = seed.CenterId.Value, Min = min, Max = max }));
+            Assert.Contains("CK_rrc_limites", ex.Message);
+        }
+    }
+
+    [Fact]
     public async Task EventoAsistencial_LaBaseDeDatosRechazaSaltarRevisionYBorrar()
     {
         var (_, _, eventId) = await SeedOwnEventAsync();

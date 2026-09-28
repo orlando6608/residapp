@@ -19,6 +19,11 @@
 <h1 class="h3">Valoración — @evento.ResidentDisplayName</h1>
 <div asp-validation-summary="All" class="text-danger"></div>
 
+@if (evento.Assessment is not null)
+{
+    <partial name="_AvisosConstantes" model="VitalSignReferenceRanges.Evaluate(evento.Assessment.Content.Vitals, evento.ReferenceRanges)" />
+}
+
 <div class="card mb-3 border-start border-4 border-secondary">
     <div class="card-body">
         <h2 class="h6 card-title">Observación original (no editable)</h2>
@@ -82,31 +87,37 @@
                 <div class="col-6 col-md-4">
                     <label asp-for="Form.TemperaturaCelsius" class="form-label"></label>
                     <input asp-for="Form.TemperaturaCelsius" type="number" class="form-control form-control-lg" inputmode="decimal" step="0.1" />
+                    <div class="form-text">@VitalSignRangeDisplay.Hint(evento.ReferenceRanges, VitalSignCode.Temperatura)</div>
                     <span asp-validation-for="Form.TemperaturaCelsius" class="text-danger"></span>
                 </div>
                 <div class="col-6 col-md-4">
                     <label asp-for="Form.TensionSistolica" class="form-label"></label>
                     <input asp-for="Form.TensionSistolica" class="form-control form-control-lg" inputmode="numeric" />
+                    <div class="form-text">@VitalSignRangeDisplay.Hint(evento.ReferenceRanges, VitalSignCode.TensionSistolica)</div>
                     <span asp-validation-for="Form.TensionSistolica" class="text-danger"></span>
                 </div>
                 <div class="col-6 col-md-4">
                     <label asp-for="Form.TensionDiastolica" class="form-label"></label>
                     <input asp-for="Form.TensionDiastolica" class="form-control form-control-lg" inputmode="numeric" />
+                    <div class="form-text">@VitalSignRangeDisplay.Hint(evento.ReferenceRanges, VitalSignCode.TensionDiastolica)</div>
                     <span asp-validation-for="Form.TensionDiastolica" class="text-danger"></span>
                 </div>
                 <div class="col-6 col-md-4">
                     <label asp-for="Form.FrecuenciaCardiaca" class="form-label"></label>
                     <input asp-for="Form.FrecuenciaCardiaca" class="form-control form-control-lg" inputmode="numeric" />
+                    <div class="form-text">@VitalSignRangeDisplay.Hint(evento.ReferenceRanges, VitalSignCode.FrecuenciaCardiaca)</div>
                     <span asp-validation-for="Form.FrecuenciaCardiaca" class="text-danger"></span>
                 </div>
                 <div class="col-6 col-md-4">
                     <label asp-for="Form.FrecuenciaRespiratoria" class="form-label"></label>
                     <input asp-for="Form.FrecuenciaRespiratoria" class="form-control form-control-lg" inputmode="numeric" />
+                    <div class="form-text">@VitalSignRangeDisplay.Hint(evento.ReferenceRanges, VitalSignCode.FrecuenciaRespiratoria)</div>
                     <span asp-validation-for="Form.FrecuenciaRespiratoria" class="text-danger"></span>
                 </div>
                 <div class="col-6 col-md-4">
                     <label asp-for="Form.SaturacionO2" class="form-label"></label>
                     <input asp-for="Form.SaturacionO2" class="form-control form-control-lg" inputmode="numeric" />
+                    <div class="form-text">@VitalSignRangeDisplay.Hint(evento.ReferenceRanges, VitalSignCode.SaturacionO2)</div>
                     <span asp-validation-for="Form.SaturacionO2" class="text-danger"></span>
                 </div>
                 <div class="col-12 col-md-4">
@@ -126,6 +137,7 @@
                 <div class="col-6 col-md-4">
                     <label asp-for="Form.Glucemia" class="form-label"></label>
                     <input asp-for="Form.Glucemia" class="form-control form-control-lg" inputmode="numeric" />
+                    <div class="form-text">@VitalSignRangeDisplay.Hint(evento.ReferenceRanges, VitalSignCode.Glucemia)</div>
                     <span asp-validation-for="Form.Glucemia" class="text-danger"></span>
                 </div>
             </div>

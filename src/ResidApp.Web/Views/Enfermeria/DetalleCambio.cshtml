@@ -125,6 +125,7 @@
             else
             {
                 var content = evento.Assessment.Content;
+                <partial name="_AvisosConstantes" model="VitalSignReferenceRanges.Evaluate(content.Vitals, evento.ReferenceRanges)" />
                 <p class="text-muted">
                     Último guardado @(evento.Assessment.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
                     el @evento.Assessment.LastUpdatedAt.ToLocalTime().ToString("g").

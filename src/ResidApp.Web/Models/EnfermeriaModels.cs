@@ -220,3 +220,47 @@ public static class VitalSignsDisplay
     }
 }
 
+
+/// <summary>Textos de los rangos de referencia de constantes y de sus avisos (ENF-05). El aviso nombra la
+/// constante, el valor y el rango en texto: no depende solo del color.</summary>
+public static class VitalSignRangeDisplay
+{
+    public static string Label(VitalSignCode code) => code switch
+    {
+        VitalSignCode.Temperatura => "Temperatura",
+        VitalSignCode.TensionSistolica => "PA sistólica",
+        VitalSignCode.TensionDiastolica => "PA diastólica",
+        VitalSignCode.FrecuenciaCardiaca => "Frecuencia cardíaca",
+        VitalSignCode.FrecuenciaRespiratoria => "Frecuencia respiratoria",
+        VitalSignCode.SaturacionO2 => "Saturación de O₂",
+        VitalSignCode.Glucemia => "Glucemia",
+        _ => code.ToString(),
+    };
+
+    public static string Unit(VitalSignCode code) => code switch
+    {
+        VitalSignCode.Temperatura => "°C",
+        VitalSignCode.TensionSistolica or VitalSignCode.TensionDiastolica => "mmHg",
+        VitalSignCode.FrecuenciaCardiaca => "lpm",
+        VitalSignCode.FrecuenciaRespiratoria => "rpm",
+        VitalSignCode.SaturacionO2 => "%",
+        VitalSignCode.Glucemia => "mg/dL",
+        _ => string.Empty,
+    };
+
+    public static string Range(VitalSignRange range) => (range.Min, range.Max) switch
+    {
+        ({ } min, { } max) => $"{min:0.#}–{max:0.#} {Unit(range.Code)}",
+        ({ } min, null) => $"≥ {min:0.#} {Unit(range.Code)}",
+        (null, { } max) => $"≤ {max:0.#} {Unit(range.Code)}",
+        _ => string.Empty,
+    };
+
+    public static string Alert(VitalSignAlert alert) =>
+        $"{Label(alert.Code)} {alert.Value:0.#} {Unit(alert.Code)}: " +
+        $"{(alert.Deviation == VitalSignDeviation.PorDebajo ? "por debajo" : "por encima")} del rango de referencia ({Range(alert.Range)})";
+
+    /// <summary>Texto de ayuda bajo el campo del formulario, o null si el centro no tiene rango para esa constante.</summary>
+    public static string? Hint(IReadOnlyList<VitalSignRange> ranges, VitalSignCode code) =>
+        ranges.FirstOrDefault(r => r.Code == code) is { } range ? $"Referencia del centro: {Range(range)}" : null;
+}

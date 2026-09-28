@@ -125,6 +125,13 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
              WHERE v.evento_id = @EventId AND v.estado_codigo = 'BORRADOR'
             """, new { ProfileScopeId = profileScopeId, EventId = eventId }, cancellationToken: ct));
 
+        var ranges = (await connection.QueryAsync<RangeRow>(new CommandDefinition("""
+            SELECT constante_codigo AS Code, minimo AS Min, maximo AS Max
+              FROM dbo.rangos_referencia_constantes WHERE centro_id = @CenterId
+            """, new { CenterId = centerId.Value }, cancellationToken: ct)))
+            .Select(r => new VitalSignRange(EnumCode.ParseCode<VitalSignCode>(r.Code), r.Min, r.Max))
+            .ToList();
+
         return new PendingChangeDetail(
             row.EventId, EnumCode.ParseCode<ClinicalEventOrigin>(row.OriginCode), ResidentId.From(row.ResidentId), row.ResidentDisplayName,
             UnitId.From(row.UnitId), row.UnitName, EnumCode.ParseCode<DailyChangeClassification>(row.ClassificationCode), areas,
@@ -141,8 +148,11 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                         assessment.RespiratoryRateRpm, assessment.OxygenSaturationPct,
                         assessment.RespiratorySupportCode is null ? null : EnumCode.ParseCode<RespiratorySupportCode>(assessment.RespiratorySupportCode),
                         assessment.OxygenFlowLpm, assessment.GlucoseMgDl, assessment.OtherName, assessment.OtherValue, assessment.OtherUnit)),
-                assessment.LastUpdatedByCurrentAccount, new DateTimeOffset(assessment.LastUpdatedAt, TimeSpan.Zero)));
+                assessment.LastUpdatedByCurrentAccount, new DateTimeOffset(assessment.LastUpdatedAt, TimeSpan.Zero)),
+            ranges);
     }
+
+    private sealed record RangeRow(string Code, decimal? Min, decimal? Max);
 
     /// <summary>OccurredAt es DateTime, no DateTimeOffset: Dapper 2.1.79 no materializa DateTimeOffset en
     /// constructores de record leídos de DATETIME2 (ver SqlBaselineRepository, mismo hallazgo). Se
