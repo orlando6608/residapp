@@ -68,7 +68,7 @@
             <div class="mb-0">
                 <label asp-for="Temperatura" class="form-label"></label>
                 <div class="input-group" style="max-width: 220px;">
-                    <input asp-for="Temperatura" class="form-control" />
+                    <input asp-for="Temperatura" type="number" step="0.1" inputmode="decimal" class="form-control" />
                     <span class="input-group-text">°C</span>
                 </div>
                 <span asp-validation-for="Temperatura" class="text-danger"></span>

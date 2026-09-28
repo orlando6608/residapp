@@ -68,7 +68,9 @@
 <form asp-action="ConfirmarCambio" method="post">
     <input type="hidden" asp-for="ResidenteId" />
     <input type="hidden" asp-for="OperacionId" />
-    <input type="hidden" asp-for="Temperatura" />
+    @* Invariante en ambos sentidos: con la cultura del servidor (es-ES), "37.8" se leería como 378. *@
+    <input type="hidden" name="Temperatura" value="@Model.Temperatura?.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+    <input type="hidden" name="__Invariant" value="Temperatura" />
     <input type="hidden" asp-for="Clasificacion" />
     <input type="hidden" asp-for="MotivoPrioritario" />
     @foreach (var (code, texto) in Model.AreaTexto.Where(kv => !string.IsNullOrWhiteSpace(kv.Value)))
