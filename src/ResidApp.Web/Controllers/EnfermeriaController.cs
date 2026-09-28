@@ -300,6 +300,66 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         return View(new IniciarSeguimientoViewModel(detail, form));
     }
 
+    /// <summary>ENF-10: muestra la información que se enviará a Medicina y pide el motivo del escalado.</summary>
+    public async Task<IActionResult> Escalar(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (!CanDecide(detail))
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        return View(new EscalarViewModel(detail, await ReadBaselineAsync(detail, ct),
+            new EscalarFormModel { EventoId = detail.EventId, Revision = detail.Revision }));
+    }
+
+    /// <summary>ENF-09 "escalar a Medicina": la valoración se cierra y el evento pasa a la bandeja de
+    /// escalados de Medicina. Ante un conflicto se conserva lo escrito y se pide recargar.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Escalar([Bind(Prefix = "Form")] EscalarFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new EscalarViewModel(detail, await ReadBaselineAsync(detail, ct), form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.EscalateClinicalEventAsync(new EscalateClinicalEventCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Motivo), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Evento escalado a Medicina.";
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput =>
+                "Revisa los datos: el motivo del escalado es obligatorio. Para escalar hace falta una valoración guardada.",
+            _ => result.Error.Message,
+        });
+        return View(new EscalarViewModel(detail, await ReadBaselineAsync(detail, ct), form));
+    }
+
+    private async Task<CurrentBaselineSummary?> ReadBaselineAsync(PendingChangeDetail detail, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.ReadCurrentBaselineAsync(
+            new ReadCurrentBaselineCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), detail.ResidentId), ct);
+        return result.Ok ? result.Value : null;
+    }
+
     /// <summary>ENF-08/ENF-09: el seguimiento abierto de un evento, con sus acciones y los formularios para
     /// registrar una actuación, reprogramar, transferir o confirmar la recepción.</summary>
     public async Task<IActionResult> Seguimiento(Guid eventoId, CancellationToken ct)

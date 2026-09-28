@@ -1,0 +1,42 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model IReadOnlyList<EscalationSummary>
+@{
+    ViewData["Title"] = "Escalados recibidos";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Escalados</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Escalados recibidos</h1>
+<p class="text-muted">Eventos que Enfermería ha escalado a Medicina, del más antiguo al más reciente. No hay ningún resumen diagnóstico automático.</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No hay escalados pendientes.</p>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        <a asp-action="Escalado" asp-route-eventoId="@item.EventId" class="card mb-3 text-decoration-none text-body border-start border-4 border-primary">
+            <div class="card-body">
+                <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
+                <p class="text-muted mb-2">
+                    @(item.UnitName ?? "Sin unidad") ·
+                    <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, false)">@ClinicalEventStatusDisplay.Label(item.Status)</span>
+                    · escalado el @item.EscalatedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(item.EscalatedAt))
+                </p>
+                <p class="mb-1" style="white-space: pre-line"><strong>Motivo:</strong> @item.Reason</p>
+                <p class="mb-1"><strong>Constantes:</strong> @(item.Vitals is null || item.Vitals.IsEmpty ? "sin constantes registradas" : VitalSignsDisplay.Summary(item.Vitals))</p>
+                <p class="mb-0" style="white-space: pre-line"><strong>Actuaciones:</strong> @(item.Actions ?? "sin actuaciones registradas")</p>
+            </div>
+        </a>
+    }
+}

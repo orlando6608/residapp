@@ -54,21 +54,22 @@
             </a>
         }
     </div>
-    @foreach (var (titulo, texto) in new[]
-    {
-        ("Escalar a Medicina", "Se envía toda la información reunida, sin resumen automático."),
-        ("Activar protocolo urgente", "Documentar la activación y, si procede, derivar a Urgencias."),
-    })
-    {
-        <div class="col-12 col-md-6">
-            <div class="card h-100 text-muted">
-                <div class="card-body">
-                    <h2 class="h5 card-title">@titulo</h2>
-                    <p class="card-text mb-0">Próximamente: @texto</p>
-                </div>
+    <div class="col-12 col-md-6">
+        <a asp-action="Escalar" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Escalar a Medicina</h2>
+                <p class="card-text text-muted mb-0">Se envía toda la información reunida con tu motivo, sin resumen automático.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card h-100 text-muted">
+            <div class="card-body">
+                <h2 class="h5 card-title">Activar protocolo urgente</h2>
+                <p class="card-text mb-0">Próximamente: documentar la activación y, si procede, derivar a Urgencias.</p>
             </div>
         </div>
-    }
+    </div>
 </div>
 
 <div class="d-grid d-md-flex justify-content-md-end">

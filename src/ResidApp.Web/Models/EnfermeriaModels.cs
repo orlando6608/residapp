@@ -79,6 +79,7 @@ public static class ClinicalEventStatusDisplay
         ClinicalEventStatus.Pendiente => "Pendiente",
         ClinicalEventStatus.EnValoracion => "En valoración",
         ClinicalEventStatus.EnSeguimiento => "En seguimiento",
+        ClinicalEventStatus.EscaladoMedicina => "Escalado a Medicina",
         ClinicalEventStatus.Cerrado => "Cerrado por Enfermería",
         _ => status.ToString(),
     };
@@ -87,6 +88,7 @@ public static class ClinicalEventStatusDisplay
     {
         ClinicalEventStatus.EnValoracion => "text-bg-warning",
         ClinicalEventStatus.EnSeguimiento => "text-bg-info",
+        ClinicalEventStatus.EscaladoMedicina => "text-bg-primary",
         ClinicalEventStatus.Cerrado => "text-bg-success",
         _ => prioritario ? "text-bg-danger" : "text-bg-secondary",
     };
@@ -169,6 +171,31 @@ public sealed class SeguimientoAccionFormModel
 
     public Guid? TransferenciaId { get; set; }
 }
+
+/// <summary>ENF-10 "escalar a Medicina": motivo obligatorio (lo decide el dominio, EscalationReason) y la
+/// revisión del evento al abrir la pantalla.</summary>
+public sealed class EscalarFormModel
+{
+    [Required]
+    public Guid EventoId { get; set; }
+
+    [Required]
+    public int Revision { get; set; }
+
+    [Required(ErrorMessage = "Escribe el motivo del escalado.")]
+    [StringLength(EscalationReason.MaxLength)]
+    [Display(Name = "Motivo del escalado")]
+    public string? Motivo { get; set; }
+}
+
+/// <summary>ENF-10/MED-03: la información reunida de un evento que se envía a Medicina (observación
+/// original, basal vigente, valoración con constantes y actuaciones, y seguimiento si lo hubo), todo de
+/// solo lectura. La usa el parcial _InformacionReunida.</summary>
+public sealed record InformacionReunidaViewModel(PendingChangeDetail Event, CurrentBaselineSummary? Baseline);
+
+/// <summary>ENF-10: el formulario más el evento, cuya información reunida se muestra antes de escalar, y el
+/// basal vigente del residente (null si no tiene).</summary>
+public sealed record EscalarViewModel(PendingChangeDetail Event, CurrentBaselineSummary? Baseline, EscalarFormModel Form);
 
 /// <summary>ENF-07B: el formulario más el evento del que cuelga.</summary>
 public sealed record IniciarSeguimientoViewModel(PendingChangeDetail Event, IniciarSeguimientoFormModel Form);

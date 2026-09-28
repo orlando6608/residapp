@@ -13,8 +13,12 @@ public sealed class EnfermeriaApplicationService(
     RegisterClinicalEvent registerClinicalEvent, ListPendingChanges listPendingChanges, FindPendingChangeDetail findPendingChangeDetail,
     StartNursingAssessment startNursingAssessment, SaveNursingAssessment saveNursingAssessment,
     CloseClinicalEvent closeClinicalEvent, ListPendingFamilyCommunications listPendingFamilyCommunications,
-    StartFollowUp startFollowUp, RecordFollowUpAction recordFollowUpAction, ListFollowUps listFollowUps)
+    StartFollowUp startFollowUp, RecordFollowUpAction recordFollowUpAction, ListFollowUps listFollowUps,
+    EscalateClinicalEvent escalateClinicalEvent)
 {
+    public Task<ApplicationResult<int>> EscalateClinicalEventAsync(EscalateClinicalEventCommand command, CancellationToken ct = default) =>
+        escalateClinicalEvent.ExecuteAsync(command, ct);
+
     public Task<ApplicationResult<int>> StartFollowUpAsync(StartFollowUpCommand command, CancellationToken ct = default) =>
         startFollowUp.ExecuteAsync(command, ct);
 

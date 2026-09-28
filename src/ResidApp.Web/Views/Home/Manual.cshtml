@@ -12,7 +12,8 @@
     índice de Barthel y la firma del estado basal) y el vertical <strong>Auxiliar</strong>; del vertical
     <strong>Enfermería</strong> funciona la navegación, la autoría completa del basal, el registro de un
     evento propio, las bandejas de cambios ordinarios y prioritarios que Auxiliar genera, la valoración de
-    esos eventos y su cierre con la decisión de comunicación familiar. El resto de módulos aparece descrito al final
+    esos eventos, su cierre con la decisión de comunicación familiar, el seguimiento y el escalado a Medicina;
+    de <strong>Medicina</strong>, la bandeja de escalados recibidos (solo lectura). El resto de módulos aparece descrito al final
     como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
     inicio de sesión con usuario y contraseña definitivo).
 </div>
@@ -31,6 +32,7 @@
             <a class="list-group-item list-group-item-action" href="#registrar-evento-enfermeria">Registrar evento (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas, valoración y cierre de eventos (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#seguimientos-enfermeria">Seguimientos y transferencia de turno (Enfermería)</a>
+            <a class="list-group-item list-group-item-action" href="#escalado-medicina">Escalar a Medicina y escalados recibidos</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -316,8 +318,8 @@
     <p>
         Con la valoración guardada, en el detalle aparece <strong>Pasar a decisión asistencial</strong>,
         con las cuatro salidas posibles: cerrar el evento, iniciar seguimiento, escalar a Medicina o activar
-        el protocolo urgente. De momento están disponibles <strong>cerrar</strong> e <strong>iniciar
-        seguimiento</strong>; escalar y el protocolo urgente aparecen como "Próximamente". Al cerrar revisas el resumen de la valoración y decides de forma
+        el protocolo urgente. De momento están disponibles <strong>cerrar</strong>, <strong>iniciar
+        seguimiento</strong> y <strong>escalar a Medicina</strong>; el protocolo urgente aparece como "Próximamente". Al cerrar revisas el resumen de la valoración y decides de forma
         explícita si se comunica a la familia: <strong>No comunicar</strong> o <strong>Preparar
         comunicación</strong>. Si la preparas, eliges si es ordinaria o relevante (la relevancia la decides
         tú) y escribes un texto comprensible, sin datos internos ni escalas. Al pulsar <strong>Cerrar
@@ -362,7 +364,32 @@
     </p>
     <p class="mb-0">
         Cuando ya no hace falta seguir, <strong>Resolver</strong> vuelve a la decisión asistencial, desde
-        donde se cierra el evento como se describe arriba (con la decisión de comunicación familiar).
+        donde se cierra el evento como se describe arriba (con la decisión de comunicación familiar) o se
+        escala a Medicina.
+    </p>
+</section>
+
+<section id="escalado-medicina" class="mb-4">
+    <h2 class="h5">
+        Escalar a Medicina y escalados recibidos
+        <span class="badge text-bg-secondary align-middle">Perfiles: Enfermería y Medicina</span>
+    </h2>
+    <p>
+        Desde la decisión asistencial (con la valoración guardada, o al resolver un seguimiento),
+        <strong>Escalar a Medicina</strong> muestra toda la información que se enviará: la observación
+        original, el basal vigente, la valoración con sus constantes y actuaciones, y el seguimiento si lo
+        hubo. Solo tienes que escribir el <strong>motivo del escalado</strong>, que es obligatorio. El sistema
+        no genera ningún resumen ni decide nada. Al escalar, la valoración queda cerrada tal como estaba, el
+        evento sale de las bandejas de Enfermería y su detalle muestra "Escalado a Medicina" con el motivo.
+        Escalar no cierra el evento: su desenlace corresponde a Medicina.
+    </p>
+    <p class="mb-0">
+        Con el perfil <strong>Medicina</strong>, la tarjeta <strong>Escalados</strong> del inicio de Medicina
+        abre la bandeja de escalados de tus unidades, del más antiguo al más reciente, con el motivo, las
+        constantes y las actuaciones de cada uno. Al abrir uno ves el motivo y toda la información reunida,
+        de solo lectura: Medicina nunca modifica la observación original ni la valoración de Enfermería. La
+        valoración médica y la conducta (indicaciones, cierre, seguimiento médico, protocolo urgente) llegan
+        más adelante (ver "Próximamente").
     </p>
 </section>
 
@@ -427,7 +454,8 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>El resto de la decisión asistencial sobre un evento ya valorado: escalar a Medicina o activar el protocolo urgente; y la línea temporal e historial de eventos.</li>
+        <li>Activar el protocolo urgente desde la decisión asistencial; y la línea temporal e historial de eventos.</li>
+        <li>Valoración médica de un escalado y conducta de Medicina (indicaciones a Enfermería, cierre, seguimiento médico, protocolo urgente).</li>
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería de la unidad y el turno entrante se escribe a mano).</li>
         <li>Derivación a Urgencias con informe firmado en PDF.</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>

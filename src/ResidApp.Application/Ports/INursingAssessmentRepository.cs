@@ -15,6 +15,9 @@ public sealed record CloseClinicalEventInput(
 public sealed record StartFollowUpInput(
     AccountId AccountId, CenterId CenterId, Guid EventId, int ExpectedRevision, FollowUpPlan Plan, string? ContinuityNotes);
 
+public sealed record EscalateClinicalEventInput(
+    AccountId AccountId, CenterId CenterId, Guid EventId, int ExpectedRevision, EscalationReason Reason);
+
 public sealed record RecordFollowUpActionInput(
     AccountId AccountId, CenterId CenterId, Guid EventId, int ExpectedRevision, FollowUpAction Action);
 
@@ -25,9 +28,12 @@ public sealed record RecordFollowUpActionInput(
 /// (NURSING_ASSESSMENT_REQUIRED) y es idempotente por OperationId: repetir el mismo cierre devuelve el mismo
 /// resultado sin cerrar dos veces. ENF-07B a ENF-09: iniciar un seguimiento (también exige la valoración
 /// guardada) y registrar acciones sobre él; confirmar una recepción que ya no está pendiente lanza
-/// FOLLOW_UP_TRANSFER_NOT_PENDING.</summary>
+/// FOLLOW_UP_TRANSFER_NOT_PENDING. ENF-09/ENF-10: escalar a Medicina desde la valoración o el seguimiento,
+/// cerrando la valoración (también exige que esté guardada).</summary>
 public interface INursingAssessmentRepository
 {
+    Task<int> EscalateAsync(EscalateClinicalEventInput input, CancellationToken ct = default);
+
     Task<int> StartFollowUpAsync(StartFollowUpInput input, CancellationToken ct = default);
 
     Task<int> RecordFollowUpActionAsync(RecordFollowUpActionInput input, CancellationToken ct = default);

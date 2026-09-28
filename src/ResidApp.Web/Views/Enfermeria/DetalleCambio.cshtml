@@ -150,6 +150,21 @@
     </div>
 </div>
 
+@if (evento.Escalation is { } escalado)
+{
+    <div class="card mb-3 border-start border-4 border-primary">
+        <div class="card-body">
+            <h2 class="h5 card-title">Escalado a Medicina</h2>
+            <p class="mb-2">
+                Escalado @(escalado.EscalatedByCurrentAccount ? "por ti" : "por otro profesional de Enfermería")
+                el @escalado.EscalatedAt.ToLocalTime().ToString("g"). El desenlace del evento corresponde ahora a Medicina.
+            </p>
+            <p class="fw-semibold mb-1">Motivo</p>
+            <p class="mb-0" style="white-space: pre-line">@escalado.Reason</p>
+        </div>
+    </div>
+}
+
 @if (evento.Closure is { } cierre)
 {
     <div class="card mb-3 border-start border-4 border-success">

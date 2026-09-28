@@ -1,0 +1,39 @@
+@using ResidApp.Web.Models
+@model MedicinaEscaladoViewModel
+@{
+    ViewData["Title"] = "Escalado recibido";
+    var evento = Model.Event;
+    var escalado = evento.Escalation!;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item"><a asp-action="Escalados">Escalados</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Detalle</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@evento.ResidentDisplayName</h1>
+<p class="text-muted">
+    @(evento.UnitName ?? "Sin unidad") ·
+    <span class="badge @ClinicalEventStatusDisplay.BadgeClass(evento.Status, false)">@ClinicalEventStatusDisplay.Label(evento.Status)</span>
+    · escalado el @escalado.EscalatedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(escalado.EscalatedAt))
+</p>
+
+<div class="card mb-3 border-start border-4 border-primary">
+    <div class="card-body">
+        <h2 class="h5 card-title">Motivo del escalado</h2>
+        <p class="mb-0" style="white-space: pre-line">@escalado.Reason</p>
+    </div>
+</div>
+
+<p class="text-muted">Toda esta información es de solo lectura: Medicina no modifica la observación original ni la valoración de Enfermería.</p>
+
+<partial name="_InformacionReunida" model="new InformacionReunidaViewModel(evento, Model.Baseline)" />
+
+<div class="d-grid d-md-flex justify-content-md-end gap-2 mb-3">
+    <a asp-action="Escalados" class="btn btn-outline-secondary btn-lg">Volver a la bandeja</a>
+    <button type="button" class="btn btn-primary btn-lg" disabled>Iniciar valoración médica (próximamente)</button>
+</div>

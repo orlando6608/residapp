@@ -60,7 +60,12 @@ builder.Services.AddScoped<ListPendingFamilyCommunications>();
 builder.Services.AddScoped<StartFollowUp>();
 builder.Services.AddScoped<RecordFollowUpAction>();
 builder.Services.AddScoped<ListFollowUps>();
+builder.Services.AddScoped<EscalateClinicalEvent>();
 builder.Services.AddScoped<EnfermeriaApplicationService>();
+
+builder.Services.AddScoped<ListEscalations>();
+builder.Services.AddScoped<FindEscalationDetail>();
+builder.Services.AddScoped<MedicinaApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();
 

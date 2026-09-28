@@ -12,45 +12,42 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- Todo el trabajo está en `main`. La historia 3 (script `0009`) ya está desplegada en Azure: el pipeline
-  terminó con éxito el 2026-09-28. La historia 4 (script `0010`) está commiteada en local y **pendiente de
-  push**; compruébalo con `git status` al empezar. El estado de un run se consulta sin autenticación en
+- Todo el trabajo está en `main`. Las historias 3 y 4 (scripts `0009` y `0010`) ya están desplegadas en
+  Azure: sus pipelines terminaron con éxito el 2026-09-28. La historia 5 (script `0011`) está commiteada
+  en local y **pendiente de push**; compruébalo con `git status` al empezar. El estado de un run se
+  consulta sin autenticación en
   `https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main` (`gh` no está instalado).
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
-  (parcial), 2, 3, 4, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
-- La base local `ResidApp` tiene los scripts `0001` a `0010` registrados en `dbo.scripts_aplicados`.
-  Hay una copia previa a `0010` en
-  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0010-20260928.bak`.
-  La base local tiene además dos eventos de prueba cerrados del escenario integrado («Prueba manual
-  historia 3: tos.», con su comunicación pendiente de aprobación, y «Prueba manual historia 4: tos.», que
-  pasó por un seguimiento completo).
-- Suite: 79 unitarios, 140 de integración y 1 funcional, todos en verde.
+  (parcial), 2, 3, 4, 5, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
+  Medicina está iniciado solo con su historia 1 en lectura (bandeja y detalle de escalados).
+- La base local `ResidApp` tiene los scripts `0001` a `0011` registrados en `dbo.scripts_aplicados`.
+  Hay una copia previa a `0011` en
+  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0011-20260928.bak`.
+  La base local tiene además eventos de prueba del escenario integrado: «Prueba manual historia 3: tos.»
+  (cerrado, con comunicación pendiente de aprobación), «Prueba manual historia 4: tos.» (cerrado tras un
+  seguimiento completo) y «Prueba manual historia 5: disnea.» (escalado a Medicina; su motivo quedó como
+  «Desaturaci%F3n…» por la lección de curl de más abajo).
+- Suite: 83 unitarios, 147 de integración y 1 funcional, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
   Azure fallaría. Antes de crear un script, comprueba cuál es el último número.
 
-## Siguiente tarea: Enfermería, historia 5
+## Siguiente tarea: decidir el orden
 
-Escalar un evento a Medicina (`ENF-06`, `ENF-09`):
-[`docs/historias-usuarios/enfermeria.md`](../historias-usuarios/enfermeria.md),
-[`docs/flujos-clinicos/valoracion-escalado-enfermeria.md`](../flujos-clinicos/valoracion-escalado-enfermeria.md)
-(salida «c», estado «Escalado a Medicina»; wireframe ENF-10) y
-[`docs/flujos-clinicos/valoracion-conducta-medicina.md`](../flujos-clinicos/valoracion-conducta-medicina.md).
+Quedan dos caminos, y hay que proponerlos al usuario antes de empezar:
 
-- Es la tercera salida de la decisión asistencial y se puede escalar desde EN_VALORACION y desde
-  EN_SEGUIMIENTO. Se activa su tarjeta en `Views/Enfermeria/Decision.cshtml`.
-- Reutiliza el patrón de `StartFollowUpAsync` y `CloseAsync` de `SqlNursingAssessmentRepository`
-  (revisión, auditoría, solo inserción). El estado y sus transiciones van en un script `0011` nuevo, con
-  `0010` como referencia.
-- El escalado transmite observación, basal vigente, valoración, constantes, actuaciones y motivo, sin
-  ningún resumen automático. Escalar no cierra el evento: el desenlace es de Medicina.
-- **Antes de diseñar hay que resolver una cosa:** el evento escalado «pasa a la bandeja de Medicina», y el
-  vertical Medicina no existe todavía. Hay que acotar qué parte mínima se construye ahora (por ejemplo, el
-  escalado con su motivo y una bandeja de Medicina de solo lectura) y qué pasa con la valoración de
-  Enfermería al escalar. Es una decisión de alcance: proponerla al usuario y no inventarla.
+- **Enfermería, historia 6: protocolo urgente y derivación a Urgencias** (`DER-01` a `DER-06`,
+  [`derivacion-urgencias.md`](../flujos-clinicos/derivacion-urgencias.md)). Es la cuarta y última salida de
+  `/Decision` y no depende de Medicina. Incluye un informe firmado en PDF, lo que exige decidir antes cómo
+  se genera, y una «actualización relevante» obligatoria para la familia con el registro del intento de
+  llamada. Esa actualización toca el Portal Familiar, igual que la comunicación de la historia 3.
+- **Medicina, historias 2 y 3: valoración médica y conducta** ([`medicina.md`](../historias-usuarios/medicina.md),
+  [`valoracion-conducta-medicina.md`](../flujos-clinicos/valoracion-conducta-medicina.md)). Son requisito
+  de la historia 7 de Enfermería (indicaciones de Medicina) y dan salida a los eventos que hoy se quedan en
+  ESCALADO_MEDICINA. Hay que decidir qué estados de Medicina se añaden al ciclo de `eventos_asistenciales`.
 
-Después, en orden: historias 7, 6 y 11 (detalle en `pendientes-enfermeria.md`), y luego Medicina.
+Después, la historia 11 (historial) y el resto del vertical Medicina.
 
 ## Reglas de trabajo propias de este repositorio
 
@@ -89,5 +86,13 @@ Después, en orden: historias 7, 6 y 11 (detalle en `pendientes-enfermeria.md`),
   `dotnet test src/ResidApp.sln`. La app se levanta con `dotnet run --launch-profile http` desde
   `src/ResidApp.Web`. Con `--no-launch-profile` no carga los user-secrets y falla por falta de la cadena de
   conexión.
+- **Interbloqueos entre tests:** los tres proyectos de test se ejecutan en paralelo contra la misma BD. Un
+  `UPDATE` o una lectura por una columna sin índice recorre la tabla entera y puede provocar interbloqueos
+  intermitentes. Pasó con `valoraciones_enfermeria.evento_id` y se resolvió con `IX_ve_evento` en `0011`.
+  Toda columna por la que se filtre un `UPDATE` necesita un índice. Si un test falla solo a veces, ejecuta
+  `dotnet test src/ResidApp.sln` varias veces y busca `xml_deadlock_report` en `system_health`.
+- **Acentos con curl en Git Bash:** `--data-urlencode` recibe los argumentos en Latin-1, así que «ó» llega
+  como `%F3` y ASP.NET lo guarda tal cual. Un navegador envía UTF-8 y se guarda bien. En pruebas con curl,
+  escribe los acentos ya codificados en UTF-8 (`--data "Form.Motivo=Desaturaci%C3%B3n"`).
 - **Verificación manual con curl:** una cuenta con un solo ámbito se autoselecciona, y
   `ProfileScope/Select` redirige. Sigue las redirecciones con `-L`.

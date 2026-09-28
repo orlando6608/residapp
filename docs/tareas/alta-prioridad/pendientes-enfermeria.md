@@ -35,6 +35,14 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   su autoría. Un seguimiento vencido sigue abierto y visible. "Resolver" vuelve a `/Decision`, desde donde
   se cierra (la valoración sigue en borrador durante el seguimiento y se cierra al cerrar el evento).
   Tablas de solo inserción `seguimientos` y `seguimiento_acciones`; script `0010_enfermeria_seguimiento`.
+- **Historia 5 (escalado a Medicina)** — 2026-09-28: "Escalar a Medicina" desde la decisión asistencial
+  (con la valoración guardada o al resolver un seguimiento) en `/Escalar`, que muestra la información
+  reunida (parcial `Shared/_InformacionReunida`) y exige el motivo. El evento pasa a ESCALADO_MEDICINA, sale
+  de las bandejas de Enfermería y la valoración queda CERRADA. Tabla de solo inserción `escalados_medicina`;
+  script `0011_enfermeria_escalado_medicina`. Del lado de Medicina se construyó solo su historia 1 en
+  lectura (`MedicinaController`: inicio, bandeja `/Medicina/Escalados` y detalle `/Medicina/Escalado`):
+  un ámbito de Medicina solo ve eventos escalados de sus unidades. Cuenta de desarrollo
+  `dev-integrado-medicina`.
 - **Historia 8 (evento propio)**: registro de un evento observado por Enfermería (`/RegistrarEvento`,
   tabla `eventos_clinicos`, script `0006`), inmutable; al guardarlo se continúa en su detalle y entra en
   las bandejas con su autoría real.
@@ -42,20 +50,19 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   firmar (`EnfermeriaBasalController` → `BaselineController/Sign`), con concurrencia optimista e
   idempotencia (script `0005_enfermeria_borrador_basal`).
 - Residentes del ámbito y ficha del residente (`/Residentes`, `/Residente`).
-- Tests de integración: `EnfermeriaApplicationServiceTests` (incluidos el cierre y el seguimiento), `SqlChangeInboxDirectoryTests`,
+- Tests de integración: `EnfermeriaApplicationServiceTests` (incluidos el cierre, el seguimiento y el
+  escalado), `MedicinaApplicationServiceTests`, `SqlChangeInboxDirectoryTests`,
   `SqlClinicalEventRepositoryTests`, `SqlEnfermeriaResidentDirectoryTests`, `SqlBaselineRepositoryDraftTests`.
 
 ## Pendiente
 
 En el orden propuesto de construcción:
 
-1. **Historia 5 — escalado a Medicina** (`ENF-09`). Comparte tablas con el vertical Medicina. Añade su
-   estado a `eventos_asistenciales` y sus transiciones a `TR_ea_transition_guard` (hoy PENDIENTE,
-   EN_VALORACION, EN_SEGUIMIENTO y CERRADO; se escala desde EN_VALORACION y desde EN_SEGUIMIENTO), y activa
-   su salida en `/Decision`.
-2. **Historia 7 — indicaciones de Medicina** (`ENF-10`). Depende de Medicina.
-3. **Historia 6 — protocolo urgente y derivación a Urgencias** (`DER-01` a `DER-06`, común con Medicina).
-4. **Historia 11 — historial de eventos y versiones del basal** (`HIS-01` a `HIS-03`, común con Medicina).
+1. **Historia 7 — indicaciones de Medicina** (`ENF-10`). Depende de que Medicina pueda registrar
+   indicaciones (valoración médica y conducta, historias 2 y 3 de Medicina), que no existen todavía.
+2. **Historia 6 — protocolo urgente y derivación a Urgencias** (`DER-01` a `DER-06`, común con Medicina).
+   No depende de Medicina para activarse desde Enfermería: es la cuarta salida de `/Decision`.
+3. **Historia 11 — historial de eventos y versiones del basal** (`HIS-01` a `HIS-03`, común con Medicina).
    Puede mostrar ya las versiones de la valoración (`valoraciones_enfermeria_versiones`), que hoy se
    guardan pero no se ven.
 

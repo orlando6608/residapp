@@ -17,7 +17,7 @@ El orden se hereda de `roadmap.md` (heredado a su vez del prototipo legado, úni
 | Residente / Basal | Transversal — lo usan los seis perfiles | Completado |
 | Auxiliar | Auxiliar | Completado (pendiente de validación por CJ) |
 | Enfermería | Enfermería | En curso |
-| Medicina | Medicina | No iniciado |
+| Medicina | Medicina | En curso (solo la bandeja de escalados, en lectura) |
 | Familia / Portal Familiar | Familiar | No iniciado |
 | Administración | Administración | No iniciado |
 | Dirección / Coordinación Clínica | Dirección/Coordinación Clínica | No iniciado |

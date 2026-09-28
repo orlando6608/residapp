@@ -1,0 +1,126 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model InformacionReunidaViewModel
+@{
+    var evento = Model.Event;
+    var esPropio = evento.Origin == ClinicalEventOrigin.EventoEnfermeria;
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Observación original</h2>
+        <p class="text-muted">
+            @(esPropio ? "Observada" : "Registrada") por @SystemProfileDisplay.Label(evento.AuthorProfile)
+            el @evento.OccurredAt.ToLocalTime().ToString("g"). No es editable.
+        </p>
+        @if (esPropio)
+        {
+            <p class="mb-2" style="white-space: pre-line">@evento.Observation</p>
+            @if (!string.IsNullOrWhiteSpace(evento.ClinicalData))
+            {
+                <p class="fw-semibold mb-1">Datos clínicos pertinentes</p>
+                <p class="mb-0" style="white-space: pre-line">@evento.ClinicalData</p>
+            }
+        }
+        else
+        {
+            @if (evento.TemperatureCelsius is not null)
+            {
+                <p class="mb-2">Temperatura: <strong>@evento.TemperatureCelsius.Value.ToString("0.0")°C</strong></p>
+            }
+            @foreach (var area in evento.Areas)
+            {
+                <div class="mb-2">
+                    <p class="fw-semibold mb-1">@DailyChangeAreaDisplay.Label(area.AreaCode)</p>
+                    @if (area.Options.Count > 0)
+                    {
+                        <ul class="mb-1">
+                            @foreach (var option in area.Options)
+                            {
+                                <li>@DailyChangeAreaOptionDisplay.Label(option)</li>
+                            }
+                        </ul>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(area.FreeText))
+                    {
+                        <p class="mb-0">@area.FreeText</p>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Basal vigente</h2>
+        @if (Model.Baseline is null)
+        {
+            <p class="text-muted mb-0">Sin basal vigente registrado.</p>
+        }
+        else
+        {
+            <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
+            <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
+        }
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Valoración de Enfermería</h2>
+        @if (evento.Assessment is null)
+        {
+            <p class="text-muted mb-0">Sin valoración guardada.</p>
+        }
+        else
+        {
+            var content = evento.Assessment.Content;
+            <dl class="row mb-0">
+                @foreach (var (etiqueta, texto) in new[] { ("Hallazgos", content.Findings), ("Valoración", content.Assessment), ("Actuaciones", content.Actions), ("Comunicaciones", content.Communications), ("Resultado", content.Outcome) })
+                {
+                    if (texto is not null)
+                    {
+                        <dt class="col-sm-3">@etiqueta</dt>
+                        <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                    }
+                }
+                <dt class="col-sm-3">Constantes</dt>
+                <dd class="col-sm-9">@(content.Vitals.IsEmpty ? "Sin constantes registradas" : VitalSignsDisplay.Summary(content.Vitals))</dd>
+            </dl>
+        }
+    </div>
+</div>
+
+@if (evento.FollowUp is { } seguimiento)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Seguimiento de Enfermería</h2>
+            <p class="mb-2">Plan vigente: @FollowUpDisplay.Plan(seguimiento.DueDate, seguimiento.Criterion)</p>
+            @if (seguimiento.ContinuityNotes is not null)
+            {
+                <p class="mb-2" style="white-space: pre-line">Indicaciones de continuidad: @seguimiento.ContinuityNotes</p>
+            }
+            @if (seguimiento.Actions.Count == 0)
+            {
+                <p class="text-muted mb-0">Sin actuaciones registradas durante el seguimiento.</p>
+            }
+            else
+            {
+                <ul class="mb-0">
+                    @foreach (var accion in seguimiento.Actions)
+                    {
+                        <li style="white-space: pre-line">@accion.RecordedAt.ToLocalTime().ToString("g") · @FollowUpDisplay.Label(accion.Type)@(accion.Type switch
+                            {
+                                FollowUpActionType.Reprogramacion => $": {FollowUpDisplay.Plan(accion.DueDate, accion.Criterion)} ({accion.Text})",
+                                FollowUpActionType.Transferencia => $": a {accion.IncomingTeam}{(accion.Text is null ? "" : $" ({accion.Text})")}",
+                                FollowUpActionType.Actuacion => $": {accion.Text}",
+                                _ => "",
+                            })</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+}

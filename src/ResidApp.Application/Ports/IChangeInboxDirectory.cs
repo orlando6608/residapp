@@ -72,6 +72,16 @@ public sealed record FollowUpSummary(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, DateOnly? DueDate, string? Criterion,
     DateTimeOffset StartedAt, FollowUpActionType? LastActionType, DateTimeOffset? LastActionAt, bool TransferPending);
 
+/// <summary>ENF-09/MED-03: escalado a Medicina, con el motivo que escribió Enfermería y si lo escaló la
+/// cuenta del ámbito que consulta.</summary>
+public sealed record ClinicalEventEscalation(string Reason, bool EscalatedByCurrentAccount, DateTimeOffset EscalatedAt);
+
+/// <summary>MED-02: una fila de la bandeja de escalados de Medicina. Constantes y actuaciones proceden de
+/// la valoración de Enfermería, ya cerrada; no hay resumen diagnóstico automático.</summary>
+public sealed record EscalationSummary(
+    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, string Reason, DateTimeOffset EscalatedAt,
+    VitalSigns? Vitals, string? Actions, ClinicalEventStatus Status);
+
 /// <summary>ENF-04: detalle completo de un evento recibido. Según el origen trae las áreas y la temperatura
 /// del cambio de Auxiliar, o la observación y los datos clínicos del evento propio; en ambos casos la
 /// observación original es inmutable. Revision es la que hay que devolver al empezar o guardar la
@@ -85,7 +95,7 @@ public sealed record PendingChangeDetail(
     SystemProfile AuthorProfile, DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes, DateTimeOffset OccurredAt,
     ClinicalEventStatus Status, int Revision, bool? AssessmentStartedByCurrentAccount, DateTimeOffset? AssessmentStartedAt,
     NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges, ClinicalEventClosure? Closure,
-    FollowUpDetail? FollowUp);
+    FollowUpDetail? FollowUp, ClinicalEventEscalation? Escalation);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre
@@ -106,4 +116,8 @@ public interface IChangeInboxDirectory
         Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
     Task<IReadOnlyList<FollowUpSummary>> ListFollowUpsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>MED-02: escalados pendientes para un ámbito de Medicina. Con un ámbito de Medicina, FindAsync
+    /// solo devuelve eventos escalados a Medicina.</summary>
+    Task<IReadOnlyList<EscalationSummary>> ListEscalationsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 }

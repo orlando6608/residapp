@@ -159,6 +159,50 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
         return revision;
     }
 
+    /// <summary>ENF-09/ENF-10: pasa el evento a ESCALADO_MEDICINA con el motivo de Enfermería y cierra su
+    /// valoración, que Medicina recibe tal como se escaló. Escalar no cierra el evento.</summary>
+    public async Task<int> EscalateAsync(EscalateClinicalEventInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var occurredAt = DateTimeOffset.UtcNow;
+
+        var updated = await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.eventos_asistenciales SET estado_codigo = 'ESCALADO_MEDICINA', revision = revision + 1
+             WHERE id = @EventId AND centro_id = @CenterId AND revision = @ExpectedRevision
+               AND estado_codigo IN ('EN_VALORACION', 'EN_SEGUIMIENTO')
+            """, new { input.EventId, CenterId = input.CenterId.Value, input.ExpectedRevision }, transaction, cancellationToken: ct));
+        if (updated != 1)
+        {
+            throw new DomainValidationException("CLINICAL_EVENT_REVISION_CONFLICT");
+        }
+
+        var closedAssessments = await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.valoraciones_enfermeria
+               SET estado_codigo = 'CERRADA', actualizado_por_cuenta_id = @AccountId, actualizado_en = @OccurredAt
+             WHERE evento_id = @EventId AND estado_codigo = 'BORRADOR'
+            """, new { AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId }, transaction, cancellationToken: ct));
+        if (closedAssessments != 1)
+        {
+            throw new DomainValidationException("NURSING_ASSESSMENT_REQUIRED");
+        }
+
+        await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.escalados_medicina (id, evento_id, residente_id, centro_id, motivo, escalado_por_cuenta_id, escalado_en)
+            SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @Reason, @AccountId, @OccurredAt
+              FROM dbo.eventos_asistenciales ea
+             WHERE ea.id = @EventId
+            """, new
+        {
+            Id = Guid.NewGuid(), Reason = input.Reason.Text, AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId,
+        }, transaction, cancellationToken: ct));
+
+        var revision = await AuditAsync(connection, transaction, input.AccountId, input.CenterId, input.EventId,
+            "CLINICAL_EVENT_ESCALATE", occurredAt, ct);
+        transaction.Commit();
+        return revision;
+    }
+
     /// <summary>ENF-08/ENF-09: una acción sobre el seguimiento abierto, con su autoría. Una recepción solo
     /// se registra sobre una transferencia de este seguimiento que nadie haya confirmado todavía.</summary>
     public async Task<int> RecordFollowUpActionAsync(RecordFollowUpActionInput input, CancellationToken ct = default)

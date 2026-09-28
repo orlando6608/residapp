@@ -1,0 +1,41 @@
+@model ResidApp.Web.Models.MedicinaInicioViewModel
+@{
+    ViewData["Title"] = "Inicio de Medicina";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Medicina</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Inicio de Medicina</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="row g-3">
+    <div class="col-12 col-md-4">
+        <a asp-action="Escalados" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Escalados</h2>
+                <p class="card-text mb-0"><span class="badge text-bg-primary">@Model.Escalados</span> escalado(s) recibido(s) de Enfermería.</p>
+            </div>
+        </a>
+    </div>
+    @foreach (var (titulo, texto) in new[]
+    {
+        ("Seguimientos", "seguimientos médicos abiertos."),
+        ("Indicaciones", "indicaciones a Enfermería y sus incidencias."),
+        ("Comunicaciones", "comunicaciones familiares pendientes de aprobación."),
+    })
+    {
+        <div class="col-12 col-md-4">
+            <div class="card h-100 text-muted">
+                <div class="card-body">
+                    <h2 class="h5 card-title">@titulo</h2>
+                    <p class="card-text mb-0">Próximamente: @texto</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>

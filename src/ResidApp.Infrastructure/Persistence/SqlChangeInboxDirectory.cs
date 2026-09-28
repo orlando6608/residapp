@@ -10,13 +10,16 @@ namespace ResidApp.Infrastructure.Persistence;
 /// <summary>Traduce las bandejas ENF-02/ENF-03 y el detalle ENF-04 sobre dbo.eventos_asistenciales, que
 /// reúne los cambios de Auxiliar y los eventos propios de Enfermería. Mismo predicado de ámbito "por
 /// defecto o restringido" que SqlEnfermeriaResidentDirectory: solo eventos de unidades concedidas y de
-/// residentes visibles para este ámbito. La observación original se lee siempre de su tabla de origen.</summary>
+/// residentes visibles para este ámbito. La observación original se lee siempre de su tabla de origen.
+/// Un ámbito de Medicina ve con el mismo predicado solo los eventos escalados a Medicina (MED-02/MED-03);
+/// cada caso de uso comprueba antes el perfil del ámbito, así que ninguno de Enfermería llega aquí con uno
+/// de Medicina ni al revés.</summary>
 public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : IChangeInboxDirectory
 {
     private const string ScopedEventsFrom = """
           FROM dbo.eventos_asistenciales ea
           JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
-               AND profile.perfil_codigo = 'ENFERMERIA' AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+               AND profile.perfil_codigo IN ('ENFERMERIA', 'MEDICINA') AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
           JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
                AND unit_scope.centro_id = profile.centro_id AND unit_scope.unidad_id = ea.unidad_id AND unit_scope.revocado_en IS NULL
           JOIN dbo.unidades unit ON unit.id = ea.unidad_id AND unit.centro_id = profile.centro_id
@@ -27,7 +30,9 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
           LEFT JOIN dbo.cierres_cotidianos_residente closure ON closure.id = ea.cierre_id
           LEFT JOIN dbo.eventos_clinicos clinical ON clinical.id = ea.evento_clinico_id
           LEFT JOIN dbo.comunicaciones_familiares family ON family.evento_id = ea.id
+          LEFT JOIN dbo.escalados_medicina escalation ON escalation.evento_id = ea.id
          WHERE ea.centro_id = @CenterId
+           AND (profile.perfil_codigo = 'ENFERMERIA' OR escalation.id IS NOT NULL)
            AND (resident_scope.id IS NOT NULL OR NOT EXISTS (
                SELECT 1 FROM dbo.ambitos_perfil_residente restriction
                 WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
@@ -93,7 +98,9 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                    CAST(CASE WHEN ea.cerrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ClosedByCurrentAccount,
                    ea.cerrado_en AS ClosedAt, ea.comunicacion_familiar_codigo AS FamilyCommunicationDecisionCode,
                    family.tipo_codigo AS FamilyCommunicationTypeCode, family.texto AS FamilyCommunicationText,
-                   family.preparado_en AS FamilyCommunicationPreparedAt
+                   family.preparado_en AS FamilyCommunicationPreparedAt, escalation.motivo AS EscalationReason,
+                   CAST(CASE WHEN escalation.escalado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS EscalatedByCurrentAccount,
+                   escalation.escalado_en AS EscalatedAt
             {ScopedEventsFrom}
                AND ea.id = @EventId
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, EventId = eventId }, cancellationToken: ct));
@@ -189,8 +196,51 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
             followUp is null ? null : new FollowUpDetail(
                 followUp.DueDate is null ? null : DateOnly.FromDateTime(followUp.DueDate.Value), followUp.Criterion,
                 followUp.ContinuityNotes, followUp.StartedByCurrentAccount, new DateTimeOffset(followUp.StartedAt, TimeSpan.Zero),
-                followUpActions));
+                followUpActions),
+            row.EscalatedAt is null ? null : new ClinicalEventEscalation(
+                row.EscalationReason!, row.EscalatedByCurrentAccount, new DateTimeOffset(row.EscalatedAt.Value, TimeSpan.Zero)));
     }
+
+    /// <summary>MED-02: escalados del ámbito de Medicina, del más antiguo al más reciente, con las constantes
+    /// y las actuaciones de la valoración de Enfermería (cerrada al escalar).</summary>
+    public async Task<IReadOnlyList<EscalationSummary>> ListEscalationsAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+
+        var rows = await connection.QueryAsync<EscalationSummaryRow>(new CommandDefinition($"""
+            SELECT scoped.EventId, scoped.ResidentId, scoped.ResidentDisplayName, scoped.UnitName, scoped.Reason, scoped.EscalatedAt,
+                   v.actuaciones AS Actions, v.temperatura_celsius AS TemperatureCelsius, v.tension_sistolica_mmhg AS SystolicMmHg,
+                   v.tension_diastolica_mmhg AS DiastolicMmHg, v.frecuencia_cardiaca_lpm AS HeartRateBpm,
+                   v.frecuencia_respiratoria_rpm AS RespiratoryRateRpm, v.saturacion_o2_pct AS OxygenSaturationPct,
+                   v.soporte_respiratorio_codigo AS RespiratorySupportCode, v.flujo_o2_lpm AS OxygenFlowLpm, v.glucemia_mg_dl AS GlucoseMgDl,
+                   v.otra_constante_nombre AS OtherName, v.otra_constante_valor AS OtherValue, v.otra_constante_unidad AS OtherUnit,
+                   scoped.StatusCode
+              FROM (SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
+                           unit.nombre_visible AS UnitName, escalation.motivo AS Reason, escalation.escalado_en AS EscalatedAt,
+                           ea.estado_codigo AS StatusCode
+                    {ScopedEventsFrom}
+                       AND ea.estado_codigo = 'ESCALADO_MEDICINA') scoped
+              LEFT JOIN dbo.valoraciones_enfermeria v ON v.evento_id = scoped.EventId AND v.estado_codigo = 'CERRADA'
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+
+        return rows.Select(r => new EscalationSummary(
+            r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName, r.Reason,
+            new DateTimeOffset(r.EscalatedAt, TimeSpan.Zero),
+            new VitalSigns(
+                r.TemperatureCelsius, r.SystolicMmHg, r.DiastolicMmHg, r.HeartRateBpm, r.RespiratoryRateRpm, r.OxygenSaturationPct,
+                r.RespiratorySupportCode is null ? null : EnumCode.ParseCode<RespiratorySupportCode>(r.RespiratorySupportCode),
+                r.OxygenFlowLpm, r.GlucoseMgDl, r.OtherName, r.OtherValue, r.OtherUnit),
+            r.Actions, EnumCode.ParseCode<ClinicalEventStatus>(r.StatusCode)))
+            .OrderBy(e => e.EscalatedAt)
+            .ToList();
+    }
+
+    private sealed record EscalationSummaryRow(
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string Reason, DateTime EscalatedAt,
+        string? Actions, decimal? TemperatureCelsius, short? SystolicMmHg, short? DiastolicMmHg, short? HeartRateBpm,
+        short? RespiratoryRateRpm, short? OxygenSaturationPct, string? RespiratorySupportCode, decimal? OxygenFlowLpm,
+        short? GlucoseMgDl, string? OtherName, string? OtherValue, string? OtherUnit, string StatusCode);
 
     /// <summary>ENF-08: seguimientos abiertos del ámbito. El plan vigente es el de la última reprogramación,
     /// si la hay; primero los que tienen fecha (de la más próxima o vencida a la más lejana), después los que
@@ -282,7 +332,8 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
         decimal? TemperatureCelsius, string? Observation, string? ClinicalData, string AuthorProfileCode, string? PriorityReasonCode,
         string? DirectNoticeNotes, DateTime OccurredAt, string StatusCode, int Revision, bool? AssessmentStartedByCurrentAccount,
         DateTime? AssessmentStartedAt, bool ClosedByCurrentAccount, DateTime? ClosedAt, string? FamilyCommunicationDecisionCode,
-        string? FamilyCommunicationTypeCode, string? FamilyCommunicationText, DateTime? FamilyCommunicationPreparedAt);
+        string? FamilyCommunicationTypeCode, string? FamilyCommunicationText, DateTime? FamilyCommunicationPreparedAt,
+        string? EscalationReason, bool EscalatedByCurrentAccount, DateTime? EscalatedAt);
 
     private sealed record AssessmentRow(
         string? Findings, string? Assessment, string? Actions, string? Communications, string? Outcome,

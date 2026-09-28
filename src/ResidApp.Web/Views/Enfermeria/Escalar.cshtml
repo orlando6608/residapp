@@ -1,0 +1,47 @@
+@using ResidApp.Web.Models
+@model EscalarViewModel
+@{
+    ViewData["Title"] = "Escalar a Medicina";
+    var evento = Model.Event;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId">Detalle</a></li>
+        <li class="breadcrumb-item"><a asp-action="Decision" asp-route-eventoId="@evento.EventId">Decisión asistencial</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Escalar a Medicina</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Escalar a Medicina — @evento.ResidentDisplayName</h1>
+<p class="text-muted">
+    Medicina recibirá esta información tal como está, junto con el motivo que escribas. El sistema no genera ningún
+    resumen ni decide nada. Al escalar, la valoración queda cerrada y el desenlace del evento pasa a Medicina.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<partial name="_InformacionReunida" model="new InformacionReunidaViewModel(evento, Model.Baseline)" />
+
+<form asp-action="Escalar" method="post">
+    <input type="hidden" asp-for="Form.EventoId" />
+    <input type="hidden" asp-for="Form.Revision" />
+
+    <div class="card mb-3 border-start border-4 border-primary">
+        <div class="card-body">
+            <label asp-for="Form.Motivo" class="form-label h5"></label>
+            <textarea asp-for="Form.Motivo" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <a asp-action="Decision" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin escalar</a>
+        <button type="submit" class="btn btn-primary btn-lg">Escalar a Medicina</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

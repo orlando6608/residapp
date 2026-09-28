@@ -127,6 +127,32 @@ BEGIN
 END
 GO
 
+/*
+ * Añadido después (2026-09-28): cuenta 'dev-integrado-medicina' con un ámbito MEDICINA sobre la misma
+ * unidad, para recorrer el escalado de Enfermería a Medicina (bandeja de escalados, MED-02/MED-03). Bloque
+ * aparte e idempotente por su cuenta, igual que el anterior.
+ */
+IF EXISTS (SELECT 1 FROM dbo.centros WHERE id = 'A1000000-0000-0000-0000-000000000001')
+   AND NOT EXISTS (SELECT 1 FROM dbo.cuentas WHERE sujeto_externo = 'dev-integrado-medicina')
+BEGIN
+    DECLARE @MedCenterId UNIQUEIDENTIFIER = 'A1000000-0000-0000-0000-000000000001';
+    DECLARE @MedAccountId UNIQUEIDENTIFIER = NEWID();
+    DECLARE @MedProfileScopeId UNIQUEIDENTIFIER = NEWID();
+    DECLARE @MedNow DATETIME2(3) = SYSUTCDATETIME();
+
+    INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en)
+    VALUES (@MedAccountId, 'dev-integrado-medicina', 'ACTIVE', @MedNow);
+
+    INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+    VALUES (@MedProfileScopeId, @MedAccountId, @MedCenterId, 'MEDICINA', 'ACTIVE', @MedNow, @MedAccountId);
+
+    INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+    SELECT NEWID(), @MedProfileScopeId, @MedCenterId, u.id, @MedNow, @MedAccountId
+      FROM dbo.unidades u
+     WHERE u.centro_id = @MedCenterId AND u.codigo = 'UNIDAD-DEV-INTEGRADO';
+END
+GO
+
 SELECT
     account.sujeto_externo AS ExternalSubject,
     profile.perfil_codigo AS Perfil,
@@ -134,7 +160,7 @@ SELECT
     profile.centro_id AS CenterId
   FROM dbo.cuentas account
   JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id
- WHERE account.sujeto_externo IN ('dev-integrado-auxiliar', 'dev-integrado-enfermeria', 'dev-integrado-direccion');
+ WHERE account.sujeto_externo IN ('dev-integrado-auxiliar', 'dev-integrado-enfermeria', 'dev-integrado-direccion', 'dev-integrado-medicina');
 
 SELECT id AS ResidentId, nombre_visible AS DisplayName
   FROM dbo.residentes
