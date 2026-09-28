@@ -192,6 +192,7 @@ SQL_SERVER=ACER-ORLANDO SQL_DATABASE=ResidApp SQLCMD_EXTRA=-C APLICAR_SEED=1 bas
 ```
 
 - Los scripts de esquema **no son idempotentes**. Un cambio de esquema va siempre en un script nuevo con el siguiente número; nunca se edita uno ya aplicado en Azure (el push a `main` los aplica allí).
+- Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y `0005_enfermeria_borrador_basal.sql`). Es inofensivo: el runner los registra por nombre completo y son independientes. **No los renombres**, o se volverían a ejecutar y el despliegue fallaría. Antes de crear un script, comprueba cuál es el último número.
 - Una base creada a mano, sin `dbo.scripts_aplicados`, necesita antes registrar los scripts que ya tiene (ver [`pipeline-no-provisiona-bd-azure.md`](docs/tareas/alta-prioridad/pipeline-no-provisiona-bd-azure.md)). Una base vacía no.
 - Los seeds de [`database/seed/`](database/seed/) son ficticios e idempotentes. Con `APLICAR_SEED=1` se reaplican en cada ejecución.
 
