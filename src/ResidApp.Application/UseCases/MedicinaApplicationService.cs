@@ -4,12 +4,15 @@ using ResidApp.Application.Ports;
 namespace ResidApp.Application.UseCases;
 
 /// <summary>
-/// Fachada del vertical Medicina, por ahora solo su historia 1 en lectura (MED-01 a MED-03): bandeja de
-/// escalados, su detalle y el basal vigente del residente. La valoración médica y la conducta llegarán con
-/// el resto del vertical. Igual que EnfermeriaApplicationService, es lo único que MedicinaController inyecta.
+/// Fachada del vertical Medicina: bandeja y detalle de escalados (MED-01 a MED-03), valoración médica
+/// (MED-04/MED-05) e indicaciones a Enfermería con su seguimiento (MED-06 a MED-09), más el basal vigente
+/// del residente. El resto de la conducta médica llegará con sus historias. Igual que
+/// EnfermeriaApplicationService, es lo único que MedicinaController inyecta.
 /// </summary>
 public sealed class MedicinaApplicationService(
-    ListEscalations listEscalations, FindEscalationDetail findEscalationDetail, ReadCurrentBaseline readCurrentBaseline)
+    ListEscalations listEscalations, FindEscalationDetail findEscalationDetail, ReadCurrentBaseline readCurrentBaseline,
+    StartMedicalAssessment startMedicalAssessment, SaveMedicalAssessment saveMedicalAssessment,
+    RegisterMedicalIndication registerMedicalIndication, ListMedicalIndications listMedicalIndications)
 {
     public Task<ApplicationResult<IReadOnlyList<EscalationSummary>>> ListEscalationsAsync(
         ListEscalationsCommand command, CancellationToken ct = default) =>
@@ -22,4 +25,18 @@ public sealed class MedicinaApplicationService(
     public Task<ApplicationResult<CurrentBaselineSummary?>> ReadCurrentBaselineAsync(
         ReadCurrentBaselineCommand command, CancellationToken ct = default) =>
         readCurrentBaseline.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<int>> StartMedicalAssessmentAsync(StartMedicalAssessmentCommand command, CancellationToken ct = default) =>
+        startMedicalAssessment.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<int>> SaveMedicalAssessmentAsync(SaveMedicalAssessmentCommand command, CancellationToken ct = default) =>
+        saveMedicalAssessment.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<int>> RegisterMedicalIndicationAsync(
+        RegisterMedicalIndicationCommand command, CancellationToken ct = default) =>
+        registerMedicalIndication.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<IReadOnlyList<MedicalIndicationListItem>>> ListMedicalIndicationsAsync(
+        ListMedicalIndicationsCommand command, CancellationToken ct = default) =>
+        listMedicalIndications.ExecuteAsync(command, ct);
 }

@@ -1,5 +1,6 @@
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Medicina;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
@@ -82,6 +83,29 @@ public sealed record EscalationSummary(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, string Reason, DateTimeOffset EscalatedAt,
     VitalSigns? Vitals, string? Actions, ClinicalEventStatus Status);
 
+/// <summary>MED-05: borrador de la valoración médica (o ya cerrada), con quién la tocó por última vez (solo
+/// si fue la cuenta del ámbito que consulta).</summary>
+public sealed record MedicalAssessmentDraft(
+    MedicalAssessmentContent Content, bool LastUpdatedByCurrentAccount, DateTimeOffset LastUpdatedAt);
+
+/// <summary>MED-07/MED-08/ENF-10: una indicación médica con su estado de lectura y realización. Revision es
+/// la de la indicación, que hay que devolver al confirmar la lectura o registrar el resultado.</summary>
+public sealed record MedicalIndicationSummary(
+    Guid Id, string Text, DateOnly? DueDate, string? Criterion, string? AdditionalInformation, bool IssuedByCurrentAccount,
+    DateTimeOffset IssuedAt, MedicalIndicationStatus Status, int Revision, DateTimeOffset? ReadAt, DateTimeOffset? ResolvedAt,
+    string? Incident);
+
+/// <summary>MED-04 a MED-08: la parte médica de un evento: quién y cuándo empezó la valoración médica (null
+/// si no se ha empezado), el borrador y las indicaciones emitidas, de la más antigua a la más reciente.</summary>
+public sealed record MedicalDetail(
+    bool? StartedByCurrentAccount, DateTimeOffset? StartedAt, MedicalAssessmentDraft? Assessment,
+    IReadOnlyList<MedicalIndicationSummary> Indications);
+
+/// <summary>ENF-10/MED-08: una indicación en una lista, con el evento y el residente del que procede.</summary>
+public sealed record MedicalIndicationListItem(
+    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, ClinicalEventStatus EventStatus,
+    MedicalIndicationSummary Indication);
+
 /// <summary>ENF-04: detalle completo de un evento recibido. Según el origen trae las áreas y la temperatura
 /// del cambio de Auxiliar, o la observación y los datos clínicos del evento propio; en ambos casos la
 /// observación original es inmutable. Revision es la que hay que devolver al empezar o guardar la
@@ -95,7 +119,7 @@ public sealed record PendingChangeDetail(
     SystemProfile AuthorProfile, DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes, DateTimeOffset OccurredAt,
     ClinicalEventStatus Status, int Revision, bool? AssessmentStartedByCurrentAccount, DateTimeOffset? AssessmentStartedAt,
     NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges, ClinicalEventClosure? Closure,
-    FollowUpDetail? FollowUp, ClinicalEventEscalation? Escalation);
+    FollowUpDetail? FollowUp, ClinicalEventEscalation? Escalation, MedicalDetail Medical);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre
@@ -120,4 +144,8 @@ public interface IChangeInboxDirectory
     /// <summary>MED-02: escalados pendientes para un ámbito de Medicina. Con un ámbito de Medicina, FindAsync
     /// solo devuelve eventos escalados a Medicina.</summary>
     Task<IReadOnlyList<EscalationSummary>> ListEscalationsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>ENF-10/MED-08: todas las indicaciones médicas de los eventos visibles para el ámbito, de la más
+    /// antigua a la más reciente; cada caso de uso filtra las que le interesan.</summary>
+    Task<IReadOnlyList<MedicalIndicationListItem>> ListIndicationsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 }

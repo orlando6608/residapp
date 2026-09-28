@@ -22,10 +22,27 @@
             </div>
         </a>
     </div>
+    <div class="col-12 col-md-4">
+        <a asp-action="Indicaciones" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Indicaciones</h2>
+                <p class="card-text mb-0">
+                    <span class="badge text-bg-info">@Model.Indicaciones</span> indicación(es) emitida(s)
+                    @if (Model.IndicacionesSinLeer > 0)
+                    {
+                        <span>· <span class="badge text-bg-warning">@Model.IndicacionesSinLeer</span> sin leer</span>
+                    }
+                    @if (Model.IndicacionesConIncidencia > 0)
+                    {
+                        <span>· <span class="badge text-bg-danger">@Model.IndicacionesConIncidencia</span> con incidencia</span>
+                    }
+                </p>
+            </div>
+        </a>
+    </div>
     @foreach (var (titulo, texto) in new[]
     {
         ("Seguimientos", "seguimientos médicos abiertos."),
-        ("Indicaciones", "indicaciones a Enfermería y sus incidencias."),
         ("Comunicaciones", "comunicaciones familiares pendientes de aprobación."),
     })
     {

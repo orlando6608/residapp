@@ -44,7 +44,9 @@ public class EnfermeriaApplicationServiceTests
             new StartFollowUp(scopes, changeInbox, session, assessments),
             new RecordFollowUpAction(scopes, changeInbox, session, assessments),
             new ListFollowUps(scopes, changeInbox, session),
-            new EscalateClinicalEvent(scopes, changeInbox, session, assessments));
+            new EscalateClinicalEvent(scopes, changeInbox, session, assessments),
+            new ListPendingIndications(scopes, changeInbox, session),
+            new RecordIndicationProgress(scopes, changeInbox, session, new SqlMedicalIndicationRepository(TestDatabase.ConnectionFactory)));
     }
 
     /// <summary>Un residente en la unidad de dos profesionales de Enfermería y un evento propio de la

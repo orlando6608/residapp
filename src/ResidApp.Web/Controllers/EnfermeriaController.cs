@@ -4,6 +4,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Medicina;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
@@ -38,11 +39,72 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         var comunicaciones = await service.ListPendingFamilyCommunicationsAsync(
             new ListPendingFamilyCommunicationsCommand(activeScope.ProfileScopeId, centroId), ct);
         var seguimientos = await service.ListFollowUpsAsync(new ListFollowUpsCommand(activeScope.ProfileScopeId, centroId), ct);
+        var indicaciones = await service.ListPendingIndicationsAsync(new ListPendingIndicationsCommand(activeScope.ProfileScopeId, centroId), ct);
         return View(new EnfermeriaInicioViewModel(
             ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
-            comunicaciones.Ok ? comunicaciones.Value!.Count : 0));
+            comunicaciones.Ok ? comunicaciones.Value!.Count : 0,
+            indicaciones.Ok ? indicaciones.Value!.Count : 0,
+            indicaciones.Ok ? indicaciones.Value!.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) : 0));
+    }
+
+    /// <summary>ENF-10: indicaciones de Medicina pendientes de leer o de registrar su resultado, compartidas
+    /// por la Enfermería de la unidad.</summary>
+    public async Task<IActionResult> Indicaciones(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Indicaciones)) });
+        }
+
+        var result = await service.ListPendingIndicationsAsync(
+            new ListPendingIndicationsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(Array.Empty<MedicalIndicationListItem>());
+        }
+
+        return View(result.Value);
+    }
+
+    /// <summary>ENF-10: confirmar la lectura (realizada = null) o registrar el resultado de una indicación ya
+    /// leída. "No realizada" exige la incidencia. Ante un conflicto se recarga la bandeja con un aviso.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProgresoIndicacion(
+        Guid eventoId, Guid indicacionId, int revision, bool? realizada, string? incidencia, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null || eventoId == Guid.Empty || indicacionId == Guid.Empty)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await service.RecordIndicationProgressAsync(new RecordIndicationProgressCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), eventoId, indicacionId, revision, realizada, incidencia), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = realizada switch
+            {
+                null => "Lectura confirmada. Registra el resultado cuando la hayas realizado o si no ha podido hacerse.",
+                true => "Indicación registrada como realizada.",
+                false => "Indicación registrada como no realizada, con su incidencia.",
+            };
+        }
+        else
+        {
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.Conflict =>
+                    "Esta indicación ha cambiado desde que abriste la bandeja (otro profesional, u otra pestaña o pulsación tuya). Revisa su estado actual.",
+                ApplicationFailureCode.InvalidInput => "Para registrarla como no realizada, describe la incidencia.",
+                _ => result.Error.Message,
+            };
+        }
+        return RedirectToAction(nameof(Indicaciones));
     }
 
     /// <summary>ENF-08: bandeja compartida de seguimientos abiertos, vencidos incluidos.</summary>

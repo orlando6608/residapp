@@ -1,0 +1,98 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Medicina
+@using ResidApp.Web.Models
+@model IReadOnlyList<MedicalIndicationListItem>
+@{
+    ViewData["Title"] = "Indicaciones de Medicina";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Indicaciones</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Indicaciones de Medicina</h1>
+<p class="text-muted">
+    Compartidas por la Enfermería de cada unidad. Primero confirma la lectura; después registra si la indicación se realizó
+    o no (con la incidencia). Confirmar la lectura no la marca como realizada. Ninguna caduca: sigue aquí hasta registrar su resultado.
+</p>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No hay indicaciones pendientes.</p>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        var indicacion = item.Indication;
+        var incidenciaId = $"incidencia-{indicacion.Id}";
+        <div class="card mb-3 border-start border-4 @(indicacion.Status == MedicalIndicationStatus.PendienteLectura ? "border-warning" : "border-info")">
+            <div class="card-body">
+                <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
+                <p class="mb-1">
+                    <span class="badge @MedicalIndicationDisplay.BadgeClass(indicacion.Status)">@MedicalIndicationDisplay.Label(indicacion.Status)</span>
+                    @if (MedicalIndicationDisplay.IsOverdue(indicacion))
+                    {
+                        <span class="badge text-bg-danger">Vencida</span>
+                    }
+                    <span class="text-muted">@(item.UnitName ?? "Sin unidad") · emitida por Medicina el @indicacion.IssuedAt.ToLocalTime().ToString("g")</span>
+                </p>
+                <p class="mb-1" style="white-space: pre-line">@indicacion.Text</p>
+                <p class="text-muted mb-1">@FollowUpDisplay.Plan(indicacion.DueDate, indicacion.Criterion)</p>
+                @if (indicacion.AdditionalInformation is not null)
+                {
+                    <p class="mb-1" style="white-space: pre-line"><strong>Información adicional:</strong> @indicacion.AdditionalInformation</p>
+                }
+                <p class="mb-3"><a asp-action="DetalleCambio" asp-route-eventoId="@item.EventId">Ver el evento</a></p>
+
+                @if (indicacion.Status == MedicalIndicationStatus.PendienteLectura)
+                {
+                    <form asp-action="ProgresoIndicacion" method="post" class="d-grid d-md-flex justify-content-md-end">
+                        <input type="hidden" name="eventoId" value="@item.EventId" />
+                        <input type="hidden" name="indicacionId" value="@indicacion.Id" />
+                        <input type="hidden" name="revision" value="@indicacion.Revision" />
+                        <button type="submit" class="btn btn-primary btn-lg">Confirmar lectura</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted">Leída el @indicacion.ReadAt?.ToLocalTime().ToString("g").</p>
+                    <div class="d-grid d-md-flex justify-content-md-end mb-3">
+                        <form asp-action="ProgresoIndicacion" method="post">
+                            <input type="hidden" name="eventoId" value="@item.EventId" />
+                            <input type="hidden" name="indicacionId" value="@indicacion.Id" />
+                            <input type="hidden" name="revision" value="@indicacion.Revision" />
+                            <input type="hidden" name="realizada" value="true" />
+                            <button type="submit" class="btn btn-success btn-lg w-100">Registrar como realizada</button>
+                        </form>
+                    </div>
+                    <form asp-action="ProgresoIndicacion" method="post">
+                        <input type="hidden" name="eventoId" value="@item.EventId" />
+                        <input type="hidden" name="indicacionId" value="@indicacion.Id" />
+                        <input type="hidden" name="revision" value="@indicacion.Revision" />
+                        <input type="hidden" name="realizada" value="false" />
+                        <label for="@incidenciaId" class="form-label">Si no ha podido realizarse, describe la incidencia</label>
+                        <textarea id="@incidenciaId" name="incidencia" class="form-control mb-2" rows="2" maxlength="@MedicalIndication.MaxTextLength"></textarea>
+                        <div class="d-grid d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-outline-danger btn-lg">Registrar como no realizada</button>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+}

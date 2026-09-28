@@ -6,28 +6,30 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 ## Prompt para empezar
 
 > Retomamos la construcción de ResidApp. Lee `CLAUDE.md`, este fichero
-> (`docs/prompts-ia/continuar-construccion.md`) y `docs/tareas/alta-prioridad/pendientes-enfermeria.md`.
+> (`docs/prompts-ia/continuar-construccion.md`), `docs/tareas/alta-prioridad/pendientes-enfermeria.md` y
+> `docs/tareas/alta-prioridad/pendientes-medicina.md`.
 > Mira si CJ ha completado algo en `docs/pendientes-cj/`. Después comprueba que la suite pasa en verde
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
 
-- Todo el trabajo está en `main`. Las historias 3 y 4 (scripts `0009` y `0010`) ya están desplegadas en
-  Azure: sus pipelines terminaron con éxito el 2026-09-28. La historia 5 (script `0011`) está commiteada
-  en local y **pendiente de push**; compruébalo con `git status` al empezar. El estado de un run se
-  consulta sin autenticación en
+- Todo el trabajo está en `main`. Hasta el script `0011` (historia 5 de Enfermería) está desplegado en
+  Azure; sus pipelines terminaron con éxito el 2026-09-28. Las historias 2 y 3 de Medicina y la 7 de
+  Enfermería (script `0012`) están commiteadas en local y **pendientes de push**; compruébalo con
+  `git status` al empezar. El estado de un run se consulta sin autenticación en
   `https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main` (`gh` no está instalado).
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
-  (parcial), 2, 3, 4, 5, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
-  Medicina está iniciado solo con su historia 1 en lectura (bandeja y detalle de escalados).
-- La base local `ResidApp` tiene los scripts `0001` a `0011` registrados en `dbo.scripts_aplicados`.
-  Hay una copia previa a `0011` en
-  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0011-20260928.bak`.
+  (parcial), 2, 3, 4, 5, 7, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
+  Medicina está en curso: historias 1, 2 y 3 (escalados, valoración médica e indicaciones).
+- La base local `ResidApp` tiene los scripts `0001` a `0012` registrados en `dbo.scripts_aplicados`.
+  Hay una copia previa a `0012` en
+  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0012-20260928.bak`.
   La base local tiene además eventos de prueba del escenario integrado: «Prueba manual historia 3: tos.»
   (cerrado, con comunicación pendiente de aprobación), «Prueba manual historia 4: tos.» (cerrado tras un
-  seguimiento completo) y «Prueba manual historia 5: disnea.» (escalado a Medicina; su motivo quedó como
-  «Desaturaci%F3n…» por la lección de curl de más abajo).
-- Suite: 83 unitarios, 147 de integración y 1 funcional, todos en verde.
+  seguimiento completo), «Prueba manual historia 5: disnea.» (escalado a Medicina; su motivo quedó como
+  «Desaturaci%F3n…» por la lección de curl de más abajo) y «Prueba manual Medicina: fiebre.» (valorado por
+  Medicina, con una indicación leída y realizada por Enfermería).
+- Suite: 92 unitarios, 152 de integración y 1 funcional, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -35,19 +37,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea: decidir el orden
 
-Quedan dos caminos, y hay que proponerlos al usuario antes de empezar:
+Hay que proponer al usuario el orden antes de empezar. Lo más urgente es que los eventos puedan terminar:
+hoy un evento escalado se queda en CON_INDICACION_PENDIENTE para siempre.
 
-- **Enfermería, historia 6: protocolo urgente y derivación a Urgencias** (`DER-01` a `DER-06`,
-  [`derivacion-urgencias.md`](../flujos-clinicos/derivacion-urgencias.md)). Es la cuarta y última salida de
-  `/Decision` y no depende de Medicina. Incluye un informe firmado en PDF, lo que exige decidir antes cómo
-  se genera, y una «actualización relevante» obligatoria para la familia con el registro del intento de
-  llamada. Esa actualización toca el Portal Familiar, igual que la comunicación de la historia 3.
-- **Medicina, historias 2 y 3: valoración médica y conducta** ([`medicina.md`](../historias-usuarios/medicina.md),
-  [`valoracion-conducta-medicina.md`](../flujos-clinicos/valoracion-conducta-medicina.md)). Son requisito
-  de la historia 7 de Enfermería (indicaciones de Medicina) y dan salida a los eventos que hoy se quedan en
-  ESCALADO_MEDICINA. Hay que decidir qué estados de Medicina se añaden al ciclo de `eventos_asistenciales`.
+- **Medicina, historia 4: cierre médico** (detalle en `pendientes-medicina.md`). Reutiliza el cierre y la
+  comunicación familiar de Enfermería. **Antes de diseñar hay que resolver una cosa:** qué pasa con las
+  indicaciones todavía no realizadas al cerrar (las indicaciones «no caducan»). Es una decisión de producto:
+  proponerla y, si hace falta, preguntar a CJ.
+- **Medicina, historia 5: seguimiento médico y continuidad entre turnos.**
+- **Enfermería, historia 6: protocolo urgente y derivación a Urgencias** (`DER-01` a `DER-06`, común con
+  Medicina, [`derivacion-urgencias.md`](../flujos-clinicos/derivacion-urgencias.md)). Incluye un informe
+  firmado en PDF (hay que decidir cómo se genera) y una «actualización relevante» obligatoria para la
+  familia con el registro del intento de llamada, que toca el Portal Familiar.
 
-Después, la historia 11 (historial) y el resto del vertical Medicina.
+Después, el historial (historia 11 de Enfermería, 9 de Medicina), el evento propio de Medicina y el resto.
 
 ## Reglas de trabajo propias de este repositorio
 

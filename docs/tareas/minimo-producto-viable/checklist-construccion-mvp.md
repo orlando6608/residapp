@@ -17,7 +17,7 @@ El orden se hereda de `roadmap.md` (heredado a su vez del prototipo legado, úni
 | Residente / Basal | Transversal — lo usan los seis perfiles | Completado |
 | Auxiliar | Auxiliar | Completado (pendiente de validación por CJ) |
 | Enfermería | Enfermería | En curso |
-| Medicina | Medicina | En curso (solo la bandeja de escalados, en lectura) |
+| Medicina | Medicina | En curso (escalados, valoración médica e indicaciones) |
 | Familia / Portal Familiar | Familiar | No iniciado |
 | Administración | Administración | No iniciado |
 | Dirección / Coordinación Clínica | Dirección/Coordinación Clínica | No iniciado |
@@ -60,10 +60,8 @@ Cubre el módulo *Medicina* de `alcance.md` y comparte *Derivación* y la gesti�
 - Flujos clínicos: [`docs/flujos-clinicos/valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-conducta-medicina.md), más `gestion-basal-barthel.md` y `derivacion-urgencias.md` (compartidos con Enfermería, ver arriba).
 - Wireframe funcional: [`docs/bocetos-pantallas/wireframes-funcionales/medicina.md`](../../bocetos-pantallas/wireframes-funcionales/medicina.md).
 
-Tareas de construcción pendientes:
-- Dominio: bandeja de escalados, valoración médica, indicaciones a Enfermería con seguimiento de cumplimiento, eventos propios, cierre definitivo.
-- Aplicación e infraestructura: casos de uso y repositorios Dapper/SQL Server sobre las mismas tablas de eventos/derivación que Enfermería (no crear un esquema paralelo).
-- `ResidApp.Web`: pantallas de escalados, valoración, indicaciones y seguimiento médico.
+En curso: bandeja de escalados, valoración médica e indicaciones a Enfermería hechas; lo hecho y lo
+pendiente, historia por historia, está en [`docs/tareas/alta-prioridad/pendientes-medicina.md`](../alta-prioridad/pendientes-medicina.md).
 - Autorización: política propia del perfil Medicina, sin automatizar decisiones ni atribuir actos a otros.
 - Tests: dominio, motor de autorización y casos de uso, incluido el historial con corrección dentro de ventana permitida (`HIS-01` a `HIS-03`, `COR-01`, `COR-02`).
 

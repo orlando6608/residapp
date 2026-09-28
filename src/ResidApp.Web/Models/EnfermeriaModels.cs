@@ -10,10 +10,11 @@ namespace ResidApp.Web.Models;
 public sealed record EnfermeriaResidentDetailViewModel(ScopeResidentSummary Resident, CurrentBaselineSummary? Baseline);
 
 /// <summary>ENF-01: contadores de las bandejas ya construidas (ordinarios, prioritarios y seguimientos,
-/// con cuántos de estos están vencidos) y de las comunicaciones familiares pendientes de aprobación.
-/// Indicaciones sigue sin contador propio hasta que exista Medicina.</summary>
+/// con cuántos de estos están vencidos), de las comunicaciones familiares pendientes de aprobación y de las
+/// indicaciones de Medicina pendientes (con cuántas faltan por leer).</summary>
 public sealed record EnfermeriaInicioViewModel(
-    int Ordinarios, int Prioritarios, int Seguimientos, int SeguimientosVencidos, int Comunicaciones);
+    int Ordinarios, int Prioritarios, int Seguimientos, int SeguimientosVencidos, int Comunicaciones,
+    int Indicaciones, int IndicacionesSinLeer);
 
 /// <summary>ENF-04: detalle de un cambio recibido más el resumen del basal vigente del residente (null si
 /// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel.</summary>
@@ -262,7 +263,7 @@ public sealed record CerrarViewModel(PendingChangeDetail Event, CerrarFormModel 
 /// <summary>ENF-05 "Valoración de Enfermería": hallazgos, valoración, actuaciones, comunicaciones,
 /// resultado y constantes opcionales. Revision es la del evento al abrir la pantalla (concurrencia
 /// optimista). Las comprobaciones de formato se repiten en dominio (VitalSigns), que es quien decide.</summary>
-public sealed class ValoracionFormModel
+public sealed class ValoracionFormModel : ConstantesFormModel
 {
     [Required]
     public Guid EventoId { get; set; }
@@ -290,6 +291,28 @@ public sealed class ValoracionFormModel
     [Display(Name = "Resultado")]
     public string? Resultado { get; set; }
 
+    public static ValoracionFormModel From(PendingChangeDetail detail)
+    {
+        var form = new ValoracionFormModel { EventoId = detail.EventId, Revision = detail.Revision };
+        if (detail.Assessment is not { Content: var content })
+        {
+            return form;
+        }
+        form.Hallazgos = content.Findings;
+        form.Valoracion = content.Assessment;
+        form.Actuaciones = content.Actions;
+        form.Comunicaciones = content.Communications;
+        form.Resultado = content.Outcome;
+        form.FillVitals(content.Vitals);
+        return form;
+    }
+}
+
+/// <summary>Constantes opcionales de una valoración (ENF-05, MED-05), comunes a Enfermería y Medicina y
+/// pintadas por el parcial _ConstantesFormulario. Las comprobaciones de formato se repiten en dominio
+/// (VitalSigns), que es quien decide.</summary>
+public abstract class ConstantesFormModel
+{
     [Range(typeof(decimal), "0.1", "99.9", ParseLimitsInInvariantCulture = true, ErrorMessage = "Indica una temperatura válida.")]
     [Display(Name = "Temperatura (°C)")]
     public decimal? TemperaturaCelsius { get; set; }
@@ -337,32 +360,20 @@ public sealed class ValoracionFormModel
     [Display(Name = "Unidad")]
     public string? OtraConstanteUnidad { get; set; }
 
-    public static ValoracionFormModel From(PendingChangeDetail detail)
+    protected void FillVitals(VitalSigns vitals)
     {
-        var form = new ValoracionFormModel { EventoId = detail.EventId, Revision = detail.Revision };
-        if (detail.Assessment is not { Content: var content })
-        {
-            return form;
-        }
-        var vitals = content.Vitals;
-        form.Hallazgos = content.Findings;
-        form.Valoracion = content.Assessment;
-        form.Actuaciones = content.Actions;
-        form.Comunicaciones = content.Communications;
-        form.Resultado = content.Outcome;
-        form.TemperaturaCelsius = vitals.TemperatureCelsius;
-        form.TensionSistolica = vitals.SystolicMmHg;
-        form.TensionDiastolica = vitals.DiastolicMmHg;
-        form.FrecuenciaCardiaca = vitals.HeartRateBpm;
-        form.FrecuenciaRespiratoria = vitals.RespiratoryRateRpm;
-        form.SaturacionO2 = vitals.OxygenSaturationPct;
-        form.SoporteRespiratorio = vitals.RespiratorySupport;
-        form.FlujoO2 = vitals.OxygenFlowLpm;
-        form.Glucemia = vitals.GlucoseMgDl;
-        form.OtraConstanteNombre = vitals.OtherName;
-        form.OtraConstanteValor = vitals.OtherValue;
-        form.OtraConstanteUnidad = vitals.OtherUnit;
-        return form;
+        TemperaturaCelsius = vitals.TemperatureCelsius;
+        TensionSistolica = vitals.SystolicMmHg;
+        TensionDiastolica = vitals.DiastolicMmHg;
+        FrecuenciaCardiaca = vitals.HeartRateBpm;
+        FrecuenciaRespiratoria = vitals.RespiratoryRateRpm;
+        SaturacionO2 = vitals.OxygenSaturationPct;
+        SoporteRespiratorio = vitals.RespiratorySupport;
+        FlujoO2 = vitals.OxygenFlowLpm;
+        Glucemia = vitals.GlucoseMgDl;
+        OtraConstanteNombre = vitals.OtherName;
+        OtraConstanteValor = vitals.OtherValue;
+        OtraConstanteUnidad = vitals.OtherUnit;
     }
 }
 

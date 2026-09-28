@@ -13,7 +13,8 @@
     <strong>Enfermería</strong> funciona la navegación, la autoría completa del basal, el registro de un
     evento propio, las bandejas de cambios ordinarios y prioritarios que Auxiliar genera, la valoración de
     esos eventos, su cierre con la decisión de comunicación familiar, el seguimiento y el escalado a Medicina;
-    de <strong>Medicina</strong>, la bandeja de escalados recibidos (solo lectura). El resto de módulos aparece descrito al final
+    de <strong>Medicina</strong>, la bandeja de escalados recibidos, la valoración médica y las indicaciones a
+    Enfermería, que Enfermería lee y registra. El resto de módulos aparece descrito al final
     como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
     inicio de sesión con usuario y contraseña definitivo).
 </div>
@@ -33,6 +34,7 @@
             <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas, valoración y cierre de eventos (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#seguimientos-enfermeria">Seguimientos y transferencia de turno (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#escalado-medicina">Escalar a Medicina y escalados recibidos</a>
+            <a class="list-group-item list-group-item-action" href="#valoracion-medica">Valoración médica e indicaciones a Enfermería</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -387,9 +389,43 @@
         Con el perfil <strong>Medicina</strong>, la tarjeta <strong>Escalados</strong> del inicio de Medicina
         abre la bandeja de escalados de tus unidades, del más antiguo al más reciente, con el motivo, las
         constantes y las actuaciones de cada uno. Al abrir uno ves el motivo y toda la información reunida,
-        de solo lectura: Medicina nunca modifica la observación original ni la valoración de Enfermería. La
-        valoración médica y la conducta (indicaciones, cierre, seguimiento médico, protocolo urgente) llegan
-        más adelante (ver "Próximamente").
+        de solo lectura: Medicina nunca modifica la observación original ni la valoración de Enfermería.
+    </p>
+</section>
+
+<section id="valoracion-medica" class="mb-4">
+    <h2 class="h5">
+        Valoración médica e indicaciones a Enfermería
+        <span class="badge text-bg-secondary align-middle">Perfiles: Medicina y Enfermería</span>
+    </h2>
+    <p>
+        En el detalle de un escalado, <strong>Iniciar valoración médica</strong> registra quién la empieza y a
+        qué hora, sin hacerte responsable exclusivo: cualquier profesional de Medicina de la unidad puede
+        continuarla. En la valoración anotas hallazgos y exploración, valoración, actuaciones y las constantes
+        que quieras (las mismas que en Enfermería). <strong>Guardar borrador</strong> conserva lo escrito, y
+        cada guardado queda como una versión que no se puede modificar. Si otra persona cambió el evento
+        entretanto, se te pide recargar sin perder lo escrito.
+    </p>
+    <p>
+        Con la valoración guardada, <strong>Pasar a conducta médica</strong> muestra las cuatro salidas. De
+        momento está disponible <strong>registrar indicaciones a Enfermería</strong>: el texto de la indicación,
+        una fecha prevista, un criterio (o ambos) y, si hace falta, información adicional. No hay prioridad
+        automática. El evento pasa a "Con indicación pendiente" y sale de la bandeja de escalados; puedes
+        añadir más indicaciones desde la conducta. La valoración médica ya no se modifica. Cierre, seguimiento
+        médico y protocolo urgente aparecen como "Próximamente".
+    </p>
+    <p>
+        La tarjeta <strong>Indicaciones</strong> del inicio de Medicina muestra las indicaciones emitidas, con
+        cuántas siguen sin leer o tienen incidencia, y la lista indica en cada una si está pendiente de
+        lectura, leída, realizada o no realizada (con la incidencia), y si está vencida (fecha prevista pasada
+        sin realizar).
+    </p>
+    <p class="mb-0">
+        Con el perfil <strong>Enfermería</strong>, la tarjeta <strong>Indicaciones</strong> del inicio abre las
+        indicaciones de Medicina pendientes de tus unidades. Primero pulsas <strong>Confirmar lectura</strong>;
+        después, <strong>Registrar como realizada</strong> o, si no ha podido hacerse, describes la incidencia y
+        pulsas <strong>Registrar como no realizada</strong>. Confirmar la lectura nunca la marca como realizada,
+        y ninguna indicación caduca: sigue en la lista hasta registrar su resultado.
     </p>
 </section>
 
@@ -455,7 +491,7 @@
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
         <li>Activar el protocolo urgente desde la decisión asistencial; y la línea temporal e historial de eventos.</li>
-        <li>Valoración médica de un escalado y conducta de Medicina (indicaciones a Enfermería, cierre, seguimiento médico, protocolo urgente).</li>
+        <li>El resto de la conducta de Medicina: cierre médico del evento (con la decisión de comunicación familiar), seguimiento médico con continuidad entre turnos y protocolo urgente; y eventos iniciados directamente por Medicina.</li>
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería de la unidad y el turno entrante se escribe a mano).</li>
         <li>Derivación a Urgencias con informe firmado en PDF.</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>

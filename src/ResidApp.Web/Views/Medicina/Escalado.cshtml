@@ -1,9 +1,11 @@
+@using ResidApp.Domain.Enfermeria
 @using ResidApp.Web.Models
 @model MedicinaEscaladoViewModel
 @{
     ViewData["Title"] = "Escalado recibido";
     var evento = Model.Event;
     var escalado = evento.Escalation!;
+    var medico = evento.Medical;
 }
 
 <nav aria-label="breadcrumb">
@@ -22,6 +24,15 @@
     · escalado el @escalado.EscalatedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(escalado.EscalatedAt))
 </p>
 
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
 <div class="card mb-3 border-start border-4 border-primary">
     <div class="card-body">
         <h2 class="h5 card-title">Motivo del escalado</h2>
@@ -29,11 +40,101 @@
     </div>
 </div>
 
-<p class="text-muted">Toda esta información es de solo lectura: Medicina no modifica la observación original ni la valoración de Enfermería.</p>
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Valoración médica</h2>
+        @if (medico.StartedAt is null)
+        {
+            <p class="mb-0">Todavía no se ha empezado. Al empezar se registra quién lo hace y a qué hora; no te convierte en responsable exclusivo del evento.</p>
+        }
+        else
+        {
+            <p class="mb-2">
+                Iniciada @(medico.StartedByCurrentAccount == true ? "por ti" : "por otro profesional de Medicina")
+                el @medico.StartedAt.Value.ToLocalTime().ToString("g").
+            </p>
+            @if (medico.Assessment is null)
+            {
+                <p class="text-muted mb-0">Sin borrador guardado todavía.</p>
+            }
+            else
+            {
+                var content = medico.Assessment.Content;
+                <p class="text-muted">
+                    Último guardado @(medico.Assessment.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
+                    el @medico.Assessment.LastUpdatedAt.ToLocalTime().ToString("g").
+                </p>
+                <dl class="row mb-0">
+                    @foreach (var (etiqueta, texto) in new[] { ("Hallazgos y exploración", content.FindingsAndExamination), ("Valoración", content.Assessment), ("Actuaciones", content.Actions) })
+                    {
+                        if (texto is not null)
+                        {
+                            <dt class="col-sm-3">@etiqueta</dt>
+                            <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                        }
+                    }
+                    @if (!content.Vitals.IsEmpty)
+                    {
+                        <dt class="col-sm-3">Constantes</dt>
+                        <dd class="col-sm-9">@VitalSignsDisplay.Summary(content.Vitals)</dd>
+                    }
+                </dl>
+            }
+        }
+    </div>
+</div>
+
+@if (medico.Indications.Count > 0)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Indicaciones a Enfermería</h2>
+            <ul class="list-unstyled mb-0">
+                @foreach (var indicacion in medico.Indications)
+                {
+                    <li class="mb-3">
+                        <span class="badge @MedicalIndicationDisplay.BadgeClass(indicacion.Status)">@MedicalIndicationDisplay.Label(indicacion.Status)</span>
+                        @if (MedicalIndicationDisplay.IsOverdue(indicacion))
+                        {
+                            <span class="badge text-bg-danger">Vencida</span>
+                        }
+                        <p class="mb-0 mt-1" style="white-space: pre-line">@indicacion.Text</p>
+                        <p class="text-muted mb-0">
+                            @FollowUpDisplay.Plan(indicacion.DueDate, indicacion.Criterion) · emitida el @indicacion.IssuedAt.ToLocalTime().ToString("g")
+                        </p>
+                        @if (indicacion.Incident is not null)
+                        {
+                            <p class="mb-0" style="white-space: pre-line"><strong>Incidencia:</strong> @indicacion.Incident</p>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+<p class="text-muted">Lo que sigue es de solo lectura: Medicina no modifica la observación original ni la valoración de Enfermería.</p>
 
 <partial name="_InformacionReunida" model="new InformacionReunidaViewModel(evento, Model.Baseline)" />
 
 <div class="d-grid d-md-flex justify-content-md-end gap-2 mb-3">
     <a asp-action="Escalados" class="btn btn-outline-secondary btn-lg">Volver a la bandeja</a>
-    <button type="button" class="btn btn-primary btn-lg" disabled>Iniciar valoración médica (próximamente)</button>
+    @if (evento.Status == ClinicalEventStatus.EscaladoMedicina)
+    {
+        <form asp-action="EmpezarValoracion" method="post">
+            <input type="hidden" name="eventoId" value="@evento.EventId" />
+            <input type="hidden" name="revision" value="@evento.Revision" />
+            <button type="submit" class="btn btn-primary btn-lg w-100">Iniciar valoración médica</button>
+        </form>
+    }
+    else if (evento.Status == ClinicalEventStatus.EnValoracionMedica)
+    {
+        <a asp-action="Valoracion" asp-route-eventoId="@evento.EventId" class="btn @(medico.Assessment is null ? "btn-primary" : "btn-outline-primary") btn-lg">
+            @(medico.Assessment is null ? "Completar valoración médica" : "Continuar valoración médica")
+        </a>
+    }
+    @if (medico.Assessment is not null && evento.Status is ClinicalEventStatus.EnValoracionMedica or ClinicalEventStatus.ConIndicacionPendiente)
+    {
+        <a asp-action="Conducta" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Pasar a conducta médica</a>
+    }
 </div>

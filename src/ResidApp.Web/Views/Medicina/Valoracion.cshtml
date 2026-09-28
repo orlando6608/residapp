@@ -1,0 +1,63 @@
+@using ResidApp.Web.Models
+@model ValoracionMedicaViewModel
+@{
+    ViewData["Title"] = "Valoración médica";
+    var evento = Model.Event;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item"><a asp-action="Escalado" asp-route-eventoId="@evento.EventId">Detalle</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Valoración médica</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Valoración médica — @evento.ResidentDisplayName</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="card mb-3 border-start border-4 border-primary">
+    <div class="card-body">
+        <h2 class="h6 card-title">Motivo del escalado (no editable)</h2>
+        <p class="mb-1" style="white-space: pre-line">@evento.Escalation!.Reason</p>
+        <a asp-action="Escalado" asp-route-eventoId="@evento.EventId">Ver toda la información reunida</a>
+    </div>
+</div>
+
+<form asp-action="Valoracion" method="post">
+    <input type="hidden" asp-for="Form.EventoId" />
+    <input type="hidden" asp-for="Form.Revision" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Valoración</h2>
+            <div class="mb-3">
+                <label asp-for="Form.HallazgosExploracion" class="form-label"></label>
+                <textarea asp-for="Form.HallazgosExploracion" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.HallazgosExploracion" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Valoracion" class="form-label"></label>
+                <textarea asp-for="Form.Valoracion" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.Valoracion" class="text-danger"></span>
+            </div>
+            <div class="mb-0">
+                <label asp-for="Form.Actuaciones" class="form-label"></label>
+                <textarea asp-for="Form.Actuaciones" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.Actuaciones" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_ConstantesFormulario" for="Form" view-data="@(new ViewDataDictionary(ViewData) { ["Rangos"] = evento.ReferenceRanges })" />
+
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <a asp-action="Escalado" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin guardar</a>
+        <button type="submit" class="btn btn-primary btn-lg">Guardar borrador</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

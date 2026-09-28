@@ -27,6 +27,8 @@ builder.Services.AddScoped<IDailyClosureRepository, SqlDailyClosureRepository>()
 builder.Services.AddScoped<IClinicalEventRepository, SqlClinicalEventRepository>();
 builder.Services.AddScoped<IChangeInboxDirectory, SqlChangeInboxDirectory>();
 builder.Services.AddScoped<INursingAssessmentRepository, SqlNursingAssessmentRepository>();
+builder.Services.AddScoped<IMedicalAssessmentRepository, SqlMedicalAssessmentRepository>();
+builder.Services.AddScoped<IMedicalIndicationRepository, SqlMedicalIndicationRepository>();
 builder.Services.AddScoped<IReferenceRangeRepository, SqlReferenceRangeRepository>();
 builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
 
@@ -61,10 +63,16 @@ builder.Services.AddScoped<StartFollowUp>();
 builder.Services.AddScoped<RecordFollowUpAction>();
 builder.Services.AddScoped<ListFollowUps>();
 builder.Services.AddScoped<EscalateClinicalEvent>();
+builder.Services.AddScoped<ListPendingIndications>();
+builder.Services.AddScoped<RecordIndicationProgress>();
 builder.Services.AddScoped<EnfermeriaApplicationService>();
 
 builder.Services.AddScoped<ListEscalations>();
 builder.Services.AddScoped<FindEscalationDetail>();
+builder.Services.AddScoped<StartMedicalAssessment>();
+builder.Services.AddScoped<SaveMedicalAssessment>();
+builder.Services.AddScoped<RegisterMedicalIndication>();
+builder.Services.AddScoped<ListMedicalIndications>();
 builder.Services.AddScoped<MedicinaApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();

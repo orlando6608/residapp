@@ -1,0 +1,52 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model IReadOnlyList<MedicalIndicationListItem>
+@{
+    ViewData["Title"] = "Indicaciones emitidas";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Indicaciones</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Indicaciones emitidas</h1>
+<p class="text-muted">
+    Indicaciones a Enfermería de los eventos que siguen con indicación pendiente, con su lectura y realización. Las no leídas,
+    vencidas o con incidencia siguen aquí hasta que se resuelva el evento.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No hay indicaciones emitidas pendientes.</p>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        var indicacion = item.Indication;
+        <a asp-action="Escalado" asp-route-eventoId="@item.EventId" class="card mb-3 text-decoration-none text-body border-start border-4 @(indicacion.Incident is null ? "border-info" : "border-danger")">
+            <div class="card-body">
+                <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
+                <p class="mb-1">
+                    <span class="badge @MedicalIndicationDisplay.BadgeClass(indicacion.Status)">@MedicalIndicationDisplay.Label(indicacion.Status)</span>
+                    @if (MedicalIndicationDisplay.IsOverdue(indicacion))
+                    {
+                        <span class="badge text-bg-danger">Vencida</span>
+                    }
+                    <span class="text-muted">@(item.UnitName ?? "Sin unidad") · emitida el @indicacion.IssuedAt.ToLocalTime().ToString("g")</span>
+                </p>
+                <p class="mb-1" style="white-space: pre-line">@indicacion.Text</p>
+                <p class="text-muted mb-0">@FollowUpDisplay.Plan(indicacion.DueDate, indicacion.Criterion)</p>
+                @if (indicacion.Incident is not null)
+                {
+                    <p class="mb-0 mt-1" style="white-space: pre-line"><strong>Incidencia:</strong> @indicacion.Incident</p>
+                }
+            </div>
+        </a>
+    }
+}

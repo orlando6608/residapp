@@ -1,0 +1,90 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model ConstantesFormModel
+@{
+    // Rangos de referencia del centro para las pistas bajo cada campo (ENF-05); vacío si no hay ninguno.
+    var rangos = ViewData["Rangos"] as IReadOnlyList<VitalSignRange> ?? [];
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Constantes <span class="text-muted fs-6">(opcionales)</span></h2>
+        <div class="row g-3">
+            <div class="col-6 col-md-4">
+                <label asp-for="TemperaturaCelsius" class="form-label"></label>
+                <input asp-for="TemperaturaCelsius" type="number" class="form-control form-control-lg" inputmode="decimal" step="0.1" />
+                <div class="form-text">@VitalSignRangeDisplay.Hint(rangos, VitalSignCode.Temperatura)</div>
+                <span asp-validation-for="TemperaturaCelsius" class="text-danger"></span>
+            </div>
+            <div class="col-6 col-md-4">
+                <label asp-for="TensionSistolica" class="form-label"></label>
+                <input asp-for="TensionSistolica" class="form-control form-control-lg" inputmode="numeric" />
+                <div class="form-text">@VitalSignRangeDisplay.Hint(rangos, VitalSignCode.TensionSistolica)</div>
+                <span asp-validation-for="TensionSistolica" class="text-danger"></span>
+            </div>
+            <div class="col-6 col-md-4">
+                <label asp-for="TensionDiastolica" class="form-label"></label>
+                <input asp-for="TensionDiastolica" class="form-control form-control-lg" inputmode="numeric" />
+                <div class="form-text">@VitalSignRangeDisplay.Hint(rangos, VitalSignCode.TensionDiastolica)</div>
+                <span asp-validation-for="TensionDiastolica" class="text-danger"></span>
+            </div>
+            <div class="col-6 col-md-4">
+                <label asp-for="FrecuenciaCardiaca" class="form-label"></label>
+                <input asp-for="FrecuenciaCardiaca" class="form-control form-control-lg" inputmode="numeric" />
+                <div class="form-text">@VitalSignRangeDisplay.Hint(rangos, VitalSignCode.FrecuenciaCardiaca)</div>
+                <span asp-validation-for="FrecuenciaCardiaca" class="text-danger"></span>
+            </div>
+            <div class="col-6 col-md-4">
+                <label asp-for="FrecuenciaRespiratoria" class="form-label"></label>
+                <input asp-for="FrecuenciaRespiratoria" class="form-control form-control-lg" inputmode="numeric" />
+                <div class="form-text">@VitalSignRangeDisplay.Hint(rangos, VitalSignCode.FrecuenciaRespiratoria)</div>
+                <span asp-validation-for="FrecuenciaRespiratoria" class="text-danger"></span>
+            </div>
+            <div class="col-6 col-md-4">
+                <label asp-for="SaturacionO2" class="form-label"></label>
+                <input asp-for="SaturacionO2" class="form-control form-control-lg" inputmode="numeric" />
+                <div class="form-text">@VitalSignRangeDisplay.Hint(rangos, VitalSignCode.SaturacionO2)</div>
+                <span asp-validation-for="SaturacionO2" class="text-danger"></span>
+            </div>
+            <div class="col-12 col-md-4">
+                <label asp-for="SoporteRespiratorio" class="form-label"></label>
+                <select asp-for="SoporteRespiratorio" class="form-select form-select-lg"
+                        asp-items="Html.GetEnumSelectList<RespiratorySupportCode>()">
+                    <option value="">Sin indicar</option>
+                </select>
+                <span asp-validation-for="SoporteRespiratorio" class="text-danger"></span>
+            </div>
+            <div class="col-6 col-md-4">
+                <label asp-for="FlujoO2" class="form-label"></label>
+                <input asp-for="FlujoO2" type="number" class="form-control form-control-lg" inputmode="decimal" step="0.1" />
+                <div class="form-text">Solo con oxigenoterapia.</div>
+                <span asp-validation-for="FlujoO2" class="text-danger"></span>
+            </div>
+            <div class="col-6 col-md-4">
+                <label asp-for="Glucemia" class="form-label"></label>
+                <input asp-for="Glucemia" class="form-control form-control-lg" inputmode="numeric" />
+                <div class="form-text">@VitalSignRangeDisplay.Hint(rangos, VitalSignCode.Glucemia)</div>
+                <span asp-validation-for="Glucemia" class="text-danger"></span>
+            </div>
+        </div>
+
+        <h3 class="h6 mt-4">Otra constante</h3>
+        <div class="row g-3">
+            <div class="col-12 col-md-5">
+                <label asp-for="OtraConstanteNombre" class="form-label"></label>
+                <input asp-for="OtraConstanteNombre" class="form-control form-control-lg" />
+                <span asp-validation-for="OtraConstanteNombre" class="text-danger"></span>
+            </div>
+            <div class="col-6 col-md-4">
+                <label asp-for="OtraConstanteValor" class="form-label"></label>
+                <input asp-for="OtraConstanteValor" class="form-control form-control-lg" />
+                <span asp-validation-for="OtraConstanteValor" class="text-danger"></span>
+            </div>
+            <div class="col-6 col-md-3">
+                <label asp-for="OtraConstanteUnidad" class="form-label"></label>
+                <input asp-for="OtraConstanteUnidad" class="form-control form-control-lg" />
+                <span asp-validation-for="OtraConstanteUnidad" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+</div>

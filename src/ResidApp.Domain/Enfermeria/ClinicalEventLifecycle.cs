@@ -20,5 +20,7 @@ public enum ClinicalEventStatus
     [Code("EN_VALORACION")] [Display(Name = "En valoración")] EnValoracion,
     [Code("EN_SEGUIMIENTO")] [Display(Name = "En seguimiento")] EnSeguimiento,
     [Code("ESCALADO_MEDICINA")] [Display(Name = "Escalado a Medicina")] EscaladoMedicina,
+    [Code("EN_VALORACION_MEDICA")] [Display(Name = "En valoración médica")] EnValoracionMedica,
+    [Code("CON_INDICACION_PENDIENTE")] [Display(Name = "Con indicación pendiente")] ConIndicacionPendiente,
     [Code("CERRADO")] [Display(Name = "Cerrado por Enfermería")] Cerrado,
 }

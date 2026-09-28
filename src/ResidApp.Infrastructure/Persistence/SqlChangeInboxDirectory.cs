@@ -2,6 +2,7 @@ using Dapper;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Medicina;
 using ResidApp.Domain.Residents;
 using ResidApp.Shared;
 
@@ -100,7 +101,11 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                    family.tipo_codigo AS FamilyCommunicationTypeCode, family.texto AS FamilyCommunicationText,
                    family.preparado_en AS FamilyCommunicationPreparedAt, escalation.motivo AS EscalationReason,
                    CAST(CASE WHEN escalation.escalado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS EscalatedByCurrentAccount,
-                   escalation.escalado_en AS EscalatedAt
+                   escalation.escalado_en AS EscalatedAt,
+                   CASE WHEN ea.valoracion_medica_iniciada_por_cuenta_id IS NULL THEN NULL
+                        WHEN ea.valoracion_medica_iniciada_por_cuenta_id = profile.cuenta_id THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END
+                       AS MedicalStartedByCurrentAccount,
+                   ea.valoracion_medica_iniciada_en AS MedicalStartedAt
             {ScopedEventsFrom}
                AND ea.id = @EventId
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, EventId = eventId }, cancellationToken: ct));
@@ -198,8 +203,104 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                 followUp.ContinuityNotes, followUp.StartedByCurrentAccount, new DateTimeOffset(followUp.StartedAt, TimeSpan.Zero),
                 followUpActions),
             row.EscalatedAt is null ? null : new ClinicalEventEscalation(
-                row.EscalationReason!, row.EscalatedByCurrentAccount, new DateTimeOffset(row.EscalatedAt.Value, TimeSpan.Zero)));
+                row.EscalationReason!, row.EscalatedByCurrentAccount, new DateTimeOffset(row.EscalatedAt.Value, TimeSpan.Zero)),
+            new MedicalDetail(
+                row.MedicalStartedByCurrentAccount,
+                row.MedicalStartedAt is null ? null : new DateTimeOffset(row.MedicalStartedAt.Value, TimeSpan.Zero),
+                await FindMedicalAssessmentAsync(connection, profileScopeId, eventId, ct),
+                (await QueryIndicationsAsync(connection, profileScopeId, "WHERE i.evento_id = @EventId", new { ProfileScopeId = profileScopeId, EventId = eventId }, ct))
+                    .Select(r => r.Summary).ToList()));
     }
+
+    private static async Task<MedicalAssessmentDraft?> FindMedicalAssessmentAsync(
+        System.Data.IDbConnection connection, Guid profileScopeId, Guid eventId, CancellationToken ct)
+    {
+        var assessment = await connection.QuerySingleOrDefaultAsync<MedicalAssessmentRow>(new CommandDefinition("""
+            SELECT v.hallazgos_exploracion AS Findings, v.valoracion AS Assessment, v.actuaciones AS Actions,
+                   v.temperatura_celsius AS TemperatureCelsius, v.tension_sistolica_mmhg AS SystolicMmHg,
+                   v.tension_diastolica_mmhg AS DiastolicMmHg, v.frecuencia_cardiaca_lpm AS HeartRateBpm,
+                   v.frecuencia_respiratoria_rpm AS RespiratoryRateRpm, v.saturacion_o2_pct AS OxygenSaturationPct,
+                   v.soporte_respiratorio_codigo AS RespiratorySupportCode, v.flujo_o2_lpm AS OxygenFlowLpm, v.glucemia_mg_dl AS GlucoseMgDl,
+                   v.otra_constante_nombre AS OtherName, v.otra_constante_valor AS OtherValue, v.otra_constante_unidad AS OtherUnit,
+                   CAST(CASE WHEN v.actualizado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS LastUpdatedByCurrentAccount,
+                   v.actualizado_en AS LastUpdatedAt
+              FROM dbo.valoraciones_medicas v
+              JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
+             WHERE v.evento_id = @EventId
+            """, new { ProfileScopeId = profileScopeId, EventId = eventId }, cancellationToken: ct));
+        return assessment is null ? null : new MedicalAssessmentDraft(
+            new MedicalAssessmentContent(
+                assessment.Findings, assessment.Assessment, assessment.Actions,
+                new VitalSigns(
+                    assessment.TemperatureCelsius, assessment.SystolicMmHg, assessment.DiastolicMmHg, assessment.HeartRateBpm,
+                    assessment.RespiratoryRateRpm, assessment.OxygenSaturationPct,
+                    assessment.RespiratorySupportCode is null ? null : EnumCode.ParseCode<RespiratorySupportCode>(assessment.RespiratorySupportCode),
+                    assessment.OxygenFlowLpm, assessment.GlucoseMgDl, assessment.OtherName, assessment.OtherValue, assessment.OtherUnit)),
+            assessment.LastUpdatedByCurrentAccount, new DateTimeOffset(assessment.LastUpdatedAt, TimeSpan.Zero));
+    }
+
+    /// <summary>ENF-10/MED-08: indicaciones de los eventos visibles para el ámbito (mismo predicado que las
+    /// bandejas), de la más antigua a la más reciente.</summary>
+    public async Task<IReadOnlyList<MedicalIndicationListItem>> ListIndicationsAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+
+        var scoped = (await connection.QueryAsync<IndicationEventRow>(new CommandDefinition($"""
+            SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
+                   unit.nombre_visible AS UnitName, ea.estado_codigo AS StatusCode
+            {ScopedEventsFrom}
+               AND EXISTS (SELECT 1 FROM dbo.indicaciones_medicas i WHERE i.evento_id = ea.id)
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct))).ToDictionary(e => e.EventId);
+        if (scoped.Count == 0)
+        {
+            return [];
+        }
+
+        var indications = await QueryIndicationsAsync(connection, profileScopeId, "WHERE i.evento_id IN @EventIds",
+            new { ProfileScopeId = profileScopeId, EventIds = scoped.Keys.ToList() }, ct);
+        return indications.Select(i =>
+        {
+            var e = scoped[i.EventId];
+            return new MedicalIndicationListItem(
+                e.EventId, ResidentId.From(e.ResidentId), e.ResidentDisplayName, e.UnitName,
+                EnumCode.ParseCode<ClinicalEventStatus>(e.StatusCode), i.Summary);
+        }).ToList();
+    }
+
+    private static async Task<IReadOnlyList<(Guid EventId, MedicalIndicationSummary Summary)>> QueryIndicationsAsync(
+        System.Data.IDbConnection connection, Guid profileScopeId, string where, object parameters, CancellationToken ct)
+    {
+        var rows = await connection.QueryAsync<IndicationRow>(new CommandDefinition($"""
+            SELECT i.id AS Id, i.evento_id AS EventId, i.texto AS [Text], i.fecha_prevista AS DueDate, i.criterio AS Criterion,
+                   i.informacion_adicional AS AdditionalInformation,
+                   CAST(CASE WHEN i.emitida_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS IssuedByCurrentAccount,
+                   i.emitida_en AS IssuedAt, i.estado_codigo AS StatusCode, i.revision AS Revision, i.leida_en AS ReadAt,
+                   i.resuelta_en AS ResolvedAt, i.incidencia AS Incident
+              FROM dbo.indicaciones_medicas i
+              JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
+             {where}
+             ORDER BY i.emitida_en ASC
+            """, parameters, cancellationToken: ct));
+        return rows.Select(r => (r.EventId, new MedicalIndicationSummary(
+            r.Id, r.Text, r.DueDate is null ? null : DateOnly.FromDateTime(r.DueDate.Value), r.Criterion, r.AdditionalInformation,
+            r.IssuedByCurrentAccount, new DateTimeOffset(r.IssuedAt, TimeSpan.Zero), EnumCode.ParseCode<MedicalIndicationStatus>(r.StatusCode),
+            r.Revision, r.ReadAt is null ? null : new DateTimeOffset(r.ReadAt.Value, TimeSpan.Zero),
+            r.ResolvedAt is null ? null : new DateTimeOffset(r.ResolvedAt.Value, TimeSpan.Zero), r.Incident))).ToList();
+    }
+
+    private sealed record IndicationEventRow(Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string StatusCode);
+
+    private sealed record IndicationRow(
+        Guid Id, Guid EventId, string Text, DateTime? DueDate, string? Criterion, string? AdditionalInformation,
+        bool IssuedByCurrentAccount, DateTime IssuedAt, string StatusCode, int Revision, DateTime? ReadAt, DateTime? ResolvedAt,
+        string? Incident);
+
+    private sealed record MedicalAssessmentRow(
+        string? Findings, string? Assessment, string? Actions,
+        decimal? TemperatureCelsius, short? SystolicMmHg, short? DiastolicMmHg, short? HeartRateBpm, short? RespiratoryRateRpm,
+        short? OxygenSaturationPct, string? RespiratorySupportCode, decimal? OxygenFlowLpm, short? GlucoseMgDl,
+        string? OtherName, string? OtherValue, string? OtherUnit, bool LastUpdatedByCurrentAccount, DateTime LastUpdatedAt);
 
     /// <summary>MED-02: escalados del ámbito de Medicina, del más antiguo al más reciente, con las constantes
     /// y las actuaciones de la valoración de Enfermería (cerrada al escalar).</summary>
@@ -220,7 +321,7 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                            unit.nombre_visible AS UnitName, escalation.motivo AS Reason, escalation.escalado_en AS EscalatedAt,
                            ea.estado_codigo AS StatusCode
                     {ScopedEventsFrom}
-                       AND ea.estado_codigo = 'ESCALADO_MEDICINA') scoped
+                       AND ea.estado_codigo IN ('ESCALADO_MEDICINA', 'EN_VALORACION_MEDICA')) scoped
               LEFT JOIN dbo.valoraciones_enfermeria v ON v.evento_id = scoped.EventId AND v.estado_codigo = 'CERRADA'
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
 
@@ -333,7 +434,8 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
         string? DirectNoticeNotes, DateTime OccurredAt, string StatusCode, int Revision, bool? AssessmentStartedByCurrentAccount,
         DateTime? AssessmentStartedAt, bool ClosedByCurrentAccount, DateTime? ClosedAt, string? FamilyCommunicationDecisionCode,
         string? FamilyCommunicationTypeCode, string? FamilyCommunicationText, DateTime? FamilyCommunicationPreparedAt,
-        string? EscalationReason, bool EscalatedByCurrentAccount, DateTime? EscalatedAt);
+        string? EscalationReason, bool EscalatedByCurrentAccount, DateTime? EscalatedAt, bool? MedicalStartedByCurrentAccount,
+        DateTime? MedicalStartedAt);
 
     private sealed record AssessmentRow(
         string? Findings, string? Assessment, string? Actions, string? Communications, string? Outcome,

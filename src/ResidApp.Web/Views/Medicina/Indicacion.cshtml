@@ -1,0 +1,64 @@
+@using ResidApp.Web.Models
+@model IndicacionViewModel
+@{
+    ViewData["Title"] = "Indicación a Enfermería";
+    var evento = Model.Event;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item"><a asp-action="Escalado" asp-route-eventoId="@evento.EventId">Detalle</a></li>
+        <li class="breadcrumb-item"><a asp-action="Conducta" asp-route-eventoId="@evento.EventId">Conducta médica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Indicación</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Indicación a Enfermería — @evento.ResidentDisplayName</h1>
+<p class="text-muted">
+    La verá la Enfermería de @(evento.UnitName ?? "la unidad"), que confirmará la lectura y después registrará si la realizó.
+    No hay prioridad automática.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Indicacion" method="post">
+    <input type="hidden" asp-for="Form.EventoId" />
+    <input type="hidden" asp-for="Form.Revision" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="mb-3">
+                <label asp-for="Form.Texto" class="form-label"></label>
+                <textarea asp-for="Form.Texto" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.Texto" class="text-danger"></span>
+            </div>
+            <p class="text-muted mb-2">Indica una fecha prevista, un criterio o ambos.</p>
+            <div class="mb-3">
+                <label asp-for="Form.FechaPrevista" class="form-label"></label>
+                <input asp-for="Form.FechaPrevista" type="date" class="form-control form-control-lg" style="max-width: 260px;" />
+                <span asp-validation-for="Form.FechaPrevista" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Criterio" class="form-label"></label>
+                <textarea asp-for="Form.Criterio" class="form-control" rows="2"></textarea>
+                <div class="form-text">Por ejemplo, cuándo o en qué situación aplicarla.</div>
+                <span asp-validation-for="Form.Criterio" class="text-danger"></span>
+            </div>
+            <div class="mb-0">
+                <label asp-for="Form.InformacionAdicional" class="form-label"></label>
+                <textarea asp-for="Form.InformacionAdicional" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="Form.InformacionAdicional" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <a asp-action="Conducta" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin registrar</a>
+        <button type="submit" class="btn btn-primary btn-lg">Registrar indicación</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

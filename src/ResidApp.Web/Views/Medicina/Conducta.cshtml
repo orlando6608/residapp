@@ -1,0 +1,49 @@
+@using ResidApp.Domain.Enfermeria
+@model ResidApp.Application.Ports.PendingChangeDetail
+@{
+    ViewData["Title"] = "Conducta médica";
+    var conIndicaciones = Model.Status == ClinicalEventStatus.ConIndicacionPendiente;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item"><a asp-action="Escalado" asp-route-eventoId="@Model.EventId">Detalle</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Conducta médica</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Conducta médica — @Model.ResidentDisplayName</h1>
+<p class="text-muted">Elige cómo continúa el evento. El sistema no decide ni propone ninguna salida, ni asigna prioridades.</p>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-md-6">
+        <a asp-action="Indicacion" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">@(conIndicaciones ? "Registrar otra indicación" : "Registrar indicaciones a Enfermería")</h2>
+                <p class="card-text text-muted mb-0">Texto, fecha prevista o criterio e información adicional. Enfermería de la unidad confirma la lectura y registra si la realizó.</p>
+            </div>
+        </a>
+    </div>
+    @foreach (var (titulo, texto) in new[]
+    {
+        ("Cerrar el evento", "cierre médico sin segundo cierre de Enfermería, con la decisión de comunicación familiar."),
+        ("Iniciar seguimiento médico", "fecha o criterio, equipo responsable y objetivo."),
+        ("Activar protocolo urgente", "documentar la activación y, si procede, derivar a Urgencias."),
+    })
+    {
+        <div class="col-12 col-md-6">
+            <div class="card h-100 text-muted">
+                <div class="card-body">
+                    <h2 class="h5 card-title">@titulo</h2>
+                    <p class="card-text mb-0">Próximamente: @texto</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="d-grid d-md-flex justify-content-md-end">
+    <a asp-action="Escalado" asp-route-eventoId="@Model.EventId" class="btn btn-outline-secondary btn-lg">Volver al detalle</a>
+</div>
