@@ -33,6 +33,20 @@ public sealed record VitalSignAlert(VitalSignCode Code, decimal Value, VitalSign
 /// </summary>
 public static class VitalSignReferenceRanges
 {
+    /// <summary>Un rango configurable: al menos un límite, positivos, mínimo menor que máximo y SpO2 como
+    /// máximo 100 %. Solo coherencia de formato: qué valores son clínicamente adecuados lo decide quien
+    /// tiene el permiso REFERENCE_RANGES_MANAGE.</summary>
+    public static void Validate(VitalSignRange range)
+    {
+        if ((range.Min is null && range.Max is null)
+            || range.Min is <= 0 || range.Max is <= 0
+            || (range.Min is not null && range.Max is not null && range.Min >= range.Max)
+            || (range.Code == VitalSignCode.SaturacionO2 && (range.Min is > 100 || range.Max is > 100)))
+        {
+            throw new DomainValidationException("REFERENCE_RANGE_INVALID");
+        }
+    }
+
     public static IReadOnlyList<VitalSignAlert> Evaluate(VitalSigns vitals, IReadOnlyList<VitalSignRange> ranges)
     {
         var alerts = new List<VitalSignAlert>();

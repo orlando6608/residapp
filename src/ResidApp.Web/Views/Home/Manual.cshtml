@@ -30,6 +30,7 @@
             <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#registrar-evento-enfermeria">Registrar evento (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas y valoración de eventos (Enfermería)</a>
+            <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
         </div>
@@ -301,14 +302,39 @@
         el rango bajo el campo correspondiente, y un aviso amarillo cuando un valor guardado quede fuera de
         él (por ejemplo, "Saturación de O₂ 89 %: por debajo del rango de referencia"). Es solo informativo:
         no impide guardar ni cambia la clasificación o la prioridad del evento; la decisión es siempre del
-        profesional. Los rangos los fija la dirección clínica del producto para cada centro; no se modifican
-        desde la aplicación.
+        profesional. Los rangos se fijan por centro en la pantalla "Rangos de referencia de constantes"
+        (ver la sección siguiente).
     </p>
     <p class="mb-0">
         Si otra persona modifica el evento mientras lo tienes abierto, al guardar se te pedirá recargar
         para ver la versión actual; lo que habías escrito sigue en pantalla para que puedas copiarlo, y
         nunca se sobrescribe el trabajo ajeno. La decisión asistencial (cerrar, seguimiento, escalar,
         protocolo urgente) y la línea temporal todavía no están disponibles (ver "Próximamente").
+    </p>
+</section>
+
+<section id="rangos-referencia" class="mb-4">
+    <h2 class="h5">
+        Rangos de referencia de constantes
+        <span class="badge text-bg-secondary align-middle">Perfil: Medicina o Dirección Clínica, con permiso</span>
+    </h2>
+    <p>
+        Desde Inicio, "Rangos de referencia de constantes" muestra, para tu centro, el mínimo y el máximo de
+        referencia de temperatura, presión arterial sistólica y diastólica, frecuencias cardíaca y
+        respiratoria, saturación de oxígeno y glucemia. Cada constante puede tener mínimo, máximo o ambos;
+        déjalos vacíos para que no tenga rango. Pulsa <strong>Guardar rangos</strong> para aplicarlos a todo
+        el centro.
+    </p>
+    <p>
+        Solo pueden usar esta pantalla los perfiles Medicina o Dirección/Coordinación Clínica a los que se
+        haya concedido el permiso específico en ese centro; Administración nunca puede. Cada cambio queda en
+        el historial de la propia pantalla (fecha, constante, valor anterior y nuevo, y perfil), que no se
+        puede modificar. Si otra persona cambia los rangos mientras tienes la pantalla abierta, al guardar
+        se te pedirá recargar.
+    </p>
+    <p class="mb-0">
+        En desarrollo, la cuenta <code>dev-integrado-direccion</code> tiene este permiso: los rangos que fije
+        se verán en las valoraciones de <code>dev-integrado-enfermeria</code>, que trabaja en el mismo centro.
     </p>
 </section>
 

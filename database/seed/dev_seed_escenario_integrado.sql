@@ -107,6 +107,26 @@ BEGIN
 END
 GO
 
+/*
+ * Añadido después (2026-09-28): permiso REFERENCE_RANGES_MANAGE para Dirección Clínica, para que CJ pueda
+ * fijar rangos de referencia de constantes como 'dev-integrado-direccion' y ver el aviso en las
+ * valoraciones de 'dev-integrado-enfermeria' (mismo centro). Va en un bloque aparte, idempotente por su
+ * cuenta, porque el bloque anterior no se reaplica en entornos donde las cuentas ya existen. No siembra
+ * ningún valor de rango: los fija CJ desde la pantalla.
+ */
+IF EXISTS (SELECT 1 FROM dbo.ambitos_perfil WHERE id = 'A1000000-0000-0000-0000-000000000003')
+   AND NOT EXISTS (
+       SELECT 1 FROM dbo.permisos_perfil
+        WHERE ambito_perfil_id = 'A1000000-0000-0000-0000-000000000003' AND permiso_codigo = 'REFERENCE_RANGES_MANAGE'
+          AND revocado_en IS NULL)
+BEGIN
+    INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+    SELECT NEWID(), p.id, p.centro_id, 'REFERENCE_RANGES_MANAGE', SYSUTCDATETIME(), p.cuenta_id
+      FROM dbo.ambitos_perfil p
+     WHERE p.id = 'A1000000-0000-0000-0000-000000000003';
+END
+GO
+
 SELECT
     account.sujeto_externo AS ExternalSubject,
     profile.perfil_codigo AS Perfil,

@@ -1,4 +1,5 @@
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Shared;
 
 namespace ResidApp.UnitTests;
 
@@ -41,4 +42,28 @@ public class VitalSignReferenceRangesTests
         Assert.Empty(VitalSignReferenceRanges.Evaluate(Vitals(systolic: 120, diastolic: 200), Ranges));
         Assert.Empty(VitalSignReferenceRanges.Evaluate(Vitals(temperature: 40m), []));
     }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData(38.0, 35.0)]
+    [InlineData(35.0, 35.0)]
+    [InlineData(-1.0, null)]
+    public void Validate_RangoIncoherente_SeRechaza(double? min, double? max)
+    {
+        var ex = Assert.Throws<DomainValidationException>(() =>
+            VitalSignReferenceRanges.Validate(new VitalSignRange(VitalSignCode.Temperatura, (decimal?)min, (decimal?)max)));
+        Assert.Equal("REFERENCE_RANGE_INVALID", ex.Code);
+    }
+
+    [Fact]
+    public void Validate_SaturacionPorEncimaDe100_SeRechaza() =>
+        Assert.Throws<DomainValidationException>(() =>
+            VitalSignReferenceRanges.Validate(new VitalSignRange(VitalSignCode.SaturacionO2, 92m, 101m)));
+
+    [Theory]
+    [InlineData(92.0, 100.0)]
+    [InlineData(92.0, null)]
+    [InlineData(null, 100.0)]
+    public void Validate_RangoCoherente_SeAcepta(double? min, double? max) =>
+        VitalSignReferenceRanges.Validate(new VitalSignRange(VitalSignCode.SaturacionO2, (decimal?)min, (decimal?)max));
 }

@@ -49,28 +49,16 @@ Huecos de lo ya construido:
 - La valoración en borrador se sobrescribe en cada guardado: se conserva quién y cuándo la tocó (fila en
   `eventos_auditoria` por guardado), pero no el contenido de las versiones intermedias. A validar con CJ
   si hace falta ese histórico antes de cerrar la valoración (historia 3).
-- **Rangos de referencia de constantes (fase 1 hecha, sin valores)**: decisión del 2026-09-28 — aviso
-  solo visual, que no bloquea ni cambia clasificación, prioridad ni desenlace; rangos por centro fijados por
-  script; rangos por residente en una segunda fase. Script `0008` (tabla `rangos_referencia_constantes`),
-  aviso en el detalle y en la valoración, y referencia bajo cada campo. **Falta que CJ facilite los
-  valores**: sin ellos no se muestra ningún aviso. Cuando lleguen, se cargan con un script numerado nuevo
-  en `database/scripts/`, idempotente y por código de centro, con este formato:
-
-  ```sql
-  MERGE dbo.rangos_referencia_constantes AS destino
-  USING (SELECT c.id AS centro_id, v.constante_codigo, v.minimo, v.maximo
-           FROM dbo.centros c
-          CROSS JOIN (VALUES ('TEMPERATURA', <min>, <max>), ('SATURACION_O2', <min>, NULL) /* ... */)
-                v(constante_codigo, minimo, maximo)
-          WHERE c.codigo = '<CODIGO_CENTRO>') AS origen
-     ON destino.centro_id = origen.centro_id AND destino.constante_codigo = origen.constante_codigo
-  WHEN MATCHED THEN UPDATE SET minimo = origen.minimo, maximo = origen.maximo
-  WHEN NOT MATCHED THEN INSERT (centro_id, constante_codigo, minimo, maximo)
-       VALUES (origen.centro_id, origen.constante_codigo, origen.minimo, origen.maximo);
-  ```
-
-  Constantes admitidas: `TEMPERATURA`, `TENSION_SISTOLICA`, `TENSION_DIASTOLICA`, `FRECUENCIA_CARDIACA`,
-  `FRECUENCIA_RESPIRATORIA`, `SATURACION_O2`, `GLUCEMIA`; cada una con mínimo, máximo o ambos.
+- **Rangos de referencia de constantes (fase 1 hecha, sin valores)**: decisiones del 2026-09-28 — aviso
+  solo visual, que no bloquea ni cambia clasificación, prioridad ni desenlace; rangos por centro fijados en
+  la pantalla "Rangos de referencia de constantes" (`RangosReferenciaController`) con el permiso
+  `REFERENCE_RANGES_MANAGE`, que la BD solo deja conceder a Medicina o Dirección/Coordinación Clínica
+  (nunca Administración, ADM-29); historial inmutable de cada cambio; rangos por residente en una segunda
+  fase. Script `0008`. En desarrollo tiene el permiso `dev-integrado-direccion` (seed del escenario
+  integrado). Pendiente de CJ:
+  - Fijar los valores en la pantalla: sin ellos no se muestra ningún aviso.
+  - Decidir a quién se concede el permiso en cada centro real. Hoy no hay pantalla para conceder permisos:
+    se concede por SQL, como el resto de permisos, hasta que exista el vertical Administración.
 - **Rangos de referencia por residente (fase 2, pendiente)**: excepciones individuales (p. ej. objetivo de
   SpO2 88-92 % en EPOC). Queda por decidir con CJ quién las fija (Enfermería o Medicina) y si forman
   parte del basal.

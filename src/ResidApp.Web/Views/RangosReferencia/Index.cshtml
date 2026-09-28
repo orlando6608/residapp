@@ -1,0 +1,124 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model RangosReferenciaViewModel
+@{
+    ViewData["Title"] = "Rangos de referencia de constantes";
+    string Limit(decimal? value) => value is null ? "—" : value.Value.ToString("0.#");
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Rangos de referencia</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Rangos de referencia de constantes</h1>
+
+@if (Model.View is null)
+{
+    <div class="alert alert-danger">
+        No se puede acceder a esta operación. Fijar los rangos requiere un perfil clínico (Medicina o
+        Dirección/Coordinación Clínica) con el permiso específico para ello en este centro.
+    </div>
+    return;
+}
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="alert alert-info">
+    Estos rangos se aplican a todo el centro. Cuando Enfermería registra una constante fuera de su rango, la
+    valoración muestra un aviso <strong>solo informativo</strong>: no impide guardar ni cambia la
+    clasificación o la prioridad del evento. Deja vacíos el mínimo y el máximo de una constante para que no
+    tenga rango.
+</div>
+
+<form asp-action="Index" method="post">
+    <input type="hidden" asp-for="Form.Version" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Constante</th>
+                            <th scope="col">Mínimo</th>
+                            <th scope="col">Máximo</th>
+                            <th scope="col">Unidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < Model.Form.Rangos.Count; i++)
+                        {
+                            var label = VitalSignRangeDisplay.Label(Model.Form.Rangos[i].Constante);
+                            <tr>
+                                <th scope="row">
+                                    @label
+                                    <input type="hidden" asp-for="Form.Rangos[i].Constante" />
+                                </th>
+                                <td>
+                                    <input asp-for="Form.Rangos[i].Minimo" type="number" step="0.1" inputmode="decimal"
+                                           class="form-control form-control-lg" aria-label="@label: mínimo" />
+                                    <span asp-validation-for="Form.Rangos[i].Minimo" class="text-danger"></span>
+                                </td>
+                                <td>
+                                    <input asp-for="Form.Rangos[i].Maximo" type="number" step="0.1" inputmode="decimal"
+                                           class="form-control form-control-lg" aria-label="@label: máximo" />
+                                    <span asp-validation-for="Form.Rangos[i].Maximo" class="text-danger"></span>
+                                </td>
+                                <td>@VitalSignRangeDisplay.Unit(Model.Form.Rangos[i].Constante)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-grid d-md-flex justify-content-md-end mb-4">
+        <button type="submit" class="btn btn-primary btn-lg">Guardar rangos</button>
+    </div>
+</form>
+
+<h2 class="h5">Historial de cambios</h2>
+@if (Model.View.History.Count == 0)
+{
+    <p class="text-muted">Todavía no se ha fijado ningún rango en este centro.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Constante</th>
+                    <th scope="col">Antes (mín. – máx.)</th>
+                    <th scope="col">Después (mín. – máx.)</th>
+                    <th scope="col">Cambiado por</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var change in Model.View.History)
+                {
+                    <tr>
+                        <td>@change.ChangedAt.ToLocalTime().ToString("g")</td>
+                        <td>@VitalSignRangeDisplay.Label(change.Code)</td>
+                        <td>@(change.PreviousMin is null && change.PreviousMax is null ? "Sin rango" : $"{Limit(change.PreviousMin)} – {Limit(change.PreviousMax)}")</td>
+                        <td>@(change.NewMin is null && change.NewMax is null ? "Sin rango" : $"{Limit(change.NewMin)} – {Limit(change.NewMax)}")</td>
+                        <td>@SystemProfileDisplay.Label(change.ChangedByProfile)@(change.ChangedByCurrentAccount ? " (tú)" : "")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

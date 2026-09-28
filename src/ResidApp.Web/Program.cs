@@ -27,6 +27,7 @@ builder.Services.AddScoped<IDailyClosureRepository, SqlDailyClosureRepository>()
 builder.Services.AddScoped<IClinicalEventRepository, SqlClinicalEventRepository>();
 builder.Services.AddScoped<IChangeInboxDirectory, SqlChangeInboxDirectory>();
 builder.Services.AddScoped<INursingAssessmentRepository, SqlNursingAssessmentRepository>();
+builder.Services.AddScoped<IReferenceRangeRepository, SqlReferenceRangeRepository>();
 builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
 
 builder.Services.AddScoped<CreateResident>();
@@ -55,6 +56,8 @@ builder.Services.AddScoped<FindPendingChangeDetail>();
 builder.Services.AddScoped<StartNursingAssessment>();
 builder.Services.AddScoped<SaveNursingAssessment>();
 builder.Services.AddScoped<EnfermeriaApplicationService>();
+
+builder.Services.AddScoped<ReferenceRangesApplicationService>();
 
 var app = builder.Build();
 
