@@ -1,7 +1,9 @@
+@using ResidApp.Domain.Enfermeria
 @using ResidApp.Web.Models
 @model ResidApp.Application.Ports.PendingChangeDetail
 @{
     ViewData["Title"] = "Decisión asistencial";
+    var enSeguimiento = Model.Status == ClinicalEventStatus.EnSeguimiento;
 }
 
 <nav aria-label="breadcrumb">
@@ -9,12 +11,19 @@
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
         <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
         <li class="breadcrumb-item"><a asp-action="DetalleCambio" asp-route-eventoId="@Model.EventId">Detalle</a></li>
+        @if (enSeguimiento)
+        {
+            <li class="breadcrumb-item"><a asp-action="Seguimiento" asp-route-eventoId="@Model.EventId">Seguimiento</a></li>
+        }
         <li class="breadcrumb-item active" aria-current="page">Decisión asistencial</li>
     </ol>
 </nav>
 
 <h1 class="h3">Decisión asistencial — @Model.ResidentDisplayName</h1>
-<p class="text-muted">Elige una sola salida para este evento. El sistema no decide ni propone ninguna.</p>
+<p class="text-muted">
+    @(enSeguimiento ? "Resuelves el seguimiento eligiendo cómo continúa el evento." : "Elige una sola salida para este evento.")
+    El sistema no decide ni propone ninguna.
+</p>
 
 <div class="row g-3 mb-3">
     <div class="col-12 col-md-6">
@@ -25,9 +34,28 @@
             </div>
         </a>
     </div>
+    <div class="col-12 col-md-6">
+        @if (enSeguimiento)
+        {
+            <div class="card h-100 text-muted">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Iniciar seguimiento</h2>
+                    <p class="card-text mb-0">El evento ya está en seguimiento.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <a asp-action="IniciarSeguimiento" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Iniciar seguimiento</h2>
+                    <p class="card-text text-muted mb-0">Fecha prevista o criterio de revisión; lo sigue la Enfermería de la unidad.</p>
+                </div>
+            </a>
+        }
+    </div>
     @foreach (var (titulo, texto) in new[]
     {
-        ("Iniciar seguimiento", "Fecha prevista o criterio y equipo responsable."),
         ("Escalar a Medicina", "Se envía toda la información reunida, sin resumen automático."),
         ("Activar protocolo urgente", "Documentar la activación y, si procede, derivar a Urgencias."),
     })
@@ -44,5 +72,7 @@
 </div>
 
 <div class="d-grid d-md-flex justify-content-md-end">
-    <a asp-action="DetalleCambio" asp-route-eventoId="@Model.EventId" class="btn btn-outline-secondary btn-lg">Volver al detalle</a>
+    <a asp-action="@(enSeguimiento ? "Seguimiento" : "DetalleCambio")" asp-route-eventoId="@Model.EventId" class="btn btn-outline-secondary btn-lg">
+        @(enSeguimiento ? "Volver al seguimiento" : "Volver al detalle")
+    </a>
 </div>

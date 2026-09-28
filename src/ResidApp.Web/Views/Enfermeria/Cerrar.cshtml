@@ -45,6 +45,29 @@
     </div>
 </div>
 
+@if (evento.FollowUp is { } seguimiento)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Seguimiento</h2>
+            <p class="mb-2">Plan vigente: @FollowUpDisplay.Plan(seguimiento.DueDate, seguimiento.Criterion)</p>
+            @if (seguimiento.Actions.Count == 0)
+            {
+                <p class="text-muted mb-0">Sin actuaciones registradas durante el seguimiento.</p>
+            }
+            else
+            {
+                <ul class="mb-0">
+                    @foreach (var accion in seguimiento.Actions.Where(a => a.Type == FollowUpActionType.Actuacion))
+                    {
+                        <li style="white-space: pre-line">@accion.RecordedAt.ToLocalTime().ToString("g"): @accion.Text</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+}
+
 <form asp-action="Cerrar" method="post">
     <input type="hidden" asp-for="Form.EventoId" />
     <input type="hidden" asp-for="Form.Revision" />

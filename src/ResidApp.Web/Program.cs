@@ -57,6 +57,9 @@ builder.Services.AddScoped<StartNursingAssessment>();
 builder.Services.AddScoped<SaveNursingAssessment>();
 builder.Services.AddScoped<CloseClinicalEvent>();
 builder.Services.AddScoped<ListPendingFamilyCommunications>();
+builder.Services.AddScoped<StartFollowUp>();
+builder.Services.AddScoped<RecordFollowUpAction>();
+builder.Services.AddScoped<ListFollowUps>();
 builder.Services.AddScoped<EnfermeriaApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();

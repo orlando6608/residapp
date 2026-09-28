@@ -40,7 +40,10 @@ public class EnfermeriaApplicationServiceTests
             new StartNursingAssessment(scopes, changeInbox, session, assessments),
             new SaveNursingAssessment(scopes, changeInbox, session, assessments),
             new CloseClinicalEvent(scopes, changeInbox, session, assessments),
-            new ListPendingFamilyCommunications(scopes, changeInbox, session));
+            new ListPendingFamilyCommunications(scopes, changeInbox, session),
+            new StartFollowUp(scopes, changeInbox, session, assessments),
+            new RecordFollowUpAction(scopes, changeInbox, session, assessments),
+            new ListFollowUps(scopes, changeInbox, session));
     }
 
     /// <summary>Un residente en la unidad de dos profesionales de Enfermería y un evento propio de la
@@ -402,6 +405,188 @@ public class EnfermeriaApplicationServiceTests
             ("UPDATE dbo.valoraciones_enfermeria SET hallazgos = 'x' WHERE evento_id = @EventId", "NURSING_ASSESSMENT_IMMUTABLE"),
             ("UPDATE dbo.comunicaciones_familiares SET texto = 'x' WHERE evento_id = @EventId", "FAMILY_COMMUNICATION_IMMUTABLE"),
             ("DELETE FROM dbo.comunicaciones_familiares WHERE evento_id = @EventId", "FAMILY_COMMUNICATION_IMMUTABLE"),
+        })
+        {
+            var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { EventId = eventId }));
+            Assert.Contains(expected, ex.Message);
+        }
+    }
+
+    private static StartFollowUpCommand StartFollowUpCommand(
+        SeededProfile seed, Guid eventId, int revision, DateOnly? dueDate = null, string? criterion = "Si reaparece la tos.") =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, dueDate, criterion, "Vigilar tolerancia.");
+
+    private static async Task<PendingChangeDetail> DetailAsync(SeededProfile seed, Guid eventId) =>
+        (await BuildService(seed.ExternalSubject).FindPendingChangeDetailAsync(
+            new FindPendingChangeDetailCommand(seed.ProfileScopeId, seed.CenterId, eventId))).Value!;
+
+    private static async Task<IReadOnlyList<FollowUpSummary>> FollowUpsAsync(SeededProfile seed) =>
+        (await BuildService(seed.ExternalSubject).ListFollowUpsAsync(new ListFollowUpsCommand(seed.ProfileScopeId, seed.CenterId))).Value!;
+
+    [Fact]
+    public async Task StartFollowUp_SacaElEventoDeLasBandejas_YLoPoneEnSeguimientos()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var service = BuildService(enfermera.ExternalSubject);
+
+        var started = await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision, new DateOnly(2030, 1, 15)));
+
+        Assert.True(started.Ok);
+        var inbox = await service.ListPendingChangesAsync(new ListPendingChangesCommand(enfermera.ProfileScopeId, enfermera.CenterId, DailyChangeClassification.Ordinario));
+        Assert.DoesNotContain(inbox.Value!, e => e.EventId == eventId);
+        var item = Assert.Single(await FollowUpsAsync(companera));
+        Assert.Equal(eventId, item.EventId);
+        Assert.Equal(new DateOnly(2030, 1, 15), item.DueDate);
+        Assert.Equal("Si reaparece la tos.", item.Criterion);
+        Assert.False(item.TransferPending);
+
+        var detail = await DetailAsync(companera, eventId);
+        Assert.Equal(ClinicalEventStatus.EnSeguimiento, detail.Status);
+        Assert.False(detail.FollowUp!.StartedByCurrentAccount);
+        Assert.Equal("Vigilar tolerancia.", detail.FollowUp.ContinuityNotes);
+        Assert.Equal(1, await CountAuditAsync(eventId, "FOLLOW_UP_START"));
+
+        // La valoración no se edita durante el seguimiento: lo nuevo son actuaciones del seguimiento.
+        var save = await service.SaveNursingAssessmentAsync(SaveCommand(enfermera, eventId, detail.Revision));
+        Assert.Equal(ApplicationFailureCode.Conflict, save.Error!.Code);
+    }
+
+    [Fact]
+    public async Task StartFollowUp_SinPlanOSinValoracion_EsInvalido()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var started = await service.StartNursingAssessmentAsync(new StartNursingAssessmentCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId, 1));
+
+        var withoutAssessment = await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, started.Value));
+        var saved = (await service.SaveNursingAssessmentAsync(SaveCommand(enfermera, eventId, started.Value))).Value;
+        var withoutPlan = await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, saved, null, " "));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutAssessment.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutPlan.Error!.Code);
+        Assert.Equal(ClinicalEventStatus.EnValoracion, (await DetailAsync(enfermera, eventId)).Status);
+    }
+
+    [Fact]
+    public async Task FollowUpActions_ConservanAutoria_ReprogramanYTransfierenConRecepcion()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var mine = BuildService(enfermera.ExternalSubject);
+        var theirs = BuildService(companera.ExternalSubject);
+        revision = (await mine.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision, new DateOnly(2030, 1, 15)))).Value;
+
+        revision = (await mine.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Actuacion, "Tolera la dieta."))).Value;
+        var stale = await theirs.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            companera.ProfileScopeId, companera.CenterId, eventId, revision - 1, FollowUpActionType.Actuacion, "Otra."));
+        Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
+        var unjustified = await theirs.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            companera.ProfileScopeId, companera.CenterId, eventId, revision, FollowUpActionType.Reprogramacion, null, new DateOnly(2030, 2, 1)));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, unjustified.Error!.Code);
+        revision = (await theirs.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            companera.ProfileScopeId, companera.CenterId, eventId, revision, FollowUpActionType.Reprogramacion,
+            "Persiste la tos.", new DateOnly(2030, 2, 1)))).Value;
+        revision = (await mine.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Transferencia,
+            "Revisar a las 8.", EquipoEntrante: "Turno de noche"))).Value;
+
+        var pending = (await DetailAsync(companera, eventId)).FollowUp!;
+        Assert.Equal(new DateOnly(2030, 2, 1), pending.DueDate);
+        Assert.Null(pending.Criterion);
+        Assert.Equal(new DateOnly(2030, 1, 15), pending.InitialDueDate);
+        Assert.Equal("Turno de noche", pending.PendingTransfer!.IncomingTeam);
+        Assert.Equal([false, true, false], pending.Actions.Select(a => a.ByCurrentAccount).ToArray());
+        Assert.True(Assert.Single(await FollowUpsAsync(companera)).TransferPending);
+
+        revision = (await theirs.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            companera.ProfileScopeId, companera.CenterId, eventId, revision, FollowUpActionType.Recepcion,
+            TransferenciaId: pending.PendingTransfer.Id))).Value;
+        var again = await theirs.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            companera.ProfileScopeId, companera.CenterId, eventId, revision, FollowUpActionType.Recepcion,
+            TransferenciaId: pending.PendingTransfer.Id));
+
+        Assert.Equal(ApplicationFailureCode.Conflict, again.Error!.Code);
+        Assert.Null((await DetailAsync(companera, eventId)).FollowUp!.PendingTransfer);
+        Assert.False(Assert.Single(await FollowUpsAsync(companera)).TransferPending);
+        Assert.Equal(1, await CountAuditAsync(eventId, "FOLLOW_UP_RECEIVE"));
+    }
+
+    [Fact]
+    public async Task FollowUp_Vencido_SigueAbiertoYVisible_YAlResolverloSeCierra()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var service = BuildService(enfermera.ExternalSubject);
+        var yesterday = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+        revision = (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision, yesterday, null))).Value;
+
+        var overdue = Assert.Single(await FollowUpsAsync(enfermera));
+        Assert.True(new FollowUpPlan(overdue.DueDate, overdue.Criterion).IsOverdue(DateOnly.FromDateTime(DateTime.Today)));
+        Assert.Equal(ClinicalEventStatus.EnSeguimiento, (await DetailAsync(enfermera, eventId)).Status);
+
+        var closed = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, revision, Guid.NewGuid()));
+
+        Assert.True(closed.Ok);
+        Assert.Empty(await FollowUpsAsync(enfermera));
+        var detail = await DetailAsync(enfermera, eventId);
+        Assert.Equal(ClinicalEventStatus.Cerrado, detail.Status);
+        Assert.NotNull(detail.FollowUp);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal("CERRADA", await connection.ExecuteScalarAsync<string>(
+            "SELECT estado_codigo FROM dbo.valoraciones_enfermeria WHERE evento_id = @EventId", new { EventId = eventId }));
+    }
+
+    [Fact]
+    public async Task FollowUp_ConAuxiliarOFueraDeAmbito_ReturnsAccessDenied()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var auxiliar = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, enfermera.CenterId, enfermera.UnitId);
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+
+        var byAuxiliar = await BuildService(auxiliar.ExternalSubject).StartFollowUpAsync(StartFollowUpCommand(auxiliar, eventId, revision));
+        var byOutsider = await BuildService(outsider.ExternalSubject).StartFollowUpAsync(StartFollowUpCommand(outsider, eventId, revision));
+        var actionByOutsider = await BuildService(outsider.ExternalSubject).RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            outsider.ProfileScopeId, outsider.CenterId, eventId, revision, FollowUpActionType.Actuacion, "x"));
+        var listByAuxiliar = await BuildService(auxiliar.ExternalSubject).ListFollowUpsAsync(new ListFollowUpsCommand(auxiliar.ProfileScopeId, auxiliar.CenterId));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byAuxiliar.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOutsider.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, actionByOutsider.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, listByAuxiliar.Error!.Code);
+    }
+
+    [Fact]
+    public async Task Seguimiento_LaBaseDeDatosRechazaModificarloYSaltosDeEstado()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var skipped = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_SEGUIMIENTO', revision = revision + 1, valoracion_iniciada_por_cuenta_id = @AccountId, valoracion_iniciada_en = SYSUTCDATETIME() WHERE id = @EventId",
+            new { EventId = eventId, AccountId = enfermera.AccountId.Value }));
+        Assert.Contains("CLINICAL_EVENT_TRANSITION_INVALID", skipped.Message);
+
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var service = BuildService(enfermera.ExternalSubject);
+        revision = (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision))).Value;
+        await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Transferencia, EquipoEntrante: "Tarde"));
+
+        foreach (var (sql, expected) in new[]
+        {
+            ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_VALORACION', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
+            ("UPDATE dbo.seguimientos SET criterio = 'x' WHERE evento_id = @EventId", "FOLLOW_UP_IMMUTABLE"),
+            ("DELETE FROM dbo.seguimientos WHERE evento_id = @EventId", "FOLLOW_UP_IMMUTABLE"),
+            ("UPDATE a SET texto = 'x' FROM dbo.seguimiento_acciones a JOIN dbo.seguimientos s ON s.id = a.seguimiento_id WHERE s.evento_id = @EventId", "FOLLOW_UP_ACTION_IMMUTABLE"),
+            ("""
+             INSERT INTO dbo.seguimiento_acciones (id, seguimiento_id, tipo_codigo, transferencia_id, registrado_por_cuenta_id, registrado_en)
+             SELECT NEWID(), a.seguimiento_id, 'RECEPCION', a.id, a.registrado_por_cuenta_id, SYSUTCDATETIME()
+               FROM dbo.seguimiento_acciones a JOIN dbo.seguimientos s ON s.id = a.seguimiento_id
+              CROSS JOIN (VALUES (1), (2)) twice(n)
+              WHERE s.evento_id = @EventId AND a.tipo_codigo = 'TRANSFERENCIA'
+             """, "UX_sa_recepcion"),
         })
         {
             var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { EventId = eventId }));

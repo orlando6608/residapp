@@ -27,6 +27,14 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   preparada se guarda en `comunicaciones_familiares` como PENDIENTE_APROBACION y se lista en
   `/Comunicaciones` (tarjeta del inicio). Cada guardado de la valoración deja además una versión inmutable
   en `valoraciones_enfermeria_versiones`. Script `0009_enfermeria_cierre_evento`.
+- **Historia 4 (seguimiento y transferencia)** — 2026-09-28: "Iniciar seguimiento" desde la decisión
+  asistencial (`/IniciarSeguimiento`, fecha prevista y/o criterio e indicaciones de continuidad); el
+  evento pasa a EN_SEGUIMIENTO, sale de ordinarios y prioritarios y entra en la bandeja `/Seguimientos`
+  (tarjeta del inicio con contador y vencidos). En `/Seguimiento`: registrar actuaciones, reprogramar con
+  justificación, transferir al equipo o turno entrante con nota y confirmar la recepción, cada acción con
+  su autoría. Un seguimiento vencido sigue abierto y visible. "Resolver" vuelve a `/Decision`, desde donde
+  se cierra (la valoración sigue en borrador durante el seguimiento y se cierra al cerrar el evento).
+  Tablas de solo inserción `seguimientos` y `seguimiento_acciones`; script `0010_enfermeria_seguimiento`.
 - **Historia 8 (evento propio)**: registro de un evento observado por Enfermería (`/RegistrarEvento`,
   tabla `eventos_clinicos`, script `0006`), inmutable; al guardarlo se continúa en su detalle y entra en
   las bandejas con su autoría real.
@@ -34,27 +42,30 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   firmar (`EnfermeriaBasalController` → `BaselineController/Sign`), con concurrencia optimista e
   idempotencia (script `0005_enfermeria_borrador_basal`).
 - Residentes del ámbito y ficha del residente (`/Residentes`, `/Residente`).
-- Tests de integración: `EnfermeriaApplicationServiceTests` (incluido el cierre), `SqlChangeInboxDirectoryTests`,
+- Tests de integración: `EnfermeriaApplicationServiceTests` (incluidos el cierre y el seguimiento), `SqlChangeInboxDirectoryTests`,
   `SqlClinicalEventRepositoryTests`, `SqlEnfermeriaResidentDirectoryTests`, `SqlBaselineRepositoryDraftTests`.
 
 ## Pendiente
 
 En el orden propuesto de construcción:
 
-1. **Historia 4 — seguimiento y transferencia** (`ENF-07`, `ENF-08`). Añade su estado a
-   `eventos_asistenciales` y su transición a `TR_ea_transition_guard` (hoy solo PENDIENTE, EN_VALORACION y
-   CERRADO), y activa su salida en `/Decision`.
-2. **Historia 5 — escalado a Medicina** (`ENF-09`). Comparte tablas con el vertical Medicina.
-3. **Historia 7 — indicaciones de Medicina** (`ENF-10`). Depende de Medicina.
-4. **Historia 6 — protocolo urgente y derivación a Urgencias** (`DER-01` a `DER-06`, común con Medicina).
-5. **Historia 11 — historial de eventos y versiones del basal** (`HIS-01` a `HIS-03`, común con Medicina).
+1. **Historia 5 — escalado a Medicina** (`ENF-09`). Comparte tablas con el vertical Medicina. Añade su
+   estado a `eventos_asistenciales` y sus transiciones a `TR_ea_transition_guard` (hoy PENDIENTE,
+   EN_VALORACION, EN_SEGUIMIENTO y CERRADO; se escala desde EN_VALORACION y desde EN_SEGUIMIENTO), y activa
+   su salida en `/Decision`.
+2. **Historia 7 — indicaciones de Medicina** (`ENF-10`). Depende de Medicina.
+3. **Historia 6 — protocolo urgente y derivación a Urgencias** (`DER-01` a `DER-06`, común con Medicina).
+4. **Historia 11 — historial de eventos y versiones del basal** (`HIS-01` a `HIS-03`, común con Medicina).
    Puede mostrar ya las versiones de la valoración (`valoraciones_enfermeria_versiones`), que hoy se
    guardan pero no se ven.
 
 Huecos de lo ya construido:
 
-- Las tarjetas de seguimientos e indicaciones de `Views/Enfermeria/Index.cshtml` son marcadores
-  "Próximamente".
+- La tarjeta de indicaciones de `Views/Enfermeria/Index.cshtml` es un marcador "Próximamente".
+- **Seguimiento (historia 4)**: no hay equipos ni turnos (son del vertical Administración). El equipo
+  responsable es la Enfermería de la unidad del evento y el equipo o turno entrante de una transferencia es
+  texto libre; cuando existan turnos reales habrá que sustituirlo. La fecha prevista es solo fecha (sin
+  hora) y vence al día siguiente.
 - **Comunicación familiar (historia 3)**: solo se guarda la comunicación preparada, pendiente de
   aprobación. Quedan para Portal Familiar / Administración: aprobarla o volver a editarla (ENF-15), la
   audiencia autorizada (ENF-14), el momento de publicación y la publicación. `comunicaciones_familiares`

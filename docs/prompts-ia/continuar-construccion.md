@@ -12,41 +12,45 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- Todo el trabajo está en `main` y subido. La historia 3 de Enfermería (script `0009`) se subió el
-  2026-09-28. Queda por confirmar que el pipeline la aplicó en Azure: comprueba el run de GitHub Actions.
+- Todo el trabajo está en `main`. La historia 3 (script `0009`) ya está desplegada en Azure: el pipeline
+  terminó con éxito el 2026-09-28. La historia 4 (script `0010`) está commiteada en local y **pendiente de
+  push**; compruébalo con `git status` al empezar. El estado de un run se consulta sin autenticación en
+  `https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main` (`gh` no está instalado).
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
-  (parcial), 2, 3, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
-- La base local `ResidApp` tiene los scripts `0001` a `0009` registrados en `dbo.scripts_aplicados`.
-  Hay una copia previa a `0009` en
-  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0009-20260928.bak`.
-  La base local tiene además un evento de prueba cerrado del escenario integrado («Prueba manual historia
-  3: tos.»), con su comunicación pendiente de aprobación.
-- Suite: 69 unitarios, 134 de integración y 1 funcional, todos en verde.
+  (parcial), 2, 3, 4, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
+- La base local `ResidApp` tiene los scripts `0001` a `0010` registrados en `dbo.scripts_aplicados`.
+  Hay una copia previa a `0010` en
+  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0010-20260928.bak`.
+  La base local tiene además dos eventos de prueba cerrados del escenario integrado («Prueba manual
+  historia 3: tos.», con su comunicación pendiente de aprobación, y «Prueba manual historia 4: tos.», que
+  pasó por un seguimiento completo).
+- Suite: 79 unitarios, 140 de integración y 1 funcional, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
   Azure fallaría. Antes de crear un script, comprueba cuál es el último número.
 
-## Siguiente tarea: Enfermería, historia 4
+## Siguiente tarea: Enfermería, historia 5
 
-Iniciar y transferir un seguimiento (`ENF-06`, `ENF-07`, `ENF-08`):
-[`docs/historias-usuarios/enfermeria.md`](../historias-usuarios/enfermeria.md) y
+Escalar un evento a Medicina (`ENF-06`, `ENF-09`):
+[`docs/historias-usuarios/enfermeria.md`](../historias-usuarios/enfermeria.md),
 [`docs/flujos-clinicos/valoracion-escalado-enfermeria.md`](../flujos-clinicos/valoracion-escalado-enfermeria.md)
-(salida «b», estado «En seguimiento»; wireframes ENF-07B, ENF-08 y ENF-09).
+(salida «c», estado «Escalado a Medicina»; wireframe ENF-10) y
+[`docs/flujos-clinicos/valoracion-conducta-medicina.md`](../flujos-clinicos/valoracion-conducta-medicina.md).
 
-- Es la segunda salida de la decisión asistencial. Se activa su tarjeta en `Views/Enfermeria/Decision.cshtml`
-  y se reutiliza el patrón del cierre: `CloseAsync` en `SqlNursingAssessmentRepository`, con idempotencia,
-  revisión y auditoría.
-- Hay que añadir el estado a `CK_ea_estado` y la transición a `TR_ea_transition_guard` en un script `0010`
-  nuevo. `0009` es la referencia de cómo hacerlo.
-- La valoración pasa hoy a CERRADA solo al cerrar. Hay que decidir qué ocurre con ella al pasar a
-  seguimiento.
-- **Antes de diseñar hay que resolver una cosa:** el seguimiento exige «equipo responsable» y una
-  transferencia «al equipo entrante» en el cambio de turno. No existen ni equipos ni turnos (turnos es
-  Administración). Hay que acotar qué se entiende por equipo ahora (por ejemplo, la unidad) y proponerlo al
-  usuario; no inventarlo.
+- Es la tercera salida de la decisión asistencial y se puede escalar desde EN_VALORACION y desde
+  EN_SEGUIMIENTO. Se activa su tarjeta en `Views/Enfermeria/Decision.cshtml`.
+- Reutiliza el patrón de `StartFollowUpAsync` y `CloseAsync` de `SqlNursingAssessmentRepository`
+  (revisión, auditoría, solo inserción). El estado y sus transiciones van en un script `0011` nuevo, con
+  `0010` como referencia.
+- El escalado transmite observación, basal vigente, valoración, constantes, actuaciones y motivo, sin
+  ningún resumen automático. Escalar no cierra el evento: el desenlace es de Medicina.
+- **Antes de diseñar hay que resolver una cosa:** el evento escalado «pasa a la bandeja de Medicina», y el
+  vertical Medicina no existe todavía. Hay que acotar qué parte mínima se construye ahora (por ejemplo, el
+  escalado con su motivo y una bandeja de Medicina de solo lectura) y qué pasa con la valoración de
+  Enfermería al escalar. Es una decisión de alcance: proponerla al usuario y no inventarla.
 
-Después, en orden: historias 5, 7, 6 y 11 (detalle en `pendientes-enfermeria.md`), y luego Medicina.
+Después, en orden: historias 7, 6 y 11 (detalle en `pendientes-enfermeria.md`), y luego Medicina.
 
 ## Reglas de trabajo propias de este repositorio
 

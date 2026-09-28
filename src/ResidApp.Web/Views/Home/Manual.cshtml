@@ -30,6 +30,7 @@
             <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#registrar-evento-enfermeria">Registrar evento (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas, valoración y cierre de eventos (Enfermería)</a>
+            <a class="list-group-item list-group-item-action" href="#seguimientos-enfermeria">Seguimientos y transferencia de turno (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -315,8 +316,8 @@
     <p>
         Con la valoración guardada, en el detalle aparece <strong>Pasar a decisión asistencial</strong>,
         con las cuatro salidas posibles: cerrar el evento, iniciar seguimiento, escalar a Medicina o activar
-        el protocolo urgente. De momento solo está disponible <strong>cerrar</strong>; las otras tres
-        aparecen como "Próximamente". Al cerrar revisas el resumen de la valoración y decides de forma
+        el protocolo urgente. De momento están disponibles <strong>cerrar</strong> e <strong>iniciar
+        seguimiento</strong>; escalar y el protocolo urgente aparecen como "Próximamente". Al cerrar revisas el resumen de la valoración y decides de forma
         explícita si se comunica a la familia: <strong>No comunicar</strong> o <strong>Preparar
         comunicación</strong>. Si la preparas, eliges si es ordinaria o relevante (la relevancia la decides
         tú) y escribes un texto comprensible, sin datos internos ni escalas. Al pulsar <strong>Cerrar
@@ -330,6 +331,38 @@
         la verá firmada siempre como "Equipo asistencial del centro", nunca con tu nombre. Su aprobación y
         publicación llegan con el Portal Familiar (ver "Próximamente"), igual que la línea temporal del
         evento.
+    </p>
+</section>
+
+<section id="seguimientos-enfermeria" class="mb-4">
+    <h2 class="h5">
+        Seguimientos y transferencia de turno
+        <span class="badge text-bg-secondary align-middle">Perfil: Enfermería</span>
+    </h2>
+    <p>
+        Desde la decisión asistencial, <strong>Iniciar seguimiento</strong> pide una fecha prevista de
+        revisión, un criterio (por ejemplo, la situación que haría revisarlo antes) o ambos, y unas
+        indicaciones de continuidad opcionales. El equipo responsable es la Enfermería de la unidad del
+        evento. El evento sale de las bandejas de prioritarios y ordinarios y pasa a la bandeja
+        <strong>Seguimientos</strong>, compartida por la unidad, que muestra la próxima revisión, la última
+        actuación y si hay una transferencia pendiente de recepción.
+    </p>
+    <p>
+        Un seguimiento cuya fecha ya ha pasado aparece como <strong>Vencido</strong>, pero sigue abierto y
+        visible: nunca se cierra ni se oculta solo. Uno que solo tiene criterio no vence.
+    </p>
+    <p>
+        En la pantalla del seguimiento puedes <strong>registrar una actuación</strong>,
+        <strong>reprogramar</strong> (nueva fecha o criterio, siempre con una justificación; el plan anterior
+        queda en el historial) y <strong>transferir al turno entrante</strong>, indicando el equipo o turno
+        (por ejemplo, "turno de noche") y una nota de continuidad. La transferencia queda pendiente hasta que
+        alguien pulsa <strong>Confirmar recepción</strong>, y el seguimiento sigue visible mientras tanto.
+        Cada acción conserva quién la hizo y cuándo. La valoración no se modifica durante el seguimiento: lo
+        nuevo se registra como actuaciones.
+    </p>
+    <p class="mb-0">
+        Cuando ya no hace falta seguir, <strong>Resolver</strong> vuelve a la decisión asistencial, desde
+        donde se cierra el evento como se describe arriba (con la decisión de comunicación familiar).
     </p>
 </section>
 
@@ -394,7 +427,8 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>El resto de la decisión asistencial sobre un evento ya valorado: iniciar seguimiento, escalar a Medicina o activar el protocolo urgente; y la línea temporal e historial de eventos.</li>
+        <li>El resto de la decisión asistencial sobre un evento ya valorado: escalar a Medicina o activar el protocolo urgente; y la línea temporal e historial de eventos.</li>
+        <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería de la unidad y el turno entrante se escribe a mano).</li>
         <li>Derivación a Urgencias con informe firmado en PDF.</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>

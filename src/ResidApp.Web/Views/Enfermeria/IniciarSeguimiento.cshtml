@@ -1,0 +1,59 @@
+@using ResidApp.Web.Models
+@model IniciarSeguimientoViewModel
+@{
+    ViewData["Title"] = "Iniciar seguimiento";
+    var evento = Model.Event;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId">Detalle</a></li>
+        <li class="breadcrumb-item"><a asp-action="Decision" asp-route-eventoId="@evento.EventId">Decisión asistencial</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Iniciar seguimiento</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Iniciar seguimiento — @evento.ResidentDisplayName</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="IniciarSeguimiento" method="post">
+    <input type="hidden" asp-for="Form.EventoId" />
+    <input type="hidden" asp-for="Form.Revision" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="mb-3">
+                Equipo responsable: <strong>Enfermería de @(evento.UnitName ?? "la unidad")</strong>. El seguimiento
+                aparece en la bandeja de seguimientos de la unidad y cualquier profesional de Enfermería puede continuarlo.
+            </p>
+            <p class="text-muted">Indica una fecha prevista, un criterio de revisión o ambos. Si vence, sigue abierto y visible.</p>
+            <div class="mb-3">
+                <label asp-for="Form.FechaPrevista" class="form-label"></label>
+                <input asp-for="Form.FechaPrevista" type="date" class="form-control form-control-lg" style="max-width: 260px;" />
+                <span asp-validation-for="Form.FechaPrevista" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Criterio" class="form-label"></label>
+                <textarea asp-for="Form.Criterio" class="form-control" rows="2"></textarea>
+                <div class="form-text">Por ejemplo, la situación que haría revisarlo antes.</div>
+                <span asp-validation-for="Form.Criterio" class="text-danger"></span>
+            </div>
+            <div class="mb-0">
+                <label asp-for="Form.IndicacionesContinuidad" class="form-label"></label>
+                <textarea asp-for="Form.IndicacionesContinuidad" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.IndicacionesContinuidad" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <a asp-action="Decision" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin iniciar</a>
+        <button type="submit" class="btn btn-primary btn-lg">Iniciar seguimiento</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

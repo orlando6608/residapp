@@ -191,6 +191,10 @@
             <a asp-action="Decision" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Pasar a decisión asistencial</a>
         }
     }
+    else if (evento.Status == ClinicalEventStatus.EnSeguimiento)
+    {
+        <a asp-action="Seguimiento" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Ver el seguimiento</a>
+    }
 </div>
 
 @if (evento.Status == ClinicalEventStatus.EnValoracion && evento.Assessment is null)

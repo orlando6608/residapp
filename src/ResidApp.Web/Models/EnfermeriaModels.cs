@@ -9,9 +9,11 @@ namespace ResidApp.Web.Models;
 /// todavía no tiene ninguno firmado).</summary>
 public sealed record EnfermeriaResidentDetailViewModel(ScopeResidentSummary Resident, CurrentBaselineSummary? Baseline);
 
-/// <summary>ENF-01: contadores de las bandejas ya construidas y de las comunicaciones familiares pendientes
-/// de aprobación. Seguimientos e indicaciones siguen sin contador propio hasta que existan esos grupos.</summary>
-public sealed record EnfermeriaInicioViewModel(int Ordinarios, int Prioritarios, int Comunicaciones);
+/// <summary>ENF-01: contadores de las bandejas ya construidas (ordinarios, prioritarios y seguimientos,
+/// con cuántos de estos están vencidos) y de las comunicaciones familiares pendientes de aprobación.
+/// Indicaciones sigue sin contador propio hasta que exista Medicina.</summary>
+public sealed record EnfermeriaInicioViewModel(
+    int Ordinarios, int Prioritarios, int Seguimientos, int SeguimientosVencidos, int Comunicaciones);
 
 /// <summary>ENF-04: detalle de un cambio recibido más el resumen del basal vigente del residente (null si
 /// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel.</summary>
@@ -76,6 +78,7 @@ public static class ClinicalEventStatusDisplay
     {
         ClinicalEventStatus.Pendiente => "Pendiente",
         ClinicalEventStatus.EnValoracion => "En valoración",
+        ClinicalEventStatus.EnSeguimiento => "En seguimiento",
         ClinicalEventStatus.Cerrado => "Cerrado por Enfermería",
         _ => status.ToString(),
     };
@@ -83,9 +86,101 @@ public static class ClinicalEventStatusDisplay
     public static string BadgeClass(ClinicalEventStatus status, bool prioritario) => status switch
     {
         ClinicalEventStatus.EnValoracion => "text-bg-warning",
+        ClinicalEventStatus.EnSeguimiento => "text-bg-info",
         ClinicalEventStatus.Cerrado => "text-bg-success",
         _ => prioritario ? "text-bg-danger" : "text-bg-secondary",
     };
+}
+
+/// <summary>Textos del seguimiento (ENF-07B a ENF-09). El vencimiento se dice en texto ("Vencido"), no
+/// solo con color.</summary>
+public static class FollowUpDisplay
+{
+    public static string Label(FollowUpActionType type) => type switch
+    {
+        FollowUpActionType.Actuacion => "Actuación",
+        FollowUpActionType.Reprogramacion => "Reprogramación",
+        FollowUpActionType.Transferencia => "Transferencia de turno",
+        FollowUpActionType.Recepcion => "Recepción confirmada",
+        _ => type.ToString(),
+    };
+
+    public static string Plan(DateOnly? dueDate, string? criterion) => (dueDate, criterion) switch
+    {
+        ({ } date, { } text) => $"Revisar el {date:dd/MM/yyyy} · {text}",
+        ({ } date, null) => $"Revisar el {date:dd/MM/yyyy}",
+        (null, { } text) => text,
+        _ => string.Empty,
+    };
+
+    public static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    public static bool IsOverdue(DateOnly? dueDate) => dueDate < Today;
+}
+
+/// <summary>ENF-07B "iniciar seguimiento": fecha prevista o criterio (al menos uno; lo decide el dominio,
+/// FollowUpPlan) e indicaciones de continuidad. El equipo responsable es la Enfermería de la unidad.</summary>
+public sealed class IniciarSeguimientoFormModel
+{
+    [Required]
+    public Guid EventoId { get; set; }
+
+    [Required]
+    public int Revision { get; set; }
+
+    [Display(Name = "Fecha prevista de revisión")]
+    public DateOnly? FechaPrevista { get; set; }
+
+    [StringLength(FollowUpPlan.MaxCriterionLength)]
+    [Display(Name = "Criterio de revisión")]
+    public string? Criterio { get; set; }
+
+    [StringLength(FollowUpAction.MaxTextLength)]
+    [Display(Name = "Indicaciones de continuidad")]
+    public string? IndicacionesContinuidad { get; set; }
+}
+
+/// <summary>ENF-08/ENF-09: una acción sobre el seguimiento. Tipo lo fija cada formulario de la pantalla
+/// (campo oculto); qué campos exige cada tipo lo decide el dominio (FollowUpAction).</summary>
+public sealed class SeguimientoAccionFormModel
+{
+    [Required]
+    public Guid EventoId { get; set; }
+
+    [Required]
+    public int Revision { get; set; }
+
+    [Required]
+    public FollowUpActionType Tipo { get; set; }
+
+    [StringLength(FollowUpAction.MaxTextLength)]
+    public string? Texto { get; set; }
+
+    [Display(Name = "Nueva fecha prevista")]
+    public DateOnly? FechaPrevista { get; set; }
+
+    [StringLength(FollowUpPlan.MaxCriterionLength)]
+    [Display(Name = "Nuevo criterio")]
+    public string? Criterio { get; set; }
+
+    [StringLength(FollowUpAction.MaxIncomingTeamLength)]
+    [Display(Name = "Equipo o turno entrante")]
+    public string? EquipoEntrante { get; set; }
+
+    public Guid? TransferenciaId { get; set; }
+}
+
+/// <summary>ENF-07B: el formulario más el evento del que cuelga.</summary>
+public sealed record IniciarSeguimientoViewModel(PendingChangeDetail Event, IniciarSeguimientoFormModel Form);
+
+/// <summary>ENF-08/ENF-09: el seguimiento del evento y, tras un error, lo escrito en el formulario que
+/// falló (Form.Tipo) para no perderlo.</summary>
+public sealed record SeguimientoViewModel(PendingChangeDetail Event, SeguimientoAccionFormModel? Form)
+{
+    public SeguimientoAccionFormModel FormFor(FollowUpActionType tipo) =>
+        Form is { } form && form.Tipo == tipo
+            ? form
+            : new SeguimientoAccionFormModel { EventoId = Event.EventId, Revision = Event.Revision, Tipo = tipo };
 }
 
 /// <summary>Textos de la comunicación familiar (ENF-14/ENF-15).</summary>

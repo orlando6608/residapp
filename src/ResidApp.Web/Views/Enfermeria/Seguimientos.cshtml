@@ -1,0 +1,58 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model IReadOnlyList<FollowUpSummary>
+@{
+    ViewData["Title"] = "Seguimientos";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Seguimientos</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Seguimientos abiertos</h1>
+<p class="text-muted">Compartidos por la Enfermería de cada unidad. Un seguimiento vencido sigue abierto hasta que alguien lo resuelve.</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No hay seguimientos abiertos.</p>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        var vencido = FollowUpDisplay.IsOverdue(item.DueDate);
+        <a asp-action="Seguimiento" asp-route-eventoId="@item.EventId"
+           class="card mb-3 text-decoration-none text-body border-start border-4 @(vencido ? "border-danger" : "border-info")">
+            <div class="card-body">
+                <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
+                <p class="mb-1">
+                    @if (vencido)
+                    {
+                        <span class="badge text-bg-danger">Vencido</span>
+                    }
+                    @if (item.TransferPending)
+                    {
+                        <span class="badge text-bg-warning">Pendiente de recepción</span>
+                    }
+                    Próxima revisión: @FollowUpDisplay.Plan(item.DueDate, item.Criterion)
+                </p>
+                <p class="text-muted mb-0">
+                    Equipo: Enfermería de @(item.UnitName ?? "la unidad") ·
+                    @if (item.LastActionType is { } tipo)
+                    {
+                        <span>Última actuación: @FollowUpDisplay.Label(tipo), @item.LastActionAt!.Value.ToLocalTime().ToString("g")</span>
+                    }
+                    else
+                    {
+                        <span>Iniciado el @item.StartedAt.ToLocalTime().ToString("g"), sin actuaciones todavía</span>
+                    }
+                </p>
+            </div>
+        </a>
+    }
+}

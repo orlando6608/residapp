@@ -38,6 +38,40 @@ public sealed record ClinicalEventClosure(
 public sealed record PendingFamilyCommunicationSummary(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, PreparedFamilyCommunication Communication);
 
+/// <summary>ENF-08/ENF-09: una acción sobre un seguimiento, con su autoría (solo si fue la cuenta del ámbito
+/// que consulta). Según el tipo trae el texto, el plan reprogramado, el equipo entrante o la transferencia
+/// que confirma.</summary>
+public sealed record FollowUpActionSummary(
+    Guid Id, FollowUpActionType Type, string? Text, DateOnly? DueDate, string? Criterion, string? IncomingTeam,
+    Guid? TransferId, bool ByCurrentAccount, DateTimeOffset RecordedAt);
+
+/// <summary>ENF-07B a ENF-09: el seguimiento de un evento con su plan inicial y todas sus acciones, de la
+/// más antigua a la más reciente. El plan vigente es el de la última reprogramación, si la hay; la
+/// transferencia pendiente es la última que nadie ha confirmado.</summary>
+public sealed record FollowUpDetail(
+    DateOnly? InitialDueDate, string? InitialCriterion, string? ContinuityNotes, bool StartedByCurrentAccount,
+    DateTimeOffset StartedAt, IReadOnlyList<FollowUpActionSummary> Actions)
+{
+    private FollowUpActionSummary? LastReschedule =>
+        Actions.LastOrDefault(a => a.Type == FollowUpActionType.Reprogramacion);
+
+    public DateOnly? DueDate => LastReschedule is { } r ? r.DueDate : InitialDueDate;
+
+    public string? Criterion => LastReschedule is { } r ? r.Criterion : InitialCriterion;
+
+    public FollowUpActionSummary? PendingTransfer =>
+        Actions.LastOrDefault(a => a.Type == FollowUpActionType.Transferencia) is { } transfer
+        && !Actions.Any(a => a.TransferId == transfer.Id)
+            ? transfer
+            : null;
+}
+
+/// <summary>ENF-08: una fila de la bandeja compartida de seguimientos. El equipo responsable es la
+/// Enfermería de la unidad; DueDate/Criterion son el plan vigente.</summary>
+public sealed record FollowUpSummary(
+    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, DateOnly? DueDate, string? Criterion,
+    DateTimeOffset StartedAt, FollowUpActionType? LastActionType, DateTimeOffset? LastActionAt, bool TransferPending);
+
 /// <summary>ENF-04: detalle completo de un evento recibido. Según el origen trae las áreas y la temperatura
 /// del cambio de Auxiliar, o la observación y los datos clínicos del evento propio; en ambos casos la
 /// observación original es inmutable. Revision es la que hay que devolver al empezar o guardar la
@@ -50,7 +84,8 @@ public sealed record PendingChangeDetail(
     string? Observation, string? ClinicalData,
     SystemProfile AuthorProfile, DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes, DateTimeOffset OccurredAt,
     ClinicalEventStatus Status, int Revision, bool? AssessmentStartedByCurrentAccount, DateTimeOffset? AssessmentStartedAt,
-    NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges, ClinicalEventClosure? Closure);
+    NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges, ClinicalEventClosure? Closure,
+    FollowUpDetail? FollowUp);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre
@@ -69,4 +104,6 @@ public interface IChangeInboxDirectory
 
     Task<IReadOnlyList<PendingFamilyCommunicationSummary>> ListPendingFamilyCommunicationsAsync(
         Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<FollowUpSummary>> ListFollowUpsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 }

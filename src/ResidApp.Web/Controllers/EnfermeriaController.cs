@@ -16,7 +16,8 @@ namespace ResidApp.Web.Controllers;
 /// basal vigente que AUX-03); grupo E3: ENF-16 (registrar evento propio); grupo E4: ENF-02/ENF-03/ENF-04
 /// (bandejas de ordinarios/prioritarios con los cambios de Auxiliar y los eventos propios, y su detalle);
 /// grupo E5: ENF-03 a ENF-05 (empezar y guardar la valoración); historia 3: ENF-06/ENF-07A (decisión
-/// asistencial y cierre) con la comunicación familiar pendiente de aprobación (ENF-14/ENF-15). Traduce a EnfermeriaApplicationService; la
+/// asistencial y cierre) con la comunicación familiar pendiente de aprobación (ENF-14/ENF-15); historia 4:
+/// ENF-07B a ENF-09 (seguimiento, su bandeja y la transferencia de turno). Traduce a EnfermeriaApplicationService; la
 /// autorización y las reglas de negocio no viven aquí.
 /// </summary>
 public sealed class EnfermeriaController(EnfermeriaApplicationService service) : Controller
@@ -36,9 +37,32 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             new ListPendingChangesCommand(activeScope.ProfileScopeId, centroId, DailyChangeClassification.Prioritario), ct);
         var comunicaciones = await service.ListPendingFamilyCommunicationsAsync(
             new ListPendingFamilyCommunicationsCommand(activeScope.ProfileScopeId, centroId), ct);
+        var seguimientos = await service.ListFollowUpsAsync(new ListFollowUpsCommand(activeScope.ProfileScopeId, centroId), ct);
         return View(new EnfermeriaInicioViewModel(
             ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
+            seguimientos.Ok ? seguimientos.Value!.Count : 0,
+            seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
             comunicaciones.Ok ? comunicaciones.Value!.Count : 0));
+    }
+
+    /// <summary>ENF-08: bandeja compartida de seguimientos abiertos, vencidos incluidos.</summary>
+    public async Task<IActionResult> Seguimientos(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Seguimientos)) });
+        }
+
+        var result = await service.ListFollowUpsAsync(
+            new ListFollowUpsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(Array.Empty<FollowUpSummary>());
+        }
+
+        return View(result.Value);
     }
 
     /// <summary>Comunicaciones familiares preparadas al cerrar un evento y pendientes de aprobación. Su
@@ -203,9 +227,30 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         return View(new ValoracionViewModel(detail, form));
     }
 
-    /// <summary>ENF-06 "decisión asistencial": las cuatro salidas, desde una valoración ya guardada. Solo
-    /// cerrar está disponible; seguimiento, escalado y protocolo urgente llegan con las historias 4 a 6.</summary>
+    /// <summary>ENF-06 "decisión asistencial": las cuatro salidas, desde una valoración ya guardada o desde un
+    /// seguimiento que se resuelve. Cerrar e iniciar seguimiento están disponibles; escalado y protocolo
+    /// urgente llegan con las historias 5 y 6.</summary>
     public async Task<IActionResult> Decision(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (!CanDecide(detail))
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        return View(detail);
+    }
+
+    private static bool CanDecide(PendingChangeDetail detail) =>
+        detail.Assessment is not null
+        && detail.Status is ClinicalEventStatus.EnValoracion or ClinicalEventStatus.EnSeguimiento;
+
+    /// <summary>ENF-07B: formulario para iniciar un seguimiento desde la decisión asistencial.</summary>
+    public async Task<IActionResult> IniciarSeguimiento(Guid eventoId, CancellationToken ct)
     {
         var detail = await FindEventAsync(eventoId, ct);
         if (detail is null)
@@ -217,7 +262,107 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             return RedirectToAction(nameof(DetalleCambio), new { eventoId });
         }
 
-        return View(detail);
+        return View(new IniciarSeguimientoViewModel(
+            detail, new IniciarSeguimientoFormModel { EventoId = detail.EventId, Revision = detail.Revision }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> IniciarSeguimiento([Bind(Prefix = "Form")] IniciarSeguimientoFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new IniciarSeguimientoViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.StartFollowUpAsync(new StartFollowUpCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision,
+            form.FechaPrevista, form.Criterio, form.IndicacionesContinuidad), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Seguimiento iniciado.";
+            return RedirectToAction(nameof(Seguimiento), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput =>
+                "Revisa los datos: indica una fecha prevista o un criterio de revisión. Para iniciar un seguimiento hace falta una valoración guardada.",
+            _ => result.Error.Message,
+        });
+        return View(new IniciarSeguimientoViewModel(detail, form));
+    }
+
+    /// <summary>ENF-08/ENF-09: el seguimiento abierto de un evento, con sus acciones y los formularios para
+    /// registrar una actuación, reprogramar, transferir o confirmar la recepción.</summary>
+    public async Task<IActionResult> Seguimiento(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (detail.Status != ClinicalEventStatus.EnSeguimiento || detail.FollowUp is null)
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        return View(new SeguimientoViewModel(detail, null));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Seguimiento([Bind(Prefix = "Form")] SeguimientoAccionFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (detail.FollowUp is null)
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId = form.EventoId });
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new SeguimientoViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Tipo,
+            form.Texto, form.FechaPrevista, form.Criterio, form.EquipoEntrante, form.TransferenciaId), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = form.Tipo switch
+            {
+                FollowUpActionType.Reprogramacion => "Seguimiento reprogramado.",
+                FollowUpActionType.Transferencia => "Transferencia registrada. Queda pendiente de recepción.",
+                FollowUpActionType.Recepcion => "Recepción confirmada.",
+                _ => "Actuación registrada.",
+            };
+            return RedirectToAction(nameof(Seguimiento), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput => form.Tipo switch
+            {
+                FollowUpActionType.Reprogramacion => "Para reprogramar indica una nueva fecha o criterio y justifica el cambio.",
+                FollowUpActionType.Transferencia => "Para transferir indica el equipo o turno entrante.",
+                _ => "Escribe la actuación antes de registrarla.",
+            },
+            _ => result.Error.Message,
+        });
+        return View(new SeguimientoViewModel(detail, form));
     }
 
     /// <summary>ENF-07A: resumen de la valoración y decisión explícita de comunicación familiar
@@ -229,7 +374,7 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         {
             return RedirectToAction(nameof(Index));
         }
-        if (detail.Status != ClinicalEventStatus.EnValoracion || detail.Assessment is null)
+        if (!CanDecide(detail))
         {
             return RedirectToAction(nameof(DetalleCambio), new { eventoId });
         }

@@ -138,6 +138,30 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
             .Select(r => new VitalSignRange(EnumCode.ParseCode<VitalSignCode>(r.Code), r.Min, r.Max))
             .ToList();
 
+        var followUp = await connection.QuerySingleOrDefaultAsync<FollowUpRow>(new CommandDefinition("""
+            SELECT s.id AS Id, s.fecha_prevista AS DueDate, s.criterio AS Criterion, s.indicaciones_continuidad AS ContinuityNotes,
+                   CAST(CASE WHEN s.iniciado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS StartedByCurrentAccount,
+                   s.iniciado_en AS StartedAt
+              FROM dbo.seguimientos s
+              JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
+             WHERE s.evento_id = @EventId
+            """, new { ProfileScopeId = profileScopeId, EventId = eventId }, cancellationToken: ct));
+        var followUpActions = followUp is null ? [] : (await connection.QueryAsync<FollowUpActionRow>(new CommandDefinition("""
+            SELECT a.id AS Id, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate, a.criterio AS Criterion,
+                   a.equipo_entrante AS IncomingTeam, a.transferencia_id AS TransferId,
+                   CAST(CASE WHEN a.registrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ByCurrentAccount,
+                   a.registrado_en AS RecordedAt
+              FROM dbo.seguimiento_acciones a
+              JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
+             WHERE a.seguimiento_id = @FollowUpId
+             ORDER BY a.registrado_en ASC
+            """, new { ProfileScopeId = profileScopeId, FollowUpId = followUp.Id }, cancellationToken: ct)))
+            .Select(a => new FollowUpActionSummary(
+                a.Id, EnumCode.ParseCode<FollowUpActionType>(a.TypeCode), a.Text,
+                a.DueDate is null ? null : DateOnly.FromDateTime(a.DueDate.Value), a.Criterion, a.IncomingTeam, a.TransferId,
+                a.ByCurrentAccount, new DateTimeOffset(a.RecordedAt, TimeSpan.Zero)))
+            .ToList();
+
         return new PendingChangeDetail(
             row.EventId, EnumCode.ParseCode<ClinicalEventOrigin>(row.OriginCode), ResidentId.From(row.ResidentId), row.ResidentDisplayName,
             UnitId.From(row.UnitId), row.UnitName, EnumCode.ParseCode<DailyChangeClassification>(row.ClassificationCode), areas,
@@ -161,8 +185,65 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                 EnumCode.ParseCode<FamilyCommunicationDecision>(row.FamilyCommunicationDecisionCode!),
                 row.FamilyCommunicationTypeCode is null ? null : new PreparedFamilyCommunication(
                     EnumCode.ParseCode<FamilyCommunicationType>(row.FamilyCommunicationTypeCode), row.FamilyCommunicationText!,
-                    new DateTimeOffset(row.FamilyCommunicationPreparedAt!.Value, TimeSpan.Zero))));
+                    new DateTimeOffset(row.FamilyCommunicationPreparedAt!.Value, TimeSpan.Zero))),
+            followUp is null ? null : new FollowUpDetail(
+                followUp.DueDate is null ? null : DateOnly.FromDateTime(followUp.DueDate.Value), followUp.Criterion,
+                followUp.ContinuityNotes, followUp.StartedByCurrentAccount, new DateTimeOffset(followUp.StartedAt, TimeSpan.Zero),
+                followUpActions));
     }
+
+    /// <summary>ENF-08: seguimientos abiertos del ámbito. El plan vigente es el de la última reprogramación,
+    /// si la hay; primero los que tienen fecha (de la más próxima o vencida a la más lejana), después los que
+    /// solo tienen criterio.</summary>
+    public async Task<IReadOnlyList<FollowUpSummary>> ListFollowUpsAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+
+        var rows = await connection.QueryAsync<FollowUpSummaryRow>(new CommandDefinition($"""
+            SELECT scoped.EventId, scoped.ResidentId, scoped.ResidentDisplayName, scoped.UnitName,
+                   CASE WHEN reschedule.id IS NULL THEN seg.fecha_prevista ELSE reschedule.fecha_prevista END AS DueDate,
+                   CASE WHEN reschedule.id IS NULL THEN seg.criterio ELSE reschedule.criterio END AS Criterion,
+                   seg.iniciado_en AS StartedAt, last_action.tipo_codigo AS LastActionTypeCode, last_action.registrado_en AS LastActionAt,
+                   CAST(CASE WHEN last_transfer.id IS NOT NULL AND NOT EXISTS (
+                        SELECT 1 FROM dbo.seguimiento_acciones r WHERE r.transferencia_id = last_transfer.id) THEN 1 ELSE 0 END AS BIT)
+                       AS TransferPending
+              FROM (SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
+                           unit.nombre_visible AS UnitName
+                    {ScopedEventsFrom}
+                       AND ea.estado_codigo = 'EN_SEGUIMIENTO') scoped
+              JOIN dbo.seguimientos seg ON seg.evento_id = scoped.EventId
+              OUTER APPLY (SELECT TOP 1 a.id, a.fecha_prevista, a.criterio FROM dbo.seguimiento_acciones a
+                            WHERE a.seguimiento_id = seg.id AND a.tipo_codigo = 'REPROGRAMACION' ORDER BY a.registrado_en DESC) reschedule
+              OUTER APPLY (SELECT TOP 1 a.tipo_codigo, a.registrado_en FROM dbo.seguimiento_acciones a
+                            WHERE a.seguimiento_id = seg.id ORDER BY a.registrado_en DESC) last_action
+              OUTER APPLY (SELECT TOP 1 a.id FROM dbo.seguimiento_acciones a
+                            WHERE a.seguimiento_id = seg.id AND a.tipo_codigo = 'TRANSFERENCIA' ORDER BY a.registrado_en DESC) last_transfer
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+
+        return rows
+            .Select(r => new FollowUpSummary(
+                r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName,
+                r.DueDate is null ? null : DateOnly.FromDateTime(r.DueDate.Value), r.Criterion,
+                new DateTimeOffset(r.StartedAt, TimeSpan.Zero),
+                r.LastActionTypeCode is null ? null : EnumCode.ParseCode<FollowUpActionType>(r.LastActionTypeCode),
+                r.LastActionAt is null ? null : new DateTimeOffset(r.LastActionAt.Value, TimeSpan.Zero), r.TransferPending))
+            .OrderBy(f => f.DueDate is null)
+            .ThenBy(f => f.DueDate)
+            .ThenBy(f => f.StartedAt)
+            .ToList();
+    }
+
+    private sealed record FollowUpRow(
+        Guid Id, DateTime? DueDate, string? Criterion, string? ContinuityNotes, bool StartedByCurrentAccount, DateTime StartedAt);
+
+    private sealed record FollowUpActionRow(
+        Guid Id, string TypeCode, string? Text, DateTime? DueDate, string? Criterion, string? IncomingTeam, Guid? TransferId,
+        bool ByCurrentAccount, DateTime RecordedAt);
+
+    private sealed record FollowUpSummaryRow(
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, DateTime? DueDate, string? Criterion,
+        DateTime StartedAt, string? LastActionTypeCode, DateTime? LastActionAt, bool TransferPending);
 
     public async Task<IReadOnlyList<PendingFamilyCommunicationSummary>> ListPendingFamilyCommunicationsAsync(
         Guid profileScopeId, CenterId centerId, CancellationToken ct = default)

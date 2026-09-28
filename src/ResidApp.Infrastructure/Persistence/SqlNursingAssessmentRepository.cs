@@ -119,6 +119,97 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
         return revision;
     }
 
+    /// <summary>ENF-07B: pasa el evento de EN_VALORACION a EN_SEGUIMIENTO con su plan. La valoración sigue en
+    /// borrador (se cierra al cerrar el evento), pero tiene que estar guardada.</summary>
+    public async Task<int> StartFollowUpAsync(StartFollowUpInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var occurredAt = DateTimeOffset.UtcNow;
+
+        var updated = await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_SEGUIMIENTO', revision = revision + 1
+             WHERE id = @EventId AND centro_id = @CenterId AND revision = @ExpectedRevision AND estado_codigo = 'EN_VALORACION'
+            """, new { input.EventId, CenterId = input.CenterId.Value, input.ExpectedRevision }, transaction, cancellationToken: ct));
+        if (updated != 1)
+        {
+            throw new DomainValidationException("CLINICAL_EVENT_REVISION_CONFLICT");
+        }
+
+        var inserted = await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.seguimientos
+                (id, evento_id, residente_id, centro_id, fecha_prevista, criterio, indicaciones_continuidad, iniciado_por_cuenta_id, iniciado_en)
+            SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @DueDate, @Criterion, @ContinuityNotes, @AccountId, @OccurredAt
+              FROM dbo.eventos_asistenciales ea
+             WHERE ea.id = @EventId
+               AND EXISTS (SELECT 1 FROM dbo.valoraciones_enfermeria v WHERE v.evento_id = ea.id AND v.estado_codigo = 'BORRADOR')
+            """, new
+        {
+            Id = Guid.NewGuid(), input.Plan.DueDate, input.Plan.Criterion, input.ContinuityNotes,
+            AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId,
+        }, transaction, cancellationToken: ct));
+        if (inserted != 1)
+        {
+            throw new DomainValidationException("NURSING_ASSESSMENT_REQUIRED");
+        }
+
+        var revision = await AuditAsync(connection, transaction, input.AccountId, input.CenterId, input.EventId,
+            "FOLLOW_UP_START", occurredAt, ct);
+        transaction.Commit();
+        return revision;
+    }
+
+    /// <summary>ENF-08/ENF-09: una acción sobre el seguimiento abierto, con su autoría. Una recepción solo
+    /// se registra sobre una transferencia de este seguimiento que nadie haya confirmado todavía.</summary>
+    public async Task<int> RecordFollowUpActionAsync(RecordFollowUpActionInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var occurredAt = DateTimeOffset.UtcNow;
+        var action = input.Action;
+
+        var updated = await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.eventos_asistenciales SET revision = revision + 1
+             WHERE id = @EventId AND centro_id = @CenterId AND revision = @ExpectedRevision AND estado_codigo = 'EN_SEGUIMIENTO'
+            """, new { input.EventId, CenterId = input.CenterId.Value, input.ExpectedRevision }, transaction, cancellationToken: ct));
+        if (updated != 1)
+        {
+            throw new DomainValidationException("CLINICAL_EVENT_REVISION_CONFLICT");
+        }
+
+        var inserted = await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.seguimiento_acciones
+                (id, seguimiento_id, tipo_codigo, texto, fecha_prevista, criterio, equipo_entrante, transferencia_id,
+                 registrado_por_cuenta_id, registrado_en)
+            SELECT @Id, s.id, @TypeCode, @Text, @DueDate, @Criterion, @IncomingTeam, @TransferId, @AccountId, @OccurredAt
+              FROM dbo.seguimientos s
+             WHERE s.evento_id = @EventId
+               AND (@TransferId IS NULL OR EXISTS (
+                   SELECT 1 FROM dbo.seguimiento_acciones t
+                    WHERE t.id = @TransferId AND t.seguimiento_id = s.id AND t.tipo_codigo = 'TRANSFERENCIA'
+                      AND NOT EXISTS (SELECT 1 FROM dbo.seguimiento_acciones r WHERE r.transferencia_id = t.id)))
+            """, new
+        {
+            Id = Guid.NewGuid(), TypeCode = action.Type.ToCode(), action.Text, action.Plan?.DueDate, action.Plan?.Criterion,
+            action.IncomingTeam, action.TransferId, AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId,
+        }, transaction, cancellationToken: ct));
+        if (inserted != 1)
+        {
+            throw new DomainValidationException("FOLLOW_UP_TRANSFER_NOT_PENDING");
+        }
+
+        var actionCode = action.Type switch
+        {
+            FollowUpActionType.Actuacion => "FOLLOW_UP_NOTE",
+            FollowUpActionType.Reprogramacion => "FOLLOW_UP_RESCHEDULE",
+            FollowUpActionType.Transferencia => "FOLLOW_UP_TRANSFER",
+            _ => "FOLLOW_UP_RECEIVE",
+        };
+        var revision = await AuditAsync(connection, transaction, input.AccountId, input.CenterId, input.EventId, actionCode, occurredAt, ct);
+        transaction.Commit();
+        return revision;
+    }
+
     /// <summary>Idempotente con el mismo patrón que SqlClinicalEventRepository.RegisterAsync: hash de la
     /// petición y fila IN_PROGRESS/SUCCEEDED en dbo.operaciones_idempotencia dentro de la misma transacción.
     /// Un cierre distinto sobre un evento ya cerrado no encuentra EN_VALORACION y es un conflicto.</summary>
@@ -152,7 +243,8 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
                 UPDATE dbo.eventos_asistenciales
                    SET estado_codigo = 'CERRADO', revision = revision + 1, cerrado_por_cuenta_id = @AccountId, cerrado_en = @OccurredAt,
                        comunicacion_familiar_codigo = @DecisionCode
-                 WHERE id = @EventId AND centro_id = @CenterId AND revision = @ExpectedRevision AND estado_codigo = 'EN_VALORACION'
+                 WHERE id = @EventId AND centro_id = @CenterId AND revision = @ExpectedRevision
+                   AND estado_codigo IN ('EN_VALORACION', 'EN_SEGUIMIENTO')
                 """, new
             {
                 AccountId = input.AccountId.Value, OccurredAt = occurredAt, DecisionCode = communication.Decision.ToCode(),
