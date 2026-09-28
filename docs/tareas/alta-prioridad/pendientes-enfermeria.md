@@ -55,7 +55,9 @@ Huecos de lo ya construido:
   `REFERENCE_RANGES_MANAGE`, que la BD solo deja conceder a Medicina o Dirección/Coordinación Clínica
   (nunca Administración, ADM-29); historial inmutable de cada cambio; rangos por residente en una segunda
   fase. Script `0008`. En desarrollo tiene el permiso `dev-integrado-direccion` (seed del escenario
-  integrado). Pendiente de CJ:
+  integrado). Pendiente de CJ (lo recoge
+  [`docs/pendientes-cj/rangos-referencia-constantes.html`](../../pendientes-cj/rangos-referencia-constantes.html),
+  que CJ completa con los valores y las respuestas a las preguntas abiertas):
   - Fijar los valores en la pantalla: sin ellos no se muestra ningún aviso.
   - Decidir a quién se concede el permiso en cada centro real. Hoy no hay pantalla para conceder permisos:
     se concede por SQL, como el resto de permisos, hasta que exista el vertical Administración.

@@ -1,0 +1,462 @@
+<!doctype html>
+<!--
+  Documento para que CJ lo complete editándolo en GitHub (lápiz → editar → «Commit changes»).
+  Busca «por definir» (Ctrl+F): 14 celdas de la tabla y 5 respuestas a las preguntas abiertas.
+  Sustituye ese texto por tu valor o tu respuesta. No hace falta tocar nada más.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rangos de referencia de constantes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --warn-bg: #fbe7a8;
+    --warn-ink: #3a2c00;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+      --warn-bg: #4a3b0c;
+      --warn-ink: #fbeab8;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-soft: #1b2e32;
+    --warn-bg: #4a3b0c;
+    --warn-ink: #fbeab8;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 20px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code, .code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+
+  /* Réplica de lo que ve Enfermería en la app */
+  .sample { display: flex; flex-direction: column; gap: 12px; }
+  .sample-label { font-size: 0.82rem; color: var(--muted); }
+  .field-demo {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 420px;
+  }
+  .field-demo .input {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 8px 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.95rem;
+  }
+  .field-demo .hint { font-size: 0.88rem; color: var(--muted); }
+  .alert-demo {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    border: 1px solid var(--warn-rule);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .alert-demo small { font-size: 0.85rem; }
+
+  /* Parámetros */
+  .params { display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
+  .param {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 8px 24px;
+    padding-block: 18px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .param-head { display: flex; flex-direction: column; gap: 2px; }
+  .param-head .unit { font-family: var(--mono); font-size: 0.9rem; color: var(--accent); }
+  .param-body { display: flex; flex-direction: column; gap: 8px; }
+  .param-body dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0; font-size: 0.95rem; }
+  .param-body dt { color: var(--muted); }
+  .param-body dd { margin: 0; }
+  .ask { font-size: 0.95rem; padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+  @media (max-width: 640px) { .param { grid-template-columns: 1fr; } }
+
+  /* Tabla a rellenar */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--accent-soft); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num { font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  td.blank {
+    background: var(--blank);
+    border-left: 1px dashed var(--blank-rule);
+    border-right: 1px dashed var(--blank-rule);
+    min-width: 110px;
+  }
+  th.blank-h { color: var(--ink); }
+  .legend { font-size: 0.9rem; color: var(--muted); }
+
+  .questions { counter-reset: q; list-style: none; padding: 0; gap: 14px; }
+  .questions li {
+    counter-increment: q;
+    display: grid;
+    grid-template-columns: 2.2em 1fr;
+    gap: 4px;
+  }
+  .questions li::before {
+    content: counter(q) ".";
+    font-family: var(--serif);
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .questions li > div { display: flex; flex-direction: column; gap: 2px; }
+  .questions .why { color: var(--muted); font-size: 0.93rem; }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+  .howto {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .answer {
+    background: var(--blank);
+    border: 1px dashed var(--blank-rule);
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-top: 4px;
+  }
+  .answer b { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <p class="eyebrow">ResidApp · Enfermería · Pendiente de CJ</p>
+    <h1>Rangos de referencia de constantes</h1>
+    <p class="meta">Estado a 28/09/2026 · Para CJ, responsable de producto</p>
+    <p class="lead prose">
+      La aplicación ya puede avisar cuando Enfermería registra una constante fuera de lo esperado, pero
+      todavía no tiene ningún valor de referencia. Este documento explica cómo funcionan los rangos y
+      recoge, en una tabla, los valores que tienes que definir.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué hace</span><span>Muestra un aviso visual. No bloquea nada ni cambia la prioridad.</span></div>
+    <div role="listitem"><span class="k">Alcance</span><span>Un juego de rangos por centro. Los rangos por residente quedan para la fase 2.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>Tus valores para 7 constantes y a quién se da el permiso.</span></div>
+  </div>
+
+  <section class="howto">
+    <h2>Cómo completar este documento</h2>
+    <ol class="prose">
+      <li>Abre este fichero en GitHub (<code>docs/pendientes-cj/rangos-referencia-constantes.html</code>) y pulsa el lápiz para editarlo.</li>
+      <li>Busca «por definir» con Ctrl+F. Los huecos que hay que rellenar son las 14 celdas de la tabla y las 5 respuestas a las preguntas abiertas (el texto aparece también en estas instrucciones).</li>
+      <li>Sustituye cada «por definir» por tu valor o tu respuesta. Si una constante no lleva límite por ese lado, bórralo y deja la celda vacía.</li>
+      <li>Pulsa «Commit changes» para guardar.</li>
+    </ol>
+    <p class="prose meta">
+      GitHub muestra el código del fichero, no la página. Para verla con formato, descárgalo (botón «Download raw file») y ábrelo en el navegador.
+    </p>
+  </section>
+
+  <section>
+    <h2>Explicación general</h2>
+    <div class="stack prose">
+      <p>
+        Un rango de referencia es un límite inferior, uno superior o ambos para una constante. Cuando
+        Enfermería guarda una valoración con un valor por debajo del mínimo o por encima del máximo, la
+        aplicación lo señala. La decisión clínica sigue siendo siempre del profesional.
+      </p>
+      <ul>
+        <li><strong>Solo informa.</strong> El aviso no impide guardar ni cambia la clasificación, la prioridad o el desenlace del evento.</li>
+        <li><strong>Es por centro.</strong> Todos los residentes del centro comparten los mismos rangos.</li>
+        <li><strong>Los límites cuentan como normales.</strong> Un valor exactamente igual al mínimo o al máximo no genera aviso.</li>
+        <li><strong>Cada límite es opcional.</strong> Puedes fijar solo el mínimo, solo el máximo o los dos. Si una constante no tiene ninguno, nunca avisa.</li>
+        <li><strong>Dónde se ve.</strong> En el formulario de valoración de Enfermería, bajo cada campo, y en el aviso amarillo del formulario y del detalle del evento.</li>
+        <li><strong>Quién los fija.</strong> Solo Medicina o Dirección/Coordinación Clínica con un permiso específico. Administración nunca puede tenerlo; la base de datos lo impide.</li>
+        <li><strong>Queda registro.</strong> Cada cambio guarda la fecha, el perfil que lo hizo, el valor anterior y el nuevo. Ese historial no se puede modificar ni borrar.</li>
+      </ul>
+    </div>
+
+    <div class="sample">
+      <p class="sample-label">Así lo verá Enfermería (réplica; los corchetes serán tus valores):</p>
+      <div class="field-demo" aria-hidden="true">
+        <span>Temperatura (°C)</span>
+        <span class="input">&nbsp;</span>
+        <span class="hint">Referencia del centro: [mín]–[máx] °C</span>
+      </div>
+      <div class="alert-demo" role="note">
+        <strong>⚠ Constantes fuera del rango de referencia del centro</strong>
+        <span>Temperatura [valor] °C: por encima del rango de referencia ([mín]–[máx] °C)</span>
+        <small>Aviso informativo: no cambia la clasificación ni la prioridad del evento; la decisión es del profesional.</small>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Reglas de formato que aplica la aplicación</h2>
+    <p class="prose">
+      La aplicación solo comprueba que los valores sean coherentes, no que sean clínicamente adecuados.
+      Esto último lo decides tú.
+    </p>
+    <ul class="prose">
+      <li>Al menos un límite por constante (o ninguno, para dejarla sin rango).</li>
+      <li>Valores mayores que cero, con un decimal como máximo.</li>
+      <li>El mínimo tiene que ser menor que el máximo; no pueden ser iguales.</li>
+      <li>La saturación de O₂ no puede superar el 100 %.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Explicación por parámetro</h2>
+    <div class="params">
+      <article class="param">
+        <div class="param-head"><h3>Temperatura</h3><span class="unit">°C</span></div>
+        <div class="param-body">
+          <dl>
+            <dt>Se registra</dt><dd>Con un decimal.</dd>
+            <dt>Se compara</dt><dd>La temperatura anotada en la valoración de Enfermería.</dd>
+          </dl>
+          <p class="ask">La temperatura que anota Auxiliar al registrar un cambio no se compara con el rango. Ver pregunta 4.</p>
+        </div>
+      </article>
+
+      <article class="param">
+        <div class="param-head"><h3>PA sistólica</h3><span class="unit">mmHg</span></div>
+        <div class="param-body">
+          <dl>
+            <dt>Se registra</dt><dd>Número entero, siempre junto con la diastólica.</dd>
+            <dt>Se compara</dt><dd>Por separado de la diastólica: cada una tiene su propio rango.</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="param">
+        <div class="param-head"><h3>PA diastólica</h3><span class="unit">mmHg</span></div>
+        <div class="param-body">
+          <dl>
+            <dt>Se registra</dt><dd>Número entero, siempre junto con la sistólica.</dd>
+            <dt>Se compara</dt><dd>Por separado de la sistólica.</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="param">
+        <div class="param-head"><h3>Frecuencia cardíaca</h3><span class="unit">lpm</span></div>
+        <div class="param-body">
+          <dl>
+            <dt>Se registra</dt><dd>Número entero, en latidos por minuto.</dd>
+            <dt>Se compara</dt><dd>El valor anotado, sin tener en cuenta el ritmo.</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="param">
+        <div class="param-head"><h3>Frecuencia respiratoria</h3><span class="unit">rpm</span></div>
+        <div class="param-body">
+          <dl>
+            <dt>Se registra</dt><dd>Número entero, en respiraciones por minuto.</dd>
+            <dt>Se compara</dt><dd>El valor anotado.</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="param">
+        <div class="param-head"><h3>Saturación de O₂</h3><span class="unit">%</span></div>
+        <div class="param-body">
+          <dl>
+            <dt>Se registra</dt><dd>Número entero, junto con el soporte respiratorio (aire ambiente u oxígeno) y, con oxígeno, el flujo.</dd>
+            <dt>Se compara</dt><dd>El porcentaje, con el mismo rango haya o no oxígeno.</dd>
+          </dl>
+          <p class="ask">El rango no distingue entre aire ambiente y oxigenoterapia. Ver pregunta 3.</p>
+        </div>
+      </article>
+
+      <article class="param">
+        <div class="param-head"><h3>Glucemia</h3><span class="unit">mg/dL</span></div>
+        <div class="param-body">
+          <dl>
+            <dt>Se registra</dt><dd>Número entero, en mg/dL.</dd>
+            <dt>Se compara</dt><dd>El valor anotado, sin distinguir ayunas o posprandial.</dd>
+          </dl>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Valores que tienes que definir</h2>
+    <p class="prose">
+      Rellena las celdas marcadas. Si una constante no debe avisar, escribe «sin rango». Si quieres solo un
+      límite, deja el otro vacío.
+    </p>
+    <!-- CJ: escribe aquí tus valores. Sustituye cada «por definir» de las columnas Mínimo y Máximo; la columna de notas es libre. -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Constante</th>
+            <th scope="col">Unidad</th>
+            <th scope="col">Valor registrado</th>
+            <th scope="col" class="blank-h">Mínimo</th>
+            <th scope="col" class="blank-h">Máximo</th>
+            <th scope="col" class="blank-h">Notas de CJ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Temperatura</th><td class="num">°C</td><td>1 decimal</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
+          <tr><th scope="row">PA sistólica</th><td class="num">mmHg</td><td>entero</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
+          <tr><th scope="row">PA diastólica</th><td class="num">mmHg</td><td>entero</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
+          <tr><th scope="row">Frecuencia cardíaca</th><td class="num">lpm</td><td>entero</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
+          <tr><th scope="row">Frecuencia respiratoria</th><td class="num">rpm</td><td>entero</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
+          <tr><th scope="row">Saturación de O₂</th><td class="num">%</td><td>entero, máx. 100</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
+          <tr><th scope="row">Glucemia</th><td class="num">mg/dL</td><td>entero</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="legend">
+      Centro: los valores se aplican a un centro concreto. Si varios centros deben tener valores distintos,
+      haz una tabla por centro.
+    </p>
+  </section>
+
+  <section>
+    <h2>Preguntas abiertas</h2>
+    <!-- CJ: escribe cada respuesta sustituyendo el «por definir» que va tras «Respuesta de CJ:». -->
+    <ol class="questions prose">
+      <li><div><strong>¿A quién se concede el permiso para fijar rangos en cada centro?</strong>
+        <span class="why">Solo puede ser Medicina o Dirección/Coordinación Clínica. Por ahora se concede con un script, porque aún no existe la pantalla de administración de permisos.</span>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+      <li><div><strong>¿Los mismos valores para todos los centros?</strong>
+        <span class="why">El sistema admite valores distintos por centro. Si son iguales, basta con una tabla.</span>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+      <li><div><strong>¿La saturación necesita un rango distinto con oxigenoterapia?</strong>
+        <span class="why">Hoy el rango es único. Distinguirlo sería un cambio nuevo.</span>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+      <li><div><strong>¿Debe avisar también la temperatura que registra Auxiliar?</strong>
+        <span class="why">Hoy solo se compara la valoración de Enfermería.</span>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+      <li><div><strong>Fase 2, rangos por residente.</strong>
+        <span class="why">Por ejemplo, un objetivo de saturación propio en un residente con EPOC. Falta decidir quién los fija (Enfermería o Medicina) y si forman parte del basal.</span>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Cómo introducirlos en la aplicación</h2>
+    <ol class="prose">
+      <li>Entra con una cuenta que tenga el permiso. En el entorno de pruebas es <code>dev-integrado-direccion</code>.</li>
+      <li>En Inicio, abre la tarjeta «Rangos de referencia de constantes».</li>
+      <li>Escribe el mínimo y el máximo de cada constante. Puedes usar coma o punto decimal.</li>
+      <li>Pulsa «Guardar rangos». El cambio aparece en el historial, debajo de la tabla.</li>
+      <li>Para verlo como Enfermería, entra con <code>dev-integrado-enfermeria</code> (mismo centro) y abre la valoración de un evento.</li>
+    </ol>
+    <p class="prose meta">
+      La pantalla ya está en la aplicación de pruebas. Puedes fijar los valores tú mismo en ella o solo
+      completar este documento.
+    </p>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. No contiene valores clínicos: todos los rangos los define CJ.
+    Cuando lo completes, ingeniería revisa tus respuestas y carga los valores (o comprueba los que hayas
+    fijado en la pantalla). La aplicación no lee este fichero.
+  </footer>
+</div>
+</body>
+</html>

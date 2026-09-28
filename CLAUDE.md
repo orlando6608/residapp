@@ -16,6 +16,7 @@ Este documento recoge las reglas de trabajo que rigen cualquier colaboración so
 - `docs\producto\` — visión, objetivos y alcance del producto, y estado de la migración.
 - `docs\flujos-clinicos\` — procesos asistenciales paso a paso.
 - `docs\historias-usuarios\` — requisitos funcionales en formato de historia de usuario.
+- `docs\pendientes-cj\` — documentos que CJ completa (valores clínicos y decisiones de producto). Revisa si tienen respuestas nuevas e incorpóralas; no rellenes tú lo que falte.
 - `docs\legado-cloudflare\` — prototipo funcional de referencia (congelado), fuente original de las reglas de negocio del producto.
 - `docs\bocetos-pantallas\guia-diseno-sistema-visual.md` — directriz vinculante de paleta de colores y estándares visuales (Bootstrap 5, WCAG 2.2 AA) para las vistas Razor. A diferencia del resto de `docs\bocetos-pantallas\` (propuestas de interfaz), este documento sí es de obligado cumplimiento al maquetar.
 - `src\ResidApp.Web\Views\Home\Manual.cshtml` (ruta `/Home/Manual`) — manual de usuario integrado en la propia app, enlazado desde la navbar. Actualízalo siempre que cambie el comportamiento funcional de cualquier pantalla ya descrita en él, o cuando se implemente un módulo listado ahí como "Próximamente".
