@@ -26,9 +26,16 @@
             </div>
         </a>
     </div>
+    <div class="col-12 col-md-6">
+        <a asp-action="Cerrar" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Cerrar el evento</h2>
+                <p class="card-text text-muted mb-0">Pasa a Historial sin un segundo cierre de Enfermería. Decides si se comunica a la familia. Las indicaciones sin resolver siguen visibles para Enfermería.</p>
+            </div>
+        </a>
+    </div>
     @foreach (var (titulo, texto) in new[]
     {
-        ("Cerrar el evento", "cierre médico sin segundo cierre de Enfermería, con la decisión de comunicación familiar."),
         ("Iniciar seguimiento médico", "fecha o criterio, equipo responsable y objetivo."),
         ("Activar protocolo urgente", "documentar la activación y, si procede, derivar a Urgencias."),
     })

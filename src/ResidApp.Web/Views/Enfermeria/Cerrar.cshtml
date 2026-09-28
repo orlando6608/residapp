@@ -73,48 +73,7 @@
     <input type="hidden" asp-for="Form.Revision" />
     <input type="hidden" asp-for="Form.OperacionId" />
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <fieldset class="mb-3">
-                <legend class="h5">¿Se comunica a la familia?</legend>
-                <p class="text-muted">Es obligatorio decidirlo de forma explícita.</p>
-                <div class="d-grid d-md-flex gap-2">
-                    @foreach (var decision in new[] { FamilyCommunicationDecision.NoComunicar, FamilyCommunicationDecision.Preparar })
-                    {
-                        var inputId = $"comunicacion-{decision}";
-                        <input type="radio" class="btn-check" asp-for="Form.Comunicacion" value="@decision" id="@inputId" autocomplete="off" />
-                        <label class="btn btn-outline-primary btn-lg" for="@inputId">@FamilyCommunicationDisplay.Label(decision)</label>
-                    }
-                </div>
-                <span asp-validation-for="Form.Comunicacion" class="text-danger"></span>
-            </fieldset>
-
-            <fieldset>
-                <legend class="h6">Si preparas la comunicación</legend>
-                <p class="text-muted mb-3">
-                    Se guarda pendiente de aprobación: no se publica todavía. La familia la verá firmada como
-                    «@FamilyCommunicationChoice.VisibleAuthor», nunca con tu nombre. Escribe un texto comprensible,
-                    sin datos internos ni escalas.
-                </p>
-                <div class="mb-3">
-                    <label asp-for="Form.TipoComunicacion" class="form-label"></label>
-                    <select asp-for="Form.TipoComunicacion" class="form-select form-select-lg">
-                        <option value="">Sin indicar</option>
-                        @foreach (var tipo in new[] { FamilyCommunicationType.Ordinaria, FamilyCommunicationType.Relevante })
-                        {
-                            <option value="@tipo" selected="@(Model.Form.TipoComunicacion == tipo)">@FamilyCommunicationDisplay.Label(tipo)</option>
-                        }
-                    </select>
-                    <div class="form-text">La relevancia la decides tú: una ordinaria se ve 30 días y una relevante 6 meses.</div>
-                </div>
-                <div class="mb-0">
-                    <label asp-for="Form.TextoComunicacion" class="form-label"></label>
-                    <textarea asp-for="Form.TextoComunicacion" class="form-control" rows="4"></textarea>
-                    <span asp-validation-for="Form.TextoComunicacion" class="text-danger"></span>
-                </div>
-            </fieldset>
-        </div>
-    </div>
+    <partial name="_ComunicacionFamiliarFormulario" for="Form" />
 
     <div class="d-grid d-md-flex justify-content-md-end gap-2">
         <a asp-action="Decision" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin cerrar</a>

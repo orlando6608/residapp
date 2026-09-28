@@ -248,7 +248,7 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
 
         var scoped = (await connection.QueryAsync<IndicationEventRow>(new CommandDefinition($"""
             SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
-                   unit.nombre_visible AS UnitName, ea.estado_codigo AS StatusCode
+                   unit.nombre_visible AS UnitName, ea.estado_codigo AS StatusCode, ea.cerrado_en AS ClosedAt
             {ScopedEventsFrom}
                AND EXISTS (SELECT 1 FROM dbo.indicaciones_medicas i WHERE i.evento_id = ea.id)
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct))).ToDictionary(e => e.EventId);
@@ -264,7 +264,8 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
             var e = scoped[i.EventId];
             return new MedicalIndicationListItem(
                 e.EventId, ResidentId.From(e.ResidentId), e.ResidentDisplayName, e.UnitName,
-                EnumCode.ParseCode<ClinicalEventStatus>(e.StatusCode), i.Summary);
+                EnumCode.ParseCode<ClinicalEventStatus>(e.StatusCode),
+                e.ClosedAt is null ? null : new DateTimeOffset(e.ClosedAt.Value, TimeSpan.Zero), i.Summary);
         }).ToList();
     }
 
@@ -289,7 +290,8 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
             r.ResolvedAt is null ? null : new DateTimeOffset(r.ResolvedAt.Value, TimeSpan.Zero), r.Incident))).ToList();
     }
 
-    private sealed record IndicationEventRow(Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string StatusCode);
+    private sealed record IndicationEventRow(
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string StatusCode, DateTime? ClosedAt);
 
     private sealed record IndicationRow(
         Guid Id, Guid EventId, string Text, DateTime? DueDate, string? Criterion, string? AdditionalInformation,

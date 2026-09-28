@@ -1,0 +1,28 @@
+@using ResidApp.Domain.Enfermeria
+@model ResidApp.Application.Ports.PendingChangeDetail
+@{
+    // Un evento escalado solo lo puede cerrar Medicina (TR_ea_transition_guard): Enfermería no lo cierra otra vez.
+    var cierre = Model.Closure!;
+    var autor = cierre.ClosedByCurrentAccount ? "por ti"
+        : Model.Escalation is not null ? "por Medicina"
+        : "por otro profesional de Enfermería";
+}
+
+<div class="card mb-3 border-start border-4 border-success">
+    <div class="card-body">
+        <h2 class="h5 card-title">Cierre</h2>
+        <p class="mb-2">
+            Cerrado @autor
+            el @cierre.ClosedAt.ToLocalTime().ToString("g"). Comunicación familiar:
+            <strong>@FamilyCommunicationDisplay.Label(cierre.Decision)</strong>.
+        </p>
+        @if (cierre.Communication is { } comunicacion)
+        {
+            <p class="mb-1">
+                <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(comunicacion.Type)</span>
+                Pendiente de aprobación · se mostrará como «@FamilyCommunicationChoice.VisibleAuthor»
+            </p>
+            <p class="mb-0" style="white-space: pre-line">@comunicacion.Text</p>
+        }
+    </div>
+</div>

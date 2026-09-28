@@ -1,6 +1,6 @@
 # Pendientes del vertical Medicina
 
-Estado al 2026-09-28. Historias de referencia: [`docs/historias-usuarios/medicina.md`](../../historias-usuarios/medicina.md).
+Estado al 2026-09-28 (tras la historia 4). Historias de referencia: [`docs/historias-usuarios/medicina.md`](../../historias-usuarios/medicina.md).
 Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-conducta-medicina.md); wireframe
 [`medicina.md`](../../bocetos-pantallas/wireframes-funcionales/medicina.md).
 
@@ -22,6 +22,14 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   añadir más; la valoración médica ya no se edita. `/Medicina/Indicaciones` muestra lectura, realización,
   incidencias y vencidas. Enfermería las lee y registra (historia 7 de Enfermería). Script
   `0012_medicina_valoracion_indicaciones`.
+- **Historia 4 (cierre médico)** — 2026-09-28: salida "cerrar el evento" de la conducta (`/Medicina/Cerrar`,
+  MED-15 a MED-17) desde EN_VALORACION_MEDICA con la valoración guardada o desde CON_INDICACION_PENDIENTE.
+  Muestra el resumen y los pendientes, decide la comunicación familiar con el mismo mecanismo que Enfermería y
+  cierra de forma idempotente. El evento queda CERRADO, sin segundo cierre de Enfermería, y su detalle dice
+  "Cerrado por Medicina". El cierre es común a los dos perfiles (`ClinicalEventCloser`). **Decisión del
+  usuario:** se puede cerrar con indicaciones sin resolver. Siguen en la bandeja de Enfermería, y en
+  `/Medicina/Indicaciones` siguen las no resueltas y las no realizadas después del cierre. Script
+  `0013_medicina_cierre_evento` (solo el trigger de transiciones).
 - Tests: `MedicinaApplicationServiceTests` (integración) y `MedicalAssessmentTests` (unitarios).
 - Cuenta de desarrollo `dev-integrado-medicina` en el escenario integrado.
 
@@ -29,22 +37,17 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
 
 En el orden propuesto:
 
-1. **Historia 4 — cierre médico** (`MED-10`, `MED-12`): idempotente, sin segundo cierre de Enfermería, con la
-   decisión de comunicación familiar. Reutiliza el cierre de Enfermería (`CloseAsync`,
-   `comunicaciones_familiares`); añade la transición desde EN_VALORACION_MEDICA/CON_INDICACION_PENDIENTE a un
-   estado de cierre y cierra la valoración médica. Hay que decidir qué pasa con las indicaciones aún
-   pendientes al cerrar (hoy "no caducan": ¿impiden el cierre o siguen visibles para Enfermería?).
-2. **Historia 5 — seguimiento médico y continuidad** (`MED-07` a `MED-09`, pantallas MED-10 a MED-12):
+1. **Historia 5 — seguimiento médico y continuidad** (`MED-07` a `MED-09`, pantallas MED-10 a MED-12):
    parecido al seguimiento de Enfermería, pero con "objetivo" y la decisión explícita de transferir o
    conservar al cambio de turno.
-3. **Historia 6 — protocolo urgente y derivación** (común con Enfermería, `DER-01` a `DER-06`).
-4. **Historia 7 — evento propio de Medicina** (`MED-11`): mismo ciclo sin reenviarlo desde Enfermería;
+2. **Historia 6 — protocolo urgente y derivación** (común con Enfermería, `DER-01` a `DER-06`).
+3. **Historia 7 — evento propio de Medicina** (`MED-11`): mismo ciclo sin reenviarlo desde Enfermería;
    exige que un ámbito de Medicina vea eventos no escalados propios.
-5. **Historias 8 y 9 — basal e historial/corrección**.
+4. **Historias 8 y 9 — basal e historial/corrección**.
 
 Huecos de lo ya construido:
 
-- "Resolver" desde CON_INDICACION_PENDIENTE solo permite registrar más indicaciones hasta que existan las
-  demás salidas de la conducta.
+- "Resolver" desde CON_INDICACION_PENDIENTE permite registrar más indicaciones o cerrar; el seguimiento
+  médico y el protocolo urgente llegarán con sus historias.
 - Los eventos escalados salen de las bandejas de Enfermería y no hay todavía una lista de "mis escalados"
   en Enfermería: llegará con el historial (historia 11 de Enfermería).

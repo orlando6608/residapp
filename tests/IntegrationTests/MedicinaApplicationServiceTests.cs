@@ -33,7 +33,8 @@ public class MedicinaApplicationServiceTests
             new StartMedicalAssessment(scopes, changeInbox, session, medical),
             new SaveMedicalAssessment(scopes, changeInbox, session, medical),
             new RegisterMedicalIndication(scopes, changeInbox, session, medical),
-            new ListMedicalIndications(scopes, changeInbox, session));
+            new ListMedicalIndications(scopes, changeInbox, session),
+            new CloseMedicalEvent(scopes, changeInbox, session, medical));
     }
 
     private static async Task<PendingChangeDetail?> FindAsync(SeededProfile seed, Guid eventId) =>
@@ -282,6 +283,132 @@ public class MedicinaApplicationServiceTests
             var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { EventId = eventId }));
             Assert.Contains(expected, ex.Message);
         }
+    }
+
+    private static CloseMedicalEventCommand Close(
+        SeededProfile seed, Guid eventId, int revision, Guid? operationId = null,
+        FamilyCommunicationDecision? decision = FamilyCommunicationDecision.NoComunicar,
+        FamilyCommunicationType? type = null, string? text = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, operationId ?? Guid.NewGuid(), decision, type, text);
+
+    [Fact]
+    public async Task CierreMedico_DesdeValoracion_CierraEventoYValoracion_EsIdempotente_YSaleDeLaBandeja()
+    {
+        var (_, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var revision = await StartAndSaveMedicalAsync(medica, eventId);
+        var operationId = Guid.NewGuid();
+
+        var withoutDecision = await service.CloseMedicalEventAsync(Close(medica, eventId, revision, decision: null));
+        var stale = await service.CloseMedicalEventAsync(Close(medica, eventId, revision - 1));
+        var closed = await service.CloseMedicalEventAsync(Close(medica, eventId, revision, operationId));
+        var repeated = await service.CloseMedicalEventAsync(Close(medica, eventId, revision, operationId));
+        var another = await service.CloseMedicalEventAsync(Close(medica, eventId, closed.Value));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutDecision.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
+        Assert.True(closed.Ok);
+        Assert.Equal(closed.Value, repeated.Value);
+        Assert.Equal(ApplicationFailureCode.Conflict, another.Error!.Code);
+
+        var detail = (await FindAsync(medica, eventId))!;
+        Assert.Equal(ClinicalEventStatus.Cerrado, detail.Status);
+        Assert.True(detail.Closure!.ClosedByCurrentAccount);
+        Assert.Equal(FamilyCommunicationDecision.NoComunicar, detail.Closure.Decision);
+        Assert.Empty((await service.ListEscalationsAsync(new ListEscalationsCommand(medica.ProfileScopeId, medica.CenterId))).Value!);
+        Assert.Equal(1, await CountAuditAsync(eventId, "CLINICAL_EVENT_CLOSE"));
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal("CERRADA", await connection.ExecuteScalarAsync<string>(
+            "SELECT estado_codigo FROM dbo.valoraciones_medicas WHERE evento_id = @EventId", new { EventId = eventId }));
+        Assert.Equal("MEDICINA", await connection.ExecuteScalarAsync<string>(
+            "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE recurso_id = @EventId AND accion_codigo = 'CLINICAL_EVENT_CLOSE'", new { EventId = eventId }));
+    }
+
+    [Fact]
+    public async Task CierreMedico_ConIndicacionesPendientes_SiguenParaEnfermeriaYMedicina_YLaComunicacionQuedaPendiente()
+    {
+        var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var first = (await service.RegisterMedicalIndicationAsync(Indication(medica, eventId, await StartAndSaveMedicalAsync(medica, eventId)))).Value;
+        var revision = (await service.RegisterMedicalIndicationAsync(Indication(medica, eventId, first, "Pautar paracetamol si fiebre."))).Value;
+
+        var withoutText = await service.CloseMedicalEventAsync(Close(
+            medica, eventId, revision, decision: FamilyCommunicationDecision.Preparar, type: FamilyCommunicationType.Ordinaria, text: " "));
+        var closed = await service.CloseMedicalEventAsync(Close(
+            medica, eventId, revision, decision: FamilyCommunicationDecision.Preparar, type: FamilyCommunicationType.Ordinaria,
+            text: "Ha tenido algo de fiebre; el equipo la ha valorado y sigue estable."));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutText.Error!.Code);
+        Assert.True(closed.Ok);
+        Assert.Equal(ClinicalEventStatus.Cerrado, (await FindAsync(medica, eventId))!.Status);
+        var medicalList = () => service.ListMedicalIndicationsAsync(new ListMedicalIndicationsCommand(medica.ProfileScopeId, medica.CenterId));
+        Assert.Equal(2, (await medicalList()).Value!.Count);
+
+        // Enfermería no cierra otra vez, pero sigue viendo las indicaciones y las puede leer y resolver.
+        var nursing = BuildService(enfermera.ExternalSubject);
+        var pending = (await nursing.ListPendingIndicationsAsync(new ListPendingIndicationsCommand(enfermera.ProfileScopeId, enfermera.CenterId))).Value!;
+        Assert.Equal(2, pending.Count);
+        Assert.All(pending, p => Assert.Equal(ClinicalEventStatus.Cerrado, p.EventStatus));
+        foreach (var (item, done) in new[] { (pending[0], true), (pending[1], false) })
+        {
+            var read = await nursing.RecordIndicationProgressAsync(new RecordIndicationProgressCommand(
+                enfermera.ProfileScopeId, enfermera.CenterId, eventId, item.Indication.Id, item.Indication.Revision));
+            Assert.True((await nursing.RecordIndicationProgressAsync(new RecordIndicationProgressCommand(
+                enfermera.ProfileScopeId, enfermera.CenterId, eventId, item.Indication.Id, read.Value, Realizada: done,
+                Incidencia: done ? null : "No había paracetamol en el botiquín."))).Ok);
+        }
+        Assert.Empty((await nursing.ListPendingIndicationsAsync(new ListPendingIndicationsCommand(enfermera.ProfileScopeId, enfermera.CenterId))).Value!);
+
+        // Medicina deja de ver la realizada, pero no la incidencia registrada después de cerrar.
+        var stillVisible = Assert.Single((await medicalList()).Value!);
+        Assert.Equal(MedicalIndicationStatus.NoRealizada, stillVisible.Indication.Status);
+        Assert.Equal("No había paracetamol en el botiquín.", stillVisible.Indication.Incident);
+
+        var nurseClose = await nursing.CloseClinicalEventAsync(new CloseClinicalEventCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, closed.Value, Guid.NewGuid(), FamilyCommunicationDecision.NoComunicar, null, null));
+        Assert.Equal(ApplicationFailureCode.Conflict, nurseClose.Error!.Code);
+
+        var communication = Assert.Single((await nursing.ListPendingFamilyCommunicationsAsync(
+            new ListPendingFamilyCommunicationsCommand(enfermera.ProfileScopeId, enfermera.CenterId))).Value!);
+        Assert.Equal(eventId, communication.EventId);
+        Assert.Equal(1, await CountAuditAsync(eventId, "CLINICAL_EVENT_CLOSE"));
+    }
+
+    [Fact]
+    public async Task CierreMedico_SinValoracionFueraDeAmbitoOConOtroPerfil_SeRechaza()
+    {
+        var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var revision = (await FindAsync(medica, eventId))!.Revision;
+        var notStarted = await service.CloseMedicalEventAsync(Close(medica, eventId, revision));
+        var started = (await service.StartMedicalAssessmentAsync(new StartMedicalAssessmentCommand(medica.ProfileScopeId, medica.CenterId, eventId, revision))).Value;
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Medicina);
+
+        var withoutAssessment = await service.CloseMedicalEventAsync(Close(medica, eventId, started));
+        var byOutsider = await BuildMedicina(outsider.ExternalSubject).CloseMedicalEventAsync(Close(outsider, eventId, started));
+        var byNurse = await BuildMedicina(enfermera.ExternalSubject).CloseMedicalEventAsync(Close(enfermera, eventId, started));
+
+        Assert.Equal(ApplicationFailureCode.Conflict, notStarted.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutAssessment.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOutsider.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byNurse.Error!.Code);
+        Assert.Equal(ClinicalEventStatus.EnValoracionMedica, (await FindAsync(medica, eventId))!.Status);
+
+        // En BD: un escalado no se cierra sin pasar por la valoración médica, y un evento cerrado no se reabre.
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var (_, _, otherMedica, escalatedId) = await SeedEscalatedAsync();
+        var skipped = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.eventos_asistenciales SET estado_codigo = 'CERRADO', revision = revision + 1, cerrado_por_cuenta_id = @AccountId, cerrado_en = SYSUTCDATETIME(), comunicacion_familiar_codigo = 'NO_COMUNICAR' WHERE id = @EventId",
+            new { EventId = escalatedId, AccountId = otherMedica.AccountId.Value }));
+        Assert.Contains("CLINICAL_EVENT_TRANSITION_INVALID", skipped.Message);
+
+        var closedRevision = (await service.CloseMedicalEventAsync(Close(medica, eventId, (await service.SaveMedicalAssessmentAsync(SaveMedical(medica, eventId, started))).Value))).Value;
+        Assert.True(closedRevision > 0);
+        var reopened = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.eventos_asistenciales SET estado_codigo = 'CON_INDICACION_PENDIENTE', revision = revision + 1, cerrado_por_cuenta_id = NULL, cerrado_en = NULL, comunicacion_familiar_codigo = NULL WHERE id = @EventId",
+            new { EventId = eventId }));
+        Assert.Contains("CLINICAL_EVENT_TRANSITION_INVALID", reopened.Message);
     }
 
     [Fact]

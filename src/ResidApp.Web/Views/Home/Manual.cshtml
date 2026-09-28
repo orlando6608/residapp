@@ -14,8 +14,8 @@
     evento propio, las bandejas de cambios ordinarios y prioritarios que Auxiliar genera, la valoración de
     esos eventos, su cierre con la decisión de comunicación familiar, el seguimiento y el escalado a Medicina;
     de <strong>Medicina</strong>, la bandeja de escalados recibidos, la valoración médica y las indicaciones a
-    Enfermería, que Enfermería lee y registra. El resto de módulos aparece descrito al final
-    como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
+    Enfermería, que Enfermería lee y registra, y el cierre médico del evento. El resto de módulos aparece
+    descrito al final como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
     inicio de sesión con usuario y contraseña definitivo).
 </div>
 
@@ -34,7 +34,7 @@
             <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas, valoración y cierre de eventos (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#seguimientos-enfermeria">Seguimientos y transferencia de turno (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#escalado-medicina">Escalar a Medicina y escalados recibidos</a>
-            <a class="list-group-item list-group-item-action" href="#valoracion-medica">Valoración médica e indicaciones a Enfermería</a>
+            <a class="list-group-item list-group-item-action" href="#valoracion-medica">Valoración médica, indicaciones y cierre médico</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -395,7 +395,7 @@
 
 <section id="valoracion-medica" class="mb-4">
     <h2 class="h5">
-        Valoración médica e indicaciones a Enfermería
+        Valoración médica, indicaciones y cierre médico
         <span class="badge text-bg-secondary align-middle">Perfiles: Medicina y Enfermería</span>
     </h2>
     <p>
@@ -407,25 +407,36 @@
         entretanto, se te pide recargar sin perder lo escrito.
     </p>
     <p>
-        Con la valoración guardada, <strong>Pasar a conducta médica</strong> muestra las cuatro salidas. De
-        momento está disponible <strong>registrar indicaciones a Enfermería</strong>: el texto de la indicación,
+        Con la valoración guardada, <strong>Pasar a conducta médica</strong> muestra las cuatro salidas. Están
+        disponibles <strong>registrar indicaciones a Enfermería</strong> y <strong>cerrar el evento</strong>;
+        seguimiento médico y protocolo urgente aparecen como "Próximamente". Una indicación lleva el texto,
         una fecha prevista, un criterio (o ambos) y, si hace falta, información adicional. No hay prioridad
         automática. El evento pasa a "Con indicación pendiente" y sale de la bandeja de escalados; puedes
-        añadir más indicaciones desde la conducta. La valoración médica ya no se modifica. Cierre, seguimiento
-        médico y protocolo urgente aparecen como "Próximamente".
+        añadir más indicaciones o cerrarlo desde la conducta. La valoración médica ya no se modifica.
+    </p>
+    <p>
+        <strong>Cerrar el evento</strong> muestra el resumen de tu valoración y los pendientes: las
+        indicaciones que Enfermería aún no ha leído o realizado y las no realizadas con su incidencia. Puedes
+        cerrar aunque haya indicaciones sin resolver: siguen en la bandeja de Enfermería hasta que registre su
+        resultado. Decides de forma obligatoria si se comunica a la familia, igual que en el cierre de
+        Enfermería (la comunicación queda pendiente de aprobación, firmada como "Equipo asistencial del
+        centro"). El evento queda "Cerrado" y Enfermería no tiene que cerrarlo otra vez: en su detalle verá
+        "Cerrado por Medicina". Si pulsas dos veces o repites el envío, el evento se cierra una sola vez.
     </p>
     <p>
         La tarjeta <strong>Indicaciones</strong> del inicio de Medicina muestra las indicaciones emitidas, con
         cuántas siguen sin leer o tienen incidencia, y la lista indica en cada una si está pendiente de
         lectura, leída, realizada o no realizada (con la incidencia), y si está vencida (fecha prevista pasada
-        sin realizar).
+        sin realizar). De los eventos que ya cerraste, marcados como "Evento cerrado", siguen las que
+        Enfermería aún no ha resuelto y las que registró como no realizadas después del cierre.
     </p>
     <p class="mb-0">
         Con el perfil <strong>Enfermería</strong>, la tarjeta <strong>Indicaciones</strong> del inicio abre las
         indicaciones de Medicina pendientes de tus unidades. Primero pulsas <strong>Confirmar lectura</strong>;
         después, <strong>Registrar como realizada</strong> o, si no ha podido hacerse, describes la incidencia y
         pulsas <strong>Registrar como no realizada</strong>. Confirmar la lectura nunca la marca como realizada,
-        y ninguna indicación caduca: sigue en la lista hasta registrar su resultado.
+        y ninguna indicación caduca: sigue en la lista hasta registrar su resultado, aunque Medicina ya haya
+        cerrado el evento.
     </p>
 </section>
 
@@ -491,7 +502,7 @@
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
         <li>Activar el protocolo urgente desde la decisión asistencial; y la línea temporal e historial de eventos.</li>
-        <li>El resto de la conducta de Medicina: cierre médico del evento (con la decisión de comunicación familiar), seguimiento médico con continuidad entre turnos y protocolo urgente; y eventos iniciados directamente por Medicina.</li>
+        <li>El resto de la conducta de Medicina: seguimiento médico con continuidad entre turnos y protocolo urgente; y eventos iniciados directamente por Medicina.</li>
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería de la unidad y el turno entrante se escribe a mano).</li>
         <li>Derivación a Urgencias con informe firmado en PDF.</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>

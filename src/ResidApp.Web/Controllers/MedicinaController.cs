@@ -12,8 +12,9 @@ namespace ResidApp.Web.Controllers;
 
 /// <summary>
 /// Vertical Medicina: MED-01 (inicio con contadores), MED-02/MED-03 (bandeja y detalle de escalados, con las
-/// fuentes de solo lectura), MED-04/MED-05 (empezar y guardar la valoración médica) y MED-06 a MED-09
-/// (conducta médica con la salida "registrar indicaciones" y el seguimiento de las indicaciones emitidas).
+/// fuentes de solo lectura), MED-04/MED-05 (empezar y guardar la valoración médica), MED-06 a MED-09
+/// (conducta médica con la salida "registrar indicaciones" y el seguimiento de las indicaciones emitidas) y
+/// MED-15 a MED-17 (cierre médico con la decisión de comunicación familiar).
 /// El resto de la conducta llegará con sus historias. Traduce a MedicinaApplicationService; la autorización
 /// y las reglas de negocio no viven aquí.
 /// </summary>
@@ -157,7 +158,7 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
     }
 
     /// <summary>MED-06 "conducta médica": las cuatro salidas, desde una valoración médica guardada o con
-    /// indicaciones ya emitidas. Solo "registrar indicaciones" está disponible por ahora.</summary>
+    /// indicaciones ya emitidas. Están disponibles "registrar indicaciones" y "cerrar".</summary>
     public async Task<IActionResult> Conducta(Guid eventoId, CancellationToken ct)
     {
         var detail = await FindEventAsync(eventoId, ct);
@@ -225,6 +226,65 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
             _ => result.Error.Message,
         });
         return View(new IndicacionViewModel(detail, form));
+    }
+
+    /// <summary>MED-15 a MED-17: resumen de la valoración médica, indicaciones aún pendientes y decisión de
+    /// comunicación familiar antes de cerrar. Mismos modelos que el cierre de Enfermería.</summary>
+    public async Task<IActionResult> Cerrar(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Escalados));
+        }
+        if (!CanDecide(detail))
+        {
+            return RedirectToAction(nameof(Escalado), new { eventoId });
+        }
+
+        return View(new CerrarViewModel(detail, new CerrarFormModel
+        {
+            EventoId = detail.EventId, Revision = detail.Revision, OperacionId = Guid.NewGuid(),
+        }));
+    }
+
+    /// <summary>Cierre médico idempotente por OperacionId, sin segundo cierre de Enfermería. Las indicaciones
+    /// pendientes siguen en la bandeja de Enfermería.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cerrar([Bind(Prefix = "Form")] CerrarFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Escalados));
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new CerrarViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var preparar = form.Comunicacion == FamilyCommunicationDecision.Preparar;
+        var result = await service.CloseMedicalEventAsync(new CloseMedicalEventCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.OperacionId,
+            form.Comunicacion, preparar ? form.TipoComunicacion : null, preparar ? form.TextoComunicacion : null), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = preparar
+                ? "Evento cerrado. Enfermería no tiene que cerrarlo. La comunicación familiar queda pendiente de aprobación."
+                : "Evento cerrado. Enfermería no tiene que cerrarlo.";
+            return RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput =>
+                "Revisa los datos: decide si se comunica a la familia y, si preparas la comunicación, elige el tipo y escribe el texto. Para cerrar hace falta una valoración médica guardada.",
+            _ => result.Error.Message,
+        });
+        return View(new CerrarViewModel(detail, form));
     }
 
     /// <summary>MED-08/MED-09: indicaciones emitidas con su lectura, realización e incidencias.</summary>

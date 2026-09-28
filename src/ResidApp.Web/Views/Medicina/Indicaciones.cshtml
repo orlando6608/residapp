@@ -16,7 +16,8 @@
 <h1 class="h3">Indicaciones emitidas</h1>
 <p class="text-muted">
     Indicaciones a Enfermería de los eventos que siguen con indicación pendiente, con su lectura y realización. Las no leídas,
-    vencidas o con incidencia siguen aquí hasta que se resuelva el evento.
+    vencidas o con incidencia siguen aquí hasta que se resuelva el evento. De los eventos que ya cerraste siguen las que
+    Enfermería aún no ha resuelto y las que registró como no realizadas después del cierre.
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
 
@@ -34,6 +35,10 @@ else
                 <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
                 <p class="mb-1">
                     <span class="badge @MedicalIndicationDisplay.BadgeClass(indicacion.Status)">@MedicalIndicationDisplay.Label(indicacion.Status)</span>
+                    @if (item.EventStatus == ResidApp.Domain.Enfermeria.ClinicalEventStatus.Cerrado)
+                    {
+                        <span class="badge text-bg-light border">Evento cerrado</span>
+                    }
                     @if (MedicalIndicationDisplay.IsOverdue(indicacion))
                     {
                         <span class="badge text-bg-danger">Vencida</span>

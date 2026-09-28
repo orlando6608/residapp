@@ -101,10 +101,11 @@ public sealed record MedicalDetail(
     bool? StartedByCurrentAccount, DateTimeOffset? StartedAt, MedicalAssessmentDraft? Assessment,
     IReadOnlyList<MedicalIndicationSummary> Indications);
 
-/// <summary>ENF-10/MED-08: una indicación en una lista, con el evento y el residente del que procede.</summary>
+/// <summary>ENF-10/MED-08: una indicación en una lista, con el evento y el residente del que procede, y cuándo
+/// se cerró el evento (null si sigue abierto).</summary>
 public sealed record MedicalIndicationListItem(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, ClinicalEventStatus EventStatus,
-    MedicalIndicationSummary Indication);
+    DateTimeOffset? EventClosedAt, MedicalIndicationSummary Indication);
 
 /// <summary>ENF-04: detalle completo de un evento recibido. Según el origen trae las áreas y la temperatura
 /// del cambio de Auxiliar, o la observación y los datos clínicos del evento propio; en ambos casos la

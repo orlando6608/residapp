@@ -1,0 +1,114 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Domain.Medicina
+@using ResidApp.Web.Models
+@model CerrarViewModel
+@{
+    ViewData["Title"] = "Cerrar el evento";
+    var evento = Model.Event;
+    var valoracion = evento.Medical.Assessment!;
+    var content = valoracion.Content;
+    var sinResolver = evento.Medical.Indications
+        .Where(i => i.Status is MedicalIndicationStatus.PendienteLectura or MedicalIndicationStatus.Leida).ToList();
+    var conIncidencia = evento.Medical.Indications.Where(i => i.Status == MedicalIndicationStatus.NoRealizada).ToList();
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item"><a asp-action="Escalado" asp-route-eventoId="@evento.EventId">Detalle</a></li>
+        <li class="breadcrumb-item"><a asp-action="Conducta" asp-route-eventoId="@evento.EventId">Conducta médica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cerrar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Cerrar el evento — @evento.ResidentDisplayName</h1>
+<p class="text-muted">El evento pasa a Historial. Enfermería no tiene que cerrarlo otra vez.</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Resumen de la valoración médica</h2>
+        <p class="text-muted">
+            Último guardado @(valoracion.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
+            el @valoracion.LastUpdatedAt.ToLocalTime().ToString("g"). Al cerrar, la valoración médica ya no se puede modificar.
+        </p>
+        <dl class="row mb-0">
+            @foreach (var (etiqueta, texto) in new[] { ("Hallazgos y exploración", content.FindingsAndExamination), ("Valoración", content.Assessment), ("Actuaciones", content.Actions) })
+            {
+                if (texto is not null)
+                {
+                    <dt class="col-sm-3">@etiqueta</dt>
+                    <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                }
+            }
+            @if (!content.Vitals.IsEmpty)
+            {
+                <dt class="col-sm-3">Constantes</dt>
+                <dd class="col-sm-9">@VitalSignsDisplay.Summary(content.Vitals)</dd>
+            }
+        </dl>
+    </div>
+</div>
+
+<div class="card mb-3 @(sinResolver.Count > 0 || conIncidencia.Count > 0 ? "border-start border-4 border-warning" : "")">
+    <div class="card-body">
+        <h2 class="h5 card-title">Pendientes</h2>
+        @if (sinResolver.Count == 0 && conIncidencia.Count == 0)
+        {
+            <p class="mb-0">No hay indicaciones pendientes ni con incidencia.</p>
+        }
+        @if (sinResolver.Count > 0)
+        {
+            <p>
+                <strong>@sinResolver.Count @(sinResolver.Count == 1 ? "indicación sin resolver" : "indicaciones sin resolver").</strong>
+                Puedes cerrar igualmente. Las indicaciones sin resolver siguen en la bandeja de indicaciones de
+                Enfermería hasta que registre si se realizaron, y verás el resultado en tus indicaciones emitidas.
+            </p>
+            <ul class="list-unstyled">
+                @foreach (var indicacion in sinResolver)
+                {
+                    <li class="mb-2">
+                        <span class="badge @MedicalIndicationDisplay.BadgeClass(indicacion.Status)">@MedicalIndicationDisplay.Label(indicacion.Status)</span>
+                        @if (MedicalIndicationDisplay.IsOverdue(indicacion))
+                        {
+                            <span class="badge text-bg-danger">Vencida</span>
+                        }
+                        <span style="white-space: pre-line">@indicacion.Text</span>
+                        <span class="text-muted">· @FollowUpDisplay.Plan(indicacion.DueDate, indicacion.Criterion)</span>
+                    </li>
+                }
+            </ul>
+        }
+        @if (conIncidencia.Count > 0)
+        {
+            <p class="mb-1"><strong>No realizadas, con incidencia:</strong></p>
+            <ul class="list-unstyled mb-0">
+                @foreach (var indicacion in conIncidencia)
+                {
+                    <li class="mb-2">
+                        <span style="white-space: pre-line">@indicacion.Text</span>
+                        <span class="d-block" style="white-space: pre-line"><strong>Incidencia:</strong> @indicacion.Incident</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+<form asp-action="Cerrar" method="post">
+    <input type="hidden" asp-for="Form.EventoId" />
+    <input type="hidden" asp-for="Form.Revision" />
+    <input type="hidden" asp-for="Form.OperacionId" />
+
+    <partial name="_ComunicacionFamiliarFormulario" for="Form" />
+
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <a asp-action="Conducta" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin cerrar</a>
+        <button type="submit" class="btn btn-primary btn-lg">Cerrar evento</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

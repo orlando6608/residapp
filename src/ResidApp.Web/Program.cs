@@ -73,6 +73,7 @@ builder.Services.AddScoped<StartMedicalAssessment>();
 builder.Services.AddScoped<SaveMedicalAssessment>();
 builder.Services.AddScoped<RegisterMedicalIndication>();
 builder.Services.AddScoped<ListMedicalIndications>();
+builder.Services.AddScoped<CloseMedicalEvent>();
 builder.Services.AddScoped<MedicinaApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();

@@ -113,6 +113,11 @@
     </div>
 }
 
+@if (evento.Closure is not null)
+{
+    <partial name="_CierreEvento" model="evento" />
+}
+
 <p class="text-muted">Lo que sigue es de solo lectura: Medicina no modifica la observación original ni la valoración de Enfermería.</p>
 
 <partial name="_InformacionReunida" model="new InformacionReunidaViewModel(evento, Model.Baseline)" />

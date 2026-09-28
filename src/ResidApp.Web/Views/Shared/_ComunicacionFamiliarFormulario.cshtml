@@ -1,0 +1,47 @@
+@using ResidApp.Domain.Enfermeria
+@model CerrarFormModel
+@* Decisión de comunicación familiar al cerrar (ENF-12/ENF-14/ENF-15, MED-16/MED-17). Se usa con
+   <partial name="_ComunicacionFamiliarFormulario" for="Form" />, así que los campos se enlazan como Form.*. *@
+
+<div class="card mb-3">
+    <div class="card-body">
+        <fieldset class="mb-3">
+            <legend class="h5">¿Se comunica a la familia?</legend>
+            <p class="text-muted">Es obligatorio decidirlo de forma explícita.</p>
+            <div class="d-grid d-md-flex gap-2">
+                @foreach (var decision in new[] { FamilyCommunicationDecision.NoComunicar, FamilyCommunicationDecision.Preparar })
+                {
+                    var inputId = $"comunicacion-{decision}";
+                    <input type="radio" class="btn-check" asp-for="Comunicacion" value="@decision" id="@inputId" autocomplete="off" />
+                    <label class="btn btn-outline-primary btn-lg" for="@inputId">@FamilyCommunicationDisplay.Label(decision)</label>
+                }
+            </div>
+            <span asp-validation-for="Comunicacion" class="text-danger"></span>
+        </fieldset>
+
+        <fieldset>
+            <legend class="h6">Si preparas la comunicación</legend>
+            <p class="text-muted mb-3">
+                Se guarda pendiente de aprobación: no se publica todavía. La familia la verá firmada como
+                «@FamilyCommunicationChoice.VisibleAuthor», nunca con tu nombre. Escribe un texto comprensible,
+                sin datos internos ni escalas.
+            </p>
+            <div class="mb-3">
+                <label asp-for="TipoComunicacion" class="form-label"></label>
+                <select asp-for="TipoComunicacion" class="form-select form-select-lg">
+                    <option value="">Sin indicar</option>
+                    @foreach (var tipo in new[] { FamilyCommunicationType.Ordinaria, FamilyCommunicationType.Relevante })
+                    {
+                        <option value="@tipo" selected="@(Model.TipoComunicacion == tipo)">@FamilyCommunicationDisplay.Label(tipo)</option>
+                    }
+                </select>
+                <div class="form-text">La relevancia la decides tú: una ordinaria se ve 30 días y una relevante 6 meses.</div>
+            </div>
+            <div class="mb-0">
+                <label asp-for="TextoComunicacion" class="form-label"></label>
+                <textarea asp-for="TextoComunicacion" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="TextoComunicacion" class="text-danger"></span>
+            </div>
+        </fieldset>
+    </div>
+</div>

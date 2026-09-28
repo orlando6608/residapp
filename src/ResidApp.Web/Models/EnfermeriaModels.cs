@@ -81,14 +81,16 @@ public static class ClinicalEventStatusDisplay
         ClinicalEventStatus.EnValoracion => "En valoración",
         ClinicalEventStatus.EnSeguimiento => "En seguimiento",
         ClinicalEventStatus.EscaladoMedicina => "Escalado a Medicina",
-        ClinicalEventStatus.Cerrado => "Cerrado por Enfermería",
+        ClinicalEventStatus.EnValoracionMedica => "En valoración médica",
+        ClinicalEventStatus.ConIndicacionPendiente => "Con indicación pendiente",
+        ClinicalEventStatus.Cerrado => "Cerrado",
         _ => status.ToString(),
     };
 
     public static string BadgeClass(ClinicalEventStatus status, bool prioritario) => status switch
     {
-        ClinicalEventStatus.EnValoracion => "text-bg-warning",
-        ClinicalEventStatus.EnSeguimiento => "text-bg-info",
+        ClinicalEventStatus.EnValoracion or ClinicalEventStatus.EnValoracionMedica => "text-bg-warning",
+        ClinicalEventStatus.EnSeguimiento or ClinicalEventStatus.ConIndicacionPendiente => "text-bg-info",
         ClinicalEventStatus.EscaladoMedicina => "text-bg-primary",
         ClinicalEventStatus.Cerrado => "text-bg-success",
         _ => prioritario ? "text-bg-danger" : "text-bg-secondary",

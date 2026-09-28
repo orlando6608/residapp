@@ -154,6 +154,11 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
         transaction.Commit();
         return revision;
     }
+
+    /// <summary>MED-15: desde EN_VALORACION_MEDICA o CON_INDICACION_PENDIENTE, cerrando la valoración médica.
+    /// Las indicaciones aún pendientes no se tocan: siguen en la bandeja de Enfermería hasta resolverse.</summary>
+    public Task<int> CloseAsync(CloseClinicalEventInput input, CancellationToken ct = default) =>
+        ClinicalEventCloser.CloseAsync(connections, ClinicalEventCloseRule.Medicina, input, ct);
 }
 
 /// <summary>Fila de dbo.eventos_auditoria sobre un evento asistencial o algo que cuelga de él (valoración
