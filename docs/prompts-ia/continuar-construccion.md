@@ -12,8 +12,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- Todo el trabajo está en `main`. La historia 3 de Enfermería (script `0009`) está commiteada en local y
-  **pendiente de push**: hasta entonces Azure no tiene `0009`. Compruébalo con `git status` al empezar.
+- Todo el trabajo está en `main` y subido. La historia 3 de Enfermería (script `0009`) se subió el
+  2026-09-28. Queda por confirmar que el pipeline la aplicó en Azure: comprueba el run de GitHub Actions.
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
   (parcial), 2, 3, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
 - La base local `ResidApp` tiene los scripts `0001` a `0009` registrados en `dbo.scripts_aplicados`.
