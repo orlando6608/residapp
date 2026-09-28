@@ -11,8 +11,8 @@
     el vertical <strong>Residente / Basal</strong> (incluida la creación, autoría de las nueve áreas, el
     índice de Barthel y la firma del estado basal) y el vertical <strong>Auxiliar</strong>; del vertical
     <strong>Enfermería</strong> funciona la navegación, la autoría completa del basal, el registro de un
-    evento propio y las bandejas de cambios ordinarios y prioritarios que Auxiliar genera, pero todavía no
-    la valoración de esos eventos. El resto de módulos aparece descrito al final
+    evento propio, las bandejas de cambios ordinarios y prioritarios que Auxiliar genera, la valoración de
+    esos eventos y su cierre con la decisión de comunicación familiar. El resto de módulos aparece descrito al final
     como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
     inicio de sesión con usuario y contraseña definitivo).
 </div>
@@ -29,7 +29,7 @@
             <a class="list-group-item list-group-item-action" href="#mis-residentes-auxiliar">Mis residentes (Auxiliar)</a>
             <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#registrar-evento-enfermeria">Registrar evento (Enfermería)</a>
-            <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas y valoración de eventos (Enfermería)</a>
+            <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas, valoración y cierre de eventos (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -270,7 +270,7 @@
 
 <section id="bandejas-enfermeria" class="mb-4">
     <h2 class="h5">
-        Bandejas y valoración de eventos
+        Bandejas, valoración y cierre de eventos
         <span class="badge text-bg-secondary align-middle">Perfil: Enfermería</span>
     </h2>
     <p>
@@ -280,7 +280,8 @@
         equipo de Enfermería, compartidos por todo el equipo de Enfermería de esa unidad. Cada fila muestra
         el residente, la unidad, el área observada (o el motivo inicial y el aviso directo documentado en
         la prioritaria), quién lo registró, cuándo, su antigüedad y su estado ("Pendiente" o "En
-        valoración"), ordenados siempre de más antiguo a más reciente.
+        valoración"), ordenados siempre de más antiguo a más reciente. Los eventos cerrados salen de las
+        bandejas.
     </p>
     <p>
         Al abrir el detalle de un evento ves la observación original completa (inmutable), la temperatura
@@ -305,11 +306,30 @@
         profesional. Los rangos se fijan por centro en la pantalla "Rangos de referencia de constantes"
         (ver la sección siguiente).
     </p>
-    <p class="mb-0">
+    <p>
         Si otra persona modifica el evento mientras lo tienes abierto, al guardar se te pedirá recargar
         para ver la versión actual; lo que habías escrito sigue en pantalla para que puedas copiarlo, y
-        nunca se sobrescribe el trabajo ajeno. La decisión asistencial (cerrar, seguimiento, escalar,
-        protocolo urgente) y la línea temporal todavía no están disponibles (ver "Próximamente").
+        nunca se sobrescribe el trabajo ajeno. Cada guardado queda además registrado como una versión
+        de la valoración, que no se puede modificar.
+    </p>
+    <p>
+        Con la valoración guardada, en el detalle aparece <strong>Pasar a decisión asistencial</strong>,
+        con las cuatro salidas posibles: cerrar el evento, iniciar seguimiento, escalar a Medicina o activar
+        el protocolo urgente. De momento solo está disponible <strong>cerrar</strong>; las otras tres
+        aparecen como "Próximamente". Al cerrar revisas el resumen de la valoración y decides de forma
+        explícita si se comunica a la familia: <strong>No comunicar</strong> o <strong>Preparar
+        comunicación</strong>. Si la preparas, eliges si es ordinaria o relevante (la relevancia la decides
+        tú) y escribes un texto comprensible, sin datos internos ni escalas. Al pulsar <strong>Cerrar
+        evento</strong>, el evento sale de las bandejas, la valoración ya no se puede modificar y el
+        detalle muestra quién lo cerró, cuándo y la decisión. Si pulsas dos veces o repites el envío, el
+        evento no se cierra dos veces.
+    </p>
+    <p class="mb-0">
+        La comunicación preparada <strong>no se publica todavía</strong>: queda pendiente de aprobación
+        humana y aparece en la tarjeta <strong>Comunicaciones</strong> del inicio de Enfermería. La familia
+        la verá firmada siempre como "Equipo asistencial del centro", nunca con tu nombre. Su aprobación y
+        publicación llegan con el Portal Familiar (ver "Próximamente"), igual que la línea temporal del
+        evento.
     </p>
 </section>
 
@@ -374,9 +394,9 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Decisión asistencial sobre un evento ya valorado: cerrarlo (con la decisión de comunicación familiar), iniciar seguimiento, escalar a Medicina o activar el protocolo urgente; y la línea temporal e historial de eventos.</li>
+        <li>El resto de la decisión asistencial sobre un evento ya valorado: iniciar seguimiento, escalar a Medicina o activar el protocolo urgente; y la línea temporal e historial de eventos.</li>
         <li>Derivación a Urgencias con informe firmado en PDF.</li>
-        <li>Publicaciones para familias y su aprobación.</li>
+        <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
         <li>Gestión administrativa completa (autorizaciones, turnos, citas, auditoría).</li>
         <li>Supervisión clínica agregada e indicadores de Dirección.</li>

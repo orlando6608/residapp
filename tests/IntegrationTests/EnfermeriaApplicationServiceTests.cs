@@ -38,7 +38,9 @@ public class EnfermeriaApplicationServiceTests
             new ListPendingChanges(scopes, changeInbox, session),
             new FindPendingChangeDetail(scopes, changeInbox, session),
             new StartNursingAssessment(scopes, changeInbox, session, assessments),
-            new SaveNursingAssessment(scopes, changeInbox, session, assessments));
+            new SaveNursingAssessment(scopes, changeInbox, session, assessments),
+            new CloseClinicalEvent(scopes, changeInbox, session, assessments),
+            new ListPendingFamilyCommunications(scopes, changeInbox, session));
     }
 
     /// <summary>Un residente en la unidad de dos profesionales de Enfermería y un evento propio de la
@@ -212,6 +214,199 @@ public class EnfermeriaApplicationServiceTests
         var deleted = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
             "DELETE FROM dbo.eventos_asistenciales WHERE id = @EventId", new { EventId = eventId }));
         Assert.Contains("CLINICAL_EVENT_DELETE_FORBIDDEN", deleted.Message);
+    }
+
+    /// <summary>Empieza y guarda la valoración; devuelve la revisión con la que se puede cerrar.</summary>
+    private static async Task<int> StartAndSaveAsync(SeededProfile seed, Guid eventId)
+    {
+        var service = BuildService(seed.ExternalSubject);
+        var started = await service.StartNursingAssessmentAsync(new StartNursingAssessmentCommand(seed.ProfileScopeId, seed.CenterId, eventId, 1));
+        return (await service.SaveNursingAssessmentAsync(SaveCommand(seed, eventId, started.Value))).Value;
+    }
+
+    private static CloseClinicalEventCommand CloseCommand(
+        SeededProfile seed, Guid eventId, int revision, Guid operationId,
+        FamilyCommunicationDecision? decision = FamilyCommunicationDecision.NoComunicar,
+        FamilyCommunicationType? type = null, string? text = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, operationId, decision, type, text);
+
+    private static async Task<int> CountAuditAsync(Guid resourceId, string actionCode)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        return await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE recurso_id = @ResourceId AND accion_codigo = @ActionCode",
+            new { ResourceId = resourceId, ActionCode = actionCode });
+    }
+
+    [Fact]
+    public async Task CloseEvent_NoComunicar_SaleDeLasBandejas_YLaValoracionYaNoSeEdita()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var service = BuildService(enfermera.ExternalSubject);
+
+        var closed = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, revision, Guid.NewGuid()));
+
+        Assert.True(closed.Ok);
+        Assert.Equal(revision + 1, closed.Value);
+        var inbox = await service.ListPendingChangesAsync(new ListPendingChangesCommand(enfermera.ProfileScopeId, enfermera.CenterId, DailyChangeClassification.Ordinario));
+        Assert.DoesNotContain(inbox.Value!, e => e.EventId == eventId);
+
+        // El detalle de un evento cerrado sigue siendo legible, con su cierre y la valoración ya cerrada.
+        var detail = (await BuildService(companera.ExternalSubject).FindPendingChangeDetailAsync(
+            new FindPendingChangeDetailCommand(companera.ProfileScopeId, companera.CenterId, eventId))).Value!;
+        Assert.Equal(ClinicalEventStatus.Cerrado, detail.Status);
+        Assert.False(detail.Closure!.ClosedByCurrentAccount);
+        Assert.Equal(FamilyCommunicationDecision.NoComunicar, detail.Closure.Decision);
+        Assert.Null(detail.Closure.Communication);
+        Assert.Equal("Crepitantes en base derecha.", detail.Assessment!.Content.Findings);
+        Assert.Equal(1, await CountAuditAsync(eventId, "CLINICAL_EVENT_CLOSE"));
+
+        var saveAfterClose = await service.SaveNursingAssessmentAsync(SaveCommand(enfermera, eventId, detail.Revision));
+        Assert.Equal(ApplicationFailureCode.Conflict, saveAfterClose.Error!.Code);
+    }
+
+    [Fact]
+    public async Task CloseEvent_MismoEnvioRepetido_NoCierraDosVeces_YOtroCierreEsConflicto()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var service = BuildService(enfermera.ExternalSubject);
+        var command = CloseCommand(enfermera, eventId, revision, Guid.NewGuid(),
+            FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Ordinaria, "Hoy ha tenido tos; la estamos vigilando.");
+
+        var first = await service.CloseClinicalEventAsync(command);
+        var repeated = await service.CloseClinicalEventAsync(command);
+        var byOther = await BuildService(companera.ExternalSubject).CloseClinicalEventAsync(
+            CloseCommand(companera, eventId, revision, Guid.NewGuid()));
+
+        Assert.True(first.Ok);
+        Assert.True(repeated.Ok);
+        Assert.Equal(first.Value, repeated.Value);
+        Assert.Equal(ApplicationFailureCode.Conflict, byOther.Error!.Code);
+        Assert.Equal(1, await CountAuditAsync(eventId, "CLINICAL_EVENT_CLOSE"));
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.comunicaciones_familiares WHERE evento_id = @EventId", new { EventId = eventId }));
+    }
+
+    [Fact]
+    public async Task CloseEvent_PrepararComunicacion_QuedaPendienteDeAprobacion_SoloEnSuAmbito()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+
+        var closed = await BuildService(enfermera.ExternalSubject).CloseClinicalEventAsync(CloseCommand(
+            enfermera, eventId, revision, Guid.NewGuid(),
+            FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Relevante, "  Hoy ha tenido fiebre y la hemos atendido.  "));
+        Assert.True(closed.Ok);
+
+        var pending = await BuildService(companera.ExternalSubject).ListPendingFamilyCommunicationsAsync(
+            new ListPendingFamilyCommunicationsCommand(companera.ProfileScopeId, companera.CenterId));
+        var item = Assert.Single(pending.Value!);
+        Assert.Equal(eventId, item.EventId);
+        Assert.Equal(FamilyCommunicationType.Relevante, item.Communication.Type);
+        Assert.Equal("Hoy ha tenido fiebre y la hemos atendido.", item.Communication.Text);
+
+        var detail = (await BuildService(companera.ExternalSubject).FindPendingChangeDetailAsync(
+            new FindPendingChangeDetailCommand(companera.ProfileScopeId, companera.CenterId, eventId))).Value!;
+        Assert.Equal(FamilyCommunicationDecision.Preparar, detail.Closure!.Decision);
+        Assert.Equal(item.Communication, detail.Closure.Communication);
+        Assert.Equal(1, await CountAuditAsync(eventId, "CLINICAL_EVENT_CLOSE"));
+
+        var outside = await BuildService(outsider.ExternalSubject).ListPendingFamilyCommunicationsAsync(
+            new ListPendingFamilyCommunicationsCommand(outsider.ProfileScopeId, outsider.CenterId));
+        Assert.Empty(outside.Value!);
+    }
+
+    [Fact]
+    public async Task CloseEvent_SinValoracionOSinDecision_EsInvalido_YConRevisionAntigua_EsConflicto()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var started = await service.StartNursingAssessmentAsync(new StartNursingAssessmentCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId, 1));
+
+        var withoutAssessment = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, started.Value, Guid.NewGuid()));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutAssessment.Error!.Code);
+
+        var saved = (await service.SaveNursingAssessmentAsync(SaveCommand(enfermera, eventId, started.Value))).Value;
+        var withoutDecision = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, saved, Guid.NewGuid(), decision: null));
+        var prepareWithoutText = await service.CloseClinicalEventAsync(CloseCommand(
+            enfermera, eventId, saved, Guid.NewGuid(), FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Ordinaria, " "));
+        var stale = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, started.Value, Guid.NewGuid()));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutDecision.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, prepareWithoutText.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
+        var detail = (await service.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
+        Assert.Equal(ClinicalEventStatus.EnValoracion, detail.Status);
+        Assert.Equal(saved, detail.Revision);
+    }
+
+    [Fact]
+    public async Task CloseEvent_ConAuxiliarOFueraDeAmbito_ReturnsAccessDenied()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var auxiliar = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, enfermera.CenterId, enfermera.UnitId);
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+
+        var byAuxiliar = await BuildService(auxiliar.ExternalSubject).CloseClinicalEventAsync(CloseCommand(auxiliar, eventId, revision, Guid.NewGuid()));
+        var byOutsider = await BuildService(outsider.ExternalSubject).CloseClinicalEventAsync(CloseCommand(outsider, eventId, revision, Guid.NewGuid()));
+        var listByAuxiliar = await BuildService(auxiliar.ExternalSubject).ListPendingFamilyCommunicationsAsync(
+            new ListPendingFamilyCommunicationsCommand(auxiliar.ProfileScopeId, auxiliar.CenterId));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byAuxiliar.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOutsider.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, listByAuxiliar.Error!.Code);
+    }
+
+    [Fact]
+    public async Task SaveAssessment_CadaGuardadoDejaUnaVersionInmutable()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var first = await StartAndSaveAsync(enfermera, eventId);
+        var second = (await BuildService(companera.ExternalSubject).SaveNursingAssessmentAsync(
+            SaveCommand(companera, eventId, first, "Crepitantes bilaterales."))).Value;
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var versions = (await connection.QueryAsync<(int Revision, string Findings, Guid SavedBy)>("""
+            SELECT revision_evento, hallazgos, guardado_por_cuenta_id FROM dbo.valoraciones_enfermeria_versiones
+             WHERE evento_id = @EventId ORDER BY revision_evento
+            """, new { EventId = eventId })).ToList();
+        Assert.Equal([(first, "Crepitantes en base derecha.", enfermera.AccountId.Value), (second, "Crepitantes bilaterales.", companera.AccountId.Value)], versions);
+
+        var updated = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.valoraciones_enfermeria_versiones SET hallazgos = 'x' WHERE evento_id = @EventId", new { EventId = eventId }));
+        Assert.Contains("NURSING_ASSESSMENT_VERSION_IMMUTABLE", updated.Message);
+        var deleted = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "DELETE FROM dbo.valoraciones_enfermeria_versiones WHERE evento_id = @EventId", new { EventId = eventId }));
+        Assert.Contains("NURSING_ASSESSMENT_VERSION_IMMUTABLE", deleted.Message);
+    }
+
+    [Fact]
+    public async Task EventoCerrado_LaBaseDeDatosRechazaReabrirloYModificarSuValoracionYComunicacion()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        Assert.True((await BuildService(enfermera.ExternalSubject).CloseClinicalEventAsync(CloseCommand(
+            enfermera, eventId, revision, Guid.NewGuid(),
+            FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Ordinaria, "Texto para la familia."))).Ok);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+
+        foreach (var (sql, expected) in new[]
+        {
+            ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_VALORACION', revision = revision + 1, cerrado_por_cuenta_id = NULL, cerrado_en = NULL, comunicacion_familiar_codigo = NULL WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
+            ("UPDATE dbo.eventos_asistenciales SET revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
+            ("UPDATE dbo.valoraciones_enfermeria SET hallazgos = 'x' WHERE evento_id = @EventId", "NURSING_ASSESSMENT_IMMUTABLE"),
+            ("UPDATE dbo.comunicaciones_familiares SET texto = 'x' WHERE evento_id = @EventId", "FAMILY_COMMUNICATION_IMMUTABLE"),
+            ("DELETE FROM dbo.comunicaciones_familiares WHERE evento_id = @EventId", "FAMILY_COMMUNICATION_IMMUTABLE"),
+        })
+        {
+            var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { EventId = eventId }));
+            Assert.Contains(expected, ex.Message);
+        }
     }
 
     [Fact]

@@ -12,10 +12,11 @@ public enum ClinicalEventOrigin
 }
 
 /// <summary>Estados del evento (docs/flujos-clinicos/valoracion-escalado-enfermeria.md, "Estados del
-/// evento"). Solo los dos que existen hoy; seguimiento, escalado, protocolo urgente y cierre llegarán con la
-/// decisión asistencial (historias 3 a 6).</summary>
+/// evento"). Solo los que existen hoy; seguimiento, escalado y protocolo urgente llegarán con las historias
+/// 4 a 6 de la decisión asistencial.</summary>
 public enum ClinicalEventStatus
 {
     [Code("PENDIENTE")] [Display(Name = "Pendiente")] Pendiente,
     [Code("EN_VALORACION")] [Display(Name = "En valoración")] EnValoracion,
+    [Code("CERRADO")] [Display(Name = "Cerrado por Enfermería")] Cerrado,
 }

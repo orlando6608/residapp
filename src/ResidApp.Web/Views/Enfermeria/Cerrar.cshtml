@@ -1,0 +1,104 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model CerrarViewModel
+@{
+    ViewData["Title"] = "Cerrar el evento";
+    var evento = Model.Event;
+    var content = evento.Assessment!.Content;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId">Detalle</a></li>
+        <li class="breadcrumb-item"><a asp-action="Decision" asp-route-eventoId="@evento.EventId">Decisión asistencial</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cerrar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Cerrar el evento — @evento.ResidentDisplayName</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Resumen de la valoración</h2>
+        <p class="text-muted">
+            Último guardado @(evento.Assessment.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
+            el @evento.Assessment.LastUpdatedAt.ToLocalTime().ToString("g"). Al cerrar, la valoración ya no se puede modificar.
+        </p>
+        <dl class="row mb-0">
+            @foreach (var (etiqueta, texto) in new[] { ("Hallazgos", content.Findings), ("Valoración", content.Assessment), ("Actuaciones", content.Actions), ("Comunicaciones", content.Communications), ("Resultado", content.Outcome) })
+            {
+                if (texto is not null)
+                {
+                    <dt class="col-sm-3">@etiqueta</dt>
+                    <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                }
+            }
+            @if (!content.Vitals.IsEmpty)
+            {
+                <dt class="col-sm-3">Constantes</dt>
+                <dd class="col-sm-9">@VitalSignsDisplay.Summary(content.Vitals)</dd>
+            }
+        </dl>
+    </div>
+</div>
+
+<form asp-action="Cerrar" method="post">
+    <input type="hidden" asp-for="Form.EventoId" />
+    <input type="hidden" asp-for="Form.Revision" />
+    <input type="hidden" asp-for="Form.OperacionId" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <fieldset class="mb-3">
+                <legend class="h5">¿Se comunica a la familia?</legend>
+                <p class="text-muted">Es obligatorio decidirlo de forma explícita.</p>
+                <div class="d-grid d-md-flex gap-2">
+                    @foreach (var decision in new[] { FamilyCommunicationDecision.NoComunicar, FamilyCommunicationDecision.Preparar })
+                    {
+                        var inputId = $"comunicacion-{decision}";
+                        <input type="radio" class="btn-check" asp-for="Form.Comunicacion" value="@decision" id="@inputId" autocomplete="off" />
+                        <label class="btn btn-outline-primary btn-lg" for="@inputId">@FamilyCommunicationDisplay.Label(decision)</label>
+                    }
+                </div>
+                <span asp-validation-for="Form.Comunicacion" class="text-danger"></span>
+            </fieldset>
+
+            <fieldset>
+                <legend class="h6">Si preparas la comunicación</legend>
+                <p class="text-muted mb-3">
+                    Se guarda pendiente de aprobación: no se publica todavía. La familia la verá firmada como
+                    «@FamilyCommunicationChoice.VisibleAuthor», nunca con tu nombre. Escribe un texto comprensible,
+                    sin datos internos ni escalas.
+                </p>
+                <div class="mb-3">
+                    <label asp-for="Form.TipoComunicacion" class="form-label"></label>
+                    <select asp-for="Form.TipoComunicacion" class="form-select form-select-lg">
+                        <option value="">Sin indicar</option>
+                        @foreach (var tipo in new[] { FamilyCommunicationType.Ordinaria, FamilyCommunicationType.Relevante })
+                        {
+                            <option value="@tipo" selected="@(Model.Form.TipoComunicacion == tipo)">@FamilyCommunicationDisplay.Label(tipo)</option>
+                        }
+                    </select>
+                    <div class="form-text">La relevancia la decides tú: una ordinaria se ve 30 días y una relevante 6 meses.</div>
+                </div>
+                <div class="mb-0">
+                    <label asp-for="Form.TextoComunicacion" class="form-label"></label>
+                    <textarea asp-for="Form.TextoComunicacion" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="Form.TextoComunicacion" class="text-danger"></span>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <a asp-action="Decision" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin cerrar</a>
+        <button type="submit" class="btn btn-primary btn-lg">Cerrar evento</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

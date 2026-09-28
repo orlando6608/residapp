@@ -54,11 +54,11 @@
         </div>
     </div>
     <div class="col-12 col-md-4">
-        <div class="card h-100 text-muted">
+        <a asp-action="Comunicaciones" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Comunicaciones</h2>
-                <p class="card-text mb-0">Próximamente: comunicaciones familiares pendientes de aprobación.</p>
+                <p class="card-text mb-0"><span class="badge text-bg-secondary">@Model.Comunicaciones</span> comunicación(es) familiar(es) pendiente(s) de aprobación.</p>
             </div>
-        </div>
+        </a>
     </div>
 </div>

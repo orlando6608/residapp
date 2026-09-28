@@ -55,6 +55,8 @@ builder.Services.AddScoped<ListPendingChanges>();
 builder.Services.AddScoped<FindPendingChangeDetail>();
 builder.Services.AddScoped<StartNursingAssessment>();
 builder.Services.AddScoped<SaveNursingAssessment>();
+builder.Services.AddScoped<CloseClinicalEvent>();
+builder.Services.AddScoped<ListPendingFamilyCommunications>();
 builder.Services.AddScoped<EnfermeriaApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();

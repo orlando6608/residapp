@@ -12,33 +12,41 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- Todo el trabajo está en `main` y desplegado en Azure; no hay ramas ni cambios locales pendientes.
+- Todo el trabajo está en `main`. La historia 3 de Enfermería (script `0009`) está commiteada en local y
+  **pendiente de push**: hasta entonces Azure no tiene `0009`. Compruébalo con `git status` al empezar.
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
-  (parcial), 2, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
-- La base local `ResidApp` tiene los scripts `0001` a `0008` y su registro en `dbo.scripts_aplicados`
-  desde el 2026-09-28. Hay una copia previa en
-  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0007-20260928.bak`.
-- Suite: 61 unitarios, 127 de integración y 1 funcional, todos en verde.
+  (parcial), 2, 3, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
+- La base local `ResidApp` tiene los scripts `0001` a `0009` registrados en `dbo.scripts_aplicados`.
+  Hay una copia previa a `0009` en
+  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0009-20260928.bak`.
+  La base local tiene además un evento de prueba cerrado del escenario integrado («Prueba manual historia
+  3: tos.»), con su comunicación pendiente de aprobación.
+- Suite: 69 unitarios, 134 de integración y 1 funcional, todos en verde.
+- Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
+  `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
+  son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
+  Azure fallaría. Antes de crear un script, comprueba cuál es el último número.
 
-## Siguiente tarea: Enfermería, historia 3
+## Siguiente tarea: Enfermería, historia 4
 
-Cerrar un evento y decidir la comunicación familiar (`ENF-06`, `ENF-12`):
+Iniciar y transferir un seguimiento (`ENF-06`, `ENF-07`, `ENF-08`):
 [`docs/historias-usuarios/enfermeria.md`](../historias-usuarios/enfermeria.md) y
-[`docs/flujos-clinicos/valoracion-escalado-enfermeria.md`](../flujos-clinicos/valoracion-escalado-enfermeria.md).
+[`docs/flujos-clinicos/valoracion-escalado-enfermeria.md`](../flujos-clinicos/valoracion-escalado-enfermeria.md)
+(salida «b», estado «En seguimiento»; wireframes ENF-07B, ENF-08 y ENF-09).
 
-- «Pasar a decisión asistencial» desde la valoración. Cerrar es una de las cuatro salidas; las otras
-  (seguimiento, escalado a Medicina, protocolo urgente) son las historias 4, 5 y 6.
-- El cierre es idempotente y los eventos cerrados salen de las bandejas.
-- Hay que ampliar los estados de `eventos_asistenciales` (hoy PENDIENTE y EN_VALORACION, con el trigger
-  `TR_ea_transition_guard`) y cerrar el borrador de `valoraciones_enfermeria`. Todo ello va en un script
-  `0009` nuevo.
-- **Antes de diseñar hay que resolver una cosa:** «preparar una comunicación familiar» exige aprobación
-  humana y se muestra como «Equipo asistencial del centro». Las publicaciones y su aprobación pertenecen a
-  los verticales Portal Familiar y Administración, que no existen todavía. Hay que acotar qué parte
-  mínima se construye ahora, por ejemplo guardar la comunicación preparada, pendiente de aprobación. Es
-  una decisión de alcance: proponerla al usuario y no inventarla.
+- Es la segunda salida de la decisión asistencial. Se activa su tarjeta en `Views/Enfermeria/Decision.cshtml`
+  y se reutiliza el patrón del cierre: `CloseAsync` en `SqlNursingAssessmentRepository`, con idempotencia,
+  revisión y auditoría.
+- Hay que añadir el estado a `CK_ea_estado` y la transición a `TR_ea_transition_guard` en un script `0010`
+  nuevo. `0009` es la referencia de cómo hacerlo.
+- La valoración pasa hoy a CERRADA solo al cerrar. Hay que decidir qué ocurre con ella al pasar a
+  seguimiento.
+- **Antes de diseñar hay que resolver una cosa:** el seguimiento exige «equipo responsable» y una
+  transferencia «al equipo entrante» en el cambio de turno. No existen ni equipos ni turnos (turnos es
+  Administración). Hay que acotar qué se entiende por equipo ahora (por ejemplo, la unidad) y proponerlo al
+  usuario; no inventarlo.
 
-Después, en orden: historias 4, 5, 7, 6 y 11 (detalle en `pendientes-enfermeria.md`), y luego Medicina.
+Después, en orden: historias 5, 7, 6 y 11 (detalle en `pendientes-enfermeria.md`), y luego Medicina.
 
 ## Reglas de trabajo propias de este repositorio
 
@@ -73,5 +81,9 @@ Después, en orden: historias 4, 5, 7, 6 y 11 (detalle en `pendientes-enfermeria
   - Tablas de solo inserción con triggers `INSTEAD OF UPDATE, DELETE` que lanzan `THROW`.
   - Comprobación de ámbito deny-by-default en cada caso de uso.
   - Auditoría en `eventos_auditoria`.
+- **Comandos locales:** la solución está en `src/ResidApp.sln`, así que se ejecuta
+  `dotnet test src/ResidApp.sln`. La app se levanta con `dotnet run --launch-profile http` desde
+  `src/ResidApp.Web`. Con `--no-launch-profile` no carga los user-secrets y falla por falta de la cadena de
+  conexión.
 - **Verificación manual con curl:** una cuenta con un solo ámbito se autoselecciona, y
   `ProfileScope/Select` redirige. Sigue las redirecciones con `-L`.

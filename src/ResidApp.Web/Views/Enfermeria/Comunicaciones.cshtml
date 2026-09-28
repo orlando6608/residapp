@@ -1,0 +1,45 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model IReadOnlyList<PendingFamilyCommunicationSummary>
+@{
+    ViewData["Title"] = "Comunicaciones familiares pendientes";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Comunicaciones familiares</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Comunicaciones familiares pendientes de aprobación</h1>
+<p class="text-muted">
+    Comunicaciones preparadas al cerrar un evento. Ninguna se ha publicado: su aprobación y publicación llegan con el
+    Portal Familiar. La familia las verá firmadas como «@FamilyCommunicationChoice.VisibleAuthor».
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No hay comunicaciones familiares pendientes de aprobación.</p>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        <div class="card mb-3 border-start border-4 border-info">
+            <div class="card-body">
+                <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
+                <p class="text-muted mb-2">
+                    @(item.UnitName ?? "Sin unidad") ·
+                    <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(item.Communication.Type)</span>
+                    · Preparada el @item.Communication.PreparedAt.ToLocalTime().ToString("g") · Pendiente de aprobación
+                </p>
+                <p class="mb-2" style="white-space: pre-line">@item.Communication.Text</p>
+                <a asp-action="DetalleCambio" asp-route-eventoId="@item.EventId">Ver el evento</a>
+            </div>
+        </div>
+    }
+}

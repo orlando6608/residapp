@@ -23,18 +23,34 @@ public sealed record PendingChangeSummary(
 public sealed record NursingAssessmentDraft(
     NursingAssessmentContent Content, bool LastUpdatedByCurrentAccount, DateTimeOffset LastUpdatedAt);
 
+/// <summary>ENF-15: comunicación familiar preparada al cerrar, pendiente de aprobación humana. Ante la
+/// familia se firma siempre como FamilyCommunicationChoice.VisibleAuthor, nunca con el profesional.</summary>
+public sealed record PreparedFamilyCommunication(FamilyCommunicationType Type, string Text, DateTimeOffset PreparedAt);
+
+/// <summary>ENF-07A: cierre de un evento, con quién lo cerró (solo si fue la cuenta del ámbito que consulta;
+/// el nombre de otros profesionales no se expone) y la decisión de comunicación familiar.</summary>
+public sealed record ClinicalEventClosure(
+    bool ClosedByCurrentAccount, DateTimeOffset ClosedAt, FamilyCommunicationDecision Decision,
+    PreparedFamilyCommunication? Communication);
+
+/// <summary>Una comunicación familiar pendiente de aprobación en el ámbito (tarjeta "Comunicaciones" de
+/// ENF-01), con el evento del que procede.</summary>
+public sealed record PendingFamilyCommunicationSummary(
+    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, PreparedFamilyCommunication Communication);
+
 /// <summary>ENF-04: detalle completo de un evento recibido. Según el origen trae las áreas y la temperatura
 /// del cambio de Auxiliar, o la observación y los datos clínicos del evento propio; en ambos casos la
 /// observación original es inmutable. Revision es la que hay que devolver al empezar o guardar la
 /// valoración (concurrencia optimista). ReferenceRanges son los rangos de referencia de constantes del
-/// centro (vacío si no hay ninguno configurado), para el aviso visual de ENF-05.</summary>
+/// centro (vacío si no hay ninguno configurado), para el aviso visual de ENF-05. Assessment es el borrador
+/// o, si el evento está cerrado, la valoración ya cerrada; Closure solo existe si el evento está cerrado.</summary>
 public sealed record PendingChangeDetail(
     Guid EventId, ClinicalEventOrigin Origin, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string? UnitName,
     DailyChangeClassification Classification, IReadOnlyList<PendingChangeAreaSummary> Areas, decimal? TemperatureCelsius,
     string? Observation, string? ClinicalData,
     SystemProfile AuthorProfile, DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes, DateTimeOffset OccurredAt,
     ClinicalEventStatus Status, int Revision, bool? AssessmentStartedByCurrentAccount, DateTimeOffset? AssessmentStartedAt,
-    NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges);
+    NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges, ClinicalEventClosure? Closure);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre
@@ -50,4 +66,7 @@ public interface IChangeInboxDirectory
         Guid profileScopeId, CenterId centerId, DailyChangeClassification classification, CancellationToken ct = default);
 
     Task<PendingChangeDetail?> FindAsync(Guid profileScopeId, CenterId centerId, Guid eventId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<PendingFamilyCommunicationSummary>> ListPendingFamilyCommunicationsAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 }

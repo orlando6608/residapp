@@ -9,9 +9,9 @@ namespace ResidApp.Web.Models;
 /// todavía no tiene ninguno firmado).</summary>
 public sealed record EnfermeriaResidentDetailViewModel(ScopeResidentSummary Resident, CurrentBaselineSummary? Baseline);
 
-/// <summary>ENF-01: contadores de las dos bandejas ya construidas (grupo E4). Seguimientos, indicaciones y
-/// comunicaciones siguen sin contador propio hasta que existan esos grupos.</summary>
-public sealed record EnfermeriaInicioViewModel(int Ordinarios, int Prioritarios);
+/// <summary>ENF-01: contadores de las bandejas ya construidas y de las comunicaciones familiares pendientes
+/// de aprobación. Seguimientos e indicaciones siguen sin contador propio hasta que existan esos grupos.</summary>
+public sealed record EnfermeriaInicioViewModel(int Ordinarios, int Prioritarios, int Comunicaciones);
 
 /// <summary>ENF-04: detalle de un cambio recibido más el resumen del basal vigente del residente (null si
 /// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel.</summary>
@@ -76,15 +76,66 @@ public static class ClinicalEventStatusDisplay
     {
         ClinicalEventStatus.Pendiente => "Pendiente",
         ClinicalEventStatus.EnValoracion => "En valoración",
+        ClinicalEventStatus.Cerrado => "Cerrado por Enfermería",
         _ => status.ToString(),
     };
 
     public static string BadgeClass(ClinicalEventStatus status, bool prioritario) => status switch
     {
         ClinicalEventStatus.EnValoracion => "text-bg-warning",
+        ClinicalEventStatus.Cerrado => "text-bg-success",
         _ => prioritario ? "text-bg-danger" : "text-bg-secondary",
     };
 }
+
+/// <summary>Textos de la comunicación familiar (ENF-14/ENF-15).</summary>
+public static class FamilyCommunicationDisplay
+{
+    public static string Label(FamilyCommunicationDecision decision) => decision switch
+    {
+        FamilyCommunicationDecision.NoComunicar => "No comunicar",
+        FamilyCommunicationDecision.Preparar => "Preparar comunicación",
+        _ => decision.ToString(),
+    };
+
+    public static string Label(FamilyCommunicationType type) => type switch
+    {
+        FamilyCommunicationType.Ordinaria => "Ordinaria",
+        FamilyCommunicationType.Relevante => "Relevante",
+        _ => type.ToString(),
+    };
+}
+
+/// <summary>ENF-07A "cerrar el evento" con la decisión de comunicación familiar (ENF-14/ENF-15). Sin
+/// decisión preseleccionada: debe ser explícita. El tipo y el texto solo se envían si se prepara la
+/// comunicación; el dominio (FamilyCommunicationChoice) es quien decide si la combinación es válida.
+/// Revision es la del evento al abrir la pantalla y OperacionId hace el cierre idempotente.</summary>
+public sealed class CerrarFormModel
+{
+    [Required]
+    public Guid EventoId { get; set; }
+
+    [Required]
+    public int Revision { get; set; }
+
+    [Required]
+    public Guid OperacionId { get; set; }
+
+    [Required(ErrorMessage = "Decide si se comunica a la familia.")]
+    [Display(Name = "Comunicación familiar")]
+    public FamilyCommunicationDecision? Comunicacion { get; set; }
+
+    [Display(Name = "Tipo de comunicación")]
+    public FamilyCommunicationType? TipoComunicacion { get; set; }
+
+    [StringLength(FamilyCommunicationChoice.MaxTextLength)]
+    [Display(Name = "Texto para la familia")]
+    public string? TextoComunicacion { get; set; }
+}
+
+/// <summary>ENF-07A: el formulario de cierre más el evento, cuyo resumen de valoración y actuaciones se
+/// revisa antes de cerrar.</summary>
+public sealed record CerrarViewModel(PendingChangeDetail Event, CerrarFormModel Form);
 
 /// <summary>ENF-05 "Valoración de Enfermería": hallazgos, valoración, actuaciones, comunicaciones,
 /// resultado y constantes opcionales. Revision es la del evento al abrir la pantalla (concurrencia

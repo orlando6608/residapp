@@ -1,0 +1,48 @@
+@using ResidApp.Web.Models
+@model ResidApp.Application.Ports.PendingChangeDetail
+@{
+    ViewData["Title"] = "Decisión asistencial";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="DetalleCambio" asp-route-eventoId="@Model.EventId">Detalle</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Decisión asistencial</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Decisión asistencial — @Model.ResidentDisplayName</h1>
+<p class="text-muted">Elige una sola salida para este evento. El sistema no decide ni propone ninguna.</p>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-md-6">
+        <a asp-action="Cerrar" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Cerrar el evento</h2>
+                <p class="card-text text-muted mb-0">Revisas la valoración, decides si se comunica a la familia y el evento pasa a Historial.</p>
+            </div>
+        </a>
+    </div>
+    @foreach (var (titulo, texto) in new[]
+    {
+        ("Iniciar seguimiento", "Fecha prevista o criterio y equipo responsable."),
+        ("Escalar a Medicina", "Se envía toda la información reunida, sin resumen automático."),
+        ("Activar protocolo urgente", "Documentar la activación y, si procede, derivar a Urgencias."),
+    })
+    {
+        <div class="col-12 col-md-6">
+            <div class="card h-100 text-muted">
+                <div class="card-body">
+                    <h2 class="h5 card-title">@titulo</h2>
+                    <p class="card-text mb-0">Próximamente: @texto</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="d-grid d-md-flex justify-content-md-end">
+    <a asp-action="DetalleCambio" asp-route-eventoId="@Model.EventId" class="btn btn-outline-secondary btn-lg">Volver al detalle</a>
+</div>

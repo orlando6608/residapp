@@ -15,7 +15,8 @@ namespace ResidApp.Web.Controllers;
 /// construidas), ENF-17 (residentes del ámbito) y ENF-18 (ficha del residente, con el mismo resumen de
 /// basal vigente que AUX-03); grupo E3: ENF-16 (registrar evento propio); grupo E4: ENF-02/ENF-03/ENF-04
 /// (bandejas de ordinarios/prioritarios con los cambios de Auxiliar y los eventos propios, y su detalle);
-/// grupo E5: ENF-03 a ENF-05 (empezar y guardar la valoración). Traduce a EnfermeriaApplicationService; la
+/// grupo E5: ENF-03 a ENF-05 (empezar y guardar la valoración); historia 3: ENF-06/ENF-07A (decisión
+/// asistencial y cierre) con la comunicación familiar pendiente de aprobación (ENF-14/ENF-15). Traduce a EnfermeriaApplicationService; la
 /// autorización y las reglas de negocio no viven aquí.
 /// </summary>
 public sealed class EnfermeriaController(EnfermeriaApplicationService service) : Controller
@@ -33,8 +34,32 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             new ListPendingChangesCommand(activeScope.ProfileScopeId, centroId, DailyChangeClassification.Ordinario), ct);
         var prioritarios = await service.ListPendingChangesAsync(
             new ListPendingChangesCommand(activeScope.ProfileScopeId, centroId, DailyChangeClassification.Prioritario), ct);
+        var comunicaciones = await service.ListPendingFamilyCommunicationsAsync(
+            new ListPendingFamilyCommunicationsCommand(activeScope.ProfileScopeId, centroId), ct);
         return View(new EnfermeriaInicioViewModel(
-            ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0));
+            ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
+            comunicaciones.Ok ? comunicaciones.Value!.Count : 0));
+    }
+
+    /// <summary>Comunicaciones familiares preparadas al cerrar un evento y pendientes de aprobación. Su
+    /// aprobación y publicación llegan con el Portal Familiar.</summary>
+    public async Task<IActionResult> Comunicaciones(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Comunicaciones)) });
+        }
+
+        var result = await service.ListPendingFamilyCommunicationsAsync(
+            new ListPendingFamilyCommunicationsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(Array.Empty<PendingFamilyCommunicationSummary>());
+        }
+
+        return View(result.Value);
     }
 
     /// <summary>ENF-02: bandeja de cambios ordinarios (AUX-11A) y eventos propios ordinarios (ENF-16).</summary>
@@ -176,6 +201,82 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             ? ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo."
             : "Revisa los datos: la valoración necesita al menos un dato, la PA con ambas cifras, el flujo de O₂ solo con oxigenoterapia y la otra constante con nombre y valor.");
         return View(new ValoracionViewModel(detail, form));
+    }
+
+    /// <summary>ENF-06 "decisión asistencial": las cuatro salidas, desde una valoración ya guardada. Solo
+    /// cerrar está disponible; seguimiento, escalado y protocolo urgente llegan con las historias 4 a 6.</summary>
+    public async Task<IActionResult> Decision(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (detail.Status != ClinicalEventStatus.EnValoracion || detail.Assessment is null)
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        return View(detail);
+    }
+
+    /// <summary>ENF-07A: resumen de la valoración y decisión explícita de comunicación familiar
+    /// (ENF-14/ENF-15) antes de cerrar.</summary>
+    public async Task<IActionResult> Cerrar(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (detail.Status != ClinicalEventStatus.EnValoracion || detail.Assessment is null)
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        return View(new CerrarViewModel(detail, new CerrarFormModel
+        {
+            EventoId = detail.EventId, Revision = detail.Revision, OperacionId = Guid.NewGuid(),
+        }));
+    }
+
+    /// <summary>ENF-07A "cerrar": idempotente por OperacionId (repetir el envío no cierra dos veces). Ante un
+    /// conflicto se conserva lo escrito y se pide recargar, igual que al guardar la valoración.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cerrar([Bind(Prefix = "Form")] CerrarFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new CerrarViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var preparar = form.Comunicacion == FamilyCommunicationDecision.Preparar;
+        var result = await service.CloseClinicalEventAsync(new CloseClinicalEventCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.OperacionId,
+            form.Comunicacion, preparar ? form.TipoComunicacion : null, preparar ? form.TextoComunicacion : null), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = preparar
+                ? "Evento cerrado. La comunicación familiar queda pendiente de aprobación."
+                : "Evento cerrado.";
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput =>
+                "Revisa los datos: decide si se comunica a la familia y, si preparas la comunicación, elige el tipo y escribe el texto. Para cerrar hace falta una valoración guardada.",
+            _ => result.Error.Message,
+        });
+        return View(new CerrarViewModel(detail, form));
     }
 
     private const string ConcurrencyMessage =

@@ -26,6 +26,7 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                AND resident_scope.revocado_en IS NULL
           LEFT JOIN dbo.cierres_cotidianos_residente closure ON closure.id = ea.cierre_id
           LEFT JOIN dbo.eventos_clinicos clinical ON clinical.id = ea.evento_clinico_id
+          LEFT JOIN dbo.comunicaciones_familiares family ON family.evento_id = ea.id
          WHERE ea.centro_id = @CenterId
            AND (resident_scope.id IS NOT NULL OR NOT EXISTS (
                SELECT 1 FROM dbo.ambitos_perfil_residente restriction
@@ -46,6 +47,7 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                    ea.estado_codigo AS StatusCode
             {ScopedEventsFrom}
                AND ea.clasificacion_codigo = @ClassificationCode
+               AND ea.estado_codigo IN ('PENDIENTE', 'EN_VALORACION')
              ORDER BY ea.recibido_en ASC
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ClassificationCode = classification.ToCode() },
             cancellationToken: ct))).ToList();
@@ -87,7 +89,11 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                    CASE WHEN ea.valoracion_iniciada_por_cuenta_id IS NULL THEN NULL
                         WHEN ea.valoracion_iniciada_por_cuenta_id = profile.cuenta_id THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END
                        AS AssessmentStartedByCurrentAccount,
-                   ea.valoracion_iniciada_en AS AssessmentStartedAt
+                   ea.valoracion_iniciada_en AS AssessmentStartedAt,
+                   CAST(CASE WHEN ea.cerrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ClosedByCurrentAccount,
+                   ea.cerrado_en AS ClosedAt, ea.comunicacion_familiar_codigo AS FamilyCommunicationDecisionCode,
+                   family.tipo_codigo AS FamilyCommunicationTypeCode, family.texto AS FamilyCommunicationText,
+                   family.preparado_en AS FamilyCommunicationPreparedAt
             {ScopedEventsFrom}
                AND ea.id = @EventId
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, EventId = eventId }, cancellationToken: ct));
@@ -122,7 +128,7 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                    v.actualizado_en AS LastUpdatedAt
               FROM dbo.valoraciones_enfermeria v
               JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
-             WHERE v.evento_id = @EventId AND v.estado_codigo = 'BORRADOR'
+             WHERE v.evento_id = @EventId AND v.estado_codigo IN ('BORRADOR', 'CERRADA')
             """, new { ProfileScopeId = profileScopeId, EventId = eventId }, cancellationToken: ct));
 
         var ranges = (await connection.QueryAsync<RangeRow>(new CommandDefinition("""
@@ -149,8 +155,36 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                         assessment.RespiratorySupportCode is null ? null : EnumCode.ParseCode<RespiratorySupportCode>(assessment.RespiratorySupportCode),
                         assessment.OxygenFlowLpm, assessment.GlucoseMgDl, assessment.OtherName, assessment.OtherValue, assessment.OtherUnit)),
                 assessment.LastUpdatedByCurrentAccount, new DateTimeOffset(assessment.LastUpdatedAt, TimeSpan.Zero)),
-            ranges);
+            ranges,
+            row.ClosedAt is null ? null : new ClinicalEventClosure(
+                row.ClosedByCurrentAccount, new DateTimeOffset(row.ClosedAt.Value, TimeSpan.Zero),
+                EnumCode.ParseCode<FamilyCommunicationDecision>(row.FamilyCommunicationDecisionCode!),
+                row.FamilyCommunicationTypeCode is null ? null : new PreparedFamilyCommunication(
+                    EnumCode.ParseCode<FamilyCommunicationType>(row.FamilyCommunicationTypeCode), row.FamilyCommunicationText!,
+                    new DateTimeOffset(row.FamilyCommunicationPreparedAt!.Value, TimeSpan.Zero))));
     }
+
+    public async Task<IReadOnlyList<PendingFamilyCommunicationSummary>> ListPendingFamilyCommunicationsAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+
+        var rows = await connection.QueryAsync<FamilyCommunicationRow>(new CommandDefinition($"""
+            SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
+                   unit.nombre_visible AS UnitName, family.tipo_codigo AS TypeCode, family.texto AS Text, family.preparado_en AS PreparedAt
+            {ScopedEventsFrom}
+               AND family.estado_codigo = 'PENDIENTE_APROBACION'
+             ORDER BY family.preparado_en ASC
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+
+        return rows.Select(r => new PendingFamilyCommunicationSummary(
+            r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName,
+            new PreparedFamilyCommunication(
+                EnumCode.ParseCode<FamilyCommunicationType>(r.TypeCode), r.Text, new DateTimeOffset(r.PreparedAt, TimeSpan.Zero)))).ToList();
+    }
+
+    private sealed record FamilyCommunicationRow(
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string TypeCode, string Text, DateTime PreparedAt);
 
     private sealed record RangeRow(string Code, decimal? Min, decimal? Max);
 
@@ -166,7 +200,8 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
         Guid EventId, string OriginCode, Guid ResidentId, string ResidentDisplayName, Guid UnitId, string? UnitName, string ClassificationCode,
         decimal? TemperatureCelsius, string? Observation, string? ClinicalData, string AuthorProfileCode, string? PriorityReasonCode,
         string? DirectNoticeNotes, DateTime OccurredAt, string StatusCode, int Revision, bool? AssessmentStartedByCurrentAccount,
-        DateTime? AssessmentStartedAt);
+        DateTime? AssessmentStartedAt, bool ClosedByCurrentAccount, DateTime? ClosedAt, string? FamilyCommunicationDecisionCode,
+        string? FamilyCommunicationTypeCode, string? FamilyCommunicationText, DateTime? FamilyCommunicationPreparedAt);
 
     private sealed record AssessmentRow(
         string? Findings, string? Assessment, string? Actions, string? Communications, string? Outcome,

@@ -150,6 +150,28 @@
     </div>
 </div>
 
+@if (evento.Closure is { } cierre)
+{
+    <div class="card mb-3 border-start border-4 border-success">
+        <div class="card-body">
+            <h2 class="h5 card-title">Cierre</h2>
+            <p class="mb-2">
+                Cerrado @(cierre.ClosedByCurrentAccount ? "por ti" : "por otro profesional de Enfermería")
+                el @cierre.ClosedAt.ToLocalTime().ToString("g"). Comunicación familiar:
+                <strong>@FamilyCommunicationDisplay.Label(cierre.Decision)</strong>.
+            </p>
+            @if (cierre.Communication is { } comunicacion)
+            {
+                <p class="mb-1">
+                    <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(comunicacion.Type)</span>
+                    Pendiente de aprobación · se mostrará como «@FamilyCommunicationChoice.VisibleAuthor»
+                </p>
+                <p class="mb-0" style="white-space: pre-line">@comunicacion.Text</p>
+            }
+        </div>
+    </div>
+}
+
 <div class="d-grid d-md-flex justify-content-md-end gap-2 mb-3">
     @if (evento.Status == ClinicalEventStatus.Pendiente)
     {
@@ -159,15 +181,22 @@
             <button type="submit" class="btn btn-primary btn-lg w-100">Empezar valoración</button>
         </form>
     }
-    else
+    else if (evento.Status == ClinicalEventStatus.EnValoracion)
     {
-        <a asp-action="Valoracion" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">
+        <a asp-action="Valoracion" asp-route-eventoId="@evento.EventId" class="btn @(evento.Assessment is null ? "btn-primary" : "btn-outline-primary") btn-lg">
             @(evento.Assessment is null ? "Completar valoración" : "Continuar valoración")
         </a>
+        @if (evento.Assessment is not null)
+        {
+            <a asp-action="Decision" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Pasar a decisión asistencial</a>
+        }
     }
 </div>
 
-<div class="alert alert-info mb-0">
-    La decisión asistencial (cerrar, iniciar seguimiento, escalar a Medicina o activar el protocolo urgente)
-    y la línea temporal del evento todavía no están disponibles: llegan en próximos bloques del vertical Enfermería.
-</div>
+@if (evento.Status == ClinicalEventStatus.EnValoracion && evento.Assessment is null)
+{
+    <div class="alert alert-info mb-0">
+        Para pasar a la decisión asistencial (cerrar, iniciar seguimiento, escalar a Medicina o activar el protocolo
+        urgente) primero hay que guardar la valoración.
+    </div>
+}
