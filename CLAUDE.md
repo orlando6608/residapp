@@ -16,6 +16,8 @@ Este documento recoge las reglas de trabajo que rigen cualquier colaboración so
 - `docs\producto\` — visión, objetivos y alcance del producto, y estado de la migración.
 - `docs\flujos-clinicos\` — procesos asistenciales paso a paso.
 - `docs\historias-usuarios\` — requisitos funcionales en formato de historia de usuario.
+- `docs\prompts-ia\continuar-construccion.md` — estado actual, siguiente tarea y lecciones técnicas para retomar el trabajo en una sesión nueva. Actualízalo al cerrar cada bloque de trabajo.
+- `docs\tareas\` — tareas de construcción por vertical; el vertical en curso está en `docs\tareas\alta-prioridad\pendientes-enfermeria.md`.
 - `docs\pendientes-cj\` — documentos que CJ completa (valores clínicos y decisiones de producto). Revisa si tienen respuestas nuevas e incorpóralas; no rellenes tú lo que falte.
 - `docs\legado-cloudflare\` — prototipo funcional de referencia (congelado), fuente original de las reglas de negocio del producto.
 - `docs\bocetos-pantallas\guia-diseno-sistema-visual.md` — directriz vinculante de paleta de colores y estándares visuales (Bootstrap 5, WCAG 2.2 AA) para las vistas Razor. A diferencia del resto de `docs\bocetos-pantallas\` (propuestas de interfaz), este documento sí es de obligado cumplimiento al maquetar.

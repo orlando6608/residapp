@@ -6,9 +6,10 @@ Plataforma web para residencias geriátricas que estructura el registro cotidian
 
 ## Estado del proyecto
 
-- **Fecha de referencia:** 12 de septiembre de 2026.
+- **Fecha de referencia:** 28 de septiembre de 2026.
 - **Arquitectura:** monolito **ASP.NET Core MVC (.NET 10) / SQL Server**, en migración activa desde un prototipo previo sobre Cloudflare Workers/D1, conservado íntegro en [`docs/legado-cloudflare/`](docs/legado-cloudflare/) como evidencia histórica.
-- **Estado funcional:** solo el vertical **Residente/Basal** está en construcción; el resto de verticales (Auxiliar, Enfermería, Medicina, Familia/Portal Familiar, Administración, Dirección/Coordinación Clínica) no se ha iniciado. El alta de residente funciona de extremo a extremo (verificada contra SQL Server real); la firma de basal está cableada pero no es demostrable todavía (ver [Limitaciones actuales conocidas](#ejecución-local)). Ver el detalle en [Hoja de ruta](#hoja-de-ruta).
+- **Estado funcional:** **Residente/Basal** completado; **Auxiliar** completado y pendiente de validación por CJ; **Enfermería** en curso. Medicina, Familia/Portal Familiar, Administración y Dirección/Coordinación Clínica no se han iniciado. Ver el detalle en [Hoja de ruta](#hoja-de-ruta).
+- **Entorno de pruebas:** cada push a `main` compila, prueba, aplica los scripts pendientes y el seed ficticio en Azure SQL y despliega la web (`.github/workflows/ci-cd.yml`).
 - **Ámbito inicial:** residencias geriátricas.
 - **Datos permitidos en esta fase:** exclusivamente ficticios.
 
@@ -182,13 +183,35 @@ Si `dotnet test` falla por resolución de workloads (por ejemplo, un manifiesto 
 dotnet test src/ResidApp.sln -p:MSBuildEnableWorkloadResolver=false
 ```
 
-`database/scripts/0001_init_sqlserver.sql` ya se ha ejecutado y verificado contra una instancia real de SQL Server (22 tablas, 27 triggers, 51 checks, 224 índices); ver `dev_seed_residente_basal.sql` en [`database/seed/`](database/seed/) para poblarla con datos ficticios mínimos.
+### Base de datos
+
+SQL Server local (en esta máquina, `ACER-ORLANDO`, base `ResidApp`). Los scripts de `database/scripts/` se aplican con [`database/aplicar-scripts.sh`](database/aplicar-scripts.sh), que lleva un registro en `dbo.scripts_aplicados` y ejecuta cada script una sola vez (necesita `sqlcmd` y Git Bash):
+
+```bash
+SQL_SERVER=ACER-ORLANDO SQL_DATABASE=ResidApp SQLCMD_EXTRA=-C APLICAR_SEED=1 bash database/aplicar-scripts.sh
+```
+
+- Los scripts de esquema **no son idempotentes**. Un cambio de esquema va siempre en un script nuevo con el siguiente número; nunca se edita uno ya aplicado en Azure (el push a `main` los aplica allí).
+- Una base creada a mano, sin `dbo.scripts_aplicados`, necesita antes registrar los scripts que ya tiene (ver [`pipeline-no-provisiona-bd-azure.md`](docs/tareas/alta-prioridad/pipeline-no-provisiona-bd-azure.md)). Una base vacía no.
+- Los seeds de [`database/seed/`](database/seed/) son ficticios e idempotentes. Con `APLICAR_SEED=1` se reaplican en cada ejecución.
+
+### Aplicación y cuentas de desarrollo
+
+```bash
+cd src/ResidApp.Web
+dotnet user-secrets set ConnectionStrings:ResidApp "<cadena de conexión>"
+dotnet run   # http://localhost:5203
+```
+
+El inicio de sesión de desarrollo (`/DevAuth/Login`) pide el `sujeto_externo` de una cuenta sembrada. Las del escenario integrado comparten centro y unidad: `dev-integrado-auxiliar`, `dev-integrado-enfermeria` y `dev-integrado-direccion` (esta con el permiso de rangos de referencia). El resto de cuentas está en la cabecera de cada seed.
+
+### Tests
+
+Los tests de integración usan por defecto la misma base local (`tests/IntegrationTests/TestSupport/TestDatabase.cs`), que debe tener aplicados todos los scripts; se puede apuntar a otra con `RESIDAPP_TEST_CONNECTION_STRING`. A 28/09/2026: 61 unitarios, 127 de integración y 1 funcional, todos en verde.
 
 **Limitaciones actuales conocidas** (no ocultarlas ni darlas por resueltas):
 
-- No existe, ni en este puerto ni en el prototipo legado, un caso de uso para crear el contenido de un borrador de basal (las 9 áreas + Barthel): `BaselineController/Sign` y `/Direction` están cableados contra la aplicación pero no se pueden demostrar de extremo a extremo hasta que exista esa capacidad (pertenece al vertical Enfermería/Medicina).
 - La identidad de sesión de `ResidApp.Web` (`DevAuthController`) es un selector de cuenta ficticia por cookie, no autenticación real; la decisión de proveedor productivo sigue abierta (ver [Decisiones pendientes](#decisiones-pendientes)).
-- Verificación uno por uno del resto de los 27 triggers (más allá de lo que ya cubren los tests de integración) sigue pendiente — bloqueada por el primer punto.
 
 Detalle completo, incluidos los bugs de producción encontrados y corregidos al ejecutar por primera vez contra un motor real, en [`docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`](docs/tareas/alta-prioridad/pendientes-migracion-inicial.md).
 
@@ -200,15 +223,15 @@ El orden funcional de migración de los bloques verticales se hereda del prototi
 
 | Bloque vertical | Estado |
 | --- | --- |
-| Residente / Basal | En curso |
-| Auxiliar | No iniciado |
-| Enfermería | No iniciado |
+| Residente / Basal | Completado |
+| Auxiliar | Completado (historias 1-6), pendiente de validación por CJ |
+| Enfermería | En curso |
 | Medicina | No iniciado |
 | Familia / Portal Familiar | No iniciado |
 | Administración | No iniciado |
 | Dirección / Coordinación Clínica | No iniciado |
 
-Detalle del vertical Residente/Basal — completado: andamiaje de la solución, identificadores y enums compartidos, dominio asistencial (Resident/Baseline con validaciones), capa de aplicación e infraestructura Dapper/SQL Server verificada contra un motor real, alta de residente funcionando de extremo a extremo en `ResidApp.Web`, 47 tests reales en verde. Pendiente crítico: el resto se detalla en [Ejecución local](#ejecución-local) y en [`docs/producto/roadmap.md`](docs/producto/roadmap.md).
+El estado detallado vive en [`docs/producto/roadmap.md`](docs/producto/roadmap.md), las tareas por vertical en [`docs/tareas/`](docs/tareas/) (el vertical en curso, en [`pendientes-enfermeria.md`](docs/tareas/alta-prioridad/pendientes-enfermeria.md)) y lo que falta que decida CJ en [`docs/pendientes-cj/`](docs/pendientes-cj/).
 
 ## Decisiones pendientes
 
