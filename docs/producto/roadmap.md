@@ -8,9 +8,9 @@ La hoja de ruta original del prototipo legado (consolidación documental → lí
 
 | Bloque vertical | Estado |
 | --- | --- |
-| Residente / Basal | En curso — ver detalle más abajo |
-| Auxiliar | No iniciado |
-| Enfermería | No iniciado |
+| Residente / Basal | Completado — ver detalle más abajo |
+| Auxiliar | Completado (historias 1-6), pendiente de validación por CJ |
+| Enfermería | En curso — ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md` |
 | Medicina | No iniciado |
 | Familia / Portal Familiar | No iniciado |
 | Administración | No iniciado |
@@ -18,9 +18,9 @@ La hoja de ruta original del prototipo legado (consolidación documental → lí
 
 ## Estado detallado del vertical Residente / Basal
 
-Estado a fecha 2026-09-12.
+Estado a fecha 2026-09-28.
 
-**Completado:**
+**Completado (hasta 2026-09-12):**
 
 - Andamiaje de la solución (`ResidApp.sln` con los proyectos Domain, Application, Infrastructure, Shared y Web).
 - Identificadores fuertemente tipados y enums compartidos.
@@ -32,11 +32,13 @@ Estado a fecha 2026-09-12.
 - 3 bugs de producción encontrados al ejecutar por primera vez contra un motor real, corregidos (detalle en `docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`, punto 6).
 - `dotnet build` compila sin errores ni avisos.
 
-**Pendiente crítico:**
+**Completado después (2026-09-14 a 2026-09-28):**
 
-- No existe, ni en este puerto ni en el prototipo legado, un caso de uso para crear el contenido de un borrador de basal (las 9 áreas + Barthel); sin él, `BaselineController/Sign` y `/Direction` están cableados pero no se pueden demostrar end-to-end. Construir esa capacidad pertenece al vertical Enfermería/Medicina (`gestion-basal-barthel.md`), no a este.
-- Verificación uno por uno del resto de los 27 triggers (inmutabilidad, transición de estados) sigue pendiente — bloqueada por el punto anterior.
-- Detalle completo en `docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`.
+- Autoría del borrador de basal (crear, 9 áreas, Barthel, cancelar, confirmar y firmar) construida desde el vertical Enfermería; la firma y la lectura de Dirección Clínica se demuestran de extremo a extremo con test (`SqlBaselineRepositoryDraftTests.FullCycle_*`).
+- Los 27 triggers de `0001` verificados uno por uno contra SQL Server real (`DatabaseTriggerTests`). Uno de ellos (`TR_rcb_update_guard`) resulta inalcanzable porque una FK rechaza antes el mismo cambio; queda documentado.
+- Selección de ámbito activo para cuentas con varios perfiles/centros.
+
+Sin pendiente crítico propio. Detalle en `docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`.
 
 ## Decisiones abiertas heredadas del legado
 
@@ -51,9 +53,12 @@ Estado a fecha 2026-09-12.
 
 ## Próximos pasos
 
-El vertical Residente/Basal ya está verificado contra un motor real y con pantallas y tests propios; el
-único pendiente crítico que le queda (autoría de borrador de basal) pertenece al vertical
-Enfermería/Medicina, no bloquea empezar Auxiliar. Antes de iniciar cualquier vertical nuevo sigue
-faltando: preparar el despliegue en Azure (App Service + Azure SQL) y un pipeline de CI/CD mínimo, hoy
-inexistentes. Las decisiones de arquitectura técnica para cada paso se documentan en
-`docs/decisiones-arquitectura/instrucciones-migracion-net10.md`, no en este roadmap.
+Residente/Basal y Auxiliar están construidos; Enfermería está en curso (bandejas en solo lectura,
+evento propio y gestión del basal hechos; valoración, cierre, seguimiento, escalado, indicaciones,
+derivación e historial pendientes — ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md`). El
+siguiente bloque funcional es la valoración de eventos (historia 2 de Enfermería).
+
+El despliegue en Azure (App Service `app-residapp-dev` + Azure SQL `sqldb-residapp-dev`) y el pipeline
+de CI/CD (build + tests contra SQL Server real, y deploy que aplica el esquema y los datos ficticios de
+desarrollo) funcionan desde 2026-09-28. Las decisiones de arquitectura técnica para cada paso se
+documentan en `docs/decisiones-arquitectura/instrucciones-migracion-net10.md`, no en este roadmap.

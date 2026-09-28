@@ -1,6 +1,6 @@
 # Checklist de construcción — Mínimo Producto Viable
 
-Estado al 2026-09-12.
+Estado al 2026-09-28.
 
 ## Qué es y qué no es este documento
 
@@ -14,9 +14,9 @@ El orden se hereda de `roadmap.md` (heredado a su vez del prototipo legado, úni
 
 | Vertical | Perfil(es) | Estado |
 | --- | --- | --- |
-| Residente / Basal | Transversal — lo usan los seis perfiles | En curso |
-| Auxiliar | Auxiliar | No iniciado |
-| Enfermería | Enfermería | No iniciado |
+| Residente / Basal | Transversal — lo usan los seis perfiles | Completado |
+| Auxiliar | Auxiliar | Completado (pendiente de validación por CJ) |
+| Enfermería | Enfermería | En curso |
 | Medicina | Medicina | No iniciado |
 | Familia / Portal Familiar | Familiar | No iniciado |
 | Administración | Administración | No iniciado |
@@ -26,7 +26,7 @@ El orden se hereda de `roadmap.md` (heredado a su vez del prototipo legado, úni
 
 Cubre el módulo *Residentes* de `alcance.md` (identidad, historial de ubicación, basal vigente/versionado, Barthel común, cognición). Es transversal: el resto de verticales lo consultan o lo completan, no lo duplican.
 
-Las tareas de construcción pendientes ya están detalladas y no se repiten aquí — ver [`docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`](../alta-prioridad/pendientes-migracion-inicial.md): ejecutar el DDL contra una instancia real de SQL Server, sacar `ResidApp.Web` de la plantilla en blanco, y añadir tests propios del vertical.
+Completado: DDL ejecutado y sus 27 triggers verificados contra SQL Server real, pantallas de alta de residente, firma y lectura de Dirección, y tests propios. La autoría del borrador de basal se construyó desde Enfermería. Detalle y desviaciones deliberadas en [`docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`](../alta-prioridad/pendientes-migracion-inicial.md).
 
 ### Auxiliar
 
@@ -36,12 +36,11 @@ Cubre el módulo *Registro cotidiano* de `alcance.md`.
 - Flujo clínico: [`docs/flujos-clinicos/registro-cotidiano-auxiliar.md`](../../flujos-clinicos/registro-cotidiano-auxiliar.md).
 - Wireframe funcional: [`docs/bocetos-pantallas/wireframes-funcionales/auxiliar.md`](../../bocetos-pantallas/wireframes-funcionales/auxiliar.md).
 
-Tareas de construcción pendientes:
-- Dominio: modelar el registro cotidiano (sin cambios / no valorable / cambio observado) y su clasificación ordinario/prioritario con aviso directo.
-- Aplicación e infraestructura: casos de uso y repositorio Dapper/SQL Server; nueva migración numerada bajo `database/scripts/` (la `0001` es inmutable, ver [`docs/decisiones-arquitectura/integridad-sql-basal-legado.md`](../../decisiones-arquitectura/integridad-sql-basal-legado.md)).
-- `ResidApp.Web`: pantallas de cierre de turno, residentes asignados y reanudación del registro.
-- Autorización: política Claims-Based propia del perfil Auxiliar, sin permitir valoración clínica ni edición de basal.
-- Tests: validación de dominio, motor de autorización y casos de uso.
+Completado (historias 1 a 6): residentes asignados con basal resumido, cierre sin cambios, no valorable, registro de cambio por áreas con opciones rápidas y clasificación ordinario/prioritario con aviso directo (scripts `0003` a `0005_auxiliar_opciones_rapidas`), con tests de integración.
+
+Pendiente:
+- Validación con CJ, incluida `AUX-12` (usabilidad del campo "Desde cuándo" y de la carga de persona/canal/hora del aviso), que la propia historia deja como punto de validación abierto.
+- La autorización se resuelve por ámbito dentro de las consultas SQL (perfil activo + asignación vigente del residente), no con una política del motor genérico; ver "Motor de autorización por perfil" en la sección Transversal.
 
 ### Enfermería
 
@@ -51,13 +50,7 @@ Cubre los módulos *Eventos* y, junto con Medicina, *Medicina* (basal/Barthel) y
 - Flujos clínicos: [`docs/flujos-clinicos/valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-escalado-enfermeria.md), [`gestion-basal-barthel.md`](../../flujos-clinicos/gestion-basal-barthel.md) (`BAS-01` a `BAS-19`, común con Medicina), [`derivacion-urgencias.md`](../../flujos-clinicos/derivacion-urgencias.md) (`DER-01` a `DER-06`, común con Medicina).
 - Wireframe funcional: [`docs/bocetos-pantallas/wireframes-funcionales/enfermeria.md`](../../bocetos-pantallas/wireframes-funcionales/enfermeria.md).
 
-Tareas de construcción pendientes:
-- Dominio: bandejas, valoración de eventos, seguimiento, escalado a Medicina, cierre con decisión de comunicación familiar.
-- Dominio compartido con Medicina (construir una sola vez, no duplicar): gestión de basal/Barthel más allá del alta inicial (reevaluaciones) y derivación a Urgencias.
-- Aplicación e infraestructura: casos de uso y repositorios Dapper/SQL Server; nueva migración para las tablas de eventos/bandejas/derivación.
-- `ResidApp.Web`: pantallas de bandejas, valoración, escalado, indicaciones recibidas y derivación.
-- Autorización: política propia del perfil Enfermería, incluida la firma no transferible del basal.
-- Tests: dominio, motor de autorización y casos de uso, incluida la concurrencia optimista del borrador de basal (mismo patrón que `BASELINE_DRAFT_REVISION_CONFLICT`).
+En curso: lo hecho y lo pendiente, historia por historia, está en [`docs/tareas/alta-prioridad/pendientes-enfermeria.md`](../alta-prioridad/pendientes-enfermeria.md).
 
 ### Medicina
 

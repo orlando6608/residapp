@@ -6,6 +6,10 @@ Paso 4 (ejecución contra un motor real, cableado de `ResidApp.Web` y tests) sob
 residente/basal. `dotnet build src/ResidApp.sln` compila sin avisos ni errores; 47 tests reales pasan
 (ver punto 3).
 
+**Revisado el 2026-09-28:** los pendientes de este documento están cerrados (puntos 1, 2.1 y 3
+actualizados). Se conserva como registro de las desviaciones deliberadas (punto 5) y de los bugs
+encontrados (punto 6).
+
 ## 1. DDL de SQL Server — ejecutado y verificado contra un motor real
 
 `database/scripts/0001_init_sqlserver.sql` se ejecutó contra una instancia real de SQL Server local
@@ -14,11 +18,23 @@ residente/basal. `dotnet build src/ResidApp.sln` compila sin avisos ni errores; 
 para activar `QUOTED_IDENTIFIER`; sin él, `CREATE INDEX` falla con el error 1934), no un problema del
 script.
 
-Verificado indirectamente mediante los tests de integración del punto 3 contra esa misma instancia:
-alta de residente con episodio/ubicación/auditoría/idempotencia, y el camino "sin borrador" de firma de
-basal. **Sigue sin verificarse uno por uno** el resto de los 27 triggers (por ejemplo, la inmutabilidad
-de residentes cerrados o el trigger maestro `baseline_versions_validate_insert` con un borrador
-completo) — bloqueado por el punto 2.1 de más abajo.
+**Actualización 2026-09-28 — los 27 triggers verificados uno por uno** en
+`tests/IntegrationTests/DatabaseTriggerTests.cs`, sobre filas reales generadas con los repositorios
+(alta, dos firmas de basal, lectura de Dirección, borrador cancelado): cada escritura prohibida se rechaza
+con su código, y las transiciones permitidas (revocar ámbito/unidad/permiso una vez, cerrar episodio y
+ubicación una vez, avanzar la revisión del borrador exactamente en 1) siguen funcionando. Se comprobó
+además, con una muestra de tres triggers (`TR_ps_revoke_only`, `TR_bv_immutable`, `TR_bdb_active_guard`),
+que sus tests fallan si se desactiva el trigger. Dos hallazgos:
+
+- `TR_rcb_update_guard` (`BASELINE_CURRENT_UPDATE_INVALID`) es **inalcanzable**: cambiar `centro_id` en
+  `basales_vigentes_residente` rompe antes la FK compuesta a `residentes(centro_id, id)`, y los triggers
+  `AFTER` se evalúan después de las restricciones. El cambio queda rechazado igualmente (error 547); el
+  test lo documenta así en lugar de darlo por verificado.
+- Borrar `basales_borrador_barthel` con ítems choca antes con la FK de los ítems; el trigger solo se
+  alcanza sobre un Barthel sin ítems, que es como lo prueba el test.
+
+El trigger maestro `baseline_versions_validate_insert` sigue sin traducirse por decisión deliberada (ver
+punto 5).
 
 ## 2. `ResidApp.Web` — cableado real para Residente; Basal cableado pero no demostrable
 
@@ -37,6 +53,12 @@ Ya no es la plantilla en blanco. Hecho:
   con formularios y vistas propias.
 
 ### 2.1. Hueco identificado: no existe capacidad para crear el contenido de un borrador de basal
+
+**Resuelto el 2026-09-14** desde el vertical Enfermería: `CreateBaselineDraft`, `SaveBaselineDraftArea`,
+`SaveBaselineDraftBarthel`, `CancelBaselineDraft` y las pantallas de `EnfermeriaBasalController`, cuya
+confirmación envía a `BaselineController/Sign`. El ciclo completo (crear, 9 áreas, Barthel, firmar, leer
+como Dirección Clínica) está cubierto por `SqlBaselineRepositoryDraftTests.FullCycle_*`. Se conserva abajo
+el análisis original como contexto.
 
 Al cablear `BaselineController` se confirmó que **ni este puerto ni el prototipo legado**
 (`lib/application/resident-baseline-service.ts`) tienen un caso de uso para crear el contenido de un
@@ -76,9 +98,10 @@ Construir esa capacidad de autoría de borrador pertenece al vertical Enfermerí
 - **Camino feliz por HTTP real** (`FunctionalTests`): `ResidentsFlowTests` levanta `ResidApp.Web` con
   `WebApplicationFactory` y repite el login de desarrollo + alta de residente.
 
-No cubierto, por la misma razón del punto 2.1: el camino de éxito completo de `SignDraftAsync` y de
-`ReadAsClinicalDirectionAsync` con un basal realmente firmado (no hay forma de sembrar un borrador
-válido sin construir antes esa capacidad).
+**Actualización 2026-09-28:** la suite completa suma 146 tests (37 unitarios, 108 de integración, 1
+funcional) incluyendo los de Auxiliar, Enfermería y los triggers. El camino de éxito de `SignDraftAsync`
+y de `ReadAsClinicalDirectionAsync` con un basal realmente firmado, que aquí figuraba como no cubierto, lo
+cubre ya `SqlBaselineRepositoryDraftTests.FullCycle_*`.
 
 ## 4. Entorno .NET de esta máquina — incidencia no reproducida hoy
 
