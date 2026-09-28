@@ -10,10 +10,9 @@ using ResidApp.Shared;
 namespace ResidApp.IntegrationTests;
 
 /// <summary>
-/// Contra la instancia real de SQL Server. No hay todavía, ni en este puerto ni en el prototipo legado, un
-/// caso de uso para crear el contenido de un borrador de basal (9 áreas + Barthel) — ver
-/// src/ResidApp.Web/Controllers/BaselineController.cs — así que aquí solo se cubren los caminos que no
-/// requieren un borrador previo válido: ausencia de borrador y "auditoría o nada" sin basal firmado.
+/// Contra la instancia real de SQL Server. Caminos que no requieren un borrador previo válido: ausencia de
+/// borrador y "auditoría o nada" sin basal firmado. El camino de éxito (firma y lectura de Dirección sobre
+/// un basal firmado) está en SqlBaselineRepositoryDraftTests.FullCycle_*.
 /// </summary>
 public class SqlBaselineRepositoryTests
 {

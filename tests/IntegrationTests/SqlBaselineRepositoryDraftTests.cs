@@ -87,7 +87,7 @@ public class SqlBaselineRepositoryDraftTests
         await _repository.CreateDraftAsync(CreateInput(seed, resident.ResidentId, BaselineReason.Alta, Guid.NewGuid()));
         var owner = Owner(seed, resident.ResidentId);
 
-        var items = FullBarthelItems();
+        var items = BaselineTestData.FullBarthelItems();
         await _repository.SaveBarthelAsync(new SaveBaselineDraftBarthelInput(owner, new DateOnly(2026, 9, 14), items));
 
         var draft = await _repository.LoadOwnedDraftAsync(owner);
@@ -117,27 +117,12 @@ public class SqlBaselineRepositoryDraftTests
         var created = await _repository.CreateDraftAsync(CreateInput(seed, resident.ResidentId, BaselineReason.Alta, Guid.NewGuid()));
         var owner = Owner(seed, resident.ResidentId);
 
-        await _repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, BaselineArea.Movilidad,
-            new MobilityAreaAnswer(MobilityDisplacementCode.DeambulaIndependienteSinAyuda, MobilityAidCode.Ninguna, null, MobilityTransferCode.Independiente), null));
-        await _repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, BaselineArea.Alimentacion,
-            new FeedingAreaAnswer(FeedingRouteCode.Oral, FoodTextureCode.Normal, null, LiquidConsistencyCode.Iddsi0FinoSinEspesar,
-                FeedingAssistanceCode.Independiente, SwallowingPrecautionsCode.NingunaDocumentada, null), null));
-        await _repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, BaselineArea.Continencia,
-            new ContinenceAreaAnswer(ContinenceValueCode.Continente, ContinenceValueCode.Continente, [ContinenceManagementCode.Ninguno], null), null));
-        await _repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, BaselineArea.AseoHigiene,
-            new PersonalCareAreaAnswer(PersonalCareCode.Independiente, BathingCode.Independiente), null));
-        await _repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, BaselineArea.Cognicion,
-            new CognitionAreaAnswer(CognitionCategoryCode.SinDeterioroConocidoODocumentado, null, null, null, null, null, null), null));
-        await _repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, BaselineArea.Comunicacion,
-            new CommunicationAreaAnswer(ComprehensionCode.ComprensionFuncional, ExpressionCode.ExpresaNecesidadesEficazmente, [CommunicationFormCode.LenguajeOral], null), null));
-        await _repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, BaselineArea.Conducta,
-            new BehaviorAreaAnswer(BehaviorStatusCode.SinConductasRelevantesConocidas, [], null), null));
-        await _repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, BaselineArea.Sueno,
-            new SleepAreaAnswer([SleepPatternCode.PatronHabitualmenteConservado]), null));
-        await _repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, BaselineArea.AyudasHabituales,
-            new UsualAidsAreaAnswer([UsualAidCode.Ninguno], null, null), null));
+        foreach (var (area, answer) in BaselineTestData.NineAreas())
+        {
+            await _repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, area, answer, null));
+        }
 
-        await _repository.SaveBarthelAsync(new SaveBaselineDraftBarthelInput(owner, new DateOnly(2026, 9, 14), FullBarthelItems()));
+        await _repository.SaveBarthelAsync(new SaveBaselineDraftBarthelInput(owner, new DateOnly(2026, 9, 14), BaselineTestData.FullBarthelItems()));
 
         var signed = await _repository.SignDraftAsync(new SignBaselineDraftInput(
             seed.AccountId, SystemProfile.Enfermeria, seed.CenterId, seed.UnitId, resident.ResidentId, created.DraftId, created.DraftRevision, Guid.NewGuid()));
@@ -161,21 +146,6 @@ public class SqlBaselineRepositoryDraftTests
         Assert.Single(headers);
         Assert.Equal(1, headers[0].VersionNumber);
     }
-
-    private static List<BarthelItem> FullBarthelItems() =>
-    [
-        new(BarthelItemCode.Comer, "INDEPENDIENTE", BarthelCatalog.ScoreOf(BarthelItemCode.Comer, "INDEPENDIENTE")),
-        new(BarthelItemCode.Lavarse, "SOLO_COMPLETO", BarthelCatalog.ScoreOf(BarthelItemCode.Lavarse, "SOLO_COMPLETO")),
-        new(BarthelItemCode.Vestirse, "INDEPENDIENTE", BarthelCatalog.ScoreOf(BarthelItemCode.Vestirse, "INDEPENDIENTE")),
-        new(BarthelItemCode.Arreglarse, "INDEPENDIENTE_HIGIENE_PERSONAL_BASICA", BarthelCatalog.ScoreOf(BarthelItemCode.Arreglarse, "INDEPENDIENTE_HIGIENE_PERSONAL_BASICA")),
-        new(BarthelItemCode.Deposicion, "CONTINENTE", BarthelCatalog.ScoreOf(BarthelItemCode.Deposicion, "CONTINENTE")),
-        new(BarthelItemCode.Miccion, "CONTINENTE", BarthelCatalog.ScoreOf(BarthelItemCode.Miccion, "CONTINENTE")),
-        new(BarthelItemCode.UsoRetrete, "INDEPENDIENTE", BarthelCatalog.ScoreOf(BarthelItemCode.UsoRetrete, "INDEPENDIENTE")),
-        new(BarthelItemCode.TrasladoCamaSillon, "INDEPENDIENTE", BarthelCatalog.ScoreOf(BarthelItemCode.TrasladoCamaSillon, "INDEPENDIENTE")),
-        new(BarthelItemCode.Deambulacion, "CAMINA_50M_INDEPENDIENTE_CON_AYUDA_TECNICA_SI_PRECISA",
-            BarthelCatalog.ScoreOf(BarthelItemCode.Deambulacion, "CAMINA_50M_INDEPENDIENTE_CON_AYUDA_TECNICA_SI_PRECISA")),
-        new(BarthelItemCode.Escaleras, "SUBE_BAJA_UN_PISO_SOLO", BarthelCatalog.ScoreOf(BarthelItemCode.Escaleras, "SUBE_BAJA_UN_PISO_SOLO")),
-    ];
 
     private static CreateBaselineDraftInput CreateInput(SeededProfile seed, ResidentId residentId, BaselineReason reason, Guid operationId) =>
         new(seed.AccountId, SystemProfile.Enfermeria, seed.CenterId, seed.UnitId, residentId, reason,
