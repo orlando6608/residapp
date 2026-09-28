@@ -46,13 +46,8 @@ jobs:
           SA_PASSWORD: ${{ secrets.CI_SQL_SA_PASSWORD }}
         run: |
           sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -Q "CREATE DATABASE ResidAppTest"
-          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0001_init_sqlserver.sql
-          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0002_renombrado_espanol_sqlserver.sql
-          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0003_auxiliar_cierre_cotidiano.sql
-          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0004_auxiliar_registrar_cambio.sql
-          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0005_auxiliar_opciones_rapidas.sql
-          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0005_enfermeria_borrador_basal.sql
-          sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d ResidAppTest -I -i database/scripts/0006_enfermeria_evento_propio.sql
+          SQL_SERVER=localhost SQL_DATABASE=ResidAppTest SQL_USER=sa SQL_PASSWORD="$SA_PASSWORD" SQLCMD_EXTRA=-C \
+            bash database/aplicar-scripts.sh
 
       - name: Restore
         run: dotnet restore src/ResidApp.sln
@@ -85,6 +80,29 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Instalar sqlcmd
+        run: |
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
+          curl -sSL https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
+          echo "/opt/mssql-tools18/bin" >> "$GITHUB_PATH"
+
+      # Entorno de desarrollo/piloto interno con datos ficticios: aplica esquema pendiente y seeds dev-*.
+      # Nunca replicar APLICAR_SEED=1 en un entorno de producción con datos reales.
+      - name: Aplicar esquema y seed en Azure SQL
+        run: |
+          cadena="$(az webapp config connection-string list --name app-residapp-dev --resource-group rg-residapp-dev \
+            --query "[?name=='ResidApp'].value | [0]" -o tsv)"
+          valor() { tr ';' '\n' <<< "$cadena" | awk -F= -v k="$1" 'tolower($1)==tolower(k) { sub(/^[^=]*=/, ""); print; exit }'; }
+          server="$(valor Server)"; server="${server#tcp:}"
+          export SQL_SERVER="$server"
+          export SQL_DATABASE="$(valor 'Initial Catalog')"
+          export SQL_USER="$(valor 'User ID')"
+          export SQL_PASSWORD="$(valor Password)"
+          echo "::add-mask::$SQL_PASSWORD"
+          APLICAR_SEED=1 bash database/aplicar-scripts.sh
 
       - name: Desplegar en Azure Web App
         uses: azure/webapps-deploy@v3
