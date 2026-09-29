@@ -6,6 +6,7 @@ using ResidApp.Application.UseCases;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Medicina;
 using ResidApp.Infrastructure.Authorization;
+using ResidApp.Infrastructure.Pdf;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
 using ResidApp.Shared;
@@ -40,7 +41,11 @@ public class MedicinaApplicationServiceTests
             new ListMedicalFollowUps(scopes, changeInbox, session),
             new ActivateMedicalUrgentProtocol(scopes, changeInbox, session, medical),
             new RecordMedicalUrgentProtocolEntry(scopes, changeInbox, session, medical),
-            new ListMedicalUrgentProtocols(scopes, changeInbox, session));
+            new ListMedicalUrgentProtocols(scopes, changeInbox, session),
+            new SignMedicalReferralReport(scopes, changeInbox, session, medical, new ReferralReportPdfRenderer()),
+            new RecordMedicalFamilyCallAttempt(scopes, changeInbox, session, medical),
+            new FindResidentIdentification(scopes, changeInbox, session),
+            new DownloadReferralReport(scopes, changeInbox, session, new SqlReferralReportRepository(TestDatabase.ConnectionFactory)));
     }
 
     private static async Task<PendingChangeDetail?> FindAsync(SeededProfile seed, Guid eventId) =>
@@ -748,6 +753,48 @@ public class MedicinaApplicationServiceTests
         Assert.Equal(ClinicalEventStatus.ProtocoloUrgenteMedico, (await FindAsync(medica, eventId))!.Status);
         Assert.Single((await service.ListMedicalIndicationsAsync(new ListMedicalIndicationsCommand(medica.ProfileScopeId, medica.CenterId))).Value!);
         Assert.Empty(await ProtocolsAsync(outsider));
+    }
+
+    [Fact]
+    public async Task DerivacionMedica_SoloLaFirmaMedicina_EnfermeriaLaVeYDescarga_YSeCierraConActualizacionRelevante()
+    {
+        var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var nursing = BuildService(enfermera.ExternalSubject);
+        var revision = (await service.ActivateUrgentProtocolAsync(Activate(medica, eventId, await StartAndSaveMedicalAsync(medica, eventId)))).Value;
+
+        var byNurse = await nursing.SignReferralReportAsync(SignCommand(enfermera, eventId, revision, Guid.NewGuid()));
+        var operationId = Guid.NewGuid();
+        var signed = await service.SignReferralReportAsync(SignCommand(medica, eventId, revision, operationId));
+        var repeated = await service.SignReferralReportAsync(SignCommand(medica, eventId, revision, operationId));
+        var callByNurse = await nursing.RecordFamilyCallAttemptAsync(CallCommand(enfermera, eventId, signed.Value));
+
+        Assert.Equal(ApplicationFailureCode.Conflict, byNurse.Error!.Code);
+        Assert.True(signed.Ok);
+        Assert.Equal(signed.Value, repeated.Value);
+        Assert.Equal(ApplicationFailureCode.Conflict, callByNurse.Error!.Code);
+
+        var detail = (await FindAsync(medica, eventId))!;
+        Assert.Equal(ClinicalEventStatus.ProtocoloUrgenteMedico, detail.Status);
+        Assert.Equal(SystemProfile.Medicina, detail.Referral!.Profile);
+        var nurseDetail = (await nursing.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
+        Assert.False(nurseDetail.Referral!.SignedByCurrentAccount);
+        var (reportId, pdf, _) = await ReadReportAsync(eventId);
+        var byNurseDownload = await nursing.DownloadReferralReportAsync(new DownloadReferralReportCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId));
+        Assert.Equal(pdf, byNurseDownload.Value!.Content);
+        Assert.Equal(1, await CountAuditAsync(reportId, "REFERRAL_REPORT_DOWNLOAD"));
+
+        var closeWithoutCall = await service.CloseMedicalEventAsync(Close(medica, eventId, signed.Value, null,
+            FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Relevante, "Ha sido trasladado a Urgencias."));
+        revision = (await service.RecordFamilyCallAttemptAsync(CallCommand(medica, eventId, signed.Value, result: FamilyCallResult.NumeroErroneo))).Value;
+        var noComunicar = await service.CloseMedicalEventAsync(Close(medica, eventId, revision));
+        var closed = await service.CloseMedicalEventAsync(Close(medica, eventId, revision, null,
+            FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Relevante, "Ha sido trasladado a Urgencias."));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, closeWithoutCall.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, noComunicar.Error!.Code);
+        Assert.True(closed.Ok);
+        Assert.Equal(ClinicalEventStatus.Cerrado, (await FindAsync(medica, eventId))!.Status);
     }
 }
 

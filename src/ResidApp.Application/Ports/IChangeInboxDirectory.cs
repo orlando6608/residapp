@@ -1,6 +1,7 @@
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Medicina;
+using ResidApp.Domain.Residents;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
@@ -126,6 +127,22 @@ public sealed record UrgentProtocolSummary(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, ClinicalEventStatus Status,
     DateTimeOffset ActivatedAt, UrgentProtocolEntryType? LastEntryType, DateTimeOffset? LastEntryAt);
 
+/// <summary>DER-06: un intento de llamada al contacto familiar, con su autoría (solo si fue la cuenta del
+/// ámbito que consulta).</summary>
+public sealed record FamilyCallAttemptSummary(
+    string Contact, DateTimeOffset CalledAt, FamilyCallResult Result, string? Note, bool ByCurrentAccount, DateTimeOffset RecordedAt);
+
+/// <summary>ENF-12/MED-14: el informe de derivación firmado de un evento: qué perfil derivó, con qué motivo,
+/// quién y cuándo firmó, la huella del contenido firmado y los intentos de llamada a la familia, del más
+/// antiguo al más reciente. El PDF se descarga aparte (IReferralReportRepository).</summary>
+public sealed record ReferralDetail(
+    SystemProfile Profile, string Reason, bool SignedByCurrentAccount, DateTimeOffset SignedAt, string ContentHash,
+    IReadOnlyList<FamilyCallAttemptSummary> CallAttempts);
+
+/// <summary>DER-03: identificación del residente y del centro para el informe de derivación.</summary>
+public sealed record ResidentIdentification(
+    string DisplayName, DateOnly BirthDate, DocumentedSexCode DocumentedSex, string CenterName, string? UnitName);
+
 /// <summary>MED-04 a MED-12: la parte médica de un evento: quién y cuándo empezó la valoración médica (null
 /// si no se ha empezado), el borrador, las indicaciones emitidas, de la más antigua a la más reciente, y el
 /// seguimiento médico si lo hubo.</summary>
@@ -152,7 +169,8 @@ public sealed record PendingChangeDetail(
     SystemProfile AuthorProfile, DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes, DateTimeOffset OccurredAt,
     ClinicalEventStatus Status, int Revision, bool? AssessmentStartedByCurrentAccount, DateTimeOffset? AssessmentStartedAt,
     NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges, ClinicalEventClosure? Closure,
-    FollowUpDetail? FollowUp, ClinicalEventEscalation? Escalation, MedicalDetail Medical, UrgentProtocolDetail? UrgentProtocol);
+    FollowUpDetail? FollowUp, ClinicalEventEscalation? Escalation, MedicalDetail Medical, UrgentProtocolDetail? UrgentProtocol,
+    ReferralDetail? Referral);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre
@@ -188,4 +206,9 @@ public interface IChangeInboxDirectory
     /// <summary>ENF-11/MED-13: protocolos urgentes activos de los eventos visibles para el ámbito, de los dos
     /// perfiles, del más antiguo al más reciente.</summary>
     Task<IReadOnlyList<UrgentProtocolSummary>> ListUrgentProtocolsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>DER-03: identificación del residente y del centro de un evento visible para el ámbito (null si
+    /// no lo es).</summary>
+    Task<ResidentIdentification?> FindResidentIdentificationAsync(
+        Guid profileScopeId, CenterId centerId, Guid eventId, CancellationToken ct = default);
 }

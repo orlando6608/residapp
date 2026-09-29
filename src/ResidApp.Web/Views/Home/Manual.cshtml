@@ -15,8 +15,8 @@
     esos eventos, su cierre con la decisión de comunicación familiar, el seguimiento, el escalado a Medicina y
     el protocolo urgente; de <strong>Medicina</strong>, la bandeja de escalados recibidos, la valoración médica
     y las indicaciones a Enfermería, que Enfermería lee y registra, el seguimiento médico con la continuidad
-    entre turnos, el protocolo urgente y el cierre médico del evento. La derivación a Urgencias todavía no está
-    disponible. El resto de módulos aparece
+    entre turnos, el protocolo urgente con la derivación a Urgencias y el cierre médico del evento. El resto de
+    módulos aparece
     descrito al final como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
     inicio de sesión con usuario y contraseña definitivo).
 </div>
@@ -39,6 +39,7 @@
             <a class="list-group-item list-group-item-action" href="#valoracion-medica">Valoración médica, indicaciones y cierre médico</a>
             <a class="list-group-item list-group-item-action" href="#seguimientos-medicina">Seguimiento médico y continuidad entre turnos (Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#protocolo-urgente">Protocolo urgente (Enfermería y Medicina)</a>
+            <a class="list-group-item list-group-item-action" href="#derivacion-urgencias">Derivación a Urgencias (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -499,15 +500,53 @@
         <strong>evolución</strong> y <strong>contactos con servicios</strong> (por ejemplo, el 112 o las
         Urgencias del hospital): el servicio contactado y la hora del contacto, que puedes corregir si lo
         documentas después, pero que no puede ser futura. Los contactos quedan en la trazabilidad interna y no
-        formarán parte del informe de derivación. Cada registro conserva quién lo hizo y cuándo, y nada se
+        forman parte del informe de derivación. Cada registro conserva quién lo hizo y cuándo, y nada se
         puede modificar después. La valoración no se modifica durante el protocolo.
     </p>
     <p class="mb-0">
         El protocolo pertenece al perfil que lo activa: el otro perfil lo ve en el detalle del evento, en solo
-        lectura. Desde el protocolo se puede <strong>cerrar el evento</strong>, con la misma decisión sobre la
-        comunicación familiar que en cualquier cierre. En Medicina, las indicaciones emitidas siguen visibles en
-        la tarjeta Indicaciones. <strong>Derivar a Urgencias</strong> (informe con vista previa, firma y PDF,
-        actualización relevante para la familia e intento de llamada) aparece todavía como "Próximamente".
+        lectura. Desde el protocolo se puede <strong>derivar a Urgencias</strong> (ver la sección siguiente) o
+        <strong>cerrar el evento</strong>, con la misma decisión sobre la comunicación familiar que en cualquier
+        cierre. En Medicina, las indicaciones emitidas siguen visibles en la tarjeta Indicaciones.
+    </p>
+</section>
+
+<section id="derivacion-urgencias" class="mb-4">
+    <h2 class="h5">
+        Derivación a Urgencias
+        <span class="badge text-bg-secondary align-middle">Perfiles: Enfermería y Medicina</span>
+    </h2>
+    <p>
+        Desde la pantalla del protocolo urgente, <strong>Derivar a Urgencias</strong> abre el informe de
+        derivación. Solo lo hace el perfil que activó el protocolo, y cada evento tiene un solo informe. El
+        informe reúne automáticamente la identificación del residente y del centro, el basal vigente (Barthel,
+        cognición, comunicación y el resto de áreas), la observación de origen, las valoraciones, las constantes y
+        la oxigenoterapia, las actuaciones y la evolución. Esos datos no se editan en el informe, y el informe no
+        cambia los registros de origen. Tú escribes el <strong>motivo de la derivación</strong> (obligatorio) y, si
+        quieres, <strong>información adicional para Urgencias</strong>. El informe nunca incluye los contactos
+        con servicios ni el campo "Comunicaciones" de la valoración, que quedan en la trazabilidad interna.
+    </p>
+    <p>
+        <strong>Ver la vista previa</strong> es obligatorio: muestra el informe completo, con cada sección marcada
+        como dato automático o escrito por ti, y su huella (un código que identifica exactamente ese contenido).
+        Desde ahí puedes volver a editar o pulsar <strong>Firmar y generar PDF</strong>. La firma es electrónica
+        simple: registra tu cuenta, la fecha y la hora, y la huella; no usa certificado. Si el protocolo cambió
+        mientras revisabas (por ejemplo, otro profesional registró algo), la app te enseña la vista previa
+        actualizada para que la revises antes de firmar. El PDF firmado no se puede modificar y se descarga con
+        <strong>Descargar el informe en PDF</strong> desde el protocolo o el detalle del evento, en los dos
+        perfiles. Cada descarga queda registrada.
+    </p>
+    <p>
+        Tras firmar, el evento sigue en el protocolo: puedes seguir documentando y tienes que registrar el
+        <strong>intento de llamada a la familia</strong>: a quién llamas (por ahora se escribe a mano), la hora
+        (no puede ser futura), el resultado (contactado, no contesta o número erróneo) y una nota opcional. Puedes
+        registrar varios intentos. Hazlo cuando puedas: la atención va primero.
+    </p>
+    <p class="mb-0">
+        Para <strong>cerrar</strong> un evento derivado hace falta al menos un intento de llamada, y la
+        comunicación a la familia es obligatoria: solo se ofrece "Preparar comunicación" de tipo relevante, con
+        el texto que escribas para la familia (no se copia el texto clínico). Queda pendiente de aprobación, como
+        las demás.
     </p>
 </section>
 
@@ -575,7 +614,6 @@
         <li>La línea temporal e historial de eventos.</li>
         <li>Eventos iniciados directamente por Medicina.</li>
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
-        <li>Derivación a Urgencias con informe firmado en PDF.</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
         <li>Gestión administrativa completa (autorizaciones, turnos, citas, auditoría).</li>

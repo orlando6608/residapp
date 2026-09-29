@@ -1,0 +1,48 @@
+@using ResidApp.Web.Models
+@model ResidApp.Application.Ports.PendingChangeDetail
+@* ENF-12/MED-14: el informe de derivación firmado y los intentos de llamada a la familia, en solo lectura. Lo
+   usan el detalle del evento de los dos perfiles y la pantalla del protocolo. La descarga del PDF queda
+   auditada (DER-05). *@
+@{
+    var derivacion = Model.Referral!;
+}
+
+<div class="card mb-3 border-start border-4 border-danger">
+    <div class="card-body">
+        <h2 class="h5 card-title">Derivación a Urgencias</h2>
+        <p class="mb-2">
+            Informe firmado por @(derivacion.SignedByCurrentAccount ? "ti" : $"otro profesional de {UrgentProtocolDisplay.Profile(derivacion.Profile)}")
+            el @derivacion.SignedAt.ToLocalTime().ToString("g").
+        </p>
+        <p class="mb-2" style="white-space: pre-line"><strong>Motivo:</strong> @derivacion.Reason</p>
+        <p class="text-muted small text-break">Huella SHA-256 del contenido: @derivacion.ContentHash</p>
+        <div class="d-grid d-md-flex mb-3">
+            <a asp-action="InformeDerivacion" asp-route-eventoId="@Model.EventId" class="btn btn-outline-primary btn-lg">Descargar el informe en PDF</a>
+        </div>
+
+        <h3 class="h6">Intentos de llamada a la familia</h3>
+        @if (derivacion.CallAttempts.Count == 0)
+        {
+            <p class="text-danger mb-0">Todavía no consta ningún intento de llamada. Hace falta al menos uno para cerrar el evento.</p>
+        }
+        else
+        {
+            <ul class="list-unstyled mb-0">
+                @foreach (var llamada in derivacion.CallAttempts)
+                {
+                    <li class="mb-2">
+                        <p class="mb-0">
+                            <strong>@ReferralDisplay.Label(llamada.Result)</strong> · @llamada.Contact ·
+                            llamada el @llamada.CalledAt.ToLocalTime().ToString("g") ·
+                            registrada por @(llamada.ByCurrentAccount ? "ti" : "otro profesional")
+                        </p>
+                        @if (llamada.Note is not null)
+                        {
+                            <p class="mb-0" style="white-space: pre-line">Nota: @llamada.Note</p>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

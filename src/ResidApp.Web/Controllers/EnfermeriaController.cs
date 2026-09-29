@@ -441,6 +441,146 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         return View(new ProtocoloViewModel(detail, form));
     }
 
+    private static bool CanRefer(PendingChangeDetail detail) =>
+        detail.Status == ClinicalEventStatus.ProtocoloUrgente && detail.UrgentProtocol is not null && detail.Referral is null;
+
+    /// <summary>ENF-12: derivar a Urgencias desde el protocolo urgente activo: el motivo y la información
+    /// adicional que escribe el profesional; el resto del informe son datos automáticos.</summary>
+    public async Task<IActionResult> Derivar(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Protocolos));
+        }
+        if (!CanRefer(detail))
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        return View(new DerivarViewModel(
+            detail, new DerivarFormModel { EventoId = detail.EventId, Revision = detail.Revision, OperacionId = Guid.NewGuid() }, null));
+    }
+
+    /// <summary>ENF-12: "ver la vista previa" (obligatoria, DER-02) y "firmar y generar PDF", que exige la huella
+    /// de esa vista previa e idempotente por OperacionId. Si el informe cambió entretanto se muestra la vista
+    /// previa nueva para revisarla antes de firmar.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Derivar([Bind(Prefix = "Form")] DerivarFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Protocolos));
+        }
+        if (detail.Referral is not null)
+        {
+            return RedirectToAction(nameof(Protocolo), new { eventoId = form.EventoId });
+        }
+        if (!ModelState.IsValid || form.Accion == DerivarFormModel.Editar)
+        {
+            return View(new DerivarViewModel(detail, form, null));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var sections = await BuildReferralSectionsAsync(detail, ct);
+        if (sections is null)
+        {
+            ModelState.AddModelError(string.Empty, "No se ha podido reunir la información del informe. Recarga e inténtalo de nuevo.");
+            return View(new DerivarViewModel(detail, form, null));
+        }
+        var preview = ReferralReportContent.Compose(sections, new ReferralReportInput(form.Motivo, form.InformacionAdicional));
+        if (form.Accion != DerivarFormModel.Firmar)
+        {
+            return View(new DerivarViewModel(detail, form, preview));
+        }
+
+        var result = await service.SignReferralReportAsync(new SignReferralReportCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.OperacionId,
+            sections, form.Motivo, form.InformacionAdicional, form.Huella), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Informe de derivación firmado. Registra el intento de llamada a la familia cuando puedas: la atención va primero.";
+            return RedirectToAction(nameof(Protocolo), new { eventoId = form.EventoId });
+        }
+
+        if (result.Error!.Code == ApplicationFailureCode.Conflict)
+        {
+            ModelState.AddModelError(string.Empty, ReferralDisplay.ChangedMessage);
+            form.Revision = detail.Revision;
+            return View(new DerivarViewModel(detail, form, preview));
+        }
+        ModelState.AddModelError(string.Empty, result.Error.Code == ApplicationFailureCode.InvalidInput
+            ? ReferralDisplay.InvalidMessage
+            : result.Error.Message);
+        return View(new DerivarViewModel(detail, form, null));
+    }
+
+    private async Task<IReadOnlyList<ReferralReportSection>?> BuildReferralSectionsAsync(PendingChangeDetail detail, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var identification = await service.FindResidentIdentificationAsync(
+            new FindResidentIdentificationCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), detail.EventId), ct);
+        return identification.Ok
+            ? ReferralReportBuilder.Build(detail, await ReadBaselineAsync(detail, ct), identification.Value!)
+            : null;
+    }
+
+    /// <summary>ENF-14/DER-06: registrar un intento de llamada al contacto familiar tras firmar el informe.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> IntentoLlamada([Bind(Prefix = "Call")] IntentoLlamadaFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Protocolos));
+        }
+        if (detail.Status != ClinicalEventStatus.ProtocoloUrgente || detail.Referral is null)
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId = form.EventoId });
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(nameof(Protocolo), new ProtocoloViewModel(detail, null, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.RecordFamilyCallAttemptAsync(new RecordFamilyCallAttemptCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Contacto,
+            form.LlamadoEnOffset, form.Resultado, form.Nota), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Intento de llamada registrado.";
+            return RedirectToAction(nameof(Protocolo), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput => ReferralDisplay.CallInvalidMessage,
+            _ => result.Error.Message,
+        });
+        return View(nameof(Protocolo), new ProtocoloViewModel(detail, null, form));
+    }
+
+    /// <summary>DER-05: el PDF firmado del informe de derivación. Cada descarga queda auditada.</summary>
+    public async Task<IActionResult> InformeDerivacion(Guid eventoId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await service.DownloadReferralReportAsync(
+            new DownloadReferralReportCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), eventoId), ct);
+        return result.Ok
+            ? File(result.Value!.Content, "application/pdf", ReferralDisplay.FileName(result.Value.SignedAt))
+            : RedirectToAction(nameof(DetalleCambio), new { eventoId });
+    }
+
 
     /// <summary>ENF-07B: formulario para iniciar un seguimiento desde la decisión asistencial.</summary>
     public async Task<IActionResult> IniciarSeguimiento(Guid eventoId, CancellationToken ct)
@@ -632,10 +772,7 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             return RedirectToAction(nameof(DetalleCambio), new { eventoId });
         }
 
-        return View(new CerrarViewModel(detail, new CerrarFormModel
-        {
-            EventoId = detail.EventId, Revision = detail.Revision, OperacionId = Guid.NewGuid(),
-        }));
+        return View(new CerrarViewModel(detail, CerrarFormModel.For(detail)));
     }
 
     /// <summary>ENF-07A "cerrar": idempotente por OperacionId (repetir el envío no cierra dos veces). Ante un
@@ -670,6 +807,7 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         ModelState.AddModelError(string.Empty, result.Error!.Code switch
         {
             ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput when detail.Referral is not null => ReferralDisplay.CloseMessage,
             ApplicationFailureCode.InvalidInput =>
                 "Revisa los datos: decide si se comunica a la familia y, si preparas la comunicación, elige el tipo y escribe el texto. Para cerrar hace falta una valoración guardada.",
             _ => result.Error.Message,

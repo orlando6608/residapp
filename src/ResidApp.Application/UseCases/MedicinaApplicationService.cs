@@ -17,8 +17,24 @@ public sealed class MedicinaApplicationService(
     CloseMedicalEvent closeMedicalEvent, StartMedicalFollowUp startMedicalFollowUp,
     RecordMedicalFollowUpAction recordMedicalFollowUpAction, ListMedicalFollowUps listMedicalFollowUps,
     ActivateMedicalUrgentProtocol activateMedicalUrgentProtocol, RecordMedicalUrgentProtocolEntry recordMedicalUrgentProtocolEntry,
-    ListMedicalUrgentProtocols listMedicalUrgentProtocols)
+    ListMedicalUrgentProtocols listMedicalUrgentProtocols, SignMedicalReferralReport signMedicalReferralReport,
+    RecordMedicalFamilyCallAttempt recordMedicalFamilyCallAttempt, FindResidentIdentification findResidentIdentification,
+    DownloadReferralReport downloadReferralReport)
 {
+    public Task<ApplicationResult<int>> SignReferralReportAsync(SignReferralReportCommand command, CancellationToken ct = default) =>
+        signMedicalReferralReport.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<int>> RecordFamilyCallAttemptAsync(RecordFamilyCallAttemptCommand command, CancellationToken ct = default) =>
+        recordMedicalFamilyCallAttempt.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<ResidentIdentification>> FindResidentIdentificationAsync(
+        FindResidentIdentificationCommand command, CancellationToken ct = default) =>
+        findResidentIdentification.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<ReferralReportPdf>> DownloadReferralReportAsync(
+        DownloadReferralReportCommand command, CancellationToken ct = default) =>
+        downloadReferralReport.ExecuteAsync(command, ct);
+
     public Task<ApplicationResult<int>> ActivateUrgentProtocolAsync(ActivateUrgentProtocolCommand command, CancellationToken ct = default) =>
         activateMedicalUrgentProtocol.ExecuteAsync(command, ct);
 

@@ -1,7 +1,32 @@
 @using ResidApp.Domain.Enfermeria
 @model CerrarFormModel
 @* Decisión de comunicación familiar al cerrar (ENF-12/ENF-14/ENF-15, MED-16/MED-17). Se usa con
-   <partial name="_ComunicacionFamiliarFormulario" for="Form" />, así que los campos se enlazan como Form.*. *@
+   <partial name="_ComunicacionFamiliarFormulario" for="Form" />, así que los campos se enlazan como Form.*.
+   ViewData["Derivacion"] (ReferralDetail) lo pone la vista de cierre si el evento se derivó a Urgencias: la
+   actualización relevante es entonces obligatoria y hace falta al menos un intento de llamada (DER-06). *@
+@{
+    var derivacion = ViewData["Derivacion"] as ResidApp.Application.Ports.ReferralDetail;
+    var decisiones = derivacion is null
+        ? new[] { FamilyCommunicationDecision.NoComunicar, FamilyCommunicationDecision.Preparar }
+        : new[] { FamilyCommunicationDecision.Preparar };
+    var tipos = derivacion is null
+        ? new[] { FamilyCommunicationType.Ordinaria, FamilyCommunicationType.Relevante }
+        : new[] { FamilyCommunicationType.Relevante };
+}
+
+@if (derivacion is not null)
+{
+    <div class="alert alert-warning">
+        <p class="mb-0">Este evento se derivó a Urgencias: la actualización relevante para la familia es obligatoria. Escribe el texto para la familia.</p>
+        @if (derivacion.CallAttempts.Count == 0)
+        {
+            <p class="mt-2 mb-0">
+                Todavía no consta ningún intento de llamada a la familia y hace falta al menos uno para cerrar.
+                <a asp-action="Protocolo" asp-route-eventoId="@Model.EventoId">Registrarlo en el protocolo</a>.
+            </p>
+        }
+    </div>
+}
 
 <div class="card mb-3">
     <div class="card-body">
@@ -9,7 +34,7 @@
             <legend class="h5">¿Se comunica a la familia?</legend>
             <p class="text-muted">Es obligatorio decidirlo de forma explícita.</p>
             <div class="d-grid d-md-flex gap-2">
-                @foreach (var decision in new[] { FamilyCommunicationDecision.NoComunicar, FamilyCommunicationDecision.Preparar })
+                @foreach (var decision in decisiones)
                 {
                     var inputId = $"comunicacion-{decision}";
                     <input type="radio" class="btn-check" asp-for="Comunicacion" value="@decision" id="@inputId" autocomplete="off" />
@@ -29,8 +54,11 @@
             <div class="mb-3">
                 <label asp-for="TipoComunicacion" class="form-label"></label>
                 <select asp-for="TipoComunicacion" class="form-select form-select-lg">
-                    <option value="">Sin indicar</option>
-                    @foreach (var tipo in new[] { FamilyCommunicationType.Ordinaria, FamilyCommunicationType.Relevante })
+                    @if (derivacion is null)
+                    {
+                        <option value="">Sin indicar</option>
+                    }
+                    @foreach (var tipo in tipos)
                     {
                         <option value="@tipo" selected="@(Model.TipoComunicacion == tipo)">@FamilyCommunicationDisplay.Label(tipo)</option>
                     }

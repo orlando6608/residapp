@@ -27,7 +27,9 @@ internal sealed record ClinicalEventCloseRule(
 /// ENF-07A y MED-15: cierre del evento con la decisión de comunicación familiar, común a Enfermería y
 /// Medicina. Idempotente con el mismo patrón que SqlClinicalEventRepository.RegisterAsync: hash de la
 /// petición y fila IN_PROGRESS/SUCCEEDED en dbo.operaciones_idempotencia dentro de la misma transacción.
-/// Un cierre distinto sobre un evento ya cerrado no encuentra un estado de origen y es un conflicto.
+/// Un cierre distinto sobre un evento ya cerrado no encuentra un estado de origen y es un conflicto. Si el
+/// evento tiene un informe de derivación firmado, exige una comunicación Relevante
+/// (REFERRAL_FAMILY_UPDATE_REQUIRED) y al menos un intento de llamada (REFERRAL_CALL_ATTEMPT_REQUIRED).
 /// </summary>
 internal static class ClinicalEventCloser
 {
@@ -87,6 +89,26 @@ internal static class ClinicalEventCloser
                 throw new DomainValidationException(rule.AssessmentRequiredCode);
             }
 
+            // DER-06: si se derivó a Urgencias, la familia recibe una actualización relevante y tiene que
+            // constar al menos un intento de llamada.
+            var referral = await connection.QuerySingleAsync<ReferralCloseRow>(new CommandDefinition("""
+                SELECT CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.informes_derivacion d WITH (FORCESEEK) WHERE d.evento_id = @EventId)
+                            THEN 1 ELSE 0 END AS BIT) AS HasReport,
+                       CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.intentos_llamada_familia c WITH (FORCESEEK) WHERE c.evento_id = @EventId)
+                            THEN 1 ELSE 0 END AS BIT) AS HasCallAttempt
+                """, new { input.EventId }, transaction, cancellationToken: ct));
+            if (referral.HasReport)
+            {
+                if (communication.Decision != FamilyCommunicationDecision.Preparar || communication.Type != FamilyCommunicationType.Relevante)
+                {
+                    throw new DomainValidationException("REFERRAL_FAMILY_UPDATE_REQUIRED");
+                }
+                if (!referral.HasCallAttempt)
+                {
+                    throw new DomainValidationException("REFERRAL_CALL_ATTEMPT_REQUIRED");
+                }
+            }
+
             var revision = await ClinicalEventAudit.RecordAsync(connection, transaction, input.AccountId, rule.ProfileCode, input.CenterId,
                 input.EventId, "CLINICAL_EVENT", input.EventId, CloseActionCode, occurredAt, ct);
 
@@ -140,14 +162,20 @@ internal static class ClinicalEventCloser
         }
     }
 
-    private static async Task<CloseResult?> FindCloseIdempotencyAsync(
-        IDbConnection connection, Guid accountId, Guid operationId, string requestHash, CancellationToken ct)
+    private static Task<CloseResult?> FindCloseIdempotencyAsync(
+        IDbConnection connection, Guid accountId, Guid operationId, string requestHash, CancellationToken ct) =>
+        FindIdempotencyAsync(connection, CloseActionCode, accountId, operationId, requestHash, ct);
+
+    /// <summary>Operación previa con la misma clave: su resultado si terminó, o el error si la clave se
+    /// reutilizó con otra petición o sigue en curso. También la usa la firma del informe de derivación.</summary>
+    internal static async Task<CloseResult?> FindIdempotencyAsync(
+        IDbConnection connection, string actionCode, Guid accountId, Guid operationId, string requestHash, CancellationToken ct)
     {
         var row = await connection.QuerySingleOrDefaultAsync<IdempotencyRow>(new CommandDefinition("""
             SELECT hash_solicitud AS RequestHash, estado AS Status, resultado_json AS ResultJson
               FROM dbo.operaciones_idempotencia
              WHERE cuenta_id = @AccountId AND accion_codigo = @ActionCode AND operacion_id = @OperationId
-            """, new { AccountId = accountId, ActionCode = CloseActionCode, OperationId = operationId }, cancellationToken: ct));
+            """, new { AccountId = accountId, ActionCode = actionCode, OperationId = operationId }, cancellationToken: ct));
         if (row is null)
         {
             return null;
@@ -163,9 +191,11 @@ internal static class ClinicalEventCloser
         throw new DomainValidationException("IDEMPOTENCY_OPERATION_IN_PROGRESS");
     }
 
-    private sealed record CloseResult(int Revision);
+    internal sealed record CloseResult(int Revision);
 
     private sealed record IdempotencyRow(string RequestHash, string Status, string? ResultJson);
+
+    private sealed record ReferralCloseRow(bool HasReport, bool HasCallAttempt);
 }
 
 file static class CloseRequestHash

@@ -262,6 +262,12 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
     public Task<int> RecordUrgentProtocolEntryAsync(RecordUrgentProtocolEntryInput input, CancellationToken ct = default) =>
         UrgentProtocolWriter.RecordAsync(connections, UrgentProtocolRule.Enfermeria, input, ct);
 
+    public Task<int> SignReferralReportAsync(SignReferralReportInput input, CancellationToken ct = default) =>
+        ReferralWriter.SignAsync(connections, UrgentProtocolRule.Enfermeria, input, ct);
+
+    public Task<int> RecordFamilyCallAttemptAsync(RecordFamilyCallAttemptInput input, CancellationToken ct = default) =>
+        ReferralWriter.RecordCallAttemptAsync(connections, UrgentProtocolRule.Enfermeria, input, ct);
+
     /// <summary>Registra la acción en dbo.eventos_auditoria y devuelve la revisión ya avanzada del evento.</summary>
     private static async Task<int> AuditAsync(
         SqlConnection connection, SqlTransaction transaction, AccountId accountId, CenterId centerId, Guid eventId,

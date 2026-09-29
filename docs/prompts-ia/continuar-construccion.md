@@ -13,14 +13,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- Hasta el script `0015` (bloque 1 de la historia 6, protocolo urgente en Enfermería y Medicina) está
-  desplegado en Azure: el pipeline de `88f8c41` (run 36577318233) terminó con éxito el 2026-09-29.
-- La corrección de la cultura (`es-ES` fija en `Program.cs` con los patrones cortos, `UseRequestLocalization`,
-  con `LocalizationTests`) está subida en `21b293f` y `e1faef4`. El pipeline de `21b293f` falló en los tests y
-  no desplegó (ver la lección «Cultura en Azure»); `e1faef4` lo corrige. Antes las fechas salían en Azure
-  como `09/29/2026 15:53`, porque en el contenedor Linux la cultura del servidor es la invariante. Si no
-  consta ya, comprueba que el pipeline de `e1faef4` terminó en verde y que en Azure salen como
-  `29/09/2026 15:53`.
+- El bloque 2 de la historia 6 (derivación a Urgencias en Enfermería y Medicina, script `0016`) está en un
+  commit en `main` **sin subir**: el push lo decide el usuario. Compruébalo con `git status` al empezar.
+  Tras el push, comprueba que el pipeline termina en verde (el CI Linux genera PDFs de verdad en los tests
+  de integración) y prueba en Azure una derivación con descarga del PDF: la hora de la firma debe salir en
+  hora de España.
+- Hasta el script `0015` está desplegado en Azure, junto con la corrección de la cultura (`es-ES` fija en
+  `Program.cs` con los patrones cortos, `LocalizationTests`). El pipeline de `6f61791` (run 36582061750)
+  terminó en verde el 2026-09-29, y en Azure las fechas salen ya como `29/09/2026 15:53` (antes
+  `09/29/2026`). El pipeline de `21b293f` falló en los tests por la diferencia de formato entre Linux y
+  Windows (ver la lección «Cultura en Azure»).
 - **Zona horaria (hecho):** la app lee y muestra las horas en la hora local del servidor. La Web App
   `app-residapp-dev` (Linux) tiene `WEBSITE_TIME_ZONE=Europe/Madrid`. Se comprobó el 2026-09-29 con el
   evento «Prueba de hora, se puede ignorar» (Residente Integrado Uno, cerrado con «No comunicar»): se
@@ -45,18 +47,31 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
   Causa probable: presión de memoria en esta máquina, la misma que en el fallo de `0014`. Consejo:
   `dotnet build src/ResidApp.sln` primero y después `dotnet test src/ResidApp.sln --no-build`.
+- Verificación de `0016`:
+  - suite local en verde, 3 vueltas tipo CI con BD nueva en verde, y BD temporal con seed (17 scripts, sin
+    errores) ya borrada;
+  - PDF generado en un contenedor Linux (Docker, `mcr.microsoft.com/dotnet/sdk:10.0`) y revisado: fuente
+    incrustada, tildes, «Ñ» y «O₂»;
+  - prueba manual con curl en los dos perfiles:
+    - derivar sin motivo (rechazado);
+    - vista previa (sin el 112 ni las comunicaciones);
+    - firmar con una huella antigua tras registrar otra evolución: enseña la vista previa nueva;
+    - firmar, repetir la firma, descargar el PDF desde los dos perfiles y cerrar sin llamada, que se
+      rechaza;
+    - forzar «No comunicar» (rechazado);
+    - registrar la llamada y cerrar con una comunicación Relevante.
 - El estado de un run se consulta sin autenticación en
   `https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main`, y el de cada job y paso en
   `.../actions/runs/<id>/jobs`. Los logs piden autenticación y `gh` no está instalado.
 - CJ no ha completado nada nuevo: `docs/pendientes-cj/rangos-referencia-constantes.html` sigue con 17
   valores «por definir».
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
-  (parcial), 2, 3, 4, 5, 6 (bloque 1), 7, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y
-  su pantalla). Medicina está en curso: historias 1, 2, 3, 4, 5 y 6 (bloque 1) (escalados, valoración
-  médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos y protocolo urgente).
-- La base local `ResidApp` tiene los scripts `0001` a `0015` registrados en `dbo.scripts_aplicados`.
-  Hay una copia previa a `0015` en
-  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0015-20260929.bak`.
+  (parcial), 2, 3, 4, 5, 6, 7, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su
+  pantalla). Medicina está en curso: historias 1 a 6 (escalados, valoración médica, indicaciones, cierre
+  médico, seguimiento médico con continuidad entre turnos, protocolo urgente y derivación a Urgencias).
+- La base local `ResidApp` tiene los scripts `0001` a `0016` registrados en `dbo.scripts_aplicados`.
+  Hay una copia previa a `0016` en
+  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0016-20260929.bak`.
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
@@ -72,7 +87,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     desde el protocolo.
   - «Prueba manual protocolo urgente: desaturación.»: prioritario de Enfermería, protocolo urgente con
     actuación, contacto con el 112 (hora de 10 minutos antes) y evolución, y cerrado desde el protocolo.
-- Suite: 107 unitarios, 166 de integración y 1 funcional, todos en verde.
+  - «Prueba manual derivacion: desaturación brusca.»: protocolo de Enfermería con un contacto al 112 y dos
+    evoluciones, derivado (informe firmado), con una llamada «No contesta» y cerrado con una comunicación
+    relevante.
+  - «Prueba manual derivacion medica: dolor torácico.»: escalado, protocolo de Medicina, derivado por
+    Medicina, con una llamada «Contactado» y cerrado con una comunicación relevante.
+- Suite: 113 unitarios, 170 de integración y 6 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -80,18 +100,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea: decidir el orden
 
-Hay que proponer al usuario el orden antes de empezar. Las dos decisiones (Enfermería y Medicina) tienen ya
-sus cuatro salidas; al protocolo urgente le falta la salida «Derivar a Urgencias».
+Hay que proponer al usuario el orden antes de empezar. Las salidas de la decisión de Enfermería, de la
+conducta de Medicina y del protocolo urgente están todas construidas.
 
-- **Derivación a Urgencias** (bloque 2 de la historia 6, `DER-01` a `DER-06`,
-  [`derivacion-urgencias.md`](../flujos-clinicos/derivacion-urgencias.md)). El usuario ya decidió el PDF,
-  la firma y el intento de llamada (detalle en `pendientes-enfermeria.md`). Quedan por decidir:
-  - qué pasa con el evento tras derivar;
-  - cómo encaja la actualización relevante con la decisión de comunicación del cierre;
-  - cómo se instala PDFsharp-MigraDoc: primer paquete NuGet del proyecto aparte de Dapper y SqlClient.
-    Comprueba la licencia y la compatibilidad con .NET 10.
 - **Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de las
-  valoraciones y los seguimientos terminados.
+  valoraciones, los seguimientos terminados y el informe de derivación firmado (el flujo pide que sea
+  accesible desde el Historial).
 - **Evento propio de Medicina** (historia 7 de Medicina).
 
 ## Reglas de trabajo propias de este repositorio
@@ -202,5 +216,17 @@ Repite estos pasos antes de dar un bloque por cerrado:
   - `docker run --rm -v <repo>:/repo:ro mcr.microsoft.com/dotnet/sdk:10.0`, copiando el repo dentro del
     contenedor y quitando `bin` y `obj`;
   - `LocalizationTests` no necesita BD.
+- **PDF (PDFsharp-MigraDoc 6.2.4, MIT):**
+  - en Linux (Azure y CI), PDFsharp no lee fuentes del sistema y lanza una excepción sin un `IFontResolver`
+    propio;
+  - la fuente Liberation Sans (OFL, con su licencia en `Infrastructure/Pdf/Fonts/OFL.txt`) va incrustada
+    como recurso y la resuelve `ReferralReportPdfRenderer`, así que el PDF sale igual en Windows y Linux;
+  - las horas del PDF se escriben con formato fijo en la hora local del servidor.
+- **Idempotencia antes que las reglas de unicidad:** si un caso de uso rechaza «ya existe» antes de llegar
+  al repositorio, repetir la misma operación da error en vez de devolver su resultado. La regla de «uno por
+  evento» va en la BD, después de consultar `operaciones_idempotencia` (como en `ReferralWriter.SignAsync`).
+- **Campos ocultos tras un POST:** `asp-for` pinta el valor enviado (ModelState) y no el del modelo. Para
+  una revisión o una huella que el servidor actualiza al volver a mostrar la vista, escribe `value="@..."`
+  explícito (ver `Shared/_Derivacion`).
 - **Verificación manual con curl:** una cuenta con un solo ámbito se autoselecciona, y
   `ProfileScope/Select` redirige. Sigue las redirecciones con `-L`.

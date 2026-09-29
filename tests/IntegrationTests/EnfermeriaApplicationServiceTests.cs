@@ -7,6 +7,7 @@ using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Authorization;
+using ResidApp.Infrastructure.Pdf;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
 using ResidApp.Shared;
@@ -49,7 +50,11 @@ public class EnfermeriaApplicationServiceTests
             new RecordIndicationProgress(scopes, changeInbox, session, new SqlMedicalIndicationRepository(TestDatabase.ConnectionFactory)),
             new ActivateUrgentProtocol(scopes, changeInbox, session, assessments),
             new RecordUrgentProtocolEntry(scopes, changeInbox, session, assessments),
-            new ListUrgentProtocols(scopes, changeInbox, session));
+            new ListUrgentProtocols(scopes, changeInbox, session),
+            new SignReferralReport(scopes, changeInbox, session, assessments, new ReferralReportPdfRenderer()),
+            new RecordFamilyCallAttempt(scopes, changeInbox, session, assessments),
+            new FindResidentIdentification(scopes, changeInbox, session),
+            new DownloadReferralReport(scopes, changeInbox, session, new SqlReferralReportRepository(TestDatabase.ConnectionFactory)));
     }
 
     /// <summary>Un residente en la unidad de dos profesionales de Enfermería y un evento propio de la
@@ -1005,6 +1010,175 @@ public class EnfermeriaApplicationServiceTests
             ("INSERT INTO dbo.protocolo_urgente_registros (id, protocolo_id, tipo_codigo, servicio_contactado, contactado_en, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), p.id, 'CONTACTO', '112', DATEADD(HOUR, 1, SYSUTCDATETIME()), p.activado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.protocolos_urgentes p WHERE p.evento_id = @EventId", "CK_pur_contacto_no_futuro"),
             ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_VALORACION', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
             ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'ESCALADO_MEDICINA', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
+        })
+        {
+            var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { EventId = eventId }));
+            Assert.Contains(expected, ex.Message);
+        }
+    }
+
+    /// <summary>Datos automáticos de prueba: en la aplicación los reúne la Web (ReferralReportBuilder, con su
+    /// propio test); aquí basta con que sean secciones automáticas.</summary>
+    internal static readonly IReadOnlyList<ReferralReportSection> ReferralSections =
+    [
+        new("Identificación del residente y del centro", true, ["Nombre: Residente de prueba"]),
+        new("Evolución", true, ["Sin datos registrados."]),
+    ];
+
+    internal const string ReferralReason = "Desaturación que no remonta con oxigenoterapia.";
+
+    internal static string ReferralHash(string reason = ReferralReason) =>
+        ReferralReportContent.Compose(ReferralSections, new ReferralReportInput(reason, null)).Hash();
+
+    internal static SignReferralReportCommand SignCommand(
+        SeededProfile seed, Guid eventId, int revision, Guid operationId, string? reason = ReferralReason, string? hash = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, operationId, ReferralSections, reason, null, hash ?? ReferralHash());
+
+    internal static RecordFamilyCallAttemptCommand CallCommand(
+        SeededProfile seed, Guid eventId, int revision, string? contact = "Su hija, contacto de referencia",
+        DateTimeOffset? calledAt = null, FamilyCallResult? result = FamilyCallResult.NoContesta, string? note = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, contact, calledAt ?? DateTimeOffset.UtcNow.AddMinutes(-2), result, note);
+
+    internal static async Task<(Guid Id, byte[] Pdf, string PdfHash)> ReadReportAsync(Guid eventId)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        return await connection.QuerySingleAsync<(Guid, byte[], string)>(
+            "SELECT id, pdf, huella_pdf FROM dbo.informes_derivacion WHERE evento_id = @EventId", new { EventId = eventId });
+    }
+
+    private static async Task<int> ActivatedProtocolAsync(SeededProfile seed, Guid eventId) =>
+        (await BuildService(seed.ExternalSubject).ActivateUrgentProtocolAsync(
+            ActivateCommand(seed, eventId, await StartAndSaveAsync(seed, eventId)))).Value;
+
+    [Fact]
+    public async Task Derivacion_ExigeMotivoYLaHuellaDeLaVistaPrevia_EsIdempotente_YElEventoSigueEnElProtocolo()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var revision = await ActivatedProtocolAsync(enfermera, eventId);
+        var operationId = Guid.NewGuid();
+
+        var withoutReason = await service.SignReferralReportAsync(SignCommand(enfermera, eventId, revision, Guid.NewGuid(), " ", "x"));
+        var changed = await service.SignReferralReportAsync(SignCommand(enfermera, eventId, revision, Guid.NewGuid(), hash: new string('0', 64)));
+        var stale = await service.SignReferralReportAsync(SignCommand(enfermera, eventId, revision - 1, Guid.NewGuid()));
+        var signed = await service.SignReferralReportAsync(SignCommand(enfermera, eventId, revision, operationId));
+        var repeated = await service.SignReferralReportAsync(SignCommand(enfermera, eventId, revision, operationId));
+        var second = await service.SignReferralReportAsync(SignCommand(enfermera, eventId, signed.Value, Guid.NewGuid()));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutReason.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, changed.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
+        Assert.True(signed.Ok);
+        Assert.Equal(signed.Value, repeated.Value);
+        Assert.Equal(ApplicationFailureCode.Conflict, second.Error!.Code);
+
+        var detail = await DetailAsync(enfermera, eventId);
+        Assert.Equal(ClinicalEventStatus.ProtocoloUrgente, detail.Status);
+        Assert.Equal(SystemProfile.Enfermeria, detail.Referral!.Profile);
+        Assert.Equal(ReferralReason, detail.Referral.Reason);
+        Assert.True(detail.Referral.SignedByCurrentAccount);
+        Assert.Equal(ReferralHash(), detail.Referral.ContentHash);
+        Assert.Empty(detail.Referral.CallAttempts);
+        Assert.Equal(eventId, Assert.Single(await ProtocolsAsync(enfermera)).EventId);
+
+        var (reportId, pdf, pdfHash) = await ReadReportAsync(eventId);
+        Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(pdf, 0, 5));
+        Assert.Equal(Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(pdf)), pdfHash);
+        Assert.Equal(1, await CountAuditAsync(reportId, "REFERRAL_REPORT_SIGN"));
+
+        var downloaded = await service.DownloadReferralReportAsync(new DownloadReferralReportCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId));
+        Assert.Equal(pdf, downloaded.Value!.Content);
+        Assert.Equal(1, await CountAuditAsync(reportId, "REFERRAL_REPORT_DOWNLOAD"));
+
+        // Tras firmar se sigue documentando en el protocolo.
+        Assert.True((await service.RecordUrgentProtocolEntryAsync(
+            EntryCommand(enfermera, eventId, signed.Value, UrgentProtocolEntryType.Evolucion, "Sale en ambulancia."))).Ok);
+    }
+
+    [Fact]
+    public async Task Derivacion_ElCierreExigeActualizacionRelevante_YAlMenosUnIntentoDeLlamada()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var (otra, _, notReferredId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var other = BuildService(companera.ExternalSubject);
+        var notReferred = await ActivatedProtocolAsync(otra, notReferredId);
+        var revision = (await service.SignReferralReportAsync(
+            SignCommand(enfermera, eventId, await ActivatedProtocolAsync(enfermera, eventId), Guid.NewGuid()))).Value;
+
+        var callWithoutReport = await BuildService(otra.ExternalSubject).RecordFamilyCallAttemptAsync(CallCommand(otra, notReferredId, notReferred));
+        var closeWithoutCall = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, revision, Guid.NewGuid(),
+            FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Relevante, "Ha sido trasladado a Urgencias."));
+        var future = await service.RecordFamilyCallAttemptAsync(CallCommand(enfermera, eventId, revision, calledAt: DateTimeOffset.UtcNow.AddHours(1)));
+        var withoutContact = await service.RecordFamilyCallAttemptAsync(CallCommand(enfermera, eventId, revision, " "));
+        var withoutResult = await service.RecordFamilyCallAttemptAsync(CallCommand(enfermera, eventId, revision, result: null));
+        revision = (await service.RecordFamilyCallAttemptAsync(CallCommand(enfermera, eventId, revision))).Value;
+        var stale = await other.RecordFamilyCallAttemptAsync(CallCommand(companera, eventId, revision - 1));
+        revision = (await other.RecordFamilyCallAttemptAsync(CallCommand(companera, eventId, revision, "Su hija", result: FamilyCallResult.Contactado,
+            note: " Informada del traslado. "))).Value;
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, callWithoutReport.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, closeWithoutCall.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, future.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutContact.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutResult.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
+
+        var attempts = (await DetailAsync(companera, eventId)).Referral!.CallAttempts;
+        Assert.Equal(new[] { FamilyCallResult.NoContesta, FamilyCallResult.Contactado }, attempts.Select(a => a.Result));
+        Assert.Equal(new[] { false, true }, attempts.Select(a => a.ByCurrentAccount));
+        Assert.Equal("Informada del traslado.", attempts[1].Note);
+
+        var noComunicar = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, revision, Guid.NewGuid()));
+        var ordinaria = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, revision, Guid.NewGuid(),
+            FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Ordinaria, "Ha sido trasladado a Urgencias."));
+        var relevante = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, revision, Guid.NewGuid(),
+            FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Relevante, "Ha sido trasladado a Urgencias."));
+        var notReferredClosed = await BuildService(otra.ExternalSubject).CloseClinicalEventAsync(CloseCommand(otra, notReferredId, notReferred, Guid.NewGuid()));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, noComunicar.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, ordinaria.Error!.Code);
+        Assert.True(relevante.Ok);
+        Assert.True(notReferredClosed.Ok);
+        var closed = await DetailAsync(enfermera, eventId);
+        Assert.Equal(ClinicalEventStatus.Cerrado, closed.Status);
+        Assert.Equal(FamilyCommunicationType.Relevante, closed.Closure!.Communication!.Type);
+        Assert.Equal(2, attempts.Count);
+    }
+
+    [Fact]
+    public async Task Derivacion_OtroPerfilOFueraDeAmbito_NoFirmaNiDescarga_YLaBaseDeDatosLaProtege()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+        var medica = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, enfermera.CenterId, enfermera.UnitId);
+        var revision = await ActivatedProtocolAsync(enfermera, eventId);
+
+        var byOutsider = await BuildService(outsider.ExternalSubject).SignReferralReportAsync(SignCommand(outsider, eventId, revision, Guid.NewGuid()));
+        var byMedica = await BuildService(medica.ExternalSubject).SignReferralReportAsync(SignCommand(medica, eventId, revision, Guid.NewGuid()));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOutsider.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byMedica.Error!.Code);
+
+        revision = (await BuildService(enfermera.ExternalSubject).SignReferralReportAsync(SignCommand(enfermera, eventId, revision, Guid.NewGuid()))).Value;
+        Assert.True((await BuildService(enfermera.ExternalSubject).RecordFamilyCallAttemptAsync(CallCommand(enfermera, eventId, revision))).Ok);
+
+        DownloadReferralReportCommand Download(SeededProfile seed) => new(seed.ProfileScopeId, seed.CenterId, eventId);
+        Assert.True((await BuildService(companera.ExternalSubject).DownloadReferralReportAsync(Download(companera))).Ok);
+        Assert.Equal(ApplicationFailureCode.AccessDenied,
+            (await BuildService(outsider.ExternalSubject).DownloadReferralReportAsync(Download(outsider))).Error!.Code);
+        // Un ámbito de Medicina solo ve eventos escalados: este no lo es.
+        Assert.Equal(ApplicationFailureCode.AccessDenied,
+            (await BuildService(medica.ExternalSubject).DownloadReferralReportAsync(Download(medica))).Error!.Code);
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        foreach (var (sql, expected) in new[]
+        {
+            ("UPDATE dbo.informes_derivacion SET motivo = 'x' WHERE evento_id = @EventId", "REFERRAL_REPORT_IMMUTABLE"),
+            ("DELETE FROM dbo.informes_derivacion WHERE evento_id = @EventId", "REFERRAL_REPORT_IMMUTABLE"),
+            ("UPDATE dbo.intentos_llamada_familia SET nota = 'x' WHERE evento_id = @EventId", "FAMILY_CALL_ATTEMPT_IMMUTABLE"),
+            ("DELETE FROM dbo.intentos_llamada_familia WHERE evento_id = @EventId", "FAMILY_CALL_ATTEMPT_IMMUTABLE"),
+            ("INSERT INTO dbo.intentos_llamada_familia (id, informe_id, evento_id, contacto, llamado_en, resultado_codigo, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), d.id, d.evento_id, 'Hija', SYSUTCDATETIME(), 'OTRO', d.firmado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.informes_derivacion d WHERE d.evento_id = @EventId", "CK_ilf_resultado"),
+            ("INSERT INTO dbo.intentos_llamada_familia (id, informe_id, evento_id, contacto, llamado_en, resultado_codigo, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), d.id, d.evento_id, 'Hija', DATEADD(HOUR, 1, SYSUTCDATETIME()), 'CONTACTADO', d.firmado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.informes_derivacion d WHERE d.evento_id = @EventId", "CK_ilf_no_futuro"),
         })
         {
             var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { EventId = eventId }));

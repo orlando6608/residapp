@@ -17,7 +17,7 @@ namespace ResidApp.Infrastructure.Persistence;
 /// de Medicina ni al revés.</summary>
 public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : IChangeInboxDirectory
 {
-    private const string ScopedEventsFrom = """
+    internal const string ScopedEventsFrom = """
           FROM dbo.eventos_asistenciales ea
           JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
                AND profile.perfil_codigo IN ('ENFERMERIA', 'MEDICINA') AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
@@ -208,8 +208,71 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                 (await QueryIndicationsAsync(connection, profileScopeId, "WHERE i.evento_id = @EventId", new { ProfileScopeId = profileScopeId, EventId = eventId }, ct))
                     .Select(r => r.Summary).ToList(),
                 await FindMedicalFollowUpAsync(connection, profileScopeId, eventId, ct)),
-            await FindUrgentProtocolAsync(connection, profileScopeId, eventId, ct));
+            await FindUrgentProtocolAsync(connection, profileScopeId, eventId, ct),
+            await FindReferralAsync(connection, profileScopeId, eventId, ct));
     }
+
+    /// <summary>ENF-12/MED-14: el informe de derivación firmado y los intentos de llamada, de cualquiera de los
+    /// dos perfiles (el PDF no se lee aquí: se descarga aparte, auditado).</summary>
+    private static async Task<ReferralDetail?> FindReferralAsync(
+        System.Data.IDbConnection connection, Guid profileScopeId, Guid eventId, CancellationToken ct)
+    {
+        var report = await connection.QuerySingleOrDefaultAsync<ReferralRow>(new CommandDefinition("""
+            SELECT d.perfil_codigo AS ProfileCode, d.motivo AS Reason,
+                   CAST(CASE WHEN d.firmado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS SignedByCurrentAccount,
+                   d.firmado_en AS SignedAt, d.huella_contenido AS ContentHash
+              FROM dbo.informes_derivacion d
+              JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
+             WHERE d.evento_id = @EventId
+            """, new { ProfileScopeId = profileScopeId, EventId = eventId }, cancellationToken: ct));
+        if (report is null)
+        {
+            return null;
+        }
+
+        var attempts = (await connection.QueryAsync<FamilyCallAttemptRow>(new CommandDefinition("""
+            SELECT c.contacto AS Contact, c.llamado_en AS CalledAt, c.resultado_codigo AS ResultCode, c.nota AS Note,
+                   CAST(CASE WHEN c.registrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ByCurrentAccount,
+                   c.registrado_en AS RecordedAt
+              FROM dbo.intentos_llamada_familia c
+              JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
+             WHERE c.evento_id = @EventId
+             ORDER BY c.registrado_en ASC
+            """, new { ProfileScopeId = profileScopeId, EventId = eventId }, cancellationToken: ct)))
+            .Select(r => new FamilyCallAttemptSummary(
+                r.Contact, new DateTimeOffset(r.CalledAt, TimeSpan.Zero), EnumCode.ParseCode<FamilyCallResult>(r.ResultCode), r.Note,
+                r.ByCurrentAccount, new DateTimeOffset(r.RecordedAt, TimeSpan.Zero)))
+            .ToList();
+
+        return new ReferralDetail(
+            EnumCode.ParseCode<SystemProfile>(report.ProfileCode), report.Reason, report.SignedByCurrentAccount,
+            new DateTimeOffset(report.SignedAt, TimeSpan.Zero), report.ContentHash, attempts);
+    }
+
+    private sealed record ReferralRow(string ProfileCode, string Reason, bool SignedByCurrentAccount, DateTime SignedAt, string ContentHash);
+
+    private sealed record FamilyCallAttemptRow(
+        string Contact, DateTime CalledAt, string ResultCode, string? Note, bool ByCurrentAccount, DateTime RecordedAt);
+
+    public async Task<ResidentIdentification?> FindResidentIdentificationAsync(
+        Guid profileScopeId, CenterId centerId, Guid eventId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+
+        var row = await connection.QuerySingleOrDefaultAsync<ResidentIdentificationRow>(new CommandDefinition($"""
+            SELECT resident.nombre_visible AS DisplayName, resident.fecha_nacimiento AS BirthDate,
+                   resident.sexo_documentado_codigo AS DocumentedSexCode,
+                   (SELECT c.nombre_visible FROM dbo.centros c WHERE c.id = ea.centro_id) AS CenterName, unit.nombre_visible AS UnitName
+            {ScopedEventsFrom}
+               AND ea.id = @EventId
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, EventId = eventId }, cancellationToken: ct));
+        return row is null ? null : new ResidentIdentification(
+            row.DisplayName, DateOnly.FromDateTime(row.BirthDate), EnumCode.ParseCode<DocumentedSexCode>(row.DocumentedSexCode),
+            row.CenterName, row.UnitName);
+    }
+
+    private sealed record ResidentIdentificationRow(
+        string DisplayName, DateTime BirthDate, string DocumentedSexCode, string CenterName, string? UnitName);
 
     /// <summary>ENF-11/MED-13: el protocolo urgente del evento con sus registros, de cualquiera de los dos
     /// perfiles (el otro perfil lo ve en solo lectura).</summary>

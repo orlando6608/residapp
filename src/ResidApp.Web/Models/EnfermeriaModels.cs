@@ -267,13 +267,15 @@ public sealed class ProtocoloRegistroFormModel
 public sealed record ActivarProtocoloViewModel(PendingChangeDetail Event, ActivarProtocoloFormModel Form);
 
 /// <summary>ENF-11/MED-13: el protocolo activo del evento y, tras un error, lo escrito en el formulario que
-/// falló (Form.Tipo) para no perderlo.</summary>
-public sealed record ProtocoloViewModel(PendingChangeDetail Event, ProtocoloRegistroFormModel? Form)
+/// falló (Form.Tipo, o CallForm si fue el intento de llamada tras derivar) para no perderlo.</summary>
+public sealed record ProtocoloViewModel(PendingChangeDetail Event, ProtocoloRegistroFormModel? Form, IntentoLlamadaFormModel? CallForm = null)
 {
     public ProtocoloRegistroFormModel FormFor(UrgentProtocolEntryType tipo) =>
         Form is { } form && form.Tipo == tipo
             ? form
             : new ProtocoloRegistroFormModel { EventoId = Event.EventId, Revision = Event.Revision, Tipo = tipo };
+
+    public IntentoLlamadaFormModel Call => CallForm ?? new IntentoLlamadaFormModel { EventoId = Event.EventId, Revision = Event.Revision };
 }
 
 /// <summary>Textos del protocolo urgente (ENF-11/MED-13).</summary>
@@ -344,6 +346,15 @@ public sealed class CerrarFormModel
     [StringLength(FamilyCommunicationChoice.MaxTextLength)]
     [Display(Name = "Texto para la familia")]
     public string? TextoComunicacion { get; set; }
+
+    /// <summary>Con una derivación a Urgencias la decisión no es libre (DER-06): la actualización relevante
+    /// para la familia es obligatoria, así que llega ya elegida; el texto lo escribe el profesional.</summary>
+    public static CerrarFormModel For(PendingChangeDetail detail) => new()
+    {
+        EventoId = detail.EventId, Revision = detail.Revision, OperacionId = Guid.NewGuid(),
+        Comunicacion = detail.Referral is null ? null : FamilyCommunicationDecision.Preparar,
+        TipoComunicacion = detail.Referral is null ? null : FamilyCommunicationType.Relevante,
+    };
 }
 
 /// <summary>ENF-07A: el formulario de cierre más el evento, cuyo resumen de valoración y actuaciones se

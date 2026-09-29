@@ -82,21 +82,80 @@
     </div>
 </form>
 
+@if (evento.Referral is not null)
+{
+    var llamada = Model.Call;
+    var horaLlamada = (llamada.LlamadoEn ?? DateTime.Now).ToString("yyyy-MM-ddTHH:mm");
+
+    <partial name="_DerivacionResumen" model="evento" />
+
+    <form asp-action="IntentoLlamada" method="post" class="card mb-3">
+        <div class="card-body">
+            <input type="hidden" name="Call.EventoId" value="@evento.EventId" />
+            <input type="hidden" name="Call.Revision" value="@llamada.Revision" />
+            <h2 class="h5 card-title">Registrar un intento de llamada a la familia</h2>
+            <p class="text-muted">Toda derivación exige documentar el intento de llamada al contacto familiar. Hazlo cuando puedas: la atención va primero.</p>
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-5">
+                    <label for="llamada-contacto" class="form-label">A quién se llama</label>
+                    <input id="llamada-contacto" name="Call.Contacto" class="form-control form-control-lg" maxlength="@FamilyCallAttempt.MaxContactLength"
+                           value="@llamada.Contacto" placeholder="Por ejemplo, su hija, contacto de referencia" />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label for="llamada-hora" class="form-label">Hora de la llamada</label>
+                    <input id="llamada-hora" name="Call.LlamadoEn" type="datetime-local" class="form-control form-control-lg" value="@horaLlamada" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label for="llamada-resultado" class="form-label">Resultado</label>
+                    <select id="llamada-resultado" name="Call.Resultado" class="form-select form-select-lg">
+                        <option value="">Elige…</option>
+                        @foreach (var resultado in Enum.GetValues<FamilyCallResult>())
+                        {
+                            <option value="@resultado" selected="@(llamada.Resultado == resultado)">@ReferralDisplay.Label(resultado)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <label for="llamada-nota" class="form-label">Nota (opcional)</label>
+            <textarea id="llamada-nota" name="Call.Nota" class="form-control mb-3" rows="2">@llamada.Nota</textarea>
+            <div class="d-grid d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary btn-lg">Registrar la llamada</button>
+            </div>
+        </div>
+    </form>
+}
+
 <div class="row g-3 mb-3">
     <div class="col-12 col-md-6">
         <a asp-action="Cerrar" asp-route-eventoId="@evento.EventId" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Cerrar el evento</h2>
-                <p class="card-text text-muted mb-0">Sin derivar a Urgencias. Decides si se comunica a la familia y el evento pasa a Historial.</p>
+                <p class="card-text text-muted mb-0">
+                    @(evento.Referral is null
+                        ? "Sin derivar a Urgencias. Decides si se comunica a la familia y el evento pasa a Historial."
+                        : "Con la derivación firmada: exige al menos un intento de llamada y preparar la actualización relevante para la familia.")
+                </p>
             </div>
         </a>
     </div>
     <div class="col-12 col-md-6">
-        <div class="card h-100 text-muted">
-            <div class="card-body">
-                <h2 class="h5 card-title">Derivar a Urgencias</h2>
-                <p class="card-text mb-0">Próximamente: informe con vista previa obligatoria, firma y PDF, actualización relevante para la familia e intento de llamada.</p>
+        @if (evento.Referral is null)
+        {
+            <a asp-action="Derivar" asp-route-eventoId="@evento.EventId" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Derivar a Urgencias</h2>
+                    <p class="card-text text-muted mb-0">Informe con vista previa obligatoria, firma y PDF. Después, el intento de llamada a la familia.</p>
+                </div>
+            </a>
+        }
+        else
+        {
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Derivado a Urgencias</h2>
+                    <p class="card-text text-muted mb-0">El informe ya está firmado; cada evento tiene un solo informe de derivación.</p>
+                </div>
             </div>
-        </div>
+        }
     </div>
 </div>

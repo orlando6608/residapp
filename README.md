@@ -8,7 +8,7 @@ Plataforma web para residencias geriátricas que estructura el registro cotidian
 
 - **Fecha de referencia:** 28 de septiembre de 2026.
 - **Arquitectura:** monolito **ASP.NET Core MVC (.NET 10) / SQL Server**, en migración activa desde un prototipo previo sobre Cloudflare Workers/D1, conservado íntegro en [`docs/legado-cloudflare/`](docs/legado-cloudflare/) como evidencia histórica.
-- **Estado funcional:** **Residente/Basal** completado; **Auxiliar** completado y pendiente de validación por CJ; **Enfermería** en curso; **Medicina** en curso (escalados, valoración médica, indicaciones, seguimiento médico, protocolo urgente y cierre médico). Familia/Portal Familiar, Administración y Dirección/Coordinación Clínica no se han iniciado. Ver el detalle en [Hoja de ruta](#hoja-de-ruta).
+- **Estado funcional:** **Residente/Basal** completado; **Auxiliar** completado y pendiente de validación por CJ; **Enfermería** en curso; **Medicina** en curso (escalados, valoración médica, indicaciones, seguimiento médico, protocolo urgente, derivación a Urgencias y cierre médico). Familia/Portal Familiar, Administración y Dirección/Coordinación Clínica no se han iniciado. Ver el detalle en [Hoja de ruta](#hoja-de-ruta).
 - **Entorno de pruebas:** cada push a `main` compila, prueba, aplica los scripts pendientes y el seed ficticio en Azure SQL y despliega la web (`.github/workflows/ci-cd.yml`).
 - **Ámbito inicial:** residencias geriátricas.
 - **Datos permitidos en esta fase:** exclusivamente ficticios.
@@ -204,7 +204,7 @@ dotnet user-secrets set ConnectionStrings:ResidApp "<cadena de conexión>"
 dotnet run   # http://localhost:5203
 ```
 
-El inicio de sesión de desarrollo (`/DevAuth/Login`) pide el `sujeto_externo` de una cuenta sembrada. Las del escenario integrado comparten centro y unidad: `dev-integrado-auxiliar`, `dev-integrado-enfermeria`, `dev-integrado-medicina` (escalados, valoración médica, indicaciones, seguimiento médico, protocolo urgente y cierre médico) y `dev-integrado-direccion` (esta con el permiso de rangos de referencia). El resto de cuentas está en la cabecera de cada seed.
+El inicio de sesión de desarrollo (`/DevAuth/Login`) pide el `sujeto_externo` de una cuenta sembrada. Las del escenario integrado comparten centro y unidad: `dev-integrado-auxiliar`, `dev-integrado-enfermeria`, `dev-integrado-medicina` (escalados, valoración médica, indicaciones, seguimiento médico, protocolo urgente, derivación a Urgencias y cierre médico) y `dev-integrado-direccion` (esta con el permiso de rangos de referencia). El resto de cuentas está en la cabecera de cada seed.
 
 ### Tests
 
@@ -227,7 +227,7 @@ El orden funcional de migración de los bloques verticales se hereda del prototi
 | Residente / Basal | Completado |
 | Auxiliar | Completado (historias 1-6), pendiente de validación por CJ |
 | Enfermería | En curso |
-| Medicina | En curso (escalados, valoración médica, indicaciones, seguimiento médico, protocolo urgente y cierre médico) |
+| Medicina | En curso (escalados, valoración médica, indicaciones, seguimiento médico, protocolo urgente, derivación a Urgencias y cierre médico) |
 | Familia / Portal Familiar | No iniciado |
 | Administración | No iniciado |
 | Dirección / Coordinación Clínica | No iniciado |

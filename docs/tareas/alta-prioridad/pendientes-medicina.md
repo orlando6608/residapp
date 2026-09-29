@@ -1,6 +1,6 @@
 # Pendientes del vertical Medicina
 
-Estado al 2026-09-29 (tras el bloque 1 de la historia 6). Historias de referencia: [`docs/historias-usuarios/medicina.md`](../../historias-usuarios/medicina.md).
+Estado al 2026-09-29 (tras la historia 6 completa). Historias de referencia: [`docs/historias-usuarios/medicina.md`](../../historias-usuarios/medicina.md).
 Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-conducta-medicina.md); wireframe
 [`medicina.md`](../../bocetos-pantallas/wireframes-funcionales/medicina.md).
 
@@ -52,23 +52,34 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   `/Medicina/Protocolo` es la misma pantalla que la de Enfermería (DER-01): actuaciones, evolución y contactos
   con servicios. Desde el protocolo solo se cierra (`/Medicina/Cerrar`). El detalle y las decisiones están en
   `pendientes-enfermeria.md`; script `0015_protocolo_urgente`.
-- Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests`, `FollowUpTests` y
-  `UrgentProtocolTests` (unitarios).
+- **Historia 6, bloque 2 (derivación a Urgencias)** — 2026-09-29: "Derivar a Urgencias" desde el protocolo
+  urgente de Medicina (`/Medicina/Derivar`, MED-14/MED-16), con la misma pantalla y las mismas reglas que
+  Enfermería (DER-01):
+  - datos automáticos que no se editan, más el motivo y la información adicional;
+  - vista previa obligatoria con huella SHA-256;
+  - firma idempotente y PDF inmutable;
+  - intentos de llamada a la familia;
+  - al cerrar, al menos un intento y una comunicación Relevante.
+
+  El evento sigue en PROTOCOLO_URGENTE_MEDICO tras firmar. Enfermería ve el informe en el detalle del evento
+  y descarga el PDF, pero no firma ni registra llamadas en un protocolo de Medicina. El detalle, las
+  decisiones y los huecos están en `pendientes-enfermeria.md`; script `0016_derivacion_urgencias`.
+- Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests`, `FollowUpTests`,
+  `UrgentProtocolTests` y `EmergencyReferralTests` (unitarios), y `ReferralReportBuilderTests` (funcional).
 - Cuenta de desarrollo `dev-integrado-medicina` en el escenario integrado.
 
 ## Pendiente
 
 En el orden propuesto:
 
-1. **Historia 6, bloque 2 — derivación a Urgencias** (común con Enfermería, `DER-01` a `DER-06`; las
-   decisiones ya tomadas están en `pendientes-enfermeria.md`).
-2. **Historia 7 — evento propio de Medicina** (`MED-11`): mismo ciclo sin reenviarlo desde Enfermería;
+1. **Historia 7 — evento propio de Medicina** (`MED-11`): mismo ciclo sin reenviarlo desde Enfermería;
    exige que un ámbito de Medicina vea eventos no escalados propios.
-3. **Historias 8 y 9 — basal e historial/corrección**.
+2. **Historias 8 y 9 — basal e historial/corrección**.
 
 Huecos de lo ya construido:
 
-- El protocolo urgente todavía no deriva a Urgencias; llegará con el bloque 2 de la historia 6.
+- Derivación a Urgencias: los mismos huecos que en Enfermería (firmante sin nombre, sin corrección del
+  informe, contacto familiar en texto libre); ver `pendientes-enfermeria.md`.
 - **Seguimiento médico (historia 5)**: no hay equipos ni turnos reales (vertical Administración). El
   equipo o turno entrante es texto libre y la fecha prevista es solo fecha, sin hora, como en Enfermería.
 - Los eventos escalados salen de las bandejas de Enfermería y no hay todavía una lista de "mis escalados"

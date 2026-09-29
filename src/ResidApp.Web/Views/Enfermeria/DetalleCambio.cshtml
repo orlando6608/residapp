@@ -169,6 +169,10 @@
 {
     <partial name="_ProtocoloUrgenteResumen" model="protocolo" />
 }
+@if (evento.Referral is not null)
+{
+    <partial name="_DerivacionResumen" model="evento" />
+}
 
 @if (evento.Closure is not null)
 {

@@ -276,6 +276,12 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
 
     public Task<int> RecordUrgentProtocolEntryAsync(RecordUrgentProtocolEntryInput input, CancellationToken ct = default) =>
         UrgentProtocolWriter.RecordAsync(connections, UrgentProtocolRule.Medicina, input, ct);
+
+    public Task<int> SignReferralReportAsync(SignReferralReportInput input, CancellationToken ct = default) =>
+        ReferralWriter.SignAsync(connections, UrgentProtocolRule.Medicina, input, ct);
+
+    public Task<int> RecordFamilyCallAttemptAsync(RecordFamilyCallAttemptInput input, CancellationToken ct = default) =>
+        ReferralWriter.RecordCallAttemptAsync(connections, UrgentProtocolRule.Medicina, input, ct);
 }
 
 /// <summary>Fila de dbo.eventos_auditoria sobre un evento asistencial o algo que cuelga de él (valoración

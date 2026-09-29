@@ -1,0 +1,80 @@
+@using ResidApp.Web.Models
+@model DerivarViewModel
+@* ENF-12/MED-14: la pantalla de derivación, común a los dos perfiles (DER-01). Primero se escriben el motivo y
+   la información adicional; "Ver la vista previa" (obligatoria, DER-02) muestra el informe completo con su
+   huella, y solo desde ahí se firma. Los campos ocultos se escriben con value explícito porque, tras un
+   POST, asp-for mostraría el valor enviado y no el actualizado (revisión o huella). *@
+@{
+    var evento = Model.Event;
+    var form = Model.Form;
+}
+
+<h1 class="h3">Derivar a Urgencias — @evento.ResidentDisplayName</h1>
+<p class="text-muted">
+    El informe reúne automáticamente la identificación, el basal, la observación, las valoraciones, las constantes,
+    las actuaciones y la evolución. Esos datos no se editan aquí: tú escribes el motivo y, si quieres, información
+    adicional. No incluye los contactos con servicios, que quedan en la trazabilidad interna.
+</p>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Derivar" method="post">
+    <input type="hidden" name="Form.EventoId" value="@form.EventoId" />
+    <input type="hidden" name="Form.Revision" value="@form.Revision" />
+    <input type="hidden" name="Form.OperacionId" value="@form.OperacionId" />
+
+    @if (Model.Preview is null)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="derivar-motivo" class="form-label">Motivo de la derivación</label>
+                    <textarea id="derivar-motivo" name="Form.Motivo" class="form-control" rows="4"
+                              maxlength="@ResidApp.Domain.Enfermeria.ReferralReportInput.MaxReasonLength">@form.Motivo</textarea>
+                </div>
+                <div>
+                    <label for="derivar-informacion" class="form-label">Información adicional para Urgencias (opcional)</label>
+                    <textarea id="derivar-informacion" name="Form.InformacionAdicional" class="form-control" rows="4"
+                              maxlength="@ResidApp.Domain.Enfermeria.ReferralReportInput.MaxAdditionalInformationLength">@form.InformacionAdicional</textarea>
+                </div>
+            </div>
+        </div>
+        <div class="d-grid d-md-flex justify-content-md-end gap-2 mb-3">
+            <a asp-action="Protocolo" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver al protocolo</a>
+            <button type="submit" name="Form.Accion" value="@DerivarFormModel.VistaPrevia" class="btn btn-primary btn-lg">Ver la vista previa</button>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" name="Form.Motivo" value="@form.Motivo" />
+        <input type="hidden" name="Form.InformacionAdicional" value="@form.InformacionAdicional" />
+        <input type="hidden" name="Form.Huella" value="@Model.Preview.Hash()" />
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5 card-title">Vista previa del informe</h2>
+                <p class="text-muted">Revísalo entero antes de firmar. Al firmar se genera el PDF definitivo, que ya no se puede modificar.</p>
+                @foreach (var seccion in Model.Preview.Sections)
+                {
+                    <section class="mb-3">
+                        <h3 class="h6 mb-1">
+                            @seccion.Title
+                            <span class="badge @(seccion.Automatic ? "text-bg-light" : "text-bg-primary")">@(seccion.Automatic ? "Dato automático" : "Escrito por ti")</span>
+                        </h3>
+                        @foreach (var linea in seccion.Lines)
+                        {
+                            <p class="mb-1" style="white-space: pre-line">@linea</p>
+                        }
+                    </section>
+                }
+                <p class="text-muted small text-break mb-0">
+                    La firma añade tu cuenta, la fecha y la hora. Huella SHA-256 del contenido: @Model.Preview.Hash()
+                </p>
+            </div>
+        </div>
+        <div class="d-grid d-md-flex justify-content-md-end gap-2 mb-3">
+            <button type="submit" name="Form.Accion" value="@DerivarFormModel.Editar" class="btn btn-outline-secondary btn-lg">Volver a editar</button>
+            <button type="submit" name="Form.Accion" value="@DerivarFormModel.Firmar" class="btn btn-danger btn-lg">Firmar y generar PDF</button>
+        </div>
+    }
+</form>

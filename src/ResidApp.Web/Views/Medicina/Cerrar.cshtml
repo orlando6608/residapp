@@ -5,6 +5,7 @@
 @{
     ViewData["Title"] = "Cerrar el evento";
     var evento = Model.Event;
+    ViewData["Derivacion"] = evento.Referral;
     var valoracion = evento.Medical.Assessment!;
     var content = valoracion.Content;
     var (volver, volverTexto) = evento.Status == ClinicalEventStatus.ProtocoloUrgenteMedico ? ("Protocolo", "Protocolo urgente") : ("Conducta", "Conducta médica");

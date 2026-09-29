@@ -1,0 +1,16 @@
+@model ResidApp.Web.Models.DerivarViewModel
+@{
+    ViewData["Title"] = "Derivar a Urgencias";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="Protocolos">Protocolos urgentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Protocolo" asp-route-eventoId="@Model.Event.EventId">Protocolo urgente</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Derivar a Urgencias</li>
+    </ol>
+</nav>
+
+<partial name="_Derivacion" model="Model" />

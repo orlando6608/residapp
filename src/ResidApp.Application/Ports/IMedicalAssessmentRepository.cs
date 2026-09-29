@@ -41,5 +41,10 @@ public interface IMedicalAssessmentRepository
 
     Task<int> RecordUrgentProtocolEntryAsync(RecordUrgentProtocolEntryInput input, CancellationToken ct = default);
 
+    /// <summary>MED-14/MED-16: derivación a Urgencias de Medicina, con los mismos inputs que la de Enfermería.</summary>
+    Task<int> SignReferralReportAsync(SignReferralReportInput input, CancellationToken ct = default);
+
+    Task<int> RecordFamilyCallAttemptAsync(RecordFamilyCallAttemptInput input, CancellationToken ct = default);
+
     Task<int> CloseAsync(CloseClinicalEventInput input, CancellationToken ct = default);
 }

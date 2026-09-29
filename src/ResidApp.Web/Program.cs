@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Localization;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Infrastructure.Authorization;
+using ResidApp.Infrastructure.Pdf;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.Web.Security;
 
@@ -32,6 +33,8 @@ builder.Services.AddScoped<INursingAssessmentRepository, SqlNursingAssessmentRep
 builder.Services.AddScoped<IMedicalAssessmentRepository, SqlMedicalAssessmentRepository>();
 builder.Services.AddScoped<IMedicalIndicationRepository, SqlMedicalIndicationRepository>();
 builder.Services.AddScoped<IReferenceRangeRepository, SqlReferenceRangeRepository>();
+builder.Services.AddScoped<IReferralReportRepository, SqlReferralReportRepository>();
+builder.Services.AddSingleton<IReferralReportPdfRenderer, ReferralReportPdfRenderer>();
 builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
 
 builder.Services.AddScoped<CreateResident>();
@@ -85,6 +88,12 @@ builder.Services.AddScoped<ListUrgentProtocols>();
 builder.Services.AddScoped<ActivateMedicalUrgentProtocol>();
 builder.Services.AddScoped<RecordMedicalUrgentProtocolEntry>();
 builder.Services.AddScoped<ListMedicalUrgentProtocols>();
+builder.Services.AddScoped<SignReferralReport>();
+builder.Services.AddScoped<RecordFamilyCallAttempt>();
+builder.Services.AddScoped<SignMedicalReferralReport>();
+builder.Services.AddScoped<RecordMedicalFamilyCallAttempt>();
+builder.Services.AddScoped<FindResidentIdentification>();
+builder.Services.AddScoped<DownloadReferralReport>();
 builder.Services.AddScoped<MedicinaApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();

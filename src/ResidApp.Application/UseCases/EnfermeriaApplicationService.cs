@@ -16,8 +16,24 @@ public sealed class EnfermeriaApplicationService(
     StartFollowUp startFollowUp, RecordFollowUpAction recordFollowUpAction, ListFollowUps listFollowUps,
     EscalateClinicalEvent escalateClinicalEvent, ListPendingIndications listPendingIndications,
     RecordIndicationProgress recordIndicationProgress, ActivateUrgentProtocol activateUrgentProtocol,
-    RecordUrgentProtocolEntry recordUrgentProtocolEntry, ListUrgentProtocols listUrgentProtocols)
+    RecordUrgentProtocolEntry recordUrgentProtocolEntry, ListUrgentProtocols listUrgentProtocols,
+    SignReferralReport signReferralReport, RecordFamilyCallAttempt recordFamilyCallAttempt,
+    FindResidentIdentification findResidentIdentification, DownloadReferralReport downloadReferralReport)
 {
+    public Task<ApplicationResult<int>> SignReferralReportAsync(SignReferralReportCommand command, CancellationToken ct = default) =>
+        signReferralReport.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<int>> RecordFamilyCallAttemptAsync(RecordFamilyCallAttemptCommand command, CancellationToken ct = default) =>
+        recordFamilyCallAttempt.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<ResidentIdentification>> FindResidentIdentificationAsync(
+        FindResidentIdentificationCommand command, CancellationToken ct = default) =>
+        findResidentIdentification.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<ReferralReportPdf>> DownloadReferralReportAsync(
+        DownloadReferralReportCommand command, CancellationToken ct = default) =>
+        downloadReferralReport.ExecuteAsync(command, ct);
+
     public Task<ApplicationResult<int>> ActivateUrgentProtocolAsync(ActivateUrgentProtocolCommand command, CancellationToken ct = default) =>
         activateUrgentProtocol.ExecuteAsync(command, ct);
 
