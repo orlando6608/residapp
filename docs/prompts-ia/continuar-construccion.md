@@ -13,16 +13,22 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- El bloque 2 de la historia 6 (derivación a Urgencias en Enfermería y Medicina, script `0016`) está en un
-  commit en `main` **sin subir**: el push lo decide el usuario. Compruébalo con `git status` al empezar.
-  Tras el push, comprueba que el pipeline termina en verde (el CI Linux genera PDFs de verdad en los tests
-  de integración) y prueba en Azure una derivación con descarga del PDF: la hora de la firma debe salir en
-  hora de España.
-- Hasta el script `0015` está desplegado en Azure, junto con la corrección de la cultura (`es-ES` fija en
-  `Program.cs` con los patrones cortos, `LocalizationTests`). El pipeline de `6f61791` (run 36582061750)
-  terminó en verde el 2026-09-29, y en Azure las fechas salen ya como `29/09/2026 15:53` (antes
-  `09/29/2026`). El pipeline de `21b293f` falló en los tests por la diferencia de formato entre Linux y
-  Windows (ver la lección «Cultura en Azure»).
+- Hasta el script `0016` (bloque 2 de la historia 6, derivación a Urgencias en Enfermería y Medicina) está
+  desplegado en Azure: el pipeline de `ca855f2` (run 36607704572) terminó en verde el 2026-09-29, con PDFs
+  reales generados en los tests del CI (Linux).
+- **Prueba en Azure de la derivación (2026-09-29):** `dev-integrado-enfermeria`, sobre «Residente
+  Integrado Uno (ficticio)», con textos «Prueba técnica, se puede ignorar». Se hizo el recorrido completo:
+  evento, valoración, protocolo, vista previa, firma, descarga del PDF, llamada y cierre con una
+  comunicación Relevante, que queda pendiente de aprobación en Comunicaciones. El PDF salió correcto: la
+  firma dice 19:54, en hora de España (17:54 UTC), y la fuente incrustada y las tildes se ven bien en Linux.
+  La hora de su intento de llamada quedó como 17:53 en vez de 19:53: se calculó con `TZ=Europe/Madrid date`
+  en Git Bash, que no aplica la zona. Es un registro de prueba inmutable y no afecta a nada más. Para
+  calcular horas locales en pruebas con curl, usa el `date` de Git Bash sin `TZ`, porque la máquina ya
+  está en hora de Madrid.
+- La corrección de la cultura (`es-ES` fija en `Program.cs` con los patrones cortos, `LocalizationTests`)
+  está desplegada desde `6f61791` (run 36582061750), y en Azure las fechas salen como `29/09/2026 15:53`
+  (antes `09/29/2026`). El pipeline de `21b293f` falló en los tests por la diferencia de formato entre
+  Linux y Windows (ver la lección «Cultura en Azure»).
 - **Zona horaria (hecho):** la app lee y muestra las horas en la hora local del servidor. La Web App
   `app-residapp-dev` (Linux) tiene `WEBSITE_TIME_ZONE=Europe/Madrid`. Se comprobó el 2026-09-29 con el
   evento «Prueba de hora, se puede ignorar» (Residente Integrado Uno, cerrado con «No comunicar»): se
