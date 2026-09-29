@@ -135,7 +135,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Primero, los dos avisos que el usuario pidió resolver tras el evento propio de Medicina** (los dos
+1. **Primero, los tres avisos que el usuario pidió resolver tras el evento propio de Medicina** (los tres
    primeros de «Avisos abiertos»): analizarlos y proponerle una solución antes de tocar nada.
 2. **Después, el Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de
    las valoraciones, los seguimientos terminados y el informe de derivación firmado (el flujo pide que sea
@@ -157,6 +157,21 @@ usuario cuando encajen:
   (ENFERMERIA ↔ EVENTO_ENFERMERIA, MEDICINA ↔ EVENTO_MEDICINA), porque están en tablas distintas. Hoy la
   garantiza `SqlClinicalEventRepository`, que escribe las dos filas en una sola transacción. Hay que estudiar
   opciones (un trigger de inserción, o una columna y una clave compuestas) y proponer la más sencilla.
+- **Pedido por el usuario (2026-09-29): el inicio muestra fichas que el perfil no puede usar.**
+  `Views/Home/Index.cshtml` es fija, viene del primer bloque (su título aún dice «vertical Residente/Basal»)
+  y enseña las siete fichas a cualquier perfil. Por ejemplo, `dev-integrado-enfermeria` ve «Medicina». No es
+  un agujero de seguridad, porque cada caso de uso deniega en el servidor, pero se ven puertas que no se
+  abren.
+  - **Propuesta:** mostrar solo las fichas del perfil activo (`HomeController` ya lee
+    `ActiveProfileScopeCookie`) y, en las que dependen de un permiso, comprobarlo también, sin duplicar las
+    reglas del servidor. Actualizar también el título.
+  - **Correspondencia**, según las reglas actuales (`ResidentBaselinePolicy`,
+    `ReferenceRangesApplicationService`):
+    - Alta de residente: Administración, o Enfermería con `RESIDENT_IDENTITY_CREATE`;
+    - Firmar borrador de basal: Enfermería o Medicina con permiso de basal;
+    - Consulta de Dirección: Dirección Clínica con `CLINICAL_DETAIL_READ`;
+    - Auxiliar, Enfermería y Medicina: su propio perfil;
+    - Rangos de referencia: Medicina o Dirección Clínica.
 - **`docs/producto/roadmap.md`** está desfasado: su tabla dice que Medicina «No iniciado» y sus «Próximos
   pasos» siguen en la historia 3 de Enfermería.
 
