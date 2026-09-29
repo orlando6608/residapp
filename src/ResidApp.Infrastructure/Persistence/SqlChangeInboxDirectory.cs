@@ -119,7 +119,7 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
               FROM dbo.cierres_cotidianos_cambio_areas area
               LEFT JOIN dbo.cierres_cotidianos_cambio_area_opciones opt ON opt.area_id = area.id
              WHERE area.cierre_id = @EventId
-             ORDER BY area.area_codigo
+             ORDER BY area.area_codigo, opt.opcion_codigo
             """, new { EventId = eventId }, cancellationToken: ct));
         var areas = areaOptionRows
             .GroupBy(r => (r.AreaId, r.AreaCode, r.FreeText))
