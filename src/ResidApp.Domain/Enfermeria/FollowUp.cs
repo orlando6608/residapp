@@ -34,13 +34,15 @@ public sealed record FollowUpPlan
     public bool IsOverdue(DateOnly today) => DueDate < today;
 }
 
-/// <summary>ENF-08/ENF-09: tipos de acción sobre un seguimiento abierto.</summary>
+/// <summary>ENF-08/ENF-09 y MED-11/MED-12: tipos de acción sobre un seguimiento abierto. Conservación solo
+/// existe en el seguimiento médico (MED-12: conservarlo para la propia próxima revisión).</summary>
 public enum FollowUpActionType
 {
     [Code("ACTUACION")] [Display(Name = "Actuación")] Actuacion,
     [Code("REPROGRAMACION")] [Display(Name = "Reprogramación")] Reprogramacion,
     [Code("TRANSFERENCIA")] [Display(Name = "Transferencia de turno")] Transferencia,
     [Code("RECEPCION")] [Display(Name = "Recepción de la transferencia")] Recepcion,
+    [Code("CONSERVACION")] [Display(Name = "Conservado para la próxima revisión")] Conservacion,
 }
 
 /// <summary>
@@ -82,6 +84,10 @@ public sealed record FollowUpAction
 
     public static FollowUpAction Transfer(string? incomingTeam, string? note) =>
         new(FollowUpActionType.Transferencia, VitalSigns.Normalize(note), null, Required(incomingTeam), null);
+
+    /// <summary>MED-12 "conservar para mi próxima revisión", con una nota opcional.</summary>
+    public static FollowUpAction Keep(string? note) =>
+        new(FollowUpActionType.Conservacion, VitalSigns.Normalize(note), null, null, null);
 
     public static FollowUpAction Receive(Guid transferId) =>
         transferId == Guid.Empty

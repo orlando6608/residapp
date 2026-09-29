@@ -34,7 +34,10 @@ public class MedicinaApplicationServiceTests
             new SaveMedicalAssessment(scopes, changeInbox, session, medical),
             new RegisterMedicalIndication(scopes, changeInbox, session, medical),
             new ListMedicalIndications(scopes, changeInbox, session),
-            new CloseMedicalEvent(scopes, changeInbox, session, medical));
+            new CloseMedicalEvent(scopes, changeInbox, session, medical),
+            new StartMedicalFollowUp(scopes, changeInbox, session, medical),
+            new RecordMedicalFollowUpAction(scopes, changeInbox, session, medical),
+            new ListMedicalFollowUps(scopes, changeInbox, session));
     }
 
     private static async Task<PendingChangeDetail?> FindAsync(SeededProfile seed, Guid eventId) =>
@@ -424,6 +427,235 @@ public class MedicinaApplicationServiceTests
 
         Assert.Equal(ApplicationFailureCode.AccessDenied, inbox.Error!.Code);
         Assert.Equal(ApplicationFailureCode.AccessDenied, start.Error!.Code);
+    }
+
+    private static StartMedicalFollowUpCommand StartFollowUp(
+        SeededProfile seed, Guid eventId, int revision, DateOnly? dueDate = null, string? criterion = "Tras la radiografía.",
+        string? objective = "Decidir antibiótico según la radiografía.") =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, dueDate, criterion, objective);
+
+    private static RecordMedicalFollowUpActionCommand FollowUpAction(
+        SeededProfile seed, Guid eventId, int revision, FollowUpActionType type, string? text = null, DateOnly? dueDate = null,
+        string? criterion = null, string? incomingTeam = null, Guid? transferId = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, type, text, dueDate, criterion, incomingTeam, transferId);
+
+    private static Task<ApplicationResult<IReadOnlyList<MedicalFollowUpSummary>>> ListFollowUpsAsync(SeededProfile seed) =>
+        BuildMedicina(seed.ExternalSubject).ListMedicalFollowUpsAsync(new ListMedicalFollowUpsCommand(seed.ProfileScopeId, seed.CenterId));
+
+    [Fact]
+    public async Task SeguimientoMedico_ExigeValoracionObjetivoYPlan_PasaAEnSeguimiento_YCambiaDeBandeja()
+    {
+        var (_, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var revision = (await FindAsync(medica, eventId))!.Revision;
+        var started = (await service.StartMedicalAssessmentAsync(new StartMedicalAssessmentCommand(medica.ProfileScopeId, medica.CenterId, eventId, revision))).Value;
+
+        var withoutAssessment = await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, started));
+        var saved = (await service.SaveMedicalAssessmentAsync(SaveMedical(medica, eventId, started))).Value;
+        var withoutObjective = await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, saved, objective: " "));
+        var withoutPlan = await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, saved, criterion: " "));
+        var stale = await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, saved - 1));
+        var ok = await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, saved, new DateOnly(2030, 3, 1)));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutAssessment.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutObjective.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutPlan.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
+        Assert.True(ok.Ok);
+
+        var detail = (await FindAsync(medica, eventId))!;
+        Assert.Equal(ClinicalEventStatus.EnSeguimientoMedico, detail.Status);
+        var followUp = detail.Medical.FollowUp!;
+        Assert.Equal("Decidir antibiótico según la radiografía.", followUp.Objective);
+        Assert.Equal(new DateOnly(2030, 3, 1), followUp.Tracking.DueDate);
+        Assert.Equal("Tras la radiografía.", followUp.Tracking.Criterion);
+        Assert.True(followUp.Tracking.StartedByCurrentAccount);
+        Assert.Null(detail.FollowUp);
+
+        Assert.Empty((await service.ListEscalationsAsync(new ListEscalationsCommand(medica.ProfileScopeId, medica.CenterId))).Value!);
+        var item = Assert.Single((await ListFollowUpsAsync(medica)).Value!);
+        Assert.Equal(eventId, item.EventId);
+        Assert.Equal("Decidir antibiótico según la radiografía.", item.Objective);
+        Assert.Null(item.LastActionType);
+        Assert.Null(item.LastContinuity);
+        Assert.Equal(1, await CountAuditAsync(eventId, "MEDICAL_FOLLOW_UP_START"));
+
+        // La valoración médica no se edita durante el seguimiento.
+        var saveDuring = await service.SaveMedicalAssessmentAsync(SaveMedical(medica, eventId, detail.Revision));
+        Assert.Equal(ApplicationFailureCode.Conflict, saveDuring.Error!.Code);
+    }
+
+    [Fact]
+    public async Task SeguimientoMedico_Acciones_ConservanAutoria_YLaRecepcionEsOpcional()
+    {
+        var (_, _, medica, eventId) = await SeedEscalatedAsync();
+        var companero = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, medica.CenterId, medica.UnitId);
+        var service = BuildMedicina(medica.ExternalSubject);
+        var other = BuildMedicina(companero.ExternalSubject);
+        var yesterday = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+        var revision = (await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, await StartAndSaveMedicalAsync(medica, eventId), yesterday))).Value;
+
+        revision = (await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Actuacion, "Radiografía pendiente de informe."))).Value;
+        var staleNote = await other.RecordMedicalFollowUpActionAsync(FollowUpAction(companero, eventId, revision - 1, FollowUpActionType.Actuacion, "Otra."));
+        var rescheduleWithoutReason = await other.RecordMedicalFollowUpActionAsync(FollowUpAction(companero, eventId, revision, FollowUpActionType.Reprogramacion, dueDate: new DateOnly(2030, 4, 1)));
+        revision = (await other.RecordMedicalFollowUpActionAsync(FollowUpAction(companero, eventId, revision, FollowUpActionType.Reprogramacion,
+            "El informe llega mañana.", new DateOnly(2030, 4, 1), "Con el informe de la radiografía."))).Value;
+        var keptWithoutNote = await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Conservacion));
+        revision = keptWithoutNote.Value;
+        var transferWithoutTeam = await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Transferencia, "Nota."));
+        revision = (await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Transferencia,
+            "Revisar el informe y decidir antibiótico.", incomingTeam: "Guardia de noche"))).Value;
+
+        Assert.Equal(ApplicationFailureCode.Conflict, staleNote.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, rescheduleWithoutReason.Error!.Code);
+        Assert.True(keptWithoutNote.Ok);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, transferWithoutTeam.Error!.Code);
+
+        // Sin confirmar la recepción, el seguimiento sigue visible con la transferencia pendiente.
+        var listed = Assert.Single((await ListFollowUpsAsync(companero)).Value!);
+        Assert.True(listed.TransferPending);
+        Assert.Equal(FollowUpActionType.Transferencia, listed.LastContinuity);
+        Assert.Equal("Guardia de noche", listed.LastContinuityTeam);
+        Assert.False(listed.LastContinuityByCurrentAccount);
+        Assert.Equal(new DateOnly(2030, 4, 1), listed.DueDate);
+        Assert.Equal("Con el informe de la radiografía.", listed.Criterion);
+
+        var tracking = (await FindAsync(companero, eventId))!.Medical.FollowUp!.Tracking;
+        var transfer = tracking.PendingTransfer!;
+        Assert.Equal(new DateOnly(2030, 4, 1), tracking.DueDate);
+        Assert.Equal(new[] { FollowUpActionType.Actuacion, FollowUpActionType.Reprogramacion, FollowUpActionType.Conservacion, FollowUpActionType.Transferencia },
+            tracking.Actions.Select(a => a.Type));
+        Assert.Equal(new[] { false, true, false, false }, tracking.Actions.Select(a => a.ByCurrentAccount));
+
+        var received = await other.RecordMedicalFollowUpActionAsync(FollowUpAction(companero, eventId, revision, FollowUpActionType.Recepcion, transferId: transfer.Id));
+        var receivedAgain = await other.RecordMedicalFollowUpActionAsync(FollowUpAction(companero, eventId, received.Value, FollowUpActionType.Recepcion, transferId: transfer.Id));
+        Assert.True(received.Ok);
+        Assert.Equal(ApplicationFailureCode.Conflict, receivedAgain.Error!.Code);
+        Assert.Null((await FindAsync(companero, eventId))!.Medical.FollowUp!.Tracking.PendingTransfer);
+        Assert.False(Assert.Single((await ListFollowUpsAsync(companero)).Value!).TransferPending);
+
+        foreach (var code in new[] { "MEDICAL_FOLLOW_UP_NOTE", "MEDICAL_FOLLOW_UP_RESCHEDULE", "MEDICAL_FOLLOW_UP_KEEP", "MEDICAL_FOLLOW_UP_TRANSFER", "MEDICAL_FOLLOW_UP_RECEIVE" })
+        {
+            Assert.Equal(1, await CountAuditAsync(eventId, code));
+        }
+    }
+
+    [Fact]
+    public async Task SeguimientoMedico_Vencido_SigueEnLaBandeja_YSeResuelveConIndicacionOCierre()
+    {
+        var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var yesterday = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+        var revision = (await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, await StartAndSaveMedicalAsync(medica, eventId), yesterday, null))).Value;
+
+        var overdue = Assert.Single((await ListFollowUpsAsync(medica)).Value!);
+        Assert.Equal(yesterday, overdue.DueDate);
+
+        // "Resolver" con una indicación: el seguimiento termina, el evento pasa a indicación pendiente y
+        // no admite un segundo seguimiento médico.
+        var indicated = await service.RegisterMedicalIndicationAsync(Indication(medica, eventId, revision));
+        Assert.True(indicated.Ok);
+        Assert.Equal(ClinicalEventStatus.ConIndicacionPendiente, (await FindAsync(medica, eventId))!.Status);
+        Assert.Empty((await ListFollowUpsAsync(medica)).Value!);
+        Assert.Single((await service.ListMedicalIndicationsAsync(new ListMedicalIndicationsCommand(medica.ProfileScopeId, medica.CenterId))).Value!);
+        var second = await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, indicated.Value));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, second.Error!.Code);
+        Assert.Equal(ClinicalEventStatus.ConIndicacionPendiente, (await FindAsync(medica, eventId))!.Status);
+        var noteAfter = await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, indicated.Value, FollowUpActionType.Actuacion, "Tarde."));
+        Assert.Equal(ApplicationFailureCode.Conflict, noteAfter.Error!.Code);
+
+        // Otro evento: desde indicación pendiente (sin seguimiento previo) sí se inicia, sus indicaciones
+        // siguen visibles para Medicina mientras dura y después se cierra desde el seguimiento.
+        var (_, _, otraMedica, otherEventId) = await SeedEscalatedAsync();
+        var otherService = BuildMedicina(otraMedica.ExternalSubject);
+        var withIndication = (await otherService.RegisterMedicalIndicationAsync(Indication(otraMedica, otherEventId, await StartAndSaveMedicalAsync(otraMedica, otherEventId)))).Value;
+        var followed = (await otherService.StartMedicalFollowUpAsync(StartFollowUp(otraMedica, otherEventId, withIndication))).Value;
+        Assert.Equal(ClinicalEventStatus.EnSeguimientoMedico, (await FindAsync(otraMedica, otherEventId))!.Status);
+        Assert.Single((await otherService.ListMedicalIndicationsAsync(new ListMedicalIndicationsCommand(otraMedica.ProfileScopeId, otraMedica.CenterId))).Value!);
+
+        var operationId = Guid.NewGuid();
+        var closed = await otherService.CloseMedicalEventAsync(Close(otraMedica, otherEventId, followed, operationId));
+        var repeated = await otherService.CloseMedicalEventAsync(Close(otraMedica, otherEventId, followed, operationId));
+        Assert.True(closed.Ok);
+        Assert.Equal(closed.Value, repeated.Value);
+        Assert.Equal(ClinicalEventStatus.Cerrado, (await FindAsync(otraMedica, otherEventId))!.Status);
+        Assert.Empty((await ListFollowUpsAsync(otraMedica)).Value!);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal("CERRADA", await connection.ExecuteScalarAsync<string>(
+            "SELECT estado_codigo FROM dbo.valoraciones_medicas WHERE evento_id = @EventId", new { EventId = otherEventId }));
+
+        // Enfermería ve el estado del evento en su detalle.
+        var nurseDetail = await BuildService(enfermera.ExternalSubject).FindPendingChangeDetailAsync(
+            new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId));
+        Assert.Equal(ClinicalEventStatus.ConIndicacionPendiente, nurseDetail.Value!.Status);
+    }
+
+    [Fact]
+    public async Task SeguimientoMedico_FueraDeAmbitoOConOtroPerfil_SeDeniega_YEnfermeriaNoPuedeConservar()
+    {
+        var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
+        var revision = await StartAndSaveMedicalAsync(medica, eventId);
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Medicina);
+        var (_, _, notEscalatedId) = await SeedOwnEventAsync();
+
+        var byOutsider = await BuildMedicina(outsider.ExternalSubject).StartMedicalFollowUpAsync(StartFollowUp(outsider, eventId, revision));
+        var byNurse = await BuildMedicina(enfermera.ExternalSubject).StartMedicalFollowUpAsync(StartFollowUp(enfermera, eventId, revision));
+        var notEscalated = await BuildMedicina(medica.ExternalSubject).StartMedicalFollowUpAsync(StartFollowUp(medica, notEscalatedId, 1));
+        var listByNurse = await BuildMedicina(enfermera.ExternalSubject).ListMedicalFollowUpsAsync(new ListMedicalFollowUpsCommand(enfermera.ProfileScopeId, enfermera.CenterId));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOutsider.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byNurse.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, notEscalated.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, listByNurse.Error!.Code);
+
+        var followed = (await BuildMedicina(medica.ExternalSubject).StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, revision))).Value;
+        var actionByOutsider = await BuildMedicina(outsider.ExternalSubject).RecordMedicalFollowUpActionAsync(
+            FollowUpAction(outsider, eventId, followed, FollowUpActionType.Actuacion, "x"));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, actionByOutsider.Error!.Code);
+        Assert.Empty((await ListFollowUpsAsync(outsider)).Value!);
+
+        // Conservar es solo del seguimiento médico: el caso de uso de Enfermería lo rechaza.
+        var (nurse, _, ownEventId) = await SeedOwnEventAsync();
+        var nursing = BuildService(nurse.ExternalSubject);
+        var nurseRevision = await StartAndSaveAsync(nurse, ownEventId);
+        var nurseFollowUp = (await nursing.StartFollowUpAsync(new StartFollowUpCommand(
+            nurse.ProfileScopeId, nurse.CenterId, ownEventId, nurseRevision, new DateOnly(2030, 1, 1), null, null))).Value;
+        var keep = await nursing.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            nurse.ProfileScopeId, nurse.CenterId, ownEventId, nurseFollowUp, FollowUpActionType.Conservacion, "Me lo quedo."));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, keep.Error!.Code);
+    }
+
+    [Fact]
+    public async Task LaBaseDeDatos_ProtegeElSeguimientoMedico()
+    {
+        var (_, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var revision = (await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, await StartAndSaveMedicalAsync(medica, eventId)))).Value;
+        Assert.True((await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Actuacion, "Revisión."))).Ok);
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        foreach (var (sql, expected) in new[]
+        {
+            ("UPDATE dbo.seguimientos_medicos SET objetivo = 'x' WHERE evento_id = @EventId", "MEDICAL_FOLLOW_UP_IMMUTABLE"),
+            ("DELETE FROM dbo.seguimientos_medicos WHERE evento_id = @EventId", "MEDICAL_FOLLOW_UP_IMMUTABLE"),
+            ("UPDATE a SET texto = 'x' FROM dbo.seguimiento_medico_acciones a JOIN dbo.seguimientos_medicos s ON s.id = a.seguimiento_id WHERE s.evento_id = @EventId", "MEDICAL_FOLLOW_UP_ACTION_IMMUTABLE"),
+            ("DELETE a FROM dbo.seguimiento_medico_acciones a JOIN dbo.seguimientos_medicos s ON s.id = a.seguimiento_id WHERE s.evento_id = @EventId", "MEDICAL_FOLLOW_UP_ACTION_IMMUTABLE"),
+            ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_VALORACION_MEDICA', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
+            ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_SEGUIMIENTO', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
+            ("INSERT INTO dbo.seguimientos_medicos (id, evento_id, residente_id, centro_id, fecha_prevista, criterio, objetivo, iniciado_por_cuenta_id, iniciado_en) SELECT NEWID(), id, residente_id, centro_id, '20300101', NULL, 'Otro', @AccountId, SYSUTCDATETIME() FROM dbo.eventos_asistenciales WHERE id = @EventId", "UX_segm_evento"),
+            ("INSERT INTO dbo.seguimiento_medico_acciones (id, seguimiento_id, tipo_codigo, texto, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), id, 'TRANSFERENCIA', 'Sin equipo', @AccountId, SYSUTCDATETIME() FROM dbo.seguimientos_medicos WHERE evento_id = @EventId", "CK_sma_tipo"),
+        })
+        {
+            var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { EventId = eventId, AccountId = medica.AccountId.Value }));
+            Assert.Contains(expected, ex.Message);
+        }
+
+        // Un escalado no salta a seguimiento médico sin pasar por la valoración médica.
+        var (_, _, _, escalatedId) = await SeedEscalatedAsync();
+        var skipped = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_SEGUIMIENTO_MEDICO', revision = revision + 1, valoracion_medica_iniciada_por_cuenta_id = @AccountId, valoracion_medica_iniciada_en = SYSUTCDATETIME() WHERE id = @EventId",
+            new { EventId = escalatedId, AccountId = medica.AccountId.Value }));
+        Assert.Contains("CLINICAL_EVENT_TRANSITION_INVALID", skipped.Message);
     }
 }
 

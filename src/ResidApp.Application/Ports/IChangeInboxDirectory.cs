@@ -95,11 +95,25 @@ public sealed record MedicalIndicationSummary(
     DateTimeOffset IssuedAt, MedicalIndicationStatus Status, int Revision, DateTimeOffset? ReadAt, DateTimeOffset? ResolvedAt,
     string? Incident);
 
-/// <summary>MED-04 a MED-08: la parte médica de un evento: quién y cuándo empezó la valoración médica (null
-/// si no se ha empezado), el borrador y las indicaciones emitidas, de la más antigua a la más reciente.</summary>
+/// <summary>MED-10 a MED-12: el seguimiento médico de un evento, con su objetivo. Tracking reutiliza el
+/// seguimiento de Enfermería (plan vigente, acciones y transferencia pendiente); no tiene indicaciones de
+/// continuidad (ContinuityNotes siempre null).</summary>
+public sealed record MedicalFollowUpDetail(string Objective, FollowUpDetail Tracking);
+
+/// <summary>MED-11: una fila de la bandeja compartida de seguimientos médicos. El equipo responsable es
+/// Medicina de la unidad; DueDate/Criterion son el plan vigente. LastContinuity es la última decisión de
+/// continuidad al terminar un turno (transferir o conservar), con el equipo entrante si se transfirió.</summary>
+public sealed record MedicalFollowUpSummary(
+    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, string Objective, DateOnly? DueDate,
+    string? Criterion, DateTimeOffset StartedAt, FollowUpActionType? LastActionType, DateTimeOffset? LastActionAt,
+    FollowUpActionType? LastContinuity, string? LastContinuityTeam, bool LastContinuityByCurrentAccount, bool TransferPending);
+
+/// <summary>MED-04 a MED-12: la parte médica de un evento: quién y cuándo empezó la valoración médica (null
+/// si no se ha empezado), el borrador, las indicaciones emitidas, de la más antigua a la más reciente, y el
+/// seguimiento médico si lo hubo.</summary>
 public sealed record MedicalDetail(
     bool? StartedByCurrentAccount, DateTimeOffset? StartedAt, MedicalAssessmentDraft? Assessment,
-    IReadOnlyList<MedicalIndicationSummary> Indications);
+    IReadOnlyList<MedicalIndicationSummary> Indications, MedicalFollowUpDetail? FollowUp);
 
 /// <summary>ENF-10/MED-08: una indicación en una lista, con el evento y el residente del que procede, y cuándo
 /// se cerró el evento (null si sigue abierto).</summary>
@@ -149,4 +163,7 @@ public interface IChangeInboxDirectory
     /// <summary>ENF-10/MED-08: todas las indicaciones médicas de los eventos visibles para el ámbito, de la más
     /// antigua a la más reciente; cada caso de uso filtra las que le interesan.</summary>
     Task<IReadOnlyList<MedicalIndicationListItem>> ListIndicationsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>MED-11: seguimientos médicos abiertos para un ámbito de Medicina, vencidos incluidos.</summary>
+    Task<IReadOnlyList<MedicalFollowUpSummary>> ListMedicalFollowUpsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 }

@@ -6,14 +6,16 @@ namespace ResidApp.Application.UseCases;
 /// <summary>
 /// Fachada del vertical Medicina: bandeja y detalle de escalados (MED-01 a MED-03), valoración médica
 /// (MED-04/MED-05) e indicaciones a Enfermería con su seguimiento (MED-06 a MED-09), más el basal vigente
-/// del residente, y el cierre médico (MED-15 a MED-17). El resto de la conducta médica llegará con sus
-/// historias. Igual que EnfermeriaApplicationService, es lo único que MedicinaController inyecta.
+/// del residente, el seguimiento médico con la continuidad entre turnos (MED-10 a MED-12) y el cierre médico
+/// (MED-15 a MED-17). El protocolo urgente llegará con su historia. Igual que EnfermeriaApplicationService, es
+/// lo único que MedicinaController inyecta.
 /// </summary>
 public sealed class MedicinaApplicationService(
     ListEscalations listEscalations, FindEscalationDetail findEscalationDetail, ReadCurrentBaseline readCurrentBaseline,
     StartMedicalAssessment startMedicalAssessment, SaveMedicalAssessment saveMedicalAssessment,
     RegisterMedicalIndication registerMedicalIndication, ListMedicalIndications listMedicalIndications,
-    CloseMedicalEvent closeMedicalEvent)
+    CloseMedicalEvent closeMedicalEvent, StartMedicalFollowUp startMedicalFollowUp,
+    RecordMedicalFollowUpAction recordMedicalFollowUpAction, ListMedicalFollowUps listMedicalFollowUps)
 {
     public Task<ApplicationResult<IReadOnlyList<EscalationSummary>>> ListEscalationsAsync(
         ListEscalationsCommand command, CancellationToken ct = default) =>
@@ -43,4 +45,15 @@ public sealed class MedicinaApplicationService(
 
     public Task<ApplicationResult<int>> CloseMedicalEventAsync(CloseMedicalEventCommand command, CancellationToken ct = default) =>
         closeMedicalEvent.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<int>> StartMedicalFollowUpAsync(StartMedicalFollowUpCommand command, CancellationToken ct = default) =>
+        startMedicalFollowUp.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<int>> RecordMedicalFollowUpActionAsync(
+        RecordMedicalFollowUpActionCommand command, CancellationToken ct = default) =>
+        recordMedicalFollowUpAction.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<IReadOnlyList<MedicalFollowUpSummary>>> ListMedicalFollowUpsAsync(
+        ListMedicalFollowUpsCommand command, CancellationToken ct = default) =>
+        listMedicalFollowUps.ExecuteAsync(command, ct);
 }

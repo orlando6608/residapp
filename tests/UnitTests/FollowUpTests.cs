@@ -41,6 +41,10 @@ public class FollowUpTests
         var transfer = FollowUpAction.Transfer(" Turno de noche ", "  ");
         Assert.Equal("Turno de noche", transfer.IncomingTeam);
         Assert.Null(transfer.Text);
+        var kept = FollowUpAction.Keep("  ");
+        Assert.Equal(FollowUpActionType.Conservacion, kept.Type);
+        Assert.Null(kept.Text);
+        Assert.Equal("Reviso el informe mañana.", FollowUpAction.Keep(" Reviso el informe mañana. ").Text);
     }
 
     public static TheoryData<Func<FollowUpAction>> AccionesIncompletas => new()
@@ -51,6 +55,7 @@ public class FollowUpTests
         () => FollowUpAction.Transfer(new string('a', FollowUpAction.MaxIncomingTeamLength + 1), null),
         () => FollowUpAction.Receive(Guid.Empty),
         () => FollowUpAction.Note(new string('a', FollowUpAction.MaxTextLength + 1)),
+        () => FollowUpAction.Keep(new string('a', FollowUpAction.MaxTextLength + 1)),
     };
 
     [Theory]

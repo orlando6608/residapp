@@ -20,7 +20,7 @@ internal sealed record ClinicalEventCloseRule(
         "ENFERMERIA", "'EN_VALORACION', 'EN_SEGUIMIENTO'", "dbo.valoraciones_enfermeria", "NURSING_ASSESSMENT_REQUIRED");
 
     public static readonly ClinicalEventCloseRule Medicina = new(
-        "MEDICINA", "'EN_VALORACION_MEDICA', 'CON_INDICACION_PENDIENTE'", "dbo.valoraciones_medicas", "MEDICAL_ASSESSMENT_REQUIRED");
+        "MEDICINA", "'EN_VALORACION_MEDICA', 'CON_INDICACION_PENDIENTE', 'EN_SEGUIMIENTO_MEDICO'", "dbo.valoraciones_medicas", "MEDICAL_ASSESSMENT_REQUIRED");
 }
 
 /// <summary>

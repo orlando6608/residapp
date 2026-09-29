@@ -74,6 +74,9 @@ builder.Services.AddScoped<SaveMedicalAssessment>();
 builder.Services.AddScoped<RegisterMedicalIndication>();
 builder.Services.AddScoped<ListMedicalIndications>();
 builder.Services.AddScoped<CloseMedicalEvent>();
+builder.Services.AddScoped<StartMedicalFollowUp>();
+builder.Services.AddScoped<RecordMedicalFollowUpAction>();
+builder.Services.AddScoped<ListMedicalFollowUps>();
 builder.Services.AddScoped<MedicinaApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();

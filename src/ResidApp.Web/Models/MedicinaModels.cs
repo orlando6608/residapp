@@ -5,10 +5,11 @@ using ResidApp.Domain.Medicina;
 
 namespace ResidApp.Web.Models;
 
-/// <summary>MED-01: contadores de escalados recibidos y de indicaciones emitidas (con cuántas siguen sin leer
-/// o tienen incidencia). Seguimientos, comunicaciones e Historial de Medicina llegarán con el resto del
-/// vertical.</summary>
-public sealed record MedicinaInicioViewModel(int Escalados, int Indicaciones, int IndicacionesSinLeer, int IndicacionesConIncidencia);
+/// <summary>MED-01: contadores de escalados recibidos, de indicaciones emitidas (con cuántas siguen sin leer
+/// o tienen incidencia) y de seguimientos médicos abiertos (con cuántos están vencidos). Comunicaciones e
+/// Historial de Medicina llegarán con el resto del vertical.</summary>
+public sealed record MedicinaInicioViewModel(
+    int Escalados, int Indicaciones, int IndicacionesSinLeer, int IndicacionesConIncidencia, int Seguimientos, int SeguimientosVencidos);
 
 /// <summary>MED-03: detalle del escalado con su información reunida (solo lectura), el basal vigente del
 /// residente (null si no tiene) y la parte médica (valoración e indicaciones).</summary>
@@ -82,6 +83,48 @@ public sealed class IndicacionFormModel
 }
 
 public sealed record IndicacionViewModel(PendingChangeDetail Event, IndicacionFormModel Form);
+
+/// <summary>MED-10 "crear seguimiento médico": fecha prevista o criterio (al menos uno) y objetivo
+/// obligatorio; lo decide el dominio (FollowUpPlan, MedicalFollowUp). El equipo responsable es Medicina de la
+/// unidad.</summary>
+public sealed class IniciarSeguimientoMedicoFormModel
+{
+    [Required]
+    public Guid EventoId { get; set; }
+
+    [Required]
+    public int Revision { get; set; }
+
+    [Display(Name = "Fecha prevista de revisión")]
+    public DateOnly? FechaPrevista { get; set; }
+
+    [StringLength(FollowUpPlan.MaxCriterionLength)]
+    [Display(Name = "Criterio de revisión")]
+    public string? Criterio { get; set; }
+
+    [Required(ErrorMessage = "Escribe el objetivo del seguimiento.")]
+    [StringLength(MedicalFollowUp.MaxObjectiveLength)]
+    [Display(Name = "Objetivo del seguimiento")]
+    public string? Objetivo { get; set; }
+}
+
+public sealed record IniciarSeguimientoMedicoViewModel(PendingChangeDetail Event, IniciarSeguimientoMedicoFormModel Form);
+
+/// <summary>MED-11: textos del seguimiento médico, y quién lo lleva según la última decisión de continuidad al
+/// terminar un turno. El equipo responsable es siempre Medicina de la unidad.</summary>
+public static class MedicalFollowUpDisplay
+{
+    /// <summary>En Medicina la actuación del seguimiento es "registrar revisión" (MED-11).</summary>
+    public static string Label(FollowUpActionType type) =>
+        type == FollowUpActionType.Actuacion ? "Revisión" : FollowUpDisplay.Label(type);
+
+    public static string Continuity(FollowUpActionType? lastContinuity, string? team, bool byCurrentAccount) => lastContinuity switch
+    {
+        FollowUpActionType.Transferencia => $"Transferido a «{team}»",
+        FollowUpActionType.Conservacion => byCurrentAccount ? "Lo conservas tú para tu próxima revisión" : "Lo conserva otro profesional de Medicina",
+        _ => "Sin decisión de continuidad todavía",
+    };
+}
 
 /// <summary>Estado de una indicación (MED-08, ENF-10), siempre en texto. "Pendiente de lectura" usa el
 /// amarillo de aviso con texto oscuro; "No realizada" el rojo, porque tiene incidencia.</summary>

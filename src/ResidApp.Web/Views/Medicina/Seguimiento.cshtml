@@ -1,0 +1,214 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model SeguimientoViewModel
+@{
+    ViewData["Title"] = "Seguimiento médico";
+    var evento = Model.Event;
+    var medico = evento.Medical.FollowUp!;
+    var seguimiento = medico.Tracking;
+    var vencido = FollowUpDisplay.IsOverdue(seguimiento.DueDate);
+    var pendiente = seguimiento.PendingTransfer;
+    var revision = Model.FormFor(FollowUpActionType.Actuacion);
+    var reprogramacion = Model.FormFor(FollowUpActionType.Reprogramacion);
+    var transferencia = Model.FormFor(FollowUpActionType.Transferencia);
+    var conservacion = Model.FormFor(FollowUpActionType.Conservacion);
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item"><a asp-action="Seguimientos">Seguimientos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Seguimiento médico</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Seguimiento médico — @evento.ResidentDisplayName</h1>
+<p class="text-muted">
+    Equipo responsable: Medicina de @(evento.UnitName ?? "la unidad") ·
+    iniciado @(seguimiento.StartedByCurrentAccount ? "por ti" : "por otro profesional de Medicina")
+    el @seguimiento.StartedAt.ToLocalTime().ToString("g") ·
+    <a asp-action="Escalado" asp-route-eventoId="@evento.EventId">Ver el evento y las valoraciones</a>
+</p>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="card mb-3 border-start border-4 @(vencido ? "border-danger" : "border-info")">
+    <div class="card-body">
+        <h2 class="h5 card-title">Objetivo y plan vigente</h2>
+        <p class="mb-2" style="white-space: pre-line"><strong>Objetivo:</strong> @medico.Objective</p>
+        <p class="mb-1">
+            @if (vencido)
+            {
+                <span class="badge text-bg-danger">Vencido</span>
+            }
+            <span style="white-space: pre-line">@FollowUpDisplay.Plan(seguimiento.DueDate, seguimiento.Criterion)</span>
+        </p>
+        @if (vencido)
+        {
+            <p class="text-muted mb-0">Un seguimiento vencido sigue abierto: resuélvelo o reprográmalo justificadamente.</p>
+        }
+    </div>
+</div>
+
+@if (pendiente is not null)
+{
+    <div class="alert alert-warning">
+        <p class="mb-2">
+            <strong>Transferencia sin recepción confirmada:</strong> al equipo o turno «@pendiente.IncomingTeam»,
+            el @pendiente.RecordedAt.ToLocalTime().ToString("g"). Confirmarla es opcional: el seguimiento sigue visible y trazable igualmente.
+            @if (pendiente.Text is not null)
+            {
+                <br /><span style="white-space: pre-line">Nota: @pendiente.Text</span>
+            }
+        </p>
+        <form asp-action="Seguimiento" method="post" class="d-grid d-md-flex">
+            <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
+            <input type="hidden" name="Form.Revision" value="@evento.Revision" />
+            <input type="hidden" name="Form.Tipo" value="@FollowUpActionType.Recepcion" />
+            <input type="hidden" name="Form.TransferenciaId" value="@pendiente.Id" />
+            <button type="submit" class="btn btn-dark btn-lg">Confirmar recepción</button>
+        </form>
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Revisiones y cambios</h2>
+        @if (seguimiento.Actions.Count == 0)
+        {
+            <p class="text-muted mb-0">Todavía no hay revisiones registradas.</p>
+        }
+        else
+        {
+            <ul class="list-unstyled mb-0">
+                @foreach (var accion in seguimiento.Actions)
+                {
+                    <li class="mb-3">
+                        <p class="mb-1">
+                            <strong>@MedicalFollowUpDisplay.Label(accion.Type)</strong> ·
+                            @(accion.ByCurrentAccount ? "tú" : "otro profesional de Medicina") ·
+                            @accion.RecordedAt.ToLocalTime().ToString("g")
+                        </p>
+                        @switch (accion.Type)
+                        {
+                            case FollowUpActionType.Reprogramacion:
+                                <p class="mb-0">Nuevo plan: @FollowUpDisplay.Plan(accion.DueDate, accion.Criterion)</p>
+                                <p class="mb-0" style="white-space: pre-line">Justificación: @accion.Text</p>
+                                break;
+                            case FollowUpActionType.Transferencia:
+                                <p class="mb-0">A: @accion.IncomingTeam</p>
+                                if (accion.Text is not null)
+                                {
+                                    <p class="mb-0" style="white-space: pre-line">Nota: @accion.Text</p>
+                                }
+                                break;
+                            case FollowUpActionType.Conservacion:
+                                if (accion.Text is not null)
+                                {
+                                    <p class="mb-0" style="white-space: pre-line">Nota: @accion.Text</p>
+                                }
+                                break;
+                            case FollowUpActionType.Recepcion:
+                                break;
+                            default:
+                                <p class="mb-0" style="white-space: pre-line">@accion.Text</p>
+                                break;
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Registrar revisión</h2>
+        <form asp-action="Seguimiento" method="post">
+            <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
+            <input type="hidden" name="Form.Revision" value="@revision.Revision" />
+            <input type="hidden" name="Form.Tipo" value="@FollowUpActionType.Actuacion" />
+            <label for="revision-texto" class="form-label">Revisión</label>
+            <textarea id="revision-texto" name="Form.Texto" class="form-control mb-3" rows="3">@revision.Texto</textarea>
+            <div class="d-grid d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary btn-lg">Registrar revisión</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Reprogramar</h2>
+        <form asp-action="Seguimiento" method="post">
+            <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
+            <input type="hidden" name="Form.Revision" value="@reprogramacion.Revision" />
+            <input type="hidden" name="Form.Tipo" value="@FollowUpActionType.Reprogramacion" />
+            <p class="text-muted">El plan nuevo sustituye al vigente. Indica una fecha, un criterio o ambos, y justifica el cambio.</p>
+            <div class="mb-3">
+                <label for="reprogramar-fecha" class="form-label">Nueva fecha prevista</label>
+                <input id="reprogramar-fecha" name="Form.FechaPrevista" type="date" class="form-control form-control-lg" style="max-width: 260px;"
+                       value="@reprogramacion.FechaPrevista?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="mb-3">
+                <label for="reprogramar-criterio" class="form-label">Nuevo criterio</label>
+                <textarea id="reprogramar-criterio" name="Form.Criterio" class="form-control" rows="2">@reprogramacion.Criterio</textarea>
+            </div>
+            <label for="reprogramar-justificacion" class="form-label">Justificación</label>
+            <textarea id="reprogramar-justificacion" name="Form.Texto" class="form-control mb-3" rows="2">@reprogramacion.Texto</textarea>
+            <div class="d-grid d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-outline-primary btn-lg">Reprogramar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Al terminar tu turno</h2>
+        <p class="text-muted">Decide explícitamente si transfieres el seguimiento al equipo entrante o lo conservas para tu próxima revisión.</p>
+        <div class="row g-3">
+            <div class="col-12 col-lg-6">
+                <form asp-action="Seguimiento" method="post" class="h-100 border rounded p-3">
+                    <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
+                    <input type="hidden" name="Form.Revision" value="@transferencia.Revision" />
+                    <input type="hidden" name="Form.Tipo" value="@FollowUpActionType.Transferencia" />
+                    <h3 class="h6">Transferir al equipo entrante</h3>
+                    <div class="mb-3">
+                        <label for="transferir-equipo" class="form-label">Equipo o turno entrante</label>
+                        <input id="transferir-equipo" name="Form.EquipoEntrante" class="form-control form-control-lg" maxlength="@FollowUpAction.MaxIncomingTeamLength"
+                               value="@transferencia.EquipoEntrante" placeholder="Por ejemplo, guardia de noche" />
+                    </div>
+                    <label for="transferir-nota" class="form-label">Nota de continuidad</label>
+                    <textarea id="transferir-nota" name="Form.Texto" class="form-control mb-3" rows="3">@transferencia.Texto</textarea>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-outline-primary btn-lg">Transferir</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-12 col-lg-6">
+                <form asp-action="Seguimiento" method="post" class="h-100 border rounded p-3">
+                    <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
+                    <input type="hidden" name="Form.Revision" value="@conservacion.Revision" />
+                    <input type="hidden" name="Form.Tipo" value="@FollowUpActionType.Conservacion" />
+                    <h3 class="h6">Conservar para mi próxima revisión</h3>
+                    <label for="conservar-nota" class="form-label">Nota (opcional)</label>
+                    <textarea id="conservar-nota" name="Form.Texto" class="form-control mb-3" rows="3">@conservacion.Texto</textarea>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-outline-primary btn-lg">Conservar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-grid d-md-flex justify-content-md-end gap-2 mb-3">
+    <a asp-action="Seguimientos" class="btn btn-outline-secondary btn-lg">Volver a la bandeja</a>
+    <a asp-action="Conducta" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Resolver</a>
+</div>

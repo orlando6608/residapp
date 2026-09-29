@@ -113,6 +113,30 @@
     </div>
 }
 
+@if (medico.FollowUp is { } seguimientoMedico)
+{
+    var abierto = evento.Status == ClinicalEventStatus.EnSeguimientoMedico;
+    var vencido = abierto && FollowUpDisplay.IsOverdue(seguimientoMedico.Tracking.DueDate);
+    <div class="card mb-3 border-start border-4 @(vencido ? "border-danger" : "border-info")">
+        <div class="card-body">
+            <h2 class="h5 card-title">Seguimiento médico @(abierto ? "" : "(terminado)")</h2>
+            <p class="mb-1" style="white-space: pre-line"><strong>Objetivo:</strong> @seguimientoMedico.Objective</p>
+            <p class="mb-1">
+                @if (vencido)
+                {
+                    <span class="badge text-bg-danger">Vencido</span>
+                }
+                Plan: @FollowUpDisplay.Plan(seguimientoMedico.Tracking.DueDate, seguimientoMedico.Tracking.Criterion)
+            </p>
+            <p class="text-muted mb-0">
+                Iniciado @(seguimientoMedico.Tracking.StartedByCurrentAccount ? "por ti" : "por otro profesional de Medicina")
+                el @seguimientoMedico.Tracking.StartedAt.ToLocalTime().ToString("g") ·
+                @seguimientoMedico.Tracking.Actions.Count acción(es) registrada(s)
+            </p>
+        </div>
+    </div>
+}
+
 @if (evento.Closure is not null)
 {
     <partial name="_CierreEvento" model="evento" />
@@ -138,7 +162,11 @@
             @(medico.Assessment is null ? "Completar valoración médica" : "Continuar valoración médica")
         </a>
     }
-    @if (medico.Assessment is not null && evento.Status is ClinicalEventStatus.EnValoracionMedica or ClinicalEventStatus.ConIndicacionPendiente)
+    @if (evento.Status == ClinicalEventStatus.EnSeguimientoMedico)
+    {
+        <a asp-action="Seguimiento" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Ver seguimiento médico</a>
+    }
+    else if (medico.Assessment is not null && evento.Status is ClinicalEventStatus.EnValoracionMedica or ClinicalEventStatus.ConIndicacionPendiente)
     {
         <a asp-action="Conducta" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Pasar a conducta médica</a>
     }

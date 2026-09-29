@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Conducta médica";
     var conIndicaciones = Model.Status == ClinicalEventStatus.ConIndicacionPendiente;
+    var enSeguimiento = Model.Status == ClinicalEventStatus.EnSeguimientoMedico;
 }
 
 <nav aria-label="breadcrumb">
@@ -16,13 +17,26 @@
 
 <h1 class="h3">Conducta médica — @Model.ResidentDisplayName</h1>
 <p class="text-muted">Elige cómo continúa el evento. El sistema no decide ni propone ninguna salida, ni asigna prioridades.</p>
+@if (enSeguimiento)
+{
+    <div class="alert alert-info">
+        Estás resolviendo el seguimiento médico. Registrar una indicación o cerrar el evento lo da por terminado.
+        <a asp-action="Seguimiento" asp-route-eventoId="@Model.EventId">Volver al seguimiento</a>
+    </div>
+}
 
 <div class="row g-3 mb-3">
     <div class="col-12 col-md-6">
         <a asp-action="Indicacion" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">@(conIndicaciones ? "Registrar otra indicación" : "Registrar indicaciones a Enfermería")</h2>
-                <p class="card-text text-muted mb-0">Texto, fecha prevista o criterio e información adicional. Enfermería de la unidad confirma la lectura y registra si la realizó.</p>
+                <p class="card-text text-muted mb-0">
+                    Texto, fecha prevista o criterio e información adicional. Enfermería de la unidad confirma la lectura y registra si la realizó.
+                    @if (enSeguimiento)
+                    {
+                        <span>El seguimiento médico termina y el evento pasa a indicación pendiente.</span>
+                    }
+                </p>
             </div>
         </a>
     </div>
@@ -34,23 +48,42 @@
             </div>
         </a>
     </div>
-    @foreach (var (titulo, texto) in new[]
-    {
-        ("Iniciar seguimiento médico", "fecha o criterio, equipo responsable y objetivo."),
-        ("Activar protocolo urgente", "documentar la activación y, si procede, derivar a Urgencias."),
-    })
-    {
-        <div class="col-12 col-md-6">
+    <div class="col-12 col-md-6">
+        @if (Model.Medical.FollowUp is null)
+        {
+            <a asp-action="IniciarSeguimiento" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Iniciar seguimiento médico</h2>
+                    <p class="card-text text-muted mb-0">Objetivo y fecha prevista o criterio. El equipo responsable es Medicina de la unidad; el evento sigue en seguimiento hasta que lo resuelvas.</p>
+                </div>
+            </a>
+        }
+        else
+        {
             <div class="card h-100 text-muted">
                 <div class="card-body">
-                    <h2 class="h5 card-title">@titulo</h2>
-                    <p class="card-text mb-0">Próximamente: @texto</p>
+                    <h2 class="h5 card-title">Iniciar seguimiento médico</h2>
+                    <p class="card-text mb-0">
+                        @(enSeguimiento ? "El evento ya está en seguimiento médico." : "Este evento ya tuvo su seguimiento médico: cada evento admite uno.")
+                    </p>
                 </div>
             </div>
+        }
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card h-100 text-muted">
+            <div class="card-body">
+                <h2 class="h5 card-title">Activar protocolo urgente</h2>
+                <p class="card-text mb-0">Próximamente: documentar la activación y, si procede, derivar a Urgencias.</p>
+            </div>
         </div>
-    }
+    </div>
 </div>
 
-<div class="d-grid d-md-flex justify-content-md-end">
+<div class="d-grid d-md-flex justify-content-md-end gap-2">
+    @if (enSeguimiento)
+    {
+        <a asp-action="Seguimiento" asp-route-eventoId="@Model.EventId" class="btn btn-outline-secondary btn-lg">Volver al seguimiento</a>
+    }
     <a asp-action="Escalado" asp-route-eventoId="@Model.EventId" class="btn btn-outline-secondary btn-lg">Volver al detalle</a>
 </div>

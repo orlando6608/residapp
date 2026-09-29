@@ -37,6 +37,26 @@ public class MedicalAssessmentTests
     }
 
     [Fact]
+    public void Seguimiento_ConObjetivoYPlan_SeAceptaRecortado()
+    {
+        var followUp = new MedicalFollowUp(new FollowUpPlan(null, "Tras la analítica."), "  Decidir antibiótico. ");
+
+        Assert.Equal("Decidir antibiótico.", followUp.Objective);
+        Assert.Equal("Tras la analítica.", followUp.Plan.Criterion);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("   ")]
+    [InlineData(MedicalFollowUp.MaxObjectiveLength + 1)]
+    public void Seguimiento_SinObjetivoODemasiadoLargo_SeRechaza(object? objective)
+    {
+        var text = objective is int length ? new string('a', length) : (string?)objective;
+        var ex = Assert.Throws<DomainValidationException>(() => new MedicalFollowUp(new FollowUpPlan(null, "Tras la analítica."), text));
+        Assert.Equal("MEDICAL_FOLLOW_UP_OBJECTIVE_REQUIRED", ex.Message);
+    }
+
+    [Fact]
     public void Indicacion_SinTexto_SeRechaza()
     {
         var ex = Assert.Throws<DomainValidationException>(() => new MedicalIndication(" ", new FollowUpPlan(null, "Cada 4 horas."), null));

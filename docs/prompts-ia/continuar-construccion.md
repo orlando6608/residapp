@@ -13,13 +13,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- Todo el trabajo está en `main` y subido al remoto; compruébalo con `git status` al empezar. Hasta el
-  script `0013` (historia 4 de Medicina, cierre médico) está desplegado en Azure: el pipeline de `b060542`
-  terminó con éxito el 2026-09-29.
+- La historia 5 de Medicina (seguimiento médico y continuidad, script `0014`) está en un commit en `main`
+  **sin subir**: el push lo decide el usuario. Compruébalo con `git status` al empezar. Hasta el script
+  `0013` (historia 4 de Medicina, cierre médico) está desplegado en Azure: el pipeline de `b060542` terminó
+  con éxito el 2026-09-29. Tras el push de `0014`, comprueba que el pipeline termina en verde.
 - El primer pipeline de `0013` (`5325ef4`) falló en los tests por interbloqueos en una BD recién creada, y
   no llegó a desplegar. Se corrigió en `f970d83` (`FORCESEEK`, ver las lecciones). En `b060542` se ordenaron
   además las opciones de área en `SqlChangeInboxDirectory.FindAsync`, porque un test fallaba de vez en
   cuando.
+- Verificación de `0014`: 6 vueltas tipo CI con BD nueva y 13 vueltas contra la base local en verde. Hubo
+  **una** vuelta local fallida en `SeguimientoMedico_Vencido_SigueEnLaBandeja_YSeResuelveConIndicacionOCierre`,
+  que tardó 85 s frente a los 5 habituales, sin mensaje guardado. No quedó ningún `xml_deadlock_report`, y el
+  log de SQL Server avisa a esa hora de que su memoria se había paginado («performance degradation»). Lo
+  más probable es un tiempo de espera por presión de memoria en la máquina, pero no está confirmado. Si
+  vuelve a fallar, guarda la salida completa (`--logger "console;verbosity=normal"`).
 - El estado de un run se consulta sin autenticación en
   `https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main`, y el de cada job y paso en
   `.../actions/runs/<id>/jobs`. Los logs piden autenticación y `gh` no está instalado.
@@ -27,20 +34,24 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   valores «por definir».
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
   (parcial), 2, 3, 4, 5, 7, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
-  Medicina está en curso: historias 1, 2, 3 y 4 (escalados, valoración médica, indicaciones y cierre
-  médico).
-- La base local `ResidApp` tiene los scripts `0001` a `0013` registrados en `dbo.scripts_aplicados`.
-  Hay una copia previa a `0013` en
-  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0013-20260928.bak`.
+  Medicina está en curso: historias 1, 2, 3, 4 y 5 (escalados, valoración médica, indicaciones, cierre
+  médico y seguimiento médico con continuidad entre turnos).
+- La base local `ResidApp` tiene los scripts `0001` a `0014` registrados en `dbo.scripts_aplicados`.
+  Hay una copia previa a `0014` en
+  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0014-20260929.bak`.
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
   - «Prueba manual historia 5: disnea.»: cerrado por Medicina, con una comunicación pendiente y una
     indicación que Enfermería realizó después del cierre. Su motivo de escalado quedó como
     «Desaturaci%F3n…» por la lección de curl de más abajo.
-  - «Prueba manual Medicina: fiebre.»: con indicación pendiente, que Enfermería leyó y realizó.
+  - «Prueba manual Medicina: fiebre.»: tenía una indicación que Enfermería leyó y realizó. Después pasó a
+    seguimiento médico (vencido, con revisión, reprogramación, transferencia con recepción y conservación) y
+    se cerró desde el seguimiento.
   - «Prueba manual cierre Enfermería tras 0013: mareo.»: cerrado por Enfermería.
-- Suite: 92 unitarios, 155 de integración y 1 funcional, todos en verde.
+  - «Prueba manual seguimiento médico: disuria.»: escalado, seguimiento médico desde la valoración y
+    resuelto con una indicación (con indicación pendiente, sin leer).
+- Suite: 97 unitarios, 160 de integración y 1 funcional, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -48,18 +59,18 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea: decidir el orden
 
-Hay que proponer al usuario el orden antes de empezar. Un evento escalado ya puede terminar con el cierre
-médico (historia 4 de Medicina).
+Hay que proponer al usuario el orden antes de empezar. La conducta médica ya tiene tres de sus cuatro
+salidas (indicaciones, cierre y seguimiento médico); falta el protocolo urgente.
 
-- **Medicina, historia 5: seguimiento médico y continuidad entre turnos** (detalle en
-  `pendientes-medicina.md`). Se parece al seguimiento de Enfermería (`0010`), pero tiene «objetivo» y la
-  decisión explícita de transferir o conservar el seguimiento al cambio de turno.
-- **Enfermería, historia 6: protocolo urgente y derivación a Urgencias** (`DER-01` a `DER-06`, común con
-  Medicina, [`derivacion-urgencias.md`](../flujos-clinicos/derivacion-urgencias.md)). Incluye un informe
-  firmado en PDF (hay que decidir cómo se genera) y una «actualización relevante» obligatoria para la
-  familia con el registro del intento de llamada, que toca el Portal Familiar.
-
-Después, el historial (historia 11 de Enfermería, 9 de Medicina), el evento propio de Medicina y el resto.
+- **Protocolo urgente y derivación a Urgencias** (historia 6 de Enfermería y 6 de Medicina, `DER-01` a
+  `DER-06`, [`derivacion-urgencias.md`](../flujos-clinicos/derivacion-urgencias.md)). Es la salida que
+  falta en las dos decisiones. Antes de empezar hay que decidir con el usuario:
+  - cómo se genera y firma el informe en PDF;
+  - la «actualización relevante» obligatoria para la familia con el registro del intento de llamada, que
+    toca el Portal Familiar, todavía sin construir.
+- **Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de las
+  valoraciones y los seguimientos terminados.
+- **Evento propio de Medicina** (historia 7 de Medicina).
 
 ## Reglas de trabajo propias de este repositorio
 
@@ -125,7 +136,10 @@ Repite estos pasos antes de dar un bloque por cerrado:
   - Cierre de evento común a Enfermería y Medicina en `ClinicalEventCloser`, con la regla de cada perfil en
     `ClinicalEventCloseRule`.
 - **Nuevos estados del evento:** añádelos también a `ClinicalEventStatusDisplay` (`EnfermeriaModels.cs`).
-  Si no, la insignia muestra el nombre interno en inglés.
+  Si no, la insignia muestra el nombre interno en inglés. Busca además los filtros por estado en los casos
+  de uso y en las consultas (`grep` de los `ClinicalEventStatus.` vecinos). Con `EN_SEGUIMIENTO_MEDICO`,
+  `ListMedicalIndications` habría ocultado las indicaciones de un evento que pasa de «con indicación
+  pendiente» a seguimiento médico.
 - **Comandos locales:** la solución está en `src/ResidApp.sln`, así que se ejecuta
   `dotnet test src/ResidApp.sln`. La app se levanta con `dotnet run --launch-profile http` desde
   `src/ResidApp.Web`. Con `--no-launch-profile` no carga los user-secrets y falla por falta de la cadena de

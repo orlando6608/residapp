@@ -40,19 +40,26 @@
             </div>
         </a>
     </div>
-    @foreach (var (titulo, texto) in new[]
-    {
-        ("Seguimientos", "seguimientos médicos abiertos."),
-        ("Comunicaciones", "comunicaciones familiares pendientes de aprobación."),
-    })
-    {
-        <div class="col-12 col-md-4">
-            <div class="card h-100 text-muted">
-                <div class="card-body">
-                    <h2 class="h5 card-title">@titulo</h2>
-                    <p class="card-text mb-0">Próximamente: @texto</p>
-                </div>
+    <div class="col-12 col-md-4">
+        <a asp-action="Seguimientos" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Seguimientos</h2>
+                <p class="card-text mb-0">
+                    <span class="badge text-bg-info">@Model.Seguimientos</span> seguimiento(s) médico(s) abierto(s)
+                    @if (Model.SeguimientosVencidos > 0)
+                    {
+                        <span>· <span class="badge text-bg-danger">@Model.SeguimientosVencidos</span> vencido(s)</span>
+                    }
+                </p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card h-100 text-muted">
+            <div class="card-body">
+                <h2 class="h5 card-title">Comunicaciones</h2>
+                <p class="card-text mb-0">Próximamente: comunicaciones familiares pendientes de aprobación.</p>
             </div>
         </div>
-    }
+    </div>
 </div>

@@ -83,6 +83,7 @@ public static class ClinicalEventStatusDisplay
         ClinicalEventStatus.EscaladoMedicina => "Escalado a Medicina",
         ClinicalEventStatus.EnValoracionMedica => "En valoración médica",
         ClinicalEventStatus.ConIndicacionPendiente => "Con indicación pendiente",
+        ClinicalEventStatus.EnSeguimientoMedico => "En seguimiento médico",
         ClinicalEventStatus.Cerrado => "Cerrado",
         _ => status.ToString(),
     };
@@ -90,7 +91,7 @@ public static class ClinicalEventStatusDisplay
     public static string BadgeClass(ClinicalEventStatus status, bool prioritario) => status switch
     {
         ClinicalEventStatus.EnValoracion or ClinicalEventStatus.EnValoracionMedica => "text-bg-warning",
-        ClinicalEventStatus.EnSeguimiento or ClinicalEventStatus.ConIndicacionPendiente => "text-bg-info",
+        ClinicalEventStatus.EnSeguimiento or ClinicalEventStatus.ConIndicacionPendiente or ClinicalEventStatus.EnSeguimientoMedico => "text-bg-info",
         ClinicalEventStatus.EscaladoMedicina => "text-bg-primary",
         ClinicalEventStatus.Cerrado => "text-bg-success",
         _ => prioritario ? "text-bg-danger" : "text-bg-secondary",
@@ -107,6 +108,7 @@ public static class FollowUpDisplay
         FollowUpActionType.Reprogramacion => "Reprogramación",
         FollowUpActionType.Transferencia => "Transferencia de turno",
         FollowUpActionType.Recepcion => "Recepción confirmada",
+        FollowUpActionType.Conservacion => "Conservado para la próxima revisión",
         _ => type.ToString(),
     };
 

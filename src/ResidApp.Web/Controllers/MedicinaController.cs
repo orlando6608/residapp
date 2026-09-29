@@ -13,10 +13,11 @@ namespace ResidApp.Web.Controllers;
 /// <summary>
 /// Vertical Medicina: MED-01 (inicio con contadores), MED-02/MED-03 (bandeja y detalle de escalados, con las
 /// fuentes de solo lectura), MED-04/MED-05 (empezar y guardar la valoración médica), MED-06 a MED-09
-/// (conducta médica con la salida "registrar indicaciones" y el seguimiento de las indicaciones emitidas) y
-/// MED-15 a MED-17 (cierre médico con la decisión de comunicación familiar).
-/// El resto de la conducta llegará con sus historias. Traduce a MedicinaApplicationService; la autorización
-/// y las reglas de negocio no viven aquí.
+/// (conducta médica con la salida "registrar indicaciones" y el seguimiento de las indicaciones emitidas),
+/// MED-10 a MED-12 (seguimiento médico, su bandeja y la continuidad entre turnos) y MED-15 a MED-17 (cierre
+/// médico con la decisión de comunicación familiar).
+/// El protocolo urgente llegará con su historia. Traduce a MedicinaApplicationService; la autorización y las
+/// reglas de negocio no viven aquí.
 /// </summary>
 public sealed class MedicinaController(MedicinaApplicationService service) : Controller
 {
@@ -31,6 +32,7 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         var centroId = CenterId.From(activeScope.CenterId);
         var escalados = await service.ListEscalationsAsync(new ListEscalationsCommand(activeScope.ProfileScopeId, centroId), ct);
         var indicaciones = await service.ListMedicalIndicationsAsync(new ListMedicalIndicationsCommand(activeScope.ProfileScopeId, centroId), ct);
+        var seguimientos = await service.ListMedicalFollowUpsAsync(new ListMedicalFollowUpsCommand(activeScope.ProfileScopeId, centroId), ct);
         if (!escalados.Ok)
         {
             ModelState.AddModelError(string.Empty, escalados.Error!.Message);
@@ -39,7 +41,9 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         return View(new MedicinaInicioViewModel(
             escalados.Ok ? escalados.Value!.Count : 0, lista.Count,
             lista.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura),
-            lista.Count(i => i.Indication.Status == MedicalIndicationStatus.NoRealizada)));
+            lista.Count(i => i.Indication.Status == MedicalIndicationStatus.NoRealizada),
+            seguimientos.Ok ? seguimientos.Value!.Count : 0,
+            seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0));
     }
 
     /// <summary>MED-02: bandeja de escalados (pendientes y en valoración médica), del más antiguo al más reciente.</summary>
@@ -157,8 +161,9 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         return View(new ValoracionMedicaViewModel(detail, form));
     }
 
-    /// <summary>MED-06 "conducta médica": las cuatro salidas, desde una valoración médica guardada o con
-    /// indicaciones ya emitidas. Están disponibles "registrar indicaciones" y "cerrar".</summary>
+    /// <summary>MED-06 "conducta médica": las cuatro salidas, desde una valoración médica guardada, con
+    /// indicaciones ya emitidas o al resolver un seguimiento médico. Están disponibles "registrar
+    /// indicaciones", "cerrar" e "iniciar seguimiento médico" (este, solo si el evento aún no tuvo uno).</summary>
     public async Task<IActionResult> Conducta(Guid eventoId, CancellationToken ct)
     {
         var detail = await FindEventAsync(eventoId, ct);
@@ -176,7 +181,150 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
 
     private static bool CanDecide(PendingChangeDetail detail) =>
         detail.Medical.Assessment is not null
-        && detail.Status is ClinicalEventStatus.EnValoracionMedica or ClinicalEventStatus.ConIndicacionPendiente;
+        && detail.Status is ClinicalEventStatus.EnValoracionMedica or ClinicalEventStatus.ConIndicacionPendiente
+            or ClinicalEventStatus.EnSeguimientoMedico;
+
+    /// <summary>Un solo seguimiento médico por evento: se inicia desde la conducta si todavía no lo tuvo.</summary>
+    private static bool CanStartFollowUp(PendingChangeDetail detail) =>
+        CanDecide(detail) && detail.Medical.FollowUp is null;
+
+    /// <summary>MED-10: formulario para iniciar el seguimiento médico desde la conducta.</summary>
+    public async Task<IActionResult> IniciarSeguimiento(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Escalados));
+        }
+        if (!CanStartFollowUp(detail))
+        {
+            return RedirectToAction(nameof(Escalado), new { eventoId });
+        }
+
+        return View(new IniciarSeguimientoMedicoViewModel(
+            detail, new IniciarSeguimientoMedicoFormModel { EventoId = detail.EventId, Revision = detail.Revision }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> IniciarSeguimiento([Bind(Prefix = "Form")] IniciarSeguimientoMedicoFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Escalados));
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new IniciarSeguimientoMedicoViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.StartMedicalFollowUpAsync(new StartMedicalFollowUpCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision,
+            form.FechaPrevista, form.Criterio, form.Objetivo), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Seguimiento médico iniciado.";
+            return RedirectToAction(nameof(Seguimiento), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput =>
+                "Revisa los datos: escribe el objetivo e indica una fecha prevista o un criterio de revisión. Hace falta una valoración médica guardada, y cada evento admite un solo seguimiento médico.",
+            _ => result.Error.Message,
+        });
+        return View(new IniciarSeguimientoMedicoViewModel(detail, form));
+    }
+
+    /// <summary>MED-11: bandeja compartida de seguimientos médicos abiertos, vencidos incluidos.</summary>
+    public async Task<IActionResult> Seguimientos(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Seguimientos)) });
+        }
+
+        var result = await service.ListMedicalFollowUpsAsync(
+            new ListMedicalFollowUpsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(Array.Empty<MedicalFollowUpSummary>());
+        }
+
+        return View(result.Value);
+    }
+
+    /// <summary>MED-11/MED-12: el seguimiento médico abierto de un evento, con sus acciones y los formularios
+    /// para registrar una revisión, reprogramar y, al terminar el turno, transferir o conservar.</summary>
+    public async Task<IActionResult> Seguimiento(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Seguimientos));
+        }
+        if (detail.Status != ClinicalEventStatus.EnSeguimientoMedico || detail.Medical.FollowUp is null)
+        {
+            return RedirectToAction(nameof(Escalado), new { eventoId });
+        }
+
+        return View(new SeguimientoViewModel(detail, null));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Seguimiento([Bind(Prefix = "Form")] SeguimientoAccionFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Seguimientos));
+        }
+        if (detail.Medical.FollowUp is null)
+        {
+            return RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new SeguimientoViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.RecordMedicalFollowUpActionAsync(new RecordMedicalFollowUpActionCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Tipo,
+            form.Texto, form.FechaPrevista, form.Criterio, form.EquipoEntrante, form.TransferenciaId), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = form.Tipo switch
+            {
+                FollowUpActionType.Reprogramacion => "Seguimiento reprogramado.",
+                FollowUpActionType.Transferencia => "Transferencia registrada. El equipo entrante puede confirmar la recepción.",
+                FollowUpActionType.Conservacion => "Queda registrado que conservas el seguimiento para tu próxima revisión.",
+                FollowUpActionType.Recepcion => "Recepción confirmada.",
+                _ => "Revisión registrada.",
+            };
+            return RedirectToAction(nameof(Seguimiento), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput => form.Tipo switch
+            {
+                FollowUpActionType.Reprogramacion => "Para reprogramar indica una nueva fecha o criterio y justifica el cambio.",
+                FollowUpActionType.Transferencia => "Para transferir indica el equipo o turno entrante.",
+                FollowUpActionType.Conservacion => "La nota es demasiado larga.",
+                _ => "Escribe la revisión antes de registrarla.",
+            },
+            _ => result.Error.Message,
+        });
+        return View(new SeguimientoViewModel(detail, form));
+    }
 
     /// <summary>MED-07: formulario de una indicación a Enfermería.</summary>
     public async Task<IActionResult> Indicacion(Guid eventoId, CancellationToken ct)
@@ -214,7 +362,9 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
             form.Texto, form.FechaPrevista, form.Criterio, form.InformacionAdicional), ct);
         if (result.Ok)
         {
-            TempData["Mensaje"] = "Indicación registrada. Enfermería de la unidad la verá en su bandeja de indicaciones.";
+            TempData["Mensaje"] = detail.Status == ClinicalEventStatus.EnSeguimientoMedico
+                ? "Indicación registrada y seguimiento médico terminado. Enfermería de la unidad la verá en su bandeja de indicaciones."
+                : "Indicación registrada. Enfermería de la unidad la verá en su bandeja de indicaciones.";
             return RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
         }
 

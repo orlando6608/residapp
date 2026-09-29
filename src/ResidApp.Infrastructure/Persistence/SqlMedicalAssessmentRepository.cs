@@ -2,6 +2,7 @@ using System.Data;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Enfermeria;
 using ResidApp.Shared;
 
 namespace ResidApp.Infrastructure.Persistence;
@@ -114,7 +115,9 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
     }
 
     /// <summary>MED-06/MED-07: la primera indicación pasa el evento de EN_VALORACION_MEDICA a
-    /// CON_INDICACION_PENDIENTE; las siguientes lo dejan ahí. Exige la valoración médica guardada.</summary>
+    /// CON_INDICACION_PENDIENTE; las siguientes lo dejan ahí. Desde EN_SEGUIMIENTO_MEDICO ("resolver" el
+    /// seguimiento) también pasa a CON_INDICACION_PENDIENTE y el seguimiento termina. Exige la valoración
+    /// médica guardada.</summary>
     public async Task<int> RegisterIndicationAsync(RegisterMedicalIndicationInput input, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
@@ -124,7 +127,7 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
         var updated = await connection.ExecuteAsync(new CommandDefinition("""
             UPDATE dbo.eventos_asistenciales SET estado_codigo = 'CON_INDICACION_PENDIENTE', revision = revision + 1
              WHERE id = @EventId AND centro_id = @CenterId AND revision = @ExpectedRevision
-               AND estado_codigo IN ('EN_VALORACION_MEDICA', 'CON_INDICACION_PENDIENTE')
+               AND estado_codigo IN ('EN_VALORACION_MEDICA', 'CON_INDICACION_PENDIENTE', 'EN_SEGUIMIENTO_MEDICO')
             """, new { input.EventId, CenterId = input.CenterId.Value, input.ExpectedRevision }, transaction, cancellationToken: ct));
         if (updated != 1)
         {
@@ -156,7 +159,112 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
         return revision;
     }
 
-    /// <summary>MED-15: desde EN_VALORACION_MEDICA o CON_INDICACION_PENDIENTE, cerrando la valoración médica.
+    /// <summary>MED-10: pasa el evento de EN_VALORACION_MEDICA o CON_INDICACION_PENDIENTE a
+    /// EN_SEGUIMIENTO_MEDICO con su plan y objetivo. Un solo seguimiento médico por evento. La valoración
+    /// médica sigue en borrador (se cierra al cerrar el evento), pero tiene que estar guardada.</summary>
+    public async Task<int> StartFollowUpAsync(StartMedicalFollowUpInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var occurredAt = DateTimeOffset.UtcNow;
+
+        var updated = await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_SEGUIMIENTO_MEDICO', revision = revision + 1
+             WHERE id = @EventId AND centro_id = @CenterId AND revision = @ExpectedRevision
+               AND estado_codigo IN ('EN_VALORACION_MEDICA', 'CON_INDICACION_PENDIENTE')
+            """, new { input.EventId, CenterId = input.CenterId.Value, input.ExpectedRevision }, transaction, cancellationToken: ct));
+        if (updated != 1)
+        {
+            throw new DomainValidationException("CLINICAL_EVENT_REVISION_CONFLICT");
+        }
+
+        var alreadyStarted = await connection.ExecuteScalarAsync<bool>(new CommandDefinition("""
+            SELECT CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.seguimientos_medicos s WITH (FORCESEEK) WHERE s.evento_id = @EventId)
+                        THEN 1 ELSE 0 END AS BIT)
+            """, new { input.EventId }, transaction, cancellationToken: ct));
+        if (alreadyStarted)
+        {
+            throw new DomainValidationException("MEDICAL_FOLLOW_UP_ALREADY_STARTED");
+        }
+
+        var followUpId = Guid.NewGuid();
+        var inserted = await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.seguimientos_medicos
+                (id, evento_id, residente_id, centro_id, fecha_prevista, criterio, objetivo, iniciado_por_cuenta_id, iniciado_en)
+            SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @DueDate, @Criterion, @Objective, @AccountId, @OccurredAt
+              FROM dbo.eventos_asistenciales ea
+             WHERE ea.id = @EventId
+               AND EXISTS (SELECT 1 FROM dbo.valoraciones_medicas v WITH (FORCESEEK) WHERE v.evento_id = ea.id AND v.estado_codigo = 'BORRADOR')
+            """, new
+        {
+            Id = followUpId, input.FollowUp.Plan.DueDate, input.FollowUp.Plan.Criterion, input.FollowUp.Objective,
+            AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId,
+        }, transaction, cancellationToken: ct));
+        if (inserted != 1)
+        {
+            throw new DomainValidationException("MEDICAL_ASSESSMENT_REQUIRED");
+        }
+
+        var revision = await ClinicalEventAudit.RecordAsync(connection, transaction, input.AccountId, "MEDICINA", input.CenterId,
+            input.EventId, "CLINICAL_EVENT", input.EventId, "MEDICAL_FOLLOW_UP_START", occurredAt, ct);
+        transaction.Commit();
+        return revision;
+    }
+
+    /// <summary>MED-11/MED-12: una acción sobre el seguimiento médico abierto, con su autoría. Una recepción
+    /// solo se registra sobre una transferencia de este seguimiento que nadie haya confirmado todavía.</summary>
+    public async Task<int> RecordFollowUpActionAsync(RecordMedicalFollowUpActionInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var occurredAt = DateTimeOffset.UtcNow;
+        var action = input.Action;
+
+        var updated = await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.eventos_asistenciales SET revision = revision + 1
+             WHERE id = @EventId AND centro_id = @CenterId AND revision = @ExpectedRevision AND estado_codigo = 'EN_SEGUIMIENTO_MEDICO'
+            """, new { input.EventId, CenterId = input.CenterId.Value, input.ExpectedRevision }, transaction, cancellationToken: ct));
+        if (updated != 1)
+        {
+            throw new DomainValidationException("CLINICAL_EVENT_REVISION_CONFLICT");
+        }
+
+        var inserted = await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.seguimiento_medico_acciones
+                (id, seguimiento_id, tipo_codigo, texto, fecha_prevista, criterio, equipo_entrante, transferencia_id,
+                 registrado_por_cuenta_id, registrado_en)
+            SELECT @Id, s.id, @TypeCode, @Text, @DueDate, @Criterion, @IncomingTeam, @TransferId, @AccountId, @OccurredAt
+              FROM dbo.seguimientos_medicos s WITH (FORCESEEK)
+             WHERE s.evento_id = @EventId
+               AND (@TransferId IS NULL OR EXISTS (
+                   SELECT 1 FROM dbo.seguimiento_medico_acciones t
+                    WHERE t.id = @TransferId AND t.seguimiento_id = s.id AND t.tipo_codigo = 'TRANSFERENCIA'
+                      AND NOT EXISTS (SELECT 1 FROM dbo.seguimiento_medico_acciones r WHERE r.transferencia_id = t.id)))
+            """, new
+        {
+            Id = Guid.NewGuid(), TypeCode = action.Type.ToCode(), action.Text, action.Plan?.DueDate, action.Plan?.Criterion,
+            action.IncomingTeam, action.TransferId, AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId,
+        }, transaction, cancellationToken: ct));
+        if (inserted != 1)
+        {
+            throw new DomainValidationException("FOLLOW_UP_TRANSFER_NOT_PENDING");
+        }
+
+        var actionCode = action.Type switch
+        {
+            FollowUpActionType.Actuacion => "MEDICAL_FOLLOW_UP_NOTE",
+            FollowUpActionType.Reprogramacion => "MEDICAL_FOLLOW_UP_RESCHEDULE",
+            FollowUpActionType.Transferencia => "MEDICAL_FOLLOW_UP_TRANSFER",
+            FollowUpActionType.Conservacion => "MEDICAL_FOLLOW_UP_KEEP",
+            _ => "MEDICAL_FOLLOW_UP_RECEIVE",
+        };
+        var revision = await ClinicalEventAudit.RecordAsync(connection, transaction, input.AccountId, "MEDICINA", input.CenterId,
+            input.EventId, "CLINICAL_EVENT", input.EventId, actionCode, occurredAt, ct);
+        transaction.Commit();
+        return revision;
+    }
+
+    /// <summary>MED-15: desde EN_VALORACION_MEDICA, CON_INDICACION_PENDIENTE o EN_SEGUIMIENTO_MEDICO, cerrando la valoración médica.
     /// Las indicaciones aún pendientes no se tocan: siguen en la bandeja de Enfermería hasta resolverse.</summary>
     public Task<int> CloseAsync(CloseClinicalEventInput input, CancellationToken ct = default) =>
         ClinicalEventCloser.CloseAsync(connections, ClinicalEventCloseRule.Medicina, input, ct);
