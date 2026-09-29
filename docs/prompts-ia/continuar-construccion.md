@@ -26,6 +26,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     - cierre por Medicina («Cerrado por Medicina» para Enfermería).
   - Evento de prueba en la base local: «Prueba manual evento propio Medicina: soplo sistólico no conocido.»,
     sobre Residente Integrado Uno, cerrado sin comunicar y con una indicación pendiente de lectura.
+  - **Desplegado en Azure:** push de `eccc69c`; el run 36621253595 terminó en verde, con `build-and-test` y
+    `deploy`.
+  - **Prueba en Azure (2026-09-29),** sobre «Residente Integrado Uno (ficticio)», con los textos «Prueba
+    técnica, se puede ignorar»:
+    - con `dev-integrado-medicina`: registro (sale como «observado por Medicina el 29/09/2026 21:50», en hora
+      de España), valoración e indicación;
+    - con `dev-integrado-enfermeria`: ve la indicación, abre el detalle («Es un evento propio de
+      Medicina…») y el evento no está en sus bandejas;
+    - cierre por Medicina sin comunicar: Enfermería ve «Cerrado por Medicina» y la indicación sigue en su
+      bandeja.
   - Copia previa a `0017`:
     `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0017-20260929.bak`.
 - Hasta el script `0016` (bloque 2 de la historia 6, derivación a Urgencias en Enfermería y Medicina) está
