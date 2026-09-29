@@ -4,11 +4,13 @@ using ResidApp.Shared;
 namespace ResidApp.Domain.Enfermeria;
 
 /// <summary>De dónde procede un evento asistencial (dbo.eventos_asistenciales.origen_codigo). Cada origen
-/// conserva su autoría real: un evento propio de Enfermería nunca aparenta venir de Auxiliar (ENF-16).</summary>
+/// conserva su autoría real: un evento propio de Enfermería nunca aparenta venir de Auxiliar (ENF-16), ni uno
+/// propio de Medicina de un escalado (MED-18).</summary>
 public enum ClinicalEventOrigin
 {
     [Code("CAMBIO_AUXILIAR")] [Display(Name = "Cambio registrado por Auxiliar")] CambioAuxiliar,
     [Code("EVENTO_ENFERMERIA")] [Display(Name = "Evento observado por Enfermería")] EventoEnfermeria,
+    [Code("EVENTO_MEDICINA")] [Display(Name = "Evento observado por Medicina")] EventoMedicina,
 }
 
 /// <summary>Estados del evento (docs/flujos-clinicos/valoracion-escalado-enfermeria.md, "Estados del

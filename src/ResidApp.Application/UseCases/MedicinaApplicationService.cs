@@ -7,8 +7,9 @@ namespace ResidApp.Application.UseCases;
 /// Fachada del vertical Medicina: bandeja y detalle de escalados (MED-01 a MED-03), valoración médica
 /// (MED-04/MED-05) e indicaciones a Enfermería con su seguimiento (MED-06 a MED-09), más el basal vigente
 /// del residente, el seguimiento médico con la continuidad entre turnos (MED-10 a MED-12) y el cierre médico
-/// (MED-15 a MED-17) y el protocolo urgente (MED-13; la derivación llegará en su bloque). Igual que
-/// EnfermeriaApplicationService, es lo único que MedicinaController inyecta.
+/// (MED-15 a MED-17) y el protocolo urgente (MED-13; la derivación llegará en su bloque), más la lista y la
+/// ficha de residentes y el evento propio (MED-18 a MED-20). Igual que EnfermeriaApplicationService, es lo
+/// único que MedicinaController inyecta.
 /// </summary>
 public sealed class MedicinaApplicationService(
     ListEscalations listEscalations, FindEscalationDetail findEscalationDetail, ReadCurrentBaseline readCurrentBaseline,
@@ -19,8 +20,21 @@ public sealed class MedicinaApplicationService(
     ActivateMedicalUrgentProtocol activateMedicalUrgentProtocol, RecordMedicalUrgentProtocolEntry recordMedicalUrgentProtocolEntry,
     ListMedicalUrgentProtocols listMedicalUrgentProtocols, SignMedicalReferralReport signMedicalReferralReport,
     RecordMedicalFamilyCallAttempt recordMedicalFamilyCallAttempt, FindResidentIdentification findResidentIdentification,
-    DownloadReferralReport downloadReferralReport)
+    DownloadReferralReport downloadReferralReport, ListScopeResidents listScopeResidents,
+    FindScopeResident findScopeResident, RegisterClinicalEvent registerClinicalEvent)
 {
+    public Task<ApplicationResult<IReadOnlyList<ScopeResidentSummary>>> ListScopeResidentsAsync(
+        ListScopeResidentsCommand command, CancellationToken ct = default) =>
+        listScopeResidents.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<ScopeResidentSummary?>> FindScopeResidentAsync(
+        FindScopeResidentCommand command, CancellationToken ct = default) =>
+        findScopeResident.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<ClinicalEventResult>> RegisterClinicalEventAsync(
+        RegisterClinicalEventCommand command, CancellationToken ct = default) =>
+        registerClinicalEvent.ExecuteAsync(command, ct);
+
     public Task<ApplicationResult<int>> SignReferralReportAsync(SignReferralReportCommand command, CancellationToken ct = default) =>
         signMedicalReferralReport.ExecuteAsync(command, ct);
 

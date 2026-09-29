@@ -5,7 +5,7 @@
     ViewData["Title"] = "Detalle del evento recibido";
     var evento = Model.Change;
     var esPrioritario = evento.Classification == ResidApp.Domain.Auxiliar.DailyChangeClassification.Prioritario;
-    var esPropio = evento.Origin == ClinicalEventOrigin.EventoEnfermeria;
+    var esPropio = evento.Origin != ClinicalEventOrigin.CambioAuxiliar;
 }
 
 <nav aria-label="breadcrumb">
@@ -108,7 +108,11 @@
 <div class="card mb-3">
     <div class="card-body">
         <h2 class="h5 card-title">Valoración de Enfermería</h2>
-        @if (evento.Status == ClinicalEventStatus.Pendiente)
+        @if (evento.Origin == ClinicalEventOrigin.EventoMedicina)
+        {
+            <p class="mb-0">Es un evento propio de Medicina: lo valora Medicina y no tiene valoración de Enfermería.</p>
+        }
+        else if (evento.Status == ClinicalEventStatus.Pendiente)
         {
             <p class="mb-0">Todavía no se ha empezado a valorar. Al empezar se registra quién lo hace y a qué hora; no te convierte en responsable exclusivo del evento.</p>
         }

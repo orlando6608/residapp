@@ -79,10 +79,12 @@ public sealed record FollowUpSummary(
 public sealed record ClinicalEventEscalation(string Reason, bool EscalatedByCurrentAccount, DateTimeOffset EscalatedAt);
 
 /// <summary>MED-02: una fila de la bandeja de escalados de Medicina. Constantes y actuaciones proceden de
-/// la valoración de Enfermería, ya cerrada; no hay resumen diagnóstico automático.</summary>
+/// la valoración de Enfermería, ya cerrada; no hay resumen diagnóstico automático. Un evento propio de
+/// Medicina (MED-18) no tiene motivo de escalado (Reason es null) y muestra su observación; ReceivedAt es la
+/// hora del escalado o, en un evento propio, la de su registro.</summary>
 public sealed record EscalationSummary(
-    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, string Reason, DateTimeOffset EscalatedAt,
-    VitalSigns? Vitals, string? Actions, ClinicalEventStatus Status);
+    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, string? Reason, string? Observation,
+    DateTimeOffset ReceivedAt, VitalSigns? Vitals, string? Actions, ClinicalEventStatus Status);
 
 /// <summary>MED-05: borrador de la valoración médica (o ya cerrada), con quién la tocó por última vez (solo
 /// si fue la cuenta del ámbito que consulta).</summary>

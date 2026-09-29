@@ -13,6 +13,21 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Evento propio de Medicina (historia 7 de Medicina, script `0017`):** hecho el 2026-09-29, en local y sin
+  push. El detalle y las decisiones están en `pendientes-medicina.md`. Verificación:
+  - suite local en verde 3 veces (113 unitarios, 176 de integración y 7 funcionales);
+  - 3 vueltas tipo CI con BD nueva en verde;
+  - BD temporal con seed (18 scripts, sin errores) ya borrada;
+  - prueba manual con curl:
+    - `dev-integrado-medicina`: residentes, ficha, registro con tildes, POST repetido con el mismo
+      `OperacionId` (mismo evento, una sola fila), valoración, bandeja, detalle e indicación;
+    - `dev-integrado-enfermeria`: ve la indicación y el detalle («Es un evento propio de Medicina…»), y el
+      evento no está en sus bandejas;
+    - cierre por Medicina («Cerrado por Medicina» para Enfermería).
+  - Evento de prueba en la base local: «Prueba manual evento propio Medicina: soplo sistólico no conocido.»,
+    sobre Residente Integrado Uno, cerrado sin comunicar y con una indicación pendiente de lectura.
+  - Copia previa a `0017`:
+    `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0017-20260929.bak`.
 - Hasta el script `0016` (bloque 2 de la historia 6, derivación a Urgencias en Enfermería y Medicina) está
   desplegado en Azure: el pipeline de `ca855f2` (run 36607704572) terminó en verde el 2026-09-29, con PDFs
   reales generados en los tests del CI (Linux). El último push (`1ed5382`, solo documentación, run
@@ -70,15 +85,18 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 - El estado de un run se consulta sin autenticación en
   `https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main`, y el de cada job y paso en
   `.../actions/runs/<id>/jobs`. Los logs piden autenticación y `gh` no está instalado.
-- CJ no ha completado nada nuevo: `docs/pendientes-cj/rangos-referencia-constantes.html` sigue con 17
-  valores «por definir».
+- CJ no ha completado nada nuevo (comprobado también en GitHub el 2026-09-29):
+  `docs/pendientes-cj/rangos-referencia-constantes.html` sigue con 19 huecos «por definir» (14 celdas de la
+  tabla y 5 respuestas; antes se contaban mal como 17).
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
   (parcial), 2, 3, 4, 5, 6, 7, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su
-  pantalla). Medicina está en curso: historias 1 a 6 (escalados, valoración médica, indicaciones, cierre
-  médico, seguimiento médico con continuidad entre turnos, protocolo urgente y derivación a Urgencias).
-- La base local `ResidApp` tiene los scripts `0001` a `0016` registrados en `dbo.scripts_aplicados`.
-  Hay una copia previa a `0016` en
-  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0016-20260929.bak`.
+  pantalla). Medicina está en curso: historias 1 a 7 (escalados, valoración médica, indicaciones, cierre
+  médico, seguimiento médico con continuidad entre turnos, protocolo urgente, derivación a Urgencias y
+  evento propio).
+- La base local `ResidApp` tiene los scripts `0001` a `0017` registrados en `dbo.scripts_aplicados`.
+  Hay copias previas a `0016` y a `0017` en
+  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`
+  y `ResidApp-antes-0017-20260929.bak`).
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
@@ -99,26 +117,38 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     relevante.
   - «Prueba manual derivacion medica: dolor torácico.»: escalado, protocolo de Medicina, derivado por
     Medicina, con una llamada «Contactado» y cerrado con una comunicación relevante.
-- Suite: 113 unitarios, 170 de integración y 6 funcionales, todos en verde.
+- Suite: 113 unitarios, 176 de integración y 7 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
   Azure fallaría. Antes de crear un script, comprueba cuál es el último número.
 
-## Siguiente tarea: decidir el orden
+## Siguiente tarea
 
-Hay que proponer al usuario el orden antes de empezar. Las salidas de la decisión de Enfermería, de la
-conducta de Medicina y del protocolo urgente están todas construidas.
-
-- **Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de las
-  valoraciones, los seguimientos terminados y el informe de derivación firmado (el flujo pide que sea
-  accesible desde el Historial).
-- **Evento propio de Medicina** (historia 7 de Medicina).
+1. **Primero, los dos avisos que el usuario pidió resolver tras el evento propio de Medicina** (los dos
+   primeros de «Avisos abiertos»): analizarlos y proponerle una solución antes de tocar nada.
+2. **Después, el Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de
+   las valoraciones, los seguimientos terminados y el informe de derivación firmado (el flujo pide que sea
+   accesible desde el Historial). Tiene decisiones abiertas y conviene partirlo en bloques:
+   - qué permiso abre la línea temporal (HIS-02);
+   - el basal y la ubicación de la fecha del evento (HIS-03);
+   - la corrección en 6 horas (COR-01/02).
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 
 Se detectaron durante otros bloques. No se han corregido porque quedaban fuera de su alcance; propónselos al
 usuario cuando encajen:
+
+- **Pedido por el usuario (2026-09-29): buscar solución tras el evento propio de Medicina.**
+  `Views/Enfermeria/Residente.cshtml` (líneas 58-60) sigue diciendo que la bandeja y la valoración de
+  eventos «llegan en un grupo posterior del vertical Enfermería»: el texto está desfasado.
+- **Pedido por el usuario (2026-09-29): buscar solución tras el evento propio de Medicina.** La BD no
+  impone la coherencia entre `eventos_clinicos.registrado_por_perfil` y `eventos_asistenciales.origen_codigo`
+  (ENFERMERIA ↔ EVENTO_ENFERMERIA, MEDICINA ↔ EVENTO_MEDICINA), porque están en tablas distintas. Hoy la
+  garantiza `SqlClinicalEventRepository`, que escribe las dos filas en una sola transacción. Hay que estudiar
+  opciones (un trigger de inserción, o una columna y una clave compuestas) y proponer la más sencilla.
+- **`docs/producto/roadmap.md`** está desfasado: su tabla dice que Medicina «No iniciado» y sus «Próximos
+  pasos» siguen en la historia 3 de Enfermería.
 
 - **`BaselineAreaDisplay.Summarize`** (`Web/Models/AuxiliarModels.cs`) escribe `ToString()` de cada
   propiedad. En las áreas con varias opciones (comunicación, continencia, conducta, sueño, ayudas
@@ -200,6 +230,10 @@ Repite estos pasos antes de dar un bloque por cerrado:
   - Auditoría en `eventos_auditoria`.
   - Cierre de evento común a Enfermería y Medicina en `ClinicalEventCloser`, con la regla de cada perfil en
     `ClinicalEventCloseRule`.
+- **Nuevos orígenes del evento:** la vista de «propio» se decide con `Origin != ClinicalEventOrigin.CambioAuxiliar`
+  (`_InformacionReunida`, `DetalleCambio`, `ReferralReportBuilder`). Un origen nuevo necesita su
+  etiqueta, su rama en `CK_ea_origen` y `CK_ea_inicio`, y revisar `ScopedEventsFrom`.
+- **Sin Python en esta máquina:** para ediciones en lote, usa Edit o `sed`, no scripts de Python.
 - **Nuevos estados del evento:** añádelos también a `ClinicalEventStatusDisplay` (`EnfermeriaModels.cs`).
   Si no, la insignia muestra el nombre interno en inglés. Busca además los filtros por estado en los casos
   de uso y en las consultas (`grep` de los `ClinicalEventStatus.` vecinos). Con `EN_SEGUIMIENTO_MEDICO`,

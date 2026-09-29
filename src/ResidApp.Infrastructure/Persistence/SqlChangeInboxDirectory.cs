@@ -12,7 +12,8 @@ namespace ResidApp.Infrastructure.Persistence;
 /// reúne los cambios de Auxiliar y los eventos propios de Enfermería. Mismo predicado de ámbito "por
 /// defecto o restringido" que SqlEnfermeriaResidentDirectory: solo eventos de unidades concedidas y de
 /// residentes visibles para este ámbito. La observación original se lee siempre de su tabla de origen.
-/// Un ámbito de Medicina ve con el mismo predicado solo los eventos escalados a Medicina (MED-02/MED-03);
+/// Un ámbito de Medicina ve con el mismo predicado solo los eventos escalados a Medicina (MED-02/MED-03) y
+/// los eventos propios de Medicina (MED-18);
 /// cada caso de uso comprueba antes el perfil del ámbito, así que ninguno de Enfermería llega aquí con uno
 /// de Medicina ni al revés.</summary>
 public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : IChangeInboxDirectory
@@ -33,7 +34,7 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
           LEFT JOIN dbo.comunicaciones_familiares family ON family.evento_id = ea.id
           LEFT JOIN dbo.escalados_medicina escalation ON escalation.evento_id = ea.id
          WHERE ea.centro_id = @CenterId
-           AND (profile.perfil_codigo = 'ENFERMERIA' OR escalation.id IS NOT NULL)
+           AND (profile.perfil_codigo = 'ENFERMERIA' OR escalation.id IS NOT NULL OR ea.origen_codigo = 'EVENTO_MEDICINA')
            AND (resident_scope.id IS NOT NULL OR NOT EXISTS (
                SELECT 1 FROM dbo.ambitos_perfil_residente restriction
                 WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
@@ -482,14 +483,16 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
         string? OtherName, string? OtherValue, string? OtherUnit, bool LastUpdatedByCurrentAccount, DateTime LastUpdatedAt);
 
     /// <summary>MED-02: escalados del ámbito de Medicina, del más antiguo al más reciente, con las constantes
-    /// y las actuaciones de la valoración de Enfermería (cerrada al escalar).</summary>
+    /// y las actuaciones de la valoración de Enfermería (cerrada al escalar). Incluye los eventos propios de
+    /// Medicina en valoración (MED-18), con su observación y la hora de su registro.</summary>
     public async Task<IReadOnlyList<EscalationSummary>> ListEscalationsAsync(
         Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
 
         var rows = await connection.QueryAsync<EscalationSummaryRow>(new CommandDefinition($"""
-            SELECT scoped.EventId, scoped.ResidentId, scoped.ResidentDisplayName, scoped.UnitName, scoped.Reason, scoped.EscalatedAt,
+            SELECT scoped.EventId, scoped.ResidentId, scoped.ResidentDisplayName, scoped.UnitName, scoped.Reason, scoped.Observation,
+                   scoped.ReceivedAt,
                    v.actuaciones AS Actions, v.temperatura_celsius AS TemperatureCelsius, v.tension_sistolica_mmhg AS SystolicMmHg,
                    v.tension_diastolica_mmhg AS DiastolicMmHg, v.frecuencia_cardiaca_lpm AS HeartRateBpm,
                    v.frecuencia_respiratoria_rpm AS RespiratoryRateRpm, v.saturacion_o2_pct AS OxygenSaturationPct,
@@ -497,27 +500,28 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                    v.otra_constante_nombre AS OtherName, v.otra_constante_valor AS OtherValue, v.otra_constante_unidad AS OtherUnit,
                    scoped.StatusCode
               FROM (SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
-                           unit.nombre_visible AS UnitName, escalation.motivo AS Reason, escalation.escalado_en AS EscalatedAt,
-                           ea.estado_codigo AS StatusCode
+                           unit.nombre_visible AS UnitName, escalation.motivo AS Reason,
+                           CASE WHEN ea.origen_codigo = 'EVENTO_MEDICINA' THEN clinical.observacion END AS Observation,
+                           COALESCE(escalation.escalado_en, ea.recibido_en) AS ReceivedAt, ea.estado_codigo AS StatusCode
                     {ScopedEventsFrom}
                        AND ea.estado_codigo IN ('ESCALADO_MEDICINA', 'EN_VALORACION_MEDICA')) scoped
               LEFT JOIN dbo.valoraciones_enfermeria v ON v.evento_id = scoped.EventId AND v.estado_codigo = 'CERRADA'
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
 
         return rows.Select(r => new EscalationSummary(
-            r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName, r.Reason,
-            new DateTimeOffset(r.EscalatedAt, TimeSpan.Zero),
+            r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName, r.Reason, r.Observation,
+            new DateTimeOffset(r.ReceivedAt, TimeSpan.Zero),
             new VitalSigns(
                 r.TemperatureCelsius, r.SystolicMmHg, r.DiastolicMmHg, r.HeartRateBpm, r.RespiratoryRateRpm, r.OxygenSaturationPct,
                 r.RespiratorySupportCode is null ? null : EnumCode.ParseCode<RespiratorySupportCode>(r.RespiratorySupportCode),
                 r.OxygenFlowLpm, r.GlucoseMgDl, r.OtherName, r.OtherValue, r.OtherUnit),
             r.Actions, EnumCode.ParseCode<ClinicalEventStatus>(r.StatusCode)))
-            .OrderBy(e => e.EscalatedAt)
+            .OrderBy(e => e.ReceivedAt)
             .ToList();
     }
 
     private sealed record EscalationSummaryRow(
-        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string Reason, DateTime EscalatedAt,
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string? Reason, string? Observation, DateTime ReceivedAt,
         string? Actions, decimal? TemperatureCelsius, short? SystolicMmHg, short? DiastolicMmHg, short? HeartRateBpm,
         short? RespiratoryRateRpm, short? OxygenSaturationPct, string? RespiratorySupportCode, decimal? OxygenFlowLpm,
         short? GlucoseMgDl, string? OtherName, string? OtherValue, string? OtherUnit, string StatusCode);

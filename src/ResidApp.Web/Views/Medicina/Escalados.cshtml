@@ -2,24 +2,27 @@
 @using ResidApp.Web.Models
 @model IReadOnlyList<EscalationSummary>
 @{
-    ViewData["Title"] = "Escalados recibidos";
+    ViewData["Title"] = "Escalados y eventos propios";
 }
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
         <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Escalados</li>
+        <li class="breadcrumb-item active" aria-current="page">Escalados y eventos propios</li>
     </ol>
 </nav>
 
-<h1 class="h3">Escalados recibidos</h1>
-<p class="text-muted">Eventos que Enfermería ha escalado a Medicina, del más antiguo al más reciente. No hay ningún resumen diagnóstico automático.</p>
+<h1 class="h3">Escalados y eventos propios</h1>
+<p class="text-muted">
+    Eventos que Enfermería ha escalado a Medicina y eventos que ha registrado Medicina, pendientes o en valoración
+    médica, del más antiguo al más reciente. No hay ningún resumen diagnóstico automático.
+</p>
 <div asp-validation-summary="All" class="text-danger"></div>
 
 @if (Model.Count == 0)
 {
-    <p class="text-muted">No hay escalados pendientes.</p>
+    <p class="text-muted">No hay escalados ni eventos propios pendientes.</p>
 }
 else
 {
@@ -31,9 +34,16 @@ else
                 <p class="text-muted mb-2">
                     @(item.UnitName ?? "Sin unidad") ·
                     <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, false)">@ClinicalEventStatusDisplay.Label(item.Status)</span>
-                    · escalado el @item.EscalatedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(item.EscalatedAt))
+                    · @(item.Reason is null ? "observado por Medicina" : "escalado") el @item.ReceivedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(item.ReceivedAt))
                 </p>
-                <p class="mb-1" style="white-space: pre-line"><strong>Motivo:</strong> @item.Reason</p>
+                @if (item.Reason is null)
+                {
+                    <p class="mb-1" style="white-space: pre-line"><strong>Evento observado por Medicina:</strong> @item.Observation</p>
+                }
+                else
+                {
+                    <p class="mb-1" style="white-space: pre-line"><strong>Motivo:</strong> @item.Reason</p>
+                }
                 <p class="mb-1"><strong>Constantes:</strong> @(item.Vitals is null || item.Vitals.IsEmpty ? "sin constantes registradas" : VitalSignsDisplay.Summary(item.Vitals))</p>
                 <p class="mb-0" style="white-space: pre-line"><strong>Actuaciones:</strong> @(item.Actions ?? "sin actuaciones registradas")</p>
             </div>

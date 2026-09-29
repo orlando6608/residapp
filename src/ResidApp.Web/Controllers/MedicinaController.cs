@@ -15,8 +15,9 @@ namespace ResidApp.Web.Controllers;
 /// fuentes de solo lectura), MED-04/MED-05 (empezar y guardar la valoración médica), MED-06 a MED-09
 /// (conducta médica con la salida "registrar indicaciones" y el seguimiento de las indicaciones emitidas),
 /// MED-10 a MED-12 (seguimiento médico, su bandeja y la continuidad entre turnos), MED-13 (protocolo urgente;
-/// la derivación llegará en su bloque) y MED-15 a MED-17 (cierre médico con la decisión de comunicación
-/// familiar). Traduce a MedicinaApplicationService; la autorización y las reglas de negocio no viven aquí.
+/// la derivación llegará en su bloque), MED-15 a MED-17 (cierre médico con la decisión de comunicación
+/// familiar) y MED-18 a MED-20 (evento propio, lista y ficha de residentes). Traduce a
+/// MedicinaApplicationService; la autorización y las reglas de negocio no viven aquí.
 /// </summary>
 public sealed class MedicinaController(MedicinaApplicationService service) : Controller
 {
@@ -726,6 +727,83 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         return View(result.Value);
     }
 
+    /// <summary>MED-19: residentes del ámbito de Medicina, con el mismo criterio que la lista de Enfermería.</summary>
+    public async Task<IActionResult> Residentes(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Residentes)) });
+        }
+
+        var result = await service.ListScopeResidentsAsync(
+            new ListScopeResidentsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), SystemProfile.Medicina), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(Array.Empty<ScopeResidentSummary>());
+        }
+
+        return View(result.Value);
+    }
+
+    /// <summary>MED-20: ficha del residente con su basal vigente (solo lectura) y "registrar evento".</summary>
+    public async Task<IActionResult> Residente(Guid residenteId, CancellationToken ct)
+    {
+        var resolved = await ResolveScopeResidentAsync(residenteId, ct);
+        if (resolved is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        var baselineResult = await service.ReadCurrentBaselineAsync(new ReadCurrentBaselineCommand(
+            resolved.Value.Scope.ProfileScopeId, CenterId.From(resolved.Value.Scope.CenterId), resolved.Value.Resident.ResidentId), ct);
+        return View(new EnfermeriaResidentDetailViewModel(resolved.Value.Resident, baselineResult.Ok ? baselineResult.Value : null));
+    }
+
+    /// <summary>MED-18: evento propio de Medicina. Al guardar nace ya en valoración médica, iniciada por quien
+    /// lo registra, y se continúa en el formulario de valoración.</summary>
+    public async Task<IActionResult> RegistrarEvento(Guid residenteId, CancellationToken ct)
+    {
+        var resolved = await ResolveScopeResidentAsync(residenteId, ct);
+        if (resolved is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        ViewBag.Resident = resolved.Value.Resident;
+        return View(new RegistrarEventoFormModel { ResidenteId = residenteId, OperacionId = Guid.NewGuid() });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegistrarEvento(RegistrarEventoFormModel form, CancellationToken ct)
+    {
+        var resolved = await ResolveScopeResidentAsync(form.ResidenteId, ct);
+        if (resolved is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+        if (!ModelState.IsValid)
+        {
+            ViewBag.Resident = resolved.Value.Resident;
+            return View(form);
+        }
+
+        var command = new RegisterClinicalEventCommand(
+            resolved.Value.Scope.ProfileScopeId, CenterId.From(resolved.Value.Scope.CenterId), ResidentId.From(form.ResidenteId),
+            form.Observacion, form.Clasificacion, form.DatosClinicosPertinentes, form.OperacionId, SystemProfile.Medicina);
+        var result = await service.RegisterClinicalEventAsync(command, ct);
+        if (!result.Ok)
+        {
+            TempData["Error"] = result.Error!.Message;
+            return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
+        }
+
+        TempData["Mensaje"] = "Evento registrado. Completa tu valoración médica.";
+        return RedirectToAction(nameof(Valoracion), new { eventoId = result.Value!.EventId });
+    }
+
     private const string ConcurrencyMessage =
         "Este evento ha cambiado desde que lo abriste (otro profesional, u otra pestaña o pulsación tuya). Recarga para ver la versión actual antes de continuar.";
 
@@ -739,5 +817,20 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         var result = await service.FindEscalationDetailAsync(
             new FindEscalationDetailCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), eventoId), ct);
         return result.Ok ? result.Value : null;
+    }
+
+    /// <summary>Compartido por Residente y RegistrarEvento: confirma que el residente está en el ámbito de
+    /// Medicina (MED-19, mismo criterio que la lista), sin distinguir "no está en el ámbito" de "no existe".</summary>
+    private async Task<(ActiveProfileScopeCookieValue Scope, ScopeResidentSummary Resident)?> ResolveScopeResidentAsync(
+        Guid residenteId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null || residenteId == Guid.Empty)
+        {
+            return null;
+        }
+        var findResult = await service.FindScopeResidentAsync(new FindScopeResidentCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), SystemProfile.Medicina), ct);
+        return !findResult.Ok || findResult.Value is null ? null : (activeScope, findResult.Value);
     }
 }

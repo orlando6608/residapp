@@ -193,7 +193,7 @@ public static class ReferralReportBuilder
     {
         var lines = new List<string>
         {
-            $"{(detail.Origin == ClinicalEventOrigin.EventoEnfermeria ? "Observada" : "Registrada")} por " +
+            $"{(detail.Origin != ClinicalEventOrigin.CambioAuxiliar ? "Observada" : "Registrada")} por " +
             $"{SystemProfileDisplay.Label(detail.AuthorProfile)} el {Time(detail.OccurredAt)}.",
         };
         if (detail.Observation is not null)

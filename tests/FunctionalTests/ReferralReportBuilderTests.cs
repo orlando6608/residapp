@@ -89,4 +89,23 @@ public class ReferralReportBuilderTests
         Assert.Equal("Sin datos registrados.", sections.Single(s => s.Title == "Evolución").Lines.Single());
         Assert.All(sections, s => Assert.NotEmpty(s.Lines));
     }
+
+    [Fact]
+    public void Build_EventoPropioDeMedicina_SaleComoObservadoPorMedicina_SinEscaladoNiValoracionDeEnfermeria()
+    {
+        var detail = new PendingChangeDetail(
+            Guid.NewGuid(), ClinicalEventOrigin.EventoMedicina, ResidentId.New(), "Residente", UnitId.New(), null,
+            DailyChangeClassification.Ordinario, [], null, "Dolor torácico opresivo.", null, SystemProfile.Medicina, null, null, At,
+            ClinicalEventStatus.ProtocoloUrgenteMedico, 3, null, null, null, [], null, null, null,
+            new MedicalDetail(true, At, null, [], null), null, null);
+
+        var sections = ReferralReportBuilder.Build(detail, null, new ResidentIdentification("Residente", new DateOnly(1940, 1, 1),
+            DocumentedSexCode.NoConsta, "Centro", null));
+        var origin = sections.Single(s => s.Title == "Observación de origen").Lines;
+
+        Assert.StartsWith("Observada por Medicina el ", origin[0]);
+        Assert.Contains("Dolor torácico opresivo.", origin);
+        Assert.DoesNotContain(origin, line => line.StartsWith("Motivo del escalado"));
+        Assert.DoesNotContain(sections.SelectMany(s => s.Lines), line => line.StartsWith("Enfermería"));
+    }
 }

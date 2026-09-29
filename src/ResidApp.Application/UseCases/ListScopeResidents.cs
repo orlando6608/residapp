@@ -4,13 +4,14 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record ListScopeResidentsCommand(Guid AmbitoPerfilId, CenterId CentroId);
+public sealed record ListScopeResidentsCommand(Guid AmbitoPerfilId, CenterId CentroId, SystemProfile Perfil = SystemProfile.Enfermeria);
 
 /// <summary>
 /// Traduce ENF-17 "Lista de residentes". Igual que ListAssignedResidents (Auxiliar), valida directamente
 /// con IProfileScopeDirectoryProvider que el ámbito pertenece a la cuenta autenticada y que su perfil es
 /// ENFERMERIA — el listado ya viene acotado por construcción (IEnfermeriaResidentDirectory) al criterio de
-/// ámbito por defecto o restringido.
+/// ámbito por defecto o restringido. Medicina usa la misma lista (MED-19) pidiendo su perfil: cada
+/// controlador pasa el suyo y el ámbito activo tiene que ser de ese perfil.
 /// </summary>
 public sealed class ListScopeResidents(
     IProfileScopeDirectoryProvider scopes, IEnfermeriaResidentDirectory directory, ISessionIdentityProvider session)
@@ -27,7 +28,8 @@ public sealed class ListScopeResidents(
 
             var activeScopes = await scopes.ListActiveAsync(identity.ExternalSubject, ct);
             var scope = activeScopes.FirstOrDefault(s => s.ProfileScopeId == command.AmbitoPerfilId && s.CenterId == command.CentroId);
-            if (scope is null || scope.Profile != SystemProfile.Enfermeria)
+            if (scope is null || scope.Profile != command.Perfil
+                || command.Perfil is not (SystemProfile.Enfermeria or SystemProfile.Medicina))
             {
                 throw new AccessDeniedException();
             }

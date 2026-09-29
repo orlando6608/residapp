@@ -13,7 +13,8 @@
     <strong>Enfermería</strong> funciona la navegación, la autoría completa del basal, el registro de un
     evento propio, las bandejas de cambios ordinarios y prioritarios que Auxiliar genera, la valoración de
     esos eventos, su cierre con la decisión de comunicación familiar, el seguimiento, el escalado a Medicina y
-    el protocolo urgente; de <strong>Medicina</strong>, la bandeja de escalados recibidos, la valoración médica
+    el protocolo urgente; de <strong>Medicina</strong>, la lista de residentes con el registro de un evento
+    propio, la bandeja de escalados recibidos y eventos propios, la valoración médica
     y las indicaciones a Enfermería, que Enfermería lee y registra, el seguimiento médico con la continuidad
     entre turnos, el protocolo urgente con la derivación a Urgencias y el cierre médico del evento. El resto de
     módulos aparece
@@ -36,6 +37,7 @@
             <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas, valoración y cierre de eventos (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#seguimientos-enfermeria">Seguimientos y transferencia de turno (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#escalado-medicina">Escalar a Medicina y escalados recibidos</a>
+            <a class="list-group-item list-group-item-action" href="#evento-propio-medicina">Residentes y evento propio (Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#valoracion-medica">Valoración médica, indicaciones y cierre médico</a>
             <a class="list-group-item list-group-item-action" href="#seguimientos-medicina">Seguimiento médico y continuidad entre turnos (Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#protocolo-urgente">Protocolo urgente (Enfermería y Medicina)</a>
@@ -392,10 +394,34 @@
         Escalar no cierra el evento: su desenlace corresponde a Medicina.
     </p>
     <p class="mb-0">
-        Con el perfil <strong>Medicina</strong>, la tarjeta <strong>Escalados</strong> del inicio de Medicina
-        abre la bandeja de escalados de tus unidades, del más antiguo al más reciente, con el motivo, las
-        constantes y las actuaciones de cada uno. Al abrir uno ves el motivo y toda la información reunida,
-        de solo lectura: Medicina nunca modifica la observación original ni la valoración de Enfermería.
+        Con el perfil <strong>Medicina</strong>, la tarjeta <strong>Escalados y eventos propios</strong> del
+        inicio de Medicina abre la bandeja de tus unidades, del más antiguo al más reciente. Cada escalado
+        muestra el motivo, las constantes y las actuaciones; cada evento propio de Medicina (ver la siguiente
+        sección) muestra "Evento observado por Medicina" con su observación. Al abrir un escalado ves el
+        motivo y toda la información reunida, de solo lectura: Medicina nunca modifica la observación
+        original ni la valoración de Enfermería.
+    </p>
+</section>
+
+<section id="evento-propio-medicina" class="mb-4">
+    <h2 class="h5">
+        Residentes y evento propio
+        <span class="badge text-bg-secondary align-middle">Perfil: Medicina</span>
+    </h2>
+    <p>
+        La tarjeta <strong>Residentes</strong> del inicio de Medicina muestra los residentes de tu ámbito, con
+        el mismo criterio que en Enfermería y si tienen un basal vigente. Al abrir uno ves su unidad y el
+        resumen del basal vigente, de solo lectura, y el acceso para <strong>registrar un evento</strong> que
+        observas directamente.
+    </p>
+    <p class="mb-0">
+        Indicas la observación, una clasificación (ordinario o prioritario) y, si procede, datos clínicos
+        pertinentes. La observación no se puede editar después. Al guardar, el evento queda
+        <strong>en valoración médica, iniciada por ti</strong>, y pasas directamente a completar la valoración.
+        A partir de ahí sigue el mismo ciclo que un escalado (conducta, indicaciones, seguimiento médico,
+        protocolo urgente, derivación y cierre), sin aparentar que lo escaló Enfermería. Aparece en la bandeja
+        "Escalados y eventos propios", así que otro profesional de Medicina de tu unidad puede continuarlo. No
+        entra en las bandejas de Enfermería; Enfermería lo ve si recibe una indicación suya.
     </p>
 </section>
 
@@ -612,7 +638,6 @@
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
         <li>La línea temporal e historial de eventos.</li>
-        <li>Eventos iniciados directamente por Medicina.</li>
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>

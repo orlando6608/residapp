@@ -25,6 +25,8 @@ public class MedicinaApplicationServiceTests
         var session = new FixedMedicinaSessionIdentityProvider(externalSubject);
         var changeInbox = new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory);
         var medical = new SqlMedicalAssessmentRepository(TestDatabase.ConnectionFactory);
+        var residents = new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory);
+        var listScopeResidents = new ListScopeResidents(scopes, residents, session);
         return new MedicinaApplicationService(
             new ListEscalations(scopes, changeInbox, session),
             new FindEscalationDetail(scopes, changeInbox, session),
@@ -45,7 +47,10 @@ public class MedicinaApplicationServiceTests
             new SignMedicalReferralReport(scopes, changeInbox, session, medical, new ReferralReportPdfRenderer()),
             new RecordMedicalFamilyCallAttempt(scopes, changeInbox, session, medical),
             new FindResidentIdentification(scopes, changeInbox, session),
-            new DownloadReferralReport(scopes, changeInbox, session, new SqlReferralReportRepository(TestDatabase.ConnectionFactory)));
+            new DownloadReferralReport(scopes, changeInbox, session, new SqlReferralReportRepository(TestDatabase.ConnectionFactory)),
+            listScopeResidents,
+            new FindScopeResident(listScopeResidents),
+            new RegisterClinicalEvent(scopes, residents, session, new SqlClinicalEventRepository(TestDatabase.ConnectionFactory)));
     }
 
     private static async Task<PendingChangeDetail?> FindAsync(SeededProfile seed, Guid eventId) =>
@@ -435,6 +440,129 @@ public class MedicinaApplicationServiceTests
 
         Assert.Equal(ApplicationFailureCode.AccessDenied, inbox.Error!.Code);
         Assert.Equal(ApplicationFailureCode.AccessDenied, start.Error!.Code);
+    }
+
+    /// <summary>Residente en la unidad de dos médicas y una enfermera, con un evento propio de la primera
+    /// médica (MED-18), prioritario y con datos clínicos.</summary>
+    private static async Task<(SeededProfile Medica, SeededProfile OtraMedica, SeededProfile Enfermera, ResidentId ResidentId, Guid EventId)> SeedOwnMedicalEventAsync()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var medica = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, adminSeed.CenterId, adminSeed.UnitId);
+        var otraMedica = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, adminSeed.CenterId, adminSeed.UnitId);
+        var enfermera = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, adminSeed.CenterId, adminSeed.UnitId);
+        var resident = await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Evento Propio Medicina", new DateOnly(1943, 3, 3), Domain.Residents.DocumentedSexCode.Hombre,
+            null, null, null, null, null, Guid.NewGuid()));
+        var registered = await BuildMedicina(medica.ExternalSubject).RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+            medica.ProfileScopeId, medica.CenterId, resident.ResidentId, "Soplo sistólico no conocido en la exploración.",
+            Domain.Auxiliar.DailyChangeClassification.Prioritario, "TA 150/90.", Guid.NewGuid(), SystemProfile.Medicina));
+        Assert.True(registered.Ok);
+        return (medica, otraMedica, enfermera, resident.ResidentId, registered.Value!.EventId);
+    }
+
+    [Fact]
+    public async Task EventoPropioMedicina_NaceEnValoracion_EntraEnSuBandeja_YNoEnLasDeEnfermeria()
+    {
+        var (medica, otraMedica, enfermera, _, eventId) = await SeedOwnMedicalEventAsync();
+
+        var item = Assert.Single((await BuildMedicina(otraMedica.ExternalSubject).ListEscalationsAsync(
+            new ListEscalationsCommand(otraMedica.ProfileScopeId, otraMedica.CenterId))).Value!);
+        Assert.Equal(eventId, item.EventId);
+        Assert.Null(item.Reason);
+        Assert.Equal("Soplo sistólico no conocido en la exploración.", item.Observation);
+        Assert.Equal(ClinicalEventStatus.EnValoracionMedica, item.Status);
+
+        var detail = (await FindAsync(otraMedica, eventId))!;
+        Assert.Equal(ClinicalEventOrigin.EventoMedicina, detail.Origin);
+        Assert.Equal(SystemProfile.Medicina, detail.AuthorProfile);
+        Assert.Null(detail.Escalation);
+        Assert.Null(detail.Assessment);
+        Assert.Equal("TA 150/90.", detail.ClinicalData);
+        Assert.NotNull(detail.Medical.StartedAt);
+        Assert.False(detail.Medical.StartedByCurrentAccount);
+        Assert.True((await FindAsync(medica, eventId))!.Medical.StartedByCurrentAccount);
+
+        // Enfermería lo ve en el detalle (llega desde sus indicaciones), pero no en sus bandejas ni lo valora.
+        var nursing = BuildService(enfermera.ExternalSubject);
+        foreach (var classification in new[] { Domain.Auxiliar.DailyChangeClassification.Ordinario, Domain.Auxiliar.DailyChangeClassification.Prioritario })
+        {
+            Assert.Empty((await nursing.ListPendingChangesAsync(new ListPendingChangesCommand(enfermera.ProfileScopeId, enfermera.CenterId, classification))).Value!);
+        }
+        var nurseDetail = (await nursing.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
+        Assert.Equal(ClinicalEventOrigin.EventoMedicina, nurseDetail.Origin);
+        var nurseStart = await nursing.StartNursingAssessmentAsync(new StartNursingAssessmentCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId, detail.Revision));
+        Assert.False(nurseStart.Ok);
+    }
+
+    [Fact]
+    public async Task EventoPropioMedicina_OtraMedicaLoContinua_IndicaYCierra_YEnfermeriaVeLaIndicacion()
+    {
+        var (medica, otraMedica, enfermera, _, eventId) = await SeedOwnMedicalEventAsync();
+        var otherService = BuildMedicina(otraMedica.ExternalSubject);
+
+        var saved = await otherService.SaveMedicalAssessmentAsync(SaveMedical(otraMedica, eventId, (await FindAsync(otraMedica, eventId))!.Revision));
+        var indicated = await otherService.RegisterMedicalIndicationAsync(Indication(otraMedica, eventId, saved.Value));
+        Assert.True(saved.Ok);
+        Assert.True(indicated.Ok);
+
+        var pending = Assert.Single((await BuildService(enfermera.ExternalSubject).ListPendingIndicationsAsync(
+            new ListPendingIndicationsCommand(enfermera.ProfileScopeId, enfermera.CenterId))).Value!);
+        Assert.Equal(eventId, pending.EventId);
+
+        var closed = await BuildMedicina(medica.ExternalSubject).CloseMedicalEventAsync(Close(medica, eventId, indicated.Value));
+        Assert.True(closed.Ok);
+        var detail = (await FindAsync(medica, eventId))!;
+        Assert.Equal(ClinicalEventStatus.Cerrado, detail.Status);
+        Assert.NotNull(detail.Closure);
+        Assert.Empty((await otherService.ListEscalationsAsync(new ListEscalationsCommand(otraMedica.ProfileScopeId, otraMedica.CenterId))).Value!);
+    }
+
+    [Fact]
+    public async Task EventoPropioMedicina_ActivaElProtocoloUrgente_ComoUnEscalado()
+    {
+        var (medica, _, _, _, eventId) = await SeedOwnMedicalEventAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+
+        var saved = await service.SaveMedicalAssessmentAsync(SaveMedical(medica, eventId, (await FindAsync(medica, eventId))!.Revision));
+        var activated = await service.ActivateUrgentProtocolAsync(Activate(medica, eventId, saved.Value));
+
+        Assert.True(activated.Ok);
+        Assert.Equal(ClinicalEventStatus.ProtocoloUrgenteMedico, (await FindAsync(medica, eventId))!.Status);
+        Assert.Equal(eventId, Assert.Single(await ProtocolsAsync(medica)).EventId);
+    }
+
+    [Fact]
+    public async Task EventoPropioMedicina_ConOtroPerfilOFueraDeAmbito_SeDeniega_YLaListaDeResidentesEsLaDeSuAmbito()
+    {
+        var (medica, _, enfermera, residentId, _) = await SeedOwnMedicalEventAsync();
+        var auxiliar = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, medica.CenterId, medica.UnitId);
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Medicina);
+        RegisterClinicalEventCommand Register(SeededProfile seed, SystemProfile profile) => new(
+            seed.ProfileScopeId, seed.CenterId, residentId, "Observación.", Domain.Auxiliar.DailyChangeClassification.Ordinario, null,
+            Guid.NewGuid(), profile);
+
+        var byNurseAsMedicina = await BuildService(enfermera.ExternalSubject).RegisterClinicalEventAsync(Register(enfermera, SystemProfile.Medicina));
+        var byMedicaAsEnfermeria = await BuildMedicina(medica.ExternalSubject).RegisterClinicalEventAsync(Register(medica, SystemProfile.Enfermeria));
+        var byAuxiliar = await BuildMedicina(auxiliar.ExternalSubject).RegisterClinicalEventAsync(Register(auxiliar, SystemProfile.Auxiliar));
+        var byOutsider = await BuildMedicina(outsider.ExternalSubject).RegisterClinicalEventAsync(Register(outsider, SystemProfile.Medicina));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byNurseAsMedicina.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byMedicaAsEnfermeria.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byAuxiliar.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOutsider.Error!.Code);
+
+        var residents = await BuildMedicina(medica.ExternalSubject).ListScopeResidentsAsync(
+            new ListScopeResidentsCommand(medica.ProfileScopeId, medica.CenterId, SystemProfile.Medicina));
+        var nurseAsMedicina = await BuildMedicina(enfermera.ExternalSubject).ListScopeResidentsAsync(
+            new ListScopeResidentsCommand(enfermera.ProfileScopeId, enfermera.CenterId, SystemProfile.Medicina));
+        var auxiliarList = await BuildMedicina(auxiliar.ExternalSubject).ListScopeResidentsAsync(
+            new ListScopeResidentsCommand(auxiliar.ProfileScopeId, auxiliar.CenterId, SystemProfile.Auxiliar));
+        Assert.Equal(residentId, Assert.Single(residents.Value!).ResidentId);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, nurseAsMedicina.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, auxiliarList.Error!.Code);
+        Assert.Empty((await BuildMedicina(outsider.ExternalSubject).ListScopeResidentsAsync(
+            new ListScopeResidentsCommand(outsider.ProfileScopeId, outsider.CenterId, SystemProfile.Medicina))).Value!);
     }
 
     private static StartMedicalFollowUpCommand StartFollowUp(

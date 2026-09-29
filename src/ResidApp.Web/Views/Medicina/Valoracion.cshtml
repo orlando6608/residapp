@@ -15,12 +15,24 @@
 </nav>
 
 <h1 class="h3">Valoración médica — @evento.ResidentDisplayName</h1>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
 <div asp-validation-summary="All" class="text-danger"></div>
 
 <div class="card mb-3 border-start border-4 border-primary">
     <div class="card-body">
-        <h2 class="h6 card-title">Motivo del escalado (no editable)</h2>
-        <p class="mb-1" style="white-space: pre-line">@evento.Escalation!.Reason</p>
+        @if (evento.Escalation is { } escalado)
+        {
+            <h2 class="h6 card-title">Motivo del escalado (no editable)</h2>
+            <p class="mb-1" style="white-space: pre-line">@escalado.Reason</p>
+        }
+        else
+        {
+            <h2 class="h6 card-title">Observación (no editable)</h2>
+            <p class="mb-1" style="white-space: pre-line">@evento.Observation</p>
+        }
         <a asp-action="Escalado" asp-route-eventoId="@evento.EventId">Ver toda la información reunida</a>
     </div>
 </div>

@@ -1,6 +1,6 @@
 # Pendientes del vertical Medicina
 
-Estado al 2026-09-29 (tras la historia 6 completa). Historias de referencia: [`docs/historias-usuarios/medicina.md`](../../historias-usuarios/medicina.md).
+Estado al 2026-09-29 (tras la historia 7). Historias de referencia: [`docs/historias-usuarios/medicina.md`](../../historias-usuarios/medicina.md).
 Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-conducta-medicina.md); wireframe
 [`medicina.md`](../../bocetos-pantallas/wireframes-funcionales/medicina.md).
 
@@ -64,6 +64,26 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   El evento sigue en PROTOCOLO_URGENTE_MEDICO tras firmar. Enfermería ve el informe en el detalle del evento
   y descarga el PDF, pero no firma ni registra llamadas en un protocolo de Medicina. El detalle, las
   decisiones y los huecos están en `pendientes-enfermeria.md`; script `0016_derivacion_urgencias`.
+- **Historia 7 (evento propio de Medicina)** — 2026-09-29: MED-11 del PRD, pantallas MED-18 a MED-20 del
+  wireframe (en el código, "MED-11" es la bandeja de seguimientos médicos).
+  - **Entrada:** tarjeta "Residentes" del inicio de Medicina (`/Medicina/Residentes`), ficha
+    (`/Medicina/Residente`, basal vigente en solo lectura) y "Registrar evento" (`/Medicina/RegistrarEvento`)
+    con los mismos campos que Enfermería: observación, clasificación y datos clínicos opcionales.
+  - **Reutilización:** `ListScopeResidents`, `FindScopeResident` y `RegisterClinicalEvent` reciben el perfil
+    pedido, y el ámbito activo tiene que ser de ese perfil.
+  - **Registro:** el evento (origen `EVENTO_MEDICINA`) nace ya en EN_VALORACION_MEDICA, iniciado por quien lo
+    registra, y se pasa a `/Medicina/Valoracion`. Desde ahí sigue el ciclo de un escalado sin simularlo.
+  - **Visibilidad:** entra en la bandeja "Escalados y eventos propios" (`ScopedEventsFrom` deja ver a Medicina
+    los eventos de origen Medicina), así que otra médica de la unidad puede continuarlo.
+  - **Base de datos:** `CK_ea_inicio` impide que entre en un estado de Enfermería. Enfermería lo ve en el
+    detalle si recibe una indicación suya.
+  - **Decisiones del usuario (2026-09-29):**
+    - directo a la valoración, sin estado "pendiente médica";
+    - misma bandeja que los escalados;
+    - entrada por la lista y la ficha de residentes;
+    - mismos campos que Enfermería.
+
+  Script `0017_medicina_evento_propio`.
 - Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests`, `FollowUpTests`,
   `UrgentProtocolTests` y `EmergencyReferralTests` (unitarios), y `ReferralReportBuilderTests` (funcional).
 - Cuenta de desarrollo `dev-integrado-medicina` en el escenario integrado.
@@ -72,11 +92,16 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
 
 En el orden propuesto:
 
-1. **Historia 7 — evento propio de Medicina** (`MED-11`): mismo ciclo sin reenviarlo desde Enfermería;
-   exige que un ámbito de Medicina vea eventos no escalados propios.
-2. **Historias 8 y 9 — basal e historial/corrección**.
+1. **Historias 8 y 9 — basal e historial/corrección**. El historial es común con la historia 11 de
+   Enfermería.
 
 Huecos de lo ya construido:
+
+- **Evento propio (historia 7):**
+  - la ficha del residente (MED-20) no muestra todavía los eventos ni el historial, que llegan con la
+    historia 9;
+  - tampoco tiene el acceso al basal, que es la historia 8;
+  - la lista de residentes (MED-19) no tiene buscador, igual que la de Enfermería.
 
 - Derivación a Urgencias: los mismos huecos que en Enfermería (firmante sin nombre, sin corrección del
   informe, contacto familiar en texto libre); ver `pendientes-enfermeria.md`.

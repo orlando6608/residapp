@@ -9,9 +9,9 @@ using ResidApp.Shared;
 
 namespace ResidApp.Infrastructure.Persistence;
 
-/// <summary>Traduce el registro idempotente de un evento clínico propio de Enfermería (ENF-16), mismo
-/// patrón que SqlDailyClosureRepository.RegisterAsync: hash de petición + fila IN_PROGRESS/SUCCEEDED en
-/// dbo.operaciones_idempotencia dentro de la misma transacción.</summary>
+/// <summary>Traduce el registro idempotente de un evento clínico propio de Enfermería (ENF-16) o de Medicina
+/// (MED-18), mismo patrón que SqlDailyClosureRepository.RegisterAsync: hash de petición + fila
+/// IN_PROGRESS/SUCCEEDED en dbo.operaciones_idempotencia dentro de la misma transacción.</summary>
 public sealed class SqlClinicalEventRepository(SqlConnectionFactory connections) : IClinicalEventRepository
 {
     private const string ActionCode = "CLINICAL_EVENT_REGISTER";
@@ -33,6 +33,8 @@ public sealed class SqlClinicalEventRepository(SqlConnectionFactory connections)
             var occurredAt = DateTimeOffset.UtcNow;
             var eventId = Guid.NewGuid();
             var result = new ClinicalEventResult(eventId, occurredAt);
+            var profileCode = input.Profile.ToCode();
+            var isMedical = input.Profile == SystemProfile.Medicina;
 
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
@@ -48,33 +50,42 @@ public sealed class SqlClinicalEventRepository(SqlConnectionFactory connections)
                     (id, residente_id, centro_id, unidad_id, observacion, clasificacion_codigo, datos_clinicos_pertinentes,
                      registrado_por_cuenta_id, registrado_por_perfil, ocurrido_en)
                 VALUES (@EventId, @ResidentId, @CenterId, @UnitId, @Observation, @ClassificationCode, @ClinicalData,
-                        @AccountId, 'ENFERMERIA', @OccurredAt)
+                        @AccountId, @ProfileCode, @OccurredAt)
                 """, new
             {
                 EventId = eventId, ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value, UnitId = input.UnitId.Value,
                 input.Observation, ClassificationCode = input.Classification.ToCode(), input.ClinicalData,
-                AccountId = input.AccountId.Value, OccurredAt = occurredAt,
+                AccountId = input.AccountId.Value, ProfileCode = profileCode, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
-            // Mismo ciclo de valoración que un cambio de Auxiliar (ENF-16), conservando su propia autoría.
+            // Mismo ciclo de valoración que un cambio de Auxiliar (ENF-16), conservando su propia autoría. El de
+            // Medicina (MED-18) nace ya en valoración médica, iniciada por quien lo registra, sin simular un
+            // escalado (0017).
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.eventos_asistenciales
-                    (id, residente_id, centro_id, unidad_id, origen_codigo, evento_clinico_id, clasificacion_codigo, recibido_en)
-                VALUES (@EventId, @ResidentId, @CenterId, @UnitId, 'EVENTO_ENFERMERIA', @EventId, @ClassificationCode, @OccurredAt)
+                    (id, residente_id, centro_id, unidad_id, origen_codigo, evento_clinico_id, clasificacion_codigo, estado_codigo,
+                     valoracion_medica_iniciada_por_cuenta_id, valoracion_medica_iniciada_en, recibido_en)
+                VALUES (@EventId, @ResidentId, @CenterId, @UnitId, @OriginCode, @EventId, @ClassificationCode, @StatusCode,
+                        @MedicalStartedBy, @MedicalStartedAt, @OccurredAt)
                 """, new
             {
                 EventId = eventId, ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value, UnitId = input.UnitId.Value,
-                ClassificationCode = input.Classification.ToCode(), OccurredAt = occurredAt,
+                OriginCode = isMedical ? "EVENTO_MEDICINA" : "EVENTO_ENFERMERIA",
+                ClassificationCode = input.Classification.ToCode(),
+                StatusCode = isMedical ? "EN_VALORACION_MEDICA" : "PENDIENTE",
+                MedicalStartedBy = isMedical ? input.AccountId.Value : (Guid?)null,
+                MedicalStartedAt = isMedical ? occurredAt : (DateTimeOffset?)null,
+                OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.eventos_auditoria
                     (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
-                VALUES (@Id, @AccountId, 'ENFERMERIA', @CenterId, @UnitId, @ResidentId, 'CLINICAL_EVENT', @EventId, @ActionCode, @OccurredAt)
+                VALUES (@Id, @AccountId, @ProfileCode, @CenterId, @UnitId, @ResidentId, 'CLINICAL_EVENT', @EventId, @ActionCode, @OccurredAt)
                 """, new
             {
-                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, CenterId = input.CenterId.Value, UnitId = input.UnitId.Value,
-                ResidentId = input.ResidentId.Value, EventId = eventId, ActionCode, OccurredAt = occurredAt,
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, ProfileCode = profileCode, CenterId = input.CenterId.Value,
+                UnitId = input.UnitId.Value, ResidentId = input.ResidentId.Value, EventId = eventId, ActionCode, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
             var resultJson = JsonSerializer.Serialize(result, ResidAppJson.Options);
@@ -137,7 +148,7 @@ file static class RequestHash
         var canonical = JsonSerializer.Serialize(new object?[]
         {
             input.AccountId.Value, input.CenterId.Value, input.UnitId.Value, input.ResidentId.Value,
-            input.Observation, input.Classification.ToCode(), input.ClinicalData, input.OperationId,
+            input.Observation, input.Classification.ToCode(), input.ClinicalData, input.OperationId, input.Profile.ToCode(),
         });
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }

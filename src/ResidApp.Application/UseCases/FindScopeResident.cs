@@ -4,7 +4,8 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record FindScopeResidentCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId);
+public sealed record FindScopeResidentCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, SystemProfile Perfil = SystemProfile.Enfermeria);
 
 /// <summary>
 /// Traduce la entrada a ENF-18 desde ENF-17: reutiliza ListScopeResidents y filtra por ResidentId, igual
@@ -17,7 +18,7 @@ public sealed class FindScopeResident(ListScopeResidents listScopeResidents)
         FindScopeResidentCommand command, CancellationToken ct = default)
     {
         var result = await listScopeResidents.ExecuteAsync(
-            new ListScopeResidentsCommand(command.AmbitoPerfilId, command.CentroId), ct);
+            new ListScopeResidentsCommand(command.AmbitoPerfilId, command.CentroId, command.Perfil), ct);
         if (!result.Ok)
         {
             return ApplicationResult<ScopeResidentSummary?>.Failed(result.Error!);

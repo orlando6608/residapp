@@ -17,8 +17,16 @@
     <div class="col-12 col-md-4">
         <a asp-action="Escalados" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Escalados</h2>
-                <p class="card-text mb-0"><span class="badge text-bg-primary">@Model.Escalados</span> escalado(s) recibido(s) de Enfermería.</p>
+                <h2 class="h5 card-title">Escalados y eventos propios</h2>
+                <p class="card-text mb-0"><span class="badge text-bg-primary">@Model.Escalados</span> escalado(s) de Enfermería o evento(s) propio(s) por valorar.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
+        <a asp-action="Residentes" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Residentes</h2>
+                <p class="card-text mb-0">Residentes de tu ámbito, con su ficha y el registro de un evento que observes.</p>
             </div>
         </a>
     </div>

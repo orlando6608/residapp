@@ -3,7 +3,7 @@
 @model InformacionReunidaViewModel
 @{
     var evento = Model.Event;
-    var esPropio = evento.Origin == ClinicalEventOrigin.EventoEnfermeria;
+    var esPropio = evento.Origin != ClinicalEventOrigin.CambioAuxiliar;
 }
 
 <div class="card mb-3">
@@ -66,31 +66,35 @@
     </div>
 </div>
 
-<div class="card mb-3">
-    <div class="card-body">
-        <h2 class="h5 card-title">Valoración de Enfermería</h2>
-        @if (evento.Assessment is null)
-        {
-            <p class="text-muted mb-0">Sin valoración guardada.</p>
-        }
-        else
-        {
-            var content = evento.Assessment.Content;
-            <dl class="row mb-0">
-                @foreach (var (etiqueta, texto) in new[] { ("Hallazgos", content.Findings), ("Valoración", content.Assessment), ("Actuaciones", content.Actions), ("Comunicaciones", content.Communications), ("Resultado", content.Outcome) })
-                {
-                    if (texto is not null)
+@* Un evento propio de Medicina (MED-18) no pasa por la valoración de Enfermería (0017). *@
+@if (evento.Origin != ClinicalEventOrigin.EventoMedicina)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Valoración de Enfermería</h2>
+            @if (evento.Assessment is null)
+            {
+                <p class="text-muted mb-0">Sin valoración guardada.</p>
+            }
+            else
+            {
+                var content = evento.Assessment.Content;
+                <dl class="row mb-0">
+                    @foreach (var (etiqueta, texto) in new[] { ("Hallazgos", content.Findings), ("Valoración", content.Assessment), ("Actuaciones", content.Actions), ("Comunicaciones", content.Communications), ("Resultado", content.Outcome) })
                     {
-                        <dt class="col-sm-3">@etiqueta</dt>
-                        <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                        if (texto is not null)
+                        {
+                            <dt class="col-sm-3">@etiqueta</dt>
+                            <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                        }
                     }
-                }
-                <dt class="col-sm-3">Constantes</dt>
-                <dd class="col-sm-9">@(content.Vitals.IsEmpty ? "Sin constantes registradas" : VitalSignsDisplay.Summary(content.Vitals))</dd>
-            </dl>
-        }
+                    <dt class="col-sm-3">Constantes</dt>
+                    <dd class="col-sm-9">@(content.Vitals.IsEmpty ? "Sin constantes registradas" : VitalSignsDisplay.Summary(content.Vitals))</dd>
+                </dl>
+            }
+        </div>
     </div>
-</div>
+}
 
 @if (evento.FollowUp is { } seguimiento)
 {

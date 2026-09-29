@@ -117,4 +117,58 @@ public class SqlClinicalEventRepositoryTests
             "UPDATE dbo.eventos_clinicos SET observacion = 'Editado' WHERE id = @Id", new { Id = result.EventId }));
         Assert.Contains("CLINICAL_EVENT_IMMUTABLE", error.Message);
     }
+
+    [Fact]
+    public async Task RegisterAsync_Medicina_NaceEnValoracionMedica_ConSuAutoria_SinValoracionDeEnfermeria()
+    {
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            seed.AccountId, SystemProfile.Administracion, seed.CenterId, seed.UnitId,
+            "Residente Evento Medicina", new DateOnly(1946, 6, 16), DocumentedSexCode.Hombre, null, null, null, null, null, Guid.NewGuid()));
+
+        var result = await _repository.RegisterAsync(new RegisterClinicalEventInput(
+            seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
+            "Soplo sistólico no conocido en la exploración.", DailyChangeClassification.Ordinario, null, Guid.NewGuid(), SystemProfile.Medicina));
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var row = await connection.QuerySingleAsync<(string Perfil, string Origen, string Estado, Guid? IniciadaMedica, Guid? IniciadaEnfermeria, string Auditoria)>("""
+            SELECT ec.registrado_por_perfil AS Perfil, ea.origen_codigo AS Origen, ea.estado_codigo AS Estado,
+                   ea.valoracion_medica_iniciada_por_cuenta_id AS IniciadaMedica, ea.valoracion_iniciada_por_cuenta_id AS IniciadaEnfermeria,
+                   audit.perfil_activo AS Auditoria
+              FROM dbo.eventos_clinicos ec
+              JOIN dbo.eventos_asistenciales ea ON ea.id = ec.id
+              JOIN dbo.eventos_auditoria audit ON audit.recurso_id = ec.id AND audit.accion_codigo = 'CLINICAL_EVENT_REGISTER'
+             WHERE ec.id = @Id
+            """, new { Id = result.EventId });
+        Assert.Equal("MEDICINA", row.Perfil);
+        Assert.Equal("EVENTO_MEDICINA", row.Origen);
+        Assert.Equal("EN_VALORACION_MEDICA", row.Estado);
+        Assert.Equal(seed.AccountId.Value, row.IniciadaMedica);
+        Assert.Null(row.IniciadaEnfermeria);
+        Assert.Equal("MEDICINA", row.Auditoria);
+    }
+
+    [Fact]
+    public async Task EventoDeMedicina_NuncaEntraEnLosEstadosDeEnfermeria()
+    {
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            seed.AccountId, SystemProfile.Administracion, seed.CenterId, seed.UnitId,
+            "Residente Evento Medicina Estados", new DateOnly(1947, 7, 17), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+        var result = await _repository.RegisterAsync(new RegisterClinicalEventInput(
+            seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
+            "Edemas maleolares nuevos.", DailyChangeClassification.Ordinario, null, Guid.NewGuid(), SystemProfile.Medicina));
+
+        // CK_ea_inicio (0017) salta antes que TR_ea_transition_guard.
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        foreach (var sql in new[]
+        {
+            "UPDATE dbo.eventos_asistenciales SET estado_codigo = 'PENDIENTE', revision = revision + 1 WHERE id = @Id",
+            "UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_VALORACION', revision = revision + 1, valoracion_iniciada_por_cuenta_id = @AccountId, valoracion_iniciada_en = SYSUTCDATETIME() WHERE id = @Id",
+        })
+        {
+            var error = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { Id = result.EventId, AccountId = seed.AccountId.Value }));
+            Assert.Contains("\"CK_ea_inicio\"", error.Message);
+        }
+    }
 }
