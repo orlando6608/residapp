@@ -1,6 +1,6 @@
 # Pendientes del vertical Enfermería
 
-Estado al 2026-09-28. Historias de referencia: [`docs/historias-usuarios/enfermeria.md`](../../historias-usuarios/enfermeria.md).
+Estado al 2026-09-29. Historias de referencia: [`docs/historias-usuarios/enfermeria.md`](../../historias-usuarios/enfermeria.md).
 Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-escalado-enfermeria.md),
 [`gestion-basal-barthel.md`](../../flujos-clinicos/gestion-basal-barthel.md),
 [`derivacion-urgencias.md`](../../flujos-clinicos/derivacion-urgencias.md).
@@ -26,7 +26,9 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   evento pasa a CERRADO, sale de las bandejas y la valoración queda CERRADA e inmutable. La comunicación
   preparada se guarda en `comunicaciones_familiares` como PENDIENTE_APROBACION y se lista en
   `/Comunicaciones` (tarjeta del inicio). Cada guardado de la valoración deja además una versión inmutable
-  en `valoraciones_enfermeria_versiones`. Script `0009_enfermeria_cierre_evento`.
+  en `valoraciones_enfermeria_versiones`. Script `0009_enfermeria_cierre_evento`. Desde `0013` el cierre es
+  común con Medicina (`ClinicalEventCloser`) y el formulario de comunicación es el parcial
+  `Shared/_ComunicacionFamiliarFormulario`; un evento escalado no lo cierra Enfermería, sino Medicina.
 - **Historia 4 (seguimiento y transferencia)** — 2026-09-28: "Iniciar seguimiento" desde la decisión
   asistencial (`/IniciarSeguimiento`, fecha prevista y/o criterio e indicaciones de continuidad); el
   evento pasa a EN_SEGUIMIENTO, sale de ordinarios y prioritarios y entra en la bandeja `/Seguimientos`
@@ -46,8 +48,9 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
 - **Historia 7 (indicaciones de Medicina)** — 2026-09-28: bandeja `/Enfermeria/Indicaciones` (tarjeta del
   inicio con contador y no leídas), compartida por unidad, con "Confirmar lectura" y, ya leída,
   "Registrar como realizada" o "como no realizada" con incidencia obligatoria (`/ProgresoIndicacion`).
-  Hitos distintos, con concurrencia optimista por la revisión de la indicación; ninguna caduca. Tabla
-  `indicaciones_medicas`, script `0012_medicina_valoracion_indicaciones` (lo que emite Medicina está en
+  Hitos distintos, con concurrencia optimista por la revisión de la indicación; ninguna caduca, tampoco si
+  Medicina cierra el evento (historia 4 de Medicina, 2026-09-28): siguen aquí hasta registrar su
+  resultado. Tabla `indicaciones_medicas`, script `0012_medicina_valoracion_indicaciones` (lo que emite Medicina está en
   `pendientes-medicina.md`).
 - **Historia 8 (evento propio)**: registro de un evento observado por Enfermería (`/RegistrarEvento`,
   tabla `eventos_clinicos`, script `0006`), inmutable; al guardarlo se continúa en su detalle y entra en

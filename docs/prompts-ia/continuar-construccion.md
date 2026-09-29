@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-09-28. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-09-29. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -13,11 +13,18 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- Todo el trabajo está en `main`. Hasta el script `0012` (historias 2 y 3 de Medicina y 7 de Enfermería)
-  está desplegado en Azure; su pipeline terminó con éxito el 2026-09-28. La historia 4 de Medicina (script
-  `0013`) está commiteada en local y **pendiente de push**; compruébalo con `git status` al empezar. El
-  estado de un run se consulta sin autenticación en
-  `https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main` (`gh` no está instalado).
+- Todo el trabajo está en `main` y subido al remoto; compruébalo con `git status` al empezar. Hasta el
+  script `0013` (historia 4 de Medicina, cierre médico) está desplegado en Azure: el pipeline de `b060542`
+  terminó con éxito el 2026-09-29.
+- El primer pipeline de `0013` (`5325ef4`) falló en los tests por interbloqueos en una BD recién creada, y
+  no llegó a desplegar. Se corrigió en `f970d83` (`FORCESEEK`, ver las lecciones). En `b060542` se ordenaron
+  además las opciones de área en `SqlChangeInboxDirectory.FindAsync`, porque un test fallaba de vez en
+  cuando.
+- El estado de un run se consulta sin autenticación en
+  `https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main`, y el de cada job y paso en
+  `.../actions/runs/<id>/jobs`. Los logs piden autenticación y `gh` no está instalado.
+- CJ no ha completado nada nuevo: `docs/pendientes-cj/rangos-referencia-constantes.html` sigue con 17
+  valores «por definir».
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
   (parcial), 2, 3, 4, 5, 7, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
   Medicina está en curso: historias 1, 2, 3 y 4 (escalados, valoración médica, indicaciones y cierre
@@ -67,6 +74,34 @@ Después, el historial (historia 11 de Enfermería, 9 de Medicina), el evento pr
 - **Valores clínicos:** nunca los inventes. Si hace falta uno, se pide a CJ con un documento en
   `docs/pendientes-cj/`.
 - **Contradicciones:** si el código contradice `docs/flujos-clinicos/`, para y avisa.
+- **Idioma:** responde al usuario siempre en español, también en los mensajes cortos de estado.
+
+## Cómo se ha verificado cada bloque
+
+Repite estos pasos antes de dar un bloque por cerrado:
+
+1. **Plan:** plan aprobado por el usuario antes de tocar código. Las decisiones de producto se le preguntan
+   a él, o a CJ con un documento en `docs/pendientes-cj/`.
+2. **Copia de la BD local** antes de aplicar un script nuevo:
+   `BACKUP DATABASE [ResidApp] TO DISK = N'...\Backup\ResidApp-antes-00XX-AAAAMMDD.bak'`.
+3. **Aplicar el script en local:**
+   `SQL_SERVER=ACER-ORLANDO SQL_DATABASE=ResidApp SQLCMD_EXTRA="-C" bash database/aplicar-scripts.sh`.
+4. **Suite en verde varias veces** contra la BD local y, además, en el entorno tipo CI (ver «Cómo
+   reproducir el CI en local» más abajo).
+5. **BD temporal nueva** con todos los scripts y el seed (`APLICAR_SEED=1`), que se borra al terminar.
+6. **Prueba manual con la app y curl** del flujo completo, con las cuentas `dev-integrado-*`:
+   - La app se levanta con `dotnet run --launch-profile http` desde `src/ResidApp.Web`, en
+     `http://localhost:5203`.
+   - Para entrar, haz un GET de `/DevAuth/Login` para sacar el `__RequestVerificationToken` y un POST
+     con `externalSubject=<cuenta>`. Después, `GET /ProfileScope/Select -L`.
+   - En cada POST, toma el token de una página que tenga formulario y envíalo con `--data-urlencode`.
+7. **Documentación:**
+   - `Manual.cshtml`;
+   - el pendiente del vertical;
+   - este fichero;
+   - el checklist y el README si cambia el estado.
+8. **Commit en `main` sin push.** El push solo cuando el usuario lo pida. Después, comprueba que el
+   pipeline termina en verde, con `build-and-test` y `deploy`.
 
 ## Lecciones técnicas que conviene no redescubrir
 
