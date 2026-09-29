@@ -13,8 +13,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Evento propio de Medicina (historia 7 de Medicina, script `0017`):** hecho el 2026-09-29, en local y sin
-  push. El detalle y las decisiones están en `pendientes-medicina.md`. Verificación:
+- **Evento propio de Medicina (historia 7 de Medicina, script `0017`):** hecho el 2026-09-29 y desplegado en
+  Azure; hasta `0017` está aplicado en Azure SQL. El detalle y las decisiones están en
+  `pendientes-medicina.md`. Verificación:
   - suite local en verde 3 veces (113 unitarios, 176 de integración y 7 funcionales);
   - 3 vueltas tipo CI con BD nueva en verde;
   - BD temporal con seed (18 scripts, sin errores) ya borrada;
@@ -38,8 +39,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
       bandeja.
   - Copia previa a `0017`:
     `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0017-20260929.bak`.
-- Hasta el script `0016` (bloque 2 de la historia 6, derivación a Urgencias en Enfermería y Medicina) está
-  desplegado en Azure: el pipeline de `ca855f2` (run 36607704572) terminó en verde el 2026-09-29, con PDFs
+- El script `0016` (bloque 2 de la historia 6, derivación a Urgencias en Enfermería y Medicina) se
+  desplegó en Azure antes que `0017`: el pipeline de `ca855f2` (run 36607704572) terminó en verde el 2026-09-29, con PDFs
   reales generados en los tests del CI (Linux). El último push (`1ed5382`, solo documentación, run
   36609356298) también terminó en verde.
 - **Prueba en Azure de la derivación (2026-09-29):** `dev-integrado-enfermeria`, sobre «Residente
@@ -317,4 +318,7 @@ Repite estos pasos antes de dar un bloque por cerrado:
   una revisión o una huella que el servidor actualiza al volver a mostrar la vista, escribe `value="@..."`
   explícito (ver `Shared/_Derivacion`).
 - **Verificación manual con curl:** una cuenta con un solo ámbito se autoselecciona, y
-  `ProfileScope/Select` redirige. Sigue las redirecciones con `-L`.
+  `ProfileScope/Select` redirige. Sigue las redirecciones con `-L`. Guarda cada página con formulario en un
+  fichero y lee de él el token, la revisión y el `OperacionId`. En la prueba en Azure del evento propio, una
+  captura en variable salió vacía y la indicación se envió sin revisión: la app la rechazó sin guardar nada,
+  pero hubo que repetirla.
