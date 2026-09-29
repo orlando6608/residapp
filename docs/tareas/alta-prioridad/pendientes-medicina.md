@@ -83,7 +83,9 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
     - entrada por la lista y la ficha de residentes;
     - mismos campos que Enfermería.
 
-  Script `0017_medicina_evento_propio`.
+  Script `0017_medicina_evento_propio`. En `0018_evento_clinico_perfil_origen`, la BD pasa a exigir que el
+  perfil que registra el evento coincida con su origen: `MEDICINA` con `EVENTO_MEDICINA` y `ENFERMERIA` con
+  `EVENTO_ENFERMERIA`.
 - Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests`, `FollowUpTests`,
   `UrgentProtocolTests` y `EmergencyReferralTests` (unitarios), y `ReferralReportBuilderTests` (funcional).
 - Cuenta de desarrollo `dev-integrado-medicina` en el escenario integrado.

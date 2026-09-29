@@ -13,6 +13,29 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Avisos tras el evento propio de Medicina (script `0018`):** resueltos el 2026-09-29, con commit en
+  `main` y **sin push** (el push aplicará `0018` en Azure SQL).
+  - La ficha del residente de Enfermería ya no dice que la bandeja y la valoración «llegan en un grupo
+    posterior».
+  - `0018_evento_clinico_perfil_origen` impone en la BD que el perfil de `eventos_clinicos` coincida con el
+    origen de `eventos_asistenciales`:
+    - columna calculada persistida `evento_clinico_perfil`;
+    - clave foránea compuesta `FK_ea_evento_clinico_perfil` sobre `UX_ec_perfil`;
+    - vale NULL en `CAMBIO_AUXILIAR`, así que ahí no se comprueba;
+    - la prueba el test `OrigenDistintoDelPerfilQueRegistra_LoRechazaLaClaveForanea`, que falla si se quita la
+      clave.
+  - El inicio (`Home/Index`) muestra solo las fichas del perfil activo, leído de la cookie, y su título es
+    «Inicio». **Decisión del usuario:** filtrar solo por perfil, sin consultar permisos, porque el servidor ya
+    deniega. Familiar ve «Tu perfil todavía no tiene pantallas disponibles». Nueva frase en el Manual
+    (`#entrar-ambito`).
+  - **Verificación:**
+    - suite local en verde 3 veces (113 unitarios, 178 de integración y 7 funcionales);
+    - 3 vueltas tipo CI con BD nueva en verde;
+    - BD temporal con seed (19 scripts, sin errores) ya borrada;
+    - curl del inicio con `dev-integrado-*`, `dev-admin`, `dev-multi` (Familiar) y sin identidad;
+    - registro de un evento de Enfermería y otro de Medicina, con «Prueba manual 0018 …: se puede ignorar»,
+      sobre el mismo residente de la base local.
+  - Copia previa: `ResidApp-antes-0018-20260929.bak`.
 - **Evento propio de Medicina (historia 7 de Medicina, script `0017`):** hecho el 2026-09-29 y desplegado en
   Azure; hasta `0017` está aplicado en Azure SQL. El detalle y las decisiones están en
   `pendientes-medicina.md`. Verificación:
@@ -104,10 +127,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   pantalla). Medicina está en curso: historias 1 a 7 (escalados, valoración médica, indicaciones, cierre
   médico, seguimiento médico con continuidad entre turnos, protocolo urgente, derivación a Urgencias y
   evento propio).
-- La base local `ResidApp` tiene los scripts `0001` a `0017` registrados en `dbo.scripts_aplicados`.
-  Hay copias previas a `0016` y a `0017` en
-  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`
-  y `ResidApp-antes-0017-20260929.bak`).
+- La base local `ResidApp` tiene los scripts `0001` a `0018` registrados en `dbo.scripts_aplicados`
+  (Azure, hasta `0017`). Hay copias previas a `0016`, `0017` y `0018` en
+  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
+  `ResidApp-antes-0017-20260929.bak` y `ResidApp-antes-0018-20260929.bak`).
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
@@ -128,7 +151,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     relevante.
   - «Prueba manual derivacion medica: dolor torácico.»: escalado, protocolo de Medicina, derivado por
     Medicina, con una llamada «Contactado» y cerrado con una comunicación relevante.
-- Suite: 113 unitarios, 176 de integración y 7 funcionales, todos en verde.
+- Suite: 113 unitarios, 178 de integración y 7 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -136,9 +159,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Primero, los tres avisos que el usuario pidió resolver tras el evento propio de Medicina** (los tres
-   primeros de «Avisos abiertos»): analizarlos y proponerle una solución antes de tocar nada.
-2. **Después, el Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de
+1. **Si el usuario lo pide, push de `0018`** y comprobar que el pipeline termina en verde, con
+   `build-and-test` y `deploy`.
+2. **El Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de
    las valoraciones, los seguimientos terminados y el informe de derivación firmado (el flujo pide que sea
    accesible desde el Historial). Tiene decisiones abiertas y conviene partirlo en bloques:
    - qué permiso abre la línea temporal (HIS-02);
@@ -150,29 +173,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 Se detectaron durante otros bloques. No se han corregido porque quedaban fuera de su alcance; propónselos al
 usuario cuando encajen:
 
-- **Pedido por el usuario (2026-09-29): buscar solución tras el evento propio de Medicina.**
-  `Views/Enfermeria/Residente.cshtml` (líneas 58-60) sigue diciendo que la bandeja y la valoración de
-  eventos «llegan en un grupo posterior del vertical Enfermería»: el texto está desfasado.
-- **Pedido por el usuario (2026-09-29): buscar solución tras el evento propio de Medicina.** La BD no
-  impone la coherencia entre `eventos_clinicos.registrado_por_perfil` y `eventos_asistenciales.origen_codigo`
-  (ENFERMERIA ↔ EVENTO_ENFERMERIA, MEDICINA ↔ EVENTO_MEDICINA), porque están en tablas distintas. Hoy la
-  garantiza `SqlClinicalEventRepository`, que escribe las dos filas en una sola transacción. Hay que estudiar
-  opciones (un trigger de inserción, o una columna y una clave compuestas) y proponer la más sencilla.
-- **Pedido por el usuario (2026-09-29): el inicio muestra fichas que el perfil no puede usar.**
-  `Views/Home/Index.cshtml` es fija, viene del primer bloque (su título aún dice «vertical Residente/Basal»)
-  y enseña las siete fichas a cualquier perfil. Por ejemplo, `dev-integrado-enfermeria` ve «Medicina». No es
-  un agujero de seguridad, porque cada caso de uso deniega en el servidor, pero se ven puertas que no se
-  abren.
-  - **Propuesta:** mostrar solo las fichas del perfil activo (`HomeController` ya lee
-    `ActiveProfileScopeCookie`) y, en las que dependen de un permiso, comprobarlo también, sin duplicar las
-    reglas del servidor. Actualizar también el título.
-  - **Correspondencia**, según las reglas actuales (`ResidentBaselinePolicy`,
-    `ReferenceRangesApplicationService`):
-    - Alta de residente: Administración, o Enfermería con `RESIDENT_IDENTITY_CREATE`;
-    - Firmar borrador de basal: Enfermería o Medicina con permiso de basal;
-    - Consulta de Dirección: Dirección Clínica con `CLINICAL_DETAIL_READ`;
-    - Auxiliar, Enfermería y Medicina: su propio perfil;
-    - Rangos de referencia: Medicina o Dirección Clínica.
+- **Inicio y permisos:** el inicio filtra las fichas solo por perfil (decisión del usuario, 2026-09-29).
+  Una ficha que depende de un permiso, como Alta de residente para Enfermería, la ve todo el perfil, aunque
+  la cuenta no tenga el permiso. Si cambian las reglas de perfiles de una pantalla, revisa también los `@if`
+  de `Views/Home/Index.cshtml`.
 - **`docs/producto/roadmap.md`** está desfasado: su tabla dice que Medicina «No iniciado» y sus «Próximos
   pasos» siguen en la historia 3 de Enfermería.
 

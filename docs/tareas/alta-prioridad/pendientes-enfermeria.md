@@ -96,7 +96,9 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   tabla `eventos_clinicos`, script `0006`), inmutable; al guardarlo se continúa en su detalle y entra en
   las bandejas con su autoría real. Desde `0017` Medicina registra también su evento propio (historia 7 de
   Medicina) con los mismos casos de uso; ese evento no entra en las bandejas de Enfermería, que lo ve en el
-  detalle ("evento propio de Medicina", sin valoración de Enfermería) si recibe una indicación suya.
+  detalle ("evento propio de Medicina", sin valoración de Enfermería) si recibe una indicación suya. Desde
+  `0018` la BD exige que el perfil que registra el evento coincida con su origen (clave foránea compuesta
+  `FK_ea_evento_clinico_perfil`).
 - **Historias 9 y 10 (basal)**: crear borrador, completar las 9 áreas y el Barthel, cancelar, confirmar y
   firmar (`EnfermeriaBasalController` → `BaselineController/Sign`), con concurrencia optimista e
   idempotencia (script `0005_enfermeria_borrador_basal`).

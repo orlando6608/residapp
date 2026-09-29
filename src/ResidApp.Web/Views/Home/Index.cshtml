@@ -1,9 +1,12 @@
-﻿@{
+@using ResidApp.Shared
+@{
     ViewData["Title"] = "ResidApp";
     var devSubject = Context.Request.Cookies[ResidApp.Web.Security.DevSessionIdentityProvider.CookieName];
+    // Solo decide qué fichas se enseñan: cada caso de uso sigue autorizando en el servidor.
+    var perfil = ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request)?.Profile;
 }
 
-<h1 class="h3 mb-3">ResidApp — vertical Residente/Basal</h1>
+<h1 class="h3 mb-3">Inicio</h1>
 
 @if (string.IsNullOrWhiteSpace(devSubject))
 {
@@ -20,61 +23,87 @@ else
     </p>
 }
 
+@if (perfil is SystemProfile.Familiar)
+{
+    <p class="text-muted">Tu perfil todavía no tiene pantallas disponibles.</p>
+}
+
 <div class="row g-3">
-    <div class="col-12 col-md-4">
-        <a asp-controller="Residents" asp-action="Create" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Alta de residente</h2>
-                <p class="card-text text-muted mb-0">Registrar un nuevo residente en el centro.</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a asp-controller="Baseline" asp-action="Sign" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Firmar borrador de basal</h2>
-                <p class="card-text text-muted mb-0">Firmar un borrador de estado basal ya existente.</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a asp-controller="Baseline" asp-action="Direction" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Consulta de Dirección Clínica</h2>
-                <p class="card-text text-muted mb-0">Consulta auditada del historial de basal de un residente.</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a asp-controller="Auxiliar" asp-action="Index" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Mis residentes (Auxiliar)</h2>
-                <p class="card-text text-muted mb-0">Registro cotidiano de los residentes asignados.</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a asp-controller="Enfermeria" asp-action="Index" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Enfermería</h2>
-                <p class="card-text text-muted mb-0">Residentes del ámbito y su estado basal.</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a asp-controller="Medicina" asp-action="Index" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Medicina</h2>
-                <p class="card-text text-muted mb-0">Escalados recibidos y eventos propios, valoración médica e indicaciones a Enfermería.</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a asp-controller="RangosReferencia" asp-action="Index" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Rangos de referencia de constantes</h2>
-                <p class="card-text text-muted mb-0">Fijar los rangos del centro (Medicina o Dirección Clínica con permiso).</p>
-            </div>
-        </a>
-    </div>
+    @if (perfil is SystemProfile.Administracion or SystemProfile.Enfermeria)
+    {
+        <div class="col-12 col-md-4">
+            <a asp-controller="Residents" asp-action="Create" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Alta de residente</h2>
+                    <p class="card-text text-muted mb-0">Registrar un nuevo residente en el centro.</p>
+                </div>
+            </a>
+        </div>
+    }
+    @if (perfil is SystemProfile.Enfermeria or SystemProfile.Medicina)
+    {
+        <div class="col-12 col-md-4">
+            <a asp-controller="Baseline" asp-action="Sign" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Firmar borrador de basal</h2>
+                    <p class="card-text text-muted mb-0">Firmar un borrador de estado basal ya existente.</p>
+                </div>
+            </a>
+        </div>
+    }
+    @if (perfil is SystemProfile.DireccionClinica)
+    {
+        <div class="col-12 col-md-4">
+            <a asp-controller="Baseline" asp-action="Direction" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Consulta de Dirección Clínica</h2>
+                    <p class="card-text text-muted mb-0">Consulta auditada del historial de basal de un residente.</p>
+                </div>
+            </a>
+        </div>
+    }
+    @if (perfil is SystemProfile.Auxiliar)
+    {
+        <div class="col-12 col-md-4">
+            <a asp-controller="Auxiliar" asp-action="Index" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Mis residentes (Auxiliar)</h2>
+                    <p class="card-text text-muted mb-0">Registro cotidiano de los residentes asignados.</p>
+                </div>
+            </a>
+        </div>
+    }
+    @if (perfil is SystemProfile.Enfermeria)
+    {
+        <div class="col-12 col-md-4">
+            <a asp-controller="Enfermeria" asp-action="Index" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Enfermería</h2>
+                    <p class="card-text text-muted mb-0">Residentes del ámbito y su estado basal.</p>
+                </div>
+            </a>
+        </div>
+    }
+    @if (perfil is SystemProfile.Medicina)
+    {
+        <div class="col-12 col-md-4">
+            <a asp-controller="Medicina" asp-action="Index" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Medicina</h2>
+                    <p class="card-text text-muted mb-0">Escalados recibidos y eventos propios, valoración médica e indicaciones a Enfermería.</p>
+                </div>
+            </a>
+        </div>
+    }
+    @if (perfil is SystemProfile.Medicina or SystemProfile.DireccionClinica)
+    {
+        <div class="col-12 col-md-4">
+            <a asp-controller="RangosReferencia" asp-action="Index" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Rangos de referencia de constantes</h2>
+                    <p class="card-text text-muted mb-0">Fijar los rangos del centro (Medicina o Dirección Clínica con permiso).</p>
+                </div>
+            </a>
+        </div>
+    }
 </div>

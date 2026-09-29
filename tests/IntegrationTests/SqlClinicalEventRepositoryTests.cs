@@ -171,4 +171,37 @@ public class SqlClinicalEventRepositoryTests
             Assert.Contains("\"CK_ea_inicio\"", error.Message);
         }
     }
+
+    [Theory]
+    [InlineData("ENFERMERIA", "EVENTO_MEDICINA", "EN_VALORACION_MEDICA")]
+    [InlineData("MEDICINA", "EVENTO_ENFERMERIA", "PENDIENTE")]
+    public async Task OrigenDistintoDelPerfilQueRegistra_LoRechazaLaClaveForanea(string perfil, string origen, string estado)
+    {
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            seed.AccountId, SystemProfile.Administracion, seed.CenterId, seed.UnitId,
+            "Residente Evento Origen Cruzado", new DateOnly(1948, 8, 18), DocumentedSexCode.Hombre, null, null, null, null, null, Guid.NewGuid()));
+        var parameters = new
+        {
+            Id = Guid.NewGuid(), ResidentId = resident.ResidentId.Value, CenterId = seed.CenterId.Value, UnitId = seed.UnitId.Value,
+            AccountId = seed.AccountId.Value, Perfil = perfil, Origen = origen, Estado = estado,
+            Medico = estado == "EN_VALORACION_MEDICA",
+        };
+
+        // El resto de columnas es válido, para que salte la clave foránea (0018) y no un CHECK.
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.eventos_clinicos
+                (id, residente_id, centro_id, unidad_id, observacion, clasificacion_codigo, registrado_por_cuenta_id, registrado_por_perfil, ocurrido_en)
+            VALUES (@Id, @ResidentId, @CenterId, @UnitId, 'Observación con origen cruzado.', 'ORDINARIO', @AccountId, @Perfil, SYSUTCDATETIME())
+            """, parameters);
+        var error = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync("""
+            INSERT INTO dbo.eventos_asistenciales
+                (id, residente_id, centro_id, unidad_id, origen_codigo, evento_clinico_id, clasificacion_codigo, estado_codigo,
+                 valoracion_medica_iniciada_por_cuenta_id, valoracion_medica_iniciada_en, recibido_en)
+            VALUES (@Id, @ResidentId, @CenterId, @UnitId, @Origen, @Id, 'ORDINARIO', @Estado,
+                    CASE WHEN @Medico = 1 THEN @AccountId END, CASE WHEN @Medico = 1 THEN SYSUTCDATETIME() END, SYSUTCDATETIME())
+            """, parameters));
+        Assert.Contains("\"FK_ea_evento_clinico_perfil\"", error.Message);
+    }
 }
