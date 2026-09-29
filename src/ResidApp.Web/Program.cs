@@ -1,3 +1,5 @@
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Infrastructure.Authorization;
@@ -87,6 +89,22 @@ builder.Services.AddScoped<MedicinaApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();
 
+// Fechas y números siempre en es-ES, sea cual sea la cultura del servidor: en el contenedor Linux de Azure
+// es la invariante y las fechas salían como MM/dd/yyyy. Es la única cultura admitida, así que el
+// Accept-Language del navegador no la cambia. Los patrones cortos se fijan porque ICU (Linux) usa
+// d/M/yyyy H:mm y Windows dd/MM/yyyy HH:mm.
+var spanish = new CultureInfo("es-ES");
+spanish.DateTimeFormat.ShortDatePattern = "dd/MM/yyyy";
+spanish.DateTimeFormat.ShortTimePattern = "HH:mm";
+spanish = CultureInfo.ReadOnly(spanish);
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    options.DefaultRequestCulture = new RequestCulture(spanish);
+    options.SupportedCultures = [spanish];
+    options.SupportedUICultures = [spanish];
+    options.ApplyCurrentCultureToResponseHeaders = true;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -94,13 +112,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
 }
-// Fechas y números siempre en es-ES, sea cual sea la cultura del servidor: en el contenedor Linux de Azure
-// es la invariante y las fechas salían como MM/dd/yyyy. Es la única cultura admitida, así que el
-// Accept-Language del navegador no la cambia.
-app.UseRequestLocalization(new RequestLocalizationOptions { ApplyCurrentCultureToResponseHeaders = true }
-    .AddSupportedCultures("es-ES")
-    .AddSupportedUICultures("es-ES")
-    .SetDefaultCulture("es-ES"));
+app.UseRequestLocalization();
 app.UseRouting();
 
 app.UseAuthorization();
