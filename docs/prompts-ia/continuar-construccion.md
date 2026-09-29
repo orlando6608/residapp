@@ -13,8 +13,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Avisos tras el evento propio de Medicina (script `0018`):** resueltos el 2026-09-29, con commit en
-  `main` y **sin push** (el push aplicará `0018` en Azure SQL).
+- **Avisos tras el evento propio de Medicina (script `0018`):** resueltos el 2026-09-29 y desplegados en
+  Azure. Push de `5bb39c6`: el run 36630575234 terminó en verde, con `build-and-test` y `deploy` (incluido
+  «Aplicar esquema y seed en Azure SQL»), así que `0018` está aplicado en Azure SQL.
   - La ficha del residente de Enfermería ya no dice que la bandeja y la valoración «llegan en un grupo
     posterior».
   - `0018_evento_clinico_perfil_origen` impone en la BD que el perfil de `eventos_clinicos` coincida con el
@@ -127,8 +128,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   pantalla). Medicina está en curso: historias 1 a 7 (escalados, valoración médica, indicaciones, cierre
   médico, seguimiento médico con continuidad entre turnos, protocolo urgente, derivación a Urgencias y
   evento propio).
-- La base local `ResidApp` tiene los scripts `0001` a `0018` registrados en `dbo.scripts_aplicados`
-  (Azure, hasta `0017`). Hay copias previas a `0016`, `0017` y `0018` en
+- La base local `ResidApp` y Azure SQL tienen los scripts `0001` a `0018` registrados en
+  `dbo.scripts_aplicados`. Hay copias previas a `0016`, `0017` y `0018` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
   `ResidApp-antes-0017-20260929.bak` y `ResidApp-antes-0018-20260929.bak`).
   La base local tiene además eventos de prueba del escenario integrado:
@@ -159,9 +160,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Si el usuario lo pide, push de `0018`** y comprobar que el pipeline termina en verde, con
-   `build-and-test` y `deploy`.
-2. **El Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de
+1. **El Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de
    las valoraciones, los seguimientos terminados y el informe de derivación firmado (el flujo pide que sea
    accesible desde el Historial). Tiene decisiones abiertas y conviene partirlo en bloques:
    - qué permiso abre la línea temporal (HIS-02);
