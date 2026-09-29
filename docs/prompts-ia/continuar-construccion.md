@@ -15,7 +15,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 - Hasta el script `0016` (bloque 2 de la historia 6, derivación a Urgencias en Enfermería y Medicina) está
   desplegado en Azure: el pipeline de `ca855f2` (run 36607704572) terminó en verde el 2026-09-29, con PDFs
-  reales generados en los tests del CI (Linux).
+  reales generados en los tests del CI (Linux). El último push (`1ed5382`, solo documentación, run
+  36609356298) también terminó en verde.
 - **Prueba en Azure de la derivación (2026-09-29):** `dev-integrado-enfermeria`, sobre «Residente
   Integrado Uno (ficticio)», con textos «Prueba técnica, se puede ignorar». Se hizo el recorrido completo:
   evento, valoración, protocolo, vista previa, firma, descarga del PDF, llamada y cierre con una
@@ -113,6 +114,28 @@ conducta de Medicina y del protocolo urgente están todas construidas.
   valoraciones, los seguimientos terminados y el informe de derivación firmado (el flujo pide que sea
   accesible desde el Historial).
 - **Evento propio de Medicina** (historia 7 de Medicina).
+
+## Avisos abiertos (fuera de alcance, sin corregir)
+
+Se detectaron durante otros bloques. No se han corregido porque quedaban fuera de su alcance; propónselos al
+usuario cuando encajen:
+
+- **`BaselineAreaDisplay.Summarize`** (`Web/Models/AuxiliarModels.cs`) escribe `ToString()` de cada
+  propiedad. En las áreas con varias opciones (comunicación, continencia, conducta, sueño, ayudas
+  habituales), las pantallas del basal (`Auxiliar/Basal`, `EnfermeriaBasal/Confirmar`) mostrarían el nombre
+  del tipo de lista (`System.Collections.Generic.List…`) en vez de los valores. El informe de derivación usa
+  su propio resumen (`ReferralReportBuilder.AreaValues`), que despliega las listas. Además, los valores de
+  los catálogos del basal no tienen etiquetas en español con tildes: se muestran con el nombre del enum.
+- **Pregunta para CJ:** si el campo «Comunicaciones» de la valoración de Enfermería debe entrar en el
+  informe de derivación. Hoy se excluye por prudencia (DER-04 saca los contactos del informe externo).
+  Está anotada en `pendientes-enfermeria.md`; si hace falta, se le pide con un documento en
+  `docs/pendientes-cj/`.
+- **CI (anotaciones de GitHub Actions):**
+  - `actions/checkout@v4` y `actions/setup-dotnet@v4` usan Node.js 20, que está obsoleto (hoy se fuerzan a
+    Node 24);
+  - `ubuntu-latest` pasará a Ubuntu 26 a partir del 19 de octubre de 2026. El workflow instala `sqlcmd` desde
+    el repositorio de paquetes de Microsoft para Ubuntu 22.04 (`.../config/ubuntu/22.04/prod.list`): revísalo
+    si el pipeline empieza a fallar en «Instalar sqlcmd».
 
 ## Reglas de trabajo propias de este repositorio
 
