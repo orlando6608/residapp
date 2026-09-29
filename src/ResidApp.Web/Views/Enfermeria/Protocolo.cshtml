@@ -1,0 +1,20 @@
+@model ResidApp.Web.Models.ProtocoloViewModel
+@{
+    ViewData["Title"] = "Protocolo urgente";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="Protocolos">Protocolos urgentes</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Protocolo urgente</li>
+    </ol>
+</nav>
+
+<partial name="_ProtocoloUrgente" model="Model" />
+
+<div class="d-grid d-md-flex justify-content-md-end gap-2 mb-3">
+    <a asp-action="Protocolos" class="btn btn-outline-secondary btn-lg">Volver a la bandeja</a>
+    <a asp-action="DetalleCambio" asp-route-eventoId="@Model.Event.EventId" class="btn btn-outline-secondary btn-lg">Ver el evento y la valoración</a>
+</div>

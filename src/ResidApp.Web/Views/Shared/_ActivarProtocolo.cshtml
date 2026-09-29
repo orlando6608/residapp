@@ -1,0 +1,32 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model ActivarProtocoloViewModel
+@* ENF-11/MED-13: confirmación de la activación, común a los dos perfiles. Envía al controlador en curso. *@
+@{
+    var evento = Model.Event;
+    var terminaSeguimiento = evento.Status is ClinicalEventStatus.EnSeguimiento or ClinicalEventStatus.EnSeguimientoMedico;
+}
+
+<h1 class="h3">Activar protocolo urgente — @evento.ResidentDisplayName</h1>
+<div class="alert alert-danger">
+    <strong>La atención va primero.</strong> Activar solo registra quién y cuándo; las actuaciones, la evolución y
+    los contactos con servicios se documentan después, sin prisa.
+    @if (terminaSeguimiento)
+    {
+        <br /><span>El seguimiento en curso termina al activar el protocolo.</span>
+    }
+</div>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="ActivarProtocolo" method="post">
+    <input type="hidden" asp-for="Form.EventoId" />
+    <input type="hidden" asp-for="Form.Revision" />
+    <div class="mb-3">
+        <label asp-for="Form.Nota" class="form-label"></label>
+        <textarea asp-for="Form.Nota" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Form.Nota" class="text-danger"></span>
+    </div>
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <button type="submit" class="btn btn-danger btn-lg">Activar protocolo urgente</button>
+    </div>
+</form>

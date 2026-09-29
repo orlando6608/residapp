@@ -1,0 +1,24 @@
+@model ResidApp.Web.Models.ActivarProtocoloViewModel
+@{
+    ViewData["Title"] = "Activar protocolo urgente";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item"><a asp-action="Escalado" asp-route-eventoId="@Model.Event.EventId">Detalle</a></li>
+        <li class="breadcrumb-item"><a asp-action="Conducta" asp-route-eventoId="@Model.Event.EventId">Conducta médica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Activar protocolo urgente</li>
+    </ol>
+</nav>
+
+<partial name="_ActivarProtocolo" model="Model" />
+
+<div class="d-grid d-md-flex justify-content-md-end mt-2">
+    <a asp-action="Conducta" asp-route-eventoId="@Model.Event.EventId" class="btn btn-outline-secondary btn-lg">Volver sin activar</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

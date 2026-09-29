@@ -137,6 +137,11 @@
     </div>
 }
 
+@if (evento.UrgentProtocol is { } protocolo)
+{
+    <partial name="_ProtocoloUrgenteResumen" model="protocolo" />
+}
+
 @if (evento.Closure is not null)
 {
     <partial name="_CierreEvento" model="evento" />
@@ -165,6 +170,10 @@
     @if (evento.Status == ClinicalEventStatus.EnSeguimientoMedico)
     {
         <a asp-action="Seguimiento" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Ver seguimiento médico</a>
+    }
+    else if (evento.Status == ClinicalEventStatus.ProtocoloUrgenteMedico)
+    {
+        <a asp-action="Protocolo" asp-route-eventoId="@evento.EventId" class="btn btn-danger btn-lg">Ver el protocolo urgente</a>
     }
     else if (medico.Assessment is not null && evento.Status is ClinicalEventStatus.EnValoracionMedica or ClinicalEventStatus.ConIndicacionPendiente)
     {

@@ -13,9 +13,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- Todo el trabajo está en `main` y subido al remoto; compruébalo con `git status` al empezar. Hasta el
-  script `0014` (historia 5 de Medicina, seguimiento médico) está desplegado en Azure: el pipeline de
-  `d273a5a` (run 36561451773) terminó con éxito el 2026-09-29, con `build-and-test` y `deploy` en verde.
+- El bloque 1 de la historia 6 (protocolo urgente en Enfermería y Medicina, script `0015`) está en un
+  commit en `main` **sin subir**: el push lo decide el usuario. Compruébalo con `git status` al empezar.
+  Hasta el script `0014` (historia 5 de Medicina, seguimiento médico) está desplegado en Azure: el pipeline
+  de `d273a5a` (run 36561451773) terminó con éxito el 2026-09-29. Tras el push de `0015`, comprueba que el
+  pipeline termina en verde.
+- **Zona horaria (pendiente del usuario):** la app lee y muestra las horas en la hora local del servidor.
+  En Azure hay que configurar en la Web App `app-residapp-dev` el ajuste `WEBSITE_TIME_ZONE=Europe/Madrid`
+  (Linux) o `WEBSITE_TIME_ZONE=Romance Standard Time` (Windows). Si no, se muestran en UTC y la hora de
+  contacto del protocolo se interpreta en UTC.
 - El primer pipeline de `0013` (`5325ef4`) falló en los tests por interbloqueos en una BD recién creada, y
   no llegó a desplegar. Se corrigió en `f970d83` (`FORCESEEK`, ver las lecciones). En `b060542` se ordenaron
   además las opciones de área en `SqlChangeInboxDirectory.FindAsync`, porque un test fallaba de vez en
@@ -26,18 +32,28 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   log de SQL Server avisa a esa hora de que su memoria se había paginado («performance degradation»). Lo
   más probable es un tiempo de espera por presión de memoria en la máquina, pero no está confirmado. Si
   vuelve a fallar, guarda la salida completa (`--logger "console;verbosity=normal"`).
+- Verificación de `0015`: 3 vueltas tipo CI con BD nueva, BD temporal con seed y 5 vueltas locales en
+  verde. Dos vueltas locales dieron unos 50 fallos por tiempo de espera agotado (unos 30 s, incluso en tests
+  que no tocan el protocolo):
+  - las dos eran la primera ejecución de `dotnet test`, que además compilaba;
+  - no había bloqueos, interbloqueos ni crecimientos lentos de ficheros (traza por defecto);
+  - el log de SQL Server avisaba de memoria paginada, y la máquina tenía 1,9 GB libres de 15,7 GB;
+  - repetidas con `--no-build`, pasaron enteras.
+
+  Causa probable: presión de memoria en esta máquina, la misma que en el fallo de `0014`. Consejo:
+  `dotnet build src/ResidApp.sln` primero y después `dotnet test src/ResidApp.sln --no-build`.
 - El estado de un run se consulta sin autenticación en
   `https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main`, y el de cada job y paso en
   `.../actions/runs/<id>/jobs`. Los logs piden autenticación y `gh` no está instalado.
 - CJ no ha completado nada nuevo: `docs/pendientes-cj/rangos-referencia-constantes.html` sigue con 17
   valores «por definir».
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
-  (parcial), 2, 3, 4, 5, 7, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su pantalla).
-  Medicina está en curso: historias 1, 2, 3, 4 y 5 (escalados, valoración médica, indicaciones, cierre
-  médico y seguimiento médico con continuidad entre turnos).
-- La base local `ResidApp` tiene los scripts `0001` a `0014` registrados en `dbo.scripts_aplicados`.
-  Hay una copia previa a `0014` en
-  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0014-20260929.bak`.
+  (parcial), 2, 3, 4, 5, 6 (bloque 1), 7, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y
+  su pantalla). Medicina está en curso: historias 1, 2, 3, 4, 5 y 6 (bloque 1) (escalados, valoración
+  médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos y protocolo urgente).
+- La base local `ResidApp` tiene los scripts `0001` a `0015` registrados en `dbo.scripts_aplicados`.
+  Hay una copia previa a `0015` en
+  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-0015-20260929.bak`.
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
@@ -49,8 +65,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     se cerró desde el seguimiento.
   - «Prueba manual cierre Enfermería tras 0013: mareo.»: cerrado por Enfermería.
   - «Prueba manual seguimiento médico: disuria.»: escalado, seguimiento médico desde la valoración y
-    resuelto con una indicación (con indicación pendiente, sin leer).
-- Suite: 97 unitarios, 160 de integración y 1 funcional, todos en verde.
+    resuelto con una indicación sin leer. Después, protocolo urgente de Medicina con un contacto, y cerrado
+    desde el protocolo.
+  - «Prueba manual protocolo urgente: desaturación.»: prioritario de Enfermería, protocolo urgente con
+    actuación, contacto con el 112 (hora de 10 minutos antes) y evolución, y cerrado desde el protocolo.
+- Suite: 107 unitarios, 166 de integración y 1 funcional, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -58,15 +77,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea: decidir el orden
 
-Hay que proponer al usuario el orden antes de empezar. La conducta médica ya tiene tres de sus cuatro
-salidas (indicaciones, cierre y seguimiento médico); falta el protocolo urgente.
+Hay que proponer al usuario el orden antes de empezar. Las dos decisiones (Enfermería y Medicina) tienen ya
+sus cuatro salidas; al protocolo urgente le falta la salida «Derivar a Urgencias».
 
-- **Protocolo urgente y derivación a Urgencias** (historia 6 de Enfermería y 6 de Medicina, `DER-01` a
-  `DER-06`, [`derivacion-urgencias.md`](../flujos-clinicos/derivacion-urgencias.md)). Es la salida que
-  falta en las dos decisiones. Antes de empezar hay que decidir con el usuario:
-  - cómo se genera y firma el informe en PDF;
-  - la «actualización relevante» obligatoria para la familia con el registro del intento de llamada, que
-    toca el Portal Familiar, todavía sin construir.
+- **Derivación a Urgencias** (bloque 2 de la historia 6, `DER-01` a `DER-06`,
+  [`derivacion-urgencias.md`](../flujos-clinicos/derivacion-urgencias.md)). El usuario ya decidió el PDF,
+  la firma y el intento de llamada (detalle en `pendientes-enfermeria.md`). Quedan por decidir:
+  - qué pasa con el evento tras derivar;
+  - cómo encaja la actualización relevante con la decisión de comunicación del cierre;
+  - cómo se instala PDFsharp-MigraDoc: primer paquete NuGet del proyecto aparte de Dapper y SqlClient.
+    Comprueba la licencia y la compatibilidad con .NET 10.
 - **Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de las
   valoraciones y los seguimientos terminados.
 - **Evento propio de Medicina** (historia 7 de Medicina).
@@ -160,5 +180,12 @@ Repite estos pasos antes de dar un bloque por cerrado:
 - **Acentos con curl en Git Bash:** `--data-urlencode` recibe los argumentos en Latin-1, así que «ó» llega
   como `%F3` y ASP.NET lo guarda tal cual. Un navegador envía UTF-8 y se guarda bien. En pruebas con curl,
   escribe los acentos ya codificados en UTF-8 (`--data "Form.Motivo=Desaturaci%C3%B3n"`).
+- **Razor:** dentro de un bloque `@if`, el texto que sigue a una etiqueta vacía (`<br />Texto`) se interpreta
+  como C#. Envuélvelo en un `<span>`.
+- **Vistas comunes a dos perfiles:** en una vista parcial, `asp-action` sin `asp-controller` apunta al
+  controlador en curso. Así, `Shared/_ProtocoloUrgente` sirve a Enfermería y a Medicina sin pasarle el
+  controlador.
+- **`CHECK` antes que el trigger:** en un test de BD que fuerza un estado prohibido, un `CHECK` de la fila
+  (como `CK_ea_inicio_medico`) salta antes que `TR_ea_transition_guard` y cambia el mensaje esperado.
 - **Verificación manual con curl:** una cuenta con un solo ámbito se autoselecciona, y
   `ProfileScope/Select` redirige. Sigue las redirecciones con `-L`.

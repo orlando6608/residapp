@@ -1,0 +1,102 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model ProtocoloViewModel
+@* ENF-11/MED-13: pantalla del protocolo urgente activo, común a los dos perfiles (DER-01). Los formularios
+   envían al controlador en curso. La hora del contacto se escribe en la hora local, igual que se muestran. *@
+@{
+    var evento = Model.Event;
+    var actuacion = Model.FormFor(UrgentProtocolEntryType.Actuacion);
+    var evolucion = Model.FormFor(UrgentProtocolEntryType.Evolucion);
+    var contacto = Model.FormFor(UrgentProtocolEntryType.Contacto);
+    var horaContacto = (contacto.ContactadoEn ?? DateTime.Now).ToString("yyyy-MM-ddTHH:mm");
+}
+
+<h1 class="h3">Protocolo urgente — @evento.ResidentDisplayName</h1>
+<p class="text-muted">
+    <span class="badge @ClinicalEventStatusDisplay.BadgeClass(evento.Status, false)">@ClinicalEventStatusDisplay.Label(evento.Status)</span>
+    · @(evento.UnitName ?? "Sin unidad") · Documentar no debe retrasar la atención: registra cuando puedas.
+</p>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<partial name="_ProtocoloUrgenteResumen" model="evento.UrgentProtocol" />
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-lg-6">
+        <form asp-action="Protocolo" method="post" class="card h-100">
+            <div class="card-body">
+                <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
+                <input type="hidden" name="Form.Revision" value="@actuacion.Revision" />
+                <input type="hidden" name="Form.Tipo" value="@UrgentProtocolEntryType.Actuacion" />
+                <h2 class="h5 card-title"><label for="actuacion-texto">Registrar actuación</label></h2>
+                <textarea id="actuacion-texto" name="Form.Texto" class="form-control mb-3" rows="3">@actuacion.Texto</textarea>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">Registrar actuación</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-12 col-lg-6">
+        <form asp-action="Protocolo" method="post" class="card h-100">
+            <div class="card-body">
+                <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
+                <input type="hidden" name="Form.Revision" value="@evolucion.Revision" />
+                <input type="hidden" name="Form.Tipo" value="@UrgentProtocolEntryType.Evolucion" />
+                <h2 class="h5 card-title"><label for="evolucion-texto">Registrar evolución</label></h2>
+                <textarea id="evolucion-texto" name="Form.Texto" class="form-control mb-3" rows="3">@evolucion.Texto</textarea>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">Registrar evolución</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<form asp-action="Protocolo" method="post" class="card mb-3">
+    <div class="card-body">
+        <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
+        <input type="hidden" name="Form.Revision" value="@contacto.Revision" />
+        <input type="hidden" name="Form.Tipo" value="@UrgentProtocolEntryType.Contacto" />
+        <h2 class="h5 card-title">Registrar contacto con un servicio</h2>
+        <p class="text-muted">Queda en la trazabilidad interna; no forma parte del informe de derivación.</p>
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-md-7">
+                <label for="contacto-servicio" class="form-label">Servicio contactado</label>
+                <input id="contacto-servicio" name="Form.Servicio" class="form-control form-control-lg" maxlength="@UrgentProtocolEntry.MaxServiceLength"
+                       value="@contacto.Servicio" placeholder="Por ejemplo, 112 o Urgencias del hospital" />
+            </div>
+            <div class="col-12 col-md-5">
+                <label for="contacto-hora" class="form-label">Hora del contacto</label>
+                <input id="contacto-hora" name="Form.ContactadoEn" type="datetime-local" class="form-control form-control-lg" value="@horaContacto" />
+            </div>
+        </div>
+        <label for="contacto-nota" class="form-label">Nota (opcional)</label>
+        <textarea id="contacto-nota" name="Form.Texto" class="form-control mb-3" rows="2">@contacto.Texto</textarea>
+        <div class="d-grid d-md-flex justify-content-md-end">
+            <button type="submit" class="btn btn-primary btn-lg">Registrar contacto</button>
+        </div>
+    </div>
+</form>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-md-6">
+        <a asp-action="Cerrar" asp-route-eventoId="@evento.EventId" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Cerrar el evento</h2>
+                <p class="card-text text-muted mb-0">Sin derivar a Urgencias. Decides si se comunica a la familia y el evento pasa a Historial.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card h-100 text-muted">
+            <div class="card-body">
+                <h2 class="h5 card-title">Derivar a Urgencias</h2>
+                <p class="card-text mb-0">Próximamente: informe con vista previa obligatoria, firma y PDF, actualización relevante para la familia e intento de llamada.</p>
+            </div>
+        </div>
+    </div>
+</div>

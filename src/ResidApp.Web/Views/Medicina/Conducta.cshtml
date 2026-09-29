@@ -71,12 +71,12 @@
         }
     </div>
     <div class="col-12 col-md-6">
-        <div class="card h-100 text-muted">
+        <a asp-action="ActivarProtocolo" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100 border-danger">
             <div class="card-body">
                 <h2 class="h5 card-title">Activar protocolo urgente</h2>
-                <p class="card-text mb-0">Próximamente: documentar la activación y, si procede, derivar a Urgencias.</p>
+                <p class="card-text text-muted mb-0">Un solo paso para no retrasar la atención; después documentas actuaciones, evolución y contactos. Las indicaciones emitidas siguen visibles. La derivación a Urgencias llegará pronto.</p>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 

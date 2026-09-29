@@ -23,5 +23,7 @@ public enum ClinicalEventStatus
     [Code("EN_VALORACION_MEDICA")] [Display(Name = "En valoración médica")] EnValoracionMedica,
     [Code("CON_INDICACION_PENDIENTE")] [Display(Name = "Con indicación pendiente")] ConIndicacionPendiente,
     [Code("EN_SEGUIMIENTO_MEDICO")] [Display(Name = "En seguimiento médico")] EnSeguimientoMedico,
+    [Code("PROTOCOLO_URGENTE")] [Display(Name = "Protocolo urgente activo")] ProtocoloUrgente,
+    [Code("PROTOCOLO_URGENTE_MEDICO")] [Display(Name = "Protocolo urgente activo (Medicina)")] ProtocoloUrgenteMedico,
     [Code("CERRADO")] [Display(Name = "Cerrado")] Cerrado,
 }

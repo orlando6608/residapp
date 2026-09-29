@@ -14,10 +14,9 @@ namespace ResidApp.Web.Controllers;
 /// Vertical Medicina: MED-01 (inicio con contadores), MED-02/MED-03 (bandeja y detalle de escalados, con las
 /// fuentes de solo lectura), MED-04/MED-05 (empezar y guardar la valoración médica), MED-06 a MED-09
 /// (conducta médica con la salida "registrar indicaciones" y el seguimiento de las indicaciones emitidas),
-/// MED-10 a MED-12 (seguimiento médico, su bandeja y la continuidad entre turnos) y MED-15 a MED-17 (cierre
-/// médico con la decisión de comunicación familiar).
-/// El protocolo urgente llegará con su historia. Traduce a MedicinaApplicationService; la autorización y las
-/// reglas de negocio no viven aquí.
+/// MED-10 a MED-12 (seguimiento médico, su bandeja y la continuidad entre turnos), MED-13 (protocolo urgente;
+/// la derivación llegará en su bloque) y MED-15 a MED-17 (cierre médico con la decisión de comunicación
+/// familiar). Traduce a MedicinaApplicationService; la autorización y las reglas de negocio no viven aquí.
 /// </summary>
 public sealed class MedicinaController(MedicinaApplicationService service) : Controller
 {
@@ -33,6 +32,7 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         var escalados = await service.ListEscalationsAsync(new ListEscalationsCommand(activeScope.ProfileScopeId, centroId), ct);
         var indicaciones = await service.ListMedicalIndicationsAsync(new ListMedicalIndicationsCommand(activeScope.ProfileScopeId, centroId), ct);
         var seguimientos = await service.ListMedicalFollowUpsAsync(new ListMedicalFollowUpsCommand(activeScope.ProfileScopeId, centroId), ct);
+        var protocolos = await service.ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(activeScope.ProfileScopeId, centroId), ct);
         if (!escalados.Ok)
         {
             ModelState.AddModelError(string.Empty, escalados.Error!.Message);
@@ -43,7 +43,8 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
             lista.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura),
             lista.Count(i => i.Indication.Status == MedicalIndicationStatus.NoRealizada),
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
-            seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0));
+            seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
+            protocolos.Ok ? protocolos.Value!.Count : 0));
     }
 
     /// <summary>MED-02: bandeja de escalados (pendientes y en valoración médica), del más antiguo al más reciente.</summary>
@@ -183,6 +184,134 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         detail.Medical.Assessment is not null
         && detail.Status is ClinicalEventStatus.EnValoracionMedica or ClinicalEventStatus.ConIndicacionPendiente
             or ClinicalEventStatus.EnSeguimientoMedico;
+
+    /// <summary>Además de desde la conducta, se cierra desde el protocolo urgente activo de Medicina.</summary>
+    private static bool CanClose(PendingChangeDetail detail) =>
+        CanDecide(detail) || (detail.Medical.Assessment is not null && detail.Status == ClinicalEventStatus.ProtocoloUrgenteMedico);
+
+    /// <summary>MED-13: confirmar la activación del protocolo urgente, con una nota opcional.</summary>
+    public async Task<IActionResult> ActivarProtocolo(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Escalados));
+        }
+        if (!CanDecide(detail))
+        {
+            return RedirectToAction(nameof(Escalado), new { eventoId });
+        }
+
+        return View(new ActivarProtocoloViewModel(
+            detail, new ActivarProtocoloFormModel { EventoId = detail.EventId, Revision = detail.Revision }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ActivarProtocolo([Bind(Prefix = "Form")] ActivarProtocoloFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Escalados));
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new ActivarProtocoloViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.ActivateUrgentProtocolAsync(new ActivateUrgentProtocolCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Nota), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Protocolo urgente activado. Documenta las actuaciones cuando puedas: la atención va primero.";
+            return RedirectToAction(nameof(Protocolo), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput => "Revisa los datos: la nota es demasiado larga. Para activar el protocolo hace falta una valoración médica guardada.",
+            _ => result.Error.Message,
+        });
+        return View(new ActivarProtocoloViewModel(detail, form));
+    }
+
+    /// <summary>MED-13: bandeja de protocolos urgentes activos de Medicina.</summary>
+    public async Task<IActionResult> Protocolos(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Protocolos)) });
+        }
+
+        var result = await service.ListUrgentProtocolsAsync(
+            new ListUrgentProtocolsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(Array.Empty<UrgentProtocolSummary>());
+        }
+
+        return View(result.Value);
+    }
+
+    /// <summary>MED-13: el protocolo urgente activo, con sus registros y los formularios para documentar
+    /// actuaciones, evolución y contactos con servicios.</summary>
+    public async Task<IActionResult> Protocolo(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Protocolos));
+        }
+        if (detail.Status != ClinicalEventStatus.ProtocoloUrgenteMedico || detail.UrgentProtocol is null)
+        {
+            return RedirectToAction(nameof(Escalado), new { eventoId });
+        }
+
+        return View(new ProtocoloViewModel(detail, null));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Protocolo([Bind(Prefix = "Form")] ProtocoloRegistroFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Protocolos));
+        }
+        if (detail.UrgentProtocol is null)
+        {
+            return RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new ProtocoloViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.RecordUrgentProtocolEntryAsync(new RecordUrgentProtocolEntryCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Tipo,
+            form.Texto, form.Servicio, form.ContactadoEnOffset), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = UrgentProtocolDisplay.SavedMessage(form.Tipo);
+            return RedirectToAction(nameof(Protocolo), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput => UrgentProtocolDisplay.InvalidMessage(form.Tipo),
+            _ => result.Error.Message,
+        });
+        return View(new ProtocoloViewModel(detail, form));
+    }
+
 
     /// <summary>Un solo seguimiento médico por evento: se inicia desde la conducta si todavía no lo tuvo.</summary>
     private static bool CanStartFollowUp(PendingChangeDetail detail) =>
@@ -387,7 +516,7 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         {
             return RedirectToAction(nameof(Escalados));
         }
-        if (!CanDecide(detail))
+        if (!CanClose(detail))
         {
             return RedirectToAction(nameof(Escalado), new { eventoId });
         }

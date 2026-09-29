@@ -77,6 +77,12 @@ builder.Services.AddScoped<CloseMedicalEvent>();
 builder.Services.AddScoped<StartMedicalFollowUp>();
 builder.Services.AddScoped<RecordMedicalFollowUpAction>();
 builder.Services.AddScoped<ListMedicalFollowUps>();
+builder.Services.AddScoped<ActivateUrgentProtocol>();
+builder.Services.AddScoped<RecordUrgentProtocolEntry>();
+builder.Services.AddScoped<ListUrgentProtocols>();
+builder.Services.AddScoped<ActivateMedicalUrgentProtocol>();
+builder.Services.AddScoped<RecordMedicalUrgentProtocolEntry>();
+builder.Services.AddScoped<ListMedicalUrgentProtocols>();
 builder.Services.AddScoped<MedicinaApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();

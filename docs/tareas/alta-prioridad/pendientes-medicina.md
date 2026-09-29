@@ -1,6 +1,6 @@
 # Pendientes del vertical Medicina
 
-Estado al 2026-09-29 (tras la historia 5). Historias de referencia: [`docs/historias-usuarios/medicina.md`](../../historias-usuarios/medicina.md).
+Estado al 2026-09-29 (tras el bloque 1 de la historia 6). Historias de referencia: [`docs/historias-usuarios/medicina.md`](../../historias-usuarios/medicina.md).
 Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-conducta-medicina.md); wireframe
 [`medicina.md`](../../bocetos-pantallas/wireframes-funcionales/medicina.md).
 
@@ -45,21 +45,30 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   porque un evento escalado desde un seguimiento de Enfermería ya tiene su fila). Script
   `0014_medicina_seguimiento`. Se reutilizan `FollowUpPlan`, `FollowUpAction` (con el tipo nuevo
   `Conservacion`) y `FollowUpDetail`.
-- Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests` y `FollowUpTests` (unitarios).
+- **Historia 6, bloque 1 (protocolo urgente)** — 2026-09-29: salida "activar protocolo urgente" de la conducta
+  (`/Medicina/ActivarProtocolo`, MED-13), desde EN_VALORACION_MEDICA (con la valoración guardada),
+  CON_INDICACION_PENDIENTE o EN_SEGUIMIENTO_MEDICO. El evento pasa a PROTOCOLO_URGENTE_MEDICO, sale de las
+  bandejas y entra en `/Medicina/Protocolos` (tarjeta del inicio). Las indicaciones emitidas siguen visibles.
+  `/Medicina/Protocolo` es la misma pantalla que la de Enfermería (DER-01): actuaciones, evolución y contactos
+  con servicios. Desde el protocolo solo se cierra (`/Medicina/Cerrar`). El detalle y las decisiones están en
+  `pendientes-enfermeria.md`; script `0015_protocolo_urgente`.
+- Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests`, `FollowUpTests` y
+  `UrgentProtocolTests` (unitarios).
 - Cuenta de desarrollo `dev-integrado-medicina` en el escenario integrado.
 
 ## Pendiente
 
 En el orden propuesto:
 
-1. **Historia 6 — protocolo urgente y derivación** (común con Enfermería, `DER-01` a `DER-06`).
+1. **Historia 6, bloque 2 — derivación a Urgencias** (común con Enfermería, `DER-01` a `DER-06`; las
+   decisiones ya tomadas están en `pendientes-enfermeria.md`).
 2. **Historia 7 — evento propio de Medicina** (`MED-11`): mismo ciclo sin reenviarlo desde Enfermería;
    exige que un ámbito de Medicina vea eventos no escalados propios.
 3. **Historias 8 y 9 — basal e historial/corrección**.
 
 Huecos de lo ya construido:
 
-- La conducta médica todavía no ofrece el protocolo urgente; llegará con la historia 6.
+- El protocolo urgente todavía no deriva a Urgencias; llegará con el bloque 2 de la historia 6.
 - **Seguimiento médico (historia 5)**: no hay equipos ni turnos reales (vertical Administración). El
   equipo o turno entrante es texto libre y la fecha prevista es solo fecha, sin hora, como en Enfermería.
 - Los eventos escalados salen de las bandejas de Enfermería y no hay todavía una lista de "mis escalados"

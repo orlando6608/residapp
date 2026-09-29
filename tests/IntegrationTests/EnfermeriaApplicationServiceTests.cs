@@ -46,7 +46,10 @@ public class EnfermeriaApplicationServiceTests
             new ListFollowUps(scopes, changeInbox, session),
             new EscalateClinicalEvent(scopes, changeInbox, session, assessments),
             new ListPendingIndications(scopes, changeInbox, session),
-            new RecordIndicationProgress(scopes, changeInbox, session, new SqlMedicalIndicationRepository(TestDatabase.ConnectionFactory)));
+            new RecordIndicationProgress(scopes, changeInbox, session, new SqlMedicalIndicationRepository(TestDatabase.ConnectionFactory)),
+            new ActivateUrgentProtocol(scopes, changeInbox, session, assessments),
+            new RecordUrgentProtocolEntry(scopes, changeInbox, session, assessments),
+            new ListUrgentProtocols(scopes, changeInbox, session));
     }
 
     /// <summary>Un residente en la unidad de dos profesionales de Enfermería y un evento propio de la
@@ -856,6 +859,157 @@ public class EnfermeriaApplicationServiceTests
 
         Assert.True(result.Ok);
         Assert.Null(result.Value);
+    }
+
+    private static ActivateUrgentProtocolCommand ActivateCommand(SeededProfile seed, Guid eventId, int revision, string? note = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, note);
+
+    private static RecordUrgentProtocolEntryCommand EntryCommand(
+        SeededProfile seed, Guid eventId, int revision, UrgentProtocolEntryType type, string? text = null, string? service = null,
+        DateTimeOffset? contactedAt = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, type, text, service, contactedAt);
+
+    private static async Task<IReadOnlyList<UrgentProtocolSummary>> ProtocolsAsync(SeededProfile seed) =>
+        (await BuildService(seed.ExternalSubject).ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(seed.ProfileScopeId, seed.CenterId))).Value!;
+
+    [Fact]
+    public async Task ProtocoloUrgente_ExigeValoracion_SaleDeLasBandejas_YEntraEnProtocolos()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var started = (await service.StartNursingAssessmentAsync(new StartNursingAssessmentCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId, 1))).Value;
+
+        var withoutAssessment = await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, eventId, started));
+        var saved = (await service.SaveNursingAssessmentAsync(SaveCommand(enfermera, eventId, started))).Value;
+        var tooLong = await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, eventId, saved, new string('a', UrgentProtocolActivation.MaxNoteLength + 1)));
+        var stale = await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, eventId, saved - 1));
+        var activated = await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, eventId, saved, "  Desaturación brusca.  "));
+        var again = await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, eventId, activated.Value));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutAssessment.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, tooLong.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
+        Assert.True(activated.Ok);
+        Assert.Equal(ApplicationFailureCode.Conflict, again.Error!.Code);
+
+        var detail = await DetailAsync(enfermera, eventId);
+        Assert.Equal(ClinicalEventStatus.ProtocoloUrgente, detail.Status);
+        Assert.Equal(SystemProfile.Enfermeria, detail.UrgentProtocol!.Profile);
+        Assert.Equal("Desaturación brusca.", detail.UrgentProtocol.ActivationNote);
+        Assert.True(detail.UrgentProtocol.ActivatedByCurrentAccount);
+        Assert.Empty(detail.UrgentProtocol.Entries);
+        Assert.Empty((await service.ListPendingChangesAsync(new ListPendingChangesCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, DailyChangeClassification.Ordinario))).Value!);
+        Assert.Equal(eventId, Assert.Single(await ProtocolsAsync(enfermera)).EventId);
+        Assert.Equal(1, await CountAuditAsync(eventId, "URGENT_PROTOCOL_ACTIVATE"));
+
+        // La valoración sigue en borrador, pero ya no se edita.
+        var saveDuring = await service.SaveNursingAssessmentAsync(SaveCommand(enfermera, eventId, detail.Revision));
+        Assert.Equal(ApplicationFailureCode.Conflict, saveDuring.Error!.Code);
+    }
+
+    [Fact]
+    public async Task ProtocoloUrgente_DesdeSeguimiento_RegistraActuacionEvolucionYContacto_ConAutoria()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var other = BuildService(companera.ExternalSubject);
+        var followed = (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, await StartAndSaveAsync(enfermera, eventId)))).Value;
+        var revision = (await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, eventId, followed))).Value;
+        Assert.Empty(await FollowUpsAsync(enfermera));
+        var contactedAt = DateTimeOffset.UtcNow.AddMinutes(-10);
+
+        revision = (await service.RecordUrgentProtocolEntryAsync(EntryCommand(enfermera, eventId, revision, UrgentProtocolEntryType.Actuacion, "Oxigenoterapia a 3 l/min."))).Value;
+        var stale = await other.RecordUrgentProtocolEntryAsync(EntryCommand(companera, eventId, revision - 1, UrgentProtocolEntryType.Evolucion, "x"));
+        var emptyEvolution = await other.RecordUrgentProtocolEntryAsync(EntryCommand(companera, eventId, revision, UrgentProtocolEntryType.Evolucion, " "));
+        revision = (await other.RecordUrgentProtocolEntryAsync(EntryCommand(companera, eventId, revision, UrgentProtocolEntryType.Evolucion, "Satura 94 % con O₂."))).Value;
+        var withoutService = await service.RecordUrgentProtocolEntryAsync(EntryCommand(enfermera, eventId, revision, UrgentProtocolEntryType.Contacto, contactedAt: contactedAt));
+        var future = await service.RecordUrgentProtocolEntryAsync(EntryCommand(enfermera, eventId, revision, UrgentProtocolEntryType.Contacto,
+            service: "112", contactedAt: DateTimeOffset.UtcNow.AddHours(1)));
+        var withoutTime = await service.RecordUrgentProtocolEntryAsync(EntryCommand(enfermera, eventId, revision, UrgentProtocolEntryType.Contacto, service: "112"));
+        var contact = await service.RecordUrgentProtocolEntryAsync(EntryCommand(enfermera, eventId, revision, UrgentProtocolEntryType.Contacto,
+            " Pide ambulancia. ", " 112 ", contactedAt));
+
+        Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, emptyEvolution.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutService.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, future.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutTime.Error!.Code);
+        Assert.True(contact.Ok);
+
+        var entries = (await DetailAsync(companera, eventId)).UrgentProtocol!.Entries;
+        Assert.Equal(new[] { UrgentProtocolEntryType.Actuacion, UrgentProtocolEntryType.Evolucion, UrgentProtocolEntryType.Contacto },
+            entries.Select(e => e.Type));
+        Assert.Equal(new[] { false, true, false }, entries.Select(e => e.ByCurrentAccount));
+        Assert.Equal("112", entries[2].Service);
+        Assert.Equal("Pide ambulancia.", entries[2].Text);
+        Assert.True(Math.Abs((entries[2].ContactedAt!.Value - contactedAt).TotalSeconds) < 1);
+        var listed = Assert.Single(await ProtocolsAsync(companera));
+        Assert.Equal(UrgentProtocolEntryType.Contacto, listed.LastEntryType);
+        foreach (var code in new[] { "URGENT_PROTOCOL_ACTION", "URGENT_PROTOCOL_EVOLUTION", "URGENT_PROTOCOL_CONTACT" })
+        {
+            Assert.Equal(1, await CountAuditAsync(eventId, code));
+        }
+    }
+
+    [Fact]
+    public async Task ProtocoloUrgente_SeCierraDeFormaIdempotente_YCierraLaValoracion()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var revision = (await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, eventId, await StartAndSaveAsync(enfermera, eventId)))).Value;
+        var operationId = Guid.NewGuid();
+
+        var closed = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, revision, operationId));
+        var repeated = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, revision, operationId));
+        var entryAfter = await service.RecordUrgentProtocolEntryAsync(EntryCommand(enfermera, eventId, closed.Value, UrgentProtocolEntryType.Actuacion, "Tarde."));
+
+        Assert.True(closed.Ok);
+        Assert.Equal(closed.Value, repeated.Value);
+        Assert.Equal(ApplicationFailureCode.Conflict, entryAfter.Error!.Code);
+        Assert.Equal(ClinicalEventStatus.Cerrado, (await DetailAsync(enfermera, eventId)).Status);
+        Assert.Empty(await ProtocolsAsync(enfermera));
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal("CERRADA", await connection.ExecuteScalarAsync<string>(
+            "SELECT estado_codigo FROM dbo.valoraciones_enfermeria WHERE evento_id = @EventId", new { EventId = eventId }));
+    }
+
+    [Fact]
+    public async Task ProtocoloUrgente_FueraDeAmbitoOConOtroPerfil_SeDeniega_YLaBaseDeDatosLoProtege()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+        var medica = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, enfermera.CenterId, enfermera.UnitId);
+
+        var byOutsider = await BuildService(outsider.ExternalSubject).ActivateUrgentProtocolAsync(ActivateCommand(outsider, eventId, revision));
+        var byMedica = await BuildService(medica.ExternalSubject).ActivateUrgentProtocolAsync(ActivateCommand(medica, eventId, revision));
+        var listByMedica = await BuildService(medica.ExternalSubject).ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(medica.ProfileScopeId, medica.CenterId));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOutsider.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byMedica.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, listByMedica.Error!.Code);
+
+        var activated = (await BuildService(enfermera.ExternalSubject).ActivateUrgentProtocolAsync(ActivateCommand(enfermera, eventId, revision))).Value;
+        Assert.True((await BuildService(enfermera.ExternalSubject).RecordUrgentProtocolEntryAsync(
+            EntryCommand(enfermera, eventId, activated, UrgentProtocolEntryType.Actuacion, "Vía periférica."))).Ok);
+        Assert.Empty(await ProtocolsAsync(outsider));
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        foreach (var (sql, expected) in new[]
+        {
+            ("UPDATE dbo.protocolos_urgentes SET nota_activacion = 'x' WHERE evento_id = @EventId", "URGENT_PROTOCOL_IMMUTABLE"),
+            ("DELETE FROM dbo.protocolos_urgentes WHERE evento_id = @EventId", "URGENT_PROTOCOL_IMMUTABLE"),
+            ("UPDATE r SET texto = 'x' FROM dbo.protocolo_urgente_registros r JOIN dbo.protocolos_urgentes p ON p.id = r.protocolo_id WHERE p.evento_id = @EventId", "URGENT_PROTOCOL_ENTRY_IMMUTABLE"),
+            ("DELETE r FROM dbo.protocolo_urgente_registros r JOIN dbo.protocolos_urgentes p ON p.id = r.protocolo_id WHERE p.evento_id = @EventId", "URGENT_PROTOCOL_ENTRY_IMMUTABLE"),
+            ("INSERT INTO dbo.protocolo_urgente_registros (id, protocolo_id, tipo_codigo, texto, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), p.id, 'CONTACTO', 'Sin servicio', p.activado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.protocolos_urgentes p WHERE p.evento_id = @EventId", "CK_pur_tipo"),
+            ("INSERT INTO dbo.protocolo_urgente_registros (id, protocolo_id, tipo_codigo, servicio_contactado, contactado_en, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), p.id, 'CONTACTO', '112', DATEADD(HOUR, 1, SYSUTCDATETIME()), p.activado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.protocolos_urgentes p WHERE p.evento_id = @EventId", "CK_pur_contacto_no_futuro"),
+            ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_VALORACION', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
+            ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'ESCALADO_MEDICINA', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
+        })
+        {
+            var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { EventId = eventId }));
+            Assert.Contains(expected, ex.Message);
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 # Pendientes del vertical Enfermería
 
-Estado al 2026-09-29. Historias de referencia: [`docs/historias-usuarios/enfermeria.md`](../../historias-usuarios/enfermeria.md).
+Estado al 2026-09-29 (tras el bloque 1 de la historia 6). Historias de referencia: [`docs/historias-usuarios/enfermeria.md`](../../historias-usuarios/enfermeria.md).
 Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-escalado-enfermeria.md),
 [`gestion-basal-barthel.md`](../../flujos-clinicos/gestion-basal-barthel.md),
 [`derivacion-urgencias.md`](../../flujos-clinicos/derivacion-urgencias.md).
@@ -45,6 +45,22 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   lectura (`MedicinaController`: inicio, bandeja `/Medicina/Escalados` y detalle `/Medicina/Escalado`):
   un ámbito de Medicina solo ve eventos escalados de sus unidades. Cuenta de desarrollo
   `dev-integrado-medicina`.
+- **Historia 6, bloque 1 (protocolo urgente)** — 2026-09-29: "Activar protocolo urgente" desde la decisión
+  asistencial (con la valoración guardada o al resolver un seguimiento) en `/ActivarProtocolo`. Es un solo
+  paso con nota opcional, para no retrasar la atención. El evento pasa a PROTOCOLO_URGENTE, sale de las
+  bandejas y entra en `/Enfermeria/Protocolos` (tarjeta del inicio). En `/Protocolo` se registran actuaciones,
+  evolución y contactos con servicios (servicio y hora del contacto, no futura, solo en la trazabilidad
+  interna, DER-04), cada uno con su autoría. Desde el protocolo solo se cierra (el cierre común). **Decisiones
+  del usuario (2026-09-29):**
+  - dos bloques;
+  - desde el protocolo, derivar o cerrar, sin escalar;
+  - el protocolo pertenece al perfil que lo activa (Medicina tiene PROTOCOLO_URGENTE_MEDICO) y el otro lo ve
+    en solo lectura;
+  - las horas se leen y muestran en la hora local del servidor, y el usuario configura Europe/Madrid en la
+    Azure Web App.
+
+  Módulo común a los dos perfiles: `UrgentProtocolWriter`, parciales `Shared/_ProtocoloUrgente*`. Tablas de
+  solo inserción `protocolos_urgentes` y `protocolo_urgente_registros`; script `0015_protocolo_urgente`.
 - **Historia 7 (indicaciones de Medicina)** — 2026-09-28: bandeja `/Enfermeria/Indicaciones` (tarjeta del
   inicio con contador y no leídas), compartida por unidad, con "Confirmar lectura" y, ya leída,
   "Registrar como realizada" o "como no realizada" con incidencia obligatoria (`/ProgresoIndicacion`).
@@ -59,7 +75,7 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   firmar (`EnfermeriaBasalController` → `BaselineController/Sign`), con concurrencia optimista e
   idempotencia (script `0005_enfermeria_borrador_basal`).
 - Residentes del ámbito y ficha del residente (`/Residentes`, `/Residente`).
-- Tests de integración: `EnfermeriaApplicationServiceTests` (incluidos el cierre, el seguimiento y el
+- Tests de integración: `EnfermeriaApplicationServiceTests` (incluidos el cierre, el seguimiento, el protocolo urgente y el
   escalado), `MedicinaApplicationServiceTests` (incluidas las indicaciones leídas y registradas por Enfermería), `SqlChangeInboxDirectoryTests`,
   `SqlClinicalEventRepositoryTests`, `SqlEnfermeriaResidentDirectoryTests`, `SqlBaselineRepositoryDraftTests`.
 
@@ -67,8 +83,18 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
 
 En el orden propuesto de construcción:
 
-1. **Historia 6 — protocolo urgente y derivación a Urgencias** (`DER-01` a `DER-06`, común con Medicina).
-   No depende de Medicina para activarse desde Enfermería: es la cuarta salida de `/Decision`.
+1. **Historia 6, bloque 2 — derivación a Urgencias** (`DER-01` a `DER-06`, común con Medicina). Es la
+   salida "Derivar a Urgencias" del protocolo, hoy "Próximamente". Decisiones del usuario (2026-09-29):
+   - informe con vista previa obligatoria y texto editable sin alterar las fuentes;
+   - firma electrónica simple (cuenta autenticada, fecha y hora, y huella SHA-256 del contenido, sin
+     certificado cualificado);
+   - PDF generado al firmar con PDFsharp-MigraDoc (MIT) y guardado inmutable en SQL con su huella;
+   - actualización relevante obligatoria para la familia;
+   - intento de llamada: a quién (texto libre, hasta que Administración tenga el contacto designado), hora,
+     resultado (contactado / no contesta / número erróneo) y nota.
+
+   Queda por decidir al planificarla qué pasa con el evento tras derivar (si se cierra en el mismo paso) y
+   cómo encaja la actualización relevante con la decisión de comunicación del cierre.
 2. **Historia 11 — historial de eventos y versiones del basal** (`HIS-01` a `HIS-03`, común con Medicina).
    Puede mostrar ya las versiones de las valoraciones (`valoraciones_enfermeria_versiones` y
    `valoraciones_medicas_versiones`), que hoy se guardan pero no se ven.

@@ -37,7 +37,10 @@ public class MedicinaApplicationServiceTests
             new CloseMedicalEvent(scopes, changeInbox, session, medical),
             new StartMedicalFollowUp(scopes, changeInbox, session, medical),
             new RecordMedicalFollowUpAction(scopes, changeInbox, session, medical),
-            new ListMedicalFollowUps(scopes, changeInbox, session));
+            new ListMedicalFollowUps(scopes, changeInbox, session),
+            new ActivateMedicalUrgentProtocol(scopes, changeInbox, session, medical),
+            new RecordMedicalUrgentProtocolEntry(scopes, changeInbox, session, medical),
+            new ListMedicalUrgentProtocols(scopes, changeInbox, session));
     }
 
     private static async Task<PendingChangeDetail?> FindAsync(SeededProfile seed, Guid eventId) =>
@@ -650,12 +653,101 @@ public class MedicinaApplicationServiceTests
             Assert.Contains(expected, ex.Message);
         }
 
-        // Un escalado no salta a seguimiento médico sin pasar por la valoración médica.
+        // Un escalado no salta a seguimiento médico ni a protocolo urgente sin pasar por la valoración médica.
         var (_, _, _, escalatedId) = await SeedEscalatedAsync();
         var skipped = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
             "UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_SEGUIMIENTO_MEDICO', revision = revision + 1, valoracion_medica_iniciada_por_cuenta_id = @AccountId, valoracion_medica_iniciada_en = SYSUTCDATETIME() WHERE id = @EventId",
             new { EventId = escalatedId, AccountId = medica.AccountId.Value }));
         Assert.Contains("CLINICAL_EVENT_TRANSITION_INVALID", skipped.Message);
+        var skippedToProtocol = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.eventos_asistenciales SET estado_codigo = 'PROTOCOLO_URGENTE_MEDICO', revision = revision + 1, valoracion_medica_iniciada_por_cuenta_id = @AccountId, valoracion_medica_iniciada_en = SYSUTCDATETIME() WHERE id = @EventId",
+            new { EventId = escalatedId, AccountId = medica.AccountId.Value }));
+        Assert.Contains("CLINICAL_EVENT_TRANSITION_INVALID", skippedToProtocol.Message);
+    }
+
+    private static ActivateUrgentProtocolCommand Activate(SeededProfile seed, Guid eventId, int revision, string? note = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, note);
+
+    private static RecordUrgentProtocolEntryCommand ProtocolEntry(
+        SeededProfile seed, Guid eventId, int revision, UrgentProtocolEntryType type, string? text = null, string? service = null,
+        DateTimeOffset? contactedAt = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, type, text, service, contactedAt);
+
+    private static async Task<IReadOnlyList<UrgentProtocolSummary>> ProtocolsAsync(SeededProfile seed) =>
+        (await BuildMedicina(seed.ExternalSubject).ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(seed.ProfileScopeId, seed.CenterId))).Value!;
+
+    [Fact]
+    public async Task ProtocoloUrgenteMedico_DesdeValoracion_RegistraYSeCierra_SinTocarLasBandejasDeEnfermeria()
+    {
+        var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var revision = (await FindAsync(medica, eventId))!.Revision;
+        var started = (await service.StartMedicalAssessmentAsync(new StartMedicalAssessmentCommand(medica.ProfileScopeId, medica.CenterId, eventId, revision))).Value;
+
+        var withoutAssessment = await service.ActivateUrgentProtocolAsync(Activate(medica, eventId, started));
+        var saved = (await service.SaveMedicalAssessmentAsync(SaveMedical(medica, eventId, started))).Value;
+        var activated = await service.ActivateUrgentProtocolAsync(Activate(medica, eventId, saved));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutAssessment.Error!.Code);
+        Assert.True(activated.Ok);
+        var detail = (await FindAsync(medica, eventId))!;
+        Assert.Equal(ClinicalEventStatus.ProtocoloUrgenteMedico, detail.Status);
+        Assert.Equal(SystemProfile.Medicina, detail.UrgentProtocol!.Profile);
+        Assert.Null(detail.UrgentProtocol.ActivationNote);
+        Assert.Empty((await service.ListEscalationsAsync(new ListEscalationsCommand(medica.ProfileScopeId, medica.CenterId))).Value!);
+        Assert.Equal(eventId, Assert.Single(await ProtocolsAsync(medica)).EventId);
+
+        var contact = await service.RecordUrgentProtocolEntryAsync(ProtocolEntry(medica, eventId, activated.Value, UrgentProtocolEntryType.Contacto,
+            service: "Urgencias del hospital de referencia", contactedAt: DateTimeOffset.UtcNow));
+        var evolution = await service.RecordUrgentProtocolEntryAsync(ProtocolEntry(medica, eventId, contact.Value, UrgentProtocolEntryType.Evolucion, "Mejora tras nebulización."));
+        Assert.True(contact.Ok);
+        Assert.True(evolution.Ok);
+        Assert.Equal(1, await CountAuditAsync(eventId, "URGENT_PROTOCOL_CONTACT"));
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            Assert.Equal("MEDICINA", await connection.ExecuteScalarAsync<string>(
+                "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE recurso_id = @EventId AND accion_codigo = 'URGENT_PROTOCOL_ACTIVATE'", new { EventId = eventId }));
+        }
+
+        // Enfermería lo ve en su detalle en solo lectura, pero no registra ni lo lista como suyo.
+        var nursing = BuildService(enfermera.ExternalSubject);
+        var nurseDetail = (await nursing.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
+        Assert.Equal(2, nurseDetail.UrgentProtocol!.Entries.Count);
+        var nurseEntry = await nursing.RecordUrgentProtocolEntryAsync(new RecordUrgentProtocolEntryCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, evolution.Value, UrgentProtocolEntryType.Actuacion, "x"));
+        Assert.Equal(ApplicationFailureCode.Conflict, nurseEntry.Error!.Code);
+        Assert.Empty((await nursing.ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(enfermera.ProfileScopeId, enfermera.CenterId))).Value!);
+        var nurseClose = await nursing.CloseClinicalEventAsync(new CloseClinicalEventCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, evolution.Value, Guid.NewGuid(), FamilyCommunicationDecision.NoComunicar, null, null));
+        Assert.Equal(ApplicationFailureCode.Conflict, nurseClose.Error!.Code);
+
+        var closed = await service.CloseMedicalEventAsync(Close(medica, eventId, evolution.Value));
+        Assert.True(closed.Ok);
+        Assert.Equal(ClinicalEventStatus.Cerrado, (await FindAsync(medica, eventId))!.Status);
+        Assert.Empty(await ProtocolsAsync(medica));
+    }
+
+    [Fact]
+    public async Task ProtocoloUrgenteMedico_DesdeIndicacionPendiente_MantieneVisiblesLasIndicaciones_YSoloEsDeMedicina()
+    {
+        var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var indicated = (await service.RegisterMedicalIndicationAsync(Indication(medica, eventId, await StartAndSaveMedicalAsync(medica, eventId)))).Value;
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Medicina);
+
+        var byOutsider = await BuildMedicina(outsider.ExternalSubject).ActivateUrgentProtocolAsync(Activate(outsider, eventId, indicated));
+        var byNurse = await BuildMedicina(enfermera.ExternalSubject).ActivateUrgentProtocolAsync(Activate(enfermera, eventId, indicated));
+        var nurseUseCase = await BuildService(enfermera.ExternalSubject).ActivateUrgentProtocolAsync(
+            new ActivateUrgentProtocolCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId, indicated, null));
+        var activated = await service.ActivateUrgentProtocolAsync(Activate(medica, eventId, indicated, "Broncoespasmo."));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOutsider.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byNurse.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, nurseUseCase.Error!.Code);
+        Assert.True(activated.Ok);
+        Assert.Equal(ClinicalEventStatus.ProtocoloUrgenteMedico, (await FindAsync(medica, eventId))!.Status);
+        Assert.Single((await service.ListMedicalIndicationsAsync(new ListMedicalIndicationsCommand(medica.ProfileScopeId, medica.CenterId))).Value!);
+        Assert.Empty(await ProtocolsAsync(outsider));
     }
 }
 

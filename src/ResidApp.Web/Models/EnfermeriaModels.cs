@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Shared;
 
 namespace ResidApp.Web.Models;
 
@@ -11,10 +12,10 @@ public sealed record EnfermeriaResidentDetailViewModel(ScopeResidentSummary Resi
 
 /// <summary>ENF-01: contadores de las bandejas ya construidas (ordinarios, prioritarios y seguimientos,
 /// con cuántos de estos están vencidos), de las comunicaciones familiares pendientes de aprobación y de las
-/// indicaciones de Medicina pendientes (con cuántas faltan por leer).</summary>
+/// indicaciones de Medicina pendientes (con cuántas faltan por leer) y de los protocolos urgentes activos.</summary>
 public sealed record EnfermeriaInicioViewModel(
     int Ordinarios, int Prioritarios, int Seguimientos, int SeguimientosVencidos, int Comunicaciones,
-    int Indicaciones, int IndicacionesSinLeer);
+    int Indicaciones, int IndicacionesSinLeer, int Protocolos);
 
 /// <summary>ENF-04: detalle de un cambio recibido más el resumen del basal vigente del residente (null si
 /// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel.</summary>
@@ -84,6 +85,8 @@ public static class ClinicalEventStatusDisplay
         ClinicalEventStatus.EnValoracionMedica => "En valoración médica",
         ClinicalEventStatus.ConIndicacionPendiente => "Con indicación pendiente",
         ClinicalEventStatus.EnSeguimientoMedico => "En seguimiento médico",
+        ClinicalEventStatus.ProtocoloUrgente => "Protocolo urgente activo",
+        ClinicalEventStatus.ProtocoloUrgenteMedico => "Protocolo urgente activo (Medicina)",
         ClinicalEventStatus.Cerrado => "Cerrado",
         _ => status.ToString(),
     };
@@ -93,6 +96,7 @@ public static class ClinicalEventStatusDisplay
         ClinicalEventStatus.EnValoracion or ClinicalEventStatus.EnValoracionMedica => "text-bg-warning",
         ClinicalEventStatus.EnSeguimiento or ClinicalEventStatus.ConIndicacionPendiente or ClinicalEventStatus.EnSeguimientoMedico => "text-bg-info",
         ClinicalEventStatus.EscaladoMedicina => "text-bg-primary",
+        ClinicalEventStatus.ProtocoloUrgente or ClinicalEventStatus.ProtocoloUrgenteMedico => "text-bg-danger",
         ClinicalEventStatus.Cerrado => "text-bg-success",
         _ => prioritario ? "text-bg-danger" : "text-bg-secondary",
     };
@@ -213,6 +217,88 @@ public sealed record SeguimientoViewModel(PendingChangeDetail Event, Seguimiento
         Form is { } form && form.Tipo == tipo
             ? form
             : new SeguimientoAccionFormModel { EventoId = Event.EventId, Revision = Event.Revision, Tipo = tipo };
+}
+
+/// <summary>ENF-11/MED-13 "activar protocolo urgente": solo una nota opcional, para no retrasar la
+/// atención. Común a Enfermería y Medicina.</summary>
+public sealed class ActivarProtocoloFormModel
+{
+    [Required]
+    public Guid EventoId { get; set; }
+
+    [Required]
+    public int Revision { get; set; }
+
+    [StringLength(UrgentProtocolActivation.MaxNoteLength)]
+    [Display(Name = "Nota de activación (opcional)")]
+    public string? Nota { get; set; }
+}
+
+/// <summary>ENF-11/MED-13: un registro del protocolo. Tipo lo fija cada formulario de la pantalla (campo
+/// oculto); qué campos exige cada tipo lo decide el dominio (UrgentProtocolEntry). ContactadoEn llega de un
+/// datetime-local, en la hora local del servidor, igual que se muestran las horas.</summary>
+public sealed class ProtocoloRegistroFormModel
+{
+    [Required]
+    public Guid EventoId { get; set; }
+
+    [Required]
+    public int Revision { get; set; }
+
+    [Required]
+    public UrgentProtocolEntryType Tipo { get; set; }
+
+    [StringLength(UrgentProtocolEntry.MaxTextLength)]
+    public string? Texto { get; set; }
+
+    [StringLength(UrgentProtocolEntry.MaxServiceLength)]
+    [Display(Name = "Servicio contactado")]
+    public string? Servicio { get; set; }
+
+    [Display(Name = "Hora del contacto")]
+    public DateTime? ContactadoEn { get; set; }
+
+    public DateTimeOffset? ContactadoEnOffset =>
+        ContactadoEn is { } value ? new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Local)) : null;
+}
+
+/// <summary>ENF-11/MED-13: la activación del protocolo con el evento del que cuelga. Las vistas del protocolo
+/// son parciales comunes a los dos perfiles (DER-01); sus formularios envían al controlador en curso.</summary>
+public sealed record ActivarProtocoloViewModel(PendingChangeDetail Event, ActivarProtocoloFormModel Form);
+
+/// <summary>ENF-11/MED-13: el protocolo activo del evento y, tras un error, lo escrito en el formulario que
+/// falló (Form.Tipo) para no perderlo.</summary>
+public sealed record ProtocoloViewModel(PendingChangeDetail Event, ProtocoloRegistroFormModel? Form)
+{
+    public ProtocoloRegistroFormModel FormFor(UrgentProtocolEntryType tipo) =>
+        Form is { } form && form.Tipo == tipo
+            ? form
+            : new ProtocoloRegistroFormModel { EventoId = Event.EventId, Revision = Event.Revision, Tipo = tipo };
+}
+
+/// <summary>Textos del protocolo urgente (ENF-11/MED-13).</summary>
+public static class UrgentProtocolDisplay
+{
+    public static string Label(UrgentProtocolEntryType type) => type switch
+    {
+        UrgentProtocolEntryType.Actuacion => "Actuación",
+        UrgentProtocolEntryType.Evolucion => "Evolución",
+        UrgentProtocolEntryType.Contacto => "Contacto con un servicio",
+        _ => type.ToString(),
+    };
+
+    public static string Profile(SystemProfile profile) => profile == SystemProfile.Medicina ? "Medicina" : "Enfermería";
+
+    public static string SavedMessage(UrgentProtocolEntryType type) => type switch
+    {
+        UrgentProtocolEntryType.Actuacion => "Actuación registrada.",
+        UrgentProtocolEntryType.Evolucion => "Evolución registrada.",
+        _ => "Contacto registrado.",
+    };
+
+    public static string InvalidMessage(UrgentProtocolEntryType type) => type == UrgentProtocolEntryType.Contacto
+        ? "Para registrar un contacto indica el servicio y la hora del contacto, que no puede ser futura."
+        : "Escribe el texto antes de registrarlo.";
 }
 
 /// <summary>Textos de la comunicación familiar (ENF-14/ENF-15).</summary>

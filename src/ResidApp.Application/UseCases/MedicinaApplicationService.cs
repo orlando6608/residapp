@@ -7,16 +7,28 @@ namespace ResidApp.Application.UseCases;
 /// Fachada del vertical Medicina: bandeja y detalle de escalados (MED-01 a MED-03), valoración médica
 /// (MED-04/MED-05) e indicaciones a Enfermería con su seguimiento (MED-06 a MED-09), más el basal vigente
 /// del residente, el seguimiento médico con la continuidad entre turnos (MED-10 a MED-12) y el cierre médico
-/// (MED-15 a MED-17). El protocolo urgente llegará con su historia. Igual que EnfermeriaApplicationService, es
-/// lo único que MedicinaController inyecta.
+/// (MED-15 a MED-17) y el protocolo urgente (MED-13; la derivación llegará en su bloque). Igual que
+/// EnfermeriaApplicationService, es lo único que MedicinaController inyecta.
 /// </summary>
 public sealed class MedicinaApplicationService(
     ListEscalations listEscalations, FindEscalationDetail findEscalationDetail, ReadCurrentBaseline readCurrentBaseline,
     StartMedicalAssessment startMedicalAssessment, SaveMedicalAssessment saveMedicalAssessment,
     RegisterMedicalIndication registerMedicalIndication, ListMedicalIndications listMedicalIndications,
     CloseMedicalEvent closeMedicalEvent, StartMedicalFollowUp startMedicalFollowUp,
-    RecordMedicalFollowUpAction recordMedicalFollowUpAction, ListMedicalFollowUps listMedicalFollowUps)
+    RecordMedicalFollowUpAction recordMedicalFollowUpAction, ListMedicalFollowUps listMedicalFollowUps,
+    ActivateMedicalUrgentProtocol activateMedicalUrgentProtocol, RecordMedicalUrgentProtocolEntry recordMedicalUrgentProtocolEntry,
+    ListMedicalUrgentProtocols listMedicalUrgentProtocols)
 {
+    public Task<ApplicationResult<int>> ActivateUrgentProtocolAsync(ActivateUrgentProtocolCommand command, CancellationToken ct = default) =>
+        activateMedicalUrgentProtocol.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<int>> RecordUrgentProtocolEntryAsync(RecordUrgentProtocolEntryCommand command, CancellationToken ct = default) =>
+        recordMedicalUrgentProtocolEntry.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<IReadOnlyList<UrgentProtocolSummary>>> ListUrgentProtocolsAsync(
+        ListUrgentProtocolsCommand command, CancellationToken ct = default) =>
+        listMedicalUrgentProtocols.ExecuteAsync(command, ct);
+
     public Task<ApplicationResult<IReadOnlyList<EscalationSummary>>> ListEscalationsAsync(
         ListEscalationsCommand command, CancellationToken ct = default) =>
         listEscalations.ExecuteAsync(command, ct);

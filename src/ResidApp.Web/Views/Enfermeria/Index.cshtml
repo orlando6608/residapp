@@ -38,6 +38,14 @@
         </a>
     </div>
     <div class="col-12 col-md-4">
+        <a asp-action="Protocolos" class="card text-decoration-none h-100 border-danger">
+            <div class="card-body">
+                <h2 class="h5 card-title">Protocolos urgentes</h2>
+                <p class="card-text mb-0"><span class="badge text-bg-danger">@Model.Protocolos</span> protocolo(s) urgente(s) activo(s).</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
         <a asp-action="Seguimientos" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Seguimientos</h2>

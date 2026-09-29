@@ -36,5 +36,10 @@ public interface IMedicalAssessmentRepository
 
     Task<int> RecordFollowUpActionAsync(RecordMedicalFollowUpActionInput input, CancellationToken ct = default);
 
+    /// <summary>MED-13: protocolo urgente de Medicina, con los mismos inputs que el de Enfermería.</summary>
+    Task<int> ActivateUrgentProtocolAsync(ActivateUrgentProtocolInput input, CancellationToken ct = default);
+
+    Task<int> RecordUrgentProtocolEntryAsync(RecordUrgentProtocolEntryInput input, CancellationToken ct = default);
+
     Task<int> CloseAsync(CloseClinicalEventInput input, CancellationToken ct = default);
 }

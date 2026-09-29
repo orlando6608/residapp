@@ -1,0 +1,14 @@
+@model IReadOnlyList<ResidApp.Application.Ports.UrgentProtocolSummary>
+@{
+    ViewData["Title"] = "Protocolos urgentes";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Protocolos urgentes</li>
+    </ol>
+</nav>
+
+<partial name="_ProtocolosLista" model="Model" />

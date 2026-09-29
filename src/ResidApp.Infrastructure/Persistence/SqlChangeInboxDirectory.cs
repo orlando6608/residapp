@@ -207,8 +207,83 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                 await FindMedicalAssessmentAsync(connection, profileScopeId, eventId, ct),
                 (await QueryIndicationsAsync(connection, profileScopeId, "WHERE i.evento_id = @EventId", new { ProfileScopeId = profileScopeId, EventId = eventId }, ct))
                     .Select(r => r.Summary).ToList(),
-                await FindMedicalFollowUpAsync(connection, profileScopeId, eventId, ct)));
+                await FindMedicalFollowUpAsync(connection, profileScopeId, eventId, ct)),
+            await FindUrgentProtocolAsync(connection, profileScopeId, eventId, ct));
     }
+
+    /// <summary>ENF-11/MED-13: el protocolo urgente del evento con sus registros, de cualquiera de los dos
+    /// perfiles (el otro perfil lo ve en solo lectura).</summary>
+    private static async Task<UrgentProtocolDetail?> FindUrgentProtocolAsync(
+        System.Data.IDbConnection connection, Guid profileScopeId, Guid eventId, CancellationToken ct)
+    {
+        var protocol = await connection.QuerySingleOrDefaultAsync<UrgentProtocolRow>(new CommandDefinition("""
+            SELECT p.id AS Id, p.perfil_codigo AS ProfileCode, p.nota_activacion AS ActivationNote,
+                   CAST(CASE WHEN p.activado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ActivatedByCurrentAccount,
+                   p.activado_en AS ActivatedAt
+              FROM dbo.protocolos_urgentes p
+              JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
+             WHERE p.evento_id = @EventId
+            """, new { ProfileScopeId = profileScopeId, EventId = eventId }, cancellationToken: ct));
+        if (protocol is null)
+        {
+            return null;
+        }
+
+        var entries = (await connection.QueryAsync<UrgentProtocolEntryRow>(new CommandDefinition("""
+            SELECT r.tipo_codigo AS TypeCode, r.texto AS [Text], r.servicio_contactado AS Service, r.contactado_en AS ContactedAt,
+                   CAST(CASE WHEN r.registrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ByCurrentAccount,
+                   r.registrado_en AS RecordedAt
+              FROM dbo.protocolo_urgente_registros r
+              JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
+             WHERE r.protocolo_id = @ProtocolId
+             ORDER BY r.registrado_en ASC
+            """, new { ProfileScopeId = profileScopeId, ProtocolId = protocol.Id }, cancellationToken: ct)))
+            .Select(r => new UrgentProtocolEntrySummary(
+                EnumCode.ParseCode<UrgentProtocolEntryType>(r.TypeCode), r.Text, r.Service,
+                r.ContactedAt is null ? null : new DateTimeOffset(r.ContactedAt.Value, TimeSpan.Zero),
+                r.ByCurrentAccount, new DateTimeOffset(r.RecordedAt, TimeSpan.Zero)))
+            .ToList();
+
+        return new UrgentProtocolDetail(
+            EnumCode.ParseCode<SystemProfile>(protocol.ProfileCode), protocol.ActivationNote, protocol.ActivatedByCurrentAccount,
+            new DateTimeOffset(protocol.ActivatedAt, TimeSpan.Zero), entries);
+    }
+
+    /// <summary>ENF-11/MED-13: protocolos urgentes activos del ámbito, del más antiguo al más reciente, con su
+    /// último registro. Con un ámbito de Medicina, solo los de eventos escalados (ScopedEventsFrom).</summary>
+    public async Task<IReadOnlyList<UrgentProtocolSummary>> ListUrgentProtocolsAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+
+        var rows = await connection.QueryAsync<UrgentProtocolSummaryRow>(new CommandDefinition($"""
+            SELECT scoped.EventId, scoped.ResidentId, scoped.ResidentDisplayName, scoped.UnitName, scoped.StatusCode,
+                   p.activado_en AS ActivatedAt, last_entry.tipo_codigo AS LastEntryTypeCode, last_entry.registrado_en AS LastEntryAt
+              FROM (SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
+                           unit.nombre_visible AS UnitName, ea.estado_codigo AS StatusCode
+                    {ScopedEventsFrom}
+                       AND ea.estado_codigo IN ('PROTOCOLO_URGENTE', 'PROTOCOLO_URGENTE_MEDICO')) scoped
+              JOIN dbo.protocolos_urgentes p ON p.evento_id = scoped.EventId
+              OUTER APPLY (SELECT TOP 1 r.tipo_codigo, r.registrado_en FROM dbo.protocolo_urgente_registros r
+                            WHERE r.protocolo_id = p.id ORDER BY r.registrado_en DESC) last_entry
+             ORDER BY p.activado_en ASC
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+
+        return rows.Select(r => new UrgentProtocolSummary(
+            r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName, EnumCode.ParseCode<ClinicalEventStatus>(r.StatusCode),
+            new DateTimeOffset(r.ActivatedAt, TimeSpan.Zero),
+            r.LastEntryTypeCode is null ? null : EnumCode.ParseCode<UrgentProtocolEntryType>(r.LastEntryTypeCode),
+            r.LastEntryAt is null ? null : new DateTimeOffset(r.LastEntryAt.Value, TimeSpan.Zero))).ToList();
+    }
+
+    private sealed record UrgentProtocolRow(Guid Id, string ProfileCode, string? ActivationNote, bool ActivatedByCurrentAccount, DateTime ActivatedAt);
+
+    private sealed record UrgentProtocolEntryRow(
+        string TypeCode, string? Text, string? Service, DateTime? ContactedAt, bool ByCurrentAccount, DateTime RecordedAt);
+
+    private sealed record UrgentProtocolSummaryRow(
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string StatusCode, DateTime ActivatedAt,
+        string? LastEntryTypeCode, DateTime? LastEntryAt);
 
     /// <summary>MED-10 a MED-12: el seguimiento médico del evento con todas sus acciones, igual que el de
     /// Enfermería pero con su objetivo y sin indicaciones de continuidad.</summary>

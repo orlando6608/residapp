@@ -21,6 +21,14 @@ public sealed record EscalateClinicalEventInput(
 public sealed record RecordFollowUpActionInput(
     AccountId AccountId, CenterId CenterId, Guid EventId, int ExpectedRevision, FollowUpAction Action);
 
+/// <summary>ENF-11/MED-13: activar el protocolo urgente y registrar dentro de él. Comunes a Enfermería y
+/// Medicina, como CloseClinicalEventInput.</summary>
+public sealed record ActivateUrgentProtocolInput(
+    AccountId AccountId, CenterId CenterId, Guid EventId, int ExpectedRevision, UrgentProtocolActivation Activation);
+
+public sealed record RecordUrgentProtocolEntryInput(
+    AccountId AccountId, CenterId CenterId, Guid EventId, int ExpectedRevision, UrgentProtocolEntry Entry);
+
 /// <summary>ENF-03 a ENF-05: empezar y guardar la valoración de un evento; ENF-06/ENF-07A: cerrarlo con la
 /// decisión de comunicación familiar. Las tres operaciones exigen la revisión con la que se abrió el evento
 /// y la avanzan en 1; si otro profesional lo modificó entretanto lanzan CLINICAL_EVENT_REVISION_CONFLICT y
@@ -29,9 +37,14 @@ public sealed record RecordFollowUpActionInput(
 /// resultado sin cerrar dos veces. ENF-07B a ENF-09: iniciar un seguimiento (también exige la valoración
 /// guardada) y registrar acciones sobre él; confirmar una recepción que ya no está pendiente lanza
 /// FOLLOW_UP_TRANSFER_NOT_PENDING. ENF-09/ENF-10: escalar a Medicina desde la valoración o el seguimiento,
-/// cerrando la valoración (también exige que esté guardada).</summary>
+/// cerrando la valoración (también exige que esté guardada). ENF-11: activar el protocolo urgente (exige la
+/// valoración guardada; desde el protocolo solo se cierra, así que hay uno por evento) y registrar dentro de él.</summary>
 public interface INursingAssessmentRepository
 {
+    Task<int> ActivateUrgentProtocolAsync(ActivateUrgentProtocolInput input, CancellationToken ct = default);
+
+    Task<int> RecordUrgentProtocolEntryAsync(RecordUrgentProtocolEntryInput input, CancellationToken ct = default);
+
     Task<int> EscalateAsync(EscalateClinicalEventInput input, CancellationToken ct = default);
 
     Task<int> StartFollowUpAsync(StartFollowUpInput input, CancellationToken ct = default);

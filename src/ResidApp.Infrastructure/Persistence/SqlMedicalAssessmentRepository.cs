@@ -268,6 +268,14 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
     /// Las indicaciones aún pendientes no se tocan: siguen en la bandeja de Enfermería hasta resolverse.</summary>
     public Task<int> CloseAsync(CloseClinicalEventInput input, CancellationToken ct = default) =>
         ClinicalEventCloser.CloseAsync(connections, ClinicalEventCloseRule.Medicina, input, ct);
+
+    /// <summary>MED-13: desde EN_VALORACION_MEDICA, CON_INDICACION_PENDIENTE o EN_SEGUIMIENTO_MEDICO a
+    /// PROTOCOLO_URGENTE_MEDICO; las indicaciones emitidas no se tocan.</summary>
+    public Task<int> ActivateUrgentProtocolAsync(ActivateUrgentProtocolInput input, CancellationToken ct = default) =>
+        UrgentProtocolWriter.ActivateAsync(connections, UrgentProtocolRule.Medicina, input, ct);
+
+    public Task<int> RecordUrgentProtocolEntryAsync(RecordUrgentProtocolEntryInput input, CancellationToken ct = default) =>
+        UrgentProtocolWriter.RecordAsync(connections, UrgentProtocolRule.Medicina, input, ct);
 }
 
 /// <summary>Fila de dbo.eventos_auditoria sobre un evento asistencial o algo que cuelga de él (valoración

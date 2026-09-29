@@ -18,7 +18,8 @@ namespace ResidApp.Web.Controllers;
 /// (bandejas de ordinarios/prioritarios con los cambios de Auxiliar y los eventos propios, y su detalle);
 /// grupo E5: ENF-03 a ENF-05 (empezar y guardar la valoración); historia 3: ENF-06/ENF-07A (decisión
 /// asistencial y cierre) con la comunicación familiar pendiente de aprobación (ENF-14/ENF-15); historia 4:
-/// ENF-07B a ENF-09 (seguimiento, su bandeja y la transferencia de turno). Traduce a EnfermeriaApplicationService; la
+/// ENF-07B a ENF-09 (seguimiento, su bandeja y la transferencia de turno); historia 6: ENF-11 (protocolo urgente,
+/// sin la derivación todavía). Traduce a EnfermeriaApplicationService; la
 /// autorización y las reglas de negocio no viven aquí.
 /// </summary>
 public sealed class EnfermeriaController(EnfermeriaApplicationService service) : Controller
@@ -40,13 +41,15 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             new ListPendingFamilyCommunicationsCommand(activeScope.ProfileScopeId, centroId), ct);
         var seguimientos = await service.ListFollowUpsAsync(new ListFollowUpsCommand(activeScope.ProfileScopeId, centroId), ct);
         var indicaciones = await service.ListPendingIndicationsAsync(new ListPendingIndicationsCommand(activeScope.ProfileScopeId, centroId), ct);
+        var protocolos = await service.ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(activeScope.ProfileScopeId, centroId), ct);
         return View(new EnfermeriaInicioViewModel(
             ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
             comunicaciones.Ok ? comunicaciones.Value!.Count : 0,
             indicaciones.Ok ? indicaciones.Value!.Count : 0,
-            indicaciones.Ok ? indicaciones.Value!.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) : 0));
+            indicaciones.Ok ? indicaciones.Value!.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) : 0,
+            protocolos.Ok ? protocolos.Value!.Count : 0));
     }
 
     /// <summary>ENF-10: indicaciones de Medicina pendientes de leer o de registrar su resultado, compartidas
@@ -311,6 +314,134 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         detail.Assessment is not null
         && detail.Status is ClinicalEventStatus.EnValoracion or ClinicalEventStatus.EnSeguimiento;
 
+    /// <summary>Además de desde la decisión asistencial, se cierra desde el protocolo urgente activo.</summary>
+    private static bool CanClose(PendingChangeDetail detail) =>
+        CanDecide(detail) || (detail.Assessment is not null && detail.Status == ClinicalEventStatus.ProtocoloUrgente);
+
+    /// <summary>ENF-11: confirmar la activación del protocolo urgente, con una nota opcional.</summary>
+    public async Task<IActionResult> ActivarProtocolo(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (!CanDecide(detail))
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        return View(new ActivarProtocoloViewModel(
+            detail, new ActivarProtocoloFormModel { EventoId = detail.EventId, Revision = detail.Revision }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ActivarProtocolo([Bind(Prefix = "Form")] ActivarProtocoloFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new ActivarProtocoloViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.ActivateUrgentProtocolAsync(new ActivateUrgentProtocolCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Nota), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Protocolo urgente activado. Documenta las actuaciones cuando puedas: la atención va primero.";
+            return RedirectToAction(nameof(Protocolo), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput => "Revisa los datos: la nota es demasiado larga. Para activar el protocolo hace falta una valoración guardada.",
+            _ => result.Error.Message,
+        });
+        return View(new ActivarProtocoloViewModel(detail, form));
+    }
+
+    /// <summary>ENF-11: bandeja de protocolos urgentes activos de Enfermería.</summary>
+    public async Task<IActionResult> Protocolos(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Protocolos)) });
+        }
+
+        var result = await service.ListUrgentProtocolsAsync(
+            new ListUrgentProtocolsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(Array.Empty<UrgentProtocolSummary>());
+        }
+
+        return View(result.Value);
+    }
+
+    /// <summary>ENF-11: el protocolo urgente activo, con sus registros y los formularios para documentar
+    /// actuaciones, evolución y contactos con servicios.</summary>
+    public async Task<IActionResult> Protocolo(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Protocolos));
+        }
+        if (detail.Status != ClinicalEventStatus.ProtocoloUrgente || detail.UrgentProtocol is null)
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        return View(new ProtocoloViewModel(detail, null));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Protocolo([Bind(Prefix = "Form")] ProtocoloRegistroFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Protocolos));
+        }
+        if (detail.UrgentProtocol is null)
+        {
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId = form.EventoId });
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new ProtocoloViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.RecordUrgentProtocolEntryAsync(new RecordUrgentProtocolEntryCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Tipo,
+            form.Texto, form.Servicio, form.ContactadoEnOffset), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = UrgentProtocolDisplay.SavedMessage(form.Tipo);
+            return RedirectToAction(nameof(Protocolo), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput => UrgentProtocolDisplay.InvalidMessage(form.Tipo),
+            _ => result.Error.Message,
+        });
+        return View(new ProtocoloViewModel(detail, form));
+    }
+
+
     /// <summary>ENF-07B: formulario para iniciar un seguimiento desde la decisión asistencial.</summary>
     public async Task<IActionResult> IniciarSeguimiento(Guid eventoId, CancellationToken ct)
     {
@@ -496,7 +627,7 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         {
             return RedirectToAction(nameof(Index));
         }
-        if (!CanDecide(detail))
+        if (!CanClose(detail))
         {
             return RedirectToAction(nameof(DetalleCambio), new { eventoId });
         }

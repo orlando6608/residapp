@@ -17,10 +17,10 @@ internal sealed record ClinicalEventCloseRule(
     string ProfileCode, string AllowedStatesSql, string AssessmentTable, string AssessmentRequiredCode)
 {
     public static readonly ClinicalEventCloseRule Enfermeria = new(
-        "ENFERMERIA", "'EN_VALORACION', 'EN_SEGUIMIENTO'", "dbo.valoraciones_enfermeria", "NURSING_ASSESSMENT_REQUIRED");
+        "ENFERMERIA", "'EN_VALORACION', 'EN_SEGUIMIENTO', 'PROTOCOLO_URGENTE'", "dbo.valoraciones_enfermeria", "NURSING_ASSESSMENT_REQUIRED");
 
     public static readonly ClinicalEventCloseRule Medicina = new(
-        "MEDICINA", "'EN_VALORACION_MEDICA', 'CON_INDICACION_PENDIENTE', 'EN_SEGUIMIENTO_MEDICO'", "dbo.valoraciones_medicas", "MEDICAL_ASSESSMENT_REQUIRED");
+        "MEDICINA", "'EN_VALORACION_MEDICA', 'CON_INDICACION_PENDIENTE', 'EN_SEGUIMIENTO_MEDICO', 'PROTOCOLO_URGENTE_MEDICO'", "dbo.valoraciones_medicas", "MEDICAL_ASSESSMENT_REQUIRED");
 }
 
 /// <summary>

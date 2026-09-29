@@ -108,6 +108,24 @@ public sealed record MedicalFollowUpSummary(
     string? Criterion, DateTimeOffset StartedAt, FollowUpActionType? LastActionType, DateTimeOffset? LastActionAt,
     FollowUpActionType? LastContinuity, string? LastContinuityTeam, bool LastContinuityByCurrentAccount, bool TransferPending);
 
+/// <summary>ENF-11/MED-13: un registro del protocolo urgente, con su autoría (solo si fue la cuenta del
+/// ámbito que consulta). Según el tipo trae el texto o el servicio y la hora del contacto (con nota opcional).</summary>
+public sealed record UrgentProtocolEntrySummary(
+    UrgentProtocolEntryType Type, string? Text, string? Service, DateTimeOffset? ContactedAt, bool ByCurrentAccount,
+    DateTimeOffset RecordedAt);
+
+/// <summary>ENF-11/MED-13: el protocolo urgente de un evento: qué perfil lo activó, con qué nota, quién y
+/// cuándo, y sus registros del más antiguo al más reciente.</summary>
+public sealed record UrgentProtocolDetail(
+    SystemProfile Profile, string? ActivationNote, bool ActivatedByCurrentAccount, DateTimeOffset ActivatedAt,
+    IReadOnlyList<UrgentProtocolEntrySummary> Entries);
+
+/// <summary>ENF-11/MED-13: una fila de la bandeja de protocolos urgentes activos. Status dice de qué perfil
+/// es el protocolo; cada caso de uso filtra el suyo.</summary>
+public sealed record UrgentProtocolSummary(
+    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, ClinicalEventStatus Status,
+    DateTimeOffset ActivatedAt, UrgentProtocolEntryType? LastEntryType, DateTimeOffset? LastEntryAt);
+
 /// <summary>MED-04 a MED-12: la parte médica de un evento: quién y cuándo empezó la valoración médica (null
 /// si no se ha empezado), el borrador, las indicaciones emitidas, de la más antigua a la más reciente, y el
 /// seguimiento médico si lo hubo.</summary>
@@ -134,7 +152,7 @@ public sealed record PendingChangeDetail(
     SystemProfile AuthorProfile, DailyChangePriorityReason? PriorityReason, string? DirectNoticeNotes, DateTimeOffset OccurredAt,
     ClinicalEventStatus Status, int Revision, bool? AssessmentStartedByCurrentAccount, DateTimeOffset? AssessmentStartedAt,
     NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges, ClinicalEventClosure? Closure,
-    FollowUpDetail? FollowUp, ClinicalEventEscalation? Escalation, MedicalDetail Medical);
+    FollowUpDetail? FollowUp, ClinicalEventEscalation? Escalation, MedicalDetail Medical, UrgentProtocolDetail? UrgentProtocol);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre
@@ -166,4 +184,8 @@ public interface IChangeInboxDirectory
 
     /// <summary>MED-11: seguimientos médicos abiertos para un ámbito de Medicina, vencidos incluidos.</summary>
     Task<IReadOnlyList<MedicalFollowUpSummary>> ListMedicalFollowUpsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>ENF-11/MED-13: protocolos urgentes activos de los eventos visibles para el ámbito, de los dos
+    /// perfiles, del más antiguo al más reciente.</summary>
+    Task<IReadOnlyList<UrgentProtocolSummary>> ListUrgentProtocolsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 }

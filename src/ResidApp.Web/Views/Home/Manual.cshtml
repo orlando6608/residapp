@@ -12,10 +12,11 @@
     índice de Barthel y la firma del estado basal) y el vertical <strong>Auxiliar</strong>; del vertical
     <strong>Enfermería</strong> funciona la navegación, la autoría completa del basal, el registro de un
     evento propio, las bandejas de cambios ordinarios y prioritarios que Auxiliar genera, la valoración de
-    esos eventos, su cierre con la decisión de comunicación familiar, el seguimiento y el escalado a Medicina;
-    de <strong>Medicina</strong>, la bandeja de escalados recibidos, la valoración médica y las indicaciones a
-    Enfermería, que Enfermería lee y registra, el seguimiento médico con la continuidad entre turnos y el
-    cierre médico del evento. El resto de módulos aparece
+    esos eventos, su cierre con la decisión de comunicación familiar, el seguimiento, el escalado a Medicina y
+    el protocolo urgente; de <strong>Medicina</strong>, la bandeja de escalados recibidos, la valoración médica
+    y las indicaciones a Enfermería, que Enfermería lee y registra, el seguimiento médico con la continuidad
+    entre turnos, el protocolo urgente y el cierre médico del evento. La derivación a Urgencias todavía no está
+    disponible. El resto de módulos aparece
     descrito al final como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
     inicio de sesión con usuario y contraseña definitivo).
 </div>
@@ -37,6 +38,7 @@
             <a class="list-group-item list-group-item-action" href="#escalado-medicina">Escalar a Medicina y escalados recibidos</a>
             <a class="list-group-item list-group-item-action" href="#valoracion-medica">Valoración médica, indicaciones y cierre médico</a>
             <a class="list-group-item list-group-item-action" href="#seguimientos-medicina">Seguimiento médico y continuidad entre turnos (Medicina)</a>
+            <a class="list-group-item list-group-item-action" href="#protocolo-urgente">Protocolo urgente (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -322,8 +324,9 @@
     <p>
         Con la valoración guardada, en el detalle aparece <strong>Pasar a decisión asistencial</strong>,
         con las cuatro salidas posibles: cerrar el evento, iniciar seguimiento, escalar a Medicina o activar
-        el protocolo urgente. De momento están disponibles <strong>cerrar</strong>, <strong>iniciar
-        seguimiento</strong> y <strong>escalar a Medicina</strong>; el protocolo urgente aparece como "Próximamente". Al cerrar revisas el resumen de la valoración y decides de forma
+        el protocolo urgente. Están disponibles las cuatro: <strong>cerrar</strong>, <strong>iniciar
+        seguimiento</strong>, <strong>escalar a Medicina</strong> y <strong>activar protocolo urgente</strong>
+        (ver "Protocolo urgente"). Al cerrar revisas el resumen de la valoración y decides de forma
         explícita si se comunica a la familia: <strong>No comunicar</strong> o <strong>Preparar
         comunicación</strong>. Si la preparas, eliges si es ordinaria o relevante (la relevancia la decides
         tú) y escribes un texto comprensible, sin datos internos ni escalas. Al pulsar <strong>Cerrar
@@ -411,8 +414,8 @@
     <p>
         Con la valoración guardada, <strong>Pasar a conducta médica</strong> muestra las cuatro salidas. Están
         disponibles <strong>registrar indicaciones a Enfermería</strong>, <strong>cerrar el evento</strong> e
-        <strong>iniciar seguimiento médico</strong> (ver la sección siguiente); el protocolo urgente aparece
-        como "Próximamente". Una indicación lleva el texto,
+        <strong>iniciar seguimiento médico</strong> (ver la sección siguiente) y <strong>activar protocolo
+        urgente</strong> (ver "Protocolo urgente"). Una indicación lleva el texto,
         una fecha prevista, un criterio (o ambos) y, si hace falta, información adicional. No hay prioridad
         automática. El evento pasa a "Con indicación pendiente" y sale de la bandeja de escalados; puedes
         añadir más indicaciones o cerrarlo desde la conducta. La valoración médica ya no se modifica.
@@ -477,6 +480,37 @@
     </p>
 </section>
 
+<section id="protocolo-urgente" class="mb-4">
+    <h2 class="h5">
+        Protocolo urgente
+        <span class="badge text-bg-secondary align-middle">Perfiles: Enfermería y Medicina</span>
+    </h2>
+    <p>
+        <strong>Activar protocolo urgente</strong> es la cuarta salida de la decisión asistencial (Enfermería,
+        con la valoración guardada o al resolver un seguimiento) y de la conducta médica (Medicina, con la
+        valoración médica guardada, con indicaciones emitidas o al resolver un seguimiento médico). Activarlo es
+        un solo paso, con una nota opcional, para no retrasar la atención: la app registra quién lo activa y a
+        qué hora. Si había un seguimiento en curso, termina. El evento pasa a "Protocolo urgente activo" (o
+        "Protocolo urgente activo (Medicina)"), sale de las demás bandejas y entra en la tarjeta
+        <strong>Protocolos urgentes</strong> del inicio de cada perfil.
+    </p>
+    <p>
+        En la pantalla del protocolo documentas, cuando puedas, <strong>actuaciones</strong>,
+        <strong>evolución</strong> y <strong>contactos con servicios</strong> (por ejemplo, el 112 o las
+        Urgencias del hospital): el servicio contactado y la hora del contacto, que puedes corregir si lo
+        documentas después, pero que no puede ser futura. Los contactos quedan en la trazabilidad interna y no
+        formarán parte del informe de derivación. Cada registro conserva quién lo hizo y cuándo, y nada se
+        puede modificar después. La valoración no se modifica durante el protocolo.
+    </p>
+    <p class="mb-0">
+        El protocolo pertenece al perfil que lo activa: el otro perfil lo ve en el detalle del evento, en solo
+        lectura. Desde el protocolo se puede <strong>cerrar el evento</strong>, con la misma decisión sobre la
+        comunicación familiar que en cualquier cierre. En Medicina, las indicaciones emitidas siguen visibles en
+        la tarjeta Indicaciones. <strong>Derivar a Urgencias</strong> (informe con vista previa, firma y PDF,
+        actualización relevante para la familia e intento de llamada) aparece todavía como "Próximamente".
+    </p>
+</section>
+
 <section id="rangos-referencia" class="mb-4">
     <h2 class="h5">
         Rangos de referencia de constantes
@@ -538,8 +572,8 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Activar el protocolo urgente desde la decisión asistencial; y la línea temporal e historial de eventos.</li>
-        <li>El protocolo urgente desde la conducta de Medicina; y eventos iniciados directamente por Medicina.</li>
+        <li>La línea temporal e historial de eventos.</li>
+        <li>Eventos iniciados directamente por Medicina.</li>
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
         <li>Derivación a Urgencias con informe firmado en PDF.</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>

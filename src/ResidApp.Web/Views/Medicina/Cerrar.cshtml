@@ -7,6 +7,7 @@
     var evento = Model.Event;
     var valoracion = evento.Medical.Assessment!;
     var content = valoracion.Content;
+    var (volver, volverTexto) = evento.Status == ClinicalEventStatus.ProtocoloUrgenteMedico ? ("Protocolo", "Protocolo urgente") : ("Conducta", "Conducta médica");
     var sinResolver = evento.Medical.Indications
         .Where(i => i.Status is MedicalIndicationStatus.PendienteLectura or MedicalIndicationStatus.Leida).ToList();
     var conIncidencia = evento.Medical.Indications.Where(i => i.Status == MedicalIndicationStatus.NoRealizada).ToList();
@@ -17,7 +18,7 @@
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
         <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
         <li class="breadcrumb-item"><a asp-action="Escalado" asp-route-eventoId="@evento.EventId">Detalle</a></li>
-        <li class="breadcrumb-item"><a asp-action="Conducta" asp-route-eventoId="@evento.EventId">Conducta médica</a></li>
+        <li class="breadcrumb-item"><a asp-action="@volver" asp-route-eventoId="@evento.EventId">@volverTexto</a></li>
         <li class="breadcrumb-item active" aria-current="page">Cerrar</li>
     </ol>
 </nav>
@@ -104,7 +105,7 @@
     <partial name="_ComunicacionFamiliarFormulario" for="Form" />
 
     <div class="d-grid d-md-flex justify-content-md-end gap-2">
-        <a asp-action="Conducta" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin cerrar</a>
+        <a asp-action="@volver" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin cerrar</a>
         <button type="submit" class="btn btn-primary btn-lg">Cerrar evento</button>
     </div>
 </form>

@@ -5,6 +5,7 @@
     ViewData["Title"] = "Cerrar el evento";
     var evento = Model.Event;
     var content = evento.Assessment!.Content;
+    var (volver, volverTexto) = evento.Status == ClinicalEventStatus.ProtocoloUrgente ? ("Protocolo", "Protocolo urgente") : ("Decision", "Decisión asistencial");
 }
 
 <nav aria-label="breadcrumb">
@@ -12,7 +13,7 @@
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
         <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
         <li class="breadcrumb-item"><a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId">Detalle</a></li>
-        <li class="breadcrumb-item"><a asp-action="Decision" asp-route-eventoId="@evento.EventId">Decisión asistencial</a></li>
+        <li class="breadcrumb-item"><a asp-action="@volver" asp-route-eventoId="@evento.EventId">@volverTexto</a></li>
         <li class="breadcrumb-item active" aria-current="page">Cerrar</li>
     </ol>
 </nav>
@@ -76,7 +77,7 @@
     <partial name="_ComunicacionFamiliarFormulario" for="Form" />
 
     <div class="d-grid d-md-flex justify-content-md-end gap-2">
-        <a asp-action="Decision" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin cerrar</a>
+        <a asp-action="@volver" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin cerrar</a>
         <button type="submit" class="btn btn-primary btn-lg">Cerrar evento</button>
     </div>
 </form>

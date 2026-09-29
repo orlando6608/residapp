@@ -1,0 +1,50 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model ResidApp.Application.Ports.UrgentProtocolDetail
+@* ENF-11/MED-13: el protocolo urgente y sus registros, en solo lectura. Lo usan el detalle del evento de los
+   dos perfiles y la propia pantalla del protocolo. Los contactos con servicios son trazabilidad interna (DER-04). *@
+
+<div class="card mb-3 border-start border-4 border-danger">
+    <div class="card-body">
+        <h2 class="h5 card-title">Protocolo urgente de @UrgentProtocolDisplay.Profile(Model.Profile)</h2>
+        <p class="mb-2">
+            Activado @(Model.ActivatedByCurrentAccount ? "por ti" : $"por otro profesional de {UrgentProtocolDisplay.Profile(Model.Profile)}")
+            el @Model.ActivatedAt.ToLocalTime().ToString("g").
+        </p>
+        @if (Model.ActivationNote is not null)
+        {
+            <p class="mb-2" style="white-space: pre-line"><strong>Nota de activación:</strong> @Model.ActivationNote</p>
+        }
+        @if (Model.Entries.Count == 0)
+        {
+            <p class="text-muted mb-0">Todavía no hay registros.</p>
+        }
+        else
+        {
+            <ul class="list-unstyled mb-0">
+                @foreach (var registro in Model.Entries)
+                {
+                    <li class="mb-3">
+                        <p class="mb-1">
+                            <strong>@UrgentProtocolDisplay.Label(registro.Type)</strong> ·
+                            @(registro.ByCurrentAccount ? "tú" : "otro profesional") ·
+                            @registro.RecordedAt.ToLocalTime().ToString("g")
+                        </p>
+                        @if (registro.Type == UrgentProtocolEntryType.Contacto)
+                        {
+                            <p class="mb-0">@registro.Service, contactado el @registro.ContactedAt!.Value.ToLocalTime().ToString("dd/MM/yyyy 'a las' HH:mm")</p>
+                            @if (registro.Text is not null)
+                            {
+                                <p class="mb-0" style="white-space: pre-line">Nota: @registro.Text</p>
+                            }
+                        }
+                        else
+                        {
+                            <p class="mb-0" style="white-space: pre-line">@registro.Text</p>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
