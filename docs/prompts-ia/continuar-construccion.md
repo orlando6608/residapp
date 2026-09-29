@@ -13,10 +13,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- La historia 5 de Medicina (seguimiento médico y continuidad, script `0014`) está en un commit en `main`
-  **sin subir**: el push lo decide el usuario. Compruébalo con `git status` al empezar. Hasta el script
-  `0013` (historia 4 de Medicina, cierre médico) está desplegado en Azure: el pipeline de `b060542` terminó
-  con éxito el 2026-09-29. Tras el push de `0014`, comprueba que el pipeline termina en verde.
+- Todo el trabajo está en `main` y subido al remoto; compruébalo con `git status` al empezar. Hasta el
+  script `0014` (historia 5 de Medicina, seguimiento médico) está desplegado en Azure: el pipeline de
+  `d273a5a` (run 36561451773) terminó con éxito el 2026-09-29, con `build-and-test` y `deploy` en verde.
 - El primer pipeline de `0013` (`5325ef4`) falló en los tests por interbloqueos en una BD recién creada, y
   no llegó a desplegar. Se corrigió en `f970d83` (`FORCESEEK`, ver las lecciones). En `b060542` se ordenaron
   además las opciones de área en `SqlChangeInboxDirectory.FindAsync`, porque un test fallaba de vez en
