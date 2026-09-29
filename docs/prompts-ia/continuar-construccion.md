@@ -13,15 +13,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- El bloque 1 de la historia 6 (protocolo urgente en Enfermería y Medicina, script `0015`) está en un
-  commit en `main` **sin subir**: el push lo decide el usuario. Compruébalo con `git status` al empezar.
-  Hasta el script `0014` (historia 5 de Medicina, seguimiento médico) está desplegado en Azure: el pipeline
-  de `d273a5a` (run 36561451773) terminó con éxito el 2026-09-29. Tras el push de `0015`, comprueba que el
-  pipeline termina en verde.
-- **Zona horaria (pendiente del usuario):** la app lee y muestra las horas en la hora local del servidor.
-  En Azure hay que configurar en la Web App `app-residapp-dev` el ajuste `WEBSITE_TIME_ZONE=Europe/Madrid`
-  (Linux) o `WEBSITE_TIME_ZONE=Romance Standard Time` (Windows). Si no, se muestran en UTC y la hora de
-  contacto del protocolo se interpreta en UTC.
+- Hasta el script `0015` (bloque 1 de la historia 6, protocolo urgente en Enfermería y Medicina) está
+  desplegado en Azure: el pipeline de `88f8c41` (run 36577318233) terminó con éxito el 2026-09-29.
+- La corrección de la cultura (`es-ES` fija en `Program.cs`, `UseRequestLocalization`, con
+  `LocalizationTests`) está en un commit en `main` **sin subir**: el push lo decide el usuario. Compruébalo
+  con `git status` al empezar. Tras el push, comprueba que el pipeline termina en verde y que en Azure las
+  fechas salen como `29/09/2026 15:53`. Antes salían como `09/29/2026 15:53`, porque en el contenedor Linux
+  la cultura del servidor es la invariante.
+- **Zona horaria (hecho):** la app lee y muestra las horas en la hora local del servidor. La Web App
+  `app-residapp-dev` (Linux) tiene `WEBSITE_TIME_ZONE=Europe/Madrid`. Se comprobó el 2026-09-29 con el
+  evento «Prueba de hora, se puede ignorar» (Residente Integrado Uno, cerrado con «No comunicar»): se
+  registró a las 13:53 UTC y la app mostró las 15:53.
 - El primer pipeline de `0013` (`5325ef4`) falló en los tests por interbloqueos en una BD recién creada, y
   no llegó a desplegar. Se corrigió en `f970d83` (`FORCESEEK`, ver las lecciones). En `b060542` se ordenaron
   además las opciones de área en `SqlChangeInboxDirectory.FindAsync`, porque un test fallaba de vez en
@@ -187,5 +189,8 @@ Repite estos pasos antes de dar un bloque por cerrado:
   controlador.
 - **`CHECK` antes que el trigger:** en un test de BD que fuerza un estado prohibido, un `CHECK` de la fila
   (como `CK_ea_inicio_medico`) salta antes que `TR_ea_transition_guard` y cambia el mensaje esperado.
+- **Cultura en Azure:** el contenedor Linux de la Web App corre con la cultura invariante (fechas
+  `MM/dd/yyyy`), y Windows con la del usuario. Por eso la cultura `es-ES` se fija en `Program.cs`, y en local
+  no se nota si falta. `LocalizationTests` lo cubre a través de la cabecera `Content-Language`.
 - **Verificación manual con curl:** una cuenta con un solo ámbito se autoselecciona, y
   `ProfileScope/Select` redirige. Sigue las redirecciones con `-L`.

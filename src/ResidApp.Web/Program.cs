@@ -94,6 +94,13 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
 }
+// Fechas y números siempre en es-ES, sea cual sea la cultura del servidor: en el contenedor Linux de Azure
+// es la invariante y las fechas salían como MM/dd/yyyy. Es la única cultura admitida, así que el
+// Accept-Language del navegador no la cambia.
+app.UseRequestLocalization(new RequestLocalizationOptions { ApplyCurrentCultureToResponseHeaders = true }
+    .AddSupportedCultures("es-ES")
+    .AddSupportedUICultures("es-ES")
+    .SetDefaultCulture("es-ES"));
 app.UseRouting();
 
 app.UseAuthorization();
