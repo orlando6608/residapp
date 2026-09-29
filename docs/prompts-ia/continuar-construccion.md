@@ -15,11 +15,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 - Hasta el script `0015` (bloque 1 de la historia 6, protocolo urgente en Enfermería y Medicina) está
   desplegado en Azure: el pipeline de `88f8c41` (run 36577318233) terminó con éxito el 2026-09-29.
-- La corrección de la cultura (`es-ES` fija en `Program.cs`, `UseRequestLocalization`, con
-  `LocalizationTests`) está en un commit en `main` **sin subir**: el push lo decide el usuario. Compruébalo
-  con `git status` al empezar. Tras el push, comprueba que el pipeline termina en verde y que en Azure las
-  fechas salen como `29/09/2026 15:53`. Antes salían como `09/29/2026 15:53`, porque en el contenedor Linux
-  la cultura del servidor es la invariante.
+- La corrección de la cultura (`es-ES` fija en `Program.cs` con los patrones cortos, `UseRequestLocalization`,
+  con `LocalizationTests`) está subida en `21b293f` y `e1faef4`. El pipeline de `21b293f` falló en los tests y
+  no desplegó (ver la lección «Cultura en Azure»); `e1faef4` lo corrige. Antes las fechas salían en Azure
+  como `09/29/2026 15:53`, porque en el contenedor Linux la cultura del servidor es la invariante. Si no
+  consta ya, comprueba que el pipeline de `e1faef4` terminó en verde y que en Azure salen como
+  `29/09/2026 15:53`.
 - **Zona horaria (hecho):** la app lee y muestra las horas en la hora local del servidor. La Web App
   `app-residapp-dev` (Linux) tiene `WEBSITE_TIME_ZONE=Europe/Madrid`. Se comprobó el 2026-09-29 con el
   evento «Prueba de hora, se puede ignorar» (Residente Integrado Uno, cerrado con «No comunicar»): se
@@ -191,6 +192,15 @@ Repite estos pasos antes de dar un bloque por cerrado:
   (como `CK_ea_inicio_medico`) salta antes que `TR_ea_transition_guard` y cambia el mensaje esperado.
 - **Cultura en Azure:** el contenedor Linux de la Web App corre con la cultura invariante (fechas
   `MM/dd/yyyy`), y Windows con la del usuario. Por eso la cultura `es-ES` se fija en `Program.cs`, y en local
-  no se nota si falta. `LocalizationTests` lo cubre a través de la cabecera `Content-Language`.
+  no se nota si falta. Además, `es-ES` no formatea igual en los dos sistemas:
+  - con ICU (Linux) es `d/M/yyyy H:mm`;
+  - con Windows es `dd/MM/yyyy HH:mm`.
+
+  Por eso los patrones cortos se fijan a mano. El primer intento (`21b293f`, run 36579577575) no los fijaba,
+  y su test falló en el CI por esa diferencia. Cualquier aserción sobre texto formateado debe probarse
+  también en Linux:
+  - `docker run --rm -v <repo>:/repo:ro mcr.microsoft.com/dotnet/sdk:10.0`, copiando el repo dentro del
+    contenedor y quitando `bin` y `obj`;
+  - `LocalizationTests` no necesita BD.
 - **Verificación manual con curl:** una cuenta con un solo ámbito se autoselecciona, y
   `ProfileScope/Select` redirige. Sigue las redirecciones con `-L`.
