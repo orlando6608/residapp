@@ -77,9 +77,10 @@ internal static class ClinicalEventCloser
             }
 
             var closedAssessments = await connection.ExecuteAsync(new CommandDefinition($"""
-                UPDATE {rule.AssessmentTable}
+                UPDATE v
                    SET estado_codigo = 'CERRADA', actualizado_por_cuenta_id = @AccountId, actualizado_en = @OccurredAt
-                 WHERE evento_id = @EventId AND estado_codigo = 'BORRADOR'
+                  FROM {rule.AssessmentTable} v WITH (FORCESEEK)
+                 WHERE v.evento_id = @EventId AND v.estado_codigo = 'BORRADOR'
                 """, new { AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId }, transaction, cancellationToken: ct));
             if (closedAssessments != 1)
             {

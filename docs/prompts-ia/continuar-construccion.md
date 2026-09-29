@@ -99,7 +99,16 @@ Después, el historial (historia 11 de Enfermería, 9 de Medicina), el evento pr
   `UPDATE` o una lectura por una columna sin índice recorre la tabla entera y puede provocar interbloqueos
   intermitentes. Pasó con `valoraciones_enfermeria.evento_id` y se resolvió con `IX_ve_evento` en `0011`.
   Toda columna por la que se filtre un `UPDATE` necesita un índice. Si un test falla solo a veces, ejecuta
-  `dotnet test src/ResidApp.sln` varias veces y busca `xml_deadlock_report` en `system_health`.
+  `dotnet test src/ResidApp.sln` varias veces y busca `xml_deadlock_report` en `system_health`: está en
+  `sys.fn_xe_file_target_read_file('system_health*.xel', ...)`, con `sqlcmd -I`.
+- **El índice no basta en una BD recién creada, como la de CI.** El plan se compila con las tablas vacías y
+  recorre la clave primaria. Pasó en el CI de `0013`: dos guardados de valoración se bloqueaban en `PK_ve` a
+  pesar de `IX_ve_evento`. Por eso las sentencias que leen o actualizan la valoración por evento dentro de
+  una transacción de escritura llevan `WITH (FORCESEEK)`, y un `UPDATE` con esa pista se escribe
+  `UPDATE v ... FROM tabla v WITH (FORCESEEK)`.
+- **Cómo reproducir el CI en local:** crea una BD nueva, aplica solo los scripts, sin seed, y ejecuta
+  `dotnet test` en Release con `RESIDAPP_TEST_CONNECTION_STRING` apuntando a ella. Hazlo varias veces, con una
+  BD nueva en cada vuelta. Los logs del pipeline piden autenticación y `gh` no está instalado.
 - **Acentos con curl en Git Bash:** `--data-urlencode` recibe los argumentos en Latin-1, así que «ó» llega
   como `%F3` y ASP.NET lo guarda tal cual. Un navegador envía UTF-8 y se guarda bien. En pruebas con curl,
   escribe los acentos ya codificados en UTF-8 (`--data "Form.Motivo=Desaturaci%C3%B3n"`).

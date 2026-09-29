@@ -60,8 +60,8 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
         var content = input.Content;
         var vitals = content.Vitals;
         await connection.ExecuteAsync(new CommandDefinition("""
-            IF EXISTS (SELECT 1 FROM dbo.valoraciones_enfermeria WHERE evento_id = @EventId AND estado_codigo = 'BORRADOR')
-                UPDATE dbo.valoraciones_enfermeria
+            IF EXISTS (SELECT 1 FROM dbo.valoraciones_enfermeria WITH (FORCESEEK) WHERE evento_id = @EventId AND estado_codigo = 'BORRADOR')
+                UPDATE v
                    SET hallazgos = @Findings, valoracion = @Assessment, actuaciones = @Actions, comunicaciones = @Communications,
                        resultado = @Outcome, temperatura_celsius = @TemperatureCelsius, tension_sistolica_mmhg = @SystolicMmHg,
                        tension_diastolica_mmhg = @DiastolicMmHg, frecuencia_cardiaca_lpm = @HeartRateBpm,
@@ -69,7 +69,8 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
                        soporte_respiratorio_codigo = @RespiratorySupportCode, flujo_o2_lpm = @OxygenFlowLpm, glucemia_mg_dl = @GlucoseMgDl,
                        otra_constante_nombre = @OtherName, otra_constante_valor = @OtherValue, otra_constante_unidad = @OtherUnit,
                        actualizado_por_cuenta_id = @AccountId, actualizado_en = @OccurredAt
-                 WHERE evento_id = @EventId AND estado_codigo = 'BORRADOR';
+                  FROM dbo.valoraciones_enfermeria v WITH (FORCESEEK)
+                 WHERE v.evento_id = @EventId AND v.estado_codigo = 'BORRADOR';
             ELSE
                 INSERT INTO dbo.valoraciones_enfermeria
                     (id, evento_id, residente_id, centro_id, hallazgos, valoracion, actuaciones, comunicaciones, resultado,
@@ -106,7 +107,7 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
                    v.temperatura_celsius, v.tension_sistolica_mmhg, v.tension_diastolica_mmhg, v.frecuencia_cardiaca_lpm, v.frecuencia_respiratoria_rpm,
                    v.saturacion_o2_pct, v.soporte_respiratorio_codigo, v.flujo_o2_lpm, v.glucemia_mg_dl,
                    v.otra_constante_nombre, v.otra_constante_valor, v.otra_constante_unidad, v.actualizado_por_cuenta_id, v.actualizado_en
-              FROM dbo.valoraciones_enfermeria v
+              FROM dbo.valoraciones_enfermeria v WITH (FORCESEEK)
              WHERE v.evento_id = @EventId AND v.estado_codigo = 'BORRADOR'
             """, new { Id = Guid.NewGuid(), Revision = revision, input.EventId }, transaction, cancellationToken: ct));
 
@@ -137,7 +138,7 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
             SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @DueDate, @Criterion, @ContinuityNotes, @AccountId, @OccurredAt
               FROM dbo.eventos_asistenciales ea
              WHERE ea.id = @EventId
-               AND EXISTS (SELECT 1 FROM dbo.valoraciones_enfermeria v WHERE v.evento_id = ea.id AND v.estado_codigo = 'BORRADOR')
+               AND EXISTS (SELECT 1 FROM dbo.valoraciones_enfermeria v WITH (FORCESEEK) WHERE v.evento_id = ea.id AND v.estado_codigo = 'BORRADOR')
             """, new
         {
             Id = Guid.NewGuid(), input.Plan.DueDate, input.Plan.Criterion, input.ContinuityNotes,
@@ -173,9 +174,10 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
         }
 
         var closedAssessments = await connection.ExecuteAsync(new CommandDefinition("""
-            UPDATE dbo.valoraciones_enfermeria
+            UPDATE v
                SET estado_codigo = 'CERRADA', actualizado_por_cuenta_id = @AccountId, actualizado_en = @OccurredAt
-             WHERE evento_id = @EventId AND estado_codigo = 'BORRADOR'
+              FROM dbo.valoraciones_enfermeria v WITH (FORCESEEK)
+             WHERE v.evento_id = @EventId AND v.estado_codigo = 'BORRADOR'
             """, new { AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId }, transaction, cancellationToken: ct));
         if (closedAssessments != 1)
         {
