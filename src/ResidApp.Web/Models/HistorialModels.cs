@@ -38,10 +38,15 @@ public static class ResidentHistoryDisplay
 {
     /// <summary>El mismo resumen que las bandejas: la observación del evento propio o las áreas del cambio de
     /// Auxiliar.</summary>
-    public static string Summary(ClosedEventSummary item) => item.Origin switch
+    public static string Summary(ClosedEventSummary item) => Summary(item.Origin, item.Areas, item.Observation);
+
+    /// <summary>ENF-18/MED-20: el mismo resumen para un evento abierto de la ficha del residente.</summary>
+    public static string Summary(OpenEventSummary item) => Summary(item.Origin, item.Areas, item.Observation);
+
+    private static string Summary(ClinicalEventOrigin origin, IReadOnlyList<DailyChangeAreaCode> areas, string? observation) => origin switch
     {
-        ClinicalEventOrigin.CambioAuxiliar => string.Join(", ", item.Areas.Select(DailyChangeAreaDisplay.Label)),
-        _ => item.Observation is null ? "—" : item.Observation.Length <= 120 ? item.Observation : item.Observation[..120] + "…",
+        ClinicalEventOrigin.CambioAuxiliar => string.Join(", ", areas.Select(DailyChangeAreaDisplay.Label)),
+        _ => observation is null ? "—" : observation.Length <= 120 ? observation : observation[..120] + "…",
     };
 
     /// <summary>Quién cerró, con la misma deducción que Shared/_CierreEvento: un escalado solo lo cierra Medicina

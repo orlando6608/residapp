@@ -67,6 +67,54 @@ public class HistorialTests
         Assert.Equal([2, 1], timeline.Value!.OfType<TimelineEntry.BaselineSigned>().Select(b => b.VersionNumber));
     }
 
+    /// <summary>ENF-18/MED-20: la ficha muestra los eventos abiertos del residente con la regla de las bandejas:
+    /// Enfermería ve los de sus unidades; Medicina, solo los escalados (y sus eventos propios). Los cerrados no
+    /// entran, y otro centro no ve nada.</summary>
+    [Fact]
+    public async Task EventosAbiertos_EnfermeriaVeLosSuyos_MedicinaSoloLosEscalados_YLosCerradosNoEntran()
+    {
+        var (enfermera, medica, residentId) = await SeedResidentAsync();
+        var nursing = BuildService(enfermera.ExternalSubject);
+        var closedId = await RegisterAsync(enfermera, residentId, "Caída sin lesiones en el baño.");
+        var closeRevision = await StartAndSaveAsync(enfermera, closedId);
+        Assert.True((await nursing.CloseClinicalEventAsync(new CloseClinicalEventCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, closedId, closeRevision, Guid.NewGuid(),
+            FamilyCommunicationDecision.NoComunicar, null, null))).Ok);
+        var openId = await RegisterAsync(enfermera, residentId, "Inapetencia en la cena.");
+        var escalatedId = await RegisterAsync(enfermera, residentId, "Disnea de esfuerzo.");
+        var escalateRevision = await StartAndSaveAsync(enfermera, escalatedId);
+        Assert.True((await nursing.EscalateClinicalEventAsync(EscalateCommand(enfermera, escalatedId, escalateRevision))).Ok);
+
+        var nurseEvents = await OpenEventsAsync(enfermera, residentId, SystemProfile.Enfermeria);
+        Assert.Equal([escalatedId, openId], nurseEvents.Select(e => e.EventId));
+        Assert.Equal(ClinicalEventStatus.EscaladoMedicina, nurseEvents[0].Status);
+        Assert.True(nurseEvents[0].Escalated);
+        Assert.Equal(ClinicalEventStatus.Pendiente, nurseEvents[1].Status);
+        Assert.Equal("Inapetencia en la cena.", nurseEvents[1].Observation);
+        Assert.Equal(SystemProfile.Enfermeria, nurseEvents[1].AuthorProfile);
+
+        Assert.Equal([escalatedId], (await OpenEventsAsync(medica, residentId, SystemProfile.Medicina)).Select(e => e.EventId));
+
+        var otroCentro = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+        Assert.Empty(await OpenEventsAsync(otroCentro, residentId, SystemProfile.Enfermeria));
+        var auxiliar = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, enfermera.CenterId, enfermera.UnitId);
+        var denied = await ListOpenEvents(auxiliar).ExecuteAsync(
+            new ListOpenEventsCommand(auxiliar.ProfileScopeId, auxiliar.CenterId, residentId, SystemProfile.Auxiliar));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, denied.Error!.Code);
+    }
+
+    private static ListOpenEvents ListOpenEvents(SeededProfile profile) =>
+        new(new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory),
+            new FixedHistorialSessionIdentityProvider(profile.ExternalSubject));
+
+    private static async Task<IReadOnlyList<OpenEventSummary>> OpenEventsAsync(SeededProfile profile, ResidentId residentId, SystemProfile perfil)
+    {
+        var result = await ListOpenEvents(profile).ExecuteAsync(
+            new ListOpenEventsCommand(profile.ProfileScopeId, profile.CenterId, residentId, perfil));
+        Assert.True(result.Ok, result.Error?.Message);
+        return result.Value!;
+    }
+
     [Fact]
     public async Task HistorialDelBasal_EnfermeriaYMedicina_VenVigenteEHistoricas()
     {

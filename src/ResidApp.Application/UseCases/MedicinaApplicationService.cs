@@ -24,7 +24,7 @@ public sealed class MedicinaApplicationService(
     FindScopeResident findScopeResident, RegisterClinicalEvent registerClinicalEvent,
     ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory, ReadResidentTimeline readResidentTimeline,
     CorrectMedicalAssessment correctMedicalAssessment, RectifyAssessment rectifyAssessment,
-    AssessmentCorrectionSettings correctionSettings)
+    AssessmentCorrectionSettings correctionSettings, ListOpenEvents listOpenEvents)
 {
     /// <summary>COR-01: ventana de corrección, para ofrecer corregir o rectificar en el detalle.</summary>
     public TimeSpan CorrectionWindow => correctionSettings.Window;
@@ -39,6 +39,10 @@ public sealed class MedicinaApplicationService(
     public Task<ApplicationResult<IReadOnlyList<ClosedEventSummary>>> ListClosedEventsAsync(
         ListClosedEventsCommand command, CancellationToken ct = default) =>
         listClosedEvents.ExecuteAsync(command with { Perfil = Shared.SystemProfile.Medicina }, ct);
+
+    public Task<ApplicationResult<IReadOnlyList<OpenEventSummary>>> ListOpenEventsAsync(
+        ListOpenEventsCommand command, CancellationToken ct = default) =>
+        listOpenEvents.ExecuteAsync(command with { Perfil = Shared.SystemProfile.Medicina }, ct);
 
     public Task<ApplicationResult<IReadOnlyList<BaselineHistoryEntry>>> ReadBaselineHistoryAsync(
         ReadBaselineHistoryCommand command, CancellationToken ct = default) =>

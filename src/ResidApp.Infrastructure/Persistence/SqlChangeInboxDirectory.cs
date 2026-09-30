@@ -237,13 +237,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             return [];
         }
 
-        var closureIds = events.Where(e => e.OriginCode == "CAMBIO_AUXILIAR").Select(e => e.EventId).ToList();
-        IEnumerable<AreaCodeRow> areaRows = closureIds.Count == 0 ? [] : await connection.QueryAsync<AreaCodeRow>(new CommandDefinition("""
-            SELECT cierre_id AS ClosureId, area_codigo AS AreaCode FROM dbo.cierres_cotidianos_cambio_areas WHERE cierre_id IN @ClosureIds
-            """, new { ClosureIds = closureIds }, cancellationToken: ct));
-        var areasByClosureId = areaRows
-            .GroupBy(a => a.ClosureId)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<DailyChangeAreaCode>)g.Select(a => EnumCode.ParseCode<DailyChangeAreaCode>(a.AreaCode)).ToList());
+        var areasByClosureId = await FindAuxiliarAreasAsync(
+            connection, events.Where(e => e.OriginCode == "CAMBIO_AUXILIAR").Select(e => e.EventId).ToList(), ct);
 
         var contexts = await FindContextsAsync(connection, events.Select(e => e.EventId).ToList(), ct);
 
@@ -253,6 +248,56 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             new DateTimeOffset(e.OccurredAt, TimeSpan.Zero), new DateTimeOffset(e.ClosedAt, TimeSpan.Zero), e.Escalated,
             contexts.GetValueOrDefault(e.EventId))).ToList();
     }
+
+    /// <summary>ENF-18/MED-20: eventos abiertos de un residente visibles para el ámbito (ScopedEventsFrom: Medicina solo
+    /// ve los escalados y sus eventos propios), del más reciente al más antiguo, con su estado actual.</summary>
+    public async Task<IReadOnlyList<OpenEventSummary>> ListOpenEventsAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+
+        var events = (await connection.QueryAsync<OpenEventRow>(new CommandDefinition($"""
+            SELECT ea.id AS EventId, ea.origen_codigo AS OriginCode, ea.clasificacion_codigo AS ClassificationCode,
+                   clinical.observacion AS Observation,
+                   COALESCE(closure.registrado_por_perfil, clinical.registrado_por_perfil) AS AuthorProfileCode,
+                   ea.recibido_en AS OccurredAt, ea.estado_codigo AS StatusCode,
+                   CAST(CASE WHEN escalation.id IS NULL THEN 0 ELSE 1 END AS BIT) AS Escalated
+            {ScopedEventsFrom}
+               AND ea.residente_id = @ResidentId
+               AND ea.estado_codigo <> 'CERRADO'
+             ORDER BY ea.recibido_en DESC
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value },
+            cancellationToken: ct))).ToList();
+        if (events.Count == 0)
+        {
+            return [];
+        }
+
+        var areasByClosureId = await FindAuxiliarAreasAsync(
+            connection, events.Where(e => e.OriginCode == "CAMBIO_AUXILIAR").Select(e => e.EventId).ToList(), ct);
+
+        return events.Select(e => new OpenEventSummary(
+            e.EventId, EnumCode.ParseCode<ClinicalEventOrigin>(e.OriginCode), EnumCode.ParseCode<DailyChangeClassification>(e.ClassificationCode),
+            areasByClosureId.GetValueOrDefault(e.EventId, []), e.Observation, EnumCode.ParseCode<SystemProfile>(e.AuthorProfileCode),
+            new DateTimeOffset(e.OccurredAt, TimeSpan.Zero), EnumCode.ParseCode<ClinicalEventStatus>(e.StatusCode), e.Escalated)).ToList();
+    }
+
+    /// <summary>Las áreas marcadas por Auxiliar en los eventos de un cambio suyo (el evento comparte id con su cierre
+    /// cotidiano).</summary>
+    private static async Task<Dictionary<Guid, IReadOnlyList<DailyChangeAreaCode>>> FindAuxiliarAreasAsync(
+        System.Data.IDbConnection connection, IReadOnlyList<Guid> closureIds, CancellationToken ct)
+    {
+        IEnumerable<AreaCodeRow> areaRows = closureIds.Count == 0 ? [] : await connection.QueryAsync<AreaCodeRow>(new CommandDefinition("""
+            SELECT cierre_id AS ClosureId, area_codigo AS AreaCode FROM dbo.cierres_cotidianos_cambio_areas WHERE cierre_id IN @ClosureIds
+            """, new { ClosureIds = closureIds }, cancellationToken: ct));
+        return areaRows
+            .GroupBy(a => a.ClosureId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<DailyChangeAreaCode>)g.Select(a => EnumCode.ParseCode<DailyChangeAreaCode>(a.AreaCode)).ToList());
+    }
+
+    private sealed record OpenEventRow(
+        Guid EventId, string OriginCode, string ClassificationCode, string? Observation, string AuthorProfileCode,
+        DateTime OccurredAt, string StatusCode, bool Escalated);
 
     /// <summary>HIS-03: la instantánea de cada evento (dbo.eventos_contexto); un evento sin fila no aparece.</summary>
     private static async Task<Dictionary<Guid, ClinicalEventContext>> FindContextsAsync(

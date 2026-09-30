@@ -238,6 +238,15 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
     eventos con fila en `escalados_medicina` y estado distinto de `CERRADO`.
   - **Tests:** `EscaladosAbiertos_LosVeLaUnidad_SiguenEnMedicina_YSalenAlCerrar` en
     `MedicinaApplicationServiceTests`.
+- **Eventos abiertos en la ficha del residente (ENF-18)** — 2026-09-30, común con Medicina (MED-20).
+  - **Qué hace:** la ficha muestra la tarjeta «Eventos abiertos», del más reciente al más antiguo: estado,
+    «Prioritario» y «Escalado» si procede, el mismo resumen que el Historial, la fecha, el perfil que lo registró y
+    «Ver detalle» (`DetalleCambio` en Enfermería, `Escalado` en Medicina). Los cerrados siguen en el Historial.
+  - **Decisión del usuario (2026-09-30):** en las fichas de Enfermería y de Medicina.
+  - **Implementación:** sin script. `ListOpenEvents`, gemelo de `ListClosedEvents` (cada controlador pasa su
+    perfil), y `SqlChangeInboxDirectory.ListOpenEventsAsync`, con la regla de las bandejas: Medicina solo ve los
+    escalados y sus eventos propios. Parcial común `Shared/_EventosAbiertos`.
+  - **Tests:** `EventosAbiertos_…` en `HistorialTests`.
 
 ## Pendiente
 

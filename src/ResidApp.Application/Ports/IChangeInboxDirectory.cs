@@ -198,6 +198,11 @@ public sealed record PendingChangeDetail(
 /// basal es null si el residente no tenía basal firmado; la unidad, si no tenía ubicación registrada.</summary>
 public sealed record ClinicalEventContext(int? BaselineVersionNumber, DateTimeOffset? BaselineSignedAt, string? UnitName);
 
+/// <summary>ENF-18/MED-20: un evento todavía abierto en la ficha del residente, con su estado actual.</summary>
+public sealed record OpenEventSummary(
+    Guid EventId, ClinicalEventOrigin Origin, DailyChangeClassification Classification, IReadOnlyList<DailyChangeAreaCode> Areas,
+    string? Observation, SystemProfile AuthorProfile, DateTimeOffset OccurredAt, ClinicalEventStatus Status, bool Escalated);
+
 /// <summary>HIS-01/ENF-23/MED-22: un evento cerrado en el Historial del residente, con su contexto (HIS-03).</summary>
 public sealed record ClosedEventSummary(
     Guid EventId, ClinicalEventOrigin Origin, DailyChangeClassification Classification, IReadOnlyList<DailyChangeAreaCode> Areas,
@@ -231,6 +236,11 @@ public interface IChangeInboxDirectory
     /// <summary>HIS-01: eventos cerrados de un residente visibles para el ámbito (la misma regla que las
     /// bandejas), del más reciente al más antiguo.</summary>
     Task<IReadOnlyList<ClosedEventSummary>> ListClosedEventsAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+
+    /// <summary>ENF-18/MED-20: eventos abiertos de un residente visibles para el ámbito (la misma regla que las
+    /// bandejas), del más reciente al más antiguo.</summary>
+    Task<IReadOnlyList<OpenEventSummary>> ListOpenEventsAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 
     /// <summary>HIS-02: línea temporal del residente, del hito más reciente al más antiguo. Solo incluye los

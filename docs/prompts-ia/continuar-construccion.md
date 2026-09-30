@@ -13,6 +13,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Eventos abiertos en la ficha del residente (ENF-18, MED-20; sin script):** hecho el 2026-09-30, en un commit
+  local sin push. Las fichas de Enfermería y Medicina muestran los eventos abiertos que ve cada perfil, con su
+  estado y «Ver detalle» (parcial `Shared/_EventosAbiertos`). El detalle está en `pendientes-enfermeria.md`.
+  - **Verificación:**
+    - suite local en verde (121, 194 y 14) y 3 vueltas tipo CI con BD nueva;
+    - curl en local:
+      - Enfermería ve en Residente Integrado Uno el cambio prioritario de Auxiliar («Dolor / malestar») y en
+        Residente Integrado Dos el evento propio de Medicina en valoración médica y el suyo pendiente;
+      - Medicina ve en Residente Integrado Dos solo su evento propio, y en Residente Integrado Uno «Este
+        residente no tiene eventos abiertos.»;
+      - cada «Ver detalle» abre `DetalleCambio` o `Escalado`.
 - **Escalados abiertos en Enfermería (sin script):** hecho el 2026-09-30 y desplegado en Azure (push de `3f241d6`,
   run 36733282186 en verde con `build-and-test` y `deploy`).
   - **Prueba en Azure (2026-09-30):** sin escalados, la tarjeta marca 0 y la lista dice «No hay escalados
@@ -343,7 +354,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 121 unitarios, 193 de integración y 14 funcionales, todos en verde.
+- Suite: 121 unitarios, 194 de integración y 14 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -351,8 +362,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Siguiente bloque por decidir con el usuario.** Candidatos de los pendientes:
-   - los eventos abiertos del residente en su ficha de Medicina (MED-20).
+1. **Siguiente bloque por decidir con el usuario.** Los candidatos anotados están hechos; revisa los pendientes
+   de `pendientes-enfermeria.md` y `pendientes-medicina.md` para proponer el siguiente.
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 

@@ -883,8 +883,10 @@ public sealed class MedicinaController(MedicinaApplicationService service, Resid
         var baselineResult = await service.ReadCurrentBaselineAsync(
             new ReadCurrentBaselineCommand(scope.ProfileScopeId, centroId, resident.ResidentId), ct);
         var canManage = await baselineService.CanManageBaselineAsync(scope.ProfileScopeId, centroId, resident.ResidentId, ct);
+        var openEvents = await service.ListOpenEventsAsync(
+            new ListOpenEventsCommand(scope.ProfileScopeId, centroId, resident.ResidentId, SystemProfile.Medicina), ct);
         return View(new EnfermeriaResidentDetailViewModel(
-            resident, baselineResult.Ok ? baselineResult.Value : null, canManage.Ok && canManage.Value));
+            resident, baselineResult.Ok ? baselineResult.Value : null, canManage.Ok && canManage.Value, openEvents.Ok ? openEvents.Value : null));
     }
 
     /// <summary>MED-22 (historia 9): eventos cerrados del residente que ve Medicina (escalados y propios), con el

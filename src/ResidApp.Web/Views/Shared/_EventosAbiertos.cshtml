@@ -1,0 +1,54 @@
+@using ResidApp.Domain.Auxiliar
+@using ResidApp.Web.Models
+@model EnfermeriaResidentDetailViewModel
+@*
+    ENF-18/MED-20: eventos abiertos del residente que ve el perfil (Medicina, solo los escalados y sus eventos
+    propios), del más reciente al más antiguo. asp-action sin asp-controller apunta al controlador en curso, y el
+    detalle es DetalleCambio en Enfermería y Escalado en Medicina.
+*@
+@{
+    var detailAction = ViewContext.RouteData.Values["controller"] as string == "Medicina" ? "Escalado" : "DetalleCambio";
+}
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Eventos abiertos</h2>
+        @if (Model.OpenEvents is null)
+        {
+            <div class="alert alert-danger mb-0">No se han podido cargar los eventos abiertos. Vuelve a intentarlo.</div>
+        }
+        else if (Model.OpenEvents.Count == 0)
+        {
+            <p class="text-muted mb-0">Este residente no tiene eventos abiertos.</p>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var item in Model.OpenEvents)
+                {
+                    <li class="list-group-item px-0">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                            <div>
+                                <p class="mb-1">
+                                    <span class="badge text-bg-info">@EnumDisplay.Label(item.Status)</span>
+                                    @if (item.Classification == DailyChangeClassification.Prioritario)
+                                    {
+                                        <span class="badge text-bg-danger">Prioritario</span>
+                                    }
+                                    @if (item.Escalated)
+                                    {
+                                        <span class="badge text-bg-secondary">Escalado</span>
+                                    }
+                                </p>
+                                <p class="mb-1">@ResidentHistoryDisplay.Summary(item)</p>
+                                <p class="text-muted small mb-0">
+                                    @item.OccurredAt.ToLocalTime().ToString("g") · registrado por @SystemProfileDisplay.Label(item.AuthorProfile)
+                                </p>
+                            </div>
+                            <a asp-action="@detailAction" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle</a>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

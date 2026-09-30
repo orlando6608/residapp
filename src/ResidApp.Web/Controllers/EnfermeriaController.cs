@@ -1022,7 +1022,10 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
 
         var baselineResult = await service.ReadCurrentBaselineAsync(
             new ReadCurrentBaselineCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId), ct);
-        return View(new EnfermeriaResidentDetailViewModel(findResult.Value, baselineResult.Ok ? baselineResult.Value : null));
+        var openEvents = await service.ListOpenEventsAsync(
+            new ListOpenEventsCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, SystemProfile.Enfermeria), ct);
+        return View(new EnfermeriaResidentDetailViewModel(findResult.Value, baselineResult.Ok ? baselineResult.Value : null,
+            OpenEvents: openEvents.Ok ? openEvents.Value : null));
     }
 
     /// <summary>ENF-23/ENF-24 (historia 11): eventos cerrados del residente, con el basal y la ubicación de su

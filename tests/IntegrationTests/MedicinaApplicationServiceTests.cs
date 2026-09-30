@@ -60,7 +60,8 @@ public class MedicinaApplicationServiceTests
             new ReadResidentTimeline(new FindScopeResident(listScopeResidents), changeInbox),
             new CorrectMedicalAssessment(scopes, changeInbox, session, corrections, settings),
             new RectifyAssessment(scopes, changeInbox, session, corrections, settings),
-            settings);
+            settings,
+            new ListOpenEvents(scopes, changeInbox, session));
     }
 
     private static async Task<PendingChangeDetail?> FindAsync(SeededProfile seed, Guid eventId) =>

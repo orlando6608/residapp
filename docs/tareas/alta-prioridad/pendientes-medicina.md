@@ -111,6 +111,9 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   y «Ver ese basal» en el detalle de un evento cerrado (`/Medicina/VersionBasal`), con la misma vista que
   Enfermería: las nueve áreas y el Barthel por ítems. El detalle está en `pendientes-enfermeria.md`
   (historia 11, bloque 4).
+- **Eventos abiertos en la ficha del residente (MED-20)** — 2026-09-30: la ficha muestra los escalados y los
+  eventos propios de Medicina que siguen abiertos, con su estado y «Ver detalle». El detalle está en
+  `pendientes-enfermeria.md`.
 - **Escalados abiertos en Enfermería** — 2026-09-30: Enfermería ve los escalados que siguen abiertos en
   Medicina (antes solo los veía al cerrarse, en el Historial). El detalle está en `pendientes-enfermeria.md`.
 - **Buscador de la lista de residentes (MED-19)** — 2026-09-30: el mismo que Enfermería (nombre, estado
@@ -142,10 +145,6 @@ En el orden propuesto:
    la línea temporal para Dirección Clínica, que queda para su vertical.
 
 Huecos de lo ya construido:
-
-- **Evento propio (historia 7):**
-  - la ficha del residente (MED-20) enlaza al Historial (eventos cerrados y versiones del basal), pero no
-    muestra los eventos abiertos del residente.
 
 - Derivación a Urgencias: los mismos huecos que en Enfermería (firmante sin nombre, sin corrección del
   informe, contacto familiar en texto libre); ver `pendientes-enfermeria.md`.
