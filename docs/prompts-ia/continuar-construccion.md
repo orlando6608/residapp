@@ -13,8 +13,13 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Historia 8 de Medicina: gestionar el basal (sin script; cambia el seed):** hecho el 2026-09-30, en un
-  commit local sin push.
+- **Historia 8 de Medicina: gestionar el basal (sin script; cambia el seed):** hecho el 2026-09-30 y
+  desplegado en Azure (push de `6131d66`, run 36717481881 en verde con `build-and-test` y `deploy`, incluido
+  «Aplicar esquema y seed en Azure SQL»).
+  - **Prueba en Azure (2026-09-30)** con `dev-integrado-medicina`: la ficha de los dos residentes integrados
+    ofrece «Crear borrador de basal», y el módulo del basal abre con las migas de Medicina. No se creó
+    ningún borrador, para no tocar el recorrido guiado de CJ, que parte de un Residente Integrado Uno sin
+    basal.
   - **Qué hace:** con permiso de basal, la ficha de Medicina ofrece «Crear borrador de basal» o «Iniciar
     reevaluación», que abren el módulo común `EnfermeriaBasal`. Sus migas y redirecciones siguen al perfil
     activo. `dev-integrado-medicina` recibe los dos permisos en el seed del escenario integrado. El detalle
@@ -314,9 +319,6 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    - una lista de «mis escalados» abiertos en Enfermería;
    - los eventos abiertos del residente en su ficha de Medicina (MED-20);
    - un buscador en las listas de residentes de Enfermería y Medicina.
-
-   Tras el push de la historia 8, prueba en Azure con `dev-integrado-medicina` que la ficha ofrece el basal
-   (el seed le da el permiso).
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 
