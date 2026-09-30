@@ -12,8 +12,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Filtro de la bandeja de cambios ordinarios (ENF-02; sin script):** hecho el 2026-09-30, **sin push** (solo
-  commit en `main`). Filtro por nombre, unidad y estado en `/Enfermeria/Ordinarios`, que completa la historia 1
+- **Filtro de la bandeja de cambios ordinarios (ENF-02; sin script):** hecho el 2026-09-30 y desplegado en Azure (push de `8c22c13`, run 36753447680 en verde con `build-and-test` y `deploy`).
+  Filtro por nombre, unidad y estado en `/Enfermeria/Ordinarios`, que completa la historia 1
   de Enfermería. El detalle está en `pendientes-enfermeria.md`.
   - **Verificación:**
     - suite local en verde (121, 194 y 17) en la 3.ª vuelta seguida; las dos primeras (la primera tras compilar)
