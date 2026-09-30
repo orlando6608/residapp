@@ -13,9 +13,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Eventos abiertos en la ficha del residente (ENF-18, MED-20; sin script):** hecho el 2026-09-30, en un commit
-  local sin push. Las fichas de Enfermería y Medicina muestran los eventos abiertos que ve cada perfil, con su
-  estado y «Ver detalle» (parcial `Shared/_EventosAbiertos`). El detalle está en `pendientes-enfermeria.md`.
+- **Eventos abiertos en la ficha del residente (ENF-18, MED-20; sin script):** hecho el 2026-09-30 y desplegado
+  en Azure (push de `685b683`, run 36743950450 en verde con `build-and-test` y `deploy`). En Azure, Residente
+  Integrado Dos muestra en las dos fichas el escalado de prueba «En valoración médica» (su «Ver detalle» abre en
+  Medicina) y Residente Integrado Uno, «Este residente no tiene eventos abiertos.». Las fichas de Enfermería y
+  Medicina muestran los eventos abiertos que ve cada perfil, con su estado y «Ver detalle» (parcial
+  `Shared/_EventosAbiertos`). El detalle está en `pendientes-enfermeria.md`.
   - **Verificación:**
     - suite local en verde (121, 194 y 14) y 3 vueltas tipo CI con BD nueva;
     - curl en local:
