@@ -13,8 +13,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Parte médica en el detalle de Enfermería (sin script):** hecho el 2026-09-30, en un commit local sin
-  push.
+- **Parte médica en el detalle de Enfermería (sin script):** hecho el 2026-09-30 y desplegado en Azure
+  (push de `ae45d44`, run 36706361068 en verde con `build-and-test` y `deploy`).
+  - **Prueba en Azure (2026-09-30)** con `dev-integrado-enfermeria`:
+    - el evento propio de Medicina de Residente Integrado Uno muestra la valoración médica, las indicaciones
+      y «Ir a Indicaciones»;
+    - sus dos eventos sin escalar no muestran nada nuevo.
+
+    En Azure no hay ningún escalado para esos residentes (Residente Integrado Dos no tiene eventos), así que
+    las tres tarjetas de un escalado solo se probaron en local.
   - **Qué hace:** el detalle de un evento escalado, o de uno propio de Medicina con indicaciones, muestra en
     solo lectura la valoración médica, las indicaciones y el seguimiento médico, con «Ir a Indicaciones» si
     queda alguna pendiente. El detalle está en `pendientes-enfermeria.md`.
@@ -239,9 +246,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Push de la parte médica en el detalle de Enfermería** cuando el usuario lo pida. Es solo de vista y no
-   tiene script. Después, comprueba el pipeline y míralo en Azure con `dev-integrado-enfermeria`.
-2. **Siguiente bloque por decidir con el usuario.** Candidatos de los pendientes:
+1. **Siguiente bloque por decidir con el usuario.** Candidatos de los pendientes:
    - historia 8 de Medicina (basal desde Medicina);
    - arreglar `BaselineAreaDisplay.Summarize` (ver avisos), que desbloquea abrir una versión histórica del
      basal;
