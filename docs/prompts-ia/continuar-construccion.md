@@ -386,13 +386,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Documento para CJ** (antes de seguir con Dirección, no bloquea el resto): preparar uno en `docs/pendientes-cj/` con
-   tres preguntas de producto que hoy están pendientes:
-   - **Finalidades válidas de `CLINICAL_DETAIL_READ`** (la matriz de permisos las deja «pendientes»): bloquea el bloque 2 de
-     Dirección y hoy `/Baseline/Direction` pide el propósito en texto libre;
-   - **Aportación a un borrador de basal ajeno** (`BASELINE_DRAFT_CONTRIBUTE`, BAS-11, ENF-20/MED-21): la matriz dice
-     «capacidad aprobada; permiso/granularidad pendientes». Qué puede aportar y si solo añade o también sobrescribe;
-   - **Campo «Comunicaciones»** de la valoración de Enfermería en el informe de derivación (ver avisos).
+1. **Revisar las respuestas de CJ** en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (preparado el
+   2026-09-30, 7 respuestas). Si ha respondido al tema 1, el siguiente bloque es el 2 de Dirección (lectura clínica
+   auditada); si ha respondido al tema 2, la aportación a un borrador de basal ajeno; el tema 3 es un cambio pequeño en el
+   informe de derivación.
 2. **Dirección, bloque 3 o 4** (no dependen de la decisión de CJ, pero sí de otros verticales en parte): ver
    `pendientes-direccion.md`. El bloque 3 necesita la publicación familiar; el 4 (indicadores con periodo e informes
    agregados) se puede construir ya.
@@ -417,10 +414,9 @@ usuario cuando encajen:
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de
   prueba allí.
 
-- **Pregunta para CJ:** si el campo «Comunicaciones» de la valoración de Enfermería debe entrar en el
-  informe de derivación. Hoy se excluye por prudencia (DER-04 saca los contactos del informe externo).
-  Está anotada en `pendientes-enfermeria.md`; si hace falta, se le pide con un documento en
-  `docs/pendientes-cj/`.
+- **Preguntas para CJ (2026-09-30):** `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` recoge las finalidades de la lectura clínica de Dirección, la
+  aportación a un borrador de basal ajeno y el campo «Comunicaciones» del informe de derivación. Revisa si
+  CJ ha respondido antes de proponer el bloque 2 de Dirección o la aportación.
 - **CI (anotaciones de GitHub Actions):**
   - `actions/checkout@v4` y `actions/setup-dotnet@v4` usan Node.js 20, que está obsoleto (hoy se fuerzan a
     Node 24);

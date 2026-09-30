@@ -274,7 +274,7 @@ Huecos de lo ya construido:
   - **Contacto familiar en texto libre:** a quién se llama se escribe a mano hasta que Administración tenga
     el contacto designado.
   - **Pendiente de CJ:** confirmar si el campo "Comunicaciones" de la valoración debe quedar fuera del
-    informe, como se hace hoy por prudencia (DER-04).
+    informe, como se hace hoy por prudencia (DER-04). Preguntado en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 3).
 
 - **Seguimiento (historia 4)**: no hay equipos ni turnos (son del vertical Administración). El equipo
   responsable es la Enfermería de la unidad del evento y el equipo o turno entrante de una transferencia es
@@ -304,7 +304,7 @@ Huecos de lo ya construido:
   SpO2 88-92 % en EPOC). Queda por decidir con CJ quién las fija (Enfermería o Medicina) y si forman
   parte del basal.
 - Historia 9: la aportación de otro profesional autorizado a un borrador ajeno (permiso
-  `BASELINE_DRAFT_CONTRIBUTE`) no está construida; hoy solo el autor del borrador puede editarlo.
+  `BASELINE_DRAFT_CONTRIBUTE`) no está construida; hoy solo el autor del borrador puede editarlo. Pendiente de CJ en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 2): qué es una aportación, sobre qué y quién.
 
 Al construir cada historia, actualizar el Manual de usuario (`src/ResidApp.Web/Views/Home/Manual.cshtml`),
 sección "Próximamente".

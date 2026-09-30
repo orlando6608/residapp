@@ -33,7 +33,7 @@ En el orden propuesto:
    válida, ámbito y auditoría registrada **antes** de entregar el contenido; línea temporal (HIS-02, que reutilizaría `ReadResidentTimeline`),
    historial de eventos cerrados y correcciones y rectificaciones en solo lectura.
    **Bloqueado por una decisión de CJ:** la matriz de permisos del prototipo marca `CLINICAL_DETAIL_READ` como «aprobado; ámbito/finalidades
-   pendientes». Hay que pedirle las finalidades válidas (`docs/pendientes-cj/`) antes de construirlo; no se inventan.
+   pendientes». Se le han preguntado en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 1); no se construye ni se inventan hasta su respuesta.
 2. **Bloque 3 — derivaciones y comunicación familiar en solo lectura (historia 5; DIR-12, DIR-13).** La comunicación familiar depende de que
    exista la aprobación y publicación (Administración y Familia).
 3. **Bloque 4 — indicadores e informes agregados (historias 4 y 7; DIR-08 a DIR-11, DIR-16):** con periodo y denominador, sin ranking
