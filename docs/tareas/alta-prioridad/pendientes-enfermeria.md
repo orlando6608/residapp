@@ -7,7 +7,7 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
 
 ## Hecho
 
-- **Historia 1 (bandejas), parcial**: bandeja prioritaria y bandeja de ordinarios
+- **Historia 1 (bandejas)**: bandeja prioritaria y bandeja de ordinarios
   (`EnfermeriaController/Prioritarios`, `/Ordinarios`) con los cambios que registra Auxiliar y los eventos
   propios de Enfermería, compartidas por unidad, ordenadas de más antiguo a más reciente y con su estado
   real; detalle del evento con la observación original, la temperatura y el basal vigente resumido
@@ -247,6 +247,15 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
     perfil), y `SqlChangeInboxDirectory.ListOpenEventsAsync`, con la regla de las bandejas: Medicina solo ve los
     escalados y sus eventos propios. Parcial común `Shared/_EventosAbiertos`.
   - **Tests:** `EventosAbiertos_…` en `HistorialTests`.
+- **Filtro de la bandeja de cambios ordinarios (ENF-02)** — 2026-09-30.
+  - **Qué hace:** encima de `/Enfermeria/Ordinarios`, filtrar por nombre del residente (sin distinguir mayúsculas
+    ni acentos), unidad (solo si hay más de una) y estado (los que hay en la bandeja), al pulsar «Buscar». Indica
+    cuántos coinciden y «Limpiar» quita el filtro. Con eso, la historia 1 queda completa.
+  - **Decisión del usuario (2026-09-30):** nombre, unidad y estado.
+  - **Implementación:** formulario GET (`?q=&unidad=&estado=`) que filtra en memoria la lista ya autorizada
+    (`PendingChangeFilter`, `PendingChangeListViewModel`), con el patrón del buscador de residentes. Un valor mal
+    formado en la URL se ignora. Sin cambios de backend ni de esquema.
+  - **Tests:** `PendingChangeFilterTests` (funcional).
 
 ## Pendiente
 
@@ -257,9 +266,6 @@ En el orden propuesto de construcción:
 
 Huecos de lo ya construido:
 
-- **Historia 1 (bandejas):** la bandeja de cambios ordinarios no tiene filtro (ENF-02 pide «filtrar y abrir
-  detalle»). El resto de la historia está hecho: bandejas de prioritarios, ordinarios, seguimientos,
-  indicaciones y comunicaciones, compartidas por unidad, y los vencidos siguen visibles.
 - **Derivación a Urgencias (historia 6, bloque 2):**
   - **Firmante sin nombre:** `dbo.cuentas` no tiene nombre, así que el PDF muestra el perfil y el
     identificador de la cuenta hasta que exista el proveedor de identidad real.

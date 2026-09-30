@@ -12,6 +12,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Filtro de la bandeja de cambios ordinarios (ENF-02; sin script):** hecho el 2026-09-30, **sin push** (solo
+  commit en `main`). Filtro por nombre, unidad y estado en `/Enfermeria/Ordinarios`, que completa la historia 1
+  de Enfermería. El detalle está en `pendientes-enfermeria.md`.
+  - **Verificación:**
+    - suite local en verde (121, 194 y 17) en la 3.ª vuelta seguida; las dos primeras (la primera tras compilar)
+      dieron tiempos de espera de conexión, el patrón de «Suite lenta» (SQL Server responde en 0,1 s desde
+      `sqlcmd` y las pruebas aisladas pasan);
+    - vueltas tipo CI con BD nueva: la primera (52 fallos por tiempos de espera) y las dos siguientes limpias;
+    - curl con `dev-integrado-enfermeria`: sin filtro, nombre («DOS»), estado, valores mal formados ignorados,
+      «Ningún evento coincide con la búsqueda.» y «Limpiar»; `dev-integrado-medicina` recibe «No se puede acceder
+      a esta operación».
 
 - **Eventos abiertos en la ficha del residente (ENF-18, MED-20; sin script):** hecho el 2026-09-30 y desplegado
   en Azure (push de `685b683`, run 36743950450 en verde con `build-and-test` y `deploy`). En Azure, Residente
@@ -324,8 +335,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 - CJ no ha completado nada nuevo (comprobado también en GitHub el 2026-09-29):
   `docs/pendientes-cj/rangos-referencia-constantes.html` sigue con 19 huecos «por definir» (14 celdas de la
   tabla y 5 respuestas; antes se contaban mal como 17).
-- Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
-  (parcial), 2 a 10 y 11 (salvo la lectura de Dirección Clínica, que es de su vertical), más los rangos de
+- Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1 a 10
+  y 11 (salvo la lectura de Dirección Clínica, que es de su vertical), más los rangos de
   referencia de constantes (fase 1 y su pantalla). Medicina está en curso: historias 1 a 8 (escalados,
   valoración médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos, protocolo
   urgente, derivación a Urgencias, evento propio y basal con permiso) y 9 (con la misma salvedad que la 11).
@@ -357,7 +368,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 121 unitarios, 194 de integración y 14 funcionales, todos en verde.
+- Suite: 121 unitarios, 194 de integración y 17 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -368,9 +379,6 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 1. **Siguiente bloque por decidir con el usuario.** Enfermería y Medicina tienen construidas todas sus
    historias salvo lo que depende de otros verticales. Candidatos, de lo pendiente en esos dos verticales a
    verticales nuevos:
-   - **Filtro de la bandeja de cambios ordinarios** (ENF-02: «filtrar y abrir detalle»): es lo único que le
-     falta a la historia 1 de Enfermería, marcada «parcial». Se puede reutilizar el patrón del buscador de
-     residentes (`Shared/_FiltroResidentes`, formulario GET).
    - **Aportación a un borrador de basal ajeno** (`BASELINE_DRAFT_CONTRIBUTE`, BAS-11, ENF-20/MED-21): hoy
      solo el autor edita su borrador. Consulta antes el flujo `gestion-basal-barthel.md` y la matriz de
      permisos del prototipo.

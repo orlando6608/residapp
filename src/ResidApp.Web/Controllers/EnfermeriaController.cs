@@ -175,12 +175,14 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
     }
 
     /// <summary>ENF-02: bandeja de cambios ordinarios (AUX-11A) y eventos propios ordinarios (ENF-16).</summary>
-    public async Task<IActionResult> Ordinarios(CancellationToken ct)
+    public async Task<IActionResult> Ordinarios(PendingChangeFilter filtro, CancellationToken ct)
     {
+        // ENF-02: un valor del filtro mal formado en la URL se ignora (queda sin filtrar), no se muestra como error.
+        ModelState.Clear();
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Ordinarios)) });
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
         }
 
         var result = await service.ListPendingChangesAsync(new ListPendingChangesCommand(
@@ -188,10 +190,10 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
-            return View(Array.Empty<PendingChangeSummary>());
+            return View(PendingChangeListViewModel.From([], filtro));
         }
 
-        return View(result.Value);
+        return View(PendingChangeListViewModel.From(result.Value!, filtro));
     }
 
     /// <summary>ENF-03: bandeja prioritaria (AUX-11B/AUX-12). Mismo alcance E4 que Ordinarios.</summary>

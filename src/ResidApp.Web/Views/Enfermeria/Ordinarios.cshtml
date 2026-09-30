@@ -1,7 +1,7 @@
 @using ResidApp.Application.Ports
 @using ResidApp.Domain.Enfermeria
 @using ResidApp.Web.Models
-@model IReadOnlyList<PendingChangeSummary>
+@model PendingChangeListViewModel
 @{
     ViewData["Title"] = "Bandeja de cambios ordinarios";
 }
@@ -17,11 +17,64 @@
 <h1 class="h3">Bandeja de cambios ordinarios</h1>
 <div asp-validation-summary="All" class="text-danger"></div>
 
-@if (Model.Count == 0)
+@if (Model.TotalCount > 0)
+{
+    <form method="get" asp-action="Ordinarios" role="search" class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md">
+                    <label for="filtro-q" class="form-label">Residente</label>
+                    <input id="filtro-q" name="q" type="search" value="@Model.Filter.Q" maxlength="200" class="form-control form-control-lg"
+                           autocomplete="off" />
+                </div>
+                @if (Model.Units.Count > 1)
+                {
+                    <div class="col-12 col-md-3">
+                        <label for="filtro-unidad" class="form-label">Unidad</label>
+                        <select id="filtro-unidad" name="unidad" class="form-select form-select-lg">
+                            <option value="">Todas</option>
+                            @foreach (var unit in Model.Units)
+                            {
+                                <option value="@unit.Id" selected="@(Model.Filter.Unidad == unit.Id)">@unit.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
+                <div class="col-12 col-md-3">
+                    <label for="filtro-estado" class="form-label">Estado</label>
+                    <select id="filtro-estado" name="estado" class="form-select form-select-lg">
+                        <option value="">Todos</option>
+                        @foreach (var status in Model.Statuses)
+                        {
+                            <option value="@status" selected="@(Model.Filter.Estado == status)">@ClinicalEventStatusDisplay.Label(status)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-auto d-grid d-md-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">Buscar</button>
+                    @if (!Model.Filter.IsEmpty)
+                    {
+                        <a asp-action="Ordinarios" class="btn btn-outline-secondary btn-lg">Limpiar</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </form>
+    @if (!Model.Filter.IsEmpty)
+    {
+        <p class="text-muted" role="status">
+            @(Model.Items.Count == 0
+                ? "Ningún evento coincide con la búsqueda."
+                : $"{Model.Items.Count} de {Model.TotalCount} eventos.")
+        </p>
+    }
+}
+
+@if (Model.TotalCount == 0)
 {
     <p class="text-muted">No hay eventos ordinarios abiertos.</p>
 }
-else
+else if (Model.Items.Count > 0)
 {
     <div class="table-responsive">
         <table class="table table-hover align-middle">
@@ -38,7 +91,7 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
+                @foreach (var item in Model.Items)
                 {
                     <tr>
                         <td>@item.ResidentDisplayName</td>

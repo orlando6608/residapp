@@ -53,6 +53,47 @@ public sealed record ResidentListViewModel(
     }
 }
 
+/// <summary>ENF-02: filtrar la bandeja de cambios ordinarios. Llega por GET (?q=&amp;unidad=&amp;estado=); los campos
+/// vacíos no filtran.</summary>
+public sealed class PendingChangeFilter
+{
+    [Display(Name = "Residente")]
+    public string? Q { get; set; }
+
+    [Display(Name = "Unidad")]
+    public Guid? Unidad { get; set; }
+
+    [Display(Name = "Estado")]
+    public ClinicalEventStatus? Estado { get; set; }
+
+    public bool IsEmpty => string.IsNullOrWhiteSpace(Q) && Unidad is null && Estado is null;
+}
+
+/// <summary>ENF-02: la bandeja de ordinarios (ya autorizada) filtrada en memoria, con el nombre buscado sin distinguir
+/// mayúsculas ni acentos. Units y Statuses son los que hay en la bandeja; la unidad solo se ofrece si hay más de una.</summary>
+public sealed record PendingChangeListViewModel(
+    IReadOnlyList<PendingChangeSummary> Items, int TotalCount, PendingChangeFilter Filter,
+    IReadOnlyList<(Guid Id, string Name)> Units, IReadOnlyList<ClinicalEventStatus> Statuses)
+{
+    public static PendingChangeListViewModel From(IReadOnlyList<PendingChangeSummary> all, PendingChangeFilter filter)
+    {
+        var name = filter.Q?.Trim();
+        var shown = all
+            .Where(c => string.IsNullOrEmpty(name) || System.Globalization.CultureInfo.InvariantCulture.CompareInfo.IndexOf(
+                c.ResidentDisplayName, name, System.Globalization.CompareOptions.IgnoreCase | System.Globalization.CompareOptions.IgnoreNonSpace) >= 0)
+            .Where(c => filter.Unidad is null || c.UnitId.Value == filter.Unidad)
+            .Where(c => filter.Estado is null || c.Status == filter.Estado)
+            .ToList();
+        var units = all
+            .GroupBy(c => c.UnitId.Value)
+            .Select(g => (g.Key, g.First().UnitName ?? "Sin unidad"))
+            .OrderBy(u => u.Item2)
+            .ToList();
+        var statuses = all.Select(c => c.Status).Distinct().OrderBy(ClinicalEventStatusDisplay.Label).ToList();
+        return new(shown, all.Count, filter, units, statuses);
+    }
+}
+
 /// <summary>ENF-18: identidad mínima del residente del ámbito más el resumen del basal vigente (null si
 /// todavía no tiene ninguno firmado). También es la ficha de Medicina (MED-20), donde CanManageBaseline dice si su
 /// ámbito tiene permiso para crear o reevaluar el basal (historia 8); Enfermería ofrece el acceso siempre. OpenEvents son
