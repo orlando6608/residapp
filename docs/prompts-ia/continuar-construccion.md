@@ -13,10 +13,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Historial, bloque 2: línea temporal (HIS-02, sin script):** hecho el 2026-09-30, con commit en `main` y
-  **sin push**. «Ver línea temporal» desde el Historial y desde el detalle de cada evento, en Enfermería y
-  Medicina: cada evento visible con sus hitos y su texto, más las versiones del basal y los cambios de
-  ubicación.
+- **Historial, bloque 2: línea temporal (HIS-02, sin script):** hecho el 2026-09-30 y desplegado en Azure
+  (push de `429eae7`, run 36685732287 en verde con `build-and-test` y `deploy`). «Ver línea temporal» desde
+  el Historial y desde el detalle de cada evento, en Enfermería y Medicina: cada evento visible con sus hitos
+  y su texto, más las versiones del basal y los cambios de ubicación.
+  - **Prueba en Azure (2026-09-30)**, sobre Residente Integrado Uno:
+    - Enfermería ve 15 hitos, con el PDF de derivación descargable, y Medicina 5;
+    - los días salen en español en Linux («martes, 29 de septiembre de 2026») y las horas en hora de España;
+    - los enlaces van y vuelven entre la línea temporal y el detalle.
   - **Decisión del usuario:** por ámbito, como la matriz de permisos del prototipo. Sustituye a la del permiso
     nuevo. El detalle está en `pendientes-enfermeria.md` (historia 11, bloque 2).
   - **Verificación:**
@@ -194,10 +198,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Si el usuario lo pide, push de la línea temporal** y comprobar que el pipeline termina en verde, con
-   `build-and-test` y `deploy`. Después, abrirla en Azure con `dev-integrado-enfermeria` y
-   `dev-integrado-medicina`.
-2. **Historial, bloque 3: la corrección (COR-01/COR-02).** Qué notas admiten la ventana de seis horas y cómo
+1. **Historial, bloque 3: la corrección (COR-01/COR-02).** Qué notas admiten la ventana de seis horas y cómo
    se rectifica fuera de ella. Es una decisión de producto que puede necesitar a CJ: revisa primero la
    matriz de permisos del prototipo (filas «Corregir curso/nota clínica propia dentro de ventana» y
    «Rectificar…», `COND objeto habilitado` y `COND política clínica`).
