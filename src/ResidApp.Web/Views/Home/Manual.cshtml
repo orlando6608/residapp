@@ -17,7 +17,8 @@
     propio, la bandeja de escalados recibidos y eventos propios, la valoración médica
     y las indicaciones a Enfermería, que Enfermería lee y registra, el seguimiento médico con la continuidad
     entre turnos, el protocolo urgente con la derivación a Urgencias y el cierre médico del evento; y, para los
-    dos perfiles, el historial de eventos cerrados y de versiones del basal de cada residente. El resto de
+    dos perfiles, el historial de eventos cerrados y de versiones del basal de cada residente y su línea
+    temporal completa. El resto de
     módulos aparece
     descrito al final como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
     inicio de sesión con usuario y contraseña definitivo).
@@ -43,7 +44,7 @@
             <a class="list-group-item list-group-item-action" href="#seguimientos-medicina">Seguimiento médico y continuidad entre turnos (Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#protocolo-urgente">Protocolo urgente (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#derivacion-urgencias">Derivación a Urgencias (Enfermería y Medicina)</a>
-            <a class="list-group-item list-group-item-action" href="#historial">Historial del residente (Enfermería y Medicina)</a>
+            <a class="list-group-item list-group-item-action" href="#historial">Historial y línea temporal del residente (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -348,8 +349,7 @@
         La comunicación preparada <strong>no se publica todavía</strong>: queda pendiente de aprobación
         humana y aparece en la tarjeta <strong>Comunicaciones</strong> del inicio de Enfermería. La familia
         la verá firmada siempre como "Equipo asistencial del centro", nunca con tu nombre. Su aprobación y
-        publicación llegan con el Portal Familiar (ver "Próximamente"), igual que la línea temporal del
-        evento.
+        publicación llegan con el Portal Familiar (ver "Próximamente").
     </p>
 </section>
 
@@ -584,7 +584,7 @@
 </section>
 
 <section id="historial" class="mb-4">
-    <h2 class="h5">Historial del residente (Enfermería y Medicina)</h2>
+    <h2 class="h5">Historial y línea temporal del residente (Enfermería y Medicina)</h2>
     <p>
         Desde la ficha del residente, <strong>Ver historial</strong> abre, en solo lectura, dos listas:
     </p>
@@ -604,9 +604,20 @@
             y cuándo, el total de Barthel y a qué versión sustituyó.
         </li>
     </ul>
+    <p>
+        <strong>Ver línea temporal</strong>, desde el historial o desde el detalle de cualquier evento, abre la
+        secuencia completa del residente, agrupada por días y del registro más reciente al más antiguo. Recoge
+        cada evento, abierto o cerrado, con cada paso de su atención y su texto: el registro, cada versión
+        guardada de las valoraciones de Enfermería y de Medicina, el escalado, las indicaciones y su lectura o
+        realización, las acciones de seguimiento, el protocolo urgente con sus contactos, el informe de
+        derivación firmado (con su PDF), las llamadas a la familia, la comunicación preparada y el cierre. También
+        recoge las versiones del basal y los cambios de ubicación. Cada paso indica el perfil que lo hizo, y
+        <strong>Ver evento</strong> abre su detalle. Solo se carga cuando la pides. Como en el resto del
+        historial, Medicina solo ve los eventos que se le escalaron y los suyos propios.
+    </p>
     <p class="mb-0">
-        Nada del historial se puede modificar. La línea temporal completa y la corrección de notas llegarán
-        más adelante (ver "Próximamente").
+        Nada del historial ni de la línea temporal se puede modificar. La corrección de notas llegará más adelante
+        (ver "Próximamente").
     </p>
 </section>
 
@@ -671,7 +682,7 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>La línea temporal completa del residente, que se abrirá con un permiso específico, y la corrección de notas clínicas dentro de la ventana de seis horas.</li>
+        <li>La corrección de notas clínicas dentro de la ventana de seis horas, y su rectificación fuera de ella.</li>
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>

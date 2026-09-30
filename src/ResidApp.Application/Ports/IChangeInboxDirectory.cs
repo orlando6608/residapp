@@ -210,6 +210,13 @@ public interface IChangeInboxDirectory
     Task<IReadOnlyList<ClosedEventSummary>> ListClosedEventsAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 
+    /// <summary>HIS-02: línea temporal del residente, del hito más reciente al más antiguo. Solo incluye los
+    /// eventos visibles para el ámbito (la misma regla que las bandejas), abiertos y cerrados, más las versiones
+    /// del basal y los cambios de ubicación del residente. Quien llama comprueba antes que el residente está en el
+    /// ámbito.</summary>
+    Task<IReadOnlyList<TimelineEntry>> ListTimelineAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+
     /// <summary>MED-02: escalados pendientes para un ámbito de Medicina. Con un ámbito de Medicina, FindAsync
     /// solo devuelve eventos escalados a Medicina.</summary>
     Task<IReadOnlyList<EscalationSummary>> ListEscalationsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);

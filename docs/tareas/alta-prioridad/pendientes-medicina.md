@@ -91,6 +91,11 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   Medicina (la regla de sus bandejas), cada uno con el basal y la ubicación de su fecha (HIS-03), y las
   versiones firmadas del basal. El detalle, las decisiones y el script `0019` están en
   `pendientes-enfermeria.md` (historia 11, bloque 1).
+- **Historia 9, bloque 2 (línea temporal, MED-03 y MED-24)** — 2026-09-30: «Ver línea temporal» desde el
+  Historial y desde el detalle de cualquier evento (`/Medicina/LineaTemporal`), con la misma vista que
+  Enfermería. Solo entran los eventos que ve Medicina, con cada hito y su texto, más las versiones del basal y
+  los cambios de ubicación. **Decisión del usuario:** por ámbito, como la matriz de permisos del prototipo,
+  sin permiso aparte. El detalle está en `pendientes-enfermeria.md` (historia 11, bloque 2).
 - Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests`, `FollowUpTests`,
   `UrgentProtocolTests` y `EmergencyReferralTests` (unitarios), y `ReferralReportBuilderTests` (funcional).
 - Cuenta de desarrollo `dev-integrado-medicina` en el escenario integrado.

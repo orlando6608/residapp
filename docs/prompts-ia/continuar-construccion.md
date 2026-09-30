@@ -13,6 +13,23 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Historial, bloque 2: línea temporal (HIS-02, sin script):** hecho el 2026-09-30, con commit en `main` y
+  **sin push**. «Ver línea temporal» desde el Historial y desde el detalle de cada evento, en Enfermería y
+  Medicina: cada evento visible con sus hitos y su texto, más las versiones del basal y los cambios de
+  ubicación.
+  - **Decisión del usuario:** por ámbito, como la matriz de permisos del prototipo. Sustituye a la del permiso
+    nuevo. El detalle está en `pendientes-enfermeria.md` (historia 11, bloque 2).
+  - **Verificación:**
+    - suite local en verde 3 veces (113 unitarios, 184 de integración y 7 funcionales);
+    - 3 vueltas tipo CI con BD nueva en verde;
+    - curl con `dev-integrado-enfermeria` y `dev-integrado-medicina`:
+      - Residente Integrado Uno: 61 hitos para Enfermería y 38 para Medicina, con los enlaces al detalle en los
+        dos sentidos;
+      - Residente Integrado Dos: el informe de derivación y las llamadas, con la descarga del PDF;
+      - `dev-integrado-auxiliar` no entra.
+  - Antes, en el mismo día: push de `c1a0b11` (solo documentación, run 36683643083 en verde) y prueba del
+    bloque 1 en Azure con los dos perfiles: Enfermería ve 3 eventos cerrados de Residente Integrado Uno y
+    Medicina 1, con el contexto de su fecha (ese residente no tiene basal firmado en Azure).
 - **Historial, bloque 1 (historia 11 de Enfermería, 9 de Medicina; script `0019`):** hecho el 2026-09-30 y
   desplegado en Azure: push de `5deb007`, run 36679533522 en verde con `build-and-test` y `deploy` (incluido
   «Aplicar esquema y seed en Azure SQL», con el relleno de la instantánea). El detalle y las decisiones están
@@ -169,7 +186,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     relevante.
   - «Prueba manual derivacion medica: dolor torácico.»: escalado, protocolo de Medicina, derivado por
     Medicina, con una llamada «Contactado» y cerrado con una comunicación relevante.
-- Suite: 113 unitarios, 183 de integración y 7 funcionales, todos en verde.
+- Suite: 113 unitarios, 184 de integración y 7 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -177,14 +194,13 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Probar el Historial en Azure** con `dev-integrado-enfermeria` y `dev-integrado-medicina` (aún no se ha
-   hecho): lista de eventos cerrados, contexto de su fecha y versiones del basal.
-2. **Historial, bloque 2: la línea temporal (HIS-02).** Decidido: se abre con un **permiso nuevo** por
-   ámbito, con auditoría de cada acceso. Falta decidir con el usuario qué contiene (versiones de las
-   valoraciones, parte médica del evento escalado, informe de derivación firmado…) y a quién se concede en
-   desarrollo. El detalle está en `pendientes-enfermeria.md` (historia 11, «Pendiente»).
-3. **Historial, bloque 3: la corrección (COR-01/COR-02).** Qué notas admiten la ventana de seis horas; es
-   una decisión de producto que puede necesitar a CJ.
+1. **Si el usuario lo pide, push de la línea temporal** y comprobar que el pipeline termina en verde, con
+   `build-and-test` y `deploy`. Después, abrirla en Azure con `dev-integrado-enfermeria` y
+   `dev-integrado-medicina`.
+2. **Historial, bloque 3: la corrección (COR-01/COR-02).** Qué notas admiten la ventana de seis horas y cómo
+   se rectifica fuera de ella. Es una decisión de producto que puede necesitar a CJ: revisa primero la
+   matriz de permisos del prototipo (filas «Corregir curso/nota clínica propia dentro de ventana» y
+   «Rectificar…», `COND objeto habilitado` y `COND política clínica`).
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 
@@ -293,6 +309,15 @@ Repite estos pasos antes de dar un bloque por cerrado:
   `dotnet test src/ResidApp.sln`. La app se levanta con `dotnet run --launch-profile http` desde
   `src/ResidApp.Web`. Con `--no-launch-profile` no carga los user-secrets y falla por falta de la cadena de
   conexión.
+- **Quién puede leer o hacer algo:** antes de proponer una decisión de autorización, consulta la matriz de
+  permisos del prototipo
+  (`docs/legado-cloudflare/docs/product/permissions/2026-09-06-matriz-permisos-seis-perfiles-v0.2.1.md`). En el
+  bloque 1 del Historial se decidió un permiso nuevo para la línea temporal sin mirarla, y hubo que cambiar
+  la decisión en el bloque 2, porque la matriz la da por ámbito.
+- **`NULL` sin tipo en una consulta de Dapper:** un `NULL AS Columna` suelto llega como `int`, y Dapper no
+  encuentra el constructor del record si el parámetro es `string?`. El caso de uso solo devuelve «No se ha
+  podido completar la operación». Escribe `CAST(NULL AS NVARCHAR(…))`. En un test, `Assert.True(r.Ok,
+  r.Error?.Message)` ayuda a llegar antes al fallo.
 - **Suite lenta o con tiempos de espera:** en el bloque 1 del Historial, dos vueltas de la solución completa
   fallaron: la primera con 51 fallos (tiempos de espera de 30 s, y en `DatabaseTriggerTests` fallos
   inmediatos en cascada) y otra con 1. En esas vueltas las pruebas de integración tardaban de 40 s a 2 min en

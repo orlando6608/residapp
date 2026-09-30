@@ -1,0 +1,85 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model ResidentTimelineViewModel
+@{
+    ViewData["Title"] = "Línea temporal del residente";
+    // Vista común: asp-action sin asp-controller apunta al controlador en curso (Enfermería o Medicina).
+    var perfil = ViewContext.RouteData.Values["controller"] as string == "Medicina" ? "Medicina" : "Enfermería";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">@perfil</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@Model.Resident.ResidentId.Value">@Model.Resident.DisplayName</a></li>
+        <li class="breadcrumb-item"><a asp-action="Historial" asp-route-residenteId="@Model.Resident.ResidentId.Value">Historial</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Línea temporal</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Línea temporal de @Model.Resident.DisplayName</h1>
+<p class="text-muted">
+    Solo lectura, del registro más reciente al más antiguo: eventos abiertos y cerrados con cada paso de su
+    atención, versiones del basal y cambios de ubicación.
+    @if (perfil == "Medicina")
+    {
+        <span>Medicina ve los eventos escalados y sus eventos propios.</span>
+    }
+</p>
+
+@if (Model.Entries is null)
+{
+    <div class="alert alert-danger">No se ha podido cargar la línea temporal. Vuelve a intentarlo.</div>
+}
+else if (Model.Entries.Count == 0)
+{
+    <p class="text-muted">Este residente todavía no tiene registros en la línea temporal.</p>
+}
+else
+{
+    @foreach (var day in Model.Entries.GroupBy(e => e.At.ToLocalTime().Date))
+    {
+        <section class="mb-4" aria-label="@day.Key.ToString("dddd, d 'de' MMMM 'de' yyyy")">
+            <h2 class="h6 text-uppercase text-muted border-bottom pb-1">@day.Key.ToString("dddd, d 'de' MMMM 'de' yyyy")</h2>
+            <ul class="list-group list-group-flush">
+                @foreach (var entry in day)
+                {
+                    <li class="list-group-item px-0">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <div>
+                                <strong>@entry.At.ToLocalTime().ToString("HH:mm")</strong>
+                                <span class="ms-2">@TimelineDisplay.Title(entry)</span>
+                                @if (entry.Profile is { } profile)
+                                {
+                                    <span class="badge text-bg-light border ms-2">@SystemProfileDisplay.Label(profile)</span>
+                                }
+                            </div>
+                            <div class="d-flex gap-2">
+                                @if (entry is TimelineEntry.ReferralSigned)
+                                {
+                                    <a asp-action="InformeDerivacion" asp-route-eventoId="@entry.EventId" class="btn btn-outline-secondary btn-sm">Descargar PDF</a>
+                                }
+                                @if (entry.EventId is { } eventId)
+                                {
+                                    <a asp-action="@Model.DetailAction" asp-route-eventoId="@eventId" class="btn btn-outline-primary btn-sm">Ver evento</a>
+                                }
+                            </div>
+                        </div>
+                        @{ var fields = TimelineDisplay.Fields(entry); }
+                        @if (fields.Count > 0)
+                        {
+                            <dl class="row mb-0 mt-1 small">
+                                @foreach (var (label, value) in fields)
+                                {
+                                    <dt class="col-sm-3 fw-normal text-muted">@label</dt>
+                                    <dd class="col-sm-9 mb-1" style="white-space: pre-line">@value</dd>
+                                }
+                            </dl>
+                        }
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+}

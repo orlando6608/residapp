@@ -59,6 +59,12 @@ public class HistorialTests
             .ExecuteAsync(new ListClosedEventsCommand(medica.ProfileScopeId, medica.CenterId, residentId, SystemProfile.Medicina));
         Assert.True(medicina.Ok);
         Assert.Empty(medicina.Value!);
+
+        // La línea temporal recoge las dos versiones del basal.
+        var timeline = await nursing.ReadResidentTimelineAsync(
+            new ReadResidentTimelineCommand(enfermera.ProfileScopeId, enfermera.CenterId, residentId, SystemProfile.Enfermeria));
+        Assert.True(timeline.Ok, timeline.Error?.Message);
+        Assert.Equal([2, 1], timeline.Value!.OfType<TimelineEntry.BaselineSigned>().Select(b => b.VersionNumber));
     }
 
     [Fact]
@@ -118,6 +124,18 @@ public class HistorialTests
         var otherCenterList = await BuildService(otroCentro.ExternalSubject).ListClosedEventsAsync(
             new ListClosedEventsCommand(otroCentro.ProfileScopeId, otroCentro.CenterId, residentId, SystemProfile.Enfermeria));
         Assert.Empty(otherCenterList.Value!);
+
+        // La línea temporal exige que el residente esté en el ámbito del perfil pedido.
+        foreach (var (profile, perfil) in new[] { (auxiliar, SystemProfile.Auxiliar), (otroCentro, SystemProfile.Enfermeria) })
+        {
+            var timelineSession = new FixedHistorialSessionIdentityProvider(profile.ExternalSubject);
+            var scopes = new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory);
+            var timeline = await new ReadResidentTimeline(
+                    new FindScopeResident(new ListScopeResidents(scopes, new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory), timelineSession)),
+                    new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory))
+                .ExecuteAsync(new ReadResidentTimelineCommand(profile.ProfileScopeId, profile.CenterId, residentId, perfil));
+            Assert.Equal(ApplicationFailureCode.AccessDenied, timeline.Error!.Code);
+        }
     }
 
     /// <summary>Un residente en la unidad de una enfermera con permisos de basal y de una médica.</summary>

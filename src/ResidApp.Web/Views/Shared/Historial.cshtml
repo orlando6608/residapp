@@ -18,6 +18,11 @@
 
 <h1 class="h3">Historial de @Model.Resident.DisplayName</h1>
 <p class="text-muted">Solo lectura. Nada de lo que aparece aquí se puede editar.</p>
+<p>
+    <a asp-action="LineaTemporal" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">
+        Ver línea temporal
+    </a>
+</p>
 
 <section class="mb-4" aria-labelledby="eventos-cerrados">
     <h2 id="eventos-cerrados" class="h5">Eventos cerrados</h2>

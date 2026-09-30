@@ -16,7 +16,7 @@ namespace ResidApp.Infrastructure.Persistence;
 /// los eventos propios de Medicina (MED-18);
 /// cada caso de uso comprueba antes el perfil del ámbito, así que ninguno de Enfermería llega aquí con uno
 /// de Medicina ni al revés.</summary>
-public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : IChangeInboxDirectory
+public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connections) : IChangeInboxDirectory
 {
     internal const string ScopedEventsFrom = """
           FROM dbo.eventos_asistenciales ea

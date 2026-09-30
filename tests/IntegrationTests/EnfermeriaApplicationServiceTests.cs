@@ -56,7 +56,8 @@ public class EnfermeriaApplicationServiceTests
             new FindResidentIdentification(scopes, changeInbox, session),
             new DownloadReferralReport(scopes, changeInbox, session, new SqlReferralReportRepository(TestDatabase.ConnectionFactory)),
             new ListClosedEvents(scopes, changeInbox, session),
-            new ReadBaselineHistory(evidenceProvider, session, baselines));
+            new ReadBaselineHistory(evidenceProvider, session, baselines),
+            new ReadResidentTimeline(new FindScopeResident(listScopeResidents), changeInbox));
     }
 
     /// <summary>Un residente en la unidad de dos profesionales de Enfermería y un evento propio de la

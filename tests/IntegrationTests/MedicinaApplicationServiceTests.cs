@@ -54,7 +54,8 @@ public class MedicinaApplicationServiceTests
             new ListClosedEvents(scopes, changeInbox, session),
             new ReadBaselineHistory(
                 new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), session,
-                new SqlBaselineRepository(TestDatabase.ConnectionFactory)));
+                new SqlBaselineRepository(TestDatabase.ConnectionFactory)),
+            new ReadResidentTimeline(new FindScopeResident(listScopeResidents), changeInbox));
     }
 
     private static async Task<PendingChangeDetail?> FindAsync(SeededProfile seed, Guid eventId) =>
@@ -310,6 +311,62 @@ public class MedicinaApplicationServiceTests
         FamilyCommunicationDecision? decision = FamilyCommunicationDecision.NoComunicar,
         FamilyCommunicationType? type = null, string? text = null) =>
         new(seed.ProfileScopeId, seed.CenterId, eventId, revision, operationId ?? Guid.NewGuid(), decision, type, text);
+
+    [Fact]
+    public async Task LineaTemporal_RecogeCadaHitoConSuTexto_YMedicinaSoloVeLoQueLeLlega()
+    {
+        var (enfermera, companera, medica, eventId) = await SeedEscalatedAsync();
+        var medicina = BuildMedicina(medica.ExternalSubject);
+        var revision = await StartAndSaveMedicalAsync(medica, eventId);
+        revision = (await medicina.SaveMedicalAssessmentAsync(SaveMedical(medica, eventId, revision, "Crepitantes bibasales, más a la izquierda."))).Value;
+        Assert.True((await medicina.RegisterMedicalIndicationAsync(Indication(medica, eventId, revision))).Ok);
+        var nursing = BuildService(companera.ExternalSubject);
+        var indication = Assert.Single((await nursing.ListPendingIndicationsAsync(
+            new ListPendingIndicationsCommand(companera.ProfileScopeId, companera.CenterId))).Value!).Indication;
+        var read = await nursing.RecordIndicationProgressAsync(new RecordIndicationProgressCommand(
+            companera.ProfileScopeId, companera.CenterId, eventId, indication.Id, indication.Revision));
+        Assert.True((await nursing.RecordIndicationProgressAsync(new RecordIndicationProgressCommand(
+            companera.ProfileScopeId, companera.CenterId, eventId, indication.Id, read.Value, Realizada: true))).Ok);
+        Assert.True((await medicina.CloseMedicalEventAsync(Close(medica, eventId, (await FindAsync(medica, eventId))!.Revision))).Ok);
+
+        // Otro evento del mismo residente, cerrado por Enfermería sin escalar: Medicina no lo ve.
+        var residentId = (await FindAsync(medica, eventId))!.ResidentId;
+        var nurseOnly = (await BuildService(enfermera.ExternalSubject).RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, residentId, "Estreñimiento de tres días.",
+            Domain.Auxiliar.DailyChangeClassification.Ordinario, null, Guid.NewGuid()))).Value!.EventId;
+        var nurseRevision = await StartAndSaveAsync(enfermera, nurseOnly);
+        Assert.True((await BuildService(enfermera.ExternalSubject).CloseClinicalEventAsync(new CloseClinicalEventCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, nurseOnly, nurseRevision, Guid.NewGuid(),
+            FamilyCommunicationDecision.NoComunicar, null, null))).Ok);
+
+        var nursingResult = await BuildService(enfermera.ExternalSubject).ReadResidentTimelineAsync(
+            new ReadResidentTimelineCommand(enfermera.ProfileScopeId, enfermera.CenterId, residentId, SystemProfile.Enfermeria));
+        var medicinaResult = await medicina.ReadResidentTimelineAsync(
+            new ReadResidentTimelineCommand(medica.ProfileScopeId, medica.CenterId, residentId, SystemProfile.Medicina));
+        Assert.True(nursingResult.Ok, nursingResult.Error?.Message);
+        Assert.True(medicinaResult.Ok, medicinaResult.Error?.Message);
+        var forNursing = nursingResult.Value!;
+        var forMedicina = medicinaResult.Value!;
+
+        Assert.Equal(forNursing.OrderByDescending(e => e.At), forNursing);
+        var escalated = forNursing.Where(e => e.EventId == eventId).ToList();
+        Assert.Single(escalated.OfType<TimelineEntry.EventRegistered>());
+        Assert.Equal("Crepitantes en base derecha.", Assert.Single(escalated.OfType<TimelineEntry.NursingAssessmentSaved>()).Content.Findings);
+        Assert.Equal("Disnea progresiva pese a oxigenoterapia.", Assert.Single(escalated.OfType<TimelineEntry.Escalated>()).Reason);
+        var medicalVersions = escalated.OfType<TimelineEntry.MedicalAssessmentSaved>().Select(m => m.Content.FindingsAndExamination).ToList();
+        Assert.Equal(2, medicalVersions.Count);
+        Assert.Contains("Crepitantes bibasales.", medicalVersions);
+        Assert.Contains("Crepitantes bibasales, más a la izquierda.", medicalVersions);
+        Assert.Equal("Control de SpO2 cada 4 horas.", Assert.Single(escalated.OfType<TimelineEntry.IndicationIssued>()).Text);
+        Assert.Single(escalated.OfType<TimelineEntry.IndicationRead>());
+        Assert.Equal(MedicalIndicationStatus.Realizada, Assert.Single(escalated.OfType<TimelineEntry.IndicationResolved>()).Status);
+        Assert.Equal(SystemProfile.Medicina, Assert.Single(escalated.OfType<TimelineEntry.EventClosed>()).Profile);
+        Assert.Equal(SystemProfile.Enfermeria, Assert.Single(forNursing.OfType<TimelineEntry.EventClosed>(), e => e.EventId == nurseOnly).Profile);
+        Assert.NotNull(Assert.Single(forNursing.OfType<TimelineEntry.LocationStarted>()).UnitName);
+
+        Assert.Equal(escalated.Count, forMedicina.Count(e => e.EventId == eventId));
+        Assert.DoesNotContain(forMedicina, e => e.EventId == nurseOnly);
+    }
 
     [Fact]
     public async Task Historial_EscaladoCerradoPorMedicina_LoVenMedicinaYEnfermeria()

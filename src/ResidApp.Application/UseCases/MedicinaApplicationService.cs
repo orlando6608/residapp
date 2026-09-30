@@ -22,7 +22,7 @@ public sealed class MedicinaApplicationService(
     RecordMedicalFamilyCallAttempt recordMedicalFamilyCallAttempt, FindResidentIdentification findResidentIdentification,
     DownloadReferralReport downloadReferralReport, ListScopeResidents listScopeResidents,
     FindScopeResident findScopeResident, RegisterClinicalEvent registerClinicalEvent,
-    ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory)
+    ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory, ReadResidentTimeline readResidentTimeline)
 {
     public Task<ApplicationResult<IReadOnlyList<ClosedEventSummary>>> ListClosedEventsAsync(
         ListClosedEventsCommand command, CancellationToken ct = default) =>
@@ -31,6 +31,10 @@ public sealed class MedicinaApplicationService(
     public Task<ApplicationResult<IReadOnlyList<BaselineHistoryEntry>>> ReadBaselineHistoryAsync(
         ReadBaselineHistoryCommand command, CancellationToken ct = default) =>
         readBaselineHistory.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<IReadOnlyList<TimelineEntry>>> ReadResidentTimelineAsync(
+        ReadResidentTimelineCommand command, CancellationToken ct = default) =>
+        readResidentTimeline.ExecuteAsync(command with { Perfil = Shared.SystemProfile.Medicina }, ct);
 
     public Task<ApplicationResult<IReadOnlyList<ScopeResidentSummary>>> ListScopeResidentsAsync(
         ListScopeResidentsCommand command, CancellationToken ct = default) =>

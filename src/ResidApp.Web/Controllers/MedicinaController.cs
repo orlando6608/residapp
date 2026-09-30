@@ -780,6 +780,23 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         return View("~/Views/Shared/Historial.cshtml", ResidentHistoryViewModel.From(resident, events, baselines, nameof(Escalado)));
     }
 
+    /// <summary>MED-03/MED-24 (HIS-02): línea temporal completa del residente, bajo demanda y en solo lectura,
+    /// dentro del ámbito; de los eventos, solo los que ve Medicina. Vista común con Enfermería.</summary>
+    public async Task<IActionResult> LineaTemporal(Guid residenteId, CancellationToken ct)
+    {
+        var resolved = await ResolveScopeResidentAsync(residenteId, ct);
+        if (resolved is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        var (scope, resident) = resolved.Value;
+        var timeline = await service.ReadResidentTimelineAsync(new ReadResidentTimelineCommand(
+            scope.ProfileScopeId, CenterId.From(scope.CenterId), resident.ResidentId, SystemProfile.Medicina), ct);
+        return View("~/Views/Shared/LineaTemporal.cshtml",
+            new ResidentTimelineViewModel(resident, timeline.Ok ? timeline.Value : null, nameof(Escalado)));
+    }
+
     /// <summary>MED-18: evento propio de Medicina. Al guardar nace ya en valoración médica, iniciada por quien
     /// lo registra, y se continúa en el formulario de valoración.</summary>
     public async Task<IActionResult> RegistrarEvento(Guid residenteId, CancellationToken ct)

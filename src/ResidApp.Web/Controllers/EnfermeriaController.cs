@@ -905,6 +905,34 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             ResidentHistoryViewModel.From(findResult.Value, events, baselines, nameof(DetalleCambio)));
     }
 
+    /// <summary>ENF-04/HIS-02: línea temporal completa del residente, bajo demanda y en solo lectura, dentro del
+    /// ámbito (decisión del usuario, 2026-09-30). Vista común con Medicina.</summary>
+    public async Task<IActionResult> LineaTemporal(Guid residenteId, CancellationToken ct)
+    {
+        if (residenteId == Guid.Empty)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(LineaTemporal), new { residenteId }) });
+        }
+
+        var centroId = CenterId.From(activeScope.CenterId);
+        var findResult = await service.FindScopeResidentAsync(
+            new FindScopeResidentCommand(activeScope.ProfileScopeId, centroId, ResidentId.From(residenteId)), ct);
+        if (!findResult.Ok || findResult.Value is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        var timeline = await service.ReadResidentTimelineAsync(
+            new ReadResidentTimelineCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, SystemProfile.Enfermeria), ct);
+        return View("~/Views/Shared/LineaTemporal.cshtml",
+            new ResidentTimelineViewModel(findResult.Value, timeline.Ok ? timeline.Value : null, nameof(DetalleCambio)));
+    }
+
     /// <summary>ENF-16: formulario de alta. Al guardar se continúa en el detalle del evento, desde donde
     /// se empieza su valoración.</summary>
     public async Task<IActionResult> RegistrarEvento(Guid residenteId, CancellationToken ct)

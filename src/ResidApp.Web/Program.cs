@@ -72,6 +72,7 @@ builder.Services.AddScoped<ListPendingIndications>();
 builder.Services.AddScoped<RecordIndicationProgress>();
 builder.Services.AddScoped<ListClosedEvents>();
 builder.Services.AddScoped<ReadBaselineHistory>();
+builder.Services.AddScoped<ReadResidentTimeline>();
 builder.Services.AddScoped<EnfermeriaApplicationService>();
 
 builder.Services.AddScoped<ListEscalations>();

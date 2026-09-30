@@ -125,23 +125,52 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
     - este bloque = eventos cerrados + historial del basal;
     - instantánea guardada, no deducida en cada lectura;
     - Medicina ve los mismos eventos que en sus bandejas;
-    - la línea temporal (HIS-02) se abrirá con un **permiso nuevo** por ámbito, con auditoría de cada acceso.
+    - la línea temporal (HIS-02) se abriría con un permiso nuevo. **Sustituida en el bloque 2:** por ámbito,
+      como la matriz de permisos del prototipo.
   - **Suposiciones confirmadas:** el historial del basal no pide permiso adicional (la política heredada, no
     el boceto ENF-19); se listan las versiones sin abrir sus nueve áreas.
 
   Script `0019_historial_contexto_evento`; tests en `HistorialTests`.
+- **Historia 11, bloque 2 (línea temporal, HIS-02)** — 2026-09-30, común con Medicina (MED-03, MED-24).
+  «Ver línea temporal» desde el Historial y desde el detalle de cualquier evento (`/Enfermeria/LineaTemporal`,
+  vista común `Shared/LineaTemporal`), agrupada por días y del hito más reciente al más antiguo.
+  - **Contenido:** cada evento visible, abierto o cerrado, con sus hitos y su texto:
+    - registro y escalado;
+    - cada versión guardada de las valoraciones de Enfermería y médica (por fin se ven
+      `valoraciones_*_versiones`);
+    - indicaciones emitidas, leídas y resueltas;
+    - inicio y acciones de los seguimientos de los dos perfiles;
+    - protocolo urgente con sus registros y contactos;
+    - informe de derivación firmado (con descarga del PDF) e intentos de llamada;
+    - comunicación preparada y cierre.
+
+    También entran las versiones del basal y los cambios de ubicación del residente. Autoría por perfil, sin
+    nombres.
+  - **Implementación:** `ReadResidentTimeline` comprueba primero con `FindScopeResident` que el residente está
+    en el ámbito (deny-by-default). `SqlChangeInboxDirectory.ListTimelineAsync` (fichero
+    `SqlChangeInboxDirectory.Timeline.cs`) hace una consulta tipada por fuente, limitada a los eventos de
+    `ScopedEventsFrom`, y los hitos son records tipados (`TimelineEntry.*`, `Ports/ResidentTimeline.cs`). Sin
+    script nuevo.
+  - **Decisiones del usuario (2026-09-30):**
+    - **autorización por ámbito**, como la matriz de permisos del prototipo (fila «Ver línea temporal
+      completa»: Enfermería y Medicina `LECT ámbito`, Dirección `COND-LECT clínica auditada`), sin permiso ni
+      auditoría nuevos; sustituye a la del permiso nuevo del bloque 1, que se tomó sin conocer la matriz;
+    - hitos con su texto;
+    - sin los cierres cotidianos de Auxiliar «sin cambios» y «no valorable»;
+    - página propia, cargada solo cuando se pide («plegada»).
+
+  Tests en `MedicinaApplicationServiceTests` (recorrido completo y visibilidad de Medicina) y `HistorialTests`
+  (versiones del basal y acceso denegado).
 
 ## Pendiente
 
 En el orden propuesto de construcción:
 
 1. **Historia 11, bloques siguientes** (común con Medicina):
-   - **Línea temporal (HIS-02):** con un permiso nuevo por ámbito (código de `permisos_perfil`, su CHECK
-     `CK_pp_code` y el enum `ResidentBaselinePermission`) y auditoría de cada acceso. Puede mostrar las
-     versiones de las valoraciones (`valoraciones_*_versiones`, que hoy se guardan pero no se ven), la parte
-     médica de un evento escalado (el detalle de Enfermería no la pinta) y el informe de derivación firmado,
-     que el flujo pide "accesible desde el Historial".
    - **Corrección (COR-01/COR-02):** qué notas se corrigen en la ventana de seis horas.
+   - **Detalle de Enfermería de un evento escalado:** sigue sin pintar la parte médica (valoración e
+     indicaciones), aunque ya se ve en la línea temporal.
+   - **Línea temporal para Dirección Clínica:** lectura condicional y auditada, que queda para su vertical.
    - **Contenido de una versión histórica del basal:** abrir sus nueve áreas exige arreglar antes
      `BaselineAreaDisplay.Summarize` (ver los avisos de `continuar-construccion.md`).
 
