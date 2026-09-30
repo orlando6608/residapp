@@ -13,8 +13,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Historial, bloque 3: corrección y rectificación (COR-01/COR-02, script `0020`):** hecho el 2026-09-30,
-  en un commit local sin push (el push aplicará `0020` en Azure SQL).
+- **Historial, bloque 3: corrección y rectificación (COR-01/COR-02, script `0020`):** hecho el 2026-09-30 y
+  desplegado en Azure (push de `8554dd2`, run 36699847694 en verde con `build-and-test` y `deploy`, incluido
+  «Aplicar esquema y seed en Azure SQL»).
+  - **Prueba en Azure (2026-09-30)** con `dev-integrado-enfermeria`, sobre Residente Integrado Uno:
+    - los dos eventos cerrados antiguos ofrecen «Añadir rectificación»;
+    - una rectificación añadida se ve en el detalle y en la línea temporal, y su reenvío da conflicto;
+    - «Corregir valoración» fuera de la ventana vuelve al detalle.
+
+    Con `dev-integrado-medicina`: su evento propio ofrece «Añadir rectificación», y el evento no escalado no
+    se abre. En Azure no se probó una corrección dentro de la ventana, para no crear un evento solo para
+    eso; sí se probó en local.
   - **Política provisional del usuario:** el prototipo no concreta los «objetos habilitados» y `roadmap.md`
     deja la política al centro y al responsable de protección de datos.
     - Solo se corrigen las valoraciones de Enfermería y médica, y solo su autor.
@@ -220,10 +229,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Push del bloque 3 del Historial** cuando el usuario lo pida. Aplica `0020` en Azure SQL. Después,
-   comprueba el pipeline y prueba en Azure la corrección y la rectificación con `dev-integrado-enfermeria` y
-   `dev-integrado-medicina`.
-2. **Detalle de Enfermería de un evento escalado** (elegida por el usuario el 2026-09-30): pintar la parte
+1. **Detalle de Enfermería de un evento escalado** (elegida por el usuario el 2026-09-30): pintar la parte
    médica (valoración e indicaciones) en `Enfermeria/DetalleCambio`, que hoy solo se ve en la línea temporal.
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
