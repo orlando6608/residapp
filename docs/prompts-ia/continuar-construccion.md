@@ -13,7 +13,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Resumen y etiquetas del basal (sin script):** hecho el 2026-09-30, en un commit local sin push.
+- **Resumen y etiquetas del basal (sin script):** hecho el 2026-09-30 y desplegado en Azure (push de
+  `b8e378d`, run 36710274311 en verde con `build-and-test` y `deploy`).
+  - **Prueba en Azure:** con `dev-integrado-enfermeria`, los desplegables de motivo y fuente del basal salen en
+    español. `Auxiliar/Basal` responde sin nombres de tipo, pero en Azure Residente Integrado Uno no tiene
+    basal firmado, así que no hay áreas que ver: el resumen con áreas solo se probó en local.
   - **Qué cambia:**
     - `BaselineAreaDisplay.Summarize` despliega las respuestas de varias opciones, que antes escribían el
       nombre del tipo de lista;
