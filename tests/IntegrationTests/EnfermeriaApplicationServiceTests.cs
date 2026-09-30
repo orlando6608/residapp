@@ -19,7 +19,7 @@ namespace ResidApp.IntegrationTests;
 /// EnfermeriaApplicationService.</summary>
 public class EnfermeriaApplicationServiceTests
 {
-    internal static EnfermeriaApplicationService BuildService(string externalSubject)
+    internal static EnfermeriaApplicationService BuildService(string externalSubject, TimeSpan? correctionWindow = null)
     {
         var scopes = new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory);
         var directory = new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory);
@@ -31,6 +31,8 @@ public class EnfermeriaApplicationServiceTests
         var changeInbox = new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory);
         var assessments = new SqlNursingAssessmentRepository(TestDatabase.ConnectionFactory);
         var listScopeResidents = new ListScopeResidents(scopes, directory, session);
+        var corrections = new SqlAssessmentCorrectionRepository(TestDatabase.ConnectionFactory);
+        var settings = new AssessmentCorrectionSettings(correctionWindow ?? TimeSpan.FromHours(6));
         return new EnfermeriaApplicationService(
             listScopeResidents,
             new FindScopeResident(listScopeResidents),
@@ -57,7 +59,10 @@ public class EnfermeriaApplicationServiceTests
             new DownloadReferralReport(scopes, changeInbox, session, new SqlReferralReportRepository(TestDatabase.ConnectionFactory)),
             new ListClosedEvents(scopes, changeInbox, session),
             new ReadBaselineHistory(evidenceProvider, session, baselines),
-            new ReadResidentTimeline(new FindScopeResident(listScopeResidents), changeInbox));
+            new ReadResidentTimeline(new FindScopeResident(listScopeResidents), changeInbox),
+            new CorrectNursingAssessment(scopes, changeInbox, session, corrections, settings),
+            new RectifyAssessment(scopes, changeInbox, session, corrections, settings),
+            settings);
     }
 
     /// <summary>Un residente en la unidad de dos profesionales de Enfermería y un evento propio de la

@@ -86,7 +86,7 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
 
         var baseline = await service.ReadCurrentBaselineAsync(
             new ReadCurrentBaselineCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), detail.ResidentId), ct);
-        return View(new MedicinaEscaladoViewModel(detail, baseline.Ok ? baseline.Value : null));
+        return View(new MedicinaEscaladoViewModel(detail, baseline.Ok ? baseline.Value : null, service.CorrectionWindow));
     }
 
     /// <summary>MED-04 "iniciar valoración médica": registra profesional y hora en servidor. Si el evento
@@ -162,6 +162,125 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
             : "Revisa los datos: la valoración necesita al menos un dato, la PA con ambas cifras, el flujo de O₂ solo con oxigenoterapia y la otra constante con nombre y valor.");
         return View(new ValoracionMedicaViewModel(detail, form));
     }
+
+    /// <summary>COR-01: corrección de la valoración médica por su autor, dentro de la ventana y cuando ya no se
+    /// puede guardar de forma normal. El servidor vuelve a comprobarlo todo al guardar.</summary>
+    public async Task<IActionResult> CorregirValoracion(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Escalados));
+        }
+        if (detail.Medical.Assessment is not { } assessment || AmendmentAction(detail) != AssessmentAmendmentAction.Corregir)
+        {
+            TempData["Error"] = CorrectionUnavailableMessage;
+            return RedirectToAction(nameof(Escalado), new { eventoId });
+        }
+
+        return View(new CorreccionValoracionMedicaViewModel(detail, CorreccionValoracionMedicaFormModel.From(detail, assessment)));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CorregirValoracion([Bind(Prefix = "Form")] CorreccionValoracionMedicaFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Escalados));
+        }
+        if (AmendmentAction(detail) != AssessmentAmendmentAction.Corregir)
+        {
+            TempData["Error"] = CorrectionUnavailableMessage;
+            return RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new CorreccionValoracionMedicaViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.CorrectMedicalAssessmentAsync(new CorrectMedicalAssessmentCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Correcciones, form.Motivo,
+            form.HallazgosExploracion, form.Valoracion, form.Actuaciones,
+            form.TemperaturaCelsius, form.TensionSistolica, form.TensionDiastolica, form.FrecuenciaCardiaca,
+            form.FrecuenciaRespiratoria, form.SaturacionO2, form.SoporteRespiratorio, form.FlujoO2, form.Glucemia,
+            form.OtraConstanteNombre, form.OtraConstanteValor, form.OtraConstanteUnidad), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Valoración médica corregida.";
+            return RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => CorrectionConflictMessage,
+            ApplicationFailureCode.AccessDenied => CorrectionUnavailableMessage,
+            _ => "Revisa los datos: el motivo es obligatorio, la valoración necesita al menos un dato, la PA con ambas cifras, el flujo de O₂ solo con oxigenoterapia y la otra constante con nombre y valor.",
+        });
+        return View(new CorreccionValoracionMedicaViewModel(detail, form));
+    }
+
+    /// <summary>COR-02: rectificación añadida por el autor de la valoración médica, una vez pasada la ventana.</summary>
+    public async Task<IActionResult> RectificarValoracion(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Escalados));
+        }
+        if (AmendmentAction(detail) != AssessmentAmendmentAction.Rectificar)
+        {
+            TempData["Error"] = CorrectionUnavailableMessage;
+            return RedirectToAction(nameof(Escalado), new { eventoId });
+        }
+
+        var form = new RectificacionFormModel
+        {
+            EventoId = eventoId, Rectificaciones = detail.Medical.Assessment!.Amendments!.Rectifications.Count,
+        };
+        return View("~/Views/Shared/RectificarValoracion.cshtml",
+            new RectificacionViewModel(detail, "valoración médica", nameof(Escalado), form));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RectificarValoracion([Bind(Prefix = "Form")] RectificacionFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Escalados));
+        }
+        var model = new RectificacionViewModel(detail, "valoración médica", nameof(Escalado), form);
+        if (!ModelState.IsValid)
+        {
+            return View("~/Views/Shared/RectificarValoracion.cshtml", model);
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.RectifyAssessmentAsync(new RectifyAssessmentCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Rectificaciones, form.Texto, form.Motivo,
+            SystemProfile.Medicina), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Rectificación añadida.";
+            return RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => CorrectionConflictMessage,
+            ApplicationFailureCode.AccessDenied => CorrectionUnavailableMessage,
+            _ => "Revisa los datos: la rectificación y el motivo son obligatorios. Si todavía estás dentro del plazo, corrige la valoración en lugar de rectificarla.",
+        });
+        return View("~/Views/Shared/RectificarValoracion.cshtml", model);
+    }
+
+    private AssessmentAmendmentAction AmendmentAction(PendingChangeDetail detail) =>
+        AssessmentAmendmentDisplay.Action(
+            detail.Medical.Assessment?.Amendments, detail.Status == ClinicalEventStatus.EnValoracionMedica, service.CorrectionWindow);
 
     /// <summary>MED-06 "conducta médica": las cuatro salidas, desde una valoración médica guardada, con
     /// indicaciones ya emitidas o al resolver un seguimiento médico. Están disponibles "registrar
@@ -842,6 +961,12 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
 
     private const string ConcurrencyMessage =
         "Este evento ha cambiado desde que lo abriste (otro profesional, u otra pestaña o pulsación tuya). Recarga para ver la versión actual antes de continuar.";
+
+    private const string CorrectionUnavailableMessage =
+        "No puedes corregir ni rectificar esta valoración: solo lo hace quien la guardó por última vez, cuando ya no se puede seguir editando. Dentro del plazo se corrige; después, se añade una rectificación.";
+
+    private const string CorrectionConflictMessage =
+        "La valoración ha cambiado desde que abriste el formulario (otra pestaña o pulsación tuya). Lo que has escrito sigue aquí: vuelve al detalle para ver la versión actual.";
 
     private async Task<PendingChangeDetail?> FindEventAsync(Guid eventoId, CancellationToken ct)
     {

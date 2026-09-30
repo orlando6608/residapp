@@ -23,7 +23,19 @@ public sealed record PendingChangeSummary(
 /// <summary>ENF-05: borrador de la valoración de Enfermería, con quién lo tocó por última vez (solo si fue la
 /// cuenta del ámbito que consulta; el nombre de otros profesionales no se expone).</summary>
 public sealed record NursingAssessmentDraft(
-    NursingAssessmentContent Content, bool LastUpdatedByCurrentAccount, DateTimeOffset LastUpdatedAt);
+    NursingAssessmentContent Content, bool LastUpdatedByCurrentAccount, DateTimeOffset LastUpdatedAt,
+    AssessmentAmendments? Amendments = null);
+
+/// <summary>COR-01/COR-02: autoría de la última versión ordinaria de una valoración (solo su autor la corrige o
+/// la rectifica, y la ventana empieza en ese guardado) y sus correcciones y rectificaciones, de la más antigua
+/// a la más reciente.</summary>
+public sealed record AssessmentAmendments(
+    bool AuthoredByCurrentAccount, DateTimeOffset LastSavedAt,
+    IReadOnlyList<AssessmentCorrectionSummary> Corrections, IReadOnlyList<AssessmentRectificationSummary> Rectifications);
+
+public sealed record AssessmentCorrectionSummary(string Reason, DateTimeOffset CorrectedAt);
+
+public sealed record AssessmentRectificationSummary(string Text, string Reason, DateTimeOffset RecordedAt);
 
 /// <summary>ENF-15: comunicación familiar preparada al cerrar, pendiente de aprobación humana. Ante la
 /// familia se firma siempre como FamilyCommunicationChoice.VisibleAuthor, nunca con el profesional.</summary>
@@ -89,7 +101,8 @@ public sealed record EscalationSummary(
 /// <summary>MED-05: borrador de la valoración médica (o ya cerrada), con quién la tocó por última vez (solo
 /// si fue la cuenta del ámbito que consulta).</summary>
 public sealed record MedicalAssessmentDraft(
-    MedicalAssessmentContent Content, bool LastUpdatedByCurrentAccount, DateTimeOffset LastUpdatedAt);
+    MedicalAssessmentContent Content, bool LastUpdatedByCurrentAccount, DateTimeOffset LastUpdatedAt,
+    AssessmentAmendments? Amendments = null);
 
 /// <summary>MED-07/MED-08/ENF-10: una indicación médica con su estado de lectura y realización. Revision es
 /// la de la indicación, que hay que devolver al confirmar la lectura o registrar el resultado.</summary>

@@ -34,6 +34,14 @@ builder.Services.AddScoped<IMedicalAssessmentRepository, SqlMedicalAssessmentRep
 builder.Services.AddScoped<IMedicalIndicationRepository, SqlMedicalIndicationRepository>();
 builder.Services.AddScoped<IReferenceRangeRepository, SqlReferenceRangeRepository>();
 builder.Services.AddScoped<IReferralReportRepository, SqlReferralReportRepository>();
+builder.Services.AddScoped<IAssessmentCorrectionRepository, SqlAssessmentCorrectionRepository>();
+// COR-01: ventana de corrección de las valoraciones, global hasta que Administración la configure por centro.
+builder.Services.AddSingleton(new AssessmentCorrectionSettings(TimeSpan.FromHours(
+    builder.Configuration.GetValue<double?>("Correccion:VentanaHoras")
+    ?? throw new InvalidOperationException("Falta Correccion:VentanaHoras en appsettings.json."))));
+builder.Services.AddScoped<CorrectNursingAssessment>();
+builder.Services.AddScoped<CorrectMedicalAssessment>();
+builder.Services.AddScoped<RectifyAssessment>();
 builder.Services.AddSingleton<IReferralReportPdfRenderer, ReferralReportPdfRenderer>();
 builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
 

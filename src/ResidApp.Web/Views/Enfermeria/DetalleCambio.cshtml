@@ -136,6 +136,10 @@
                         <dd class="col-sm-9">@VitalSignsDisplay.Summary(content.Vitals)</dd>
                     }
                 </dl>
+                var enmiendas = evento.Assessment.Amendments;
+                <partial name="_CorreccionesValoracion" model="new CorreccionesValoracionViewModel(
+                    enmiendas, AssessmentAmendmentDisplay.Action(enmiendas, evento.Status == ClinicalEventStatus.EnValoracion, Model.CorrectionWindow),
+                    evento.EventId, enmiendas?.LastSavedAt + Model.CorrectionWindow)" />
             }
         }
     </div>

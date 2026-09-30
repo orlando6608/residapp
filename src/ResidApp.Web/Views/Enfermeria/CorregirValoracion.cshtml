@@ -1,0 +1,77 @@
+@using ResidApp.Web.Models
+@model CorreccionValoracionViewModel
+@{
+    ViewData["Title"] = "Corregir valoración de Enfermería";
+    var evento = Model.Event;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId">Detalle</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Corregir valoración</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Corregir valoración — @evento.ResidentDisplayName</h1>
+<div class="alert alert-info">
+    Estás dentro del plazo para corregir tu valoración. La versión corregida sustituye a la que se muestra, y la
+    original queda guardada en la línea temporal del residente con el motivo de la corrección.
+</div>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="CorregirValoracion" method="post">
+    <input type="hidden" asp-for="Form.EventoId" />
+    <input type="hidden" asp-for="Form.Correcciones" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <label asp-for="Form.Motivo" class="form-label fw-semibold"></label>
+            <textarea asp-for="Form.Motivo" class="form-control" rows="2" required></textarea>
+            <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Valoración</h2>
+            <div class="mb-3">
+                <label asp-for="Form.Hallazgos" class="form-label"></label>
+                <textarea asp-for="Form.Hallazgos" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.Hallazgos" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Valoracion" class="form-label"></label>
+                <textarea asp-for="Form.Valoracion" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.Valoracion" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Actuaciones" class="form-label"></label>
+                <textarea asp-for="Form.Actuaciones" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Form.Actuaciones" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Comunicaciones" class="form-label"></label>
+                <textarea asp-for="Form.Comunicaciones" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="Form.Comunicaciones" class="text-danger"></span>
+            </div>
+            <div class="mb-0">
+                <label asp-for="Form.Resultado" class="form-label"></label>
+                <textarea asp-for="Form.Resultado" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="Form.Resultado" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_ConstantesFormulario" for="Form" view-data="@(new ViewDataDictionary(ViewData) { ["Rangos"] = evento.ReferenceRanges })" />
+
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin corregir</a>
+        <button type="submit" class="btn btn-primary btn-lg">Guardar corrección</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

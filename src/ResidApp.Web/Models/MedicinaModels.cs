@@ -13,8 +13,9 @@ public sealed record MedicinaInicioViewModel(
     int Protocolos);
 
 /// <summary>MED-03: detalle del escalado con su información reunida (solo lectura), el basal vigente del
-/// residente (null si no tiene) y la parte médica (valoración e indicaciones).</summary>
-public sealed record MedicinaEscaladoViewModel(PendingChangeDetail Event, CurrentBaselineSummary? Baseline);
+/// residente (null si no tiene) y la parte médica (valoración e indicaciones). CorrectionWindow decide si se
+/// ofrece corregir o rectificar la valoración médica (COR-01/COR-02).</summary>
+public sealed record MedicinaEscaladoViewModel(PendingChangeDetail Event, CurrentBaselineSummary? Baseline, TimeSpan CorrectionWindow);
 
 /// <summary>MED-05 "valoración médica": hallazgos y exploración, valoración, actuaciones y constantes
 /// opcionales. Revision es la del evento al abrir la pantalla (concurrencia optimista); el dominio

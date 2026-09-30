@@ -243,7 +243,7 @@ El estado detallado vive en [`docs/producto/roadmap.md`](docs/producto/roadmap.m
 | EIPD, contratos y seguridad | Pendiente de formalizar antes de tratar datos reales. |
 | Configuración real de citas, equipos y tiempos | Pendiente de definir junto con cada centro piloto. |
 | Criterios de actualización familiar relevante | Pendiente de acordar entre dirección clínica y centro. |
-| Política de corrección de notas clínicas y su conservación | Pendiente de acordar entre centro y responsable de protección de datos. |
+| Política de corrección de notas clínicas y su conservación | Pendiente de acordar entre centro y responsable de protección de datos. Mientras tanto, la app aplica una política provisional (2026-09-30): el autor corrige solo las valoraciones de Enfermería y médica durante 6 h y después añade rectificaciones; todo se conserva. |
 
 Estas decisiones no bloquean la construcción del prototipo con datos ficticios, pero sí condicionan cualquier piloto real o despliegue productivo.
 

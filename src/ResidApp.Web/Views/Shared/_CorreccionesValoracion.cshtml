@@ -1,0 +1,51 @@
+@using ResidApp.Web.Models
+@model CorreccionesValoracionViewModel
+@* COR-01/COR-02: correcciones y rectificaciones de una valoración y, solo para su autor, el botón para
+   corregirla o rectificarla. *@
+@{
+    var amendments = Model.Amendments;
+}
+
+@if (amendments is { Corrections.Count: > 0 })
+{
+    <div class="alert alert-secondary mt-3 mb-0" role="note">
+        <p class="fw-semibold mb-1">Valoración corregida por su autor</p>
+        <ul class="mb-1">
+            @foreach (var correccion in amendments.Corrections)
+            {
+                <li>El @correccion.CorrectedAt.ToLocalTime().ToString("g"). Motivo: @correccion.Reason</li>
+            }
+        </ul>
+        <p class="small mb-0">Se muestra la versión corregida. La original y cada corrección están en la línea temporal del residente.</p>
+    </div>
+}
+
+@if (amendments is { Rectifications.Count: > 0 })
+{
+    <div class="mt-3">
+        <h3 class="h6">Rectificaciones</h3>
+        @foreach (var rectificacion in amendments.Rectifications)
+        {
+            <div class="border-start border-4 border-secondary ps-3 mb-2">
+                <p class="text-muted small mb-1">Añadida por su autor el @rectificacion.RecordedAt.ToLocalTime().ToString("g"). La valoración original no cambia.</p>
+                <p class="mb-1" style="white-space: pre-line">@rectificacion.Text</p>
+                <p class="small mb-0">Motivo: @rectificacion.Reason</p>
+            </div>
+        }
+    </div>
+}
+
+@if (Model.Action == AssessmentAmendmentAction.Corregir)
+{
+    <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+        <a asp-action="CorregirValoracion" asp-route-eventoId="@Model.EventoId" class="btn btn-outline-primary">Corregir valoración</a>
+        <span class="small text-muted">Puedes corregirla hasta el @Model.CorrectionDeadline?.ToLocalTime().ToString("g").</span>
+    </div>
+}
+else if (Model.Action == AssessmentAmendmentAction.Rectificar)
+{
+    <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+        <a asp-action="RectificarValoracion" asp-route-eventoId="@Model.EventoId" class="btn btn-outline-primary">Añadir rectificación</a>
+        <span class="small text-muted">Ya pasó el plazo para corregirla: la rectificación se añade sin cambiar la valoración.</span>
+    </div>
+}

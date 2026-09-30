@@ -19,8 +19,20 @@ public sealed class EnfermeriaApplicationService(
     RecordUrgentProtocolEntry recordUrgentProtocolEntry, ListUrgentProtocols listUrgentProtocols,
     SignReferralReport signReferralReport, RecordFamilyCallAttempt recordFamilyCallAttempt,
     FindResidentIdentification findResidentIdentification, DownloadReferralReport downloadReferralReport,
-    ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory, ReadResidentTimeline readResidentTimeline)
+    ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory, ReadResidentTimeline readResidentTimeline,
+    CorrectNursingAssessment correctNursingAssessment, RectifyAssessment rectifyAssessment,
+    AssessmentCorrectionSettings correctionSettings)
 {
+    /// <summary>COR-01: ventana de corrección, para ofrecer corregir o rectificar en el detalle.</summary>
+    public TimeSpan CorrectionWindow => correctionSettings.Window;
+
+    public Task<ApplicationResult<bool>> CorrectNursingAssessmentAsync(
+        CorrectNursingAssessmentCommand command, CancellationToken ct = default) =>
+        correctNursingAssessment.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<bool>> RectifyAssessmentAsync(RectifyAssessmentCommand command, CancellationToken ct = default) =>
+        rectifyAssessment.ExecuteAsync(command with { Perfil = Shared.SystemProfile.Enfermeria }, ct);
+
     public Task<ApplicationResult<IReadOnlyList<ClosedEventSummary>>> ListClosedEventsAsync(
         ListClosedEventsCommand command, CancellationToken ct = default) =>
         listClosedEvents.ExecuteAsync(command with { Perfil = Shared.SystemProfile.Enfermeria }, ct);

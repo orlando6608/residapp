@@ -58,6 +58,11 @@ public static class TimelineDisplay
         TimelineEntry.EventRegistered e => e.Origin == ClinicalEventOrigin.CambioAuxiliar ? "Cambio registrado por Auxiliar" : "Evento registrado",
         TimelineEntry.NursingAssessmentSaved => "Valoración de Enfermería guardada",
         TimelineEntry.MedicalAssessmentSaved => "Valoración médica guardada",
+        TimelineEntry.NursingAssessmentCorrected => "Valoración de Enfermería corregida",
+        TimelineEntry.MedicalAssessmentCorrected => "Valoración médica corregida",
+        TimelineEntry.AssessmentRectified r => r.Profile == SystemProfile.Medicina
+            ? "Rectificación de la valoración médica"
+            : "Rectificación de la valoración de Enfermería",
         TimelineEntry.Escalated => "Escalado a Medicina",
         TimelineEntry.IndicationIssued => "Indicación de Medicina",
         TimelineEntry.IndicationRead => "Indicación leída",
@@ -101,6 +106,26 @@ public static class TimelineDisplay
                 fields.Add(("Valoración", m.Content.Assessment));
                 fields.Add(("Actuaciones", m.Content.Actions));
                 fields.Add(("Constantes", VitalSignsDisplay.Summary(m.Content.Vitals)));
+                break;
+            case TimelineEntry.NursingAssessmentCorrected n:
+                fields.Add(("Motivo de la corrección", n.Reason));
+                fields.Add(("Hallazgos", n.Content.Findings));
+                fields.Add(("Valoración", n.Content.Assessment));
+                fields.Add(("Actuaciones", n.Content.Actions));
+                fields.Add(("Comunicaciones", n.Content.Communications));
+                fields.Add(("Resultado", n.Content.Outcome));
+                fields.Add(("Constantes", VitalSignsDisplay.Summary(n.Content.Vitals)));
+                break;
+            case TimelineEntry.MedicalAssessmentCorrected m:
+                fields.Add(("Motivo de la corrección", m.Reason));
+                fields.Add(("Hallazgos y exploración", m.Content.FindingsAndExamination));
+                fields.Add(("Valoración", m.Content.Assessment));
+                fields.Add(("Actuaciones", m.Content.Actions));
+                fields.Add(("Constantes", VitalSignsDisplay.Summary(m.Content.Vitals)));
+                break;
+            case TimelineEntry.AssessmentRectified r:
+                fields.Add(("Rectificación", r.Text));
+                fields.Add(("Motivo", r.Reason));
                 break;
             case TimelineEntry.Escalated s:
                 fields.Add(("Motivo", s.Reason));

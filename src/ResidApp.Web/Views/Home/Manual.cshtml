@@ -17,8 +17,8 @@
     propio, la bandeja de escalados recibidos y eventos propios, la valoración médica
     y las indicaciones a Enfermería, que Enfermería lee y registra, el seguimiento médico con la continuidad
     entre turnos, el protocolo urgente con la derivación a Urgencias y el cierre médico del evento; y, para los
-    dos perfiles, el historial de eventos cerrados y de versiones del basal de cada residente y su línea
-    temporal completa. El resto de
+    dos perfiles, el historial de eventos cerrados y de versiones del basal de cada residente, su línea
+    temporal completa y la corrección o rectificación de la propia valoración. El resto de
     módulos aparece
     descrito al final como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
     inicio de sesión con usuario y contraseña definitivo).
@@ -45,6 +45,7 @@
             <a class="list-group-item list-group-item-action" href="#protocolo-urgente">Protocolo urgente (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#derivacion-urgencias">Derivación a Urgencias (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#historial">Historial y línea temporal del residente (Enfermería y Medicina)</a>
+            <a class="list-group-item list-group-item-action" href="#correccion">Corregir o rectificar una valoración (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -608,7 +609,8 @@
         <strong>Ver línea temporal</strong>, desde el historial o desde el detalle de cualquier evento, abre la
         secuencia completa del residente, agrupada por días y del registro más reciente al más antiguo. Recoge
         cada evento, abierto o cerrado, con cada paso de su atención y su texto: el registro, cada versión
-        guardada de las valoraciones de Enfermería y de Medicina, el escalado, las indicaciones y su lectura o
+        guardada de las valoraciones de Enfermería y de Medicina con sus correcciones y rectificaciones, el
+        escalado, las indicaciones y su lectura o
         realización, las acciones de seguimiento, el protocolo urgente con sus contactos, el informe de
         derivación firmado (con su PDF), las llamadas a la familia, la comunicación preparada y el cierre. También
         recoge las versiones del basal y los cambios de ubicación. Cada paso indica el perfil que lo hizo, y
@@ -616,8 +618,36 @@
         historial, Medicina solo ve los eventos que se le escalaron y los suyos propios.
     </p>
     <p class="mb-0">
-        Nada del historial ni de la línea temporal se puede modificar. La corrección de notas llegará más adelante
-        (ver "Próximamente").
+        Nada del historial ni de la línea temporal se puede modificar. Lo único que admite cambios es la propia
+        valoración, y siempre de forma trazable (ver la sección siguiente).
+    </p>
+</section>
+
+<section id="correccion" class="mb-4">
+    <h2 class="h5">Corregir o rectificar una valoración (Enfermería y Medicina)</h2>
+    <p>
+        Mientras un evento está en valoración, la valoración se sigue editando y guardando de forma normal. Cuando
+        el evento avanza (seguimiento, escalado, indicaciones, protocolo urgente o cierre), la valoración ya no se
+        edita, pero <strong>quien la guardó por última vez</strong> puede arreglar un error desde el detalle del
+        evento:
+    </p>
+    <ul>
+        <li>
+            <strong>Corregir valoración</strong>, durante las <strong>6 horas</strong> siguientes a ese último
+            guardado (el detalle indica hasta cuándo). Se reescribe la valoración y hay que indicar el motivo.
+            La versión corregida es la que se muestra a partir de entonces, con un aviso de la corrección y su
+            motivo. La original no se pierde: queda en la línea temporal.
+        </li>
+        <li>
+            <strong>Añadir rectificación</strong>, una vez pasadas esas 6 horas. Se escribe la rectificación y su
+            motivo. La valoración original no cambia y la rectificación aparece debajo, con su fecha.
+        </li>
+    </ul>
+    <p class="mb-0">
+        Solo se corrigen las valoraciones de Enfermería y la médica, cada una desde su perfil. Nunca el basal, la
+        observación original, las indicaciones, los seguimientos, el protocolo urgente, el informe de derivación
+        firmado ni la comunicación familiar. Los demás profesionales ven las correcciones y rectificaciones, pero no
+        pueden hacerlas. Es una política provisional, pendiente de validar con el centro.
     </p>
 </section>
 
@@ -682,7 +712,6 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>La corrección de notas clínicas dentro de la ventana de seis horas, y su rectificación fuera de ella.</li>
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>

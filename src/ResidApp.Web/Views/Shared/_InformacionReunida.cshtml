@@ -78,6 +78,8 @@
                     <dt class="col-sm-3">Constantes</dt>
                     <dd class="col-sm-9">@(content.Vitals.IsEmpty ? "Sin constantes registradas" : VitalSignsDisplay.Summary(content.Vitals))</dd>
                 </dl>
+                <partial name="_CorreccionesValoracion" model="new CorreccionesValoracionViewModel(
+                    evento.Assessment.Amendments, AssessmentAmendmentAction.Ninguna, evento.EventId, null)" />
             }
         </div>
     </div>

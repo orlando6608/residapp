@@ -1,0 +1,54 @@
+@using ResidApp.Web.Models
+@model RectificacionViewModel
+@* COR-02: rectificación añadida, común a Enfermería y Medicina. Las rutas relativas (asp-action) son las del
+   controlador en curso. *@
+@{
+    ViewData["Title"] = $"Rectificar la {Model.AssessmentTitle}";
+    var evento = Model.Event;
+    var perfil = ViewContext.RouteData.Values["controller"] as string == "Medicina" ? "Medicina" : "Enfermería";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">@perfil</a></li>
+        <li class="breadcrumb-item"><a asp-action="@Model.DetailAction" asp-route-eventoId="@evento.EventId">Detalle</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Rectificar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Rectificar la @Model.AssessmentTitle — @evento.ResidentDisplayName</h1>
+<div class="alert alert-info">
+    Ya pasó el plazo para corregir tu valoración. La rectificación se añade debajo, con su motivo y su fecha, y la
+    valoración original no cambia.
+</div>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="RectificarValoracion" method="post">
+    <input type="hidden" asp-for="Form.EventoId" />
+    <input type="hidden" asp-for="Form.Rectificaciones" />
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="mb-3">
+                <label asp-for="Form.Texto" class="form-label fw-semibold"></label>
+                <textarea asp-for="Form.Texto" class="form-control" rows="4" required></textarea>
+                <span asp-validation-for="Form.Texto" class="text-danger"></span>
+            </div>
+            <div class="mb-0">
+                <label asp-for="Form.Motivo" class="form-label fw-semibold"></label>
+                <textarea asp-for="Form.Motivo" class="form-control" rows="2" required></textarea>
+                <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-grid d-md-flex justify-content-md-end gap-2">
+        <a asp-action="@Model.DetailAction" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin rectificar</a>
+        <button type="submit" class="btn btn-primary btn-lg">Añadir rectificación</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

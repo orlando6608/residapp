@@ -23,6 +23,17 @@ public abstract record TimelineEntry(DateTimeOffset At, Guid? EventId, SystemPro
     public sealed record MedicalAssessmentSaved(DateTimeOffset At, Guid? EventId, MedicalAssessmentContent Content)
         : TimelineEntry(At, EventId, SystemProfile.Medicina);
 
+    /// <summary>COR-01: versión corregida por su autor dentro de la ventana, con el motivo.</summary>
+    public sealed record NursingAssessmentCorrected(DateTimeOffset At, Guid? EventId, NursingAssessmentContent Content, string Reason)
+        : TimelineEntry(At, EventId, SystemProfile.Enfermeria);
+
+    public sealed record MedicalAssessmentCorrected(DateTimeOffset At, Guid? EventId, MedicalAssessmentContent Content, string Reason)
+        : TimelineEntry(At, EventId, SystemProfile.Medicina);
+
+    /// <summary>COR-02: rectificación añadida a la valoración de Profile, fuera de la ventana.</summary>
+    public sealed record AssessmentRectified(DateTimeOffset At, Guid? EventId, SystemProfile? Profile, string Text, string Reason)
+        : TimelineEntry(At, EventId, Profile);
+
     public sealed record Escalated(DateTimeOffset At, Guid? EventId, string Reason) : TimelineEntry(At, EventId, SystemProfile.Enfermeria);
 
     public sealed record IndicationIssued(

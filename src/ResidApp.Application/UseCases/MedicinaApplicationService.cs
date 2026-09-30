@@ -22,8 +22,20 @@ public sealed class MedicinaApplicationService(
     RecordMedicalFamilyCallAttempt recordMedicalFamilyCallAttempt, FindResidentIdentification findResidentIdentification,
     DownloadReferralReport downloadReferralReport, ListScopeResidents listScopeResidents,
     FindScopeResident findScopeResident, RegisterClinicalEvent registerClinicalEvent,
-    ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory, ReadResidentTimeline readResidentTimeline)
+    ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory, ReadResidentTimeline readResidentTimeline,
+    CorrectMedicalAssessment correctMedicalAssessment, RectifyAssessment rectifyAssessment,
+    AssessmentCorrectionSettings correctionSettings)
 {
+    /// <summary>COR-01: ventana de corrección, para ofrecer corregir o rectificar en el detalle.</summary>
+    public TimeSpan CorrectionWindow => correctionSettings.Window;
+
+    public Task<ApplicationResult<bool>> CorrectMedicalAssessmentAsync(
+        CorrectMedicalAssessmentCommand command, CancellationToken ct = default) =>
+        correctMedicalAssessment.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<bool>> RectifyAssessmentAsync(RectifyAssessmentCommand command, CancellationToken ct = default) =>
+        rectifyAssessment.ExecuteAsync(command with { Perfil = Shared.SystemProfile.Medicina }, ct);
+
     public Task<ApplicationResult<IReadOnlyList<ClosedEventSummary>>> ListClosedEventsAsync(
         ListClosedEventsCommand command, CancellationToken ct = default) =>
         listClosedEvents.ExecuteAsync(command with { Perfil = Shared.SystemProfile.Medicina }, ct);

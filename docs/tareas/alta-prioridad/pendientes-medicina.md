@@ -96,6 +96,17 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   Enfermería. Solo entran los eventos que ve Medicina, con cada hito y su texto, más las versiones del basal y
   los cambios de ubicación. **Decisión del usuario:** por ámbito, como la matriz de permisos del prototipo,
   sin permiso aparte. El detalle está en `pendientes-enfermeria.md` (historia 11, bloque 2).
+- **Historia 9, bloque 3 (corrección y rectificación, COR-01/COR-02, MED-23)** — 2026-09-30: quien guardó
+  por última vez la valoración médica puede corregirla desde `/Medicina/Escalado` cuando ya no se edita de
+  forma normal: tras la conducta, el seguimiento, el protocolo o el cierre.
+  - **Corregir valoración** (`/Medicina/CorregirValoracion`): dentro de las 6 h siguientes a ese guardado,
+    con motivo obligatorio.
+  - **Añadir rectificación** (`/Medicina/RectificarValoracion`, vista común `Shared/RectificarValoracion`):
+    después de esas 6 h.
+
+  Medicina ve también las correcciones y rectificaciones de la valoración de Enfermería en la información
+  reunida. La política provisional, las decisiones y el script `0020` están en `pendientes-enfermeria.md`
+  (historia 11, bloque 3).
 - Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests`, `FollowUpTests`,
   `UrgentProtocolTests` y `EmergencyReferralTests` (unitarios), y `ReferralReportBuilderTests` (funcional).
 - Cuenta de desarrollo `dev-integrado-medicina` en el escenario integrado.
@@ -104,8 +115,8 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
 
 En el orden propuesto:
 
-1. **Historia 8 — basal** y **historia 9, bloques siguientes** (línea temporal y corrección, comunes con la
-   historia 11 de Enfermería; ver `pendientes-enfermeria.md`).
+1. **Historia 8 — basal** y **lo que queda de la historia 9** (común con la historia 11 de Enfermería; ver
+   `pendientes-enfermeria.md`).
 
 Huecos de lo ya construido:
 

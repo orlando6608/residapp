@@ -188,7 +188,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                         assessment.RespiratoryRateRpm, assessment.OxygenSaturationPct,
                         assessment.RespiratorySupportCode is null ? null : EnumCode.ParseCode<RespiratorySupportCode>(assessment.RespiratorySupportCode),
                         assessment.OxygenFlowLpm, assessment.GlucoseMgDl, assessment.OtherName, assessment.OtherValue, assessment.OtherUnit)),
-                assessment.LastUpdatedByCurrentAccount, new DateTimeOffset(assessment.LastUpdatedAt, TimeSpan.Zero)),
+                assessment.LastUpdatedByCurrentAccount, new DateTimeOffset(assessment.LastUpdatedAt, TimeSpan.Zero),
+                await FindAmendmentsAsync(connection, profileScopeId, eventId, medical: false, ct)),
             ranges,
             row.ClosedAt is null ? null : new ClinicalEventClosure(
                 row.ClosedByCurrentAccount, new DateTimeOffset(row.ClosedAt.Value, TimeSpan.Zero),
@@ -472,7 +473,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                     assessment.RespiratoryRateRpm, assessment.OxygenSaturationPct,
                     assessment.RespiratorySupportCode is null ? null : EnumCode.ParseCode<RespiratorySupportCode>(assessment.RespiratorySupportCode),
                     assessment.OxygenFlowLpm, assessment.GlucoseMgDl, assessment.OtherName, assessment.OtherValue, assessment.OtherUnit)),
-            assessment.LastUpdatedByCurrentAccount, new DateTimeOffset(assessment.LastUpdatedAt, TimeSpan.Zero));
+            assessment.LastUpdatedByCurrentAccount, new DateTimeOffset(assessment.LastUpdatedAt, TimeSpan.Zero),
+            await FindAmendmentsAsync(connection, profileScopeId, eventId, medical: true, ct));
     }
 
     /// <summary>ENF-10/MED-08: indicaciones de los eventos visibles para el ámbito (mismo predicado que las

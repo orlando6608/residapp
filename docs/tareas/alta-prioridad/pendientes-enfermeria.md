@@ -161,13 +161,42 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
 
   Tests en `MedicinaApplicationServiceTests` (recorrido completo y visibilidad de Medicina) y `HistorialTests`
   (versiones del basal y acceso denegado).
+- **Historia 11, bloque 3 (corrección y rectificación, COR-01/COR-02)** — 2026-09-30, común con Medicina
+  (historia 9, MED-23).
+  - **Decisiones del usuario (2026-09-30), política provisional:** el prototipo no concreta qué objetos se
+    habilitan (matriz v0.2.1: «COND objeto habilitado», «COND política clínica») y `roadmap.md` la da como
+    pendiente del centro y del responsable de protección de datos.
+    - solo se corrigen las valoraciones de Enfermería y médica;
+    - dentro de la ventana, versión corregida con motivo obligatorio, que pasa a ser la que se muestra;
+    - fuera de ella, rectificación añadida (texto y motivo) que no cambia la valoración;
+    - ventana global de 6 h en `appsettings.json` (`Correccion:VentanaHoras`).
+  - **Suposiciones aprobadas con el plan:**
+    - el autor es la cuenta que guardó la última versión ordinaria (`valoraciones_*_versiones`);
+    - la ventana empieza en ese guardado y las correcciones no la amplían;
+    - solo se ofrece cuando la valoración ya no se guarda de forma normal (el evento salió de `EN_VALORACION`
+      o `EN_VALORACION_MEDICA`);
+    - la versión corregida es la que usan todas las lecturas, incluido un informe de derivación aún sin
+      firmar.
+  - **Pantallas:** en el detalle (`Enfermeria/DetalleCambio`, `Medicina/Escalado`), el autor ve «Corregir
+    valoración» (con la hora límite) o «Añadir rectificación». Los demás ven el aviso de la corrección y las
+    rectificaciones, también en la información reunida (`Shared/_CorreccionesValoracion`). La línea temporal
+    muestra la versión original, cada corrección con su motivo y cada rectificación.
+  - **Implementación:** script `0020_correccion_valoraciones`.
+    - **Tablas de solo inserción:** `valoraciones_enfermeria_correcciones`, `valoraciones_medicas_correcciones`
+      (contenido completo y motivo) y `valoraciones_rectificaciones`.
+    - **Triggers:** `TR_ve_guard` y `TR_vm_guard` solo dejan cambiar una valoración `CERRADA` si su contenido,
+      autor y hora coinciden con una corrección registrada.
+    - **Código:** `SqlAssessmentCorrectionRepository` bloquea la valoración y comprueba en una transacción la
+      disponibilidad, el autor, la ventana y el número de correcciones o rectificaciones, que es el token
+      contra el doble envío. No toca la revisión del evento.
+  - **Tests:** `CorreccionTests`, `CorreccionMedica_…` en `MedicinaApplicationServiceTests` y
+    `AssessmentCorrectionTests` (unitarios).
 
 ## Pendiente
 
 En el orden propuesto de construcción:
 
 1. **Historia 11, bloques siguientes** (común con Medicina):
-   - **Corrección (COR-01/COR-02):** qué notas se corrigen en la ventana de seis horas.
    - **Detalle de Enfermería de un evento escalado:** sigue sin pintar la parte médica (valoración e
      indicaciones), aunque ya se ve en la línea temporal.
    - **Línea temporal para Dirección Clínica:** lectura condicional y auditada, que queda para su vertical.
@@ -179,8 +208,8 @@ Huecos de lo ya construido:
 - **Derivación a Urgencias (historia 6, bloque 2):**
   - **Firmante sin nombre:** `dbo.cuentas` no tiene nombre, así que el PDF muestra el perfil y el
     identificador de la cuenta hasta que exista el proveedor de identidad real.
-  - **Sin corrección:** un informe firmado no se corrige ni tiene nueva versión (COR-01/02 no define ese
-    tipo de objeto).
+  - **Sin corrección:** un informe firmado no se corrige ni tiene nueva versión (la política provisional de
+    COR-01/02 solo habilita las valoraciones).
   - **Contacto familiar en texto libre:** a quién se llama se escribe a mano hasta que Administración tenga
     el contacto designado.
   - **Valores del basal sin tildes:** en el informe salen separados en palabras a partir de los catálogos,

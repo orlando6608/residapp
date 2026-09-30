@@ -18,8 +18,9 @@ public sealed record EnfermeriaInicioViewModel(
     int Indicaciones, int IndicacionesSinLeer, int Protocolos);
 
 /// <summary>ENF-04: detalle de un cambio recibido más el resumen del basal vigente del residente (null si
-/// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel.</summary>
-public sealed record EnfermeriaChangeDetailViewModel(PendingChangeDetail Change, CurrentBaselineSummary? Baseline);
+/// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel. CorrectionWindow decide si
+/// se ofrece corregir o rectificar la valoración (COR-01/COR-02).</summary>
+public sealed record EnfermeriaChangeDetailViewModel(PendingChangeDetail Change, CurrentBaselineSummary? Baseline, TimeSpan CorrectionWindow);
 
 /// <summary>ENF-02/ENF-03 "antigüedad": tiempo transcurrido desde el registro, en la unidad más grande que
 /// tenga sentido (días, horas o minutos) — no hace falta más precisión para ordenar visualmente una

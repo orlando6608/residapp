@@ -13,6 +13,28 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Historial, bloque 3: corrección y rectificación (COR-01/COR-02, script `0020`):** hecho el 2026-09-30,
+  en un commit local sin push (el push aplicará `0020` en Azure SQL).
+  - **Política provisional del usuario:** el prototipo no concreta los «objetos habilitados» y `roadmap.md`
+    deja la política al centro y al responsable de protección de datos.
+    - Solo se corrigen las valoraciones de Enfermería y médica, y solo su autor.
+    - Dentro de 6 h (`Correccion:VentanaHoras`), versión corregida con motivo.
+    - Después, rectificación añadida.
+
+    El detalle y las suposiciones aprobadas están en `pendientes-enfermeria.md` (historia 11, bloque 3).
+  - **Verificación:**
+    - suite local en verde 3 veces (121 unitarios, 189 de integración y 7 funcionales);
+    - 3 vueltas tipo CI con BD nueva en verde;
+    - BD temporal con seed (21 scripts, sin errores) ya borrada;
+    - curl con `dev-integrado-enfermeria` sobre Residente Integrado Uno:
+      - registro, valoración y cierre de un evento, y corrección dentro de la ventana, con la hora límite, el
+        aviso y el motivo;
+      - el reenvío del formulario da conflicto;
+      - la línea temporal muestra la versión original y la corrección;
+      - rectificación de un evento antiguo (sin motivo se rechaza).
+    - curl con `dev-integrado-medicina`: rectificación de la valoración médica; ve también la de Enfermería.
+      `dev-integrado-auxiliar` no entra en ninguna de las cuatro pantallas.
+  - Copia previa: `ResidApp-antes-0020-20260930.bak`.
 - **Historial, bloque 2: línea temporal (HIS-02, sin script):** hecho el 2026-09-30 y desplegado en Azure
   (push de `429eae7`, run 36685732287 en verde con `build-and-test` y `deploy`). «Ver línea temporal» desde
   el Historial y desde el detalle de cada evento, en Enfermería y Medicina: cada evento visible con sus hitos
@@ -198,10 +220,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Historial, bloque 3: la corrección (COR-01/COR-02).** Qué notas admiten la ventana de seis horas y cómo
-   se rectifica fuera de ella. Es una decisión de producto que puede necesitar a CJ: revisa primero la
-   matriz de permisos del prototipo (filas «Corregir curso/nota clínica propia dentro de ventana» y
-   «Rectificar…», `COND objeto habilitado` y `COND política clínica`).
+1. **Push del bloque 3 del Historial** cuando el usuario lo pida. Aplica `0020` en Azure SQL. Después,
+   comprueba el pipeline y prueba en Azure la corrección y la rectificación con `dev-integrado-enfermeria` y
+   `dev-integrado-medicina`.
+2. **Detalle de Enfermería de un evento escalado** (elegida por el usuario el 2026-09-30): pintar la parte
+   médica (valoración e indicaciones) en `Enfermeria/DetalleCambio`, que hoy solo se ve en la línea temporal.
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 
@@ -300,6 +323,11 @@ Repite estos pasos antes de dar un bloque por cerrado:
   etiqueta, su rama en `CK_ea_origen` y `CK_ea_inicio`, y revisar `ScopedEventsFrom`. Todo código que
   inserte en `eventos_asistenciales` debe llamar también a `EventContextSnapshot.CaptureAsync` en la misma
   transacción (HIS-03, `0019`); si no, el evento sale en el Historial «Sin datos de contexto».
+- **Cambiar una valoración ya cerrada:** desde `0020`, `TR_ve_guard` y `TR_vm_guard` solo lo permiten si
+  antes se insertó en `valoraciones_*_correcciones` una fila con el mismo contenido, autor y hora
+  (`actualizado_en`), usando el mismo parámetro de fecha en las dos sentencias. La comparación usa
+  `INTERSECT`, que trata los `NULL` como iguales. Si se añade una columna de contenido a una valoración, hay
+  que añadirla también a su tabla de correcciones y al `INTERSECT` del trigger.
 - **Sin Python en esta máquina:** para ediciones en lote, usa Edit o `sed`, no scripts de Python.
 - **Nuevos estados del evento:** añádelos también a `ClinicalEventStatusDisplay` (`EnfermeriaModels.cs`).
   Si no, la insignia muestra el nombre interno en inglés. Busca además los filtros por estado en los casos

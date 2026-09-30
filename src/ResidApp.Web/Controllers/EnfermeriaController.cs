@@ -215,7 +215,8 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
 
         var baselineResult = await service.ReadCurrentBaselineAsync(
             new ReadCurrentBaselineCommand(activeScope.ProfileScopeId, centroId, detailResult.Value.ResidentId), ct);
-        return View(new EnfermeriaChangeDetailViewModel(detailResult.Value, baselineResult.Ok ? baselineResult.Value : null));
+        return View(new EnfermeriaChangeDetailViewModel(
+            detailResult.Value, baselineResult.Ok ? baselineResult.Value : null, service.CorrectionWindow));
     }
 
     /// <summary>ENF-03 "empezar valoración": registra profesional y hora en servidor. Si el evento cambió
@@ -291,6 +292,125 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             : "Revisa los datos: la valoración necesita al menos un dato, la PA con ambas cifras, el flujo de O₂ solo con oxigenoterapia y la otra constante con nombre y valor.");
         return View(new ValoracionViewModel(detail, form));
     }
+
+    /// <summary>COR-01: corrección de la valoración por su autor, dentro de la ventana y cuando ya no se puede
+    /// guardar de forma normal. El servidor vuelve a comprobarlo todo al guardar.</summary>
+    public async Task<IActionResult> CorregirValoracion(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (detail.Assessment is not { } assessment || AmendmentAction(detail) != AssessmentAmendmentAction.Corregir)
+        {
+            TempData["Error"] = CorrectionUnavailableMessage;
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        return View(new CorreccionValoracionViewModel(detail, CorreccionValoracionFormModel.From(detail, assessment)));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CorregirValoracion([Bind(Prefix = "Form")] CorreccionValoracionFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (AmendmentAction(detail) != AssessmentAmendmentAction.Corregir)
+        {
+            TempData["Error"] = CorrectionUnavailableMessage;
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId = form.EventoId });
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new CorreccionValoracionViewModel(detail, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.CorrectNursingAssessmentAsync(new CorrectNursingAssessmentCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Correcciones, form.Motivo,
+            form.Hallazgos, form.Valoracion, form.Actuaciones, form.Comunicaciones, form.Resultado,
+            form.TemperaturaCelsius, form.TensionSistolica, form.TensionDiastolica, form.FrecuenciaCardiaca,
+            form.FrecuenciaRespiratoria, form.SaturacionO2, form.SoporteRespiratorio, form.FlujoO2, form.Glucemia,
+            form.OtraConstanteNombre, form.OtraConstanteValor, form.OtraConstanteUnidad), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Valoración corregida.";
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => CorrectionConflictMessage,
+            ApplicationFailureCode.AccessDenied => CorrectionUnavailableMessage,
+            _ => "Revisa los datos: el motivo es obligatorio, la valoración necesita al menos un dato, la PA con ambas cifras, el flujo de O₂ solo con oxigenoterapia y la otra constante con nombre y valor.",
+        });
+        return View(new CorreccionValoracionViewModel(detail, form));
+    }
+
+    /// <summary>COR-02: rectificación añadida por el autor de la valoración, una vez pasada la ventana.</summary>
+    public async Task<IActionResult> RectificarValoracion(Guid eventoId, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(eventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (AmendmentAction(detail) != AssessmentAmendmentAction.Rectificar)
+        {
+            TempData["Error"] = CorrectionUnavailableMessage;
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+        }
+
+        var form = new RectificacionFormModel
+        {
+            EventoId = eventoId, Rectificaciones = detail.Assessment!.Amendments!.Rectifications.Count,
+        };
+        return View("~/Views/Shared/RectificarValoracion.cshtml",
+            new RectificacionViewModel(detail, "valoración de Enfermería", nameof(DetalleCambio), form));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RectificarValoracion([Bind(Prefix = "Form")] RectificacionFormModel form, CancellationToken ct)
+    {
+        var detail = await FindEventAsync(form.EventoId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        var model = new RectificacionViewModel(detail, "valoración de Enfermería", nameof(DetalleCambio), form);
+        if (!ModelState.IsValid)
+        {
+            return View("~/Views/Shared/RectificarValoracion.cshtml", model);
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.RectifyAssessmentAsync(new RectifyAssessmentCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Rectificaciones, form.Texto, form.Motivo,
+            SystemProfile.Enfermeria), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Rectificación añadida.";
+            return RedirectToAction(nameof(DetalleCambio), new { eventoId = form.EventoId });
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict => CorrectionConflictMessage,
+            ApplicationFailureCode.AccessDenied => CorrectionUnavailableMessage,
+            _ => "Revisa los datos: la rectificación y el motivo son obligatorios. Si todavía estás dentro del plazo, corrige la valoración en lugar de rectificarla.",
+        });
+        return View("~/Views/Shared/RectificarValoracion.cshtml", model);
+    }
+
+    private AssessmentAmendmentAction AmendmentAction(PendingChangeDetail detail) =>
+        AssessmentAmendmentDisplay.Action(
+            detail.Assessment?.Amendments, detail.Status == ClinicalEventStatus.EnValoracion, service.CorrectionWindow);
 
     /// <summary>ENF-06 "decisión asistencial": las cuatro salidas, desde una valoración ya guardada o desde un
     /// seguimiento que se resuelve. Cerrar e iniciar seguimiento están disponibles; escalado y protocolo
@@ -817,6 +937,12 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
 
     private const string ConcurrencyMessage =
         "Este evento ha cambiado desde que lo abriste (otro profesional, u otra pestaña o pulsación tuya). Recarga para ver la versión actual antes de continuar.";
+
+    private const string CorrectionUnavailableMessage =
+        "No puedes corregir ni rectificar esta valoración: solo lo hace quien la guardó por última vez, cuando ya no se puede seguir editando. Dentro del plazo se corrige; después, se añade una rectificación.";
+
+    private const string CorrectionConflictMessage =
+        "La valoración ha cambiado desde que abriste el formulario (otra pestaña o pulsación tuya). Lo que has escrito sigue aquí: vuelve al detalle para ver la versión actual.";
 
     private async Task<PendingChangeDetail?> FindEventAsync(Guid eventoId, CancellationToken ct)
     {

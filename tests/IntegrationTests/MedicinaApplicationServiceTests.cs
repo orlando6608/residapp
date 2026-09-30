@@ -19,7 +19,7 @@ namespace ResidApp.IntegrationTests;
 /// eventos que no se le han escalado.</summary>
 public class MedicinaApplicationServiceTests
 {
-    private static MedicinaApplicationService BuildMedicina(string externalSubject)
+    private static MedicinaApplicationService BuildMedicina(string externalSubject, TimeSpan? correctionWindow = null)
     {
         var scopes = new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory);
         var session = new FixedMedicinaSessionIdentityProvider(externalSubject);
@@ -27,6 +27,8 @@ public class MedicinaApplicationServiceTests
         var medical = new SqlMedicalAssessmentRepository(TestDatabase.ConnectionFactory);
         var residents = new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory);
         var listScopeResidents = new ListScopeResidents(scopes, residents, session);
+        var corrections = new SqlAssessmentCorrectionRepository(TestDatabase.ConnectionFactory);
+        var settings = new AssessmentCorrectionSettings(correctionWindow ?? TimeSpan.FromHours(6));
         return new MedicinaApplicationService(
             new ListEscalations(scopes, changeInbox, session),
             new FindEscalationDetail(scopes, changeInbox, session),
@@ -55,7 +57,10 @@ public class MedicinaApplicationServiceTests
             new ReadBaselineHistory(
                 new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), session,
                 new SqlBaselineRepository(TestDatabase.ConnectionFactory)),
-            new ReadResidentTimeline(new FindScopeResident(listScopeResidents), changeInbox));
+            new ReadResidentTimeline(new FindScopeResident(listScopeResidents), changeInbox),
+            new CorrectMedicalAssessment(scopes, changeInbox, session, corrections, settings),
+            new RectifyAssessment(scopes, changeInbox, session, corrections, settings),
+            settings);
     }
 
     private static async Task<PendingChangeDetail?> FindAsync(SeededProfile seed, Guid eventId) =>
@@ -1005,6 +1010,60 @@ public class MedicinaApplicationServiceTests
         Assert.Equal(ApplicationFailureCode.InvalidInput, noComunicar.Error!.Code);
         Assert.True(closed.Ok);
         Assert.Equal(ClinicalEventStatus.Cerrado, (await FindAsync(medica, eventId))!.Status);
+    }
+
+    private static CorrectMedicalAssessmentCommand CorrectMedical(SeededProfile seed, Guid eventId, int corrections) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, corrections, "Exploración anotada en el lado equivocado.",
+            "Crepitantes en base izquierda.", "Posible infección respiratoria.", "Se solicita radiografía.",
+            null, null, null, 96, null, 91, null, null, null, null, null, null);
+
+    /// <summary>COR-01/COR-02 (0020) sobre la valoración médica: se corrige cuando ya no se guarda de forma normal
+    /// (tras la primera indicación) y se rectifica fuera de la ventana; la de Enfermería no se toca.</summary>
+    [Fact]
+    public async Task CorreccionMedica_TrasLaIndicacion_ElAutorLaCorrige_YFueraDeLaVentanaLaRectifica()
+    {
+        var (_, _, medica, eventId) = await SeedEscalatedAsync();
+        var otraMedica = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, medica.CenterId, medica.UnitId);
+        var revision = await StartAndSaveMedicalAsync(medica, eventId);
+        var service = BuildMedicina(medica.ExternalSubject);
+
+        // En valoración médica se guarda de forma normal: todavía no hay nada que corregir.
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await service.CorrectMedicalAssessmentAsync(CorrectMedical(medica, eventId, 0))).Error!.Code);
+        Assert.True((await service.RegisterMedicalIndicationAsync(Indication(medica, eventId, revision))).Ok);
+
+        var corrected = await service.CorrectMedicalAssessmentAsync(CorrectMedical(medica, eventId, 0));
+        Assert.True(corrected.Ok, corrected.Error?.Message);
+        var detail = (await FindAsync(medica, eventId))!;
+        Assert.Equal(ClinicalEventStatus.ConIndicacionPendiente, detail.Status);
+        Assert.Equal("Crepitantes en base izquierda.", detail.Medical.Assessment!.Content.FindingsAndExamination);
+        Assert.Single(detail.Medical.Assessment.Amendments!.Corrections);
+        Assert.Empty(detail.Assessment!.Amendments!.Corrections);
+        Assert.False(detail.Assessment.Amendments.AuthoredByCurrentAccount);
+        Assert.Equal(1, await CountAuditAsync(eventId, "MEDICAL_ASSESSMENT_CORRECT"));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied,
+            (await BuildMedicina(otraMedica.ExternalSubject).CorrectMedicalAssessmentAsync(CorrectMedical(otraMedica, eventId, 1))).Error!.Code);
+
+        // Cerrado el evento, la valoración médica queda CERRADA y su corrección pasa por TR_vm_guard.
+        Assert.True((await service.CloseMedicalEventAsync(Close(medica, eventId, (await FindAsync(medica, eventId))!.Revision))).Ok);
+        Assert.True((await service.CorrectMedicalAssessmentAsync(CorrectMedical(medica, eventId, 1))).Ok);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            Assert.Equal("CERRADA", await connection.ExecuteScalarAsync<string>(
+                "SELECT estado_codigo FROM dbo.valoraciones_medicas WHERE evento_id = @EventId", new { EventId = eventId }));
+            var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+                "UPDATE dbo.valoraciones_medicas SET valoracion = 'x', actualizado_en = SYSUTCDATETIME() WHERE evento_id = @EventId",
+                new { EventId = eventId }));
+            Assert.Contains("MEDICAL_ASSESSMENT_IMMUTABLE", ex.Message);
+        }
+
+        var rectified = await BuildMedicina(medica.ExternalSubject, TimeSpan.Zero).RectifyAssessmentAsync(new RectifyAssessmentCommand(
+            medica.ProfileScopeId, medica.CenterId, eventId, 0, "La radiografía se pidió portátil.", "Faltaba el detalle.", SystemProfile.Enfermeria));
+        Assert.True(rectified.Ok, rectified.Error?.Message);
+        var after = (await FindAsync(medica, eventId))!;
+        Assert.Equal("La radiografía se pidió portátil.", Assert.Single(after.Medical.Assessment!.Amendments!.Rectifications).Text);
+        // La fachada de Medicina fija el perfil: la rectificación es de la valoración médica, no de la de Enfermería.
+        Assert.Empty(after.Assessment!.Amendments!.Rectifications);
     }
 }
 
