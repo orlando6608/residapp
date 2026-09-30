@@ -153,6 +153,23 @@ BEGIN
 END
 GO
 
+/*
+ * Añadido después (2026-09-30): permisos de basal para 'dev-integrado-medicina', para recorrer la historia 8 de
+ * Medicina (crear o reevaluar el basal, MED-21) con el mismo módulo que Enfermería. Idempotente por permiso: solo
+ * concede el que su ámbito MEDICINA todavía no tiene vigente.
+ */
+INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+SELECT NEWID(), profile.id, profile.centro_id, permiso.codigo, SYSUTCDATETIME(), account.id
+  FROM dbo.cuentas account
+  JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id AND profile.perfil_codigo = 'MEDICINA'
+ CROSS JOIN (VALUES ('BASELINE_INITIAL_COMPLETE'), ('BASELINE_REEVALUATE')) AS permiso(codigo)
+ WHERE account.sujeto_externo = 'dev-integrado-medicina'
+   AND profile.centro_id = 'A1000000-0000-0000-0000-000000000001'
+   AND NOT EXISTS (SELECT 1 FROM dbo.permisos_perfil existing
+                    WHERE existing.ambito_perfil_id = profile.id AND existing.permiso_codigo = permiso.codigo
+                      AND existing.revocado_en IS NULL);
+GO
+
 SELECT
     account.sujeto_externo AS ExternalSubject,
     profile.perfil_codigo AS Perfil,

@@ -111,6 +111,21 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   y «Ver ese basal» en el detalle de un evento cerrado (`/Medicina/VersionBasal`), con la misma vista que
   Enfermería: las nueve áreas y el Barthel por ítems. El detalle está en `pendientes-enfermeria.md`
   (historia 11, bloque 4).
+- **Historia 8 (gestionar el basal, MED-21)** — 2026-09-30: Medicina crea, completa y firma el basal con el
+  mismo módulo que Enfermería (`EnfermeriaBasal`, mismas URLs), si su ámbito tiene `BASELINE_INITIAL_COMPLETE`
+  (alta) o `BASELINE_REEVALUATE` (reevaluación).
+  - **Decisiones del usuario (2026-09-30):**
+    - la ficha de Medicina (`/Medicina/Residente`) solo muestra «Crear borrador de basal» o «Iniciar
+      reevaluación» si el ámbito tiene alguno de los dos permisos (`CreateBaselineDraft.CanCreateAsync`, la
+      misma autorización que crear el borrador); Enfermería lo sigue mostrando siempre;
+    - `dev-integrado-medicina` recibe los dos permisos en `dev_seed_escenario_integrado.sql`;
+    - el módulo conserva el nombre `EnfermeriaBasal`.
+  - **Implementación:** el backend ya lo admitía (política, casos de uso y `CK_bv_signer`). Cambia la web:
+    `EnfermeriaBasalController` busca al residente en el ámbito del perfil activo, y sus migas y redirecciones
+    vuelven al controlador de ese perfil (`BaselineModuleDisplay`).
+  - **Tests:** `Medicina_ConPermisoDeBasal_CreaCompletaYFirmaElBasal` y
+    `Medicina_SinPermisoNoGestionaElBasal_YConPermisoNoDaDeAltaResidentes` en
+    `ResidentBaselineApplicationServiceTests`: el permiso de basal no concede el alta de residentes.
 - Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests`, `FollowUpTests`,
   `UrgentProtocolTests` y `EmergencyReferralTests` (unitarios), y `ReferralReportBuilderTests` (funcional).
 - Cuenta de desarrollo `dev-integrado-medicina` en el escenario integrado.
@@ -119,15 +134,14 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
 
 En el orden propuesto:
 
-1. **Historia 8 — basal** y **lo que queda de la historia 9** (común con la historia 11 de Enfermería; ver
-   `pendientes-enfermeria.md`).
+1. **Lo que queda de la historia 9** (común con la historia 11 de Enfermería; ver `pendientes-enfermeria.md`):
+   la línea temporal para Dirección Clínica, que queda para su vertical.
 
 Huecos de lo ya construido:
 
 - **Evento propio (historia 7):**
   - la ficha del residente (MED-20) enlaza al Historial (eventos cerrados y versiones del basal), pero no
     muestra los eventos abiertos del residente;
-  - no tiene el acceso a crear o reevaluar el basal, que es la historia 8;
   - la lista de residentes (MED-19) no tiene buscador, igual que la de Enfermería.
 
 - Derivación a Urgencias: los mismos huecos que en Enfermería (firmante sin nombre, sin corrección del

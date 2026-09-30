@@ -15,7 +15,8 @@ namespace ResidApp.Web.Controllers;
 /// tiene permiso allí), ENF-20 (crear borrador y completar las nueve áreas), ENF-21 (Barthel) y ENF-22
 /// (confirmación, que reutiliza sin cambios BaselineController/Sign ya existente). Traduce a
 /// ResidentBaselineApplicationService (contenido del borrador) y EnfermeriaApplicationService (resolución
-/// del residente del ámbito); las reglas de negocio no viven aquí.
+/// del residente del ámbito); las reglas de negocio no viven aquí. Es el módulo común del basal: Medicina (historia 8,
+/// MED-21) entra por las mismas URLs con su propio ámbito, y la política exige a los dos perfiles el permiso de basal.
 /// </summary>
 public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService baselineService, EnfermeriaApplicationService enfermeriaService) : Controller
 {
@@ -24,7 +25,7 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         var resolved = await ResolveAsync(residenteId, ct);
         if (resolved is null)
         {
-            return RedirectToAction(nameof(EnfermeriaController.Residentes), "Enfermeria");
+            return BackToResidents();
         }
         var (activeScope, resident) = resolved.Value;
 
@@ -47,7 +48,7 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         var resolved = await ResolveAsync(createForm.ResidenteId, ct);
         if (resolved is null)
         {
-            return RedirectToAction(nameof(EnfermeriaController.Residentes), "Enfermeria");
+            return BackToResidents();
         }
         if (!ModelState.IsValid || (createForm.FuenteInformacionComun == InformationSourceCode.Otra && string.IsNullOrWhiteSpace(createForm.FuenteInformacionComunOtroTexto)))
         {
@@ -74,7 +75,7 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         var resolved = await ResolveAsync(cancelForm.ResidenteId, ct);
         if (resolved is null)
         {
-            return RedirectToAction(nameof(EnfermeriaController.Residentes), "Enfermeria");
+            return BackToResidents();
         }
         if (!ModelState.IsValid)
         {
@@ -95,7 +96,7 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         var resolved = await ResolveAsync(residenteId, ct);
         if (resolved is null)
         {
-            return RedirectToAction(nameof(EnfermeriaController.Residentes), "Enfermeria");
+            return BackToResidents();
         }
 
         var draftResult = await baselineService.LoadBaselineDraftAsync(new LoadBaselineDraftCommand(
@@ -120,7 +121,7 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         var resolved = await ResolveAsync(form.ResidenteId, ct);
         if (resolved is null)
         {
-            return RedirectToAction(nameof(EnfermeriaController.Residentes), "Enfermeria");
+            return BackToResidents();
         }
 
         IBaselineAreaAnswer answer;
@@ -150,7 +151,7 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         var resolved = await ResolveAsync(residenteId, ct);
         if (resolved is null)
         {
-            return RedirectToAction(nameof(EnfermeriaController.Residentes), "Enfermeria");
+            return BackToResidents();
         }
 
         var draftResult = await baselineService.LoadBaselineDraftAsync(new LoadBaselineDraftCommand(
@@ -178,7 +179,7 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         var resolved = await ResolveAsync(form.ResidenteId, ct);
         if (resolved is null)
         {
-            return RedirectToAction(nameof(EnfermeriaController.Residentes), "Enfermeria");
+            return BackToResidents();
         }
 
         var items = new List<BarthelItem>();
@@ -216,7 +217,7 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         var resolved = await ResolveAsync(residenteId, ct);
         if (resolved is null)
         {
-            return RedirectToAction(nameof(EnfermeriaController.Residentes), "Enfermeria");
+            return BackToResidents();
         }
 
         var draftResult = await baselineService.LoadBaselineDraftAsync(new LoadBaselineDraftCommand(
@@ -243,10 +244,15 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         {
             return null;
         }
-        var findResult = await enfermeriaService.FindScopeResidentAsync(
-            new FindScopeResidentCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId)), ct);
+        // Historia 8 de Medicina: el residente se busca en el ámbito del perfil activo (ListScopeResidents solo
+        // admite Enfermería y Medicina, y que el perfil sea el del ámbito).
+        var findResult = await enfermeriaService.FindScopeResidentAsync(new FindScopeResidentCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), activeScope.Profile), ct);
         return !findResult.Ok || findResult.Value is null ? null : (activeScope, findResult.Value);
     }
+
+    private IActionResult BackToResidents() =>
+        RedirectToAction("Residentes", BaselineModuleDisplay.ProfileController(Request));
 
     private static BaselineAreaFormModel FillFromAnswer(Guid residenteId, BaselineArea areaCode, IBaselineAreaAnswer answer, string? observation)
     {

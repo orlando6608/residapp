@@ -145,3 +145,16 @@ public sealed class BarthelFormModel
 
     public Dictionary<string, string> Opciones { get; set; } = new();
 }
+
+/// <summary>Historia 8 de Medicina: el módulo del basal es común a Enfermería y Medicina. Sus migas y redirecciones
+/// vuelven al controlador del perfil del ámbito activo (Enfermería si no hay ámbito o no es Medicina).</summary>
+public static class BaselineModuleDisplay
+{
+    public static string ProfileController(Microsoft.AspNetCore.Http.HttpRequest request) =>
+        ResidApp.Web.Security.ActiveProfileScopeCookie.Read(request)?.Profile == ResidApp.Shared.SystemProfile.Medicina
+            ? "Medicina"
+            : "Enfermeria";
+
+    public static string ProfileLabel(Microsoft.AspNetCore.Http.HttpRequest request) =>
+        ProfileController(request) == "Medicina" ? "Medicina" : "Enfermería";
+}

@@ -7,8 +7,10 @@ using ResidApp.Shared;
 namespace ResidApp.Web.Models;
 
 /// <summary>ENF-18: identidad mínima del residente del ámbito más el resumen del basal vigente (null si
-/// todavía no tiene ninguno firmado).</summary>
-public sealed record EnfermeriaResidentDetailViewModel(ScopeResidentSummary Resident, CurrentBaselineSummary? Baseline);
+/// todavía no tiene ninguno firmado). También es la ficha de Medicina (MED-20), donde CanManageBaseline dice si su
+/// ámbito tiene permiso para crear o reevaluar el basal (historia 8); Enfermería ofrece el acceso siempre.</summary>
+public sealed record EnfermeriaResidentDetailViewModel(
+    ScopeResidentSummary Resident, CurrentBaselineSummary? Baseline, bool CanManageBaseline = false);
 
 /// <summary>ENF-01: contadores de las bandejas ya construidas (ordinarios, prioritarios y seguimientos,
 /// con cuántos de estos están vencidos), de las comunicaciones familiares pendientes de aprobación y de las

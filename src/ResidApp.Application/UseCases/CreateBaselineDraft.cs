@@ -30,4 +30,27 @@ public sealed class CreateBaselineDraft(
                 command.FuenteInformacionComun, command.FuenteInformacionComunOtroTexto, command.FechaInformacionComun, command.OperacionId);
             return await RequestAuthorizationContextResolver.ExecuteBaselineDraftCreateAsync(context, repository, payload, ct);
         });
+
+    /// <summary>MED-21 (historia 8 de Medicina): si la cuenta podría crear un borrador para el residente, de alta o de
+    /// reevaluación, con la misma autorización que ExecuteAsync. Sirve para ofrecer el acceso al basal solo a quien
+    /// tiene el permiso; no escribe nada.</summary>
+    public Task<ApplicationResult<bool>> CanCreateAsync(
+        Guid ambitoPerfilId, CenterId centroId, ResidentId residenteId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            foreach (var reason in new[] { BaselineReason.Alta, BaselineReason.RevisionProgramada })
+            {
+                try
+                {
+                    await RequestAuthorizationContextResolver.ResolveAsync(
+                        evidenceProvider, session, new AuthorizationSelection(ambitoPerfilId, centroId),
+                        new AuthorizationTarget.Draft(residenteId, reason), ct: ct);
+                    return true;
+                }
+                catch (AccessDeniedException)
+                {
+                }
+            }
+            return false;
+        });
 }

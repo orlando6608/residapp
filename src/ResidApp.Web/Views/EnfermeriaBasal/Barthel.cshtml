@@ -8,7 +8,7 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
-        <li class="breadcrumb-item"><a asp-controller="Enfermeria" asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-controller="@BaselineModuleDisplay.ProfileController(Context.Request)" asp-action="Index">@BaselineModuleDisplay.ProfileLabel(Context.Request)</a></li>
         <li class="breadcrumb-item"><a asp-action="Draft" asp-route-residenteId="@Model.ResidenteId">Estado basal</a></li>
         <li class="breadcrumb-item active" aria-current="page">Índice de Barthel</li>
     </ol>

@@ -13,8 +13,27 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Historia 8 de Medicina: gestionar el basal (sin script; cambia el seed):** hecho el 2026-09-30, en un
+  commit local sin push.
+  - **Qué hace:** con permiso de basal, la ficha de Medicina ofrece «Crear borrador de basal» o «Iniciar
+    reevaluación», que abren el módulo común `EnfermeriaBasal`. Sus migas y redirecciones siguen al perfil
+    activo. `dev-integrado-medicina` recibe los dos permisos en el seed del escenario integrado. El detalle
+    y las decisiones están en `pendientes-medicina.md` (historia 8).
+  - **Verificación:**
+    - suite local en verde (121, 192 y 11);
+    - vueltas tipo CI con BD nueva: la primera dio 3 fallos en tests no relacionados y tardó 1 min 13 s (se
+      solapó con la aplicación del seed a la base local); las tres siguientes, limpias en unos 10 s;
+    - el seed, aplicado dos veces a una BD temporal, deja cada permiso una sola vez;
+    - curl con `dev-integrado-medicina` sobre Residente Integrado Dos: botón en la ficha, migas de Medicina,
+      borrador de alta, nueve áreas, Barthel, confirmación y firma (versión 1, firmada por Medicina, que queda
+      en la base local);
+    - con los permisos revocados a mano, el botón desaparece y crear el borrador da «No se puede acceder a
+      esta operación». Al reaplicar el seed se vuelven a conceder;
+    - Enfermería conserva sus migas, y un residente ajeno vuelve a la lista del perfil activo.
 - **Contenido de una versión del basal (historia 11 de Enfermería, 9 de Medicina; sin script):** hecho el
-  2026-09-30, en un commit local sin push.
+  2026-09-30 y desplegado en Azure (push de `7669c20`, run 36715209771 en verde con `build-and-test` y
+  `deploy`). En Azure no hay basal firmado: se comprobó que una versión inexistente vuelve al Historial, en
+  Enfermería y Medicina, y que los eventos cerrados sin basal no muestran «Ver ese basal».
   - **Qué hace:** «Ver versión» en el Historial y «Ver ese basal» en el detalle de un evento cerrado abren
     `VersionBasal` (Enfermería y Medicina, vista común `Shared/VersionBasal`): cabecera, fuente y fecha de la
     información, las nueve áreas y el Barthel por ítems. Los ítems del Barthel tienen nombre en español, que
@@ -254,10 +273,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   `docs/pendientes-cj/rangos-referencia-constantes.html` sigue con 19 huecos «por definir» (14 celdas de la
   tabla y 5 respuestas; antes se contaban mal como 17).
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1
-  (parcial), 2, 3, 4, 5, 6, 7, 8, 9 y 10, más los rangos de referencia de constantes (fase 1 y su
-  pantalla). Medicina está en curso: historias 1 a 7 (escalados, valoración médica, indicaciones, cierre
-  médico, seguimiento médico con continuidad entre turnos, protocolo urgente, derivación a Urgencias y
-  evento propio).
+  (parcial), 2 a 10 y 11 (salvo la lectura de Dirección Clínica, que es de su vertical), más los rangos de
+  referencia de constantes (fase 1 y su pantalla). Medicina está en curso: historias 1 a 8 (escalados,
+  valoración médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos, protocolo
+  urgente, derivación a Urgencias, evento propio y basal con permiso) y 9 (con la misma salvedad que la 11).
 - La base local `ResidApp` tiene los scripts `0001` a `0020` registrados en `dbo.scripts_aplicados`
   (también en Azure). Hay copias previas a `0016`, `0017`, `0018`, `0019` y `0020` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
@@ -292,8 +311,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 ## Siguiente tarea
 
 1. **Siguiente bloque por decidir con el usuario.** Candidatos de los pendientes:
-   - historia 8 de Medicina (basal desde Medicina);
-   - una lista de «mis escalados» abiertos en Enfermería.
+   - una lista de «mis escalados» abiertos en Enfermería;
+   - los eventos abiertos del residente en su ficha de Medicina (MED-20);
+   - un buscador en las listas de residentes de Enfermería y Medicina.
+
+   Tras el push de la historia 8, prueba en Azure con `dev-integrado-medicina` que la ficha ofrece el basal
+   (el seed le da el permiso).
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 

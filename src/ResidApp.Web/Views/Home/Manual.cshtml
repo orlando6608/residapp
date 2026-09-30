@@ -16,7 +16,8 @@
     el protocolo urgente; de <strong>Medicina</strong>, la lista de residentes con el registro de un evento
     propio, la bandeja de escalados recibidos y eventos propios, la valoración médica
     y las indicaciones a Enfermería, que Enfermería lee y registra, el seguimiento médico con la continuidad
-    entre turnos, el protocolo urgente con la derivación a Urgencias y el cierre médico del evento; y, para los
+    entre turnos, el protocolo urgente con la derivación a Urgencias, el cierre médico del evento y, con
+    permiso, la autoría del basal; y, para los
     dos perfiles, el historial de eventos cerrados y de versiones del basal de cada residente, su línea
     temporal completa y la corrección o rectificación de la propia valoración. El resto de
     módulos aparece
@@ -195,9 +196,15 @@
     <p>
         El <strong>basal</strong> es el estado habitual de referencia de un residente, valorado en 9 áreas
         más la escala <strong>Barthel</strong> (autonomía funcional). Desde la ficha del residente (ver
-        "Residentes (Enfermería)") puedes crear un borrador indicando el motivo (alta, revisión programada
-        o cambio funcional consolidado), la fuente de la información y su fecha. Solo puede existir un
-        borrador activo por residente a la vez.
+        "Residentes (Enfermería)" o "Residentes y evento propio" en Medicina) puedes crear un borrador
+        indicando el motivo (alta, revisión programada o cambio funcional consolidado), la fuente de la
+        información y su fecha. Solo puede existir un borrador activo por residente a la vez.
+    </p>
+    <p>
+        Enfermería y Medicina usan las mismas pantallas y las mismas reglas, y las dos necesitan el permiso de
+        basal de su ámbito: el de alta para un basal inicial y el de reevaluación para los siguientes. En
+        Medicina, el acceso solo aparece en la ficha si tu ámbito tiene ese permiso. Poder gestionar el basal
+        nunca permite dar de alta residentes, que es un permiso aparte.
     </p>
     <p>
         Una vez creado, completas las nueve áreas una por una (cada una queda marcada como completada) y el
@@ -426,8 +433,10 @@
     <p>
         La tarjeta <strong>Residentes</strong> del inicio de Medicina muestra los residentes de tu ámbito, con
         el mismo criterio que en Enfermería y si tienen un basal vigente. Al abrir uno ves su unidad y el
-        resumen del basal vigente, de solo lectura, y el acceso para <strong>registrar un evento</strong> que
-        observas directamente.
+        resumen del basal vigente y el acceso para <strong>registrar un evento</strong> que observas
+        directamente. Si tu ámbito tiene permiso de basal, también ves <strong>Crear borrador de basal</strong>
+        o <strong>Iniciar reevaluación</strong> (ver "Crear, completar y firmar el estado basal"). La cuenta de
+        prueba <code>dev-integrado-medicina</code> tiene ese permiso.
     </p>
     <p class="mb-0">
         Indicas la observación, una clasificación (ordinario o prioritario) y, si procede, datos clínicos

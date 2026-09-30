@@ -37,6 +37,13 @@
             <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
             <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
         }
+        @* Historia 8 (MED-21): el mismo módulo del basal que Enfermería, solo si el ámbito tiene permiso de basal. *@
+        @if (Model.CanManageBaseline)
+        {
+            <a asp-controller="EnfermeriaBasal" asp-action="Draft" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-primary btn-lg mt-3">
+                @(Model.Baseline is null ? "Crear borrador de basal" : "Iniciar reevaluación")
+            </a>
+        }
     </div>
 </div>
 

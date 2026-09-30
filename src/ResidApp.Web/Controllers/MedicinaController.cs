@@ -19,7 +19,7 @@ namespace ResidApp.Web.Controllers;
 /// familiar) y MED-18 a MED-20 (evento propio, lista y ficha de residentes). Traduce a
 /// MedicinaApplicationService; la autorización y las reglas de negocio no viven aquí.
 /// </summary>
-public sealed class MedicinaController(MedicinaApplicationService service) : Controller
+public sealed class MedicinaController(MedicinaApplicationService service, ResidentBaselineApplicationService baselineService) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -866,7 +866,8 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         return View(result.Value);
     }
 
-    /// <summary>MED-20: ficha del residente con su basal vigente (solo lectura) y "registrar evento".</summary>
+    /// <summary>MED-20: ficha del residente con su basal vigente, "registrar evento" y, si el ámbito tiene permiso de
+    /// basal (historia 8, MED-21), el acceso al módulo común del basal para crearlo o reevaluarlo.</summary>
     public async Task<IActionResult> Residente(Guid residenteId, CancellationToken ct)
     {
         var resolved = await ResolveScopeResidentAsync(residenteId, ct);
@@ -875,9 +876,13 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
             return RedirectToAction(nameof(Residentes));
         }
 
-        var baselineResult = await service.ReadCurrentBaselineAsync(new ReadCurrentBaselineCommand(
-            resolved.Value.Scope.ProfileScopeId, CenterId.From(resolved.Value.Scope.CenterId), resolved.Value.Resident.ResidentId), ct);
-        return View(new EnfermeriaResidentDetailViewModel(resolved.Value.Resident, baselineResult.Ok ? baselineResult.Value : null));
+        var (scope, resident) = resolved.Value;
+        var centroId = CenterId.From(scope.CenterId);
+        var baselineResult = await service.ReadCurrentBaselineAsync(
+            new ReadCurrentBaselineCommand(scope.ProfileScopeId, centroId, resident.ResidentId), ct);
+        var canManage = await baselineService.CanManageBaselineAsync(scope.ProfileScopeId, centroId, resident.ResidentId, ct);
+        return View(new EnfermeriaResidentDetailViewModel(
+            resident, baselineResult.Ok ? baselineResult.Value : null, canManage.Ok && canManage.Value));
     }
 
     /// <summary>MED-22 (historia 9): eventos cerrados del residente que ve Medicina (escalados y propios), con el

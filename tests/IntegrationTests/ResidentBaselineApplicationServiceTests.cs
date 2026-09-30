@@ -141,6 +141,60 @@ public class ResidentBaselineApplicationServiceTests
         Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
     }
 
+    /// <summary>Historia 8 de Medicina (MED-21): con permiso de basal, Medicina crea, completa y firma el basal con
+    /// el mismo módulo que Enfermería, y la versión queda firmada por Medicina.</summary>
+    [Fact]
+    public async Task Medicina_ConPermisoDeBasal_CreaCompletaYFirmaElBasal()
+    {
+        var (seed, resident) = await SeedResidentWithProfileAsync(SystemProfile.Medicina,
+            [ResidentBaselinePermission.BaselineInitialComplete.ToCode(), ResidentBaselinePermission.BaselineReevaluate.ToCode()]);
+        var service = BuildService(seed.ExternalSubject);
+        var residentId = resident.ResidentId;
+
+        Assert.True((await service.CanManageBaselineAsync(seed.ProfileScopeId, seed.CenterId, residentId)).Value);
+        Assert.True((await service.CreateBaselineDraftAsync(DraftCommand(seed, residentId, BaselineReason.Alta))).Ok);
+        foreach (var (area, answer) in BaselineTestData.NineAreas())
+        {
+            Assert.True((await service.SaveBaselineDraftAreaAsync(
+                new SaveBaselineDraftAreaCommand(seed.ProfileScopeId, seed.CenterId, residentId, area, answer, null))).Ok);
+        }
+        Assert.True((await service.SaveBaselineDraftBarthelAsync(new SaveBaselineDraftBarthelCommand(
+            seed.ProfileScopeId, seed.CenterId, residentId, new DateOnly(2026, 9, 14), BaselineTestData.FullBarthelItems()))).Ok);
+
+        var draft = (await service.LoadBaselineDraftAsync(new LoadBaselineDraftCommand(seed.ProfileScopeId, seed.CenterId, residentId))).Value!;
+        var signed = await service.SignBaselineAsync(new SignBaselineCommand(
+            seed.ProfileScopeId, seed.CenterId, residentId, draft.Id, draft.DraftRevision, Guid.NewGuid()));
+        Assert.True(signed.Ok, signed.Error?.Message);
+        Assert.Equal(1, signed.Value!.VersionNumber);
+
+        var history = await new SqlBaselineRepository(TestDatabase.ConnectionFactory)
+            .ReadHistoryAsync(new ReadCurrentBaselineSummaryInput(seed.CenterId, residentId));
+        var version = Assert.Single(history);
+        Assert.Equal(SystemProfile.Medicina, version.SignedByProfile);
+        Assert.True(version.IsCurrent);
+    }
+
+    /// <summary>Historia 8 de Medicina: sin permiso no se ofrece ni se crea el basal, y el permiso de basal nunca
+    /// concede el alta administrativa de residentes.</summary>
+    [Fact]
+    public async Task Medicina_SinPermisoNoGestionaElBasal_YConPermisoNoDaDeAltaResidentes()
+    {
+        var (withoutPermission, resident) = await SeedResidentWithProfileAsync(SystemProfile.Medicina, []);
+        var service = BuildService(withoutPermission.ExternalSubject);
+        Assert.False((await service.CanManageBaselineAsync(withoutPermission.ProfileScopeId, withoutPermission.CenterId, resident.ResidentId)).Value);
+        Assert.Equal(ApplicationFailureCode.AccessDenied,
+            (await service.CreateBaselineDraftAsync(DraftCommand(withoutPermission, resident.ResidentId, BaselineReason.Alta))).Error!.Code);
+
+        var (withPermission, _) = await SeedResidentWithProfileAsync(SystemProfile.Medicina,
+            [ResidentBaselinePermission.BaselineInitialComplete.ToCode(), ResidentBaselinePermission.BaselineReevaluate.ToCode()]);
+        var created = await BuildService(withPermission.ExternalSubject).CreateResidentAsync(Command(withPermission));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, created.Error!.Code);
+
+        var (auxiliar, auxResident) = await SeedResidentWithProfileAsync(SystemProfile.Auxiliar, []);
+        Assert.False((await BuildService(auxiliar.ExternalSubject)
+            .CanManageBaselineAsync(auxiliar.ProfileScopeId, auxiliar.CenterId, auxResident.ResidentId)).Value);
+    }
+
     private static CreateBaselineDraftCommand DraftCommand(SeededProfile seed, ResidentId residentId, BaselineReason reason) =>
         new(seed.ProfileScopeId, seed.CenterId, residentId, reason, InformationSourceCode.ValoracionDirecta, null, new DateOnly(2026, 9, 14), Guid.NewGuid());
 

@@ -29,6 +29,10 @@ public sealed class ResidentBaselineApplicationService(
         CreateBaselineDraftCommand command, CancellationToken ct = default) =>
         createBaselineDraft.ExecuteAsync(command, ct);
 
+    public Task<ApplicationResult<bool>> CanManageBaselineAsync(
+        Guid ambitoPerfilId, Shared.CenterId centroId, Shared.ResidentId residenteId, CancellationToken ct = default) =>
+        createBaselineDraft.CanCreateAsync(ambitoPerfilId, centroId, residenteId, ct);
+
     public Task<ApplicationResult<BaselineDraftDetail?>> LoadBaselineDraftAsync(
         LoadBaselineDraftCommand command, CancellationToken ct = default) =>
         loadBaselineDraft.ExecuteAsync(command, ct);
