@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using ResidApp.Domain.Baseline.Catalogs;
 using ResidApp.Shared;
@@ -8,12 +9,19 @@ namespace ResidApp.Domain.Baseline.Answers;
 /// regla no negociable de AGENTS.md: NO_APLICA en textura/líquidos solo es válido si la vía es ENTERAL.</summary>
 public sealed record FeedingAreaAnswer : IBaselineAreaAnswer
 {
+    [Display(Name = "Vía de alimentación")]
     public FeedingRouteCode RouteCode { get; init; }
+    [Display(Name = "Textura de los alimentos")]
     public FoodTextureCode FoodTextureCode { get; init; }
+    [Display(Name = "Otra textura adaptada")]
     public string? FoodTextureOtherText { get; init; }
+    [Display(Name = "Consistencia de líquidos")]
     public LiquidConsistencyCode LiquidConsistencyCode { get; init; }
+    [Display(Name = "Ayuda para alimentarse")]
     public FeedingAssistanceCode AssistanceCode { get; init; }
+    [Display(Name = "Precauciones de deglución")]
     public SwallowingPrecautionsCode SwallowingPrecautionsCode { get; init; }
+    [Display(Name = "Precauciones documentadas")]
     public string? SwallowingPrecautionsText { get; init; }
 
     [JsonConstructor]

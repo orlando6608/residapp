@@ -27,17 +27,36 @@ public class BaselineAreaDisplayTests
     }
 
     [Fact]
-    public void Resumen_DespliegaLasListas_ConSusEtiquetas()
+    public void Respuestas_TodosLosCamposTienenNombreEnEspanol()
+    {
+        var answers = typeof(IBaselineAreaAnswer).Assembly.GetTypes()
+            .Where(t => t.IsClass && typeof(IBaselineAreaAnswer).IsAssignableFrom(t))
+            .ToList();
+        Assert.Equal(9, answers.Count);
+
+        var missing = answers
+            .SelectMany(t => t.GetProperties())
+            .Where(p => string.IsNullOrWhiteSpace(p.GetCustomAttribute<DisplayAttribute>()?.Name))
+            .Select(p => $"{p.DeclaringType!.Name}.{p.Name}")
+            .ToList();
+        Assert.Empty(missing);
+    }
+
+    [Fact]
+    public void Resumen_DiceElCampoDeCadaValor_YDespliegaLasListas()
     {
         var communication = BaselineAreaDisplay.Summarize(new CommunicationAreaAnswer(
             ComprehensionCode.NecesitaFrasesSencillasRepeticionOApoyo, ExpressionCode.ComunicacionPrincipalmenteNoVerbal,
             [CommunicationFormCode.Gestos, CommunicationFormCode.Otra], "Pictogramas"));
         var aids = BaselineAreaDisplay.Summarize(new UsualAidsAreaAnswer(
             [UsualAidCode.Gafas, UsualAidCode.Audifono], null, null));
+        var personalCare = BaselineAreaDisplay.Summarize(new PersonalCareAreaAnswer(PersonalCareCode.NoDocumentado, BathingCode.NoDocumentado));
 
         Assert.Equal(
-            ["Necesita frases sencillas, repetición o apoyo", "Comunicación principalmente no verbal", "Gestos", "Otra", "Pictogramas"],
+            ["Comprensión: Necesita frases sencillas, repetición o apoyo", "Expresión: Comunicación principalmente no verbal",
+                "Formas habituales de comunicación: Gestos, Otra", "Otra forma de comunicación: Pictogramas"],
             communication);
-        Assert.Equal(["Gafas", "Audífono"], aids);
+        Assert.Equal(["Ayudas habituales: Gafas, Audífono"], aids);
+        Assert.Equal(["Aseo personal: No documentado", "Baño o ducha: No documentado"], personalCare);
     }
 }

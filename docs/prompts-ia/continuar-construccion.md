@@ -13,6 +13,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Nombre de campo en el resumen del basal (sin script):** hecho el 2026-09-30, en un commit local sin push.
+  - **Qué cambia:** `BaselineAreaDisplay.Summarize` da una línea «Campo: valores» por cada campo con dato,
+    con el nombre en español de las 35 propiedades de las nueve respuestas de área (`[Display]` en
+    `Domain/Baseline/Answers`). Las listas se unen con comas. El informe de derivación escribe cada área como
+    «Comunicación — Comprensión: …; Expresión: …».
+  - **Test:** `BaselineAreaDisplayTests` comprueba que todo campo de respuesta tiene nombre.
+  - **Verificación:**
+    - suite local y 3 vueltas tipo CI en verde (una cuarta dio 5 fallos por lentitud y se repitió limpia);
+    - curl de `Auxiliar/Basal`.
 - **Resumen y etiquetas del basal (sin script):** hecho el 2026-09-30 y desplegado en Azure (push de
   `b8e378d`, run 36710274311 en verde con `build-and-test` y `deploy`).
   - **Prueba en Azure:** con `dev-integrado-enfermeria`, los desplegables de motivo y fuente del basal salen en
@@ -283,9 +292,6 @@ usuario cuando encajen:
 - **`docs/producto/roadmap.md`** está desfasado: su tabla dice que Medicina «No iniciado» y sus «Próximos
   pasos» siguen en la historia 3 de Enfermería.
 
-- **Resumen del basal sin nombre de campo:** `BaselineAreaDisplay.Summarize` solo da valores. Un basal todo
-  «No documentado» (como el del seed) muestra la misma frase varias veces por área, sin decir de qué campo es
-  (en `Auxiliar/Basal`, `EnfermeriaBasal/Confirmar` y el informe de derivación).
 - **Pregunta para CJ:** si el campo «Comunicaciones» de la valoración de Enfermería debe entrar en el
   informe de derivación. Hoy se excluye por prudencia (DER-04 saca los contactos del informe externo).
   Está anotada en `pendientes-enfermeria.md`; si hace falta, se le pide con un documento en

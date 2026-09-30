@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using ResidApp.Domain.Baseline.Catalogs;
 
@@ -6,9 +7,13 @@ namespace ResidApp.Domain.Baseline.Answers;
 /// <summary>Traduce el caso "COMUNICACION" de assertCompleteBaselineAreaAnswer (validation.ts).</summary>
 public sealed record CommunicationAreaAnswer : IBaselineAreaAnswer
 {
+    [Display(Name = "Comprensión")]
     public ComprehensionCode ComprehensionCode { get; init; }
+    [Display(Name = "Expresión")]
     public ExpressionCode ExpressionCode { get; init; }
+    [Display(Name = "Formas habituales de comunicación")]
     public IReadOnlyList<CommunicationFormCode> UsualFormsCodes { get; init; }
+    [Display(Name = "Otra forma de comunicación")]
     public string? UsualFormOtherText { get; init; }
 
     [JsonConstructor]

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using ResidApp.Domain.Baseline.Catalogs;
 using ResidApp.Shared;
@@ -9,8 +10,11 @@ namespace ResidApp.Domain.Baseline.Answers;
 /// otro estado, la lista debe quedar vacía.</summary>
 public sealed record BehaviorAreaAnswer : IBaselineAreaAnswer
 {
+    [Display(Name = "Estado conductual")]
     public BehaviorStatusCode StatusCode { get; init; }
+    [Display(Name = "Patrones conductuales")]
     public IReadOnlyList<BehaviorPatternCode> PatternCodes { get; init; }
+    [Display(Name = "Otro patrón")]
     public string? PatternOtherText { get; init; }
 
     [JsonConstructor]
@@ -36,6 +40,7 @@ public sealed record BehaviorAreaAnswer : IBaselineAreaAnswer
 /// texto libre: SLEEP_PATTERNS no tiene OTRA/OTRO.</summary>
 public sealed record SleepAreaAnswer : IBaselineAreaAnswer
 {
+    [Display(Name = "Patrón de sueño")]
     public IReadOnlyList<SleepPatternCode> PatternCodes { get; init; }
 
     [JsonConstructor]

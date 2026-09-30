@@ -59,7 +59,7 @@ public class ReferralReportBuilderTests
         foreach (var expected in new[]
         {
             "Fecha de nacimiento: 20/02/1938", "Sexo documentado: Mujer", "Centro: Centro Norte", "Barthel total: 65 / 100",
-            "Comunicación: Comprensión funcional · Expresa necesidades eficazmente · Lenguaje oral · Gestos",
+            "Comunicación — Comprensión: Comprensión funcional; Expresión: Expresa necesidades eficazmente; Formas habituales de comunicación: Lenguaje oral, Gestos",
             "Disnea brusca al levantarse.", "Datos clínicos pertinentes: Tiraje intercostal.",
             "Enfermería, valoración: Insuficiencia respiratoria.", "oxigenoterapia a 3 L/min",
             "Enfermería: Oxigenoterapia a 3 L/min.", "Vía periférica.", "Satura 88 %.",

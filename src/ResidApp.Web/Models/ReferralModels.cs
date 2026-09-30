@@ -162,9 +162,9 @@ public static class ReferralReportBuilder
                      _ => 2,
                  }))
         {
-            var summary = string.Join(" · ", BaselineAreaDisplay.Summarize(area.Answer));
+            var summary = string.Join("; ", BaselineAreaDisplay.Summarize(area.Answer));
             var observation = area.Observation is null ? "" : $" (observación: {area.Observation})";
-            lines.Add($"{BaselineAreaDisplay.Label(area.AreaCode)}: {(summary.Length == 0 ? "sin respuesta" : summary)}{observation}");
+            lines.Add($"{BaselineAreaDisplay.Label(area.AreaCode)} — {(summary.Length == 0 ? "sin respuesta" : summary)}{observation}");
         }
         return lines;
     }

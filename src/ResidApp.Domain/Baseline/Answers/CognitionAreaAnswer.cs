@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using ResidApp.Domain.Baseline.Catalogs;
 using ResidApp.Shared;
@@ -9,12 +10,19 @@ namespace ResidApp.Domain.Baseline.Answers;
 /// obligatoria/prohibida según haya o no dato de etiología/GDS).</summary>
 public sealed record CognitionAreaAnswer : IBaselineAreaAnswer
 {
+    [Display(Name = "Categoría cognitiva")]
     public CognitionCategoryCode CategoryCode { get; init; }
+    [Display(Name = "Etiología")]
     public EtiologyCode? EtiologyCode { get; init; }
+    [Display(Name = "Otra etiología")]
     public string? EtiologyOtherText { get; init; }
+    [Display(Name = "Escala GDS")]
     public GdsCode? GdsCode { get; init; }
+    [Display(Name = "Fuente de la referencia clínica")]
     public InformationSourceCode? ClinicalReferenceSourceCode { get; init; }
+    [Display(Name = "Otra fuente")]
     public string? ClinicalReferenceSourceOtherText { get; init; }
+    [Display(Name = "Fecha de la referencia clínica")]
     public string? ClinicalReferenceDate { get; init; }
 
     [JsonConstructor]

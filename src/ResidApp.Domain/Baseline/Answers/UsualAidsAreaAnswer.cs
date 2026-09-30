@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using ResidApp.Domain.Baseline.Catalogs;
 
@@ -7,8 +8,11 @@ namespace ResidApp.Domain.Baseline.Answers;
 /// textos libres independientes, uno por cada opción abierta del catálogo.</summary>
 public sealed record UsualAidsAreaAnswer : IBaselineAreaAnswer
 {
+    [Display(Name = "Ayudas habituales")]
     public IReadOnlyList<UsualAidCode> AidCodes { get; init; }
+    [Display(Name = "Otro producto de apoyo")]
     public string? OtherSupportProductText { get; init; }
+    [Display(Name = "Otra ayuda")]
     public string? OtherSupportText { get; init; }
 
     [JsonConstructor]

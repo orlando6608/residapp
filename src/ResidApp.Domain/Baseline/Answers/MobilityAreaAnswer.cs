@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using ResidApp.Domain.Baseline.Catalogs;
 
@@ -11,9 +12,13 @@ public interface IBaselineAreaAnswer;
 /// depende de dos campos a la vez.</summary>
 public sealed record MobilityAreaAnswer : IBaselineAreaAnswer
 {
+    [Display(Name = "Forma de desplazamiento")]
     public MobilityDisplacementCode DisplacementModeCode { get; init; }
+    [Display(Name = "Ayuda técnica")]
     public MobilityAidCode TechnicalAidCode { get; init; }
+    [Display(Name = "Otra ayuda técnica")]
     public string? TechnicalAidOtherText { get; init; }
+    [Display(Name = "Traslados")]
     public MobilityTransferCode TransferCode { get; init; }
 
     [JsonConstructor]

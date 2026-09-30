@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Baseline;
@@ -150,22 +151,26 @@ public static class BaselineAreaDisplay
         _ => area.ToString(),
     };
 
-    /// <summary>Resumen genérico de una respuesta de área: solo valores, nunca los nombres de propiedad en
-    /// inglés del record C#. Despliega las respuestas de varias opciones y escribe cada valor de catálogo con su
-    /// etiqueta en español (EnumDisplay). Lo usan AUX-03, la confirmación del basal y el informe de
-    /// derivación.</summary>
+    /// <summary>Resumen genérico de una respuesta de área: una línea «Campo: valores» por cada campo con dato,
+    /// con el nombre en español del campo ([Display] de la respuesta) y la etiqueta de cada valor de catálogo
+    /// (EnumDisplay). Las respuestas de varias opciones se unen con comas. Lo usan AUX-03, la confirmación del
+    /// basal y el informe de derivación.</summary>
     public static IReadOnlyList<string> Summarize(IBaselineAreaAnswer answer) =>
         answer.GetType().GetProperties()
-            .Select(property => property.GetValue(answer))
-            .SelectMany(value => value switch
-            {
-                null => [],
-                string text => [text],
-                System.Collections.IEnumerable items => items.Cast<object>(),
-                _ => [value],
-            })
-            .Select(value => value is Enum option ? EnumDisplay.Label(option) : value.ToString()!)
-            .Where(value => value.Length > 0)
+            .Select(property => (
+                Label: property.GetCustomAttribute<DisplayAttribute>()?.Name ?? property.Name,
+                Values: (property.GetValue(answer) switch
+                    {
+                        null => [],
+                        string text => [text],
+                        System.Collections.IEnumerable items => items.Cast<object>(),
+                        var value => [value],
+                    })
+                    .Select(value => value is Enum option ? EnumDisplay.Label(option) : value.ToString()!)
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .ToList()))
+            .Where(field => field.Values.Count > 0)
+            .Select(field => $"{field.Label}: {string.Join(", ", field.Values)}")
             .ToList();
 }
 
