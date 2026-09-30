@@ -36,7 +36,7 @@
                     }
                     @if (activeScopeLayout is not null)
                     {
-                        <span class="badge text-bg-light">
+                        <span class="badge text-bg-light text-wrap text-start">
                             Ámbito: @ResidApp.Web.Models.SystemProfileDisplay.Label(activeScopeLayout.Profile) · @activeScopeLayout.CenterName
                         </span>
                         <a asp-controller="ProfileScope" asp-action="Select" class="nav-link">Cambiar ámbito</a>
