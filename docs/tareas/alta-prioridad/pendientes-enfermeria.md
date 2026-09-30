@@ -107,16 +107,43 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   escalado), `MedicinaApplicationServiceTests` (incluidas las indicaciones leídas y registradas por Enfermería), `SqlChangeInboxDirectoryTests`,
   `SqlClinicalEventRepositoryTests`, `SqlEnfermeriaResidentDirectoryTests`, `SqlBaselineRepositoryDraftTests`.
 
+- **Historia 11, bloque 1 (Historial: eventos cerrados y versiones del basal)** — 2026-09-30, común con la
+  historia 9 de Medicina. «Ver historial» desde la ficha (`/Enfermeria/Historial`, vista común
+  `Shared/Historial`):
+  - **Eventos cerrados (HIS-01, ENF-23):** los del residente, con la misma regla de ámbito que las bandejas,
+    del cierre más reciente al más antiguo. Se abren en el detalle de solo lectura que ya existía.
+  - **Contexto de su fecha (HIS-03):** cada evento guarda al crearse la versión del basal y el intervalo de
+    ubicación vigentes (`eventos_contexto`, de solo inserción). Lo escriben `SqlClinicalEventRepository` y
+    `SqlDailyClosureRepository` en la misma transacción que el evento. Los eventos anteriores se rellenaron en
+    el script, deduciéndolo del histórico inmutable. El detalle de un evento cerrado muestra ese contexto en
+    vez del basal actual.
+  - **Versiones del basal (ENF-24):** vigente e históricas, con motivo, perfil firmante, fecha, Barthel y la
+    versión a la que sustituyó. Se habilitó en `RequestAuthorizationContext` la rama `BaselineHistory` para
+    Enfermería y Medicina, que la política ya permitía; Dirección sigue entrando solo por su lectura
+    auditada.
+  - **Decisiones del usuario (2026-09-30):**
+    - este bloque = eventos cerrados + historial del basal;
+    - instantánea guardada, no deducida en cada lectura;
+    - Medicina ve los mismos eventos que en sus bandejas;
+    - la línea temporal (HIS-02) se abrirá con un **permiso nuevo** por ámbito, con auditoría de cada acceso.
+  - **Suposiciones confirmadas:** el historial del basal no pide permiso adicional (la política heredada, no
+    el boceto ENF-19); se listan las versiones sin abrir sus nueve áreas.
+
+  Script `0019_historial_contexto_evento`; tests en `HistorialTests`.
+
 ## Pendiente
 
 En el orden propuesto de construcción:
 
-1. **Historia 11 — historial de eventos y versiones del basal** (`HIS-01` a `HIS-03`, común con Medicina).
-   Puede mostrar ya:
-   - las versiones de las valoraciones (`valoraciones_enfermeria_versiones` y
-     `valoraciones_medicas_versiones`), que hoy se guardan pero no se ven;
-   - el informe de derivación firmado, que el flujo pide "accesible desde el Historial" y hoy se descarga
-     desde el protocolo y el detalle del evento.
+1. **Historia 11, bloques siguientes** (común con Medicina):
+   - **Línea temporal (HIS-02):** con un permiso nuevo por ámbito (código de `permisos_perfil`, su CHECK
+     `CK_pp_code` y el enum `ResidentBaselinePermission`) y auditoría de cada acceso. Puede mostrar las
+     versiones de las valoraciones (`valoraciones_*_versiones`, que hoy se guardan pero no se ven), la parte
+     médica de un evento escalado (el detalle de Enfermería no la pinta) y el informe de derivación firmado,
+     que el flujo pide "accesible desde el Historial".
+   - **Corrección (COR-01/COR-02):** qué notas se corrigen en la ventana de seis horas.
+   - **Contenido de una versión histórica del basal:** abrir sus nueve áreas exige arreglar antes
+     `BaselineAreaDisplay.Summarize` (ver los avisos de `continuar-construccion.md`).
 
 Huecos de lo ya construido:
 

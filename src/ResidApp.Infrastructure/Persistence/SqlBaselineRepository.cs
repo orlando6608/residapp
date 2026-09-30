@@ -383,6 +383,31 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             new DateTimeOffset(version.SignedAt, TimeSpan.Zero), areas, barthelTotal);
     }
 
+    /// <summary>ENF-24: versiones firmadas del residente, de la más reciente a la más antigua, con la vigente
+    /// marcada y la versión a la que sustituyó cada una. Ya autorizada (BaselineHistoryRead de Enfermería o
+    /// Medicina, sin obligación de auditoría).</summary>
+    public async Task<IReadOnlyList<BaselineHistoryEntry>> ReadHistoryAsync(
+        ReadCurrentBaselineSummaryInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var rows = await connection.QueryAsync<HistoryRow>(new CommandDefinition("""
+            SELECT v.numero_version AS VersionNumber, v.motivo_codigo AS ReasonCode, v.firmado_por_perfil AS SignedByProfile,
+                   v.firmado_en AS SignedAt, b.puntuacion_total AS BarthelTotal,
+                   CAST(CASE WHEN cur.version_basal_id IS NULL THEN 0 ELSE 1 END AS BIT) AS IsCurrent,
+                   previous.numero_version AS ReplacesVersionNumber
+              FROM dbo.basales_version v
+              JOIN dbo.basales_version_barthel b ON b.version_basal_id = v.id
+              LEFT JOIN dbo.basales_vigentes_residente cur ON cur.version_basal_id = v.id
+              LEFT JOIN dbo.basales_sustituciones replacement ON replacement.version_nueva_id = v.id
+              LEFT JOIN dbo.basales_version previous ON previous.id = replacement.version_anterior_id
+             WHERE v.residente_id = @ResidentId AND v.centro_id = @CenterId
+             ORDER BY v.numero_version DESC
+            """, new { ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value }, cancellationToken: ct));
+        return rows.Select(r => new BaselineHistoryEntry(
+            r.VersionNumber, EnumCode.ParseCode<BaselineReason>(r.ReasonCode), EnumCode.ParseCode<SystemProfile>(r.SignedByProfile),
+            new DateTimeOffset(r.SignedAt, TimeSpan.Zero), r.BarthelTotal, r.IsCurrent, r.ReplacesVersionNumber)).ToList();
+    }
+
     /// <summary>Traduce ENF-19/ENF-20 "crear borrador": comprueba primero, en aplicación, que no exista ya
     /// un borrador activo para el residente (UX_bd_active es la defensa en profundidad si esta
     /// comprobación se saltara) e inserta el borrador con los campos comunes de versión ya completos.</summary>
@@ -819,6 +844,10 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
     // columna DATETIME2 en esta ruta. La conversión a DateTimeOffset ocurre donde el valor sale hacia un
     // tipo de dominio/puerto público.
     private sealed record CurrentVersionRow(Guid Id, int VersionNumber, string ReasonCode, DateTime SignedAt);
+
+    private sealed record HistoryRow(
+        int VersionNumber, string ReasonCode, string SignedByProfile, DateTime SignedAt, int BarthelTotal, bool IsCurrent,
+        int? ReplacesVersionNumber);
 
     private sealed record CurrentAreaRow(string AreaCode, string AnswerPayload, string? Observation);
 

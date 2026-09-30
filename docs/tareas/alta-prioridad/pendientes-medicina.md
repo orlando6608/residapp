@@ -86,6 +86,11 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   Script `0017_medicina_evento_propio`. En `0018_evento_clinico_perfil_origen`, la BD pasa a exigir que el
   perfil que registra el evento coincida con su origen: `MEDICINA` con `EVENTO_MEDICINA` y `ENFERMERIA` con
   `EVENTO_ENFERMERIA`.
+- **Historia 9, bloque 1 (Historial)** — 2026-09-30: «Ver historial» desde la ficha
+  (`/Medicina/Historial`), con la misma vista que Enfermería: eventos cerrados escalados o propios de
+  Medicina (la regla de sus bandejas), cada uno con el basal y la ubicación de su fecha (HIS-03), y las
+  versiones firmadas del basal. El detalle, las decisiones y el script `0019` están en
+  `pendientes-enfermeria.md` (historia 11, bloque 1).
 - Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests`, `FollowUpTests`,
   `UrgentProtocolTests` y `EmergencyReferralTests` (unitarios), y `ReferralReportBuilderTests` (funcional).
 - Cuenta de desarrollo `dev-integrado-medicina` en el escenario integrado.
@@ -94,20 +99,21 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
 
 En el orden propuesto:
 
-1. **Historias 8 y 9 — basal e historial/corrección**. El historial es común con la historia 11 de
-   Enfermería.
+1. **Historia 8 — basal** y **historia 9, bloques siguientes** (línea temporal y corrección, comunes con la
+   historia 11 de Enfermería; ver `pendientes-enfermeria.md`).
 
 Huecos de lo ya construido:
 
 - **Evento propio (historia 7):**
-  - la ficha del residente (MED-20) no muestra todavía los eventos ni el historial, que llegan con la
-    historia 9;
-  - tampoco tiene el acceso al basal, que es la historia 8;
+  - la ficha del residente (MED-20) enlaza al Historial (eventos cerrados y versiones del basal), pero no
+    muestra los eventos abiertos del residente;
+  - no tiene el acceso a crear o reevaluar el basal, que es la historia 8;
   - la lista de residentes (MED-19) no tiene buscador, igual que la de Enfermería.
 
 - Derivación a Urgencias: los mismos huecos que en Enfermería (firmante sin nombre, sin corrección del
   informe, contacto familiar en texto libre); ver `pendientes-enfermeria.md`.
 - **Seguimiento médico (historia 5)**: no hay equipos ni turnos reales (vertical Administración). El
   equipo o turno entrante es texto libre y la fecha prevista es solo fecha, sin hora, como en Enfermería.
-- Los eventos escalados salen de las bandejas de Enfermería y no hay todavía una lista de "mis escalados"
-  en Enfermería: llegará con el historial (historia 11 de Enfermería).
+- Los eventos escalados salen de las bandejas de Enfermería. Cuando Medicina los cierra aparecen en el
+  Historial del residente, pero mientras siguen abiertos en Medicina no hay una lista de "mis escalados" en
+  Enfermería.

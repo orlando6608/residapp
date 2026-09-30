@@ -150,6 +150,8 @@ public sealed class SqlDailyClosureRepository(SqlConnectionFactory connections) 
                 ClosureId = closureId, ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value, UnitId = input.UnitId.Value,
                 ClassificationCode = input.Classification.ToCode(), OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
+            await EventContextSnapshot.CaptureAsync(
+                connection, transaction, closureId, input.ResidentId.Value, input.CenterId.Value, occurredAt, ct);
 
             foreach (var area in input.Areas)
             {

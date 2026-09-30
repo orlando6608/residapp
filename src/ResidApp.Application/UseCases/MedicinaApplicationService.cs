@@ -21,8 +21,17 @@ public sealed class MedicinaApplicationService(
     ListMedicalUrgentProtocols listMedicalUrgentProtocols, SignMedicalReferralReport signMedicalReferralReport,
     RecordMedicalFamilyCallAttempt recordMedicalFamilyCallAttempt, FindResidentIdentification findResidentIdentification,
     DownloadReferralReport downloadReferralReport, ListScopeResidents listScopeResidents,
-    FindScopeResident findScopeResident, RegisterClinicalEvent registerClinicalEvent)
+    FindScopeResident findScopeResident, RegisterClinicalEvent registerClinicalEvent,
+    ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory)
 {
+    public Task<ApplicationResult<IReadOnlyList<ClosedEventSummary>>> ListClosedEventsAsync(
+        ListClosedEventsCommand command, CancellationToken ct = default) =>
+        listClosedEvents.ExecuteAsync(command with { Perfil = Shared.SystemProfile.Medicina }, ct);
+
+    public Task<ApplicationResult<IReadOnlyList<BaselineHistoryEntry>>> ReadBaselineHistoryAsync(
+        ReadBaselineHistoryCommand command, CancellationToken ct = default) =>
+        readBaselineHistory.ExecuteAsync(command, ct);
+
     public Task<ApplicationResult<IReadOnlyList<ScopeResidentSummary>>> ListScopeResidentsAsync(
         ListScopeResidentsCommand command, CancellationToken ct = default) =>
         listScopeResidents.ExecuteAsync(command, ct);

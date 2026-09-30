@@ -210,7 +210,65 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
                     .Select(r => r.Summary).ToList(),
                 await FindMedicalFollowUpAsync(connection, profileScopeId, eventId, ct)),
             await FindUrgentProtocolAsync(connection, profileScopeId, eventId, ct),
-            await FindReferralAsync(connection, profileScopeId, eventId, ct));
+            await FindReferralAsync(connection, profileScopeId, eventId, ct),
+            (await FindContextsAsync(connection, [eventId], ct)).GetValueOrDefault(eventId));
+    }
+
+    public async Task<IReadOnlyList<ClosedEventSummary>> ListClosedEventsAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+
+        var events = (await connection.QueryAsync<ClosedEventRow>(new CommandDefinition($"""
+            SELECT ea.id AS EventId, ea.origen_codigo AS OriginCode, ea.clasificacion_codigo AS ClassificationCode,
+                   clinical.observacion AS Observation,
+                   COALESCE(closure.registrado_por_perfil, clinical.registrado_por_perfil) AS AuthorProfileCode,
+                   ea.recibido_en AS OccurredAt, ea.cerrado_en AS ClosedAt,
+                   CAST(CASE WHEN escalation.id IS NULL THEN 0 ELSE 1 END AS BIT) AS Escalated
+            {ScopedEventsFrom}
+               AND ea.residente_id = @ResidentId
+               AND ea.estado_codigo = 'CERRADO'
+             ORDER BY ea.cerrado_en DESC
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value },
+            cancellationToken: ct))).ToList();
+        if (events.Count == 0)
+        {
+            return [];
+        }
+
+        var closureIds = events.Where(e => e.OriginCode == "CAMBIO_AUXILIAR").Select(e => e.EventId).ToList();
+        IEnumerable<AreaCodeRow> areaRows = closureIds.Count == 0 ? [] : await connection.QueryAsync<AreaCodeRow>(new CommandDefinition("""
+            SELECT cierre_id AS ClosureId, area_codigo AS AreaCode FROM dbo.cierres_cotidianos_cambio_areas WHERE cierre_id IN @ClosureIds
+            """, new { ClosureIds = closureIds }, cancellationToken: ct));
+        var areasByClosureId = areaRows
+            .GroupBy(a => a.ClosureId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<DailyChangeAreaCode>)g.Select(a => EnumCode.ParseCode<DailyChangeAreaCode>(a.AreaCode)).ToList());
+
+        var contexts = await FindContextsAsync(connection, events.Select(e => e.EventId).ToList(), ct);
+
+        return events.Select(e => new ClosedEventSummary(
+            e.EventId, EnumCode.ParseCode<ClinicalEventOrigin>(e.OriginCode), EnumCode.ParseCode<DailyChangeClassification>(e.ClassificationCode),
+            areasByClosureId.GetValueOrDefault(e.EventId, []), e.Observation, EnumCode.ParseCode<SystemProfile>(e.AuthorProfileCode),
+            new DateTimeOffset(e.OccurredAt, TimeSpan.Zero), new DateTimeOffset(e.ClosedAt, TimeSpan.Zero), e.Escalated,
+            contexts.GetValueOrDefault(e.EventId))).ToList();
+    }
+
+    /// <summary>HIS-03: la instantánea de cada evento (dbo.eventos_contexto); un evento sin fila no aparece.</summary>
+    private static async Task<Dictionary<Guid, ClinicalEventContext>> FindContextsAsync(
+        System.Data.IDbConnection connection, IReadOnlyList<Guid> eventIds, CancellationToken ct)
+    {
+        var rows = await connection.QueryAsync<ContextRow>(new CommandDefinition("""
+            SELECT ctx.evento_id AS EventId, baseline.numero_version AS BaselineVersionNumber, baseline.firmado_en AS BaselineSignedAt,
+                   unit.nombre_visible AS UnitName
+              FROM dbo.eventos_contexto ctx
+              LEFT JOIN dbo.basales_version baseline ON baseline.id = ctx.version_basal_id
+              LEFT JOIN dbo.intervalos_ubicacion_residente location ON location.id = ctx.intervalo_ubicacion_id
+              LEFT JOIN dbo.unidades unit ON unit.id = location.unidad_id
+             WHERE ctx.evento_id IN @EventIds
+            """, new { EventIds = eventIds }, cancellationToken: ct));
+        return rows.ToDictionary(r => r.EventId, r => new ClinicalEventContext(
+            r.BaselineVersionNumber, r.BaselineSignedAt is null ? null : new DateTimeOffset(r.BaselineSignedAt.Value, TimeSpan.Zero),
+            r.UnitName));
     }
 
     /// <summary>ENF-12/MED-14: el informe de derivación firmado y los intentos de llamada, de cualquiera de los
@@ -684,6 +742,12 @@ public sealed class SqlChangeInboxDirectory(SqlConnectionFactory connections) : 
         string? OtherName, string? OtherValue, string? OtherUnit, bool LastUpdatedByCurrentAccount, DateTime LastUpdatedAt);
 
     private sealed record AreaCodeRow(Guid ClosureId, string AreaCode);
+
+    private sealed record ClosedEventRow(
+        Guid EventId, string OriginCode, string ClassificationCode, string? Observation, string AuthorProfileCode,
+        DateTime OccurredAt, DateTime ClosedAt, bool Escalated);
+
+    private sealed record ContextRow(Guid EventId, int? BaselineVersionNumber, DateTime? BaselineSignedAt, string? UnitName);
 
     private sealed record AreaOptionRow(Guid AreaId, string AreaCode, string? FreeText, string? OptionCode);
 }

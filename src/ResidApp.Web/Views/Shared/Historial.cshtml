@@ -1,0 +1,128 @@
+@using ResidApp.Web.Models
+@model ResidentHistoryViewModel
+@{
+    ViewData["Title"] = "Historial del residente";
+    // Vista común: asp-action sin asp-controller apunta al controlador en curso (Enfermería o Medicina).
+    var perfil = ViewContext.RouteData.Values["controller"] as string == "Medicina" ? "Medicina" : "Enfermería";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">@perfil</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@Model.Resident.ResidentId.Value">@Model.Resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Historial</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Historial de @Model.Resident.DisplayName</h1>
+<p class="text-muted">Solo lectura. Nada de lo que aparece aquí se puede editar.</p>
+
+<section class="mb-4" aria-labelledby="eventos-cerrados">
+    <h2 id="eventos-cerrados" class="h5">Eventos cerrados</h2>
+    <p class="text-muted small">
+        Cada evento muestra el basal y la ubicación que estaban vigentes cuando se registró, no los actuales.
+        @if (perfil == "Medicina")
+        {
+            <span>Medicina ve los eventos escalados y sus eventos propios.</span>
+        }
+    </p>
+    @if (Model.Events is null)
+    {
+        <div class="alert alert-danger">No se han podido cargar los eventos cerrados. Vuelve a intentarlo.</div>
+    }
+    else if (Model.Events.Count == 0)
+    {
+        <p class="text-muted">Este residente no tiene eventos cerrados.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Registrado</th>
+                        <th scope="col">Evento</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Basal y ubicación de su fecha</th>
+                        <th scope="col">Cerrado</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Events)
+                    {
+                        <tr>
+                            <td>@item.OccurredAt.ToLocalTime().ToString("g")</td>
+                            <td>
+                                @if (item.Classification == ResidApp.Domain.Auxiliar.DailyChangeClassification.Prioritario)
+                                {
+                                    <span class="badge text-bg-danger me-1">Prioritario</span>
+                                }
+                                @ResidentHistoryDisplay.Summary(item)
+                            </td>
+                            <td>@SystemProfileDisplay.Label(item.AuthorProfile)</td>
+                            <td>@ResidentHistoryDisplay.Context(item.Context)</td>
+                            <td>@item.ClosedAt.ToLocalTime().ToString("g") por @ResidentHistoryDisplay.ClosedBy(item)</td>
+                            <td>
+                                <a asp-action="@Model.DetailAction" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<section class="mb-4" aria-labelledby="versiones-basal">
+    <h2 id="versiones-basal" class="h5">Versiones del basal</h2>
+    @if (Model.Baselines is null)
+    {
+        <div class="alert alert-danger">No se ha podido cargar el historial del basal. Vuelve a intentarlo.</div>
+    }
+    else if (Model.Baselines.Count == 0)
+    {
+        <p class="text-muted">Este residente no tiene ningún basal firmado.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Versión</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Motivo</th>
+                        <th scope="col">Firmado</th>
+                        <th scope="col">Barthel</th>
+                        <th scope="col">Sustituye a</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var version in Model.Baselines)
+                    {
+                        <tr>
+                            <td>@version.VersionNumber</td>
+                            <td>
+                                @if (version.IsCurrent)
+                                {
+                                    <span class="badge text-bg-success">Vigente</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Histórica</span>
+                                }
+                            </td>
+                            <td>@BaselineReasonDisplay.Label(version.ReasonCode)</td>
+                            <td>@version.SignedAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(version.SignedByProfile)</td>
+                            <td>@version.BarthelTotal / 100</td>
+                            <td>@(version.ReplacesVersionNumber is { } previous ? $"Versión {previous}" : "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

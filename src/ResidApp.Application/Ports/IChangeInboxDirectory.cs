@@ -163,7 +163,8 @@ public sealed record MedicalIndicationListItem(
 /// observación original es inmutable. Revision es la que hay que devolver al empezar o guardar la
 /// valoración (concurrencia optimista). ReferenceRanges son los rangos de referencia de constantes del
 /// centro (vacío si no hay ninguno configurado), para el aviso visual de ENF-05. Assessment es el borrador
-/// o, si el evento está cerrado, la valoración ya cerrada; Closure solo existe si el evento está cerrado.</summary>
+/// o, si el evento está cerrado, la valoración ya cerrada; Closure solo existe si el evento está cerrado.
+/// Context es la instantánea de HIS-03 (null si el evento no la tiene).</summary>
 public sealed record PendingChangeDetail(
     Guid EventId, ClinicalEventOrigin Origin, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string? UnitName,
     DailyChangeClassification Classification, IReadOnlyList<PendingChangeAreaSummary> Areas, decimal? TemperatureCelsius,
@@ -172,7 +173,17 @@ public sealed record PendingChangeDetail(
     ClinicalEventStatus Status, int Revision, bool? AssessmentStartedByCurrentAccount, DateTimeOffset? AssessmentStartedAt,
     NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges, ClinicalEventClosure? Closure,
     FollowUpDetail? FollowUp, ClinicalEventEscalation? Escalation, MedicalDetail Medical, UrgentProtocolDetail? UrgentProtocol,
-    ReferralDetail? Referral);
+    ReferralDetail? Referral, ClinicalEventContext? Context = null);
+
+/// <summary>HIS-03: basal y ubicación vigentes cuando se creó el evento (dbo.eventos_contexto). La versión del
+/// basal es null si el residente no tenía basal firmado; la unidad, si no tenía ubicación registrada.</summary>
+public sealed record ClinicalEventContext(int? BaselineVersionNumber, DateTimeOffset? BaselineSignedAt, string? UnitName);
+
+/// <summary>HIS-01/ENF-23/MED-22: un evento cerrado en el Historial del residente, con su contexto (HIS-03).</summary>
+public sealed record ClosedEventSummary(
+    Guid EventId, ClinicalEventOrigin Origin, DailyChangeClassification Classification, IReadOnlyList<DailyChangeAreaCode> Areas,
+    string? Observation, SystemProfile AuthorProfile, DateTimeOffset OccurredAt, DateTimeOffset ClosedAt, bool Escalated,
+    ClinicalEventContext? Context);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre
@@ -193,6 +204,11 @@ public interface IChangeInboxDirectory
         Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
     Task<IReadOnlyList<FollowUpSummary>> ListFollowUpsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>HIS-01: eventos cerrados de un residente visibles para el ámbito (la misma regla que las
+    /// bandejas), del más reciente al más antiguo.</summary>
+    Task<IReadOnlyList<ClosedEventSummary>> ListClosedEventsAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 
     /// <summary>MED-02: escalados pendientes para un ámbito de Medicina. Con un ámbito de Medicina, FindAsync
     /// solo devuelve eventos escalados a Medicina.</summary>

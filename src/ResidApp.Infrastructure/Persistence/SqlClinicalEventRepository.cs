@@ -77,6 +77,8 @@ public sealed class SqlClinicalEventRepository(SqlConnectionFactory connections)
                 MedicalStartedAt = isMedical ? occurredAt : (DateTimeOffset?)null,
                 OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
+            await EventContextSnapshot.CaptureAsync(
+                connection, transaction, eventId, input.ResidentId.Value, input.CenterId.Value, occurredAt, ct);
 
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.eventos_auditoria

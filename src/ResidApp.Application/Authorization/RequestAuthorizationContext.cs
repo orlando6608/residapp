@@ -75,9 +75,12 @@ public static class RequestAuthorizationContextResolver
             // ResidentBaselinePolicy.AuthorizeBaselineCurrentRead ya permite Auxiliar/Enfermeria/Medicina
             // sin permiso ni auditoría (a diferencia de Dirección Clínica); hasta ahora esa rama estaba
             // documentada como inalcanzable (pendientes-migracion-inicial.md, punto 5) porque aquí se
-            // cortaba antes de llegar a la política. Se habilita solo para BaselineCurrent (AUX-03/ENF-20).
+            // cortaba antes de llegar a la política. Se habilita para BaselineCurrent (AUX-03/ENF-20) y, desde el
+            // Historial (ENF-24), para BaselineHistory de Enfermería y Medicina, que la política ya permite.
             var directCareRead = resourceType == ClinicalResourceType.BaselineCurrent
-                && evidence.Profile is SystemProfile.Auxiliar or SystemProfile.Enfermeria or SystemProfile.Medicina;
+                    && evidence.Profile is SystemProfile.Auxiliar or SystemProfile.Enfermeria or SystemProfile.Medicina
+                || resourceType == ClinicalResourceType.BaselineHistory
+                    && evidence.Profile is SystemProfile.Enfermeria or SystemProfile.Medicina;
             if (evidence.Profile != SystemProfile.DireccionClinica && !directCareRead)
             {
                 throw new AccessDeniedException();
@@ -193,6 +196,21 @@ public static class RequestAuthorizationContextResolver
         var operation = RequireTarget<AuthorizationTarget.Read>(context);
         var input = new ReadCurrentBaselineSummaryInput(operation.CenterId, operation.ResidentId!.Value);
         return await repository.ReadCurrentSummaryAsync(input, ct);
+    }
+
+    /// <summary>ENF-24: versiones firmadas del basal para Enfermería y Medicina (BaselineHistoryRead sin
+    /// obligación de auditoría). Una decisión con obligaciones (Dirección Clínica) no entra por aquí: su
+    /// lectura es ExecuteDirectionBaselineReadAsync, que audita antes de entregar el contenido.</summary>
+    public static async Task<IReadOnlyList<BaselineHistoryEntry>> ExecuteBaselineHistoryReadAsync(
+        RequestAuthorizationContext context, IBaselineRepository repository, CancellationToken ct = default)
+    {
+        var operation = RequireTarget<AuthorizationTarget.Read>(context);
+        if (operation.Action != ResidentBaselineAction.BaselineHistoryRead || operation.Decision.Obligations.Count > 0)
+        {
+            throw new AccessDeniedException();
+        }
+        var input = new ReadCurrentBaselineSummaryInput(operation.CenterId, operation.ResidentId!.Value);
+        return await repository.ReadHistoryAsync(input, ct);
     }
 
     /// <summary>ENF-19/ENF-20: crea el contenido de un borrador de basal, ya autorizado (permiso

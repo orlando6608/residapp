@@ -1,0 +1,37 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model InformacionReunidaViewModel
+@*
+    HIS-03: un evento cerrado muestra el basal y la ubicación de su fecha (la instantánea de eventos_contexto), no
+    el basal actual. Un evento abierto sigue mostrando el basal vigente, que es el que importa para atenderlo.
+*@
+<div class="card mb-3">
+    <div class="card-body">
+        @if (Model.Event.Status == ClinicalEventStatus.Cerrado)
+        {
+            <h2 class="h5 card-title">Basal y ubicación de la fecha del evento</h2>
+            @if (Model.Event.Context is null)
+            {
+                <p class="text-muted mb-0">Sin datos de contexto.</p>
+            }
+            else
+            {
+                <p class="mb-1">@ResidentHistoryDisplay.Baseline(Model.Event.Context)</p>
+                <p class="text-muted mb-0">Unidad: @(Model.Event.Context.UnitName ?? "sin ubicación registrada")</p>
+            }
+        }
+        else
+        {
+            <h2 class="h5 card-title">Basal vigente</h2>
+            @if (Model.Baseline is null)
+            {
+                <p class="text-muted mb-0">Sin basal vigente registrado.</p>
+            }
+            else
+            {
+                <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
+                <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
+            }
+        }
+    </div>
+</div>

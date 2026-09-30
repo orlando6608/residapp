@@ -99,4 +99,12 @@ public interface IBaselineRepository
         ClinicalDirectionReadInput input, CancellationToken ct = default);
 
     Task<CurrentBaselineSummary?> ReadCurrentSummaryAsync(ReadCurrentBaselineSummaryInput input, CancellationToken ct = default);
+
+    Task<IReadOnlyList<BaselineHistoryEntry>> ReadHistoryAsync(ReadCurrentBaselineSummaryInput input, CancellationToken ct = default);
 }
+
+/// <summary>ENF-24: una versión firmada del basal en el historial de Enfermería y Medicina, sin sus nueve áreas.
+/// ReplacesVersionNumber es la versión a la que sustituyó (basales_sustituciones), null en la primera.</summary>
+public sealed record BaselineHistoryEntry(
+    int VersionNumber, BaselineReason ReasonCode, SystemProfile SignedByProfile, DateTimeOffset SignedAt, int BarthelTotal,
+    bool IsCurrent, int? ReplacesVersionNumber);

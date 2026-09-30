@@ -18,8 +18,17 @@ public sealed class EnfermeriaApplicationService(
     RecordIndicationProgress recordIndicationProgress, ActivateUrgentProtocol activateUrgentProtocol,
     RecordUrgentProtocolEntry recordUrgentProtocolEntry, ListUrgentProtocols listUrgentProtocols,
     SignReferralReport signReferralReport, RecordFamilyCallAttempt recordFamilyCallAttempt,
-    FindResidentIdentification findResidentIdentification, DownloadReferralReport downloadReferralReport)
+    FindResidentIdentification findResidentIdentification, DownloadReferralReport downloadReferralReport,
+    ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory)
 {
+    public Task<ApplicationResult<IReadOnlyList<ClosedEventSummary>>> ListClosedEventsAsync(
+        ListClosedEventsCommand command, CancellationToken ct = default) =>
+        listClosedEvents.ExecuteAsync(command with { Perfil = Shared.SystemProfile.Enfermeria }, ct);
+
+    public Task<ApplicationResult<IReadOnlyList<BaselineHistoryEntry>>> ReadBaselineHistoryAsync(
+        ReadBaselineHistoryCommand command, CancellationToken ct = default) =>
+        readBaselineHistory.ExecuteAsync(command, ct);
+
     public Task<ApplicationResult<int>> SignReferralReportAsync(SignReferralReportCommand command, CancellationToken ct = default) =>
         signReferralReport.ExecuteAsync(command, ct);
 

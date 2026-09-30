@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-09-29. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-09-30. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -13,6 +13,23 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Historial, bloque 1 (historia 11 de Enfermería, 9 de Medicina; script `0019`):** hecho el 2026-09-30, con
+  commit en `main` y **sin push** (el push aplicará `0019` en Azure SQL, incluido el relleno de la instantánea
+  de todos los eventos existentes). El detalle y las decisiones están en `pendientes-enfermeria.md`
+  (historia 11, bloque 1).
+  - «Ver historial» desde la ficha, en Enfermería y Medicina: eventos cerrados con el basal y la ubicación de
+    su fecha (HIS-01, HIS-03) y versiones firmadas del basal (ENF-24).
+  - **Verificación:**
+    - suite local (113 unitarios, 183 de integración y 7 funcionales) en verde en 6 de 8 vueltas; las 4
+      últimas, seguidas y en 5-10 s. Ver la lección «Suite lenta o con tiempos de espera» por las 2 que
+      fallaron;
+    - 3 vueltas tipo CI con BD nueva en verde;
+    - BD temporal con seed (20 scripts, sin errores) ya borrada;
+    - relleno en local: 4986 eventos, todos con su instantánea (10 con versión de basal);
+    - curl con `dev-integrado-enfermeria` y `dev-integrado-medicina` sobre Residente Integrado Uno (8 y 4
+      eventos cerrados, basal versión 1) y Dos (sin basal); detalle cerrado con el basal de su fecha y
+      detalle abierto con el vigente; `dev-integrado-auxiliar` no entra.
+  - Copia previa: `ResidApp-antes-0019-20260930.bak`.
 - **Avisos tras el evento propio de Medicina (script `0018`):** resueltos el 2026-09-29 y desplegados en
   Azure. Push de `5bb39c6`: el run 36630575234 terminó en verde, con `build-and-test` y `deploy` (incluido
   «Aplicar esquema y seed en Azure SQL»), así que `0018` está aplicado en Azure SQL.
@@ -128,10 +145,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   pantalla). Medicina está en curso: historias 1 a 7 (escalados, valoración médica, indicaciones, cierre
   médico, seguimiento médico con continuidad entre turnos, protocolo urgente, derivación a Urgencias y
   evento propio).
-- La base local `ResidApp` y Azure SQL tienen los scripts `0001` a `0018` registrados en
-  `dbo.scripts_aplicados`. Hay copias previas a `0016`, `0017` y `0018` en
+- La base local `ResidApp` tiene los scripts `0001` a `0019` registrados en `dbo.scripts_aplicados` (Azure,
+  hasta `0018`). Hay copias previas a `0016`, `0017`, `0018` y `0019` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
-  `ResidApp-antes-0017-20260929.bak` y `ResidApp-antes-0018-20260929.bak`).
+  `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak` y `ResidApp-antes-0019-20260930.bak`).
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
@@ -152,7 +169,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     relevante.
   - «Prueba manual derivacion medica: dolor torácico.»: escalado, protocolo de Medicina, derivado por
     Medicina, con una llamada «Contactado» y cerrado con una comunicación relevante.
-- Suite: 113 unitarios, 178 de integración y 7 funcionales, todos en verde.
+- Suite: 113 unitarios, 183 de integración y 7 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -160,12 +177,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **El Historial** (historia 11 de Enfermería, 9 de Medicina): puede mostrar ya las versiones de
-   las valoraciones, los seguimientos terminados y el informe de derivación firmado (el flujo pide que sea
-   accesible desde el Historial). Tiene decisiones abiertas y conviene partirlo en bloques:
-   - qué permiso abre la línea temporal (HIS-02);
-   - el basal y la ubicación de la fecha del evento (HIS-03);
-   - la corrección en 6 horas (COR-01/02).
+1. **Si el usuario lo pide, push de `0019`** y comprobar que el pipeline termina en verde, con
+   `build-and-test` y `deploy`. Después, abrir el Historial en Azure con `dev-integrado-enfermeria`.
+2. **Historial, bloque 2: la línea temporal (HIS-02).** Decidido: se abre con un **permiso nuevo** por
+   ámbito, con auditoría de cada acceso. Falta decidir con el usuario qué contiene (versiones de las
+   valoraciones, parte médica del evento escalado, informe de derivación firmado…) y a quién se concede en
+   desarrollo. El detalle está en `pendientes-enfermeria.md` (historia 11, «Pendiente»).
+3. **Historial, bloque 3: la corrección (COR-01/COR-02).** Qué notas admiten la ventana de seis horas; es
+   una decisión de producto que puede necesitar a CJ.
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 
@@ -261,7 +280,9 @@ Repite estos pasos antes de dar un bloque por cerrado:
     `ClinicalEventCloseRule`.
 - **Nuevos orígenes del evento:** la vista de «propio» se decide con `Origin != ClinicalEventOrigin.CambioAuxiliar`
   (`_InformacionReunida`, `DetalleCambio`, `ReferralReportBuilder`). Un origen nuevo necesita su
-  etiqueta, su rama en `CK_ea_origen` y `CK_ea_inicio`, y revisar `ScopedEventsFrom`.
+  etiqueta, su rama en `CK_ea_origen` y `CK_ea_inicio`, y revisar `ScopedEventsFrom`. Todo código que
+  inserte en `eventos_asistenciales` debe llamar también a `EventContextSnapshot.CaptureAsync` en la misma
+  transacción (HIS-03, `0019`); si no, el evento sale en el Historial «Sin datos de contexto».
 - **Sin Python en esta máquina:** para ediciones en lote, usa Edit o `sed`, no scripts de Python.
 - **Nuevos estados del evento:** añádelos también a `ClinicalEventStatusDisplay` (`EnfermeriaModels.cs`).
   Si no, la insignia muestra el nombre interno en inglés. Busca además los filtros por estado en los casos
@@ -272,6 +293,18 @@ Repite estos pasos antes de dar un bloque por cerrado:
   `dotnet test src/ResidApp.sln`. La app se levanta con `dotnet run --launch-profile http` desde
   `src/ResidApp.Web`. Con `--no-launch-profile` no carga los user-secrets y falla por falta de la cadena de
   conexión.
+- **Suite lenta o con tiempos de espera:** en el bloque 1 del Historial, dos vueltas de la solución completa
+  fallaron: la primera con 51 fallos (tiempos de espera de 30 s, y en `DatabaseTriggerTests` fallos
+  inmediatos en cascada) y otra con 1. En esas vueltas las pruebas de integración tardaban de 40 s a 2 min en
+  vez de 6 s. Cómo se descartó el código:
+  - sin `xml_deadlock_report` en `system_health`;
+  - la máquina tenía 1,3 GB libres de 15,7;
+  - las pruebas de integración solas pasaron enteras en 10 s;
+  - una vuelta completa muestreando `sys.dm_exec_requests` cada 2 s no encontró ningún bloqueo de más de
+    0,5 s, y tardó 6 s;
+  - las 3 vueltas siguientes pasaron en 5-10 s.
+
+  Si vuelve a pasar, repite este diagnóstico antes de tocar código.
 - **Interbloqueos entre tests:** los tres proyectos de test se ejecutan en paralelo contra la misma BD. Un
   `UPDATE` o una lectura por una columna sin índice recorre la tabla entera y puede provocar interbloqueos
   intermitentes. Pasó con `valoraciones_enfermeria.evento_id` y se resolvió con `IX_ve_evento` en `0011`.

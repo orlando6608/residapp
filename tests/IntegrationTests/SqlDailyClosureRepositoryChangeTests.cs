@@ -42,6 +42,16 @@ public class SqlDailyClosureRepositoryChangeTests
         var areaCount = await connection.QuerySingleAsync<int>(
             "SELECT COUNT(*) FROM dbo.cierres_cotidianos_cambio_areas WHERE cierre_id = @Id", new { Id = result.ClosureId });
         Assert.Equal(1, areaCount);
+
+        // HIS-03 (0019): el evento guarda la ubicación vigente al registrarse; sin basal firmado, sin versión.
+        var context = await connection.QuerySingleAsync<(Guid? Version, Guid? Interval)>("""
+            SELECT ctx.version_basal_id AS Version, ctx.intervalo_ubicacion_id AS Interval
+              FROM dbo.eventos_contexto ctx WHERE ctx.evento_id = @Id
+            """, new { Id = result.ClosureId });
+        Assert.Null(context.Version);
+        Assert.Equal(await connection.QuerySingleAsync<Guid>(
+            "SELECT id FROM dbo.intervalos_ubicacion_residente WHERE residente_id = @Id AND vigente_hasta IS NULL",
+            new { Id = resident.ResidentId.Value }), context.Interval);
     }
 
     [Fact]

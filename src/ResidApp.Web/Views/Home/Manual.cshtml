@@ -16,7 +16,8 @@
     el protocolo urgente; de <strong>Medicina</strong>, la lista de residentes con el registro de un evento
     propio, la bandeja de escalados recibidos y eventos propios, la valoración médica
     y las indicaciones a Enfermería, que Enfermería lee y registra, el seguimiento médico con la continuidad
-    entre turnos, el protocolo urgente con la derivación a Urgencias y el cierre médico del evento. El resto de
+    entre turnos, el protocolo urgente con la derivación a Urgencias y el cierre médico del evento; y, para los
+    dos perfiles, el historial de eventos cerrados y de versiones del basal de cada residente. El resto de
     módulos aparece
     descrito al final como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
     inicio de sesión con usuario y contraseña definitivo).
@@ -42,6 +43,7 @@
             <a class="list-group-item list-group-item-action" href="#seguimientos-medicina">Seguimiento médico y continuidad entre turnos (Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#protocolo-urgente">Protocolo urgente (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#derivacion-urgencias">Derivación a Urgencias (Enfermería y Medicina)</a>
+            <a class="list-group-item list-group-item-action" href="#historial">Historial del residente (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -581,6 +583,33 @@
     </p>
 </section>
 
+<section id="historial" class="mb-4">
+    <h2 class="h5">Historial del residente (Enfermería y Medicina)</h2>
+    <p>
+        Desde la ficha del residente, <strong>Ver historial</strong> abre, en solo lectura, dos listas:
+    </p>
+    <ul>
+        <li>
+            <strong>Eventos cerrados</strong>, del cierre más reciente al más antiguo, con la fecha de registro, un
+            resumen, quién lo registró, quién lo cerró y cuándo. Cada evento muestra el <strong>basal y la unidad
+            que estaban vigentes cuando se registró</strong>, no los actuales: si después se firma un basal
+            nuevo, el evento antiguo sigue indicando la versión de su fecha. Con <strong>Ver detalle</strong>
+            se abre el evento completo, que en un evento cerrado también muestra ese basal de su fecha.
+            Enfermería ve todos los eventos de sus unidades; Medicina, los que se le escalaron y sus eventos
+            propios.
+        </li>
+        <li>
+            <strong>Versiones del basal</strong>: todas las firmadas, marcando cuál es la vigente y cuáles son
+            históricas, con su motivo (alta, revisión programada o cambio funcional consolidado), quién firmó
+            y cuándo, el total de Barthel y a qué versión sustituyó.
+        </li>
+    </ul>
+    <p class="mb-0">
+        Nada del historial se puede modificar. La línea temporal completa y la corrección de notas llegarán
+        más adelante (ver "Próximamente").
+    </p>
+</section>
+
 <section id="rangos-referencia" class="mb-4">
     <h2 class="h5">
         Rangos de referencia de constantes
@@ -642,7 +671,7 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>La línea temporal e historial de eventos.</li>
+        <li>La línea temporal completa del residente, que se abrirá con un permiso específico, y la corrección de notas clínicas dentro de la ventana de seis horas.</li>
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>

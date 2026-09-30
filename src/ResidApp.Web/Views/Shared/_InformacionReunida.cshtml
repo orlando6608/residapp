@@ -51,20 +51,7 @@
     </div>
 </div>
 
-<div class="card mb-3">
-    <div class="card-body">
-        <h2 class="h5 card-title">Basal vigente</h2>
-        @if (Model.Baseline is null)
-        {
-            <p class="text-muted mb-0">Sin basal vigente registrado.</p>
-        }
-        else
-        {
-            <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
-            <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
-        }
-    </div>
-</div>
+<partial name="_BasalDelEvento" model="Model" />
 
 @* Un evento propio de Medicina (MED-18) no pasa por la valoración de Enfermería (0017). *@
 @if (evento.Origin != ClinicalEventOrigin.EventoMedicina)

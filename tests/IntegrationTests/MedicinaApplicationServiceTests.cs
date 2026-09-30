@@ -50,7 +50,11 @@ public class MedicinaApplicationServiceTests
             new DownloadReferralReport(scopes, changeInbox, session, new SqlReferralReportRepository(TestDatabase.ConnectionFactory)),
             listScopeResidents,
             new FindScopeResident(listScopeResidents),
-            new RegisterClinicalEvent(scopes, residents, session, new SqlClinicalEventRepository(TestDatabase.ConnectionFactory)));
+            new RegisterClinicalEvent(scopes, residents, session, new SqlClinicalEventRepository(TestDatabase.ConnectionFactory)),
+            new ListClosedEvents(scopes, changeInbox, session),
+            new ReadBaselineHistory(
+                new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), session,
+                new SqlBaselineRepository(TestDatabase.ConnectionFactory)));
     }
 
     private static async Task<PendingChangeDetail?> FindAsync(SeededProfile seed, Guid eventId) =>
@@ -306,6 +310,27 @@ public class MedicinaApplicationServiceTests
         FamilyCommunicationDecision? decision = FamilyCommunicationDecision.NoComunicar,
         FamilyCommunicationType? type = null, string? text = null) =>
         new(seed.ProfileScopeId, seed.CenterId, eventId, revision, operationId ?? Guid.NewGuid(), decision, type, text);
+
+    [Fact]
+    public async Task Historial_EscaladoCerradoPorMedicina_LoVenMedicinaYEnfermeria()
+    {
+        var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
+        var revision = await StartAndSaveMedicalAsync(medica, eventId);
+        Assert.True((await BuildMedicina(medica.ExternalSubject).CloseMedicalEventAsync(Close(medica, eventId, revision))).Ok);
+        var residentId = (await FindAsync(medica, eventId))!.ResidentId;
+
+        var medicina = await BuildMedicina(medica.ExternalSubject).ListClosedEventsAsync(
+            new ListClosedEventsCommand(medica.ProfileScopeId, medica.CenterId, residentId, SystemProfile.Medicina));
+        var enfermeria = await BuildService(enfermera.ExternalSubject).ListClosedEventsAsync(
+            new ListClosedEventsCommand(enfermera.ProfileScopeId, enfermera.CenterId, residentId, SystemProfile.Enfermeria));
+
+        var item = Assert.Single(medicina.Value!);
+        Assert.Equal(eventId, item.EventId);
+        Assert.True(item.Escalated);
+        Assert.Null(item.Context!.BaselineVersionNumber);
+        Assert.NotNull(item.Context.UnitName);
+        Assert.Equal(eventId, Assert.Single(enfermeria.Value!).EventId);
+    }
 
     [Fact]
     public async Task CierreMedico_DesdeValoracion_CierraEventoYValoracion_EsIdempotente_YSaleDeLaBandeja()

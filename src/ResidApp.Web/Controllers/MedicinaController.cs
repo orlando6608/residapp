@@ -761,6 +761,25 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         return View(new EnfermeriaResidentDetailViewModel(resolved.Value.Resident, baselineResult.Ok ? baselineResult.Value : null));
     }
 
+    /// <summary>MED-22 (historia 9): eventos cerrados del residente que ve Medicina (escalados y propios), con el
+    /// basal y la ubicación de su fecha (HIS-03), y las versiones firmadas del basal. Vista común con Enfermería.</summary>
+    public async Task<IActionResult> Historial(Guid residenteId, CancellationToken ct)
+    {
+        var resolved = await ResolveScopeResidentAsync(residenteId, ct);
+        if (resolved is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        var (scope, resident) = resolved.Value;
+        var centroId = CenterId.From(scope.CenterId);
+        var events = await service.ListClosedEventsAsync(
+            new ListClosedEventsCommand(scope.ProfileScopeId, centroId, resident.ResidentId, SystemProfile.Medicina), ct);
+        var baselines = await service.ReadBaselineHistoryAsync(
+            new ReadBaselineHistoryCommand(scope.ProfileScopeId, centroId, resident.ResidentId), ct);
+        return View("~/Views/Shared/Historial.cshtml", ResidentHistoryViewModel.From(resident, events, baselines, nameof(Escalado)));
+    }
+
     /// <summary>MED-18: evento propio de Medicina. Al guardar nace ya en valoración médica, iniciada por quien
     /// lo registra, y se continúa en el formulario de valoración.</summary>
     public async Task<IActionResult> RegistrarEvento(Guid residenteId, CancellationToken ct)

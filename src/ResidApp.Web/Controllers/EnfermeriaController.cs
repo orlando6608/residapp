@@ -874,6 +874,37 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         return View(new EnfermeriaResidentDetailViewModel(findResult.Value, baselineResult.Ok ? baselineResult.Value : null));
     }
 
+    /// <summary>ENF-23/ENF-24 (historia 11): eventos cerrados del residente, con el basal y la ubicación de su
+    /// fecha (HIS-03), y las versiones firmadas del basal. Parcial común con Medicina.</summary>
+    public async Task<IActionResult> Historial(Guid residenteId, CancellationToken ct)
+    {
+        if (residenteId == Guid.Empty)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Historial), new { residenteId }) });
+        }
+
+        var centroId = CenterId.From(activeScope.CenterId);
+        var findResult = await service.FindScopeResidentAsync(
+            new FindScopeResidentCommand(activeScope.ProfileScopeId, centroId, ResidentId.From(residenteId)), ct);
+        if (!findResult.Ok || findResult.Value is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        var residentId = findResult.Value.ResidentId;
+        var events = await service.ListClosedEventsAsync(
+            new ListClosedEventsCommand(activeScope.ProfileScopeId, centroId, residentId, SystemProfile.Enfermeria), ct);
+        var baselines = await service.ReadBaselineHistoryAsync(
+            new ReadBaselineHistoryCommand(activeScope.ProfileScopeId, centroId, residentId), ct);
+        return View("~/Views/Shared/Historial.cshtml",
+            ResidentHistoryViewModel.From(findResult.Value, events, baselines, nameof(DetalleCambio)));
+    }
+
     /// <summary>ENF-16: formulario de alta. Al guardar se continúa en el detalle del evento, desde donde
     /// se empieza su valoración.</summary>
     public async Task<IActionResult> RegistrarEvento(Guid residenteId, CancellationToken ct)

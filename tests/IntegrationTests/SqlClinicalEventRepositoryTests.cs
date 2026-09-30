@@ -172,6 +172,38 @@ public class SqlClinicalEventRepositoryTests
         }
     }
 
+    [Fact]
+    public async Task RegisterAsync_GuardaSuContexto_QueNoSePuedeModificar()
+    {
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            seed.AccountId, SystemProfile.Administracion, seed.CenterId, seed.UnitId,
+            "Residente Evento Contexto", new DateOnly(1949, 9, 19), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+        var result = await _repository.RegisterAsync(new RegisterClinicalEventInput(
+            seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
+            "Mareo al levantarse.", DailyChangeClassification.Ordinario, null, Guid.NewGuid()));
+
+        // HIS-03 (0019): ubicación vigente al registrarse; el residente aún no tiene basal firmado.
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var context = await connection.QuerySingleAsync<(Guid? Version, Guid? Interval)>(
+            "SELECT version_basal_id AS Version, intervalo_ubicacion_id AS Interval FROM dbo.eventos_contexto WHERE evento_id = @Id",
+            new { Id = result.EventId });
+        Assert.Null(context.Version);
+        Assert.Equal(await connection.QuerySingleAsync<Guid>(
+            "SELECT id FROM dbo.intervalos_ubicacion_residente WHERE residente_id = @Id AND vigente_hasta IS NULL",
+            new { Id = resident.ResidentId.Value }), context.Interval);
+
+        foreach (var sql in new[]
+        {
+            "UPDATE dbo.eventos_contexto SET version_basal_id = NULL WHERE evento_id = @Id",
+            "DELETE FROM dbo.eventos_contexto WHERE evento_id = @Id",
+        })
+        {
+            var error = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { Id = result.EventId }));
+            Assert.Contains("CLINICAL_EVENT_CONTEXT_IMMUTABLE", error.Message);
+        }
+    }
+
     [Theory]
     [InlineData("ENFERMERIA", "EVENTO_MEDICINA", "EN_VALORACION_MEDICA")]
     [InlineData("MEDICINA", "EVENTO_ENFERMERIA", "PENDIENTE")]
