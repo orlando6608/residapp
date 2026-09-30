@@ -6,6 +6,53 @@ using ResidApp.Shared;
 
 namespace ResidApp.Web.Models;
 
+/// <summary>ENF-17/MED-19: filtro del estado basal en la lista de residentes.</summary>
+public enum ResidentBaselineFilter
+{
+    [Display(Name = "Basal vigente")] Vigente,
+    [Display(Name = "Basal pendiente")] Pendiente,
+}
+
+/// <summary>ENF-17/MED-19: buscar y filtrar la lista de residentes. Llega por GET (?q=&amp;basal=&amp;unidad=), así que el
+/// filtro queda en la URL; los campos vacíos no filtran.</summary>
+public sealed class ResidentListFilter
+{
+    [Display(Name = "Nombre")]
+    public string? Q { get; set; }
+
+    [Display(Name = "Estado basal")]
+    public ResidentBaselineFilter? Basal { get; set; }
+
+    [Display(Name = "Unidad")]
+    public Guid? Unidad { get; set; }
+
+    public bool IsEmpty => string.IsNullOrWhiteSpace(Q) && Basal is null && Unidad is null;
+}
+
+/// <summary>ENF-17/MED-19: la lista del ámbito (ya autorizada) filtrada en memoria. El nombre se busca sin distinguir
+/// mayúsculas ni acentos («jose» encuentra «José»). Units son las unidades con residentes en el ámbito; el filtro de
+/// unidad solo se ofrece si hay más de una.</summary>
+public sealed record ResidentListViewModel(
+    IReadOnlyList<ScopeResidentSummary> Residents, int TotalCount, ResidentListFilter Filter, IReadOnlyList<(Guid Id, string Name)> Units)
+{
+    public static ResidentListViewModel From(IReadOnlyList<ScopeResidentSummary> all, ResidentListFilter filter)
+    {
+        var name = filter.Q?.Trim();
+        var shown = all
+            .Where(r => string.IsNullOrEmpty(name) || System.Globalization.CultureInfo.InvariantCulture.CompareInfo.IndexOf(
+                r.DisplayName, name, System.Globalization.CompareOptions.IgnoreCase | System.Globalization.CompareOptions.IgnoreNonSpace) >= 0)
+            .Where(r => filter.Basal is null || r.TieneBasalVigente == (filter.Basal == ResidentBaselineFilter.Vigente))
+            .Where(r => filter.Unidad is null || r.UnitId.Value == filter.Unidad)
+            .ToList();
+        var units = all
+            .GroupBy(r => r.UnitId.Value)
+            .Select(g => (g.Key, g.First().UnitName ?? "Sin unidad"))
+            .OrderBy(u => u.Item2)
+            .ToList();
+        return new(shown, all.Count, filter, units);
+    }
+}
+
 /// <summary>ENF-18: identidad mínima del residente del ámbito más el resumen del basal vigente (null si
 /// todavía no tiene ninguno firmado). También es la ficha de Medicina (MED-20), donde CanManageBaseline dice si su
 /// ámbito tiene permiso para crear o reevaluar el basal (historia 8); Enfermería ofrece el acceso siempre.</summary>

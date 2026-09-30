@@ -217,6 +217,15 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
     usa también el formulario del Barthel, donde antes salía el nombre interno («UsoRetrete»).
   - **Tests:** `VersionDelBasal_…` y el acceso denegado en `HistorialTests`, y
     `Barthel_CadaItemTieneNombreEnEspanol_…` en `BaselineAreaDisplayTests`.
+- **Buscador de la lista de residentes (ENF-17)** — 2026-09-30, común con Medicina (MED-19).
+  - **Qué hace:** encima de la lista, buscar por nombre sin distinguir mayúsculas ni acentos y filtrar por
+    estado basal (vigente o pendiente) y por unidad, que solo se ofrece si el ámbito tiene residentes en más
+    de una. Indica cuántos coinciden y «Limpiar» quita el filtro.
+  - **Decisiones del usuario (2026-09-30):** nombre, estado basal y unidad, aplicado al pulsar «Buscar».
+  - **Implementación:** formulario GET (`?q=&basal=&unidad=`, parcial común `Shared/_FiltroResidentes`) que
+    filtra en memoria la lista ya autorizada del ámbito (`ResidentListViewModel`). Un valor mal formado en la
+    URL se ignora. Sin cambios de backend ni de esquema.
+  - **Tests:** `ResidentListFilterTests` (funcional).
 
 ## Pendiente
 

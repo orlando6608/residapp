@@ -956,12 +956,14 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         return result.Ok ? result.Value : null;
     }
 
-    public async Task<IActionResult> Residentes(CancellationToken ct)
+    public async Task<IActionResult> Residentes(ResidentListFilter filtro, CancellationToken ct)
     {
+        // ENF-17/MED-19: un valor del filtro mal formado en la URL se ignora (queda sin filtrar), no se muestra como error.
+        ModelState.Clear();
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Residentes)) });
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
         }
 
         var command = new ListScopeResidentsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId));
@@ -969,10 +971,10 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
-            return View(Array.Empty<ScopeResidentSummary>());
+            return View(ResidentListViewModel.From([], filtro));
         }
 
-        return View(result.Value);
+        return View(ResidentListViewModel.From(result.Value!, filtro));
     }
 
     public async Task<IActionResult> Residente(Guid residenteId, CancellationToken ct)

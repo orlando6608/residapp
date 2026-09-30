@@ -1,0 +1,56 @@
+@using ResidApp.Web.Models
+@model ResidentListViewModel
+@*
+    ENF-17/MED-19: buscar por nombre y filtrar por estado basal y unidad. Formulario GET a la acción en curso
+    (Enfermería o Medicina), así que el filtro queda en la URL. La unidad solo se ofrece si hay más de una.
+*@
+<form method="get" asp-action="Residentes" role="search" class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md">
+                <label for="filtro-q" class="form-label">Nombre</label>
+                <input id="filtro-q" name="q" type="search" value="@Model.Filter.Q" maxlength="200" class="form-control form-control-lg"
+                       autocomplete="off" />
+            </div>
+            <div class="col-12 col-md-3">
+                <label for="filtro-basal" class="form-label">Estado basal</label>
+                <select id="filtro-basal" name="basal" class="form-select form-select-lg">
+                    <option value="">Todos</option>
+                    @foreach (var option in Enum.GetValues<ResidentBaselineFilter>())
+                    {
+                        <option value="@option" selected="@(Model.Filter.Basal == option)">@EnumDisplay.Label(option)</option>
+                    }
+                </select>
+            </div>
+            @if (Model.Units.Count > 1)
+            {
+                <div class="col-12 col-md-3">
+                    <label for="filtro-unidad" class="form-label">Unidad</label>
+                    <select id="filtro-unidad" name="unidad" class="form-select form-select-lg">
+                        <option value="">Todas</option>
+                        @foreach (var unit in Model.Units)
+                        {
+                            <option value="@unit.Id" selected="@(Model.Filter.Unidad == unit.Id)">@unit.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-12 col-md-auto d-grid d-md-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">Buscar</button>
+                @if (!Model.Filter.IsEmpty)
+                {
+                    <a asp-action="Residentes" class="btn btn-outline-secondary btn-lg">Limpiar</a>
+                }
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (!Model.Filter.IsEmpty && Model.TotalCount > 0)
+{
+    <p class="text-muted" role="status">
+        @(Model.Residents.Count == 0
+            ? "Ningún residente coincide con la búsqueda."
+            : $"{Model.Residents.Count} de {Model.TotalCount} residentes.")
+    </p>
+}

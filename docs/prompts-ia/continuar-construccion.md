@@ -13,6 +13,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Buscador de las listas de residentes (ENF-17, MED-19; sin script):** hecho el 2026-09-30, en un commit local
+  sin push. Buscar por nombre (sin mayúsculas ni acentos) y filtrar por estado basal y unidad, al pulsar «Buscar»,
+  en Enfermería y Medicina (parcial `Shared/_FiltroResidentes`). El detalle está en `pendientes-enfermeria.md`.
+  - **Verificación:**
+    - suite local en verde (121, 192 y 14) y 3 vueltas tipo CI con BD nueva;
+    - curl con `dev-integrado-enfermeria` y `dev-integrado-medicina`: nombre en mayúsculas y con acentos
+      («fictÍCIO Dos»), estado basal, unidad por URL, «N de M residentes», «Ningún residente coincide»,
+      «Limpiar», valores mal formados ignorados, y sin ámbito vuelve a la búsqueda tras elegirlo. Los dos
+      residentes integrados comparten unidad, así que el desplegable de unidad no aparece en local: se
+      prueba en `ResidentListFilterTests`.
 - **Historia 8 de Medicina: gestionar el basal (sin script; cambia el seed):** hecho el 2026-09-30 y
   desplegado en Azure (push de `6131d66`, run 36717481881 en verde con `build-and-test` y `deploy`, incluido
   «Aplicar esquema y seed en Azure SQL»).
@@ -307,7 +317,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     relevante.
   - «Prueba manual derivacion medica: dolor torácico.»: escalado, protocolo de Medicina, derivado por
     Medicina, con una llamada «Contactado» y cerrado con una comunicación relevante.
-- Suite: 121 unitarios, 190 de integración y 11 funcionales, todos en verde.
+- Suite: 121 unitarios, 192 de integración y 14 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -317,8 +327,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 1. **Siguiente bloque por decidir con el usuario.** Candidatos de los pendientes:
    - una lista de «mis escalados» abiertos en Enfermería;
-   - los eventos abiertos del residente en su ficha de Medicina (MED-20);
-   - un buscador en las listas de residentes de Enfermería y Medicina.
+   - los eventos abiertos del residente en su ficha de Medicina (MED-20).
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 

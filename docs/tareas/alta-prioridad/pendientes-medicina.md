@@ -111,6 +111,8 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   y «Ver ese basal» en el detalle de un evento cerrado (`/Medicina/VersionBasal`), con la misma vista que
   Enfermería: las nueve áreas y el Barthel por ítems. El detalle está en `pendientes-enfermeria.md`
   (historia 11, bloque 4).
+- **Buscador de la lista de residentes (MED-19)** — 2026-09-30: el mismo que Enfermería (nombre, estado
+  basal y unidad). El detalle está en `pendientes-enfermeria.md`.
 - **Historia 8 (gestionar el basal, MED-21)** — 2026-09-30: Medicina crea, completa y firma el basal con el
   mismo módulo que Enfermería (`EnfermeriaBasal`, mismas URLs), si su ámbito tiene `BASELINE_INITIAL_COMPLETE`
   (alta) o `BASELINE_REEVALUATE` (reevaluación).
@@ -141,8 +143,7 @@ Huecos de lo ya construido:
 
 - **Evento propio (historia 7):**
   - la ficha del residente (MED-20) enlaza al Historial (eventos cerrados y versiones del basal), pero no
-    muestra los eventos abiertos del residente;
-  - la lista de residentes (MED-19) no tiene buscador, igual que la de Enfermería.
+    muestra los eventos abiertos del residente.
 
 - Derivación a Urgencias: los mismos huecos que en Enfermería (firmante sin nombre, sin corrección del
   informe, contacto familiar en texto libre); ver `pendientes-enfermeria.md`.
