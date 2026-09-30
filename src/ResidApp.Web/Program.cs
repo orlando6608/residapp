@@ -29,6 +29,7 @@ builder.Services.AddScoped<IEnfermeriaResidentDirectory, SqlEnfermeriaResidentDi
 builder.Services.AddScoped<IDailyClosureRepository, SqlDailyClosureRepository>();
 builder.Services.AddScoped<IClinicalEventRepository, SqlClinicalEventRepository>();
 builder.Services.AddScoped<IChangeInboxDirectory, SqlChangeInboxDirectory>();
+builder.Services.AddScoped<ISupervisionDirectory, SqlSupervisionDirectory>();
 builder.Services.AddScoped<INursingAssessmentRepository, SqlNursingAssessmentRepository>();
 builder.Services.AddScoped<IMedicalAssessmentRepository, SqlMedicalAssessmentRepository>();
 builder.Services.AddScoped<IMedicalIndicationRepository, SqlMedicalIndicationRepository>();
@@ -108,6 +109,7 @@ builder.Services.AddScoped<RecordMedicalFamilyCallAttempt>();
 builder.Services.AddScoped<FindResidentIdentification>();
 builder.Services.AddScoped<DownloadReferralReport>();
 builder.Services.AddScoped<MedicinaApplicationService>();
+builder.Services.AddScoped<DireccionApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();
 

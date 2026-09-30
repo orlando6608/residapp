@@ -34,6 +34,7 @@
             <a class="list-group-item list-group-item-action" href="#alta-residente">Dar de alta un residente</a>
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
+            <a class="list-group-item list-group-item-action" href="#supervision-direccion">Supervisión operativa por unidad (Dirección Clínica)</a>
             <a class="list-group-item list-group-item-action" href="#mis-residentes-auxiliar">Mis residentes (Auxiliar)</a>
             <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#registrar-evento-enfermeria">Registrar evento (Enfermería)</a>
@@ -228,6 +229,30 @@
         Dirección Clínica puede consultar, en modo de solo lectura, el basal vigente o el histórico de
         versiones de un residente. Cada consulta requiere indicar un propósito y queda registrada
         obligatoriamente en auditoría.
+    </p>
+</section>
+
+<section id="supervision-direccion" class="mb-4">
+    <h2 class="h5">
+        Supervisión operativa por unidad
+        <span class="badge text-bg-secondary align-middle">Perfil: Dirección Clínica</span>
+    </h2>
+    <p>
+        El inicio de Dirección Clínica muestra, por cada unidad de tu ámbito, cuántos episodios siguen abiertos y cuántos
+        están sin valorar, en valoración, escalados a Medicina, en seguimiento (y cuántos de ellos vencidos) o con
+        protocolo urgente, junto con las indicaciones pendientes y las no realizadas. Cada cifra va acompañada del total
+        de la unidad. Los episodios cerrados no cuentan.
+    </p>
+    <p>
+        En <strong>Supervisión de pendientes</strong> ves la lista de episodios abiertos, del más antiguo al más reciente, y
+        puedes filtrar por tipo de pendiente y por unidad con "Buscar". "Ver detalle operativo" abre el estado del episodio
+        y sus hitos (quién los hizo, por perfil, y cuándo). Esta vista no muestra observaciones, valoraciones ni
+        indicaciones, y no ofrece ninguna acción asistencial.
+    </p>
+    <p class="mb-0">
+        En <strong>Mi ámbito de supervisión</strong> consultas el centro, las unidades y los permisos vigentes de tu perfil
+        activo; consultarlo no lo amplía. Si una pantalla te dice "No se puede acceder a esta operación", el episodio no
+        está en tu ámbito o no existe: el mensaje no distingue entre ambos casos.
     </p>
 </section>
 
@@ -754,6 +779,6 @@
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
         <li>Gestión administrativa completa (autorizaciones, turnos, citas, auditoría).</li>
-        <li>Supervisión clínica agregada e indicadores de Dirección.</li>
+        <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, y los indicadores e informes agregados.</li>
     </ul>
 </section>

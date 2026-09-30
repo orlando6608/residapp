@@ -1,0 +1,98 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model DireccionInicioViewModel
+@{
+    ViewData["Title"] = "Inicio de Dirección Clínica";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Dirección Clínica</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Inicio de Dirección Clínica</h1>
+<p class="text-muted">
+    Supervisión operativa del proceso asistencial por unidad, sin contenido clínico. Cada cifra cuenta episodios abiertos;
+    los cerrados no aparecen. No hay ninguna acción asistencial en este perfil.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <a asp-action="Pendientes" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Supervisión de pendientes</h2>
+                <p class="card-text mb-0">
+                    <span class="badge text-bg-primary">@Model.Open</span> episodio(s) abierto(s)
+                    @if (Model.FollowUpsOverdue > 0)
+                    {
+                        <span>· <span class="badge text-bg-warning">@Model.FollowUpsOverdue</span> seguimiento(s) vencido(s)</span>
+                    }
+                </p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
+        <a asp-action="Ambito" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Mi ámbito de supervisión</h2>
+                <p class="card-text mb-0">Centro, unidades y permisos vigentes de tu perfil activo.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
+        <a asp-controller="Baseline" asp-action="Direction" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Consulta auditada del basal</h2>
+                <p class="card-text mb-0">Historial de basal de un residente, con registro de auditoría previo.</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<h2 class="h5">Por unidad</h2>
+@if (Model.Units.Count == 0)
+{
+    <p class="text-muted">Tu ámbito de supervisión no tiene unidades.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Episodios abiertos por unidad, con el total de la unidad como denominador</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Unidad</th>
+                    <th scope="col" class="text-end">Abiertos</th>
+                    <th scope="col" class="text-end">Sin valorar</th>
+                    <th scope="col" class="text-end">En valoración</th>
+                    <th scope="col" class="text-end">Escalados</th>
+                    <th scope="col" class="text-end">Seguimientos</th>
+                    <th scope="col" class="text-end">Vencidos</th>
+                    <th scope="col" class="text-end">Indicaciones pendientes</th>
+                    <th scope="col" class="text-end">Indicaciones no realizadas</th>
+                    <th scope="col" class="text-end">Protocolos urgentes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var unit in Model.Units)
+                {
+                    <tr>
+                        <th scope="row"><a asp-action="Pendientes" asp-route-unidad="@unit.UnitId.Value">@unit.UnitName</a></th>
+                        <td class="text-end">@unit.Open</td>
+                        <td class="text-end">@unit.WithoutAssessment de @unit.Open</td>
+                        <td class="text-end">@unit.InAssessment de @unit.Open</td>
+                        <td class="text-end">@unit.Escalated de @unit.Open</td>
+                        <td class="text-end">@unit.FollowUps de @unit.Open</td>
+                        <td class="text-end">@unit.FollowUpsOverdue de @unit.FollowUps</td>
+                        <td class="text-end">@unit.IndicationsPending</td>
+                        <td class="text-end">@unit.IndicationsNotDone</td>
+                        <td class="text-end">@unit.UrgentProtocols de @unit.Open</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

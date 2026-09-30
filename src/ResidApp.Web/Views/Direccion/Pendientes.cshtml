@@ -1,0 +1,118 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Auxiliar
+@using ResidApp.Web.Models
+@model SupervisionPendingViewModel
+@{
+    ViewData["Title"] = "Supervisión de pendientes";
+    var filtro = Model.Filter;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Dirección Clínica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Pendientes</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Supervisión de pendientes</h1>
+<p class="text-muted">Episodios abiertos de tu ámbito, del más antiguo al más reciente. Sin contenido clínico.</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form method="get" asp-action="Pendientes" role="search" class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label for="filtro-tipo" class="form-label">Tipo de pendiente</label>
+                <select id="filtro-tipo" name="tipo" class="form-select form-select-lg">
+                    <option value="">Todos</option>
+                    @foreach (var type in Enum.GetValues<SupervisionPendingType>())
+                    {
+                        <option value="@type" selected="@(filtro.Tipo == type)">@SupervisionDisplay.Label(type)</option>
+                    }
+                </select>
+            </div>
+            @if (Model.Units.Count > 1)
+            {
+                <div class="col-12 col-md-4">
+                    <label for="filtro-unidad" class="form-label">Unidad</label>
+                    <select id="filtro-unidad" name="unidad" class="form-select form-select-lg">
+                        <option value="">Todas</option>
+                        @foreach (var unit in Model.Units)
+                        {
+                            <option value="@unit.Id" selected="@(filtro.Unidad == unit.Id)">@unit.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-12 col-md-auto d-grid d-md-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">Buscar</button>
+                @if (!filtro.IsEmpty)
+                {
+                    <a asp-action="Pendientes" class="btn btn-outline-secondary btn-lg">Limpiar</a>
+                }
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.List.TotalOpen == 0)
+{
+    <p class="text-muted">No hay episodios abiertos.</p>
+}
+else
+{
+    @if (!filtro.IsEmpty)
+    {
+        <p class="text-muted" role="status">
+            @(Model.List.Episodes.Count == 0
+                ? "Ningún episodio coincide con la búsqueda."
+                : $"{Model.List.Episodes.Count} de {Model.List.TotalOpen} episodios abiertos.")
+        </p>
+    }
+    @if (Model.List.Episodes.Count > 0)
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Residente</th>
+                        <th scope="col">Unidad</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Situación</th>
+                        <th scope="col">Registro</th>
+                        <th scope="col">Antigüedad</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.List.Episodes)
+                    {
+                        <tr>
+                            <td>@item.ResidentDisplayName</td>
+                            <td>@item.UnitName</td>
+                            <td>
+                                <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, item.Classification == DailyChangeClassification.Prioritario)">@ClinicalEventStatusDisplay.Label(item.Status)</span>
+                            </td>
+                            <td>
+                                @if (SupervisionPendingRules.IsOverdue(item, Model.Today))
+                                {
+                                    <span class="badge text-bg-warning">Seguimiento vencido</span>
+                                }
+                                @if (item.IndicationsNotDone > 0)
+                                {
+                                    <span class="badge text-bg-danger">Indicación no realizada</span>
+                                }
+                            </td>
+                            <td>@item.ReceivedAt.ToLocalTime().ToString("g")</td>
+                            <td>@ElapsedTimeDisplay.Since(item.ReceivedAt)</td>
+                            <td>
+                                <a asp-action="Episodio" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle operativo</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}

@@ -1,0 +1,62 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model SupervisionScopeInfo?
+@{
+    ViewData["Title"] = "Mi ámbito de supervisión";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Dirección Clínica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Mi ámbito</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Mi ámbito de supervisión</h1>
+<p class="text-muted">Lo que tu perfil activo puede supervisar. Consultarlo no amplía tu ámbito.</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model is not null)
+{
+    <dl class="row">
+        <dt class="col-sm-3">Centro</dt>
+        <dd class="col-sm-9">@Model.CenterName</dd>
+        <dt class="col-sm-3">Unidades</dt>
+        <dd class="col-sm-9">
+            @if (Model.Units.Count == 0)
+            {
+                <span>Ninguna.</span>
+            }
+            else
+            {
+                <ul class="mb-0">
+                    @foreach (var unit in Model.Units)
+                    {
+                        <li>@unit.Name</li>
+                    }
+                </ul>
+            }
+            @if (Model.RestrictedToResidents)
+            {
+                <p class="text-muted mb-0">Tu ámbito está limitado a determinados residentes de esas unidades.</p>
+            }
+        </dd>
+        <dt class="col-sm-3">Permisos vigentes</dt>
+        <dd class="col-sm-9">
+            @if (Model.Permissions.Count == 0)
+            {
+                <span>Ninguno: solo la supervisión operativa, sin contenido clínico.</span>
+            }
+            else
+            {
+                <ul class="mb-0">
+                    @foreach (var permission in Model.Permissions)
+                    {
+                        <li>@SupervisionDisplay.PermissionLabel(permission)</li>
+                    }
+                </ul>
+            }
+        </dd>
+    </dl>
+}

@@ -11,10 +11,10 @@ La hoja de ruta original del prototipo legado (consolidación documental → lí
 | Residente / Basal | Completado — ver detalle más abajo |
 | Auxiliar | Completado (historias 1-6), pendiente de validación por CJ |
 | Enfermería | En curso — ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md` |
-| Medicina | No iniciado |
+| Medicina | En curso — ver `docs/tareas/alta-prioridad/pendientes-medicina.md` |
 | Familia / Portal Familiar | No iniciado |
 | Administración | No iniciado |
-| Dirección / Coordinación Clínica | No iniciado |
+| Dirección / Coordinación Clínica | En curso — ver `docs/tareas/alta-prioridad/pendientes-direccion.md` |
 
 ## Estado detallado del vertical Residente / Basal
 
@@ -53,11 +53,12 @@ Sin pendiente crítico propio. Detalle en `docs/tareas/alta-prioridad/pendientes
 
 ## Próximos pasos
 
-Residente/Basal y Auxiliar están construidos; Enfermería está en curso (bandejas, evento propio,
-valoración de eventos y gestión del basal hechos; decisión asistencial, seguimiento, escalado,
-indicaciones, derivación e historial pendientes — ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md`).
-El siguiente bloque funcional es cerrar un evento y decidir la comunicación familiar (historia 3 de
-Enfermería).
+Residente/Basal y Auxiliar están construidos. Enfermería y Medicina tienen construidas todas sus historias
+salvo lo que depende de otros verticales (ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md` y
+`pendientes-medicina.md`). Dirección / Coordinación Clínica está en curso: la supervisión operativa en solo
+lectura está hecha y la lectura clínica auditada espera las finalidades que fije CJ (ver
+`docs/tareas/alta-prioridad/pendientes-direccion.md`). Después vienen Administración y Familia / Portal
+Familiar, que depende de ella y de la decisión del proveedor de identidad.
 
 El despliegue en Azure (App Service `app-residapp-dev` + Azure SQL `sqldb-residapp-dev`) y el pipeline
 de CI/CD (build + tests contra SQL Server real, y deploy que aplica el esquema y los datos ficticios de

@@ -1,6 +1,6 @@
 # Checklist de construcción — Mínimo Producto Viable
 
-Estado al 2026-09-28.
+Estado al 2026-09-30.
 
 ## Qué es y qué no es este documento
 
@@ -20,7 +20,7 @@ El orden se hereda de `roadmap.md` (heredado a su vez del prototipo legado, úni
 | Medicina | Medicina | En curso (escalados, evento propio, valoración médica, indicaciones, seguimiento médico, protocolo urgente, derivación a Urgencias y cierre médico) |
 | Familia / Portal Familiar | Familiar | No iniciado |
 | Administración | Administración | No iniciado |
-| Dirección / Coordinación Clínica | Dirección/Coordinación Clínica | No iniciado |
+| Dirección / Coordinación Clínica | Dirección/Coordinación Clínica | En curso (supervisión operativa en solo lectura; ver `pendientes-direccion.md`) |
 
 ### Residente / Basal
 
@@ -102,6 +102,8 @@ Cubre el módulo *Dirección Clínica* de `alcance.md`.
 - Historias de usuario: [`docs/historias-usuarios/direccion-coordinacion-clinica.md`](../../historias-usuarios/direccion-coordinacion-clinica.md) (`DIR-01` a `DIR-11`, `COR-01`, `COR-02`).
 - Flujo clínico: [`docs/flujos-clinicos/supervision-clinica-direccion.md`](../../flujos-clinicos/supervision-clinica-direccion.md) (`DIR-01` a `DIR-16`).
 - Wireframe funcional: [`docs/bocetos-pantallas/wireframes-funcionales/direccion-coordinacion-clinica.md`](../../bocetos-pantallas/wireframes-funcionales/direccion-coordinacion-clinica.md).
+
+En curso: lo hecho y lo pendiente, por bloques, está en [`docs/tareas/alta-prioridad/pendientes-direccion.md`](../alta-prioridad/pendientes-direccion.md). Las tareas de abajo son el alcance completo del vertical.
 
 Tareas de construcción pendientes:
 - Dominio: panel agregado, supervisión de pendientes sin contenido clínico, indicadores/informes agregados sin ranking individual.

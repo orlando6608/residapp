@@ -7,11 +7,21 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 > Retomamos la construcción de ResidApp. Lee `CLAUDE.md`, este fichero
 > (`docs/prompts-ia/continuar-construccion.md`), `docs/tareas/alta-prioridad/pendientes-enfermeria.md` y
-> `docs/tareas/alta-prioridad/pendientes-medicina.md`.
+> `docs/tareas/alta-prioridad/pendientes-medicina.md` y `docs/tareas/alta-prioridad/pendientes-direccion.md`.
 > Mira si CJ ha completado algo en `docs/pendientes-cj/`. Después comprueba que la suite pasa en verde
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Dirección Clínica, bloque 1: supervisión operativa en solo lectura (DIR-01 a DIR-04, DIR-17; sin script):** hecho el
+  2026-09-30, **sin push** (solo commit en `main`). `/Direccion` (contadores por unidad con denominador),
+  `/Direccion/Pendientes` (filtro por tipo y unidad), `/Direccion/Episodio` (hitos sin texto) y `/Direccion/Ambito`. Sin
+  contenido clínico: los tipos de supervisión no tienen campos de texto. El detalle y las suposiciones están en
+  `pendientes-direccion.md` (fichero nuevo).
+  - **Verificación:**
+    - suite local en verde 3 veces seguidas (121, 199 y 17) y 3 vueltas tipo CI con BD nueva en verde;
+    - curl con `dev-integrado-direccion`: inicio (Residente Integrado Uno y Dos, 3 abiertos), pendientes con filtro y valores
+      mal formados ignorados, los 3 episodios sin ningún texto de observación, episodio inexistente vuelve a Pendientes y
+      «Mi ámbito»; `dev-integrado-enfermeria`, `-medicina` y `-auxiliar` reciben «No se puede acceder a esta operación».
 - **Filtro de la bandeja de cambios ordinarios (ENF-02; sin script):** hecho el 2026-09-30 y desplegado en Azure (push de `8c22c13`, run 36753447680 en verde con `build-and-test` y `deploy`).
   Filtro por nombre, unidad y estado en `/Enfermeria/Ordinarios`, que completa la historia 1
   de Enfermería. El detalle está en `pendientes-enfermeria.md`.
@@ -368,7 +378,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 121 unitarios, 194 de integración y 17 funcionales, todos en verde.
+- Suite: 121 unitarios, 199 de integración y 17 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -376,18 +386,19 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Siguiente bloque por decidir con el usuario.** Enfermería y Medicina tienen construidas todas sus
-   historias salvo lo que depende de otros verticales. Candidatos, de lo pendiente en esos dos verticales a
-   verticales nuevos:
-   - **Aportación a un borrador de basal ajeno** (`BASELINE_DRAFT_CONTRIBUTE`, BAS-11, ENF-20/MED-21): hoy
-     solo el autor edita su borrador. Consulta antes el flujo `gestion-basal-barthel.md` y la matriz de
-     permisos del prototipo.
-   - **Empezar un vertical nuevo**, en el orden funcional de `docs/producto/roadmap.md`: Familia / Portal
-     Familiar (aprobar y publicar las comunicaciones familiares, que hoy quedan pendientes), Administración
-     (turnos y equipos reales, contacto familiar designado, concesión de permisos) o Dirección /
-     Coordinación Clínica (incluida la línea temporal auditada de HIS-02). Antes de proponerlo, lee sus
-     historias en `docs/historias-usuarios/` y comprueba qué pide de lo ya construido.
-   - **Actualizar `docs/producto/roadmap.md`**, que está desfasado (ver avisos).
+1. **Documento para CJ** (antes de seguir con Dirección, no bloquea el resto): preparar uno en `docs/pendientes-cj/` con
+   tres preguntas de producto que hoy están pendientes:
+   - **Finalidades válidas de `CLINICAL_DETAIL_READ`** (la matriz de permisos las deja «pendientes»): bloquea el bloque 2 de
+     Dirección y hoy `/Baseline/Direction` pide el propósito en texto libre;
+   - **Aportación a un borrador de basal ajeno** (`BASELINE_DRAFT_CONTRIBUTE`, BAS-11, ENF-20/MED-21): la matriz dice
+     «capacidad aprobada; permiso/granularidad pendientes». Qué puede aportar y si solo añade o también sobrescribe;
+   - **Campo «Comunicaciones»** de la valoración de Enfermería en el informe de derivación (ver avisos).
+2. **Dirección, bloque 3 o 4** (no dependen de la decisión de CJ, pero sí de otros verticales en parte): ver
+   `pendientes-direccion.md`. El bloque 3 necesita la publicación familiar; el 4 (indicadores con periodo e informes
+   agregados) se puede construir ya.
+3. **Administración** (prerrequisito de Familia y de los huecos de turnos, equipos y firmante) y después **Familia /
+   Portal Familiar**, que también depende del proveedor de identidad. Antes de proponerlos, lee sus historias en
+   `docs/historias-usuarios/` y comprueba qué piden de lo ya construido.
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 
@@ -398,8 +409,6 @@ usuario cuando encajen:
   Una ficha que depende de un permiso, como Alta de residente para Enfermería, la ve todo el perfil, aunque
   la cuenta no tenga el permiso. Si cambian las reglas de perfiles de una pantalla, revisa también los `@if`
   de `Views/Home/Index.cshtml`.
-- **`docs/producto/roadmap.md`** está desfasado: su tabla dice que Medicina «No iniciado» y sus «Próximos
-  pasos» siguen en la historia 3 de Enfermería.
 - **Manual, cuentas de prueba:** la tabla de `#cuentas-prueba` y el recorrido guiado citan tres cuentas
   `dev-integrado-*` y no incluyen `dev-integrado-medicina`, que existe desde el 2026-09-28 y tiene permiso de
   basal desde la historia 8. Solo la nombra la sección «Residentes y evento propio».

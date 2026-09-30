@@ -54,6 +54,14 @@ else
     @if (perfil is SystemProfile.DireccionClinica)
     {
         <div class="col-12 col-md-4">
+            <a asp-controller="Direccion" asp-action="Index" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Supervisión de Dirección Clínica</h2>
+                    <p class="card-text text-muted mb-0">Episodios abiertos por unidad y pendientes, sin contenido clínico.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-12 col-md-4">
             <a asp-controller="Baseline" asp-action="Direction" class="card text-decoration-none h-100">
                 <div class="card-body">
                     <h2 class="h5 card-title">Consulta de Dirección Clínica</h2>

@@ -1,0 +1,80 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Auxiliar
+@using ResidApp.Web.Models
+@model SupervisionEpisodeDetail
+@{
+    var episode = Model.Episode;
+    ViewData["Title"] = "Detalle operativo del episodio";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Dirección Clínica</a></li>
+        <li class="breadcrumb-item"><a asp-action="Pendientes">Pendientes</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Detalle operativo</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Detalle operativo del episodio</h1>
+<div class="alert alert-info" role="note">
+    Vista de supervisión: muestra el estado y los hitos del episodio, sin observaciones, valoraciones ni indicaciones. Desde aquí no
+    se puede valorar, indicar, escalar, corregir ni cerrar.
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">@episode.ResidentDisplayName</h2>
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Unidad</dt>
+            <dd class="col-sm-9">@episode.UnitName</dd>
+            <dt class="col-sm-3">Estado</dt>
+            <dd class="col-sm-9">
+                <span class="badge @ClinicalEventStatusDisplay.BadgeClass(episode.Status, episode.Classification == DailyChangeClassification.Prioritario)">@ClinicalEventStatusDisplay.Label(episode.Status)</span>
+                @if (episode.Classification == DailyChangeClassification.Prioritario)
+                {
+                    <span class="badge text-bg-danger">Prioritario</span>
+                }
+            </dd>
+            <dt class="col-sm-3">Origen</dt>
+            <dd class="col-sm-9">@EnumDisplay.Label(episode.Origin)</dd>
+            <dt class="col-sm-3">Registro</dt>
+            <dd class="col-sm-9">@episode.ReceivedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(episode.ReceivedAt))</dd>
+            <dt class="col-sm-3">Equipo responsable</dt>
+            <dd class="col-sm-9">El de la unidad (todavía no hay equipos ni turnos configurados).</dd>
+            @if (episode.HasFollowUp)
+            {
+                <dt class="col-sm-3">Seguimiento</dt>
+                <dd class="col-sm-9">
+                    @(episode.FollowUpDue is { } due ? $"Fecha prevista {due:d}" : "Sin fecha prevista (por criterio)")
+                    @if (episode.FollowUpDue < DateOnly.FromDateTime(DateTime.Today))
+                    {
+                        <span class="badge text-bg-warning">Vencido</span>
+                    }
+                </dd>
+            }
+            @if (episode.IndicationsPending > 0 || episode.IndicationsNotDone > 0)
+            {
+                <dt class="col-sm-3">Indicaciones</dt>
+                <dd class="col-sm-9">@episode.IndicationsPending pendiente(s) · @episode.IndicationsNotDone no realizada(s)</dd>
+            }
+        </dl>
+    </div>
+</div>
+
+<h2 class="h5">Hitos</h2>
+<ol class="list-group list-group-numbered mb-3">
+    @foreach (var milestone in Model.Milestones)
+    {
+        <li class="list-group-item">
+            <strong>@SupervisionDisplay.Label(milestone.Kind)</strong>
+            · @milestone.At.ToLocalTime().ToString("g")
+            @if (milestone.Profile is { } profile)
+            {
+                <span class="text-muted">· @SystemProfileDisplay.Label(profile)</span>
+            }
+        </li>
+    }
+</ol>
+
+<a asp-action="Pendientes" class="btn btn-outline-secondary btn-lg">Volver a los pendientes</a>
