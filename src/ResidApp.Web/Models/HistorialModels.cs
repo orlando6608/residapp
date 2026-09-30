@@ -21,6 +21,19 @@ public sealed record ResidentHistoryViewModel(
         new(resident, events.Ok ? events.Value : null, baselines.Ok ? baselines.Value : null, detailAction);
 }
 
+/// <summary>ENF-24 (historia 11 de Enfermería, 9 de Medicina): una versión firmada del basal, vista común a
+/// Enfermería y Medicina.</summary>
+public sealed record BaselineVersionViewModel(ScopeResidentSummary Resident, BaselineVersionDetail Version);
+
+public static class BaselineVersionDisplay
+{
+    /// <summary>La etiqueta de la opción elegida en un ítem del Barthel (BarthelCatalog); si el catálogo ya no la tiene,
+    /// su código.</summary>
+    public static string BarthelOption(BarthelItem item) =>
+        BarthelCatalog.Options[item.ItemCode].FirstOrDefault(o => o.OptionCode == item.SelectedOptionCode)?.Label
+        ?? item.SelectedOptionCode;
+}
+
 public static class ResidentHistoryDisplay
 {
     /// <summary>El mismo resumen que las bandejas: la observación del evento propio o las áreas del cambio de

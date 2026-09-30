@@ -213,6 +213,20 @@ public static class RequestAuthorizationContextResolver
         return await repository.ReadHistoryAsync(input, ct);
     }
 
+    /// <summary>ENF-24: el contenido de una versión firmada, con la misma autorización que
+    /// ExecuteBaselineHistoryReadAsync (BaselineHistoryRead sin obligación de auditoría).</summary>
+    public static async Task<BaselineVersionDetail?> ExecuteBaselineVersionReadAsync(
+        RequestAuthorizationContext context, IBaselineRepository repository, int versionNumber, CancellationToken ct = default)
+    {
+        var operation = RequireTarget<AuthorizationTarget.Read>(context);
+        if (operation.Action != ResidentBaselineAction.BaselineHistoryRead || operation.Decision.Obligations.Count > 0)
+        {
+            throw new AccessDeniedException();
+        }
+        var input = new ReadCurrentBaselineSummaryInput(operation.CenterId, operation.ResidentId!.Value);
+        return await repository.ReadVersionAsync(input, versionNumber, ct);
+    }
+
     /// <summary>ENF-19/ENF-20: crea el contenido de un borrador de basal, ya autorizado (permiso
     /// BASELINE_INITIAL_COMPLETE o BASELINE_REEVALUATE según el motivo elegido, comprobado en
     /// ResolveAsync). Sin obligación de auditoría propia: la propia fila del borrador, con su autoría y

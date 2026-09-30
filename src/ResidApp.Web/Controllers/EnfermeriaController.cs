@@ -1031,6 +1031,38 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             ResidentHistoryViewModel.From(findResult.Value, events, baselines, nameof(DetalleCambio)));
     }
 
+    /// <summary>ENF-24 (historia 11): una versión firmada del basal, vigente o histórica, con sus nueve áreas y el
+    /// Barthel por ítems. Vista común con Medicina.</summary>
+    public async Task<IActionResult> VersionBasal(Guid residenteId, int version, CancellationToken ct)
+    {
+        if (residenteId == Guid.Empty)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope",
+                new { returnUrl = Url.Action(nameof(VersionBasal), new { residenteId, version }) });
+        }
+
+        var centroId = CenterId.From(activeScope.CenterId);
+        var findResult = await service.FindScopeResidentAsync(
+            new FindScopeResidentCommand(activeScope.ProfileScopeId, centroId, ResidentId.From(residenteId)), ct);
+        if (!findResult.Ok || findResult.Value is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        var result = await service.ReadBaselineVersionAsync(
+            new ReadBaselineVersionCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, version), ct);
+        if (!result.Ok || result.Value is null)
+        {
+            return RedirectToAction(nameof(Historial), new { residenteId });
+        }
+        return View("~/Views/Shared/VersionBasal.cshtml", new BaselineVersionViewModel(findResult.Value, result.Value));
+    }
+
     /// <summary>ENF-04/HIS-02: línea temporal completa del residente, bajo demanda y en solo lectura, dentro del
     /// ámbito (decisión del usuario, 2026-09-30). Vista común con Medicina.</summary>
     public async Task<IActionResult> LineaTemporal(Guid residenteId, CancellationToken ct)

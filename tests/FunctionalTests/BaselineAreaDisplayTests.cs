@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using ResidApp.Domain.Baseline;
 using ResidApp.Domain.Baseline.Answers;
 using ResidApp.Domain.Baseline.Catalogs;
 using ResidApp.Web.Models;
@@ -40,6 +41,17 @@ public class BaselineAreaDisplayTests
             .Select(p => $"{p.DeclaringType!.Name}.{p.Name}")
             .ToList();
         Assert.Empty(missing);
+    }
+
+    [Fact]
+    public void Barthel_CadaItemTieneNombreEnEspanol_YLaOpcionSuEtiqueta()
+    {
+        Assert.Equal(
+            ["Comer", "Lavarse", "Vestirse", "Arreglarse", "Deposición", "Micción", "Uso del retrete", "Traslado cama-sillón",
+                "Deambulación", "Escaleras"],
+            Enum.GetValues<BarthelItemCode>().Select(item => EnumDisplay.Label(item)));
+        Assert.Equal("Supervisión o mínima ayuda",
+            BaselineVersionDisplay.BarthelOption(new BarthelItem(BarthelItemCode.TrasladoCamaSillon, "SUPERVISION_O_MINIMA_AYUDA", 10)));
     }
 
     [Fact]

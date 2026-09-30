@@ -44,6 +44,10 @@ public sealed class MedicinaApplicationService(
         ReadBaselineHistoryCommand command, CancellationToken ct = default) =>
         readBaselineHistory.ExecuteAsync(command, ct);
 
+    public Task<ApplicationResult<BaselineVersionDetail?>> ReadBaselineVersionAsync(
+        ReadBaselineVersionCommand command, CancellationToken ct = default) =>
+        readBaselineHistory.ExecuteVersionAsync(command, ct);
+
     public Task<ApplicationResult<IReadOnlyList<TimelineEntry>>> ReadResidentTimelineAsync(
         ReadResidentTimelineCommand command, CancellationToken ct = default) =>
         readResidentTimeline.ExecuteAsync(command with { Perfil = Shared.SystemProfile.Medicina }, ct);

@@ -13,7 +13,22 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Nombre de campo en el resumen del basal (sin script):** hecho el 2026-09-30, en un commit local sin push.
+- **Contenido de una versión del basal (historia 11 de Enfermería, 9 de Medicina; sin script):** hecho el
+  2026-09-30, en un commit local sin push.
+  - **Qué hace:** «Ver versión» en el Historial y «Ver ese basal» en el detalle de un evento cerrado abren
+    `VersionBasal` (Enfermería y Medicina, vista común `Shared/VersionBasal`): cabecera, fuente y fecha de la
+    información, las nueve áreas y el Barthel por ítems. Los ítems del Barthel tienen nombre en español, que
+    usa también su formulario. El detalle está en `pendientes-enfermeria.md` (historia 11, bloque 4).
+  - **Verificación:**
+    - suite local en verde (121, 190 y 11) y 3 vueltas tipo CI con BD nueva;
+    - curl con `dev-integrado-enfermeria` y `dev-integrado-medicina` sobre Residente Integrado Uno: la versión 1
+      con sus nueve áreas y los diez ítems; «Ver ese basal» en los 9 eventos cerrados de Enfermería y en los
+      de Medicina; una versión inexistente vuelve al Historial y un residente ajeno a Residentes;
+    - el formulario del Barthel con los nombres en español, sobre un borrador de prueba que después se
+      canceló.
+- **Nombre de campo en el resumen del basal (sin script):** hecho el 2026-09-30 y desplegado en Azure (push
+  de `85b43a4`, run 36712405469 en verde con `build-and-test` y `deploy`). En Azure ningún residente del
+  escenario integrado tiene basal firmado, así que el resumen con áreas solo se probó en local.
   - **Qué cambia:** `BaselineAreaDisplay.Summarize` da una línea «Campo: valores» por cada campo con dato,
     con el nombre en español de las 35 propiedades de las nueve respuestas de área (`[Display]` en
     `Domain/Baseline/Answers`). Las listas se unen con comas. El informe de derivación escribe cada área como
@@ -243,10 +258,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   pantalla). Medicina está en curso: historias 1 a 7 (escalados, valoración médica, indicaciones, cierre
   médico, seguimiento médico con continuidad entre turnos, protocolo urgente, derivación a Urgencias y
   evento propio).
-- La base local `ResidApp` tiene los scripts `0001` a `0019` registrados en `dbo.scripts_aplicados`
-  (también en Azure). Hay copias previas a `0016`, `0017`, `0018` y `0019` en
+- La base local `ResidApp` tiene los scripts `0001` a `0020` registrados en `dbo.scripts_aplicados`
+  (también en Azure). Hay copias previas a `0016`, `0017`, `0018`, `0019` y `0020` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
-  `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak` y `ResidApp-antes-0019-20260930.bak`).
+  `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak`, `ResidApp-antes-0019-20260930.bak` y
+  `ResidApp-antes-0020-20260930.bak`).
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
@@ -267,7 +283,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     relevante.
   - «Prueba manual derivacion medica: dolor torácico.»: escalado, protocolo de Medicina, derivado por
     Medicina, con una llamada «Contactado» y cerrado con una comunicación relevante.
-- Suite: 113 unitarios, 184 de integración y 7 funcionales, todos en verde.
+- Suite: 121 unitarios, 190 de integración y 11 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -277,7 +293,6 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 1. **Siguiente bloque por decidir con el usuario.** Candidatos de los pendientes:
    - historia 8 de Medicina (basal desde Medicina);
-   - abrir una versión histórica del basal con sus nueve áreas desde el Historial (ya desbloqueado);
    - una lista de «mis escalados» abiertos en Enfermería.
 
 ## Avisos abiertos (fuera de alcance, sin corregir)

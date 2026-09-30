@@ -101,7 +101,15 @@ public interface IBaselineRepository
     Task<CurrentBaselineSummary?> ReadCurrentSummaryAsync(ReadCurrentBaselineSummaryInput input, CancellationToken ct = default);
 
     Task<IReadOnlyList<BaselineHistoryEntry>> ReadHistoryAsync(ReadCurrentBaselineSummaryInput input, CancellationToken ct = default);
+
+    Task<BaselineVersionDetail?> ReadVersionAsync(ReadCurrentBaselineSummaryInput input, int versionNumber, CancellationToken ct = default);
 }
+
+/// <summary>ENF-24 (historia 11 de Enfermería, 9 de Medicina): el contenido de una versión firmada del basal, vigente
+/// o histórica: su cabecera del historial, la información común, las nueve áreas y el Barthel con sus diez ítems.</summary>
+public sealed record BaselineVersionDetail(
+    BaselineHistoryEntry Header, InformationSourceCode InformationSource, string? InformationSourceOtherText,
+    DateOnly InformationDate, IReadOnlyList<BaselineAreaSummary> Areas, DateOnly BarthelDate, IReadOnlyList<BarthelItem> BarthelItems);
 
 /// <summary>ENF-24: una versión firmada del basal en el historial de Enfermería y Medicina, sin sus nueve áreas.
 /// ReplacesVersionNumber es la versión a la que sustituyó (basales_sustituciones), null en la primera.</summary>

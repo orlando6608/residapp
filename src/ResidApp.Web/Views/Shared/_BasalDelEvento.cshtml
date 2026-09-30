@@ -18,6 +18,13 @@
             {
                 <p class="mb-1">@ResidentHistoryDisplay.Baseline(Model.Event.Context)</p>
                 <p class="text-muted mb-0">Unidad: @(Model.Event.Context.UnitName ?? "sin ubicación registrada")</p>
+                @if (Model.Event.Context.BaselineVersionNumber is { } baselineVersion)
+                {
+                    <a asp-action="VersionBasal" asp-route-residenteId="@Model.Event.ResidentId.Value" asp-route-version="@baselineVersion"
+                       class="btn btn-outline-secondary btn-sm mt-2 me-2">
+                        Ver ese basal
+                    </a>
+                }
             }
         }
         else

@@ -100,6 +100,40 @@ public class HistorialTests
     }
 
     [Fact]
+    public async Task VersionDelBasal_EnfermeriaYMedicina_AbrenLaHistoricaConSusAreasYSuBarthel()
+    {
+        var (enfermera, medica, residentId) = await SeedResidentAsync();
+        await SignBaselineAsync(enfermera, residentId, BaselineReason.Alta);
+        await SignBaselineAsync(enfermera, residentId, BaselineReason.RevisionProgramada);
+
+        foreach (var profile in new[] { enfermera, medica })
+        {
+            var historic = (await ReadBaselineVersionAsync(profile, residentId, 1)).Value!;
+            Assert.Equal(1, historic.Header.VersionNumber);
+            Assert.False(historic.Header.IsCurrent);
+            Assert.Equal(BaselineReason.Alta, historic.Header.ReasonCode);
+            Assert.Equal(InformationSourceCode.ValoracionDirecta, historic.InformationSource);
+            Assert.Equal(new DateOnly(2026, 9, 14), historic.InformationDate);
+            Assert.Equal(new DateOnly(2026, 9, 14), historic.BarthelDate);
+            Assert.Equal(Enum.GetValues<BaselineArea>().Order(), historic.Areas.Select(a => a.AreaCode).Order());
+            Assert.Equal(BaselineTestData.NineAreas().Single(a => a.Area == BaselineArea.Movilidad).Answer,
+                historic.Areas.Single(a => a.AreaCode == BaselineArea.Movilidad).Answer);
+            // Los diez ítems, en el orden del formulario, suman el total.
+            Assert.Equal(Enum.GetValues<BarthelItemCode>(), historic.BarthelItems.Select(i => i.ItemCode));
+            Assert.Equal(BaselineTestData.FullBarthelItems(), historic.BarthelItems);
+            Assert.Equal(historic.Header.BarthelTotal, historic.BarthelItems.Sum(i => i.AwardedScore));
+
+            var current = (await ReadBaselineVersionAsync(profile, residentId, 2)).Value!;
+            Assert.True(current.Header.IsCurrent);
+            Assert.Equal(1, current.Header.ReplacesVersionNumber);
+
+            var missing = await ReadBaselineVersionAsync(profile, residentId, 3);
+            Assert.True(missing.Ok);
+            Assert.Null(missing.Value);
+        }
+    }
+
+    [Fact]
     public async Task Historial_AuxiliarDireccionYOtroCentro_NoAcceden()
     {
         var (enfermera, _, residentId) = await SeedResidentAsync();
@@ -113,6 +147,7 @@ public class HistorialTests
         foreach (var profile in new[] { auxiliar, direccion, otroCentro })
         {
             Assert.Equal(ApplicationFailureCode.AccessDenied, (await ReadBaselineHistoryAsync(profile, residentId)).Error!.Code);
+            Assert.Equal(ApplicationFailureCode.AccessDenied, (await ReadBaselineVersionAsync(profile, residentId, 1)).Error!.Code);
         }
 
         var session = new FixedHistorialSessionIdentityProvider(auxiliar.ExternalSubject);
@@ -181,6 +216,12 @@ public class HistorialTests
                 new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory),
                 new FixedHistorialSessionIdentityProvider(profile.ExternalSubject), _baselines)
             .ExecuteAsync(new ReadBaselineHistoryCommand(profile.ProfileScopeId, profile.CenterId, residentId));
+
+    private Task<ApplicationResult<BaselineVersionDetail?>> ReadBaselineVersionAsync(SeededProfile profile, ResidentId residentId, int version) =>
+        new ReadBaselineHistory(
+                new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory),
+                new FixedHistorialSessionIdentityProvider(profile.ExternalSubject), _baselines)
+            .ExecuteVersionAsync(new ReadBaselineVersionCommand(profile.ProfileScopeId, profile.CenterId, residentId, version));
 }
 
 file sealed class FixedHistorialSessionIdentityProvider(string externalSubject) : ISessionIdentityProvider

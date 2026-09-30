@@ -899,6 +899,26 @@ public sealed class MedicinaController(MedicinaApplicationService service) : Con
         return View("~/Views/Shared/Historial.cshtml", ResidentHistoryViewModel.From(resident, events, baselines, nameof(Escalado)));
     }
 
+    /// <summary>MED-22 (historia 9): una versión firmada del basal, vigente o histórica, con sus nueve áreas y el Barthel
+    /// por ítems. Vista común con Enfermería.</summary>
+    public async Task<IActionResult> VersionBasal(Guid residenteId, int version, CancellationToken ct)
+    {
+        var resolved = await ResolveScopeResidentAsync(residenteId, ct);
+        if (resolved is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        var (scope, resident) = resolved.Value;
+        var result = await service.ReadBaselineVersionAsync(
+            new ReadBaselineVersionCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), resident.ResidentId, version), ct);
+        if (!result.Ok || result.Value is null)
+        {
+            return RedirectToAction(nameof(Historial), new { residenteId });
+        }
+        return View("~/Views/Shared/VersionBasal.cshtml", new BaselineVersionViewModel(resident, result.Value));
+    }
+
     /// <summary>MED-03/MED-24 (HIS-02): línea temporal completa del residente, bajo demanda y en solo lectura,
     /// dentro del ámbito; de los eventos, solo los que ve Medicina. Vista común con Enfermería.</summary>
     public async Task<IActionResult> LineaTemporal(Guid residenteId, CancellationToken ct)

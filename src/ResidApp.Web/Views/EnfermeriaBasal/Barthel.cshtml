@@ -36,7 +36,7 @@
         var seleccionada = Model.Opciones.GetValueOrDefault(item.ToCode());
         <div class="card mb-3">
             <div class="card-body">
-                <h2 class="h6 card-title">@item</h2>
+                <h2 class="h6 card-title">@EnumDisplay.Label(item)</h2>
                 @foreach (var opcion in BarthelCatalog.Options[item])
                 {
                     var inputId = $"{item.ToCode()}-{opcion.OptionCode}";

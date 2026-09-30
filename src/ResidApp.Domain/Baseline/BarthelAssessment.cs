@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using ResidApp.Shared;
 
 namespace ResidApp.Domain.Baseline;
@@ -5,16 +6,16 @@ namespace ResidApp.Domain.Baseline;
 /// <summary>Traduce BARTHEL_ITEMS de db/repositories/baseline-repository.ts. Los 10 ítems del índice de Barthel.</summary>
 public enum BarthelItemCode
 {
-    [Code("COMER")] Comer,
-    [Code("LAVARSE")] Lavarse,
-    [Code("VESTIRSE")] Vestirse,
-    [Code("ARREGLARSE")] Arreglarse,
-    [Code("DEPOSICION")] Deposicion,
-    [Code("MICCION")] Miccion,
-    [Code("USO_RETRETE")] UsoRetrete,
-    [Code("TRASLADO_CAMA_SILLON")] TrasladoCamaSillon,
-    [Code("DEAMBULACION")] Deambulacion,
-    [Code("ESCALERAS")] Escaleras,
+    [Code("COMER"), Display(Name = "Comer")] Comer,
+    [Code("LAVARSE"), Display(Name = "Lavarse")] Lavarse,
+    [Code("VESTIRSE"), Display(Name = "Vestirse")] Vestirse,
+    [Code("ARREGLARSE"), Display(Name = "Arreglarse")] Arreglarse,
+    [Code("DEPOSICION"), Display(Name = "Deposición")] Deposicion,
+    [Code("MICCION"), Display(Name = "Micción")] Miccion,
+    [Code("USO_RETRETE"), Display(Name = "Uso del retrete")] UsoRetrete,
+    [Code("TRASLADO_CAMA_SILLON"), Display(Name = "Traslado cama-sillón")] TrasladoCamaSillon,
+    [Code("DEAMBULACION"), Display(Name = "Deambulación")] Deambulacion,
+    [Code("ESCALERAS"), Display(Name = "Escaleras")] Escaleras,
 }
 
 public sealed record BarthelItem(BarthelItemCode ItemCode, string SelectedOptionCode, int AwardedScore);

@@ -103,6 +103,7 @@
                         <th scope="col">Firmado</th>
                         <th scope="col">Barthel</th>
                         <th scope="col">Sustituye a</th>
+                        <th scope="col"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,6 +125,9 @@
                             <td>@version.SignedAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(version.SignedByProfile)</td>
                             <td>@version.BarthelTotal / 100</td>
                             <td>@(version.ReplacesVersionNumber is { } previous ? $"Versión {previous}" : "—")</td>
+                            <td>
+                                <a asp-action="VersionBasal" asp-route-residenteId="@Model.Resident.ResidentId.Value" asp-route-version="@version.VersionNumber" class="btn btn-outline-primary btn-sm">Ver versión</a>
+                            </td>
                         </tr>
                     }
                 </tbody>

@@ -201,6 +201,22 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
     - las indicaciones se muestran en solo lectura, con «Ir a Indicaciones» si queda alguna por leer o por
       realizar; se confirman y registran en esa bandeja;
     - entran valoración, indicaciones y seguimiento.
+- **Historia 11, bloque 4 (contenido de una versión del basal, ENF-24)** — 2026-09-30, común con Medicina
+  (historia 9).
+  - **Qué muestra:** «Ver versión» en la tabla de versiones del Historial, y «Ver ese basal» en el detalle de
+    un evento cerrado (el basal de su fecha, HIS-03), abren `VersionBasal` (vista común
+    `Shared/VersionBasal`), en solo lectura: la cabecera de la versión, la fuente y la fecha de la
+    información, las nueve áreas con el resumen «Campo: valores» y su observación, y el Barthel con la opción
+    y los puntos de cada ítem.
+  - **Decisiones del usuario (2026-09-30):** el Barthel se muestra con sus diez ítems, no solo el total, y
+    el basal de la fecha del evento cerrado también enlaza a su versión.
+  - **Implementación:** sin script. `ReadBaselineHistory.ExecuteVersionAsync` usa la misma autorización que
+    el historial (`BaselineHistoryRead`, sin auditoría); `SqlBaselineRepository.ReadVersionAsync` lee la
+    versión por su número dentro del residente y del centro, y devuelve null si no existe. Los ítems del
+    Barthel (`BarthelItemCode`) tienen ya su nombre en español (el del contrato de datos del prototipo), que
+    usa también el formulario del Barthel, donde antes salía el nombre interno («UsoRetrete»).
+  - **Tests:** `VersionDelBasal_…` y el acceso denegado en `HistorialTests`, y
+    `Barthel_CadaItemTieneNombreEnEspanol_…` en `BaselineAreaDisplayTests`.
 
 ## Pendiente
 
@@ -208,8 +224,6 @@ En el orden propuesto de construcción:
 
 1. **Historia 11, bloques siguientes** (común con Medicina):
    - **Línea temporal para Dirección Clínica:** lectura condicional y auditada, que queda para su vertical.
-   - **Contenido de una versión histórica del basal:** abrir sus nueve áreas desde el Historial. Ya está
-     desbloqueado: el resumen despliega las listas y los catálogos tienen etiquetas en español (2026-09-30).
 
 Huecos de lo ya construido:
 

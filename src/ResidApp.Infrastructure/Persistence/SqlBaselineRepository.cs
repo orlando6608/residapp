@@ -364,15 +364,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             return null;
         }
 
-        var areas = (await connection.QueryAsync<CurrentAreaRow>(new CommandDefinition("""
-            SELECT area_codigo AS AreaCode, respuestas_json AS AnswerPayload, observacion AS Observation
-              FROM dbo.basales_version_areas WHERE version_basal_id = @VersionId ORDER BY area_codigo
-            """, new { VersionId = version.Id }, cancellationToken: ct)))
-            .Select(area => new BaselineAreaSummary(
-                EnumCode.ParseCode<BaselineArea>(area.AreaCode),
-                BaselineAreaAnswerReader.Parse(EnumCode.ParseCode<BaselineArea>(area.AreaCode), area.AnswerPayload),
-                area.Observation))
-            .ToList();
+        var areas = await ReadVersionAreasAsync(connection, version.Id, ct);
 
         var barthelTotal = await connection.QuerySingleAsync<int>(new CommandDefinition("""
             SELECT puntuacion_total FROM dbo.basales_version_barthel WHERE version_basal_id = @VersionId
@@ -407,6 +399,64 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             r.VersionNumber, EnumCode.ParseCode<BaselineReason>(r.ReasonCode), EnumCode.ParseCode<SystemProfile>(r.SignedByProfile),
             new DateTimeOffset(r.SignedAt, TimeSpan.Zero), r.BarthelTotal, r.IsCurrent, r.ReplacesVersionNumber)).ToList();
     }
+
+    /// <summary>ENF-24: el contenido de una versión firmada (vigente o histórica) por su número, con la misma cabecera
+    /// que ReadHistoryAsync, las nueve áreas y los diez ítems del Barthel en el orden del formulario. Null si el
+    /// residente no tiene esa versión. Ya autorizada, igual que ReadHistoryAsync.</summary>
+    public async Task<BaselineVersionDetail?> ReadVersionAsync(
+        ReadCurrentBaselineSummaryInput input, int versionNumber, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var version = await connection.QuerySingleOrDefaultAsync<VersionRow>(new CommandDefinition("""
+            SELECT v.id AS Id, v.numero_version AS VersionNumber, v.motivo_codigo AS ReasonCode, v.firmado_por_perfil AS SignedByProfile,
+                   v.firmado_en AS SignedAt, b.puntuacion_total AS BarthelTotal,
+                   CAST(CASE WHEN cur.version_basal_id IS NULL THEN 0 ELSE 1 END AS BIT) AS IsCurrent,
+                   previous.numero_version AS ReplacesVersionNumber,
+                   v.fuente_informacion_comun_codigo AS InformationSourceCode, v.fuente_informacion_comun_otro_texto AS InformationSourceOtherText,
+                   v.fecha_informacion_comun AS InformationDate, b.fecha_valoracion AS BarthelDate
+              FROM dbo.basales_version v
+              JOIN dbo.basales_version_barthel b ON b.version_basal_id = v.id
+              LEFT JOIN dbo.basales_vigentes_residente cur ON cur.version_basal_id = v.id
+              LEFT JOIN dbo.basales_sustituciones replacement ON replacement.version_nueva_id = v.id
+              LEFT JOIN dbo.basales_version previous ON previous.id = replacement.version_anterior_id
+             WHERE v.residente_id = @ResidentId AND v.centro_id = @CenterId AND v.numero_version = @VersionNumber
+            """, new { ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value, VersionNumber = versionNumber },
+            cancellationToken: ct));
+        if (version is null)
+        {
+            return null;
+        }
+
+        var areas = await ReadVersionAreasAsync(connection, version.Id, ct);
+        var barthelItems = (await connection.QueryAsync<BarthelItemRow>(new CommandDefinition("""
+                SELECT item_codigo AS ItemCode, opcion_seleccionada_codigo AS SelectedOptionCode, puntuacion_otorgada AS AwardedScore
+                  FROM dbo.basales_version_barthel_items WHERE version_basal_id = @VersionId
+                """, new { VersionId = version.Id }, cancellationToken: ct)))
+            .Select(i => new BarthelItem(EnumCode.ParseCode<BarthelItemCode>(i.ItemCode), i.SelectedOptionCode, i.AwardedScore))
+            .OrderBy(i => i.ItemCode)
+            .ToList();
+
+        return new BaselineVersionDetail(
+            new BaselineHistoryEntry(
+                version.VersionNumber, EnumCode.ParseCode<BaselineReason>(version.ReasonCode),
+                EnumCode.ParseCode<SystemProfile>(version.SignedByProfile), new DateTimeOffset(version.SignedAt, TimeSpan.Zero),
+                version.BarthelTotal, version.IsCurrent, version.ReplacesVersionNumber),
+            EnumCode.ParseCode<InformationSourceCode>(version.InformationSourceCode), version.InformationSourceOtherText,
+            DateOnly.FromDateTime(version.InformationDate), areas, DateOnly.FromDateTime(version.BarthelDate), barthelItems);
+    }
+
+    /// <summary>Las nueve áreas de una versión firmada, ya tipadas con BaselineAreaAnswerReader (el mismo parser que
+    /// valida el borrador al firmar).</summary>
+    private static async Task<IReadOnlyList<BaselineAreaSummary>> ReadVersionAreasAsync(IDbConnection connection, Guid versionId, CancellationToken ct) =>
+        (await connection.QueryAsync<CurrentAreaRow>(new CommandDefinition("""
+            SELECT area_codigo AS AreaCode, respuestas_json AS AnswerPayload, observacion AS Observation
+              FROM dbo.basales_version_areas WHERE version_basal_id = @VersionId ORDER BY area_codigo
+            """, new { VersionId = versionId }, cancellationToken: ct)))
+            .Select(area => new BaselineAreaSummary(
+                EnumCode.ParseCode<BaselineArea>(area.AreaCode),
+                BaselineAreaAnswerReader.Parse(EnumCode.ParseCode<BaselineArea>(area.AreaCode), area.AnswerPayload),
+                area.Observation))
+            .ToList();
 
     /// <summary>Traduce ENF-19/ENF-20 "crear borrador": comprueba primero, en aplicación, que no exista ya
     /// un borrador activo para el residente (UX_bd_active es la defensa en profundidad si esta
@@ -848,6 +898,11 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
     private sealed record HistoryRow(
         int VersionNumber, string ReasonCode, string SignedByProfile, DateTime SignedAt, int BarthelTotal, bool IsCurrent,
         int? ReplacesVersionNumber);
+
+    private sealed record VersionRow(
+        Guid Id, int VersionNumber, string ReasonCode, string SignedByProfile, DateTime SignedAt, int BarthelTotal, bool IsCurrent,
+        int? ReplacesVersionNumber, string InformationSourceCode, string? InformationSourceOtherText, DateTime InformationDate,
+        DateTime BarthelDate);
 
     private sealed record CurrentAreaRow(string AreaCode, string AnswerPayload, string? Observation);
 

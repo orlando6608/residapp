@@ -107,6 +107,10 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   Medicina ve también las correcciones y rectificaciones de la valoración de Enfermería en la información
   reunida. La política provisional, las decisiones y el script `0020` están en `pendientes-enfermeria.md`
   (historia 11, bloque 3).
+- **Historia 9, bloque 4 (contenido de una versión del basal)** — 2026-09-30: «Ver versión» en el Historial
+  y «Ver ese basal» en el detalle de un evento cerrado (`/Medicina/VersionBasal`), con la misma vista que
+  Enfermería: las nueve áreas y el Barthel por ítems. El detalle está en `pendientes-enfermeria.md`
+  (historia 11, bloque 4).
 - Tests: `MedicinaApplicationServiceTests` (integración), `MedicalAssessmentTests`, `FollowUpTests`,
   `UrgentProtocolTests` y `EmergencyReferralTests` (unitarios), y `ReferralReportBuilderTests` (funcional).
 - Cuenta de desarrollo `dev-integrado-medicina` en el escenario integrado.
