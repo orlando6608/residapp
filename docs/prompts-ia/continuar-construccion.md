@@ -27,9 +27,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
       - al empezar la valoración médica la lista muestra «En valoración médica»;
       - al cerrarlo Medicina, la tarjeta vuelve a 0, la lista dice «No hay escalados abiertos.» y el evento
         aparece en el Historial.
-- **Buscador de las listas de residentes (ENF-17, MED-19; sin script):** hecho el 2026-09-30, en un commit local
-  sin push. Buscar por nombre (sin mayúsculas ni acentos) y filtrar por estado basal y unidad, al pulsar «Buscar»,
-  en Enfermería y Medicina (parcial `Shared/_FiltroResidentes`). El detalle está en `pendientes-enfermeria.md`.
+- **Buscador de las listas de residentes (ENF-17, MED-19; sin script):** hecho el 2026-09-30 y desplegado en
+  Azure (push de `e6720f2`, run 36722073738 en verde con `build-and-test` y `deploy`). En Azure, con las cuentas
+  integradas de Enfermería y Medicina: «uno», «DÓS» (sin acentos ni mayúsculas, con ICU en Linux), estado basal
+  y una búsqueda sin coincidencias. Buscar por nombre (sin mayúsculas ni acentos) y filtrar por estado basal y
+  unidad, al pulsar «Buscar», en Enfermería y Medicina (parcial `Shared/_FiltroResidentes`). El detalle está en
+  `pendientes-enfermeria.md`.
   - **Verificación:**
     - suite local en verde (121, 192 y 14) y 3 vueltas tipo CI con BD nueva;
     - curl con `dev-integrado-enfermeria` y `dev-integrado-medicina`: nombre en mayúsculas y con acentos
