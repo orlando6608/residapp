@@ -13,10 +13,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Historial, bloque 1 (historia 11 de Enfermería, 9 de Medicina; script `0019`):** hecho el 2026-09-30, con
-  commit en `main` y **sin push** (el push aplicará `0019` en Azure SQL, incluido el relleno de la instantánea
-  de todos los eventos existentes). El detalle y las decisiones están en `pendientes-enfermeria.md`
-  (historia 11, bloque 1).
+- **Historial, bloque 1 (historia 11 de Enfermería, 9 de Medicina; script `0019`):** hecho el 2026-09-30 y
+  desplegado en Azure: push de `5deb007`, run 36679533522 en verde con `build-and-test` y `deploy` (incluido
+  «Aplicar esquema y seed en Azure SQL», con el relleno de la instantánea). El detalle y las decisiones están
+  en `pendientes-enfermeria.md` (historia 11, bloque 1).
   - «Ver historial» desde la ficha, en Enfermería y Medicina: eventos cerrados con el basal y la ubicación de
     su fecha (HIS-01, HIS-03) y versiones firmadas del basal (ENF-24).
   - **Verificación:**
@@ -145,8 +145,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   pantalla). Medicina está en curso: historias 1 a 7 (escalados, valoración médica, indicaciones, cierre
   médico, seguimiento médico con continuidad entre turnos, protocolo urgente, derivación a Urgencias y
   evento propio).
-- La base local `ResidApp` tiene los scripts `0001` a `0019` registrados en `dbo.scripts_aplicados` (Azure,
-  hasta `0018`). Hay copias previas a `0016`, `0017`, `0018` y `0019` en
+- La base local `ResidApp` tiene los scripts `0001` a `0019` registrados en `dbo.scripts_aplicados`
+  (también en Azure). Hay copias previas a `0016`, `0017`, `0018` y `0019` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
   `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak` y `ResidApp-antes-0019-20260930.bak`).
   La base local tiene además eventos de prueba del escenario integrado:
@@ -177,8 +177,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Si el usuario lo pide, push de `0019`** y comprobar que el pipeline termina en verde, con
-   `build-and-test` y `deploy`. Después, abrir el Historial en Azure con `dev-integrado-enfermeria`.
+1. **Probar el Historial en Azure** con `dev-integrado-enfermeria` y `dev-integrado-medicina` (aún no se ha
+   hecho): lista de eventos cerrados, contexto de su fecha y versiones del basal.
 2. **Historial, bloque 2: la línea temporal (HIS-02).** Decidido: se abre con un **permiso nuevo** por
    ámbito, con auditoría de cada acceso. Falta decidir con el usuario qué contiene (versiones de las
    valoraciones, parte médica del evento escalado, informe de derivación firmado…) y a quién se concede en
