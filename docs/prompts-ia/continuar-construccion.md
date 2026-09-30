@@ -13,10 +13,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 - **Dirección Clínica, bloque 1: supervisión operativa en solo lectura (DIR-01 a DIR-04, DIR-17; sin script):** hecho el
-  2026-09-30, **sin push** (solo commit en `main`). `/Direccion` (contadores por unidad con denominador),
+  2026-09-30 y desplegado en Azure (push de `04c68ce`, run 36762590727 en verde con `build-and-test` y `deploy`). `/Direccion` (contadores por unidad con denominador),
   `/Direccion/Pendientes` (filtro por tipo y unidad), `/Direccion/Episodio` (hitos sin texto) y `/Direccion/Ambito`. Sin
   contenido clínico: los tipos de supervisión no tienen campos de texto. El detalle y las suposiciones están en
   `pendientes-direccion.md` (fichero nuevo).
+  - **Prueba en Azure (2026-09-30)** con `dev-integrado-direccion`: inicio con 1 episodio abierto (el escalado de
+    ejemplo de Residente Integrado Dos, «en valoración médica»), la fila de la unidad con sus denominadores, pendientes
+    con el filtro «Escalado a Medicina» («1 de 1») y valores mal formados ignorados, y el episodio con sus 4 hitos
+    (registro, valoración de Enfermería, escalado y valoración médica) sin el texto de la observación. Un episodio
+    inexistente vuelve a Pendientes y «Mi ámbito» muestra el centro, la unidad y sus dos permisos.
+    `dev-integrado-enfermeria` y `-medicina` reciben «No se puede acceder a esta operación».
   - **Verificación:**
     - suite local en verde 3 veces seguidas (121, 199 y 17) y 3 vueltas tipo CI con BD nueva en verde;
     - curl con `dev-integrado-direccion`: inicio (Residente Integrado Uno y Dos, 3 abiertos), pendientes con filtro y valores
