@@ -231,6 +231,13 @@ public class MedicinaApplicationServiceTests
         Assert.Equal(eventId, pending.EventId);
         Assert.Equal(MedicalIndicationStatus.PendienteLectura, indication.Status);
 
+        // El detalle de Enfermería trae la parte médica que pinta _ParteMedicaResumen, en solo lectura.
+        var nursingDetail = (await nursing.FindPendingChangeDetailAsync(
+            new FindPendingChangeDetailCommand(companera.ProfileScopeId, companera.CenterId, eventId))).Value!;
+        Assert.Equal("Crepitantes bibasales.", nursingDetail.Medical.Assessment!.Content.FindingsAndExamination);
+        Assert.False(nursingDetail.Medical.Assessment.Amendments!.AuthoredByCurrentAccount);
+        Assert.Equal(indication.Id, Assert.Single(nursingDetail.Medical.Indications).Id);
+
         var doneBeforeReading = await nursing.RecordIndicationProgressAsync(new RecordIndicationProgressCommand(
             companera.ProfileScopeId, companera.CenterId, eventId, indication.Id, indication.Revision, Realizada: true));
         var read = await nursing.RecordIndicationProgressAsync(new RecordIndicationProgressCommand(

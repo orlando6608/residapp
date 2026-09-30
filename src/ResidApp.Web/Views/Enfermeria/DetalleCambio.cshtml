@@ -160,6 +160,11 @@
     </div>
 }
 
+@if (evento.Medical.StartedAt is not null || evento.Medical.Indications.Count > 0)
+{
+    <partial name="_ParteMedicaResumen" model="evento" />
+}
+
 @if (evento.UrgentProtocol is { } protocolo)
 {
     <partial name="_ProtocoloUrgenteResumen" model="protocolo" />

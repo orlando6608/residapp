@@ -191,14 +191,22 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
       contra el doble envío. No toca la revisión del evento.
   - **Tests:** `CorreccionTests`, `CorreccionMedica_…` en `MedicinaApplicationServiceTests` y
     `AssessmentCorrectionTests` (unitarios).
+- **Parte médica en el detalle de Enfermería** — 2026-09-30.
+  - **Qué muestra:** el detalle de un evento escalado, o de uno propio de Medicina con indicaciones, enseña en
+    solo lectura la valoración médica (con sus correcciones y rectificaciones), las indicaciones con su estado
+    y el seguimiento médico (parcial `Shared/_ParteMedicaResumen`).
+  - **Implementación:** los datos ya llegaban en `PendingChangeDetail.Medical`, así que no hay cambios de
+    backend ni de esquema.
+  - **Decisiones del usuario (2026-09-30):**
+    - las indicaciones se muestran en solo lectura, con «Ir a Indicaciones» si queda alguna por leer o por
+      realizar; se confirman y registran en esa bandeja;
+    - entran valoración, indicaciones y seguimiento.
 
 ## Pendiente
 
 En el orden propuesto de construcción:
 
 1. **Historia 11, bloques siguientes** (común con Medicina):
-   - **Detalle de Enfermería de un evento escalado:** sigue sin pintar la parte médica (valoración e
-     indicaciones), aunque ya se ve en la línea temporal.
    - **Línea temporal para Dirección Clínica:** lectura condicional y auditada, que queda para su vertical.
    - **Contenido de una versión histórica del basal:** abrir sus nueve áreas exige arreglar antes
      `BaselineAreaDisplay.Summarize` (ver los avisos de `continuar-construccion.md`).

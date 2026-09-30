@@ -1,0 +1,106 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Domain.Medicina
+@using ResidApp.Web.Models
+@model PendingChangeDetail
+@* Parte médica de un evento escalado o propio de Medicina, en solo lectura, para el detalle de Enfermería
+   (decisión del usuario, 2026-09-30). Las indicaciones se confirman y registran en la bandeja de Indicaciones. *@
+@{
+    var medico = Model.Medical;
+    var pendientes = medico.Indications.Any(i => i.Status is MedicalIndicationStatus.PendienteLectura or MedicalIndicationStatus.Leida);
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Valoración médica</h2>
+        @if (medico.Assessment is null)
+        {
+            <p class="text-muted mb-0">
+                @(medico.StartedAt is { } iniciada
+                    ? $"Iniciada por Medicina el {iniciada.ToLocalTime():g}. Medicina todavía no ha guardado su valoración."
+                    : "Medicina todavía no ha empezado su valoración.")
+            </p>
+        }
+        else
+        {
+            var content = medico.Assessment.Content;
+            <p class="text-muted">
+                Iniciada por Medicina el @medico.StartedAt?.ToLocalTime().ToString("g"). Último guardado el
+                @medico.Assessment.LastUpdatedAt.ToLocalTime().ToString("g"). Es de solo lectura para Enfermería.
+            </p>
+            <dl class="row mb-0">
+                @foreach (var (etiqueta, texto) in new[] { ("Hallazgos y exploración", content.FindingsAndExamination), ("Valoración", content.Assessment), ("Actuaciones", content.Actions) })
+                {
+                    if (texto is not null)
+                    {
+                        <dt class="col-sm-3">@etiqueta</dt>
+                        <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                    }
+                }
+                @if (!content.Vitals.IsEmpty)
+                {
+                    <dt class="col-sm-3">Constantes</dt>
+                    <dd class="col-sm-9">@VitalSignsDisplay.Summary(content.Vitals)</dd>
+                }
+            </dl>
+            <partial name="_CorreccionesValoracion" model="new CorreccionesValoracionViewModel(
+                medico.Assessment.Amendments, AssessmentAmendmentAction.Ninguna, Model.EventId, null)" />
+        }
+    </div>
+</div>
+
+@if (medico.Indications.Count > 0)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Indicaciones de Medicina</h2>
+            <ul class="list-unstyled mb-0">
+                @foreach (var indicacion in medico.Indications)
+                {
+                    <li class="mb-3">
+                        <span class="badge @MedicalIndicationDisplay.BadgeClass(indicacion.Status)">@MedicalIndicationDisplay.Label(indicacion.Status)</span>
+                        @if (MedicalIndicationDisplay.IsOverdue(indicacion))
+                        {
+                            <span class="badge text-bg-danger">Vencida</span>
+                        }
+                        <p class="mb-0 mt-1" style="white-space: pre-line">@indicacion.Text</p>
+                        <p class="text-muted mb-0">
+                            @FollowUpDisplay.Plan(indicacion.DueDate, indicacion.Criterion) · emitida el @indicacion.IssuedAt.ToLocalTime().ToString("g")
+                        </p>
+                        @if (indicacion.AdditionalInformation is not null)
+                        {
+                            <p class="mb-0" style="white-space: pre-line">Información adicional: @indicacion.AdditionalInformation</p>
+                        }
+                        @if (indicacion.Incident is not null)
+                        {
+                            <p class="mb-0" style="white-space: pre-line"><strong>Incidencia:</strong> @indicacion.Incident</p>
+                        }
+                    </li>
+                }
+            </ul>
+            @if (pendientes)
+            {
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <a asp-controller="Enfermeria" asp-action="Indicaciones" class="btn btn-outline-primary">Ir a Indicaciones</a>
+                    <span class="small text-muted">Allí se confirma la lectura y se registra si se realizó.</span>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (medico.FollowUp is { } seguimientoMedico)
+{
+    var abierto = Model.Status == ClinicalEventStatus.EnSeguimientoMedico;
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Seguimiento médico @(abierto ? "" : "(terminado)")</h2>
+            <p class="mb-1" style="white-space: pre-line"><strong>Objetivo:</strong> @seguimientoMedico.Objective</p>
+            <p class="mb-1">Plan: @FollowUpDisplay.Plan(seguimientoMedico.Tracking.DueDate, seguimientoMedico.Tracking.Criterion)</p>
+            <p class="text-muted mb-0">
+                Iniciado por Medicina el @seguimientoMedico.Tracking.StartedAt.ToLocalTime().ToString("g") ·
+                @seguimientoMedico.Tracking.Actions.Count acción(es) registrada(s)
+            </p>
+        </div>
+    </div>
+}

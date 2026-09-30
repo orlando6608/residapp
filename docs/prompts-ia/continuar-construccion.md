@@ -13,6 +13,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Parte médica en el detalle de Enfermería (sin script):** hecho el 2026-09-30, en un commit local sin
+  push.
+  - **Qué hace:** el detalle de un evento escalado, o de uno propio de Medicina con indicaciones, muestra en
+    solo lectura la valoración médica, las indicaciones y el seguimiento médico, con «Ir a Indicaciones» si
+    queda alguna pendiente. El detalle está en `pendientes-enfermeria.md`.
+  - **Verificación:**
+    - suite local en verde (121, 189 y 7);
+    - 3 vueltas tipo CI con BD nueva;
+    - curl con `dev-integrado-enfermeria` sobre los 10 eventos de Residente Integrado Uno: tarjetas en los 3
+      escalados con valoración médica y en el evento propio de Medicina, y ninguna en los 6 sin escalar.
 - **Historial, bloque 3: corrección y rectificación (COR-01/COR-02, script `0020`):** hecho el 2026-09-30 y
   desplegado en Azure (push de `8554dd2`, run 36699847694 en verde con `build-and-test` y `deploy`, incluido
   «Aplicar esquema y seed en Azure SQL»).
@@ -229,8 +239,13 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Detalle de Enfermería de un evento escalado** (elegida por el usuario el 2026-09-30): pintar la parte
-   médica (valoración e indicaciones) en `Enfermeria/DetalleCambio`, que hoy solo se ve en la línea temporal.
+1. **Push de la parte médica en el detalle de Enfermería** cuando el usuario lo pida. Es solo de vista y no
+   tiene script. Después, comprueba el pipeline y míralo en Azure con `dev-integrado-enfermeria`.
+2. **Siguiente bloque por decidir con el usuario.** Candidatos de los pendientes:
+   - historia 8 de Medicina (basal desde Medicina);
+   - arreglar `BaselineAreaDisplay.Summarize` (ver avisos), que desbloquea abrir una versión histórica del
+     basal;
+   - una lista de «mis escalados» abiertos en Enfermería.
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 
