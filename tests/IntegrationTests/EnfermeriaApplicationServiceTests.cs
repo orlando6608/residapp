@@ -62,7 +62,8 @@ public class EnfermeriaApplicationServiceTests
             new ReadResidentTimeline(new FindScopeResident(listScopeResidents), changeInbox),
             new CorrectNursingAssessment(scopes, changeInbox, session, corrections, settings),
             new RectifyAssessment(scopes, changeInbox, session, corrections, settings),
-            settings);
+            settings,
+            new ListOpenEscalations(scopes, changeInbox, session));
     }
 
     /// <summary>Un residente en la unidad de dos profesionales de Enfermería y un evento propio de la

@@ -21,7 +21,7 @@ public sealed class EnfermeriaApplicationService(
     FindResidentIdentification findResidentIdentification, DownloadReferralReport downloadReferralReport,
     ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory, ReadResidentTimeline readResidentTimeline,
     CorrectNursingAssessment correctNursingAssessment, RectifyAssessment rectifyAssessment,
-    AssessmentCorrectionSettings correctionSettings)
+    AssessmentCorrectionSettings correctionSettings, ListOpenEscalations listOpenEscalations)
 {
     /// <summary>COR-01: ventana de corrección, para ofrecer corregir o rectificar en el detalle.</summary>
     public TimeSpan CorrectionWindow => correctionSettings.Window;
@@ -92,6 +92,10 @@ public sealed class EnfermeriaApplicationService(
     public Task<ApplicationResult<IReadOnlyList<FollowUpSummary>>> ListFollowUpsAsync(
         ListFollowUpsCommand command, CancellationToken ct = default) =>
         listFollowUps.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<IReadOnlyList<OpenEscalationSummary>>> ListOpenEscalationsAsync(
+        ListOpenEscalationsCommand command, CancellationToken ct = default) =>
+        listOpenEscalations.ExecuteAsync(command, ct);
 
     public Task<ApplicationResult<int>> CloseClinicalEventAsync(
         CloseClinicalEventCommand command, CancellationToken ct = default) =>

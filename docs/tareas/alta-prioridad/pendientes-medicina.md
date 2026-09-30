@@ -111,6 +111,8 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   y «Ver ese basal» en el detalle de un evento cerrado (`/Medicina/VersionBasal`), con la misma vista que
   Enfermería: las nueve áreas y el Barthel por ítems. El detalle está en `pendientes-enfermeria.md`
   (historia 11, bloque 4).
+- **Escalados abiertos en Enfermería** — 2026-09-30: Enfermería ve los escalados que siguen abiertos en
+  Medicina (antes solo los veía al cerrarse, en el Historial). El detalle está en `pendientes-enfermeria.md`.
 - **Buscador de la lista de residentes (MED-19)** — 2026-09-30: el mismo que Enfermería (nombre, estado
   basal y unidad). El detalle está en `pendientes-enfermeria.md`.
 - **Historia 8 (gestionar el basal, MED-21)** — 2026-09-30: Medicina crea, completa y firma el basal con el
@@ -149,6 +151,3 @@ Huecos de lo ya construido:
   informe, contacto familiar en texto libre); ver `pendientes-enfermeria.md`.
 - **Seguimiento médico (historia 5)**: no hay equipos ni turnos reales (vertical Administración). El
   equipo o turno entrante es texto libre y la fecha prevista es solo fecha, sin hora, como en Enfermería.
-- Los eventos escalados salen de las bandejas de Enfermería. Cuando Medicina los cierra aparecen en el
-  Historial del residente, pero mientras siguen abiertos en Medicina no hay una lista de "mis escalados" en
-  Enfermería.

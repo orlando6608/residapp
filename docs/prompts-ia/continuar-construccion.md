@@ -13,6 +13,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Escalados abiertos en Enfermería (sin script):** hecho el 2026-09-30, en un commit local sin push. Tarjeta
+  «Escalados a Medicina» en el inicio de Enfermería y lista `/Enfermeria/Escalados` con los eventos que la
+  Enfermería de sus unidades escaló y siguen abiertos en Medicina, marcando «Escalado por ti». El detalle está
+  en `pendientes-enfermeria.md`.
+  - **Verificación:**
+    - suite local en verde (121, 193 y 14) y 3 vueltas tipo CI con BD nueva;
+    - curl en local sobre Residente Integrado Dos, con el evento «Prueba manual escalados abiertos: tos
+      productiva.», que queda cerrado en la base local:
+      - `dev-integrado-enfermeria` lo registra, lo valora y lo escala. La tarjeta pasa a 1 y la lista lo
+        muestra «Escalado a Medicina», con «Escalado por ti», el motivo, la unidad y la fecha;
+      - `dev-integrado-medicina` recibe «No se puede acceder a esta operación» en `/Enfermeria/Escalados`;
+      - al empezar la valoración médica la lista muestra «En valoración médica»;
+      - al cerrarlo Medicina, la tarjeta vuelve a 0, la lista dice «No hay escalados abiertos.» y el evento
+        aparece en el Historial.
 - **Buscador de las listas de residentes (ENF-17, MED-19; sin script):** hecho el 2026-09-30, en un commit local
   sin push. Buscar por nombre (sin mayúsculas ni acentos) y filtrar por estado basal y unidad, al pulsar «Buscar»,
   en Enfermería y Medicina (parcial `Shared/_FiltroResidentes`). El detalle está en `pendientes-enfermeria.md`.
@@ -317,7 +331,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     relevante.
   - «Prueba manual derivacion medica: dolor torácico.»: escalado, protocolo de Medicina, derivado por
     Medicina, con una llamada «Contactado» y cerrado con una comunicación relevante.
-- Suite: 121 unitarios, 192 de integración y 14 funcionales, todos en verde.
+  - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
+    valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
+    firmado por Medicina (historia 8).
+- Suite: 121 unitarios, 193 de integración y 14 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -326,7 +343,6 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 ## Siguiente tarea
 
 1. **Siguiente bloque por decidir con el usuario.** Candidatos de los pendientes:
-   - una lista de «mis escalados» abiertos en Enfermería;
    - los eventos abiertos del residente en su ficha de Medicina (MED-20).
 
 ## Avisos abiertos (fuera de alcance, sin corregir)

@@ -61,10 +61,11 @@ public sealed record EnfermeriaResidentDetailViewModel(
 
 /// <summary>ENF-01: contadores de las bandejas ya construidas (ordinarios, prioritarios y seguimientos,
 /// con cuántos de estos están vencidos), de las comunicaciones familiares pendientes de aprobación y de las
-/// indicaciones de Medicina pendientes (con cuántas faltan por leer) y de los protocolos urgentes activos.</summary>
+/// indicaciones de Medicina pendientes (con cuántas faltan por leer), de los protocolos urgentes activos y de los
+/// escalados a Medicina que siguen abiertos.</summary>
 public sealed record EnfermeriaInicioViewModel(
     int Ordinarios, int Prioritarios, int Seguimientos, int SeguimientosVencidos, int Comunicaciones,
-    int Indicaciones, int IndicacionesSinLeer, int Protocolos);
+    int Indicaciones, int IndicacionesSinLeer, int Protocolos, int Escalados);
 
 /// <summary>ENF-04: detalle de un cambio recibido más el resumen del basal vigente del residente (null si
 /// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel. CorrectionWindow decide si

@@ -324,6 +324,41 @@ public class MedicinaApplicationServiceTests
         FamilyCommunicationType? type = null, string? text = null) =>
         new(seed.ProfileScopeId, seed.CenterId, eventId, revision, operationId ?? Guid.NewGuid(), decision, type, text);
 
+    /// <summary>Escalados abiertos de Enfermería: el escalado aparece para toda la Enfermería de la unidad, marcado para
+    /// quien lo escaló, sigue mientras Medicina lo valora y sale al cerrarse. Medicina no entra en esta lista.</summary>
+    [Fact]
+    public async Task EscaladosAbiertos_LosVeLaUnidad_SiguenEnMedicina_YSalenAlCerrar()
+    {
+        var (enfermera, companera, medica, eventId) = await SeedEscalatedAsync();
+        var otroCentro = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+
+        var mine = Assert.Single(await OpenEscalationsAsync(enfermera), e => e.EventId == eventId);
+        Assert.True(mine.EscalatedByCurrentAccount);
+        Assert.Equal(ClinicalEventStatus.EscaladoMedicina, mine.Status);
+        Assert.False(string.IsNullOrWhiteSpace(mine.Reason));
+        Assert.False(Assert.Single(await OpenEscalationsAsync(companera), e => e.EventId == eventId).EscalatedByCurrentAccount);
+        Assert.DoesNotContain(await OpenEscalationsAsync(otroCentro), e => e.EventId == eventId);
+
+        var revision = await StartAndSaveMedicalAsync(medica, eventId);
+        Assert.Equal(ClinicalEventStatus.EnValoracionMedica,
+            Assert.Single(await OpenEscalationsAsync(enfermera), e => e.EventId == eventId).Status);
+
+        var denied = await BuildService(medica.ExternalSubject).ListOpenEscalationsAsync(
+            new ListOpenEscalationsCommand(medica.ProfileScopeId, medica.CenterId));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, denied.Error!.Code);
+
+        Assert.True((await BuildMedicina(medica.ExternalSubject).CloseMedicalEventAsync(Close(medica, eventId, revision))).Ok);
+        Assert.DoesNotContain(await OpenEscalationsAsync(enfermera), e => e.EventId == eventId);
+    }
+
+    private static async Task<IReadOnlyList<OpenEscalationSummary>> OpenEscalationsAsync(SeededProfile seed)
+    {
+        var result = await BuildService(seed.ExternalSubject).ListOpenEscalationsAsync(
+            new ListOpenEscalationsCommand(seed.ProfileScopeId, seed.CenterId));
+        Assert.True(result.Ok, result.Error?.Message);
+        return result.Value!;
+    }
+
     [Fact]
     public async Task LineaTemporal_RecogeCadaHitoConSuTexto_YMedicinaSoloVeLoQueLeLlega()
     {

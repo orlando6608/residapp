@@ -1,0 +1,48 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model IReadOnlyList<OpenEscalationSummary>
+@{
+    ViewData["Title"] = "Escalados a Medicina";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Escalados a Medicina</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Escalados a Medicina abiertos</h1>
+<p class="text-muted">
+    Eventos que la Enfermería de tus unidades escaló a Medicina y que Medicina todavía no ha cerrado. Solo lectura: las
+    indicaciones se leen y registran en Indicaciones.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No hay escalados abiertos.</p>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        <a asp-action="DetalleCambio" asp-route-eventoId="@item.EventId" class="card mb-3 text-decoration-none text-body border-start border-4 border-info">
+            <div class="card-body">
+                <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
+                <p class="mb-1">
+                    <span class="badge text-bg-info">@EnumDisplay.Label(item.Status)</span>
+                    @if (item.EscalatedByCurrentAccount)
+                    {
+                        <span class="badge text-bg-secondary">Escalado por ti</span>
+                    }
+                </p>
+                <p class="mb-1">Motivo: @item.Reason</p>
+                <p class="text-muted mb-0">
+                    @(item.UnitName ?? "Sin unidad") · Escalado el @item.EscalatedAt.ToLocalTime().ToString("g")
+                </p>
+            </div>
+        </a>
+    }
+}

@@ -42,6 +42,7 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         var seguimientos = await service.ListFollowUpsAsync(new ListFollowUpsCommand(activeScope.ProfileScopeId, centroId), ct);
         var indicaciones = await service.ListPendingIndicationsAsync(new ListPendingIndicationsCommand(activeScope.ProfileScopeId, centroId), ct);
         var protocolos = await service.ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(activeScope.ProfileScopeId, centroId), ct);
+        var escalados = await service.ListOpenEscalationsAsync(new ListOpenEscalationsCommand(activeScope.ProfileScopeId, centroId), ct);
         return View(new EnfermeriaInicioViewModel(
             ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
@@ -49,7 +50,8 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             comunicaciones.Ok ? comunicaciones.Value!.Count : 0,
             indicaciones.Ok ? indicaciones.Value!.Count : 0,
             indicaciones.Ok ? indicaciones.Value!.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) : 0,
-            protocolos.Ok ? protocolos.Value!.Count : 0));
+            protocolos.Ok ? protocolos.Value!.Count : 0,
+            escalados.Ok ? escalados.Value!.Count : 0));
     }
 
     /// <summary>ENF-10: indicaciones de Medicina pendientes de leer o de registrar su resultado, compartidas
@@ -125,6 +127,27 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
             return View(Array.Empty<FollowUpSummary>());
+        }
+
+        return View(result.Value);
+    }
+
+    /// <summary>Escalados abiertos: los eventos que la Enfermería de la unidad escaló a Medicina y siguen abiertos, que
+    /// ya no están en sus bandejas. Solo lectura; el detalle muestra la parte médica.</summary>
+    public async Task<IActionResult> Escalados(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Escalados)) });
+        }
+
+        var result = await service.ListOpenEscalationsAsync(
+            new ListOpenEscalationsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(Array.Empty<OpenEscalationSummary>());
         }
 
         return View(result.Value);

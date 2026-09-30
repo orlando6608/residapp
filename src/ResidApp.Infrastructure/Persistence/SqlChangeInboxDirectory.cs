@@ -580,6 +580,33 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             .ToList();
     }
 
+    /// <summary>Escalados abiertos del ámbito de Enfermería (la misma regla de unidades y residentes que sus bandejas):
+    /// eventos con escalado a Medicina que todavía no están cerrados, del escalado más antiguo al más reciente.</summary>
+    public async Task<IReadOnlyList<OpenEscalationSummary>> ListOpenEscalationsAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+
+        var rows = await connection.QueryAsync<OpenEscalationRow>(new CommandDefinition($"""
+            SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
+                   unit.nombre_visible AS UnitName, escalation.motivo AS Reason, escalation.escalado_en AS EscalatedAt,
+                   CAST(CASE WHEN escalation.escalado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS EscalatedByCurrentAccount,
+                   ea.estado_codigo AS StatusCode
+            {ScopedEventsFrom}
+               AND escalation.id IS NOT NULL AND ea.estado_codigo <> 'CERRADO'
+             ORDER BY escalation.escalado_en
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+
+        return rows.Select(r => new OpenEscalationSummary(
+            r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName, r.Reason,
+            new DateTimeOffset(r.EscalatedAt, TimeSpan.Zero), r.EscalatedByCurrentAccount,
+            EnumCode.ParseCode<ClinicalEventStatus>(r.StatusCode))).ToList();
+    }
+
+    private sealed record OpenEscalationRow(
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string Reason, DateTime EscalatedAt,
+        bool EscalatedByCurrentAccount, string StatusCode);
+
     private sealed record EscalationSummaryRow(
         Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string? Reason, string? Observation, DateTime ReceivedAt,
         string? Actions, decimal? TemperatureCelsius, short? SystolicMmHg, short? DiastolicMmHg, short? HeartRateBpm,

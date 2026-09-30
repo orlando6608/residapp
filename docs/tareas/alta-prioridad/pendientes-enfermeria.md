@@ -226,6 +226,18 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
     filtra en memoria la lista ya autorizada del ámbito (`ResidentListViewModel`). Un valor mal formado en la
     URL se ignora. Sin cambios de backend ni de esquema.
   - **Tests:** `ResidentListFilterTests` (funcional).
+- **Escalados abiertos (ENF-10)** — 2026-09-30, común con Medicina.
+  - **Qué hace:** la tarjeta «Escalados a Medicina» del inicio (con su número) abre `/Enfermeria/Escalados`:
+    los eventos que la Enfermería de las unidades del ámbito escaló y que Medicina todavía no ha cerrado, del
+    escalado más antiguo al más reciente, con el residente, el estado actual en Medicina, el motivo, la unidad,
+    la fecha y «Escalado por ti» en los propios. Cada uno abre `DetalleCambio`, que ya muestra la parte médica.
+  - **Decisiones del usuario (2026-09-30):** la lista es de las unidades, como el resto de bandejas, y no solo
+    de la propia cuenta; se entra por una tarjeta en el inicio.
+  - **Implementación:** sin script. `ListOpenEscalations` (solo Enfermería) y
+    `SqlChangeInboxDirectory.ListOpenEscalationsAsync`, con la misma regla de ámbito que las bandejas:
+    eventos con fila en `escalados_medicina` y estado distinto de `CERRADO`.
+  - **Tests:** `EscaladosAbiertos_LosVeLaUnidad_SiguenEnMedicina_YSalenAlCerrar` en
+    `MedicinaApplicationServiceTests`.
 
 ## Pendiente
 

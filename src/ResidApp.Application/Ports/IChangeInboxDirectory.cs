@@ -80,6 +80,12 @@ public sealed record FollowUpDetail(
             : null;
 }
 
+/// <summary>Una fila de los escalados abiertos de Enfermería: el evento sigue en Medicina (Status es su estado actual).
+/// EscalatedByCurrentAccount marca los que escaló la cuenta del ámbito que consulta.</summary>
+public sealed record OpenEscalationSummary(
+    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, string Reason, DateTimeOffset EscalatedAt,
+    bool EscalatedByCurrentAccount, ClinicalEventStatus Status);
+
 /// <summary>ENF-08: una fila de la bandeja compartida de seguimientos. El equipo responsable es la
 /// Enfermería de la unidad; DueDate/Criterion son el plan vigente.</summary>
 public sealed record FollowUpSummary(
@@ -217,6 +223,10 @@ public interface IChangeInboxDirectory
         Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
     Task<IReadOnlyList<FollowUpSummary>> ListFollowUpsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>Escalados abiertos de Enfermería: eventos del ámbito escalados a Medicina que aún no se han cerrado, del
+    /// escalado más antiguo al más reciente.</summary>
+    Task<IReadOnlyList<OpenEscalationSummary>> ListOpenEscalationsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
     /// <summary>HIS-01: eventos cerrados de un residente visibles para el ámbito (la misma regla que las
     /// bandejas), del más reciente al más antiguo.</summary>
