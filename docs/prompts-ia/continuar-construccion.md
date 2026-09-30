@@ -13,10 +13,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
-- **Escalados abiertos en Enfermería (sin script):** hecho el 2026-09-30, en un commit local sin push. Tarjeta
-  «Escalados a Medicina» en el inicio de Enfermería y lista `/Enfermeria/Escalados` con los eventos que la
-  Enfermería de sus unidades escaló y siguen abiertos en Medicina, marcando «Escalado por ti». El detalle está
-  en `pendientes-enfermeria.md`.
+- **Escalados abiertos en Enfermería (sin script):** hecho el 2026-09-30 y desplegado en Azure (push de `3f241d6`,
+  run 36733282186 en verde con `build-and-test` y `deploy`).
+  - **Prueba en Azure (2026-09-30):** sin escalados, la tarjeta marca 0 y la lista dice «No hay escalados
+    abiertos.». Con `dev-integrado-medicina` la lista da «No se puede acceder a esta operación». Después,
+    `dev-integrado-enfermeria` registró, valoró y escaló «Prueba manual escalados abiertos: tos productiva.» sobre
+    Residente Integrado Dos. La tarjeta pasó a 1 y la lista lo mostró con «Escalado por ti», el motivo y la fecha.
+    Al empezar Medicina su valoración, pasó a «En valoración médica». Se deja abierto en Azure como ejemplo.
+  - **Qué hace:** tarjeta «Escalados a Medicina» en el inicio de Enfermería y lista `/Enfermeria/Escalados` con
+    los eventos que la Enfermería de sus unidades escaló y siguen abiertos en Medicina, marcando «Escalado por
+    ti». El detalle está en `pendientes-enfermeria.md`.
   - **Verificación:**
     - suite local en verde (121, 193 y 14) y 3 vueltas tipo CI con BD nueva;
     - curl en local sobre Residente Integrado Dos, con el evento «Prueba manual escalados abiertos: tos
