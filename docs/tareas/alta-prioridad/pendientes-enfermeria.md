@@ -257,6 +257,9 @@ En el orden propuesto de construcción:
 
 Huecos de lo ya construido:
 
+- **Historia 1 (bandejas):** la bandeja de cambios ordinarios no tiene filtro (ENF-02 pide «filtrar y abrir
+  detalle»). El resto de la historia está hecho: bandejas de prioritarios, ordinarios, seguimientos,
+  indicaciones y comunicaciones, compartidas por unidad, y los vencidos siguen visibles.
 - **Derivación a Urgencias (historia 6, bloque 2):**
   - **Firmante sin nombre:** `dbo.cuentas` no tiene nombre, así que el PDF muestra el perfil y el
     identificador de la cuenta hasta que exista el proveedor de identidad real.

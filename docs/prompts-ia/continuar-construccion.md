@@ -365,8 +365,21 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Siguiente bloque por decidir con el usuario.** Los candidatos anotados están hechos; revisa los pendientes
-   de `pendientes-enfermeria.md` y `pendientes-medicina.md` para proponer el siguiente.
+1. **Siguiente bloque por decidir con el usuario.** Enfermería y Medicina tienen construidas todas sus
+   historias salvo lo que depende de otros verticales. Candidatos, de lo pendiente en esos dos verticales a
+   verticales nuevos:
+   - **Filtro de la bandeja de cambios ordinarios** (ENF-02: «filtrar y abrir detalle»): es lo único que le
+     falta a la historia 1 de Enfermería, marcada «parcial». Se puede reutilizar el patrón del buscador de
+     residentes (`Shared/_FiltroResidentes`, formulario GET).
+   - **Aportación a un borrador de basal ajeno** (`BASELINE_DRAFT_CONTRIBUTE`, BAS-11, ENF-20/MED-21): hoy
+     solo el autor edita su borrador. Consulta antes el flujo `gestion-basal-barthel.md` y la matriz de
+     permisos del prototipo.
+   - **Empezar un vertical nuevo**, en el orden funcional de `docs/producto/roadmap.md`: Familia / Portal
+     Familiar (aprobar y publicar las comunicaciones familiares, que hoy quedan pendientes), Administración
+     (turnos y equipos reales, contacto familiar designado, concesión de permisos) o Dirección /
+     Coordinación Clínica (incluida la línea temporal auditada de HIS-02). Antes de proponerlo, lee sus
+     historias en `docs/historias-usuarios/` y comprueba qué pide de lo ya construido.
+   - **Actualizar `docs/producto/roadmap.md`**, que está desfasado (ver avisos).
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 
@@ -379,6 +392,13 @@ usuario cuando encajen:
   de `Views/Home/Index.cshtml`.
 - **`docs/producto/roadmap.md`** está desfasado: su tabla dice que Medicina «No iniciado» y sus «Próximos
   pasos» siguen en la historia 3 de Enfermería.
+- **Manual, cuentas de prueba:** la tabla de `#cuentas-prueba` y el recorrido guiado citan tres cuentas
+  `dev-integrado-*` y no incluyen `dev-integrado-medicina`, que existe desde el 2026-09-28 y tiene permiso de
+  basal desde la historia 8. Solo la nombra la sección «Residentes y evento propio».
+- **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
+  abiertos: tos productiva.», en valoración médica, que se dejó como ejemplo de la lista de escalados. El
+  usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de
+  prueba allí.
 
 - **Pregunta para CJ:** si el campo «Comunicaciones» de la valoración de Enfermería debe entrar en el
   informe de derivación. Hoy se excluye por prudencia (DER-04 saca los contactos del informe externo).
@@ -508,7 +528,39 @@ Repite estos pasos antes de dar un bloque por cerrado:
   `UPDATE v ... FROM tabla v WITH (FORCESEEK)`.
 - **Cómo reproducir el CI en local:** crea una BD nueva, aplica solo los scripts, sin seed, y ejecuta
   `dotnet test` en Release con `RESIDAPP_TEST_CONNECTION_STRING` apuntando a ella. Hazlo varias veces, con una
-  BD nueva en cada vuelta. Los logs del pipeline piden autenticación y `gh` no está instalado.
+  BD nueva en cada vuelta. Los logs del pipeline piden autenticación y `gh` no está instalado. Una vuelta, en
+  Git Bash (compila antes con `dotnet build src/ResidApp.sln -c Release`):
+
+  ```bash
+  db=ResidAppCi1
+  sqlcmd -S ACER-ORLANDO -E -C -b -Q "IF DB_ID('$db') IS NOT NULL BEGIN ALTER DATABASE [$db] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [$db]; END; CREATE DATABASE [$db]"
+  SQL_SERVER=ACER-ORLANDO SQL_DATABASE=$db SQLCMD_EXTRA=-C bash database/aplicar-scripts.sh > /dev/null
+  RESIDAPP_TEST_CONNECTION_STRING="Server=ACER-ORLANDO;Database=$db;Integrated Security=True;MultipleActiveResultSets=true;TrustServerCertificate=True" \
+    dotnet test src/ResidApp.sln --no-build -c Release
+  sqlcmd -S ACER-ORLANDO -E -C -Q "ALTER DATABASE [$db] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [$db]"
+  ```
+
+  No la solapes con otra carga sobre SQL Server (aplicar el seed, la app con curl, otra compilación): el
+  2026-09-30 una vuelta que coincidió con la aplicación del seed a la base local tardó 1 min 13 s y dio 3
+  fallos en tests no relacionados; las tres siguientes, sin nada en paralelo, salieron limpias.
+- **Estado de un push en GitHub:** busca su run con `.../actions/runs?head_sha=<sha completo>`; la lista con
+  `per_page=1` a veces devuelve un run antiguo. Después, `.../actions/runs/<id>/jobs` da la conclusión de
+  `build-and-test` y `deploy`.
+- **`sqlcmd` y los índices filtrados:** un `UPDATE` manual sobre una tabla con índices filtrados (como
+  `permisos_perfil`) falla con «SET options have incorrect settings: 'QUOTED_IDENTIFIER'» si no se lanza con
+  `sqlcmd -I`. Los scripts ya lo llevan (`aplicar-scripts.sh` usa `-I`).
+- **Filtros por GET:** un valor mal formado en la URL (por ejemplo `basal=xyz` en un enum) deja un error de
+  enlace de modelo en inglés en `ModelState`, que sale en el `asp-validation-summary`. En una acción de lista
+  que solo filtra, `ModelState.Clear()` al empezar lo ignora (ver `Residentes`).
+- **Buscar sin acentos:** `CultureInfo.InvariantCulture.CompareInfo.IndexOf(texto, busqueda,
+  CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace)` funciona igual en Windows y en Linux con ICU
+  (probado en Azure: «DÓS» encuentra «Dos»). No actives `InvariantGlobalization`, o dejaría de ignorarlos.
+- **Recorrido con curl de un escalado:** Enfermería `RegistrarEvento` (`ResidenteId`, `OperacionId`,
+  `Observacion`, `Clasificacion`) → `EmpezarValoracion` (`eventoId`, `revision`) → `Valoracion` (`Form.*`, con
+  `Form.Revision` de la página) → `Escalar` (`Form.EventoId`, `Form.Revision`, `Form.Motivo`). Medicina
+  `EmpezarValoracion` → `Valoracion` (`Form.HallazgosExploracion`, `Form.Valoracion`) → `Cerrar`
+  (`Form.OperacionId`, `Form.Comunicacion=NoComunicar`). Lee cada revisión de la página anterior: sube en
+  cada paso.
 - **Acentos con curl en Git Bash:** `--data-urlencode` recibe los argumentos en Latin-1, así que «ó» llega
   como `%F3` y ASP.NET lo guarda tal cual. Un navegador envía UTF-8 y se guarda bien. En pruebas con curl,
   escribe los acentos ya codificados en UTF-8 (`--data "Form.Motivo=Desaturaci%C3%B3n"`).
