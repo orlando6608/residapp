@@ -13,6 +13,22 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 
+- **Resumen y etiquetas del basal (sin script):** hecho el 2026-09-30, en un commit local sin push.
+  - **Qué cambia:**
+    - `BaselineAreaDisplay.Summarize` despliega las respuestas de varias opciones, que antes escribían el
+      nombre del tipo de lista;
+    - los 151 valores de los catálogos del basal, más `BaselineReason`, llevan `[Display(Name)]` en
+      español, transcripción literal de su código;
+    - lo usan los `<select>` y las casillas del formulario del basal, la fuente de información, los
+      resúmenes y el informe de derivación, que deja su propio resumen y usa el común.
+  - **Test:** `BaselineAreaDisplayTests` (funcional) comprueba que todo valor de catálogo tiene etiqueta.
+  - **Verificación:**
+    - suite local en verde y 3 vueltas tipo CI;
+    - curl de `Auxiliar/Basal`, del formulario del basal (7 áreas) y de `Confirmar` con un área de varias
+      opciones, sobre un borrador de prueba que después se canceló.
+
+    La primera vuelta local falló por tiempos de espera: SQL Server tenía 216 MB en memoria y tardaba 5 s en
+    una consulta trivial (ver «Suite lenta»). Las siguientes pasaron.
 - **Parte médica en el detalle de Enfermería (sin script):** hecho el 2026-09-30 y desplegado en Azure
   (push de `ae45d44`, run 36706361068 en verde con `build-and-test` y `deploy`).
   - **Prueba en Azure (2026-09-30)** con `dev-integrado-enfermeria`:
@@ -248,8 +264,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 1. **Siguiente bloque por decidir con el usuario.** Candidatos de los pendientes:
    - historia 8 de Medicina (basal desde Medicina);
-   - arreglar `BaselineAreaDisplay.Summarize` (ver avisos), que desbloquea abrir una versión histórica del
-     basal;
+   - abrir una versión histórica del basal con sus nueve áreas desde el Historial (ya desbloqueado);
    - una lista de «mis escalados» abiertos en Enfermería.
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
@@ -264,12 +279,9 @@ usuario cuando encajen:
 - **`docs/producto/roadmap.md`** está desfasado: su tabla dice que Medicina «No iniciado» y sus «Próximos
   pasos» siguen en la historia 3 de Enfermería.
 
-- **`BaselineAreaDisplay.Summarize`** (`Web/Models/AuxiliarModels.cs`) escribe `ToString()` de cada
-  propiedad. En las áreas con varias opciones (comunicación, continencia, conducta, sueño, ayudas
-  habituales), las pantallas del basal (`Auxiliar/Basal`, `EnfermeriaBasal/Confirmar`) mostrarían el nombre
-  del tipo de lista (`System.Collections.Generic.List…`) en vez de los valores. El informe de derivación usa
-  su propio resumen (`ReferralReportBuilder.AreaValues`), que despliega las listas. Además, los valores de
-  los catálogos del basal no tienen etiquetas en español con tildes: se muestran con el nombre del enum.
+- **Resumen del basal sin nombre de campo:** `BaselineAreaDisplay.Summarize` solo da valores. Un basal todo
+  «No documentado» (como el del seed) muestra la misma frase varias veces por área, sin decir de qué campo es
+  (en `Auxiliar/Basal`, `EnfermeriaBasal/Confirmar` y el informe de derivación).
 - **Pregunta para CJ:** si el campo «Comunicaciones» de la valoración de Enfermería debe entrar en el
   informe de derivación. Hoy se excluye por prudencia (DER-04 saca los contactos del informe externo).
   Está anotada en `pendientes-enfermeria.md`; si hace falta, se le pide con un documento en

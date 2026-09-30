@@ -208,8 +208,8 @@ En el orden propuesto de construcción:
 
 1. **Historia 11, bloques siguientes** (común con Medicina):
    - **Línea temporal para Dirección Clínica:** lectura condicional y auditada, que queda para su vertical.
-   - **Contenido de una versión histórica del basal:** abrir sus nueve áreas exige arreglar antes
-     `BaselineAreaDisplay.Summarize` (ver los avisos de `continuar-construccion.md`).
+   - **Contenido de una versión histórica del basal:** abrir sus nueve áreas desde el Historial. Ya está
+     desbloqueado: el resumen despliega las listas y los catálogos tienen etiquetas en español (2026-09-30).
 
 Huecos de lo ya construido:
 
@@ -220,8 +220,6 @@ Huecos de lo ya construido:
     COR-01/02 solo habilita las valoraciones).
   - **Contacto familiar en texto libre:** a quién se llama se escribe a mano hasta que Administración tenga
     el contacto designado.
-  - **Valores del basal sin tildes:** en el informe salen separados en palabras a partir de los catálogos,
-    que no tienen etiquetas con tildes.
   - **Pendiente de CJ:** confirmar si el campo "Comunicaciones" de la valoración debe quedar fuera del
     informe, como se hace hoy por prudencia (DER-04).
 

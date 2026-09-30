@@ -150,13 +150,31 @@ public static class BaselineAreaDisplay
         _ => area.ToString(),
     };
 
-    /// <summary>Resumen genérico de una respuesta de área: solo valores (ya en español, como el resto de
-    /// catálogos de dominio), nunca los nombres de propiedad en inglés del record C#. Suficiente para
-    /// AUX-03 ("necesarios para el cuidado cotidiano"), sin un formateador propio por área.</summary>
+    /// <summary>Resumen genérico de una respuesta de área: solo valores, nunca los nombres de propiedad en
+    /// inglés del record C#. Despliega las respuestas de varias opciones y escribe cada valor de catálogo con su
+    /// etiqueta en español (EnumDisplay). Lo usan AUX-03, la confirmación del basal y el informe de
+    /// derivación.</summary>
     public static IReadOnlyList<string> Summarize(IBaselineAreaAnswer answer) =>
         answer.GetType().GetProperties()
             .Select(property => property.GetValue(answer))
-            .Where(value => value is not null && value is not string { Length: 0 })
-            .Select(value => value!.ToString()!)
+            .SelectMany(value => value switch
+            {
+                null => [],
+                string text => [text],
+                System.Collections.IEnumerable items => items.Cast<object>(),
+                _ => [value],
+            })
+            .Select(value => value is Enum option ? EnumDisplay.Label(option) : value.ToString()!)
+            .Where(value => value.Length > 0)
             .ToList();
+}
+
+/// <summary>Etiqueta en español de un valor de enum ([Display(Name)], la misma que usa GetEnumSelectList); si no
+/// la tiene, su nombre.</summary>
+public static class EnumDisplay
+{
+    public static string Label(Enum value) =>
+        value.GetType().GetField(value.ToString())?
+            .GetCustomAttributes(typeof(DisplayAttribute), false).OfType<DisplayAttribute>().FirstOrDefault()?.Name
+        ?? value.ToString();
 }

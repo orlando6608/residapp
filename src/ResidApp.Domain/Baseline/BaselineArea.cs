@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using ResidApp.Shared;
 
 namespace ResidApp.Domain.Baseline;
@@ -19,7 +20,7 @@ public enum BaselineArea
 /// <summary>Traduce BASELINE_REASONS de baseline.ts.</summary>
 public enum BaselineReason
 {
-    [Code("ALTA")] Alta,
-    [Code("REVISION_PROGRAMADA")] RevisionProgramada,
-    [Code("CAMBIO_FUNCIONAL_CONSOLIDADO")] CambioFuncionalConsolidado,
+    [Code("ALTA")] [Display(Name = "Alta")] Alta,
+    [Code("REVISION_PROGRAMADA")] [Display(Name = "Revisión programada")] RevisionProgramada,
+    [Code("CAMBIO_FUNCIONAL_CONSOLIDADO")] [Display(Name = "Cambio funcional consolidado")] CambioFuncionalConsolidado,
 }

@@ -97,7 +97,7 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="ManagementCodes" id="@checkboxId"
                                        value="@option" checked="@(Model.ManagementCodes.Contains(option))" />
-                                <label class="form-check-label" for="@checkboxId">@option</label>
+                                <label class="form-check-label" for="@checkboxId">@EnumDisplay.Label(option)</label>
                             </div>
                         }
                     </div>
@@ -172,7 +172,7 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="UsualFormsCodes" id="@checkboxId"
                                        value="@option" checked="@(Model.UsualFormsCodes.Contains(option))" />
-                                <label class="form-check-label" for="@checkboxId">@option</label>
+                                <label class="form-check-label" for="@checkboxId">@EnumDisplay.Label(option)</label>
                             </div>
                         }
                     </div>
@@ -195,7 +195,7 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="PatternCodes" id="@checkboxId"
                                        value="@option" checked="@(Model.PatternCodes.Contains(option))" />
-                                <label class="form-check-label" for="@checkboxId">@option</label>
+                                <label class="form-check-label" for="@checkboxId">@EnumDisplay.Label(option)</label>
                             </div>
                         }
                     </div>
@@ -214,7 +214,7 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="SleepPatternCodes" id="@checkboxId"
                                        value="@option" checked="@(Model.SleepPatternCodes.Contains(option))" />
-                                <label class="form-check-label" for="@checkboxId">@option</label>
+                                <label class="form-check-label" for="@checkboxId">@EnumDisplay.Label(option)</label>
                             </div>
                         }
                     </div>
@@ -229,7 +229,7 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="AidCodes" id="@checkboxId"
                                        value="@option" checked="@(Model.AidCodes.Contains(option))" />
-                                <label class="form-check-label" for="@checkboxId">@option</label>
+                                <label class="form-check-label" for="@checkboxId">@EnumDisplay.Label(option)</label>
                             </div>
                         }
                     </div>

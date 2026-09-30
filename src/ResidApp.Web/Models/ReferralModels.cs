@@ -162,32 +162,12 @@ public static class ReferralReportBuilder
                      _ => 2,
                  }))
         {
-            var summary = string.Join(" · ", AreaValues(area.Answer));
+            var summary = string.Join(" · ", BaselineAreaDisplay.Summarize(area.Answer));
             var observation = area.Observation is null ? "" : $" (observación: {area.Observation})";
             lines.Add($"{BaselineAreaDisplay.Label(area.AreaCode)}: {(summary.Length == 0 ? "sin respuesta" : summary)}{observation}");
         }
         return lines;
     }
-
-    /// <summary>Como BaselineAreaDisplay.Summarize (solo valores), pero desplegando las respuestas de varias
-    /// opciones en vez de escribir el nombre del tipo de la lista, y separando en palabras los valores de los
-    /// catálogos ("ComprensionFuncional" → "Comprension funcional"; los catálogos no tienen etiquetas con
-    /// tildes).</summary>
-    private static IEnumerable<string> AreaValues(Domain.Baseline.Answers.IBaselineAreaAnswer answer) =>
-        answer.GetType().GetProperties()
-            .Select(property => property.GetValue(answer))
-            .SelectMany(value => value switch
-            {
-                null => [],
-                string text => [text],
-                System.Collections.IEnumerable items => items.Cast<object>(),
-                _ => [value],
-            })
-            .Select(value => value is Enum ? Words(value.ToString()!) : value.ToString()!)
-            .Where(value => value.Length > 0);
-
-    private static string Words(string pascalCase) =>
-        string.Concat(pascalCase.Select((c, i) => i > 0 && char.IsUpper(c) ? " " + char.ToLowerInvariant(c) : c.ToString()));
 
     private static List<string> ObservationLines(PendingChangeDetail detail)
     {
