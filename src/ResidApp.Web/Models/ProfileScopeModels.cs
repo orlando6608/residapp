@@ -20,6 +20,7 @@ public static class SystemProfileDisplay
         SystemProfile.Familiar => "Familiar",
         SystemProfile.Administracion => "Administración",
         SystemProfile.DireccionClinica => "Dirección Clínica",
+        SystemProfile.Plataforma => "Plataforma",
         _ => profile.ToString(),
     };
 }

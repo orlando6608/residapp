@@ -30,6 +30,17 @@ else
 }
 
 <div class="row g-3">
+    @if (perfil is SystemProfile.Plataforma)
+    {
+        <div class="col-12 col-md-4">
+            <a asp-controller="Plataforma" asp-action="Index" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Centros</h2>
+                    <p class="card-text text-muted mb-0">Dar de alta un centro con su primera unidad y su administrador.</p>
+                </div>
+            </a>
+        </div>
+    }
     @if (perfil is SystemProfile.Administracion)
     {
         <div class="col-12 col-md-4">

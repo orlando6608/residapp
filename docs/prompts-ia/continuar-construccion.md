@@ -13,6 +13,34 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Perfil de plataforma: alta de un centro nuevo (script `0026`; seed `dev_seed_plataforma.sql`; ADR
+  `docs/decisiones-arquitectura/0006-perfil-plataforma.md`):** hecho el 2026-10-01 en `main` **sin push** (Azure sigue en `0024`).
+  - **Qué hace:** séptimo perfil, `PLATAFORMA`, con `/Plataforma`: lista de centros y «Nuevo centro», que crea en una transacción el
+    centro, su primera unidad, la cuenta de su primer administrador y su ámbito de Administración con la unidad concedida. El
+    operador pertenece a un centro reservado «Plataforma» (`5F3A1C00-0000-4000-8000-000000000001`), porque `ambitos_perfil.centro_id`
+    es `NOT NULL`. No ve datos clínicos y los demás servicios lo deniegan. Cuenta de desarrollo: `dev-plataforma`. Detalle, decisiones
+    y suposiciones en `pendientes-administracion.md`.
+  - **Raíz de confianza:** la primera cuenta de plataforma de un entorno real se inserta por SQL una sola vez (plantilla: el seed). Si
+    se hace el push, **hay que crear esa cuenta en Azure** para poder usar la pantalla; el seed de desarrollo ya crea `dev-plataforma`
+    allí si el pipeline aplica los seeds (Azure es de desarrollo).
+  - **Aviso:** un perfil nuevo toca todos los `switch` por perfil. Se revisaron `SystemProfileDisplay`, `ProfilePermissions` y
+    `ProfessionalAccount`, y `ElPerfilDePlataforma_NoEntraEnNingunOtroServicio` comprueba que Administración, Enfermería, Medicina y
+    Dirección lo deniegan (Auxiliar no se probó porque su servicio no se construye desde el test). Si se añade un servicio nuevo, añádelo.
+  - **Verificación:**
+    - suite en verde antes (184, 239 y 42) y después 3 veces (196, 251 y 43), más 3 vueltas tipo CI con BD nueva y una BD temporal
+      con los 26 scripts y todos los seeds, aplicados dos veces (una sola cuenta `dev-plataforma`; ya borrada);
+    - dos ejecuciones filtradas de los tests nuevos fallaron con «tiempo de espera durante la fase previa al inicio de sesión» (la
+      máquina tenía 2,2 GB libres); tras `dotnet build-server shutdown` pasaron los 12 en 1 s. Es el patrón de «Suite lenta»;
+    - curl en local con `dev-plataforma`: el Inicio ofrece «Centros»; el formulario vacío da los errores en español; se crea
+      «Residencia de prueba plataforma (ficticia)» (`PRUEBA-PLAT-1`, unidad `PLANTA-1`, administrador `dev-prueba-plat-admin`); el
+      reenvío no la duplica; el mismo identificador de acceso con otro centro da «Ya existe» y no crea nada; la lista no incluye el
+      centro reservado. Con `dev-prueba-plat-admin`: su Inicio es el de Administración, Estructura muestra su unidad, el alta de
+      residente la ofrece ya elegida y da de alta «Residente prueba centro nuevo (ficticio)», que sale en su lista;
+    - `/Plataforma` da «No se puede acceder a esta operación» a `dev-integrado-enfermeria`, `-medicina`, `-direccion`, `-auxiliar` y
+      `-administracion`, y al administrador del centro nuevo.
+  - **Datos de prueba en la base local:** el centro «Residencia de prueba plataforma (ficticia)» con su administrador y un residente.
+    Hay además centros `FUNC-CENTER-…` de los tests funcionales, que no se limpian.
+  - Copia previa: `ResidApp-antes-0026-20261001.bak`.
 - **Administración, bloque 5: estructura del centro, unidades (ADM-05; historia 2, primer bloque; script `0025`; sin cambios
   en el seed):** hecho el 2026-10-01 en `main` **sin push** (Azure sigue en `0024`).
   - **Qué hace:** `/Administracion/Estructura` lista las unidades concedidas al ámbito de Administración (activas e
@@ -607,12 +635,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   referencia de constantes (fase 1 y su pantalla). Medicina está en curso: historias 1 a 8 (escalados,
   valoración médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos, protocolo
   urgente, derivación a Urgencias, evento propio y basal con permiso) y 9 (con la misma salvedad que la 11).
-- La base local `ResidApp` tiene los scripts `0001` a `0025` registrados en `dbo.scripts_aplicados`
-  (en Azure, hasta `0024`; `0025` aún no se ha subido). Hay copias previas a `0016` … `0025` en
+- La base local `ResidApp` tiene los scripts `0001` a `0026` registrados en `dbo.scripts_aplicados`
+  (en Azure, hasta `0024`; `0025` y `0026` aún no se han subido). Hay copias previas a `0016` … `0026` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
   `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak`, `ResidApp-antes-0019-20260930.bak`,
   `ResidApp-antes-0020-20260930.bak`, `ResidApp-antes-0021-20261001.bak`, `ResidApp-antes-0022-20261001.bak`,
-  `ResidApp-antes-0023-20261001.bak`, `ResidApp-antes-0024-20261001.bak` y `ResidApp-antes-0025-20261001.bak`). También
+  `ResidApp-antes-0023-20261001.bak`, `ResidApp-antes-0024-20261001.bak`, `ResidApp-antes-0025-20261001.bak` y `ResidApp-antes-0026-20261001.bak`). También
   tiene la cuenta `dev-integrado-administracion`, el residente de prueba «Prueba Corrección Identidad (ficticio)», con una
   corrección, «Prueba selector unidad (ficticio)» y «Prueba familiares (ficticio)», con dos familiares (Lucía, autorización
   revocada tras recorrer todos los estados; Tomás, teléfono editado) y el contacto urgente designado, cambiado, quitado y
@@ -644,7 +672,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 184 unitarios, 239 de integración y 42 funcionales, todos en verde.
+- Suite: 196 unitarios, 251 de integración y 43 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en

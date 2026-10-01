@@ -27,6 +27,7 @@
 | Familiar | Consulta publicaciones y gestiona citas habilitadas para residentes autorizados | No accede a contenido clínico interno ni elige profesional concreto |
 | Administración | Estructura subordinada, identidades, ubicaciones, roles, asignaciones, turnos, autorizaciones, citas y auditoría administrativa | No provisiona centros, participa en actos clínicos ni accede por defecto al historial clínico |
 | Dirección Clínica | Supervisión de proceso, indicadores e informes agregados | No interviene clínicamente desde este perfil; el detalle clínico solo se consulta en lectura, con permiso y auditoría |
+| Plataforma | Alta de un centro con su primera unidad y su primer administrador (perfil de operación, ver `docs/decisiones-arquitectura/0006-perfil-plataforma.md`) | No ve residentes ni contenido clínico, ni gestiona nada de un centro después de crearlo |
 
 ### Cuentas multirol
 

@@ -1,0 +1,63 @@
+@model IReadOnlyList<ResidApp.Application.Ports.PlatformCenterSummary>
+@{
+    ViewData["Title"] = "Centros";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Centros</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Centros</h1>
+<p class="text-muted">
+    Operación de la plataforma. Un centro nuevo nace con su primera unidad y la cuenta de su primer administrador, que desde ahí
+    gestiona su propia estructura, sus usuarios y sus residentes. Este perfil no ve residentes ni contenido clínico.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (ViewData.ModelState.IsValid)
+{
+    <a asp-action="NuevoCentro" class="btn btn-primary btn-lg mb-3">Nuevo centro</a>
+}
+
+@if (ViewData.ModelState.IsValid && Model.Count == 0)
+{
+    <p class="text-muted">Todavía no hay ningún centro.</p>
+}
+else if (Model.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Centros del sistema</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Código</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Unidades</th>
+                    <th scope="col">Creado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var center in Model)
+                {
+                    <tr>
+                        <th scope="row">@center.Name</th>
+                        <td><code>@center.Code</code></td>
+                        <td>
+                            <span class="badge @(center.Active ? "text-bg-success" : "text-bg-secondary")">@(center.Active ? "Activo" : "Inactivo")</span>
+                        </td>
+                        <td>@center.UnitCount</td>
+                        <td>@center.CreatedAt.LocalDateTime.ToString("d")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

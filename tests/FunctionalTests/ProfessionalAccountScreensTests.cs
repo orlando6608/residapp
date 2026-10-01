@@ -131,6 +131,77 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.DoesNotContain("Nueva unidad", nursePage);
     }
 
+    [Fact]
+    public async Task Plataforma_CreaUnCentro_ElInicioSoloLaOfreceAEsePerfil_YOtroPerfilNoEntra()
+    {
+        var operatorSubject = await SeedPlatformOperatorAsync();
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = operatorSubject,
+        }))).EnsureSuccessStatusCode();
+
+        var home = WebUtility.HtmlDecode(await client.GetStringAsync("/"));
+        var newPage = await client.GetStringAsync("/Plataforma/NuevoCentro");
+        async Task<string> PostAsync(Dictionary<string, string> fields) =>
+            WebUtility.HtmlDecode(await (await client.PostAsync("/Plataforma/NuevoCentro", new FormUrlEncodedContent(new Dictionary<string, string>(fields)
+            {
+                ["__RequestVerificationToken"] = ExtractValue(newPage, "__RequestVerificationToken"),
+                ["Form.OperacionId"] = ExtractValue(newPage, "Form.OperacionId"),
+            }))).Content.ReadAsStringAsync());
+        var empty = await PostAsync([]);
+        var suffix = Guid.NewGuid().ToString("N")[..10];
+        var created = await PostAsync(new()
+        {
+            ["Form.CodigoCentro"] = $"func-{suffix}",
+            ["Form.NombreCentro"] = "Residencia Funcional (ficticia)",
+            ["Form.CodigoUnidad"] = "planta-1",
+            ["Form.NombreUnidad"] = "Planta 1",
+            ["Form.IdentificadorAdministrador"] = $"func-admin-{suffix}",
+            ["Form.NombreAdministrador"] = "Admin Funcional (ficticio)",
+        });
+        var repeated = await PostAsync(new()
+        {
+            ["Form.CodigoCentro"] = $"func2-{suffix}",
+            ["Form.NombreCentro"] = "Otra residencia",
+            ["Form.CodigoUnidad"] = "planta-1",
+            ["Form.NombreUnidad"] = "Planta 1",
+            ["Form.IdentificadorAdministrador"] = $"func-admin-{suffix}",
+            ["Form.NombreAdministrador"] = "Admin Funcional (ficticio)",
+        });
+        var adminHome = await PageAsync("ADMINISTRACION", null);
+        var adminPlatform = await PageAsync("ADMINISTRACION", null, "/Plataforma");
+
+        Assert.Contains("Dar de alta un centro con su primera unidad y su administrador.", home);
+        Assert.Contains("Escribe el código del centro.", empty);
+        Assert.Contains("Escribe el identificador de acceso del administrador.", empty);
+        Assert.DoesNotContain("The ", empty);
+        Assert.Contains("Centro creado.", created);
+        Assert.Contains("Residencia Funcional (ficticia)", created);
+        Assert.Contains($"FUNC-{suffix}".ToUpperInvariant(), created);
+        Assert.Contains("Ya existe un centro con ese código o una cuenta con ese identificador de acceso.", repeated);
+        Assert.DoesNotContain("Dar de alta un centro con su primera unidad", adminHome);
+        Assert.Contains("No se puede acceder a esta operación", adminPlatform);
+        Assert.DoesNotContain("Nuevo centro", adminPlatform);
+    }
+
+    /// <summary>Una cuenta con el perfil Plataforma, que vive en el centro reservado.</summary>
+    private static async Task<string> SeedPlatformOperatorAsync()
+    {
+        var accountId = Guid.NewGuid();
+        var subject = $"functional-plat-{Guid.NewGuid():N}"[..30];
+        var now = DateTimeOffset.UtcNow.UtcDateTime;
+        using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@accountId, @subject, 'ACTIVE', @now);
+            INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @accountId, '5F3A1C00-0000-4000-8000-000000000001', 'PLATAFORMA', 'ACTIVE', @now, @accountId);
+            """, new { accountId, subject, now });
+        return subject;
+    }
+
     private static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
 

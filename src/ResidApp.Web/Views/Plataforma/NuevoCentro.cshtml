@@ -1,0 +1,76 @@
+@model ResidApp.Web.Models.NewCenterViewModel
+@{
+    ViewData["Title"] = "Nuevo centro";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Centros</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Nuevo centro</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Nuevo centro</h1>
+<p class="text-muted">
+    Se crea todo a la vez o nada: el centro, su primera unidad y la cuenta de su primer administrador, que nace activa con el perfil
+    Administración y la unidad concedida. Los códigos no se pueden cambiar después. El identificador de acceso no puede ser el de una
+    cuenta que ya exista.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="NuevoCentro" method="post">
+            <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+            <fieldset class="mb-3">
+                <legend class="h5">Centro</legend>
+                <div class="mb-3">
+                    <label asp-for="Form.CodigoCentro" class="form-label"></label>
+                    <input asp-for="Form.CodigoCentro" class="form-control form-control-lg" autocomplete="off" aria-describedby="ayuda-codigos" />
+                    <span asp-validation-for="Form.CodigoCentro" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Form.NombreCentro" class="form-label"></label>
+                    <input asp-for="Form.NombreCentro" class="form-control form-control-lg" autocomplete="off" />
+                    <span asp-validation-for="Form.NombreCentro" class="text-danger"></span>
+                </div>
+            </fieldset>
+            <fieldset class="mb-3">
+                <legend class="h5">Primera unidad</legend>
+                <div class="mb-3">
+                    <label asp-for="Form.CodigoUnidad" class="form-label"></label>
+                    <input asp-for="Form.CodigoUnidad" class="form-control form-control-lg" autocomplete="off" aria-describedby="ayuda-codigos" />
+                    <div id="ayuda-codigos" class="form-text">Los códigos llevan de 2 a 64 caracteres: letras sin acentos, dígitos, «-» o «_». Se guardan en mayúsculas.</div>
+                    <span asp-validation-for="Form.CodigoUnidad" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Form.NombreUnidad" class="form-label"></label>
+                    <input asp-for="Form.NombreUnidad" class="form-control form-control-lg" autocomplete="off" />
+                    <span asp-validation-for="Form.NombreUnidad" class="text-danger"></span>
+                </div>
+            </fieldset>
+            <fieldset class="mb-3">
+                <legend class="h5">Primer administrador</legend>
+                <div class="mb-3">
+                    <label asp-for="Form.IdentificadorAdministrador" class="form-label"></label>
+                    <input asp-for="Form.IdentificadorAdministrador" class="form-control form-control-lg" autocomplete="off" />
+                    <span asp-validation-for="Form.IdentificadorAdministrador" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Form.NombreAdministrador" class="form-label"></label>
+                    <input asp-for="Form.NombreAdministrador" class="form-control form-control-lg" autocomplete="off" />
+                    <span asp-validation-for="Form.NombreAdministrador" class="text-danger"></span>
+                </div>
+            </fieldset>
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Crear centro</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

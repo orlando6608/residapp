@@ -52,6 +52,8 @@ builder.Services.AddScoped<IProfessionalAccountDirectory, SqlProfessionalAccount
 builder.Services.AddScoped<IProfessionalAccountRepository, SqlProfessionalAccountRepository>();
 builder.Services.AddScoped<ICenterStructureDirectory, SqlCenterStructureDirectory>();
 builder.Services.AddScoped<ICenterStructureRepository, SqlCenterStructureRepository>();
+builder.Services.AddScoped<IPlatformCenterDirectory, SqlPlatformCenterDirectory>();
+builder.Services.AddScoped<IPlatformCenterRepository, SqlPlatformCenterRepository>();
 builder.Services.AddScoped<INursingAssessmentRepository, SqlNursingAssessmentRepository>();
 builder.Services.AddScoped<IMedicalAssessmentRepository, SqlMedicalAssessmentRepository>();
 builder.Services.AddScoped<IMedicalIndicationRepository, SqlMedicalIndicationRepository>();
@@ -136,6 +138,7 @@ builder.Services.AddScoped<DownloadReferralReport>();
 builder.Services.AddScoped<MedicinaApplicationService>();
 builder.Services.AddScoped<DireccionApplicationService>();
 builder.Services.AddScoped<AdministracionApplicationService>();
+builder.Services.AddScoped<PlatformApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();
 

@@ -1,6 +1,6 @@
 # Pendientes del vertical Administración
 
-Estado al 2026-10-01 (tras el bloque 5). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
+Estado al 2026-10-01 (tras el bloque 5 y el perfil de plataforma). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
 No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pantallas/wireframes-funcionales/administracion.md).
 
 ## Hecho
@@ -180,6 +180,27 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
   - **Tests:** `AdministracionEstructuraTests` (integración), `CenterUnitTests` (unitarios) y
     `Estructura_AdministracionCreaYRenombraUnaUnidad_YOtroPerfilNoEntra` en `ProfessionalAccountScreensTests` (funcional).
 
+- **Perfil de plataforma: alta de un centro nuevo (script `0026`; ADR `0006-perfil-plataforma.md`)** — 2026-10-01. Cierra el hueco del
+  primer ámbito de Administración de un centro nuevo.
+  - **Qué hace:** un séptimo perfil, `PLATAFORMA`, con la pantalla `/Plataforma` (lista de centros y «Nuevo centro»). El formulario
+    crea en una transacción el centro, su primera unidad, la cuenta de su primer administrador (nueva, con nombre), su ámbito de
+    Administración y la concesión de la unidad. Desde ahí el administrador usa Estructura, Usuarios y el alta de residentes.
+  - **Decisiones del usuario (2026-10-01):** pantalla dentro de la app (no script ni herramienta); perfil de sistema nuevo (no lista
+    en configuración); centro + unidad + administrador en un solo paso.
+  - **Suposiciones aprobadas con el plan:**
+    - el operador pertenece a un centro reservado «Plataforma» (id fijo), porque `ambitos_perfil.centro_id` es `NOT NULL` y toda la
+      autorización trabaja con un centro; sin unidades ni residentes;
+    - la primera cuenta de plataforma es la raíz de confianza y la pone un seed (desarrollo) o un `INSERT` único (entorno real);
+    - el administrador es siempre una cuenta nueva; un identificador existente es un conflicto;
+    - el operador no ve datos clínicos ni de residentes, no se concede desde Usuarios y se suspende o revoca por SQL.
+  - **Implementación:** script `0026_perfil_plataforma` (`PLATAFORMA` en `CK_ps_profile` y `CK_audit_profile`, el centro reservado y
+    `TR_ps_platform_center`, THROW 50440/50441); seed `dev_seed_plataforma.sql` (cuenta `dev-plataforma`). Dominio
+    `Domain/Platform/NewCenter.cs`; puertos `Ports/IPlatformCenters.cs`; `PlatformApplicationService`; `SqlPlatformCenterDirectory` y
+    `SqlPlatformCenterRepository` (bloquea la fila del centro reservado). Auditoría sin datos: `CENTER_CREATE`, `UNIT_CREATE`,
+    `ACCOUNT_CREATE`, `PROFILE_SCOPE_GRANT` y `PROFILE_UNIT_GRANT`. El `OperacionId` del formulario es el id del centro.
+  - **Tests:** `PlataformaCentrosTests` (integración, incluido el recorrido del administrador nuevo y la denegación en los demás
+    servicios), `NewCenterTests` (unitarios) y `Plataforma_CreaUnCentro_…` en `ProfessionalAccountScreensTests` (funcional).
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
@@ -191,8 +212,8 @@ En el orden propuesto (cada bloque se planifica antes de construirlo):
 Huecos de lo ya construido:
 
 - **Alta de residente:** desde el 2026-10-01 la unidad se elige entre las del ámbito activo, y esas unidades se crean, renombran e
-  inactivan desde Estructura (bloque 5). La unidad de un centro nuevo ya provisionado sigue necesitando un primer ámbito de
-  Administración con la unidad concedida (por SQL), porque una unidad solo se ve si está concedida al ámbito.
+  inactivan desde Estructura (bloque 5). Un centro nuevo ya no necesita SQL: el perfil de plataforma lo crea con su primera unidad y
+  su administrador. Solo la primera cuenta de plataforma se pone fuera de la aplicación (raíz de confianza, ADR 0006).
 - **Inactivar una unidad:** se comprueba que no tenga ubicaciones vigentes dentro de la transacción, pero un alta de residente que
   llegue a la vez no se bloquea (el alta autoriza la unidad antes, y la clave foránea no mira el estado). Es una carrera muy
   estrecha; si importa, habrá que comprobar el estado de la unidad al insertar la ubicación.

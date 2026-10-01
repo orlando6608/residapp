@@ -9,6 +9,7 @@ public enum SystemProfile
     [Code("FAMILIAR")] Familiar,
     [Code("ADMINISTRACION")] Administracion,
     [Code("DIRECCION_CLINICA")] DireccionClinica,
+    [Code("PLATAFORMA")] Plataforma,
 }
 
 /// <summary>
