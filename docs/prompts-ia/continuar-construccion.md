@@ -20,6 +20,13 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     cualquier fila de `ambitos_perfil_residente`, aunque esté revocada, como la evidencia de autorización (ADR 0004).
     Test `Ambito_ConSuUnicaAsignacionRevocada_SigueRestringido`.
   - Suite en verde 3 veces (173, 230 y 34) y 3 vueltas tipo CI con BD nueva.
+- **PDF de derivación generados a la vez (sin script):** corregido el 2026-10-01, en `main` sin push. En el PDF de un test,
+  «residente» salía sin negrita en «Identificación del residente y del centro». Un PDF generado solo salía bien; de 16
+  generados en paralelo, 2 tenían cambios de fuente de más en el contenido de la página. `ReferralReportPdfRenderer`
+  serializa ahora el renderizado con un `Lock` estático; 200 en paralelo salieron idénticos. Test
+  `ReferralReportPdfRendererTests` (64 en paralelo comparados con uno solo): falla 3 de 3 sin el candado y pasa con él.
+  Suite en verde 3 veces (173, 231 y 34) y 3 vueltas tipo CI (las primeras 3 se hundieron con 1,8 GB libres; tras
+  `dotnet build-server shutdown`, limpias).
 - **Administración, bloque 3: usuarios profesionales, perfiles, unidades y residentes de Auxiliar (historia 4 sin turnos
   ni permisos; ADM-12 y ADM-13; script `0023`; sin cambios en el seed):** hecho el 2026-10-01 y desplegado en Azure (push
   de `31ab320`, run 36869186733 en verde con `build-and-test` y `deploy`, que aplicó `0023`).
@@ -573,7 +580,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 173 unitarios, 230 de integración y 34 funcionales, todos en verde.
+- Suite: 173 unitarios, 231 de integración y 34 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -662,6 +669,11 @@ Repite estos pasos antes de dar un bloque por cerrado:
 
 ## Lecciones técnicas que conviene no redescubrir
 
+- **PDFsharp/MigraDoc no admite generar documentos a la vez:** comparten estado de fuentes y un título puede salir con una
+  palabra en la fuente equivocada. Cualquier renderizador nuevo debe serializar el renderizado como
+  `ReferralReportPdfRenderer`. Para revisar un PDF sin abrirlo, compara el contenido de su página
+  (`PdfReader.Open(...).Pages[0].Contents`, `UnfilteredValue`): el texto va con la fuente incrustada y no se busca como
+  texto plano.
 - **Decimales en formularios:** la cultura del servidor es es-ES. Un decimal enlazado desde
   `type="text"` convierte «37.8» en 378. Usa `type="number" step="0.1"`, que ASP.NET Core enlaza con
   cultura invariante gracias al campo oculto `__Invariant`. En un campo oculto que reenvía un decimal,

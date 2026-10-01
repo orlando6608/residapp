@@ -17,9 +17,21 @@ public sealed class ReferralReportPdfRenderer : IReferralReportPdfRenderer
 {
     private const string FontFamily = "Liberation Sans";
 
+    /// <summary>PDFsharp/MigraDoc comparten estado de fuentes entre documentos: dos PDF generados a la vez pueden salir
+    /// con palabras de un título en la fuente que no toca (visto en las pruebas en paralelo). Se generan de uno en uno.</summary>
+    private static readonly Lock RenderLock = new();
+
     static ReferralReportPdfRenderer() => GlobalFontSettings.FontResolver = new EmbeddedFontResolver();
 
     public byte[] Render(string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature)
+    {
+        lock (RenderLock)
+        {
+            return RenderDocument(residentDisplayName, content, signature);
+        }
+    }
+
+    private static byte[] RenderDocument(string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature)
     {
         var document = new Document();
         document.Info.Title = "Informe de derivación a Urgencias";

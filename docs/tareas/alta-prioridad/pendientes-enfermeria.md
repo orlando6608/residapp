@@ -270,6 +270,9 @@ Huecos de lo ya construido:
   - **Firmante:** desde el 2026-10-01 (`0023`), el PDF muestra el nombre visible de la cuenta, su perfil y su
     identificador. Las cuentas a las que Administración aún no ha puesto nombre siguen saliendo solo con perfil e
     identificador. Los PDF ya firmados no cambian: el nombre es el que tenía la cuenta al firmar.
+  - **PDF generados a la vez (corregido el 2026-10-01):** PDFsharp/MigraDoc comparten estado de fuentes entre documentos, y
+    dos firmas simultáneas podían dejar una palabra de un título sin negrita. `ReferralReportPdfRenderer` genera ahora los PDF
+    de uno en uno (test `ReferralReportPdfRendererTests`). Los PDF firmados antes no se tocan: son inmutables.
   - **Sin corrección:** un informe firmado no se corrige ni tiene nueva versión (la política provisional de
     COR-01/02 solo habilita las valoraciones).
   - **Contacto familiar:** desde el 2026-10-01 la pantalla muestra el contacto urgente que designa Administración y
