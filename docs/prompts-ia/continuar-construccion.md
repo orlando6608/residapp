@@ -13,8 +13,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Administración, turnos recurrentes con excepciones (historia 4; ADM-16; sin script ni cambios en el seed):** hecho el 2026-10-01 en `main`
-  **sin push** (Azure en `0028`).
+- **Administración, turnos recurrentes con excepciones (historia 4; ADM-16; sin script ni cambios en el seed):** hecho el 2026-10-01 en `main`,
+  pusheado y desplegado en Azure (push de `db4f013`, run 36929187490 en verde con `build-and-test` y `deploy`; sin script, Azure sigue en `0028`).
   - **Qué hace:** «Planificar un turno» admite hasta **367 fechas** por envío (una serie: las filas con el mismo `lote_id`) y un campo
     **«Fechas a saltar»** (festivos, `AAAA-MM-DD` o `DD/MM/AAAA`). `Ver serie` (`/Administracion/SeriePlanificacion?loteId=`) enseña sus fechas, retira una
     fecha suelta o **retira la serie desde un día** (`POST RetirarSerie`; solo hoy en adelante), con un solo evento de auditoría
@@ -35,6 +35,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
       noviembre saltando el 2 y el 25 guarda 18 fechas (no salen esas dos); la serie las enseña; retirar una suelta deja 17 y 1 retirada; retirar
       desde el 20 retira 5 (12 activas, 6 retiradas); repetirlo avisa; la auditoría tiene `SCHEDULE_SERIES_RETIRE`; Enfermería, Medicina, Auxiliar y
       Dirección reciben «No se puede acceder» en la serie.
+  - **Prueba en Azure (2026-10-01)** con `dev-integrado-administracion`: «Equipo A az» con «Manana az» de lunes a viernes del 2 al 27 de noviembre
+    saltando el 2 y el 25 guarda 18 fechas (no salen esas dos); una fecha a saltar inválida da el error; retirar una suelta deja 17 y 1 retirada;
+    retirar desde el 20 retira 5 (12 activas, 6 retiradas); repetirlo avisa; la auditoría tiene `SCHEDULE_SERIES_RETIRE`; Enfermería, Medicina,
+    Auxiliar y Dirección reciben «No se puede acceder». Queda esa serie de prueba en Azure.
   - **Datos de prueba en la base local:** una serie de «Equipo I1 prueba» con «Manana prueba» en noviembre de 2026. Nada se borra.
 - **Equipos en los seguimientos de Enfermería y Medicina (punto 2 del pendiente de Administración; script `0028`; sin cambios en el seed):** hecho
   el 2026-10-01 en `main`, pusheado y desplegado en Azure (push de `17a4926`, run 36925459313 en verde con `build-and-test` y `deploy`, que aplicó `0028`). Antes, en la misma sesión, `AdministracionApplicationService` se dividió en tres
