@@ -82,8 +82,8 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     [Fact]
     public async Task Inicio_EnfermeriaSoloVeElAltaDeResidenteConElPermiso()
     {
-        var without = await HomeAsync("ENFERMERIA", null);
-        var with = await HomeAsync("ENFERMERIA", ProfilePermissions.ResidentIdentityCreate);
+        var without = await PageAsync("ENFERMERIA", null);
+        var with = await PageAsync("ENFERMERIA", ProfilePermissions.ResidentIdentityCreate);
 
         Assert.All(new[] { without, with }, page => Assert.Contains("<h2 class=\"h5 card-title\">Enfermería</h2>", page));
         Assert.DoesNotContain("Alta de residente", without);
@@ -95,15 +95,30 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     [InlineData("MEDICINA", ProfilePermissions.BaselineReevaluate)]
     public async Task Inicio_FirmarBorradorDeBasal_SoloConUnPermisoDeBasal(string profileCode, string permission)
     {
-        var without = await HomeAsync(profileCode, null);
-        var with = await HomeAsync(profileCode, permission);
+        var without = await PageAsync(profileCode, null);
+        var with = await PageAsync(profileCode, permission);
 
         Assert.DoesNotContain("Firmar borrador de basal", without);
         Assert.Contains("Firmar borrador de basal", with);
     }
 
-    /// <summary>El Inicio, ya decodificado, de una cuenta nueva con un ámbito del perfil indicado y, si se pide, un permiso.</summary>
-    private async Task<string> HomeAsync(string profileCode, string? permission)
+    [Theory]
+    [InlineData("ENFERMERIA", null, false)]
+    [InlineData("ENFERMERIA", ProfilePermissions.ResidentIdentityCreate, true)]
+    [InlineData("MEDICINA", null, false)]
+    [InlineData("ADMINISTRACION", null, true)]
+    public async Task AltaDeResidente_ElFormularioSoloSaleSiElAmbitoPuedeDarDeAlta(
+        string profileCode, string? permission, bool canCreate)
+    {
+        var page = await PageAsync(profileCode, permission, "/Residents/Create");
+
+        Assert.Equal(canCreate, page.Contains("name=\"NombreVisible\""));
+        Assert.Equal(!canCreate, page.Contains("Tu ámbito activo no tiene permiso para dar de alta residentes."));
+    }
+
+    /// <summary>Una página (por defecto el Inicio), ya decodificada, de una cuenta nueva con un ámbito del perfil indicado
+    /// y, si se pide, un permiso.</summary>
+    private async Task<string> PageAsync(string profileCode, string? permission, string path = "/")
     {
         var account = await SeedAdministratorAsync(profileCode, permission);
         var client = _factory.CreateClient();
@@ -113,7 +128,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
             ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
             ["externalSubject"] = account.ExternalSubject,
         }))).EnsureSuccessStatusCode();
-        return WebUtility.HtmlDecode(await client.GetStringAsync("/"));
+        return WebUtility.HtmlDecode(await client.GetStringAsync(path));
     }
 
     /// <summary>Una cuenta con un ámbito del perfil indicado (por defecto Administración) en un centro y una unidad nuevos y,

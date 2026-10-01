@@ -13,6 +13,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Pantalla de alta de residente según el permiso (sin script):** hecho el 2026-10-01, en `main` sin push. Antes,
+  `GET /Residents/Create` abría el formulario a cualquier ámbito y solo se denegaba al guardar. Ahora, con la misma
+  regla que `ResidentBaselinePolicy` (Administración siempre; Enfermería con `RESIDENT_IDENTITY_CREATE`), sin permiso sale
+  un aviso en lugar del formulario; guardar sigue autorizándose en el servidor. Test
+  `AltaDeResidente_ElFormularioSoloSaleSiElAmbitoPuedeDarDeAlta` (falla sin el cambio); suite en verde 3 veces (174, 233
+  y 41); curl en local: `dev-multi` (todos sus ámbitos), `dev-integrado-enfermeria` y `dev-prueba-enfermeria-nueva` ven el
+  aviso y `dev-integrado-administracion` el formulario; concedido el permiso a `dev-prueba-enfermeria-nueva` vio el
+  formulario y dio de alta «Prueba alta pantalla permiso (ficticia)»; revocado otra vez, vuelve el aviso.
 - **«Firmar borrador de basal» en el Inicio por permiso (sin script):** hecho el 2026-10-01, en `main` sin push. La
   tarjeta sale a Enfermería y Medicina solo con `BASELINE_INITIAL_COMPLETE` o `BASELINE_REEVALUATE` (firmar exige uno u
   otro según el motivo del borrador). Test `Inicio_FirmarBorradorDeBasal_SoloConUnPermisoDeBasal` (falla sin el cambio);
@@ -612,7 +620,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 174 unitarios, 233 de integración y 37 funcionales, todos en verde.
+- Suite: 174 unitarios, 233 de integración y 41 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -639,10 +647,7 @@ usuario cuando encajen:
 
 - **Inicio y permisos:** desde el bloque 4 de Administración, «Alta de residente» y «Rangos de referencia» solo salen con
   el permiso, y «Firmar borrador de basal» con el de basal inicial o el de reevaluar (2026-10-01). Si cambian las reglas
-  de perfiles o permisos de una pantalla, revisa también los `@if` de `Views/Home/Index.cshtml`.
-- **Formulario de alta sin el permiso:** `GET /Residents/Create` abre el formulario a Enfermería aunque no tenga
-  `RESIDENT_IDENTITY_CREATE`; el permiso se comprueba al enviarlo, que se deniega. Visto en Azure el 2026-10-01.
-- **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
+  de perfiles o permisos de una pantalla, revisa también los `@if` de `Views/Home/Index.cshtml`.- **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
   abiertos: tos productiva.», en valoración médica, que se dejó como ejemplo de la lista de escalados. El
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de
   prueba allí.

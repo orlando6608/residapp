@@ -25,7 +25,13 @@
             (<a asp-controller="ProfileScope" asp-action="Select" asp-route-returnUrl="@Url.Action("Create", "Residents")">Cambiar ámbito</a>)
         </p>
 
-        @if (units.Count == 0)
+        @if (ViewBag.PuedeDarDeAlta != true)
+        {
+            <div class="alert alert-warning" role="alert">
+                Tu ámbito activo no tiene permiso para dar de alta residentes. Si lo necesitas, pídeselo a Administración.
+            </div>
+        }
+        else if (units.Count == 0)
         {
             <div class="alert alert-warning" role="alert">
                 Tu ámbito activo no tiene ninguna unidad concedida, así que no puedes dar de alta residentes en él.

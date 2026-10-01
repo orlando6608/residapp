@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
+using ResidApp.Domain.Accounts;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
@@ -11,7 +12,8 @@ namespace ResidApp.Web.Controllers;
 /// <summary>Primera pantalla real del vertical Residente/Basal: alta de residente. Traduce el formulario
 /// directamente a CreateResidentCommand; la autorización y las reglas de negocio viven en
 /// ResidentBaselineApplicationService, no aquí.</summary>
-public sealed class ResidentsController(ResidentBaselineApplicationService service, ListActiveScopeUnits listUnits) : Controller
+public sealed class ResidentsController(
+    ResidentBaselineApplicationService service, ListActiveScopeUnits listUnits, ListActiveScopePermissions listPermissions) : Controller
 {
     public async Task<IActionResult> Create(CancellationToken ct)
     {
@@ -74,6 +76,13 @@ public sealed class ResidentsController(ResidentBaselineApplicationService servi
             : await listUnits.ExecuteAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
         IReadOnlyList<ScopeUnit> units = result is { Ok: true } ? result.Value! : [];
         ViewBag.Unidades = units.Select(u => new SelectListItem(u.Name, u.UnitId.Value.ToString())).ToList();
+        // Misma regla que ResidentBaselinePolicy: Administración siempre; Enfermería solo con el permiso. Solo orienta:
+        // el alta vuelve a autorizarse al guardarla.
+        ViewBag.PuedeDarDeAlta = activeScope?.Profile == SystemProfile.Administracion
+            || (activeScope?.Profile == SystemProfile.Enfermeria
+                && await listPermissions.ExecuteAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct)
+                    is { Ok: true } permissions
+                && permissions.Value!.Contains(ProfilePermissions.ResidentIdentityCreate));
         return units;
     }
 }
