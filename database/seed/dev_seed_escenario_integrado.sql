@@ -170,6 +170,32 @@ SELECT NEWID(), profile.id, profile.centro_id, permiso.codigo, SYSUTCDATETIME(),
                       AND existing.revocado_en IS NULL);
 GO
 
+/*
+ * Añadido después (2026-10-01): cuenta 'dev-integrado-administracion' con un ámbito ADMINISTRACION sobre la misma
+ * unidad, para recorrer el bloque 1 de Administración (lista de residentes, ficha administrativa y corrección de
+ * identidad) con los residentes integrados. Bloque aparte e idempotente por su cuenta, igual que el de Medicina.
+ */
+IF EXISTS (SELECT 1 FROM dbo.centros WHERE id = 'A1000000-0000-0000-0000-000000000001')
+   AND NOT EXISTS (SELECT 1 FROM dbo.cuentas WHERE sujeto_externo = 'dev-integrado-administracion')
+BEGIN
+    DECLARE @AdmCenterId UNIQUEIDENTIFIER = 'A1000000-0000-0000-0000-000000000001';
+    DECLARE @AdmAccountId UNIQUEIDENTIFIER = NEWID();
+    DECLARE @AdmProfileScopeId UNIQUEIDENTIFIER = NEWID();
+    DECLARE @AdmNow DATETIME2(3) = SYSUTCDATETIME();
+
+    INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en)
+    VALUES (@AdmAccountId, 'dev-integrado-administracion', 'ACTIVE', @AdmNow);
+
+    INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+    VALUES (@AdmProfileScopeId, @AdmAccountId, @AdmCenterId, 'ADMINISTRACION', 'ACTIVE', @AdmNow, @AdmAccountId);
+
+    INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+    SELECT NEWID(), @AdmProfileScopeId, @AdmCenterId, u.id, @AdmNow, @AdmAccountId
+      FROM dbo.unidades u
+     WHERE u.centro_id = @AdmCenterId AND u.codigo = 'UNIDAD-DEV-INTEGRADO';
+END
+GO
+
 SELECT
     account.sujeto_externo AS ExternalSubject,
     profile.perfil_codigo AS Perfil,
@@ -177,7 +203,8 @@ SELECT
     profile.centro_id AS CenterId
   FROM dbo.cuentas account
   JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id
- WHERE account.sujeto_externo IN ('dev-integrado-auxiliar', 'dev-integrado-enfermeria', 'dev-integrado-direccion', 'dev-integrado-medicina');
+ WHERE account.sujeto_externo IN ('dev-integrado-auxiliar', 'dev-integrado-enfermeria', 'dev-integrado-direccion', 'dev-integrado-medicina',
+                                   'dev-integrado-administracion');
 
 SELECT id AS ResidentId, nombre_visible AS DisplayName
   FROM dbo.residentes

@@ -1,0 +1,91 @@
+@using ResidApp.Web.Models
+@model AdministrativeResidentListViewModel
+@{
+    ViewData["Title"] = "Residentes";
+    var filtro = Model.Filter;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Residentes</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Residentes</h1>
+<p class="text-muted">Residentes activos de tu ámbito, por orden alfabético. Solo datos administrativos.</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form method="get" asp-action="Residentes" role="search" class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-5">
+                <label for="filtro-q" class="form-label">Nombre</label>
+                <input id="filtro-q" name="q" type="search" class="form-control form-control-lg" value="@filtro.Q" />
+            </div>
+            @if (Model.Units.Count > 1)
+            {
+                <div class="col-12 col-md-4">
+                    <label for="filtro-unidad" class="form-label">Unidad</label>
+                    <select id="filtro-unidad" name="unidad" class="form-select form-select-lg">
+                        <option value="">Todas</option>
+                        @foreach (var unit in Model.Units)
+                        {
+                            <option value="@unit.Id" selected="@(filtro.Unidad == unit.Id)">@unit.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-12 col-md-auto d-grid d-md-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">Buscar</button>
+                @if (!filtro.IsEmpty)
+                {
+                    <a asp-action="Residentes" class="btn btn-outline-secondary btn-lg">Limpiar</a>
+                }
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Model.TotalCount == 0)
+{
+    <p class="text-muted">No hay residentes en tu ámbito.</p>
+}
+else if (Model.Residents.Count == 0)
+{
+    <p class="text-muted">Ningún residente coincide con la búsqueda.</p>
+}
+else
+{
+    @if (!filtro.IsEmpty)
+    {
+        <p>@Model.Residents.Count de @Model.TotalCount residentes.</p>
+    }
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Residentes de tu ámbito con sus datos administrativos</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col" class="text-end">Edad</th>
+                    <th scope="col">Sexo documentado</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Fecha de alta</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var resident in Model.Residents)
+                {
+                    <tr>
+                        <th scope="row"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></th>
+                        <td class="text-end">@AdministrativeResidentDisplay.Age(resident.BirthDate, Model.Today)</td>
+                        <td>@EnumDisplay.Label(resident.DocumentedSex)</td>
+                        <td>@resident.UnitName</td>
+                        <td>@resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

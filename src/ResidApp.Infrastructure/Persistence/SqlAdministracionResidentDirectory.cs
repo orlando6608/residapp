@@ -1,0 +1,104 @@
+using Dapper;
+using ResidApp.Application.Ports;
+using ResidApp.Domain.Residents;
+using ResidApp.Shared;
+
+namespace ResidApp.Infrastructure.Persistence;
+
+/// <summary>
+/// ADM-02/ADM-03: residentes del ámbito de Administración. La regla de ámbito es la de SqlEnfermeriaResidentDirectory
+/// (unidades concedidas y, si el ámbito los restringe, sus residentes) para un ámbito activo de ADMINISTRACION, así que
+/// «sale en la lista» y «se abre su ficha» son lo mismo. Solo lee identidad, ubicación, episodio y correcciones de
+/// identidad: nunca basal ni contenido clínico. Las fechas se guardan en UTC.
+/// </summary>
+public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory connections) : IAdministracionResidentDirectory
+{
+    private const string ScopedResidentsSelect = """
+        SELECT resident.id AS ResidentId, resident.nombre_visible AS DisplayName, resident.fecha_nacimiento AS BirthDate,
+               resident.sexo_documentado_codigo AS SexCode, unit.id AS UnitId, unit.nombre_visible AS UnitName,
+               episode.vigente_desde AS AdmittedAt
+          FROM dbo.ambitos_perfil profile
+          JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
+               AND unit_scope.centro_id = profile.centro_id AND unit_scope.revocado_en IS NULL
+          JOIN dbo.unidades unit ON unit.id = unit_scope.unidad_id AND unit.centro_id = profile.centro_id AND unit.estado = 'ACTIVE'
+          JOIN dbo.residentes resident ON resident.centro_id = profile.centro_id AND resident.estado = 'ACTIVE'
+          JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id
+               AND location.centro_id = profile.centro_id AND location.unidad_id = unit.id AND location.vigente_hasta IS NULL
+          JOIN dbo.episodios_residente_centro episode ON episode.id = location.episodio_id
+               AND episode.residente_id = resident.id AND episode.centro_id = profile.centro_id
+          LEFT JOIN dbo.ambitos_perfil_residente resident_scope ON resident_scope.ambito_perfil_id = profile.id
+               AND resident_scope.centro_id = profile.centro_id AND resident_scope.residente_id = resident.id
+               AND resident_scope.revocado_en IS NULL
+         WHERE profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
+           AND profile.perfil_codigo = 'ADMINISTRACION' AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+           AND (resident_scope.id IS NOT NULL OR NOT EXISTS (
+               SELECT 1 FROM dbo.ambitos_perfil_residente restriction
+                WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
+        """;
+
+    public async Task<IReadOnlyList<AdministrativeResidentSummary>> ListAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var rows = await connection.QueryAsync<ResidentRow>(new CommandDefinition(
+            ScopedResidentsSelect + " ORDER BY resident.nombre_visible",
+            new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+        return rows.Select(ToSummary).ToList();
+    }
+
+    public async Task<AdministrativeResidentDetail?> FindAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var parameters = new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value };
+        var row = await connection.QuerySingleOrDefaultAsync<ResidentRow>(new CommandDefinition(
+            ScopedResidentsSelect + " AND resident.id = @ResidentId", parameters, cancellationToken: ct));
+        if (row is null)
+        {
+            return null;
+        }
+
+        // El ámbito ya está comprobado con la consulta anterior; desde aquí solo se lee de ese residente.
+        var locations = (await connection.QueryAsync<LocationRow>(new CommandDefinition("""
+            SELECT unit.nombre_visible AS UnitName, i.vigente_desde AS StartedAt, i.vigente_hasta AS EndedAt,
+                   i.modificado_por_perfil AS ProfileCode
+              FROM dbo.intervalos_ubicacion_residente i
+              JOIN dbo.unidades unit ON unit.id = i.unidad_id AND unit.centro_id = i.centro_id
+             WHERE i.residente_id = @ResidentId AND i.centro_id = @CenterId
+             ORDER BY i.vigente_desde DESC
+            """, parameters, cancellationToken: ct)))
+            .Select(l => new ResidentLocationInterval(
+                l.UnitName, Utc(l.StartedAt), l.EndedAt is { } ended ? Utc(ended) : null, EnumCode.ParseCode<SystemProfile>(l.ProfileCode)))
+            .ToList();
+        var corrections = (await connection.QueryAsync<CorrectionRow>(new CommandDefinition("""
+            SELECT numero AS Number, nombre_anterior AS NameBefore, fecha_nacimiento_anterior AS BirthDateBefore,
+                   sexo_anterior_codigo AS SexBefore, nombre_nuevo AS NameAfter, fecha_nacimiento_nueva AS BirthDateAfter,
+                   sexo_nuevo_codigo AS SexAfter, motivo AS Reason, corregido_en AS CorrectedAt
+              FROM dbo.residentes_identidad_correcciones
+             WHERE residente_id = @ResidentId AND centro_id = @CenterId
+             ORDER BY numero
+            """, parameters, cancellationToken: ct)))
+            .Select(c => new ResidentIdentityCorrectionEntry(
+                c.Number,
+                new ResidentIdentity(c.NameBefore, DateOnly.FromDateTime(c.BirthDateBefore), EnumCode.ParseCode<DocumentedSexCode>(c.SexBefore)),
+                new ResidentIdentity(c.NameAfter, DateOnly.FromDateTime(c.BirthDateAfter), EnumCode.ParseCode<DocumentedSexCode>(c.SexAfter)),
+                c.Reason, Utc(c.CorrectedAt)))
+            .ToList();
+        return new AdministrativeResidentDetail(ToSummary(row), locations, corrections);
+    }
+
+    private static AdministrativeResidentSummary ToSummary(ResidentRow r) => new(
+        ResidentId.From(r.ResidentId), r.DisplayName, DateOnly.FromDateTime(r.BirthDate), EnumCode.ParseCode<DocumentedSexCode>(r.SexCode),
+        UnitId.From(r.UnitId), r.UnitName, Utc(r.AdmittedAt));
+
+    private static DateTimeOffset Utc(DateTime value) => new(value, TimeSpan.Zero);
+
+    private sealed record ResidentRow(
+        Guid ResidentId, string DisplayName, DateTime BirthDate, string SexCode, Guid UnitId, string UnitName, DateTime AdmittedAt);
+
+    private sealed record LocationRow(string UnitName, DateTime StartedAt, DateTime? EndedAt, string ProfileCode);
+
+    private sealed record CorrectionRow(
+        int Number, string NameBefore, DateTime BirthDateBefore, string SexBefore, string NameAfter, DateTime BirthDateAfter,
+        string SexAfter, string Reason, DateTime CorrectedAt);
+}

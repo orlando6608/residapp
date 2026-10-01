@@ -1,0 +1,70 @@
+@using ResidApp.Domain.Residents
+@using ResidApp.Web.Models
+@model CorrectIdentityViewModel
+@{
+    var resident = Model.Resident;
+    ViewData["Title"] = "Corregir identidad";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Corregir identidad</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Corregir identidad</h1>
+<p class="text-muted">
+    Corrige un error en los datos de identidad tomados de la documentación administrativa. La versión anterior y el motivo
+    quedan en el historial de la ficha.
+</p>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h6 card-title">Identidad vigente</h2>
+        <p class="mb-0">@resident.DisplayName · @resident.BirthDate.ToString("dd/MM/yyyy") · @EnumDisplay.Label(resident.DocumentedSex)</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="CorregirIdentidad" method="post">
+            <input type="hidden" name="Form.ResidenteId" value="@Model.Form.ResidenteId" />
+            <input type="hidden" name="Form.CorreccionesEsperadas" value="@Model.Form.CorreccionesEsperadas" />
+
+            <div class="mb-3">
+                <label asp-for="Form.NombreVisible" class="form-label"></label>
+                <input asp-for="Form.NombreVisible" class="form-control form-control-lg" />
+                <span asp-validation-for="Form.NombreVisible" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.FechaNacimiento" class="form-label"></label>
+                <input asp-for="Form.FechaNacimiento" class="form-control form-control-lg" />
+                <span asp-validation-for="Form.FechaNacimiento" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.SexoDocumentado" class="form-label"></label>
+                <select asp-for="Form.SexoDocumentado" class="form-select form-select-lg" asp-items="Html.GetEnumSelectList<DocumentedSexCode>()"></select>
+                <span asp-validation-for="Form.SexoDocumentado" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Motivo" class="form-label"></label>
+                <textarea asp-for="Form.Motivo" class="form-control form-control-lg" rows="3"></textarea>
+                <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Guardar corrección</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

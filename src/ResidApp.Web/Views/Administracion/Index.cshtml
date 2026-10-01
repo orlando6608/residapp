@@ -1,0 +1,40 @@
+@using ResidApp.Web.Models
+@model AdministracionInicioViewModel
+@{
+    ViewData["Title"] = "Inicio de Administración";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Administración</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Inicio de Administración</h1>
+<p class="text-muted">
+    Gestión administrativa de los residentes de tu ámbito. Administración no ve el basal ni ningún contenido clínico.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="row g-3">
+    <div class="col-12 col-md-6">
+        <a asp-action="Residentes" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Residentes</h2>
+                <p class="card-text mb-0">
+                    <span class="badge text-bg-primary">@Model.Residents</span> residente(s) en tu ámbito: ficha administrativa,
+                    historial de ubicación y corrección de identidad.
+                </p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6">
+        <a asp-controller="Residents" asp-action="Create" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Alta de residente</h2>
+                <p class="card-text mb-0">Registrar un nuevo residente en el centro. Su basal queda pendiente.</p>
+            </div>
+        </a>
+    </div>
+</div>

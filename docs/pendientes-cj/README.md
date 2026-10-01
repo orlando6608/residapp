@@ -18,3 +18,4 @@ abrirlos en el navegador.
 | --- | --- | --- |
 | [rangos-referencia-constantes.html](rangos-referencia-constantes.html) | Mínimo y máximo de las 7 constantes con aviso visual, y 5 preguntas abiertas | Pendiente |
 | [decisiones-direccion-basal-derivacion.html](decisiones-direccion-basal-derivacion.html) | Finalidades de la lectura clínica de Dirección, aportación a un borrador de basal ajeno y el campo «Comunicaciones» en el informe de derivación (7 respuestas) | Pendiente |
+| [traslado-y-baja-residente.html](traslado-y-baja-residente.html) | Traslado entre unidades o centros (episodios abiertos, borrador de basal, quién lo hace) y baja y reactivación del residente (6 respuestas) | Pendiente |

@@ -7,11 +7,37 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 > Retomamos la construcción de ResidApp. Lee `CLAUDE.md`, este fichero
 > (`docs/prompts-ia/continuar-construccion.md`), `docs/tareas/alta-prioridad/pendientes-enfermeria.md` y
-> `docs/tareas/alta-prioridad/pendientes-medicina.md` y `docs/tareas/alta-prioridad/pendientes-direccion.md`.
+> `docs/tareas/alta-prioridad/pendientes-medicina.md`, `docs/tareas/alta-prioridad/pendientes-direccion.md` y
+> `docs/tareas/alta-prioridad/pendientes-administracion.md`.
 > Mira si CJ ha completado algo en `docs/pendientes-cj/`. Después comprueba que la suite pasa en verde
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Administración, bloque 1: residentes, ficha administrativa y corrección de identidad (ADM-01 a ADM-03, RES-01,
+  RES-03, RES-04; script `0021`; cambia el seed):** hecho el 2026-10-01, con commit en `main` **sin push**. El push aplica
+  `0021` y el seed (cuenta `dev-integrado-administracion`) en Azure SQL. Después, comprueba el pipeline y prueba en Azure
+  con esa cuenta, corrigiendo un residente nuevo dado de alta para eso, nunca Residente Integrado Uno.
+  - **Qué hace:** `/Administracion` (inicio), `/Administracion/Residentes` (lista con edad, sexo, unidad y fecha de alta,
+    con búsqueda y filtro), `/Administracion/Residente` (ficha con historial de ubicación y de correcciones) y
+    `/Administracion/CorregirIdentidad` (con motivo obligatorio). Sin basal ni contenido clínico.
+  - **Sin traslado ni baja:** `D1-P04` está diferida en los flujos; se ha preguntado a CJ en
+    `docs/pendientes-cj/traslado-y-baja-residente.html`. El detalle y las decisiones están en `pendientes-administracion.md`
+    (fichero nuevo).
+  - **Verificación:**
+    - suite local en verde antes de empezar (125, 201 y 21) y después 3 veces seguidas (131, 206 y 26);
+    - 3 vueltas tipo CI con BD nueva en verde;
+    - BD temporal con todos los scripts (22) y el seed aplicado dos veces: la cuenta nueva queda una sola vez;
+    - `0021` probado a mano en una BD desechable (8 casos del trigger y de la tabla);
+    - curl con `dev-integrado-administracion`:
+      - inicio (2 residentes), lista, «DÓS» encuentra a Residente Integrado Dos y un filtro mal formado se ignora;
+      - ficha de Residente Integrado Dos con su historial de ubicación;
+      - alta de «prueba correccion identidad (ficticio)» y su corrección a «Prueba Corrección Identidad (ficticio)», Mujer,
+        con motivo; el reenvío da conflicto, sin motivo se rechaza y sin cambios también;
+      - la ficha muestra la corrección y la auditoría tiene `RESIDENT_CREATE` y `RESIDENT_IDENTITY_CORRECT`;
+    - `dev-integrado-enfermeria`, `-medicina`, `-auxiliar` y `-direccion` reciben «No se puede acceder a esta operación».
+  - La primera vuelta completa dio 188 fallos y otra 52, todos tiempos de espera al iniciar sesión en SQL Server, con
+    1 GB libre. Ver la lección «Suite lenta»: se resolvió liberando los nodos de MSBuild.
+  - Copia previa: `ResidApp-antes-0021-20261001.bak`.
 - **Dirección Clínica, bloque 4: indicadores agregados, evolución e informe imprimible (DIR-08, DIR-09, DIR-10, DIR-16; sin
   script):** hecho el 2026-10-01 y desplegado en Azure (push de `60b3c86`, run 36827738565 en verde con `build-and-test` y
   `deploy`).
@@ -379,17 +405,19 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 - CJ no ha completado nada nuevo (comprobado también en GitHub el 2026-10-01): `decisiones-direccion-basal-derivacion.html`
   sigue con sus 7 respuestas «por definir», y
   `docs/pendientes-cj/rangos-referencia-constantes.html` sigue con 19 huecos «por definir» (14 celdas de la
-  tabla y 5 respuestas; antes se contaban mal como 17).
+  tabla y 5 respuestas; antes se contaban mal como 17). El 2026-10-01 se añadió
+  `docs/pendientes-cj/traslado-y-baja-residente.html` (6 respuestas).
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1 a 10
   y 11 (salvo la lectura de Dirección Clínica, que es de su vertical), más los rangos de
   referencia de constantes (fase 1 y su pantalla). Medicina está en curso: historias 1 a 8 (escalados,
   valoración médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos, protocolo
   urgente, derivación a Urgencias, evento propio y basal con permiso) y 9 (con la misma salvedad que la 11).
-- La base local `ResidApp` tiene los scripts `0001` a `0020` registrados en `dbo.scripts_aplicados`
-  (también en Azure). Hay copias previas a `0016`, `0017`, `0018`, `0019` y `0020` en
-  `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
-  `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak`, `ResidApp-antes-0019-20260930.bak` y
-  `ResidApp-antes-0020-20260930.bak`).
+- La base local `ResidApp` tiene los scripts `0001` a `0021` registrados en `dbo.scripts_aplicados`
+  (en Azure, hasta `0020` mientras no se haga el push). Hay copias previas a `0016`, `0017`, `0018`, `0019`, `0020` y
+  `0021` en `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
+  `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak`, `ResidApp-antes-0019-20260930.bak`,
+  `ResidApp-antes-0020-20260930.bak` y `ResidApp-antes-0021-20261001.bak`). También tiene la cuenta
+  `dev-integrado-administracion` y el residente de prueba «Prueba Corrección Identidad (ficticio)», con una corrección.
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
@@ -413,7 +441,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 125 unitarios, 201 de integración y 21 funcionales, todos en verde.
+- Suite: 131 unitarios, 206 de integración y 26 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -421,16 +449,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Revisar las respuestas de CJ** en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (preparado el
-   2026-09-30, 7 respuestas). Si ha respondido al tema 1, el siguiente bloque es el 2 de Dirección (lectura clínica
-   auditada); si ha respondido al tema 2, la aportación a un borrador de basal ajeno; el tema 3 es un cambio pequeño en el
-   informe de derivación.
-2. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
-   (Administración y Familia). El bloque 4 está hecho; la revisión de calidad de proceso (DIR-11) necesita que CJ defina
-   los hitos y plazos. Ver `pendientes-direccion.md`.
-3. **Administración** (prerrequisito de Familia y de los huecos de turnos, equipos y firmante) y después **Familia /
-   Portal Familiar**, que también depende del proveedor de identidad. Antes de proponerlos, lee sus historias en
-   `docs/historias-usuarios/` y comprueba qué piden de lo ya construido.
+1. **Revisar las respuestas de CJ:**
+   - `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (preparado el 2026-09-30, 7 respuestas). Si ha respondido
+     al tema 1, el siguiente bloque es el 2 de Dirección (lectura clínica auditada); si ha respondido al tema 2, la aportación a
+     un borrador de basal ajeno; el tema 3 es un cambio pequeño en el informe de derivación.
+   - `docs/pendientes-cj/traslado-y-baja-residente.html` (preparado el 2026-10-01, 6 respuestas): traslado y baja del
+     residente en Administración.
+2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): familiares, autorizaciones y contacto urgente
+   (prerrequisito del Portal Familiar y del contacto de la derivación); usuarios, perfiles y permisos; turnos y equipos.
+3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
+   (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.
+4. **Familia / Portal Familiar**, que depende de Administración y del proveedor de identidad.
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 
@@ -441,9 +470,11 @@ usuario cuando encajen:
   Una ficha que depende de un permiso, como Alta de residente para Enfermería, la ve todo el perfil, aunque
   la cuenta no tenga el permiso. Si cambian las reglas de perfiles de una pantalla, revisa también los `@if`
   de `Views/Home/Index.cshtml`.
-- **Manual, cuentas de prueba:** la tabla de `#cuentas-prueba` y el recorrido guiado citan tres cuentas
-  `dev-integrado-*` y no incluyen `dev-integrado-medicina`, que existe desde el 2026-09-28 y tiene permiso de
-  basal desde la historia 8. Solo la nombra la sección «Residentes y evento propio».
+- **Indicadores de Dirección, días en UTC:** las fechas se guardan en UTC, pero `ListIndicatorFactsAsync` compara el
+  periodo con días locales y `SupervisionIndicatorRules` agrupa por la fecha UTC. Un hecho entre las 00:00 y las 02:00
+  de España cuenta en el día (y a fin de mes, en el mes) anterior. Detectado el 2026-10-01; pendiente de corregir
+  (convertir los límites del periodo a UTC y agrupar por la fecha local).
+- **Alta de residente:** el formulario pide el identificador de la unidad a mano (no hay selector de unidades).
 - **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
   abiertos: tos productiva.», en valoración médica, que se dejó como ejemplo de la lista de escalados. El
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de
@@ -564,6 +595,12 @@ Repite estos pasos antes de dar un bloque por cerrado:
   - las 3 vueltas siguientes pasaron en 5-10 s.
 
   Si vuelve a pasar, repite este diagnóstico antes de tocar código.
+
+  El 2026-10-01 (bloque 1 de Administración) se repitió a lo grande: 188 y 52 fallos, todos «tiempo de espera durante
+  la fase previa al inicio de sesión», con 1 GB libre y SQL Server con 267 MB en memoria. Había 13 nodos de MSBuild
+  (unos 1,5 GB) que las compilaciones dejan vivos para reutilizarlos. `dotnet build-server shutdown` los cerró, dejó 2,1 GB
+  libres, y las 6 vueltas siguientes (3 locales y 3 tipo CI) salieron limpias en 7-13 s. Antes de una tanda de vueltas,
+  compila primero y lanza ese comando.
 - **Interbloqueos entre tests:** los tres proyectos de test se ejecutan en paralelo contra la misma BD. Un
   `UPDATE` o una lectura por una columna sin índice recorre la tabla entera y puede provocar interbloqueos
   intermitentes. Pasó con `valoraciones_enfermeria.evento_id` y se resolvió con `IX_ve_evento` en `0011`.

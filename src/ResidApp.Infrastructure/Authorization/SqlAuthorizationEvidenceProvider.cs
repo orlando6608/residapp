@@ -127,6 +127,9 @@ public sealed class SqlAuthorizationEvidenceProvider(SqlConnectionFactory connec
             case AuthorizationTarget.Draft draft:
                 parameters.Add("ResidentId", draft.ResidentId.Value);
                 break;
+            case AuthorizationTarget.IdentityUpdate identity:
+                parameters.Add("ResidentId", identity.ResidentId.Value);
+                break;
         }
         return (sql, parameters);
     }

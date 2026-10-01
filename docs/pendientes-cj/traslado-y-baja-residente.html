@@ -1,0 +1,266 @@
+<!doctype html>
+<!--
+  Documento para que CJ lo complete editándolo en GitHub (lápiz → editar → «Commit changes»).
+  Busca «por definir» (Ctrl+F): 6 respuestas, repartidas en 2 temas.
+  Sustituye ese texto por tu respuesta. No hace falta tocar nada más.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Traslado y baja del residente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 20px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+
+  .howto {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  .questions { list-style: none; padding: 0; gap: 18px; }
+  .questions li {
+    display: grid;
+    grid-template-columns: 2.6em 1fr;
+    gap: 4px;
+  }
+  .questions .n {
+    font-family: var(--serif);
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .questions li > div { display: flex; flex-direction: column; gap: 4px; }
+  .questions .why { color: var(--muted); font-size: 0.93rem; }
+  .options { font-size: 0.95rem; }
+  .answer {
+    background: var(--blank);
+    border: 1px dashed var(--blank-rule);
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-top: 4px;
+  }
+  .answer b { font-weight: 600; }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <p class="eyebrow">ResidApp · Administración · Pendiente de CJ</p>
+    <h1>Traslado y baja del residente</h1>
+    <p class="meta">Estado a 01/10/2026 · Para CJ, responsable de producto</p>
+    <p class="lead prose">
+      Administración ya puede consultar la ficha administrativa de cada residente, con su historial de ubicación, y corregir
+      errores de identidad. Lo que todavía no puede hacer es trasladar a un residente ni darle de baja. El flujo del basal
+      deja esa decisión expresamente pendiente («D1-P04»), porque afecta al trabajo clínico en curso. Este documento explica
+      lo que ocurre hoy y lo que falta decidir.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué bloquea</span><span>El traslado entre unidades o centros, y la baja y reactivación del residente.</span></div>
+    <div role="listitem"><span class="k">Qué no bloquea</span><span>La lista, la ficha administrativa y la corrección de identidad, que ya funcionan.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>6 respuestas, repartidas en 2 temas.</span></div>
+  </div>
+
+  <section class="howto">
+    <h2>Cómo completar este documento</h2>
+    <ol class="prose">
+      <li>Abre este fichero en GitHub (<code>docs/pendientes-cj/traslado-y-baja-residente.html</code>) y pulsa el lápiz para editarlo.</li>
+      <li>Busca «por definir» con Ctrl+F. Hay 6 respuestas por rellenar (el texto aparece también en estas instrucciones).</li>
+      <li>Sustituye cada «por definir» por tu respuesta. Si eliges una de las opciones propuestas, basta con escribir su letra.</li>
+      <li>Pulsa «Commit changes» para guardar.</li>
+    </ol>
+    <p class="prose meta">
+      GitHub muestra el código del fichero, no la página. Para verla con formato, descárgalo (botón «Download raw file») y ábrelo en el navegador.
+    </p>
+  </section>
+
+  <section>
+    <h2>Tema 1 · Trasladar a un residente</h2>
+    <div class="stack prose">
+      <p>
+        Cada residente tiene una única ubicación vigente (centro y unidad) y un historial que no se reescribe: un traslado
+        cerraría la ubicación anterior y abriría la nueva. Las listas de residentes de cada perfil, y el acceso a su ficha y
+        a su basal, siguen a esa ubicación vigente.
+      </p>
+      <p>
+        En cambio, cada episodio (un cambio de Auxiliar, un evento de Enfermería o de Medicina, con su valoración, escalado,
+        seguimiento, indicaciones o protocolo) pertenece a la unidad donde se registró, y es la Enfermería y la Medicina de
+        esa unidad quienes lo ven en sus bandejas.
+      </p>
+      <p class="context">
+        Por eso, si hoy se trasladara a un residente con episodios abiertos, esos episodios se quedarían en las bandejas de
+        la unidad de origen, mientras que el residente aparecería en las listas de la unidad de destino. Además, quien
+        tuviera a medias un borrador de su basal en la unidad de origen dejaría de poder abrirlo.
+      </p>
+    </div>
+    <ol class="questions prose">
+      <li><span class="n">1.1</span><div><strong>¿Qué traslados necesita el centro?</strong>
+        <ul class="options">
+          <li><strong>A.</strong> Solo entre unidades del mismo centro.</li>
+          <li><strong>B.</strong> Entre unidades y también entre centros del mismo grupo.</li>
+          <li><strong>C.</strong> Ninguno por ahora: los cambios de unidad son raros y se pueden aplazar.</li>
+        </ul>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+      <li><span class="n">1.2</span><div><strong>¿Qué pasa con los episodios abiertos del residente al trasladarlo?</strong>
+        <span class="why">Por ejemplo, un cambio sin valorar, un escalado en valoración médica, un seguimiento o una indicación sin realizar.</span>
+        <ul class="options">
+          <li><strong>A.</strong> Siguen en la unidad de origen hasta que se cierran. La unidad de destino los ve en la ficha del residente, pero no en sus bandejas.</li>
+          <li><strong>B.</strong> Pasan a la unidad de destino, que los continúa desde sus bandejas. La unidad de origen deja de verlos.</li>
+          <li><strong>C.</strong> No se puede trasladar a un residente con episodios abiertos: hay que cerrarlos antes.</li>
+        </ul>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+      <li><span class="n">1.3</span><div><strong>¿Y un borrador de basal que esté a medias?</strong>
+        <ul class="options">
+          <li><strong>A.</strong> Se cancela con el motivo «traslado» y la unidad de destino crea uno nuevo.</li>
+          <li><strong>B.</strong> Se conserva y lo puede terminar su autor, aunque sea de la unidad de origen.</li>
+          <li><strong>C.</strong> No se puede trasladar con un borrador abierto: hay que firmarlo o cancelarlo antes.</li>
+        </ul>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+      <li><span class="n">1.4</span><div><strong>¿Quién puede hacer el traslado?</strong>
+        <span class="why">Hoy el alta la hace Administración, y Enfermería solo con un permiso específico.</span>
+        <ul class="options">
+          <li><strong>A.</strong> Solo Administración.</li>
+          <li><strong>B.</strong> Administración, y Enfermería con un permiso específico, como en el alta.</li>
+        </ul>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Tema 2 · Dar de baja y reactivar a un residente</h2>
+    <div class="stack prose">
+      <p>
+        La aplicación ya prevé que un residente pase a «inactivo» con un motivo, pero no hay ninguna pantalla para hacerlo ni
+        está decidido qué ocurre después. Un residente inactivo desaparece hoy de todas las listas y no se puede abrir.
+      </p>
+    </div>
+    <ol class="questions prose">
+      <li><span class="n">2.1</span><div><strong>¿Qué motivos de baja hay que recoger?</strong>
+        <span class="why">Por ejemplo: fallecimiento, alta voluntaria, traslado a otro centro, ingreso hospitalario prolongado u otro. Di si es una lista cerrada o si se admite «otro» con texto.</span>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+      <li><span class="n">2.2</span><div><strong>Tras la baja, ¿qué se puede seguir consultando y se puede reactivar?</strong>
+        <ul class="options">
+          <li><strong>A.</strong> Aparece en una lista aparte de residentes dados de baja, en solo lectura, y Administración puede reactivarlo.</li>
+          <li><strong>B.</strong> Aparece en esa lista en solo lectura, pero no se reactiva: si vuelve, se da de alta de nuevo.</li>
+          <li><strong>C.</strong> Otra (descríbela).</li>
+        </ul>
+        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
+    </ol>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. Ingeniería no ha elegido ninguna opción: todas las decisiones son
+    de CJ. Cuando lo completes, ingeniería revisa tus respuestas, te consulta lo que no quede claro y lo incorpora a la
+    aplicación. La aplicación no lee este fichero.
+  </footer>
+</div>
+</body>
+</html>

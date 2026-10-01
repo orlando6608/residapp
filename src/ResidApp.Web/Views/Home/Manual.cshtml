@@ -32,6 +32,7 @@
             <a class="list-group-item list-group-item-action" href="#entrar-ambito">Entrar y elegir tu ámbito de trabajo</a>
             <a class="list-group-item list-group-item-action" href="#cuentas-prueba">Cuentas de prueba y cómo cambiar de usuario</a>
             <a class="list-group-item list-group-item-action" href="#alta-residente">Dar de alta un residente</a>
+            <a class="list-group-item list-group-item-action" href="#residentes-administracion">Residentes y ficha administrativa (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
             <a class="list-group-item list-group-item-action" href="#supervision-direccion">Supervisión operativa por unidad (Dirección Clínica)</a>
@@ -100,7 +101,7 @@
                 <tr>
                     <td><code>dev-admin</code></td>
                     <td>Administración</td>
-                    <td>Dar de alta un residente nuevo.</td>
+                    <td>Dar de alta un residente nuevo y consultar la lista y la ficha administrativa de su centro.</td>
                 </tr>
                 <tr>
                     <td><code>dev-auxiliar</code></td>
@@ -129,6 +130,16 @@
                     </td>
                     <td>Auxiliar, Enfermería y Dirección Clínica (mismo centro y unidad)</td>
                     <td>Recorrido guiado de extremo a extremo cruzando los tres perfiles — ver más abajo.</td>
+                </tr>
+                <tr>
+                    <td><code>dev-integrado-medicina</code></td>
+                    <td>Medicina (mismo centro y unidad, con permiso de basal)</td>
+                    <td>Escalados, valoración médica, indicaciones, evento propio y basal de los residentes integrados.</td>
+                </tr>
+                <tr>
+                    <td><code>dev-integrado-administracion</code></td>
+                    <td>Administración (mismo centro y unidad)</td>
+                    <td>Residentes, ficha administrativa, historial de ubicación, corrección de identidad y alta.</td>
                 </tr>
             </tbody>
         </table>
@@ -187,6 +198,30 @@
     <p class="mb-0">
         Administración nunca ve contenido clínico desde esta pantalla; solo gestiona el dato administrativo
         de identidad y ubicación.
+    </p>
+</section>
+
+<section id="residentes-administracion" class="mb-4">
+    <h2 class="h5">
+        Residentes y ficha administrativa
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+    </h2>
+    <p>
+        El inicio de Administración tiene dos tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
+        ámbito, y <strong>Alta de residente</strong>. En la lista de residentes ves el nombre, la edad (calculada a partir
+        de la fecha de nacimiento), el sexo documentado, la unidad y la fecha de alta. Puedes buscar por nombre, sin
+        importar mayúsculas ni acentos, y filtrar por unidad si tu ámbito tiene más de una.
+    </p>
+    <p>
+        La <strong>ficha administrativa</strong> muestra la identidad, la unidad actual, la fecha de alta, el historial
+        de ubicación (cada intervalo con su unidad, desde, hasta y el perfil que lo registró) y las correcciones de
+        identidad. No muestra el basal ni ningún contenido clínico.
+    </p>
+    <p class="mb-0">
+        <strong>Corregir identidad</strong> sirve para arreglar un error en el nombre, la fecha de nacimiento o el sexo
+        documentado. El motivo es obligatorio y algo tiene que cambiar. La versión anterior, la nueva y el motivo quedan en
+        el historial de la ficha, y la corrección queda en la auditoría. Si la identidad ha cambiado desde que abriste el
+        formulario, la pantalla te lo indica y conserva lo que escribiste.
     </p>
 </section>
 
@@ -810,7 +845,8 @@
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
-        <li>Gestión administrativa completa (autorizaciones, turnos, citas, auditoría).</li>
+        <li>Gestión administrativa completa (familiares y autorizaciones, usuarios y turnos, publicaciones, citas, auditoría).</li>
+        <li>Traslado de un residente entre unidades o centros, y su baja y reactivación (pendiente de que CJ decida qué pasa con su trabajo clínico en curso).</li>
         <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, y la revisión de calidad de proceso (cumplimiento de hitos y plazos, pendiente de definir).</li>
     </ul>
 </section>

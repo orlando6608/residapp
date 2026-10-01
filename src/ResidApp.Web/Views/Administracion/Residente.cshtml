@@ -1,0 +1,92 @@
+@using ResidApp.Web.Models
+@model AdministrativeResidentViewModel
+@{
+    var resident = Model.Detail.Resident;
+    ViewData["Title"] = resident.DisplayName;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@resident.DisplayName</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@resident.DisplayName</h1>
+<p class="text-muted">Ficha administrativa. No incluye el basal ni ningún contenido clínico.</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+
+<section class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5 card-title">Identidad</h2>
+        <dl class="row mb-3">
+            <dt class="col-sm-4">Nombre</dt>
+            <dd class="col-sm-8">@resident.DisplayName</dd>
+            <dt class="col-sm-4">Fecha de nacimiento</dt>
+            <dd class="col-sm-8">@resident.BirthDate.ToString("dd/MM/yyyy") (@AdministrativeResidentDisplay.Age(resident.BirthDate, Model.Today) años)</dd>
+            <dt class="col-sm-4">Sexo documentado</dt>
+            <dd class="col-sm-8">@EnumDisplay.Label(resident.DocumentedSex)</dd>
+            <dt class="col-sm-4">Unidad actual</dt>
+            <dd class="col-sm-8">@resident.UnitName</dd>
+            <dt class="col-sm-4">Fecha de alta</dt>
+            <dd class="col-sm-8">@resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+        </dl>
+        <a asp-action="CorregirIdentidad" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Corregir identidad</a>
+    </div>
+</section>
+
+<section class="mb-4">
+    <h2 class="h5">Historial de ubicación</h2>
+    <p class="text-muted">Del más reciente al más antiguo. Cada cambio de ubicación cierra el anterior; ninguno se reescribe.</p>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Intervalos de ubicación del residente</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Desde</th>
+                    <th scope="col">Hasta</th>
+                    <th scope="col">Registrado por</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var location in Model.Detail.Locations)
+                {
+                    <tr>
+                        <th scope="row">@location.UnitName</th>
+                        <td>@location.From.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(location.Until is { } until ? until.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "Vigente")</td>
+                        <td>@SystemProfileDisplay.Label(location.RecordedBy)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="mb-4">
+    <h2 class="h5">Correcciones de identidad</h2>
+    @if (Model.Detail.Corrections.Count == 0)
+    {
+        <p class="text-muted">La identidad no se ha corregido nunca.</p>
+    }
+    else
+    {
+        <ol class="list-group list-group-numbered">
+            @foreach (var correction in Model.Detail.Corrections)
+            {
+                <li class="list-group-item">
+                    <span class="fw-semibold">@correction.CorrectedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Administración</span>
+                    <div>Antes: @AdministrativeResidentDisplay.Identity(correction.Before)</div>
+                    <div>Después: @AdministrativeResidentDisplay.Identity(correction.After)</div>
+                    <div>Motivo: @correction.Reason</div>
+                </li>
+            }
+        </ol>
+    }
+</section>

@@ -16,6 +16,9 @@ public abstract record AuthorizationTarget
     /// (donde el motivo se lee del borrador ya existente), aquí el motivo lo elige quien lo crea, así que
     /// viaja como dato de entrada del propio target.</summary>
     public sealed record Draft(ResidentId ResidentId, BaselineReason Reason) : AuthorizationTarget;
+
+    /// <summary>ADM-03: corregir la identidad administrativa de un residente (ResidentIdentityUpdate).</summary>
+    public sealed record IdentityUpdate(ResidentId ResidentId) : AuthorizationTarget;
 }
 
 /// <summary>Traduce AuthorizationSelection de authorization-subject-repository.ts. profileScopeId viaja

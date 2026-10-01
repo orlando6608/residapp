@@ -13,7 +13,7 @@ La hoja de ruta original del prototipo legado (consolidación documental → lí
 | Enfermería | En curso — ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md` |
 | Medicina | En curso — ver `docs/tareas/alta-prioridad/pendientes-medicina.md` |
 | Familia / Portal Familiar | No iniciado |
-| Administración | No iniciado |
+| Administración | En curso — ver `docs/tareas/alta-prioridad/pendientes-administracion.md` |
 | Dirección / Coordinación Clínica | En curso — ver `docs/tareas/alta-prioridad/pendientes-direccion.md` |
 
 ## Estado detallado del vertical Residente / Basal
@@ -57,8 +57,10 @@ Residente/Basal y Auxiliar están construidos. Enfermería y Medicina tienen con
 salvo lo que depende de otros verticales (ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md` y
 `pendientes-medicina.md`). Dirección / Coordinación Clínica está en curso: la supervisión operativa en solo
 lectura y los indicadores agregados con su informe imprimible están hechos, y la lectura clínica auditada espera las finalidades que fije CJ (ver
-`docs/tareas/alta-prioridad/pendientes-direccion.md`). Después vienen Administración y Familia / Portal
-Familiar, que depende de ella y de la decisión del proveedor de identidad.
+`docs/tareas/alta-prioridad/pendientes-direccion.md`). Administración está en curso: la lista de residentes, la ficha
+administrativa con su historial de ubicación y la corrección de identidad están hechas, y el traslado y la baja esperan la
+decisión de CJ (ver `docs/tareas/alta-prioridad/pendientes-administracion.md`). Después viene Familia / Portal Familiar, que
+depende de Administración y de la decisión del proveedor de identidad.
 
 El despliegue en Azure (App Service `app-residapp-dev` + Azure SQL `sqldb-residapp-dev`) y el pipeline
 de CI/CD (build + tests contra SQL Server real, y deploy que aplica el esquema y los datos ficticios de

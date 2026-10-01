@@ -19,7 +19,7 @@ El orden se hereda de `roadmap.md` (heredado a su vez del prototipo legado, úni
 | Enfermería | Enfermería | En curso |
 | Medicina | Medicina | En curso (escalados, evento propio, valoración médica, indicaciones, seguimiento médico, protocolo urgente, derivación a Urgencias y cierre médico) |
 | Familia / Portal Familiar | Familiar | No iniciado |
-| Administración | Administración | No iniciado |
+| Administración | Administración | En curso (residentes, ficha administrativa y corrección de identidad; ver `pendientes-administracion.md`) |
 | Dirección / Coordinación Clínica | Dirección/Coordinación Clínica | En curso (supervisión operativa en solo lectura e indicadores agregados con informe imprimible; ver `pendientes-direccion.md`) |
 
 ### Residente / Basal
@@ -87,6 +87,8 @@ Cubre los módulos *Organización*, *Identidades*, *Publicaciones* (configuraci�
 - Historias de usuario: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md) (`ADM-01` a `ADM-11`, `ORG-*`, `FAM-01`/`FAM-09`, `CIT-01`/`CIT-D*`/`CIT-S*`/`CIT-C*`, `AUD-01` a `AUD-03`).
 - No tiene flujo clínico propio (es un perfil no asistencial, ver `docs/flujos-clinicos/indice.md`).
 - Wireframe funcional: [`docs/bocetos-pantallas/wireframes-funcionales/administracion.md`](../../bocetos-pantallas/wireframes-funcionales/administracion.md).
+
+En curso: lo hecho y lo pendiente, por bloques, está en [`docs/tareas/alta-prioridad/pendientes-administracion.md`](../alta-prioridad/pendientes-administracion.md). Las tareas de abajo son el alcance completo del vertical.
 
 Tareas de construcción pendientes:
 - Dominio: estructura subordinada del centro, identidades y familiares/autorizaciones, usuarios profesionales multirol y turnos, configuración de publicaciones, citas, auditoría administrativa.

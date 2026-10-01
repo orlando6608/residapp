@@ -29,7 +29,18 @@ else
 }
 
 <div class="row g-3">
-    @if (perfil is SystemProfile.Administracion or SystemProfile.Enfermeria)
+    @if (perfil is SystemProfile.Administracion)
+    {
+        <div class="col-12 col-md-4">
+            <a asp-controller="Administracion" asp-action="Index" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Administración</h2>
+                    <p class="card-text text-muted mb-0">Residentes, ficha administrativa, historial de ubicación y alta.</p>
+                </div>
+            </a>
+        </div>
+    }
+    @if (perfil is SystemProfile.Enfermeria)
     {
         <div class="col-12 col-md-4">
             <a asp-controller="Residents" asp-action="Create" class="card text-decoration-none h-100">

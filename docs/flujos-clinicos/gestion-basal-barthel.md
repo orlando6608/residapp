@@ -63,6 +63,8 @@ Tres decisiones relacionadas siguen diferidas y denegadas por defecto — no exi
 | `D1-P05` | Cancelación excepcional de un borrador cuando su creador no está disponible, más allá del motivo trazable ya previsto |
 | `D1-P06` | Actor, alcance y procedimiento para iniciar una rectificación de un basal firmado |
 
+`D1-P04` se ha preguntado a CJ el 2026-10-01 en `docs/pendientes-cj/traslado-y-baja-residente.html`; sigue diferida hasta su respuesta.
+
 ## Reglas de negocio adicionales
 
 - Un basal firmado es inmutable: no se elimina ni se sobrescribe. Un error se corrige mediante una nueva versión de rectificación vinculada al original, con motivo, autoría y fecha propios.

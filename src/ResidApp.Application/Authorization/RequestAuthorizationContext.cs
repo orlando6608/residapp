@@ -13,6 +13,10 @@ public sealed record ResidentCreatePayload(
     string DisplayName, DateOnly BirthDate, DocumentedSexCode DocumentedSexCode,
     string? InternalReference, Guid? BuildingId, Guid? FloorId, Guid? RoomId, Guid? PlaceId, Guid OperationId);
 
+/// <summary>ADM-03: la identidad corregida, ya validada, su motivo y cuántas correcciones tenía el residente al abrir
+/// el formulario (el token contra el doble envío).</summary>
+public sealed record ResidentIdentityCorrectionPayload(ResidentIdentity Identity, string Reason, int ExpectedCorrections);
+
 /// <summary>Traduce el payload de executeBaselineSign en request-context.ts.</summary>
 public sealed record BaselineSignPayload(int ExpectedDraftRevision, Guid OperationId);
 
@@ -117,6 +121,7 @@ public static class RequestAuthorizationContextResolver
             AuthorizationTarget.Draft draft => draft.Reason == BaselineReason.Alta
                 ? ResidentBaselineAction.BaselineInitialComplete
                 : ResidentBaselineAction.BaselineReevaluate,
+            AuthorizationTarget.IdentityUpdate => ResidentBaselineAction.ResidentIdentityUpdate,
             _ => throw new AccessDeniedException(),
         };
 
@@ -151,6 +156,23 @@ public static class RequestAuthorizationContextResolver
             payload.DisplayName, payload.BirthDate, payload.DocumentedSexCode, payload.InternalReference,
             payload.BuildingId, payload.FloorId, payload.RoomId, payload.PlaceId, payload.OperationId);
         return await repository.CreateWithInitialLocationAsync(input, ct);
+    }
+
+    /// <summary>ADM-03: corrección de la identidad administrativa. La política ya la reserva a Administración; se
+    /// vuelve a comprobar aquí, igual que ExecuteResidentCreateAsync comprueba su perfil.</summary>
+    public static async Task<int> ExecuteResidentIdentityUpdateAsync(
+        RequestAuthorizationContext context, IResidentIdentityRepository repository, ResidentIdentityCorrectionPayload payload,
+        CancellationToken ct = default)
+    {
+        var operation = RequireTarget<AuthorizationTarget.IdentityUpdate>(context);
+        if (operation.Subject.ActiveProfile != SystemProfile.Administracion)
+        {
+            throw new AccessDeniedException();
+        }
+        var input = new CorrectResidentIdentityInput(
+            operation.Subject.AccountId!.Value, operation.CenterId, operation.UnitId, operation.ResidentId!.Value,
+            payload.Identity, payload.Reason, payload.ExpectedCorrections);
+        return await repository.CorrectAsync(input, ct);
     }
 
     /// <summary>Traduce executeBaselineSign de request-context.ts.</summary>
