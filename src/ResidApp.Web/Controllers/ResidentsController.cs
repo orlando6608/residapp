@@ -39,7 +39,7 @@ public sealed class ResidentsController(ResidentBaselineApplicationService servi
         }
 
         var command = new CreateResidentCommand(
-            form.AmbitoPerfilId, CenterId.From(form.CentroId), UnitId.From(form.UnidadId), form.NombreVisible,
+            form.AmbitoPerfilId, CenterId.From(form.CentroId), UnitId.From(form.UnidadId!.Value),form.NombreVisible,
             form.FechaNacimiento!.Value, form.SexoDocumentadoCodigo, form.ReferenciaInterna,
             EdificioId: null, PlantaId: null, HabitacionId: null, PlazaId: null, form.OperacionId);
 

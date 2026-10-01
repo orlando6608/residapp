@@ -48,13 +48,14 @@ public interface ISupervisionDirectory
 
     Task<SupervisionScopeInfo?> FindScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
-    /// <summary>DIR-08 a DIR-10: hechos del ámbito con fecha en [from, toExclusive), abiertos o cerrados.</summary>
+    /// <summary>DIR-08 a DIR-10: hechos del ámbito con fecha en [from, toExclusive), abiertos o cerrados. Los límites son
+    /// UTC, como las fechas guardadas (ver SupervisionIndicatorRules.UtcBounds).</summary>
     Task<SupervisionIndicatorFacts> ListIndicatorFactsAsync(
         Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default);
 }
 
 /// <summary>DIR-08 a DIR-10: hechos de los que salen los indicadores agregados. Solo llevan la unidad, códigos y la fecha
-/// (hora local del servidor): ni texto, ni residente, ni cuenta, así que ningún indicador puede bajar a una persona
+/// (UTC, como se guarda): ni texto, ni residente, ni cuenta, así que ningún indicador puede bajar a una persona
 /// (DIR-09, sin ranking individual). Un episodio cuenta en el periodo por su registro; los indicadores de escalado,
 /// protocolo y derivación dicen qué le pasó después, hasta hoy.</summary>
 public sealed record IndicatorEpisodeFact(
@@ -98,26 +99,33 @@ public static class SupervisionIndicatorRules
     /// <summary>Periodo más largo que se puede pedir, en días.</summary>
     public const int MaxPeriodDays = 366;
 
+    /// <summary>Límites UTC [From, ToExclusive) de los días from a to (incluidos) de la zona horaria zone.</summary>
+    public static (DateTime From, DateTime ToExclusive) UtcBounds(DateOnly from, DateOnly to, TimeZoneInfo zone) =>
+        (TimeZoneInfo.ConvertTimeToUtc(from.ToDateTime(TimeOnly.MinValue), zone),
+         TimeZoneInfo.ConvertTimeToUtc(to.AddDays(1).ToDateTime(TimeOnly.MinValue), zone));
+
+    /// <summary>Cada hecho (en UTC) cuenta en su día de la zona horaria zone, la misma en la que se eligió el periodo.</summary>
     public static SupervisionIndicators Aggregate(
-        SupervisionIndicatorFacts facts, SupervisionScopeInfo scope, DateOnly from, DateOnly to)
+        SupervisionIndicatorFacts facts, SupervisionScopeInfo scope, DateOnly from, DateOnly to, TimeZoneInfo zone)
     {
-        var units = scope.Units.Select(u => new SupervisionUnitIndicators(u.Id, u.Name, Count(facts, from, to, u.Id))).ToList();
+        var units = scope.Units.Select(u => new SupervisionUnitIndicators(u.Id, u.Name, Count(facts, from, to, u.Id, zone))).ToList();
         var months = new List<SupervisionMonthIndicators>();
         for (var start = from; start <= to; start = new DateOnly(start.Year, start.Month, 1).AddMonths(1))
         {
             var monthEnd = new DateOnly(start.Year, start.Month, 1).AddMonths(1).AddDays(-1);
             var end = monthEnd < to ? monthEnd : to;
-            months.Add(new SupervisionMonthIndicators(start, end, Count(facts, start, end, null)));
+            months.Add(new SupervisionMonthIndicators(start, end, Count(facts, start, end, null, zone)));
         }
 
-        return new SupervisionIndicators(scope.CenterName, from, to, units, Count(facts, from, to, null), months);
+        return new SupervisionIndicators(scope.CenterName, from, to, units, Count(facts, from, to, null, zone), months);
     }
 
-    private static SupervisionIndicatorCounts Count(SupervisionIndicatorFacts facts, DateOnly from, DateOnly to, UnitId? unit)
+    private static SupervisionIndicatorCounts Count(
+        SupervisionIndicatorFacts facts, DateOnly from, DateOnly to, UnitId? unit, TimeZoneInfo zone)
     {
         bool In(UnitId unitId, DateTime at)
         {
-            var day = DateOnly.FromDateTime(at);
+            var day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(at, zone));
             return (unit is null || unitId == unit) && day >= from && day <= to;
         }
 

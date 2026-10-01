@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using Dapper;
@@ -45,6 +46,49 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
 
         var body = await response.Content.ReadAsStringAsync();
         Assert.Contains("Id del residente", body);
+    }
+
+    [Fact]
+    public async Task Create_UnidadEmpiezaVacia_YSusErroresSalenEnEspañol()
+    {
+        var seed = await SeedAsync();
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = seed.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        var createPage = await client.GetStringAsync("/Residents/Create");
+        async Task<string> PostWithUnitAsync(string unit) => WebUtility.HtmlDecode(await (await client.PostAsync(
+            "/Residents/Create", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(createPage, "__RequestVerificationToken"),
+                ["OperacionId"] = ExtractValue(createPage, "OperacionId"),
+                ["AmbitoPerfilId"] = seed.ProfileScopeId.ToString(),
+                ["CentroId"] = seed.CenterId.ToString(),
+                ["UnidadId"] = unit,
+                ["NombreVisible"] = "Residente Funcional",
+                ["FechaNacimiento"] = "1938-02-20",
+                ["SexoDocumentadoCodigo"] = "Hombre",
+            }))).Content.ReadAsStringAsync());
+        var empty = await PostWithUnitAsync("");
+        var malformed = await PostWithUnitAsync("no-es-un-guid");
+
+        Assert.Equal("", ExtractValue(createPage, "UnidadId"));
+        Assert.DoesNotContain(Guid.Empty.ToString(), createPage);
+        Assert.Contains("Indica el identificador de la unidad.", WebUtility.HtmlDecode(createPage));
+        Assert.Contains("Indica el identificador de la unidad.", empty);
+        Assert.Contains("«no-es-un-guid» no es un valor válido para Unidad.", malformed);
+        // Los campos ocultos (ámbito, centro, operación) conservan su mensaje por defecto: no los rellena el usuario.
+        foreach (var field in new[] { "Unidad", "Nombre completo", "Fecha de nacimiento", "Sexo documentado", "Referencia interna" })
+        {
+            Assert.DoesNotContain($"The {field} field", createPage + empty + malformed);
+        }
+
+        Assert.DoesNotContain("The field ", createPage);
+        Assert.DoesNotContain("is not valid", empty + malformed);
     }
 
     private static string ExtractValue(string html, string inputName) =>

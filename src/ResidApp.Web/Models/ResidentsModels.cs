@@ -15,25 +15,26 @@ public sealed class CreateResidentFormModel
     [Display(Name = "Centro")]
     public Guid CentroId { get; set; }
 
-    [Required]
+    /// <summary>Anulable para que el formulario empiece vacío y no con el identificador de ceros.</summary>
+    [Required(ErrorMessage = "Indica el identificador de la unidad.")]
     [Display(Name = "Unidad")]
-    public Guid UnidadId { get; set; }
+    public Guid? UnidadId { get; set; }
 
-    [Required]
-    [StringLength(200)]
+    [Required(ErrorMessage = "Escribe el nombre completo.")]
+    [StringLength(200, ErrorMessage = "El nombre no puede pasar de 200 caracteres.")]
     [Display(Name = "Nombre completo")]
     public string NombreVisible { get; set; } = string.Empty;
 
-    [Required]
+    [Required(ErrorMessage = "Indica la fecha de nacimiento.")]
     [DataType(DataType.Date)]
     [Display(Name = "Fecha de nacimiento")]
     public DateOnly? FechaNacimiento { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Elige el sexo documentado.")]
     [Display(Name = "Sexo documentado")]
     public DocumentedSexCode SexoDocumentadoCodigo { get; set; }
 
-    [StringLength(200)]
+    [StringLength(200, ErrorMessage = "La referencia interna no puede pasar de 200 caracteres.")]
     [Display(Name = "Referencia interna")]
     public string? ReferenciaInterna { get; set; }
 

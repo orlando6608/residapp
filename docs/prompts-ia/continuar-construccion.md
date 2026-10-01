@@ -13,6 +13,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Correcciones (sin script), 2026-10-01, con commit en `main` sin push:**
+  - **Indicadores de Dirección, días en UTC:** las fechas se guardan en UTC, pero el periodo se comparaba con días locales y
+    se agrupaba por la fecha UTC, así que un hecho entre las 00:00 y las 02:00 de España contaba en el día (y a fin de mes,
+    en el mes) anterior. Ahora `SupervisionIndicatorRules.UtcBounds` convierte los límites del periodo a UTC y `Aggregate`
+    agrupa por el día de la zona horaria local del servidor (`TimeZoneInfo.Local`, Europe/Madrid en Azure). Tests nuevos en
+    `SupervisionIndicatorRulesTests` (cambio de día en verano y en invierno y el día de 25 horas); el de cambio de día falla
+    con el código anterior.
+  - **Alta de residente:** `UnidadId` empezaba con el identificador de ceros y sus mensajes salían en inglés. Ahora es
+    anulable y empieza vacío; los campos visibles llevan mensajes en español, y `Program.cs` traduce los mensajes del enlace
+    del modelo (p. ej., «no-es-un-guid» no es un valor válido para Unidad), que valen para todos los formularios. Test
+    funcional `Create_UnidadEmpiezaVacia_YSusErroresSalenEnEspañol`.
 - **Administración, bloque 1: residentes, ficha administrativa y corrección de identidad (ADM-01 a ADM-03, RES-01,
   RES-03, RES-04; script `0021`; cambia el seed):** hecho el 2026-10-01 y desplegado en Azure (push de `c650ba2`, run
   36833525743 en verde con `build-and-test` y `deploy`, que aplicó `0021` y el seed).
@@ -452,7 +463,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 131 unitarios, 206 de integración y 26 funcionales, todos en verde.
+- Suite: 133 unitarios, 206 de integración y 27 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -481,14 +492,9 @@ usuario cuando encajen:
   Una ficha que depende de un permiso, como Alta de residente para Enfermería, la ve todo el perfil, aunque
   la cuenta no tenga el permiso. Si cambian las reglas de perfiles de una pantalla, revisa también los `@if`
   de `Views/Home/Index.cshtml`.
-- **Indicadores de Dirección, días en UTC:** las fechas se guardan en UTC, pero `ListIndicatorFactsAsync` compara el
-  periodo con días locales y `SupervisionIndicatorRules` agrupa por la fecha UTC. Un hecho entre las 00:00 y las 02:00
-  de España cuenta en el día (y a fin de mes, en el mes) anterior. Detectado el 2026-10-01; pendiente de corregir
-  (convertir los límites del periodo a UTC y agrupar por la fecha local).
-- **Alta de residente:** el formulario pide el identificador de la unidad a mano (no hay selector de unidades), y
-  `UnidadId` llega precargado con `00000000-0000-0000-0000-000000000000` y el mensaje de obligatorio en inglés («The Unidad
-  field is required.»). En Azure, el identificador de la unidad integrada (`0f73bfdc-27e9-49a7-945d-d8c0681779dd`) se ve en
-  los enlaces de `/Direccion` con `dev-integrado-direccion`.
+- **Alta de residente:** el formulario pide el identificador de la unidad a mano (no hay selector de unidades). En Azure,
+  el identificador de la unidad integrada (`0f73bfdc-27e9-49a7-945d-d8c0681779dd`) se ve en los enlaces de `/Direccion` con
+  `dev-integrado-direccion`.
 - **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
   abiertos: tos productiva.», en valoración médica, que se dejó como ejemplo de la lista de escalados. El
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de

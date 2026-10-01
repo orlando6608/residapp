@@ -10,7 +10,22 @@ using ResidApp.Web.Security;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Mensajes de enlace del modelo en español (p. ej., un identificador mal escrito); por defecto salen en inglés.
+    var messages = options.ModelBindingMessageProvider;
+    messages.SetAttemptedValueIsInvalidAccessor((value, field) => $"«{value}» no es un valor válido para {field}.");
+    messages.SetNonPropertyAttemptedValueIsInvalidAccessor(value => $"«{value}» no es un valor válido.");
+    messages.SetUnknownValueIsInvalidAccessor(field => $"El valor de {field} no es válido.");
+    messages.SetNonPropertyUnknownValueIsInvalidAccessor(() => "El valor no es válido.");
+    messages.SetValueIsInvalidAccessor(value => $"«{value}» no es un valor válido.");
+    messages.SetValueMustBeANumberAccessor(field => $"{field} tiene que ser un número.");
+    messages.SetNonPropertyValueMustBeANumberAccessor(() => "Tiene que ser un número.");
+    messages.SetValueMustNotBeNullAccessor(_ => "Este campo es obligatorio.");
+    messages.SetMissingBindRequiredValueAccessor(field => $"Falta el valor de {field}.");
+    messages.SetMissingKeyOrValueAccessor(() => "Falta un valor.");
+    messages.SetMissingRequestBodyRequiredValueAccessor(() => "Falta el contenido de la petición.");
+});
 builder.Services.AddHttpContextAccessor();
 
 var connectionString = builder.Configuration.GetConnectionString("ResidApp")

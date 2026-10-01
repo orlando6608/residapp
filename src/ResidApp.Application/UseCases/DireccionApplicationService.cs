@@ -97,10 +97,12 @@ public sealed class DireccionApplicationService(
 
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
-            var facts = await directory.ListIndicatorFactsAsync(
-                query.AmbitoPerfilId, query.CentroId, query.From.ToDateTime(TimeOnly.MinValue),
-                query.To.AddDays(1).ToDateTime(TimeOnly.MinValue), ct);
-            return SupervisionIndicatorRules.Aggregate(facts, info, query.From, query.To);
+            // El periodo son días de la hora local del servidor (la misma con la que se muestran las fechas) y las fechas se
+            // guardan en UTC.
+            var zone = TimeZoneInfo.Local;
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, zone);
+            var facts = await directory.ListIndicatorFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
+            return SupervisionIndicatorRules.Aggregate(facts, info, query.From, query.To, zone);
         });
 
     private async Task EnsureDirectionScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct)
