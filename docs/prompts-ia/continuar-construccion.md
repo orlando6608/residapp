@@ -13,8 +13,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 - **Dirección Clínica, bloque 4: indicadores agregados, evolución e informe imprimible (DIR-08, DIR-09, DIR-10, DIR-16; sin
-  script):** hecho el 2026-10-01, con commit en `main` **sin push**. Al hacer el push, comprueba el pipeline y prueba en Azure con
-  `dev-integrado-direccion`.
+  script):** hecho el 2026-10-01 y desplegado en Azure (push de `60b3c86`, run 36827738565 en verde con `build-and-test` y
+  `deploy`).
+  - **Prueba en Azure (2026-10-01)** con `dev-integrado-direccion`:
+    - el periodo por defecto da 4 registrados (3 de Enfermería y 1 de Medicina), 3 cerrados, 1 escalado, 1 protocolo, 1 derivación
+      y 1 indicación sin resolver, que cuadran con los datos de prueba de Azure anotados más abajo;
+    - el periodo 15/08–01/10 da los tres meses, con «1 de octubre de 2026» (ICU de Linux);
+    - las fechas mal formadas se ignoran, y `desde > hasta` y más de 366 días dan su mensaje;
+    - la página no muestra residentes.
+
+    `dev-integrado-enfermeria`, `-medicina` y `-auxiliar` reciben «No se puede acceder a esta operación».
   - **Qué hace:** `/Direccion/Indicadores?desde=&hasta=` muestra, por unidad y en total, los indicadores como «n de m». Son cuatro
     grupos (actividad, escalados y urgencias, indicaciones médicas y continuidad entre turnos), con la evolución mes a mes debajo.
   - **Informe:** «Imprimir / guardar como PDF» deja solo el informe de actividad agregado. Las decisiones y suposiciones están en
