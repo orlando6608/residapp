@@ -9,8 +9,8 @@ using ResidApp.Shared;
 namespace ResidApp.Infrastructure.Persistence;
 
 /// <summary>
-/// ADM-12/ADM-13 (0023): escrituras sobre cuentas profesionales, sus perfiles, unidades y residentes de Auxiliar. Cada una
-/// va en una transacción que:
+/// ADM-12/ADM-13 (0023): escrituras sobre cuentas profesionales, sus perfiles, unidades, residentes de Auxiliar y permisos
+/// configurables (0024, del catálogo de ProfilePermissions). Cada una va en una transacción que:
 ///   1. vuelve a comprobar que quien gestiona tiene su ámbito de Administración vigente (cuenta y centro activos), como
 ///      SqlReferenceRangeRepository comprueba su permiso;
 ///   2. bloquea la cuenta afectada (UPDLOCK), lo que ordena los cambios simultáneos sobre una misma cuenta; la propia
@@ -325,6 +325,80 @@ public sealed class SqlProfessionalAccountRepository(SqlConnectionFactory connec
         await AuditAsync(connection, transaction, access, "PROFILE_SCOPE", profileScopeId, "PROFILE_RESIDENT_REVOKE", occurredAt,
             residentId: residentId.Value, ct: ct);
         transaction.Commit();
+    }
+
+    public async Task GrantPermissionAsync(
+        AccountAdministrationAccess access, AccountId accountId, Guid profileScopeId, string permissionCode, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await FindPermissionProfileAsync(connection, transaction, access, accountId, profileScopeId, permissionCode, ct);
+        var parameters = new
+        {
+            ProfileScopeId = profileScopeId, CenterId = access.CenterId.Value, Code = permissionCode, OccurredAt = DateTimeOffset.UtcNow,
+            ActorId = access.AccountId.Value,
+        };
+        if (await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+                SELECT COUNT(*) FROM dbo.permisos_perfil
+                 WHERE ambito_perfil_id = @ProfileScopeId AND centro_id = @CenterId AND permiso_codigo = @Code AND revocado_en IS NULL
+                """, parameters, transaction, cancellationToken: ct)) > 0)
+        {
+            throw new DomainValidationException("ACCOUNT_CHANGE_CONFLICT");
+        }
+
+        try
+        {
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @ProfileScopeId, @CenterId, @Code, @OccurredAt, @ActorId);
+                """, parameters, transaction, cancellationToken: ct));
+        }
+        catch (SqlException error) when (error.Number is 2601 or 2627)
+        {
+            throw new DomainValidationException("ACCOUNT_CHANGE_CONFLICT");
+        }
+
+        await AuditAsync(connection, transaction, access, "PROFILE_SCOPE", profileScopeId, "PROFILE_PERMISSION_GRANT", parameters.OccurredAt, ct: ct);
+        transaction.Commit();
+    }
+
+    public async Task RevokePermissionAsync(
+        AccountAdministrationAccess access, AccountId accountId, Guid profileScopeId, string permissionCode, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await FindPermissionProfileAsync(connection, transaction, access, accountId, profileScopeId, permissionCode, ct);
+        var occurredAt = DateTimeOffset.UtcNow;
+        var revoked = await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.permisos_perfil SET revocado_en = @OccurredAt, revocado_por_cuenta_id = @ActorId
+             WHERE ambito_perfil_id = @ProfileScopeId AND centro_id = @CenterId AND permiso_codigo = @Code AND revocado_en IS NULL
+            """, new
+        {
+            ProfileScopeId = profileScopeId, CenterId = access.CenterId.Value, Code = permissionCode, OccurredAt = occurredAt,
+            ActorId = access.AccountId.Value,
+        }, transaction, cancellationToken: ct));
+        if (revoked == 0)
+        {
+            throw new DomainValidationException("ACCOUNT_CHANGE_CONFLICT");
+        }
+
+        await AuditAsync(connection, transaction, access, "PROFILE_SCOPE", profileScopeId, "PROFILE_PERMISSION_REVOKE", occurredAt, ct: ct);
+        transaction.Commit();
+    }
+
+    /// <summary>Los pasos comunes de conceder o revocar un permiso: quien gestiona, la cuenta bloqueada, el perfil vigente y
+    /// el permiso del catálogo de ese perfil (si no, PROFILE_SCOPE_INVALID).</summary>
+    private static async Task FindPermissionProfileAsync(
+        SqlConnection connection, SqlTransaction transaction, AccountAdministrationAccess access, AccountId accountId, Guid profileScopeId,
+        string permissionCode, CancellationToken ct)
+    {
+        await EnsureAdministratorAsync(connection, transaction, access, ct);
+        await LockAccountAsync(connection, transaction, access, accountId, ct);
+        var profile = await FindActiveProfileAsync(connection, transaction, access, accountId, profileScopeId, ct);
+        if (!ProfilePermissions.For(profile).Contains(permissionCode))
+        {
+            throw new DomainValidationException("PROFILE_SCOPE_INVALID");
+        }
     }
 
     /// <summary>Quien gestiona sigue teniendo su ámbito de Administración vigente, con la cuenta y el centro activos.</summary>

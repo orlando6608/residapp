@@ -10,6 +10,8 @@
     var activeResidents = profile.Residents.Where(r => r.Active).ToList();
     var revoked = profile.Units.Where(u => !u.Active).Select(u => ("Unidad", u))
         .Concat(profile.Residents.Where(r => !r.Active).Select(r => ("Residente", r)))
+        .Concat(profile.Permissions.Where(p => !p.Active)
+            .Select(p => ("Permiso", p with { Name = SupervisionDisplay.PermissionLabel(p.Name) })))
         .OrderByDescending(g => g.Item2.RevokedAt)
         .ToList();
     var isAssistant = profile.Profile == SystemProfile.Auxiliar;
@@ -159,6 +161,47 @@
                 </form>
             }
         }
+    </section>
+}
+
+@if (Model.Permissions.Count > 0)
+{
+    <section class="mb-4">
+        <h2 class="h5">Permisos</h2>
+        <p class="text-muted">
+            Acciones que este perfil solo puede hacer con su permiso. Valen en las unidades del perfil y desde la siguiente
+            pantalla que abra la persona.
+        </p>
+        <ul class="list-group">
+            @foreach (var (code, grant) in Model.Permissions)
+            {
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span>
+                        <strong>@SupervisionDisplay.PermissionLabel(code)</strong>
+                        @if (grant is null)
+                        {
+                            <span class="text-muted">· no concedido</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">· desde el @grant.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @grant.GrantedBy</span>
+                        }
+                    </span>
+                    @if (Model.CanChange)
+                    {
+                        <form asp-action="PermisoPerfil" method="post">
+                            <input type="hidden" name="cuentaId" value="@account.AccountId.Value" />
+                            <input type="hidden" name="ambitoId" value="@profile.ProfileScopeId" />
+                            <input type="hidden" name="permiso" value="@code" />
+                            <input type="hidden" name="conceder" value="@(grant is null ? "true" : "false")" />
+                            <button type="submit" class="btn @(grant is null ? "btn-outline-primary" : "btn-outline-danger")">
+                                @(grant is null ? "Conceder" : "Revocar")
+                            </button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
     </section>
 }
 

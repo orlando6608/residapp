@@ -251,7 +251,7 @@ public sealed class GrantAccountProfileFormModel
 public sealed record GrantAccountProfileViewModel(
     ProfessionalAccountSummary Account, GrantAccountProfileFormModel Form, IReadOnlyList<SystemProfile> Profiles, IReadOnlyList<ScopeUnit> Units);
 
-/// <summary>ADM-13: un perfil de la cuenta con sus unidades y residentes. AdministratorUnits son las unidades del ámbito
+/// <summary>ADM-13: un perfil de la cuenta con sus unidades, residentes y permisos. AdministratorUnits son las unidades del ámbito
 /// de quien gestiona (las únicas que puede conceder o revocar); CanChange es falso en la propia cuenta, en un perfil
 /// revocado y en Familiar.</summary>
 public sealed record AccountProfileViewModel(
@@ -264,6 +264,11 @@ public sealed record AccountProfileViewModel(
 
     public IReadOnlyList<ScopeUnit> AddableUnits => AdministratorUnits
         .Where(u => !Profile.Units.Any(g => g.Active && g.TargetId == u.UnitId.Value))
+        .ToList();
+
+    /// <summary>0024: cada permiso del catálogo del perfil con su concesión vigente, o null si no lo tiene.</summary>
+    public IReadOnlyList<(string Code, AccountScopeGrant? Grant)> Permissions => ProfilePermissions.For(Profile.Profile)
+        .Select(code => (code, Profile.Permissions.FirstOrDefault(p => p.Active && p.Name == code)))
         .ToList();
 }
 

@@ -13,15 +13,37 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Dos correcciones tras el bloque 3 (sin script):** hechas el 2026-10-01, en `main` sin push.
+- **Administración, bloque 4: permisos configurables (historia 4; script `0024`; sin cambios en el seed) e Inicio por
+  permiso:** hecho el 2026-10-01, en `main` sin push.
+  - **Qué hace:** sección «Permisos» en la pantalla de cada perfil, con el catálogo de ese perfil (Enfermería: alta,
+    basal inicial y reevaluación; Medicina: basal inicial, reevaluación y rangos; Dirección: lectura clínica detallada y
+    rangos) y «Conceder»/«Revocar». El Inicio solo enseña «Alta de residente» y «Rangos de referencia» con el permiso.
+    Detalle, decisiones y suposiciones en `pendientes-administracion.md`.
+  - **Verificación:**
+    - suite en verde antes (173, 231 y 34) y después 3 veces (174, 233 y 35), más 3 vueltas tipo CI y una BD temporal con
+      scripts y seed;
+    - curl en local con `dev-integrado-administracion` sobre `dev-prueba-enfermeria-nueva`:
+      - la sección muestra sus tres permisos «no concedidos»;
+      - concederle «Dar de alta residentes» hace aparecer la tarjeta en su Inicio y da de alta «Prueba alta Enfermeria
+        (ficticio)»; repetir la concesión avisa del conflicto; revocarlo quita la tarjeta y deniega el alta;
+      - `CLINICAL_DETAIL_READ` y `REFERENCE_RANGES_MANAGE` se rechazan («no es de este perfil»);
+      - sin «Basal inicial» no crea el borrador del basal y con él sí;
+      - la ficha propia sigue sin acciones;
+      - `dev-integrado-direccion` ve «Rangos de referencia» y `dev-integrado-medicina` (sin el permiso) no.
+  - **Antes de empezar,** verificado en Azure el push de `c913af8` (runs 36875998442 y 36875998509 en verde). Como
+    `prueba-azure-usuarios-b3` se registró el evento «Prueba manual firma con nombre azure: disnea.» sobre «Prueba familiares
+    azure (ficticio)», se valoró, se activó el protocolo y se firmó la derivación. El PDF dice «Firmado por Prueba usuarios
+    azure (ficticia) (Enfermería, cuenta prueba-azure-usuarios-b3)», con todos los títulos en negrita. Queda abierto, sin
+    llamada.
+- **Dos correcciones tras el bloque 3 (sin script):** hechas el 2026-10-01 y desplegadas en Azure (push de `c913af8`).
   - **Firma del PDF de derivación:** lleva el nombre visible de la cuenta (`ActiveProfileScope.AccountDisplayName`), su
     perfil y su identificador; sin nombre, como antes. Test `FirmaDerivacionNombreTests`; PDF real revisado.
   - **Ámbito de Dirección:** `SqlSupervisionDirectory.FindScopeAsync` dice «limitado a determinados residentes» con
     cualquier fila de `ambitos_perfil_residente`, aunque esté revocada, como la evidencia de autorización (ADR 0004).
     Test `Ambito_ConSuUnicaAsignacionRevocada_SigueRestringido`.
   - Suite en verde 3 veces (173, 230 y 34) y 3 vueltas tipo CI con BD nueva.
-- **PDF de derivación generados a la vez (sin script):** corregido el 2026-10-01, en `main` sin push. En el PDF de un test,
-  «residente» salía sin negrita en «Identificación del residente y del centro». Un PDF generado solo salía bien; de 16
+- **PDF de derivación generados a la vez (sin script):** corregido el 2026-10-01 y desplegado en Azure (push de
+  `c913af8`). En el PDF de un test, «residente» salía sin negrita en «Identificación del residente y del centro». Un PDF generado solo salía bien; de 16
   generados en paralelo, 2 tenían cambios de fuente de más en el contenido de la página. `ReferralReportPdfRenderer`
   serializa ahora el renderizado con un `Lock` estático; 200 en paralelo salieron idénticos. Test
   `ReferralReportPdfRendererTests` (64 en paralelo comparados con uno solo): falla 3 de 3 sin el candado y pasa con él.
@@ -37,7 +59,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     Usuarios, y la ficha propia es de solo lectura. La cuenta queda activa con Enfermería y el Auxiliar revocado.
   - **Qué hace:** lista de usuarios del centro, alta (identificador de acceso, nombre, perfil y unidades), ficha con nombre,
     suspender/reactivar y conceder perfil, y pantalla de cada perfil con sus unidades, sus residentes (Auxiliar) y revocar.
-    Los permisos configurables siguen por SQL (siguiente bloque). Detalle, decisiones y suposiciones en
+    Los permisos configurables llegaron en el bloque 4. Detalle, decisiones y suposiciones en
     `pendientes-administracion.md`.
   - **Verificación:**
     - suite en verde antes (161, 219 y 32) y después 3 veces (173, 228 y 34), más 3 vueltas tipo CI con BD nueva y una BD
@@ -545,18 +567,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   referencia de constantes (fase 1 y su pantalla). Medicina está en curso: historias 1 a 8 (escalados,
   valoración médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos, protocolo
   urgente, derivación a Urgencias, evento propio y basal con permiso) y 9 (con la misma salvedad que la 11).
-- La base local `ResidApp` tiene los scripts `0001` a `0023` registrados en `dbo.scripts_aplicados`
-  (en Azure, hasta `0022` mientras no se haga el push). Hay copias previas a `0016` … `0023` en
+- La base local `ResidApp` tiene los scripts `0001` a `0024` registrados en `dbo.scripts_aplicados`
+  (en Azure, hasta `0023` mientras no se haga el push). Hay copias previas a `0016` … `0024` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
   `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak`, `ResidApp-antes-0019-20260930.bak`,
-  `ResidApp-antes-0020-20260930.bak`, `ResidApp-antes-0021-20261001.bak`, `ResidApp-antes-0022-20261001.bak` y `ResidApp-antes-0023-20261001.bak`). También
+  `ResidApp-antes-0020-20260930.bak`, `ResidApp-antes-0021-20261001.bak`, `ResidApp-antes-0022-20261001.bak`,
+  `ResidApp-antes-0023-20261001.bak` y `ResidApp-antes-0024-20261001.bak`). También
   tiene la cuenta `dev-integrado-administracion`, el residente de prueba «Prueba Corrección Identidad (ficticio)», con una
   corrección, «Prueba selector unidad (ficticio)» y «Prueba familiares (ficticio)», con dos familiares (Lucía, autorización
   revocada tras recorrer todos los estados; Tomás, teléfono editado) y el contacto urgente designado, cambiado, quitado y
   vuelto a designar (Tomás); tiene el evento «Prueba manual contacto urgente: disnea.», en protocolo urgente, derivado, con
   una llamada «Contactado» a Tomás, sin cerrar. Y la cuenta `dev-prueba-enfermeria-nueva` («Prueba Enfermería renombrada
-  (ficticia)»), dada de alta desde Usuarios: Enfermería vigente en la unidad del escenario y un Auxiliar revocado que tuvo
-  asignado a «Prueba familiares (ficticio)».
+  (ficticia)»), dada de alta desde Usuarios: Enfermería vigente en la unidad del escenario (con «Basal inicial»; «Dar de
+  alta residentes» concedido y revocado) y un Auxiliar revocado que tuvo asignado a «Prueba familiares (ficticio)». Esa
+  cuenta dio de alta a «Prueba alta Enfermeria (ficticio)», que tiene un borrador de basal inicial suyo sin completar.
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
@@ -580,7 +604,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 173 unitarios, 231 de integración y 34 funcionales, todos en verde.
+- Suite: 174 unitarios, 233 de integración y 35 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -594,8 +618,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
      un borrador de basal ajeno; el tema 3 es un cambio pequeño en el informe de derivación.
    - `docs/pendientes-cj/traslado-y-baja-residente.html` (preparado el 2026-10-01, 6 respuestas): traslado y baja del
      residente en Administración.
-2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): permisos configurables (hay que decidir
-   antes la «política del centro» de la matriz); turnos y equipos.
+2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): turnos y equipos; después publicaciones,
+   citas, auditoría administrativa y panel.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
    (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.
 4. **Familia / Portal Familiar**, que depende de Administración y del proveedor de identidad.
@@ -605,10 +629,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 Se detectaron durante otros bloques. No se han corregido porque quedaban fuera de su alcance; propónselos al
 usuario cuando encajen:
 
-- **Inicio y permisos:** el inicio filtra las fichas solo por perfil (decisión del usuario, 2026-09-29).
-  Una ficha que depende de un permiso, como Alta de residente para Enfermería, la ve todo el perfil, aunque
-  la cuenta no tenga el permiso. Si cambian las reglas de perfiles de una pantalla, revisa también los `@if`
-  de `Views/Home/Index.cshtml`.
+- **Inicio y permisos:** desde el bloque 4 de Administración, «Alta de residente» y «Rangos de referencia» solo salen con
+  el permiso. «Firmar borrador de basal» sigue saliendo a toda Enfermería y Medicina, aunque la cuenta no tenga los
+  permisos de basal. Si cambian las reglas de perfiles o permisos de una pantalla, revisa también los `@if` de
+  `Views/Home/Index.cshtml`.
 - **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
   abiertos: tos productiva.», en valoración médica, que se dejó como ejemplo de la lista de escalados. El
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de

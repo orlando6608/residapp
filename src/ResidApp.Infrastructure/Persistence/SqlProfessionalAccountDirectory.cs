@@ -7,8 +7,8 @@ namespace ResidApp.Infrastructure.Persistence;
 
 /// <summary>
 /// ADM-12/ADM-13 (0023): las cuentas con algún perfil (vigente o revocado) en el centro de quien gestiona, con sus perfiles,
-/// unidades y residentes de este centro. De otros centros solo se dice si hay perfiles vigentes. Quien concede o revoca se
-/// muestra por su nombre o, si no tiene, por su sujeto externo. Las fechas se guardan en UTC.
+/// unidades, residentes y permisos (0024) de este centro. De otros centros solo se dice si hay perfiles vigentes. Quien
+/// concede o revoca se muestra por su nombre o, si no tiene, por su sujeto externo. Las fechas se guardan en UTC.
 /// </summary>
 public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connections) : IProfessionalAccountDirectory
 {
@@ -114,6 +114,18 @@ public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connect
              WHERE grant_row.centro_id = @CenterId AND {accountFilter}
              ORDER BY resident.nombre_visible, grant_row.concedido_en
             """, parameters, cancellationToken: ct))).ToLookup(r => r.Id);
+        var permissions = (await connection.QueryAsync<GrantRow>(new CommandDefinition($"""
+            SELECT grant_row.ambito_perfil_id AS Id, profile.cuenta_id AS OwnerId, grant_row.permiso_codigo AS Code,
+                   grant_row.id AS TargetId, grant_row.concedido_en AS GrantedAt,
+                   COALESCE(granter.nombre_visible, granter.sujeto_externo) AS GrantedBy, grant_row.revocado_en AS RevokedAt,
+                   COALESCE(revoker.nombre_visible, revoker.sujeto_externo) AS RevokedBy
+              FROM dbo.permisos_perfil grant_row
+              JOIN dbo.ambitos_perfil profile ON profile.id = grant_row.ambito_perfil_id AND profile.centro_id = grant_row.centro_id
+              JOIN dbo.cuentas granter ON granter.id = grant_row.concedido_por_cuenta_id
+              LEFT JOIN dbo.cuentas revoker ON revoker.id = grant_row.revocado_por_cuenta_id
+             WHERE grant_row.centro_id = @CenterId AND {accountFilter}
+             ORDER BY grant_row.permiso_codigo, grant_row.concedido_en
+            """, parameters, cancellationToken: ct))).ToLookup(p => p.Id);
 
         var byAccount = profiles.ToLookup(p => p.OwnerId);
         return accounts.Select(a => new ProfessionalAccountSummary(
@@ -121,7 +133,8 @@ public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connect
                 byAccount[a.AccountId].Select(p => new AccountProfileScope(
                     p.Id, EnumCode.ParseCode<SystemProfile>(p.Code), Utc(p.GrantedAt), p.GrantedBy,
                     p.RevokedAt is { } revoked ? Utc(revoked) : null, p.RevokedBy,
-                    units[p.Id].Select(ToGrant).ToList(), residents[p.Id].Select(ToGrant).ToList())).ToList()))
+                    units[p.Id].Select(ToGrant).ToList(), residents[p.Id].Select(ToGrant).ToList(),
+                    permissions[p.Id].Select(ToGrant).ToList())).ToList()))
             .ToList();
     }
 
@@ -132,8 +145,9 @@ public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connect
 
     private sealed record AccountRow(Guid AccountId, string Subject, string? DisplayName, string StatusCode);
 
-    /// <summary>Una fila de perfil, unidad o residente. Id es el ámbito de perfil; Code, el código del perfil o el nombre de
-    /// la unidad o del residente; TargetId, el id de la unidad o del residente.</summary>
+    /// <summary>Una fila de perfil, unidad, residente o permiso. Id es el ámbito de perfil; Code, el código del perfil o del
+    /// permiso, o el nombre de la unidad o del residente; TargetId, el id de la unidad, del residente o de la fila del
+    /// permiso.</summary>
     private sealed record GrantRow(
         Guid Id, Guid OwnerId, string Code, Guid TargetId, DateTime GrantedAt, string GrantedBy, DateTime? RevokedAt, string? RevokedBy);
 

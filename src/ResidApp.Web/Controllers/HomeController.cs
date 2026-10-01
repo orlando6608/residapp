@@ -1,20 +1,29 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using ResidApp.Application.UseCases;
+using ResidApp.Shared;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
 
 namespace ResidApp.Web.Controllers;
 
-public class HomeController : Controller
+public class HomeController(ListActiveScopePermissions listPermissions) : Controller
 {
-    public IActionResult Index()
+    public async Task<IActionResult> Index(CancellationToken ct)
     {
         var devSubject = Request.Cookies[DevSessionIdentityProvider.CookieName];
-        if (!string.IsNullOrWhiteSpace(devSubject) && ActiveProfileScopeCookie.Read(Request) is null)
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (!string.IsNullOrWhiteSpace(devSubject) && activeScope is null)
         {
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Index)) });
         }
 
+        // Las fichas que dependen de un permiso solo se enseñan si el ámbito activo lo tiene (0024). Solo orienta: cada
+        // pantalla vuelve a autorizar.
+        IReadOnlyList<string> permissions = activeScope is null
+            ? []
+            : (await listPermissions.ExecuteAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct)).Value ?? [];
+        ViewBag.Permisos = permissions;
         return View();
     }
 

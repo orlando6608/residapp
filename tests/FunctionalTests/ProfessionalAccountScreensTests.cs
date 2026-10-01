@@ -79,7 +79,34 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     private static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
 
-    private static async Task<(string ExternalSubject, Guid AccountId, Guid UnitId)> SeedAdministratorAsync()
+    [Fact]
+    public async Task Inicio_EnfermeriaSoloVeElAltaDeResidenteConElPermiso()
+    {
+        async Task<string> HomeAsync(string? permission)
+        {
+            var nurse = await SeedAdministratorAsync("ENFERMERIA", permission);
+            var client = _factory.CreateClient();
+            var loginPage = await client.GetStringAsync("/DevAuth/Login");
+            (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+                ["externalSubject"] = nurse.ExternalSubject,
+            }))).EnsureSuccessStatusCode();
+            return WebUtility.HtmlDecode(await client.GetStringAsync("/"));
+        }
+
+        var without = await HomeAsync(null);
+        var with = await HomeAsync(ProfilePermissions.ResidentIdentityCreate);
+
+        Assert.All(new[] { without, with }, page => Assert.Contains("<h2 class=\"h5 card-title\">Enfermería</h2>", page));
+        Assert.DoesNotContain("Alta de residente", without);
+        Assert.Contains("Alta de residente", with);
+    }
+
+    /// <summary>Una cuenta con un ámbito del perfil indicado (por defecto Administración) en un centro y una unidad nuevos y,
+    /// si se pide, un permiso de ese ámbito.</summary>
+    private static async Task<(string ExternalSubject, Guid AccountId, Guid UnitId)> SeedAdministratorAsync(
+        string profileCode = "ADMINISTRACION", string? permission = null)
     {
         var suffix = Guid.NewGuid().ToString("N")[..12];
         var accountId = Guid.NewGuid();
@@ -95,13 +122,16 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
             INSERT INTO dbo.centros (id, codigo, nombre_visible, estado, creado_en) VALUES (@centerId, @centerCode, @centerCode, 'ACTIVE', @now);
             INSERT INTO dbo.unidades (id, centro_id, codigo, nombre_visible, estado, creado_en) VALUES (@unitId, @centerId, @unitCode, @unitCode, 'ACTIVE', @now);
             INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
-            VALUES (@profileScopeId, @accountId, @centerId, 'ADMINISTRACION', 'ACTIVE', @now, @accountId);
+            VALUES (@profileScopeId, @accountId, @centerId, @profileCode, 'ACTIVE', @now, @accountId);
             INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
             VALUES (NEWID(), @profileScopeId, @centerId, @unitId, @now, @accountId);
+            IF @permission IS NOT NULL
+                INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @profileScopeId, @centerId, @permission, @now, @accountId);
             """, new
         {
             accountId, externalSubject, now, centerId, centerCode = $"FUNC-CENTER-{suffix}", unitId, unitCode = $"FUNC-UNIT-{suffix}",
-            profileScopeId,
+            profileScopeId, profileCode, permission,
         });
         return (externalSubject, accountId, unitId);
     }

@@ -65,6 +65,10 @@ public sealed record ChangeAccountProfileUnitCommand(
 public sealed record ChangeAccountProfileResidentCommand(
     Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid PerfilCuentaId, ResidentId ResidenteId, bool Asignar);
 
+/// <summary>ADM-13 (0024): conceder (Conceder = true) o revocar un permiso del catálogo del perfil.</summary>
+public sealed record ChangeAccountProfilePermissionCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid PerfilCuentaId, string? Permiso, bool Conceder);
+
 /// <summary>
 /// Fachada del vertical Administración. Bloque 1 (historia 1): lista de residentes (ADM-02), ficha administrativa con
 /// historial de ubicación (ADM-03, RES-04) y corrección de identidad (script 0021). Bloque 2 (historia 3, script 0022):
@@ -72,7 +76,8 @@ public sealed record ChangeAccountProfileResidentCommand(
 /// contenido clínico. La lectura exige un ámbito activo de Administración de la cuenta, y el directorio aplica la regla
 /// de ámbito en la consulta. La corrección pasa por RequestAuthorizationContextResolver
 /// (ResidentIdentityUpdate, que la política reserva a Administración). Bloque 3 (historia 4, script 0023): cuentas
-/// profesionales, sus perfiles, unidades y residentes de Auxiliar. Son operaciones de centro, sin residente: como los
+/// profesionales, sus perfiles, unidades y residentes de Auxiliar; bloque 4 (0024), sus permisos configurables. Son
+/// operaciones de centro, sin residente: como los
 /// rangos de referencia, se comprueba aquí el ámbito activo de Administración y el repositorio lo repite dentro de la
 /// transacción.
 /// </summary>
@@ -242,6 +247,18 @@ public sealed class AdministracionApplicationService(
             await (command.Asignar
                 ? accounts.GrantResidentAsync(access, command.CuentaId, command.PerfilCuentaId, command.ResidenteId, ct)
                 : accounts.RevokeResidentAsync(access, command.CuentaId, command.PerfilCuentaId, command.ResidenteId, ct));
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> ChangeProfilePermissionAsync(
+        ChangeAccountProfilePermissionCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            var code = string.IsNullOrWhiteSpace(command.Permiso) ? throw new DomainValidationException("PROFILE_SCOPE_INVALID") : command.Permiso;
+            await (command.Conceder
+                ? accounts.GrantPermissionAsync(access, command.CuentaId, command.PerfilCuentaId, code, ct)
+                : accounts.RevokePermissionAsync(access, command.CuentaId, command.PerfilCuentaId, code, ct));
             return true;
         });
 

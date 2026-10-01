@@ -70,8 +70,9 @@
     </p>
     <p>
         El <strong>Inicio</strong> muestra solo los accesos del perfil con el que estás trabajando. Por ejemplo,
-        con Enfermería no verás el de Medicina. Si una pantalla necesita además un permiso que tu cuenta no
-        tiene, la app te denegará la acción.
+        con Enfermería no verás el de Medicina. <strong>Alta de residente</strong> (Enfermería) y <strong>Rangos de
+        referencia</strong> (Medicina y Dirección Clínica) solo aparecen si Administración te ha concedido ese permiso. Si
+        una pantalla necesita además un permiso que tu cuenta no tiene, la app te denegará la acción.
     </p>
     <p class="mb-0">
         Desde cualquier pantalla que dependa del ámbito activo puedes pulsar <strong>«Cambiar ámbito»</strong>
@@ -287,9 +288,19 @@
         nuevo. Todo cambio queda en la auditoría y vale desde la siguiente pantalla que abra la persona, aunque ya tuviera la
         sesión abierta.
     </p>
+    <p>
+        En la misma pantalla, la sección <strong>Permisos</strong> recoge las acciones que ese perfil solo puede hacer con
+        permiso. Cada una sale como «no concedido» o vigente (desde cuándo y quién), con <strong>Conceder</strong> o
+        <strong>Revocar</strong>. Cada perfil tiene sus permisos:
+    </p>
+    <ul>
+        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta) y reevaluar el basal.</li>
+        <li><strong>Medicina:</strong> basal inicial, reevaluar el basal y gestionar los rangos de referencia de constantes.</li>
+        <li><strong>Dirección Clínica:</strong> lectura clínica detallada y auditada, y gestionar los rangos de referencia.</li>
+        <li>Auxiliar y Administración no tienen permisos configurables.</li>
+    </ul>
     <p class="mb-0">
-        Tu propia cuenta la ves, pero no la puedes cambiar: lo hace otra cuenta de Administración. Los permisos específicos
-        (alta de residente para Enfermería, basal, detalle clínico, rangos de referencia) todavía no se conceden desde aquí.
+        Tu propia cuenta la ves, pero no la puedes cambiar: lo hace otra cuenta de Administración.
     </p>
 </section>
 
@@ -919,7 +930,7 @@
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
-        <li>Más gestión administrativa: permisos específicos de cada usuario, turnos, publicaciones, citas y auditoría.</li>
+        <li>Más gestión administrativa: turnos, publicaciones, citas y auditoría.</li>
         <li>Traslado de un residente entre unidades o centros, y su baja y reactivación (pendiente de que CJ decida qué pasa con su trabajo clínico en curso).</li>
         <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, y la revisión de calidad de proceso (cumplimiento de hitos y plazos, pendiente de definir).</li>
     </ul>

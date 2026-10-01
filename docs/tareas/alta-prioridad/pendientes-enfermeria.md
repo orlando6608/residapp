@@ -303,8 +303,8 @@ Huecos de lo ya construido:
   [`docs/pendientes-cj/rangos-referencia-constantes.html`](../../pendientes-cj/rangos-referencia-constantes.html),
   que CJ completa con los valores y las respuestas a las preguntas abiertas):
   - Fijar los valores en la pantalla: sin ellos no se muestra ningún aviso.
-  - Decidir a quién se concede el permiso en cada centro real. Hoy no hay pantalla para conceder permisos:
-    se concede por SQL, como el resto de permisos, hasta que exista el vertical Administración.
+  - Decidir a quién se concede el permiso en cada centro real. Desde el 2026-10-01 lo concede Administración en
+    Usuarios (pantalla de cada perfil, solo a Medicina o Dirección Clínica).
 - **Rangos de referencia por residente (fase 2, pendiente)**: excepciones individuales (p. ej. objetivo de
   SpO2 88-92 % en EPOC). Queda por decidir con CJ quién las fija (Enfermería o Medicina) y si forman
   parte del basal.

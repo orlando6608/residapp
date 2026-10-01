@@ -15,11 +15,13 @@ public sealed record AccountScopeGrant(
     public bool Active => RevokedAt is null;
 }
 
-/// <summary>ADM-13: un perfil de la cuenta en el centro, vigente o revocado, con sus unidades y sus residentes (estos,
-/// solo en Auxiliar). TargetId es el id de la unidad o del residente.</summary>
+/// <summary>ADM-13: un perfil de la cuenta en el centro, vigente o revocado, con sus unidades, sus residentes (estos,
+/// solo en Auxiliar) y sus permisos configurables (0024). TargetId es el id de la unidad, del residente o de la fila del
+/// permiso; en los permisos, Name es el código.</summary>
 public sealed record AccountProfileScope(
     Guid ProfileScopeId, SystemProfile Profile, DateTimeOffset GrantedAt, string GrantedBy, DateTimeOffset? RevokedAt,
-    string? RevokedBy, IReadOnlyList<AccountScopeGrant> Units, IReadOnlyList<AccountScopeGrant> Residents)
+    string? RevokedBy, IReadOnlyList<AccountScopeGrant> Units, IReadOnlyList<AccountScopeGrant> Residents,
+    IReadOnlyList<AccountScopeGrant> Permissions)
 {
     public bool Active => RevokedAt is null;
 }
@@ -88,4 +90,11 @@ public interface IProfessionalAccountRepository
 
     Task RevokeResidentAsync(
         AccountAdministrationAccess access, AccountId accountId, Guid profileScopeId, ResidentId residentId, CancellationToken ct = default);
+
+    /// <summary>0024: un permiso del catálogo del perfil (ProfilePermissions.For).</summary>
+    Task GrantPermissionAsync(
+        AccountAdministrationAccess access, AccountId accountId, Guid profileScopeId, string permissionCode, CancellationToken ct = default);
+
+    Task RevokePermissionAsync(
+        AccountAdministrationAccess access, AccountId accountId, Guid profileScopeId, string permissionCode, CancellationToken ct = default);
 }

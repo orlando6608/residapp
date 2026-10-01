@@ -4,6 +4,7 @@
     var devSubject = Context.Request.Cookies[ResidApp.Web.Security.DevSessionIdentityProvider.CookieName];
     // Solo decide qué fichas se enseñan: cada caso de uso sigue autorizando en el servidor.
     var perfil = ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request)?.Profile;
+    var permisos = ViewBag.Permisos as IReadOnlyList<string> ?? [];
 }
 
 <h1 class="h3 mb-3">Inicio</h1>
@@ -40,7 +41,7 @@ else
             </a>
         </div>
     }
-    @if (perfil is SystemProfile.Enfermeria)
+    @if (perfil is SystemProfile.Enfermeria && permisos.Contains(ResidApp.Domain.Accounts.ProfilePermissions.ResidentIdentityCreate))
     {
         <div class="col-12 col-md-4">
             <a asp-controller="Residents" asp-action="Create" class="card text-decoration-none h-100">
@@ -114,7 +115,8 @@ else
             </a>
         </div>
     }
-    @if (perfil is SystemProfile.Medicina or SystemProfile.DireccionClinica)
+    @if (perfil is SystemProfile.Medicina or SystemProfile.DireccionClinica
+         && permisos.Contains(ResidApp.Domain.Accounts.ProfilePermissions.ReferenceRangesManage))
     {
         <div class="col-12 col-md-4">
             <a asp-controller="RangosReferencia" asp-action="Index" class="card text-decoration-none h-100">

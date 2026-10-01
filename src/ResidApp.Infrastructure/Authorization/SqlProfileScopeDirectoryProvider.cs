@@ -8,7 +8,7 @@ namespace ResidApp.Infrastructure.Authorization;
 /// <summary>Lee los ambitos_perfil ACTIVE de una cuenta (dbo.cuentas ⋈ dbo.ambitos_perfil ⋈ dbo.centros),
 /// sin unir con unidades/residentes: esta pantalla solo resuelve el par (ProfileScopeId, CenterId) que
 /// alimenta AuthorizationSelection, no el ámbito completo de autorización. ListUnitsAsync sí une con las unidades del
-/// ámbito, para el selector de unidad del alta de residente.</summary>
+/// ámbito, para el selector de unidad del alta de residente; ListPermissionsAsync, con sus permisos, para el Inicio.</summary>
 public sealed class SqlProfileScopeDirectoryProvider(SqlConnectionFactory connections) : IProfileScopeDirectoryProvider
 {
     public async Task<IReadOnlyList<ActiveProfileScope>> ListActiveAsync(string externalSubject, CancellationToken ct = default)
@@ -52,6 +52,25 @@ public sealed class SqlProfileScopeDirectoryProvider(SqlConnectionFactory connec
             cancellationToken: ct));
 
         return rows.Select(row => new ScopeUnit(UnitId.From(row.UnitId), row.Name)).ToList();
+    }
+
+    public async Task<IReadOnlyList<string>> ListPermissionsAsync(
+        string externalSubject, Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return (await connection.QueryAsync<string>(new CommandDefinition("""
+            SELECT permission.permiso_codigo
+              FROM dbo.cuentas account
+              JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id
+                  AND profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
+                  AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+              JOIN dbo.centros center ON center.id = profile.centro_id AND center.estado = 'ACTIVE'
+              JOIN dbo.permisos_perfil permission ON permission.ambito_perfil_id = profile.id
+                  AND permission.centro_id = profile.centro_id AND permission.revocado_en IS NULL
+             WHERE account.sujeto_externo = @ExternalSubject AND account.estado = 'ACTIVE'
+             ORDER BY permission.permiso_codigo
+            """, new { ExternalSubject = externalSubject, ProfileScopeId = profileScopeId, CenterId = centerId.Value },
+            cancellationToken: ct))).ToList();
     }
 
     private sealed record Row(Guid ProfileScopeId, Guid AccountId, Guid CenterId, string CenterName, string Profile, string? AccountDisplayName);

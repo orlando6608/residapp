@@ -694,6 +694,25 @@ public sealed class AdministracionController(AdministracionApplicationService se
             conflict: "Las unidades del perfil han cambiado desde que abriste la pantalla. Revisa las vigentes.");
     }
 
+    /// <summary>ADM-13 (0024): conceder (conceder = true) o revocar un permiso del catálogo del perfil.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PermisoPerfil(Guid cuentaId, Guid ambitoId, string? permiso, bool conceder, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await service.ChangeProfilePermissionAsync(new ChangeAccountProfilePermissionCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), AccountId.From(cuentaId), ambitoId, permiso, conceder), ct);
+        return AfterAccountChange(result, cuentaId, ambitoId,
+            conceder ? "Permiso concedido." : "Permiso revocado.",
+            invalid: "Ese permiso no es de este perfil.",
+            conflict: "Los permisos del perfil han cambiado desde que abriste la pantalla. Revisa los vigentes.");
+    }
+
     /// <summary>ADM-13: asignar (asignar = true) o retirar un residente de un perfil Auxiliar.</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]

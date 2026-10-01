@@ -287,6 +287,72 @@ public class AdministracionUsuariosTests
         Assert.Equal(0, await CountAuditAsync(nurse.AccountId.Value, "ACCOUNT_SUSPEND"));
     }
 
+    private static ChangeAccountProfilePermissionCommand Permission(SeededProfile admin, SeededProfile target, string code, bool grant) =>
+        new(admin.ProfileScopeId, admin.CenterId, target.AccountId, target.ProfileScopeId, code, grant);
+
+    [Fact]
+    public async Task Permisos_SeConcedenYRevocan_SoloLosDelCatalogoDelPerfil()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
+        var doctor = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, admin.CenterId, admin.UnitId);
+        var assistant = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, admin.CenterId, admin.UnitId);
+        var service = Build(admin.ExternalSubject);
+        var create = new AuthorizationTarget.Create(admin.UnitId);
+        async Task<IReadOnlyList<string>> NursePermissionsAsync() =>
+            (await EvidenceAsync(nurse.ExternalSubject, nurse.ProfileScopeId, nurse.CenterId, create))!.Permissions.Select(p => p.Code).ToList();
+
+        var grant = await service.ChangeProfilePermissionAsync(Permission(admin, nurse, "BASELINE_INITIAL_COMPLETE", grant: true));
+        var afterGrant = await NursePermissionsAsync();
+        var grantAgain = await service.ChangeProfilePermissionAsync(Permission(admin, nurse, "BASELINE_INITIAL_COMPLETE", grant: true));
+        var outOfCatalog = new[]
+        {
+            await service.ChangeProfilePermissionAsync(Permission(admin, doctor, "RESIDENT_IDENTITY_CREATE", grant: true)),
+            await service.ChangeProfilePermissionAsync(Permission(admin, nurse, "CLINICAL_DETAIL_READ", grant: true)),
+            await service.ChangeProfilePermissionAsync(Permission(admin, nurse, "BASELINE_DRAFT_CONTRIBUTE", grant: true)),
+            await service.ChangeProfilePermissionAsync(Permission(admin, assistant, "BASELINE_REEVALUATE", grant: true)),
+            await service.ChangeProfilePermissionAsync(Permission(admin, admin, "RESIDENT_IDENTITY_CREATE", grant: true)),
+        };
+        var detail = await DetailAsync(admin, nurse.AccountId);
+        var revoke = await service.ChangeProfilePermissionAsync(Permission(admin, nurse, "BASELINE_INITIAL_COMPLETE", grant: false));
+        var revokeAgain = await service.ChangeProfilePermissionAsync(Permission(admin, nurse, "BASELINE_INITIAL_COMPLETE", grant: false));
+        var afterRevoke = await NursePermissionsAsync();
+
+        Assert.True(grant.Ok, grant.Error?.Message);
+        Assert.Equal(["BASELINE_INITIAL_COMPLETE"], afterGrant);
+        Assert.Equal(ApplicationFailureCode.Conflict, grantAgain.Error!.Code);
+        Assert.All(outOfCatalog, r => Assert.Equal(ApplicationFailureCode.InvalidInput, r.Error!.Code));
+        Assert.Equal("BASELINE_INITIAL_COMPLETE", Assert.Single(Assert.Single(detail.Account.Profiles).Permissions).Name);
+        Assert.True(revoke.Ok, revoke.Error?.Message);
+        Assert.Equal(ApplicationFailureCode.Conflict, revokeAgain.Error!.Code);
+        Assert.Empty(afterRevoke);
+        Assert.Equal(1, await CountAuditAsync(nurse.ProfileScopeId, "PROFILE_PERMISSION_GRANT"));
+        Assert.Equal(1, await CountAuditAsync(nurse.ProfileScopeId, "PROFILE_PERMISSION_REVOKE"));
+    }
+
+    [Fact]
+    public async Task Permisos_LosDelAmbitoActivo_YLaBaseDeDatosNoAdmiteOtroPerfil()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var nurse = await SeedFixture.AddProfileToCenterAsync(
+            SystemProfile.Enfermeria, admin.CenterId, admin.UnitId, ["RESIDENT_IDENTITY_CREATE", "BASELINE_REEVALUATE"]);
+        Assert.True((await Build(admin.ExternalSubject).ChangeProfilePermissionAsync(
+            Permission(admin, nurse, "BASELINE_REEVALUATE", grant: false))).Ok);
+        var scopes = new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory);
+
+        var own = await scopes.ListPermissionsAsync(nurse.ExternalSubject, nurse.ProfileScopeId, nurse.CenterId);
+        var foreign = await scopes.ListPermissionsAsync(admin.ExternalSubject, nurse.ProfileScopeId, nurse.CenterId);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var direct = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync("""
+            INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @ProfileScopeId, @CenterId, 'CLINICAL_DETAIL_READ', SYSUTCDATETIME(), @AccountId)
+            """, new { nurse.ProfileScopeId, CenterId = nurse.CenterId.Value, AccountId = admin.AccountId.Value }));
+
+        Assert.Equal(["RESIDENT_IDENTITY_CREATE"], own);
+        Assert.Empty(foreign);
+        Assert.Contains("PROFILE_PERMISSION_NOT_ALLOWED", direct.Message);
+    }
+
     [Fact]
     public async Task Nombre_SePoneYSeCambiaConAuditoria()
     {

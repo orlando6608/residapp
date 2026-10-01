@@ -98,9 +98,12 @@ public static class SupervisionDisplay
         _ => kind.ToString(),
     };
 
-    /// <summary>DIR-17: nombre en español de los permisos que puede tener un ámbito de Dirección.</summary>
+    /// <summary>DIR-17 y ADM-13 (0024): nombre en español de los permisos configurables.</summary>
     public static string PermissionLabel(string code) => code switch
     {
+        "RESIDENT_IDENTITY_CREATE" => "Dar de alta residentes",
+        "BASELINE_INITIAL_COMPLETE" => "Basal inicial (al alta)",
+        "BASELINE_REEVALUATE" => "Reevaluar el basal",
         "CLINICAL_DETAIL_READ" => "Lectura clínica detallada y auditada",
         "REFERENCE_RANGES_MANAGE" => "Gestionar los rangos de referencia de constantes",
         _ => code,

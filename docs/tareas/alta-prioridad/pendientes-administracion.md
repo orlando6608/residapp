@@ -1,6 +1,6 @@
 # Pendientes del vertical Administración
 
-Estado al 2026-10-01 (tras el bloque 3). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
+Estado al 2026-10-01 (tras el bloque 4). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
 No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pantallas/wireframes-funcionales/administracion.md).
 
 ## Hecho
@@ -126,16 +126,42 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
   - **Tests:** `AdministracionUsuariosTests` (integración, con la evidencia de autorización real), `ProfessionalAccountTests`
     (unitarios) y `ProfessionalAccountScreensTests` (funcionales, por HTTP).
 
+- **Bloque 4 (permisos configurables, historia 4; e Inicio por permiso)** — 2026-10-01.
+  - **Qué hace:** la pantalla de cada perfil (`PerfilUsuario`) tiene la sección «Permisos» con el catálogo de ese perfil,
+    cada uno «no concedido» o vigente (desde cuándo y quién), y «Conceder» o «Revocar» (`PermisoPerfil`). Los revocados
+    pasan al historial «Revocado». El Inicio enseña «Alta de residente» a Enfermería y «Rangos de referencia» a Medicina y
+    Dirección solo si el ámbito activo tiene el permiso.
+  - **Decisiones del usuario (2026-10-01):**
+    - la «política del centro» de la matriz la aplica su Administración: concede y revoca cualquier permiso del catálogo
+      de cada perfil, con auditoría y sin motivo;
+    - `CLINICAL_DETAIL_READ` se concede desde la pantalla: solo habilita lo que ya existe (histórico de basal con finalidad
+      «supervisión clínica», auditado);
+    - el Inicio respeta los permisos.
+  - **Suposiciones aprobadas con el plan:**
+    - catálogo (`Domain/Accounts/ProfilePermissions.cs`):
+      - Enfermería: alta de residente, basal inicial y reevaluación;
+      - Medicina: basal inicial, reevaluación y rangos;
+      - Dirección Clínica: lectura clínica detallada y rangos;
+      - Auxiliar, Administración y Familiar: ninguno;
+      - `BASELINE_DRAFT_CONTRIBUTE` no se ofrece, porque no se usa;
+    - se gestionan en la pantalla del perfil, no en el alta;
+    - rigen las mismas reglas que el bloque 3 (propia cuenta, perfil vigente, revocar sin borrar).
+  - **Implementación:**
+    - script `0024_permisos_por_perfil` (`TR_pp_profile_catalog`, THROW 50420: un permiso solo en los perfiles que lo usan;
+      `REFERENCE_RANGES_MANAGE` sigue en el trigger de 0008);
+    - `SqlProfessionalAccountRepository.GrantPermissionAsync`/`RevokePermissionAsync`, con auditoría
+      `PROFILE_PERMISSION_GRANT`/`_REVOKE`;
+    - `IProfileScopeDirectoryProvider.ListPermissionsAsync` y el caso de uso `ListActiveScopePermissions` para el Inicio.
+  - **Tests:** en `AdministracionUsuariosTests` (evidencia real y trigger), `ProfessionalAccountTests` y
+    `ProfessionalAccountScreensTests` (Inicio con y sin el permiso).
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
-2. **Permisos configurables (historia 4):** conceder y revocar `RESIDENT_IDENTITY_CREATE`, `BASELINE_INITIAL_COMPLETE`,
-   `BASELINE_REEVALUATE`, `CLINICAL_DETAIL_READ` y `REFERENCE_RANGES_MANAGE` desde la pantalla del perfil. Hoy se conceden por
-   SQL. La matriz los pone en «COND política del centro» y esa política no está definida: decidir antes de construir.
-3. **Turnos y equipos (historia 4):** sustituirían el «equipo o turno entrante» en texto libre de los seguimientos.
-4. **Publicaciones familiares (historias 5 y 6), citas (7 y 8), auditoría administrativa (9) y panel completo (10).**
+2. **Turnos y equipos (historia 4):** sustituirían el «equipo o turno entrante» en texto libre de los seguimientos.
+3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8), auditoría administrativa (9) y panel completo (10).**
 
 Huecos de lo ya construido:
 
@@ -145,7 +171,9 @@ Huecos de lo ya construido:
   (historia 2); la ficha solo muestra la unidad.
 - **Usuarios:** no se vincula una cuenta que ya existe en otro centro (llegará con las invitaciones del proveedor de identidad);
   no se restringe por residente a Enfermería, Medicina o Dirección; no hay «Mi cuenta» (ADM-30). Fuera de estas pantallas, el
-  nombre de la cuenta solo se usa en la firma del PDF de derivación (2026-10-01).
+  nombre de la cuenta solo se usa en la firma del PDF de derivación (2026-10-01). Los permisos no se eligen en el alta ni
+  en «Conceder perfil», sino después en la pantalla del perfil. El Inicio sigue enseñando «Firmar borrador de basal» a
+  Enfermería y Medicina sin mirar sus permisos de basal.
 - **Familiares:** un familiar no se puede vincular a un segundo residente (habría que crearlo otra vez) ni desvincular; la edición
   no tiene token de concurrencia (gana la última). La «fecha efectiva» de ADM-11 es siempre el momento del cambio. Ninguna cuenta
   de familiar existe todavía: llegará con el Portal Familiar y el proveedor de identidad.

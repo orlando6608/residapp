@@ -23,6 +23,11 @@ public interface IProfileScopeDirectoryProvider
     /// con las que SqlAuthorizationEvidenceProvider autoriza el alta en una unidad. Vacía si el ámbito no es suyo.</summary>
     Task<IReadOnlyList<ScopeUnit>> ListUnitsAsync(
         string externalSubject, Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>Códigos de los permisos vigentes de un ámbito activo de la cuenta (cuenta, ámbito y centro activos, como
+    /// ListActiveAsync), para decidir qué fichas enseña el Inicio. Vacía si el ámbito no es suyo.</summary>
+    Task<IReadOnlyList<string>> ListPermissionsAsync(
+        string externalSubject, Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 }
 
 public sealed record ScopeUnit(UnitId UnitId, string Name);
