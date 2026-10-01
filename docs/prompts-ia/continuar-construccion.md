@@ -28,7 +28,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     del modelo (p. ej., «no-es-un-guid» no es un valor válido para Unidad), que valen para todos los formularios. Test
     funcional `Create_UnidadEmpiezaVacia_YSusErroresSalenEnEspañol` (hoy
     `Create_LaUnidadSeEligeEntreLasDelAmbito_YSusErroresSalenEnEspañol`).
-- **Selector de unidad en el alta (sin script), 2026-10-01, con commit en `main` sin push:** la unidad ya no se escribe a
+- **Selector de unidad en el alta (sin script), 2026-10-01:** desplegado en Azure (push de `6a433fe`, run 36841516152 en
+  verde con `build-and-test` y `deploy`). Prueba en Azure: `dev-integrado-administracion`, `-enfermeria` y `-auxiliar` ven la
+  unidad integrada ya elegida; el alta de «Prueba selector unidad azure (ficticio)» como Administración llega a la
+  confirmación y sale en la lista, y Auxiliar recibe «No se puede acceder a esta operación».
+  **Qué hace:** la unidad ya no se escribe a
   mano: se elige en un `<select>` con las unidades concedidas y activas del ámbito activo
   (`IProfileScopeDirectoryProvider.ListUnitsAsync`, con las mismas condiciones con las que `SqlAuthorizationEvidenceProvider`
   autoriza el alta; caso de uso `ListActiveScopeUnits`). Con una sola unidad viene elegida; con varias empieza en «Elige una
