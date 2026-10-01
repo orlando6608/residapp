@@ -1,0 +1,43 @@
+@using ResidApp.Web.Models
+@model RenameProfessionalAccountViewModel
+@{
+    var name = ProfessionalAccountDisplay.Name(Model.Account);
+    ViewData["Title"] = "Nombre del usuario";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Usuarios">Usuarios</a></li>
+        <li class="breadcrumb-item"><a asp-action="Usuario" asp-route-cuentaId="@Model.Account.AccountId.Value">@name</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Nombre</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Nombre del usuario</h1>
+<p class="text-muted">
+    Identificador de acceso: <code>@Model.Account.Subject</code> (no cambia). El cambio de nombre queda en la auditoría.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="NombreUsuario" method="post">
+            <input type="hidden" name="Form.CuentaId" value="@Model.Form.CuentaId" />
+            <div class="mb-3">
+                <label asp-for="Form.NombreVisible" class="form-label"></label>
+                <input asp-for="Form.NombreVisible" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.NombreVisible" class="text-danger"></span>
+            </div>
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Usuario" asp-route-cuentaId="@Model.Account.AccountId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Guardar nombre</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,63 @@
+@using ResidApp.Domain.Accounts
+@using ResidApp.Web.Models
+@model NewProfessionalAccountViewModel
+@{
+    ViewData["Title"] = "Alta de usuario";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Usuarios">Usuarios</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Alta de usuario</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Alta de usuario</h1>
+<p class="text-muted">
+    La cuenta nace activa, con un perfil y sus unidades. Después puedes concederle más perfiles desde su ficha. El identificador
+    de acceso es con el que la persona entra en la aplicación y no se puede cambiar.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        @if (Model.Units.Count == 0)
+        {
+            <div class="alert alert-warning">Tu ámbito no tiene unidades activas: no puedes conceder ninguna.</div>
+        }
+        <form asp-action="NuevoUsuario" method="post">
+            <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+
+            <div class="mb-3">
+                <label asp-for="Form.Identificador" class="form-label"></label>
+                <input asp-for="Form.Identificador" class="form-control form-control-lg" autocomplete="off" aria-describedby="identificador-ayuda" />
+                <div id="identificador-ayuda" class="form-text">De 3 a 200 caracteres, sin espacios: letras, dígitos, «.», «_», «-» o «@@».</div>
+                <span asp-validation-for="Form.Identificador" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.NombreVisible" class="form-label"></label>
+                <input asp-for="Form.NombreVisible" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.NombreVisible" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Perfil" class="form-label"></label>
+                <select asp-for="Form.Perfil" asp-items="ProfessionalAccountDisplay.ProfileOptions(ProfessionalAccount.GrantableProfiles)" class="form-select form-select-lg">
+                    <option value="">Elige un perfil</option>
+                </select>
+                <span asp-validation-for="Form.Perfil" class="text-danger"></span>
+            </div>
+            <partial name="_UnidadesPerfil" model="new ProfileUnitsFieldModel(Model.Units, Model.Form.Unidades)" />
+
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Usuarios" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Dar de alta</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

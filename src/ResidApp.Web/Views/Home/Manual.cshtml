@@ -34,6 +34,7 @@
             <a class="list-group-item list-group-item-action" href="#alta-residente">Dar de alta un residente</a>
             <a class="list-group-item list-group-item-action" href="#residentes-administracion">Residentes y ficha administrativa (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#familiares-administracion">Familiares, autorizaciones y contacto urgente (Administración)</a>
+            <a class="list-group-item list-group-item-action" href="#usuarios-administracion">Usuarios, perfiles y unidades (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
             <a class="list-group-item list-group-item-action" href="#supervision-direccion">Supervisión operativa por unidad (Dirección Clínica)</a>
@@ -140,7 +141,7 @@
                 <tr>
                     <td><code>dev-integrado-administracion</code></td>
                     <td>Administración (mismo centro y unidad)</td>
-                    <td>Residentes, ficha administrativa, historial de ubicación, corrección de identidad y alta.</td>
+                    <td>Residentes, ficha administrativa, historial de ubicación, corrección de identidad, alta y usuarios.</td>
                 </tr>
             </tbody>
         </table>
@@ -208,8 +209,8 @@
         <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
     </h2>
     <p>
-        El inicio de Administración tiene dos tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
-        ámbito, y <strong>Alta de residente</strong>. En el alta, la unidad se elige en una lista con las unidades de tu
+        El inicio de Administración tiene tres tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
+        ámbito, <strong>Alta de residente</strong> y <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»). En el alta, la unidad se elige en una lista con las unidades de tu
         ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves el nombre, la edad (calculada a partir
         de la fecha de nacimiento), el sexo documentado, la unidad y la fecha de alta. Puedes buscar por nombre, sin
         importar mayúsculas ni acentos, y filtrar por unidad si tu ámbito tiene más de una.
@@ -252,6 +253,43 @@
         historial. Enfermería y Medicina lo ven (nombre, relación y teléfono) en la ficha del residente y al registrar la
         llamada a la familia tras una derivación a urgencias. Si otra persona ha cambiado la autorización o el contacto desde que abriste la pantalla, te lo indica
         en lugar de guardar.
+    </p>
+</section>
+
+<section id="usuarios-administracion" class="mb-4">
+    <h2 class="h5">
+        Usuarios, perfiles y unidades
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+    </h2>
+    <p>
+        <strong>Usuarios</strong> lista las cuentas con algún perfil en tu centro: nombre, identificador de acceso, estado
+        (Activa o Suspendida) y sus perfiles vigentes con sus unidades. Las cuentas creadas antes de esta pantalla no tienen
+        nombre y aparecen por su identificador hasta que se lo pongas.
+    </p>
+    <p>
+        <strong>Alta de usuario</strong> pide el identificador de acceso (con el que la persona entra; hoy, el nombre de
+        cuenta de <code>/DevAuth/Login</code>), el nombre, un perfil (Auxiliar, Enfermería, Medicina, Administración o
+        Dirección Clínica) y al menos una de las unidades de tu ámbito. Si el identificador ya existe, te lo indica. La cuenta
+        nace activa y puede entrar en ese momento.
+    </p>
+    <p>
+        En la <strong>ficha de la cuenta</strong> puedes cambiar el nombre, <strong>suspender</strong> la cuenta (no podrá
+        entrar con ningún perfil aunque los conserve) y <strong>reactivarla</strong>. Si la cuenta tiene perfiles vigentes
+        en otro centro, no se suspende desde aquí: revoca sus perfiles de tu centro. Con <strong>Conceder perfil</strong> le
+        das un perfil más, con sus unidades; para usarlo tendrá que elegirlo al entrar, porque los permisos de perfiles
+        distintos nunca se suman.
+    </p>
+    <p>
+        <strong>Gestionar</strong> abre un perfil: puedes concederle o revocarle unidades de tu ámbito (la última no se
+        revoca: en ese caso se revoca el perfil) y <strong>revocar el perfil</strong>. En un perfil Auxiliar, además,
+        asignas o retiras los residentes que verá: solo los de sus unidades, y sin ninguno asignado no ve a nadie. Lo
+        revocado no se borra ni se reactiva: queda como historial, con quién y cuándo, y si vuelve a hacer falta se concede de
+        nuevo. Todo cambio queda en la auditoría y vale desde la siguiente pantalla que abra la persona, aunque ya tuviera la
+        sesión abierta.
+    </p>
+    <p class="mb-0">
+        Tu propia cuenta la ves, pero no la puedes cambiar: lo hace otra cuenta de Administración. Los permisos específicos
+        (alta de residente para Enfermería, basal, detalle clínico, rangos de referencia) todavía no se conceden desde aquí.
     </p>
 </section>
 
@@ -879,7 +917,7 @@
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
-        <li>Más gestión administrativa: usuarios y turnos, publicaciones, citas y auditoría.</li>
+        <li>Más gestión administrativa: permisos específicos de cada usuario, turnos, publicaciones, citas y auditoría.</li>
         <li>Traslado de un residente entre unidades o centros, y su baja y reactivación (pendiente de que CJ decida qué pasa con su trabajo clínico en curso).</li>
         <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, y la revisión de calidad de proceso (cumplimiento de hitos y plazos, pendiente de definir).</li>
     </ul>

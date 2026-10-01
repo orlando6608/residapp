@@ -1,0 +1,197 @@
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model AccountProfileViewModel
+@{
+    var account = Model.Detail.Account;
+    var name = ProfessionalAccountDisplay.Name(account);
+    var profile = Model.Profile;
+    var profileLabel = SystemProfileDisplay.Label(profile.Profile);
+    var activeUnits = profile.Units.Where(u => u.Active).ToList();
+    var activeResidents = profile.Residents.Where(r => r.Active).ToList();
+    var revoked = profile.Units.Where(u => !u.Active).Select(u => ("Unidad", u))
+        .Concat(profile.Residents.Where(r => !r.Active).Select(r => ("Residente", r)))
+        .OrderByDescending(g => g.Item2.RevokedAt)
+        .ToList();
+    var isAssistant = profile.Profile == SystemProfile.Auxiliar;
+    ViewData["Title"] = $"{profileLabel} · {name}";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Usuarios">Usuarios</a></li>
+        <li class="breadcrumb-item"><a asp-action="Usuario" asp-route-cuentaId="@account.AccountId.Value">@name</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@profileLabel</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@profileLabel · @name</h1>
+<p class="text-muted">
+    Concedido el @profile.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") por @profile.GrantedBy.
+    @if (profile.RevokedAt is { } revokedAt)
+    {
+        @:Revocado el @revokedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") por @profile.RevokedBy: ya no da acceso a nada.
+    }
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<section class="mb-4">
+    <h2 class="h5">Unidades</h2>
+    <p class="text-muted">El perfil solo vale en estas unidades. La última no se revoca: si ya no hace falta, revoca el perfil.</p>
+    @if (activeUnits.Count == 0)
+    {
+        <p class="text-muted">Ninguna vigente.</p>
+    }
+    else
+    {
+        <ul class="list-group mb-3">
+            @foreach (var unit in activeUnits)
+            {
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span>
+                        <strong>@unit.Name</strong>
+                        <span class="text-muted">· desde el @unit.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @unit.GrantedBy</span>
+                    </span>
+                    @if (Model.CanChange && activeUnits.Count > 1 && Model.Manages(unit.TargetId))
+                    {
+                        <form asp-action="UnidadPerfil" method="post">
+                            <input type="hidden" name="cuentaId" value="@account.AccountId.Value" />
+                            <input type="hidden" name="ambitoId" value="@profile.ProfileScopeId" />
+                            <input type="hidden" name="unidadId" value="@unit.TargetId" />
+                            <input type="hidden" name="conceder" value="false" />
+                            <button type="submit" class="btn btn-outline-danger">Revocar unidad</button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+    }
+    @if (Model.CanChange && Model.AddableUnits.Count > 0)
+    {
+        <form asp-action="UnidadPerfil" method="post" class="row g-2 align-items-end">
+            <input type="hidden" name="cuentaId" value="@account.AccountId.Value" />
+            <input type="hidden" name="ambitoId" value="@profile.ProfileScopeId" />
+            <input type="hidden" name="conceder" value="true" />
+            <div class="col-12 col-md-6">
+                <label for="unidad-nueva" class="form-label">Añadir unidad</label>
+                <select id="unidad-nueva" name="unidadId" class="form-select form-select-lg">
+                    @foreach (var unit in Model.AddableUnits)
+                    {
+                        <option value="@unit.UnitId.Value">@unit.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-md-auto">
+                <button type="submit" class="btn btn-outline-primary btn-lg w-100">Conceder unidad</button>
+            </div>
+        </form>
+    }
+</section>
+
+@if (isAssistant)
+{
+    <section class="mb-4">
+        <h2 class="h5">Residentes asignados</h2>
+        <p class="text-muted">
+            Auxiliar solo ve a los residentes asignados que están en sus unidades. Sin ninguno asignado no ve a nadie; retirar el
+            último no le da acceso a toda la unidad.
+        </p>
+        @if (activeResidents.Count == 0)
+        {
+            <p class="text-muted">Ninguno asignado.</p>
+        }
+        else
+        {
+            <ul class="list-group mb-3">
+                @foreach (var resident in activeResidents)
+                {
+                    <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <span>
+                            <strong>@resident.Name</strong>
+                            <span class="text-muted">· desde el @resident.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @resident.GrantedBy</span>
+                        </span>
+                        @if (Model.CanChange)
+                        {
+                            <form asp-action="ResidentePerfil" method="post">
+                                <input type="hidden" name="cuentaId" value="@account.AccountId.Value" />
+                                <input type="hidden" name="ambitoId" value="@profile.ProfileScopeId" />
+                                <input type="hidden" name="residenteId" value="@resident.TargetId" />
+                                <input type="hidden" name="asignar" value="false" />
+                                <button type="submit" class="btn btn-outline-danger">Retirar</button>
+                            </form>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+        @if (Model.CanChange)
+        {
+            @if (Model.AssignableResidents.Count == 0)
+            {
+                <p class="text-muted">No hay más residentes de sus unidades que se puedan asignar.</p>
+            }
+            else
+            {
+                <form asp-action="ResidentePerfil" method="post" class="row g-2 align-items-end">
+                    <input type="hidden" name="cuentaId" value="@account.AccountId.Value" />
+                    <input type="hidden" name="ambitoId" value="@profile.ProfileScopeId" />
+                    <input type="hidden" name="asignar" value="true" />
+                    <div class="col-12 col-md-6">
+                        <label for="residente-nuevo" class="form-label">Asignar residente</label>
+                        <select id="residente-nuevo" name="residenteId" class="form-select form-select-lg">
+                            @foreach (var resident in Model.AssignableResidents)
+                            {
+                                <option value="@resident.ResidentId.Value">@resident.DisplayName (@resident.UnitName)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-auto">
+                        <button type="submit" class="btn btn-outline-primary btn-lg w-100">Asignar</button>
+                    </div>
+                </form>
+            }
+        }
+    </section>
+}
+
+@if (revoked.Count > 0)
+{
+    <section class="mb-4">
+        <h2 class="h5">Revocado</h2>
+        <ul class="list-group">
+            @foreach (var (kind, grant) in revoked)
+            {
+                <li class="list-group-item">
+                    @kind <strong>@grant.Name</strong>: concedido el @grant.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @grant.GrantedBy;
+                    revocado el @grant.RevokedAt!.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @grant.RevokedBy
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@if (Model.CanChange)
+{
+    <section class="card border-danger mb-4">
+        <div class="card-body">
+            <h2 class="h5 card-title">Revocar el perfil</h2>
+            <p>
+                @name dejará de poder entrar como @profileLabel en este centro desde su siguiente pantalla. No se deshace: si vuelve
+                a hacer falta, se concede de nuevo.
+            </p>
+            <form asp-action="RevocarPerfil" method="post">
+                <input type="hidden" name="cuentaId" value="@account.AccountId.Value" />
+                <input type="hidden" name="ambitoId" value="@profile.ProfileScopeId" />
+                <button type="submit" class="btn btn-danger btn-lg">Revocar perfil</button>
+            </form>
+        </div>
+    </section>
+}

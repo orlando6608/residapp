@@ -1,0 +1,75 @@
+@using ResidApp.Web.Models
+@model IReadOnlyList<ResidApp.Application.Ports.ProfessionalAccountSummary>
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Usuarios</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Usuarios</h1>
+<p class="text-muted">
+    Cuentas con algún perfil en el centro. Cada persona entra con un único perfil activo; los permisos de perfiles distintos
+    no se suman. Conceder un perfil no da acceso a nada fuera de sus unidades.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<a asp-action="NuevoUsuario" class="btn btn-primary btn-lg mb-3">Alta de usuario</a>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No hay cuentas con perfil en el centro.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Cuentas con perfil en el centro</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Identificador de acceso</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Perfiles vigentes y unidades</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var account in Model)
+                {
+                    var active = account.Profiles.Where(p => p.Active).ToList();
+                    <tr>
+                        <th scope="row">
+                            <a asp-action="Usuario" asp-route-cuentaId="@account.AccountId.Value">@ProfessionalAccountDisplay.Name(account)</a>
+                        </th>
+                        <td><code>@account.Subject</code></td>
+                        <td>
+                            <span class="badge @(account.Status == ResidApp.Domain.Accounts.AccountStatus.Active ? "text-bg-success" : "text-bg-secondary")">
+                                @ProfessionalAccountDisplay.Status(account.Status)
+                            </span>
+                        </td>
+                        <td>
+                            @if (active.Count == 0)
+                            {
+                                <span class="text-muted">Ninguno</span>
+                            }
+                            else
+                            {
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var profile in active)
+                                    {
+                                        <li>@SystemProfileDisplay.Label(profile.Profile) · @ProfessionalAccountDisplay.ActiveUnits(profile)</li>
+                                    }
+                                </ul>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

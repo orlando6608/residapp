@@ -1,0 +1,123 @@
+@using ResidApp.Domain.Accounts
+@using ResidApp.Web.Models
+@model ResidApp.Application.Ports.ProfessionalAccountDetail
+@{
+    var account = Model.Account;
+    var name = ProfessionalAccountDisplay.Name(account);
+    var canChange = !Model.IsOwnAccount;
+    ViewData["Title"] = name;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Usuarios">Usuarios</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@name</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@name</h1>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+@if (Model.IsOwnAccount)
+{
+    <div class="alert alert-info">Es tu propia cuenta: la ves pero no la puedes cambiar. Otra cuenta de Administración puede hacerlo.</div>
+}
+
+<section class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5 card-title">Cuenta</h2>
+        <dl class="row mb-3">
+            <dt class="col-sm-4">Nombre</dt>
+            <dd class="col-sm-8">@(account.DisplayName ?? "Sin nombre")</dd>
+            <dt class="col-sm-4">Identificador de acceso</dt>
+            <dd class="col-sm-8"><code>@account.Subject</code></dd>
+            <dt class="col-sm-4">Estado</dt>
+            <dd class="col-sm-8">@ProfessionalAccountDisplay.Status(account.Status)</dd>
+        </dl>
+        @if (canChange)
+        {
+            <div class="d-grid d-md-flex gap-2">
+                <a asp-action="NombreUsuario" asp-route-cuentaId="@account.AccountId.Value" class="btn btn-outline-primary btn-lg">
+                    @(account.DisplayName is null ? "Poner nombre" : "Cambiar nombre")
+                </a>
+                @if (!Model.HasActiveProfilesElsewhere)
+                {
+                    var suspend = account.Status == AccountStatus.Active;
+                    <form asp-action="EstadoUsuario" method="post">
+                        <input type="hidden" name="cuentaId" value="@account.AccountId.Value" />
+                        <input type="hidden" name="estado" value="@(suspend ? AccountStatus.Suspended : AccountStatus.Active)" />
+                        <button type="submit" class="btn @(suspend ? "btn-outline-danger" : "btn-outline-success") btn-lg w-100">
+                            @(suspend ? "Suspender cuenta" : "Reactivar cuenta")
+                        </button>
+                    </form>
+                }
+            </div>
+            @if (Model.HasActiveProfilesElsewhere)
+            {
+                <p class="text-muted mt-3 mb-0">
+                    La cuenta tiene perfiles vigentes en otros centros, así que no se suspende desde aquí: si deja de trabajar en este
+                    centro, revoca sus perfiles de este centro.
+                </p>
+            }
+            else
+            {
+                <p class="text-muted mt-3 mb-0">Una cuenta suspendida no puede entrar con ningún perfil, aunque los conserve.</p>
+            }
+        }
+    </div>
+</section>
+
+<section class="mb-4">
+    <h2 class="h5">Perfiles en este centro</h2>
+    <p class="text-muted">Cada perfil vale solo en sus unidades. Los revocados se conservan como historial.</p>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Perfiles de la cuenta en el centro</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Perfil</th>
+                    <th scope="col">Unidades vigentes</th>
+                    <th scope="col">Concedido</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var profile in account.Profiles)
+                {
+                    <tr>
+                        <th scope="row">@SystemProfileDisplay.Label(profile.Profile)</th>
+                        <td>@(profile.Active ? ProfessionalAccountDisplay.ActiveUnits(profile) : "—")</td>
+                        <td>@profile.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @profile.GrantedBy</td>
+                        <td>
+                            @if (profile.RevokedAt is { } revokedAt)
+                            {
+                                @:Revocado el @revokedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @profile.RevokedBy
+                            }
+                            else
+                            {
+                                @:Vigente
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="PerfilUsuario" asp-route-cuentaId="@account.AccountId.Value" asp-route-ambitoId="@profile.ProfileScopeId"
+                               class="btn btn-outline-primary">@(canChange && profile.Active && ProfessionalAccount.IsGrantable(profile.Profile) ? "Gestionar" : "Ver")</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (canChange)
+    {
+        <a asp-action="ConcederPerfil" asp-route-cuentaId="@account.AccountId.Value" class="btn btn-outline-primary btn-lg">Conceder perfil</a>
+    }
+</section>

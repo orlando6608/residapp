@@ -1,6 +1,6 @@
 # Pendientes del vertical Administración
 
-Estado al 2026-10-01 (tras el bloque 2). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
+Estado al 2026-10-01 (tras el bloque 3). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
 No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pantallas/wireframes-funcionales/administracion.md).
 
 ## Hecho
@@ -89,13 +89,51 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
   - **Tests:** `ContactoUrgenteLecturaTests` (integración: perfiles, ámbito, vigente, quitado y derivación),
     `ReferralReportBuilderTests` (el informe no lo incluye aunque el detalle lo tenga) y `EmergencyContactDisplayTests`.
 
+- **Bloque 3 (usuarios profesionales, perfiles, unidades y residentes de Auxiliar; ADM-12 y ADM-13, ADM-04; historia 4 sin
+  turnos ni permisos)** — 2026-10-01.
+  - **Qué hace:**
+    - `/Administracion/Usuarios` (ADM-12): las cuentas con algún perfil (vigente o revocado) en el centro, con nombre (o
+      identificador), identificador de acceso, estado y perfiles vigentes con sus unidades. Tarjeta «Usuarios» en el inicio.
+    - `/Administracion/NuevoUsuario`: identificador de acceso, nombre, perfil y unidades (casillas de las del ámbito de quien
+      gestiona). La cuenta nace activa.
+    - `/Administracion/Usuario` (ADM-13): datos, «Cambiar nombre» (`NombreUsuario`), «Suspender»/«Reactivar» (`EstadoUsuario`),
+      perfiles vigentes y revocados, y «Conceder perfil» (`ConcederPerfil`).
+    - `/Administracion/PerfilUsuario`: unidades vigentes (conceder y revocar, `UnidadPerfil`), residentes asignados de un
+      perfil Auxiliar (asignar y retirar, `ResidentePerfil`), lo revocado y «Revocar perfil» (`RevocarPerfil`).
+  - **Decisiones del usuario (2026-10-01):**
+    - dos bloques: este, y los permisos configurables aparte (siguen por SQL; la matriz los pone en «COND política del centro»);
+    - nombre visible nuevo en `cuentas`, obligatorio en el alta y editable con auditoría;
+    - suspender o reactivar solo si todos los perfiles vigentes de la cuenta son de este centro (ADR 0005: retirar un centro
+      no suspende la cuenta global); si no, se revocan los de este centro;
+    - la propia cuenta de quien gestiona es de solo lectura.
+  - **Suposiciones aprobadas con el plan:**
+    - se ven todas las cuentas con algún perfil en el centro; las unidades que se conceden o revocan deben ser del ámbito de quien
+      gestiona, y los residentes que se asignan, también (regla de `SqlAdministracionResidentDirectory`);
+    - el alta lleva un perfil y al menos una unidad, así que toda cuenta nace ligada al centro. Un identificador que ya existe
+      (en cualquier centro, sin distinguir mayúsculas) es un conflicto: vincular una cuenta de otro centro queda fuera;
+    - perfiles concedibles: Auxiliar, Enfermería, Medicina, Administración y Dirección Clínica; Familiar no;
+    - revocar no pide motivo (las fuentes no lo definen); la última unidad de un perfil no se revoca; lo revocado no se
+      reactiva; retirar el último residente de un Auxiliar lo deja sin nadie (ADR 0004);
+    - la autorización es de centro, como la de los rangos de referencia: el servicio exige el ámbito activo de Administración
+      y el repositorio lo repite dentro de la transacción, que además bloquea la cuenta gestionada (`UPDLOCK`).
+  - **Implementación:** script `0023_gestion_cuentas_profesionales` (`cuentas.nombre_visible`, `TR_acc_update_guard`: el sujeto
+    externo y la fecha de creación no cambian; `TR_acc_no_delete`). Las concesiones siguen en las tablas de `0002`.
+    - Dominio en `Domain/Accounts/ProfessionalAccount.cs`; puertos en `Ports/IProfessionalAccountDirectory.cs`; lectura en
+      `SqlProfessionalAccountDirectory` y escritura en `SqlProfessionalAccountRepository`. Auditoría sin datos: `ACCOUNT_CREATE`,
+      `ACCOUNT_RENAME`, `ACCOUNT_SUSPEND`, `ACCOUNT_ACTIVATE`, `PROFILE_SCOPE_GRANT`, `PROFILE_SCOPE_REVOKE`,
+      `PROFILE_UNIT_GRANT`, `PROFILE_UNIT_REVOKE`, `PROFILE_RESIDENT_GRANT` y `PROFILE_RESIDENT_REVOKE`.
+    - El `OperacionId` del formulario es el id de la cuenta (alta) o del ámbito (conceder perfil): reenviar no duplica.
+  - **Tests:** `AdministracionUsuariosTests` (integración, con la evidencia de autorización real), `ProfessionalAccountTests`
+    (unitarios) y `ProfessionalAccountScreensTests` (funcionales, por HTTP).
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
-2. **Usuarios profesionales, perfiles, ámbitos y permisos (historia 4 sin turnos):** hoy se conceden por SQL. Las cuentas no tienen
-   nombre hasta que exista el proveedor de identidad real.
+2. **Permisos configurables (historia 4):** conceder y revocar `RESIDENT_IDENTITY_CREATE`, `BASELINE_INITIAL_COMPLETE`,
+   `BASELINE_REEVALUATE`, `CLINICAL_DETAIL_READ` y `REFERENCE_RANGES_MANAGE` desde la pantalla del perfil. Hoy se conceden por
+   SQL. La matriz los pone en «COND política del centro» y esa política no está definida: decidir antes de construir.
 3. **Turnos y equipos (historia 4):** sustituirían el «equipo o turno entrante» en texto libre de los seguimientos.
 4. **Publicaciones familiares (historias 5 y 6), citas (7 y 8), auditoría administrativa (9) y panel completo (10).**
 
@@ -105,6 +143,9 @@ Huecos de lo ya construido:
   del centro (historia 2): las unidades y sus concesiones se crean por SQL.
 - **Niveles de ubicación:** los intervalos admiten edificio, planta, habitación y plaza, pero no hay tablas ni pantallas para ellos
   (historia 2); la ficha solo muestra la unidad.
+- **Usuarios:** no se vincula una cuenta que ya existe en otro centro (llegará con las invitaciones del proveedor de identidad);
+  no se restringe por residente a Enfermería, Medicina o Dirección; no hay «Mi cuenta» (ADM-30). Los nombres de cuenta aún no
+  se usan fuera de esta pantalla (el PDF de derivación sigue mostrando el identificador del firmante).
 - **Familiares:** un familiar no se puede vincular a un segundo residente (habría que crearlo otra vez) ni desvincular; la edición
   no tiene token de concurrencia (gana la última). La «fecha efectiva» de ADM-11 es siempre el momento del cambio. Ninguna cuenta
   de familiar existe todavía: llegará con el Portal Familiar y el proveedor de identidad.

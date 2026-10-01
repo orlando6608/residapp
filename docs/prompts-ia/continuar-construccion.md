@@ -13,6 +13,25 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Administración, bloque 3: usuarios profesionales, perfiles, unidades y residentes de Auxiliar (historia 4 sin turnos
+  ni permisos; ADM-12 y ADM-13; script `0023`; sin cambios en el seed):** hecho el 2026-10-01, en `main` sin push.
+  - **Qué hace:** lista de usuarios del centro, alta (identificador de acceso, nombre, perfil y unidades), ficha con nombre,
+    suspender/reactivar y conceder perfil, y pantalla de cada perfil con sus unidades, sus residentes (Auxiliar) y revocar.
+    Los permisos configurables siguen por SQL (siguiente bloque). Detalle, decisiones y suposiciones en
+    `pendientes-administracion.md`.
+  - **Verificación:**
+    - suite en verde antes (161, 219 y 32) y después 3 veces (173, 228 y 34), más 3 vueltas tipo CI con BD nueva y una BD
+      temporal con todos los scripts y el seed (sin errores, ya borrada);
+    - curl en local con `dev-integrado-administracion`: alta de `dev-prueba-enfermeria-nueva` (el reenvío no duplica; el
+      mismo identificador en mayúsculas da «Ya existe»), que entra como Enfermería y ve los 5 residentes de la unidad;
+      suspenderla deja su sesión abierta en «No se puede acceder» y sin ámbitos al volver a entrar; suspender otra vez avisa;
+      reactivar la devuelve; conceder Auxiliar (ya no ofrece Enfermería), asignar «Prueba familiares (ficticio)» y verlo solo
+      a él desde Auxiliar; revocar la última unidad por POST, rechazado; revocar el perfil Auxiliar deja la sesión Auxiliar
+      abierta sin acceso; cambiar el nombre y repetirlo, rechazado;
+    - `dev-integrado-enfermeria`, `-medicina`, `-auxiliar` y `-direccion` reciben «No se puede acceder a esta operación» en
+      la lista y la ficha; la ficha de `dev-integrado-administracion` es de solo lectura; la auditoría tiene cada acción.
+  - Una vuelta de los tests de Administración y otra del test funcional nuevo fallaron por tiempos de espera (también
+    `sqlcmd` dio *login timeout*), con 1,5 GB libres; tras `dotnet build-server shutdown` pasaron (lección «Suite lenta»).
 - **Contacto urgente en la derivación y en la ficha de Enfermería y Medicina (sin script):** hecho el 2026-10-01 y
   desplegado en Azure (push de `fc360fa`, run 36858712803 en verde con `build-and-test` y `deploy`).
   - **Prueba en Azure (2026-10-01)** sobre «Prueba familiares azure (ficticio)»:
@@ -506,16 +525,18 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   referencia de constantes (fase 1 y su pantalla). Medicina está en curso: historias 1 a 8 (escalados,
   valoración médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos, protocolo
   urgente, derivación a Urgencias, evento propio y basal con permiso) y 9 (con la misma salvedad que la 11).
-- La base local `ResidApp` tiene los scripts `0001` a `0022` registrados en `dbo.scripts_aplicados`
-  (en Azure, hasta `0021` mientras no se haga el push). Hay copias previas a `0016` … `0022` en
+- La base local `ResidApp` tiene los scripts `0001` a `0023` registrados en `dbo.scripts_aplicados`
+  (en Azure, hasta `0022` mientras no se haga el push). Hay copias previas a `0016` … `0023` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
   `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak`, `ResidApp-antes-0019-20260930.bak`,
-  `ResidApp-antes-0020-20260930.bak`, `ResidApp-antes-0021-20261001.bak` y `ResidApp-antes-0022-20261001.bak`). También
+  `ResidApp-antes-0020-20260930.bak`, `ResidApp-antes-0021-20261001.bak`, `ResidApp-antes-0022-20261001.bak` y `ResidApp-antes-0023-20261001.bak`). También
   tiene la cuenta `dev-integrado-administracion`, el residente de prueba «Prueba Corrección Identidad (ficticio)», con una
   corrección, «Prueba selector unidad (ficticio)» y «Prueba familiares (ficticio)», con dos familiares (Lucía, autorización
   revocada tras recorrer todos los estados; Tomás, teléfono editado) y el contacto urgente designado, cambiado, quitado y
   vuelto a designar (Tomás); tiene el evento «Prueba manual contacto urgente: disnea.», en protocolo urgente, derivado, con
-  una llamada «Contactado» a Tomás, sin cerrar.
+  una llamada «Contactado» a Tomás, sin cerrar. Y la cuenta `dev-prueba-enfermeria-nueva` («Prueba Enfermería renombrada
+  (ficticia)»), dada de alta desde Usuarios: Enfermería vigente en la unidad del escenario y un Auxiliar revocado que tuvo
+  asignado a «Prueba familiares (ficticio)».
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
@@ -539,7 +560,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 161 unitarios, 219 de integración y 32 funcionales, todos en verde.
+- Suite: 173 unitarios, 228 de integración y 34 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -553,8 +574,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
      un borrador de basal ajeno; el tema 3 es un cambio pequeño en el informe de derivación.
    - `docs/pendientes-cj/traslado-y-baja-residente.html` (preparado el 2026-10-01, 6 respuestas): traslado y baja del
      residente en Administración.
-2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): usuarios, perfiles y permisos; turnos y
-   equipos.
+2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): permisos configurables (hay que decidir
+   antes la «política del centro» de la matriz); turnos y equipos.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
    (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.
 4. **Familia / Portal Familiar**, que depende de Administración y del proveedor de identidad.
@@ -568,6 +589,11 @@ usuario cuando encajen:
   Una ficha que depende de un permiso, como Alta de residente para Enfermería, la ve todo el perfil, aunque
   la cuenta no tenga el permiso. Si cambian las reglas de perfiles de una pantalla, revisa también los `@if`
   de `Views/Home/Index.cshtml`.
+- **Ámbito restringido por residente:** la evidencia de autorización y los directorios tratan un ámbito como restringido
+  si tiene alguna fila en `ambitos_perfil_residente`, aunque esté revocada (ADR 0004: revocar la última no amplía el
+  acceso). En cambio, `SqlSupervisionDirectory.FindScopeAsync` solo cuenta las vigentes para decirle a Dirección si su
+  ámbito está restringido. Con la gestión de residentes de Auxiliar (bloque 3 de Administración) no cambia nada, porque
+  Auxiliar siempre necesita asignación, pero conviene alinearlo si algún día se restringen otros perfiles.
 - **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
   abiertos: tos productiva.», en valoración médica, que se dejó como ejemplo de la lista de escalados. El
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de

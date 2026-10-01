@@ -1,6 +1,7 @@
 using ResidApp.Application.Authorization;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
 using ResidApp.Shared;
@@ -37,17 +38,48 @@ public sealed record ChangeFamilyAuthorizationCommand(
 public sealed record DesignateEmergencyContactCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid? VinculoId, int DesignacionesEsperadas);
 
+/// <summary>ADM-13 (0023): una cuenta del centro, vista por quien la gestiona.</summary>
+public sealed record FindProfessionalAccountQuery(Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId);
+
+/// <summary>ADM-13 (0023): alta de una cuenta con su primer perfil. OperacionId nace con el formulario y es el id de la
+/// cuenta, así que un reenvío no la duplica.</summary>
+public sealed record CreateProfessionalAccountCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? Identificador, string? NombreVisible, SystemProfile Perfil,
+    IReadOnlyList<Guid> Unidades);
+
+public sealed record RenameProfessionalAccountCommand(Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, string? NombreVisible);
+
+/// <summary>ADM-12: Estado es el que se quiere (Suspended para suspender, Active para reactivar).</summary>
+public sealed record ChangeAccountStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, AccountStatus Estado);
+
+/// <summary>ADM-13: conceder un perfil más a la cuenta. OperacionId es el id del ámbito nuevo.</summary>
+public sealed record GrantAccountProfileCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid OperacionId, SystemProfile Perfil, IReadOnlyList<Guid> Unidades);
+
+/// <summary>ADM-13: PerfilCuentaId es el ámbito de la cuenta gestionada (no el de quien gestiona).</summary>
+public sealed record RevokeAccountProfileCommand(Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid PerfilCuentaId);
+
+public sealed record ChangeAccountProfileUnitCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid PerfilCuentaId, UnitId UnidadId, bool Conceder);
+
+public sealed record ChangeAccountProfileResidentCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid PerfilCuentaId, ResidentId ResidenteId, bool Asignar);
+
 /// <summary>
 /// Fachada del vertical Administración. Bloque 1 (historia 1): lista de residentes (ADM-02), ficha administrativa con
 /// historial de ubicación (ADM-03, RES-04) y corrección de identidad (script 0021). Bloque 2 (historia 3, script 0022):
 /// familiares, autorizaciones y contacto urgente, que se autorizan igual que la corrección. Nunca entrega basal, Barthel ni
 /// contenido clínico. La lectura exige un ámbito activo de Administración de la cuenta, y el directorio aplica la regla
 /// de ámbito en la consulta. La corrección pasa por RequestAuthorizationContextResolver
-/// (ResidentIdentityUpdate, que la política reserva a Administración).
+/// (ResidentIdentityUpdate, que la política reserva a Administración). Bloque 3 (historia 4, script 0023): cuentas
+/// profesionales, sus perfiles, unidades y residentes de Auxiliar. Son operaciones de centro, sin residente: como los
+/// rangos de referencia, se comprueba aquí el ámbito activo de Administración y el repositorio lo repite dentro de la
+/// transacción.
 /// </summary>
 public sealed class AdministracionApplicationService(
     IProfileScopeDirectoryProvider scopes, IAdministracionResidentDirectory directory, ISessionIdentityProvider session,
-    IAuthorizationEvidenceProvider evidenceProvider, IResidentIdentityRepository identities, IResidentFamilyRepository families)
+    IAuthorizationEvidenceProvider evidenceProvider, IResidentIdentityRepository identities, IResidentFamilyRepository families,
+    IProfessionalAccountDirectory accountDirectory, IProfessionalAccountRepository accounts)
 {
     public Task<ApplicationResult<IReadOnlyList<AdministrativeResidentSummary>>> ListResidentsAsync(
         AdministracionQuery query, CancellationToken ct = default) =>
@@ -118,6 +150,107 @@ public sealed class AdministracionApplicationService(
             return await families.DesignateEmergencyContactAsync(target, command.VinculoId, command.DesignacionesEsperadas, ct);
         });
 
+    public Task<ApplicationResult<IReadOnlyList<ProfessionalAccountSummary>>> ListAccountsAsync(
+        AdministracionQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await accountDirectory.ListAsync(access, ct);
+        });
+
+    public Task<ApplicationResult<ProfessionalAccountDetail>> FindAccountAsync(
+        FindProfessionalAccountQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await accountDirectory.FindAsync(access, query.CuentaId, ct) ?? throw new AccessDeniedException();
+        });
+
+    /// <summary>Las unidades del ámbito de quien gestiona: las únicas que puede conceder o revocar.</summary>
+    public Task<ApplicationResult<IReadOnlyList<ScopeUnit>>> ListAdministrationUnitsAsync(
+        AdministracionQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, subject) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await scopes.ListUnitsAsync(subject, access.ProfileScopeId, access.CenterId, ct);
+        });
+
+    public Task<ApplicationResult<IReadOnlyList<AssignableResident>>> ListAssignableResidentsAsync(
+        FindProfessionalAccountQuery query, Guid profileScopeId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await accountDirectory.ListAssignableResidentsAsync(access, profileScopeId, ct);
+        });
+
+    public Task<ApplicationResult<AccountId>> CreateAccountAsync(CreateProfessionalAccountCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            var data = ProfessionalAccount.Validate(command.Identificador, command.NombreVisible);
+            return await accounts.CreateAsync(access, command.OperacionId, data, command.Perfil, ProfileUnits(command.Perfil, command.Unidades), ct);
+        });
+
+    public Task<ApplicationResult<bool>> RenameAccountAsync(RenameProfessionalAccountCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await accounts.RenameAsync(access, command.CuentaId, ProfessionalAccount.ValidateDisplayName(command.NombreVisible), ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> ChangeAccountStatusAsync(ChangeAccountStatusCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await accounts.ChangeStatusAsync(access, command.CuentaId, command.Estado, ct);
+            return true;
+        });
+
+    /// <summary>Devuelve el ámbito concedido.</summary>
+    public Task<ApplicationResult<Guid>> GrantProfileAsync(GrantAccountProfileCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            return await accounts.GrantProfileAsync(
+                access, command.CuentaId, command.OperacionId, command.Perfil, ProfileUnits(command.Perfil, command.Unidades), ct);
+        });
+
+    public Task<ApplicationResult<bool>> RevokeProfileAsync(RevokeAccountProfileCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await accounts.RevokeProfileAsync(access, command.CuentaId, command.PerfilCuentaId, ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> ChangeProfileUnitAsync(ChangeAccountProfileUnitCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await (command.Conceder
+                ? accounts.GrantUnitAsync(access, command.CuentaId, command.PerfilCuentaId, command.UnidadId, ct)
+                : accounts.RevokeUnitAsync(access, command.CuentaId, command.PerfilCuentaId, command.UnidadId, ct));
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> ChangeProfileResidentAsync(
+        ChangeAccountProfileResidentCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await (command.Asignar
+                ? accounts.GrantResidentAsync(access, command.CuentaId, command.PerfilCuentaId, command.ResidenteId, ct)
+                : accounts.RevokeResidentAsync(access, command.CuentaId, command.PerfilCuentaId, command.ResidenteId, ct));
+            return true;
+        });
+
+    /// <summary>Un perfil concedible con al menos una unidad, sin repetir.</summary>
+    private static IReadOnlyList<UnitId> ProfileUnits(SystemProfile profile, IReadOnlyList<Guid> units) =>
+        !ProfessionalAccount.IsGrantable(profile) || units.Count == 0 || units.Distinct().Count() != units.Count
+            ? throw new DomainValidationException("PROFILE_SCOPE_INVALID")
+            : units.Select(UnitId.From).ToList();
+
     private async Task<AdministrativeResidentTarget> ResolveResidentAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct)
     {
@@ -127,7 +260,13 @@ public sealed class AdministracionApplicationService(
         return RequestAuthorizationContextResolver.RequireResidentAdministration(context);
     }
 
-    private async Task EnsureAdministrationScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct)
+    private Task EnsureAdministrationScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct) =>
+        AdministrationAccessAsync(profileScopeId, centerId, ct);
+
+    /// <summary>El ámbito activo de Administración de la cuenta de la sesión y su sujeto externo; si no lo es, acceso
+    /// denegado.</summary>
+    private async Task<(AccountAdministrationAccess Access, string Subject)> AdministrationAccessAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct)
     {
         var identity = await session.GetVerifiedIdentityAsync(ct) ?? throw new AccessDeniedException();
         var activeScopes = await scopes.ListActiveAsync(identity.ExternalSubject, ct);
@@ -136,5 +275,7 @@ public sealed class AdministracionApplicationService(
         {
             throw new AccessDeniedException();
         }
+
+        return (new AccountAdministrationAccess(scope.ProfileScopeId, scope.AccountId, scope.CenterId), identity.ExternalSubject);
     }
 }

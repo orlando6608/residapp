@@ -1,0 +1,16 @@
+@using ResidApp.Web.Models
+@model ProfileUnitsFieldModel
+
+<fieldset class="mb-3">
+    <legend class="form-label fs-6">Unidades</legend>
+    <div class="form-text mb-2">El perfil solo vale en las unidades que marques. Solo puedes conceder las de tu ámbito.</div>
+    @foreach (var unit in Model.Units)
+    {
+        var id = $"unidad-{unit.UnitId.Value:N}";
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="Form.Unidades" value="@unit.UnitId.Value" id="@id"
+                   checked="@Model.Selected.Contains(unit.UnitId.Value)" />
+            <label class="form-check-label" for="@id">@unit.Name</label>
+        </div>
+    }
+</fieldset>

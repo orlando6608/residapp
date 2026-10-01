@@ -1,0 +1,55 @@
+@using ResidApp.Web.Models
+@model GrantAccountProfileViewModel
+@{
+    var name = ProfessionalAccountDisplay.Name(Model.Account);
+    ViewData["Title"] = "Conceder perfil";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Usuarios">Usuarios</a></li>
+        <li class="breadcrumb-item"><a asp-action="Usuario" asp-route-cuentaId="@Model.Account.AccountId.Value">@name</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Conceder perfil</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Conceder perfil</h1>
+<p class="text-muted">
+    @name tendrá un perfil más en este centro. Para usarlo tendrá que elegirlo al entrar: los permisos de sus perfiles no se
+    suman.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        @if (Model.Profiles.Count == 0)
+        {
+            <p class="mb-0">La cuenta ya tiene vigentes todos los perfiles que se conceden desde aquí.</p>
+        }
+        else
+        {
+            <form asp-action="ConcederPerfil" method="post">
+                <input type="hidden" name="Form.CuentaId" value="@Model.Form.CuentaId" />
+                <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+                <div class="mb-3">
+                    <label asp-for="Form.Perfil" class="form-label"></label>
+                    <select asp-for="Form.Perfil" asp-items="ProfessionalAccountDisplay.ProfileOptions(Model.Profiles)" class="form-select form-select-lg">
+                        <option value="">Elige un perfil</option>
+                    </select>
+                    <span asp-validation-for="Form.Perfil" class="text-danger"></span>
+                </div>
+                <partial name="_UnidadesPerfil" model="new ProfileUnitsFieldModel(Model.Units, Model.Form.Unidades)" />
+                <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                    <a asp-action="Usuario" asp-route-cuentaId="@Model.Account.AccountId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-lg">Conceder perfil</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -14,7 +14,7 @@ namespace ResidApp.Infrastructure.Persistence;
 /// </summary>
 public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory connections) : IAdministracionResidentDirectory
 {
-    private const string ScopedResidentsSelect = """
+    internal const string ScopedResidentsSelect = """
         SELECT resident.id AS ResidentId, resident.nombre_visible AS DisplayName, resident.fecha_nacimiento AS BirthDate,
                resident.sexo_documentado_codigo AS SexCode, unit.id AS UnitId, unit.nombre_visible AS UnitName,
                episode.vigente_desde AS AdmittedAt

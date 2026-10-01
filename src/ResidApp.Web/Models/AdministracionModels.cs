@@ -1,13 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
+using ResidApp.Shared;
 
 namespace ResidApp.Web.Models;
 
-/// <summary>ADM-01: el inicio de Administración, con el número de residentes activos del ámbito.</summary>
-public sealed record AdministracionInicioViewModel(int Residents);
+/// <summary>ADM-01: el inicio de Administración, con el número de residentes activos del ámbito y el de cuentas con
+/// algún perfil en el centro.</summary>
+public sealed record AdministracionInicioViewModel(int Residents, int Accounts);
 
 /// <summary>ADM-02: buscar y filtrar la lista de residentes. Llega por GET (?q=&amp;unidad=); los campos vacíos no
 /// filtran.</summary>
@@ -187,3 +191,95 @@ public static class AdministrativeResidentDisplay
     public static string Identity(ResidentIdentity identity) =>
         $"{identity.DisplayName} · {identity.BirthDate:dd/MM/yyyy} · {EnumDisplay.Label(identity.DocumentedSex)}";
 }
+
+/// <summary>ADM-13 (0023): alta de una cuenta profesional con su primer perfil. OperacionId nace con el formulario y es el
+/// id de la cuenta: reenviarlo no la duplica.</summary>
+public sealed class NewProfessionalAccountFormModel
+{
+    public Guid OperacionId { get; set; }
+
+    [Required(ErrorMessage = "Escribe el identificador de acceso.")]
+    [StringLength(ProfessionalAccount.MaxSubjectLength, MinimumLength = ProfessionalAccount.MinSubjectLength,
+        ErrorMessage = "El identificador lleva entre {2} y {1} caracteres.")]
+    [Display(Name = "Identificador de acceso")]
+    public string? Identificador { get; set; }
+
+    [Required(ErrorMessage = "Escribe el nombre.")]
+    [StringLength(ProfessionalAccount.MaxDisplayNameLength, ErrorMessage = "El nombre no puede pasar de {1} caracteres.")]
+    [Display(Name = "Nombre")]
+    public string? NombreVisible { get; set; }
+
+    [Required(ErrorMessage = "Elige el perfil.")]
+    [Display(Name = "Perfil")]
+    public SystemProfile? Perfil { get; set; }
+
+    [Display(Name = "Unidades")]
+    public List<Guid> Unidades { get; set; } = [];
+}
+
+/// <summary>ADM-13: Units son las unidades del ámbito de quien gestiona, las únicas que puede conceder.</summary>
+public sealed record NewProfessionalAccountViewModel(NewProfessionalAccountFormModel Form, IReadOnlyList<ScopeUnit> Units);
+
+public sealed class RenameProfessionalAccountFormModel
+{
+    public Guid CuentaId { get; set; }
+
+    [Required(ErrorMessage = "Escribe el nombre.")]
+    [StringLength(ProfessionalAccount.MaxDisplayNameLength, ErrorMessage = "El nombre no puede pasar de {1} caracteres.")]
+    [Display(Name = "Nombre")]
+    public string? NombreVisible { get; set; }
+}
+
+public sealed record RenameProfessionalAccountViewModel(ProfessionalAccountSummary Account, RenameProfessionalAccountFormModel Form);
+
+/// <summary>ADM-13: conceder un perfil más. OperacionId es el id del ámbito nuevo.</summary>
+public sealed class GrantAccountProfileFormModel
+{
+    public Guid CuentaId { get; set; }
+
+    public Guid OperacionId { get; set; }
+
+    [Required(ErrorMessage = "Elige el perfil.")]
+    [Display(Name = "Perfil")]
+    public SystemProfile? Perfil { get; set; }
+
+    [Display(Name = "Unidades")]
+    public List<Guid> Unidades { get; set; } = [];
+}
+
+/// <summary>ADM-13: Profiles son los concedibles que la cuenta no tiene vigentes en este centro.</summary>
+public sealed record GrantAccountProfileViewModel(
+    ProfessionalAccountSummary Account, GrantAccountProfileFormModel Form, IReadOnlyList<SystemProfile> Profiles, IReadOnlyList<ScopeUnit> Units);
+
+/// <summary>ADM-13: un perfil de la cuenta con sus unidades y residentes. AdministratorUnits son las unidades del ámbito
+/// de quien gestiona (las únicas que puede conceder o revocar); CanChange es falso en la propia cuenta, en un perfil
+/// revocado y en Familiar.</summary>
+public sealed record AccountProfileViewModel(
+    ProfessionalAccountDetail Detail, AccountProfileScope Profile, IReadOnlyList<ScopeUnit> AdministratorUnits,
+    IReadOnlyList<AssignableResident> AssignableResidents)
+{
+    public bool CanChange => !Detail.IsOwnAccount && Profile.Active && ProfessionalAccount.IsGrantable(Profile.Profile);
+
+    public bool Manages(Guid unitId) => AdministratorUnits.Any(u => u.UnitId.Value == unitId);
+
+    public IReadOnlyList<ScopeUnit> AddableUnits => AdministratorUnits
+        .Where(u => !Profile.Units.Any(g => g.Active && g.TargetId == u.UnitId.Value))
+        .ToList();
+}
+
+public static class ProfessionalAccountDisplay
+{
+    /// <summary>El nombre, o el identificador de acceso en las cuentas que aún no lo tienen.</summary>
+    public static string Name(ProfessionalAccountSummary account) => account.DisplayName ?? account.Subject;
+
+    public static string Status(AccountStatus status) => status == AccountStatus.Active ? "Activa" : "Suspendida";
+
+    public static string ActiveUnits(AccountProfileScope profile) =>
+        string.Join(", ", profile.Units.Where(u => u.Active).Select(u => u.Name));
+
+    public static IEnumerable<SelectListItem> ProfileOptions(IEnumerable<SystemProfile> profiles) =>
+        profiles.Select(p => new SelectListItem(SystemProfileDisplay.Label(p), p.ToString()));
+}
+
+/// <summary>ADM-13: las casillas de unidades (Form.Unidades) del alta y de «Conceder perfil».</summary>
+public sealed record ProfileUnitsFieldModel(IReadOnlyList<ScopeUnit> Units, IReadOnlyList<Guid> Selected);
