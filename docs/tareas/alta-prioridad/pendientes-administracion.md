@@ -280,7 +280,7 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
     conflicto al repetir, accesos denegados), unitarios (`SchedulePlanTests`) y funcionales (`PlanFormModelTests`; la prueba de la pantalla de
     planificación recorre fechas a saltar inválidas, serie, retirada y acceso denegado a Enfermería).
 
-- **Edificios, plantas, habitaciones y plazas (historia 2; script `0029`)** — 2026-10-02. **Fase 1 de 2 hecha: edificios y plantas, y colocar las unidades.**
+- **Edificios, plantas, habitaciones y plazas (historia 2; script `0029`)** — 2026-10-02. **Fases 1 y 2 hechas.**
   - **Decisiones del usuario (2026-10-02):** este bloque cubre edificios, plantas, habitaciones y plazas (el organigrama queda fuera: ningún
     documento lo define) y habitación y plaza son opcionales en el alta de residente. Mover a un residente de habitación o plaza es un traslado
     y espera a CJ.
@@ -301,13 +301,28 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
     ámbito repetido, bloqueo del centro, idempotencia por `OperacionId`); métodos en `AdministracionEstructuraApplicationService`; controlador parcial
     `AdministracionController.Edificios.cs`; vistas `Edificios`, `NombreEstructura` y `UbicacionUnidad`.
   - **Tests:** `AdministracionEdificiosTests` (integración), `CenterLayoutTests` (unitarios) y `Edificios_…` en `ProfessionalAccountScreensTests` (funcional).
+  - **Fase 2 (habitaciones y plazas, alta y ficha):**
+    - habitaciones y plazas son de una unidad del ámbito (como los equipos): nombre único por unidad y por habitación; crear exige la unidad (o la
+      habitación) activa; inactivar una habitación o plaza exige que no tenga un residente ubicado; reactivar una plaza exige la habitación activa;
+    - **alta de residente** (`Residents/Create`, la misma pantalla para Administración y para Enfermería con el permiso de alta): una sola lista opcional
+      «Ubicación en la unidad» agrupada por unidad, con «Habitación 12» y «Habitación 12 · Cama A» (`r:{id}` / `p:{id}`). El servidor deduce habitación,
+      edificio y planta de lo elegido y de la unidad, **ignora** el edificio y la planta que mande el cliente y valida habitación y plaza (activas, de esa
+      unidad y centro, plaza libre); una plaza ocupada es `PLACE_OCCUPIED` (conflicto), otra elección no válida es `PLACE_INVALID`/`ROOM_INVALID`. Dos altas
+      a la vez en la misma plaza: gana una (índice `UX_rli_place_active`) y la otra recibe `PLACE_OCCUPIED`;
+    - la ficha administrativa muestra habitación y plaza en el historial de ubicación;
+    - `/Administracion/Habitaciones?unidadId=` (habitaciones con sus plazas y su ocupación), `NombreHabitacion`/`NombrePlaza` (vista `NombreEstructura`
+      compartida con edificios y plantas), `EstadoHabitacion`/`EstadoPlaza`; auditoría `ROOM_*` y `PLACE_*` con la unidad;
+    - `ILocationOptionsDirectory`/`SqlLocationOptionsDirectory` y el caso de uso `ListActiveScopeLocations` (hermano de `ListActiveScopeUnits`) dan las
+      opciones del alta; `SqlResidentRepository.ResolveLocationAsync` las valida dentro de la transacción;
+    - **tests:** `AdministracionHabitacionesTests` (integración: crear, rechazos, renombrar y estado, alta con plaza, alta rechazada, 6 altas simultáneas, inactivar
+      con residentes, opciones del alta por perfil, triggers e índice) y `Habitaciones_…` en `ProfessionalAccountScreensTests` (funcional).
 
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
-2. **El resto de la estructura (historia 2: edificios, plantas, habitaciones, plazas y organigrama, ADM-06/ADM-07).** Los turnos recurrentes con excepciones (ADM-16) y el equipo entrante de los seguimientos ya están hechos (2026-10-01).
+2. **El organigrama y los cargos (ADM-07):** ningún documento los define; antes hay que preguntar a CJ. Los turnos recurrentes con excepciones (ADM-16), el equipo entrante de los seguimientos y los edificios, plantas, habitaciones y plazas ya están hechos (2026-10-01/02).
 3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8) y panel completo (10).**
 
 Huecos de lo ya construido:
@@ -328,8 +343,10 @@ Huecos de lo ya construido:
   ve cualquier Administración del centro, aunque la cuenta afectada tenga unidades de otro ámbito.
 - **Estructura:** no hay forma de conceder una unidad ya existente a otro ámbito de Administración ni de ver las del centro que no
   estén en el ámbito propio; el organigrama (ADM-07) y los cargos tampoco existen.
-- **Niveles de ubicación:** los intervalos admiten edificio, planta, habitación y plaza, pero no hay tablas ni pantallas para ellos
-  (historia 2); la ficha solo muestra la unidad.
+- **Niveles de ubicación:** edificios, plantas, habitaciones y plazas existen (script `0029`) y se eligen al dar de alta, pero **cambiar de habitación o de plaza**
+  (y liberar una plaza al dar de baja) es un traslado y espera a CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`). Enfermería, Medicina y Auxiliar
+  no ven aún la habitación ni la plaza del residente (solo la ficha administrativa). Una unidad o una habitación que se inactive justo mientras llega un
+  alta a ella no se bloquea (carrera muy estrecha, como la de las unidades).
 - **Usuarios:** no se vincula una cuenta que ya existe en otro centro (llegará con las invitaciones del proveedor de identidad);
   no se restringe por residente a Enfermería, Medicina o Dirección; no hay «Mi cuenta» (ADM-30). Fuera de estas pantallas, el
   nombre de la cuenta solo se usa en la firma del PDF de derivación (2026-10-01). Los permisos no se eligen en el alta ni

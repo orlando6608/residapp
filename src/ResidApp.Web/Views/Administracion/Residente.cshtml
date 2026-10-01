@@ -136,7 +136,7 @@
             <caption class="visually-hidden">Intervalos de ubicación del residente</caption>
             <thead>
                 <tr>
-                    <th scope="col">Unidad</th>
+                    <th scope="col">Unidad (y habitación o plaza)</th>
                     <th scope="col">Desde</th>
                     <th scope="col">Hasta</th>
                     <th scope="col">Registrado por</th>
@@ -146,7 +146,13 @@
                 @foreach (var location in Model.Detail.Locations)
                 {
                     <tr>
-                        <th scope="row">@location.UnitName</th>
+                        <th scope="row">
+                            @location.UnitName
+                            @if (location.RoomName is not null)
+                            {
+                                <div class="text-muted small fw-normal">@location.RoomName@(location.PlaceName is null ? "" : $" · {location.PlaceName}")</div>
+                            }
+                        </th>
                         <td>@location.From.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                         <td>@(location.Until is { } until ? until.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "Vigente")</td>
                         <td>@SystemProfileDisplay.Label(location.RecordedBy)</td>

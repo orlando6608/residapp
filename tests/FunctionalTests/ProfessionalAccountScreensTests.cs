@@ -194,6 +194,85 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     }
 
     [Fact]
+    public async Task Habitaciones_CreaHabitacionYPlaza_ElAltaLaOfrece_LaPlazaOcupadaSeRechaza_YOtroPerfilNoEntra()
+    {
+        var admin = await SeedAdministratorAsync();
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = admin.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+        async Task<string> PostAsync(string path, string page, Dictionary<string, string> fields) =>
+            WebUtility.HtmlDecode(await (await client.PostAsync(path, new FormUrlEncodedContent(new Dictionary<string, string>(fields)
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            }))).Content.ReadAsStringAsync());
+
+        var roomsUrl = $"/Administracion/Habitaciones?unidadId={admin.UnitId}";
+        var emptyPage = await client.GetStringAsync(roomsUrl);
+        var empty = await PostAsync("/Administracion/NuevaHabitacion", emptyPage, new() { ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.UnidadId"] = admin.UnitId.ToString() });
+        var created = await PostAsync("/Administracion/NuevaHabitacion", emptyPage, new()
+        {
+            ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.UnidadId"] = admin.UnitId.ToString(), ["Form.Nombre"] = "Habitación 12 (ficticia)",
+        });
+        var roomId = Regex.Match(created, "name=\"habitacionId\" value=\"([0-9a-f-]{36})\"").Groups[1].Value;
+        var duplicated = await PostAsync("/Administracion/NuevaHabitacion", created, new()
+        {
+            ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.UnidadId"] = admin.UnitId.ToString(), ["Form.Nombre"] = "habitación 12 (ficticia)",
+        });
+        var placeCreated = await PostAsync("/Administracion/NuevaPlaza", created, new()
+        {
+            ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.UnidadId"] = admin.UnitId.ToString(), ["Form.HabitacionId"] = roomId, ["Form.Nombre"] = "Cama A",
+        });
+        var placeId = Regex.Match(placeCreated, "name=\"plazaId\" value=\"([0-9a-f-]{36})\"").Groups[1].Value;
+        var renamePage = await client.GetStringAsync($"/Administracion/NombrePlaza?unidadId={admin.UnitId}&plazaId={placeId}");
+        var renamed = await PostAsync("/Administracion/NombrePlaza", renamePage, new()
+        {
+            ["Form.Id"] = placeId, ["Form.UnidadId"] = admin.UnitId.ToString(), ["Form.Nombre"] = "Cama 1",
+        });
+
+        async Task<string> AdmitAsync(string location)
+        {
+            var createPage = await client.GetStringAsync("/Residents/Create");
+            var fields = new Dictionary<string, string>
+            {
+                ["OperacionId"] = ExtractValue(createPage, "OperacionId"), ["AmbitoPerfilId"] = ExtractValue(createPage, "AmbitoPerfilId"),
+                ["CentroId"] = ExtractValue(createPage, "CentroId"), ["UnidadId"] = admin.UnitId.ToString(), ["NombreVisible"] = $"Residente {Guid.NewGuid():N}"[..18],
+                ["FechaNacimiento"] = "1938-02-20", ["SexoDocumentadoCodigo"] = "Hombre", ["Ubicacion"] = location,
+            };
+            return await PostAsync("/Residents/Create", createPage, fields);
+        }
+
+        var offered = WebUtility.HtmlDecode(await client.GetStringAsync("/Residents/Create"));
+        var badLocation = await AdmitAsync("x:1");
+        var admitted = await AdmitAsync($"p:{placeId}");
+        var occupied = await AdmitAsync($"p:{placeId}");
+        var offeredAfter = WebUtility.HtmlDecode(await client.GetStringAsync("/Residents/Create"));
+        var nursePage = await PageAsync("ENFERMERIA", null, roomsUrl);
+
+        Assert.Contains("Escribe el nombre de la habitación", empty);
+        Assert.Contains("Habitación creada.", created);
+        Assert.Contains("Habitación 12 (ficticia)", created);
+        Assert.Contains("Ya existe una habitación con ese nombre en la unidad.", duplicated);
+        Assert.Contains("Plaza creada.", placeCreated);
+        Assert.Contains("Nombre guardado.", renamed);
+        Assert.Contains("Cama 1", renamed);
+        Assert.Contains("Ubicación en la unidad (opcional)", offered);
+        Assert.Contains($"value=\"p:{placeId}\">Habitación 12 (ficticia) · Cama 1", offered);
+        Assert.Contains($"value=\"r:{roomId}\">Habitación 12 (ficticia)", offered);
+        Assert.Contains("Elige una ubicación de la lista.", badLocation);
+        Assert.Contains("Id del residente", admitted);
+        Assert.DoesNotContain($"value=\"p:{placeId}\"", offeredAfter);
+        Assert.Contains($"value=\"r:{roomId}\"", offeredAfter);
+        Assert.Contains("Ocupada", await client.GetStringAsync(roomsUrl));
+        Assert.DoesNotContain("Id del residente", occupied);
+        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.DoesNotContain("Crear habitación", nursePage);
+    }
+
+    [Fact]
     public async Task Plataforma_CreaUnCentro_ElInicioSoloLaOfreceAEsePerfil_YOtroPerfilNoEntra()
     {
         var operatorSubject = await SeedPlatformOperatorAsync();

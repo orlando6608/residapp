@@ -14,7 +14,7 @@ namespace ResidApp.Infrastructure.Persistence;
 /// dbo.eventos_auditoria, sin datos. Edificios y plantas son del centro; un edificio o planta de otro centro, o inexistente, da acceso
 /// denegado sin distinguirlos. Colocar una unidad exige que esté concedida al ámbito. Los triggers de 0029 impiden cambiar el padre y borrar.
 /// </summary>
-public sealed class SqlCenterLayoutRepository(SqlConnectionFactory connections) : ICenterLayoutRepository
+public sealed partial class SqlCenterLayoutRepository(SqlConnectionFactory connections) : ICenterLayoutRepository
 {
     public async Task<Guid> CreateBuildingAsync(AccountAdministrationAccess access, Guid operationId, string name, CancellationToken ct = default)
     {

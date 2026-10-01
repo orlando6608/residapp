@@ -1,0 +1,143 @@
+@using ResidApp.Web.Models
+@model RoomsViewModel
+@{
+    ViewData["Title"] = "Habitaciones y plazas";
+    var unitId = Model.Unit.UnitId.Value;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Estructura">Estructura</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Habitaciones y plazas</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Habitaciones y plazas de @Model.Unit.Name</h1>
+<p class="text-muted">
+    Las habitaciones son de la unidad y las plazas, de cada habitación. Al dar de alta a un residente se puede elegir una habitación o una plaza
+    libre de su unidad (es opcional). Crear o cambiar una habitación o una plaza no da acceso a nadie ni cambia dónde está ningún residente; cambiar
+    después a un residente de habitación o plaza es un traslado y todavía no está disponible. Nada se borra: se inactiva.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (ViewData.ModelState.IsValid)
+{
+    <form asp-action="NuevaHabitacion" method="post" class="card card-body mb-3">
+        <input type="hidden" name="Form.OperacionId" value="@Guid.NewGuid()" />
+        <input type="hidden" name="Form.UnidadId" value="@unitId" />
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-8">
+                <label for="nueva-habitacion" class="form-label">Nueva habitación</label>
+                <input id="nueva-habitacion" name="Form.Nombre" class="form-control form-control-lg" maxlength="200" autocomplete="off" />
+            </div>
+            <div class="col-12 col-md-4 d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Crear habitación</button>
+            </div>
+        </div>
+    </form>
+
+    @if (Model.Rooms.Count == 0)
+    {
+        <p class="text-muted">La unidad todavía no tiene habitaciones.</p>
+    }
+}
+
+@foreach (var room in Model.Rooms)
+{
+    <section class="card mb-3" aria-labelledby="habitacion-@room.RoomId">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                <h2 class="h5 mb-0" id="habitacion-@room.RoomId">
+                    @room.Name
+                    <span class="badge @(room.Active ? "text-bg-success" : "text-bg-secondary") align-middle">@(room.Active ? "Activa" : "Inactiva")</span>
+                    <span class="text-muted small fw-normal">@room.CurrentResidents residente(s) ubicado(s)</span>
+                </h2>
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-action="NombreHabitacion" asp-route-unidadId="@unitId" asp-route-habitacionId="@room.RoomId" class="btn btn-outline-primary">Cambiar nombre</a>
+                    <form asp-action="EstadoHabitacion" method="post">
+                        <input type="hidden" name="unidadId" value="@unitId" />
+                        <input type="hidden" name="habitacionId" value="@room.RoomId" />
+                        <input type="hidden" name="activa" value="@(room.Active ? "false" : "true")" />
+                        <button type="submit" class="btn @(room.Active ? "btn-outline-danger" : "btn-outline-success")">
+                            @(room.Active ? "Inactivar" : "Reactivar")
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            @if (room.Places.Count == 0)
+            {
+                <p class="text-muted">Esta habitación no tiene plazas.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <caption class="visually-hidden">Plazas de @room.Name</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Plaza</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Ocupación</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var place in room.Places)
+                            {
+                                <tr>
+                                    <th scope="row">@place.Name</th>
+                                    <td><span class="badge @(place.Active ? "text-bg-success" : "text-bg-secondary")">@(place.Active ? "Activa" : "Inactiva")</span></td>
+                                    <td>@(place.Occupied ? "Ocupada" : "Libre")</td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a asp-action="NombrePlaza" asp-route-unidadId="@unitId" asp-route-plazaId="@place.PlaceId" class="btn btn-outline-primary">Cambiar nombre</a>
+                                            <form asp-action="EstadoPlaza" method="post">
+                                                <input type="hidden" name="unidadId" value="@unitId" />
+                                                <input type="hidden" name="plazaId" value="@place.PlaceId" />
+                                                <input type="hidden" name="activa" value="@(place.Active ? "false" : "true")" />
+                                                <button type="submit" class="btn @(place.Active ? "btn-outline-danger" : "btn-outline-success")">
+                                                    @(place.Active ? "Inactivar" : "Reactivar")
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (room.Active)
+            {
+                <form asp-action="NuevaPlaza" method="post">
+                    <input type="hidden" name="Form.OperacionId" value="@Guid.NewGuid()" />
+                    <input type="hidden" name="Form.UnidadId" value="@unitId" />
+                    <input type="hidden" name="Form.HabitacionId" value="@room.RoomId" />
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-8">
+                            <label for="nueva-plaza-@room.RoomId" class="form-label">Nueva plaza en @room.Name</label>
+                            <input id="nueva-plaza-@room.RoomId" name="Form.Nombre" class="form-control" maxlength="200" autocomplete="off" />
+                        </div>
+                        <div class="col-12 col-md-4 d-grid">
+                            <button type="submit" class="btn btn-outline-primary">Crear plaza</button>
+                        </div>
+                    </div>
+                </form>
+            }
+        </div>
+    </section>
+}
+
+<a asp-action="Estructura" class="btn btn-outline-secondary btn-lg mb-3">Volver a la estructura</a>

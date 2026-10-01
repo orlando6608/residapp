@@ -80,6 +80,8 @@ builder.Services.AddScoped<SignBaseline>();
 builder.Services.AddScoped<ReadDirectionBaseline>();
 builder.Services.AddScoped<ListActiveProfileScopes>();
 builder.Services.AddScoped<ListActiveScopeUnits>();
+builder.Services.AddScoped<ListActiveScopeLocations>();
+builder.Services.AddScoped<ILocationOptionsDirectory, SqlLocationOptionsDirectory>();
 builder.Services.AddScoped<ListActiveScopePermissions>();
 builder.Services.AddScoped<CreateBaselineDraft>();
 builder.Services.AddScoped<LoadBaselineDraft>();

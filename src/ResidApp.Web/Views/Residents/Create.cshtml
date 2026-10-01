@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Alta de residente";
     var units = (List<SelectListItem>?)ViewBag.Unidades ?? [];
+    var locations = (IReadOnlyList<ResidApp.Application.Ports.LocationOption>?)ViewBag.Ubicaciones ?? [];
 }
 
 <nav aria-label="breadcrumb">
@@ -13,7 +14,7 @@
 
 <h1 class="h3">Alta de residente</h1>
 <p class="text-muted">
-    Vertical Residente/Basal. La unidad se elige entre las de tu ámbito activo.
+    Vertical Residente/Basal. La unidad se elige entre las de tu ámbito activo; la habitación y la plaza son opcionales.
 </p>
 
 <div class="card">
@@ -54,6 +55,36 @@
                 </select>
                 <span asp-validation-for="UnidadId" class="text-danger"></span>
             </div>
+            @if (locations.Count > 0)
+            {
+                <div class="mb-3">
+                    <label asp-for="Ubicacion" class="form-label"></label>
+                    <select asp-for="Ubicacion" class="form-select form-select-lg" aria-describedby="ayuda-ubicacion">
+                        <option value="">Sin habitación ni plaza</option>
+                        @foreach (var unitGroup in locations.GroupBy(l => l.UnitName))
+                        {
+                            <optgroup label="@unitGroup.Key">
+                                @foreach (var option in unitGroup)
+                                {
+                                    @if (option.PlaceId is { } placeId)
+                                    {
+                                        <option value="p:@placeId">@option.RoomName · @option.PlaceName</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="r:@option.RoomId">@option.RoomName</option>
+                                    }
+                                }
+                            </optgroup>
+                        }
+                    </select>
+                    <div id="ayuda-ubicacion" class="form-text">
+                        Opcional. Debe ser de la unidad que elijas arriba; las plazas ocupadas no se ofrecen. Cambiar después de habitación o plaza
+                        es un traslado y todavía no está disponible.
+                    </div>
+                    <span asp-validation-for="Ubicacion" class="text-danger"></span>
+                </div>
+            }
             <div class="mb-3">
                 <label asp-for="NombreVisible" class="form-label"></label>
                 <input asp-for="NombreVisible" class="form-control form-control-lg" />

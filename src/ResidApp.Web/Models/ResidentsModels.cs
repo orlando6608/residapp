@@ -39,6 +39,28 @@ public sealed class CreateResidentFormModel
     [Display(Name = "Referencia interna")]
     public string? ReferenciaInterna { get; set; }
 
+    /// <summary>Habitación o plaza dentro de la unidad (opcional, historia 2, script 0029): «r:{habitación}» o «p:{plaza}». El servidor comprueba
+    /// que sea de la unidad elegida y, si es una plaza, que esté libre.</summary>
+    [Display(Name = "Ubicación en la unidad (opcional)")]
+    public string? Ubicacion { get; set; }
+
+    /// <summary>La habitación y la plaza elegidas, o null si el texto no es ninguna de las formas válidas (vacío es válido: ninguna).</summary>
+    public (Guid? RoomId, Guid? PlaceId)? ParseLocation()
+    {
+        var text = Ubicacion?.Trim();
+        if (string.IsNullOrEmpty(text))
+        {
+            return (null, null);
+        }
+
+        return text.Split(':') switch
+        {
+            ["r", var id] when Guid.TryParse(id, out var room) => (room, null),
+            ["p", var id] when Guid.TryParse(id, out var place) => (null, place),
+            _ => null,
+        };
+    }
+
     /// <summary>Se genera al mostrar el formulario y viaja oculto: da soporte a la idempotencia del caso de
     /// uso (un reenvío accidental con el mismo OperacionId no duplica el alta).</summary>
     [Required]

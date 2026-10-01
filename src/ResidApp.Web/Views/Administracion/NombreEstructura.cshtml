@@ -1,7 +1,15 @@
 @model ResidApp.Web.Models.RenameLayoutViewModel
 @{
-    ViewData["Title"] = Model.Kind == "edificio" ? "Nombre del edificio" : "Nombre de la planta";
-    var action = Model.Kind == "edificio" ? "NombreEdificio" : "NombrePlanta";
+    var article = Model.Kind is "edificio" or "plaza" ? "del" : "de la";
+    ViewData["Title"] = $"Nombre {article} {Model.Kind}";
+    var action = Model.Kind switch
+    {
+        "edificio" => "NombreEdificio",
+        "planta" => "NombrePlanta",
+        "habitación" => "NombreHabitacion",
+        _ => "NombrePlaza",
+    };
+    var inRoomsScreen = Model.Form.UnidadId is not null;
 }
 
 <nav aria-label="breadcrumb">
@@ -9,7 +17,14 @@
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
         <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
         <li class="breadcrumb-item"><a asp-action="Estructura">Estructura</a></li>
-        <li class="breadcrumb-item"><a asp-action="Edificios">Edificios y plantas</a></li>
+        @if (inRoomsScreen)
+        {
+            <li class="breadcrumb-item"><a asp-action="Habitaciones" asp-route-unidadId="@Model.Form.UnidadId">Habitaciones y plazas</a></li>
+        }
+        else
+        {
+            <li class="breadcrumb-item"><a asp-action="Edificios">Edificios y plantas</a></li>
+        }
         <li class="breadcrumb-item active" aria-current="page">Nombre</li>
     </ol>
 </nav>
@@ -22,13 +37,24 @@
         <div asp-validation-summary="All" class="text-danger"></div>
         <form asp-action="@action" method="post">
             <input type="hidden" name="Form.Id" value="@Model.Form.Id" />
+            @if (inRoomsScreen)
+            {
+                <input type="hidden" name="Form.UnidadId" value="@Model.Form.UnidadId" />
+            }
             <div class="mb-3">
                 <label asp-for="Form.Nombre" class="form-label"></label>
                 <input asp-for="Form.Nombre" class="form-control form-control-lg" autocomplete="off" />
                 <span asp-validation-for="Form.Nombre" class="text-danger"></span>
             </div>
             <div class="d-grid d-md-flex justify-content-md-end gap-2">
-                <a asp-action="Edificios" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                @if (inRoomsScreen)
+                {
+                    <a asp-action="Habitaciones" asp-route-unidadId="@Model.Form.UnidadId" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                }
+                else
+                {
+                    <a asp-action="Edificios" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                }
                 <button type="submit" class="btn btn-primary btn-lg">Guardar nombre</button>
             </div>
         </form>

@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Shared;
 
@@ -66,7 +67,7 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
                 EpisodeId = episodeId, ResidentId = residentId.Value, CenterId = input.CenterId.Value,
                 input.InternalReference, OccurredAt = occurredAt, AccountId = input.AccountId.Value, ActiveProfile = activeProfileCode,
             }, transaction, cancellationToken: ct));
-
+            var location = await ResolveLocationAsync(connection, transaction, input, ct);
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.intervalos_ubicacion_residente
                     (id, residente_id, centro_id, episodio_id, unidad_id, edificio_id, planta_id, habitacion_id, plaza_id,
@@ -76,7 +77,8 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
                 """, new
             {
                 LocationIntervalId = locationIntervalId, ResidentId = residentId.Value, CenterId = input.CenterId.Value,
-                EpisodeId = episodeId, UnitId = input.UnitId.Value, input.BuildingId, input.FloorId, input.RoomId, input.PlaceId,
+                EpisodeId = episodeId, UnitId = input.UnitId.Value, BuildingId = location.BuildingId, FloorId = location.FloorId,
+                RoomId = location.RoomId, PlaceId = location.PlaceId,
                 OccurredAt = occurredAt, AccountId = input.AccountId.Value, ActiveProfile = activeProfileCode,
             }, transaction, cancellationToken: ct));
 
@@ -105,7 +107,7 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
             transaction.Commit();
             return result;
         }
-        catch
+        catch (Exception error)
         {
             transaction.Rollback();
             var recovered = await FindIdempotencyAsync(connection, null, input.AccountId.Value, input.OperationId, requestHash, ct);
@@ -113,9 +115,63 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
             {
                 return recovered;
             }
+            // Dos altas a la vez en la misma plaza: gana una y la otra choca con el índice único.
+            if (error is SqlException { Number: 2601 or 2627 } duplicate && duplicate.Message.Contains("UX_rli_place_active", StringComparison.Ordinal))
+            {
+                throw new DomainValidationException("PLACE_OCCUPIED");
+            }
             throw;
         }
     }
+
+    /// <summary>Historia 2 (0029): la habitación y la plaza de la ubicación inicial son opcionales. Una plaza se elige entre las activas de una
+    /// habitación activa de esa unidad y centro, y tiene que estar libre; una habitación, entre las activas de esa unidad. Edificio y planta no los
+    /// manda el cliente: son los de la unidad.</summary>
+    private static async Task<ResolvedLocation> ResolveLocationAsync(
+        IDbConnection connection, IDbTransaction transaction, CreateResidentInput input, CancellationToken ct)
+    {
+        var parameters = new { CenterId = input.CenterId.Value, UnitId = input.UnitId.Value };
+        var unit = await connection.QuerySingleOrDefaultAsync<UnitPlacement>(new CommandDefinition(
+            "SELECT edificio_id AS BuildingId, planta_id AS FloorId FROM dbo.unidades WHERE id = @UnitId AND centro_id = @CenterId",
+            parameters, transaction, cancellationToken: ct)) ?? new UnitPlacement(null, null);
+        var roomId = input.RoomId;
+        if (input.PlaceId is { } placeId)
+        {
+            var placeRoom = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition("""
+                SELECT place.habitacion_id
+                  FROM dbo.plazas place
+                  JOIN dbo.habitaciones room ON room.id = place.habitacion_id AND room.centro_id = place.centro_id AND room.unidad_id = place.unidad_id
+                 WHERE place.id = @PlaceId AND place.centro_id = @CenterId AND place.unidad_id = @UnitId
+                   AND place.estado = 'ACTIVE' AND room.estado = 'ACTIVE'
+                """, new { PlaceId = placeId, parameters.CenterId, parameters.UnitId }, transaction, cancellationToken: ct));
+            if (placeRoom is null || roomId is not null && roomId != placeRoom)
+            {
+                throw new DomainValidationException("PLACE_INVALID");
+            }
+
+            if (await connection.ExecuteScalarAsync<int>(new CommandDefinition(
+                    "SELECT COUNT(*) FROM dbo.intervalos_ubicacion_residente WHERE plaza_id = @PlaceId AND vigente_hasta IS NULL",
+                    new { PlaceId = placeId }, transaction, cancellationToken: ct)) > 0)
+            {
+                throw new DomainValidationException("PLACE_OCCUPIED");
+            }
+
+            roomId = placeRoom;
+        }
+        else if (roomId is { } room && await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+                    SELECT COUNT(*) FROM dbo.habitaciones
+                     WHERE id = @RoomId AND centro_id = @CenterId AND unidad_id = @UnitId AND estado = 'ACTIVE'
+                    """, new { RoomId = room, parameters.CenterId, parameters.UnitId }, transaction, cancellationToken: ct)) == 0)
+        {
+            throw new DomainValidationException("ROOM_INVALID");
+        }
+
+        return new ResolvedLocation(unit.BuildingId, unit.FloorId, roomId, input.PlaceId);
+    }
+
+    private sealed record UnitPlacement(Guid? BuildingId, Guid? FloorId);
+
+    private sealed record ResolvedLocation(Guid? BuildingId, Guid? FloorId, Guid? RoomId, Guid? PlaceId);
 
     private static async Task<CreateResidentResult?> FindIdempotencyAsync(
         IDbConnection connection, IDbTransaction? transaction, Guid accountId, Guid operationId, string requestHash, CancellationToken ct)

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Accounts;
@@ -13,7 +14,8 @@ namespace ResidApp.Web.Controllers;
 /// directamente a CreateResidentCommand; la autorización y las reglas de negocio viven en
 /// ResidentBaselineApplicationService, no aquí.</summary>
 public sealed class ResidentsController(
-    ResidentBaselineApplicationService service, ListActiveScopeUnits listUnits, ListActiveScopePermissions listPermissions) : Controller
+    ResidentBaselineApplicationService service, ListActiveScopeUnits listUnits, ListActiveScopeLocations listLocations,
+    ListActiveScopePermissions listPermissions) : Controller
 {
     public async Task<IActionResult> Create(CancellationToken ct)
     {
@@ -44,15 +46,28 @@ public sealed class ResidentsController(
             return View(form);
         }
 
+        if (form.ParseLocation() is not { } location)
+        {
+            ModelState.AddModelError(nameof(form.Ubicacion), "Elige una ubicación de la lista.");
+            await ShowActiveScopeAsync(ActiveProfileScopeCookie.Read(Request), ct);
+            return View(form);
+        }
+
+        // Edificio y planta no se mandan: el servidor usa los de la unidad.
         var command = new CreateResidentCommand(
             form.AmbitoPerfilId, CenterId.From(form.CentroId), UnitId.From(form.UnidadId!.Value), form.NombreVisible,
             form.FechaNacimiento!.Value, form.SexoDocumentadoCodigo, form.ReferenciaInterna,
-            EdificioId: null, PlantaId: null, HabitacionId: null, PlazaId: null, form.OperacionId);
+            EdificioId: null, PlantaId: null, location.RoomId, location.PlaceId, form.OperacionId);
 
         var result = await service.CreateResidentAsync(command, ct);
         if (!result.Ok)
         {
-            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            var chosen = location.RoomId is not null || location.PlaceId is not null;
+            ModelState.AddModelError(string.Empty, chosen && result.Error!.Code == ApplicationFailureCode.Conflict
+                ? "Esa plaza ya está ocupada por otro residente. Elige otra o deja la ubicación vacía."
+                : chosen && result.Error!.Code == ApplicationFailureCode.InvalidInput
+                    ? "La habitación o la plaza elegida no está disponible en esa unidad. Elige otra o deja la ubicación vacía."
+                    : result.Error!.Message);
             await ShowActiveScopeAsync(ActiveProfileScopeCookie.Read(Request), ct);
             return View(form);
         }
@@ -76,6 +91,10 @@ public sealed class ResidentsController(
             : await listUnits.ExecuteAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
         IReadOnlyList<ScopeUnit> units = result is { Ok: true } ? result.Value! : [];
         ViewBag.Unidades = units.Select(u => new SelectListItem(u.Name, u.UnitId.Value.ToString())).ToList();
+        var locations = activeScope is null
+            ? null
+            : await listLocations.ExecuteAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
+        ViewBag.Ubicaciones = locations is { Ok: true } ? locations.Value! : (IReadOnlyList<LocationOption>)[];
         // Misma regla que ResidentBaselinePolicy: Administración siempre; Enfermería solo con el permiso. Solo orienta:
         // el alta vuelve a autorizarse al guardarla.
         ViewBag.PuedeDarDeAlta = activeScope?.Profile == SystemProfile.Administracion

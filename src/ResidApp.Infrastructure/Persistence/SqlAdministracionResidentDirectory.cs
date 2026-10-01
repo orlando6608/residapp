@@ -62,14 +62,17 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
         // El ámbito ya está comprobado con la consulta anterior; desde aquí solo se lee de ese residente.
         var locations = (await connection.QueryAsync<LocationRow>(new CommandDefinition("""
             SELECT unit.nombre_visible AS UnitName, i.vigente_desde AS StartedAt, i.vigente_hasta AS EndedAt,
-                   i.modificado_por_perfil AS ProfileCode
+                   i.modificado_por_perfil AS ProfileCode, room.nombre_visible AS RoomName, place.nombre_visible AS PlaceName
               FROM dbo.intervalos_ubicacion_residente i
               JOIN dbo.unidades unit ON unit.id = i.unidad_id AND unit.centro_id = i.centro_id
+              LEFT JOIN dbo.habitaciones room ON room.id = i.habitacion_id AND room.centro_id = i.centro_id
+              LEFT JOIN dbo.plazas place ON place.id = i.plaza_id AND place.centro_id = i.centro_id
              WHERE i.residente_id = @ResidentId AND i.centro_id = @CenterId
              ORDER BY i.vigente_desde DESC
             """, parameters, cancellationToken: ct)))
             .Select(l => new ResidentLocationInterval(
-                l.UnitName, Utc(l.StartedAt), l.EndedAt is { } ended ? Utc(ended) : null, EnumCode.ParseCode<SystemProfile>(l.ProfileCode)))
+                l.UnitName, Utc(l.StartedAt), l.EndedAt is { } ended ? Utc(ended) : null, EnumCode.ParseCode<SystemProfile>(l.ProfileCode),
+                l.RoomName, l.PlaceName))
             .ToList();
         var corrections = (await connection.QueryAsync<CorrectionRow>(new CommandDefinition("""
             SELECT numero AS Number, nombre_anterior AS NameBefore, fecha_nacimiento_anterior AS BirthDateBefore,
@@ -127,7 +130,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
     private sealed record ResidentRow(
         Guid ResidentId, string DisplayName, DateTime BirthDate, string SexCode, Guid UnitId, string UnitName, DateTime AdmittedAt);
 
-    private sealed record LocationRow(string UnitName, DateTime StartedAt, DateTime? EndedAt, string ProfileCode);
+    private sealed record LocationRow(string UnitName, DateTime StartedAt, DateTime? EndedAt, string ProfileCode, string? RoomName, string? PlaceName);
 
     private sealed record CorrectionRow(
         int Number, string NameBefore, DateTime BirthDateBefore, string SexBefore, string NameAfter, DateTime BirthDateAfter,

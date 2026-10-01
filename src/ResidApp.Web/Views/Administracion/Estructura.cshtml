@@ -15,7 +15,7 @@
 <p class="text-muted">
     Unidades concedidas a tu ámbito. Una unidad nueva queda concedida a tu ámbito; después, desde Usuarios, se concede a cada
     perfil. Crear o cambiar una unidad no da acceso clínico a nadie. Los edificios y las plantas son del centro y agrupan las unidades
-    (desde «Edificios y plantas»); las habitaciones y las plazas llegarán más adelante.
+    (desde «Edificios y plantas»); las habitaciones y las plazas son de cada unidad (desde «Habitaciones y plazas»).
 </p>
 @if (TempData["Mensaje"] is string mensaje)
 {
@@ -69,6 +69,7 @@ else if (Model.Count > 0)
                             <div class="d-flex flex-wrap gap-2">
                                 <a asp-action="NombreUnidad" asp-route-unidadId="@unit.UnitId.Value" class="btn btn-outline-primary">Cambiar nombre</a>
                                 <a asp-action="UbicacionUnidad" asp-route-unidadId="@unit.UnitId.Value" class="btn btn-outline-primary">Edificio y planta</a>
+                                <a asp-action="Habitaciones" asp-route-unidadId="@unit.UnitId.Value" class="btn btn-outline-primary">Habitaciones y plazas</a>
                                 <form asp-action="EstadoUnidad" method="post">
                                     <input type="hidden" name="unidadId" value="@unit.UnitId.Value" />
                                     <input type="hidden" name="activa" value="@(unit.Active ? "false" : "true")" />

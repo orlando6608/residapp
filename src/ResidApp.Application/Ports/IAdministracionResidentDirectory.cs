@@ -11,7 +11,9 @@ public sealed record AdministrativeResidentSummary(
     string UnitName, DateTimeOffset AdmittedAt);
 
 /// <summary>RES-04: un intervalo del historial de ubicación. Until es null en el vigente.</summary>
-public sealed record ResidentLocationInterval(string UnitName, DateTimeOffset From, DateTimeOffset? Until, SystemProfile RecordedBy);
+/// <summary>RoomName y PlaceName son la habitación y la plaza de la ubicación (historia 2, script 0029), si las tiene.</summary>
+public sealed record ResidentLocationInterval(
+    string UnitName, DateTimeOffset From, DateTimeOffset? Until, SystemProfile RecordedBy, string? RoomName = null, string? PlaceName = null);
 
 /// <summary>ADM-03 (0021): una corrección de identidad, con los valores anteriores y los nuevos.</summary>
 public sealed record ResidentIdentityCorrectionEntry(

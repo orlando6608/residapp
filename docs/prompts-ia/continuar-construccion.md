@@ -13,31 +13,46 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Administración, edificios, plantas, habitaciones y plazas (historia 2; script `0029`; sin cambios en el seed):** en curso, 2026-10-02, en `main`
-  **sin push** (Azure en `0028`). **Fase 1 de 2 hecha: edificios y plantas, y colocar las unidades. Falta la fase 2: habitaciones y plazas, el alta
-  de residente con habitación/plaza opcionales y la ficha.** Detalle, decisiones y suposiciones en `pendientes-administracion.md`.
-  - **Qué hace la fase 1:** `/Administracion/Edificios` (edificios y plantas del centro: crear, renombrar, inactivar, reactivar), `UbicacionUnidad` y la
-    columna «Edificio y planta» de Estructura. El script `0029` ya trae las cuatro tablas (también habitaciones y plazas), las claves foráneas de
-    `intervalos_ubicacion_residente` y el índice `UX_rli_place_active`: la fase 2 no necesita otro script.
+- **Administración, edificios, plantas, habitaciones y plazas (historia 2; script `0029`; sin cambios en el seed):** hecho el 2026-10-02 en `main`
+  **sin push** (Azure en `0028`). Dos fases, dos commits (`449f02b` y la fase 2) más `f88a5fa` (corrección de los tests, ver abajo). Detalle, decisiones y
+  suposiciones en `pendientes-administracion.md`.
+  - **Qué hace:** `/Administracion/Edificios` (edificios y plantas del centro: crear, renombrar, inactivar, reactivar), `UbicacionUnidad` (edificio y planta de
+    cada unidad), `/Administracion/Habitaciones?unidadId=` (habitaciones y plazas de la unidad, con su ocupación) y, en el alta de residente
+    (`Residents/Create`, Administración y Enfermería con permiso), una lista opcional «Ubicación en la unidad» con habitaciones y plazas libres. La ficha
+    administrativa enseña habitación y plaza. Decisiones del usuario: el bloque cubre estos cuatro niveles (el organigrama queda fuera: ningún documento lo
+    define) y habitación y plaza son opcionales en el alta. **Pendiente:** cambiar de habitación o plaza (traslado) y la baja, que esperan a CJ; las vistas
+    de Enfermería, Medicina y Auxiliar no enseñan aún la habitación ni la plaza.
   - **Detalle técnico que conviene no redescubrir:**
-    - `TR_units_guard` se recreó en `0029` sin la parte de edificio/planta; antes de crear las claves foráneas el script falla si `unidades` o
-      `intervalos_ubicacion_residente` tienen ids de edificio, planta, habitación o plaza (no los tenían: el alta mandaba null);
-    - el alta ya acepta `EdificioId`/`PlantaId`/`HabitacionId`/`PlazaId` en `CreateResidentCommand` pero sin validarlos más que con las claves
-      foráneas nuevas: la fase 2 debe deducir edificio y planta de la unidad y validar habitación y plaza en el servidor;
-    - `ICenterLayout*` es puerto aparte de `ICenterStructure*`; `AdministracionEstructuraApplicationService` ya tiene 6 dependencias;
-    - **fallos intermitentes de la suite (sin explicar):** en esta fase, 2 de ~10 ejecuciones completas fallaron en un test de integración distinto cada vez
-      (`AdministracionUsuariosTests.Alta_…`, `MedicinaApplicationServiceTests.ValoracionMedica_…`), y antes, una vuelta tipo CI con 2 fallos y otra con
-      `Inactivar_NoValeConResidentes…`. Ninguno se reprodujo en 30 ejecuciones posteriores con salida detallada ni con cada proyecto aislado, y
-      `system_health` de SQL Server no registra interbloqueos. No capturé el mensaje de ninguno. Si reaparece, ejecuta con
-      `--logger "console;verbosity=detailed"` y guarda la salida antes de repetir.
-  - **Verificación de la fase 1:**
-    - suite en verde antes (232, 284 y 52) y después (240, 291 y 53) más de 20 veces en total salvo los 2 fallos intermitentes de arriba, y 3 vueltas
-      tipo CI con BD nueva limpias; copia previa `ResidApp-antes-0029-20261001.bak`; BD temporal con los 29 scripts y los seeds dos veces, sin errores
-      (ya borrada);
-    - curl en local con `dev-integrado-administracion`: nombre vacío, crear edificio y planta, repetido, colocar la unidad, repetir, inactivar con
-      unidad activa («No se puede inactivar…»), quitar la unidad y entonces inactivar/reactivar planta y edificio (reactivar la planta con el edificio
-      inactivo se rechaza), `UNIT_LOCATE` en la auditoría; Enfermería, Medicina, Auxiliar y Dirección reciben «No se puede acceder».
-  - **Datos de prueba en la base local:** «Edificio Principal local» con «Planta baja» (la unidad del escenario integrado quedó sin edificio).
+    - un solo script `0029` con las cuatro tablas, las claves foráneas de `unidades` e `intervalos_ubicacion_residente` y `UX_rli_place_active`; antes de
+      crearlas falla si esas columnas ya tenían ids (no los tenían: el alta mandaba null). `TR_units_guard` se recreó sin la parte de edificio/planta;
+    - `SqlResidentRepository.CreateWithInitialLocationAsync` ya **no** guarda el edificio y la planta que mande el cliente: usa los de la unidad
+      (`ResolveLocationAsync`), y valida habitación y plaza dentro de la transacción; `PLACE_OCCUPIED` también sale del choque con el índice único;
+    - `ICenterLayout*` (edificios, plantas, habitaciones, plazas) es puerto aparte de `ICenterStructure*` (unidades); `SqlCenterLayoutRepository` es `partial`
+      (`.Rooms.cs`); `AdministracionEstructuraApplicationService` tiene 6 dependencias;
+    - la vista `NombreEstructura` sirve para renombrar edificio, planta, habitación y plaza (el `Kind` decide la acción y a dónde volver);
+    - **mensajes del alta:** el servicio devuelve mensajes genéricos (el código de dominio no llega a la web); el controlador distingue plaza ocupada
+      (conflicto) y habitación o plaza no disponible (entrada inválida) solo cuando se eligió una ubicación;
+    - **los fallos intermitentes de la suite eran interbloqueos de SQL Server (1205), causados por los tests:** varios ayudantes contaban filas de
+      `eventos_auditoria` por `recurso_id` y `accion_codigo` sin índice que los respalde, y bajo ejecución paralela chocaban con las inserciones de otras
+      pruebas (la lectura salía como víctima). Se capturó con `--logger "console;verbosity=detailed"`. Corregido en `f88a5fa` con `WITH (NOLOCK)` en esas
+      lecturas de los tests; después, 20 ejecuciones completas seguidas sin un fallo (antes, uno cada tres o cuatro). **Los tests nuevos que consulten esa
+      tabla deben hacer lo mismo.** El código de producción no cambió: si en algún momento la auditoría por recurso se consulta desde la aplicación,
+      conviene un índice por `(recurso_id, accion_codigo)` o reintentar ante el error 1205;
+    - heredocs largos y `sed` con continuaciones de línea en Git Bash pierden la indentación o fallan: escribe los ficheros con la herramienta de escritura
+      o edición.
+  - **Verificación:**
+    - suite en verde antes (240, 291 y 53) y después (240, 300 y 54): más de 20 ejecuciones completas limpias tras corregir los tests, y
+      3 vueltas tipo CI con BD nueva por fase, limpias. **Una anomalía distinta, sin explicar:** al parar la app local tras el recorrido con curl, dos ejecuciones
+      seguidas de la suite dieron timeouts de SQL masivos (37 y 109 tests; no había sesiones bloqueadas ni transacciones abiertas, con 1,9 GB libres) y las tres
+      siguientes salieron limpias. Copia previa `ResidApp-antes-0029-20261001.bak`; BD temporal con los 29 scripts y los seeds dos
+      veces, sin errores (ya borrada);
+    - curl en local con `dev-integrado-administracion`: edificio y planta (nombre vacío, repetido), colocar la unidad (mal formada, repetir), inactivar con
+      hijos activos, reactivar la planta con el edificio inactivo; habitación «Habitacion 12 local» y plazas «Cama A/B» (repetida), alta en «Cama A» (la lista
+      deja de ofrecerla), segunda alta en esa plaza rechazada («ya está ocupada»), ficha con «Habitacion 12 local · Cama A», no se puede inactivar la plaza ni la
+      habitación con residente, auditoría `ROOM_CREATE`/`PLACE_CREATE`; Enfermería, Medicina, Auxiliar y Dirección reciben «No se puede acceder»;
+      Enfermería sin permiso de alta ve el aviso de siempre (con permiso, lo cubre el test funcional existente del alta).
+  - **Datos de prueba en la base local:** «Edificio Principal local» con «Planta baja» (la unidad del escenario integrado quedó sin edificio), «Habitacion 12 local»
+    con «Cama A» (ocupada por «Residente A local (ficticio)») y «Cama B».
 - **Administración, turnos recurrentes con excepciones (historia 4; ADM-16; sin script ni cambios en el seed):** hecho el 2026-10-01 en `main`,
   pusheado y desplegado en Azure (push de `db4f013`, run 36929187490 en verde con `build-and-test` y `deploy`; sin script, Azure sigue en `0028`).
   - **Qué hace:** «Planificar un turno» admite hasta **367 fechas** por envío (una serie: las filas con el mismo `lote_id`) y un campo
@@ -836,7 +851,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
      un borrador de basal ajeno; el tema 3 es un cambio pequeño en el informe de derivación.
    - `docs/pendientes-cj/traslado-y-baja-residente.html` (preparado el 2026-10-01, 6 respuestas): traslado y baja del
      residente en Administración.
-2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): la estructura (las unidades ya están hechas; faltan edificios, plantas, habitaciones, plazas y organigrama); después publicaciones,
+2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): el organigrama y los cargos (ADM-07; ningún documento los define: pregunta a CJ); después publicaciones,
    citas, auditoría administrativa y panel.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
    (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.

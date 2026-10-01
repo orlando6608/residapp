@@ -12,6 +12,11 @@ public sealed class NewLayoutFormModel
 
     public Guid? EdificioId { get; set; }
 
+    /// <summary>Solo en habitaciones y plazas (historia 2, fase 2): la unidad a la que se vuelve y, en la plaza, su habitación.</summary>
+    public Guid? UnidadId { get; set; }
+
+    public Guid? HabitacionId { get; set; }
+
     [Required(ErrorMessage = "Escribe el nombre.")]
     [StringLength(CenterLayout.MaxNameLength, ErrorMessage = "El nombre no puede pasar de {1} caracteres.")]
     [Display(Name = "Nombre")]
@@ -22,14 +27,20 @@ public sealed class RenameLayoutFormModel
 {
     public Guid Id { get; set; }
 
+    /// <summary>Solo en habitaciones y plazas: la unidad a la que se vuelve.</summary>
+    public Guid? UnidadId { get; set; }
+
     [Required(ErrorMessage = "Escribe el nombre.")]
     [StringLength(CenterLayout.MaxNameLength, ErrorMessage = "El nombre no puede pasar de {1} caracteres.")]
     [Display(Name = "Nombre")]
     public string? Nombre { get; set; }
 }
 
-/// <summary>Kind es «edificio» o «planta» (solo para los textos de la pantalla).</summary>
+/// <summary>Kind es «edificio», «planta», «habitación» o «plaza» (para los textos y para a dónde volver).</summary>
 public sealed record RenameLayoutViewModel(string Kind, string CurrentName, RenameLayoutFormModel Form);
+
+/// <summary>Historia 2, fase 2: las habitaciones de una unidad del ámbito con sus plazas.</summary>
+public sealed record RoomsViewModel(StructureUnit Unit, IReadOnlyList<LayoutRoom> Rooms);
 
 public sealed record BuildingsViewModel(IReadOnlyList<LayoutBuilding> Buildings);
 
