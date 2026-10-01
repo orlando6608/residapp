@@ -13,7 +13,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Correcciones (sin script), 2026-10-01, con commit en `main` sin push:**
+- **Correcciones (sin script), 2026-10-01:** desplegadas en Azure (push de `2816ce3`, run 36839380770 en verde con
+  `build-and-test` y `deploy`). Prueba en Azure: el alta con `dev-integrado-administracion` muestra la unidad vacía y los
+  errores en español (unidad vacía o «no-es-un-guid»), sin crear ningún residente; los indicadores del 15/08 al 01/10 con
+  `dev-integrado-direccion` siguen dando 4 registrados y 3 cerrados (no hay hechos cerca de medianoche).
   - **Indicadores de Dirección, días en UTC:** las fechas se guardan en UTC, pero el periodo se comparaba con días locales y
     se agrupaba por la fecha UTC, así que un hecho entre las 00:00 y las 02:00 de España contaba en el día (y a fin de mes,
     en el mes) anterior. Ahora `SupervisionIndicatorRules.UtcBounds` convierte los límites del periodo a UTC y `Aggregate`
