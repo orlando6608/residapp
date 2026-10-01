@@ -21,7 +21,7 @@ public class AdministracionAuditoriaTests
             to ?? DateOnly.FromDateTime(DateTime.Today).AddDays(1), action, account);
 
     private static async Task<AuditPage> ListAsync(SeededProfile admin, ListAdministrativeAuditQuery? query = null) =>
-        (await Build(admin.ExternalSubject).ListAuditAsync(query ?? Query(admin))).Value!;
+        (await BuildEstructura(admin.ExternalSubject).ListAuditAsync(query ?? Query(admin))).Value!;
 
     private static async Task InsertAuditAsync(
         SeededProfile actor, string profile, string action, string resourceType, Guid resourceId, Guid? unitId = null, Guid? residentId = null,
@@ -53,7 +53,7 @@ public class AdministracionAuditoriaTests
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var resident = await CreateResidentAsync(admin, "Residente Auditoría");
         var created = await CreateAccountAsync(admin, "Ana Ruiz");
-        var unit = await Build(admin.ExternalSubject).CreateUnitAsync(new CreateUnitCommand(
+        var unit = await BuildEstructura(admin.ExternalSubject).CreateUnitAsync(new CreateUnitCommand(
             admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), $"aud-{Guid.NewGuid():N}"[..16], "Unidad de auditoría"));
         Assert.True(unit.Ok, unit.Error?.Message);
         await InsertAuditAsync(admin, "ENFERMERIA", "CLINICAL_EVENT_REGISTER", "CLINICAL_EVENT", Guid.NewGuid(), admin.UnitId.Value, resident.Value);
@@ -129,7 +129,7 @@ public class AdministracionAuditoriaTests
     public async Task PeriodoImposible_OAccionNoAdministrativa_SonEntradaInvalida()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildEstructura(admin.ExternalSubject);
         var today = DateOnly.FromDateTime(DateTime.Today);
 
         var reversed = await service.ListAuditAsync(Query(admin, today, today.AddDays(-1)));
@@ -169,8 +169,8 @@ public class AdministracionAuditoriaTests
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
 
-        var result = await Build(nurse.ExternalSubject).ListAuditAsync(Query(nurse));
-        var foreign = await Build(nurse.ExternalSubject).ListAuditAsync(Query(admin));
+        var result = await BuildEstructura(nurse.ExternalSubject).ListAuditAsync(Query(nurse));
+        var foreign = await BuildEstructura(nurse.ExternalSubject).ListAuditAsync(Query(admin));
 
         Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
         Assert.Equal(ApplicationFailureCode.AccessDenied, foreign.Error!.Code);

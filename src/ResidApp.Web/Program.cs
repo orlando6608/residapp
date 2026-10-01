@@ -142,7 +142,10 @@ builder.Services.AddScoped<FindResidentIdentification>();
 builder.Services.AddScoped<DownloadReferralReport>();
 builder.Services.AddScoped<MedicinaApplicationService>();
 builder.Services.AddScoped<DireccionApplicationService>();
+builder.Services.AddScoped<AdministrationAccessResolver>();
 builder.Services.AddScoped<AdministracionApplicationService>();
+builder.Services.AddScoped<AdministracionEstructuraApplicationService>();
+builder.Services.AddScoped<AdministracionTurnosApplicationService>();
 builder.Services.AddScoped<PlatformApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();

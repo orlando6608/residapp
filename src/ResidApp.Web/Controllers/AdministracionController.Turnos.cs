@@ -21,7 +21,7 @@ public sealed partial class AdministracionController
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Turnos)) });
         }
 
-        var result = await service.ListShiftsAsync(Query(activeScope), ct);
+        var result = await turnos.ListShiftsAsync(Query(activeScope), ct);
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
@@ -52,7 +52,7 @@ public sealed partial class AdministracionController
 
         if (ModelState.IsValid)
         {
-            var result = await service.CreateShiftAsync(new CreateShiftCommand(
+            var result = await turnos.CreateShiftAsync(new CreateShiftCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.OperacionId, form.Nombre, form.Inicio, form.Fin), ct);
             if (result.Ok)
             {
@@ -103,7 +103,7 @@ public sealed partial class AdministracionController
 
         if (ModelState.IsValid)
         {
-            var result = await service.RenameShiftAsync(new RenameShiftCommand(
+            var result = await turnos.RenameShiftAsync(new RenameShiftCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.TurnoId, form.Nombre), ct);
             if (result.Ok)
             {
@@ -133,7 +133,7 @@ public sealed partial class AdministracionController
             return RedirectToAction("Select", "ProfileScope");
         }
 
-        var result = await service.ChangeShiftStatusAsync(new ChangeShiftStatusCommand(
+        var result = await turnos.ChangeShiftStatusAsync(new ChangeShiftStatusCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), turnoId, activo), ct);
         SetFeedback(result, activo ? "Turno reactivado." : "Turno inactivado: ya no se podrá planificar.", "El turno ya estaba en ese estado.");
         return RedirectToAction(nameof(Turnos));
@@ -148,7 +148,7 @@ public sealed partial class AdministracionController
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Equipos)) });
         }
 
-        var result = await service.ListTeamsAsync(Query(activeScope), ct);
+        var result = await turnos.ListTeamsAsync(Query(activeScope), ct);
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
@@ -185,7 +185,7 @@ public sealed partial class AdministracionController
 
         if (ModelState.IsValid)
         {
-            var result = await service.CreateTeamAsync(new CreateTeamCommand(
+            var result = await turnos.CreateTeamAsync(new CreateTeamCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.OperacionId, UnitId.From(form.UnidadId!.Value), form.Nombre), ct);
             if (result.Ok)
             {
@@ -236,7 +236,7 @@ public sealed partial class AdministracionController
 
         if (ModelState.IsValid)
         {
-            var result = await service.RenameTeamAsync(new RenameTeamCommand(
+            var result = await turnos.RenameTeamAsync(new RenameTeamCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EquipoId, form.Nombre), ct);
             if (result.Ok)
             {
@@ -265,7 +265,7 @@ public sealed partial class AdministracionController
             return RedirectToAction("Select", "ProfileScope");
         }
 
-        var result = await service.ChangeTeamStatusAsync(new ChangeTeamStatusCommand(
+        var result = await turnos.ChangeTeamStatusAsync(new ChangeTeamStatusCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), equipoId, activo), ct);
         SetFeedback(result, activo ? "Equipo reactivado." : "Equipo inactivado: ya no se podrá planificar.", "El equipo ya estaba en ese estado.");
         return RedirectToAction(nameof(Equipos));
@@ -286,7 +286,7 @@ public sealed partial class AdministracionController
             return RedirectToAction(nameof(Equipos));
         }
 
-        var eligible = (await service.ListEligibleTeamMembersAsync(Query(activeScope), equipoId, ct)).Value ?? [];
+        var eligible = (await turnos.ListEligibleTeamMembersAsync(Query(activeScope), equipoId, ct)).Value ?? [];
         return View(new TeamMembersViewModel(team, eligible));
     }
 
@@ -301,7 +301,7 @@ public sealed partial class AdministracionController
             return RedirectToAction("Select", "ProfileScope");
         }
 
-        var result = await service.ChangeTeamMemberAsync(new ChangeTeamMemberCommand(
+        var result = await turnos.ChangeTeamMemberAsync(new ChangeTeamMemberCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), equipoId, AccountId.From(cuentaId), anadir), ct);
         if (result.Ok)
         {
@@ -337,8 +337,8 @@ public sealed partial class AdministracionController
     }
 
     private async Task<ShiftInfo?> FindShiftAsync(ActiveProfileScopeCookieValue activeScope, Guid shiftId, CancellationToken ct) =>
-        (await service.ListShiftsAsync(Query(activeScope), ct)).Value?.FirstOrDefault(s => s.ShiftId == shiftId);
+        (await turnos.ListShiftsAsync(Query(activeScope), ct)).Value?.FirstOrDefault(s => s.ShiftId == shiftId);
 
     private async Task<TeamInfo?> FindTeamAsync(ActiveProfileScopeCookieValue activeScope, Guid teamId, CancellationToken ct) =>
-        (await service.ListTeamsAsync(Query(activeScope), ct)).Value?.FirstOrDefault(t => t.TeamId == teamId);
+        (await turnos.ListTeamsAsync(Query(activeScope), ct)).Value?.FirstOrDefault(t => t.TeamId == teamId);
 }

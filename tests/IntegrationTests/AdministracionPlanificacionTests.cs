@@ -17,14 +17,14 @@ public class AdministracionPlanificacionTests
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
 
     private sealed record World(
-        SeededProfile Admin, AdministracionApplicationService Service, SeededProfile Nurse1, SeededProfile Nurse2,
+        SeededProfile Admin, AdministracionTurnosApplicationService Service, SeededProfile Nurse1, SeededProfile Nurse2,
         Guid TeamA, Guid TeamB, Guid TeamC, Guid Morning, Guid Afternoon, Guid Night, Guid Dawn);
 
     /// <summary>Equipo A (enfermera 1 y 2), B (enfermera 2) y C (nadie); turnos de mañana 07–15, tarde 14–22, noche 22–06 y madrugada 05–13.</summary>
     private static async Task<World> CreateWorldAsync()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildTurnos(admin.ExternalSubject);
         var n1 = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
         var n2 = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
         async Task<Guid> Shift(string name, string start, string end) => (await service.CreateShiftAsync(new CreateShiftCommand(
@@ -260,9 +260,9 @@ public class AdministracionPlanificacionTests
         };
         var denied = new[]
         {
-            (await Build(other.ExternalSubject).PlanShiftAsync(new PlanShiftCommand(other.ProfileScopeId, other.CenterId, Guid.NewGuid(), w.TeamA, w.Morning, [d]))).Error,
-            (await Build(w.Nurse1.ExternalSubject).PlanShiftAsync(new PlanShiftCommand(w.Nurse1.ProfileScopeId, w.Nurse1.CenterId, Guid.NewGuid(), w.TeamA, w.Morning, [d]))).Error,
-            (await Build(w.Nurse1.ExternalSubject).ListScheduleAsync(new ListScheduleQuery(w.Nurse1.ProfileScopeId, w.Nurse1.CenterId, Today, Today.AddDays(5)))).Error,
+            (await BuildTurnos(other.ExternalSubject).PlanShiftAsync(new PlanShiftCommand(other.ProfileScopeId, other.CenterId, Guid.NewGuid(), w.TeamA, w.Morning, [d]))).Error,
+            (await BuildTurnos(w.Nurse1.ExternalSubject).PlanShiftAsync(new PlanShiftCommand(w.Nurse1.ProfileScopeId, w.Nurse1.CenterId, Guid.NewGuid(), w.TeamA, w.Morning, [d]))).Error,
+            (await BuildTurnos(w.Nurse1.ExternalSubject).ListScheduleAsync(new ListScheduleQuery(w.Nurse1.ProfileScopeId, w.Nurse1.CenterId, Today, Today.AddDays(5)))).Error,
         };
 
         Assert.All(results, r => Assert.Equal(ApplicationFailureCode.InvalidInput, r.Error!.Code));

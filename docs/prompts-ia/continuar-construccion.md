@@ -14,7 +14,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 - **Administración, turnos y equipos, primer bloque (historia 4; ADM-14/15/17; script `0027`; sin cambios en el seed):** hecho el
-  2026-10-01 en `main` **sin push** (Azure en `0026`). Dos commits: fase 1 (`838f6f8`, catálogo de turnos, equipos y miembros) y fase 2
+  2026-10-01 en `main`, pusheado y desplegado en Azure (push de `4b3fef4`, run 36913920922 en verde con `build-and-test` y `deploy`, que aplicó `0027`). Dos commits: fase 1 (`838f6f8`, catálogo de turnos, equipos y miembros) y fase 2
   (planificación puntual con conflictos). El script `0027` lleva las cuatro tablas, la de planificación incluida.
   - **Qué hace:** `/Administracion/Turnos`, `/Equipos` (con `MiembrosEquipo`), `/Planificacion` (dos semanas, por unidad) y `PlanificarTurno`
     (un equipo en un turno para un rango de fechas y días de la semana, de 1 a 62 fechas). El servidor avisa de dos solapamientos (el mismo
@@ -28,7 +28,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     - el reenvío de un lote ya guardado enseña «Todas esas fechas ya tienen planificado ese equipo…» (la vista previa corre antes que la
       escritura); el token de lote (`lote_id`) protege el servicio, no esa pantalla;
     - `AdministracionController` es ahora `partial` (`.Turnos.cs`, `.Planificacion.cs`); el parámetro `service` del constructor primario vale en todas
-      las partes. El servicio `AdministracionApplicationService` ya tiene 15 dependencias: el siguiente bloque debería dividirlo;
+      las partes. **El servicio ya se dividió** (refactor posterior): `AdministracionApplicationService` (residentes y cuentas),
+      `AdministracionEstructuraApplicationService` (unidades y auditoría) y `AdministracionTurnosApplicationService` (turnos, equipos y
+      planificación); los tres reciben `AdministrationAccessResolver` (el ámbito activo de Administración, que antes era privado). El
+      controlador recibe los tres (`service`, `estructura`, `turnos`). En los tests: `Build`, `BuildEstructura` y `BuildTurnos`;
     - **heredocs largos en Git Bash:** varios comandos con un heredoc largo y comillas simples fallaron con «unexpected EOF» sin ejecutar nada.
       Escribe los ficheros con la herramienta de escritura y aplica los `sed` aparte.
   - **Verificación:**
@@ -690,7 +693,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   valoración médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos, protocolo
   urgente, derivación a Urgencias, evento propio y basal con permiso) y 9 (con la misma salvedad que la 11).
 - La base local `ResidApp` tiene los scripts `0001` a `0027` registrados en `dbo.scripts_aplicados`
-  (en Azure, hasta `0026`; `0027` aún no se ha subido). Hay copias previas a `0016` … `0027` en
+  (en Azure, hasta `0027`). Hay copias previas a `0016` … `0027` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
   `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak`, `ResidApp-antes-0019-20260930.bak`,
   `ResidApp-antes-0020-20260930.bak`, `ResidApp-antes-0021-20261001.bak`, `ResidApp-antes-0022-20261001.bak`,

@@ -68,55 +68,13 @@ public sealed record ChangeAccountProfileUnitCommand(
 public sealed record ChangeAccountProfileResidentCommand(
     Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid PerfilCuentaId, ResidentId ResidenteId, bool Asignar);
 
-/// <summary>ADM-28: la auditoría administrativa de un periodo (días de la hora local del servidor, ambos incluidos). Accion, si
-/// se da, es una de AdministrativeAudit.Actions; Cuenta filtra por la cuenta afectada, nunca por quien actuó (AUD-02).</summary>
-public sealed record ListAdministrativeAuditQuery(
-    Guid AmbitoPerfilId, CenterId CentroId, DateOnly From, DateOnly To, string? Accion = null, AccountId? Cuenta = null);
-
-/// <summary>ADM-14 (0027): alta de un turno del catálogo del centro. OperacionId nace con el formulario y es el id del turno.</summary>
-public sealed record CreateShiftCommand(
-    Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? Nombre, TimeOnly? Inicio, TimeOnly? Fin);
-
-public sealed record RenameShiftCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid TurnoId, string? Nombre);
-
-/// <summary>ADM-14: Activo es el estado que se quiere (false para inactivar, true para reactivar).</summary>
-public sealed record ChangeShiftStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid TurnoId, bool Activo);
-
-/// <summary>ADM-14: alta de un equipo en una unidad del ámbito. OperacionId es el id del equipo.</summary>
-public sealed record CreateTeamCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, UnitId UnidadId, string? Nombre);
-
-public sealed record RenameTeamCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EquipoId, string? Nombre);
-
-public sealed record ChangeTeamStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EquipoId, bool Activo);
-
-/// <summary>ADM-14: añadir (true) o dar de baja (false) a una cuenta de un equipo.</summary>
-public sealed record ChangeTeamMemberCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EquipoId, AccountId CuentaId, bool Anadir);
-
-/// <summary>ADM-15/17 (0027): planificar un equipo en un turno para varias fechas. LoteId nace con el formulario y es el token contra el
-/// doble envío. Justificacion se da cuando el servidor avisó de solapamientos y Administración decide seguir.</summary>
-public sealed record PlanShiftCommand(
-    Guid AmbitoPerfilId, CenterId CentroId, Guid LoteId, Guid EquipoId, Guid TurnoId, IReadOnlyList<DateOnly> Fechas, string? Justificacion = null);
-
-public sealed record RetireScheduleCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid PlanificacionId);
-
-/// <summary>ADM-14: la planificación entre dos fechas (ambas incluidas), de todas las unidades del ámbito o de una.</summary>
-public sealed record ListScheduleQuery(Guid AmbitoPerfilId, CenterId CentroId, DateOnly Desde, DateOnly Hasta, UnitId? UnidadId = null);
-
-/// <summary>ADM-05 (0025): alta de una unidad. OperacionId nace con el formulario y es el id de la unidad, así que un reenvío
-/// no la duplica.</summary>
-public sealed record CreateUnitCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? Codigo, string? Nombre);
-
-public sealed record RenameUnitCommand(Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, string? Nombre);
-
-/// <summary>ADM-05: Activa es el estado que se quiere (false para inactivar, true para reactivar).</summary>
-public sealed record ChangeUnitStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, bool Activa);
 
 /// <summary>ADM-13 (0024): conceder (Conceder = true) o revocar un permiso del catálogo del perfil.</summary>
 public sealed record ChangeAccountProfilePermissionCommand(
     Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid PerfilCuentaId, string? Permiso, bool Conceder);
 
 /// <summary>
-/// Fachada del vertical Administración. Bloque 1 (historia 1): lista de residentes (ADM-02), ficha administrativa con
+/// Vertical Administración: residentes y cuentas (la estructura y la auditoría están en AdministracionEstructuraApplicationService; los turnos, en AdministracionTurnosApplicationService). Bloque 1 (historia 1): lista de residentes (ADM-02), ficha administrativa con
 /// historial de ubicación (ADM-03, RES-04) y corrección de identidad (script 0021). Bloque 2 (historia 3, script 0022):
 /// familiares, autorizaciones y contacto urgente, que se autorizan igual que la corrección. Nunca entrega basal, Barthel ni
 /// contenido clínico. La lectura exige un ámbito activo de Administración de la cuenta, y el directorio aplica la regla
@@ -128,11 +86,10 @@ public sealed record ChangeAccountProfilePermissionCommand(
 /// transacción.
 /// </summary>
 public sealed class AdministracionApplicationService(
-    IProfileScopeDirectoryProvider scopes, IAdministracionResidentDirectory directory, ISessionIdentityProvider session,
+    AdministrationAccessResolver administrationAccess, IProfileScopeDirectoryProvider scopes,
+    IAdministracionResidentDirectory directory, ISessionIdentityProvider session,
     IAuthorizationEvidenceProvider evidenceProvider, IResidentIdentityRepository identities, IResidentFamilyRepository families,
-    IProfessionalAccountDirectory accountDirectory, IProfessionalAccountRepository accounts, ICenterStructureDirectory structure,
-    ICenterStructureRepository structureWriter, IAdministrativeAuditDirectory audit, ISchedulingDirectory scheduling,
-    ISchedulingRepository schedulingWriter, ISchedulePlanDirectory schedulePlan, ISchedulePlanRepository schedulePlanWriter)
+    IProfessionalAccountDirectory accountDirectory, IProfessionalAccountRepository accounts)
 {
     public Task<ApplicationResult<IReadOnlyList<AdministrativeResidentSummary>>> ListResidentsAsync(
         AdministracionQuery query, CancellationToken ct = default) =>
@@ -310,172 +267,6 @@ public sealed class AdministracionApplicationService(
             return true;
         });
 
-    /// <summary>ADM-05: las unidades concedidas al ámbito de quien gestiona, activas e inactivas.</summary>
-    public Task<ApplicationResult<IReadOnlyList<StructureUnit>>> ListStructureUnitsAsync(
-        AdministracionQuery query, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            return await structure.ListUnitsAsync(access, ct);
-        });
-
-    public Task<ApplicationResult<UnitId>> CreateUnitAsync(CreateUnitCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            var data = CenterUnit.Validate(command.Codigo, command.Nombre);
-            return await structureWriter.CreateUnitAsync(access, command.OperacionId, data, ct);
-        });
-
-    public Task<ApplicationResult<bool>> RenameUnitAsync(RenameUnitCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            await structureWriter.RenameUnitAsync(access, command.UnidadId, CenterUnit.ValidateName(command.Nombre), ct);
-            return true;
-        });
-
-    public Task<ApplicationResult<bool>> ChangeUnitStatusAsync(ChangeUnitStatusCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            await structureWriter.ChangeUnitStatusAsync(access, command.UnidadId, command.Activa, ct);
-            return true;
-        });
-
-    public Task<ApplicationResult<IReadOnlyList<ShiftInfo>>> ListShiftsAsync(AdministracionQuery query, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            return await scheduling.ListShiftsAsync(access, ct);
-        });
-
-    public Task<ApplicationResult<IReadOnlyList<TeamInfo>>> ListTeamsAsync(AdministracionQuery query, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            return await scheduling.ListTeamsAsync(access, ct);
-        });
-
-    public Task<ApplicationResult<IReadOnlyList<EligibleTeamMember>>> ListEligibleTeamMembersAsync(
-        AdministracionQuery query, Guid teamId, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            return await scheduling.ListEligibleMembersAsync(access, teamId, ct);
-        });
-
-    public Task<ApplicationResult<Guid>> CreateShiftAsync(CreateShiftCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            var data = Shift.Validate(command.Nombre, command.Inicio, command.Fin);
-            return await schedulingWriter.CreateShiftAsync(access, command.OperacionId, data, ct);
-        });
-
-    public Task<ApplicationResult<bool>> RenameShiftAsync(RenameShiftCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            await schedulingWriter.RenameShiftAsync(access, command.TurnoId, Shift.ValidateName(command.Nombre), ct);
-            return true;
-        });
-
-    public Task<ApplicationResult<bool>> ChangeShiftStatusAsync(ChangeShiftStatusCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            await schedulingWriter.ChangeShiftStatusAsync(access, command.TurnoId, command.Activo, ct);
-            return true;
-        });
-
-    public Task<ApplicationResult<Guid>> CreateTeamAsync(CreateTeamCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            return await schedulingWriter.CreateTeamAsync(access, command.OperacionId, command.UnidadId, Team.ValidateName(command.Nombre), ct);
-        });
-
-    public Task<ApplicationResult<bool>> RenameTeamAsync(RenameTeamCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            await schedulingWriter.RenameTeamAsync(access, command.EquipoId, Team.ValidateName(command.Nombre), ct);
-            return true;
-        });
-
-    public Task<ApplicationResult<bool>> ChangeTeamStatusAsync(ChangeTeamStatusCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            await schedulingWriter.ChangeTeamStatusAsync(access, command.EquipoId, command.Activo, ct);
-            return true;
-        });
-
-    public Task<ApplicationResult<bool>> ChangeTeamMemberAsync(ChangeTeamMemberCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            await (command.Anadir
-                ? schedulingWriter.AddTeamMemberAsync(access, command.EquipoId, command.CuentaId, ct)
-                : schedulingWriter.RemoveTeamMemberAsync(access, command.EquipoId, command.CuentaId, ct));
-            return true;
-        });
-
-    public Task<ApplicationResult<IReadOnlyList<ScheduleEntry>>> ListScheduleAsync(ListScheduleQuery query, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            if (query.Desde > query.Hasta || query.Hasta.DayNumber - query.Desde.DayNumber + 1 > SchedulePlan.MaxDates)
-            {
-                throw new DomainValidationException(SchedulePlan.InvalidCode);
-            }
-
-            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            return await schedulePlan.ListScheduleAsync(access, query.Desde, query.Hasta, query.UnidadId, ct);
-        });
-
-    /// <summary>ADM-17: lo que pasaría al planificar, sin escribir nada.</summary>
-    public Task<ApplicationResult<SchedulePreview>> PreviewScheduleAsync(PlanShiftCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            var dates = SchedulePlan.ValidateDates(command.Fechas, DateOnly.FromDateTime(DateTime.Today));
-            return await schedulePlanWriter.PreviewAsync(access, command.EquipoId, command.TurnoId, dates, ct);
-        });
-
-    /// <summary>ADM-15: planifica. Con solapamientos y sin justificación no guarda nada (SCHEDULE_CONFLICTS, un conflicto).</summary>
-    public Task<ApplicationResult<PlanOutcome>> PlanShiftAsync(PlanShiftCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            var dates = SchedulePlan.ValidateDates(command.Fechas, DateOnly.FromDateTime(DateTime.Today));
-            var justification = SchedulePlan.ValidateJustification(command.Justificacion);
-            return await schedulePlanWriter.PlanAsync(access, command.LoteId, command.EquipoId, command.TurnoId, dates, justification, ct);
-        });
-
-    public Task<ApplicationResult<bool>> RetireScheduleAsync(RetireScheduleCommand command, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            await schedulePlanWriter.RetireAsync(access, command.PlanificacionId, DateOnly.FromDateTime(DateTime.Today), ct);
-            return true;
-        });
-
-    /// <summary>ADM-28: los eventos administrativos del ámbito, del más reciente al más antiguo. Un periodo imposible o una acción
-    /// que no es administrativa es entrada inválida.</summary>
-    public Task<ApplicationResult<AuditPage>> ListAuditAsync(ListAdministrativeAuditQuery query, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
-        {
-            if (query.From > query.To || query.To.DayNumber - query.From.DayNumber + 1 > SupervisionIndicatorRules.MaxPeriodDays
-                || query.Accion is not null && !AdministrativeAudit.IsAdministrative(query.Accion))
-            {
-                throw new DomainValidationException("APPLICATION_INPUT_INVALID");
-            }
-
-            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
-            return await audit.ListAsync(access, new AdministrativeAuditQuery(fromUtc, toExclusiveUtc, query.Accion, query.Cuenta), ct);
-        });
 
     /// <summary>Un perfil concedible con al menos una unidad, sin repetir.</summary>
     private static IReadOnlyList<UnitId> ProfileUnits(SystemProfile profile, IReadOnlyList<Guid> units) =>
@@ -495,19 +286,7 @@ public sealed class AdministracionApplicationService(
     private Task EnsureAdministrationScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct) =>
         AdministrationAccessAsync(profileScopeId, centerId, ct);
 
-    /// <summary>El ámbito activo de Administración de la cuenta de la sesión y su sujeto externo; si no lo es, acceso
-    /// denegado.</summary>
-    private async Task<(AccountAdministrationAccess Access, string Subject)> AdministrationAccessAsync(
-        Guid profileScopeId, CenterId centerId, CancellationToken ct)
-    {
-        var identity = await session.GetVerifiedIdentityAsync(ct) ?? throw new AccessDeniedException();
-        var activeScopes = await scopes.ListActiveAsync(identity.ExternalSubject, ct);
-        var scope = activeScopes.FirstOrDefault(s => s.ProfileScopeId == profileScopeId && s.CenterId == centerId);
-        if (scope is null || scope.Profile != SystemProfile.Administracion)
-        {
-            throw new AccessDeniedException();
-        }
-
-        return (new AccountAdministrationAccess(scope.ProfileScopeId, scope.AccountId, scope.CenterId), identity.ExternalSubject);
-    }
+    private Task<(AccountAdministrationAccess Access, string Subject)> AdministrationAccessAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct) =>
+        administrationAccess.ResolveAsync(profileScopeId, centerId, ct);
 }

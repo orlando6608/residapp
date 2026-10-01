@@ -17,7 +17,9 @@ namespace ResidApp.Web.Controllers;
 /// residentes de Auxiliar. Ninguna pantalla muestra basal, Barthel ni contenido clínico. Traduce a
 /// AdministracionApplicationService; la autorización no vive aquí.
 /// </summary>
-public sealed partial class AdministracionController(AdministracionApplicationService service) : Controller
+public sealed partial class AdministracionController(
+    AdministracionApplicationService service, AdministracionEstructuraApplicationService estructura,
+    AdministracionTurnosApplicationService turnos) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -753,7 +755,7 @@ public sealed partial class AdministracionController(AdministracionApplicationSe
             return View(new AuditViewModel(filtro, from, to, null, accounts));
         }
 
-        var result = await service.ListAuditAsync(new ListAdministrativeAuditQuery(
+        var result = await estructura.ListAuditAsync(new ListAdministrativeAuditQuery(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to,
             ResidApp.Domain.Audit.AdministrativeAudit.IsAdministrative(filtro.Accion) ? filtro.Accion : null,
             filtro.Cuenta is { } account ? AccountId.From(account) : null), ct);
@@ -774,7 +776,7 @@ public sealed partial class AdministracionController(AdministracionApplicationSe
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Estructura)) });
         }
 
-        var result = await service.ListStructureUnitsAsync(Query(activeScope), ct);
+        var result = await estructura.ListStructureUnitsAsync(Query(activeScope), ct);
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
@@ -805,7 +807,7 @@ public sealed partial class AdministracionController(AdministracionApplicationSe
 
         if (ModelState.IsValid)
         {
-            var result = await service.CreateUnitAsync(new CreateUnitCommand(
+            var result = await estructura.CreateUnitAsync(new CreateUnitCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.OperacionId, form.Codigo, form.Nombre), ct);
             if (result.Ok)
             {
@@ -857,7 +859,7 @@ public sealed partial class AdministracionController(AdministracionApplicationSe
 
         if (ModelState.IsValid)
         {
-            var result = await service.RenameUnitAsync(new RenameUnitCommand(
+            var result = await estructura.RenameUnitAsync(new RenameUnitCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), UnitId.From(form.UnidadId), form.Nombre), ct);
             if (result.Ok)
             {
@@ -887,7 +889,7 @@ public sealed partial class AdministracionController(AdministracionApplicationSe
             return RedirectToAction("Select", "ProfileScope");
         }
 
-        var result = await service.ChangeUnitStatusAsync(new ChangeUnitStatusCommand(
+        var result = await estructura.ChangeUnitStatusAsync(new ChangeUnitStatusCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), UnitId.From(unidadId), activa), ct);
         if (result.Ok)
         {
@@ -909,7 +911,7 @@ public sealed partial class AdministracionController(AdministracionApplicationSe
     }
 
     private async Task<StructureUnit?> FindStructureUnitAsync(ActiveProfileScopeCookieValue activeScope, Guid unidadId, CancellationToken ct) =>
-        (await service.ListStructureUnitsAsync(Query(activeScope), ct)).Value?.FirstOrDefault(u => u.UnitId.Value == unidadId);
+        (await estructura.ListStructureUnitsAsync(Query(activeScope), ct)).Value?.FirstOrDefault(u => u.UnitId.Value == unidadId);
 
     /// <summary>Tras un cambio pedido desde la ficha de la cuenta (ambitoId null) o de uno de sus perfiles: el mensaje o
     /// el error vuelven con TempData. Una cuenta ajena vuelve a la lista sin distinguir el motivo.</summary>

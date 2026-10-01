@@ -41,7 +41,7 @@ public class AdministracionTurnosTests
     public async Task Turno_SeCreaConSusHoras_YElReenvioNoLoDuplica()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildTurnos(admin.ExternalSubject);
         var operationId = Guid.NewGuid();
         var command = NewShift(admin, "  Noche  ", operationId, "22:00", "06:00");
 
@@ -66,7 +66,7 @@ public class AdministracionTurnosTests
     public async Task Turno_RechazaNombreRepetidoODatosInvalidos_SeRenombra_YSeInactiva()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildTurnos(admin.ExternalSubject);
         var first = (await service.CreateShiftAsync(NewShift(admin, "Mañana"))).Value;
         var second = (await service.CreateShiftAsync(NewShift(admin, "Tarde", start: "15:00", end: "23:00"))).Value;
         RenameShiftCommand Rename(Guid id, string name) => new(admin.ProfileScopeId, admin.CenterId, id, name);
@@ -102,7 +102,7 @@ public class AdministracionTurnosTests
     public async Task Equipo_SeCreaEnUnaUnidadDelAmbito_ConNombreUnicoPorUnidad_YSeRenombraEInactiva()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildTurnos(admin.ExternalSubject);
         var foreignUnit = await AddUnitAsync(admin.CenterId);
         var operationId = Guid.NewGuid();
         var command = NewTeam(admin, name: "Equipo A", operationId: operationId);
@@ -139,7 +139,7 @@ public class AdministracionTurnosTests
     public async Task Miembros_SoloLosElegiblesDeLaUnidad_ConAltaBajaYAuditoria_SinCambiarSusPermisos()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildTurnos(admin.ExternalSubject);
         var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
         var doctor = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, admin.CenterId, admin.UnitId);
         var otherUnit = await AddUnitAsync(admin.CenterId);
@@ -188,7 +188,7 @@ public class AdministracionTurnosTests
     public async Task UnMiembroQueYaNoTienePerfilEnLaUnidad_SigueEnElEquipo_PeroSaleComoNoElegible_YUnEquipoInactivoNoAdmiteMiembros()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildTurnos(admin.ExternalSubject);
         var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
         var other = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, admin.CenterId, admin.UnitId);
         var teamId = (await service.CreateTeamAsync(NewTeam(admin))).Value;
@@ -218,10 +218,10 @@ public class AdministracionTurnosTests
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var other = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
-        var shiftId = (await Build(admin.ExternalSubject).CreateShiftAsync(NewShift(admin))).Value;
-        var teamId = (await Build(admin.ExternalSubject).CreateTeamAsync(NewTeam(admin))).Value;
-        var foreign = Build(other.ExternalSubject);
-        var nurseService = Build(nurse.ExternalSubject);
+        var shiftId = (await BuildTurnos(admin.ExternalSubject).CreateShiftAsync(NewShift(admin))).Value;
+        var teamId = (await BuildTurnos(admin.ExternalSubject).CreateTeamAsync(NewTeam(admin))).Value;
+        var foreign = BuildTurnos(other.ExternalSubject);
+        var nurseService = BuildTurnos(nurse.ExternalSubject);
 
         var results = new[]
         {
@@ -245,7 +245,7 @@ public class AdministracionTurnosTests
     public async Task BaseDeDatos_NoDejaCambiarLasHorasDeUnTurno_NiBorrar_NiReescribirMiembros()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildTurnos(admin.ExternalSubject);
         var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
         var shiftId = (await service.CreateShiftAsync(NewShift(admin))).Value;
         var teamId = (await service.CreateTeamAsync(NewTeam(admin))).Value;
@@ -277,13 +277,13 @@ public class AdministracionTurnosTests
     public async Task LaAuditoria_MuestraLasAccionesDeTurnosYEquipos_ConLaCuentaAfectada()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildTurnos(admin.ExternalSubject);
         var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
         await service.CreateShiftAsync(NewShift(admin));
         var teamId = (await service.CreateTeamAsync(NewTeam(admin))).Value;
         await service.ChangeTeamMemberAsync(Member(admin, teamId, nurse, true));
 
-        var page = (await service.ListAuditAsync(new ListAdministrativeAuditQuery(
+        var page = (await BuildEstructura(admin.ExternalSubject).ListAuditAsync(new ListAdministrativeAuditQuery(
             admin.ProfileScopeId, admin.CenterId, DateOnly.FromDateTime(DateTime.Today).AddDays(-1), DateOnly.FromDateTime(DateTime.Today).AddDays(1)))).Value!;
 
         Assert.Contains(page.Entries, e => e.Action == "SHIFT_CREATE");

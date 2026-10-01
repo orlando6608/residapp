@@ -15,25 +15,30 @@ namespace ResidApp.IntegrationTests;
 /// con historial de ubicación y corrección de identidad. Cada prueba crea su propio centro.</summary>
 public class AdministracionResidentesTests
 {
+    private static AdministrationAccessResolver Access(string externalSubject) =>
+        new(new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedAdministracionSessionIdentityProvider(externalSubject));
+
     internal static AdministracionApplicationService Build(string externalSubject)
     {
         var session = new FixedAdministracionSessionIdentityProvider(externalSubject);
         return new AdministracionApplicationService(
-            new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory),
+            Access(externalSubject), new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory),
             new SqlAdministracionResidentDirectory(TestDatabase.ConnectionFactory), session,
             new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory),
             new SqlResidentIdentityRepository(TestDatabase.ConnectionFactory),
             new SqlResidentFamilyRepository(TestDatabase.ConnectionFactory),
             new SqlProfessionalAccountDirectory(TestDatabase.ConnectionFactory),
-            new SqlProfessionalAccountRepository(TestDatabase.ConnectionFactory),
-            new SqlCenterStructureDirectory(TestDatabase.ConnectionFactory),
-            new SqlCenterStructureRepository(TestDatabase.ConnectionFactory),
-            new SqlAdministrativeAuditDirectory(TestDatabase.ConnectionFactory),
-            new SqlSchedulingDirectory(TestDatabase.ConnectionFactory),
-            new SqlSchedulingRepository(TestDatabase.ConnectionFactory),
-            new SqlSchedulePlanDirectory(TestDatabase.ConnectionFactory),
-            new SqlSchedulePlanRepository(TestDatabase.ConnectionFactory));
+            new SqlProfessionalAccountRepository(TestDatabase.ConnectionFactory));
     }
+
+    internal static AdministracionEstructuraApplicationService BuildEstructura(string externalSubject) => new(
+        Access(externalSubject), new SqlCenterStructureDirectory(TestDatabase.ConnectionFactory),
+        new SqlCenterStructureRepository(TestDatabase.ConnectionFactory), new SqlAdministrativeAuditDirectory(TestDatabase.ConnectionFactory));
+
+    internal static AdministracionTurnosApplicationService BuildTurnos(string externalSubject) => new(
+        Access(externalSubject), new SqlSchedulingDirectory(TestDatabase.ConnectionFactory),
+        new SqlSchedulingRepository(TestDatabase.ConnectionFactory), new SqlSchedulePlanDirectory(TestDatabase.ConnectionFactory),
+        new SqlSchedulePlanRepository(TestDatabase.ConnectionFactory));
 
     internal static async Task<ResidentId> CreateResidentAsync(SeededProfile admin, string name, UnitId? unitId = null)
     {

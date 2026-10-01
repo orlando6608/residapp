@@ -20,7 +20,7 @@ public class AdministracionEstructuraTests
     private static string NewCode() => $"est-{Guid.NewGuid():N}"[..20];
 
     private static async Task<IReadOnlyList<StructureUnit>> ListAsync(SeededProfile admin) =>
-        (await Build(admin.ExternalSubject).ListStructureUnitsAsync(new AdministracionQuery(admin.ProfileScopeId, admin.CenterId))).Value!;
+        (await BuildEstructura(admin.ExternalSubject).ListStructureUnitsAsync(new AdministracionQuery(admin.ProfileScopeId, admin.CenterId))).Value!;
 
     private static async Task<int> CountAuditAsync(Guid resourceId, string action)
     {
@@ -34,7 +34,7 @@ public class AdministracionEstructuraTests
     public async Task Crear_LaDejaActivaEnElAmbito_LaOfreceElSelector_YElReenvioNoLaDuplica()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildEstructura(admin.ExternalSubject);
         var operationId = Guid.NewGuid();
         var code = NewCode();
 
@@ -61,7 +61,7 @@ public class AdministracionEstructuraTests
     public async Task Crear_RechazaCodigoONombreRepetidos_YDatosInvalidos()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildEstructura(admin.ExternalSubject);
         var code = NewCode();
         Assert.True((await service.CreateUnitAsync(Create(admin, code, "Unidad Uno"))).Ok);
 
@@ -82,7 +82,7 @@ public class AdministracionEstructuraTests
     public async Task Renombrar_CambiaSoloElNombre_ConAuditoria_YRechazaRepetidoOIgual()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildEstructura(admin.ExternalSubject);
         var first = (await service.CreateUnitAsync(Create(admin, NewCode(), "Unidad A"))).Value;
         var second = (await service.CreateUnitAsync(Create(admin, NewCode(), "Unidad B"))).Value;
         RenameUnitCommand Rename(UnitId id, string name) => new(admin.ProfileScopeId, admin.CenterId, id, name);
@@ -105,7 +105,7 @@ public class AdministracionEstructuraTests
     public async Task Inactivar_NoValeConResidentesUbicados_SalePorElSelector_YSeReactiva()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var service = Build(admin.ExternalSubject);
+        var service = BuildEstructura(admin.ExternalSubject);
         var empty = (await service.CreateUnitAsync(Create(admin, NewCode(), "Unidad vacía"))).Value;
         ChangeUnitStatusCommand Status(UnitId id, bool active) => new(admin.ProfileScopeId, admin.CenterId, id, active);
         await CreateResidentAsync(admin, "Residente en la unidad del seed");
@@ -138,9 +138,9 @@ public class AdministracionEstructuraTests
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var nurse = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
         var otherAdmin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var mine = (await Build(admin.ExternalSubject).CreateUnitAsync(Create(admin, NewCode(), "Mi unidad"))).Value;
-        var nurseService = Build(nurse.ExternalSubject);
-        var otherService = Build(otherAdmin.ExternalSubject);
+        var mine = (await BuildEstructura(admin.ExternalSubject).CreateUnitAsync(Create(admin, NewCode(), "Mi unidad"))).Value;
+        var nurseService = BuildEstructura(nurse.ExternalSubject);
+        var otherService = BuildEstructura(otherAdmin.ExternalSubject);
 
         var list = await nurseService.ListStructureUnitsAsync(new AdministracionQuery(nurse.ProfileScopeId, nurse.CenterId));
         var create = await nurseService.CreateUnitAsync(Create(nurse, NewCode(), "Intento de Enfermería"));

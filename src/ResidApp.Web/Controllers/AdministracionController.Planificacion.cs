@@ -29,7 +29,7 @@ public sealed partial class AdministracionController
         var to = from.AddDays(ScheduleWindowDays - 1);
         var units = await AdministratorUnitsAsync(activeScope, ct);
         var unit = unidad is { } id && units.Any(u => u.UnitId.Value == id) ? UnitId.From(id) : (UnitId?)null;
-        var result = await service.ListScheduleAsync(new ListScheduleQuery(
+        var result = await turnos.ListScheduleAsync(new ListScheduleQuery(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to, unit), ct);
         if (!result.Ok)
         {
@@ -77,7 +77,7 @@ public sealed partial class AdministracionController
         var command = new PlanShiftCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.OperacionId, form.EquipoId!.Value, form.TurnoId!.Value,
             form.Dates(), form.Justificacion);
-        var preview = await service.PreviewScheduleAsync(command, ct);
+        var preview = await turnos.PreviewScheduleAsync(command, ct);
         if (!preview.Ok)
         {
             ModelState.AddModelError(string.Empty, PlanError(preview.Error!));
@@ -112,7 +112,7 @@ public sealed partial class AdministracionController
             }
         }
 
-        var result = await service.PlanShiftAsync(command, ct);
+        var result = await turnos.PlanShiftAsync(command, ct);
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, PlanError(result.Error!));
@@ -136,7 +136,7 @@ public sealed partial class AdministracionController
             return RedirectToAction("Select", "ProfileScope");
         }
 
-        var result = await service.RetireScheduleAsync(new RetireScheduleCommand(
+        var result = await turnos.RetireScheduleAsync(new RetireScheduleCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), planificacionId), ct);
         if (result.Ok)
         {
@@ -158,8 +158,8 @@ public sealed partial class AdministracionController
     private async Task<PlanViewModel> PlanViewAsync(
         ActiveProfileScopeCookieValue activeScope, PlanFormModel form, SchedulePreview? preview, CancellationToken ct)
     {
-        var teamsResult = await service.ListTeamsAsync(Query(activeScope), ct);
-        var shiftsResult = await service.ListShiftsAsync(Query(activeScope), ct);
+        var teamsResult = await turnos.ListTeamsAsync(Query(activeScope), ct);
+        var shiftsResult = await turnos.ListShiftsAsync(Query(activeScope), ct);
         if (!teamsResult.Ok && !ModelState.ContainsKey(string.Empty))
         {
             ModelState.AddModelError(string.Empty, teamsResult.Error!.Message);

@@ -81,7 +81,7 @@ public class PlataformaCentrosTests
         var scope = Assert.Single(scopes);
         Assert.Equal(SystemProfile.Administracion, scope.Profile);
         Assert.Equal(centerId, scope.CenterId.Value);
-        var admin = Build(subject);
+        var admin = BuildEstructura(subject);
         var query = new AdministracionQuery(scope.ProfileScopeId, scope.CenterId);
         var units = (await admin.ListStructureUnitsAsync(query)).Value!;
         var first = Assert.Single(units);
@@ -89,7 +89,7 @@ public class PlataformaCentrosTests
         Assert.True(second.Ok, second.Error?.Message);
         var seeded = new SeededProfile(subject, scope.AccountId, scope.CenterId, first.UnitId, scope.ProfileScopeId);
         await CreateResidentAsync(seeded, "Residente del centro nuevo");
-        var residents = await admin.ListResidentsAsync(query);
+        var residents = await Build(subject).ListResidentsAsync(query);
         Assert.Single(residents.Value!);
 
         var listed = (await BuildPlatform(op.ExternalSubject).ListCentersAsync(new PlatformQuery(op.ProfileScopeId, op.CenterId))).Value!;
@@ -192,7 +192,7 @@ public class PlataformaCentrosTests
         var session = new FixedPlatformSessionIdentityProvider(op.ExternalSubject);
 
         var administracion = await Build(op.ExternalSubject).ListResidentsAsync(new AdministracionQuery(op.ProfileScopeId, op.CenterId));
-        var estructura = await Build(op.ExternalSubject).ListStructureUnitsAsync(new AdministracionQuery(op.ProfileScopeId, op.CenterId));
+        var estructura = await BuildEstructura(op.ExternalSubject).ListStructureUnitsAsync(new AdministracionQuery(op.ProfileScopeId, op.CenterId));
         var usuarios = await Build(op.ExternalSubject).ListAccountsAsync(new AdministracionQuery(op.ProfileScopeId, op.CenterId));
         var enfermeria = await EnfermeriaApplicationServiceTests.BuildService(op.ExternalSubject)
             .ListScopeResidentsAsync(new ListScopeResidentsCommand(op.ProfileScopeId, op.CenterId));
