@@ -13,9 +13,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Contacto urgente en la derivación y en la ficha de Enfermería y Medicina (sin script):** hecho el 2026-10-01, con
-  commit en `main` **sin push**. Tras el push, comprueba el pipeline y prueba en Azure sobre «Prueba familiares azure
-  (ficticio)» (su contacto vigente es Tomás), nunca Residente Integrado Uno.
+- **Contacto urgente en la derivación y en la ficha de Enfermería y Medicina (sin script):** hecho el 2026-10-01 y
+  desplegado en Azure (push de `fc360fa`, run 36858712803 en verde con `build-and-test` y `deploy`).
+  - **Prueba en Azure (2026-10-01)** sobre «Prueba familiares azure (ficticio)»:
+    - las fichas de `dev-integrado-enfermeria` y `-medicina` muestran a Tomás (622 555 666, `tel:622555666`, sin correo);
+    - evento «Prueba manual contacto urgente azure: disnea.» registrado, valorado, con protocolo y derivado (la vista previa
+      no incluye el contacto); el protocolo muestra a Tomás y precarga «Tomás Pérez (ficticio) (Hijo)», y la llamada
+      «Contactado» se registró con ese texto. Queda abierto, sin cerrar;
+    - la hora de esa llamada quedó en 12:03 en vez de ~14:03 porque el script la calculó con `TZ=Europe/Madrid date` en Git
+      Bash (la lección de más abajo: usa `date` sin `TZ`); es un dato de prueba, no un fallo de la app;
+    - `dev-integrado-auxiliar` y `-direccion` reciben «No se puede acceder a esta operación» en las fichas y el protocolo, y
+      el episodio de Dirección no muestra el contacto.
   - **Qué hace:** tras firmar la derivación, el protocolo muestra el contacto urgente (teléfono con `tel:`) y precarga «A
     quién se llama»; la ficha de Enfermería y de Medicina tiene la tarjeta «Contacto urgente». Detalle en
     `pendientes-administracion.md`.
