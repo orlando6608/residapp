@@ -248,7 +248,7 @@ public class EnfermeriaApplicationServiceTests
         return (await service.SaveNursingAssessmentAsync(SaveCommand(seed, eventId, started.Value))).Value;
     }
 
-    private static CloseClinicalEventCommand CloseCommand(
+    internal static CloseClinicalEventCommand CloseCommand(
         SeededProfile seed, Guid eventId, int revision, Guid operationId,
         FamilyCommunicationDecision? decision = FamilyCommunicationDecision.NoComunicar,
         FamilyCommunicationType? type = null, string? text = null) =>
@@ -433,11 +433,11 @@ public class EnfermeriaApplicationServiceTests
         }
     }
 
-    private static StartFollowUpCommand StartFollowUpCommand(
+    internal static StartFollowUpCommand StartFollowUpCommand(
         SeededProfile seed, Guid eventId, int revision, DateOnly? dueDate = null, string? criterion = "Si reaparece la tos.") =>
         new(seed.ProfileScopeId, seed.CenterId, eventId, revision, dueDate, criterion, "Vigilar tolerancia.");
 
-    private static async Task<PendingChangeDetail> DetailAsync(SeededProfile seed, Guid eventId) =>
+    internal static async Task<PendingChangeDetail> DetailAsync(SeededProfile seed, Guid eventId) =>
         (await BuildService(seed.ExternalSubject).FindPendingChangeDetailAsync(
             new FindPendingChangeDetailCommand(seed.ProfileScopeId, seed.CenterId, eventId))).Value!;
 
@@ -876,7 +876,7 @@ public class EnfermeriaApplicationServiceTests
         Assert.Null(result.Value);
     }
 
-    private static ActivateUrgentProtocolCommand ActivateCommand(SeededProfile seed, Guid eventId, int revision, string? note = null) =>
+    internal static ActivateUrgentProtocolCommand ActivateCommand(SeededProfile seed, Guid eventId, int revision, string? note = null) =>
         new(seed.ProfileScopeId, seed.CenterId, eventId, revision, note);
 
     private static RecordUrgentProtocolEntryCommand EntryCommand(

@@ -19,7 +19,7 @@ namespace ResidApp.IntegrationTests;
 /// eventos que no se le han escalado.</summary>
 public class MedicinaApplicationServiceTests
 {
-    private static MedicinaApplicationService BuildMedicina(string externalSubject, TimeSpan? correctionWindow = null)
+    internal static MedicinaApplicationService BuildMedicina(string externalSubject, TimeSpan? correctionWindow = null)
     {
         var scopes = new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory);
         var session = new FixedMedicinaSessionIdentityProvider(externalSubject);
@@ -136,12 +136,12 @@ public class MedicinaApplicationServiceTests
         new(seed.ProfileScopeId, seed.CenterId, eventId, revision, findings, "Posible infección respiratoria.", "Se solicita radiografía.",
             null, null, null, 96, null, 91, null, null, null, null, null, null);
 
-    private static RegisterMedicalIndicationCommand Indication(
+    internal static RegisterMedicalIndicationCommand Indication(
         SeededProfile seed, Guid eventId, int revision, string? text = "Control de SpO2 cada 4 horas.", string? criterion = "Si baja de 90 %, avisar.") =>
         new(seed.ProfileScopeId, seed.CenterId, eventId, revision, text, null, criterion, null);
 
     /// <summary>Empieza y guarda la valoración médica; devuelve la revisión con la que se puede indicar.</summary>
-    private static async Task<int> StartAndSaveMedicalAsync(SeededProfile medica, Guid eventId)
+    internal static async Task<int> StartAndSaveMedicalAsync(SeededProfile medica, Guid eventId)
     {
         var service = BuildMedicina(medica.ExternalSubject);
         var revision = (await FindAsync(medica, eventId))!.Revision;

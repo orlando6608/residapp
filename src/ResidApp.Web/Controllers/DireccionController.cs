@@ -73,6 +73,36 @@ public sealed class DireccionController(DireccionApplicationService service) : C
         return result.Ok ? View(result.Value) : RedirectToAction(nameof(Pendientes));
     }
 
+    /// <summary>DIR-08 a DIR-10 y DIR-16 (bloque 4): indicadores agregados del periodo, por unidad, en total y mes a mes. La
+    /// misma página es el informe de actividad imprimible.</summary>
+    public async Task<IActionResult> Indicadores(IndicatorPeriodFilter filtro, CancellationToken ct)
+    {
+        // Una fecha mal formada en la URL se ignora (toma el valor por defecto), no se muestra como error.
+        ModelState.Clear();
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var (from, to) = filtro.Resolve(today);
+        if (filtro.Validate(today) is { } invalid)
+        {
+            ModelState.AddModelError(string.Empty, invalid);
+            return View(new SupervisionIndicatorsViewModel(from, to, null, DateTime.Now));
+        }
+
+        var result = await service.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+        }
+
+        return View(new SupervisionIndicatorsViewModel(from, to, result.Value, DateTime.Now));
+    }
+
     public async Task<IActionResult> Ambito(CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);

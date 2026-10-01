@@ -1,6 +1,6 @@
 # Checklist de construcción — Mínimo Producto Viable
 
-Estado al 2026-09-30.
+Estado al 2026-10-01.
 
 ## Qué es y qué no es este documento
 
@@ -20,7 +20,7 @@ El orden se hereda de `roadmap.md` (heredado a su vez del prototipo legado, úni
 | Medicina | Medicina | En curso (escalados, evento propio, valoración médica, indicaciones, seguimiento médico, protocolo urgente, derivación a Urgencias y cierre médico) |
 | Familia / Portal Familiar | Familiar | No iniciado |
 | Administración | Administración | No iniciado |
-| Dirección / Coordinación Clínica | Dirección/Coordinación Clínica | En curso (supervisión operativa en solo lectura; ver `pendientes-direccion.md`) |
+| Dirección / Coordinación Clínica | Dirección/Coordinación Clínica | En curso (supervisión operativa en solo lectura e indicadores agregados con informe imprimible; ver `pendientes-direccion.md`) |
 
 ### Residente / Basal
 

@@ -56,7 +56,7 @@ Sin pendiente crítico propio. Detalle en `docs/tareas/alta-prioridad/pendientes
 Residente/Basal y Auxiliar están construidos. Enfermería y Medicina tienen construidas todas sus historias
 salvo lo que depende de otros verticales (ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md` y
 `pendientes-medicina.md`). Dirección / Coordinación Clínica está en curso: la supervisión operativa en solo
-lectura está hecha y la lectura clínica auditada espera las finalidades que fije CJ (ver
+lectura y los indicadores agregados con su informe imprimible están hechos, y la lectura clínica auditada espera las finalidades que fije CJ (ver
 `docs/tareas/alta-prioridad/pendientes-direccion.md`). Después vienen Administración y Familia / Portal
 Familiar, que depende de ella y de la decisión del proveedor de identidad.
 

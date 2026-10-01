@@ -1,0 +1,242 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model SupervisionIndicatorsViewModel
+@{
+    ViewData["Title"] = "Indicadores de actividad";
+    var indicators = Model.Indicators;
+    var period = $"del {Model.From:dd/MM/yyyy} al {Model.To:dd/MM/yyyy}";
+    List<(string Name, SupervisionIndicatorCounts Counts, bool IsTotal)> rows = indicators is null
+        ? []
+        : [.. indicators.Units.Select(u => (u.UnitName, u.Counts, false)), ("Total del ámbito", indicators.Total, true)];
+    static string Of(int part, int total) => $"{part} de {total}";
+}
+
+@* DIR-16: al imprimir solo queda el informe; la navegación, el pie y el formulario no salen. *@
+<style>
+    @@media print {
+        header, footer { display: none !important; }
+        .container { max-width: none !important; }
+        .table-responsive { overflow: visible !important; }
+        .table { font-size: 0.8rem; }
+    }
+</style>
+
+<nav aria-label="breadcrumb" class="d-print-none">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Dirección Clínica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Indicadores</li>
+    </ol>
+</nav>
+
+@if (indicators is not null)
+{
+    <div class="d-none d-print-block mb-3">
+        <p class="h4 mb-1">Informe de actividad agregado</p>
+        <p class="mb-0">@indicators.CenterName · @string.Join(", ", indicators.Units.Select(u => u.UnitName))</p>
+        <p class="mb-0">Periodo @period · generado el @Model.GeneratedAt.ToString("dd/MM/yyyy HH:mm")</p>
+        <p class="mb-0">Solo cifras agregadas: sin datos de residentes ni de profesionales.</p>
+    </div>
+}
+
+<h1 class="h3">Indicadores de actividad</h1>
+<p class="text-muted">
+    Cifras agregadas por unidad de tu ámbito para el periodo elegido, con su denominador. No identifican a ningún residente
+    ni profesional y no valoran el trabajo de nadie: sirven para ver cómo funciona el proceso.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form method="get" asp-action="Indicadores" class="card mb-3 d-print-none">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-3">
+                <label for="periodo-desde" class="form-label">Desde</label>
+                <input id="periodo-desde" name="desde" type="date" class="form-control form-control-lg" value="@Model.From.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-12 col-md-3">
+                <label for="periodo-hasta" class="form-label">Hasta</label>
+                <input id="periodo-hasta" name="hasta" type="date" class="form-control form-control-lg" value="@Model.To.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-12 col-md-auto d-grid d-md-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">Aplicar</button>
+                @if (indicators is not null)
+                {
+                    <button type="button" class="btn btn-outline-primary btn-lg" onclick="window.print()">Imprimir / guardar como PDF</button>
+                }
+            </div>
+        </div>
+        <p class="form-text mb-0">Las dos fechas se incluyen. Por defecto, los últimos @IndicatorPeriodFilter.DefaultDays días; como máximo, @SupervisionIndicatorRules.MaxPeriodDays.</p>
+    </div>
+</form>
+
+@if (indicators is not null)
+{
+    <p class="fw-semibold">Periodo @period.</p>
+
+    <section class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5 card-title">Cómo se cuenta</h2>
+            <ul class="mb-0">
+                <li><strong>Registrados:</strong> episodios registrados en el periodo (cambios de Auxiliar y eventos de Enfermería o de Medicina). Son el denominador de los escalados, protocolos y derivaciones, que cuentan lo que pasó después con esos episodios, hasta hoy.</li>
+                <li><strong>Cerrados en el periodo:</strong> episodios cerrados en esas fechas, aunque se registraran antes. No tiene denominador.</li>
+                <li><strong>Indicaciones:</strong> indicaciones médicas emitidas en el periodo, que son el denominador, con su estado de hoy. «Sin resolver» son las que aún no se han registrado como realizadas o no realizadas.</li>
+                <li><strong>Continuidad:</strong> transferencias de un seguimiento al equipo o turno entrante registradas en el periodo, y cuántas tienen la recepción confirmada. En Medicina confirmar la recepción es opcional.</li>
+                <li>La unidad es la del episodio. Las horas son las del centro.</li>
+            </ul>
+        </div>
+    </section>
+
+    <h2 class="h5">Actividad</h2>
+    <div class="table-responsive mb-4">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Episodios registrados y cerrados en el periodo, por unidad</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Unidad</th>
+                    <th scope="col" class="text-end">Registrados</th>
+                    <th scope="col" class="text-end">De Auxiliar</th>
+                    <th scope="col" class="text-end">De Enfermería</th>
+                    <th scope="col" class="text-end">De Medicina</th>
+                    <th scope="col" class="text-end">Prioritarios</th>
+                    <th scope="col" class="text-end">Cerrados en el periodo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    var c = row.Counts;
+                    <tr class="@(row.IsTotal ? "fw-semibold table-group-divider" : null)">
+                        <th scope="row">@row.Name</th>
+                        <td class="text-end">@c.Registered</td>
+                        <td class="text-end">@Of(c.FromAuxiliar, c.Registered)</td>
+                        <td class="text-end">@Of(c.FromNursing, c.Registered)</td>
+                        <td class="text-end">@Of(c.FromMedicine, c.Registered)</td>
+                        <td class="text-end">@Of(c.Priority, c.Registered)</td>
+                        <td class="text-end">@c.Closed</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="h5">Escalados y urgencias</h2>
+    <div class="table-responsive mb-4">
+        <table class="table align-middle">
+            <caption class="visually-hidden">De los episodios registrados en el periodo, cuántos se escalaron, activaron protocolo urgente o se derivaron, por unidad</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Unidad</th>
+                    <th scope="col" class="text-end">Registrados</th>
+                    <th scope="col" class="text-end">Escalados a Medicina</th>
+                    <th scope="col" class="text-end">Con protocolo urgente</th>
+                    <th scope="col" class="text-end">Con informe de derivación firmado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    var c = row.Counts;
+                    <tr class="@(row.IsTotal ? "fw-semibold table-group-divider" : null)">
+                        <th scope="row">@row.Name</th>
+                        <td class="text-end">@c.Registered</td>
+                        <td class="text-end">@Of(c.Escalated, c.Registered)</td>
+                        <td class="text-end">@Of(c.UrgentProtocols, c.Registered)</td>
+                        <td class="text-end">@Of(c.Referrals, c.Registered)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="h5">Indicaciones médicas</h2>
+    <div class="table-responsive mb-4">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Indicaciones médicas emitidas en el periodo y su estado de hoy, por unidad</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Unidad</th>
+                    <th scope="col" class="text-end">Emitidas</th>
+                    <th scope="col" class="text-end">Leídas</th>
+                    <th scope="col" class="text-end">Realizadas</th>
+                    <th scope="col" class="text-end">No realizadas</th>
+                    <th scope="col" class="text-end">Sin resolver</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    var c = row.Counts;
+                    <tr class="@(row.IsTotal ? "fw-semibold table-group-divider" : null)">
+                        <th scope="row">@row.Name</th>
+                        <td class="text-end">@c.IndicationsIssued</td>
+                        <td class="text-end">@Of(c.IndicationsRead, c.IndicationsIssued)</td>
+                        <td class="text-end">@Of(c.IndicationsDone, c.IndicationsIssued)</td>
+                        <td class="text-end">@Of(c.IndicationsNotDone, c.IndicationsIssued)</td>
+                        <td class="text-end">@Of(c.IndicationsUnresolved, c.IndicationsIssued)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="h5">Continuidad entre turnos</h2>
+    <div class="table-responsive mb-4">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Transferencias de seguimiento registradas en el periodo y cuántas tienen la recepción confirmada, por unidad</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Unidad</th>
+                    <th scope="col" class="text-end">Transferencias de Enfermería recibidas</th>
+                    <th scope="col" class="text-end">Transferencias de Medicina recibidas</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    var c = row.Counts;
+                    <tr class="@(row.IsTotal ? "fw-semibold table-group-divider" : null)">
+                        <th scope="row">@row.Name</th>
+                        <td class="text-end">@Of(c.NursingTransfersReceived, c.NursingTransfers)</td>
+                        <td class="text-end">@Of(c.MedicalTransfersReceived, c.MedicalTransfers)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="h5">Evolución mes a mes</h2>
+    <p class="text-muted">Totales del ámbito en cada mes del periodo. Los meses de los extremos pueden estar incompletos.</p>
+    <div class="table-responsive mb-4">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Totales del ámbito por mes dentro del periodo</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Mes</th>
+                    <th scope="col" class="text-end">Registrados</th>
+                    <th scope="col" class="text-end">Cerrados</th>
+                    <th scope="col" class="text-end">Escalados</th>
+                    <th scope="col" class="text-end">Con protocolo urgente</th>
+                    <th scope="col" class="text-end">Con derivación</th>
+                    <th scope="col" class="text-end">Indicaciones emitidas</th>
+                    <th scope="col" class="text-end">Transferencias recibidas</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var month in indicators.Months)
+                {
+                    var c = month.Counts;
+                    <tr>
+                        <th scope="row">@SupervisionDisplay.MonthLabel(month)</th>
+                        <td class="text-end">@c.Registered</td>
+                        <td class="text-end">@c.Closed</td>
+                        <td class="text-end">@Of(c.Escalated, c.Registered)</td>
+                        <td class="text-end">@Of(c.UrgentProtocols, c.Registered)</td>
+                        <td class="text-end">@Of(c.Referrals, c.Registered)</td>
+                        <td class="text-end">@c.IndicationsIssued</td>
+                        <td class="text-end">@Of(c.NursingTransfersReceived + c.MedicalTransfersReceived, c.NursingTransfers + c.MedicalTransfers)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

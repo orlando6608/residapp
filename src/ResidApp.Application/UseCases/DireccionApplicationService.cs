@@ -12,6 +12,9 @@ public sealed record ListSupervisionPendingQuery(
 
 public sealed record FindSupervisionEpisodeQuery(Guid AmbitoPerfilId, CenterId CentroId, Guid EventId);
 
+/// <summary>DIR-08 a DIR-10: el periodo, con From y To incluidos.</summary>
+public sealed record ReadSupervisionIndicatorsQuery(Guid AmbitoPerfilId, CenterId CentroId, DateOnly From, DateOnly To);
+
 /// <summary>DIR-01/DIR-02: contadores de una unidad. Open es el denominador de los demás (episodios abiertos de la unidad).</summary>
 public sealed record SupervisionUnitSummary(
     UnitId UnitId, string UnitName, int Open, int WithoutAssessment, int InAssessment, int Escalated, int FollowUps,
@@ -78,6 +81,26 @@ public sealed class DireccionApplicationService(
         {
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             return await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
+        });
+
+    /// <summary>DIR-08 a DIR-10 y DIR-16 (bloque 4): indicadores agregados del periodo, sin permiso ni auditoría, porque no
+    /// entregan contenido clínico ni datos de personas (la matriz da «Ver indicadores agregados» y «Generar informes
+    /// agregados» a Dirección).</summary>
+    public Task<ApplicationResult<SupervisionIndicators>> ReadIndicatorsAsync(
+        ReadSupervisionIndicatorsQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            if (query.From > query.To || query.To.DayNumber - query.From.DayNumber + 1 > SupervisionIndicatorRules.MaxPeriodDays)
+            {
+                throw new DomainValidationException("APPLICATION_INPUT_INVALID");
+            }
+
+            await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
+            var facts = await directory.ListIndicatorFactsAsync(
+                query.AmbitoPerfilId, query.CentroId, query.From.ToDateTime(TimeOnly.MinValue),
+                query.To.AddDays(1).ToDateTime(TimeOnly.MinValue), ct);
+            return SupervisionIndicatorRules.Aggregate(facts, info, query.From, query.To);
         });
 
     private async Task EnsureDirectionScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct)

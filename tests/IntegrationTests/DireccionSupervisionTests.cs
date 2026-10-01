@@ -144,6 +144,90 @@ public class DireccionSupervisionTests
     }
 
     [Fact]
+    public async Task Indicadores_CuentanLoDelPeriodoEnElAmbito_ConSusDenominadores()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var companera = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, direccion.CenterId, direccion.UnitId);
+        var medica = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, direccion.CenterId, direccion.UnitId);
+        var service = BuildService(enfermera.ExternalSubject);
+        // Cerrado por Enfermería.
+        var closed = await RegisterAsync(enfermera, residentId, "Tos productiva.");
+        var revision = await StartAndSaveAsync(enfermera, closed);
+        Assert.True((await service.CloseClinicalEventAsync(CloseCommand(enfermera, closed, revision, Guid.NewGuid()))).Ok);
+        // Escalado, con una indicación médica sin leer.
+        var escalated = await RegisterAsync(enfermera, residentId, "Disnea progresiva.");
+        revision = await StartAndSaveAsync(enfermera, escalated);
+        Assert.True((await service.EscalateClinicalEventAsync(EscalateCommand(enfermera, escalated, revision))).Ok);
+        revision = await MedicinaApplicationServiceTests.StartAndSaveMedicalAsync(medica, escalated);
+        var indication = await MedicinaApplicationServiceTests.BuildMedicina(medica.ExternalSubject).RegisterMedicalIndicationAsync(
+            MedicinaApplicationServiceTests.Indication(medica, escalated, revision));
+        Assert.True(indication.Ok, indication.Error?.Message);
+        // Protocolo urgente.
+        var urgent = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
+        revision = await StartAndSaveAsync(enfermera, urgent);
+        Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, urgent, revision))).Ok);
+        // Seguimiento transferido y recibido por la compañera.
+        var followUp = await RegisterAsync(enfermera, residentId, "Diarrea de dos días.");
+        revision = await StartAndSaveAsync(enfermera, followUp);
+        revision = (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, followUp, revision))).Value;
+        revision = (await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, followUp, revision, FollowUpActionType.Transferencia,
+            "Revisar a las 8.", EquipoEntrante: "Turno de noche"))).Value;
+        var transfer = (await DetailAsync(companera, followUp)).FollowUp!.PendingTransfer!;
+        Assert.True((await BuildService(companera.ExternalSubject).RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            companera.ProfileScopeId, companera.CenterId, followUp, revision, FollowUpActionType.Recepcion,
+            TransferenciaId: transfer.Id))).Ok);
+        // Un episodio de otro centro no cuenta.
+        var (_, otraEnfermera, otroResidente) = await SeedCenterAsync();
+        await RegisterAsync(otraEnfermera, otroResidente, "Tos productiva.");
+        var dir = BuildDireccion(direccion.ExternalSubject);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        var result = await dir.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today));
+        var yesterday = (await dir.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(
+            direccion.ProfileScopeId, direccion.CenterId, today.AddDays(-1), today.AddDays(-1)))).Value!;
+
+        Assert.True(result.Ok, result.Error?.Message);
+        var unit = Assert.Single(result.Value!.Units);
+        Assert.Equal(direccion.UnitId, unit.UnitId);
+        var c = unit.Counts;
+        Assert.Equal((4, 4, 0, 1), (c.Registered, c.FromNursing, c.FromAuxiliar, c.Closed));
+        Assert.Equal((1, 1, 0), (c.Escalated, c.UrgentProtocols, c.Referrals));
+        Assert.Equal((1, 0, 1), (c.IndicationsIssued, c.IndicationsRead, c.IndicationsUnresolved));
+        Assert.Equal((1, 1, 0), (c.NursingTransfers, c.NursingTransfersReceived, c.MedicalTransfers));
+        Assert.Equal(c, result.Value.Total);
+        Assert.Equal(c, Assert.Single(result.Value.Months).Counts);
+        Assert.Equal(0, yesterday.Total.Registered + yesterday.Total.Closed + yesterday.Total.IndicationsIssued + yesterday.Total.NursingTransfers);
+    }
+
+    [Fact]
+    public async Task Indicadores_OtrosPerfilesNoEntran_YUnPeriodoImposibleSeRechaza()
+    {
+        var (direccion, enfermera, _) = await SeedCenterAsync();
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        var asNurse = await BuildDireccion(enfermera.ExternalSubject).ReadIndicatorsAsync(
+            new ReadSupervisionIndicatorsQuery(enfermera.ProfileScopeId, enfermera.CenterId, today, today));
+        var reversed = await BuildDireccion(direccion.ExternalSubject).ReadIndicatorsAsync(
+            new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today.AddDays(-1)));
+        var tooLong = await BuildDireccion(direccion.ExternalSubject).ReadIndicatorsAsync(
+            new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today.AddDays(-366), today));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, asNurse.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, reversed.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, tooLong.Error!.Code);
+        // Garantía estructural: los hechos y los indicadores no llevan texto (salvo nombres de centro y unidad), ni residente ni cuenta.
+        var types = new[]
+        {
+            typeof(IndicatorEpisodeFact), typeof(IndicatorClosureFact), typeof(IndicatorIndicationFact), typeof(IndicatorTransferFact),
+            typeof(SupervisionIndicatorCounts), typeof(SupervisionUnitIndicators), typeof(SupervisionMonthIndicators), typeof(SupervisionIndicators),
+        };
+        var properties = types.SelectMany(t => t.GetProperties()).ToList();
+        Assert.Equal(["CenterName", "UnitName"], properties.Where(p => p.PropertyType == typeof(string)).Select(p => p.Name).Order());
+        Assert.DoesNotContain(properties, p => p.PropertyType == typeof(ResidentId) || p.PropertyType == typeof(Guid));
+    }
+
+    [Fact]
     public async Task Ambito_ListaSusUnidadesYPermisosVigentes()
     {
         var direccion = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica, ["CLINICAL_DETAIL_READ"]);

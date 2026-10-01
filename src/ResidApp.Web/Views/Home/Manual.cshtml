@@ -35,6 +35,7 @@
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
             <a class="list-group-item list-group-item-action" href="#supervision-direccion">Supervisión operativa por unidad (Dirección Clínica)</a>
+            <a class="list-group-item list-group-item-action" href="#indicadores-direccion">Indicadores e informe de actividad (Dirección Clínica)</a>
             <a class="list-group-item list-group-item-action" href="#mis-residentes-auxiliar">Mis residentes (Auxiliar)</a>
             <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#registrar-evento-enfermeria">Registrar evento (Enfermería)</a>
@@ -253,6 +254,37 @@
         En <strong>Mi ámbito de supervisión</strong> consultas el centro, las unidades y los permisos vigentes de tu perfil
         activo; consultarlo no lo amplía. Si una pantalla te dice "No se puede acceder a esta operación", el episodio no
         está en tu ámbito o no existe: el mensaje no distingue entre ambos casos.
+    </p>
+</section>
+
+<section id="indicadores-direccion" class="mb-4">
+    <h2 class="h5">
+        Indicadores e informe de actividad
+        <span class="badge text-bg-secondary align-middle">Perfil: Dirección Clínica</span>
+    </h2>
+    <p>
+        Desde la tarjeta <strong>Indicadores e informe de actividad</strong> del inicio de Dirección Clínica eliges un periodo
+        con las fechas "Desde" y "Hasta" (las dos incluidas) y pulsas "Aplicar". Por defecto son los últimos 30 días, y el
+        periodo puede llegar a 366 días. Si una fecha no es válida se usa la de por defecto; si "Desde" es posterior a
+        "Hasta", la pantalla te lo indica.
+    </p>
+    <p>
+        Para cada unidad de tu ámbito, y en total, ves:
+    </p>
+    <ul>
+        <li><strong>Actividad:</strong> los episodios registrados en el periodo, por origen (Auxiliar, Enfermería o Medicina) y cuántos fueron prioritarios, y los episodios cerrados en esas fechas.</li>
+        <li><strong>Escalados y urgencias:</strong> de los episodios registrados en el periodo, cuántos se escalaron a Medicina, activaron un protocolo urgente o tienen un informe de derivación firmado.</li>
+        <li><strong>Indicaciones médicas:</strong> las emitidas en el periodo y cuántas están leídas, realizadas, no realizadas o sin resolver.</li>
+        <li><strong>Continuidad entre turnos:</strong> las transferencias de seguimiento de Enfermería y de Medicina, y cuántas tienen la recepción confirmada.</li>
+    </ul>
+    <p>
+        Cada cifra se muestra como "n de m", con su denominador, y la pantalla explica cómo se cuenta cada una. Debajo, la
+        <strong>evolución mes a mes</strong> da los totales de cada mes del periodo. Son solo cifras agregadas: no aparecen
+        residentes ni profesionales, y ninguna cifra valora el trabajo de nadie.
+    </p>
+    <p class="mb-0">
+        "Imprimir / guardar como PDF" abre la impresión del navegador con el <strong>informe de actividad agregado</strong>:
+        el centro, las unidades, el periodo y la fecha de generación, sin el menú ni el formulario.
     </p>
 </section>
 
@@ -779,6 +811,6 @@
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
         <li>Gestión administrativa completa (autorizaciones, turnos, citas, auditoría).</li>
-        <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, y los indicadores e informes agregados.</li>
+        <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, y la revisión de calidad de proceso (cumplimiento de hitos y plazos, pendiente de definir).</li>
     </ul>
 </section>

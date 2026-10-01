@@ -24,8 +24,55 @@ public sealed class SupervisionFilter
 public sealed record SupervisionPendingViewModel(
     SupervisionPendingList List, SupervisionFilter Filter, IReadOnlyList<(Guid Id, string Name)> Units, DateOnly Today);
 
+/// <summary>DIR-08 a DIR-10: el periodo de los indicadores. Llega por GET (?desde=&amp;hasta=); una fecha vacía o mal formada
+/// toma el valor por defecto: los últimos 30 días, hoy incluido.</summary>
+public sealed class IndicatorPeriodFilter
+{
+    public const int DefaultDays = 30;
+
+    public DateOnly? Desde { get; set; }
+
+    public DateOnly? Hasta { get; set; }
+
+    public (DateOnly From, DateOnly To) Resolve(DateOnly today)
+    {
+        var to = Hasta ?? today;
+        return (Desde ?? to.AddDays(1 - DefaultDays), to);
+    }
+
+    /// <summary>Mensaje para un periodo imposible; null si es válido.</summary>
+    public string? Validate(DateOnly today)
+    {
+        var (from, to) = Resolve(today);
+        if (from > to)
+        {
+            return "La fecha «desde» no puede ser posterior a la fecha «hasta».";
+        }
+
+        return to.DayNumber - from.DayNumber + 1 > SupervisionIndicatorRules.MaxPeriodDays
+            ? $"El periodo no puede pasar de {SupervisionIndicatorRules.MaxPeriodDays} días."
+            : null;
+    }
+}
+
+/// <summary>DIR-08 a DIR-10 y DIR-16: los indicadores (null si el periodo no es válido o falló la lectura) y cuándo se
+/// generaron, para la cabecera del informe imprimible.</summary>
+public sealed record SupervisionIndicatorsViewModel(
+    DateOnly From, DateOnly To, SupervisionIndicators? Indicators, DateTime GeneratedAt);
+
 public static class SupervisionDisplay
 {
+    /// <summary>DIR-10: un mes del periodo, recortado si no está entero («septiembre de 2026» o «1–15 de septiembre de 2026»).</summary>
+    public static string MonthLabel(SupervisionMonthIndicators month)
+    {
+        var culture = System.Globalization.CultureInfo.GetCultureInfo("es-ES");
+        var whole = month.From.Day == 1 && month.To == month.From.AddMonths(1).AddDays(-1);
+        var name = month.From.ToString("MMMM 'de' yyyy", culture);
+        return whole ? name
+            : month.From == month.To ? $"{month.From.Day} de {name}"
+            : $"{month.From.Day}–{month.To.Day} de {name}";
+    }
+
     public static string Label(SupervisionPendingType type) => type switch
     {
         SupervisionPendingType.SinValorar => "Sin valorar",

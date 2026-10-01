@@ -2,6 +2,7 @@ using Dapper;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Medicina;
 using ResidApp.Shared;
 
 namespace ResidApp.Infrastructure.Persistence;
@@ -13,7 +14,29 @@ namespace ResidApp.Infrastructure.Persistence;
 /// SqlChangeInboxDirectory.ScopedEventsFrom para Dirección, que no puede reutilizarlo porque fija Enfermería y Medicina.</summary>
 public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : ISupervisionDirectory
 {
-    private const string ScopedEpisodesSelect = """
+    // Regla de ámbito común a la supervisión y a los indicadores: el ámbito activo de Dirección del centro, sus unidades y,
+    // si los restringe, sus residentes. Va seguida de los APPLY o JOIN de cada consulta y de ScopedEventsWhere.
+    private const string ScopedEventsFrom = """
+          FROM dbo.eventos_asistenciales ea
+          JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
+               AND profile.perfil_codigo = 'DIRECCION_CLINICA' AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+          JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
+               AND unit_scope.centro_id = profile.centro_id AND unit_scope.unidad_id = ea.unidad_id AND unit_scope.revocado_en IS NULL
+          JOIN dbo.unidades unit ON unit.id = ea.unidad_id AND unit.centro_id = profile.centro_id
+          JOIN dbo.residentes resident ON resident.id = ea.residente_id AND resident.centro_id = profile.centro_id
+          LEFT JOIN dbo.ambitos_perfil_residente resident_scope ON resident_scope.ambito_perfil_id = profile.id
+               AND resident_scope.centro_id = profile.centro_id AND resident_scope.residente_id = ea.residente_id
+               AND resident_scope.revocado_en IS NULL
+        """;
+
+    private const string ScopedEventsWhere = """
+         WHERE ea.centro_id = @CenterId
+           AND (resident_scope.id IS NOT NULL OR NOT EXISTS (
+               SELECT 1 FROM dbo.ambitos_perfil_residente restriction
+                WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
+        """;
+
+    private const string ScopedEpisodesSelect = $"""
         SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
                ea.unidad_id AS UnitId, unit.nombre_visible AS UnitName, ea.origen_codigo AS OriginCode,
                ea.clasificacion_codigo AS ClassificationCode, ea.estado_codigo AS StatusCode, ea.recibido_en AS ReceivedAt,
@@ -27,16 +50,7 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
                  WHERE i.evento_id = ea.id AND i.estado_codigo IN ('PENDIENTE_LECTURA', 'LEIDA')) AS IndicationsPending,
                (SELECT COUNT(*) FROM dbo.indicaciones_medicas i
                  WHERE i.evento_id = ea.id AND i.estado_codigo = 'NO_REALIZADA') AS IndicationsNotDone
-          FROM dbo.eventos_asistenciales ea
-          JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
-               AND profile.perfil_codigo = 'DIRECCION_CLINICA' AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
-          JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
-               AND unit_scope.centro_id = profile.centro_id AND unit_scope.unidad_id = ea.unidad_id AND unit_scope.revocado_en IS NULL
-          JOIN dbo.unidades unit ON unit.id = ea.unidad_id AND unit.centro_id = profile.centro_id
-          JOIN dbo.residentes resident ON resident.id = ea.residente_id AND resident.centro_id = profile.centro_id
-          LEFT JOIN dbo.ambitos_perfil_residente resident_scope ON resident_scope.ambito_perfil_id = profile.id
-               AND resident_scope.centro_id = profile.centro_id AND resident_scope.residente_id = ea.residente_id
-               AND resident_scope.revocado_en IS NULL
+        {ScopedEventsFrom}
           OUTER APPLY (SELECT CASE WHEN reschedule.id IS NULL THEN seg.fecha_prevista ELSE reschedule.fecha_prevista END AS DueDate
                          FROM dbo.seguimientos seg
                          OUTER APPLY (SELECT TOP 1 a.id, a.fecha_prevista FROM dbo.seguimiento_acciones a
@@ -49,10 +63,8 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
                                        WHERE a.seguimiento_id = seg.id AND a.tipo_codigo = 'REPROGRAMACION'
                                        ORDER BY a.registrado_en DESC) reschedule
                         WHERE seg.evento_id = ea.id AND ea.estado_codigo = 'EN_SEGUIMIENTO_MEDICO') medical_follow_up
-         WHERE ea.centro_id = @CenterId AND ea.estado_codigo <> 'CERRADO'
-           AND (resident_scope.id IS NOT NULL OR NOT EXISTS (
-               SELECT 1 FROM dbo.ambitos_perfil_residente restriction
-                WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
+        {ScopedEventsWhere}
+           AND ea.estado_codigo <> 'CERRADO'
         """;
 
     public async Task<IReadOnlyList<SupervisionEpisode>> ListOpenEpisodesAsync(
@@ -170,6 +182,75 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
         return new SupervisionScopeInfo(center, units, restricted, permissions);
     }
 
+    /// <summary>DIR-08 a DIR-10: cuatro consultas sobre la misma regla de ámbito, sin el filtro de abiertos. Solo leen la
+    /// unidad, códigos y fechas.</summary>
+    public async Task<SupervisionIndicatorFacts> ListIndicatorFactsAsync(
+        Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var parameters = new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, From = from, To = toExclusive };
+
+        var episodes = await connection.QueryAsync<EpisodeFactRow>(new CommandDefinition($"""
+            SELECT ea.unidad_id AS UnitId, ea.origen_codigo AS OriginCode, ea.clasificacion_codigo AS ClassificationCode,
+                   ea.recibido_en AS ReceivedAt,
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.escalados_medicina x WHERE x.evento_id = ea.id) THEN 1 ELSE 0 END AS BIT)
+                       AS Escalated,
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.protocolos_urgentes x WHERE x.evento_id = ea.id) THEN 1 ELSE 0 END AS BIT)
+                       AS UrgentProtocol,
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.informes_derivacion x WHERE x.evento_id = ea.id) THEN 1 ELSE 0 END AS BIT)
+                       AS Referred
+            {ScopedEventsFrom}
+            {ScopedEventsWhere}
+               AND ea.recibido_en >= @From AND ea.recibido_en < @To
+            """, parameters, cancellationToken: ct));
+        var closures = await connection.QueryAsync<ClosureFactRow>(new CommandDefinition($"""
+            SELECT ea.unidad_id AS UnitId, ea.cerrado_en AS ClosedAt
+            {ScopedEventsFrom}
+            {ScopedEventsWhere}
+               AND ea.cerrado_en >= @From AND ea.cerrado_en < @To
+            """, parameters, cancellationToken: ct));
+        var indications = await connection.QueryAsync<IndicationFactRow>(new CommandDefinition($"""
+            SELECT ea.unidad_id AS UnitId, indication.emitida_en AS IssuedAt, indication.estado_codigo AS StatusCode
+            {ScopedEventsFrom}
+              JOIN dbo.indicaciones_medicas indication ON indication.evento_id = ea.id
+            {ScopedEventsWhere}
+               AND indication.emitida_en >= @From AND indication.emitida_en < @To
+            """, parameters, cancellationToken: ct));
+        var transfers = await connection.QueryAsync<TransferFactRow>(new CommandDefinition($"""
+            SELECT ea.unidad_id AS UnitId, transfer_fact.ProfileCode, transfer_fact.At, transfer_fact.Received
+            {ScopedEventsFrom}
+              CROSS APPLY (
+                  SELECT 'ENFERMERIA' AS ProfileCode, a.registrado_en AS At,
+                         CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.seguimiento_acciones r
+                                                 WHERE r.transferencia_id = a.id AND r.tipo_codigo = 'RECEPCION')
+                              THEN 1 ELSE 0 END AS BIT) AS Received
+                    FROM dbo.seguimientos s
+                    JOIN dbo.seguimiento_acciones a ON a.seguimiento_id = s.id AND a.tipo_codigo = 'TRANSFERENCIA'
+                   WHERE s.evento_id = ea.id
+                  UNION ALL
+                  SELECT 'MEDICINA', a.registrado_en,
+                         CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.seguimiento_medico_acciones r
+                                                 WHERE r.transferencia_id = a.id AND r.tipo_codigo = 'RECEPCION')
+                              THEN 1 ELSE 0 END AS BIT)
+                    FROM dbo.seguimientos_medicos s
+                    JOIN dbo.seguimiento_medico_acciones a ON a.seguimiento_id = s.id AND a.tipo_codigo = 'TRANSFERENCIA'
+                   WHERE s.evento_id = ea.id) transfer_fact
+            {ScopedEventsWhere}
+               AND transfer_fact.At >= @From AND transfer_fact.At < @To
+            """, parameters, cancellationToken: ct));
+
+        return new SupervisionIndicatorFacts(
+            episodes.Select(r => new IndicatorEpisodeFact(
+                UnitId.From(r.UnitId), EnumCode.ParseCode<ClinicalEventOrigin>(r.OriginCode),
+                EnumCode.ParseCode<DailyChangeClassification>(r.ClassificationCode), r.ReceivedAt, r.Escalated, r.UrgentProtocol,
+                r.Referred)).ToList(),
+            closures.Select(r => new IndicatorClosureFact(UnitId.From(r.UnitId), r.ClosedAt)).ToList(),
+            indications.Select(r => new IndicatorIndicationFact(
+                UnitId.From(r.UnitId), r.IssuedAt, EnumCode.ParseCode<MedicalIndicationStatus>(r.StatusCode))).ToList(),
+            transfers.Select(r => new IndicatorTransferFact(
+                UnitId.From(r.UnitId), EnumCode.ParseCode<SystemProfile>(r.ProfileCode), r.At, r.Received)).ToList());
+    }
+
     private static SupervisionEpisode ToEpisode(EpisodeRow r) => new(
         r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, UnitId.From(r.UnitId), r.UnitName,
         EnumCode.ParseCode<ClinicalEventOrigin>(r.OriginCode), EnumCode.ParseCode<DailyChangeClassification>(r.ClassificationCode),
@@ -189,4 +270,13 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
     private sealed record MilestoneRow(string Kind, string ProfileCode, DateTime At);
 
     private sealed record UnitRow(Guid Id, string Name);
+
+    private sealed record EpisodeFactRow(
+        Guid UnitId, string OriginCode, string ClassificationCode, DateTime ReceivedAt, bool Escalated, bool UrgentProtocol, bool Referred);
+
+    private sealed record ClosureFactRow(Guid UnitId, DateTime ClosedAt);
+
+    private sealed record IndicationFactRow(Guid UnitId, DateTime IssuedAt, string StatusCode);
+
+    private sealed record TransferFactRow(Guid UnitId, string ProfileCode, DateTime At, bool Received);
 }

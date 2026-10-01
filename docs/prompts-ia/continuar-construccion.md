@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-09-30. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-01. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -12,6 +12,26 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Dirección Clínica, bloque 4: indicadores agregados, evolución e informe imprimible (DIR-08, DIR-09, DIR-10, DIR-16; sin
+  script):** hecho el 2026-10-01, con commit en `main` **sin push**. Al hacer el push, comprueba el pipeline y prueba en Azure con
+  `dev-integrado-direccion`.
+  - **Qué hace:** `/Direccion/Indicadores?desde=&hasta=` muestra, por unidad y en total, los indicadores como «n de m». Son cuatro
+    grupos (actividad, escalados y urgencias, indicaciones médicas y continuidad entre turnos), con la evolución mes a mes debajo.
+  - **Informe:** «Imprimir / guardar como PDF» deja solo el informe de actividad agregado. Las decisiones y suposiciones están en
+    `pendientes-direccion.md`.
+  - **Verificación:**
+    - suite local en verde antes de empezar (121, 199 y 17) y después 3 veces seguidas (125, 201 y 21);
+    - 3 vueltas tipo CI con BD nueva en verde;
+    - `IndicatorPeriodFilterTests` y `LocalizationTests` en un contenedor Linux (nombres de los meses con ICU);
+    - curl con `dev-integrado-direccion`:
+      - el periodo por defecto cuadra con una consulta `sqlcmd` de control: 15 registrados (1, 12 y 2 por origen; 5 prioritarios),
+        12 cerrados, 5 escalados, 4 protocolos, 2 derivaciones, 4 indicaciones y una transferencia recibida por perfil;
+      - el periodo 15/08–01/10 da tres meses recortados;
+      - las fechas mal formadas se ignoran, y `desde > hasta` y más de 366 días dan su mensaje;
+      - la página no muestra residentes;
+    - `dev-integrado-enfermeria`, `-medicina` y `-auxiliar` reciben «No se puede acceder a esta operación»;
+    - impresión revisada con Edge sin interfaz (`msedge --headless --print-to-pdf` sobre la página guardada con `<base href>`): la
+      primera versión cortaba las tablas anchas (`table-responsive`), y se corrigió con estilos de impresión en la propia vista.
 - **Dirección Clínica, bloque 1: supervisión operativa en solo lectura (DIR-01 a DIR-04, DIR-17; sin script):** hecho el
   2026-09-30 y desplegado en Azure (push de `04c68ce`, run 36762590727 en verde con `build-and-test` y `deploy`). `/Direccion` (contadores por unidad con denominador),
   `/Direccion/Pendientes` (filtro por tipo y unidad), `/Direccion/Episodio` (hitos sin texto) y `/Direccion/Ambito`. Sin
@@ -348,7 +368,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 - El estado de un run se consulta sin autenticación en
   `https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main`, y el de cada job y paso en
   `.../actions/runs/<id>/jobs`. Los logs piden autenticación y `gh` no está instalado.
-- CJ no ha completado nada nuevo (comprobado también en GitHub el 2026-09-29):
+- CJ no ha completado nada nuevo (comprobado también en GitHub el 2026-10-01): `decisiones-direccion-basal-derivacion.html`
+  sigue con sus 7 respuestas «por definir», y
   `docs/pendientes-cj/rangos-referencia-constantes.html` sigue con 19 huecos «por definir» (14 celdas de la
   tabla y 5 respuestas; antes se contaban mal como 17).
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1 a 10
@@ -384,7 +405,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 121 unitarios, 199 de integración y 17 funcionales, todos en verde.
+- Suite: 125 unitarios, 201 de integración y 21 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -396,9 +417,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    2026-09-30, 7 respuestas). Si ha respondido al tema 1, el siguiente bloque es el 2 de Dirección (lectura clínica
    auditada); si ha respondido al tema 2, la aportación a un borrador de basal ajeno; el tema 3 es un cambio pequeño en el
    informe de derivación.
-2. **Dirección, bloque 3 o 4** (no dependen de la decisión de CJ, pero sí de otros verticales en parte): ver
-   `pendientes-direccion.md`. El bloque 3 necesita la publicación familiar; el 4 (indicadores con periodo e informes
-   agregados) se puede construir ya.
+2. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
+   (Administración y Familia). El bloque 4 está hecho; la revisión de calidad de proceso (DIR-11) necesita que CJ defina
+   los hitos y plazos. Ver `pendientes-direccion.md`.
 3. **Administración** (prerrequisito de Familia y de los huecos de turnos, equipos y firmante) y después **Familia /
    Portal Familiar**, que también depende del proveedor de identidad. Antes de proponerlos, lee sus historias en
    `docs/historias-usuarios/` y comprueba qué piden de lo ya construido.
