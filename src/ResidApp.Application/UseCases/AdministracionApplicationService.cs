@@ -4,6 +4,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
+using ResidApp.Domain.Structure;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
@@ -65,6 +66,15 @@ public sealed record ChangeAccountProfileUnitCommand(
 public sealed record ChangeAccountProfileResidentCommand(
     Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid PerfilCuentaId, ResidentId ResidenteId, bool Asignar);
 
+/// <summary>ADM-05 (0025): alta de una unidad. OperacionId nace con el formulario y es el id de la unidad, así que un reenvío
+/// no la duplica.</summary>
+public sealed record CreateUnitCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? Codigo, string? Nombre);
+
+public sealed record RenameUnitCommand(Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, string? Nombre);
+
+/// <summary>ADM-05: Activa es el estado que se quiere (false para inactivar, true para reactivar).</summary>
+public sealed record ChangeUnitStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, bool Activa);
+
 /// <summary>ADM-13 (0024): conceder (Conceder = true) o revocar un permiso del catálogo del perfil.</summary>
 public sealed record ChangeAccountProfilePermissionCommand(
     Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid PerfilCuentaId, string? Permiso, bool Conceder);
@@ -84,7 +94,8 @@ public sealed record ChangeAccountProfilePermissionCommand(
 public sealed class AdministracionApplicationService(
     IProfileScopeDirectoryProvider scopes, IAdministracionResidentDirectory directory, ISessionIdentityProvider session,
     IAuthorizationEvidenceProvider evidenceProvider, IResidentIdentityRepository identities, IResidentFamilyRepository families,
-    IProfessionalAccountDirectory accountDirectory, IProfessionalAccountRepository accounts)
+    IProfessionalAccountDirectory accountDirectory, IProfessionalAccountRepository accounts, ICenterStructureDirectory structure,
+    ICenterStructureRepository structureWriter)
 {
     public Task<ApplicationResult<IReadOnlyList<AdministrativeResidentSummary>>> ListResidentsAsync(
         AdministracionQuery query, CancellationToken ct = default) =>
@@ -259,6 +270,39 @@ public sealed class AdministracionApplicationService(
             await (command.Conceder
                 ? accounts.GrantPermissionAsync(access, command.CuentaId, command.PerfilCuentaId, code, ct)
                 : accounts.RevokePermissionAsync(access, command.CuentaId, command.PerfilCuentaId, code, ct));
+            return true;
+        });
+
+    /// <summary>ADM-05: las unidades concedidas al ámbito de quien gestiona, activas e inactivas.</summary>
+    public Task<ApplicationResult<IReadOnlyList<StructureUnit>>> ListStructureUnitsAsync(
+        AdministracionQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await structure.ListUnitsAsync(access, ct);
+        });
+
+    public Task<ApplicationResult<UnitId>> CreateUnitAsync(CreateUnitCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            var data = CenterUnit.Validate(command.Codigo, command.Nombre);
+            return await structureWriter.CreateUnitAsync(access, command.OperacionId, data, ct);
+        });
+
+    public Task<ApplicationResult<bool>> RenameUnitAsync(RenameUnitCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await structureWriter.RenameUnitAsync(access, command.UnidadId, CenterUnit.ValidateName(command.Nombre), ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> ChangeUnitStatusAsync(ChangeUnitStatusCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await structureWriter.ChangeUnitStatusAsync(access, command.UnidadId, command.Activa, ct);
             return true;
         });
 

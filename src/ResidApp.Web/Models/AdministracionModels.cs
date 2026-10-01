@@ -5,6 +5,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
+using ResidApp.Domain.Structure;
 using ResidApp.Shared;
 
 namespace ResidApp.Web.Models;
@@ -288,3 +289,33 @@ public static class ProfessionalAccountDisplay
 
 /// <summary>ADM-13: las casillas de unidades (Form.Unidades) del alta y de «Conceder perfil».</summary>
 public sealed record ProfileUnitsFieldModel(IReadOnlyList<ScopeUnit> Units, IReadOnlyList<Guid> Selected);
+
+/// <summary>ADM-05: alta de una unidad. OperacionId es el id de la unidad nueva, así que reenviar no la duplica.</summary>
+public sealed class NewUnitFormModel
+{
+    public Guid OperacionId { get; set; }
+
+    [Required(ErrorMessage = "Escribe el código.")]
+    [StringLength(CenterUnit.MaxCodeLength, MinimumLength = CenterUnit.MinCodeLength, ErrorMessage = "El código lleva entre {2} y {1} caracteres.")]
+    [Display(Name = "Código")]
+    public string? Codigo { get; set; }
+
+    [Required(ErrorMessage = "Escribe el nombre.")]
+    [StringLength(CenterUnit.MaxNameLength, ErrorMessage = "El nombre no puede pasar de {1} caracteres.")]
+    [Display(Name = "Nombre")]
+    public string? Nombre { get; set; }
+}
+
+public sealed class RenameUnitFormModel
+{
+    public Guid UnidadId { get; set; }
+
+    [Required(ErrorMessage = "Escribe el nombre.")]
+    [StringLength(CenterUnit.MaxNameLength, ErrorMessage = "El nombre no puede pasar de {1} caracteres.")]
+    [Display(Name = "Nombre")]
+    public string? Nombre { get; set; }
+}
+
+public sealed record RenameUnitViewModel(StructureUnit Unit, RenameUnitFormModel Form);
+
+public sealed record NewUnitViewModel(NewUnitFormModel Form);

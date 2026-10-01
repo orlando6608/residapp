@@ -25,7 +25,9 @@ public class AdministracionResidentesTests
             new SqlResidentIdentityRepository(TestDatabase.ConnectionFactory),
             new SqlResidentFamilyRepository(TestDatabase.ConnectionFactory),
             new SqlProfessionalAccountDirectory(TestDatabase.ConnectionFactory),
-            new SqlProfessionalAccountRepository(TestDatabase.ConnectionFactory));
+            new SqlProfessionalAccountRepository(TestDatabase.ConnectionFactory),
+            new SqlCenterStructureDirectory(TestDatabase.ConnectionFactory),
+            new SqlCenterStructureRepository(TestDatabase.ConnectionFactory));
     }
 
     internal static async Task<ResidentId> CreateResidentAsync(SeededProfile admin, string name, UnitId? unitId = null)

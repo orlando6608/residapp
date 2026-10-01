@@ -35,6 +35,7 @@
             <a class="list-group-item list-group-item-action" href="#residentes-administracion">Residentes y ficha administrativa (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#familiares-administracion">Familiares, autorizaciones y contacto urgente (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#usuarios-administracion">Usuarios, perfiles y unidades (Administración)</a>
+            <a class="list-group-item list-group-item-action" href="#estructura-administracion">Estructura del centro: unidades (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
             <a class="list-group-item list-group-item-action" href="#supervision-direccion">Supervisión operativa por unidad (Dirección Clínica)</a>
@@ -212,8 +213,8 @@
         <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
     </h2>
     <p>
-        El inicio de Administración tiene tres tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
-        ámbito, <strong>Alta de residente</strong> y <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»). En el alta, la unidad se elige en una lista con las unidades de tu
+        El inicio de Administración tiene cuatro tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
+        ámbito, <strong>Alta de residente</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades») y <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades»). En el alta, la unidad se elige en una lista con las unidades de tu
         ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves el nombre, la edad (calculada a partir
         de la fecha de nacimiento), el sexo documentado, la unidad y la fecha de alta. Puedes buscar por nombre, sin
         importar mayúsculas ni acentos, y filtrar por unidad si tu ámbito tiene más de una.
@@ -303,6 +304,27 @@
     </ul>
     <p class="mb-0">
         Tu propia cuenta la ves, pero no la puedes cambiar: lo hace otra cuenta de Administración.
+    </p>
+</section>
+
+<section id="estructura-administracion" class="mb-4">
+    <h2 class="h5">
+        Estructura del centro: unidades
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+    </h2>
+    <p>
+        <strong>Estructura del centro</strong> lista las unidades concedidas a tu ámbito, con su nombre, su código, si están
+        activas o inactivas y cuántos residentes tienen ubicados. Con <strong>Nueva unidad</strong> escribes el código (de 2 a
+        64 caracteres: letras sin acentos, dígitos, «-» o «_»; se guarda en mayúsculas y no se puede cambiar después) y el
+        nombre. Si el código o el nombre ya los lleva otra unidad del centro, te lo indica. La unidad nace activa y
+        concedida a tu ámbito: desde ese momento la ofrece el alta de residentes y puedes concedérsela a los perfiles
+        desde Usuarios.
+    </p>
+    <p>
+        <strong>Cambiar nombre</strong> renombra la unidad sin tocar las ubicaciones anteriores. <strong>Inactivar</strong>
+        retira la unidad del alta de residentes y de la gestión de usuarios; no se puede inactivar mientras tenga residentes
+        ubicados, y <strong>Reactivar</strong> la devuelve. Una unidad no se borra. Todo cambio queda en la auditoría. Crear o
+        cambiar una unidad no da acceso clínico a nadie. Edificios, plantas, habitaciones y plazas llegarán más adelante.
     </p>
 </section>
 

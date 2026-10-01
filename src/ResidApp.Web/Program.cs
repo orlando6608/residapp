@@ -50,6 +50,8 @@ builder.Services.AddScoped<IResidentIdentityRepository, SqlResidentIdentityRepos
 builder.Services.AddScoped<IResidentFamilyRepository, SqlResidentFamilyRepository>();
 builder.Services.AddScoped<IProfessionalAccountDirectory, SqlProfessionalAccountDirectory>();
 builder.Services.AddScoped<IProfessionalAccountRepository, SqlProfessionalAccountRepository>();
+builder.Services.AddScoped<ICenterStructureDirectory, SqlCenterStructureDirectory>();
+builder.Services.AddScoped<ICenterStructureRepository, SqlCenterStructureRepository>();
 builder.Services.AddScoped<INursingAssessmentRepository, SqlNursingAssessmentRepository>();
 builder.Services.AddScoped<IMedicalAssessmentRepository, SqlMedicalAssessmentRepository>();
 builder.Services.AddScoped<IMedicalIndicationRepository, SqlMedicalIndicationRepository>();

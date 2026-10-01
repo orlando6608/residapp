@@ -733,6 +733,152 @@ public sealed class AdministracionController(AdministracionApplicationService se
             conflict: "Los residentes asignados han cambiado desde que abriste la pantalla. Revisa los vigentes.");
     }
 
+    /// <summary>ADM-05 (0025): las unidades concedidas al ámbito de Administración, con alta, renombrado e inactivación.</summary>
+    public async Task<IActionResult> Estructura(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Estructura)) });
+        }
+
+        var result = await service.ListStructureUnitsAsync(Query(activeScope), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+        }
+
+        return View(result.Value ?? []);
+    }
+
+    public IActionResult NuevaUnidad()
+    {
+        if (ActiveProfileScopeCookie.Read(Request) is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(NuevaUnidad)) });
+        }
+
+        return View(new NewUnitViewModel(new NewUnitFormModel { OperacionId = Guid.NewGuid() }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> NuevaUnidad([Bind(Prefix = "Form")] NewUnitFormModel form, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        if (ModelState.IsValid)
+        {
+            var result = await service.CreateUnitAsync(new CreateUnitCommand(
+                activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.OperacionId, form.Codigo, form.Nombre), ct);
+            if (result.Ok)
+            {
+                TempData["Mensaje"] = "Unidad creada. Ya la ofrecen el alta de residentes y la gestión de usuarios de tu ámbito.";
+                return RedirectToAction(nameof(Estructura));
+            }
+
+            ModelState.AddModelError(string.Empty, result.Error!.Code switch
+            {
+                ApplicationFailureCode.Conflict => "Ya existe una unidad con ese código o con ese nombre en el centro.",
+                ApplicationFailureCode.InvalidInput =>
+                    "Revisa los datos: el código lleva de 2 a 64 caracteres (letras sin acentos, dígitos, «-» o «_») y el nombre es obligatorio.",
+                _ => result.Error.Message,
+            });
+        }
+
+        return View(new NewUnitViewModel(form));
+    }
+
+    public async Task<IActionResult> NombreUnidad(Guid unidadId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(NombreUnidad), new { unidadId }) });
+        }
+
+        var unit = await FindStructureUnitAsync(activeScope, unidadId, ct);
+        return unit is null
+            ? RedirectToAction(nameof(Estructura))
+            : View(new RenameUnitViewModel(unit, new RenameUnitFormModel { UnidadId = unidadId, Nombre = unit.Name }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> NombreUnidad([Bind(Prefix = "Form")] RenameUnitFormModel form, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var unit = await FindStructureUnitAsync(activeScope, form.UnidadId, ct);
+        if (unit is null)
+        {
+            return RedirectToAction(nameof(Estructura));
+        }
+
+        if (ModelState.IsValid)
+        {
+            var result = await service.RenameUnitAsync(new RenameUnitCommand(
+                activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), UnitId.From(form.UnidadId), form.Nombre), ct);
+            if (result.Ok)
+            {
+                TempData["Mensaje"] = "Nombre guardado.";
+                return RedirectToAction(nameof(Estructura));
+            }
+
+            ModelState.AddModelError(string.Empty, result.Error!.Code switch
+            {
+                ApplicationFailureCode.Conflict => "Ya existe otra unidad con ese nombre en el centro.",
+                ApplicationFailureCode.InvalidInput => "Escribe un nombre distinto del actual.",
+                _ => result.Error.Message,
+            });
+        }
+
+        return View(new RenameUnitViewModel(unit, form));
+    }
+
+    /// <summary>ADM-05: Activa es el estado que se quiere (false para inactivar, true para reactivar).</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EstadoUnidad(Guid unidadId, bool activa, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await service.ChangeUnitStatusAsync(new ChangeUnitStatusCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), UnitId.From(unidadId), activa), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = activa
+                ? "Unidad reactivada."
+                : "Unidad inactivada: ya no se ofrece en el alta de residentes ni en la gestión de usuarios.";
+        }
+        else
+        {
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.InvalidInput => "No se puede inactivar una unidad con residentes ubicados en ella.",
+                ApplicationFailureCode.Conflict => "La unidad ya estaba en ese estado.",
+                _ => result.Error.Message,
+            };
+        }
+
+        return RedirectToAction(nameof(Estructura));
+    }
+
+    private async Task<StructureUnit?> FindStructureUnitAsync(ActiveProfileScopeCookieValue activeScope, Guid unidadId, CancellationToken ct) =>
+        (await service.ListStructureUnitsAsync(Query(activeScope), ct)).Value?.FirstOrDefault(u => u.UnitId.Value == unidadId);
+
     /// <summary>Tras un cambio pedido desde la ficha de la cuenta (ambitoId null) o de uno de sus perfiles: el mensaje o
     /// el error vuelven con TempData. Una cuenta ajena vuelve a la lista sin distinguir el motivo.</summary>
     private IActionResult AfterAccountChange(

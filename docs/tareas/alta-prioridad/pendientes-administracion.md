@@ -1,6 +1,6 @@
 # Pendientes del vertical Administración
 
-Estado al 2026-10-01 (tras el bloque 4). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
+Estado al 2026-10-01 (tras el bloque 5). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
 No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pantallas/wireframes-funcionales/administracion.md).
 
 ## Hecho
@@ -155,18 +155,49 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
   - **Tests:** en `AdministracionUsuariosTests` (evidencia real y trigger), `ProfessionalAccountTests` y
     `ProfessionalAccountScreensTests` (Inicio con y sin el permiso).
 
+- **Bloque 5 (estructura del centro: unidades; ADM-05; historia 2, primer bloque)** — 2026-10-01.
+  - **Qué hace:** `/Administracion/Estructura` (tarjeta «Estructura del centro» del inicio) lista las unidades concedidas al ámbito
+    activo de Administración, activas e inactivas, con su nombre, código, estado y residentes ubicados. `NuevaUnidad` (código y
+    nombre), `NombreUnidad` (renombrar) y `EstadoUnidad` (inactivar o reactivar).
+  - **Decisiones del usuario (2026-10-01):** primer bloque de la historia 2 = solo unidades (crear, renombrar, inactivar); edificios,
+    plantas, habitaciones, plazas y organigrama quedan fuera. Se prefirió a turnos y equipos porque estos necesitan primero la estructura.
+  - **Suposiciones aprobadas con el plan:**
+    - Administración gestiona unidades de centros ya provisionados; no crea centros;
+    - se ven y gestionan solo las unidades concedidas al ámbito de Administración (deny-by-default, como Usuarios);
+    - una unidad nueva se concede al ámbito de quien la crea; desde Usuarios se concede después a cada perfil;
+    - el código (2 a 64 caracteres: letras sin acentos, dígitos, «-» y «_»; se guarda en mayúsculas) no cambia; el nombre sí;
+    - código y nombre no se repiten dentro del centro (sin distinguir mayúsculas);
+    - una unidad con residentes ubicados (ubicación vigente) no se inactiva; una inactiva no se ofrece en el alta de residentes ni en
+      Usuarios, que ya filtraban por unidades activas; no se borra.
+  - **Implementación:** script `0025_estructura_unidades` (`TR_units_guard`, THROW 50430: centro, código, edificio, planta y fecha de
+    creación no cambian; `TR_units_no_delete`, THROW 50431). Sin tablas nuevas: `dbo.unidades` ya existía.
+    - Dominio `Domain/Structure/CenterUnit.cs`; puertos `Ports/ICenterStructure.cs`; lectura en `SqlCenterStructureDirectory` y
+      escritura en `SqlCenterStructureRepository`, que reutiliza `EnsureAdministratorAsync` y `AuditAsync` de
+      `SqlProfessionalAccountRepository` (ahora `internal`). Cada escritura bloquea la fila del centro (`UPDLOCK`) para ordenar los
+      cambios de estructura y comprobar código y nombre sin carreras.
+    - Auditoría sin datos: `UNIT_CREATE`, `UNIT_RENAME`, `UNIT_DEACTIVATE`, `UNIT_ACTIVATE`.
+    - El `OperacionId` del formulario es el id de la unidad: reenviar no la duplica; con otro código o nombre, conflicto.
+  - **Tests:** `AdministracionEstructuraTests` (integración), `CenterUnitTests` (unitarios) y
+    `Estructura_AdministracionCreaYRenombraUnaUnidad_YOtroPerfilNoEntra` en `ProfessionalAccountScreensTests` (funcional).
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
-2. **Turnos y equipos (historia 4):** sustituirían el «equipo o turno entrante» en texto libre de los seguimientos.
+2. **Turnos y equipos (historia 4), y el resto de la estructura (historia 2: edificios, plantas, habitaciones, plazas y organigrama, ADM-06/ADM-07):** los turnos sustituirían el «equipo o turno entrante» en texto libre de los seguimientos.
 3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8), auditoría administrativa (9) y panel completo (10).**
 
 Huecos de lo ya construido:
 
-- **Alta de residente:** desde el 2026-10-01 la unidad se elige entre las del ámbito activo. Sigue sin haber pantalla de estructura
-  del centro (historia 2): las unidades y sus concesiones se crean por SQL.
+- **Alta de residente:** desde el 2026-10-01 la unidad se elige entre las del ámbito activo, y esas unidades se crean, renombran e
+  inactivan desde Estructura (bloque 5). La unidad de un centro nuevo ya provisionado sigue necesitando un primer ámbito de
+  Administración con la unidad concedida (por SQL), porque una unidad solo se ve si está concedida al ámbito.
+- **Inactivar una unidad:** se comprueba que no tenga ubicaciones vigentes dentro de la transacción, pero un alta de residente que
+  llegue a la vez no se bloquea (el alta autoriza la unidad antes, y la clave foránea no mira el estado). Es una carrera muy
+  estrecha; si importa, habrá que comprobar el estado de la unidad al insertar la ubicación.
+- **Estructura:** no hay forma de conceder una unidad ya existente a otro ámbito de Administración ni de ver las del centro que no
+  estén en el ámbito propio; el organigrama (ADM-07) y los cargos tampoco existen.
 - **Niveles de ubicación:** los intervalos admiten edificio, planta, habitación y plaza, pero no hay tablas ni pantallas para ellos
   (historia 2); la ficha solo muestra la unidad.
 - **Usuarios:** no se vincula una cuenta que ya existe en otro centro (llegará con las invitaciones del proveedor de identidad);

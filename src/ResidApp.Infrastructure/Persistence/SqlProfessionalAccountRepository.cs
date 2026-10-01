@@ -402,7 +402,7 @@ public sealed class SqlProfessionalAccountRepository(SqlConnectionFactory connec
     }
 
     /// <summary>Quien gestiona sigue teniendo su ámbito de Administración vigente, con la cuenta y el centro activos.</summary>
-    private static async Task EnsureAdministratorAsync(
+    internal static async Task EnsureAdministratorAsync(
         SqlConnection connection, SqlTransaction transaction, AccountAdministrationAccess access, CancellationToken ct)
     {
         var allowed = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
@@ -513,7 +513,7 @@ public sealed class SqlProfessionalAccountRepository(SqlConnectionFactory connec
         }
     }
 
-    private static Task AuditAsync(
+    internal static Task AuditAsync(
         SqlConnection connection, SqlTransaction transaction, AccountAdministrationAccess access, string resourceType, Guid resourceId,
         string action, DateTimeOffset occurredAt, Guid? unitId = null, Guid? residentId = null, CancellationToken ct = default) =>
         connection.ExecuteAsync(new CommandDefinition(InsertAudit, new

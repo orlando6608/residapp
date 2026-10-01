@@ -13,7 +13,31 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Pantalla de alta de residente según el permiso (sin script):** hecho el 2026-10-01, en `main` sin push. Antes,
+- **Administración, bloque 5: estructura del centro, unidades (ADM-05; historia 2, primer bloque; script `0025`; sin cambios
+  en el seed):** hecho el 2026-10-01 en `main` **sin push** (Azure sigue en `0024`).
+  - **Qué hace:** `/Administracion/Estructura` lista las unidades concedidas al ámbito de Administración (activas e
+    inactivas, con código, estado y residentes ubicados), con «Nueva unidad», «Cambiar nombre» e «Inactivar»/«Reactivar». Una
+    unidad nueva se concede al ámbito de quien la crea; una con residentes ubicados no se inactiva; código y nombre no se
+    repiten en el centro; nada se borra (`TR_units_guard` y `TR_units_no_delete`). Detalle, decisiones y suposiciones en
+    `pendientes-administracion.md`.
+  - **Verificación:**
+    - suite en verde antes (174, 233 y 41) y después 3 veces (184, 239 y 42), más 3 vueltas tipo CI con BD nueva y una BD
+      temporal con los 25 scripts y el seed (sin errores, ya borrada);
+    - una primera ejecución filtrada de los tests nuevos dio un fallo en `Inactivar_NoValeConResidentesUbicados_…` (41 s); no se
+      guardó su mensaje y no se repitió en 7 ejecuciones posteriores (la misma tanda filtrada una vez, la suite completa 3 veces
+      y las 3 vueltas tipo CI). No está explicado: puede ser el patrón de «Suite lenta» (se había compilado justo antes), pero no
+      está confirmado. Si vuelve, guarda la salida completa;
+    - curl en local con `dev-integrado-administracion`: lista inicial, formulario vacío (errores en español), alta de
+      «Prueba estructura (ficticia)» (código `PRUEBA-EST-1`; el reenvío no la duplica, el código o el nombre repetidos dan «Ya existe»,
+      el código con espacio da el aviso), renombrar (y renombrar igual, rechazado), inactivar (sale del alta de residentes; repetir
+      avisa), reactivar (vuelve al alta), inactivar la unidad del escenario con 8 residentes (rechazado), y la auditoría tiene
+      `UNIT_CREATE`, `UNIT_RENAME`, `UNIT_DEACTIVATE` y `UNIT_ACTIVATE`. `dev-integrado-enfermeria` recibe «No se puede acceder a
+      esta operación» y no ve «Nueva unidad». El POST de Enfermería se probó con el token de la pantalla de entrada, así que su
+      rechazo lo cubre el test de integración, no ese curl;
+    - la unidad de prueba «Prueba estructura renombrada (ficticia)» queda activa en la base local.
+  - Copia previa: `ResidApp-antes-0025-20261001.bak`.
+  - Al empezar la sesión se comprobó que `origin/main` y `HEAD` eran el mismo commit (`bf90bda`) y que CJ no había contestado nada.
+- **Pantalla de alta de residente según el permiso (sin script):** hecho el 2026-10-01, en `origin/main` (commit `bf90bda`; no se ha revisado su run en Azure). Antes,
   `GET /Residents/Create` abría el formulario a cualquier ámbito y solo se denegaba al guardar. Ahora, con la misma
   regla que `ResidentBaselinePolicy` (Administración siempre; Enfermería con `RESIDENT_IDENTITY_CREATE`), sin permiso sale
   un aviso en lugar del formulario; guardar sigue autorizándose en el servidor. Test
@@ -21,7 +45,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   y 41); curl en local: `dev-multi` (todos sus ámbitos), `dev-integrado-enfermeria` y `dev-prueba-enfermeria-nueva` ven el
   aviso y `dev-integrado-administracion` el formulario; concedido el permiso a `dev-prueba-enfermeria-nueva` vio el
   formulario y dio de alta «Prueba alta pantalla permiso (ficticia)»; revocado otra vez, vuelve el aviso.
-- **«Firmar borrador de basal» en el Inicio por permiso (sin script):** hecho el 2026-10-01, en `main` sin push. La
+- **«Firmar borrador de basal» en el Inicio por permiso (sin script):** hecho el 2026-10-01, en `origin/main` (commit `23e9616`; no se ha revisado su run en Azure). La
   tarjeta sale a Enfermería y Medicina solo con `BASELINE_INITIAL_COMPLETE` o `BASELINE_REEVALUATE` (firmar exige uno u
   otro según el motivo del borrador). Test `Inicio_FirmarBorradorDeBasal_SoloConUnPermisoDeBasal` (falla sin el cambio);
   suite en verde 3 veces (174, 233 y 37); curl en local: `dev-multi` (Enfermería o Medicina, sin permisos) no la ve y
@@ -583,12 +607,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   referencia de constantes (fase 1 y su pantalla). Medicina está en curso: historias 1 a 8 (escalados,
   valoración médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos, protocolo
   urgente, derivación a Urgencias, evento propio y basal con permiso) y 9 (con la misma salvedad que la 11).
-- La base local `ResidApp` tiene los scripts `0001` a `0024` registrados en `dbo.scripts_aplicados`
-  (en Azure, hasta `0023` mientras no se haga el push). Hay copias previas a `0016` … `0024` en
+- La base local `ResidApp` tiene los scripts `0001` a `0025` registrados en `dbo.scripts_aplicados`
+  (en Azure, hasta `0024`; `0025` aún no se ha subido). Hay copias previas a `0016` … `0025` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
   `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak`, `ResidApp-antes-0019-20260930.bak`,
   `ResidApp-antes-0020-20260930.bak`, `ResidApp-antes-0021-20261001.bak`, `ResidApp-antes-0022-20261001.bak`,
-  `ResidApp-antes-0023-20261001.bak` y `ResidApp-antes-0024-20261001.bak`). También
+  `ResidApp-antes-0023-20261001.bak`, `ResidApp-antes-0024-20261001.bak` y `ResidApp-antes-0025-20261001.bak`). También
   tiene la cuenta `dev-integrado-administracion`, el residente de prueba «Prueba Corrección Identidad (ficticio)», con una
   corrección, «Prueba selector unidad (ficticio)» y «Prueba familiares (ficticio)», con dos familiares (Lucía, autorización
   revocada tras recorrer todos los estados; Tomás, teléfono editado) y el contacto urgente designado, cambiado, quitado y
@@ -620,7 +644,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 174 unitarios, 233 de integración y 41 funcionales, todos en verde.
+- Suite: 184 unitarios, 239 de integración y 42 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -634,7 +658,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
      un borrador de basal ajeno; el tema 3 es un cambio pequeño en el informe de derivación.
    - `docs/pendientes-cj/traslado-y-baja-residente.html` (preparado el 2026-10-01, 6 respuestas): traslado y baja del
      residente en Administración.
-2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): turnos y equipos; después publicaciones,
+2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): turnos y equipos (la estructura de unidades ya está hecha; faltan edificios, plantas, habitaciones, plazas y organigrama); después publicaciones,
    citas, auditoría administrativa y panel.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
    (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.

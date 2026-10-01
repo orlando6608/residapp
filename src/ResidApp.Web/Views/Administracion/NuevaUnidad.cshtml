@@ -1,0 +1,47 @@
+@model ResidApp.Web.Models.NewUnitViewModel
+@{
+    ViewData["Title"] = "Nueva unidad";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Estructura">Estructura</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Nueva unidad</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Nueva unidad</h1>
+<p class="text-muted">
+    El código identifica la unidad en el centro y no se puede cambiar después; el nombre sí. La unidad nace activa y concedida
+    a tu ámbito.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="NuevaUnidad" method="post">
+            <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+            <div class="mb-3">
+                <label asp-for="Form.Codigo" class="form-label"></label>
+                <input asp-for="Form.Codigo" class="form-control form-control-lg" autocomplete="off" aria-describedby="ayuda-codigo" />
+                <div id="ayuda-codigo" class="form-text">De 2 a 64 caracteres: letras sin acentos, dígitos, «-» o «_». Se guarda en mayúsculas.</div>
+                <span asp-validation-for="Form.Codigo" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Nombre" class="form-label"></label>
+                <input asp-for="Form.Nombre" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+            </div>
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Estructura" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Crear unidad</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

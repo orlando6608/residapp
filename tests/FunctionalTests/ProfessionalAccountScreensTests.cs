@@ -76,6 +76,61 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("Enfermería · ", list);
     }
 
+    [Fact]
+    public async Task Estructura_AdministracionCreaYRenombraUnaUnidad_YOtroPerfilNoEntra()
+    {
+        var admin = await SeedAdministratorAsync();
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = admin.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        var newPage = await client.GetStringAsync("/Administracion/NuevaUnidad");
+        async Task<string> PostAsync(string path, string page, Dictionary<string, string> fields) =>
+            WebUtility.HtmlDecode(await (await client.PostAsync(path, new FormUrlEncodedContent(new Dictionary<string, string>(fields)
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            }))).Content.ReadAsStringAsync());
+        var code = $"func-{Guid.NewGuid():N}"[..16];
+        var empty = await PostAsync("/Administracion/NuevaUnidad", newPage, new() { ["Form.OperacionId"] = ExtractValue(newPage, "Form.OperacionId") });
+        var created = await PostAsync("/Administracion/NuevaUnidad", newPage, new()
+        {
+            ["Form.OperacionId"] = ExtractValue(newPage, "Form.OperacionId"),
+            ["Form.Codigo"] = code,
+            ["Form.Nombre"] = "Planta Norte (ficticia)",
+        });
+        var listPage = await client.GetStringAsync("/Administracion/Estructura");
+        var unitId = Regex.Match(listPage, "name=\"unidadId\" value=\"([0-9a-f-]{36})\"").Groups[1].Value;
+        var renamePage = await client.GetStringAsync($"/Administracion/NombreUnidad?unidadId={unitId}");
+        var renamed = await PostAsync("/Administracion/NombreUnidad", renamePage, new()
+        {
+            ["Form.UnidadId"] = unitId,
+            ["Form.Nombre"] = "Planta Norte renombrada (ficticia)",
+        });
+        var inactivated = await PostAsync("/Administracion/EstadoUnidad", renamed, new() { ["unidadId"] = unitId, ["activa"] = "false" });
+        var again = await PostAsync("/Administracion/EstadoUnidad", inactivated, new() { ["unidadId"] = unitId, ["activa"] = "false" });
+        var nursePage = await PageAsync("ENFERMERIA", null, "/Administracion/Estructura");
+
+        Assert.Contains("Escribe el código.", empty);
+        Assert.Contains("Escribe el nombre.", empty);
+        Assert.DoesNotContain("The ", empty);
+        Assert.Contains("Unidad creada.", created);
+        Assert.Contains("Planta Norte (ficticia)", created);
+        Assert.Contains(code.ToUpperInvariant(), created);
+        Assert.Contains("Activa", created);
+        Assert.Contains("Nombre guardado.", renamed);
+        Assert.Contains("Planta Norte renombrada (ficticia)", renamed);
+        Assert.Contains("Unidad inactivada", inactivated);
+        Assert.Contains("Inactiva", inactivated);
+        Assert.Contains("Reactivar", inactivated);
+        Assert.Contains("La unidad ya estaba en ese estado.", again);
+        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.DoesNotContain("Nueva unidad", nursePage);
+    }
+
     private static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
 
