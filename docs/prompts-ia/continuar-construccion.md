@@ -47,6 +47,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
       Planificación (en `PlanificarTurno` la vi vacía y se corrigió para que también lo diga);
     - dos ejecuciones filtradas de los tests nuevos dieron errores de compilación y de orden de mis propios tests, ya corregidos; ningún fallo de
       entorno en esta tanda.
+  - **Prueba en Azure (2026-10-01)** con `dev-integrado-administracion`, tras el despliegue de `0027`: tres turnos «Manana/Tarde/Noche az»
+    (el nocturno sale «termina al día siguiente»); «Equipo A az» (enfermería y medicina) y «Equipo B az» (medicina y auxiliar) en la unidad del
+    escenario integrado; Mañana de A del 5 al 7 de octubre; Tarde de B el 5 avisa de que `dev-integrado-medicina` está en los dos equipos, confirmar
+    sin justificación se rechaza y con ella se guarda («Solapamiento justificado»); Noche de B el 6 no avisa; retirar una fecha funciona y repetirlo
+    avisa. La auditoría tiene 5 `SCHEDULE_CREATE`, 1 `SCHEDULE_RETIRE`, 2 `TEAM_CREATE`, 4 `TEAM_MEMBER_ADD` y 3 `SHIFT_CREATE`. Enfermería,
+    Medicina, Auxiliar y Dirección reciben «No se puede acceder» en Turnos, Equipos, Planificación y PlanificarTurno. Los datos de prueba quedan.
   - **Datos de prueba en la base local:** turnos «Manana/Tarde/Noche prueba», equipos «Equipo A/B prueba» (en la unidad de la prueba de estructura) y
     «Equipo I1/I2 prueba» (en la del escenario integrado) con su planificación, en octubre de 2026. No se limpian (nada se borra).
   - Copia previa: `ResidApp-antes-0027-20261001.bak`.
