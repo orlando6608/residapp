@@ -1,6 +1,6 @@
 # Pendientes del vertical Administración
 
-Estado al 2026-10-01 (tras el bloque 1). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
+Estado al 2026-10-01 (tras el bloque 2). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
 No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pantallas/wireframes-funcionales/administracion.md).
 
 ## Hecho
@@ -40,13 +40,49 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
   - **Tests:** `AdministracionResidentesTests` (integración), `ResidentIdentityCorrectionTests` (unitarios) y
     `AdministrativeResidentListTests` (funcionales).
 
+- **Bloque 2 (familiares, autorizaciones y contacto urgente; ADM-08 a ADM-11 del wireframe, FAM-01; historia 3)** — 2026-10-01.
+  - **Qué hace:**
+    - la ficha administrativa tiene la sección «Familiares» (nombre, relación, teléfono, correo y estado de la autorización, con
+      la etiqueta del contacto urgente) y la sección «Contacto urgente» con su historial;
+    - `/Administracion/AnadirFamiliar` y `/Administracion/EditarFamiliar` (vista `Familiar`): nombre, relación (texto libre),
+      teléfono (6 a 15 dígitos) y correo opcional. Añadir no abre la autorización (FAM-01);
+    - `/Administracion/AutorizacionFamiliar`: estado de hoy, cambios posibles e historial;
+    - `/Administracion/ContactoUrgente`: elegir entre los familiares del residente o «Sin contacto urgente».
+  - **Decisiones del usuario (2026-10-01):**
+    - alcance: familiares, contacto urgente y autorizaciones con estados e historial, que no dan acceso a nada hasta que exista el
+      Portal Familiar;
+    - el contacto urgente es uno de los familiares vinculados, uno vigente, con historial;
+    - la derivación no se toca en este bloque (ver Pendiente);
+    - estados del PRD: Pendiente → Activa → Suspendida / Revocada / Caducada, con «válida hasta» opcional.
+  - **Suposiciones aprobadas con el plan:**
+    - todo se gestiona desde la ficha; el familiar se crea y se vincula al residente en el mismo paso (vincular un familiar ya
+      existente a otro residente queda fuera, aunque las tablas lo permiten);
+    - la relación es texto libre (no hay catálogo de parentescos decidido); los datos se editan con auditoría, sin versiones;
+    - la autorización se abre en Pendiente; Activar vale desde Pendiente, Suspendida o Caducada; Suspender (solo una Activa
+      vigente) y Revocar piden motivo y surten efecto al momento; Revocada es final; Caducada no se guarda: es una Activa con
+      «válida hasta» pasada (día local, ese día incluido);
+    - el contacto urgente no exige autorización activa;
+    - se autoriza como la corrección de identidad (`AuthorizationTarget.IdentityUpdate`: Administración y residente de su ámbito).
+  - **Implementación:** script `0022_familiares_autorizaciones`.
+    - `familiares` (solo cambian nombre, teléfono y correo), `residentes_familiares` (vínculo; solo cambia la relación; sin
+      borrado), `familiares_autorizaciones_cambios` (solo inserción, número por vínculo con `UX_fac_numero`;
+      `TR_fac_transition` valida cada cambio contra el anterior) y `residentes_contacto_urgente` (solo inserción, número por
+      residente; `FK_rcu_vinculo` exige un vínculo del mismo residente).
+    - Dominio en `Domain/Families/` (`FamilyMember`, `FamilyAuthorizationRules`); repositorio `SqlResidentFamilyRepository`
+      (transacción, conflicto por número esperado, auditoría `FAMILY_MEMBER_CREATE`, `FAMILY_MEMBER_UPDATE`,
+      `FAMILY_AUTHORIZATION_CHANGE` y `EMERGENCY_CONTACT_DESIGNATE`, sin datos); lectura en `SqlAdministracionResidentDirectory`.
+    - El identificador del familiar es el `OperacionId` del formulario, así que reenviar el alta no lo duplica.
+  - **Tests:** `AdministracionFamiliaresTests` (integración), `FamilyRulesTests` (unitarios) y `FamilyAuthorizationDisplayTests`
+    (funcionales).
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
-2. **Familiares, autorizaciones y contacto urgente designado (historia 3):** prerrequisito del Portal Familiar y del contacto de la
-   derivación (hoy texto libre).
+2. **Contacto urgente en la derivación:** la matriz da a Enfermería y Medicina lectura del contacto urgente, y la derivación pide
+   documentar la llamada al contacto designado (hoy texto libre). Toca pantallas clínicas: decisión del usuario de hacerlo
+   aparte.
 3. **Usuarios profesionales, perfiles, ámbitos y permisos (historia 4 sin turnos):** hoy se conceden por SQL. Las cuentas no tienen
    nombre hasta que exista el proveedor de identidad real.
 4. **Turnos y equipos (historia 4):** sustituirían el «equipo o turno entrante» en texto libre de los seguimientos.
@@ -58,3 +94,6 @@ Huecos de lo ya construido:
   del centro (historia 2): las unidades y sus concesiones se crean por SQL.
 - **Niveles de ubicación:** los intervalos admiten edificio, planta, habitación y plaza, pero no hay tablas ni pantallas para ellos
   (historia 2); la ficha solo muestra la unidad.
+- **Familiares:** un familiar no se puede vincular a un segundo residente (habría que crearlo otra vez) ni desvincular; la edición
+  no tiene token de concurrencia (gana la última). La «fecha efectiva» de ADM-11 es siempre el momento del cambio. Ninguna cuenta
+  de familiar existe todavía: llegará con el Portal Familiar y el proveedor de identidad.

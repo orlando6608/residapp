@@ -1,5 +1,6 @@
 using Dapper;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
 using ResidApp.Shared;
 
@@ -8,8 +9,8 @@ namespace ResidApp.Infrastructure.Persistence;
 /// <summary>
 /// ADM-02/ADM-03: residentes del ámbito de Administración. La regla de ámbito es la de SqlEnfermeriaResidentDirectory
 /// (unidades concedidas y, si el ámbito los restringe, sus residentes) para un ámbito activo de ADMINISTRACION, así que
-/// «sale en la lista» y «se abre su ficha» son lo mismo. Solo lee identidad, ubicación, episodio y correcciones de
-/// identidad: nunca basal ni contenido clínico. Las fechas se guardan en UTC.
+/// «sale en la lista» y «se abre su ficha» son lo mismo. Solo lee identidad, ubicación, episodio, correcciones de
+/// identidad y, en la ficha, familiares, autorizaciones y contacto urgente (0022): nunca basal ni contenido clínico. Las fechas se guardan en UTC.
 /// </summary>
 public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory connections) : IAdministracionResidentDirectory
 {
@@ -84,7 +85,37 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                 new ResidentIdentity(c.NameAfter, DateOnly.FromDateTime(c.BirthDateAfter), EnumCode.ParseCode<DocumentedSexCode>(c.SexAfter)),
                 c.Reason, Utc(c.CorrectedAt)))
             .ToList();
-        return new AdministrativeResidentDetail(ToSummary(row), locations, corrections);
+        var changes = (await connection.QueryAsync<AuthorizationChangeRow>(new CommandDefinition("""
+            SELECT c.vinculo_id AS LinkId, c.numero AS Number, c.estado_codigo AS StatusCode, c.valida_hasta AS ValidUntil,
+                   c.motivo AS Reason, c.registrado_en AS At
+              FROM dbo.familiares_autorizaciones_cambios c
+              JOIN dbo.residentes_familiares link ON link.id = c.vinculo_id AND link.centro_id = c.centro_id
+             WHERE link.residente_id = @ResidentId AND link.centro_id = @CenterId
+             ORDER BY c.numero
+            """, parameters, cancellationToken: ct)))
+            .ToLookup(c => c.LinkId, c => new FamilyAuthorizationChangeEntry(
+                c.Number, EnumCode.ParseCode<FamilyAuthorizationStatus>(c.StatusCode),
+                c.ValidUntil is { } until ? DateOnly.FromDateTime(until) : null, c.Reason, Utc(c.At)));
+        var family = (await connection.QueryAsync<FamilyRow>(new CommandDefinition("""
+            SELECT link.id AS LinkId, f.nombre_visible AS DisplayName, link.relacion AS Relationship, f.telefono AS Phone, f.correo AS Email
+              FROM dbo.residentes_familiares link
+              JOIN dbo.familiares f ON f.id = link.familiar_id AND f.centro_id = link.centro_id
+             WHERE link.residente_id = @ResidentId AND link.centro_id = @CenterId
+             ORDER BY f.nombre_visible
+            """, parameters, cancellationToken: ct)))
+            .Select(f => new ResidentFamilyMember(f.LinkId, f.DisplayName, f.Relationship, f.Phone, f.Email, changes[f.LinkId].ToList()))
+            .ToList();
+        var contacts = (await connection.QueryAsync<ContactRow>(new CommandDefinition("""
+            SELECT d.numero AS Number, d.vinculo_id AS LinkId, f.nombre_visible AS DisplayName, d.designado_en AS At
+              FROM dbo.residentes_contacto_urgente d
+              LEFT JOIN dbo.residentes_familiares link ON link.id = d.vinculo_id AND link.centro_id = d.centro_id
+              LEFT JOIN dbo.familiares f ON f.id = link.familiar_id AND f.centro_id = link.centro_id
+             WHERE d.residente_id = @ResidentId AND d.centro_id = @CenterId
+             ORDER BY d.numero
+            """, parameters, cancellationToken: ct)))
+            .Select(d => new EmergencyContactDesignation(d.Number, d.LinkId, d.DisplayName, Utc(d.At)))
+            .ToList();
+        return new AdministrativeResidentDetail(ToSummary(row), locations, corrections, family, contacts);
     }
 
     private static AdministrativeResidentSummary ToSummary(ResidentRow r) => new(
@@ -101,4 +132,10 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
     private sealed record CorrectionRow(
         int Number, string NameBefore, DateTime BirthDateBefore, string SexBefore, string NameAfter, DateTime BirthDateAfter,
         string SexAfter, string Reason, DateTime CorrectedAt);
+
+    private sealed record AuthorizationChangeRow(Guid LinkId, int Number, string StatusCode, DateTime? ValidUntil, string? Reason, DateTime At);
+
+    private sealed record FamilyRow(Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email);
+
+    private sealed record ContactRow(int Number, Guid? LinkId, string? DisplayName, DateTime At);
 }

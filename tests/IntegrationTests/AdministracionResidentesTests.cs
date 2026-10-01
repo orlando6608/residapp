@@ -15,17 +15,18 @@ namespace ResidApp.IntegrationTests;
 /// con historial de ubicación y corrección de identidad. Cada prueba crea su propio centro.</summary>
 public class AdministracionResidentesTests
 {
-    private static AdministracionApplicationService Build(string externalSubject)
+    internal static AdministracionApplicationService Build(string externalSubject)
     {
         var session = new FixedAdministracionSessionIdentityProvider(externalSubject);
         return new AdministracionApplicationService(
             new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory),
             new SqlAdministracionResidentDirectory(TestDatabase.ConnectionFactory), session,
             new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory),
-            new SqlResidentIdentityRepository(TestDatabase.ConnectionFactory));
+            new SqlResidentIdentityRepository(TestDatabase.ConnectionFactory),
+            new SqlResidentFamilyRepository(TestDatabase.ConnectionFactory));
     }
 
-    private static async Task<ResidentId> CreateResidentAsync(SeededProfile admin, string name, UnitId? unitId = null)
+    internal static async Task<ResidentId> CreateResidentAsync(SeededProfile admin, string name, UnitId? unitId = null)
     {
         var created = await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(new CreateResidentInput(
             admin.AccountId, SystemProfile.Administracion, admin.CenterId, unitId ?? admin.UnitId, name, new DateOnly(1940, 5, 20),
@@ -33,7 +34,7 @@ public class AdministracionResidentesTests
         return created.ResidentId;
     }
 
-    private static async Task<UnitId> AddUnitAsync(CenterId centerId)
+    internal static async Task<UnitId> AddUnitAsync(CenterId centerId)
     {
         var unitId = Guid.NewGuid();
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();

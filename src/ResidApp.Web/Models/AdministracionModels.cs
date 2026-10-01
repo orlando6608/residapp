@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
 
 namespace ResidApp.Web.Models;
@@ -78,8 +79,104 @@ public sealed class CorrectIdentityFormModel
 /// <summary>ADM-03: la ficha vigente junto al formulario de corrección.</summary>
 public sealed record CorrectIdentityViewModel(AdministrativeResidentSummary Resident, CorrectIdentityFormModel Form);
 
+/// <summary>ADM-09 (0022): formulario de un familiar, para añadirlo (OperacionId, que nace con el formulario y evita
+/// duplicarlo al reenviar) o para editarlo (VinculoId).</summary>
+public sealed class FamilyMemberFormModel
+{
+    public Guid ResidenteId { get; set; }
+
+    public Guid OperacionId { get; set; }
+
+    public Guid? VinculoId { get; set; }
+
+    [Required(ErrorMessage = "Escribe el nombre.")]
+    [StringLength(FamilyMember.MaxDisplayNameLength, ErrorMessage = "El nombre no puede pasar de {1} caracteres.")]
+    [Display(Name = "Nombre")]
+    public string? NombreVisible { get; set; }
+
+    [Required(ErrorMessage = "Escribe la relación con el residente.")]
+    [StringLength(FamilyMember.MaxRelationshipLength, ErrorMessage = "La relación no puede pasar de {1} caracteres.")]
+    [Display(Name = "Relación con el residente (p. ej., «Hija»)")]
+    public string? Relacion { get; set; }
+
+    [Required(ErrorMessage = "Escribe el teléfono.")]
+    [StringLength(FamilyMember.MaxPhoneLength, ErrorMessage = "El teléfono no puede pasar de {1} caracteres.")]
+    [Display(Name = "Teléfono")]
+    public string? Telefono { get; set; }
+
+    [StringLength(FamilyMember.MaxEmailLength, ErrorMessage = "El correo no puede pasar de {1} caracteres.")]
+    [EmailAddress(ErrorMessage = "Escribe un correo válido.")]
+    [Display(Name = "Correo electrónico (opcional)")]
+    public string? Correo { get; set; }
+}
+
+/// <summary>ADM-09: el residente junto al formulario del familiar.</summary>
+public sealed record FamilyMemberViewModel(AdministrativeResidentSummary Resident, FamilyMemberFormModel Form);
+
+/// <summary>ADM-10/ADM-11 (0022): un cambio de la autorización. CambiosEsperados es cuántos cambios tenía al abrir la
+/// pantalla: si otro se adelanta, da conflicto.</summary>
+public sealed class FamilyAuthorizationFormModel
+{
+    public Guid ResidenteId { get; set; }
+
+    public Guid VinculoId { get; set; }
+
+    public int CambiosEsperados { get; set; }
+
+    public FamilyAuthorizationChange Cambio { get; set; }
+
+    [DataType(DataType.Date)]
+    [Display(Name = "Válida hasta (opcional; ese día incluido)")]
+    public DateOnly? ValidaHasta { get; set; }
+
+    [StringLength(FamilyAuthorizationRules.MaxReasonLength, ErrorMessage = "El motivo no puede pasar de {1} caracteres.")]
+    [Display(Name = "Motivo")]
+    public string? Motivo { get; set; }
+}
+
+/// <summary>ADM-10: la autorización de un familiar, con su estado de hoy y los cambios posibles.</summary>
+public sealed record FamilyAuthorizationViewModel(
+    AdministrativeResidentSummary Resident, ResidentFamilyMember Member, DateOnly Today, FamilyAuthorizationFormModel Form)
+{
+    public FamilyAuthorizationStatus? Effective => Member.CurrentAuthorization is { } current
+        ? FamilyAuthorizationRules.Effective(current.Status, current.ValidUntil, Today)
+        : null;
+
+    public IReadOnlyList<FamilyAuthorizationChange> Allowed => FamilyAuthorizationRules.Allowed(Effective);
+}
+
+/// <summary>ADM-08 (0022): designar el contacto urgente. VinculoId null es «sin contacto urgente»;
+/// DesignacionesEsperadas es cuántas designaciones tenía el residente al abrir la pantalla.</summary>
+public sealed class EmergencyContactFormModel
+{
+    public Guid ResidenteId { get; set; }
+
+    public int DesignacionesEsperadas { get; set; }
+
+    public Guid? VinculoId { get; set; }
+}
+
+public sealed record EmergencyContactViewModel(AdministrativeResidentDetail Detail, EmergencyContactFormModel Form);
+
 public static class AdministrativeResidentDisplay
 {
+    /// <summary>ADM-08: la autorización tal como cuenta hoy, p. ej. «Activa hasta el 31/10/2026» o «Sin autorización».</summary>
+    public static string Authorization(ResidentFamilyMember member, DateOnly today)
+    {
+        if (member.CurrentAuthorization is not { } current)
+        {
+            return "Sin autorización";
+        }
+
+        var effective = FamilyAuthorizationRules.Effective(current.Status, current.ValidUntil, today);
+        return effective switch
+        {
+            FamilyAuthorizationStatus.Activa when current.ValidUntil is { } until => $"Activa hasta el {until:dd/MM/yyyy}",
+            FamilyAuthorizationStatus.Caducada => $"Caducada (fue válida hasta el {current.ValidUntil:dd/MM/yyyy})",
+            _ => EnumDisplay.Label(effective),
+        };
+    }
+
     /// <summary>RES-03: la edad se calcula desde la fecha de nacimiento y la de hoy; no se guarda.</summary>
     public static int Age(DateOnly birthDate, DateOnly today)
     {

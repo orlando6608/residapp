@@ -175,6 +175,20 @@ public static class RequestAuthorizationContextResolver
         return await repository.CorrectAsync(input, ct);
     }
 
+    /// <summary>ADM-08 a ADM-11 (0022): familiares, autorizaciones y contacto urgente son datos administrativos del
+    /// residente, así que se autorizan como la corrección de identidad (IdentityUpdate: Administración y residente de su
+    /// ámbito). Devuelve el residente ya autorizado y la cuenta que firma.</summary>
+    public static AdministrativeResidentTarget RequireResidentAdministration(RequestAuthorizationContext context)
+    {
+        var operation = RequireTarget<AuthorizationTarget.IdentityUpdate>(context);
+        if (operation.Subject.ActiveProfile != SystemProfile.Administracion)
+        {
+            throw new AccessDeniedException();
+        }
+        return new AdministrativeResidentTarget(
+            operation.Subject.AccountId!.Value, operation.CenterId, operation.UnitId, operation.ResidentId!.Value);
+    }
+
     /// <summary>Traduce executeBaselineSign de request-context.ts.</summary>
     public static async Task<SignBaselineDraftResult> ExecuteBaselineSignAsync(
         RequestAuthorizationContext context, IBaselineRepository repository, BaselineSignPayload payload, CancellationToken ct = default)

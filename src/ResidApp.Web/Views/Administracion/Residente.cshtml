@@ -41,6 +41,94 @@
 </section>
 
 <section class="mb-4">
+    <h2 class="h5">Familiares</h2>
+    <p class="text-muted">Solo una autorización Activa dará acceso al Portal Familiar cuando exista. Añadir un familiar no la abre.</p>
+    @if (Model.Detail.Family.Count == 0)
+    {
+        <p class="text-muted">No hay familiares vinculados.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <caption class="visually-hidden">Familiares vinculados al residente</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Relación</th>
+                        <th scope="col">Teléfono</th>
+                        <th scope="col">Correo</th>
+                        <th scope="col">Autorización</th>
+                        <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var member in Model.Detail.Family)
+                    {
+                        <tr>
+                            <th scope="row">
+                                @member.DisplayName
+                                @if (Model.Detail.CurrentEmergencyContact == member.LinkId)
+                                {
+                                    <span class="badge text-bg-primary ms-1">Contacto urgente</span>
+                                }
+                            </th>
+                            <td>@member.Relationship</td>
+                            <td>@member.Phone</td>
+                            <td>@(member.Email ?? "—")</td>
+                            <td>@AdministrativeResidentDisplay.Authorization(member, Model.Today)</td>
+                            <td class="text-nowrap">
+                                <a asp-action="AutorizacionFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
+                                   class="btn btn-outline-primary">Autorización</a>
+                                <a asp-action="EditarFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
+                                   class="btn btn-outline-secondary">Editar</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <a asp-action="AnadirFamiliar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Añadir familiar</a>
+</section>
+
+<section class="mb-4">
+    <h2 class="h5">Contacto urgente</h2>
+    @{
+        var currentContact = Model.Detail.Family.FirstOrDefault(f => f.LinkId == Model.Detail.CurrentEmergencyContact);
+    }
+    <p>
+        @if (currentContact is null)
+        {
+            <span class="text-muted">No hay contacto urgente designado.</span>
+        }
+        else
+        {
+            <strong>@currentContact.DisplayName</strong> @($"({currentContact.Relationship}) · {currentContact.Phone}")
+        }
+    </p>
+    @if (Model.Detail.Family.Count > 0)
+    {
+        <a asp-action="ContactoUrgente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg mb-3">
+            @(currentContact is null ? "Designar contacto urgente" : "Cambiar contacto urgente")
+        </a>
+    }
+    @if (Model.Detail.EmergencyContacts.Count > 0)
+    {
+        <h3 class="h6">Historial</h3>
+        <ol class="list-group list-group-numbered">
+            @foreach (var designation in Model.Detail.EmergencyContacts)
+            {
+                <li class="list-group-item">
+                    @designation.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Administración ·
+                    @(designation.DisplayName ?? "Sin contacto urgente")
+                </li>
+            }
+        </ol>
+    }
+</section>
+
+<section class="mb-4">
     <h2 class="h5">Historial de ubicación</h2>
     <p class="text-muted">Del más reciente al más antiguo. Cada cambio de ubicación cierra el anterior; ninguno se reescribe.</p>
     <div class="table-responsive">

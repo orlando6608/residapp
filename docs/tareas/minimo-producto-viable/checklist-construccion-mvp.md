@@ -19,7 +19,7 @@ El orden se hereda de `roadmap.md` (heredado a su vez del prototipo legado, úni
 | Enfermería | Enfermería | En curso |
 | Medicina | Medicina | En curso (escalados, evento propio, valoración médica, indicaciones, seguimiento médico, protocolo urgente, derivación a Urgencias y cierre médico) |
 | Familia / Portal Familiar | Familiar | No iniciado |
-| Administración | Administración | En curso (residentes, ficha administrativa y corrección de identidad; ver `pendientes-administracion.md`) |
+| Administración | Administración | En curso (residentes, ficha administrativa, corrección de identidad, familiares, autorizaciones y contacto urgente; ver `pendientes-administracion.md`) |
 | Dirección / Coordinación Clínica | Dirección/Coordinación Clínica | En curso (supervisión operativa en solo lectura e indicadores agregados con informe imprimible; ver `pendientes-direccion.md`) |
 
 ### Residente / Basal

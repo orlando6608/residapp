@@ -1,3 +1,4 @@
+using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
 using ResidApp.Shared;
 
@@ -16,10 +17,33 @@ public sealed record ResidentLocationInterval(string UnitName, DateTimeOffset Fr
 public sealed record ResidentIdentityCorrectionEntry(
     int Number, ResidentIdentity Before, ResidentIdentity After, string Reason, DateTimeOffset CorrectedAt);
 
-/// <summary>ADM-03: la ficha administrativa. Corrections va de la más antigua a la más reciente.</summary>
+/// <summary>ADM-10 (0022): un cambio de la autorización de un familiar, tal como se guardó (nunca Caducada).</summary>
+public sealed record FamilyAuthorizationChangeEntry(
+    int Number, FamilyAuthorizationStatus Status, DateOnly? ValidUntil, string? Reason, DateTimeOffset At);
+
+/// <summary>ADM-08 (0022): un familiar vinculado al residente. LinkId identifica el vínculo; AuthorizationChanges va del
+/// primero al último y está vacía si la autorización no se ha abierto.</summary>
+public sealed record ResidentFamilyMember(
+    Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email,
+    IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges)
+{
+    public FamilyAuthorizationChangeEntry? CurrentAuthorization => AuthorizationChanges.Count == 0 ? null : AuthorizationChanges[^1];
+}
+
+/// <summary>ADM-08 (0022): una designación de contacto urgente. LinkId null es «sin contacto urgente»; DisplayName es el
+/// nombre vigente del familiar.</summary>
+public sealed record EmergencyContactDesignation(int Number, Guid? LinkId, string? DisplayName, DateTimeOffset At);
+
+/// <summary>ADM-03: la ficha administrativa. Corrections y EmergencyContacts van de la más antigua a la más reciente;
+/// Family, por nombre.</summary>
 public sealed record AdministrativeResidentDetail(
     AdministrativeResidentSummary Resident, IReadOnlyList<ResidentLocationInterval> Locations,
-    IReadOnlyList<ResidentIdentityCorrectionEntry> Corrections);
+    IReadOnlyList<ResidentIdentityCorrectionEntry> Corrections, IReadOnlyList<ResidentFamilyMember> Family,
+    IReadOnlyList<EmergencyContactDesignation> EmergencyContacts)
+{
+    /// <summary>El vínculo del contacto urgente vigente, o null si no hay.</summary>
+    public Guid? CurrentEmergencyContact => EmergencyContacts.Count == 0 ? null : EmergencyContacts[^1].LinkId;
+}
 
 /// <summary>ADM-02/ADM-03: lectura de Administración. Aplica en la propia consulta la regla de ámbito de
 /// SqlEnfermeriaResidentDirectory (ámbito activo de ADMINISTRACION, sus unidades y, si los restringe, sus residentes),
@@ -40,4 +64,32 @@ public sealed record CorrectResidentIdentityInput(
 public interface IResidentIdentityRepository
 {
     Task<int> CorrectAsync(CorrectResidentIdentityInput input, CancellationToken ct = default);
+}
+
+/// <summary>Un residente sobre el que Administración ya está autorizada (RequestAuthorizationContextResolver
+/// .RequireResidentAdministration), con la cuenta que firma el cambio.</summary>
+public sealed record AdministrativeResidentTarget(AccountId AccountId, CenterId CenterId, UnitId UnitId, ResidentId ResidentId);
+
+/// <summary>
+/// ADM-08 a ADM-11 (0022): familiares, autorizaciones y contacto urgente de un residente. Cada escritura va en una
+/// transacción con su auditoría. Un vínculo que no es del residente da acceso denegado, sin distinguir si existe.
+/// </summary>
+public interface IResidentFamilyRepository
+{
+    /// <summary>Crea el familiar con el identificador operationId y lo vincula al residente, sin autorización. Un reenvío
+    /// con el mismo operationId no duplica nada: devuelve el vínculo ya creado.</summary>
+    Task<Guid> AddAsync(AdministrativeResidentTarget target, Guid operationId, FamilyMemberData data, CancellationToken ct = default);
+
+    Task UpdateAsync(AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, CancellationToken ct = default);
+
+    /// <summary>Registra el cambio si el vínculo sigue teniendo expectedChanges cambios (si no, conflicto) y es válido desde
+    /// su estado efectivo de hoy. Devuelve cuántos cambios tiene ya.</summary>
+    Task<int> ChangeAuthorizationAsync(
+        AdministrativeResidentTarget target, Guid linkId, FamilyAuthorizationChange change, DateOnly? validUntil, string? reason,
+        int expectedChanges, DateOnly today, CancellationToken ct = default);
+
+    /// <summary>Designa el contacto urgente (linkId null lo quita) si el residente sigue teniendo expectedDesignations
+    /// designaciones (si no, conflicto) y cambia algo. Devuelve cuántas tiene ya.</summary>
+    Task<int> DesignateEmergencyContactAsync(
+        AdministrativeResidentTarget target, Guid? linkId, int expectedDesignations, CancellationToken ct = default);
 }

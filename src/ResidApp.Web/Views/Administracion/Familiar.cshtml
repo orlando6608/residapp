@@ -1,0 +1,77 @@
+@using ResidApp.Web.Models
+@model FamilyMemberViewModel
+@{
+    var resident = Model.Resident;
+    var editing = Model.Form.VinculoId is not null;
+    var title = editing ? "Editar familiar" : "Añadir familiar";
+    ViewData["Title"] = title;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@title</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@title</h1>
+<p class="text-muted">
+    @if (editing)
+    {
+        @:Los cambios quedan en la auditoría. Cambiar los datos no cambia su autorización de acceso.
+    }
+    else
+    {
+        @:Familiar de @resident.DisplayName. Añadirlo no le da acceso a nada: su autorización se abre y se activa aparte.
+    }
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="@(editing ? "EditarFamiliar" : "AnadirFamiliar")" method="post">
+            <input type="hidden" name="Form.ResidenteId" value="@Model.Form.ResidenteId" />
+            @if (editing)
+            {
+                <input type="hidden" name="Form.VinculoId" value="@Model.Form.VinculoId" />
+            }
+            else
+            {
+                <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+            }
+
+            <div class="mb-3">
+                <label asp-for="Form.NombreVisible" class="form-label"></label>
+                <input asp-for="Form.NombreVisible" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.NombreVisible" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Relacion" class="form-label"></label>
+                <input asp-for="Form.Relacion" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.Relacion" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Telefono" class="form-label"></label>
+                <input asp-for="Form.Telefono" type="tel" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.Telefono" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Correo" class="form-label"></label>
+                <input asp-for="Form.Correo" type="email" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.Correo" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">@(editing ? "Guardar cambios" : "Añadir familiar")</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,116 @@
+@using ResidApp.Domain.Families
+@using ResidApp.Web.Models
+@model FamilyAuthorizationViewModel
+@{
+    var resident = Model.Resident;
+    var member = Model.Member;
+    ViewData["Title"] = "Autorización de " + member.DisplayName;
+    // Lo escrito se conserva solo en el cambio que se intentó.
+    string? Reason(FamilyAuthorizationChange change) => Model.Form.Cambio == change ? Model.Form.Motivo : null;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Autorización de @member.DisplayName</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Autorización de @member.DisplayName</h1>
+<p class="text-muted">
+    @member.Relationship de @resident.DisplayName. Solo una autorización <strong>Activa</strong> dará acceso al Portal Familiar
+    cuando exista; mientras tanto, el estado se registra pero no da acceso a nada.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<section class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5 card-title">Estado de hoy</h2>
+        <p class="fs-5 mb-0">@AdministrativeResidentDisplay.Authorization(member, Model.Today)</p>
+    </div>
+</section>
+
+@if (Model.Allowed.Count == 0)
+{
+    <p class="text-muted">La autorización está revocada: no admite más cambios.</p>
+}
+@foreach (var change in Model.Allowed)
+{
+    <section class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">@EnumDisplay.Label(change)</h2>
+            <form asp-action="AutorizacionFamiliar" method="post">
+                <input type="hidden" name="Form.ResidenteId" value="@Model.Form.ResidenteId" />
+                <input type="hidden" name="Form.VinculoId" value="@Model.Form.VinculoId" />
+                <input type="hidden" name="Form.CambiosEsperados" value="@Model.Form.CambiosEsperados" />
+                <input type="hidden" name="Form.Cambio" value="@change" />
+                @switch (change)
+                {
+                    case FamilyAuthorizationChange.Abrir:
+                        <p>Abre la autorización en estado Pendiente. Todavía no da acceso: después hay que activarla.</p>
+                        break;
+                    case FamilyAuthorizationChange.Activar:
+                        <div class="mb-3">
+                            <label for="valida-hasta" class="form-label">Válida hasta (opcional; ese día incluido)</label>
+                            <input id="valida-hasta" name="Form.ValidaHasta" type="date" class="form-control form-control-lg"
+                                   min="@Model.Today.ToString("yyyy-MM-dd")"
+                                   value="@(Model.Form.Cambio == change ? Model.Form.ValidaHasta?.ToString("yyyy-MM-dd") : null)" />
+                            <div class="form-text">Sin fecha, sigue activa hasta que se suspenda o se revoque.</div>
+                        </div>
+                        break;
+                    default:
+                        <div class="mb-3">
+                            <label for="motivo-@change" class="form-label">Motivo</label>
+                            <textarea id="motivo-@change" name="Form.Motivo" class="form-control form-control-lg" rows="2"
+                                      maxlength="@FamilyAuthorizationRules.MaxReasonLength" required>@Reason(change)</textarea>
+                            <div class="form-text">
+                                @(change == FamilyAuthorizationChange.Revocar
+                                    ? "Revocar es definitivo: la autorización no se podrá volver a activar."
+                                    : "Tiene efecto inmediato. Se puede levantar volviendo a activarla.")
+                            </div>
+                        </div>
+                        break;
+                }
+                <button type="submit" class="btn btn-lg @(change == FamilyAuthorizationChange.Revocar ? "btn-outline-danger" : "btn-primary")">
+                    @EnumDisplay.Label(change)
+                </button>
+            </form>
+        </div>
+    </section>
+}
+
+<section class="mb-4">
+    <h2 class="h5">Historial</h2>
+    @if (member.AuthorizationChanges.Count == 0)
+    {
+        <p class="text-muted">La autorización no se ha abierto.</p>
+    }
+    else
+    {
+        <ol class="list-group list-group-numbered">
+            @foreach (var entry in member.AuthorizationChanges)
+            {
+                <li class="list-group-item">
+                    <span class="fw-semibold">@entry.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @EnumDisplay.Label(entry.Status)</span>
+                    @if (entry.ValidUntil is { } until)
+                    {
+                        <span>hasta el @until.ToString("dd/MM/yyyy")</span>
+                    }
+                    @if (entry.Reason is not null)
+                    {
+                        <div>Motivo: @entry.Reason</div>
+                    }
+                </li>
+            }
+        </ol>
+    }
+</section>
+
+<a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Volver a la ficha</a>

@@ -33,6 +33,7 @@
             <a class="list-group-item list-group-item-action" href="#cuentas-prueba">Cuentas de prueba y cómo cambiar de usuario</a>
             <a class="list-group-item list-group-item-action" href="#alta-residente">Dar de alta un residente</a>
             <a class="list-group-item list-group-item-action" href="#residentes-administracion">Residentes y ficha administrativa (Administración)</a>
+            <a class="list-group-item list-group-item-action" href="#familiares-administracion">Familiares, autorizaciones y contacto urgente (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
             <a class="list-group-item list-group-item-action" href="#supervision-direccion">Supervisión operativa por unidad (Dirección Clínica)</a>
@@ -223,6 +224,33 @@
         documentado. El motivo es obligatorio y algo tiene que cambiar. La versión anterior, la nueva y el motivo quedan en
         el historial de la ficha, y la corrección queda en la auditoría. Si la identidad ha cambiado desde que abriste el
         formulario, la pantalla te lo indica y conserva lo que escribiste.
+    </p>
+</section>
+
+<section id="familiares-administracion" class="mb-4">
+    <h2 class="h5">
+        Familiares, autorizaciones y contacto urgente
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+    </h2>
+    <p>
+        En la ficha administrativa, la sección <strong>Familiares</strong> lista los familiares del residente con su
+        relación, teléfono, correo y el estado de su autorización. Con <strong>Añadir familiar</strong> escribes nombre,
+        relación (por ejemplo, «Hija»), teléfono y, si quieres, correo. Añadir un familiar no le da acceso a nada.
+        <strong>Editar</strong> cambia esos datos; el cambio queda en la auditoría.
+    </p>
+    <p>
+        <strong>Autorización</strong> abre la pantalla de acceso del familiar. Primero se <strong>abre</strong> (queda
+        Pendiente) y después se <strong>activa</strong>, con una fecha «válida hasta» opcional: pasado ese día pasa a
+        <strong>Caducada</strong> sin que nadie la toque, y se puede renovar activándola otra vez. Una autorización activa
+        se puede <strong>suspender</strong> (con motivo; se levanta activándola) o <strong>revocar</strong> (con motivo;
+        es definitivo). Todos los cambios quedan en el historial de la pantalla y en la auditoría. Solo una autorización
+        Activa dará acceso al Portal Familiar cuando exista; hoy el estado se registra, pero no da acceso a nada.
+    </p>
+    <p class="mb-0">
+        El <strong>contacto urgente</strong> es uno de los familiares del residente, a quien se avisa en una urgencia (no
+        necesita autorización de acceso). Se designa, se cambia o se quita desde la ficha, y cada cambio queda en su
+        historial. Si otra persona ha cambiado la autorización o el contacto desde que abriste la pantalla, te lo indica
+        en lugar de guardar.
     </p>
 </section>
 
@@ -846,7 +874,8 @@
         <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
-        <li>Gestión administrativa completa (familiares y autorizaciones, usuarios y turnos, publicaciones, citas, auditoría).</li>
+        <li>Más gestión administrativa: usuarios y turnos, publicaciones, citas y auditoría.</li>
+        <li>Ver el contacto urgente designado desde la derivación a urgencias (hoy el contacto de la llamada se escribe a mano).</li>
         <li>Traslado de un residente entre unidades o centros, y su baja y reactivación (pendiente de que CJ decida qué pasa con su trabajo clínico en curso).</li>
         <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, y la revisión de calidad de proceso (cumplimiento de hitos y plazos, pendiente de definir).</li>
     </ul>
