@@ -63,6 +63,7 @@ public static class AuditActionDisplay
         ["TEAM_MEMBER_REMOVE"] = "Miembro dado de baja de un equipo",
         ["SCHEDULE_CREATE"] = "Turno planificado",
         ["SCHEDULE_RETIRE"] = "Planificación retirada",
+        ["SCHEDULE_SERIES_RETIRE"] = "Serie de turnos retirada",
     };
 
     public static string Label(string code) => Labels.TryGetValue(code, out var label) ? label : "Acción administrativa";

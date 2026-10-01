@@ -365,7 +365,16 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         var noJustification = await PostAsync("/Administracion/PlanificarTurno", planPage, Form(afternoonId, null, seen, true));
         var changed = await PostAsync("/Administracion/PlanificarTurno", planPage, Form(afternoonId, "Refuerzo", "HUELLA-ANTIGUA", true));
         var confirmed = await PostAsync("/Administracion/PlanificarTurno", planPage, Form(afternoonId, "Refuerzo por baja (ficticio)", seen, true));
+        var badSkip = await PostAsync("/Administracion/PlanificarTurno", planPage,
+            Form(afternoonId, null, null, true).Append(new("Form.Saltar", "mañana, 2026-13-45")).ToList());
+        var allSkipped = await PostAsync("/Administracion/PlanificarTurno", planPage,
+            Form(afternoonId, null, null, true).Append(new("Form.Saltar", day)).ToList());
+        var seriesId = Regex.Match(await client.GetStringAsync($"/Administracion/Planificacion?desde={day}"), "SeriePlanificacion\\?loteId=([0-9a-f-]{36})").Groups[1].Value;
+        var seriesPage = await client.GetStringAsync($"/Administracion/SeriePlanificacion?loteId={seriesId}");
+        var retiredSeries = await PostAsync("/Administracion/RetirarSerie", seriesPage, new Dictionary<string, string> { ["loteId"] = seriesId, ["desde"] = day });
+        var retiredAgain = await PostAsync("/Administracion/RetirarSerie", seriesPage, new Dictionary<string, string> { ["loteId"] = seriesId, ["desde"] = day });
         var nursePage = await PageAsync("ENFERMERIA", null, "/Administracion/Planificacion");
+        var nurseSeries = await PageAsync("ENFERMERIA", null, $"/Administracion/SeriePlanificacion?loteId={seriesId}");
 
         Assert.Contains("Planificado en 1 fecha(s).", first);
         Assert.Contains(morningName, first);
@@ -379,8 +388,16 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("Queda anotada tu justificación del solapamiento.", confirmed);
         Assert.Contains("Solapamiento justificado", confirmed);
         Assert.Contains("Refuerzo por baja (ficticio)", confirmed);
+        Assert.Contains("No entiendo estas fechas a saltar: «mañana», «2026-13-45».", WebUtility.HtmlDecode(badSkip));
+        Assert.Contains("No queda ninguna fecha", allSkipped);
+        Assert.Contains("Serie de turnos", seriesPage);
+        Assert.Contains("Retirar la serie desde esa fecha", seriesPage);
+        Assert.Contains("Serie retirada: 1 fecha(s) desde esa fecha.", retiredSeries);
+        Assert.Contains("La serie no tiene fechas planificadas desde esa fecha", retiredAgain);
         Assert.Contains("No se puede acceder a esta operación", nursePage);
         Assert.DoesNotContain("Planificar un turno", nursePage);
+        Assert.Contains("No se puede acceder a esta operación", nurseSeries);
+        Assert.DoesNotContain("Retirar la serie", nurseSeries);
     }
 
     private static string ExtractValue(string html, string inputName) =>

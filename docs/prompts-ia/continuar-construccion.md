@@ -13,6 +13,29 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Administración, turnos recurrentes con excepciones (historia 4; ADM-16; sin script ni cambios en el seed):** hecho el 2026-10-01 en `main`
+  **sin push** (Azure en `0028`).
+  - **Qué hace:** «Planificar un turno» admite hasta **367 fechas** por envío (una serie: las filas con el mismo `lote_id`) y un campo
+    **«Fechas a saltar»** (festivos, `AAAA-MM-DD` o `DD/MM/AAAA`). `Ver serie` (`/Administracion/SeriePlanificacion?loteId=`) enseña sus fechas, retira una
+    fecha suelta o **retira la serie desde un día** (`POST RetirarSerie`; solo hoy en adelante), con un solo evento de auditoría
+    `SCHEDULE_SERIES_RETIRE`. Decisión del usuario: series con horizonte de un año, no una regla sin fecha final; excepciones al crear y después.
+    Detalle en `pendientes-administracion.md`.
+  - **Pendiente de este bloque:** nada propio; el resto de Administración es la estructura (edificios, plantas, habitaciones, plazas y organigrama).
+  - **Detalle técnico que conviene no redescubrir:**
+    - no hay script: `lote_id` ya era la serie y retirar es un `UPDATE` que los triggers permiten;
+    - `SchedulePlan.MaxDates` = 367 (`MaxHorizonDays + 1`) y la ventana de la consulta tiene `MaxListDays` = 62;
+    - un test funcional existente exige que a Enfermería no le salga el rótulo «Planificar un turno» en la página de planificación: no lo uses
+      en textos que se vean sin permiso;
+    - `ScheduleEntry` lleva `BatchId` (segundo parámetro); `curl` envía «ñ» en Latin-1 (el aviso de fecha inválida sale «ma%F1ana»: es el
+      efecto ya conocido, no un fallo).
+  - **Verificación:**
+    - suite en verde antes (232, 280 y 48) y después 3 veces (232, 284 y 52), más 3 vueltas tipo CI con BD nueva (sin script nuevo: no hacen
+      falta copia ni BD temporal);
+    - curl en local con `dev-integrado-administracion`: una fecha a saltar inválida da el error en español; lunes a viernes del 2 al 27 de
+      noviembre saltando el 2 y el 25 guarda 18 fechas (no salen esas dos); la serie las enseña; retirar una suelta deja 17 y 1 retirada; retirar
+      desde el 20 retira 5 (12 activas, 6 retiradas); repetirlo avisa; la auditoría tiene `SCHEDULE_SERIES_RETIRE`; Enfermería, Medicina, Auxiliar y
+      Dirección reciben «No se puede acceder» en la serie.
+  - **Datos de prueba en la base local:** una serie de «Equipo I1 prueba» con «Manana prueba» en noviembre de 2026. Nada se borra.
 - **Equipos en los seguimientos de Enfermería y Medicina (punto 2 del pendiente de Administración; script `0028`; sin cambios en el seed):** hecho
   el 2026-10-01 en `main`, pusheado y desplegado en Azure (push de `17a4926`, run 36925459313 en verde con `build-and-test` y `deploy`, que aplicó `0028`). Antes, en la misma sesión, `AdministracionApplicationService` se dividió en tres
   (`30509f1`, ya pusheado): `AdministracionApplicationService` (residentes y cuentas), `AdministracionEstructuraApplicationService` (unidades y
@@ -57,7 +80,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     equipo en turnos que se solapan; una persona en dos equipos con turnos que se solapan, con el cruce de medianoche) y Administración decide:
     solo se guarda con una justificación, que queda en las fechas afectadas. Las horas de un turno no cambian nunca. Detalle, decisiones y
     suposiciones en `pendientes-administracion.md`.
-  - **Pendiente de este bloque:** recurrencias y excepciones (ADM-16). Los seguimientos ya usan los equipos (script `0028`, entrada anterior).
+  - **Pendiente de este bloque:** nada (las recurrencias y los seguimientos con equipos están hechos; ver las entradas anteriores).
   - **Detalle técnico que conviene no redescubrir:**
     - la confirmación de un solapamiento lleva una huella SHA-256 (`ConflictosVistos`) de los que se enseñaron; si cambian, no se confirma;
     - el reenvío de un lote ya guardado enseña «Todas esas fechas ya tienen planificado ese equipo…» (la vista previa corre antes que la
@@ -784,7 +807,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
      un borrador de basal ajeno; el tema 3 es un cambio pequeño en el informe de derivación.
    - `docs/pendientes-cj/traslado-y-baja-residente.html` (preparado el 2026-10-01, 6 respuestas): traslado y baja del
      residente en Administración.
-2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): turnos recurrentes con excepciones (ADM-16) y la estructura (las unidades ya están hechas; faltan edificios, plantas, habitaciones, plazas y organigrama); después publicaciones,
+2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): la estructura (las unidades ya están hechas; faltan edificios, plantas, habitaciones, plazas y organigrama); después publicaciones,
    citas, auditoría administrativa y panel.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
    (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.

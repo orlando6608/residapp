@@ -1,0 +1,114 @@
+@using ResidApp.Web.Models
+@model SeriesViewModel
+@{
+    ViewData["Title"] = "Serie de turnos";
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var series = Model.Series;
+    string Day(DateOnly date) => date.ToString("dddd, d 'de' MMMM 'de' yyyy");
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Planificacion">Planificación</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Serie de turnos</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Serie de turnos</h1>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (series is not null)
+{
+    var future = series.ActiveDates.Where(d => d.Date >= today).ToList();
+    <p class="text-muted">
+        Una serie son las fechas que se guardaron juntas en un mismo envío de «Planificar un turno».
+        <strong>@series.TeamName</strong> en <strong>@series.ShiftName</strong>
+        (@series.Start.ToString("HH\\:mm") – @series.End.ToString("HH\\:mm")@(series.CrossesMidnight ? ", termina al día siguiente" : "")),
+        unidad @series.UnitName. @series.ActiveDates.Count fecha(s) planificada(s)@(series.RetiredDates > 0 ? $" y {series.RetiredDates} retirada(s)" : "").
+    </p>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Retirar la serie</h2>
+            @if (future.Count == 0)
+            {
+                <p class="text-muted mb-0">No quedan fechas de hoy en adelante: lo pasado no se retira.</p>
+            }
+            else
+            {
+                <p class="text-muted">
+                    Retira todas las fechas de la serie desde el día que elijas (hoy o después). Lo retirado no se borra: queda en la auditoría
+                    y la serie conserva las fechas anteriores.
+                </p>
+                <form asp-action="RetirarSerie" method="post" class="row g-3 align-items-end">
+                    <input type="hidden" name="loteId" value="@series.BatchId" />
+                    <div class="col-12 col-md-6">
+                        <label for="serie-desde" class="form-label">Retirar desde</label>
+                        <input id="serie-desde" name="desde" type="date" class="form-control form-control-lg"
+                               value="@today.ToString("yyyy-MM-dd")" min="@today.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-12 col-md-6 d-grid">
+                        <button type="submit" class="btn btn-outline-danger btn-lg">Retirar la serie desde esa fecha</button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Fechas planificadas</h2>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Fechas activas de la serie</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var date in series.ActiveDates)
+                        {
+                            <tr>
+                                <th scope="row" class="text-capitalize">
+                                    @Day(date.Date)
+                                    @if (date.Justification is not null)
+                                    {
+                                        <div class="small fw-normal"><span class="badge text-bg-warning">Solapamiento justificado</span> @date.Justification</div>
+                                    }
+                                </th>
+                                <td>
+                                    @if (date.Date >= today)
+                                    {
+                                        <form asp-action="RetirarPlanificacion" method="post">
+                                            <input type="hidden" name="planificacionId" value="@date.ScheduleId" />
+                                            <input type="hidden" name="loteId" value="@series.BatchId" />
+                                            <button type="submit" class="btn btn-outline-danger">Retirar esta fecha</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Pasado</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<a asp-action="Planificacion" class="btn btn-outline-secondary btn-lg mb-3">Volver a la planificación</a>

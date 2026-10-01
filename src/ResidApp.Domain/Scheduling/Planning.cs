@@ -19,13 +19,15 @@ public sealed record ScheduleConflict(
     ScheduleConflictKind Kind, DateOnly Date, string TeamName, string ShiftName, string OtherTeamName, string OtherShiftName, string? PersonName);
 
 /// <summary>
-/// ADM-14/15/17 (script 0027): reglas de la planificación puntual. Un lote son de 1 a 62 fechas distintas, de hoy a un año vista. Los
+/// ADM-14/15/16/17 (script 0027): reglas de la planificación. Una serie (un lote) son de 1 a 367 fechas distintas, de hoy a un año vista. Los
 /// conflictos se calculan con los intervalos reales de los turnos (cruce de medianoche incluido). Que el servidor avise no impide
 /// planificar: Administración decide y deja una justificación (de 1 a 500 caracteres).
 /// </summary>
 public static class SchedulePlan
 {
-    public const int MaxDates = 62;
+    public const int MaxDates = MaxHorizonDays + 1;
+    /// <summary>Los días que cubre como máximo una consulta de la planificación.</summary>
+    public const int MaxListDays = 62;
     public const int MaxHorizonDays = 366;
     public const int MaxJustificationLength = 500;
     public const string InvalidCode = "SCHEDULE_INVALID";

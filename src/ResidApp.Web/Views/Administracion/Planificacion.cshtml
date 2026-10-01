@@ -20,7 +20,7 @@
 <p class="text-muted">
     Qué equipo hace qué turno cada día, en las unidades de tu ámbito. Planificar no da acceso a nada: el acceso sigue dependiendo de
     los perfiles y las unidades concedidos. Si un equipo, o una persona que está en dos equipos, queda en turnos que se solapan, se te
-    avisa y decides tú.
+    avisa y decides tú. Las fechas guardadas en un mismo envío forman una serie: desde «Ver serie» puedes retirar sus fechas.
 </p>
 @if (TempData["Mensaje"] is string mensaje)
 {
@@ -107,6 +107,7 @@
                                 </td>
                                 <td>@entry.UnitName</td>
                                 <td>
+                                    <a asp-action="SeriePlanificacion" asp-route-loteId="@entry.BatchId" class="d-block mb-1">Ver serie</a>
                                     @if (entry.Date >= today)
                                     {
                                         <form asp-action="RetirarPlanificacion" method="post">

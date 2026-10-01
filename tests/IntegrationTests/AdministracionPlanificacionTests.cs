@@ -244,7 +244,7 @@ public class AdministracionPlanificacionTests
         var w = await CreateWorldAsync();
         var other = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var d = Today.AddDays(2);
-        var tooMany = Enumerable.Range(1, 63).Select(i => Today.AddDays(i)).ToArray();
+        var tooMany = Enumerable.Range(1, 368).Select(i => Today.AddDays(i)).ToArray();
         Assert.True((await w.Service.ChangeTeamStatusAsync(new ChangeTeamStatusCommand(w.Admin.ProfileScopeId, w.Admin.CenterId, w.TeamC, false))).Ok);
         Assert.True((await w.Service.ChangeShiftStatusAsync(new ChangeShiftStatusCommand(w.Admin.ProfileScopeId, w.Admin.CenterId, w.Dawn, false))).Ok);
 
@@ -299,5 +299,98 @@ public class AdministracionPlanificacionTests
         Assert.Contains("SCHEDULE_DELETE_FORBIDDEN", delete.Message);
         Assert.Contains("UX_sch_active", duplicate.Message);
         Assert.Contains("CK_sch_justification", blankJustification.Message);
+    }
+
+    [Fact]
+    public async Task Serie_DeUnAnio_SeGuardaEnUnLote_YEnseñaSusFechas()
+    {
+        var w = await CreateWorldAsync();
+        var batch = Guid.NewGuid();
+        var dates = Enumerable.Range(0, SchedulePlan.MaxDates).Select(i => Today.AddDays(i)).ToArray();
+
+        var planned = await w.Service.PlanShiftAsync(Plan(w, w.TeamA, w.Morning, batch: batch, dates: dates));
+        var series = await w.Service.FindScheduleSeriesAsync(new FindScheduleSeriesQuery(w.Admin.ProfileScopeId, w.Admin.CenterId, batch));
+        var listed = await ListAsync(w, Today, Today.AddDays(SchedulePlan.MaxListDays - 1));
+
+        Assert.True(planned.Ok, planned.Error?.Message);
+        Assert.Equal(367, planned.Value!.Created.Count);
+        Assert.True(series.Ok, series.Error?.Message);
+        Assert.Equal(367, series.Value!.ActiveDates.Count);
+        Assert.Equal(0, series.Value.RetiredDates);
+        Assert.Equal(w.TeamA, series.Value.TeamId);
+        Assert.Equal(w.Morning, series.Value.ShiftId);
+        Assert.All(listed, e => Assert.Equal(batch, e.BatchId));
+        Assert.Equal(SchedulePlan.MaxListDays, listed.Count);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await w.Service.ListScheduleAsync(new ListScheduleQuery(
+            w.Admin.ProfileScopeId, w.Admin.CenterId, Today, Today.AddDays(SchedulePlan.MaxListDays)))).Error!.Code);
+    }
+
+    [Fact]
+    public async Task RetirarSerie_RetiraDesdeLaFechaConUnSoloEventoDeAuditoria_YNoTocaLoAnterior()
+    {
+        var w = await CreateWorldAsync();
+        var batch = Guid.NewGuid();
+        var dates = Enumerable.Range(1, 20).Select(i => Today.AddDays(i)).ToArray();
+        Assert.True((await w.Service.PlanShiftAsync(Plan(w, w.TeamA, w.Morning, batch: batch, dates: dates))).Ok);
+        var other = Guid.NewGuid();
+        Assert.True((await w.Service.PlanShiftAsync(Plan(w, w.TeamB, w.Night, batch: other, dates: [Today.AddDays(15)]))).Ok);
+        var retireFrom = Today.AddDays(11);
+
+        var retired = await w.Service.RetireScheduleSeriesAsync(new RetireScheduleSeriesCommand(w.Admin.ProfileScopeId, w.Admin.CenterId, batch, retireFrom));
+        var again = await w.Service.RetireScheduleSeriesAsync(new RetireScheduleSeriesCommand(w.Admin.ProfileScopeId, w.Admin.CenterId, batch, retireFrom));
+        var series = (await w.Service.FindScheduleSeriesAsync(new FindScheduleSeriesQuery(w.Admin.ProfileScopeId, w.Admin.CenterId, batch))).Value!;
+
+        Assert.True(retired.Ok, retired.Error?.Message);
+        Assert.Equal(10, retired.Value);
+        Assert.Equal(ApplicationFailureCode.Conflict, again.Error!.Code);
+        Assert.Equal(10, series.ActiveDates.Count);
+        Assert.Equal(10, series.RetiredDates);
+        Assert.Equal(dates.Take(10), series.ActiveDates.Select(d => d.Date));
+        Assert.Single((await ListAsync(w)).Where(e => e.BatchId == other));
+        Assert.Equal(1, await CountAsync(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE recurso_id = @batch AND accion_codigo = 'SCHEDULE_SERIES_RETIRE' AND unidad_id = @unit",
+            new { batch, unit = w.Admin.UnitId.Value }));
+        Assert.Equal(0, await CountAsync(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = 'SCHEDULE_RETIRE' AND centro_id = @center", new { center = w.Admin.CenterId.Value }));
+    }
+
+    [Fact]
+    public async Task RetirarSerie_DesdeUnaFechaPasada_SoloRetiraDeHoyEnAdelante_YSinFechasActivasEsUnConflicto()
+    {
+        var w = await CreateWorldAsync();
+        var batch = Guid.NewGuid();
+        Assert.True((await w.Service.PlanShiftAsync(Plan(w, w.TeamA, w.Morning, batch: batch, dates: [Today, Today.AddDays(1), Today.AddDays(2)]))).Ok);
+
+        var fromPast = await w.Service.RetireScheduleSeriesAsync(new RetireScheduleSeriesCommand(
+            w.Admin.ProfileScopeId, w.Admin.CenterId, batch, Today.AddDays(-30)));
+        var empty = await w.Service.RetireScheduleSeriesAsync(new RetireScheduleSeriesCommand(w.Admin.ProfileScopeId, w.Admin.CenterId, batch, Today.AddDays(-30)));
+
+        Assert.Equal(3, fromPast.Value);
+        Assert.Equal(ApplicationFailureCode.Conflict, empty.Error!.Code);
+    }
+
+    [Fact]
+    public async Task Serie_ConEnfermeriaOtroAmbitoOLoteAjeno_ReturnsAccessDenied()
+    {
+        var w = await CreateWorldAsync();
+        var other = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var batch = Guid.NewGuid();
+        Assert.True((await w.Service.PlanShiftAsync(Plan(w, w.TeamA, w.Morning, batch: batch, dates: [Today.AddDays(2)]))).Ok);
+
+        var find = new[]
+        {
+            (await BuildTurnos(w.Nurse1.ExternalSubject).FindScheduleSeriesAsync(new FindScheduleSeriesQuery(w.Nurse1.ProfileScopeId, w.Nurse1.CenterId, batch))).Error,
+            (await BuildTurnos(other.ExternalSubject).FindScheduleSeriesAsync(new FindScheduleSeriesQuery(other.ProfileScopeId, other.CenterId, batch))).Error,
+            (await w.Service.FindScheduleSeriesAsync(new FindScheduleSeriesQuery(w.Admin.ProfileScopeId, w.Admin.CenterId, Guid.NewGuid()))).Error,
+        };
+        var retire = new[]
+        {
+            (await BuildTurnos(w.Nurse1.ExternalSubject).RetireScheduleSeriesAsync(new RetireScheduleSeriesCommand(w.Nurse1.ProfileScopeId, w.Nurse1.CenterId, batch, Today))).Error,
+            (await BuildTurnos(other.ExternalSubject).RetireScheduleSeriesAsync(new RetireScheduleSeriesCommand(other.ProfileScopeId, other.CenterId, batch, Today))).Error,
+            (await BuildTurnos(other.ExternalSubject).RetireScheduleSeriesAsync(new RetireScheduleSeriesCommand(w.Admin.ProfileScopeId, w.Admin.CenterId, batch, Today))).Error,
+        };
+
+        Assert.All(find.Concat(retire), e => Assert.Equal(ApplicationFailureCode.AccessDenied, e!.Code));
+        Assert.Single(await ListAsync(w));
     }
 }

@@ -109,12 +109,13 @@ public class SchedulePlanTests
             [Today.AddDays(-1)],
             [Today.AddDays(367)],
             [Today, Today],
-            Enumerable.Range(0, 63).Select(i => Today.AddDays(i)),
+            Enumerable.Range(0, 368).Select(i => Today.AddDays(i)),
         };
 
         Assert.All(invalid, dates => Assert.Equal(SchedulePlan.InvalidCode, Assert.Throws<DomainValidationException>(
             () => SchedulePlan.ValidateDates(dates, Today)).Message));
-        Assert.Equal(62, SchedulePlan.ValidateDates(Enumerable.Range(0, 62).Select(i => Today.AddDays(i)), Today).Count);
+        Assert.Equal(SchedulePlan.MaxDates, SchedulePlan.ValidateDates(Enumerable.Range(0, 367).Select(i => Today.AddDays(i)), Today).Count);
+        Assert.Equal(63, SchedulePlan.ValidateDates(Enumerable.Range(0, 63).Select(i => Today.AddDays(i)), Today).Count);
     }
 
     [Theory]

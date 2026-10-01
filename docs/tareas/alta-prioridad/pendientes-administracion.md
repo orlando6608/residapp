@@ -260,12 +260,32 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
   - **Tests:** `AdministracionTurnosTests` y `AdministracionPlanificacionTests` (integración), `SchedulingTests` y `SchedulePlanTests` (unitarios),
     `TurnosYEquipos_…` y `Planificacion_ConSolapamiento_…` en `ProfessionalAccountScreensTests` (funcionales).
 
+- **Turnos recurrentes con excepciones (historia 4; ADM-16; sin script)** — 2026-10-01.
+  - **Qué hace:** una serie son las fechas guardadas en un mismo envío de «Planificar un turno» (el lote ya existía). Hasta **367 fechas** por
+    serie (de hoy a un año vista), así que «de lunes a viernes durante todo el año» cabe en un envío. `Planificar un turno` admite
+    **«Fechas a saltar»** (festivos; `AAAA-MM-DD` o `DD/MM/AAAA`, separadas por comas, espacios o líneas); `Ver serie` (`/Administracion/SeriePlanificacion`)
+    enseña sus fechas activas, retira una fecha suelta (como antes) o **retira la serie desde un día** (`RetirarSerie`; lo anterior a hoy no se toca).
+  - **Decisiones del usuario (2026-10-01):** series con horizonte de un año (no una regla sin fecha final) y excepciones tanto al crear como después.
+  - **Suposiciones aprobadas con el plan:**
+    - se sigue guardando una fila por fecha, así que los solapamientos se calculan igual y la BD no cambia (sin script: `lote_id` ya era la serie);
+    - las fechas saltadas no se guardan (no hay fila ni regla que las recree); las que caen fuera del rango o de los días elegidos se ignoran;
+    - retirar la serie hace un solo evento de auditoría `SCHEDULE_SERIES_RETIRE` (recurso: el lote, con la unidad), no uno por fecha; retirar una
+      fecha suelta sigue siendo `SCHEDULE_RETIRE`;
+    - sin fechas activas desde esa fecha, la retirada es un conflicto («ya estaba retirada»); un lote ajeno o de otro ámbito, acceso denegado.
+  - **Implementación:** `SchedulePlan.MaxDates` pasa a 367 y la ventana de consulta tiene su propia constante (`MaxListDays` = 62);
+    `ISchedulePlanDirectory.FindSeriesAsync` y `ISchedulePlanRepository.RetireSeriesAsync` (`SqlSchedulePlanDirectory`/`SqlSchedulePlanRepository`);
+    `FindScheduleSeriesAsync`/`RetireScheduleSeriesAsync` en `AdministracionTurnosApplicationService`; `ScheduleEntry` lleva `BatchId`;
+    `PlanFormModel.Saltar`, `SkippedDates()` y `Dates()`; vista `SeriePlanificacion.cshtml`.
+  - **Tests:** integración (`AdministracionPlanificacionTests`: serie de 367 fechas, retirar desde una fecha con un solo evento de auditoría, pasado,
+    conflicto al repetir, accesos denegados), unitarios (`SchedulePlanTests`) y funcionales (`PlanFormModelTests`; la prueba de la pantalla de
+    planificación recorre fechas a saltar inválidas, serie, retirada y acceso denegado a Enfermería).
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
-2. **Turnos recurrentes con excepciones (ADM-16) y el resto de la estructura (historia 2: edificios, plantas, habitaciones, plazas y organigrama, ADM-06/ADM-07).** El equipo entrante de los seguimientos ya se elige entre los equipos de la unidad (script `0028`, 2026-10-01).
+2. **El resto de la estructura (historia 2: edificios, plantas, habitaciones, plazas y organigrama, ADM-06/ADM-07).** Los turnos recurrentes con excepciones (ADM-16) y el equipo entrante de los seguimientos ya están hechos (2026-10-01).
 3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8) y panel completo (10).**
 
 Huecos de lo ya construido:
@@ -276,7 +296,7 @@ Huecos de lo ya construido:
 - **Inactivar una unidad:** se comprueba que no tenga ubicaciones vigentes dentro de la transacción, pero un alta de residente que
   llegue a la vez no se bloquea (el alta autoriza la unidad antes, y la clave foránea no mira el estado). Es una carrera muy
   estrecha; si importa, habrá que comprobar el estado de la unidad al insertar la ubicación.
-- **Turnos y equipos:** sin recurrencias ni excepciones (ADM-16): cada fecha se planifica expresamente. Los seguimientos ya eligen el equipo entrante entre los equipos de la unidad (`0028`), pero no miran el turno planificado.
+- **Turnos y equipos:** las recurrencias son series de hasta un año (una fila por fecha, sin regla abierta): lo que quede después hay que volver a planificarlo. Los seguimientos ya eligen el equipo entrante entre los equipos de la unidad (`0028`), pero no miran el turno planificado.
   Inactivar un equipo o un turno no retira lo ya planificado. Un equipo o turno ya usado no se corrige (las horas
   no cambian: se crea otro). La planificación no se edita: se retira y se vuelve a planificar. La vista solo enseña dos semanas, sin cuadrícula
   semanal ni vista por persona. Los conflictos se calculan entre unidades del ámbito de quien planifica; otra Administración con otro ámbito

@@ -33,6 +33,12 @@ public sealed record PlanShiftCommand(
 
 public sealed record RetireScheduleCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid PlanificacionId);
 
+/// <summary>ADM-16: la serie de un lote (las fechas guardadas en un mismo envío).</summary>
+public sealed record FindScheduleSeriesQuery(Guid AmbitoPerfilId, CenterId CentroId, Guid LoteId);
+
+/// <summary>ADM-16: retirar las fechas activas de una serie desde una fecha (las pasadas no se tocan).</summary>
+public sealed record RetireScheduleSeriesCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid LoteId, DateOnly Desde);
+
 /// <summary>ADM-14: la planificación entre dos fechas (ambas incluidas), de todas las unidades del ámbito o de una.</summary>
 public sealed record ListScheduleQuery(Guid AmbitoPerfilId, CenterId CentroId, DateOnly Desde, DateOnly Hasta, UnitId? UnidadId = null);
 
@@ -124,7 +130,7 @@ public sealed class AdministracionTurnosApplicationService(
     public Task<ApplicationResult<IReadOnlyList<ScheduleEntry>>> ListScheduleAsync(ListScheduleQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
-            if (query.Desde > query.Hasta || query.Hasta.DayNumber - query.Desde.DayNumber + 1 > SchedulePlan.MaxDates)
+            if (query.Desde > query.Hasta || query.Hasta.DayNumber - query.Desde.DayNumber + 1 > SchedulePlan.MaxListDays)
             {
                 throw new DomainValidationException(SchedulePlan.InvalidCode);
             }
@@ -160,4 +166,18 @@ public sealed class AdministracionTurnosApplicationService(
             return true;
         });
 
+    public Task<ApplicationResult<ScheduleSeries>> FindScheduleSeriesAsync(FindScheduleSeriesQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (grant, _) = await access.ResolveAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await schedulePlan.FindSeriesAsync(grant, query.LoteId, ct);
+        });
+
+    /// <summary>ADM-16: devuelve cuántas fechas retiró.</summary>
+    public Task<ApplicationResult<int>> RetireScheduleSeriesAsync(RetireScheduleSeriesCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            return await schedulePlanWriter.RetireSeriesAsync(grant, command.LoteId, command.Desde, DateOnly.FromDateTime(DateTime.Today), ct);
+        });
 }

@@ -113,8 +113,37 @@ public sealed class PlanFormModel
 
     public string? ConflictosVistos { get; set; }
 
-    /// <summary>Las fechas del rango que caen en los días elegidos (nunca más de un año, para no recorrer rangos absurdos).</summary>
-    public IReadOnlyList<DateOnly> Dates()
+    [StringLength(2000, ErrorMessage = "Las fechas a saltar no pueden pasar de {1} caracteres.")]
+    [Display(Name = "Fechas a saltar (festivos)")]
+    public string? Saltar { get; set; }
+
+    private static readonly string[] SkipFormats = ["yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy"];
+
+    /// <summary>ADM-16: las fechas a saltar escritas en Saltar (separadas por saltos de línea, espacios, comas o punto y coma, en AAAA-MM-DD o
+    /// DD/MM/AAAA) y los trozos que no son una fecha.</summary>
+    public (IReadOnlyList<DateOnly> Dates, IReadOnlyList<string> Invalid) SkippedDates()
+    {
+        var dates = new List<DateOnly>();
+        var invalid = new List<string>();
+        foreach (var token in (Saltar ?? "").Split([' ', '\t', '\r', '\n', ',', ';'], StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (DateOnly.TryParseExact(token, SkipFormats, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var date))
+            {
+                dates.Add(date);
+            }
+            else
+            {
+                invalid.Add(token);
+            }
+        }
+
+        return (dates, invalid);
+    }
+
+    /// <summary>Las fechas del rango que caen en los días elegidos (nunca más de un año, para no recorrer rangos absurdos), antes de saltar
+    /// ninguna.</summary>
+    private List<DateOnly> RangeDates()
     {
         if (Desde is not { } from || Hasta is not { } to || to < from)
         {
@@ -132,6 +161,20 @@ public sealed class PlanFormModel
         }
 
         return dates;
+    }
+
+    /// <summary>Las fechas que se planificarían: las del rango en los días elegidos, menos las que se saltan.</summary>
+    public IReadOnlyList<DateOnly> Dates()
+    {
+        var skipped = SkippedDates().Dates.ToHashSet();
+        return RangeDates().Where(d => !skipped.Contains(d)).ToList();
+    }
+
+    /// <summary>Cuántas fechas del rango se saltan (las que no caen en el rango o en los días elegidos no cuentan).</summary>
+    public int SkippedInRange()
+    {
+        var skipped = SkippedDates().Dates.ToHashSet();
+        return RangeDates().Count(skipped.Contains);
     }
 }
 
@@ -171,3 +214,6 @@ public static class ScheduleConflictDisplay
     public static readonly DayOfWeek[] WeekOrder =
         [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday];
 }
+
+/// <summary>ADM-16: la serie que se enseña; Series es null si no se pudo leer (el error va en el ModelState).</summary>
+public sealed record SeriesViewModel(ScheduleSeries? Series);

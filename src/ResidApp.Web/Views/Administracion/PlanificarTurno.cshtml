@@ -20,7 +20,7 @@
 <h1 class="h3">Planificar un turno</h1>
 <p class="text-muted">
     Elige un equipo, un turno y un rango de fechas con los días de la semana en que se repite. Las fechas que ya tengan ese equipo en ese
-    turno se omiten. Hasta 62 fechas, entre hoy y un año vista.
+    turno se omiten. Hasta 367 fechas (una serie), entre hoy y un año vista.
 </p>
 
 <div class="card">
@@ -92,10 +92,24 @@
                     </div>
                 </fieldset>
 
+                <div class="mb-3">
+                    <label asp-for="Form.Saltar" class="form-label"></label>
+                    <textarea asp-for="Form.Saltar" class="form-control" rows="2" maxlength="2000" aria-describedby="ayuda-saltar"></textarea>
+                    <div id="ayuda-saltar" class="form-text">
+                        Opcional. Fechas del rango que no se planifican (por ejemplo, festivos), separadas por comas o una por línea, como
+                        AAAA-MM-DD o DD/MM/AAAA. Después puedes retirar cualquier fecha suelta.
+                    </div>
+                    <span asp-validation-for="Form.Saltar" class="text-danger"></span>
+                </div>
+
                 @if (Model.Preview is { } preview)
                 {
                     <div class="alert alert-info">
                         Se planificaría en <strong>@preview.ToCreate.Count</strong> fecha(s).
+                        @if (Model.Form.SkippedInRange() > 0)
+                        {
+                            <span>Se saltan @Model.Form.SkippedInRange() fecha(s) del rango.</span>
+                        }
                         @if (preview.AlreadyPlanned.Count > 0)
                         {
                             <span>@preview.AlreadyPlanned.Count fecha(s) ya tienen ese equipo en ese turno y se omitirán.</span>

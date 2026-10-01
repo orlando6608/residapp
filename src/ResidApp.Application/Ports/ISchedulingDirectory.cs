@@ -59,9 +59,9 @@ public interface ISchedulingRepository
 }
 
 /// <summary>ADM-14/15: un turno planificado de un equipo en una fecha, de una unidad del ámbito. Justification es la decisión de
-/// Administración cuando se avisó de un solapamiento (null si no lo hubo).</summary>
+/// Administración cuando se avisó de un solapamiento (null si no lo hubo). BatchId es la serie: las fechas guardadas en un mismo envío.</summary>
 public sealed record ScheduleEntry(
-    Guid ScheduleId, UnitId UnitId, string UnitName, Guid TeamId, string TeamName, int TeamMembers, Guid ShiftId, string ShiftName,
+    Guid ScheduleId, Guid BatchId, UnitId UnitId, string UnitName, Guid TeamId, string TeamName, int TeamMembers, Guid ShiftId, string ShiftName,
     TimeOnly Start, TimeOnly End, DateOnly Date, string? Justification)
 {
     public bool CrossesMidnight => ResidApp.Domain.Scheduling.Shift.CrossesMidnight(Start, End);
@@ -75,11 +75,25 @@ public sealed record SchedulePreview(
 /// <summary>ADM-15: las fechas guardadas y las omitidas por estar ya planificadas.</summary>
 public sealed record PlanOutcome(IReadOnlyList<DateOnly> Created, IReadOnlyList<DateOnly> Skipped);
 
+/// <summary>ADM-16: una fecha activa de una serie.</summary>
+public sealed record ScheduleSeriesDate(Guid ScheduleId, DateOnly Date, string? Justification);
+
+/// <summary>ADM-16: una serie (las fechas guardadas en un mismo envío): su equipo, su turno, sus fechas activas y cuántas se han retirado.</summary>
+public sealed record ScheduleSeries(
+    Guid BatchId, UnitId UnitId, string UnitName, Guid TeamId, string TeamName, Guid ShiftId, string ShiftName, TimeOnly Start, TimeOnly End,
+    IReadOnlyList<ScheduleSeriesDate> ActiveDates, int RetiredDates)
+{
+    public bool CrossesMidnight => ResidApp.Domain.Scheduling.Shift.CrossesMidnight(Start, End);
+}
+
 /// <summary>ADM-14/15: lectura de la planificación de las unidades del ámbito entre dos fechas (ambas incluidas).</summary>
 public interface ISchedulePlanDirectory
 {
     Task<IReadOnlyList<ScheduleEntry>> ListScheduleAsync(
         AccountAdministrationAccess access, DateOnly from, DateOnly to, UnitId? unitId, CancellationToken ct = default);
+
+    /// <summary>ADM-16: la serie de un lote, solo si es de una unidad del ámbito (si no, acceso denegado).</summary>
+    Task<ScheduleSeries> FindSeriesAsync(AccountAdministrationAccess access, Guid batchId, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -100,4 +114,8 @@ public interface ISchedulePlanRepository
 
     /// <summary>Retira una fecha planificada (hoy o futura). Lo retirado no se reactiva ni se borra.</summary>
     Task RetireAsync(AccountAdministrationAccess access, Guid scheduleId, DateOnly today, CancellationToken ct = default);
+
+    /// <summary>ADM-16: retira las fechas activas de la serie desde max(from, today). Un solo evento de auditoría. Sin fechas activas desde
+    /// ahí lanza SCHEDULING_CHANGE_CONFLICT. Devuelve cuántas retiró.</summary>
+    Task<int> RetireSeriesAsync(AccountAdministrationAccess access, Guid batchId, DateOnly from, DateOnly today, CancellationToken ct = default);
 }

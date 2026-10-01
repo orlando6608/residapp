@@ -9,7 +9,8 @@ using ResidApp.Shared;
 namespace ResidApp.Infrastructure.Persistence;
 
 /// <summary>
-/// ADM-15/17 (0027): planificación de un equipo en un turno para una o varias fechas. Planificar no concede acceso a nada.
+/// ADM-15/16/17 (0027): planificación de un equipo en un turno para una o varias fechas (una serie, con el lote como identificador). Planificar
+/// no concede acceso a nada.
 /// Las escrituras van en una transacción que repite el ámbito de Administración y bloquea la fila del centro (como el resto de cambios
 /// de turnos y equipos), y recalculan los conflictos aunque la pantalla ya los haya enseñado:
 ///   - mismo equipo en turnos que se solapan, y una persona en dos equipos con turnos que se solapan (SchedulePlan.FindConflicts);
@@ -118,6 +119,46 @@ public sealed class SqlSchedulePlanRepository(SqlConnectionFactory connections) 
         transaction.Commit();
     }
 
+    public async Task<int> RetireSeriesAsync(
+        AccountAdministrationAccess access, Guid batchId, DateOnly from, DateOnly today, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await SqlProfessionalAccountRepository.EnsureAdministratorAsync(connection, transaction, access, ct);
+        await connection.ExecuteScalarAsync<Guid>(new CommandDefinition(
+            "SELECT id FROM dbo.centros WITH (UPDLOCK, ROWLOCK) WHERE id = @CenterId",
+            new { CenterId = access.CenterId.Value }, transaction, cancellationToken: ct));
+        var rows = (await connection.QueryAsync<SeriesRetireRow>(new CommandDefinition($"""
+            SELECT sch.unidad_id AS UnitId, sch.fecha AS Date, CAST(CASE WHEN sch.retirado_en IS NULL THEN 0 ELSE 1 END AS BIT) AS Retired
+              FROM dbo.planificacion_turnos sch WITH (UPDLOCK, ROWLOCK)
+             WHERE sch.lote_id = @BatchId AND sch.centro_id = @CenterId AND {SqlSchedulingDirectory.AdministratorUnitGrant("sch.unidad_id")}
+            """, new { BatchId = batchId, CenterId = access.CenterId.Value, access.ProfileScopeId }, transaction, cancellationToken: ct))).ToList();
+        if (rows.Count == 0)
+        {
+            throw new AccessDeniedException();
+        }
+
+        var start = from > today ? from : today;
+        if (!rows.Any(r => !r.Retired && DateOnly.FromDateTime(r.Date) >= start))
+        {
+            throw new DomainValidationException("SCHEDULING_CHANGE_CONFLICT");
+        }
+
+        var occurredAt = DateTimeOffset.UtcNow;
+        var retired = await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.planificacion_turnos SET retirado_en = @OccurredAt, retirado_por_cuenta_id = @ActorId
+             WHERE lote_id = @BatchId AND centro_id = @CenterId AND retirado_en IS NULL AND fecha >= @Start
+            """, new
+        {
+            BatchId = batchId, CenterId = access.CenterId.Value, OccurredAt = occurredAt, ActorId = access.AccountId.Value,
+            Start = start.ToDateTime(TimeOnly.MinValue),
+        }, transaction, cancellationToken: ct));
+        await SqlProfessionalAccountRepository.AuditAsync(
+            connection, transaction, access, "SCHEDULE", batchId, "SCHEDULE_SERIES_RETIRE", occurredAt, rows[0].UnitId, ct: ct);
+        transaction.Commit();
+        return retired;
+    }
+
     /// <summary>El equipo y el turno tienen que existir, estar activos y el equipo ser de una unidad del ámbito. Calcula qué fechas se
     /// guardarían, cuáles ya estaban y los conflictos con lo planificado en el entorno de esas fechas (un día antes y después, por los
     /// turnos que cruzan la medianoche).</summary>
@@ -192,4 +233,6 @@ public sealed class SqlSchedulePlanRepository(SqlConnectionFactory connections) 
     private sealed record BatchRow(Guid TeamId, Guid ShiftId, DateTime Date);
 
     private sealed record RetireRow(Guid UnitId, DateTime Date, bool Retired);
+
+    private sealed record SeriesRetireRow(Guid UnitId, DateTime Date, bool Retired);
 }
