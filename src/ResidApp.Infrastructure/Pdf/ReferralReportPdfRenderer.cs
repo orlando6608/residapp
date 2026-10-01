@@ -63,8 +63,12 @@ public sealed class ReferralReportPdfRenderer : IReferralReportPdfRenderer
         signed.Format.Borders.Top.Width = 0.5;
         signed.Format.Borders.Top.Color = Colors.Gray;
         signed.AddFormattedText("Firma electrónica simple", TextFormat.Bold);
+        // Sin nombre visible (cuentas anteriores a 0023 a las que nadie se lo ha puesto), solo perfil e identificador.
+        var signer = signature.SignerName is { } name
+            ? $"{name} ({Profile(signature.Profile)}, cuenta {signature.SignerSubject})"
+            : $"{Profile(signature.Profile)} (cuenta {signature.SignerSubject})";
         section.AddParagraph(
-            $"Firmado por {Profile(signature.Profile)} (cuenta {signature.SignerSubject}) " +
+            $"Firmado por {signer} " +
             $"el {signature.SignedAt.ToLocalTime():dd'/'MM'/'yyyy} a las {signature.SignedAt.ToLocalTime():HH':'mm}.");
         section.AddParagraph($"Huella SHA-256 del contenido: {signature.ContentHash}");
 

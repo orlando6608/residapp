@@ -171,9 +171,11 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
              WHERE unit_scope.ambito_perfil_id = @ProfileScopeId AND unit_scope.centro_id = @CenterId AND unit_scope.revocado_en IS NULL
              ORDER BY unit.nombre_visible
             """, parameters, cancellationToken: ct))).Select(u => (UnitId.From(u.Id), u.Name)).ToList();
+        // Misma regla que la evidencia de autorización y ScopedEpisodes: cualquier fila, aunque esté revocada, restringe el
+        // ámbito (ADR 0004: revocar la última no amplía el acceso a toda la unidad).
         var restricted = await connection.QuerySingleAsync<bool>(new CommandDefinition("""
             SELECT CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.ambitos_perfil_residente WHERE ambito_perfil_id = @ProfileScopeId
-                AND centro_id = @CenterId AND revocado_en IS NULL) THEN 1 ELSE 0 END AS BIT)
+                AND centro_id = @CenterId) THEN 1 ELSE 0 END AS BIT)
             """, parameters, cancellationToken: ct));
         var permissions = (await connection.QueryAsync<string>(new CommandDefinition("""
             SELECT permiso_codigo FROM dbo.permisos_perfil

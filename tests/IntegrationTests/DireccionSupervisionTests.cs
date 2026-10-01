@@ -1,3 +1,4 @@
+using Dapper;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
@@ -237,6 +238,31 @@ public class DireccionSupervisionTests
         Assert.Equal(direccion.UnitId, Assert.Single(scope.Units).Id);
         Assert.Equal(["CLINICAL_DETAIL_READ"], scope.Permissions);
         Assert.False(scope.RestrictedToResidents);
+    }
+
+    [Fact]
+    public async Task Ambito_ConSuUnicaAsignacionRevocada_SigueRestringido()
+    {
+        var direccion = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica);
+        var admin = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, direccion.CenterId, direccion.UnitId);
+        var residentId = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Asignación Revocada");
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.ambitos_perfil_residente
+                    (id, ambito_perfil_id, centro_id, residente_id, concedido_en, concedido_por_cuenta_id, revocado_en, revocado_por_cuenta_id)
+                VALUES (NEWID(), @ProfileScopeId, @CenterId, @ResidentId, SYSUTCDATETIME(), @AccountId, SYSUTCDATETIME(), @AccountId)
+                """, new
+            {
+                direccion.ProfileScopeId, CenterId = direccion.CenterId.Value, ResidentId = residentId.Value,
+                AccountId = admin.AccountId.Value,
+            });
+        }
+
+        var scope = (await BuildDireccion(direccion.ExternalSubject).ReadScopeAsync(Query(direccion))).Value!;
+
+        // Como la evidencia de autorización: revocar la última asignación no amplía el ámbito a toda la unidad.
+        Assert.True(scope.RestrictedToResidents);
     }
 }
 

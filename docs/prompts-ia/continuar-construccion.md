@@ -13,8 +13,21 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Dos correcciones tras el bloque 3 (sin script):** hechas el 2026-10-01, en `main` sin push.
+  - **Firma del PDF de derivación:** lleva el nombre visible de la cuenta (`ActiveProfileScope.AccountDisplayName`), su
+    perfil y su identificador; sin nombre, como antes. Test `FirmaDerivacionNombreTests`; PDF real revisado.
+  - **Ámbito de Dirección:** `SqlSupervisionDirectory.FindScopeAsync` dice «limitado a determinados residentes» con
+    cualquier fila de `ambitos_perfil_residente`, aunque esté revocada, como la evidencia de autorización (ADR 0004).
+    Test `Ambito_ConSuUnicaAsignacionRevocada_SigueRestringido`.
+  - Suite en verde 3 veces (173, 230 y 34) y 3 vueltas tipo CI con BD nueva.
 - **Administración, bloque 3: usuarios profesionales, perfiles, unidades y residentes de Auxiliar (historia 4 sin turnos
-  ni permisos; ADM-12 y ADM-13; script `0023`; sin cambios en el seed):** hecho el 2026-10-01, en `main` sin push.
+  ni permisos; ADM-12 y ADM-13; script `0023`; sin cambios en el seed):** hecho el 2026-10-01 y desplegado en Azure (push
+  de `31ab320`, run 36869186733 en verde con `build-and-test` y `deploy`, que aplicó `0023`).
+  - **Prueba en Azure (2026-10-01)** con `dev-integrado-administracion`: alta de `prueba-azure-usuarios-b3` («Prueba usuarios
+    azure (ficticia)», Enfermería), que entra y ve los 5 residentes; suspenderla deja su sesión sin acceso y reactivarla la
+    devuelve; Auxiliar concedido con «Prueba familiares azure (ficticio)» asignado, que es el único que ve; la última unidad
+    no se revoca; revocar el Auxiliar deja su sesión sin acceso. `dev-integrado-enfermeria` y `-direccion` no abren
+    Usuarios, y la ficha propia es de solo lectura. La cuenta queda activa con Enfermería y el Auxiliar revocado.
   - **Qué hace:** lista de usuarios del centro, alta (identificador de acceso, nombre, perfil y unidades), ficha con nombre,
     suspender/reactivar y conceder perfil, y pantalla de cada perfil con sus unidades, sus residentes (Auxiliar) y revocar.
     Los permisos configurables siguen por SQL (siguiente bloque). Detalle, decisiones y suposiciones en
@@ -560,7 +573,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 173 unitarios, 228 de integración y 34 funcionales, todos en verde.
+- Suite: 173 unitarios, 230 de integración y 34 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -589,11 +602,6 @@ usuario cuando encajen:
   Una ficha que depende de un permiso, como Alta de residente para Enfermería, la ve todo el perfil, aunque
   la cuenta no tenga el permiso. Si cambian las reglas de perfiles de una pantalla, revisa también los `@if`
   de `Views/Home/Index.cshtml`.
-- **Ámbito restringido por residente:** la evidencia de autorización y los directorios tratan un ámbito como restringido
-  si tiene alguna fila en `ambitos_perfil_residente`, aunque esté revocada (ADR 0004: revocar la última no amplía el
-  acceso). En cambio, `SqlSupervisionDirectory.FindScopeAsync` solo cuenta las vigentes para decirle a Dirección si su
-  ámbito está restringido. Con la gestión de residentes de Auxiliar (bloque 3 de Administración) no cambia nada, porque
-  Auxiliar siempre necesita asignación, pero conviene alinearlo si algún día se restringen otros perfiles.
 - **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
   abiertos: tos productiva.», en valoración médica, que se dejó como ejemplo de la lista de escalados. El
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de

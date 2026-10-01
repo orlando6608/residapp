@@ -69,7 +69,7 @@ internal static class ReferralSigning
         }
 
         var signedAt = DateTimeOffset.UtcNow;
-        var pdf = renderer.Render(detail.ResidentDisplayName, content, new ReferralReportSignature(profile, subject, signedAt, hash));
+        var pdf = renderer.Render(detail.ResidentDisplayName, content, new ReferralReportSignature(profile, subject, signedAt, hash, scope.AccountDisplayName));
         return await persist(new SignReferralReportInput(
             scope.AccountId, command.CentroId, command.EventoId, command.Revision, command.OperacionId, report, content, hash,
             pdf, Convert.ToHexStringLower(SHA256.HashData(pdf)), signedAt));

@@ -267,8 +267,9 @@ En el orden propuesto de construcción:
 Huecos de lo ya construido:
 
 - **Derivación a Urgencias (historia 6, bloque 2):**
-  - **Firmante sin nombre:** `dbo.cuentas` no tiene nombre, así que el PDF muestra el perfil y el
-    identificador de la cuenta hasta que exista el proveedor de identidad real.
+  - **Firmante:** desde el 2026-10-01 (`0023`), el PDF muestra el nombre visible de la cuenta, su perfil y su
+    identificador. Las cuentas a las que Administración aún no ha puesto nombre siguen saliendo solo con perfil e
+    identificador. Los PDF ya firmados no cambian: el nombre es el que tenía la cuenta al firmar.
   - **Sin corrección:** un informe firmado no se corrige ni tiene nueva versión (la política provisional de
     COR-01/02 solo habilita las valoraciones).
   - **Contacto familiar:** desde el 2026-10-01 la pantalla muestra el contacto urgente que designa Administración y

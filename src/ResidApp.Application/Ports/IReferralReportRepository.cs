@@ -3,9 +3,10 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
 
-/// <summary>DER-05: firma electrónica simple que figura en el PDF: quién firma (perfil e identificador de la
-/// cuenta, hasta que exista el proveedor de identidad real), cuándo, y la huella del contenido firmado.</summary>
-public sealed record ReferralReportSignature(SystemProfile Profile, string SignerSubject, DateTimeOffset SignedAt, string ContentHash);
+/// <summary>DER-05: firma electrónica simple que figura en el PDF: quién firma (nombre visible de la cuenta, si lo tiene
+/// (0023), perfil e identificador de la cuenta), cuándo, y la huella del contenido firmado.</summary>
+public sealed record ReferralReportSignature(
+    SystemProfile Profile, string SignerSubject, DateTimeOffset SignedAt, string ContentHash, string? SignerName = null);
 
 /// <summary>DER-05: genera el PDF del informe de derivación al firmarlo.</summary>
 public interface IReferralReportPdfRenderer
