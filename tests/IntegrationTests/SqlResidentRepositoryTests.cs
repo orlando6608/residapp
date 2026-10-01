@@ -33,7 +33,7 @@ public class SqlResidentRepositoryTests
         Assert.Equal("ACTIVE", status);
 
         var auditCount = await connection.QuerySingleAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'RESIDENT_CREATE'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @Id AND accion_codigo = 'RESIDENT_CREATE'",
             new { Id = result.ResidentId.Value });
         Assert.Equal(1, auditCount);
     }

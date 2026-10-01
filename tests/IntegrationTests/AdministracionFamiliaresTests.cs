@@ -35,7 +35,7 @@ public class AdministracionFamiliaresTests
     {
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         return await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = @Action",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @Id AND accion_codigo = @Action",
             new { Id = residentId.Value, Action = action });
     }
 

@@ -26,7 +26,7 @@ public class AdministracionEstructuraTests
     {
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         return await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE recurso_id = @Id AND accion_codigo = @Action AND perfil_activo = 'ADMINISTRACION'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE recurso_id = @Id AND accion_codigo = @Action AND perfil_activo = 'ADMINISTRACION'",
             new { Id = resourceId, Action = action });
     }
 

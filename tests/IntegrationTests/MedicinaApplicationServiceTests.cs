@@ -469,7 +469,7 @@ public class MedicinaApplicationServiceTests
         Assert.Equal("CERRADA", await connection.ExecuteScalarAsync<string>(
             "SELECT estado_codigo FROM dbo.valoraciones_medicas WHERE evento_id = @EventId", new { EventId = eventId }));
         Assert.Equal("MEDICINA", await connection.ExecuteScalarAsync<string>(
-            "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE recurso_id = @EventId AND accion_codigo = 'CLINICAL_EVENT_CLOSE'", new { EventId = eventId }));
+            "SELECT perfil_activo FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE recurso_id = @EventId AND accion_codigo = 'CLINICAL_EVENT_CLOSE'", new { EventId = eventId }));
     }
 
     [Fact]
@@ -1009,7 +1009,7 @@ public class MedicinaApplicationServiceTests
         using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
         {
             Assert.Equal("MEDICINA", await connection.ExecuteScalarAsync<string>(
-                "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE recurso_id = @EventId AND accion_codigo = 'URGENT_PROTOCOL_ACTIVATE'", new { EventId = eventId }));
+                "SELECT perfil_activo FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE recurso_id = @EventId AND accion_codigo = 'URGENT_PROTOCOL_ACTIVATE'", new { EventId = eventId }));
         }
 
         // Enfermería lo ve en su detalle en solo lectura, pero no registra ni lo lista como suyo.

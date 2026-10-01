@@ -259,7 +259,7 @@ public class EnfermeriaApplicationServiceTests
     {
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         return await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE recurso_id = @ResourceId AND accion_codigo = @ActionCode",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE recurso_id = @ResourceId AND accion_codigo = @ActionCode",
             new { ResourceId = resourceId, ActionCode = actionCode });
     }
 

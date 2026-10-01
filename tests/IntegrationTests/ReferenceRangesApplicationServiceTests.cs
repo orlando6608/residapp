@@ -58,7 +58,7 @@ public class ReferenceRangesApplicationServiceTests
 
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var audits = await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @CenterId AND accion_codigo = 'REFERENCE_RANGES_UPDATE' AND perfil_activo = 'DIRECCION_CLINICA'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE centro_id = @CenterId AND accion_codigo = 'REFERENCE_RANGES_UPDATE' AND perfil_activo = 'DIRECCION_CLINICA'",
             new { CenterId = direccion.CenterId.Value });
         Assert.Equal(2, audits);
     }

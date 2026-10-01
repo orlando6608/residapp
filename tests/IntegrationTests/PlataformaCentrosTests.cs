@@ -72,7 +72,7 @@ public class PlataformaCentrosTests
         foreach (var action in new[] { "CENTER_CREATE", "UNIT_CREATE", "ACCOUNT_CREATE", "PROFILE_SCOPE_GRANT", "PROFILE_UNIT_GRANT" })
         {
             Assert.Equal(1, await CountAsync(
-                "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @centerId AND accion_codigo = @action AND perfil_activo = 'PLATAFORMA' AND cuenta_id = @actor",
+                "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE centro_id = @centerId AND accion_codigo = @action AND perfil_activo = 'PLATAFORMA' AND cuenta_id = @actor",
                 new { centerId, action, actor = op.AccountId.Value }));
         }
 
@@ -116,7 +116,7 @@ public class PlataformaCentrosTests
         Assert.Equal(ApplicationFailureCode.Conflict, otherAdmin.Error!.Code);
         Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.centros WHERE id = @centerId", new { centerId }));
         Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.unidades WHERE centro_id = @centerId", new { centerId }));
-        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @centerId AND accion_codigo = 'CENTER_CREATE'", new { centerId }));
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE centro_id = @centerId AND accion_codigo = 'CENTER_CREATE'", new { centerId }));
         Assert.Equal(ApplicationFailureCode.Conflict, reused.Error!.Code);
     }
 

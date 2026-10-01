@@ -137,7 +137,7 @@ public class SqlClinicalEventRepositoryTests
                    audit.perfil_activo AS Auditoria
               FROM dbo.eventos_clinicos ec
               JOIN dbo.eventos_asistenciales ea ON ea.id = ec.id
-              JOIN dbo.eventos_auditoria audit ON audit.recurso_id = ec.id AND audit.accion_codigo = 'CLINICAL_EVENT_REGISTER'
+              JOIN dbo.eventos_auditoria audit WITH (NOLOCK) ON audit.recurso_id = ec.id AND audit.accion_codigo = 'CLINICAL_EVENT_REGISTER'
              WHERE ec.id = @Id
             """, new { Id = result.EventId });
         Assert.Equal("MEDICINA", row.Perfil);

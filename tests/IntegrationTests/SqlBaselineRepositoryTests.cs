@@ -53,7 +53,7 @@ public class SqlBaselineRepositoryTests
 
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var auditCount = await connection.QuerySingleAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ'",
             new { Id = resident.ResidentId.Value });
         Assert.Equal(0, auditCount);
 

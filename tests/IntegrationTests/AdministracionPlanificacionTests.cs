@@ -82,7 +82,7 @@ public class AdministracionPlanificacionTests
         Assert.All(entries, e => Assert.Null(e.Justification));
         Assert.Equal(dates.Order(), entries.Select(e => e.Date));
         Assert.Equal(3, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = 'SCHEDULE_CREATE' AND centro_id = @c", new { c = w.Admin.CenterId.Value }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'SCHEDULE_CREATE' AND centro_id = @c", new { c = w.Admin.CenterId.Value }));
     }
 
     [Fact]
@@ -235,7 +235,7 @@ public class AdministracionPlanificacionTests
         Assert.True(replanned.Ok, replanned.Error?.Message);
         Assert.Single(await ListAsync(w));
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE recurso_id = @id AND accion_codigo = 'SCHEDULE_RETIRE'", new { id = entry.ScheduleId }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE recurso_id = @id AND accion_codigo = 'SCHEDULE_RETIRE'", new { id = entry.ScheduleId }));
     }
 
     [Fact]
@@ -348,10 +348,10 @@ public class AdministracionPlanificacionTests
         Assert.Equal(dates.Take(10), series.ActiveDates.Select(d => d.Date));
         Assert.Single((await ListAsync(w)).Where(e => e.BatchId == other));
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE recurso_id = @batch AND accion_codigo = 'SCHEDULE_SERIES_RETIRE' AND unidad_id = @unit",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE recurso_id = @batch AND accion_codigo = 'SCHEDULE_SERIES_RETIRE' AND unidad_id = @unit",
             new { batch, unit = w.Admin.UnitId.Value }));
         Assert.Equal(0, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = 'SCHEDULE_RETIRE' AND centro_id = @center", new { center = w.Admin.CenterId.Value }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'SCHEDULE_RETIRE' AND centro_id = @center", new { center = w.Admin.CenterId.Value }));
     }
 
     [Fact]
