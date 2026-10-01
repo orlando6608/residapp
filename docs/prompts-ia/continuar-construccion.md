@@ -14,7 +14,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 - **Equipos en los seguimientos de Enfermería y Medicina (punto 2 del pendiente de Administración; script `0028`; sin cambios en el seed):** hecho
-  el 2026-10-01 en `main` **sin push** (Azure en `0027`). Antes, en la misma sesión, `AdministracionApplicationService` se dividió en tres
+  el 2026-10-01 en `main`, pusheado y desplegado en Azure (push de `17a4926`, run 36925459313 en verde con `build-and-test` y `deploy`, que aplicó `0028`). Antes, en la misma sesión, `AdministracionApplicationService` se dividió en tres
   (`30509f1`, ya pusheado): `AdministracionApplicationService` (residentes y cuentas), `AdministracionEstructuraApplicationService` (unidades y
   auditoría) y `AdministracionTurnosApplicationService` (turnos, equipos y planificación), con `AdministrationAccessResolver` compartido. En los
   tests: `Build`, `BuildEstructura` y `BuildTurnos`.
@@ -42,6 +42,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
       → valoración → seguimiento) igual, con «Equipo I2 prueba»;
     - tests nuevos: `Transferencia_…` ×2 y `ListTransferTeams_…` (Enfermería) y `SeguimientoMedico_Transferencia_…` (Medicina); los que usaban
       `EquipoEntrante: "…"` crean ahora un equipo real con `TransferTeamData`.
+  - **Prueba en Azure (2026-10-01)** con `dev-integrado-enfermeria`, `-medicina` y `-administracion`, sobre «Residente Integrado Dos» (Uno no se toca) y los
+    equipos «Equipo A az»/«Equipo B az» de la prueba anterior: Enfermería (evento → valoración → seguimiento) ofrece el selector; sin equipo y con un id
+    inventado se rechaza en español; transferencia a «Equipo A az» y recepción confirmada. Medicina (escalado → valoración → seguimiento) igual, con
+    «Equipo B az». Inactivando los dos equipos desde Administración, Medicina ve «La unidad del residente no tiene equipos activos»; reactivados,
+    vuelve el selector. Quedan en Azure dos eventos ficticios («Prueba azure de transferencia…») con sus transferencias.
   - **Datos de prueba en la base local:** dos eventos de Enfermería/Medicina de prueba («Prueba de transferencia…») en el residente
     `a1000000-…-000000000002`, con sus transferencias. Copia previa: `ResidApp-antes-0028-20261001.bak`.
 - **Administración, turnos y equipos, primer bloque (historia 4; ADM-14/15/17; script `0027`; sin cambios en el seed):** hecho el
