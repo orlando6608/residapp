@@ -13,8 +13,42 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Administración, auditoría administrativa (historia 9, ADM-28 / AUD-01 a AUD-03; sin script):** hecho el 2026-10-01 en `main`
-  **sin push** (Azure en `0026`).
+- **Administración, turnos y equipos, primer bloque (historia 4; ADM-14/15/17; script `0027`; sin cambios en el seed):** hecho el
+  2026-10-01 en `main` **sin push** (Azure en `0026`). Dos commits: fase 1 (`838f6f8`, catálogo de turnos, equipos y miembros) y fase 2
+  (planificación puntual con conflictos). El script `0027` lleva las cuatro tablas, la de planificación incluida.
+  - **Qué hace:** `/Administracion/Turnos`, `/Equipos` (con `MiembrosEquipo`), `/Planificacion` (dos semanas, por unidad) y `PlanificarTurno`
+    (un equipo en un turno para un rango de fechas y días de la semana, de 1 a 62 fechas). El servidor avisa de dos solapamientos (el mismo
+    equipo en turnos que se solapan; una persona en dos equipos con turnos que se solapan, con el cruce de medianoche) y Administración decide:
+    solo se guarda con una justificación, que queda en las fechas afectadas. Las horas de un turno no cambian nunca. Detalle, decisiones y
+    suposiciones en `pendientes-administracion.md`.
+  - **Pendiente de este bloque:** recurrencias y excepciones (ADM-16) y usar los equipos en los seguimientos de Enfermería y Medicina (siguen con
+    texto libre).
+  - **Detalle técnico que conviene no redescubrir:**
+    - la confirmación de un solapamiento lleva una huella SHA-256 (`ConflictosVistos`) de los que se enseñaron; si cambian, no se confirma;
+    - el reenvío de un lote ya guardado enseña «Todas esas fechas ya tienen planificado ese equipo…» (la vista previa corre antes que la
+      escritura); el token de lote (`lote_id`) protege el servicio, no esa pantalla;
+    - `AdministracionController` es ahora `partial` (`.Turnos.cs`, `.Planificacion.cs`); el parámetro `service` del constructor primario vale en todas
+      las partes. El servicio `AdministracionApplicationService` ya tiene 15 dependencias: el siguiente bloque debería dividirlo;
+    - **heredocs largos en Git Bash:** varios comandos con un heredoc largo y comillas simples fallaron con «unexpected EOF» sin ejecutar nada.
+      Escribe los ficheros con la herramienta de escritura y aplica los `sed` aparte.
+  - **Verificación:**
+    - suite en verde antes (207, 259 y 46) y después 3 veces en cada fase (224, 267 y 47 tras la fase 1; 232, 276 y 48 tras la 2), más 3 vueltas
+      tipo CI con BD nueva y una BD temporal con los 27 scripts y los seeds aplicados dos veces (ya borrada);
+    - curl en local con `dev-integrado-administracion` sobre la unidad del escenario integrado: tres turnos (uno nocturno, que sale «termina al
+      día siguiente»); dos equipos con `dev-integrado-enfermeria` y `-medicina` como miembros (los elegibles son los de Auxiliar, Enfermería y Medicina
+      de la unidad, sin Administración ni Dirección); planificar Mañana en 3 fechas; el mismo equipo y turno otra vez da el aviso de ya planificado; Tarde del
+      otro equipo el primer día avisa de que Medicina está en los dos y confirmar sin justificación se rechaza; con ella se guarda y sale
+      «Solapamiento justificado»; la noche de un día y la mañana del siguiente no avisan; retirar una fecha funciona y repetirlo avisa; la auditoría
+      tiene `SCHEDULE_CREATE` ×6, `SCHEDULE_RETIRE`, `TEAM_CREATE` y `TEAM_MEMBER_ADD`;
+    - `dev-integrado-enfermeria`, `-medicina`, `-auxiliar` y `-direccion` reciben «No se puede acceder a esta operación» en Turnos, Equipos y
+      Planificación (en `PlanificarTurno` la vi vacía y se corrigió para que también lo diga);
+    - dos ejecuciones filtradas de los tests nuevos dieron errores de compilación y de orden de mis propios tests, ya corregidos; ningún fallo de
+      entorno en esta tanda.
+  - **Datos de prueba en la base local:** turnos «Manana/Tarde/Noche prueba», equipos «Equipo A/B prueba» (en la unidad de la prueba de estructura) y
+    «Equipo I1/I2 prueba» (en la del escenario integrado) con su planificación, en octubre de 2026. No se limpian (nada se borra).
+  - Copia previa: `ResidApp-antes-0027-20261001.bak`.
+- **Administración, auditoría administrativa (historia 9, ADM-28 / AUD-01 a AUD-03; sin script):** hecho el 2026-10-01
+  y desplegado en Azure (push de `4c8b389`, run 36905131323 en verde con `build-and-test` y `deploy`; sin script, Azure sigue en `0026`; la pantalla no se ha probado allí).
   - **Qué hace:** `/Administracion/Auditoria` (tarjeta «Auditoría» del inicio) lista, del más reciente al más antiguo, las acciones
     administrativas del centro del ámbito (cuentas, perfiles y permisos, estructura, residentes y familias) con cuándo, qué, quién y con
     qué perfil, y la cuenta afectada, la unidad y el residente si constan. Filtros por periodo (30 días por defecto, máximo 366), tipo de
@@ -655,12 +689,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   referencia de constantes (fase 1 y su pantalla). Medicina está en curso: historias 1 a 8 (escalados,
   valoración médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos, protocolo
   urgente, derivación a Urgencias, evento propio y basal con permiso) y 9 (con la misma salvedad que la 11).
-- La base local `ResidApp` tiene los scripts `0001` a `0026` registrados en `dbo.scripts_aplicados`
-  (en Azure, hasta `0026`). Hay copias previas a `0016` … `0026` en
+- La base local `ResidApp` tiene los scripts `0001` a `0027` registrados en `dbo.scripts_aplicados`
+  (en Azure, hasta `0026`; `0027` aún no se ha subido). Hay copias previas a `0016` … `0027` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
   `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak`, `ResidApp-antes-0019-20260930.bak`,
   `ResidApp-antes-0020-20260930.bak`, `ResidApp-antes-0021-20261001.bak`, `ResidApp-antes-0022-20261001.bak`,
-  `ResidApp-antes-0023-20261001.bak`, `ResidApp-antes-0024-20261001.bak`, `ResidApp-antes-0025-20261001.bak` y `ResidApp-antes-0026-20261001.bak`). También
+  `ResidApp-antes-0023-20261001.bak`, `ResidApp-antes-0024-20261001.bak`, `ResidApp-antes-0025-20261001.bak`, `ResidApp-antes-0026-20261001.bak` y `ResidApp-antes-0027-20261001.bak`). También
   tiene la cuenta `dev-integrado-administracion`, el residente de prueba «Prueba Corrección Identidad (ficticio)», con una
   corrección, «Prueba selector unidad (ficticio)» y «Prueba familiares (ficticio)», con dos familiares (Lucía, autorización
   revocada tras recorrer todos los estados; Tomás, teléfono editado) y el contacto urgente designado, cambiado, quitado y
@@ -692,7 +726,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 207 unitarios, 259 de integración y 46 funcionales, todos en verde.
+- Suite: 232 unitarios, 276 de integración y 48 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en

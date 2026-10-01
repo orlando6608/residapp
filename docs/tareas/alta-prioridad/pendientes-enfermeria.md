@@ -281,7 +281,7 @@ Huecos de lo ya construido:
   - **Pendiente de CJ:** confirmar si el campo "Comunicaciones" de la valoración debe quedar fuera del
     informe, como se hace hoy por prudencia (DER-04). Preguntado en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 3).
 
-- **Seguimiento (historia 4)**: no hay equipos ni turnos (son del vertical Administración). El equipo
+- **Seguimiento (historia 4)**: los equipos y turnos ya existen en Administración (desde el 2026-10-01) pero los seguimientos aún no los usan. El equipo
   responsable es la Enfermería de la unidad del evento y el equipo o turno entrante de una transferencia es
   texto libre; cuando existan turnos reales habrá que sustituirlo. La fecha prevista es solo fecha (sin
   hora) y vence al día siguiente.

@@ -149,5 +149,5 @@ Huecos de lo ya construido:
 - Derivación a Urgencias: los mismos huecos que en Enfermería (firmante sin nombre, sin corrección del
   informe; el contacto familiar se precarga con el contacto urgente designado, pero se guarda como texto); ver
   `pendientes-enfermeria.md`.
-- **Seguimiento médico (historia 5)**: no hay equipos ni turnos reales (vertical Administración). El
+- **Seguimiento médico (historia 5)**: los equipos y turnos ya existen en Administración (desde el 2026-10-01) pero el seguimiento médico aún no los usa. El
   equipo o turno entrante es texto libre y la fecha prevista es solo fecha, sin hora, como en Enfermería.

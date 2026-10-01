@@ -37,6 +37,7 @@
             <a class="list-group-item list-group-item-action" href="#usuarios-administracion">Usuarios, perfiles y unidades (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#estructura-administracion">Estructura del centro: unidades (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#auditoria-administracion">Auditoría administrativa (Administración)</a>
+            <a class="list-group-item list-group-item-action" href="#turnos-equipos-administracion">Turnos, equipos y planificación (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#plataforma-centros">Centros nuevos (Plataforma)</a>
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
@@ -215,8 +216,8 @@
         <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
     </h2>
     <p>
-        El inicio de Administración tiene cinco tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
-        ámbito, <strong>Alta de residente</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades») y <strong>Auditoría</strong> (ver «Auditoría administrativa»). En el alta, la unidad se elige en una lista con las unidades de tu
+        El inicio de Administración tiene ocho tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
+        ámbito, <strong>Alta de residente</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»). En el alta, la unidad se elige en una lista con las unidades de tu
         ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves el nombre, la edad (calculada a partir
         de la fecha de nacimiento), el sexo documentado, la unidad y la fecha de alta. Puedes buscar por nombre, sin
         importar mayúsculas ni acentos, y filtrar por unidad si tu ámbito tiene más de una.
@@ -347,6 +348,39 @@
         para comparar a los trabajadores. Se muestran como mucho 500 eventos; si hay más, un aviso pide acotar el periodo. El registro no
         se puede modificar ni borrar, no contiene texto clínico y no incluye las acciones clínicas (valoraciones, indicaciones,
         derivaciones) ni la lectura clínica de Dirección.
+    </p>
+</section>
+
+<section id="turnos-equipos-administracion" class="mb-4">
+    <h2 class="h5">
+        Turnos, equipos y planificación
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+    </h2>
+    <p>
+        <strong>Turnos</strong> es el catálogo de turnos del centro: cada uno tiene un nombre y unas horas que defines tú. Si la hora de
+        fin es igual o anterior a la de inicio (por ejemplo, de 22:00 a 06:00), el turno termina al día siguiente. Las horas no se pueden
+        cambiar una vez creado el turno, para no alterar lo ya planificado: si hacen falta otras, crea otro turno e inactiva el anterior.
+        Sí se puede cambiar el nombre, inactivar y reactivar. Nada se borra.
+    </p>
+    <p>
+        <strong>Equipos</strong> son grupos con nombre dentro de una unidad de tu ámbito (por ejemplo, «Equipo A»). Sus miembros son
+        cuentas activas de Auxiliar, Enfermería o Medicina que tengan esa unidad concedida; una persona puede estar en varios equipos. En
+        «Miembros» añades y das de baja a las personas; si a un miembro se le retira después su perfil en la unidad, sigue en el equipo
+        con un aviso hasta que lo des de baja. Pertenecer a un equipo no da acceso a nada.
+    </p>
+    <p>
+        <strong>Planificación de turnos</strong> muestra, de dos en dos semanas, qué equipo hace qué turno cada día en las unidades de tu
+        ámbito. Con <strong>Planificar un turno</strong> eliges un equipo, un turno, un rango de fechas y los días de la semana en que
+        se repite (hasta 62 fechas, de hoy a un año vista). Las fechas que ya tenían ese equipo en ese turno se omiten. Cada fecha se
+        puede <strong>retirar</strong> (de hoy en adelante); lo retirado no se borra, queda en la auditoría.
+    </p>
+    <p>
+        Si el mismo equipo queda en dos turnos que se solapan, o una persona que está en dos equipos queda en turnos que se solapan (los
+        turnos que cruzan la medianoche se tienen en cuenta), la pantalla te lo enseña con las fechas y las personas. Decides tú:
+        puedes cambiar el equipo, el turno o las fechas, o seguir adelante escribiendo una justificación (hasta 500 caracteres) que queda
+        anotada en las fechas afectadas. Solo se comparan las planificaciones de las unidades de tu ámbito. Planificar un turno no concede
+        acceso a nada: el acceso sigue dependiendo de los perfiles y las unidades. Los seguimientos de Enfermería y Medicina todavía
+        escriben el equipo o turno entrante a mano.
     </p>
 </section>
 
@@ -993,7 +1027,7 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Turnos y equipos reales para los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano).</li>
+        <li>Usar los equipos y turnos en los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano), y los turnos recurrentes con excepciones.</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
         <li>Más gestión administrativa: turnos, publicaciones, citas y auditoría.</li>

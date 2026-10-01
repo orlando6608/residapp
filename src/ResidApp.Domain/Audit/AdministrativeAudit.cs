@@ -53,6 +53,8 @@ public static class AdministrativeAudit
         ("TEAM_DEACTIVATE", AuditCategory.TurnosYEquipos),
         ("TEAM_MEMBER_ADD", AuditCategory.TurnosYEquipos),
         ("TEAM_MEMBER_REMOVE", AuditCategory.TurnosYEquipos),
+        ("SCHEDULE_CREATE", AuditCategory.TurnosYEquipos),
+        ("SCHEDULE_RETIRE", AuditCategory.TurnosYEquipos),
     ];
 
     public static bool IsAdministrative(string? code) => code is not null && Actions.Any(a => a.Code == code);

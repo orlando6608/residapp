@@ -30,7 +30,9 @@ public class AdministracionResidentesTests
             new SqlCenterStructureRepository(TestDatabase.ConnectionFactory),
             new SqlAdministrativeAuditDirectory(TestDatabase.ConnectionFactory),
             new SqlSchedulingDirectory(TestDatabase.ConnectionFactory),
-            new SqlSchedulingRepository(TestDatabase.ConnectionFactory));
+            new SqlSchedulingRepository(TestDatabase.ConnectionFactory),
+            new SqlSchedulePlanDirectory(TestDatabase.ConnectionFactory),
+            new SqlSchedulePlanRepository(TestDatabase.ConnectionFactory));
     }
 
     internal static async Task<ResidentId> CreateResidentAsync(SeededProfile admin, string name, UnitId? unitId = null)

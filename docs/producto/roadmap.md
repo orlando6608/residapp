@@ -59,7 +59,7 @@ salvo lo que depende de otros verticales (ver `docs/tareas/alta-prioridad/pendie
 lectura y los indicadores agregados con su informe imprimible están hechos, y la lectura clínica auditada espera las finalidades que fije CJ (ver
 `docs/tareas/alta-prioridad/pendientes-direccion.md`). Administración está en curso: la lista de residentes, la ficha
 administrativa con su historial de ubicación, la corrección de identidad y los familiares con sus autorizaciones y el contacto
-urgente, las cuentas profesionales con sus permisos, la gestión de unidades y la auditoría administrativa están hechos, y el traslado y la baja esperan la decisión de CJ (ver `docs/tareas/alta-prioridad/pendientes-administracion.md`). Después viene Familia / Portal Familiar, que
+urgente, las cuentas profesionales con sus permisos, la gestión de unidades, la auditoría administrativa y los turnos y equipos con su planificación puntual están hechos, y el traslado y la baja esperan la decisión de CJ (ver `docs/tareas/alta-prioridad/pendientes-administracion.md`). Después viene Familia / Portal Familiar, que
 depende de Administración y de la decisión del proveedor de identidad.
 
 El despliegue en Azure (App Service `app-residapp-dev` + Azure SQL `sqldb-residapp-dev`) y el pipeline

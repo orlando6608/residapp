@@ -1,0 +1,137 @@
+@using ResidApp.Domain.Scheduling
+@using ResidApp.Web.Models
+@model PlanViewModel
+@{
+    ViewData["Title"] = "Planificar un turno";
+    var conflicts = Model.Preview?.Conflicts ?? [];
+    var hasConflicts = conflicts.Count > 0;
+    string Day(DateOnly date) => date.ToString("dddd, d 'de' MMMM 'de' yyyy");
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Planificacion">Planificación</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Planificar un turno</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Planificar un turno</h1>
+<p class="text-muted">
+    Elige un equipo, un turno y un rango de fechas con los días de la semana en que se repite. Las fechas que ya tengan ese equipo en ese
+    turno se omiten. Hasta 62 fechas, entre hoy y un año vista.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        @if (Model.Teams.Count == 0 || Model.Shifts.Count == 0)
+        {
+            @if (ViewData.ModelState.IsValid)
+            {
+                <p class="text-muted mb-0">
+                    Hacen falta al menos un <a asp-action="Equipos">equipo</a> activo y un <a asp-action="Turnos">turno</a> activo para planificar.
+                </p>
+            }
+        }
+        else
+        {
+            <form asp-action="PlanificarTurno" method="post">
+                <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+                <input type="hidden" name="Form.ConflictosVistos" value="@Model.Form.ConflictosVistos" />
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Form.EquipoId" class="form-label"></label>
+                        <select asp-for="Form.EquipoId" class="form-select form-select-lg">
+                            <option value="">Elige un equipo</option>
+                            @foreach (var unitGroup in Model.Teams.GroupBy(t => t.UnitName))
+                            {
+                                <optgroup label="@unitGroup.Key">
+                                    @foreach (var team in unitGroup)
+                                    {
+                                        <option value="@team.TeamId" selected="@(team.TeamId == Model.Form.EquipoId)">@team.Name (@team.Members.Count miembro(s))</option>
+                                    }
+                                </optgroup>
+                            }
+                        </select>
+                        <span asp-validation-for="Form.EquipoId" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Form.TurnoId" class="form-label"></label>
+                        <select asp-for="Form.TurnoId" class="form-select form-select-lg">
+                            <option value="">Elige un turno</option>
+                            @foreach (var shift in Model.Shifts)
+                            {
+                                <option value="@shift.ShiftId" selected="@(shift.ShiftId == Model.Form.TurnoId)">@shift.Name · @SchedulingDisplay.Hours(shift)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Form.TurnoId" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Form.Desde" class="form-label"></label>
+                        <input asp-for="Form.Desde" type="date" class="form-control form-control-lg" value="@Model.Form.Desde?.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="Form.Desde" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Form.Hasta" class="form-label"></label>
+                        <input asp-for="Form.Hasta" type="date" class="form-control form-control-lg" value="@Model.Form.Hasta?.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="Form.Hasta" class="text-danger"></span>
+                    </div>
+                </div>
+                <fieldset class="mb-3">
+                    <legend class="form-label fs-6">Días de la semana</legend>
+                    <div class="d-flex flex-wrap gap-3">
+                        @foreach (var day in ScheduleConflictDisplay.WeekOrder)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Form.Dias" id="dia-@day" value="@day" checked="@Model.Form.Dias.Contains(day)" />
+                                <label class="form-check-label" for="dia-@day">@ScheduleConflictDisplay.DayName(day)</label>
+                            </div>
+                        }
+                    </div>
+                </fieldset>
+
+                @if (Model.Preview is { } preview)
+                {
+                    <div class="alert alert-info">
+                        Se planificaría en <strong>@preview.ToCreate.Count</strong> fecha(s).
+                        @if (preview.AlreadyPlanned.Count > 0)
+                        {
+                            <span>@preview.AlreadyPlanned.Count fecha(s) ya tienen ese equipo en ese turno y se omitirán.</span>
+                        }
+                    </div>
+                }
+
+                @if (hasConflicts)
+                {
+                    <section class="alert alert-warning" aria-labelledby="titulo-solapamientos">
+                        <h2 class="h5" id="titulo-solapamientos">Solapamientos (@conflicts.Count)</h2>
+                        <p>
+                            Puedes seguir adelante: el sistema informa y decides tú. Si lo haces, tu justificación queda anotada en las
+                            fechas afectadas. Si prefieres evitarlo, cambia el equipo, el turno o las fechas y vuelve a enviar.
+                        </p>
+                        <ul class="mb-3">
+                            @foreach (var conflict in conflicts)
+                            {
+                                <li><strong class="text-capitalize">@Day(conflict.Date)</strong>: @ScheduleConflictDisplay.Describe(conflict)</li>
+                            }
+                        </ul>
+                        <label asp-for="Form.Justificacion" class="form-label"></label>
+                        <textarea asp-for="Form.Justificacion" class="form-control" rows="3" maxlength="500"></textarea>
+                        <span asp-validation-for="Form.Justificacion" class="text-danger"></span>
+                    </section>
+                }
+
+                <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                    <a asp-action="Planificacion" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-lg">@(hasConflicts ? "Confirmar y planificar con estos solapamientos" : "Planificar")</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

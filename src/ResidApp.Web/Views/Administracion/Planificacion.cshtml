@@ -1,0 +1,130 @@
+@using ResidApp.Web.Models
+@model ScheduleViewModel
+@{
+    ViewData["Title"] = "Planificación de turnos";
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    string Day(DateOnly date) => date.ToString("dddd, d 'de' MMMM 'de' yyyy");
+    var byDate = Model.Entries.GroupBy(e => e.Date).OrderBy(g => g.Key).ToList();
+    var unitValue = Model.Unit?.Value.ToString();
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Planificación</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Planificación de turnos</h1>
+<p class="text-muted">
+    Qué equipo hace qué turno cada día, en las unidades de tu ámbito. Planificar no da acceso a nada: el acceso sigue dependiendo de
+    los perfiles y las unidades concedidos. Si un equipo, o una persona que está en dos equipos, queda en turnos que se solapan, se te
+    avisa y decides tú.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    @if (ViewData.ModelState.IsValid)
+    {
+        <a asp-action="PlanificarTurno" class="btn btn-primary btn-lg">Planificar un turno</a>
+    }
+    <a asp-action="Turnos" class="btn btn-outline-secondary btn-lg">Turnos</a>
+    <a asp-action="Equipos" class="btn btn-outline-secondary btn-lg">Equipos</a>
+</div>
+
+<form method="get" asp-action="Planificacion" class="card card-body mb-3">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-4">
+            <label for="desde" class="form-label">Desde (dos semanas)</label>
+            <input id="desde" name="desde" type="date" class="form-control form-control-lg" value="@Model.From.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-12 col-md-5">
+            <label for="unidad" class="form-label">Unidad</label>
+            <select id="unidad" name="unidad" class="form-select form-select-lg">
+                <option value="">Todas las de mi ámbito</option>
+                @foreach (var unit in Model.Units)
+                {
+                    <option value="@unit.UnitId.Value" selected="@(unit.UnitId.Value.ToString() == unitValue)">@unit.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-3 d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">Ver</button>
+        </div>
+    </div>
+    <div class="d-flex justify-content-between mt-3">
+        <a asp-action="Planificacion" asp-route-desde="@Model.From.AddDays(-14).ToString("yyyy-MM-dd")" asp-route-unidad="@unitValue">« Dos semanas antes</a>
+        <a asp-action="Planificacion" asp-route-desde="@Model.From.AddDays(14).ToString("yyyy-MM-dd")" asp-route-unidad="@unitValue">Dos semanas después »</a>
+    </div>
+</form>
+
+@if (ViewData.ModelState.IsValid && byDate.Count == 0)
+{
+    <p class="text-muted">No hay nada planificado entre el @Model.From.ToString("d") y el @Model.To.ToString("d").</p>
+}
+
+@foreach (var group in byDate)
+{
+    <section class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title text-capitalize">@Day(group.Key)</h2>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Turnos planificados el @Day(group.Key)</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Turno</th>
+                            <th scope="col">Equipo</th>
+                            <th scope="col">Unidad</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in group)
+                        {
+                            <tr>
+                                <th scope="row">
+                                    @entry.ShiftName
+                                    <div class="text-muted small fw-normal">
+                                        @entry.Start.ToString("HH\\:mm") – @entry.End.ToString("HH\\:mm")@(entry.CrossesMidnight ? " (termina al día siguiente)" : "")
+                                    </div>
+                                </th>
+                                <td>
+                                    @entry.TeamName <span class="text-muted">(@entry.TeamMembers miembro(s))</span>
+                                    @if (entry.Justification is not null)
+                                    {
+                                        <div class="small"><span class="badge text-bg-warning">Solapamiento justificado</span> @entry.Justification</div>
+                                    }
+                                </td>
+                                <td>@entry.UnitName</td>
+                                <td>
+                                    @if (entry.Date >= today)
+                                    {
+                                        <form asp-action="RetirarPlanificacion" method="post">
+                                            <input type="hidden" name="planificacionId" value="@entry.ScheduleId" />
+                                            <input type="hidden" name="desde" value="@Model.From.ToString("yyyy-MM-dd")" />
+                                            <button type="submit" class="btn btn-outline-danger">Retirar</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Pasado</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+}

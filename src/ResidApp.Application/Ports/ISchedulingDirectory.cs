@@ -57,3 +57,47 @@ public interface ISchedulingRepository
 
     Task RemoveTeamMemberAsync(AccountAdministrationAccess access, Guid teamId, AccountId accountId, CancellationToken ct = default);
 }
+
+/// <summary>ADM-14/15: un turno planificado de un equipo en una fecha, de una unidad del ámbito. Justification es la decisión de
+/// Administración cuando se avisó de un solapamiento (null si no lo hubo).</summary>
+public sealed record ScheduleEntry(
+    Guid ScheduleId, UnitId UnitId, string UnitName, Guid TeamId, string TeamName, int TeamMembers, Guid ShiftId, string ShiftName,
+    TimeOnly Start, TimeOnly End, DateOnly Date, string? Justification)
+{
+    public bool CrossesMidnight => ResidApp.Domain.Scheduling.Shift.CrossesMidnight(Start, End);
+}
+
+/// <summary>ADM-17: lo que pasaría al planificar: ToCreate son las fechas que se guardarían, AlreadyPlanned las que ya tenían ese equipo
+/// y ese turno (se omiten), y Conflicts los solapamientos que Administración tiene que decidir. No escribe nada.</summary>
+public sealed record SchedulePreview(
+    IReadOnlyList<DateOnly> ToCreate, IReadOnlyList<DateOnly> AlreadyPlanned, IReadOnlyList<ResidApp.Domain.Scheduling.ScheduleConflict> Conflicts);
+
+/// <summary>ADM-15: las fechas guardadas y las omitidas por estar ya planificadas.</summary>
+public sealed record PlanOutcome(IReadOnlyList<DateOnly> Created, IReadOnlyList<DateOnly> Skipped);
+
+/// <summary>ADM-14/15: lectura de la planificación de las unidades del ámbito entre dos fechas (ambas incluidas).</summary>
+public interface ISchedulePlanDirectory
+{
+    Task<IReadOnlyList<ScheduleEntry>> ListScheduleAsync(
+        AccountAdministrationAccess access, DateOnly from, DateOnly to, UnitId? unitId, CancellationToken ct = default);
+}
+
+/// <summary>
+/// ADM-15/17 (0027): escrituras sobre la planificación. Planificar no concede acceso a nada. El cálculo de conflictos es del servidor y
+/// se repite dentro de la transacción de escritura: con conflictos, solo se guarda con una justificación.
+/// </summary>
+public interface ISchedulePlanRepository
+{
+    /// <summary>Calcula lo que pasaría, sin escribir.</summary>
+    Task<SchedulePreview> PreviewAsync(
+        AccountAdministrationAccess access, Guid teamId, Guid shiftId, IReadOnlyList<DateOnly> dates, CancellationToken ct = default);
+
+    /// <summary>Planifica el equipo en el turno para las fechas (con LotId como token contra el doble envío). Con solapamientos y sin
+    /// justificación lanza SCHEDULE_CONFLICTS.</summary>
+    Task<PlanOutcome> PlanAsync(
+        AccountAdministrationAccess access, Guid batchId, Guid teamId, Guid shiftId, IReadOnlyList<DateOnly> dates, string? justification,
+        CancellationToken ct = default);
+
+    /// <summary>Retira una fecha planificada (hoy o futura). Lo retirado no se reactiva ni se borra.</summary>
+    Task RetireAsync(AccountAdministrationAccess access, Guid scheduleId, DateOnly today, CancellationToken ct = default);
+}

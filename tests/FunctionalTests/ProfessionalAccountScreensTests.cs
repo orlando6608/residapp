@@ -306,6 +306,83 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.DoesNotContain("Nuevo turno", nursePage);
     }
 
+    [Fact]
+    public async Task Planificacion_ConSolapamiento_PideJustificacion_ConHuella_YLaAnotaEnLaFecha()
+    {
+        var admin = await SeedAdministratorAsync();
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = admin.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        async Task<string> PostAsync(string path, string pageWithForm, IEnumerable<KeyValuePair<string, string>> fields) =>
+            WebUtility.HtmlDecode(await (await client.PostAsync(path, new FormUrlEncodedContent(
+                fields.Append(KeyValuePair.Create("__RequestVerificationToken", ExtractValue(pageWithForm, "__RequestVerificationToken")))))).Content.ReadAsStringAsync());
+
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+        var morningName = $"Mañana {suffix}";
+        var afternoonName = $"Tarde {suffix}";
+        var shiftPage = await client.GetStringAsync("/Administracion/NuevoTurno");
+        foreach (var (name, start, end) in new[] { (morningName, "07:00", "15:00"), (afternoonName, "14:00", "22:00") })
+        {
+            await PostAsync("/Administracion/NuevoTurno", shiftPage, new Dictionary<string, string>
+            {
+                ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.Nombre"] = name, ["Form.Inicio"] = start, ["Form.Fin"] = end,
+            });
+        }
+
+        var teamPage = await client.GetStringAsync("/Administracion/NuevoEquipo");
+        await PostAsync("/Administracion/NuevoEquipo", teamPage, new Dictionary<string, string>
+        {
+            ["Form.OperacionId"] = ExtractValue(teamPage, "Form.OperacionId"), ["Form.UnidadId"] = admin.UnitId.ToString(), ["Form.Nombre"] = $"Equipo {suffix}",
+        });
+
+        var planPage = await client.GetStringAsync("/Administracion/PlanificarTurno");
+        string OptionId(string page, string label) => Regex.Match(page, $"<option value=\"([0-9a-f-]{{36}})\"[^>]*>{Regex.Escape(label)}").Groups[1].Value;
+        var teamId = OptionId(planPage, $"Equipo {suffix}");
+        var morningId = OptionId(WebUtility.HtmlDecode(planPage), morningName);
+        var afternoonId = OptionId(WebUtility.HtmlDecode(planPage), afternoonName);
+        Assert.True(teamId != "" && morningId != "" && afternoonId != "", $"opciones: [{teamId}] [{morningId}] [{afternoonId}]");
+        var day = DateTime.Today.AddDays(3).ToString("yyyy-MM-dd");
+        var secondBatch = Guid.NewGuid().ToString();
+        List<KeyValuePair<string, string>> Form(string shiftId, string? justification = null, string? seen = null, bool second = false)
+        {
+            var fields = new List<KeyValuePair<string, string>>
+            {
+                new("Form.OperacionId", second ? secondBatch : ExtractValue(planPage, "Form.OperacionId")), new("Form.EquipoId", teamId), new("Form.TurnoId", shiftId),
+                new("Form.Desde", day), new("Form.Hasta", day), new("Form.Justificacion", justification ?? ""), new("Form.ConflictosVistos", seen ?? ""),
+            };
+            fields.AddRange(Enum.GetNames<DayOfWeek>().Select(d => new KeyValuePair<string, string>("Form.Dias", d)));
+            return fields;
+        }
+
+        var first = await PostAsync("/Administracion/PlanificarTurno", planPage, Form(morningId));
+        var overlap = await PostAsync("/Administracion/PlanificarTurno", planPage, Form(afternoonId, null, null, true));
+        var seen = ExtractValue(overlap, "Form.ConflictosVistos");
+        var noJustification = await PostAsync("/Administracion/PlanificarTurno", planPage, Form(afternoonId, null, seen, true));
+        var changed = await PostAsync("/Administracion/PlanificarTurno", planPage, Form(afternoonId, "Refuerzo", "HUELLA-ANTIGUA", true));
+        var confirmed = await PostAsync("/Administracion/PlanificarTurno", planPage, Form(afternoonId, "Refuerzo por baja (ficticio)", seen, true));
+        var nursePage = await PageAsync("ENFERMERIA", null, "/Administracion/Planificacion");
+
+        Assert.Contains("Planificado en 1 fecha(s).", first);
+        Assert.Contains(morningName, first);
+        Assert.Contains("Solapamientos (1)", overlap);
+        Assert.Contains($"«Equipo {suffix}» ya está planificado en «{morningName}», que se solapa con «{afternoonName}».", overlap);
+        Assert.Contains("Confirmar y planificar con estos solapamientos", overlap);
+        Assert.False(string.IsNullOrEmpty(seen));
+        Assert.Contains("Escribe por qué sigues adelante a pesar de los solapamientos.", noJustification);
+        Assert.Contains("Los solapamientos han cambiado desde que los viste.", changed);
+        Assert.Contains("Planificado en 1 fecha(s).", confirmed);
+        Assert.Contains("Queda anotada tu justificación del solapamiento.", confirmed);
+        Assert.Contains("Solapamiento justificado", confirmed);
+        Assert.Contains("Refuerzo por baja (ficticio)", confirmed);
+        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.DoesNotContain("Planificar un turno", nursePage);
+    }
+
     private static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
 

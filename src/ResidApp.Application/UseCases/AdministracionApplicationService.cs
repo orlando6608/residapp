@@ -92,6 +92,16 @@ public sealed record ChangeTeamStatusCommand(Guid AmbitoPerfilId, CenterId Centr
 /// <summary>ADM-14: añadir (true) o dar de baja (false) a una cuenta de un equipo.</summary>
 public sealed record ChangeTeamMemberCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EquipoId, AccountId CuentaId, bool Anadir);
 
+/// <summary>ADM-15/17 (0027): planificar un equipo en un turno para varias fechas. LoteId nace con el formulario y es el token contra el
+/// doble envío. Justificacion se da cuando el servidor avisó de solapamientos y Administración decide seguir.</summary>
+public sealed record PlanShiftCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, Guid LoteId, Guid EquipoId, Guid TurnoId, IReadOnlyList<DateOnly> Fechas, string? Justificacion = null);
+
+public sealed record RetireScheduleCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid PlanificacionId);
+
+/// <summary>ADM-14: la planificación entre dos fechas (ambas incluidas), de todas las unidades del ámbito o de una.</summary>
+public sealed record ListScheduleQuery(Guid AmbitoPerfilId, CenterId CentroId, DateOnly Desde, DateOnly Hasta, UnitId? UnidadId = null);
+
 /// <summary>ADM-05 (0025): alta de una unidad. OperacionId nace con el formulario y es el id de la unidad, así que un reenvío
 /// no la duplica.</summary>
 public sealed record CreateUnitCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? Codigo, string? Nombre);
@@ -122,7 +132,7 @@ public sealed class AdministracionApplicationService(
     IAuthorizationEvidenceProvider evidenceProvider, IResidentIdentityRepository identities, IResidentFamilyRepository families,
     IProfessionalAccountDirectory accountDirectory, IProfessionalAccountRepository accounts, ICenterStructureDirectory structure,
     ICenterStructureRepository structureWriter, IAdministrativeAuditDirectory audit, ISchedulingDirectory scheduling,
-    ISchedulingRepository schedulingWriter)
+    ISchedulingRepository schedulingWriter, ISchedulePlanDirectory schedulePlan, ISchedulePlanRepository schedulePlanWriter)
 {
     public Task<ApplicationResult<IReadOnlyList<AdministrativeResidentSummary>>> ListResidentsAsync(
         AdministracionQuery query, CancellationToken ct = default) =>
@@ -409,6 +419,45 @@ public sealed class AdministracionApplicationService(
             await (command.Anadir
                 ? schedulingWriter.AddTeamMemberAsync(access, command.EquipoId, command.CuentaId, ct)
                 : schedulingWriter.RemoveTeamMemberAsync(access, command.EquipoId, command.CuentaId, ct));
+            return true;
+        });
+
+    public Task<ApplicationResult<IReadOnlyList<ScheduleEntry>>> ListScheduleAsync(ListScheduleQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            if (query.Desde > query.Hasta || query.Hasta.DayNumber - query.Desde.DayNumber + 1 > SchedulePlan.MaxDates)
+            {
+                throw new DomainValidationException(SchedulePlan.InvalidCode);
+            }
+
+            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await schedulePlan.ListScheduleAsync(access, query.Desde, query.Hasta, query.UnidadId, ct);
+        });
+
+    /// <summary>ADM-17: lo que pasaría al planificar, sin escribir nada.</summary>
+    public Task<ApplicationResult<SchedulePreview>> PreviewScheduleAsync(PlanShiftCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            var dates = SchedulePlan.ValidateDates(command.Fechas, DateOnly.FromDateTime(DateTime.Today));
+            return await schedulePlanWriter.PreviewAsync(access, command.EquipoId, command.TurnoId, dates, ct);
+        });
+
+    /// <summary>ADM-15: planifica. Con solapamientos y sin justificación no guarda nada (SCHEDULE_CONFLICTS, un conflicto).</summary>
+    public Task<ApplicationResult<PlanOutcome>> PlanShiftAsync(PlanShiftCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            var dates = SchedulePlan.ValidateDates(command.Fechas, DateOnly.FromDateTime(DateTime.Today));
+            var justification = SchedulePlan.ValidateJustification(command.Justificacion);
+            return await schedulePlanWriter.PlanAsync(access, command.LoteId, command.EquipoId, command.TurnoId, dates, justification, ct);
+        });
+
+    public Task<ApplicationResult<bool>> RetireScheduleAsync(RetireScheduleCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await schedulePlanWriter.RetireAsync(access, command.PlanificacionId, DateOnly.FromDateTime(DateTime.Today), ct);
             return true;
         });
 

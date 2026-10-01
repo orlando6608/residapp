@@ -81,3 +81,97 @@ public class SchedulingTests
         Assert.True(Shift.Overlaps(Monday, T("10:00"), T("10:00"), Monday.AddDays(1), T("09:00"), T("11:00")));
     }
 }
+
+/// <summary>ADM-15/17 (0027): fechas de un lote, justificación y detección de solapamientos (funciones puras).</summary>
+public class SchedulePlanTests
+{
+    private static readonly DateOnly Today = new(2026, 10, 5);
+    private static TimeOnly T(string time) => TimeOnly.Parse(time);
+
+    private static PlannedShift Planned(Guid team, string teamName, Guid shift, string shiftName, string start, string end, DateOnly date) =>
+        new(team, teamName, shift, shiftName, T(start), T(end), date);
+
+    [Fact]
+    public void Fechas_SeOrdenan_YSeAceptanDeHoyAUnAnoVista()
+    {
+        var dates = SchedulePlan.ValidateDates([Today.AddDays(3), Today, Today.AddDays(366)], Today);
+
+        Assert.Equal([Today, Today.AddDays(3), Today.AddDays(366)], dates);
+    }
+
+    [Fact]
+    public void Fechas_Invalidas_SeRechazan()
+    {
+        var invalid = new IEnumerable<DateOnly>?[]
+        {
+            null,
+            [],
+            [Today.AddDays(-1)],
+            [Today.AddDays(367)],
+            [Today, Today],
+            Enumerable.Range(0, 63).Select(i => Today.AddDays(i)),
+        };
+
+        Assert.All(invalid, dates => Assert.Equal(SchedulePlan.InvalidCode, Assert.Throws<DomainValidationException>(
+            () => SchedulePlan.ValidateDates(dates, Today)).Message));
+        Assert.Equal(62, SchedulePlan.ValidateDates(Enumerable.Range(0, 62).Select(i => Today.AddDays(i)), Today).Count);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("   ", null)]
+    [InlineData("  Refuerzo  ", "Refuerzo")]
+    public void Justificacion_SeRecortaOQuedaVacia(string? text, string? expected) =>
+        Assert.Equal(expected, SchedulePlan.ValidateJustification(text));
+
+    [Fact]
+    public void Justificacion_TieneLimiteDeLongitud()
+    {
+        Assert.Equal(500, SchedulePlan.ValidateJustification(new string('x', 500))!.Length);
+        Assert.Throws<DomainValidationException>(() => SchedulePlan.ValidateJustification(new string('x', 501)));
+    }
+
+    [Fact]
+    public void Conflictos_MismoEquipo_PersonaEnDosEquipos_YSinSolapamiento()
+    {
+        Guid a = Guid.NewGuid(), b = Guid.NewGuid(), c = Guid.NewGuid(), morning = Guid.NewGuid(), afternoon = Guid.NewGuid(), night = Guid.NewGuid();
+        var ana = (Guid.NewGuid(), "Ana");
+        var members = new Dictionary<Guid, IReadOnlyList<(Guid AccountId, string Name)>>
+        {
+            [a] = [ana, (Guid.NewGuid(), "Luis")],
+            [b] = [ana],
+            [c] = [(Guid.NewGuid(), "Eva")],
+        };
+        var existing = new[]
+        {
+            Planned(a, "A", morning, "Mañana", "07:00", "15:00", Today),
+            Planned(c, "C", morning, "Mañana", "07:00", "15:00", Today),
+            Planned(a, "A", night, "Noche", "22:00", "06:00", Today.AddDays(-1)),
+        };
+        var proposed = new[]
+        {
+            Planned(a, "A", afternoon, "Tarde", "14:00", "22:00", Today),
+            Planned(b, "B", afternoon, "Tarde", "14:00", "22:00", Today),
+            Planned(b, "B", morning, "Mañana", "07:00", "15:00", Today),
+        };
+
+        var conflicts = SchedulePlan.FindConflicts(proposed, existing, members);
+
+        Assert.Contains(conflicts, k => k.Kind == ScheduleConflictKind.SameTeam && k.TeamName == "A" && k.OtherShiftName == "Mañana");
+        Assert.Contains(conflicts, k => k.Kind == ScheduleConflictKind.SamePerson && k.TeamName == "B" && k.OtherTeamName == "A" && k.PersonName == "Ana");
+        Assert.DoesNotContain(conflicts, k => k.OtherTeamName == "C");
+        // La noche del día anterior termina a las 06:00 y no pisa ni la mañana ni la tarde.
+        Assert.DoesNotContain(conflicts, k => k.OtherShiftName == "Noche");
+        // Sin duplicados: el mismo par se cuenta una vez.
+        Assert.Equal(conflicts.Count, conflicts.Distinct().Count());
+    }
+
+    [Fact]
+    public void Conflictos_ElMismoEquipoYTurnoEnLaMismaFecha_EsUnDuplicado_NoUnConflicto()
+    {
+        Guid a = Guid.NewGuid(), morning = Guid.NewGuid();
+        var one = Planned(a, "A", morning, "Mañana", "07:00", "15:00", Today);
+
+        Assert.Empty(SchedulePlan.FindConflicts([one], [one], new Dictionary<Guid, IReadOnlyList<(Guid, string)>>()));
+    }
+}

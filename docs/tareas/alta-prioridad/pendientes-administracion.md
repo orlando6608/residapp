@@ -1,6 +1,6 @@
 # Pendientes del vertical Administración
 
-Estado al 2026-10-01 (tras el bloque 5, el perfil de plataforma y la auditoría). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
+Estado al 2026-10-01 (tras el bloque 5, el perfil de plataforma, la auditoría y los turnos y equipos). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
 No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pantallas/wireframes-funcionales/administracion.md).
 
 ## Hecho
@@ -223,12 +223,49 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
   - **Tests:** `AdministracionAuditoriaTests` (integración, con el test por reflexión de AUD-02 y el de solo inserción),
     `AdministrativeAuditTests` (unitarios), `AuditActionDisplayTests` y `Auditoria_Muestra…` en `ProfessionalAccountScreensTests` (funcionales).
 
+- **Turnos y equipos, primer bloque (historia 4; ADM-14, ADM-15, ADM-17; ORG-02, ORG-04 parcial; script `0027`)** — 2026-10-01.
+  - **Qué hace:**
+    - `/Administracion/Turnos`: catálogo de turnos del centro (nombre y horas). Crear, renombrar, inactivar y reactivar.
+    - `/Administracion/Equipos`: equipos con nombre dentro de las unidades del ámbito. Crear, renombrar, inactivar y reactivar; `MiembrosEquipo` añade y da
+      de baja cuentas.
+    - `/Administracion/Planificacion` (dos semanas, filtro por unidad) y `PlanificarTurno`: un equipo en un turno para un rango de fechas y días de
+      la semana, con aviso de solapamientos que Administración decide; `RetirarPlanificacion`.
+  - **Decisiones del usuario (2026-10-01):**
+    - alcance: catálogo + planificación puntual por unidad y fecha (una o varias fechas), con solapamientos que decide Administración; **sin
+      recurrencias ni excepciones** (ADM-16);
+    - un equipo es una entidad propia con nombre dentro de una unidad, a la que se asignan personas y turnos.
+  - **Suposiciones aprobadas con el plan:**
+    - un turno tiene nombre y horas; fin igual o anterior al inicio cruza la medianoche; las horas no se editan (para otras, otro turno);
+    - un equipo es de una sola unidad, con nombre único en ella; nada se borra;
+    - miembros: cuentas activas con un perfil vigente de Auxiliar, Enfermería o Medicina con la unidad del equipo concedida; una persona puede estar
+      en varios equipos; alta y baja con historial;
+    - una fila de planificación es (unidad, equipo, turno, fecha); se crea en lote y se retira, nunca se edita; mismo equipo y turno en la misma
+      fecha, no dos veces (se omite);
+    - conflictos (ADM-17): el mismo equipo en turnos que se solapan, y una persona en dos equipos con turnos que se solapan, calculados con los
+      intervalos reales (cruce de medianoche incluido) y solo entre unidades del ámbito; con ellos, solo se guarda con una justificación obligatoria de
+      hasta 500 caracteres, que queda en las fechas afectadas;
+    - fechas: de 1 a 62 distintas, de hoy a un año vista; solo se retiran las de hoy en adelante;
+    - planificar no concede acceso a nada; auditoría con categoría «Turnos y equipos».
+  - **Decisión de implementación:** la confirmación de un solapamiento lleva una huella (SHA-256) de los que se enseñaron. Si cambian entre la
+    vista y la confirmación, no se confirma y se vuelven a enseñar.
+  - **Implementación:** script `0027_turnos_equipos` (`turnos_catalogo`, `equipos`, `equipos_miembros`, `planificacion_turnos`; triggers que impiden cambiar
+    horas, centro o unidad, borrar, y reescribir miembros o planificación: solo se revoca o se retira; `UX_sch_active`, `UX_tm_active`).
+    - Dominio `Domain/Scheduling/` (`Shift`, `Team`, `SchedulePlan`: fechas, justificación y `FindConflicts` puras);
+    - puertos `ISchedulingDirectory`/`ISchedulingRepository` (catálogo, equipos y miembros) e `ISchedulePlanDirectory`/`ISchedulePlanRepository`
+      (planificación);
+    - `Sql*` correspondientes: cada escritura repite el ámbito de Administración y bloquea la fila del centro; la planificación recalcula los
+      conflictos dentro de la transacción;
+    - controlador parcial (`AdministracionController.Turnos.cs` y `.Planificacion.cs`);
+    - auditoría sin datos: `SHIFT_*`, `TEAM_*`, `TEAM_MEMBER_ADD/REMOVE` (recurso: la cuenta, con la unidad del equipo), `SCHEDULE_CREATE/RETIRE`.
+  - **Tests:** `AdministracionTurnosTests` y `AdministracionPlanificacionTests` (integración), `SchedulingTests` y `SchedulePlanTests` (unitarios),
+    `TurnosYEquipos_…` y `Planificacion_ConSolapamiento_…` en `ProfessionalAccountScreensTests` (funcionales).
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
-2. **Turnos y equipos (historia 4), y el resto de la estructura (historia 2: edificios, plantas, habitaciones, plazas y organigrama, ADM-06/ADM-07):** los turnos sustituirían el «equipo o turno entrante» en texto libre de los seguimientos.
+2. **Turnos recurrentes con excepciones (ADM-16), usar equipos y turnos en los seguimientos, y el resto de la estructura (historia 2: edificios, plantas, habitaciones, plazas y organigrama, ADM-06/ADM-07):** los equipos y turnos ya existen; faltaría sustituir el «equipo o turno entrante» en texto libre de los seguimientos de Enfermería y Medicina.
 3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8) y panel completo (10).**
 
 Huecos de lo ya construido:
@@ -239,6 +276,11 @@ Huecos de lo ya construido:
 - **Inactivar una unidad:** se comprueba que no tenga ubicaciones vigentes dentro de la transacción, pero un alta de residente que
   llegue a la vez no se bloquea (el alta autoriza la unidad antes, y la clave foránea no mira el estado). Es una carrera muy
   estrecha; si importa, habrá que comprobar el estado de la unidad al insertar la ubicación.
+- **Turnos y equipos:** sin recurrencias ni excepciones (ADM-16): cada fecha se planifica expresamente. Los seguimientos siguen escribiendo el
+  equipo o turno entrante a mano. Inactivar un equipo o un turno no retira lo ya planificado. Un equipo o turno ya usado no se corrige (las horas
+  no cambian: se crea otro). La planificación no se edita: se retira y se vuelve a planificar. La vista solo enseña dos semanas, sin cuadrícula
+  semanal ni vista por persona. Los conflictos se calculan entre unidades del ámbito de quien planifica; otra Administración con otro ámbito
+  puede planificar sin ver lo de este.
 - **Auditoría:** solo cubre las acciones que existen hoy. Las de horarios, citas y retiradas de publicaciones se añadirán a la lista cerrada
   cuando se construyan. No se audita la propia consulta, ni hay exportación. Los eventos de acciones sin unidad (cuentas y perfiles) los
   ve cualquier Administración del centro, aunque la cuenta afectada tenga unidades de otro ámbito.

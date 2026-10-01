@@ -57,6 +57,8 @@ builder.Services.AddScoped<IPlatformCenterRepository, SqlPlatformCenterRepositor
 builder.Services.AddScoped<IAdministrativeAuditDirectory, SqlAdministrativeAuditDirectory>();
 builder.Services.AddScoped<ISchedulingDirectory, SqlSchedulingDirectory>();
 builder.Services.AddScoped<ISchedulingRepository, SqlSchedulingRepository>();
+builder.Services.AddScoped<ISchedulePlanDirectory, SqlSchedulePlanDirectory>();
+builder.Services.AddScoped<ISchedulePlanRepository, SqlSchedulePlanRepository>();
 builder.Services.AddScoped<INursingAssessmentRepository, SqlNursingAssessmentRepository>();
 builder.Services.AddScoped<IMedicalAssessmentRepository, SqlMedicalAssessmentRepository>();
 builder.Services.AddScoped<IMedicalIndicationRepository, SqlMedicalIndicationRepository>();
