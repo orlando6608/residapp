@@ -13,6 +13,31 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Administración, edificios, plantas, habitaciones y plazas (historia 2; script `0029`; sin cambios en el seed):** en curso, 2026-10-02, en `main`
+  **sin push** (Azure en `0028`). **Fase 1 de 2 hecha: edificios y plantas, y colocar las unidades. Falta la fase 2: habitaciones y plazas, el alta
+  de residente con habitación/plaza opcionales y la ficha.** Detalle, decisiones y suposiciones en `pendientes-administracion.md`.
+  - **Qué hace la fase 1:** `/Administracion/Edificios` (edificios y plantas del centro: crear, renombrar, inactivar, reactivar), `UbicacionUnidad` y la
+    columna «Edificio y planta» de Estructura. El script `0029` ya trae las cuatro tablas (también habitaciones y plazas), las claves foráneas de
+    `intervalos_ubicacion_residente` y el índice `UX_rli_place_active`: la fase 2 no necesita otro script.
+  - **Detalle técnico que conviene no redescubrir:**
+    - `TR_units_guard` se recreó en `0029` sin la parte de edificio/planta; antes de crear las claves foráneas el script falla si `unidades` o
+      `intervalos_ubicacion_residente` tienen ids de edificio, planta, habitación o plaza (no los tenían: el alta mandaba null);
+    - el alta ya acepta `EdificioId`/`PlantaId`/`HabitacionId`/`PlazaId` en `CreateResidentCommand` pero sin validarlos más que con las claves
+      foráneas nuevas: la fase 2 debe deducir edificio y planta de la unidad y validar habitación y plaza en el servidor;
+    - `ICenterLayout*` es puerto aparte de `ICenterStructure*`; `AdministracionEstructuraApplicationService` ya tiene 6 dependencias;
+    - **fallos intermitentes de la suite (sin explicar):** en esta fase, 2 de ~10 ejecuciones completas fallaron en un test de integración distinto cada vez
+      (`AdministracionUsuariosTests.Alta_…`, `MedicinaApplicationServiceTests.ValoracionMedica_…`), y antes, una vuelta tipo CI con 2 fallos y otra con
+      `Inactivar_NoValeConResidentes…`. Ninguno se reprodujo en 30 ejecuciones posteriores con salida detallada ni con cada proyecto aislado, y
+      `system_health` de SQL Server no registra interbloqueos. No capturé el mensaje de ninguno. Si reaparece, ejecuta con
+      `--logger "console;verbosity=detailed"` y guarda la salida antes de repetir.
+  - **Verificación de la fase 1:**
+    - suite en verde antes (232, 284 y 52) y después (240, 291 y 53) más de 20 veces en total salvo los 2 fallos intermitentes de arriba, y 3 vueltas
+      tipo CI con BD nueva limpias; copia previa `ResidApp-antes-0029-20261001.bak`; BD temporal con los 29 scripts y los seeds dos veces, sin errores
+      (ya borrada);
+    - curl en local con `dev-integrado-administracion`: nombre vacío, crear edificio y planta, repetido, colocar la unidad, repetir, inactivar con
+      unidad activa («No se puede inactivar…»), quitar la unidad y entonces inactivar/reactivar planta y edificio (reactivar la planta con el edificio
+      inactivo se rechaza), `UNIT_LOCATE` en la auditoría; Enfermería, Medicina, Auxiliar y Dirección reciben «No se puede acceder».
+  - **Datos de prueba en la base local:** «Edificio Principal local» con «Planta baja» (la unidad del escenario integrado quedó sin edificio).
 - **Administración, turnos recurrentes con excepciones (historia 4; ADM-16; sin script ni cambios en el seed):** hecho el 2026-10-01 en `main`,
   pusheado y desplegado en Azure (push de `db4f013`, run 36929187490 en verde con `build-and-test` y `deploy`; sin script, Azure sigue en `0028`).
   - **Qué hace:** «Planificar un turno» admite hasta **367 fechas** por envío (una serie: las filas con el mismo `lote_id`) y un campo

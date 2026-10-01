@@ -1,0 +1,56 @@
+@using ResidApp.Web.Models
+@model UnitLocationViewModel
+@{
+    ViewData["Title"] = "Edificio y planta de la unidad";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Estructura">Estructura</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Edificio y planta</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Edificio y planta de la unidad</h1>
+<p class="text-muted">
+    Unidad <strong>@Model.Unit.Name</strong> (<code>@Model.Unit.Code</code>). Elegir un edificio y una planta solo agrupa la unidad; no da
+    acceso a nadie ni cambia dónde está ningún residente. Quedan en la auditoría.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="UbicacionUnidad" method="post">
+            <input type="hidden" name="Form.UnidadId" value="@Model.Form.UnidadId" />
+            <div class="mb-3">
+                <label asp-for="Form.Ubicacion" class="form-label"></label>
+                <select asp-for="Form.Ubicacion" class="form-select form-select-lg">
+                    <option value="">Sin edificio</option>
+                    @foreach (var building in Model.Buildings.Where(b => b.Active))
+                    {
+                        <optgroup label="@building.Name">
+                            <option value="b:@building.BuildingId">@building.Name (sin planta)</option>
+                            @foreach (var floor in building.Floors.Where(f => f.Active))
+                            {
+                                <option value="f:@building.BuildingId:@floor.FloorId">@building.Name · @floor.Name</option>
+                            }
+                        </optgroup>
+                    }
+                </select>
+                <span asp-validation-for="Form.Ubicacion" class="text-danger"></span>
+            </div>
+            @if (Model.Buildings.All(b => !b.Active))
+            {
+                <p class="text-muted">
+                    No hay edificios activos. Créalos en <a asp-action="Edificios">Edificios y plantas</a>.
+                </p>
+            }
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Estructura" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>

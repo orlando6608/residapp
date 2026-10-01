@@ -132,6 +132,68 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     }
 
     [Fact]
+    public async Task Edificios_CreaEdificioYPlanta_ColocaLaUnidad_YOtroPerfilNoEntra()
+    {
+        var admin = await SeedAdministratorAsync();
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = admin.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+        async Task<string> PostAsync(string path, string page, Dictionary<string, string> fields) =>
+            WebUtility.HtmlDecode(await (await client.PostAsync(path, new FormUrlEncodedContent(new Dictionary<string, string>(fields)
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            }))).Content.ReadAsStringAsync());
+
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+        var listPage = await client.GetStringAsync("/Administracion/Edificios");
+        var empty = await PostAsync("/Administracion/NuevoEdificio", listPage, new() { ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.Nombre"] = "" });
+        var created = await PostAsync("/Administracion/NuevoEdificio", listPage, new()
+        {
+            ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.Nombre"] = $"Edificio {suffix} (ficticio)",
+        });
+        var buildingId = Regex.Match(created, "name=\"edificioId\" value=\"([0-9a-f-]{36})\"").Groups[1].Value;
+        var duplicated = await PostAsync("/Administracion/NuevoEdificio", created, new()
+        {
+            ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.Nombre"] = $"edificio {suffix} (ficticio)",
+        });
+        var floorCreated = await PostAsync("/Administracion/NuevaPlanta", created, new()
+        {
+            ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.EdificioId"] = buildingId, ["Form.Nombre"] = "Planta 1",
+        });
+        var floorId = Regex.Match(floorCreated, "name=\"plantaId\" value=\"([0-9a-f-]{36})\"").Groups[1].Value;
+        var renamePage = await client.GetStringAsync($"/Administracion/NombrePlanta?plantaId={floorId}");
+        var renamed = await PostAsync("/Administracion/NombrePlanta", renamePage, new() { ["Form.Id"] = floorId, ["Form.Nombre"] = "Planta baja" });
+        var locationPage = await client.GetStringAsync($"/Administracion/UbicacionUnidad?unidadId={admin.UnitId}");
+        var badLocation = await PostAsync("/Administracion/UbicacionUnidad", locationPage, new() { ["Form.UnidadId"] = admin.UnitId.ToString(), ["Form.Ubicacion"] = "x:1" });
+        var located = await PostAsync("/Administracion/UbicacionUnidad", locationPage, new()
+        {
+            ["Form.UnidadId"] = admin.UnitId.ToString(), ["Form.Ubicacion"] = $"f:{buildingId}:{floorId}",
+        });
+        var blocked = await PostAsync("/Administracion/EstadoEdificio", located, new() { ["edificioId"] = buildingId, ["activo"] = "false" });
+        var nursePage = await PageAsync("ENFERMERIA", null, "/Administracion/Edificios");
+        var nurseLocation = await PageAsync("ENFERMERIA", null, $"/Administracion/UbicacionUnidad?unidadId={admin.UnitId}");
+
+        Assert.Contains("Escribe el nombre del edificio", empty);
+        Assert.Contains("Edificio creado.", created);
+        Assert.Contains($"Edificio {suffix} (ficticio)", created);
+        Assert.Contains("Ya existe un edificio con ese nombre en el centro.", duplicated);
+        Assert.Contains("Planta creada.", floorCreated);
+        Assert.Contains("Nombre guardado.", renamed);
+        Assert.Contains("Planta baja", renamed);
+        Assert.Contains("Elige una ubicación de la lista.", badLocation);
+        Assert.Contains("Ubicación de la unidad guardada.", located);
+        Assert.Contains($"Edificio {suffix} (ficticio) · Planta baja", located);
+        Assert.Contains("No se puede inactivar un edificio con plantas o unidades activas.", blocked);
+        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.DoesNotContain("Crear edificio", nursePage);
+        Assert.Contains("No se puede acceder a esta operación", nurseLocation);
+    }
+
+    [Fact]
     public async Task Plataforma_CreaUnCentro_ElInicioSoloLaOfreceAEsePerfil_YOtroPerfilNoEntra()
     {
         var operatorSubject = await SeedPlatformOperatorAsync();

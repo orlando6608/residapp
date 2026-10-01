@@ -33,7 +33,8 @@ public class AdministracionResidentesTests
 
     internal static AdministracionEstructuraApplicationService BuildEstructura(string externalSubject) => new(
         Access(externalSubject), new SqlCenterStructureDirectory(TestDatabase.ConnectionFactory),
-        new SqlCenterStructureRepository(TestDatabase.ConnectionFactory), new SqlAdministrativeAuditDirectory(TestDatabase.ConnectionFactory));
+        new SqlCenterStructureRepository(TestDatabase.ConnectionFactory), new SqlCenterLayoutDirectory(TestDatabase.ConnectionFactory),
+        new SqlCenterLayoutRepository(TestDatabase.ConnectionFactory), new SqlAdministrativeAuditDirectory(TestDatabase.ConnectionFactory));
 
     internal static AdministracionTurnosApplicationService BuildTurnos(string externalSubject) => new(
         Access(externalSubject), new SqlSchedulingDirectory(TestDatabase.ConnectionFactory),

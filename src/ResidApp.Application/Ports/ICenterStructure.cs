@@ -4,8 +4,11 @@ using ResidApp.Shared;
 namespace ResidApp.Application.Ports;
 
 /// <summary>ADM-05: una unidad del centro concedida al ámbito de quien gestiona. CurrentResidents son los residentes con la
-/// unidad como ubicación vigente; mientras haya alguno, no se puede inactivar.</summary>
-public sealed record StructureUnit(UnitId UnitId, string Code, string Name, bool Active, int CurrentResidents);
+/// unidad como ubicación vigente; mientras haya alguno, no se puede inactivar. BuildingId y FloorId son el edificio y la planta donde está la
+/// unidad (historia 2, script 0029), si los tiene.</summary>
+public sealed record StructureUnit(
+    UnitId UnitId, string Code, string Name, bool Active, int CurrentResidents, Guid? BuildingId = null, string? BuildingName = null,
+    Guid? FloorId = null, string? FloorName = null);
 
 /// <summary>ADM-05: lectura de las unidades del ámbito de quien gestiona, activas e inactivas.</summary>
 public interface ICenterStructureDirectory

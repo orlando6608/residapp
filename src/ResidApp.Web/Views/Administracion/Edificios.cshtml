@@ -1,0 +1,138 @@
+@using ResidApp.Web.Models
+@model BuildingsViewModel
+@{
+    ViewData["Title"] = "Edificios y plantas";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Estructura">Estructura</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Edificios y plantas</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Edificios y plantas</h1>
+<p class="text-muted">
+    Los edificios y sus plantas son del centro y son opcionales: sirven para agrupar las unidades. Una unidad se coloca en un edificio y una
+    planta desde <a asp-action="Estructura">Estructura</a>. Crear o cambiar un edificio o una planta no da acceso a nadie. Nada se borra: se
+    inactiva.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (ViewData.ModelState.IsValid)
+{
+    <form asp-action="NuevoEdificio" method="post" class="card card-body mb-3">
+        <input type="hidden" name="Form.OperacionId" value="@Guid.NewGuid()" />
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-8">
+                <label for="nuevo-edificio" class="form-label">Nuevo edificio</label>
+                <input id="nuevo-edificio" name="Form.Nombre" class="form-control form-control-lg" maxlength="200" autocomplete="off" />
+            </div>
+            <div class="col-12 col-md-4 d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Crear edificio</button>
+            </div>
+        </div>
+    </form>
+
+    @if (Model.Buildings.Count == 0)
+    {
+        <p class="text-muted">El centro todavía no tiene edificios.</p>
+    }
+}
+
+@foreach (var building in Model.Buildings)
+{
+    <section class="card mb-3" aria-labelledby="edificio-@building.BuildingId">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                <h2 class="h5 mb-0" id="edificio-@building.BuildingId">
+                    @building.Name
+                    <span class="badge @(building.Active ? "text-bg-success" : "text-bg-secondary") align-middle">@(building.Active ? "Activo" : "Inactivo")</span>
+                    <span class="text-muted small fw-normal">@building.ActiveUnits unidad(es) activa(s)</span>
+                </h2>
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-action="NombreEdificio" asp-route-edificioId="@building.BuildingId" class="btn btn-outline-primary">Cambiar nombre</a>
+                    <form asp-action="EstadoEdificio" method="post">
+                        <input type="hidden" name="edificioId" value="@building.BuildingId" />
+                        <input type="hidden" name="activo" value="@(building.Active ? "false" : "true")" />
+                        <button type="submit" class="btn @(building.Active ? "btn-outline-danger" : "btn-outline-success")">
+                            @(building.Active ? "Inactivar" : "Reactivar")
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            @if (building.Floors.Count == 0)
+            {
+                <p class="text-muted">Este edificio no tiene plantas.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <caption class="visually-hidden">Plantas de @building.Name</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Planta</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Unidades activas</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var floor in building.Floors)
+                            {
+                                <tr>
+                                    <th scope="row">@floor.Name</th>
+                                    <td><span class="badge @(floor.Active ? "text-bg-success" : "text-bg-secondary")">@(floor.Active ? "Activa" : "Inactiva")</span></td>
+                                    <td>@floor.ActiveUnits</td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a asp-action="NombrePlanta" asp-route-plantaId="@floor.FloorId" class="btn btn-outline-primary">Cambiar nombre</a>
+                                            <form asp-action="EstadoPlanta" method="post">
+                                                <input type="hidden" name="plantaId" value="@floor.FloorId" />
+                                                <input type="hidden" name="activa" value="@(floor.Active ? "false" : "true")" />
+                                                <button type="submit" class="btn @(floor.Active ? "btn-outline-danger" : "btn-outline-success")">
+                                                    @(floor.Active ? "Inactivar" : "Reactivar")
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (building.Active)
+            {
+                <form asp-action="NuevaPlanta" method="post">
+                    <input type="hidden" name="Form.OperacionId" value="@Guid.NewGuid()" />
+                    <input type="hidden" name="Form.EdificioId" value="@building.BuildingId" />
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-8">
+                            <label for="nueva-planta-@building.BuildingId" class="form-label">Nueva planta en @building.Name</label>
+                            <input id="nueva-planta-@building.BuildingId" name="Form.Nombre" class="form-control" maxlength="200" autocomplete="off" />
+                        </div>
+                        <div class="col-12 col-md-4 d-grid">
+                            <button type="submit" class="btn btn-outline-primary">Crear planta</button>
+                        </div>
+                    </div>
+                </form>
+            }
+        </div>
+    </section>
+}
+
+<a asp-action="Estructura" class="btn btn-outline-secondary btn-lg mb-3">Volver a la estructura</a>

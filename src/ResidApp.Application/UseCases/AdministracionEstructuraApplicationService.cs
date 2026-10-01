@@ -21,10 +21,29 @@ public sealed record RenameUnitCommand(Guid AmbitoPerfilId, CenterId CentroId, U
 /// <summary>ADM-05: Activa es el estado que se quiere (false para inactivar, true para reactivar).</summary>
 public sealed record ChangeUnitStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, bool Activa);
 
+/// <summary>Historia 2 (0029): alta de un edificio. OperacionId nace con el formulario y es el id del edificio.</summary>
+public sealed record CreateBuildingCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? Nombre);
+
+public sealed record RenameBuildingCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EdificioId, string? Nombre);
+
+/// <summary>Activo es el estado que se quiere (false para inactivar, true para reactivar).</summary>
+public sealed record ChangeBuildingStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EdificioId, bool Activo);
+
+/// <summary>Historia 2 (0029): alta de una planta en un edificio. OperacionId es el id de la planta.</summary>
+public sealed record CreateFloorCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, Guid EdificioId, string? Nombre);
+
+public sealed record RenameFloorCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid PlantaId, string? Nombre);
+
+public sealed record ChangeFloorStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid PlantaId, bool Activa);
+
+/// <summary>Historia 2: colocar una unidad en un edificio y una planta (EdificioId null la quita del edificio; PlantaId exige edificio).</summary>
+public sealed record SetUnitLocationCommand(Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, Guid? EdificioId, Guid? PlantaId);
+
 /// <summary>Administración, estructura del centro (ADM-05, script 0025) y auditoría administrativa (ADM-28). Como el resto de
 /// Administración, cada caso de uso exige un ámbito activo de Administración y el repositorio lo repite dentro de la transacción.</summary>
 public sealed class AdministracionEstructuraApplicationService(
     AdministrationAccessResolver access, ICenterStructureDirectory structure, ICenterStructureRepository structureWriter,
+    ICenterLayoutDirectory layout, ICenterLayoutRepository layoutWriter,
     IAdministrativeAuditDirectory audit)
 {
     /// <summary>ADM-05: las unidades concedidas al ámbito de quien gestiona, activas e inactivas.</summary>
@@ -57,6 +76,69 @@ public sealed class AdministracionEstructuraApplicationService(
         {
             var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
             await structureWriter.ChangeUnitStatusAsync(grant, command.UnidadId, command.Activa, ct);
+            return true;
+        });
+
+    /// <summary>Historia 2 (0029): los edificios del centro con sus plantas, activos e inactivos.</summary>
+    public Task<ApplicationResult<IReadOnlyList<LayoutBuilding>>> ListBuildingsAsync(AdministracionQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (grant, _) = await access.ResolveAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await layout.ListBuildingsAsync(grant, ct);
+        });
+
+    public Task<ApplicationResult<Guid>> CreateBuildingAsync(CreateBuildingCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            return await layoutWriter.CreateBuildingAsync(grant, command.OperacionId, CenterLayout.ValidateBuildingName(command.Nombre), ct);
+        });
+
+    public Task<ApplicationResult<bool>> RenameBuildingAsync(RenameBuildingCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await layoutWriter.RenameBuildingAsync(grant, command.EdificioId, CenterLayout.ValidateBuildingName(command.Nombre), ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> ChangeBuildingStatusAsync(ChangeBuildingStatusCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await layoutWriter.ChangeBuildingStatusAsync(grant, command.EdificioId, command.Activo, ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<Guid>> CreateFloorAsync(CreateFloorCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            return await layoutWriter.CreateFloorAsync(
+                grant, command.OperacionId, command.EdificioId, CenterLayout.ValidateFloorName(command.Nombre), ct);
+        });
+
+    public Task<ApplicationResult<bool>> RenameFloorAsync(RenameFloorCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await layoutWriter.RenameFloorAsync(grant, command.PlantaId, CenterLayout.ValidateFloorName(command.Nombre), ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> ChangeFloorStatusAsync(ChangeFloorStatusCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await layoutWriter.ChangeFloorStatusAsync(grant, command.PlantaId, command.Activa, ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> SetUnitLocationAsync(SetUnitLocationCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await layoutWriter.SetUnitLocationAsync(grant, command.UnidadId, command.EdificioId, command.PlantaId, ct);
             return true;
         });
 

@@ -1,0 +1,40 @@
+@model ResidApp.Web.Models.RenameLayoutViewModel
+@{
+    ViewData["Title"] = Model.Kind == "edificio" ? "Nombre del edificio" : "Nombre de la planta";
+    var action = Model.Kind == "edificio" ? "NombreEdificio" : "NombrePlanta";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Estructura">Estructura</a></li>
+        <li class="breadcrumb-item"><a asp-action="Edificios">Edificios y plantas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Nombre</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@ViewData["Title"]</h1>
+<p class="text-muted">El cambio de nombre queda en la auditoría y no modifica las ubicaciones históricas.</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="@action" method="post">
+            <input type="hidden" name="Form.Id" value="@Model.Form.Id" />
+            <div class="mb-3">
+                <label asp-for="Form.Nombre" class="form-label"></label>
+                <input asp-for="Form.Nombre" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+            </div>
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Edificios" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Guardar nombre</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

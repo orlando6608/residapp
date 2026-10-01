@@ -146,6 +146,8 @@ builder.Services.AddScoped<MedicinaApplicationService>();
 builder.Services.AddScoped<DireccionApplicationService>();
 builder.Services.AddScoped<AdministrationAccessResolver>();
 builder.Services.AddScoped<AdministracionApplicationService>();
+builder.Services.AddScoped<ICenterLayoutDirectory, SqlCenterLayoutDirectory>();
+builder.Services.AddScoped<ICenterLayoutRepository, SqlCenterLayoutRepository>();
 builder.Services.AddScoped<AdministracionEstructuraApplicationService>();
 builder.Services.AddScoped<AdministracionTurnosApplicationService>();
 builder.Services.AddScoped<PlatformApplicationService>();

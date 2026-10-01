@@ -15,19 +15,24 @@ public sealed class SqlCenterStructureDirectory(SqlConnectionFactory connections
             SELECT unit.id AS UnitId, unit.codigo AS Code, unit.nombre_visible AS Name,
                    CAST(CASE WHEN unit.estado = 'ACTIVE' THEN 1 ELSE 0 END AS BIT) AS Active,
                    (SELECT COUNT(*) FROM dbo.intervalos_ubicacion_residente location
-                     WHERE location.centro_id = unit.centro_id AND location.unidad_id = unit.id AND location.vigente_hasta IS NULL) AS CurrentResidents
+                     WHERE location.centro_id = unit.centro_id AND location.unidad_id = unit.id AND location.vigente_hasta IS NULL) AS CurrentResidents,
+                   unit.edificio_id AS BuildingId, building.nombre_visible AS BuildingName, unit.planta_id AS FloorId, fl.nombre_visible AS FloorName
               FROM dbo.ambitos_perfil profile
               JOIN dbo.centros center ON center.id = profile.centro_id AND center.estado = 'ACTIVE'
               JOIN dbo.cuentas account ON account.id = profile.cuenta_id AND account.estado = 'ACTIVE'
               JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
                    AND unit_scope.centro_id = profile.centro_id AND unit_scope.revocado_en IS NULL
               JOIN dbo.unidades unit ON unit.id = unit_scope.unidad_id AND unit.centro_id = unit_scope.centro_id
+              LEFT JOIN dbo.edificios building ON building.id = unit.edificio_id AND building.centro_id = unit.centro_id
+              LEFT JOIN dbo.plantas fl ON fl.id = unit.planta_id AND fl.centro_id = unit.centro_id
              WHERE profile.id = @ProfileScopeId AND profile.centro_id = @CenterId AND profile.cuenta_id = @AccountId
                AND profile.perfil_codigo = 'ADMINISTRACION' AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
              ORDER BY unit.estado, unit.nombre_visible, unit.codigo
             """, new { access.ProfileScopeId, CenterId = access.CenterId.Value, AccountId = access.AccountId.Value }, cancellationToken: ct));
-        return rows.Select(row => new StructureUnit(UnitId.From(row.UnitId), row.Code, row.Name, row.Active, row.CurrentResidents)).ToList();
+        return rows.Select(row => new StructureUnit(
+            UnitId.From(row.UnitId), row.Code, row.Name, row.Active, row.CurrentResidents, row.BuildingId, row.BuildingName, row.FloorId, row.FloorName)).ToList();
     }
 
-    private sealed record UnitRow(Guid UnitId, string Code, string Name, bool Active, int CurrentResidents);
+    private sealed record UnitRow(
+        Guid UnitId, string Code, string Name, bool Active, int CurrentResidents, Guid? BuildingId, string? BuildingName, Guid? FloorId, string? FloorName);
 }

@@ -280,6 +280,28 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
     conflicto al repetir, accesos denegados), unitarios (`SchedulePlanTests`) y funcionales (`PlanFormModelTests`; la prueba de la pantalla de
     planificación recorre fechas a saltar inválidas, serie, retirada y acceso denegado a Enfermería).
 
+- **Edificios, plantas, habitaciones y plazas (historia 2; script `0029`)** — 2026-10-02. **Fase 1 de 2 hecha: edificios y plantas, y colocar las unidades.**
+  - **Decisiones del usuario (2026-10-02):** este bloque cubre edificios, plantas, habitaciones y plazas (el organigrama queda fuera: ningún
+    documento lo define) y habitación y plaza son opcionales en el alta de residente. Mover a un residente de habitación o plaza es un traslado
+    y espera a CJ.
+  - **Suposiciones aprobadas con el plan:**
+    - edificios y plantas son del centro (como el catálogo de turnos): cualquier Administración del centro los gestiona; nombre único por centro
+      (edificio) y por edificio (planta); habitaciones y plazas serán de una unidad (fase 2);
+    - una unidad puede tener edificio y planta (opcionales); `TR_units_guard` se recreó para permitir cambiarlos (centro, código y fecha de creación
+      siguen inmutables) y `unidades.edificio_id`/`planta_id` tienen ahora claves foráneas compuestas;
+    - nada se borra; inactivar un edificio exige que no tenga plantas ni unidades activas, y una planta, que no tenga unidades activas; reactivar
+      una planta exige el edificio activo; crear una planta, un edificio activo; colocar una unidad exige edificio y planta activos y de ese edificio;
+    - colocar una unidad solo agrupa: no da acceso a nadie ni cambia dónde está ningún residente.
+  - **Qué hace la fase 1:** `/Administracion/Edificios` (crear edificios y plantas, renombrar, inactivar y reactivar), `UbicacionUnidad` (una sola lista
+    «Edificio (sin planta)» / «Edificio · Planta» por unidad) y la columna «Edificio y planta» de Estructura. Auditoría `BUILDING_*`, `FLOOR_*` y
+    `UNIT_LOCATE`.
+  - **Implementación:** script `0029` (las cuatro tablas, sus triggers 50461–50468, claves foráneas de `unidades` y de `intervalos_ubicacion_residente`,
+    e índice único `UX_rli_place_active`; antes de crearlas comprueba que no hay ids huérfanos); `Domain/Structure/CenterLayout.cs`;
+    `ICenterLayoutDirectory`/`ICenterLayoutRepository` con `SqlCenterLayoutDirectory`/`SqlCenterLayoutRepository` (patrón de `SqlCenterStructureRepository`:
+    ámbito repetido, bloqueo del centro, idempotencia por `OperacionId`); métodos en `AdministracionEstructuraApplicationService`; controlador parcial
+    `AdministracionController.Edificios.cs`; vistas `Edificios`, `NombreEstructura` y `UbicacionUnidad`.
+  - **Tests:** `AdministracionEdificiosTests` (integración), `CenterLayoutTests` (unitarios) y `Edificios_…` en `ProfessionalAccountScreensTests` (funcional).
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):

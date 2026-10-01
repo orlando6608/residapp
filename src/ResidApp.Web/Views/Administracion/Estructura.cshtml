@@ -14,8 +14,8 @@
 <h1 class="h3">Estructura del centro</h1>
 <p class="text-muted">
     Unidades concedidas a tu ámbito. Una unidad nueva queda concedida a tu ámbito; después, desde Usuarios, se concede a cada
-    perfil. Crear o cambiar una unidad no da acceso clínico a nadie. Edificios, plantas, habitaciones y plazas llegarán más
-    adelante.
+    perfil. Crear o cambiar una unidad no da acceso clínico a nadie. Los edificios y las plantas son del centro y agrupan las unidades
+    (desde «Edificios y plantas»); las habitaciones y las plazas llegarán más adelante.
 </p>
 @if (TempData["Mensaje"] is string mensaje)
 {
@@ -29,7 +29,10 @@
 
 @if (ViewData.ModelState.IsValid)
 {
-    <a asp-action="NuevaUnidad" class="btn btn-primary btn-lg mb-3">Nueva unidad</a>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a asp-action="NuevaUnidad" class="btn btn-primary btn-lg">Nueva unidad</a>
+        <a asp-action="Edificios" class="btn btn-outline-secondary btn-lg">Edificios y plantas</a>
+    </div>
 }
 
 @if (ViewData.ModelState.IsValid && Model.Count == 0)
@@ -46,6 +49,7 @@ else if (Model.Count > 0)
                     <th scope="col">Nombre</th>
                     <th scope="col">Código</th>
                     <th scope="col">Estado</th>
+                    <th scope="col">Edificio y planta</th>
                     <th scope="col">Residentes ubicados</th>
                     <th scope="col">Acciones</th>
                 </tr>
@@ -59,10 +63,12 @@ else if (Model.Count > 0)
                         <td>
                             <span class="badge @(unit.Active ? "text-bg-success" : "text-bg-secondary")">@(unit.Active ? "Activa" : "Inactiva")</span>
                         </td>
+                        <td>@(unit.BuildingName is null ? "—" : unit.FloorName is null ? unit.BuildingName : $"{unit.BuildingName} · {unit.FloorName}")</td>
                         <td>@unit.CurrentResidents</td>
                         <td>
                             <div class="d-flex flex-wrap gap-2">
                                 <a asp-action="NombreUnidad" asp-route-unidadId="@unit.UnitId.Value" class="btn btn-outline-primary">Cambiar nombre</a>
+                                <a asp-action="UbicacionUnidad" asp-route-unidadId="@unit.UnitId.Value" class="btn btn-outline-primary">Edificio y planta</a>
                                 <form asp-action="EstadoUnidad" method="post">
                                     <input type="hidden" name="unidadId" value="@unit.UnitId.Value" />
                                     <input type="hidden" name="activa" value="@(unit.Active ? "false" : "true")" />
