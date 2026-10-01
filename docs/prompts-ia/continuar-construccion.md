@@ -13,6 +13,37 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Equipos en los seguimientos de Enfermería y Medicina (punto 2 del pendiente de Administración; script `0028`; sin cambios en el seed):** hecho
+  el 2026-10-01 en `main` **sin push** (Azure en `0027`). Antes, en la misma sesión, `AdministracionApplicationService` se dividió en tres
+  (`30509f1`, ya pusheado): `AdministracionApplicationService` (residentes y cuentas), `AdministracionEstructuraApplicationService` (unidades y
+  auditoría) y `AdministracionTurnosApplicationService` (turnos, equipos y planificación), con `AdministrationAccessResolver` compartido. En los
+  tests: `Build`, `BuildEstructura` y `BuildTurnos`.
+  - **Qué hace:** la transferencia de un seguimiento (Enfermería y Medicina) ya no escribe el «equipo o turno entrante» a mano: elige uno de los
+    equipos **activos de la unidad del evento** (`<select>` en `Seguimiento.cshtml` de cada vertical); sin equipos activos, aviso y no se puede
+    transferir (decisión del usuario: «No, siempre un equipo»). El turno planificado no interviene.
+  - **Cómo se guarda:** `equipo_entrante_id` (nullable, FK a `equipos`) más `equipo_entrante` con el nombre copiado al transferir, así el
+    historial, la bandeja y Dirección siguen mostrando el nombre aunque el equipo se renombre o inactive. Las transferencias anteriores conservan
+    su texto y `equipo_entrante_id` NULL. La inserción SQL (`SqlNursingAssessmentRepository`/`SqlMedicalAssessmentRepository`) copia el nombre
+    desde `dbo.equipos` y exige que el equipo sea del centro y la unidad del evento y esté `ACTIVE`; si no, `FOLLOW_UP_TEAM_INVALID`
+    (entrada inválida; la transacción se deshace y la revisión no avanza). El dominio (`FollowUpAction.Transfer`) recibe un id de equipo no vacío.
+  - **Lectura:** `ITransferTeamDirectory`/`SqlTransferTeamDirectory` (reutiliza `SqlChangeInboxDirectory.ScopedEventsFrom`, así el evento tiene que
+    ser visible para el ámbito) y el caso de uso `ListTransferTeams` (exige el perfil del ámbito); `ListTransferTeamsAsync` en
+    `EnfermeriaApplicationService` y `MedicinaApplicationService`. `SeguimientoViewModel` (compartido) lleva `Teams`.
+  - **Pendiente de este bloque:** que la transferencia tenga en cuenta el turno planificado, y que la recepción se limite a miembros del equipo
+    (hoy la confirma cualquiera de Enfermería/Medicina del ámbito). No hay test funcional de la pantalla de seguimiento (ninguno existía; se
+    verificó con curl).
+  - **Verificación:**
+    - suite en verde antes (232, 276 y 48) y después 3 veces (232, 280 y 48), más CI con BD nueva (una vuelta dio 2 fallos de integración y
+      2 min 27 s con 2,8 GB libres; no pude ver cuáles: las cinco vueltas siguientes salieron limpias, así que lo anoto como carga de la
+      máquina, sin explicar) y una BD temporal con los 28 scripts y los seeds dos veces (sin errores, ya borrada);
+    - curl en local: Enfermería (evento nuevo → valoración → seguimiento) con el selector de «Equipo I1/I2 prueba»; sin equipo y con un id
+      inventado, rechazo en español; con equipo, «Transferencia registrada» y «A: Equipo I1 prueba»; recepción confirmada; inactivando los dos
+      equipos desde Administración sale «La unidad del residente no tiene equipos activos» y al reactivarlos vuelve el selector; Medicina (escalado
+      → valoración → seguimiento) igual, con «Equipo I2 prueba»;
+    - tests nuevos: `Transferencia_…` ×2 y `ListTransferTeams_…` (Enfermería) y `SeguimientoMedico_Transferencia_…` (Medicina); los que usaban
+      `EquipoEntrante: "…"` crean ahora un equipo real con `TransferTeamData`.
+  - **Datos de prueba en la base local:** dos eventos de Enfermería/Medicina de prueba («Prueba de transferencia…») en el residente
+    `a1000000-…-000000000002`, con sus transferencias. Copia previa: `ResidApp-antes-0028-20261001.bak`.
 - **Administración, turnos y equipos, primer bloque (historia 4; ADM-14/15/17; script `0027`; sin cambios en el seed):** hecho el
   2026-10-01 en `main`, pusheado y desplegado en Azure (push de `4b3fef4`, run 36913920922 en verde con `build-and-test` y `deploy`, que aplicó `0027`). Dos commits: fase 1 (`838f6f8`, catálogo de turnos, equipos y miembros) y fase 2
   (planificación puntual con conflictos). El script `0027` lleva las cuatro tablas, la de planificación incluida.
@@ -21,8 +52,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     equipo en turnos que se solapan; una persona en dos equipos con turnos que se solapan, con el cruce de medianoche) y Administración decide:
     solo se guarda con una justificación, que queda en las fechas afectadas. Las horas de un turno no cambian nunca. Detalle, decisiones y
     suposiciones en `pendientes-administracion.md`.
-  - **Pendiente de este bloque:** recurrencias y excepciones (ADM-16) y usar los equipos en los seguimientos de Enfermería y Medicina (siguen con
-    texto libre).
+  - **Pendiente de este bloque:** recurrencias y excepciones (ADM-16). Los seguimientos ya usan los equipos (script `0028`, entrada anterior).
   - **Detalle técnico que conviene no redescubrir:**
     - la confirmación de un solapamiento lleva una huella SHA-256 (`ConflictosVistos`) de los que se enseñaron; si cambian, no se confirma;
     - el reenvío de un lote ya guardado enseña «Todas esas fechas ya tienen planificado ese equipo…» (la vista previa corre antes que la
@@ -749,7 +779,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
      un borrador de basal ajeno; el tema 3 es un cambio pequeño en el informe de derivación.
    - `docs/pendientes-cj/traslado-y-baja-residente.html` (preparado el 2026-10-01, 6 respuestas): traslado y baja del
      residente en Administración.
-2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): turnos y equipos (la estructura de unidades ya está hecha; faltan edificios, plantas, habitaciones, plazas y organigrama); después publicaciones,
+2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): turnos recurrentes con excepciones (ADM-16) y la estructura (las unidades ya están hechas; faltan edificios, plantas, habitaciones, plazas y organigrama); después publicaciones,
    citas, auditoría administrativa y panel.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
    (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.

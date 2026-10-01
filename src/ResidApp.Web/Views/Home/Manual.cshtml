@@ -379,8 +379,9 @@
         turnos que cruzan la medianoche se tienen en cuenta), la pantalla te lo enseña con las fechas y las personas. Decides tú:
         puedes cambiar el equipo, el turno o las fechas, o seguir adelante escribiendo una justificación (hasta 500 caracteres) que queda
         anotada en las fechas afectadas. Solo se comparan las planificaciones de las unidades de tu ámbito. Planificar un turno no concede
-        acceso a nada: el acceso sigue dependiendo de los perfiles y las unidades. Los seguimientos de Enfermería y Medicina todavía
-        escriben el equipo o turno entrante a mano.
+        acceso a nada: el acceso sigue dependiendo de los perfiles y las unidades. En los seguimientos de Enfermería y Medicina, la
+        transferencia se hace a uno de estos equipos: elige uno de los equipos activos de la unidad del residente, así que una unidad
+        sin equipos activos no puede transferir hasta que Administración cree uno.
     </p>
 </section>
 
@@ -663,8 +664,8 @@
     <p>
         En la pantalla del seguimiento puedes <strong>registrar una actuación</strong>,
         <strong>reprogramar</strong> (nueva fecha o criterio, siempre con una justificación; el plan anterior
-        queda en el historial) y <strong>transferir al turno entrante</strong>, indicando el equipo o turno
-        (por ejemplo, "turno de noche") y una nota de continuidad. La transferencia queda pendiente hasta que
+        queda en el historial) y <strong>transferir al equipo entrante</strong>, eligiendo uno de los equipos activos de la unidad
+        del residente (los crea Administración) y escribiendo una nota de continuidad. La transferencia queda pendiente hasta que
         alguien pulsa <strong>Confirmar recepción</strong>, y el seguimiento sigue visible mientras tanto.
         Cada acción conserva quién la hizo y cuándo. La valoración no se modifica durante el seguimiento: lo
         nuevo se registra como actuaciones.
@@ -809,7 +810,7 @@
         En la pantalla del seguimiento puedes <strong>registrar una revisión</strong> o
         <strong>reprogramar</strong> (nueva fecha o criterio, con justificación obligatoria). Al terminar tu
         turno decides de forma explícita en el bloque <strong>Al terminar tu turno</strong>:
-        <strong>Transferir</strong> al equipo o turno entrante (lo escribes a mano, con una nota de continuidad)
+        <strong>Transferir</strong> al equipo entrante (eliges uno de los equipos activos de la unidad del residente, con una nota de continuidad)
         o <strong>Conservar</strong> para tu próxima revisión (con una nota opcional). Quien recibe una
         transferencia puede pulsar <strong>Confirmar recepción</strong>, pero no es obligatorio: el seguimiento
         sigue visible y trazable igualmente. Cada acción conserva quién la hizo y cuándo. La valoración médica
@@ -1027,7 +1028,7 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Usar los equipos y turnos en los seguimientos (hoy el equipo es la Enfermería o Medicina de la unidad y el turno entrante se escribe a mano), y los turnos recurrentes con excepciones.</li>
+        <li>Los turnos recurrentes con excepciones, y que el equipo entrante de una transferencia tenga en cuenta el turno planificado.</li>
         <li>Aprobación y publicación de las comunicaciones para familias.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
         <li>Más gestión administrativa: turnos, publicaciones, citas y auditoría.</li>

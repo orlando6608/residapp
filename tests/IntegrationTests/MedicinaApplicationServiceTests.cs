@@ -61,7 +61,8 @@ public class MedicinaApplicationServiceTests
             new CorrectMedicalAssessment(scopes, changeInbox, session, corrections, settings),
             new RectifyAssessment(scopes, changeInbox, session, corrections, settings),
             settings,
-            new ListOpenEvents(scopes, changeInbox, session));
+            new ListOpenEvents(scopes, changeInbox, session),
+            new ListTransferTeams(scopes, session, new SqlTransferTeamDirectory(TestDatabase.ConnectionFactory)));
     }
 
     private static async Task<PendingChangeDetail?> FindAsync(SeededProfile seed, Guid eventId) =>
@@ -702,8 +703,8 @@ public class MedicinaApplicationServiceTests
 
     private static RecordMedicalFollowUpActionCommand FollowUpAction(
         SeededProfile seed, Guid eventId, int revision, FollowUpActionType type, string? text = null, DateOnly? dueDate = null,
-        string? criterion = null, string? incomingTeam = null, Guid? transferId = null) =>
-        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, type, text, dueDate, criterion, incomingTeam, transferId);
+        string? criterion = null, Guid? incomingTeamId = null, Guid? transferId = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, type, text, dueDate, criterion, incomingTeamId, transferId);
 
     private static Task<ApplicationResult<IReadOnlyList<MedicalFollowUpSummary>>> ListFollowUpsAsync(SeededProfile seed) =>
         BuildMedicina(seed.ExternalSubject).ListMedicalFollowUpsAsync(new ListMedicalFollowUpsCommand(seed.ProfileScopeId, seed.CenterId));
@@ -752,6 +753,45 @@ public class MedicinaApplicationServiceTests
     }
 
     [Fact]
+    public async Task SeguimientoMedico_Transferencia_ExigeUnEquipoActivoDeLaUnidad_YGuardaElVinculo()
+    {
+        var (_, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var revision = (await service.StartMedicalFollowUpAsync(StartFollowUp(
+            medica, eventId, await StartAndSaveMedicalAsync(medica, eventId), DateOnly.FromDateTime(DateTime.Today).AddDays(1)))).Value;
+        var teamId = await TransferTeamData.CreateAsync(medica, "Guardia de tarde");
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Medicina);
+        Guid?[] invalid =
+        [
+            await TransferTeamData.CreateAsync(medica, "Inactivo", active: false),
+            await TransferTeamData.CreateAsync(outsider, "De otro centro"),
+            Guid.NewGuid(),
+            null,
+        ];
+
+        var listed = (await service.ListTransferTeamsAsync(new ListTransferTeamsQuery(medica.ProfileScopeId, medica.CenterId, eventId))).Value!;
+        var rejected = new List<ApplicationResult<int>>();
+        foreach (var team in invalid)
+        {
+            rejected.Add(await service.RecordMedicalFollowUpActionAsync(FollowUpAction(
+                medica, eventId, revision, FollowUpActionType.Transferencia, "Nota.", incomingTeamId: team)));
+        }
+
+        var accepted = await service.RecordMedicalFollowUpActionAsync(FollowUpAction(
+            medica, eventId, revision, FollowUpActionType.Transferencia, "Nota.", incomingTeamId: teamId));
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("UPDATE dbo.equipos SET nombre_visible = 'Renombrado despues' WHERE id = @teamId", new { teamId });
+
+        Assert.Equal(new TransferTeam(teamId, "Guardia de tarde"), Assert.Single(listed));
+        Assert.All(rejected, r => Assert.Equal(ApplicationFailureCode.InvalidInput, r.Error!.Code));
+        Assert.True(accepted.Ok, accepted.Error?.Message);
+        Assert.Equal(teamId, await connection.ExecuteScalarAsync<Guid>(
+            "SELECT a.equipo_entrante_id FROM dbo.seguimiento_medico_acciones a JOIN dbo.seguimientos_medicos s ON s.id = a.seguimiento_id WHERE s.evento_id = @eventId AND a.tipo_codigo = 'TRANSFERENCIA'",
+            new { eventId }));
+        Assert.Equal("Guardia de tarde", (await FindAsync(medica, eventId))!.Medical.FollowUp!.Tracking.PendingTransfer!.IncomingTeam);
+    }
+
+    [Fact]
     public async Task SeguimientoMedico_Acciones_ConservanAutoria_YLaRecepcionEsOpcional()
     {
         var (_, _, medica, eventId) = await SeedEscalatedAsync();
@@ -770,7 +810,7 @@ public class MedicinaApplicationServiceTests
         revision = keptWithoutNote.Value;
         var transferWithoutTeam = await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Transferencia, "Nota."));
         revision = (await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Transferencia,
-            "Revisar el informe y decidir antibiótico.", incomingTeam: "Guardia de noche"))).Value;
+            "Revisar el informe y decidir antibiótico.", incomingTeamId: await TransferTeamData.CreateAsync(medica, "Guardia de noche")))).Value;
 
         Assert.Equal(ApplicationFailureCode.Conflict, staleNote.Error!.Code);
         Assert.Equal(ApplicationFailureCode.InvalidInput, rescheduleWithoutReason.Error!.Code);

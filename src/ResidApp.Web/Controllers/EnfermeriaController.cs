@@ -852,7 +852,7 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service, F
             return RedirectToAction(nameof(DetalleCambio), new { eventoId });
         }
 
-        return View(new SeguimientoViewModel(detail, null));
+        return View(new SeguimientoViewModel(detail, null, await TransferTeamsAsync(detail.EventId, ct)));
     }
 
     [HttpPost]
@@ -870,13 +870,13 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service, F
         }
         if (!ModelState.IsValid)
         {
-            return View(new SeguimientoViewModel(detail, form));
+            return View(new SeguimientoViewModel(detail, form, await TransferTeamsAsync(detail.EventId, ct)));
         }
 
         var activeScope = ActiveProfileScopeCookie.Read(Request)!;
         var result = await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Tipo,
-            form.Texto, form.FechaPrevista, form.Criterio, form.EquipoEntrante, form.TransferenciaId), ct);
+            form.Texto, form.FechaPrevista, form.Criterio, form.EquipoEntranteId, form.TransferenciaId), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = form.Tipo switch
@@ -895,12 +895,12 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service, F
             ApplicationFailureCode.InvalidInput => form.Tipo switch
             {
                 FollowUpActionType.Reprogramacion => "Para reprogramar indica una nueva fecha o criterio y justifica el cambio.",
-                FollowUpActionType.Transferencia => "Para transferir indica el equipo o turno entrante.",
+                FollowUpActionType.Transferencia => "Para transferir elige un equipo de la unidad del residente.",
                 _ => "Escribe la actuación antes de registrarla.",
             },
             _ => result.Error.Message,
         });
-        return View(new SeguimientoViewModel(detail, form));
+        return View(new SeguimientoViewModel(detail, form, await TransferTeamsAsync(detail.EventId, ct)));
     }
 
     /// <summary>ENF-07A: resumen de la valoración y decisión explícita de comunicación familiar
@@ -1186,5 +1186,14 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service, F
         var findResult = await service.FindScopeResidentAsync(
             new FindScopeResidentCommand(activeScope.ProfileScopeId, centroId, ResidentId.From(residenteId)), ct);
         return !findResult.Ok || findResult.Value is null ? null : (activeScope, findResult.Value);
+    }
+
+    /// <summary>Los equipos activos de la unidad del evento, para elegir el entrante de una transferencia; sin ellos, no se puede transferir.</summary>
+    private async Task<IReadOnlyList<TransferTeam>> TransferTeamsAsync(Guid eventId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.ListTransferTeamsAsync(
+            new ListTransferTeamsQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), eventId), ct);
+        return result.Value ?? [];
     }
 }

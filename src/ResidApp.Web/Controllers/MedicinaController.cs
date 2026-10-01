@@ -665,7 +665,7 @@ public sealed class MedicinaController(
             return RedirectToAction(nameof(Escalado), new { eventoId });
         }
 
-        return View(new SeguimientoViewModel(detail, null));
+        return View(new SeguimientoViewModel(detail, null, await TransferTeamsAsync(detail.EventId, ct)));
     }
 
     [HttpPost]
@@ -683,13 +683,13 @@ public sealed class MedicinaController(
         }
         if (!ModelState.IsValid)
         {
-            return View(new SeguimientoViewModel(detail, form));
+            return View(new SeguimientoViewModel(detail, form, await TransferTeamsAsync(detail.EventId, ct)));
         }
 
         var activeScope = ActiveProfileScopeCookie.Read(Request)!;
         var result = await service.RecordMedicalFollowUpActionAsync(new RecordMedicalFollowUpActionCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Tipo,
-            form.Texto, form.FechaPrevista, form.Criterio, form.EquipoEntrante, form.TransferenciaId), ct);
+            form.Texto, form.FechaPrevista, form.Criterio, form.EquipoEntranteId, form.TransferenciaId), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = form.Tipo switch
@@ -709,13 +709,13 @@ public sealed class MedicinaController(
             ApplicationFailureCode.InvalidInput => form.Tipo switch
             {
                 FollowUpActionType.Reprogramacion => "Para reprogramar indica una nueva fecha o criterio y justifica el cambio.",
-                FollowUpActionType.Transferencia => "Para transferir indica el equipo o turno entrante.",
+                FollowUpActionType.Transferencia => "Para transferir elige un equipo de la unidad del residente.",
                 FollowUpActionType.Conservacion => "La nota es demasiado larga.",
                 _ => "Escribe la revisión antes de registrarla.",
             },
             _ => result.Error.Message,
         });
-        return View(new SeguimientoViewModel(detail, form));
+        return View(new SeguimientoViewModel(detail, form, await TransferTeamsAsync(detail.EventId, ct)));
     }
 
     /// <summary>MED-07: formulario de una indicación a Enfermería.</summary>
@@ -1026,5 +1026,14 @@ public sealed class MedicinaController(
         var findResult = await service.FindScopeResidentAsync(new FindScopeResidentCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), SystemProfile.Medicina), ct);
         return !findResult.Ok || findResult.Value is null ? null : (activeScope, findResult.Value);
+    }
+
+    /// <summary>Los equipos activos de la unidad del evento, para elegir el entrante de una transferencia; sin ellos, no se puede transferir.</summary>
+    private async Task<IReadOnlyList<TransferTeam>> TransferTeamsAsync(Guid eventId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await service.ListTransferTeamsAsync(
+            new ListTransferTeamsQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), eventId), ct);
+        return result.Value ?? [];
     }
 }

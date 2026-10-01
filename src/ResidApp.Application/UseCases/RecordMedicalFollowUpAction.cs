@@ -7,7 +7,7 @@ namespace ResidApp.Application.UseCases;
 
 public sealed record RecordMedicalFollowUpActionCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId, int Revision, FollowUpActionType Tipo,
-    string? Texto = null, DateOnly? FechaPrevista = null, string? Criterio = null, string? EquipoEntrante = null,
+    string? Texto = null, DateOnly? FechaPrevista = null, string? Criterio = null, Guid? EquipoEntranteId = null,
     Guid? TransferenciaId = null);
 
 /// <summary>
@@ -28,7 +28,7 @@ public sealed class RecordMedicalFollowUpAction(
                 FollowUpActionType.Actuacion => FollowUpAction.Note(command.Texto),
                 FollowUpActionType.Reprogramacion => FollowUpAction.Reschedule(
                     new FollowUpPlan(command.FechaPrevista, command.Criterio), command.Texto),
-                FollowUpActionType.Transferencia => FollowUpAction.Transfer(command.EquipoEntrante, command.Texto),
+                FollowUpActionType.Transferencia => FollowUpAction.Transfer(command.EquipoEntranteId, command.Texto),
                 FollowUpActionType.Conservacion => FollowUpAction.Keep(command.Texto),
                 FollowUpActionType.Recepcion => FollowUpAction.Receive(command.TransferenciaId ?? Guid.Empty),
                 _ => throw new DomainValidationException("FOLLOW_UP_ACTION_INVALID"),

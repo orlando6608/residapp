@@ -231,11 +231,13 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
 
         var inserted = await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.seguimiento_medico_acciones
-                (id, seguimiento_id, tipo_codigo, texto, fecha_prevista, criterio, equipo_entrante, transferencia_id,
+                (id, seguimiento_id, tipo_codigo, texto, fecha_prevista, criterio, equipo_entrante, equipo_entrante_id, transferencia_id,
                  registrado_por_cuenta_id, registrado_en)
-            SELECT @Id, s.id, @TypeCode, @Text, @DueDate, @Criterion, @IncomingTeam, @TransferId, @AccountId, @OccurredAt
+            SELECT @Id, s.id, @TypeCode, @Text, @DueDate, @Criterion, q.nombre_visible, q.id, @TransferId, @AccountId, @OccurredAt
               FROM dbo.seguimientos_medicos s WITH (FORCESEEK)
-             WHERE s.evento_id = @EventId
+              JOIN dbo.eventos_asistenciales ea ON ea.id = s.evento_id
+              LEFT JOIN dbo.equipos q ON q.id = @IncomingTeamId AND q.centro_id = ea.centro_id AND q.unidad_id = ea.unidad_id AND q.estado = 'ACTIVE'
+             WHERE s.evento_id = @EventId AND (@IncomingTeamId IS NULL OR q.id IS NOT NULL)
                AND (@TransferId IS NULL OR EXISTS (
                    SELECT 1 FROM dbo.seguimiento_medico_acciones t
                     WHERE t.id = @TransferId AND t.seguimiento_id = s.id AND t.tipo_codigo = 'TRANSFERENCIA'
@@ -243,11 +245,12 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
             """, new
         {
             Id = Guid.NewGuid(), TypeCode = action.Type.ToCode(), action.Text, action.Plan?.DueDate, action.Plan?.Criterion,
-            action.IncomingTeam, action.TransferId, AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId,
+            action.IncomingTeamId, action.TransferId, AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId,
         }, transaction, cancellationToken: ct));
         if (inserted != 1)
         {
-            throw new DomainValidationException("FOLLOW_UP_TRANSFER_NOT_PENDING");
+            // Una transferencia nueva no lleva TransferId: si no se inserta, el equipo no es activo ni de la unidad del evento.
+            throw new DomainValidationException(action.Type == FollowUpActionType.Transferencia ? "FOLLOW_UP_TEAM_INVALID" : "FOLLOW_UP_TRANSFER_NOT_PENDING");
         }
 
         var actionCode = action.Type switch

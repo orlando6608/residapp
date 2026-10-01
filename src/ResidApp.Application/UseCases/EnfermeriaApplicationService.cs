@@ -1,5 +1,6 @@
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
+using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
@@ -22,7 +23,7 @@ public sealed class EnfermeriaApplicationService(
     ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory, ReadResidentTimeline readResidentTimeline,
     CorrectNursingAssessment correctNursingAssessment, RectifyAssessment rectifyAssessment,
     AssessmentCorrectionSettings correctionSettings, ListOpenEscalations listOpenEscalations,
-    ListOpenEvents listOpenEvents)
+    ListOpenEvents listOpenEvents, ListTransferTeams listTransferTeams)
 {
     /// <summary>COR-01: ventana de corrección, para ofrecer corregir o rectificar en el detalle.</summary>
     public TimeSpan CorrectionWindow => correctionSettings.Window;
@@ -97,6 +98,10 @@ public sealed class EnfermeriaApplicationService(
     public Task<ApplicationResult<IReadOnlyList<FollowUpSummary>>> ListFollowUpsAsync(
         ListFollowUpsCommand command, CancellationToken ct = default) =>
         listFollowUps.ExecuteAsync(command, ct);
+
+    /// <summary>ENF-09: los equipos activos de la unidad del evento, para elegir el entrante de una transferencia.</summary>
+    public Task<ApplicationResult<IReadOnlyList<TransferTeam>>> ListTransferTeamsAsync(ListTransferTeamsQuery query, CancellationToken ct = default) =>
+        listTransferTeams.ExecuteAsync(query, SystemProfile.Enfermeria, ct);
 
     public Task<ApplicationResult<IReadOnlyList<OpenEscalationSummary>>> ListOpenEscalationsAsync(
         ListOpenEscalationsCommand command, CancellationToken ct = default) =>

@@ -38,8 +38,9 @@ public class FollowUpTests
         Assert.Equal("Tolera la dieta.", FollowUpAction.Note(" Tolera la dieta. ").Text);
         var reschedule = FollowUpAction.Reschedule(new FollowUpPlan(Today, null), "Sigue con tos.");
         Assert.Equal(Today, reschedule.Plan!.DueDate);
-        var transfer = FollowUpAction.Transfer(" Turno de noche ", "  ");
-        Assert.Equal("Turno de noche", transfer.IncomingTeam);
+        var teamId = Guid.NewGuid();
+        var transfer = FollowUpAction.Transfer(teamId, "  ");
+        Assert.Equal(teamId, transfer.IncomingTeamId);
         Assert.Null(transfer.Text);
         var kept = FollowUpAction.Keep("  ");
         Assert.Equal(FollowUpActionType.Conservacion, kept.Type);
@@ -52,7 +53,7 @@ public class FollowUpTests
         () => FollowUpAction.Note(" "),
         () => FollowUpAction.Reschedule(new FollowUpPlan(Today, null), null),
         () => FollowUpAction.Transfer(null, "Nota."),
-        () => FollowUpAction.Transfer(new string('a', FollowUpAction.MaxIncomingTeamLength + 1), null),
+        () => FollowUpAction.Transfer(Guid.Empty, null),
         () => FollowUpAction.Receive(Guid.Empty),
         () => FollowUpAction.Note(new string('a', FollowUpAction.MaxTextLength + 1)),
         () => FollowUpAction.Keep(new string('a', FollowUpAction.MaxTextLength + 1)),

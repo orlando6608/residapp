@@ -281,10 +281,10 @@ Huecos de lo ya construido:
   - **Pendiente de CJ:** confirmar si el campo "Comunicaciones" de la valoración debe quedar fuera del
     informe, como se hace hoy por prudencia (DER-04). Preguntado en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 3).
 
-- **Seguimiento (historia 4)**: los equipos y turnos ya existen en Administración (desde el 2026-10-01) pero los seguimientos aún no los usan. El equipo
-  responsable es la Enfermería de la unidad del evento y el equipo o turno entrante de una transferencia es
-  texto libre; cuando existan turnos reales habrá que sustituirlo. La fecha prevista es solo fecha (sin
-  hora) y vence al día siguiente.
+- **Seguimiento (historia 4)**: desde el 2026-10-01 (script `0028`) el equipo entrante de una transferencia se elige entre los equipos activos de la unidad
+  del evento (los crea Administración) y se guarda su vínculo y su nombre; ya no es texto libre, y sin equipos activos no se puede transferir. Las
+  transferencias anteriores conservan su texto. El equipo responsable sigue siendo la Enfermería de la unidad del evento. La fecha prevista es solo
+  fecha (sin hora) y vence al día siguiente.
 - **Comunicación familiar (historia 3)**: solo se guarda la comunicación preparada, pendiente de
   aprobación. Quedan para Portal Familiar / Administración: aprobarla o volver a editarla (ENF-15), la
   audiencia autorizada (ENF-14), el momento de publicación y la publicación. `comunicaciones_familiares`

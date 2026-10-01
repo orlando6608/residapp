@@ -110,6 +110,8 @@ builder.Services.AddScoped<RecordFollowUpAction>();
 builder.Services.AddScoped<ListFollowUps>();
 builder.Services.AddScoped<ListOpenEscalations>();
 builder.Services.AddScoped<ListOpenEvents>();
+builder.Services.AddScoped<ListTransferTeams>();
+builder.Services.AddScoped<ITransferTeamDirectory, SqlTransferTeamDirectory>();
 builder.Services.AddScoped<EscalateClinicalEvent>();
 builder.Services.AddScoped<ListPendingIndications>();
 builder.Services.AddScoped<RecordIndicationProgress>();

@@ -36,7 +36,7 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   criterio. El evento pasa a EN_SEGUIMIENTO_MEDICO, sale de Escalados y entra en la bandeja compartida
   `/Medicina/Seguimientos` (MED-11; tarjeta del inicio con contador y vencidos). En `/Medicina/Seguimiento`
   se puede registrar una revisión, reprogramar con justificación y, al terminar el turno, decidir
-  explícitamente entre transferir al equipo o turno entrante (texto libre y nota) y conservarlo para la
+  explícitamente entre transferir a un equipo entrante de la unidad (elegido de la lista y nota) y conservarlo para la
   próxima revisión propia (nota opcional). La recepción de una transferencia es opcional (MED-12). "Resolver"
   vuelve a la conducta: cerrar o registrar una indicación, que pasa el evento a CON_INDICACION_PENDIENTE y
   termina el seguimiento. **Decisiones del usuario (2026-09-29):** un solo seguimiento médico por evento;
@@ -149,5 +149,6 @@ Huecos de lo ya construido:
 - Derivación a Urgencias: los mismos huecos que en Enfermería (firmante sin nombre, sin corrección del
   informe; el contacto familiar se precarga con el contacto urgente designado, pero se guarda como texto); ver
   `pendientes-enfermeria.md`.
-- **Seguimiento médico (historia 5)**: los equipos y turnos ya existen en Administración (desde el 2026-10-01) pero el seguimiento médico aún no los usa. El
-  equipo o turno entrante es texto libre y la fecha prevista es solo fecha, sin hora, como en Enfermería.
+- **Seguimiento médico (historia 5)**: desde el 2026-10-01 (script `0028`) el equipo entrante de una transferencia se elige entre los equipos activos de
+  la unidad del evento, como en Enfermería (sin equipos activos no se puede transferir; las transferencias anteriores conservan su texto). La fecha
+  prevista es solo fecha, sin hora, como en Enfermería.

@@ -53,17 +53,17 @@ public enum FollowUpActionType
 public sealed record FollowUpAction
 {
     public const int MaxTextLength = 2000;
-    public const int MaxIncomingTeamLength = 100;
 
     public FollowUpActionType Type { get; }
     public string? Text { get; }
     public FollowUpPlan? Plan { get; }
-    public string? IncomingTeam { get; }
+    /// <summary>El equipo entrante de una transferencia: el id de un equipo (script 0028); su nombre lo copia la base al guardar.</summary>
+    public Guid? IncomingTeamId { get; }
     public Guid? TransferId { get; }
 
-    private FollowUpAction(FollowUpActionType type, string? text, FollowUpPlan? plan, string? incomingTeam, Guid? transferId)
+    private FollowUpAction(FollowUpActionType type, string? text, FollowUpPlan? plan, Guid? incomingTeamId, Guid? transferId)
     {
-        if (text is { Length: > MaxTextLength } || incomingTeam is { Length: > MaxIncomingTeamLength })
+        if (text is { Length: > MaxTextLength })
         {
             throw new DomainValidationException("FOLLOW_UP_ACTION_INVALID");
         }
@@ -71,7 +71,7 @@ public sealed record FollowUpAction
         Type = type;
         Text = text;
         Plan = plan;
-        IncomingTeam = incomingTeam;
+        IncomingTeamId = incomingTeamId;
         TransferId = transferId;
     }
 
@@ -82,8 +82,9 @@ public sealed record FollowUpAction
     public static FollowUpAction Reschedule(FollowUpPlan plan, string? justification) =>
         new(FollowUpActionType.Reprogramacion, Required(justification), plan, null, null);
 
-    public static FollowUpAction Transfer(string? incomingTeam, string? note) =>
-        new(FollowUpActionType.Transferencia, VitalSigns.Normalize(note), null, Required(incomingTeam), null);
+    public static FollowUpAction Transfer(Guid? incomingTeamId, string? note) =>
+        new(FollowUpActionType.Transferencia, VitalSigns.Normalize(note), null,
+            incomingTeamId is { } id && id != Guid.Empty ? id : throw new DomainValidationException("FOLLOW_UP_ACTION_INVALID"), null);
 
     /// <summary>MED-12 "conservar para mi próxima revisión", con una nota opcional.</summary>
     public static FollowUpAction Keep(string? note) =>

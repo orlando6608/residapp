@@ -269,9 +269,8 @@ public sealed class SeguimientoAccionFormModel
     [Display(Name = "Nuevo criterio")]
     public string? Criterio { get; set; }
 
-    [StringLength(FollowUpAction.MaxIncomingTeamLength)]
-    [Display(Name = "Equipo o turno entrante")]
-    public string? EquipoEntrante { get; set; }
+    [Display(Name = "Equipo entrante")]
+    public Guid? EquipoEntranteId { get; set; }
 
     public Guid? TransferenciaId { get; set; }
 }
@@ -306,7 +305,8 @@ public sealed record IniciarSeguimientoViewModel(PendingChangeDetail Event, Inic
 
 /// <summary>ENF-08/ENF-09: el seguimiento del evento y, tras un error, lo escrito en el formulario que
 /// falló (Form.Tipo) para no perderlo.</summary>
-public sealed record SeguimientoViewModel(PendingChangeDetail Event, SeguimientoAccionFormModel? Form)
+public sealed record SeguimientoViewModel(
+    PendingChangeDetail Event, SeguimientoAccionFormModel? Form, IReadOnlyList<TransferTeam> Teams)
 {
     public SeguimientoAccionFormModel FormFor(FollowUpActionType tipo) =>
         Form is { } form && form.Tipo == tipo

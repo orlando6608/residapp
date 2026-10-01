@@ -173,7 +173,7 @@ public class DireccionSupervisionTests
         revision = (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, followUp, revision))).Value;
         revision = (await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
             enfermera.ProfileScopeId, enfermera.CenterId, followUp, revision, FollowUpActionType.Transferencia,
-            "Revisar a las 8.", EquipoEntrante: "Turno de noche"))).Value;
+            "Revisar a las 8.", EquipoEntranteId: await TransferTeamData.CreateAsync(enfermera, "Turno de noche")))).Value;
         var transfer = (await DetailAsync(companera, followUp)).FollowUp!.PendingTransfer!;
         Assert.True((await BuildService(companera.ExternalSubject).RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
             companera.ProfileScopeId, companera.CenterId, followUp, revision, FollowUpActionType.Recepcion,

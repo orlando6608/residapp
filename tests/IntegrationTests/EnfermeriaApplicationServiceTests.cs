@@ -64,7 +64,8 @@ public class EnfermeriaApplicationServiceTests
             new RectifyAssessment(scopes, changeInbox, session, corrections, settings),
             settings,
             new ListOpenEscalations(scopes, changeInbox, session),
-            new ListOpenEvents(scopes, changeInbox, session));
+            new ListOpenEvents(scopes, changeInbox, session),
+            new ListTransferTeams(scopes, session, new SqlTransferTeamDirectory(TestDatabase.ConnectionFactory)));
     }
 
     /// <summary>Un residente en la unidad de dos profesionales de Enfermería y un evento propio de la
@@ -511,7 +512,7 @@ public class EnfermeriaApplicationServiceTests
             "Persiste la tos.", new DateOnly(2030, 2, 1)))).Value;
         revision = (await mine.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
             enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Transferencia,
-            "Revisar a las 8.", EquipoEntrante: "Turno de noche"))).Value;
+            "Revisar a las 8.", EquipoEntranteId: await TransferTeamData.CreateAsync(enfermera, "Turno de noche")))).Value;
 
         var pending = (await DetailAsync(companera, eventId)).FollowUp!;
         Assert.Equal(new DateOnly(2030, 2, 1), pending.DueDate);
@@ -580,6 +581,82 @@ public class EnfermeriaApplicationServiceTests
     }
 
     [Fact]
+    public async Task Transferencia_ConEquipoDeLaUnidad_GuardaElVinculoYElNombreCopiado()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var service = BuildService(enfermera.ExternalSubject);
+        revision = (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision))).Value;
+        var teamId = await TransferTeamData.CreateAsync(enfermera, "Equipo de noche");
+        await TransferTeamData.CreateAsync(enfermera, "Equipo inactivo", active: false);
+
+        var listed = (await service.ListTransferTeamsAsync(new ListTransferTeamsQuery(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
+        var transfer = await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Transferencia, "Revisar a las 8.",
+            EquipoEntranteId: teamId));
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("UPDATE dbo.equipos SET nombre_visible = 'Renombrado despues' WHERE id = @teamId", new { teamId });
+
+        Assert.Equal(new TransferTeam(teamId, "Equipo de noche"), Assert.Single(listed));
+        Assert.True(transfer.Ok, transfer.Error?.Message);
+        Assert.Equal(teamId, await connection.ExecuteScalarAsync<Guid>(
+            "SELECT a.equipo_entrante_id FROM dbo.seguimiento_acciones a JOIN dbo.seguimientos s ON s.id = a.seguimiento_id WHERE s.evento_id = @eventId AND a.tipo_codigo = 'TRANSFERENCIA'",
+            new { eventId }));
+        Assert.Equal("Equipo de noche", (await DetailAsync(enfermera, eventId)).FollowUp!.PendingTransfer!.IncomingTeam);
+    }
+
+    [Fact]
+    public async Task Transferencia_ConEquipoInactivoAjenoInexistenteOSinEquipo_SeRechazaSinAvanzarLaRevision()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var service = BuildService(enfermera.ExternalSubject);
+        revision = (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision))).Value;
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+        Guid?[] invalid =
+        [
+            await TransferTeamData.CreateAsync(enfermera, "Inactivo", active: false),
+            await TransferTeamData.CreateAsync(outsider, "De otro centro"),
+            Guid.NewGuid(),
+            Guid.Empty,
+            null,
+        ];
+
+        var results = new List<ApplicationResult<int>>();
+        foreach (var team in invalid)
+        {
+            results.Add(await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+                enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Transferencia, "Nota.",
+                EquipoEntranteId: team)));
+        }
+
+        Assert.All(results, r => Assert.Equal(ApplicationFailureCode.InvalidInput, r.Error!.Code));
+        // La revisión no avanzó: la misma sigue valiendo.
+        Assert.True((await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Actuacion, "Sigue igual."))).Ok);
+    }
+
+    [Fact]
+    public async Task ListTransferTeams_ConAuxiliarOFueraDeAmbito_NoEntregaEquipos()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        await TransferTeamData.CreateAsync(enfermera, "Equipo de noche");
+        var auxiliar = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, enfermera.CenterId, enfermera.UnitId);
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+
+        var byAuxiliar = await BuildService(auxiliar.ExternalSubject).ListTransferTeamsAsync(
+            new ListTransferTeamsQuery(auxiliar.ProfileScopeId, auxiliar.CenterId, eventId));
+        var byOutsider = await BuildService(outsider.ExternalSubject).ListTransferTeamsAsync(
+            new ListTransferTeamsQuery(outsider.ProfileScopeId, outsider.CenterId, eventId));
+        var foreignScope = await BuildService(outsider.ExternalSubject).ListTransferTeamsAsync(
+            new ListTransferTeamsQuery(enfermera.ProfileScopeId, enfermera.CenterId, eventId));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byAuxiliar.Error!.Code);
+        Assert.Empty(byOutsider.Value!);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, foreignScope.Error!.Code);
+    }
+
+    [Fact]
     public async Task Seguimiento_LaBaseDeDatosRechazaModificarloYSaltosDeEstado()
     {
         var (enfermera, _, eventId) = await SeedOwnEventAsync();
@@ -593,7 +670,7 @@ public class EnfermeriaApplicationServiceTests
         var service = BuildService(enfermera.ExternalSubject);
         revision = (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision))).Value;
         await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
-            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Transferencia, EquipoEntrante: "Tarde"));
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Transferencia, EquipoEntranteId: await TransferTeamData.CreateAsync(enfermera, "Tarde")));
 
         foreach (var (sql, expected) in new[]
         {

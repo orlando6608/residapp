@@ -180,9 +180,23 @@
                     <input type="hidden" name="Form.Tipo" value="@FollowUpActionType.Transferencia" />
                     <h3 class="h6">Transferir al equipo entrante</h3>
                     <div class="mb-3">
-                        <label for="transferir-equipo" class="form-label">Equipo o turno entrante</label>
-                        <input id="transferir-equipo" name="Form.EquipoEntrante" class="form-control form-control-lg" maxlength="@FollowUpAction.MaxIncomingTeamLength"
-                               value="@transferencia.EquipoEntrante" placeholder="Por ejemplo, guardia de noche" />
+                        <label for="transferir-equipo" class="form-label">Equipo entrante</label>
+                        @if (Model.Teams.Count == 0)
+                        {
+                            <p class="text-muted mb-0" id="transferir-equipo">
+                                La unidad del residente no tiene equipos activos. Pide a Administración que cree uno para poder transferir.
+                            </p>
+                        }
+                        else
+                        {
+                            <select id="transferir-equipo" name="Form.EquipoEntranteId" class="form-select form-select-lg">
+                                <option value="">Elige un equipo</option>
+                                @foreach (var team in Model.Teams)
+                                {
+                                    <option value="@team.TeamId" selected="@(team.TeamId == transferencia.EquipoEntranteId)">@team.Name</option>
+                                }
+                            </select>
+                        }
                     </div>
                     <label for="transferir-nota" class="form-label">Nota de continuidad</label>
                     <textarea id="transferir-nota" name="Form.Texto" class="form-control mb-3" rows="3">@transferencia.Texto</textarea>

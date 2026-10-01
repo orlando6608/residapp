@@ -1,5 +1,6 @@
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
+using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
@@ -24,7 +25,8 @@ public sealed class MedicinaApplicationService(
     FindScopeResident findScopeResident, RegisterClinicalEvent registerClinicalEvent,
     ListClosedEvents listClosedEvents, ReadBaselineHistory readBaselineHistory, ReadResidentTimeline readResidentTimeline,
     CorrectMedicalAssessment correctMedicalAssessment, RectifyAssessment rectifyAssessment,
-    AssessmentCorrectionSettings correctionSettings, ListOpenEvents listOpenEvents)
+    AssessmentCorrectionSettings correctionSettings, ListOpenEvents listOpenEvents,
+    ListTransferTeams listTransferTeams)
 {
     /// <summary>COR-01: ventana de corrección, para ofrecer corregir o rectificar en el detalle.</summary>
     public TimeSpan CorrectionWindow => correctionSettings.Window;
@@ -127,6 +129,10 @@ public sealed class MedicinaApplicationService(
     public Task<ApplicationResult<int>> RecordMedicalFollowUpActionAsync(
         RecordMedicalFollowUpActionCommand command, CancellationToken ct = default) =>
         recordMedicalFollowUpAction.ExecuteAsync(command, ct);
+
+    /// <summary>MED-12: los equipos activos de la unidad del evento, para elegir el entrante de una transferencia.</summary>
+    public Task<ApplicationResult<IReadOnlyList<TransferTeam>>> ListTransferTeamsAsync(ListTransferTeamsQuery query, CancellationToken ct = default) =>
+        listTransferTeams.ExecuteAsync(query, SystemProfile.Medicina, ct);
 
     public Task<ApplicationResult<IReadOnlyList<MedicalFollowUpSummary>>> ListMedicalFollowUpsAsync(
         ListMedicalFollowUpsCommand command, CancellationToken ct = default) =>

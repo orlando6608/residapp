@@ -265,7 +265,7 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
-2. **Turnos recurrentes con excepciones (ADM-16), usar equipos y turnos en los seguimientos, y el resto de la estructura (historia 2: edificios, plantas, habitaciones, plazas y organigrama, ADM-06/ADM-07):** los equipos y turnos ya existen; faltaría sustituir el «equipo o turno entrante» en texto libre de los seguimientos de Enfermería y Medicina.
+2. **Turnos recurrentes con excepciones (ADM-16) y el resto de la estructura (historia 2: edificios, plantas, habitaciones, plazas y organigrama, ADM-06/ADM-07).** El equipo entrante de los seguimientos ya se elige entre los equipos de la unidad (script `0028`, 2026-10-01).
 3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8) y panel completo (10).**
 
 Huecos de lo ya construido:
@@ -276,8 +276,8 @@ Huecos de lo ya construido:
 - **Inactivar una unidad:** se comprueba que no tenga ubicaciones vigentes dentro de la transacción, pero un alta de residente que
   llegue a la vez no se bloquea (el alta autoriza la unidad antes, y la clave foránea no mira el estado). Es una carrera muy
   estrecha; si importa, habrá que comprobar el estado de la unidad al insertar la ubicación.
-- **Turnos y equipos:** sin recurrencias ni excepciones (ADM-16): cada fecha se planifica expresamente. Los seguimientos siguen escribiendo el
-  equipo o turno entrante a mano. Inactivar un equipo o un turno no retira lo ya planificado. Un equipo o turno ya usado no se corrige (las horas
+- **Turnos y equipos:** sin recurrencias ni excepciones (ADM-16): cada fecha se planifica expresamente. Los seguimientos ya eligen el equipo entrante entre los equipos de la unidad (`0028`), pero no miran el turno planificado.
+  Inactivar un equipo o un turno no retira lo ya planificado. Un equipo o turno ya usado no se corrige (las horas
   no cambian: se crea otro). La planificación no se edita: se retira y se vuelve a planificar. La vista solo enseña dos semanas, sin cuadrícula
   semanal ni vista por persona. Los conflictos se calculan entre unidades del ámbito de quien planifica; otra Administración con otro ámbito
   puede planificar sin ver lo de este.
