@@ -14,9 +14,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 - **Administración, bloque 1: residentes, ficha administrativa y corrección de identidad (ADM-01 a ADM-03, RES-01,
-  RES-03, RES-04; script `0021`; cambia el seed):** hecho el 2026-10-01, con commit en `main` **sin push**. El push aplica
-  `0021` y el seed (cuenta `dev-integrado-administracion`) en Azure SQL. Después, comprueba el pipeline y prueba en Azure
-  con esa cuenta, corrigiendo un residente nuevo dado de alta para eso, nunca Residente Integrado Uno.
+  RES-03, RES-04; script `0021`; cambia el seed):** hecho el 2026-10-01 y desplegado en Azure (push de `c650ba2`, run
+  36833525743 en verde con `build-and-test` y `deploy`, que aplicó `0021` y el seed).
+  - **Prueba en Azure (2026-10-01)** con `dev-integrado-administracion` (ámbito único, se selecciona solo):
+    - inicio, lista (2 residentes integrados) y «DÓS» encuentra solo a Residente Integrado Dos;
+    - ficha de Residente Integrado Dos con su intervalo de ubicación y sin correcciones;
+    - alta de «prueba correccion identidad azure (ficticio)» (`4dec3da0-c937-4a35-bf4f-0cf1540380f1`, «No consta») y
+      corrección a Mujer con motivo; sin motivo y sin cambios se rechaza, y el reenvío da conflicto;
+    - la primera corrección guardó «Correcci%F3n» porque curl en Git Bash envió las tildes en Latin-1 (fallo del envío de
+      prueba, no de la app). Una segunda corrección enviada en UTF-8 desde fichero la dejó en «Prueba Corrección Identidad
+      Azure (ficticio)»; la ficha muestra las dos. Para probar con tildes por curl, pasa el valor con `--data-urlencode
+      "campo@fichero"`.
+
+    `dev-integrado-enfermeria`, `-medicina`, `-auxiliar` y `-direccion` reciben «No se puede acceder a esta operación» en
+    la lista, la ficha y el formulario.
   - **Qué hace:** `/Administracion` (inicio), `/Administracion/Residentes` (lista con edad, sexo, unidad y fecha de alta,
     con búsqueda y filtro), `/Administracion/Residente` (ficha con historial de ubicación y de correcciones) y
     `/Administracion/CorregirIdentidad` (con motivo obligatorio). Sin basal ni contenido clínico.
@@ -474,7 +485,10 @@ usuario cuando encajen:
   periodo con días locales y `SupervisionIndicatorRules` agrupa por la fecha UTC. Un hecho entre las 00:00 y las 02:00
   de España cuenta en el día (y a fin de mes, en el mes) anterior. Detectado el 2026-10-01; pendiente de corregir
   (convertir los límites del periodo a UTC y agrupar por la fecha local).
-- **Alta de residente:** el formulario pide el identificador de la unidad a mano (no hay selector de unidades).
+- **Alta de residente:** el formulario pide el identificador de la unidad a mano (no hay selector de unidades), y
+  `UnidadId` llega precargado con `00000000-0000-0000-0000-000000000000` y el mensaje de obligatorio en inglés («The Unidad
+  field is required.»). En Azure, el identificador de la unidad integrada (`0f73bfdc-27e9-49a7-945d-d8c0681779dd`) se ve en
+  los enlaces de `/Direccion` con `dev-integrado-direccion`.
 - **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
   abiertos: tos productiva.», en valoración médica, que se dejó como ejemplo de la lista de escalados. El
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de
