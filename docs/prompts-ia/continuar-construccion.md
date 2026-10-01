@@ -14,9 +14,18 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 - **Administración, bloque 2: familiares, autorizaciones y contacto urgente (historia 3; ADM-08 a ADM-11 del wireframe,
-  FAM-01; script `0022`; sin cambios en el seed):** hecho el 2026-10-01, con commit en `main` **sin push**. El push aplica
-  `0022` en Azure SQL. Después, comprueba el pipeline y prueba en Azure con `dev-integrado-administracion` sobre un residente
-  nuevo dado de alta para eso, nunca Residente Integrado Uno.
+  FAM-01; script `0022`; sin cambios en el seed):** hecho el 2026-10-01 y desplegado en Azure (push de `380552b`, run
+  36855312637 en verde con `build-and-test` y `deploy`, que aplicó `0022`).
+  - **Prueba en Azure (2026-10-01)** con `dev-integrado-administracion` sobre «Prueba familiares azure (ficticio)», dado de
+    alta para eso:
+    - Lucía (el reenvío del alta no la duplica) y Tomás añadidos, sin autorización;
+    - autorización de Lucía: activar antes de abrir rechazado, abrir, activar hasta el 31/12/2026, suspender sin motivo
+      rechazado, suspender, reactivar y suspender con número antiguo (conflicto); queda **Activa**;
+    - contacto urgente: Lucía, repetido (rechazado), Tomás, número antiguo (conflicto); queda **Tomás**, con su teléfono
+      editado a 622 555 666.
+
+    `dev-integrado-enfermeria`, `-medicina`, `-auxiliar` y `-direccion` reciben «No se puede acceder a esta operación» en las
+    cuatro pantallas, sin ver datos del familiar, y su POST de suspensión no cambia nada.
   - **Qué hace:** sección «Familiares» y «Contacto urgente» en la ficha administrativa; pantallas Añadir/Editar familiar,
     Autorización (Pendiente → Activa → Suspendida / Revocada / Caducada, con historial) y Contacto urgente. Nada da acceso
     todavía: el Portal Familiar no existe. Detalle, decisiones y suposiciones en `pendientes-administracion.md`.
