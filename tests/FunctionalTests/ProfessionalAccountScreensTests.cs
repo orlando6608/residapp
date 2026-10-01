@@ -202,6 +202,47 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         return subject;
     }
 
+    [Fact]
+    public async Task Auditoria_MuestraLaAccionEnEspañol_IgnoraFiltrosMalFormados_YEnfermeriaNoEntra()
+    {
+        var admin = await SeedAdministratorAsync();
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = admin.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+        var emptyPage = WebUtility.HtmlDecode(await client.GetStringAsync("/Administracion/Auditoria"));
+        var newPage = await client.GetStringAsync("/Administracion/NuevaUnidad");
+        (await client.PostAsync("/Administracion/NuevaUnidad", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(newPage, "__RequestVerificationToken"),
+            ["Form.OperacionId"] = ExtractValue(newPage, "Form.OperacionId"),
+            ["Form.Codigo"] = $"aud-{Guid.NewGuid():N}"[..14],
+            ["Form.Nombre"] = "Unidad de la auditoría (ficticia)",
+        }))).EnsureSuccessStatusCode();
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync("/Administracion/Auditoria"));
+        var malformed = WebUtility.HtmlDecode(await client.GetStringAsync("/Administracion/Auditoria?desde=xyz&hasta=2026-99-99&accion=HACK&cuenta=nope"));
+        var filtered = WebUtility.HtmlDecode(await client.GetStringAsync("/Administracion/Auditoria?accion=ACCOUNT_CREATE"));
+        var reversed = WebUtility.HtmlDecode(await client.GetStringAsync("/Administracion/Auditoria?desde=2026-10-01&hasta=2026-09-01"));
+        var nursePage = await PageAsync("ENFERMERIA", null, "/Administracion/Auditoria");
+
+        Assert.Contains("Auditoría administrativa", emptyPage);
+        Assert.Contains("Ningún evento coincide con la búsqueda.", emptyPage);
+        Assert.Contains("Unidad creada", page);
+        Assert.Contains("Unidad de la auditoría (ficticia)", page);
+        Assert.Contains("<optgroup label=\"Estructura del centro\">", page);
+        Assert.DoesNotContain(">UNIT_CREATE<", page);
+        Assert.Contains("Unidad creada", malformed);
+        Assert.DoesNotContain("The ", malformed);
+        Assert.Contains("Ningún evento coincide con la búsqueda.", filtered);
+        Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", reversed);
+        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.DoesNotContain("<table", nursePage);
+    }
+
     private static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
 

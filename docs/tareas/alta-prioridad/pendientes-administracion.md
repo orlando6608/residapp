@@ -1,6 +1,6 @@
 # Pendientes del vertical Administración
 
-Estado al 2026-10-01 (tras el bloque 5 y el perfil de plataforma). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
+Estado al 2026-10-01 (tras el bloque 5, el perfil de plataforma y la auditoría). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
 No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pantallas/wireframes-funcionales/administracion.md).
 
 ## Hecho
@@ -201,13 +201,35 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
   - **Tests:** `PlataformaCentrosTests` (integración, incluido el recorrido del administrador nuevo y la denegación en los demás
     servicios), `NewCenterTests` (unitarios) y `Plataforma_CreaUnCentro_…` en `ProfessionalAccountScreensTests` (funcional).
 
+- **Auditoría administrativa (historia 9; ADM-28 / AUD-01 a AUD-03; sin script)** — 2026-10-01.
+  - **Qué hace:** `/Administracion/Auditoria` lista, del más reciente al más antiguo, las acciones administrativas del centro del ámbito
+    con cuándo, qué, quién la hizo y con qué perfil, y la cuenta afectada, la unidad y el residente si constan. Se filtra por periodo, tipo de
+    acción y cuenta afectada.
+  - **Decisiones del usuario (2026-10-01):**
+    - solo eventos administrativos, con una lista cerrada de acciones en código (los clínicos no salen);
+    - lista filtrable sin totales: filtros por periodo, tipo de acción y cuenta afectada; nada de contadores por persona, orden ni filtro
+      por actor (AUD-02: la auditoría no es un ranking de trabajadores).
+  - **Suposiciones aprobadas con el plan:**
+    - acciones incluidas, por código y sea cual sea el perfil que las hizo: cuentas, perfiles y permisos (concesiones y revocaciones de
+      perfil, unidad, residente y permiso), estructura (`CENTER_CREATE` y las de unidades) y residentes y familias (alta, corrección de
+      identidad, familiares, autorizaciones y contacto urgente). Fuera: las clínicas, `CLINICAL_DETAIL_READ` y `REFERENCE_RANGES_UPDATE`;
+    - ámbito («COND ámbito» de la matriz): el centro del ámbito activo y, en los eventos con unidad, las unidades concedidas al ámbito;
+    - periodo por defecto de 30 días, máximo 366, y como mucho 500 filas con aviso;
+    - consultar la auditoría no se audita (AUD-01 no lo pide).
+  - **Implementación:** sin script (`IX_audit_scope_time` cubre el acceso por centro y fecha). `Domain/Audit/AdministrativeAudit.cs`;
+    `Ports/IAdministrativeAuditDirectory.cs`; `SqlAdministrativeAuditDirectory` (una consulta que repite el ámbito de Administración,
+    limita a la lista y resuelve los nombres con `LEFT JOIN`); `AdministracionApplicationService.ListAuditAsync`. Los tipos de la
+    lectura no tienen texto libre ni contadores. Etiquetas en `AuditActionDisplay`.
+  - **Tests:** `AdministracionAuditoriaTests` (integración, con el test por reflexión de AUD-02 y el de solo inserción),
+    `AdministrativeAuditTests` (unitarios), `AuditActionDisplayTests` y `Auditoria_Muestra…` en `ProfessionalAccountScreensTests` (funcionales).
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
 2. **Turnos y equipos (historia 4), y el resto de la estructura (historia 2: edificios, plantas, habitaciones, plazas y organigrama, ADM-06/ADM-07):** los turnos sustituirían el «equipo o turno entrante» en texto libre de los seguimientos.
-3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8), auditoría administrativa (9) y panel completo (10).**
+3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8) y panel completo (10).**
 
 Huecos de lo ya construido:
 
@@ -217,6 +239,9 @@ Huecos de lo ya construido:
 - **Inactivar una unidad:** se comprueba que no tenga ubicaciones vigentes dentro de la transacción, pero un alta de residente que
   llegue a la vez no se bloquea (el alta autoriza la unidad antes, y la clave foránea no mira el estado). Es una carrera muy
   estrecha; si importa, habrá que comprobar el estado de la unidad al insertar la ubicación.
+- **Auditoría:** solo cubre las acciones que existen hoy. Las de horarios, citas y retiradas de publicaciones se añadirán a la lista cerrada
+  cuando se construyan. No se audita la propia consulta, ni hay exportación. Los eventos de acciones sin unidad (cuentas y perfiles) los
+  ve cualquier Administración del centro, aunque la cuenta afectada tenga unidades de otro ámbito.
 - **Estructura:** no hay forma de conceder una unidad ya existente a otro ámbito de Administración ni de ver las del centro que no
   estén en el ámbito propio; el organigrama (ADM-07) y los cargos tampoco existen.
 - **Niveles de ubicación:** los intervalos admiten edificio, planta, habitación y plaza, pero no hay tablas ni pantallas para ellos

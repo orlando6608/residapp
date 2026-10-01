@@ -2,6 +2,7 @@ using ResidApp.Application.Authorization;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Audit;
 using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
 using ResidApp.Domain.Structure;
@@ -68,6 +69,11 @@ public sealed record ChangeAccountProfileResidentCommand(
 
 /// <summary>ADM-05 (0025): alta de una unidad. OperacionId nace con el formulario y es el id de la unidad, así que un reenvío
 /// no la duplica.</summary>
+/// <summary>ADM-28: la auditoría administrativa de un periodo (días de la hora local del servidor, ambos incluidos). Accion, si
+/// se da, es una de AdministrativeAudit.Actions; Cuenta filtra por la cuenta afectada, nunca por quien actuó (AUD-02).</summary>
+public sealed record ListAdministrativeAuditQuery(
+    Guid AmbitoPerfilId, CenterId CentroId, DateOnly From, DateOnly To, string? Accion = null, AccountId? Cuenta = null);
+
 public sealed record CreateUnitCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? Codigo, string? Nombre);
 
 public sealed record RenameUnitCommand(Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, string? Nombre);
@@ -95,7 +101,7 @@ public sealed class AdministracionApplicationService(
     IProfileScopeDirectoryProvider scopes, IAdministracionResidentDirectory directory, ISessionIdentityProvider session,
     IAuthorizationEvidenceProvider evidenceProvider, IResidentIdentityRepository identities, IResidentFamilyRepository families,
     IProfessionalAccountDirectory accountDirectory, IProfessionalAccountRepository accounts, ICenterStructureDirectory structure,
-    ICenterStructureRepository structureWriter)
+    ICenterStructureRepository structureWriter, IAdministrativeAuditDirectory audit)
 {
     public Task<ApplicationResult<IReadOnlyList<AdministrativeResidentSummary>>> ListResidentsAsync(
         AdministracionQuery query, CancellationToken ct = default) =>
@@ -304,6 +310,22 @@ public sealed class AdministracionApplicationService(
             var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
             await structureWriter.ChangeUnitStatusAsync(access, command.UnidadId, command.Activa, ct);
             return true;
+        });
+
+    /// <summary>ADM-28: los eventos administrativos del ámbito, del más reciente al más antiguo. Un periodo imposible o una acción
+    /// que no es administrativa es entrada inválida.</summary>
+    public Task<ApplicationResult<AuditPage>> ListAuditAsync(ListAdministrativeAuditQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            if (query.From > query.To || query.To.DayNumber - query.From.DayNumber + 1 > SupervisionIndicatorRules.MaxPeriodDays
+                || query.Accion is not null && !AdministrativeAudit.IsAdministrative(query.Accion))
+            {
+                throw new DomainValidationException("APPLICATION_INPUT_INVALID");
+            }
+
+            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
+            return await audit.ListAsync(access, new AdministrativeAuditQuery(fromUtc, toExclusiveUtc, query.Accion, query.Cuenta), ct);
         });
 
     /// <summary>Un perfil concedible con al menos una unidad, sin repetir.</summary>

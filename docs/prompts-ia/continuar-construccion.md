@@ -13,8 +13,28 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Administración, auditoría administrativa (historia 9, ADM-28 / AUD-01 a AUD-03; sin script):** hecho el 2026-10-01 en `main`
+  **sin push** (Azure en `0026`).
+  - **Qué hace:** `/Administracion/Auditoria` (tarjeta «Auditoría» del inicio) lista, del más reciente al más antiguo, las acciones
+    administrativas del centro del ámbito (cuentas, perfiles y permisos, estructura, residentes y familias) con cuándo, qué, quién y con
+    qué perfil, y la cuenta afectada, la unidad y el residente si constan. Filtros por periodo (30 días por defecto, máximo 366), tipo de
+    acción y cuenta afectada; nunca por quien actuó ni con contadores (AUD-02). Como mucho 500 filas, con aviso. Los eventos con unidad
+    solo salen si la unidad está concedida al ámbito. Detalle, decisiones y suposiciones en `pendientes-administracion.md`.
+  - **Lista cerrada** (`Domain/Audit/AdministrativeAudit.cs`): una acción nueva no aparece hasta añadirla allí **y** a
+    `AuditActionDisplay` (un test comprueba que todas tengan etiqueta). Quedan fuera las clínicas, `CLINICAL_DETAIL_READ` y
+    `REFERENCE_RANGES_UPDATE`.
+  - **Verificación:**
+    - suite en verde antes (196, 251 y 43) y después 3 veces (207, 259 y 46), más 3 vueltas tipo CI con BD nueva (no hay script, así
+      que no hizo falta BD temporal);
+    - curl en local con `dev-integrado-administracion`: en el periodo por defecto salen 20 tipos de acción administrativa (altas de
+      residente, autorizaciones, contacto urgente, permisos, unidades, cuentas…) y ninguno clínico ni con código interno, aunque la
+      base tiene unos 97 mil eventos de auditoría; el filtro por acción, el periodo sin eventos, el periodo imposible y los filtros mal
+      formados responden bien; `dev-integrado-enfermeria`, `-medicina`, `-auxiliar` y `-direccion` reciben «No se puede acceder a esta
+      operación»;
+    - `AdministracionAuditoriaTests` (incluido el test por reflexión de AUD-02) comprueban que los tipos de la lectura no tienen texto libre, contadores ni
+      filtro por actor.
 - **Perfil de plataforma: alta de un centro nuevo (script `0026`; seed `dev_seed_plataforma.sql`; ADR
-  `docs/decisiones-arquitectura/0006-perfil-plataforma.md`):** hecho el 2026-10-01 en `main` **sin push** (Azure sigue en `0024`).
+  `docs/decisiones-arquitectura/0006-perfil-plataforma.md`):** hecho el 2026-10-01 y desplegado en Azure (push de `4029380`, run 36902277867 en verde con `build-and-test` y `deploy`, que aplicó `0026` y el seed: `dev-plataforma` existe en Azure; no se ha probado la pantalla allí).
   - **Qué hace:** séptimo perfil, `PLATAFORMA`, con `/Plataforma`: lista de centros y «Nuevo centro», que crea en una transacción el
     centro, su primera unidad, la cuenta de su primer administrador y su ámbito de Administración con la unidad concedida. El
     operador pertenece a un centro reservado «Plataforma» (`5F3A1C00-0000-4000-8000-000000000001`), porque `ambitos_perfil.centro_id`
@@ -42,7 +62,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     Hay además centros `FUNC-CENTER-…` de los tests funcionales, que no se limpian.
   - Copia previa: `ResidApp-antes-0026-20261001.bak`.
 - **Administración, bloque 5: estructura del centro, unidades (ADM-05; historia 2, primer bloque; script `0025`; sin cambios
-  en el seed):** hecho el 2026-10-01 en `main` **sin push** (Azure sigue en `0024`).
+  en el seed):** hecho el 2026-10-01 y desplegado en Azure (push de `0a48f3f`, mismo run 36902277867, que aplicó `0025`).
   - **Qué hace:** `/Administracion/Estructura` lista las unidades concedidas al ámbito de Administración (activas e
     inactivas, con código, estado y residentes ubicados), con «Nueva unidad», «Cambiar nombre» e «Inactivar»/«Reactivar». Una
     unidad nueva se concede al ámbito de quien la crea; una con residentes ubicados no se inactiva; código y nombre no se
@@ -636,7 +656,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   valoración médica, indicaciones, cierre médico, seguimiento médico con continuidad entre turnos, protocolo
   urgente, derivación a Urgencias, evento propio y basal con permiso) y 9 (con la misma salvedad que la 11).
 - La base local `ResidApp` tiene los scripts `0001` a `0026` registrados en `dbo.scripts_aplicados`
-  (en Azure, hasta `0024`; `0025` y `0026` aún no se han subido). Hay copias previas a `0016` … `0026` en
+  (en Azure, hasta `0026`). Hay copias previas a `0016` … `0026` en
   `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\` (`ResidApp-antes-0016-20260929.bak`,
   `ResidApp-antes-0017-20260929.bak`, `ResidApp-antes-0018-20260929.bak`, `ResidApp-antes-0019-20260930.bak`,
   `ResidApp-antes-0020-20260930.bak`, `ResidApp-antes-0021-20261001.bak`, `ResidApp-antes-0022-20261001.bak`,
@@ -672,7 +692,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 196 unitarios, 251 de integración y 43 funcionales, todos en verde.
+- Suite: 207 unitarios, 259 de integración y 46 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en

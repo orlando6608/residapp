@@ -1,0 +1,115 @@
+@using ResidApp.Web.Models
+@model AuditViewModel
+@{
+    ViewData["Title"] = "Auditoría administrativa";
+    var filtered = Model.Filter.Desde is not null || Model.Filter.Hasta is not null || Model.Filter.Cuenta is not null
+        || ResidApp.Domain.Audit.AdministrativeAudit.IsAdministrative(Model.Filter.Accion);
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Auditoría</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Auditoría administrativa</h1>
+<p class="text-muted">
+    Quién hizo qué y cuándo en cuentas, perfiles, permisos, estructura, residentes y familias de tu ámbito. El registro no se puede
+    modificar ni borrar, no contiene texto clínico y no sirve para comparar a las personas: solo se filtra por periodo, tipo de acción y
+    cuenta afectada. Las acciones clínicas no aparecen.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form method="get" asp-action="Auditoria" class="card card-body mb-3">
+    <div class="row g-3">
+        <div class="col-12 col-md-3">
+            <label for="desde" class="form-label">Desde</label>
+            <input id="desde" name="desde" type="date" class="form-control form-control-lg" value="@Model.From.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-12 col-md-3">
+            <label for="hasta" class="form-label">Hasta</label>
+            <input id="hasta" name="hasta" type="date" class="form-control form-control-lg" value="@Model.To.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-12 col-md-3">
+            <label for="accion" class="form-label">Tipo de acción</label>
+            <select id="accion" name="accion" class="form-select form-select-lg">
+                <option value="">Todas</option>
+                @foreach (var group in AuditActionDisplay.Groups())
+                {
+                    <optgroup label="@group.Category">
+                        @foreach (var action in group.Actions)
+                        {
+                            <option value="@action.Code" selected="@(action.Code == Model.Filter.Accion)">@action.Label</option>
+                        }
+                    </optgroup>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-3">
+            <label for="cuenta" class="form-label">Cuenta afectada</label>
+            <select id="cuenta" name="cuenta" class="form-select form-select-lg">
+                <option value="">Todas</option>
+                @foreach (var account in Model.Accounts)
+                {
+                    <option value="@account.AccountId.Value" selected="@(account.AccountId.Value == Model.Filter.Cuenta)">@ProfessionalAccountDisplay.Name(account)</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="d-grid d-md-flex justify-content-md-end gap-2 mt-3">
+        @if (filtered)
+        {
+            <a asp-action="Auditoria" class="btn btn-outline-secondary btn-lg">Limpiar</a>
+        }
+        <button type="submit" class="btn btn-primary btn-lg">Buscar</button>
+    </div>
+</form>
+
+@if (Model.Page is { } page)
+{
+    @if (page.Truncated)
+    {
+        <div class="alert alert-warning">
+            Hay más de @ResidApp.Application.Ports.AuditPage.MaxEntries eventos en este periodo: se muestran los más recientes.
+            Acota el periodo o el tipo de acción para ver el resto.
+        </div>
+    }
+
+    @if (page.Entries.Count == 0)
+    {
+        <p class="text-muted">Ningún evento coincide con la búsqueda.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <caption class="visually-hidden">Eventos de auditoría administrativa, del más reciente al más antiguo</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Fecha y hora</th>
+                        <th scope="col">Acción</th>
+                        <th scope="col">Hecha por</th>
+                        <th scope="col">Cuenta afectada</th>
+                        <th scope="col">Unidad</th>
+                        <th scope="col">Residente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in page.Entries)
+                    {
+                        <tr>
+                            <td>@entry.OccurredAt.LocalDateTime.ToString("g")</td>
+                            <th scope="row">@AuditActionDisplay.Label(entry.Action)</th>
+                            <td>@entry.ActorName <span class="text-muted">(@SystemProfileDisplay.Label(entry.ActorProfile))</span></td>
+                            <td>@(entry.AffectedName ?? "—")</td>
+                            <td>@(entry.UnitName ?? "—")</td>
+                            <td>@(entry.ResidentName ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}

@@ -403,7 +403,7 @@ public sealed class SqlProfessionalAccountRepository(SqlConnectionFactory connec
 
     /// <summary>Quien gestiona sigue teniendo su ámbito de Administración vigente, con la cuenta y el centro activos.</summary>
     internal static async Task EnsureAdministratorAsync(
-        SqlConnection connection, SqlTransaction transaction, AccountAdministrationAccess access, CancellationToken ct)
+        SqlConnection connection, SqlTransaction? transaction, AccountAdministrationAccess access, CancellationToken ct)
     {
         var allowed = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
             SELECT COUNT(*)

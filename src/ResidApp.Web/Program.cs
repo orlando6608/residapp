@@ -54,6 +54,7 @@ builder.Services.AddScoped<ICenterStructureDirectory, SqlCenterStructureDirector
 builder.Services.AddScoped<ICenterStructureRepository, SqlCenterStructureRepository>();
 builder.Services.AddScoped<IPlatformCenterDirectory, SqlPlatformCenterDirectory>();
 builder.Services.AddScoped<IPlatformCenterRepository, SqlPlatformCenterRepository>();
+builder.Services.AddScoped<IAdministrativeAuditDirectory, SqlAdministrativeAuditDirectory>();
 builder.Services.AddScoped<INursingAssessmentRepository, SqlNursingAssessmentRepository>();
 builder.Services.AddScoped<IMedicalAssessmentRepository, SqlMedicalAssessmentRepository>();
 builder.Services.AddScoped<IMedicalIndicationRepository, SqlMedicalIndicationRepository>();

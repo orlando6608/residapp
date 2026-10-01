@@ -733,6 +733,38 @@ public sealed class AdministracionController(AdministracionApplicationService se
             conflict: "Los residentes asignados han cambiado desde que abriste la pantalla. Revisa los vigentes.");
     }
 
+    /// <summary>ADM-28: auditoría administrativa. Un valor mal formado en la URL se ignora; un periodo imposible se explica.</summary>
+    public async Task<IActionResult> Auditoria(AuditFilter filtro, CancellationToken ct)
+    {
+        ModelState.Clear();
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var period = filtro.Period();
+        var (from, to) = period.Resolve(today);
+        var accounts = (await service.ListAccountsAsync(Query(activeScope), ct)).Value ?? [];
+        if (period.Validate(today) is { } periodError)
+        {
+            ModelState.AddModelError(string.Empty, periodError);
+            return View(new AuditViewModel(filtro, from, to, null, accounts));
+        }
+
+        var result = await service.ListAuditAsync(new ListAdministrativeAuditQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to,
+            ResidApp.Domain.Audit.AdministrativeAudit.IsAdministrative(filtro.Accion) ? filtro.Accion : null,
+            filtro.Cuenta is { } account ? AccountId.From(account) : null), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+        }
+
+        return View(new AuditViewModel(filtro, from, to, result.Value, accounts));
+    }
+
     /// <summary>ADM-05 (0025): las unidades concedidas al ámbito de Administración, con alta, renombrado e inactivación.</summary>
     public async Task<IActionResult> Estructura(CancellationToken ct)
     {
