@@ -13,8 +13,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **«Firmar borrador de basal» en el Inicio por permiso (sin script):** hecho el 2026-10-01, en `main` sin push. La
+  tarjeta sale a Enfermería y Medicina solo con `BASELINE_INITIAL_COMPLETE` o `BASELINE_REEVALUATE` (firmar exige uno u
+  otro según el motivo del borrador). Test `Inicio_FirmarBorradorDeBasal_SoloConUnPermisoDeBasal` (falla sin el cambio);
+  suite en verde 3 veces (174, 233 y 37); curl en local: `dev-multi` (Enfermería o Medicina, sin permisos) no la ve y
+  `dev-integrado-enfermeria`, `dev-integrado-medicina` y `dev-prueba-enfermeria-nueva` sí.
 - **Administración, bloque 4: permisos configurables (historia 4; script `0024`; sin cambios en el seed) e Inicio por
-  permiso:** hecho el 2026-10-01, en `main` sin push.
+  permiso:** hecho el 2026-10-01 y desplegado en Azure (push de `d6629b3`, run 36880340272 en verde). En Azure, con
+  `dev-integrado-administracion` sobre `prueba-azure-usuarios-b3` (Enfermería): sus tres permisos salen «no concedidos»;
+  conceder «Dar de alta residentes» la hace aparecer en su Inicio; repetirlo avisa del conflicto; `CLINICAL_DETAIL_READ`
+  se rechaza; revocarlo la quita y deja el permiso en «Revocado». Quedó sin permisos.
   - **Qué hace:** sección «Permisos» en la pantalla de cada perfil, con el catálogo de ese perfil (Enfermería: alta,
     basal inicial y reevaluación; Medicina: basal inicial, reevaluación y rangos; Dirección: lectura clínica detallada y
     rangos) y «Conceder»/«Revocar». El Inicio solo enseña «Alta de residente» y «Rangos de referencia» con el permiso.
@@ -604,7 +612,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 174 unitarios, 233 de integración y 35 funcionales, todos en verde.
+- Suite: 174 unitarios, 233 de integración y 37 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -630,9 +638,10 @@ Se detectaron durante otros bloques. No se han corregido porque quedaban fuera d
 usuario cuando encajen:
 
 - **Inicio y permisos:** desde el bloque 4 de Administración, «Alta de residente» y «Rangos de referencia» solo salen con
-  el permiso. «Firmar borrador de basal» sigue saliendo a toda Enfermería y Medicina, aunque la cuenta no tenga los
-  permisos de basal. Si cambian las reglas de perfiles o permisos de una pantalla, revisa también los `@if` de
-  `Views/Home/Index.cshtml`.
+  el permiso, y «Firmar borrador de basal» con el de basal inicial o el de reevaluar (2026-10-01). Si cambian las reglas
+  de perfiles o permisos de una pantalla, revisa también los `@if` de `Views/Home/Index.cshtml`.
+- **Formulario de alta sin el permiso:** `GET /Residents/Create` abre el formulario a Enfermería aunque no tenga
+  `RESIDENT_IDENTITY_CREATE`; el permiso se comprueba al enviarlo, que se deniega. Visto en Azure el 2026-10-01.
 - **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
   abiertos: tos productiva.», en valoración médica, que se dejó como ejemplo de la lista de escalados. El
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de

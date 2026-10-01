@@ -52,7 +52,9 @@ else
             </a>
         </div>
     }
-    @if (perfil is SystemProfile.Enfermeria or SystemProfile.Medicina)
+    @if (perfil is SystemProfile.Enfermeria or SystemProfile.Medicina
+         && (permisos.Contains(ResidApp.Domain.Accounts.ProfilePermissions.BaselineInitialComplete)
+             || permisos.Contains(ResidApp.Domain.Accounts.ProfilePermissions.BaselineReevaluate)))
     {
         <div class="col-12 col-md-4">
             <a asp-controller="Baseline" asp-action="Sign" class="card text-decoration-none h-100">

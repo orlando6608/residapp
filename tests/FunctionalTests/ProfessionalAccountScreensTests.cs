@@ -82,25 +82,38 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     [Fact]
     public async Task Inicio_EnfermeriaSoloVeElAltaDeResidenteConElPermiso()
     {
-        async Task<string> HomeAsync(string? permission)
-        {
-            var nurse = await SeedAdministratorAsync("ENFERMERIA", permission);
-            var client = _factory.CreateClient();
-            var loginPage = await client.GetStringAsync("/DevAuth/Login");
-            (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-                ["externalSubject"] = nurse.ExternalSubject,
-            }))).EnsureSuccessStatusCode();
-            return WebUtility.HtmlDecode(await client.GetStringAsync("/"));
-        }
-
-        var without = await HomeAsync(null);
-        var with = await HomeAsync(ProfilePermissions.ResidentIdentityCreate);
+        var without = await HomeAsync("ENFERMERIA", null);
+        var with = await HomeAsync("ENFERMERIA", ProfilePermissions.ResidentIdentityCreate);
 
         Assert.All(new[] { without, with }, page => Assert.Contains("<h2 class=\"h5 card-title\">Enfermería</h2>", page));
         Assert.DoesNotContain("Alta de residente", without);
         Assert.Contains("Alta de residente", with);
+    }
+
+    [Theory]
+    [InlineData("ENFERMERIA", ProfilePermissions.BaselineInitialComplete)]
+    [InlineData("MEDICINA", ProfilePermissions.BaselineReevaluate)]
+    public async Task Inicio_FirmarBorradorDeBasal_SoloConUnPermisoDeBasal(string profileCode, string permission)
+    {
+        var without = await HomeAsync(profileCode, null);
+        var with = await HomeAsync(profileCode, permission);
+
+        Assert.DoesNotContain("Firmar borrador de basal", without);
+        Assert.Contains("Firmar borrador de basal", with);
+    }
+
+    /// <summary>El Inicio, ya decodificado, de una cuenta nueva con un ámbito del perfil indicado y, si se pide, un permiso.</summary>
+    private async Task<string> HomeAsync(string profileCode, string? permission)
+    {
+        var account = await SeedAdministratorAsync(profileCode, permission);
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = account.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+        return WebUtility.HtmlDecode(await client.GetStringAsync("/"));
     }
 
     /// <summary>Una cuenta con un ámbito del perfil indicado (por defecto Administración) en un centro y una unidad nuevos y,

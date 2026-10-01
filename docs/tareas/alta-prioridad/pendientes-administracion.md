@@ -172,8 +172,7 @@ Huecos de lo ya construido:
 - **Usuarios:** no se vincula una cuenta que ya existe en otro centro (llegará con las invitaciones del proveedor de identidad);
   no se restringe por residente a Enfermería, Medicina o Dirección; no hay «Mi cuenta» (ADM-30). Fuera de estas pantallas, el
   nombre de la cuenta solo se usa en la firma del PDF de derivación (2026-10-01). Los permisos no se eligen en el alta ni
-  en «Conceder perfil», sino después en la pantalla del perfil. El Inicio sigue enseñando «Firmar borrador de basal» a
-  Enfermería y Medicina sin mirar sus permisos de basal.
+  en «Conceder perfil», sino después en la pantalla del perfil.
 - **Familiares:** un familiar no se puede vincular a un segundo residente (habría que crearlo otra vez) ni desvincular; la edición
   no tiene token de concurrencia (gana la última). La «fecha efectiva» de ADM-11 es siempre el momento del cambio. Ninguna cuenta
   de familiar existe todavía: llegará con el Portal Familiar y el proveedor de identidad.
