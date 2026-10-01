@@ -15,4 +15,11 @@ public sealed record ActiveProfileScope(Guid ProfileScopeId, AccountId AccountId
 public interface IProfileScopeDirectoryProvider
 {
     Task<IReadOnlyList<ActiveProfileScope>> ListActiveAsync(string externalSubject, CancellationToken ct = default);
+
+    /// <summary>Unidades concedidas (sin revocar y activas) a un ámbito activo de la cuenta, con las mismas condiciones
+    /// con las que SqlAuthorizationEvidenceProvider autoriza el alta en una unidad. Vacía si el ámbito no es suyo.</summary>
+    Task<IReadOnlyList<ScopeUnit>> ListUnitsAsync(
+        string externalSubject, Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 }
+
+public sealed record ScopeUnit(UnitId UnitId, string Name);

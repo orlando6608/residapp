@@ -26,7 +26,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Alta de residente:** `UnidadId` empezaba con el identificador de ceros y sus mensajes salían en inglés. Ahora es
     anulable y empieza vacío; los campos visibles llevan mensajes en español, y `Program.cs` traduce los mensajes del enlace
     del modelo (p. ej., «no-es-un-guid» no es un valor válido para Unidad), que valen para todos los formularios. Test
-    funcional `Create_UnidadEmpiezaVacia_YSusErroresSalenEnEspañol`.
+    funcional `Create_UnidadEmpiezaVacia_YSusErroresSalenEnEspañol` (hoy
+    `Create_LaUnidadSeEligeEntreLasDelAmbito_YSusErroresSalenEnEspañol`).
+- **Selector de unidad en el alta (sin script), 2026-10-01, con commit en `main` sin push:** la unidad ya no se escribe a
+  mano: se elige en un `<select>` con las unidades concedidas y activas del ámbito activo
+  (`IProfileScopeDirectoryProvider.ListUnitsAsync`, con las mismas condiciones con las que `SqlAuthorizationEvidenceProvider`
+  autoriza el alta; caso de uso `ListActiveScopeUnits`). Con una sola unidad viene elegida; con varias empieza en «Elige una
+  unidad»; sin ninguna, un aviso sustituye al formulario. El alta sigue autorizando la unidad recibida, así que el selector
+  solo orienta. Tests: `ScopeUnitsTests` (integración: revocadas, inactivas, sin conceder, ámbito ajeno y otro centro) y el
+  funcional del alta con una y dos unidades. Probado en local con curl: el alta de `dev-integrado-administracion` con la unidad
+  del selector llega a la confirmación y Auxiliar sigue recibiendo «No se puede acceder a esta operación».
 - **Administración, bloque 1: residentes, ficha administrativa y corrección de identidad (ADM-01 a ADM-03, RES-01,
   RES-03, RES-04; script `0021`; cambia el seed):** hecho el 2026-10-01 y desplegado en Azure (push de `c650ba2`, run
   36833525743 en verde con `build-and-test` y `deploy`, que aplicó `0021` y el seed).
@@ -466,7 +475,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 133 unitarios, 206 de integración y 27 funcionales, todos en verde.
+- Suite: 133 unitarios, 208 de integración y 27 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -495,9 +504,6 @@ usuario cuando encajen:
   Una ficha que depende de un permiso, como Alta de residente para Enfermería, la ve todo el perfil, aunque
   la cuenta no tenga el permiso. Si cambian las reglas de perfiles de una pantalla, revisa también los `@if`
   de `Views/Home/Index.cshtml`.
-- **Alta de residente:** el formulario pide el identificador de la unidad a mano (no hay selector de unidades). En Azure,
-  el identificador de la unidad integrada (`0f73bfdc-27e9-49a7-945d-d8c0681779dd`) se ve en los enlaces de `/Direccion` con
-  `dev-integrado-direccion`.
 - **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
   abiertos: tos productiva.», en valoración médica, que se dejó como ejemplo de la lista de escalados. El
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de

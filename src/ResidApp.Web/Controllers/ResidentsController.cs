@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
@@ -9,9 +11,9 @@ namespace ResidApp.Web.Controllers;
 /// <summary>Primera pantalla real del vertical Residente/Basal: alta de residente. Traduce el formulario
 /// directamente a CreateResidentCommand; la autorización y las reglas de negocio viven en
 /// ResidentBaselineApplicationService, no aquí.</summary>
-public sealed class ResidentsController(ResidentBaselineApplicationService service) : Controller
+public sealed class ResidentsController(ResidentBaselineApplicationService service, ListActiveScopeUnits listUnits) : Controller
 {
-    public IActionResult Create()
+    public async Task<IActionResult> Create(CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
@@ -19,12 +21,14 @@ public sealed class ResidentsController(ResidentBaselineApplicationService servi
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Create)) });
         }
 
-        ShowActiveScope(activeScope);
+        var units = await ShowActiveScopeAsync(activeScope, ct);
         return View(new CreateResidentFormModel
         {
             OperacionId = Guid.NewGuid(),
             AmbitoPerfilId = activeScope.ProfileScopeId,
             CentroId = activeScope.CenterId,
+            // Con una sola unidad no hay nada que elegir.
+            UnidadId = units.Count == 1 ? units[0].UnitId.Value : null,
         });
     }
 
@@ -34,12 +38,12 @@ public sealed class ResidentsController(ResidentBaselineApplicationService servi
     {
         if (!ModelState.IsValid)
         {
-            ShowActiveScope(ActiveProfileScopeCookie.Read(Request));
+            await ShowActiveScopeAsync(ActiveProfileScopeCookie.Read(Request), ct);
             return View(form);
         }
 
         var command = new CreateResidentCommand(
-            form.AmbitoPerfilId, CenterId.From(form.CentroId), UnitId.From(form.UnidadId!.Value),form.NombreVisible,
+            form.AmbitoPerfilId, CenterId.From(form.CentroId), UnitId.From(form.UnidadId!.Value), form.NombreVisible,
             form.FechaNacimiento!.Value, form.SexoDocumentadoCodigo, form.ReferenciaInterna,
             EdificioId: null, PlantaId: null, HabitacionId: null, PlazaId: null, form.OperacionId);
 
@@ -47,7 +51,7 @@ public sealed class ResidentsController(ResidentBaselineApplicationService servi
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
-            ShowActiveScope(ActiveProfileScopeCookie.Read(Request));
+            await ShowActiveScopeAsync(ActiveProfileScopeCookie.Read(Request), ct);
             return View(form);
         }
 
@@ -61,9 +65,15 @@ public sealed class ResidentsController(ResidentBaselineApplicationService servi
         return View();
     }
 
-    private void ShowActiveScope(ActiveProfileScopeCookieValue? activeScope)
+    private async Task<IReadOnlyList<ScopeUnit>> ShowActiveScopeAsync(ActiveProfileScopeCookieValue? activeScope, CancellationToken ct)
     {
         ViewBag.AmbitoCentroNombre = activeScope?.CenterName;
         ViewBag.AmbitoPerfilLabel = activeScope is null ? null : SystemProfileDisplay.Label(activeScope.Profile);
+        var result = activeScope is null
+            ? null
+            : await listUnits.ExecuteAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
+        IReadOnlyList<ScopeUnit> units = result is { Ok: true } ? result.Value! : [];
+        ViewBag.Unidades = units.Select(u => new SelectListItem(u.Name, u.UnitId.Value.ToString())).ToList();
+        return units;
     }
 }

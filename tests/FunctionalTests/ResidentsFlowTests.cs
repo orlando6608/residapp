@@ -49,7 +49,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
-    public async Task Create_UnidadEmpiezaVacia_YSusErroresSalenEnEspañol()
+    public async Task Create_LaUnidadSeEligeEntreLasDelAmbito_YSusErroresSalenEnEspañol()
     {
         var seed = await SeedAsync();
         var client = _factory.CreateClient();
@@ -60,6 +60,9 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["externalSubject"] = seed.ExternalSubject,
         }))).EnsureSuccessStatusCode();
 
+        // Con una sola unidad, ya viene elegida.
+        var singleUnitPage = await client.GetStringAsync("/Residents/Create");
+        var secondUnitId = await GrantUnitAsync(seed, "Planta funcional dos");
         var createPage = await client.GetStringAsync("/Residents/Create");
         async Task<string> PostWithUnitAsync(string unit) => WebUtility.HtmlDecode(await (await client.PostAsync(
             "/Residents/Create", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -76,10 +79,14 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var empty = await PostWithUnitAsync("");
         var malformed = await PostWithUnitAsync("no-es-un-guid");
 
-        Assert.Equal("", ExtractValue(createPage, "UnidadId"));
+        Assert.Contains($"<option selected=\"selected\" value=\"{seed.UnitId}\">", singleUnitPage);
+        Assert.DoesNotContain("Elige una unidad", singleUnitPage);
+        Assert.Contains("<option value=\"\">Elige una unidad</option>", createPage);
+        Assert.Contains($"<option value=\"{secondUnitId}\">Planta funcional dos</option>", createPage);
+        Assert.Contains($"<option value=\"{seed.UnitId}\">", createPage);
         Assert.DoesNotContain(Guid.Empty.ToString(), createPage);
-        Assert.Contains("Indica el identificador de la unidad.", WebUtility.HtmlDecode(createPage));
-        Assert.Contains("Indica el identificador de la unidad.", empty);
+        Assert.Contains("Elige la unidad.", WebUtility.HtmlDecode(createPage));
+        Assert.Contains("Elige la unidad.", empty);
         Assert.Contains("«no-es-un-guid» no es un valor válido para Unidad.", malformed);
         // Los campos ocultos (ámbito, centro, operación) conservan su mensaje por defecto: no los rellena el usuario.
         foreach (var field in new[] { "Unidad", "Nombre completo", "Fecha de nacimiento", "Sexo documentado", "Referencia interna" })
@@ -89,6 +96,21 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
 
         Assert.DoesNotContain("The field ", createPage);
         Assert.DoesNotContain("is not valid", empty + malformed);
+    }
+
+    private static async Task<Guid> GrantUnitAsync((string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed, string name)
+    {
+        var unitId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow.UtcDateTime;
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        await connection.ExecuteAsync(
+            "INSERT INTO dbo.unidades (id, centro_id, codigo, nombre_visible, estado, creado_en) VALUES (@unitId, @centerId, @code, @name, 'ACTIVE', @now)",
+            new { unitId, centerId = seed.CenterId, code = $"FUNC-UNIT-{unitId:N}"[..30], name, now });
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+            SELECT NEWID(), id, centro_id, @unitId, @now, cuenta_id FROM dbo.ambitos_perfil WHERE id = @profileScopeId
+            """, new { unitId, now, profileScopeId = seed.ProfileScopeId });
+        return unitId;
     }
 
     private static string ExtractValue(string html, string inputName) =>

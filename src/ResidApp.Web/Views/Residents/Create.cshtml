@@ -1,6 +1,7 @@
 @model ResidApp.Web.Models.CreateResidentFormModel
 @{
     ViewData["Title"] = "Alta de residente";
+    var units = (List<SelectListItem>?)ViewBag.Unidades ?? [];
 }
 
 <nav aria-label="breadcrumb">
@@ -12,9 +13,7 @@
 
 <h1 class="h3">Alta de residente</h1>
 <p class="text-muted">
-    Vertical Residente/Basal. El identificador de unidad debe corresponder a datos ya sembrados (ver
-    <code>database/seed/dev_seed_residente_basal.sql</code>); no se lista aquí porque todavía no existe una
-    pantalla de selección de unidad.
+    Vertical Residente/Basal. La unidad se elige entre las de tu ámbito activo.
 </p>
 
 <div class="card">
@@ -26,6 +25,14 @@
             (<a asp-controller="ProfileScope" asp-action="Select" asp-route-returnUrl="@Url.Action("Create", "Residents")">Cambiar ámbito</a>)
         </p>
 
+        @if (units.Count == 0)
+        {
+            <div class="alert alert-warning" role="alert">
+                Tu ámbito activo no tiene ninguna unidad concedida, así que no puedes dar de alta residentes en él.
+            </div>
+        }
+        else
+        {
         <form asp-controller="Residents" asp-action="Create" method="post">
             <input type="hidden" asp-for="OperacionId" />
             <input type="hidden" asp-for="AmbitoPerfilId" />
@@ -33,7 +40,12 @@
 
             <div class="mb-3">
                 <label asp-for="UnidadId" class="form-label"></label>
-                <input asp-for="UnidadId" class="form-control form-control-lg" />
+                <select asp-for="UnidadId" class="form-select form-select-lg" asp-items="units">
+                    @if (units.Count > 1)
+                    {
+                        <option value="">Elige una unidad</option>
+                    }
+                </select>
                 <span asp-validation-for="UnidadId" class="text-danger"></span>
             </div>
             <div class="mb-3">
@@ -61,6 +73,7 @@
                 <button type="submit" class="btn btn-primary btn-lg">Dar de alta</button>
             </div>
         </form>
+        }
     </div>
 </div>
 

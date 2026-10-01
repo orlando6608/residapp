@@ -15,8 +15,9 @@ public sealed class CreateResidentFormModel
     [Display(Name = "Centro")]
     public Guid CentroId { get; set; }
 
-    /// <summary>Anulable para que el formulario empiece vacío y no con el identificador de ceros.</summary>
-    [Required(ErrorMessage = "Indica el identificador de la unidad.")]
+    /// <summary>Se elige entre las unidades del ámbito activo (ListActiveScopeUnits). Anulable para que, con varias, el
+    /// selector empiece sin ninguna elegida.</summary>
+    [Required(ErrorMessage = "Elige la unidad.")]
     [Display(Name = "Unidad")]
     public Guid? UnidadId { get; set; }
 

@@ -67,6 +67,7 @@ builder.Services.AddScoped<CreateResident>();
 builder.Services.AddScoped<SignBaseline>();
 builder.Services.AddScoped<ReadDirectionBaseline>();
 builder.Services.AddScoped<ListActiveProfileScopes>();
+builder.Services.AddScoped<ListActiveScopeUnits>();
 builder.Services.AddScoped<CreateBaselineDraft>();
 builder.Services.AddScoped<LoadBaselineDraft>();
 builder.Services.AddScoped<SaveBaselineDraftArea>();

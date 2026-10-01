@@ -54,7 +54,7 @@ En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 Huecos de lo ya construido:
 
-- **Alta de residente:** el formulario pide el identificador de la unidad a mano, porque no hay selector de unidades ni pantalla de
-  estructura del centro (historia 2).
+- **Alta de residente:** desde el 2026-10-01 la unidad se elige entre las del ámbito activo. Sigue sin haber pantalla de estructura
+  del centro (historia 2): las unidades y sus concesiones se crean por SQL.
 - **Niveles de ubicación:** los intervalos admiten edificio, planta, habitación y plaza, pero no hay tablas ni pantallas para ellos
   (historia 2); la ficha solo muestra la unidad.
