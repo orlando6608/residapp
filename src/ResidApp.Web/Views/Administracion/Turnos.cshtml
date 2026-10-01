@@ -1,0 +1,75 @@
+@using ResidApp.Web.Models
+@model IReadOnlyList<ResidApp.Application.Ports.ShiftInfo>
+@{
+    ViewData["Title"] = "Turnos";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Turnos</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Turnos del centro</h1>
+<p class="text-muted">
+    Los turnos son del centro: cada uno tiene un nombre y unas horas que defines tú. Las horas no se pueden cambiar una vez creado el
+    turno, para no alterar lo ya planificado: si hacen falta otras, crea otro turno e inactiva el anterior. Planificar un turno no da
+    acceso a nada.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (ViewData.ModelState.IsValid)
+{
+    <a asp-action="NuevoTurno" class="btn btn-primary btn-lg mb-3">Nuevo turno</a>
+}
+
+@if (ViewData.ModelState.IsValid && Model.Count == 0)
+{
+    <p class="text-muted">El centro todavía no tiene turnos.</p>
+}
+else if (Model.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Turnos del centro</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Horas</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var shift in Model)
+                {
+                    <tr>
+                        <th scope="row">@shift.Name</th>
+                        <td>@SchedulingDisplay.Hours(shift)</td>
+                        <td><span class="badge @(shift.Active ? "text-bg-success" : "text-bg-secondary")">@(shift.Active ? "Activo" : "Inactivo")</span></td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-action="NombreTurno" asp-route-turnoId="@shift.ShiftId" class="btn btn-outline-primary">Cambiar nombre</a>
+                                <form asp-action="EstadoTurno" method="post">
+                                    <input type="hidden" name="turnoId" value="@shift.ShiftId" />
+                                    <input type="hidden" name="activo" value="@(shift.Active ? "false" : "true")" />
+                                    <button type="submit" class="btn @(shift.Active ? "btn-outline-danger" : "btn-outline-success")">@(shift.Active ? "Inactivar" : "Reactivar")</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

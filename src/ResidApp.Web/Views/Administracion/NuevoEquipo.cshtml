@@ -1,0 +1,59 @@
+@model ResidApp.Web.Models.NewTeamViewModel
+@{
+    ViewData["Title"] = "Nuevo equipo";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Equipos">Equipos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Nuevo equipo</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Nuevo equipo</h1>
+<p class="text-muted">El equipo pertenece a una sola unidad, que no se podrá cambiar después. Los miembros se añaden desde la lista de equipos.</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        @if (Model.Units.Count == 0)
+        {
+            <p class="text-muted mb-0">Tu ámbito no tiene ninguna unidad activa: no se puede crear un equipo.</p>
+        }
+        else
+        {
+            <form asp-action="NuevoEquipo" method="post">
+                <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+                <div class="mb-3">
+                    <label asp-for="Form.UnidadId" class="form-label"></label>
+                    <select asp-for="Form.UnidadId" class="form-select form-select-lg">
+                        @if (Model.Units.Count > 1)
+                        {
+                            <option value="">Elige una unidad</option>
+                        }
+                        @foreach (var unit in Model.Units)
+                        {
+                            <option value="@unit.UnitId.Value" selected="@(unit.UnitId.Value == Model.Form.UnidadId)">@unit.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Form.UnidadId" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Form.Nombre" class="form-label"></label>
+                    <input asp-for="Form.Nombre" class="form-control form-control-lg" autocomplete="off" />
+                    <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+                </div>
+                <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                    <a asp-action="Equipos" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-lg">Crear equipo</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

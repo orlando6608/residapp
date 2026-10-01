@@ -1,0 +1,104 @@
+@using ResidApp.Web.Models
+@model ResidApp.Web.Models.TeamMembersViewModel
+@{
+    ViewData["Title"] = "Miembros del equipo";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Equipos">Equipos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Team.Name</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@Model.Team.Name</h1>
+<p class="text-muted">
+    Unidad: @Model.Team.UnitName · @(Model.Team.Active ? "Equipo activo" : "Equipo inactivo"). Pertenecer al equipo no da acceso a nada.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<section class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5 card-title">Miembros</h2>
+        @if (Model.Team.Members.Count == 0)
+        {
+            <p class="text-muted mb-0">El equipo todavía no tiene miembros.</p>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var member in Model.Team.Members)
+                {
+                    <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <span>
+                            <strong>@member.Name</strong>
+                            @if (member.Eligible)
+                            {
+                                <span class="text-muted">· @SchedulingDisplay.Profiles(member.Profiles)</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-warning">Ya no tiene un perfil de equipo en esta unidad</span>
+                            }
+                        </span>
+                        <form asp-action="MiembroEquipo" method="post">
+                            <input type="hidden" name="equipoId" value="@Model.Team.TeamId" />
+                            <input type="hidden" name="cuentaId" value="@member.AccountId.Value" />
+                            <input type="hidden" name="anadir" value="false" />
+                            <button type="submit" class="btn btn-outline-danger">Dar de baja</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</section>
+
+@if (Model.Team.Active)
+{
+    <section class="card">
+        <div class="card-body">
+            <h2 class="h5 card-title">Añadir un miembro</h2>
+            @if (Model.Eligible.Count == 0)
+            {
+                <p class="text-muted mb-0">
+                    No hay más cuentas que se puedan añadir: tienen que estar activas y tener un perfil de Auxiliar, Enfermería o
+                    Medicina con la unidad del equipo concedida (se concede en Usuarios).
+                </p>
+            }
+            else
+            {
+                <form asp-action="MiembroEquipo" method="post" class="row g-3 align-items-end">
+                    <input type="hidden" name="equipoId" value="@Model.Team.TeamId" />
+                    <input type="hidden" name="anadir" value="true" />
+                    <div class="col-12 col-md-8">
+                        <label for="cuentaId" class="form-label">Cuenta</label>
+                        <select id="cuentaId" name="cuentaId" class="form-select form-select-lg" required>
+                            <option value="">Elige una cuenta</option>
+                            @foreach (var account in Model.Eligible)
+                            {
+                                <option value="@account.AccountId.Value">@account.Name (@SchedulingDisplay.Profiles(account.Profiles))</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4 d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Añadir</button>
+                    </div>
+                </form>
+            }
+        </div>
+    </section>
+}
+else
+{
+    <p class="text-muted">Reactiva el equipo para poder añadir miembros.</p>
+}

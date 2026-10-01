@@ -1,0 +1,77 @@
+@using ResidApp.Web.Models
+@model IReadOnlyList<ResidApp.Application.Ports.TeamInfo>
+@{
+    ViewData["Title"] = "Equipos";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Equipos</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Equipos</h1>
+<p class="text-muted">
+    Un equipo es un grupo con nombre dentro de una unidad de tu ámbito. Sus miembros son cuentas de Auxiliar, Enfermería o Medicina con
+    esa unidad concedida; una persona puede estar en varios equipos. Pertenecer a un equipo no da acceso a nada.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (ViewData.ModelState.IsValid)
+{
+    <a asp-action="NuevoEquipo" class="btn btn-primary btn-lg mb-3">Nuevo equipo</a>
+}
+
+@if (ViewData.ModelState.IsValid && Model.Count == 0)
+{
+    <p class="text-muted">Tu ámbito todavía no tiene equipos.</p>
+}
+else if (Model.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Equipos de las unidades del ámbito</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Equipo</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Miembros</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var team in Model)
+                {
+                    <tr>
+                        <th scope="row">@team.Name</th>
+                        <td>@team.UnitName</td>
+                        <td><span class="badge @(team.Active ? "text-bg-success" : "text-bg-secondary")">@(team.Active ? "Activo" : "Inactivo")</span></td>
+                        <td>@team.Members.Count</td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-action="MiembrosEquipo" asp-route-equipoId="@team.TeamId" class="btn btn-outline-primary">Miembros</a>
+                                <a asp-action="NombreEquipo" asp-route-equipoId="@team.TeamId" class="btn btn-outline-primary">Cambiar nombre</a>
+                                <form asp-action="EstadoEquipo" method="post">
+                                    <input type="hidden" name="equipoId" value="@team.TeamId" />
+                                    <input type="hidden" name="activo" value="@(team.Active ? "false" : "true")" />
+                                    <button type="submit" class="btn @(team.Active ? "btn-outline-danger" : "btn-outline-success")">@(team.Active ? "Inactivar" : "Reactivar")</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

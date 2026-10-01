@@ -5,6 +5,7 @@ using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Audit;
 using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
+using ResidApp.Domain.Scheduling;
 using ResidApp.Domain.Structure;
 using ResidApp.Shared;
 
@@ -67,13 +68,32 @@ public sealed record ChangeAccountProfileUnitCommand(
 public sealed record ChangeAccountProfileResidentCommand(
     Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId, Guid PerfilCuentaId, ResidentId ResidenteId, bool Asignar);
 
-/// <summary>ADM-05 (0025): alta de una unidad. OperacionId nace con el formulario y es el id de la unidad, así que un reenvío
-/// no la duplica.</summary>
 /// <summary>ADM-28: la auditoría administrativa de un periodo (días de la hora local del servidor, ambos incluidos). Accion, si
 /// se da, es una de AdministrativeAudit.Actions; Cuenta filtra por la cuenta afectada, nunca por quien actuó (AUD-02).</summary>
 public sealed record ListAdministrativeAuditQuery(
     Guid AmbitoPerfilId, CenterId CentroId, DateOnly From, DateOnly To, string? Accion = null, AccountId? Cuenta = null);
 
+/// <summary>ADM-14 (0027): alta de un turno del catálogo del centro. OperacionId nace con el formulario y es el id del turno.</summary>
+public sealed record CreateShiftCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? Nombre, TimeOnly? Inicio, TimeOnly? Fin);
+
+public sealed record RenameShiftCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid TurnoId, string? Nombre);
+
+/// <summary>ADM-14: Activo es el estado que se quiere (false para inactivar, true para reactivar).</summary>
+public sealed record ChangeShiftStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid TurnoId, bool Activo);
+
+/// <summary>ADM-14: alta de un equipo en una unidad del ámbito. OperacionId es el id del equipo.</summary>
+public sealed record CreateTeamCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, UnitId UnidadId, string? Nombre);
+
+public sealed record RenameTeamCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EquipoId, string? Nombre);
+
+public sealed record ChangeTeamStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EquipoId, bool Activo);
+
+/// <summary>ADM-14: añadir (true) o dar de baja (false) a una cuenta de un equipo.</summary>
+public sealed record ChangeTeamMemberCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EquipoId, AccountId CuentaId, bool Anadir);
+
+/// <summary>ADM-05 (0025): alta de una unidad. OperacionId nace con el formulario y es el id de la unidad, así que un reenvío
+/// no la duplica.</summary>
 public sealed record CreateUnitCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? Codigo, string? Nombre);
 
 public sealed record RenameUnitCommand(Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, string? Nombre);
@@ -101,7 +121,8 @@ public sealed class AdministracionApplicationService(
     IProfileScopeDirectoryProvider scopes, IAdministracionResidentDirectory directory, ISessionIdentityProvider session,
     IAuthorizationEvidenceProvider evidenceProvider, IResidentIdentityRepository identities, IResidentFamilyRepository families,
     IProfessionalAccountDirectory accountDirectory, IProfessionalAccountRepository accounts, ICenterStructureDirectory structure,
-    ICenterStructureRepository structureWriter, IAdministrativeAuditDirectory audit)
+    ICenterStructureRepository structureWriter, IAdministrativeAuditDirectory audit, ISchedulingDirectory scheduling,
+    ISchedulingRepository schedulingWriter)
 {
     public Task<ApplicationResult<IReadOnlyList<AdministrativeResidentSummary>>> ListResidentsAsync(
         AdministracionQuery query, CancellationToken ct = default) =>
@@ -309,6 +330,85 @@ public sealed class AdministracionApplicationService(
         {
             var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
             await structureWriter.ChangeUnitStatusAsync(access, command.UnidadId, command.Activa, ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<IReadOnlyList<ShiftInfo>>> ListShiftsAsync(AdministracionQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await scheduling.ListShiftsAsync(access, ct);
+        });
+
+    public Task<ApplicationResult<IReadOnlyList<TeamInfo>>> ListTeamsAsync(AdministracionQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await scheduling.ListTeamsAsync(access, ct);
+        });
+
+    public Task<ApplicationResult<IReadOnlyList<EligibleTeamMember>>> ListEligibleTeamMembersAsync(
+        AdministracionQuery query, Guid teamId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await scheduling.ListEligibleMembersAsync(access, teamId, ct);
+        });
+
+    public Task<ApplicationResult<Guid>> CreateShiftAsync(CreateShiftCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            var data = Shift.Validate(command.Nombre, command.Inicio, command.Fin);
+            return await schedulingWriter.CreateShiftAsync(access, command.OperacionId, data, ct);
+        });
+
+    public Task<ApplicationResult<bool>> RenameShiftAsync(RenameShiftCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await schedulingWriter.RenameShiftAsync(access, command.TurnoId, Shift.ValidateName(command.Nombre), ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> ChangeShiftStatusAsync(ChangeShiftStatusCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await schedulingWriter.ChangeShiftStatusAsync(access, command.TurnoId, command.Activo, ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<Guid>> CreateTeamAsync(CreateTeamCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            return await schedulingWriter.CreateTeamAsync(access, command.OperacionId, command.UnidadId, Team.ValidateName(command.Nombre), ct);
+        });
+
+    public Task<ApplicationResult<bool>> RenameTeamAsync(RenameTeamCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await schedulingWriter.RenameTeamAsync(access, command.EquipoId, Team.ValidateName(command.Nombre), ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> ChangeTeamStatusAsync(ChangeTeamStatusCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await schedulingWriter.ChangeTeamStatusAsync(access, command.EquipoId, command.Activo, ct);
+            return true;
+        });
+
+    public Task<ApplicationResult<bool>> ChangeTeamMemberAsync(ChangeTeamMemberCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (access, _) = await AdministrationAccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await (command.Anadir
+                ? schedulingWriter.AddTeamMemberAsync(access, command.EquipoId, command.CuentaId, ct)
+                : schedulingWriter.RemoveTeamMemberAsync(access, command.EquipoId, command.CuentaId, ct));
             return true;
         });
 

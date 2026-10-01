@@ -17,7 +17,7 @@ namespace ResidApp.Web.Controllers;
 /// residentes de Auxiliar. Ninguna pantalla muestra basal, Barthel ni contenido clínico. Traduce a
 /// AdministracionApplicationService; la autorización no vive aquí.
 /// </summary>
-public sealed class AdministracionController(AdministracionApplicationService service) : Controller
+public sealed partial class AdministracionController(AdministracionApplicationService service) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {

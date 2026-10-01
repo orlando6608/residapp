@@ -7,6 +7,7 @@ public enum AuditCategory
     PerfilesYPermisos,
     Estructura,
     ResidentesYFamilias,
+    TurnosYEquipos,
 }
 
 /// <summary>
@@ -42,6 +43,16 @@ public static class AdministrativeAudit
         ("FAMILY_MEMBER_UPDATE", AuditCategory.ResidentesYFamilias),
         ("FAMILY_AUTHORIZATION_CHANGE", AuditCategory.ResidentesYFamilias),
         ("EMERGENCY_CONTACT_DESIGNATE", AuditCategory.ResidentesYFamilias),
+        ("SHIFT_CREATE", AuditCategory.TurnosYEquipos),
+        ("SHIFT_RENAME", AuditCategory.TurnosYEquipos),
+        ("SHIFT_ACTIVATE", AuditCategory.TurnosYEquipos),
+        ("SHIFT_DEACTIVATE", AuditCategory.TurnosYEquipos),
+        ("TEAM_CREATE", AuditCategory.TurnosYEquipos),
+        ("TEAM_RENAME", AuditCategory.TurnosYEquipos),
+        ("TEAM_ACTIVATE", AuditCategory.TurnosYEquipos),
+        ("TEAM_DEACTIVATE", AuditCategory.TurnosYEquipos),
+        ("TEAM_MEMBER_ADD", AuditCategory.TurnosYEquipos),
+        ("TEAM_MEMBER_REMOVE", AuditCategory.TurnosYEquipos),
     ];
 
     public static bool IsAdministrative(string? code) => code is not null && Actions.Any(a => a.Code == code);

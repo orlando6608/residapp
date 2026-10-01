@@ -243,6 +243,69 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.DoesNotContain("<table", nursePage);
     }
 
+    [Fact]
+    public async Task TurnosYEquipos_SeCreanDesdeLasPantallas_EnEspañol_YEnfermeriaNoEntra()
+    {
+        var admin = await SeedAdministratorAsync();
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = admin.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        async Task<string> PostFormAsync(string path, string pageWithForm, Dictionary<string, string> fields) =>
+            WebUtility.HtmlDecode(await (await client.PostAsync(path, new FormUrlEncodedContent(new Dictionary<string, string>(fields)
+            {
+                ["__RequestVerificationToken"] = ExtractValue(pageWithForm, "__RequestVerificationToken"),
+            }))).Content.ReadAsStringAsync());
+
+        var newShiftPage = await client.GetStringAsync("/Administracion/NuevoTurno");
+        var emptyShift = await PostFormAsync("/Administracion/NuevoTurno", newShiftPage, new() { ["Form.OperacionId"] = ExtractValue(newShiftPage, "Form.OperacionId") });
+        var shiftName = $"Noche {Guid.NewGuid():N}"[..14];
+        var shifts = await PostFormAsync("/Administracion/NuevoTurno", newShiftPage, new()
+        {
+            ["Form.OperacionId"] = ExtractValue(newShiftPage, "Form.OperacionId"),
+            ["Form.Nombre"] = shiftName,
+            ["Form.Inicio"] = "22:00",
+            ["Form.Fin"] = "06:00",
+        });
+        var duplicatedShift = await PostFormAsync("/Administracion/NuevoTurno", newShiftPage, new()
+        {
+            ["Form.OperacionId"] = Guid.NewGuid().ToString(),
+            ["Form.Nombre"] = shiftName.ToUpperInvariant(),
+            ["Form.Inicio"] = "07:00",
+            ["Form.Fin"] = "15:00",
+        });
+
+        var newTeamPage = await client.GetStringAsync("/Administracion/NuevoEquipo");
+        var emptyTeam = await PostFormAsync("/Administracion/NuevoEquipo", newTeamPage, new() { ["Form.OperacionId"] = ExtractValue(newTeamPage, "Form.OperacionId") });
+        var teams = await PostFormAsync("/Administracion/NuevoEquipo", newTeamPage, new()
+        {
+            ["Form.OperacionId"] = ExtractValue(newTeamPage, "Form.OperacionId"),
+            ["Form.UnidadId"] = admin.UnitId.ToString(),
+            ["Form.Nombre"] = "Equipo A (ficticio)",
+        });
+        var teamId = Regex.Match(teams, "equipoId=([0-9a-f-]{36})").Groups[1].Value;
+        var membersPage = WebUtility.HtmlDecode(await client.GetStringAsync($"/Administracion/MiembrosEquipo?equipoId={teamId}"));
+        var nursePage = await PageAsync("ENFERMERIA", null, "/Administracion/Turnos");
+
+        Assert.Contains("Escribe el nombre del turno.", emptyShift);
+        Assert.Contains("Indica la hora de inicio.", emptyShift);
+        Assert.DoesNotContain("The ", emptyShift);
+        Assert.Contains("Turno creado.", shifts);
+        Assert.Contains(shiftName, shifts);
+        Assert.Contains("22:00 – 06:00 (termina al día siguiente)", shifts);
+        Assert.Contains("Ya existe un turno con ese nombre en el centro.", duplicatedShift);
+        Assert.Contains("Escribe el nombre del equipo.", emptyTeam);
+        Assert.Contains("Equipo creado.", teams);
+        Assert.Contains("Equipo A (ficticio)", teams);
+        Assert.Contains("El equipo todavía no tiene miembros.", membersPage);
+        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.DoesNotContain("Nuevo turno", nursePage);
+    }
+
     private static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
 

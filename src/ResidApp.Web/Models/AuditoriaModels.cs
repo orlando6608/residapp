@@ -51,6 +51,16 @@ public static class AuditActionDisplay
         ["FAMILY_MEMBER_UPDATE"] = "Datos del familiar cambiados",
         ["FAMILY_AUTHORIZATION_CHANGE"] = "Autorización del familiar cambiada",
         ["EMERGENCY_CONTACT_DESIGNATE"] = "Contacto urgente designado",
+        ["SHIFT_CREATE"] = "Turno creado",
+        ["SHIFT_RENAME"] = "Turno renombrado",
+        ["SHIFT_ACTIVATE"] = "Turno reactivado",
+        ["SHIFT_DEACTIVATE"] = "Turno inactivado",
+        ["TEAM_CREATE"] = "Equipo creado",
+        ["TEAM_RENAME"] = "Equipo renombrado",
+        ["TEAM_ACTIVATE"] = "Equipo reactivado",
+        ["TEAM_DEACTIVATE"] = "Equipo inactivado",
+        ["TEAM_MEMBER_ADD"] = "Miembro añadido a un equipo",
+        ["TEAM_MEMBER_REMOVE"] = "Miembro dado de baja de un equipo",
     };
 
     public static string Label(string code) => Labels.TryGetValue(code, out var label) ? label : "Acción administrativa";
@@ -61,6 +71,7 @@ public static class AuditActionDisplay
         AuditCategory.PerfilesYPermisos => "Perfiles y permisos",
         AuditCategory.Estructura => "Estructura del centro",
         AuditCategory.ResidentesYFamilias => "Residentes y familias",
+        AuditCategory.TurnosYEquipos => "Turnos y equipos",
         _ => category.ToString(),
     };
 

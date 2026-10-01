@@ -1,0 +1,53 @@
+@model ResidApp.Web.Models.NewShiftViewModel
+@{
+    ViewData["Title"] = "Nuevo turno";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Turnos">Turnos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Nuevo turno</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Nuevo turno</h1>
+<p class="text-muted">
+    Las horas no se podrán cambiar después. Si la hora de fin es igual o anterior a la de inicio (por ejemplo, de 22:00 a 06:00), el
+    turno termina al día siguiente.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="NuevoTurno" method="post">
+            <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+            <div class="mb-3">
+                <label asp-for="Form.Nombre" class="form-label"></label>
+                <input asp-for="Form.Nombre" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                    <label asp-for="Form.Inicio" class="form-label"></label>
+                    <input asp-for="Form.Inicio" type="time" class="form-control form-control-lg" value="@Model.Form.Inicio?.ToString("HH:mm")" />
+                    <span asp-validation-for="Form.Inicio" class="text-danger"></span>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label asp-for="Form.Fin" class="form-label"></label>
+                    <input asp-for="Form.Fin" type="time" class="form-control form-control-lg" value="@Model.Form.Fin?.ToString("HH:mm")" />
+                    <span asp-validation-for="Form.Fin" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Turnos" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Crear turno</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

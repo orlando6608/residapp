@@ -1,0 +1,39 @@
+@using ResidApp.Web.Models
+@model ResidApp.Web.Models.RenameShiftViewModel
+@{
+    ViewData["Title"] = "Nombre del turno";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Turnos">Turnos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Nombre</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Nombre del turno</h1>
+<p class="text-muted">Horas: @SchedulingDisplay.Hours(Model.Shift) (no cambian). El cambio de nombre queda en la auditoría.</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="NombreTurno" method="post">
+            <input type="hidden" name="Form.TurnoId" value="@Model.Form.TurnoId" />
+            <div class="mb-3">
+                <label asp-for="Form.Nombre" class="form-label"></label>
+                <input asp-for="Form.Nombre" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+            </div>
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Turnos" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Guardar nombre</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
