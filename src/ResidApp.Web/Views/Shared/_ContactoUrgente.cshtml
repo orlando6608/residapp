@@ -1,0 +1,21 @@
+@using ResidApp.Web.Models
+@model EmergencyContactCardModel
+@* ADM-08 (0022): contacto urgente designado por Administración, en solo lectura, en la ficha de Enfermería y de
+   Medicina (la matriz les da lectura). *@
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Contacto urgente</h2>
+        @if (Model.Contact is { } contacto)
+        {
+            <p class="mb-0">
+                <strong>@contacto.DisplayName</strong> (@contacto.Relationship) ·
+                <a href="@EmergencyContactDisplay.TelHref(contacto.Phone)">@contacto.Phone</a>
+            </p>
+        }
+        else
+        {
+            <p class="text-muted mb-0">No hay contacto urgente designado (lo designa Administración).</p>
+        }
+    </div>
+</div>

@@ -211,7 +211,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                     .Select(r => r.Summary).ToList(),
                 await FindMedicalFollowUpAsync(connection, profileScopeId, eventId, ct)),
             await FindUrgentProtocolAsync(connection, profileScopeId, eventId, ct),
-            await FindReferralAsync(connection, profileScopeId, eventId, ct),
+            await FindReferralAsync(connection, profileScopeId, centerId.Value, row.ResidentId, eventId, ct),
             (await FindContextsAsync(connection, [eventId], ct)).GetValueOrDefault(eventId));
     }
 
@@ -318,9 +318,9 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
     }
 
     /// <summary>ENF-12/MED-14: el informe de derivación firmado y los intentos de llamada, de cualquiera de los
-    /// dos perfiles (el PDF no se lee aquí: se descarga aparte, auditado).</summary>
+    /// dos perfiles (el PDF no se lee aquí: se descarga aparte, auditado), con el contacto urgente vigente del residente.</summary>
     private static async Task<ReferralDetail?> FindReferralAsync(
-        System.Data.IDbConnection connection, Guid profileScopeId, Guid eventId, CancellationToken ct)
+        System.Data.IDbConnection connection, Guid profileScopeId, Guid centerId, Guid residentId, Guid eventId, CancellationToken ct)
     {
         var report = await connection.QuerySingleOrDefaultAsync<ReferralRow>(new CommandDefinition("""
             SELECT d.perfil_codigo AS ProfileCode, d.motivo AS Reason,
@@ -351,7 +351,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
 
         return new ReferralDetail(
             EnumCode.ParseCode<SystemProfile>(report.ProfileCode), report.Reason, report.SignedByCurrentAccount,
-            new DateTimeOffset(report.SignedAt, TimeSpan.Zero), report.ContentHash, attempts);
+            new DateTimeOffset(report.SignedAt, TimeSpan.Zero), report.ContentHash, attempts,
+            await EmergencyContactQuery.FindAsync(connection, centerId, residentId, ct));
     }
 
     private sealed record ReferralRow(string ProfileCode, string Reason, bool SignedByCurrentAccount, DateTime SignedAt, string ContentHash);

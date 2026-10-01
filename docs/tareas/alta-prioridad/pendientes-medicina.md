@@ -147,6 +147,7 @@ En el orden propuesto:
 Huecos de lo ya construido:
 
 - Derivación a Urgencias: los mismos huecos que en Enfermería (firmante sin nombre, sin corrección del
-  informe, contacto familiar en texto libre); ver `pendientes-enfermeria.md`.
+  informe; el contacto familiar se precarga con el contacto urgente designado, pero se guarda como texto); ver
+  `pendientes-enfermeria.md`.
 - **Seguimiento médico (historia 5)**: no hay equipos ni turnos reales (vertical Administración). El
   equipo o turno entrante es texto libre y la fecha prevista es solo fecha, sin hora, como en Enfermería.

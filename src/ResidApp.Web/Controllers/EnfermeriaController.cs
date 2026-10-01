@@ -22,7 +22,7 @@ namespace ResidApp.Web.Controllers;
 /// sin la derivación todavía). Traduce a EnfermeriaApplicationService; la
 /// autorización y las reglas de negocio no viven aquí.
 /// </summary>
-public sealed class EnfermeriaController(EnfermeriaApplicationService service) : Controller
+public sealed class EnfermeriaController(EnfermeriaApplicationService service, FindEmergencyContact findEmergencyContact) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -1026,8 +1026,10 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service) :
             new ReadCurrentBaselineCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId), ct);
         var openEvents = await service.ListOpenEventsAsync(
             new ListOpenEventsCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, SystemProfile.Enfermeria), ct);
+        var contact = await findEmergencyContact.ExecuteAsync(
+            new FindScopeResidentCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId), ct);
         return View(new EnfermeriaResidentDetailViewModel(findResult.Value, baselineResult.Ok ? baselineResult.Value : null,
-            OpenEvents: openEvents.Ok ? openEvents.Value : null));
+            OpenEvents: openEvents.Ok ? openEvents.Value : null, EmergencyContact: contact.Ok ? contact.Value : null));
     }
 
     /// <summary>ENF-23/ENF-24 (historia 11): eventos cerrados del residente, con el basal y la ubicación de su

@@ -271,8 +271,9 @@ Huecos de lo ya construido:
     identificador de la cuenta hasta que exista el proveedor de identidad real.
   - **Sin corrección:** un informe firmado no se corrige ni tiene nueva versión (la política provisional de
     COR-01/02 solo habilita las valoraciones).
-  - **Contacto familiar en texto libre:** a quién se llama se escribe a mano hasta que Administración tenga
-    el contacto designado.
+  - **Contacto familiar:** desde el 2026-10-01 la pantalla muestra el contacto urgente que designa Administración y
+    precarga «A quién se llama» con él (ver `pendientes-administracion.md`); se sigue guardando como texto, sin enlace al
+    familiar.
   - **Pendiente de CJ:** confirmar si el campo "Comunicaciones" de la valoración debe quedar fuera del
     informe, como se hace hoy por prudencia (DER-04). Preguntado en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 3).
 

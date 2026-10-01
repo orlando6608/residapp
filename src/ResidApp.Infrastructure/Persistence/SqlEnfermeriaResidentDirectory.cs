@@ -48,5 +48,12 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
             .ToList();
     }
 
+    public async Task<EmergencyContactSummary?> FindEmergencyContactAsync(
+        CenterId centerId, ResidentId residentId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return await EmergencyContactQuery.FindAsync(connection, centerId.Value, residentId.Value, ct);
+    }
+
     private sealed record Row(Guid ResidentId, string DisplayName, Guid UnitId, string? UnitName, bool TieneBasalVigente);
 }

@@ -155,10 +155,11 @@ public sealed record FamilyCallAttemptSummary(
 
 /// <summary>ENF-12/MED-14: el informe de derivación firmado de un evento: qué perfil derivó, con qué motivo,
 /// quién y cuándo firmó, la huella del contenido firmado y los intentos de llamada a la familia, del más
-/// antiguo al más reciente. El PDF se descarga aparte (IReferralReportRepository).</summary>
+/// antiguo al más reciente. El PDF se descarga aparte (IReferralReportRepository). EmergencyContact es el contacto
+/// urgente vigente del residente (0022), para registrar la llamada; no forma parte del informe (DER-04).</summary>
 public sealed record ReferralDetail(
     SystemProfile Profile, string Reason, bool SignedByCurrentAccount, DateTimeOffset SignedAt, string ContentHash,
-    IReadOnlyList<FamilyCallAttemptSummary> CallAttempts);
+    IReadOnlyList<FamilyCallAttemptSummary> CallAttempts, EmergencyContactSummary? EmergencyContact);
 
 /// <summary>DER-03: identificación del residente y del centro para el informe de derivación.</summary>
 public sealed record ResidentIdentification(

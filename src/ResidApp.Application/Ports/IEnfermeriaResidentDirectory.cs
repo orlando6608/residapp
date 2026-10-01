@@ -18,4 +18,12 @@ public sealed record ScopeResidentSummary(
 public interface IEnfermeriaResidentDirectory
 {
     Task<IReadOnlyList<ScopeResidentSummary>> ListAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>ADM-08 (0022): el contacto urgente vigente de un residente que el caso de uso ya ha comprobado que está en
+    /// el ámbito (FindEmergencyContact); null si no tiene.</summary>
+    Task<EmergencyContactSummary?> FindEmergencyContactAsync(CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 }
+
+/// <summary>ADM-08 (0022): el contacto urgente designado por Administración, tal como lo leen Enfermería y Medicina (la
+/// matriz les da lectura): nombre, relación y teléfono, sin correo.</summary>
+public sealed record EmergencyContactSummary(string DisplayName, string Relationship, string Phone);

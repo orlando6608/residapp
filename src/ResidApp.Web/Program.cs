@@ -85,6 +85,7 @@ builder.Services.AddScoped<AuxiliarApplicationService>();
 
 builder.Services.AddScoped<ListScopeResidents>();
 builder.Services.AddScoped<FindScopeResident>();
+builder.Services.AddScoped<FindEmergencyContact>();
 builder.Services.AddScoped<RegisterClinicalEvent>();
 builder.Services.AddScoped<ListPendingChanges>();
 builder.Services.AddScoped<FindPendingChangeDetail>();

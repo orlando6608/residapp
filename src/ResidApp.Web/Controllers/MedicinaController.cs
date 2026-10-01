@@ -19,7 +19,8 @@ namespace ResidApp.Web.Controllers;
 /// familiar) y MED-18 a MED-20 (evento propio, lista y ficha de residentes). Traduce a
 /// MedicinaApplicationService; la autorización y las reglas de negocio no viven aquí.
 /// </summary>
-public sealed class MedicinaController(MedicinaApplicationService service, ResidentBaselineApplicationService baselineService) : Controller
+public sealed class MedicinaController(
+    MedicinaApplicationService service, ResidentBaselineApplicationService baselineService, FindEmergencyContact findEmergencyContact) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -885,8 +886,11 @@ public sealed class MedicinaController(MedicinaApplicationService service, Resid
         var canManage = await baselineService.CanManageBaselineAsync(scope.ProfileScopeId, centroId, resident.ResidentId, ct);
         var openEvents = await service.ListOpenEventsAsync(
             new ListOpenEventsCommand(scope.ProfileScopeId, centroId, resident.ResidentId, SystemProfile.Medicina), ct);
+        var contact = await findEmergencyContact.ExecuteAsync(
+            new FindScopeResidentCommand(scope.ProfileScopeId, centroId, resident.ResidentId, SystemProfile.Medicina), ct);
         return View(new EnfermeriaResidentDetailViewModel(
-            resident, baselineResult.Ok ? baselineResult.Value : null, canManage.Ok && canManage.Value, openEvents.Ok ? openEvents.Value : null));
+            resident, baselineResult.Ok ? baselineResult.Value : null, canManage.Ok && canManage.Value, openEvents.Ok ? openEvents.Value : null,
+            contact.Ok ? contact.Value : null));
     }
 
     /// <summary>MED-22 (historia 9): eventos cerrados del residente que ve Medicina (escalados y propios), con el

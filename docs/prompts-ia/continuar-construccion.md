@@ -13,6 +13,23 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Contacto urgente en la derivación y en la ficha de Enfermería y Medicina (sin script):** hecho el 2026-10-01, con
+  commit en `main` **sin push**. Tras el push, comprueba el pipeline y prueba en Azure sobre «Prueba familiares azure
+  (ficticio)» (su contacto vigente es Tomás), nunca Residente Integrado Uno.
+  - **Qué hace:** tras firmar la derivación, el protocolo muestra el contacto urgente (teléfono con `tel:`) y precarga «A
+    quién se llama»; la ficha de Enfermería y de Medicina tiene la tarjeta «Contacto urgente». Detalle en
+    `pendientes-administracion.md`.
+  - **Verificación:**
+    - suite en verde antes (161, 216 y 29) y después 3 veces (161, 219 y 32), más 3 vueltas tipo CI con BD nueva;
+    - curl en local sobre «Prueba familiares (ficticio)»: las fichas de Enfermería y Medicina dicen que no hay contacto; tras
+      designar a Tomás como Administración, lo muestran (sin el correo); evento «Prueba manual contacto urgente: disnea.»
+      registrado, valorado, con protocolo (sin bloque de contacto antes de derivar) y derivado (la vista previa no lo
+      incluye); el protocolo muestra el contacto y precarga «Tomás Pérez (ficticio) (Hijo)», y la llamada se registra con
+      ese texto;
+    - Auxiliar y Dirección no ven el contacto en ninguna pantalla (las de Enfermería y Medicina les dan acceso denegado; el
+      episodio de Dirección no lo muestra).
+  - Dos vueltas de la suite fallaron por tiempos de espera de ejecución con 0,8–1,2 GB libres (sin bloqueos en SQL Server);
+    las mismas pruebas pasaron en cuanto hubo memoria (lección «Suite lenta»).
 - **Administración, bloque 2: familiares, autorizaciones y contacto urgente (historia 3; ADM-08 a ADM-11 del wireframe,
   FAM-01; script `0022`; sin cambios en el seed):** hecho el 2026-10-01 y desplegado en Azure (push de `380552b`, run
   36855312637 en verde con `build-and-test` y `deploy`, que aplicó `0022`).
@@ -488,7 +505,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   `ResidApp-antes-0020-20260930.bak`, `ResidApp-antes-0021-20261001.bak` y `ResidApp-antes-0022-20261001.bak`). También
   tiene la cuenta `dev-integrado-administracion`, el residente de prueba «Prueba Corrección Identidad (ficticio)», con una
   corrección, «Prueba selector unidad (ficticio)» y «Prueba familiares (ficticio)», con dos familiares (Lucía, autorización
-  revocada tras recorrer todos los estados; Tomás, teléfono editado) y el contacto urgente designado, cambiado y quitado.
+  revocada tras recorrer todos los estados; Tomás, teléfono editado) y el contacto urgente designado, cambiado, quitado y
+  vuelto a designar (Tomás); tiene el evento «Prueba manual contacto urgente: disnea.», en protocolo urgente, derivado, con
+  una llamada «Contactado» a Tomás, sin cerrar.
   La base local tiene además eventos de prueba del escenario integrado:
   - «Prueba manual historia 3: tos.»: cerrado, con comunicación pendiente de aprobación.
   - «Prueba manual historia 4: tos.»: cerrado tras un seguimiento completo.
@@ -512,7 +531,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - «Prueba manual escalados abiertos: tos productiva.» (Residente Integrado Dos): escalado por Enfermería,
     valorado y cerrado por Medicina sin comunicación. Residente Integrado Dos tiene además un basal versión 1
     firmado por Medicina (historia 8).
-- Suite: 161 unitarios, 216 de integración y 29 funcionales, todos en verde.
+- Suite: 161 unitarios, 219 de integración y 32 funcionales, todos en verde.
 - Hay dos scripts con el número `0005` (`0005_auxiliar_opciones_rapidas.sql` y
   `0005_enfermeria_borrador_basal.sql`). Es inofensivo, porque el runner los registra por nombre completo y
   son independientes entre sí. **No los renombres:** el runner los volvería a ejecutar y el despliegue en
@@ -526,8 +545,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
      un borrador de basal ajeno; el tema 3 es un cambio pequeño en el informe de derivación.
    - `docs/pendientes-cj/traslado-y-baja-residente.html` (preparado el 2026-10-01, 6 respuestas): traslado y baja del
      residente en Administración.
-2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): el contacto urgente en la derivación (toca
-   pantallas clínicas); usuarios, perfiles y permisos; turnos y equipos.
+2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): usuarios, perfiles y permisos; turnos y
+   equipos.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
    (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.
 4. **Familia / Portal Familiar**, que depende de Administración y del proveedor de identidad.

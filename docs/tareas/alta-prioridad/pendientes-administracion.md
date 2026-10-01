@@ -75,18 +75,29 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
   - **Tests:** `AdministracionFamiliaresTests` (integración), `FamilyRulesTests` (unitarios) y `FamilyAuthorizationDisplayTests`
     (funcionales).
 
+- **Contacto urgente en la derivación y en la ficha de Enfermería y Medicina (sin script)** — 2026-10-01.
+  - **Qué hace:** tras firmar la derivación, la pantalla del protocolo muestra el contacto urgente vigente (nombre, relación y
+    teléfono pulsable con `tel:`) y precarga «A quién se llama» con «Nombre (relación)», editable; se sigue guardando como texto
+    en `intentos_llamada_familia`. La ficha del residente de Enfermería y de Medicina tiene la tarjeta «Contacto urgente» de
+    solo lectura (`_ContactoUrgente`). Sin contacto designado, lo dice. El correo no se muestra.
+  - **Decisiones del usuario (2026-10-01):** mostrar y precargar, sin guardar el vínculo (sin script); verlo también en la ficha.
+  - **Implementación:** `EmergencyContactQuery` (la designación con el número más alto; null si la quitó) la usan
+    `SqlChangeInboxDirectory.FindReferralAsync` (`ReferralDetail.EmergencyContact`) y
+    `SqlEnfermeriaResidentDirectory.FindEmergencyContactAsync`. El caso de uso `FindEmergencyContact` reutiliza
+    `FindScopeResident` (solo Enfermería y Medicina, mismo criterio que abrir la ficha). El informe de derivación no lo incluye
+    (DER-04).
+  - **Tests:** `ContactoUrgenteLecturaTests` (integración: perfiles, ámbito, vigente, quitado y derivación),
+    `ReferralReportBuilderTests` (el informe no lo incluye aunque el detalle lo tenga) y `EmergencyContactDisplayTests`.
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
-2. **Contacto urgente en la derivación:** la matriz da a Enfermería y Medicina lectura del contacto urgente, y la derivación pide
-   documentar la llamada al contacto designado (hoy texto libre). Toca pantallas clínicas: decisión del usuario de hacerlo
-   aparte.
-3. **Usuarios profesionales, perfiles, ámbitos y permisos (historia 4 sin turnos):** hoy se conceden por SQL. Las cuentas no tienen
+2. **Usuarios profesionales, perfiles, ámbitos y permisos (historia 4 sin turnos):** hoy se conceden por SQL. Las cuentas no tienen
    nombre hasta que exista el proveedor de identidad real.
-4. **Turnos y equipos (historia 4):** sustituirían el «equipo o turno entrante» en texto libre de los seguimientos.
-5. **Publicaciones familiares (historias 5 y 6), citas (7 y 8), auditoría administrativa (9) y panel completo (10).**
+3. **Turnos y equipos (historia 4):** sustituirían el «equipo o turno entrante» en texto libre de los seguimientos.
+4. **Publicaciones familiares (historias 5 y 6), citas (7 y 8), auditoría administrativa (9) y panel completo (10).**
 
 Huecos de lo ya construido:
 
