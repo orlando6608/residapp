@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-01. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-02. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -9,11 +9,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > (`docs/prompts-ia/continuar-construccion.md`), `docs/tareas/alta-prioridad/pendientes-enfermeria.md` y
 > `docs/tareas/alta-prioridad/pendientes-medicina.md`, `docs/tareas/alta-prioridad/pendientes-direccion.md` y
 > `docs/tareas/alta-prioridad/pendientes-administracion.md`.
-> Mira si CJ ha completado algo en `docs/pendientes-cj/`. Después comprueba que la suite pasa en verde
-> contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
+> Mira si CJ ha subido respuestas en `docs/pendientes-cj/` (ficheros `*.respuestas.json`, ver su `README.md`). Después
+> comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Derivaciones en solo lectura para Dirección, DIR-12 (2026-10-02, sin script ni push):** `/Direccion/Derivaciones` (tarjeta nueva del inicio). `ISupervisionDirectory.ListReferralsAsync`
+- **Documentos de CJ con respuestas guardadas (2026-10-02):** los `.html` de `docs/pendientes-cj/` ya no se rellenan editando «por definir»: CJ
+  los abre en el navegador, responde con opciones, texto y tablas (borrador en `localStorage`), pulsa «Guardar respuestas» y sube a la misma
+  carpeta `<documento>.respuestas.json`, que es lo que lee ingeniería (formato en el `README.md` de la carpeta; lleva el texto de cada pregunta
+  y de la opción elegida). Los 3 documentos que había se convirtieron con las mismas preguntas y opciones, y hay 2 nuevos:
+  `administracion-ambito-familiares-cargos.html` (unidades sin Administración, desvincular y compartir familiares, organigrama) y
+  `continuidad-supervision-comunicacion.html` (confirmar lo construido sin documento: recepción por miembros, derivaciones de Dirección,
+  seguimientos vencidos; plazos de hitos de DIR-11 y quién aprueba la comunicación familiar). Estilo y script iguales en todos (inline, sin
+  dependencias salvo las fuentes); probados con Chrome sin interfaz: responder, recargar, guardar, abrir el fichero (incluido uno de otro
+  documento o roto), carga automática del JSON hermano por http y aviso de versión distinta. Los `pendientes-*.md` enlazan cada hueco a su tema.
+- **Derivaciones en solo lectura para Dirección, DIR-12 (2026-10-02, sin script):** `/Direccion/Derivaciones` (tarjeta nueva del inicio). `ISupervisionDirectory.ListReferralsAsync`
   (`SqlSupervisionDirectory`, reutiliza `ScopedEventsFrom/Where`) devuelve `SupervisionReferral`: episodios **abiertos** con protocolo urgente, con el protocolo
   (perfil y hora), el informe firmado si lo hay (perfil y hora) y el número y la hora de la última llamada a la familia; `DireccionApplicationService.ListReferralsAsync`
   exige el ámbito de Dirección. Sin texto clínico, contacto, resultado de llamadas ni contenido del informe (test por reflexión). **Suposiciones mías, sin confirmar:**

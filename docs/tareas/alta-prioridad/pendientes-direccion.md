@@ -67,10 +67,12 @@ En el orden propuesto:
      protocolo, si el informe está firmado (cuándo y por qué perfil), el número de llamadas a la familia y la última, y un resumen (en curso, firmadas,
      sin firmar, con llamadas). `SupervisionReferral` no tiene texto clínico, ni el contacto, ni el resultado de las llamadas, ni el contenido del informe
      (lo comprueba un test por reflexión); sin permiso ni auditoría, como el resto de la supervisión operativa. Solo abiertos: los cerrados salen en los
-     indicadores agregados, no por nombre. **Sigue bloqueado:** consultar el informe firmado, que exige permiso clínico y las finalidades que fijará CJ (tema 1).
+     indicadores agregados, no por nombre. Pedido a CJ que lo confirme (solo abiertos; auditoría) en `docs/pendientes-cj/continuidad-supervision-comunicacion.html`
+     (tema 2). **Sigue bloqueado:** consultar el informe firmado, que exige permiso clínico y las finalidades que fijará CJ (tema 1).
    - **Comunicación familiar (DIR-13):** depende de que exista la aprobación y publicación (Administración y Familia).
 3. **Revisión de calidad de proceso (DIR-11 del boceto):** «cumplimiento de hitos definidos y excepciones». Nadie ha definido qué hitos
-   ni con qué plazos; es una decisión clínica que habría que pedir a CJ con un documento en `docs/pendientes-cj/`.
+   ni con qué plazos; es una decisión clínica. Preguntado a CJ el 2026-10-02 en `docs/pendientes-cj/continuidad-supervision-comunicacion.html`
+   (tema 4: tabla de plazos de 7 hitos y qué hacer con uno fuera de plazo).
 
 Huecos de lo ya construido:
 
@@ -79,7 +81,7 @@ Huecos de lo ya construido:
   empezar ese día (`SupervisionIndicatorRules.WasOverdue`, función pura; reprogramar el mismo día en que vence no lo borra). **Es una deducción mía, sin
   confirmar con el usuario ni con CJ.** Un seguimiento deja de estar abierto al cerrarse el episodio, al escalarse (solo Enfermería) o al activarse el
   protocolo urgente, lo primero que ocurra tras iniciarse; **no se guarda cuándo termina por otras vías** (p. ej. una indicación médica), y esos casos
-  cuentan hasta el cierre del episodio. Cada mes de la evolución se calcula por separado (un seguimiento puede contar en varios). Tests:
+  cuentan hasta el cierre del episodio (las dos cosas, preguntadas a CJ en `docs/pendientes-cj/continuidad-supervision-comunicacion.html`, tema 3). Cada mes de la evolución se calcula por separado (un seguimiento puede contar en varios). Tests:
   `SupervisionIndicatorRulesTests` (la regla, con zona horaria) e `Indicadores_SeguimientosConLaFechaVencidaEnElPeriodo_…` (SQL; falla si se pierde el cierre).
 
 - **Responsables de equipo:** el detalle operativo no los muestra porque no hay equipos ni turnos hasta que exista Administración.

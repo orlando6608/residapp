@@ -322,7 +322,8 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
-2. **El organigrama y los cargos (ADM-07):** ningún documento los define; antes hay que preguntar a CJ. Los turnos recurrentes con excepciones (ADM-16), el equipo entrante de los seguimientos y los edificios, plantas, habitaciones y plazas ya están hechos (2026-10-01/02).
+2. **El organigrama y los cargos (ADM-07):** ningún documento los define; preguntado a CJ el 2026-10-02 en
+   `docs/pendientes-cj/administracion-ambito-familiares-cargos.html` (tema 3). Los turnos recurrentes con excepciones (ADM-16), el equipo entrante de los seguimientos y los edificios, plantas, habitaciones y plazas ya están hechos (2026-10-01/02).
 3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8) y panel completo (10).**
 
 Huecos de lo ya construido:
@@ -345,7 +346,8 @@ Huecos de lo ya construido:
   perfil → «Añadir unidad»; lo cubre `UnaUnidadDelAmbito_SeConcedeAlPerfilDeOtraAdministracion_…`; este pendiente decía lo contrario por error). Lo que
   sigue sin existir: ver las unidades del centro que no están en el ámbito propio y concederse (o conceder) una unidad que no se tiene, de modo que una
   unidad que ningún ámbito de Administración tenga no se puede recuperar desde la app. Es una decisión de política (¿quién puede ampliar su propio
-  ámbito dentro del centro?) que no está en ningún documento; el organigrama (ADM-07) y los cargos tampoco existen.
+  ámbito dentro del centro?) que no está en ningún documento; el organigrama (ADM-07) y los cargos tampoco existen. Preguntado a CJ en
+  `docs/pendientes-cj/administracion-ambito-familiares-cargos.html` (tema 1, con la opción de impedir que una unidad se quede sin Administración).
 - **Niveles de ubicación:** edificios, plantas, habitaciones y plazas existen (script `0029`) y se eligen al dar de alta, pero **cambiar de habitación o de plaza**
   (y liberar una plaza al dar de baja) es un traslado y espera a CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`). Desde el 2026-10-02 Enfermería,
   Medicina y Auxiliar ven la habitación y la plaza junto a la unidad (listas, ficha y registro del residente; `ResidentLocationLabel`, sin script). Una unidad o una habitación que se inactive justo mientras llega un
@@ -366,4 +368,5 @@ Huecos de lo ya construido:
     escribe para cada residente; vincular no abre la autorización (FAM-01); un par ya vinculado es conflicto y cualquier otro motivo, acceso denegado;
     el identificador del formulario es el del vínculo (un reenvío no duplica). Los datos de contacto son compartidos: editarlos desde un residente
     cambia a todos, y la pantalla de edición avisa con el número de otros residentes (`ResidentFamilyMember.OtherResidentLinks`), sin decir cuáles.
-    **Quedan abiertos:** desvincular, y que quien edita un familiar compartido no ve ni controla los residentes ajenos a su ámbito.
+    **Quedan abiertos:** desvincular, y que quien edita un familiar compartido no ve ni controla los residentes ajenos a su ámbito. Preguntados
+    a CJ, con la confirmación del filtro por ámbito, en `docs/pendientes-cj/administracion-ambito-familiares-cargos.html` (tema 2).

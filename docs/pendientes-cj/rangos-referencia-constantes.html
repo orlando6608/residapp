@@ -1,8 +1,8 @@
 <!doctype html>
 <!--
-  Documento para que CJ lo complete editándolo en GitHub (lápiz → editar → «Commit changes»).
-  Busca «por definir» (Ctrl+F): 14 celdas de la tabla y 5 respuestas a las preguntas abiertas.
-  Sustituye ese texto por tu valor o tu respuesta. No hace falta tocar nada más.
+  Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan en «rangos-referencia-constantes.respuestas.json», en esta misma carpeta;
+  ingeniería las lee de ese fichero. Cómo funciona: docs/pendientes-cj/README.md.
 -->
 <html lang="es">
 <head>
@@ -20,12 +20,15 @@
     --muted: #55686c;
     --rule: #d3dcdd;
     --accent: #1b5f6b;
+    --accent-ink: #ffffff;
     --accent-soft: #e3eff0;
-    --warn-bg: #fbe7a8;
-    --warn-ink: #3a2c00;
     --warn-rule: #e0bf55;
     --blank: #fffdf4;
     --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
     --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
     --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
@@ -39,12 +42,15 @@
       --muted: #9aafb2;
       --rule: #2a383b;
       --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
       --accent-soft: #1b2e32;
-      --warn-bg: #4a3b0c;
-      --warn-ink: #fbeab8;
       --warn-rule: #7c6520;
       --blank: #1d2420;
       --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
     }
   }
   :root[data-theme="dark"] {
@@ -55,12 +61,15 @@
     --muted: #9aafb2;
     --rule: #2a383b;
     --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
     --accent-soft: #1b2e32;
-    --warn-bg: #4a3b0c;
-    --warn-ink: #fbeab8;
     --warn-rule: #7c6520;
     --blank: #1d2420;
     --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
   }
 
   body {
@@ -70,12 +79,12 @@
     font-family: var(--sans);
     font-size: 16px;
     line-height: 1.6;
-    padding-inline: 20px;
+    padding-inline: 16px;
   }
   .page {
     max-width: 880px;
     margin: 0 auto;
-    padding-block: 48px 72px;
+    padding-block: 48px 160px;
     display: flex;
     flex-direction: column;
     gap: 48px;
@@ -86,10 +95,10 @@
   h2 { font-size: 1.45rem; }
   h3 { font-size: 1.1rem; font-weight: 500; }
   p, ul, ol { margin: 0; }
-  section { display: flex; flex-direction: column; gap: 16px; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
   .stack { display: flex; flex-direction: column; gap: 12px; }
   ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
-  code, .code { font-family: var(--mono); font-size: 0.86em; }
+  code { font-family: var(--mono); font-size: 0.86em; }
   strong { font-weight: 600; }
   a { color: var(--accent); }
 
@@ -113,53 +122,162 @@
     border-radius: 6px;
     overflow: hidden;
   }
-  .keyfacts div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
   .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
   @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
 
-  /* Réplica de lo que ve Enfermería en la app */
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .bar, .howto, .toc { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+
+  /* Propio de este documento: réplica del aviso, parámetros y tabla de valores */
+  :root { --warn-bg: #fbe7a8; --warn-ink: #3a2c00; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --warn-bg: #4a3b0c; --warn-ink: #fbeab8; } }
+  :root[data-theme="dark"] { --warn-bg: #4a3b0c; --warn-ink: #fbeab8; }
+
   .sample { display: flex; flex-direction: column; gap: 12px; }
   .sample-label { font-size: 0.82rem; color: var(--muted); }
   .field-demo {
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-width: 420px;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; max-width: 420px;
   }
   .field-demo .input {
-    border: 1px solid var(--rule);
-    border-radius: 4px;
-    padding: 8px 12px;
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 0.95rem;
+    border: 1px solid var(--rule); border-radius: 4px; padding: 8px 12px;
+    color: var(--muted); font-family: var(--mono); font-size: 0.95rem;
   }
   .field-demo .hint { font-size: 0.88rem; color: var(--muted); }
   .alert-demo {
-    background: var(--warn-bg);
-    color: var(--warn-ink);
-    border: 1px solid var(--warn-rule);
-    border-radius: 6px;
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-rule); border-radius: 6px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;
   }
   .alert-demo small { font-size: 0.85rem; }
 
-  /* Parámetros */
   .params { display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
-  .param {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 8px 24px;
-    padding-block: 18px;
-    border-bottom: 1px solid var(--rule);
-  }
+  .param { display: grid; grid-template-columns: 200px 1fr; gap: 8px 24px; padding-block: 18px; border-bottom: 1px solid var(--rule); }
   .param-head { display: flex; flex-direction: column; gap: 2px; }
   .param-head .unit { font-family: var(--mono); font-size: 0.9rem; color: var(--accent); }
   .param-body { display: flex; flex-direction: column; gap: 8px; }
@@ -169,65 +287,30 @@
   .ask { font-size: 0.95rem; padding-left: 12px; border-left: 3px solid var(--warn-rule); }
   @media (max-width: 640px) { .param { grid-template-columns: 1fr; } }
 
-  /* Tabla a rellenar */
   .table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
-  table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 0.95rem; }
-  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
   thead th { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--accent-soft); }
-  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
   td.num { font-variant-numeric: tabular-nums; font-family: var(--mono); }
-  td.blank {
-    background: var(--blank);
-    border-left: 1px dashed var(--blank-rule);
-    border-right: 1px dashed var(--blank-rule);
-    min-width: 110px;
-  }
-  th.blank-h { color: var(--ink); }
+  td.blank { background: var(--blank); }
+  td.blank input[type="text"] { font-family: var(--mono); min-width: 80px; }
+  td.notes input[type="text"] { font-family: var(--sans); min-width: 160px; }
+  td.check { text-align: center; }
+  td.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+  tbody tr[data-done] th { box-shadow: inset 4px 0 0 var(--ok-rule); }
+  tbody tr[data-done] th::after { content: " ✓"; color: var(--ok-ink); }
+  input[type="text"]:invalid { border-color: var(--danger); border-width: 2px; }
   .legend { font-size: 0.9rem; color: var(--muted); }
-
-  .questions { counter-reset: q; list-style: none; padding: 0; gap: 14px; }
-  .questions li {
-    counter-increment: q;
-    display: grid;
-    grid-template-columns: 2.2em 1fr;
-    gap: 4px;
-  }
-  .questions li::before {
-    content: counter(q) ".";
-    font-family: var(--serif);
-    font-weight: 600;
-    color: var(--accent);
-  }
-  .questions li > div { display: flex; flex-direction: column; gap: 2px; }
-  .questions .why { color: var(--muted); font-size: 0.93rem; }
-
-  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
-  .howto {
-    background: var(--accent-soft);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    padding: 18px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .answer {
-    background: var(--blank);
-    border: 1px dashed var(--blank-rule);
-    border-radius: 4px;
-    padding: 6px 10px;
-    margin-top: 4px;
-  }
-  .answer b { font-weight: 600; }
 </style>
 </head>
-<body>
+<body data-doc="rangos-referencia-constantes" data-version="2026-09-28">
 
 <div class="page">
   <header>
     <p class="eyebrow">ResidApp · Enfermería · Pendiente de CJ</p>
     <h1>Rangos de referencia de constantes</h1>
-    <p class="meta">Estado a 28/09/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 28/09/2026 (actualizado el 02/10/2026) · Para CJ, responsable de producto</p>
     <p class="lead prose">
       La aplicación ya puede avisar cuando Enfermería registra una constante fuera de lo esperado, pero
       todavía no tiene ningún valor de referencia. Este documento explica cómo funcionan los rangos y
@@ -238,21 +321,25 @@
   <div class="keyfacts" role="list">
     <div role="listitem"><span class="k">Qué hace</span><span>Muestra un aviso visual. No bloquea nada ni cambia la prioridad.</span></div>
     <div role="listitem"><span class="k">Alcance</span><span>Un juego de rangos por centro. Los rangos por residente quedan para la fase 2.</span></div>
-    <div role="listitem"><span class="k">Qué falta</span><span>Tus valores para 7 constantes y a quién se da el permiso.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>Tus valores para 7 constantes y 5 preguntas abiertas.</span></div>
   </div>
 
-  <section class="howto">
-    <h2>Cómo completar este documento</h2>
-    <ol class="prose">
-      <li>Abre este fichero en GitHub (<code>docs/pendientes-cj/rangos-referencia-constantes.html</code>) y pulsa el lápiz para editarlo.</li>
-      <li>Busca «por definir» con Ctrl+F. Los huecos que hay que rellenar son las 14 celdas de la tabla y las 5 respuestas a las preguntas abiertas (el texto aparece también en estas instrucciones).</li>
-      <li>Sustituye cada «por definir» por tu valor o tu respuesta. Si una constante no lleva límite por ese lado, bórralo y deja la celda vacía.</li>
-      <li>Pulsa «Commit changes» para guardar.</li>
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Responde aquí</strong>
+        <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se queda en este navegador: puedes cerrar y seguir otro día.</span></li>
+      <li><span class="step-n">2</span><strong>Guarda</strong>
+        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>rangos-referencia-constantes.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
+      <li><span class="step-n">3</span><strong>Súbelo a GitHub</strong>
+        <span>Abre la <a href="https://github.com/orlando6608/residapp/upload/main/docs/pendientes-cj" target="_blank" rel="noopener">carpeta de documentos</a>, arrastra el fichero y pulsa «Commit changes». Si ya habías subido uno, se sustituye.</span></li>
     </ol>
     <p class="prose meta">
-      GitHub muestra el código del fichero, no la página. Para verla con formato, descárgalo (botón «Download raw file») y ábrelo en el navegador.
+      ¿Desde otro ordenador? Abre este documento y pulsa «Abrir respuestas guardadas» con tu fichero para seguir donde lo dejaste.
     </p>
   </section>
+
+  <nav class="toc" id="indice" aria-label="Partes que hay que completar"></nav>
 
   <section>
     <h2>Explicación general</h2>
@@ -379,13 +466,12 @@
     </div>
   </section>
 
-  <section>
+  <section class="tema" id="valores">
     <h2>Valores que tienes que definir</h2>
     <p class="prose">
-      Rellena las celdas marcadas. Si una constante no debe avisar, escribe «sin rango». Si quieres solo un
-      límite, deja el otro vacío.
+      Escribe el mínimo y el máximo de cada constante (con coma o punto decimal). Si quieres solo un límite, deja el otro
+      vacío. Si una constante no debe avisar, marca «Sin rango». Un recuadro en rojo indica un formato que no es un número.
     </p>
-    <!-- CJ: escribe aquí tus valores. Sustituye cada «por definir» de las columnas Mínimo y Máximo; la columna de notas es libre. -->
     <div class="table-wrap">
       <table>
         <thead>
@@ -393,48 +479,86 @@
             <th scope="col">Constante</th>
             <th scope="col">Unidad</th>
             <th scope="col">Valor registrado</th>
-            <th scope="col" class="blank-h">Mínimo</th>
-            <th scope="col" class="blank-h">Máximo</th>
-            <th scope="col" class="blank-h">Notas de CJ</th>
+            <th scope="col">Mínimo</th>
+            <th scope="col">Máximo</th>
+            <th scope="col">Sin rango</th>
+            <th scope="col">Notas de CJ</th>
           </tr>
         </thead>
         <tbody>
-          <tr><th scope="row">Temperatura</th><td class="num">°C</td><td>1 decimal</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
-          <tr><th scope="row">PA sistólica</th><td class="num">mmHg</td><td>entero</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
-          <tr><th scope="row">PA diastólica</th><td class="num">mmHg</td><td>entero</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
-          <tr><th scope="row">Frecuencia cardíaca</th><td class="num">lpm</td><td>entero</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
-          <tr><th scope="row">Frecuencia respiratoria</th><td class="num">rpm</td><td>entero</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
-          <tr><th scope="row">Saturación de O₂</th><td class="num">%</td><td>entero, máx. 100</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
-          <tr><th scope="row">Glucemia</th><td class="num">mg/dL</td><td>entero</td><td class="blank">por definir</td><td class="blank">por definir</td><td class="blank"></td></tr>
+          <tr data-q="temperatura" data-pregunta="Temperatura (°C), 1 decimal"><th scope="row">Temperatura</th><td class="num">°C</td><td>1 decimal</td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="minimo" aria-label="Temperatura, mínimo"></td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="maximo" aria-label="Temperatura, máximo"></td>
+            <td class="blank check"><input type="checkbox" data-field="sinRango" aria-label="Temperatura sin rango"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Temperatura, notas"></td></tr>
+          <tr data-q="pa-sistolica" data-pregunta="PA sistólica (mmHg), entero"><th scope="row">PA sistólica</th><td class="num">mmHg</td><td>entero</td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="minimo" aria-label="PA sistólica, mínimo"></td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="maximo" aria-label="PA sistólica, máximo"></td>
+            <td class="blank check"><input type="checkbox" data-field="sinRango" aria-label="PA sistólica sin rango"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="PA sistólica, notas"></td></tr>
+          <tr data-q="pa-diastolica" data-pregunta="PA diastólica (mmHg), entero"><th scope="row">PA diastólica</th><td class="num">mmHg</td><td>entero</td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="minimo" aria-label="PA diastólica, mínimo"></td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="maximo" aria-label="PA diastólica, máximo"></td>
+            <td class="blank check"><input type="checkbox" data-field="sinRango" aria-label="PA diastólica sin rango"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="PA diastólica, notas"></td></tr>
+          <tr data-q="frecuencia-cardiaca" data-pregunta="Frecuencia cardíaca (lpm), entero"><th scope="row">Frecuencia cardíaca</th><td class="num">lpm</td><td>entero</td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="minimo" aria-label="Frecuencia cardíaca, mínimo"></td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="maximo" aria-label="Frecuencia cardíaca, máximo"></td>
+            <td class="blank check"><input type="checkbox" data-field="sinRango" aria-label="Frecuencia cardíaca sin rango"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Frecuencia cardíaca, notas"></td></tr>
+          <tr data-q="frecuencia-respiratoria" data-pregunta="Frecuencia respiratoria (rpm), entero"><th scope="row">Frecuencia respiratoria</th><td class="num">rpm</td><td>entero</td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="minimo" aria-label="Frecuencia respiratoria, mínimo"></td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="maximo" aria-label="Frecuencia respiratoria, máximo"></td>
+            <td class="blank check"><input type="checkbox" data-field="sinRango" aria-label="Frecuencia respiratoria sin rango"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Frecuencia respiratoria, notas"></td></tr>
+          <tr data-q="saturacion-o2" data-pregunta="Saturación de O₂ (%), entero, máx. 100"><th scope="row">Saturación de O₂</th><td class="num">%</td><td>entero, máx. 100</td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="minimo" aria-label="Saturación de O₂, mínimo"></td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="maximo" aria-label="Saturación de O₂, máximo"></td>
+            <td class="blank check"><input type="checkbox" data-field="sinRango" aria-label="Saturación de O₂ sin rango"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Saturación de O₂, notas"></td></tr>
+          <tr data-q="glucemia" data-pregunta="Glucemia (mg/dL), entero"><th scope="row">Glucemia</th><td class="num">mg/dL</td><td>entero</td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="minimo" aria-label="Glucemia, mínimo"></td>
+            <td class="blank"><input type="text" inputmode="decimal" pattern="\d{1,3}([.,]\d)?" data-field="maximo" aria-label="Glucemia, máximo"></td>
+            <td class="blank check"><input type="checkbox" data-field="sinRango" aria-label="Glucemia sin rango"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Glucemia, notas"></td></tr>
         </tbody>
       </table>
     </div>
     <p class="legend">
-      Centro: los valores se aplican a un centro concreto. Si varios centros deben tener valores distintos,
-      haz una tabla por centro.
+      Centro: los valores se aplican a un centro concreto. Si varios centros deben tener valores distintos, dilo en la
+      pregunta 2 y escribe allí los valores que cambian.
     </p>
   </section>
 
-  <section>
+  <section class="tema" id="preguntas">
     <h2>Preguntas abiertas</h2>
-    <!-- CJ: escribe cada respuesta sustituyendo el «por definir» que va tras «Respuesta de CJ:». -->
-    <ol class="questions prose">
-      <li><div><strong>¿A quién se concede el permiso para fijar rangos en cada centro?</strong>
-        <span class="why">Solo puede ser Medicina o Dirección/Coordinación Clínica. Por ahora se concede con un script, porque aún no existe la pantalla de administración de permisos.</span>
-        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
-      <li><div><strong>¿Los mismos valores para todos los centros?</strong>
-        <span class="why">El sistema admite valores distintos por centro. Si son iguales, basta con una tabla.</span>
-        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
-      <li><div><strong>¿La saturación necesita un rango distinto con oxigenoterapia?</strong>
-        <span class="why">Hoy el rango es único. Distinguirlo sería un cambio nuevo.</span>
-        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
-      <li><div><strong>¿Debe avisar también la temperatura que registra Auxiliar?</strong>
-        <span class="why">Hoy solo se compara la valoración de Enfermería.</span>
-        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
-      <li><div><strong>Fase 2, rangos por residente.</strong>
-        <span class="why">Por ejemplo, un objetivo de saturación propio en un residente con EPOC. Falta decidir quién los fija (Enfermería o Medicina) y si forman parte del basal.</span>
-        <p class="answer"><b>Respuesta de CJ:</b> por definir</p></div></li>
-    </ol>
+    <div class="qs">
+      <article class="q" data-q="1">
+        <div class="q-head"><span class="n">1</span><h3 class="q-title">¿A quién se concede el permiso para fijar rangos en cada centro?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Solo puede ser Medicina o Dirección/Coordinación Clínica. Desde el 01/10/2026 lo concede Administración en Usuarios, en la pantalla de cada perfil.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2">
+        <div class="q-head"><span class="n">2</span><h3 class="q-title">¿Los mismos valores para todos los centros?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">El sistema admite valores distintos por centro. Si son iguales, basta con la tabla.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3">
+        <div class="q-head"><span class="n">3</span><h3 class="q-title">¿La saturación necesita un rango distinto con oxigenoterapia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy el rango es único. Distinguirlo sería un cambio nuevo.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4">
+        <div class="q-head"><span class="n">4</span><h3 class="q-title">¿Debe avisar también la temperatura que registra Auxiliar?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy solo se compara la valoración de Enfermería.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5">
+        <div class="q-head"><span class="n">5</span><h3 class="q-title">Fase 2, rangos por residente.</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo, un objetivo de saturación propio en un residente con EPOC. Falta decidir quién los fija (Enfermería o Medicina) y si forman parte del basal.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
   </section>
 
   <section>
@@ -454,9 +578,225 @@
 
   <footer>
     ResidApp · Documento de trabajo para producto. No contiene valores clínicos: todos los rangos los define CJ.
-    Cuando lo completes, ingeniería revisa tus respuestas y carga los valores (o comprueba los que hayas
-    fijado en la pantalla). La aplicación no lee este fichero.
+    Cuando subas tus respuestas, ingeniería las revisa y carga los valores (o comprueba los que hayas
+    fijado en la pantalla). La aplicación no lee este fichero ni sus respuestas.
   </footer>
 </div>
+
+<div class="bar" role="region" aria-label="Guardar respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+    <div class="actions">
+      <button type="button" class="btn" id="btn-abrir">Abrir respuestas guardadas</button>
+      <button type="button" class="btn primary" id="btn-guardar">Guardar respuestas</button>
+      <input type="file" id="fichero" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var FILE = DOC + ".respuestas.json";
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var UPLOAD = "https://github.com/orlando6608/residapp/upload/main/docs/pendientes-cj";
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;
+  var savedAt = null;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text, link) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+    if (link) {
+      var a = document.createElement("a");
+      a.href = UPLOAD; a.target = "_blank"; a.rel = "noopener"; a.textContent = link[0];
+      estado.append(a, link[1]);
+    }
+  }
+
+  function status() {
+    if (dirty) say("", "Tienes cambios que aún no están en el fichero. Pulsa «Guardar respuestas» cuando quieras.");
+    else if (savedAt) say("ok", "Fichero al día (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda en este navegador.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? "Respondida" : "Pendiente";
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  function loaded(data, origin) {
+    apply(data);
+    dirty = false;
+    savedAt = data.guardado || null;
+    store(refresh());
+    var msg = "Respuestas cargadas " + origin + " (guardadas el " + when(data.guardado) + ").";
+    if (data.cuestionario !== VERSION) {
+      say("error", msg + " Son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+    } else {
+      say("ok", msg);
+    }
+  }
+
+  function download(json) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  async function save() {
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    try {
+      if (!window.showSaveFilePicker) throw new Error("sin selector");
+      var handle = await window.showSaveFilePicker({ suggestedName: FILE,
+        types: [{ description: "Respuestas (JSON)", accept: { "application/json": [".json"] } }] });
+      var w = await handle.createWritable();
+      await w.write(json);
+      await w.close();
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      download(json);
+    }
+    dirty = false;
+    savedAt = data.guardado;
+    store(data);
+    say("ok", "Guardado como «" + FILE + "». Ahora súbelo: abre la ",
+      ["carpeta de documentos en GitHub", ", arrastra el fichero y pulsa «Commit changes»."]);
+  }
+
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    store(refresh());
+    status();
+  }
+
+  document.getElementById("btn-guardar").addEventListener("click", save);
+  document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
+  document.getElementById("fichero").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    file.text().then(function (t) {
+      var data = JSON.parse(t);
+      if (data.documento !== DOC) {
+        say("error", "Ese fichero es de otro documento («" + data.documento + "»). Elige «" + FILE + "».");
+        return;
+      }
+      loaded(data, "del fichero");
+    }).catch(function () {
+      say("error", "No se ha podido leer ese fichero. Elige «" + FILE + "».");
+    }).finally(function () { e.target.value = ""; });
+  });
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+
+  // Si la página se sirve por http (no desde disco), carga las respuestas ya subidas al repositorio.
+  if (location.protocol.indexOf("http") === 0) {
+    fetch(FILE, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.documento !== DOC) return;
+        if (dirty) {
+          say("", "Hay respuestas en el repositorio (guardadas el " + when(data.guardado) +
+            "), pero mantienes los cambios de este navegador, que aún no están en el fichero.");
+          return;
+        }
+        loaded(data, "del repositorio");
+      })
+      .catch(function () { /* sin fichero de respuestas */ });
+  }
+})();
+</script>
 </body>
 </html>

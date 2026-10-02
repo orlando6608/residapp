@@ -1,14 +1,14 @@
 <!doctype html>
 <!--
   Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
-  Las respuestas se guardan en «traslado-y-baja-residente.respuestas.json», en esta misma carpeta;
+  Las respuestas se guardan en «administracion-ambito-familiares-cargos.respuestas.json», en esta misma carpeta;
   ingeniería las lee de ese fichero. Cómo funciona: docs/pendientes-cj/README.md.
 -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Traslado y baja del residente</title>
+<title>Ámbito, familiares y cargos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
@@ -255,25 +255,24 @@
   }
 </style>
 </head>
-<body data-doc="traslado-y-baja-residente" data-version="2026-10-01">
+<body data-doc="administracion-ambito-familiares-cargos" data-version="2026-10-02">
 
 <div class="page">
   <header>
     <p class="eyebrow">ResidApp · Administración · Pendiente de CJ</p>
-    <h1>Traslado y baja del residente</h1>
-    <p class="meta">Estado a 01/10/2026 · Para CJ, responsable de producto</p>
+    <h1>Ámbito de Administración, familiares y cargos</h1>
+    <p class="meta">Estado a 02/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
-      Administración ya puede consultar la ficha administrativa de cada residente, con su historial de ubicación, y corregir
-      errores de identidad. Lo que todavía no puede hacer es trasladar a un residente ni darle de baja. El flujo del basal
-      deja esa decisión expresamente pendiente («D1-P04»), porque afecta al trabajo clínico en curso. Este documento explica
-      lo que ocurre hoy y lo que falta decidir.
+      Administración ya gestiona usuarios, unidades, edificios, habitaciones, turnos, equipos y familiares. Al construirlo
+      han aparecido tres huecos que no resuelve ningún documento del producto: qué pasa con una unidad que ninguna
+      Administración tiene, cómo se deshace o se comparte el vínculo de un familiar, y qué es el organigrama del centro.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué bloquea</span><span>El traslado entre unidades o centros, y la baja y reactivación del residente.</span></div>
-    <div role="listitem"><span class="k">Qué no bloquea</span><span>La lista, la ficha administrativa y la corrección de identidad, que ya funcionan.</span></div>
-    <div role="listitem"><span class="k">Qué falta</span><span>6 respuestas, repartidas en 2 temas.</span></div>
+    <div role="listitem"><span class="k">Qué bloquea</span><span>Recuperar unidades sin Administración, desvincular familiares y el organigrama.</span></div>
+    <div role="listitem"><span class="k">Qué no bloquea</span><span>Todo lo que ya funciona: usuarios, estructura, turnos, equipos y familiares.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>7 respuestas, repartidas en 3 temas.</span></div>
   </div>
 
   <section class="howto" aria-labelledby="como">
@@ -282,7 +281,7 @@
       <li><span class="step-n">1</span><strong>Responde aquí</strong>
         <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se queda en este navegador: puedes cerrar y seguir otro día.</span></li>
       <li><span class="step-n">2</span><strong>Guarda</strong>
-        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>traslado-y-baja-residente.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
+        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>administracion-ambito-familiares-cargos.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
       <li><span class="step-n">3</span><strong>Súbelo a GitHub</strong>
         <span>Abre la <a href="https://github.com/orlando6608/residapp/upload/main/docs/pendientes-cj" target="_blank" rel="noopener">carpeta de documentos</a>, arrastra el fichero y pulsa «Commit changes». Si ya habías subido uno, se sustituye.</span></li>
     </ol>
@@ -294,59 +293,40 @@
   <nav class="toc" id="indice" aria-label="Temas del documento"></nav>
 
   <section class="tema" id="tema-1">
-    <h2>Tema 1 · Trasladar a un residente</h2>
+    <h2>Tema 1 · Unidades que ninguna Administración tiene</h2>
     <div class="stack prose">
       <p>
-        Cada residente tiene una única ubicación vigente (centro y unidad) y un historial que no se reescribe: un traslado
-        cerraría la ubicación anterior y abriría la nueva. Las listas de residentes de cada perfil, y el acceso a su ficha y
-        a su basal, siguen a esa ubicación vigente.
+        Cada perfil de Administración trabaja sobre un <strong>ámbito</strong>: su centro y las unidades que se le han
+        concedido. Solo ve y gestiona esas unidades. Quien crea una unidad la recibe en su ámbito, y desde Usuarios puede
+        concederla a otras personas, también a otra Administración.
       </p>
       <p>
-        En cambio, cada episodio (un cambio de Auxiliar, un evento de Enfermería o de Medicina, con su valoración, escalado,
-        seguimiento, indicaciones o protocolo) pertenece a la unidad donde se registró, y es la Enfermería y la Medicina de
-        esa unidad quienes lo ven en sus bandejas.
+        Lo que no existe es lo contrario: ver las unidades del centro que <strong>no</strong> están en tu ámbito y
+        añadírtelas. Hoy nadie puede ampliar su propio ámbito.
       </p>
       <p class="context">
-        Por eso, si hoy se trasladara a un residente con episodios abiertos, esos episodios se quedarían en las bandejas de
-        la unidad de origen, mientras que el residente aparecería en las listas de la unidad de destino. Además, quien
-        tuviera a medias un borrador de su basal en la unidad de origen dejaría de poder abrirlo.
+        Por eso, si la única Administración que tenía una unidad deja de tenerla (se le retira la unidad o se le revoca el
+        perfil), esa unidad se queda sin nadie que la gestione, y desde la aplicación no se puede recuperar. Los residentes
+        siguen en ella y la parte clínica sigue funcionando; lo que se pierde es la gestión administrativa.
       </p>
     </div>
     <div class="qs">
       <article class="q" data-q="1.1">
-        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Qué traslados necesita el centro?</h3><span class="chip">Pendiente</span></div>
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Quién puede ver todas las unidades del centro y añadirse las que no tiene?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">En cualquier caso, cada ampliación quedaría registrada en la auditoría con quién y cuándo.</p>
         <fieldset class="choices" aria-labelledby="t-1-1">
-          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Solo entre unidades del mismo centro.</span></label>
-          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Entre unidades y también entre centros del mismo grupo.</span></label>
-          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">Ninguno por ahora: los cambios de unidad son raros y se pueden aplazar.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Cualquier Administración del centro.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Solo una Administración «principal» del centro, marcada como tal (por ejemplo, la persona responsable de la administración del centro).</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">Nadie desde el centro: lo resuelve el soporte de la plataforma, que ya da de alta los centros nuevos.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
       <article class="q" data-q="1.2">
-        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Qué pasa con los episodios abiertos del residente al trasladarlo?</h3><span class="chip">Pendiente</span></div>
-        <p class="why">Por ejemplo, un cambio sin valorar, un escalado en valoración médica, un seguimiento o una indicación sin realizar.</p>
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Hay que impedir que una unidad se quede sin ninguna Administración?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy ya se impide que un perfil se quede sin ninguna unidad, pero no que una unidad se quede sin ninguna Administración.</p>
         <fieldset class="choices" aria-labelledby="t-1-2">
-          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Siguen en la unidad de origen hasta que se cierran. La unidad de destino los ve en la ficha del residente, pero no en sus bandejas.</span></label>
-          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Pasan a la unidad de destino, que los continúa desde sus bandejas. La unidad de origen deja de verlos.</span></label>
-          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">No se puede trasladar a un residente con episodios abiertos: hay que cerrarlos antes.</span></label>
-        </fieldset>
-        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
-      </article>
-      <article class="q" data-q="1.3">
-        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">¿Y un borrador de basal que esté a medias?</h3><span class="chip">Pendiente</span></div>
-        <fieldset class="choices" aria-labelledby="t-1-3">
-          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">Se cancela con el motivo «traslado» y la unidad de destino crea uno nuevo.</span></label>
-          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">Se conserva y lo puede terminar su autor, aunque sea de la unidad de origen.</span></label>
-          <label class="choice"><input type="radio" name="r-1-3" value="C"><span class="letter">C</span><span class="txt">No se puede trasladar con un borrador abierto: hay que firmarlo o cancelarlo antes.</span></label>
-        </fieldset>
-        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
-      </article>
-      <article class="q" data-q="1.4">
-        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">¿Quién puede hacer el traslado?</h3><span class="chip">Pendiente</span></div>
-        <p class="why">Hoy el alta la hace Administración, y Enfermería solo con un permiso específico.</p>
-        <fieldset class="choices" aria-labelledby="t-1-4">
-          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">Solo Administración.</span></label>
-          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">Administración, y Enfermería con un permiso específico, como en el alta.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Sí: no se puede retirar una unidad (ni revocar un perfil) si es la última Administración que la tiene.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">No hace falta, con la respuesta a la pregunta 1.1 basta para recuperarla.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
@@ -354,27 +334,79 @@
   </section>
 
   <section class="tema" id="tema-2">
-    <h2>Tema 2 · Dar de baja y reactivar a un residente</h2>
+    <h2>Tema 2 · Familiares vinculados a varios residentes</h2>
     <div class="stack prose">
       <p>
-        La aplicación ya prevé que un residente pase a «inactivo» con un motivo, pero no hay ninguna pantalla para hacerlo ni
-        está decidido qué ocurre después. Un residente inactivo desaparece hoy de todas las listas y no se puede abrir.
+        Administración da de alta a los familiares de cada residente: datos de contacto y relación (hija, sobrino…). Desde
+        el 02/10/2026 un familiar que ya existe se puede <strong>vincular a otro residente</strong>, por ejemplo una hija
+        con sus dos padres en el centro. Sus datos de contacto son los mismos para todos: si se cambia el teléfono desde
+        un residente, cambia para todos, y la pantalla de edición avisa de con cuántos residentes más está vinculado.
+      </p>
+      <p class="context">
+        Para elegir el familiar que se vincula, solo se ofrecen los que ya están vinculados a algún residente
+        <strong>del ámbito de quien lo hace</strong>. Así nadie descubre a personas relacionadas solo con residentes de
+        otras unidades o de otros centros. Lo que hoy <strong>no</strong> se puede hacer es deshacer un vínculo.
       </p>
     </div>
     <div class="qs">
       <article class="q" data-q="2.1">
-        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">¿Qué motivos de baja hay que recoger?</h3><span class="chip">Pendiente</span></div>
-        <p class="why">Por ejemplo: fallecimiento, alta voluntaria, traslado a otro centro, ingreso hospitalario prolongado u otro. Di si es una lista cerrada o si se admite «otro» con texto.</p>
-        <label class="field">Tu respuesta<textarea data-field="texto" rows="3"></textarea></label>
-      </article>
-      <article class="q" data-q="2.2">
-        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">Tras la baja, ¿qué se puede seguir consultando y se puede reactivar?</h3><span class="chip">Pendiente</span></div>
-        <fieldset class="choices" aria-labelledby="t-2-2">
-          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">Aparece en una lista aparte de residentes dados de baja, en solo lectura, y Administración puede reactivarlo.</span></label>
-          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">Aparece en esa lista en solo lectura, pero no se reactiva: si vuelve, se da de alta de nuevo.</span></label>
-          <label class="choice"><input type="radio" name="r-2-2" value="C"><span class="letter">C</span><span class="txt">Otra (descríbela en el comentario).</span></label>
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">¿Se puede desvincular a un familiar de un residente?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo, porque se vinculó por error o porque ya no es el contacto de ese residente.</p>
+        <fieldset class="choices" aria-labelledby="t-2-1">
+          <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">Sí, Administración, indicando un motivo. El vínculo pasado se sigue viendo en el historial del residente y el familiar sigue con los demás residentes.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">No se desvincula: se marca el vínculo como inactivo («no contactar»), y sigue visible.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="C"><span class="letter">C</span><span class="txt">No hace falta por ahora.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.2">
+        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">Si un familiar está vinculado a residentes de unidades distintas, ¿quién puede cambiar sus datos de contacto?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy puede cambiarlos cualquier Administración que tenga en su ámbito a alguno de esos residentes, y el cambio afecta también a los que no ve.</p>
+        <fieldset class="choices" aria-labelledby="t-2-2">
+          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">Está bien así: cualquiera que gestione a alguno de sus residentes.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">Solo quien tenga en su ámbito a todos sus residentes; el resto lo ve en solo lectura.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="C"><span class="letter">C</span><span class="txt">Los datos de contacto no se comparten: cada residente tiene su propia copia, y vincular copia los datos.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.3">
+        <div class="q-head"><span class="n">2.3</span><h3 class="q-title" id="t-2-3">Al vincular, ¿basta con ofrecer los familiares de residentes del propio ámbito?</h3><span class="chip">Pendiente</span></div>
+        <fieldset class="choices" aria-labelledby="t-2-3">
+          <label class="choice"><input type="radio" name="r-2-3" value="A"><span class="letter">A</span><span class="txt">Sí, como ahora.</span></label>
+          <label class="choice"><input type="radio" name="r-2-3" value="B"><span class="letter">B</span><span class="txt">No: se debe poder buscar a cualquier familiar del centro (por ejemplo, por nombre o teléfono).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Organigrama y cargos del centro</h2>
+    <div class="stack prose">
+      <p>
+        La historia de usuario de la estructura del centro incluye «el organigrama», y el boceto de pantalla dice solo que
+        muestra <strong>cargos y relaciones organizativas</strong>. Ningún documento dice qué cargos hay ni para qué los
+        usa la aplicación.
+      </p>
+      <p class="context">
+        La regla del producto que sí está fijada: un cargo no da permisos. Que alguien sea, por ejemplo, supervisora de
+        planta no le deja ver ni hacer nada más; eso lo deciden siempre su perfil y su ámbito.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">¿Para qué sirve el organigrama en la aplicación?</h3><span class="chip">Pendiente</span></div>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Solo para consultarlo: quién ocupa cada cargo y de quién depende.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Además, para que la aplicación indique a quién dirigirse en cada caso (por ejemplo, la responsable de una unidad), sin dar permisos.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">No hace falta por ahora; se aplaza.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">Si hace falta, ¿qué cargos hay en un centro y de quién depende cada uno?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo: dirección del centro, dirección médica, supervisión de enfermería, responsable de unidad… Basta con una lista; si un cargo existe por unidad o por planta, dilo.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
       </article>
     </div>
   </section>

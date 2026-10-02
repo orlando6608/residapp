@@ -1,0 +1,781 @@
+<!doctype html>
+<!--
+  Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan en «continuidad-supervision-comunicacion.respuestas.json», en esta misma carpeta;
+  ingeniería las lee de ese fichero. Cómo funciona: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Continuidad, supervisión y familia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .bar, .howto, .toc { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+
+  /* Propio de este documento: ejemplo de días y tabla de plazos */
+  .days { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; max-width: 560px; }
+  .day {
+    border: 1px solid var(--rule); border-radius: 6px; background: var(--surface);
+    padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; font-size: 0.9rem;
+  }
+  .day b { font-family: var(--serif); font-weight: 600; }
+  .day.due { border-color: var(--accent); box-shadow: inset 0 3px 0 var(--accent); }
+  .day.late { background: var(--blank); border-color: var(--warn-rule); box-shadow: inset 0 3px 0 var(--warn-rule); }
+  @media (max-width: 520px) { .days { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 820px; font-size: 0.93rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+  thead th { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--accent-soft); }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+  td.blank { background: var(--blank); }
+  td.blank input[type="text"] { min-width: 90px; }
+  td.notes input[type="text"] { min-width: 150px; }
+  tbody tr[data-done] th { box-shadow: inset 4px 0 0 var(--ok-rule); }
+  tbody tr[data-done] th::after { content: " ✓"; color: var(--ok-ink); }
+</style>
+</head>
+<body data-doc="continuidad-supervision-comunicacion" data-version="2026-10-02">
+
+<div class="page">
+  <header>
+    <p class="eyebrow">ResidApp · Enfermería, Medicina y Dirección · Pendiente de CJ</p>
+    <h1>Continuidad, supervisión y comunicación familiar</h1>
+    <p class="meta">Estado a 02/10/2026 · Para CJ, responsable de producto</p>
+    <p class="lead prose">
+      En los últimos días se han construido tres cosas con reglas que ingeniería ha decidido por su cuenta, a falta de
+      un documento que las fije: quién confirma la recepción de un seguimiento, qué derivaciones ve Dirección y cómo se
+      cuentan los seguimientos vencidos. Necesitamos que las confirmes o las cambies. Además, hay dos decisiones
+      clínicas que bloquean trabajo: los plazos de cada hito del proceso y quién aprueba lo que se comunica a la familia.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Para confirmar</span><span>Temas 1, 2 y 3: ya funcionan así en la aplicación de pruebas y se pueden cambiar.</span></div>
+    <div role="listitem"><span class="k">Qué bloquea</span><span>Tema 4, la revisión de calidad de proceso, y tema 5, aprobar y publicar la comunicación familiar.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>9 preguntas y una tabla de 7 plazos, en 5 temas.</span></div>
+  </div>
+
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Responde aquí</strong>
+        <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se queda en este navegador: puedes cerrar y seguir otro día.</span></li>
+      <li><span class="step-n">2</span><strong>Guarda</strong>
+        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>continuidad-supervision-comunicacion.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
+      <li><span class="step-n">3</span><strong>Súbelo a GitHub</strong>
+        <span>Abre la <a href="https://github.com/orlando6608/residapp/upload/main/docs/pendientes-cj" target="_blank" rel="noopener">carpeta de documentos</a>, arrastra el fichero y pulsa «Commit changes». Si ya habías subido uno, se sustituye.</span></li>
+    </ol>
+    <p class="prose meta">
+      ¿Desde otro ordenador? Abre este documento y pulsa «Abrir respuestas guardadas» con tu fichero para seguir donde lo dejaste.
+    </p>
+  </section>
+
+  <nav class="toc" id="indice" aria-label="Temas del documento"></nav>
+
+  <section class="tema" id="tema-1">
+    <h2>Tema 1 · Quién confirma la recepción de un seguimiento</h2>
+    <div class="stack prose">
+      <p>
+        Cuando Enfermería o Medicina tiene un seguimiento abierto y termina su turno, lo <strong>transfiere al equipo
+        entrante</strong>: elige uno de los equipos de la unidad (los crea Administración, con sus miembros y sus turnos) y
+        escribe una nota de continuidad. La transferencia queda pendiente hasta que alguien pulsa <strong>Confirmar
+        recepción</strong>; mientras tanto el seguimiento sigue visible para todos.
+      </p>
+      <p class="context">
+        Desde el 02/10/2026, si el equipo entrante tiene miembros, <strong>solo ellos</strong> pueden confirmar la
+        recepción; a los demás la pantalla les dice quién puede. Si el equipo no tiene miembros, la confirma cualquiera del
+        mismo perfil en la unidad. El equipo entrante se elige a mano: la aplicación no mira qué equipo tiene turno
+        planificado.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Quién puede confirmar la recepción?</h3><span class="chip">Pendiente</span></div>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Los miembros del equipo entrante, como ahora (y cualquiera de la unidad si el equipo no tiene miembros).</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Cualquier profesional del mismo perfil en la unidad, sea o no del equipo.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">Solo los miembros del equipo entrante que tengan turno planificado en ese momento.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿La aplicación debe proponer el equipo entrante según los turnos planificados?</h3><span class="chip">Pendiente</span></div>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Sí: propone el equipo del siguiente turno planificado de la unidad, y se puede cambiar.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">No: se elige a mano entre los equipos de la unidad, como ahora.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2">
+    <h2>Tema 2 · Qué derivaciones a Urgencias ve Dirección</h2>
+    <div class="stack prose">
+      <p>
+        Desde el 02/10/2026 Dirección Clínica tiene la pantalla <strong>Derivaciones a Urgencias</strong>. Para cada
+        episodio con el protocolo urgente activado muestra el residente y su unidad, quién (por perfil) y cuándo activó el
+        protocolo, si el informe de derivación está firmado y cuándo, y cuántas llamadas a la familia constan y la última.
+      </p>
+      <p class="context">
+        No muestra el contenido del informe, el teléfono ni el resultado de las llamadas. Solo salen los episodios
+        <strong>abiertos</strong>: los cerrados se cuentan en los indicadores, sin nombres. Como no muestra contenido
+        clínico, consultarla no pide finalidad ni queda en la auditoría, igual que el resto de la supervisión.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="2.1">
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">¿Qué derivaciones debe ver Dirección en esa pantalla?</h3><span class="chip">Pendiente</span></div>
+        <fieldset class="choices" aria-labelledby="t-2-1">
+          <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">Solo las de episodios abiertos, como ahora.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">También las de episodios ya cerrados, eligiendo un periodo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.2">
+        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">¿Debe quedar en la auditoría cada consulta de esa pantalla?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Muestra nombres de residentes, aunque no contenido clínico.</p>
+        <fieldset class="choices" aria-labelledby="t-2-2">
+          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">No, como ahora.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">Sí, sin pedir finalidad.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="C"><span class="letter">C</span><span class="txt">Sí, y pidiendo una finalidad, como la lectura clínica.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Cómo se cuentan los seguimientos vencidos</h2>
+    <div class="stack prose">
+      <p>
+        Un seguimiento con fecha prevista aparece como <strong>vencido</strong> desde el día siguiente a esa fecha, y sigue
+        abierto hasta que alguien actúa. Uno que solo tiene criterio (sin fecha) no vence. En los indicadores de Dirección,
+        para un periodo, se cuenta como «n de m»:
+      </p>
+      <ul>
+        <li><strong>m</strong>: los seguimientos que estuvieron abiertos algún día del periodo;</li>
+        <li><strong>n</strong>: cuántos de ellos estuvieron vencidos algún día del periodo, mirando la fecha prevista que tenían al empezar ese día.</li>
+      </ul>
+      <p>Un ejemplo, con fecha prevista el lunes 5:</p>
+      <div class="days" aria-hidden="true">
+        <div class="day due"><b>Lun 5</b><span>Fecha prevista</span></div>
+        <div class="day late"><b>Mar 6</b><span>Vencido</span></div>
+        <div class="day late"><b>Mié 7</b><span>Vencido</span></div>
+        <div class="day"><b>Jue 8</b><span>…</span></div>
+      </div>
+      <ul>
+        <li>Si el lunes 5 se reprograma al jueves 8, nunca cuenta como vencido.</li>
+        <li>Si se reprograma el martes 6, sí cuenta: al empezar el martes ya estaba vencido.</li>
+      </ul>
+      <p class="context">
+        Un seguimiento deja de contar como abierto cuando se cierra el episodio, cuando Enfermería lo escala a Medicina o
+        cuando se activa el protocolo urgente. Si termina de otra forma, la aplicación no lo sabe y lo sigue contando hasta
+        que se cierra el episodio.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">¿Es correcta esta forma de contar los vencidos?</h3><span class="chip">Pendiente</span></div>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Sí.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">No: reprogramar el mismo día en que vence no debería contar como vencido.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">Otra (descríbela en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">¿Hay otros momentos en que un seguimiento termina?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Además de cerrar el episodio, escalarlo a Medicina o activar el protocolo urgente.</p>
+        <fieldset class="choices" aria-labelledby="t-3-2">
+          <label class="choice"><input type="radio" name="r-3-2" value="A"><span class="letter">A</span><span class="txt">No, esos tres bastan.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="B"><span class="letter">B</span><span class="txt">Sí (di cuáles en el comentario; por ejemplo, cuando Medicina da una indicación).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-4">
+    <h2>Tema 4 · Plazos de cada hito del proceso</h2>
+    <div class="stack prose">
+      <p>
+        El boceto de Dirección prevé una <strong>revisión de calidad de proceso</strong>: «cumplimiento de hitos definidos
+        y excepciones». La aplicación ya guarda quién y cuándo hace cada paso, pero nadie ha dicho qué plazo es el
+        esperado. Sin esos plazos no se puede construir.
+      </p>
+      <p class="context">
+        Como el resto de los indicadores, se mostraría por unidad y periodo, nunca por profesional. Escribe el plazo como
+        quieras («30 min», «2 h», «antes de 24 h»). Si un hito no debe medirse, escribe «no». Si falta alguno, añádelo en
+        el comentario de la pregunta 4.1.
+      </p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Hito</th>
+            <th scope="col">Desde</th>
+            <th scope="col">Hasta</th>
+            <th scope="col">Plazo</th>
+            <th scope="col">Plazo si es prioritario</th>
+            <th scope="col">Notas de CJ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-q="hito-valoracion-enfermeria" data-pregunta="Valoración de Enfermería: desde el registro del cambio hasta el inicio de la valoración">
+            <th scope="row">Valoración de Enfermería</th><td>Auxiliar registra un cambio</td><td>Enfermería empieza la valoración</td>
+            <td class="blank"><input type="text" data-field="plazo" aria-label="Valoración de Enfermería, plazo"></td>
+            <td class="blank"><input type="text" data-field="plazoPrioritario" aria-label="Valoración de Enfermería, plazo si es prioritario"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Valoración de Enfermería, notas"></td></tr>
+          <tr data-q="hito-valoracion-medica" data-pregunta="Valoración médica: desde el escalado hasta el inicio de la valoración médica">
+            <th scope="row">Valoración médica</th><td>Enfermería escala a Medicina</td><td>Medicina empieza la valoración</td>
+            <td class="blank"><input type="text" data-field="plazo" aria-label="Valoración médica, plazo"></td>
+            <td class="blank"><input type="text" data-field="plazoPrioritario" aria-label="Valoración médica, plazo si es prioritario"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Valoración médica, notas"></td></tr>
+          <tr data-q="hito-recepcion" data-pregunta="Recepción de la transferencia: desde la transferencia hasta la confirmación de la recepción">
+            <th scope="row">Recepción del seguimiento</th><td>Se transfiere al equipo entrante</td><td>El equipo confirma la recepción</td>
+            <td class="blank"><input type="text" data-field="plazo" aria-label="Recepción del seguimiento, plazo"></td>
+            <td class="blank"><input type="text" data-field="plazoPrioritario" aria-label="Recepción del seguimiento, plazo si es prioritario"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Recepción del seguimiento, notas"></td></tr>
+          <tr data-q="hito-informe-derivacion" data-pregunta="Informe de derivación: desde la activación del protocolo urgente hasta la firma del informe">
+            <th scope="row">Informe de derivación</th><td>Se activa el protocolo urgente</td><td>Se firma el informe</td>
+            <td class="blank"><input type="text" data-field="plazo" aria-label="Informe de derivación, plazo"></td>
+            <td class="blank"><input type="text" data-field="plazoPrioritario" aria-label="Informe de derivación, plazo si es prioritario"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Informe de derivación, notas"></td></tr>
+          <tr data-q="hito-llamada-familia" data-pregunta="Llamada a la familia: desde la activación del protocolo urgente hasta el primer intento de llamada">
+            <th scope="row">Llamada a la familia</th><td>Se activa el protocolo urgente</td><td>Primer intento de llamada</td>
+            <td class="blank"><input type="text" data-field="plazo" aria-label="Llamada a la familia, plazo"></td>
+            <td class="blank"><input type="text" data-field="plazoPrioritario" aria-label="Llamada a la familia, plazo si es prioritario"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Llamada a la familia, notas"></td></tr>
+          <tr data-q="hito-lectura-indicacion" data-pregunta="Lectura de la indicación médica: desde que Medicina la emite hasta que Enfermería confirma la lectura">
+            <th scope="row">Lectura de la indicación</th><td>Medicina emite una indicación</td><td>Enfermería confirma la lectura</td>
+            <td class="blank"><input type="text" data-field="plazo" aria-label="Lectura de la indicación, plazo"></td>
+            <td class="blank"><input type="text" data-field="plazoPrioritario" aria-label="Lectura de la indicación, plazo si es prioritario"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Lectura de la indicación, notas"></td></tr>
+          <tr data-q="hito-realizacion-indicacion" data-pregunta="Realización de la indicación médica: desde que Medicina la emite hasta que consta realizada o no realizada">
+            <th scope="row">Realización de la indicación</th><td>Medicina emite una indicación</td><td>Consta como realizada o no realizada</td>
+            <td class="blank"><input type="text" data-field="plazo" aria-label="Realización de la indicación, plazo"></td>
+            <td class="blank"><input type="text" data-field="plazoPrioritario" aria-label="Realización de la indicación, plazo si es prioritario"></td>
+            <td class="blank notes"><input type="text" data-field="notas" aria-label="Realización de la indicación, notas"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="4.1">
+        <div class="q-head"><span class="n">4.1</span><h3 class="q-title" id="t-4-1">¿Qué hace la aplicación con un hito fuera de plazo?</h3><span class="chip">Pendiente</span></div>
+        <fieldset class="choices" aria-labelledby="t-4-1">
+          <label class="choice"><input type="radio" name="r-4-1" value="A"><span class="letter">A</span><span class="txt">Solo lo cuenta en los indicadores de Dirección, por unidad y periodo, como excepción.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="B"><span class="letter">B</span><span class="txt">Además, Dirección ve la lista de episodios con algún hito fuera de plazo, sin contenido clínico.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="C"><span class="letter">C</span><span class="txt">Además, el equipo responsable ve un aviso cuando un hito está a punto de pasar de plazo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional; aquí también los hitos que falten)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-5">
+    <h2>Tema 5 · Quién aprueba la comunicación a la familia</h2>
+    <div class="stack prose">
+      <p>
+        Al cerrar un evento, Enfermería o Medicina puede preparar un texto para la familia, comprensible y sin datos
+        internos. La familia lo verá firmado como «Equipo asistencial del centro», nunca con el nombre de quien lo escribió.
+        Hoy ese texto <strong>solo se guarda</strong>, pendiente de aprobación: no hay forma de aprobarlo ni de publicarlo.
+      </p>
+      <p class="context">
+        El PRD dice que Enfermería «puede aprobar el texto familiar separado», pero no dice si basta con quien lo
+        redacta o si hace falta otra persona. Sin esta respuesta no se puede construir la aprobación, ni después la
+        publicación en el Portal Familiar.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="5.1">
+        <div class="q-head"><span class="n">5.1</span><h3 class="q-title" id="t-5-1">¿Quién aprueba el texto para la familia?</h3><span class="chip">Pendiente</span></div>
+        <fieldset class="choices" aria-labelledby="t-5-1">
+          <label class="choice"><input type="radio" name="r-5-1" value="A"><span class="letter">A</span><span class="txt">Quien lo prepara: al guardarlo ya queda aprobado.</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="B"><span class="letter">B</span><span class="txt">Otro profesional del mismo perfil y unidad, distinto de quien lo redactó.</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="C"><span class="letter">C</span><span class="txt">Dirección Clínica.</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="D"><span class="letter">D</span><span class="txt">Otra (descríbela en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5.2">
+        <div class="q-head"><span class="n">5.2</span><h3 class="q-title" id="t-5-2">Una vez aprobado, ¿cuándo lo ve la familia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">El Portal Familiar aún no existe; la respuesta sirve para prepararlo.</p>
+        <fieldset class="choices" aria-labelledby="t-5-2">
+          <label class="choice"><input type="radio" name="r-5-2" value="A"><span class="letter">A</span><span class="txt">En cuanto se aprueba.</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="B"><span class="letter">B</span><span class="txt">Cuando Administración lo publica, que decide el momento.</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="C"><span class="letter">C</span><span class="txt">Otra (descríbela en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. Lo que ya está construido se puede cambiar según tus respuestas; en lo
+    demás, ingeniería no ha elegido ninguna opción. Cuando subas tus respuestas, ingeniería las revisa, te consulta lo que
+    no quede claro y lo incorpora a la aplicación. La aplicación no lee este fichero ni sus respuestas.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Guardar respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+    <div class="actions">
+      <button type="button" class="btn" id="btn-abrir">Abrir respuestas guardadas</button>
+      <button type="button" class="btn primary" id="btn-guardar">Guardar respuestas</button>
+      <input type="file" id="fichero" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var FILE = DOC + ".respuestas.json";
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var UPLOAD = "https://github.com/orlando6608/residapp/upload/main/docs/pendientes-cj";
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;
+  var savedAt = null;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text, link) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+    if (link) {
+      var a = document.createElement("a");
+      a.href = UPLOAD; a.target = "_blank"; a.rel = "noopener"; a.textContent = link[0];
+      estado.append(a, link[1]);
+    }
+  }
+
+  function status() {
+    if (dirty) say("", "Tienes cambios que aún no están en el fichero. Pulsa «Guardar respuestas» cuando quieras.");
+    else if (savedAt) say("ok", "Fichero al día (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda en este navegador.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? "Respondida" : "Pendiente";
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  function loaded(data, origin) {
+    apply(data);
+    dirty = false;
+    savedAt = data.guardado || null;
+    store(refresh());
+    var msg = "Respuestas cargadas " + origin + " (guardadas el " + when(data.guardado) + ").";
+    if (data.cuestionario !== VERSION) {
+      say("error", msg + " Son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+    } else {
+      say("ok", msg);
+    }
+  }
+
+  function download(json) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  async function save() {
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    try {
+      if (!window.showSaveFilePicker) throw new Error("sin selector");
+      var handle = await window.showSaveFilePicker({ suggestedName: FILE,
+        types: [{ description: "Respuestas (JSON)", accept: { "application/json": [".json"] } }] });
+      var w = await handle.createWritable();
+      await w.write(json);
+      await w.close();
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      download(json);
+    }
+    dirty = false;
+    savedAt = data.guardado;
+    store(data);
+    say("ok", "Guardado como «" + FILE + "». Ahora súbelo: abre la ",
+      ["carpeta de documentos en GitHub", ", arrastra el fichero y pulsa «Commit changes»."]);
+  }
+
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    store(refresh());
+    status();
+  }
+
+  document.getElementById("btn-guardar").addEventListener("click", save);
+  document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
+  document.getElementById("fichero").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    file.text().then(function (t) {
+      var data = JSON.parse(t);
+      if (data.documento !== DOC) {
+        say("error", "Ese fichero es de otro documento («" + data.documento + "»). Elige «" + FILE + "».");
+        return;
+      }
+      loaded(data, "del fichero");
+    }).catch(function () {
+      say("error", "No se ha podido leer ese fichero. Elige «" + FILE + "».");
+    }).finally(function () { e.target.value = ""; });
+  });
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+
+  // Si la página se sirve por http (no desde disco), carga las respuestas ya subidas al repositorio.
+  if (location.protocol.indexOf("http") === 0) {
+    fetch(FILE, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.documento !== DOC) return;
+        if (dirty) {
+          say("", "Hay respuestas en el repositorio (guardadas el " + when(data.guardado) +
+            "), pero mantienes los cambios de este navegador, que aún no están en el fichero.");
+          return;
+        }
+        loaded(data, "del repositorio");
+      })
+      .catch(function () { /* sin fichero de respuestas */ });
+  }
+})();
+</script>
+</body>
+</html>
