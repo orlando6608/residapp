@@ -13,7 +13,7 @@
 
 <h1 class="h3">@Model.Resident.DisplayName</h1>
 <p class="text-muted">
-    @(Model.Resident.UnitName ?? "Sin unidad")
+    @Model.Resident.LocationLabel
     @if (Model.Resident.CerradoHoy)
     {
         <span class="badge text-bg-success align-middle">Turno ya cerrado hoy</span>

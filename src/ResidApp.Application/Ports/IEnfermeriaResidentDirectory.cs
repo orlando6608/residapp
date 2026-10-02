@@ -8,7 +8,20 @@ namespace ResidApp.Application.Ports;
 /// ninguna restricción explícita, todos los residentes ubicados en las unidades concedidas son visibles;
 /// si existe al menos una restricción, solo esos residentes lo son.</summary>
 public sealed record ScopeResidentSummary(
-    ResidentId ResidentId, string DisplayName, UnitId UnitId, string? UnitName, bool TieneBasalVigente);
+    ResidentId ResidentId, string DisplayName, UnitId UnitId, string? UnitName, bool TieneBasalVigente,
+    string? RoomName = null, string? PlaceName = null)
+{
+    /// <summary>La unidad con la habitación y la plaza actuales, si las tiene (script 0029).</summary>
+    public string LocationLabel => ResidentLocationLabel.Format(UnitName, RoomName, PlaceName);
+}
+
+/// <summary>Texto de ubicación actual de un residente para las pantallas de Enfermería, Medicina y Auxiliar: «Unidad · Habitación · Plaza»,
+/// omitiendo lo que no consta.</summary>
+public static class ResidentLocationLabel
+{
+    public static string Format(string? unitName, string? roomName, string? placeName) =>
+        string.Join(" · ", new[] { unitName ?? "Sin unidad", roomName, placeName }.Where(part => !string.IsNullOrEmpty(part)));
+}
 
 /// <summary>
 /// Descubre el conjunto de residentes visibles para un ámbito de perfil Enfermería (ENF-17), aplicando el

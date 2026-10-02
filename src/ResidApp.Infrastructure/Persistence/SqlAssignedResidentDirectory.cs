@@ -21,7 +21,8 @@ public sealed class SqlAssignedResidentDirectory(SqlConnectionFactory connection
         var rows = await connection.QueryAsync<Row>(new CommandDefinition("""
             SELECT resident.id AS ResidentId, resident.nombre_visible AS DisplayName, unit.id AS UnitId, unit.nombre_visible AS UnitName,
                    CAST(CASE WHEN current_baseline.residente_id IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS TieneBasalVigente,
-                   CAST(CASE WHEN closure_today.id IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS CerradoHoy
+                   CAST(CASE WHEN closure_today.id IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS CerradoHoy,
+                   room.nombre_visible AS RoomName, place.nombre_visible AS PlaceName
               FROM dbo.ambitos_perfil profile
               JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
                    AND unit_scope.centro_id = profile.centro_id AND unit_scope.revocado_en IS NULL
@@ -32,6 +33,8 @@ public sealed class SqlAssignedResidentDirectory(SqlConnectionFactory connection
                    AND resident.centro_id = profile.centro_id AND resident.estado = 'ACTIVE'
               JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id
                    AND location.centro_id = profile.centro_id AND location.unidad_id = unit.id AND location.vigente_hasta IS NULL
+              LEFT JOIN dbo.habitaciones room ON room.id = location.habitacion_id AND room.centro_id = location.centro_id
+              LEFT JOIN dbo.plazas place ON place.id = location.plaza_id AND place.centro_id = location.centro_id
               LEFT JOIN dbo.basales_vigentes_residente current_baseline ON current_baseline.residente_id = resident.id
                    AND current_baseline.centro_id = profile.centro_id
               OUTER APPLY (
@@ -48,10 +51,11 @@ public sealed class SqlAssignedResidentDirectory(SqlConnectionFactory connection
         return rows
             .Select(row => new AssignedResidentSummary(
                 ResidentId.From(row.ResidentId), row.DisplayName, UnitId.From(row.UnitId), row.UnitName,
-                row.TieneBasalVigente, row.CerradoHoy))
+                row.TieneBasalVigente, row.CerradoHoy, row.RoomName, row.PlaceName))
             .ToList();
     }
 
     private sealed record Row(
-        Guid ResidentId, string DisplayName, Guid UnitId, string? UnitName, bool TieneBasalVigente, bool CerradoHoy);
+        Guid ResidentId, string DisplayName, Guid UnitId, string? UnitName, bool TieneBasalVigente, bool CerradoHoy,
+        string? RoomName, string? PlaceName);
 }

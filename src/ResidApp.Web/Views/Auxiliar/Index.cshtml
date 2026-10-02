@@ -35,7 +35,7 @@ else
                 <div class="card h-100 border-start border-4 @(resident.TieneBasalVigente ? "border-success" : "border-danger")">
                     <div class="card-body">
                         <h2 class="h5 card-title mb-1">@resident.DisplayName</h2>
-                        <p class="card-text text-muted mb-2">@(resident.UnitName ?? "Sin unidad")</p>
+                        <p class="card-text text-muted mb-2">@resident.LocationLabel</p>
                         <p class="mb-2">
                             <span class="badge @(resident.TieneBasalVigente ? "text-bg-success" : "text-bg-danger")">
                                 @(resident.TieneBasalVigente ? "Basal vigente" : "Basal pendiente")

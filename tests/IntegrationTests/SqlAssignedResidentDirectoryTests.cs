@@ -1,5 +1,6 @@
 using Dapper;
 using ResidApp.Application.Ports;
+using ResidApp.Application.UseCases;
 using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
@@ -55,6 +56,28 @@ public class SqlAssignedResidentDirectoryTests
         var result = await _directory.ListAsync(auxiliarSeed.ProfileScopeId, adminSeed.CenterId);
 
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task ListAsync_IncluyeLaHabitacionYLaPlazaActuales()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var auxiliarSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, adminSeed.CenterId, adminSeed.UnitId);
+        var estructura = AdministracionResidentesTests.BuildEstructura(adminSeed.ExternalSubject);
+        var room = (await estructura.CreateRoomAsync(new CreateRoomCommand(
+            adminSeed.ProfileScopeId, adminSeed.CenterId, Guid.NewGuid(), adminSeed.UnitId, "Habitación 3"))).Value;
+        var place = (await estructura.CreatePlaceAsync(new CreatePlaceCommand(
+            adminSeed.ProfileScopeId, adminSeed.CenterId, Guid.NewGuid(), room, "Cama B"))).Value;
+        var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Auxiliar Con Plaza", new DateOnly(1940, 1, 1), DocumentedSexCode.Mujer, null, null, null, room, place, Guid.NewGuid()));
+        await AssignAsync(auxiliarSeed.ProfileScopeId, adminSeed.CenterId, resident.ResidentId, adminSeed.AccountId);
+
+        var result = await _directory.ListAsync(auxiliarSeed.ProfileScopeId, adminSeed.CenterId);
+
+        var listed = Assert.Single(result);
+        Assert.Equal(("Habitación 3", "Cama B"), (listed.RoomName, listed.PlaceName));
+        Assert.EndsWith(" · Habitación 3 · Cama B", listed.LocationLabel);
     }
 
     private static async Task<UnitId> CreateUnitAsync(CenterId centerId)

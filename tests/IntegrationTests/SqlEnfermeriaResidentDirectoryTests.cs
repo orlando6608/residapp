@@ -1,5 +1,6 @@
 using Dapper;
 using ResidApp.Application.Ports;
+using ResidApp.Application.UseCases;
 using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
@@ -69,6 +70,33 @@ public class SqlEnfermeriaResidentDirectoryTests
 
         Assert.Single(result);
         Assert.Equal(granted.ResidentId, result[0].ResidentId);
+    }
+
+    [Fact]
+    public async Task ListAsync_IncluyeLaHabitacionYLaPlazaActuales_YSinElloSoloLaUnidad()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var enfermeriaSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, adminSeed.CenterId, adminSeed.UnitId);
+        var estructura = AdministracionResidentesTests.BuildEstructura(adminSeed.ExternalSubject);
+        var room = (await estructura.CreateRoomAsync(new CreateRoomCommand(
+            adminSeed.ProfileScopeId, adminSeed.CenterId, Guid.NewGuid(), adminSeed.UnitId, "Habitación 12"))).Value;
+        var place = (await estructura.CreatePlaceAsync(new CreatePlaceCommand(
+            adminSeed.ProfileScopeId, adminSeed.CenterId, Guid.NewGuid(), room, "Cama A"))).Value;
+        var located = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Con Plaza", new DateOnly(1939, 1, 1), DocumentedSexCode.Mujer, null, null, null, room, place, Guid.NewGuid()));
+        var unlocated = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Sin Plaza", new DateOnly(1939, 2, 2), DocumentedSexCode.Hombre, null, null, null, null, null, Guid.NewGuid()));
+
+        var result = await _directory.ListAsync(enfermeriaSeed.ProfileScopeId, adminSeed.CenterId);
+
+        var withPlace = Assert.Single(result, r => r.ResidentId == located.ResidentId);
+        var withoutPlace = Assert.Single(result, r => r.ResidentId == unlocated.ResidentId);
+        Assert.Equal(("Habitación 12", "Cama A"), (withPlace.RoomName, withPlace.PlaceName));
+        Assert.EndsWith(" · Habitación 12 · Cama A", withPlace.LocationLabel);
+        Assert.Equal((null, null), (withoutPlace.RoomName, withoutPlace.PlaceName));
+        Assert.DoesNotContain(" · ", withoutPlace.LocationLabel);
     }
 
     private static async Task<UnitId> CreateUnitAsync(CenterId centerId)

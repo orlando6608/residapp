@@ -7,7 +7,12 @@ namespace ResidApp.Application.Ports;
 /// real para dejar constancia de dónde se registró el cierre. CerradoHoy sustituye al placeholder fijo
 /// "Pendiente" del grupo A1, ahora que existe la tabla de cierres cotidianos.</summary>
 public sealed record AssignedResidentSummary(
-    ResidentId ResidentId, string DisplayName, UnitId UnitId, string? UnitName, bool TieneBasalVigente, bool CerradoHoy);
+    ResidentId ResidentId, string DisplayName, UnitId UnitId, string? UnitName, bool TieneBasalVigente, bool CerradoHoy,
+    string? RoomName = null, string? PlaceName = null)
+{
+    /// <summary>La unidad con la habitación y la plaza actuales, si las tiene (script 0029).</summary>
+    public string LocationLabel => ResidentLocationLabel.Format(UnitName, RoomName, PlaceName);
+}
 
 /// <summary>
 /// A diferencia de IAuthorizationEvidenceProvider (evidencia para un ResidentId ya conocido, pensada para

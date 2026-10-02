@@ -24,7 +24,8 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
         using var connection = await connections.OpenAsync(ct);
         var rows = await connection.QueryAsync<Row>(new CommandDefinition("""
             SELECT resident.id AS ResidentId, resident.nombre_visible AS DisplayName, unit.id AS UnitId, unit.nombre_visible AS UnitName,
-                   CAST(CASE WHEN current_baseline.residente_id IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS TieneBasalVigente
+                   CAST(CASE WHEN current_baseline.residente_id IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS TieneBasalVigente,
+                   room.nombre_visible AS RoomName, place.nombre_visible AS PlaceName
               FROM dbo.ambitos_perfil profile
               JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
                    AND unit_scope.centro_id = profile.centro_id AND unit_scope.revocado_en IS NULL
@@ -32,6 +33,8 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
               JOIN dbo.residentes resident ON resident.centro_id = profile.centro_id AND resident.estado = 'ACTIVE'
               JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id
                    AND location.centro_id = profile.centro_id AND location.unidad_id = unit.id AND location.vigente_hasta IS NULL
+              LEFT JOIN dbo.habitaciones room ON room.id = location.habitacion_id AND room.centro_id = location.centro_id
+              LEFT JOIN dbo.plazas place ON place.id = location.plaza_id AND place.centro_id = location.centro_id
               LEFT JOIN dbo.ambitos_perfil_residente resident_scope ON resident_scope.ambito_perfil_id = profile.id
                    AND resident_scope.centro_id = profile.centro_id AND resident_scope.residente_id = resident.id
                    AND resident_scope.revocado_en IS NULL
@@ -47,7 +50,7 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
 
         return rows
             .Select(row => new ScopeResidentSummary(
-                ResidentId.From(row.ResidentId), row.DisplayName, UnitId.From(row.UnitId), row.UnitName, row.TieneBasalVigente))
+                ResidentId.From(row.ResidentId), row.DisplayName, UnitId.From(row.UnitId), row.UnitName, row.TieneBasalVigente, row.RoomName, row.PlaceName))
             .ToList();
     }
 
@@ -58,5 +61,6 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
         return await EmergencyContactQuery.FindAsync(connection, centerId.Value, residentId.Value, ct);
     }
 
-    private sealed record Row(Guid ResidentId, string DisplayName, Guid UnitId, string? UnitName, bool TieneBasalVigente);
+    private sealed record Row(
+        Guid ResidentId, string DisplayName, Guid UnitId, string? UnitName, bool TieneBasalVigente, string? RoomName, string? PlaceName);
 }

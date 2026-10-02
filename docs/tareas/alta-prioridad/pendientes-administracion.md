@@ -344,8 +344,8 @@ Huecos de lo ya construido:
 - **Estructura:** no hay forma de conceder una unidad ya existente a otro ámbito de Administración ni de ver las del centro que no
   estén en el ámbito propio; el organigrama (ADM-07) y los cargos tampoco existen.
 - **Niveles de ubicación:** edificios, plantas, habitaciones y plazas existen (script `0029`) y se eligen al dar de alta, pero **cambiar de habitación o de plaza**
-  (y liberar una plaza al dar de baja) es un traslado y espera a CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`). Enfermería, Medicina y Auxiliar
-  no ven aún la habitación ni la plaza del residente (solo la ficha administrativa). Una unidad o una habitación que se inactive justo mientras llega un
+  (y liberar una plaza al dar de baja) es un traslado y espera a CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`). Desde el 2026-10-02 Enfermería,
+  Medicina y Auxiliar ven la habitación y la plaza junto a la unidad (listas, ficha y registro del residente; `ResidentLocationLabel`, sin script). Una unidad o una habitación que se inactive justo mientras llega un
   alta a ella no se bloquea (carrera muy estrecha, como la de las unidades).
 - **Usuarios:** no se vincula una cuenta que ya existe en otro centro (llegará con las invitaciones del proveedor de identidad);
   no se restringe por residente a Enfermería, Medicina o Dirección; no hay «Mi cuenta» (ADM-30). Fuera de estas pantallas, el

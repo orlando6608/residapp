@@ -13,6 +13,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Habitación y plaza en Enfermería, Medicina y Auxiliar (2026-10-02, sin script ni push):** `ScopeResidentSummary` y `AssignedResidentSummary` llevan
+  `RoomName` y `PlaceName` (opcionales, al final) y `LocationLabel` («Unidad · Habitación · Plaza», vía `ResidentLocationLabel.Format`, omitiendo lo que
+  no consta). `SqlEnfermeriaResidentDirectory` (que sirve también a Medicina y al desplegable de Dirección, que no lo muestra) y
+  `SqlAssignedResidentDirectory` hacen `LEFT JOIN` a `habitaciones` y `plazas` desde la ubicación vigente. Vistas: `Residentes` y `Residente` de
+  Enfermería y Medicina, y `Index` y `Registro` de Auxiliar. Manual al día (sale de «Próximamente»). Tests: uno de integración por directorio y
+  `ResidentLocationLabelTests`. Suite en verde (245, 306 y 61). Curl en local con «Habitacion 8 prueba · Cama Y prueba» en la unidad del escenario
+  integrado: lista y ficha de Enfermería y Medicina lo muestran; Auxiliar no se probó con curl (hay que asignarle el residente) y lo cubre el test de
+  integración. Quedan datos de prueba en la base local (habitaciones 7 y 8, residentes «Residente ubicacion … (ficticio)»).
 - **Login de desarrollo sin callejón sin salida (2026-10-02, commit `ff61368`, sin push):** `DevAuth/Login` rechaza un usuario sin cuenta activa o sin ningún
   ámbito activo (`IProfileScopeDirectoryProvider.ListActiveAsync` vacío) y no escribe la cookie; antes `dev-kk` dejaba la sesión atrapada en
   `ProfileScope/Select`, sin enlaces, y «Inicio» redirigía de nuevo allí. Un login rechazado vuelve a pintar el formulario con la identidad previa
