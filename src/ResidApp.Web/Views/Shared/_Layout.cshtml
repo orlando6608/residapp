@@ -45,7 +45,16 @@
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container impresion-pagina">
+        @* Identidad de marca en toda impresión o PDF del navegador, repetida arriba de cada página (site.css,
+           guia-diseno-sistema-visual.md). Es un div y no un header para que las páginas que ocultan header al imprimir
+           no lo quiten. *@
+        <div class="d-none impresion-marca">
+            <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+                <img src="~/images/logo.svg" alt="ResidApp" style="height: 1.4cm; width: 1.4cm" />
+                <span class="text-muted"><strong>ResidApp</strong> · Plataforma Asistencial Geriátrica</span>
+            </div>
+        </div>
         <main role="main" class="pb-3">
             @RenderBody()
         </main>

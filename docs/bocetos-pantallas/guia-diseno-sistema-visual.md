@@ -62,6 +62,17 @@ Al tratar con perfiles que van desde auxiliares con turnos nocturnos hasta **Fam
 
 ---
 
+## 🖨️ 4. Identidad de marca en PDF e impresión (obligatorio)
+
+El icono de ResidApp en color es la identidad de marca de la app. **Todo documento que la app genere o que se imprima desde ella lleva arriba el icono en color y el nombre «ResidApp · Plataforma Asistencial Geriátrica»**, separados del contenido por una línea fina gris. Esto incluye los documentos que se añadan en el futuro.
+
+* **PDF generado en servidor (MigraDoc):** cada sección llama a `PdfBranding.AddHeader(section)` (`src/ResidApp.Infrastructure/Pdf/PdfBranding.cs`), que pone el encabezado en **todas las páginas**. No se escribe un encabezado propio en cada renderizador.
+* **Impresión o «guardar como PDF» del navegador:** el encabezado ya está en `Views/Shared/_Layout.cshtml` (bloque `.impresion-marca`, visible solo al imprimir) y se repite **arriba de cada página**, con un hueco fijo para que el contenido nunca quede debajo. `wwwroot/css/site.css` imprime el contenedor `.impresion-pagina` como una tabla y el encabezado como su cabecera (`table-header-group` con `break-inside: avoid`), que es lo que hace que el navegador lo repita. Una vista que oculte elementos al imprimir no debe ocultar ese bloque (por eso es un `div`, no un `header`) ni cambiar el `display` del contenedor.
+* **Origen del icono:** `wwwroot/images/logo.svg`. Los PDF de servidor usan su versión PNG, `src/ResidApp.Infrastructure/Pdf/Images/logo.png`, porque PDFsharp no importa SVG. Si cambia el SVG, hay que regenerar el PNG.
+* Los documentos ya firmados no se regeneran: conservan el aspecto con el que se firmaron.
+
+---
+
 ## 🧙‍♂️ Instrucciones directas para Claude Code
 Cuando maquetes código Razor (`.cshtml`) en `src/ResidApp.Web/Views/`, implementa de forma estricta las clases utilitarias de Bootstrap 5 que mapean esta paleta:
 * Fondos: `bg-light`, `bg-white`, `bg-primary`.

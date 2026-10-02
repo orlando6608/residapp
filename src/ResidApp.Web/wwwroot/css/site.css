@@ -29,3 +29,22 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* Identidad de marca al imprimir (guia-diseno-sistema-visual.md, sección 4): el contenedor se imprime como una tabla y el
+   encabezado de marca como su cabecera, que el navegador repite arriba de cada página reservando el mismo hueco. */
+@media print {
+  .impresion-pagina {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .impresion-marca {
+    display: table-header-group !important;
+    break-inside: avoid;
+  }
+
+  .impresion-pagina > main {
+    display: table-row-group;
+  }
+}

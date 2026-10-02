@@ -934,11 +934,20 @@ Repite estos pasos antes de dar un bloque por cerrado:
   `ReferralReportPdfRenderer`. Para revisar un PDF sin abrirlo, compara el contenido de su página
   (`PdfReader.Open(...).Pages[0].Contents`, `UnfilteredValue`): el texto va con la fuente incrustada y no se busca como
   texto plano.
+- **Identidad de marca en PDF e impresión** (obligatoria, ver sección 4 de `guia-diseno-sistema-visual.md`): todo PDF
+  nuevo de servidor llama a `PdfBranding.AddHeader(section)`. Las impresiones del navegador ya llevan el encabezado
+  del `_Layout`, y ninguna vista debe ocultarlo al imprimir. Se repite en cada página porque, al imprimir, el contenedor
+  es una tabla CSS y el encabezado su `table-header-group`. Sin `break-inside: avoid`, Chrome no lo repite (comprobado
+  imprimiendo Indicadores en dos páginas).
 - **Imágenes en el PDF:** PDFsharp no importa SVG. El icono del encabezado es `wwwroot\images\logo.svg` rasterizado a
   PNG de 256 px (`Infrastructure\Pdf\Images\logo.png`, generado con Chrome headless `--screenshot` y
   `--default-background-color=00000000`), incrustado como recurso y pasado a MigraDoc con el prefijo `base64:`, sin
   ficheros temporales. Si cambia el SVG, hay que regenerar el PNG. Para ver un PDF como imagen sin poppler, usa
   `Windows.Data.Pdf` desde Windows PowerShell 5.1; Chrome headless no pinta su visor de PDF.
+- **Probar una impresión con sesión en local:** inicia sesión con curl (`/DevAuth/Login` con el token antiforgery;
+  `/ProfileScope/Select` elige solo el ámbito único) e imprime con Chrome por DevTools (`Network.setCookie` +
+  `Page.printToPDF`; Node 20 necesita `--experimental-websocket`). En local, la app devuelve 0 bytes en los estáticos
+  si el navegador pide compresión (`Accept-Encoding: br/gzip`): para la prueba, manda `Accept-Encoding: identity`.
 - **Decimales en formularios:** la cultura del servidor es es-ES. Un decimal enlazado desde
   `type="text"` convierte «37.8» en 378. Usa `type="number" step="0.1"`, que ASP.NET Core enlaza con
   cultura invariante gracias al campo oculto `__Invariant`. En un campo oculto que reenvía un decimal,
