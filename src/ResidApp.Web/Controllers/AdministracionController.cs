@@ -201,6 +201,72 @@ public sealed partial class AdministracionController(
         return View("Familiar", new FamilyMemberViewModel(detail.Resident, form));
     }
 
+    /// <summary>Vincular a este residente un familiar que ya está vinculado a otro residente del ámbito. No abre su autorización (FAM-01).</summary>
+    public async Task<IActionResult> VincularFamiliar(Guid residenteId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(VincularFamiliar), new { residenteId }) });
+        }
+
+        var detail = await FindAsync(activeScope, residenteId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        return View(new LinkFamilyViewModel(
+            detail.Resident, await LinkableFamilyAsync(activeScope, residenteId, ct), new LinkFamilyFormModel { ResidenteId = residenteId, OperacionId = Guid.NewGuid() }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VincularFamiliar([Bind(Prefix = "Form")] LinkFamilyFormModel form, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var detail = await FindAsync(activeScope, form.ResidenteId, ct);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        if (ModelState.IsValid)
+        {
+            var result = await service.LinkFamilyMemberAsync(new LinkFamilyMemberCommand(
+                activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.OperacionId,
+                form.FamiliarId!.Value, form.Relacion), ct);
+            if (result.Ok)
+            {
+                TempData["Mensaje"] = "Familiar vinculado. No tiene autorización de acceso hasta que la abras y la actives.";
+                return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
+            }
+
+            ModelState.AddModelError(string.Empty, result.Error!.Code switch
+            {
+                ApplicationFailureCode.InvalidInput => "Escribe la relación con el residente (hasta 100 caracteres).",
+                ApplicationFailureCode.Conflict => "Ese familiar ya está vinculado a este residente.",
+                ApplicationFailureCode.AccessDenied => "Ese familiar ya no se puede vincular. Elige otro de la lista.",
+                _ => result.Error.Message,
+            });
+        }
+
+        return View(new LinkFamilyViewModel(detail.Resident, await LinkableFamilyAsync(activeScope, form.ResidenteId, ct), form));
+    }
+
+    private async Task<IReadOnlyList<LinkableFamilyMember>> LinkableFamilyAsync(
+        ActiveProfileScopeCookieValue activeScope, Guid residenteId, CancellationToken ct)
+    {
+        var result = await service.ListLinkableFamilyAsync(new FindAdministrativeResidentQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId)), ct);
+        return result.Ok ? result.Value! : [];
+    }
+
     /// <summary>ADM-08 (0022): editar nombre, relación, teléfono y correo de un familiar del residente.</summary>
     public async Task<IActionResult> EditarFamiliar(Guid residenteId, Guid vinculoId, CancellationToken ct)
     {
@@ -217,7 +283,7 @@ public sealed partial class AdministracionController(
             return detail is null ? RedirectToAction(nameof(Residentes)) : RedirectToAction(nameof(Residente), new { residenteId });
         }
 
-        return View("Familiar", new FamilyMemberViewModel(detail!.Resident, EditForm(residenteId, member)));
+        return View("Familiar", new FamilyMemberViewModel(detail!.Resident, EditForm(residenteId, member), member.OtherResidentLinks));
     }
 
     /// <summary>El formulario de edición con los datos actuales del familiar y su versión (ver FamilyMemberData.Version).</summary>
@@ -277,13 +343,13 @@ public sealed partial class AdministracionController(
                 ModelState.Clear();
                 ModelState.AddModelError(string.Empty,
                     "Otra persona ha cambiado los datos de este familiar mientras los editabas. Aquí tienes los datos actuales: revísalos y vuelve a guardar si aún hace falta.");
-                return View("Familiar", new FamilyMemberViewModel(fresh.Resident, EditForm(form.ResidenteId, current)));
+                return View("Familiar", new FamilyMemberViewModel(fresh.Resident, EditForm(form.ResidenteId, current), current.OtherResidentLinks));
             }
 
             ModelState.AddModelError(string.Empty, FamilyMemberError(result.Error, editing: true));
         }
 
-        return View("Familiar", new FamilyMemberViewModel(detail.Resident, form));
+        return View("Familiar", new FamilyMemberViewModel(detail.Resident, form, detail.Family.FirstOrDefault(f => f.LinkId == linkId)?.OtherResidentLinks ?? 0));
     }
 
     /// <summary>ADM-10/ADM-11 (0022): la autorización de acceso de un familiar, con su historial y los cambios posibles.</summary>

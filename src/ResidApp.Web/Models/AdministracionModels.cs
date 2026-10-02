@@ -119,7 +119,29 @@ public sealed class FamilyMemberFormModel
 }
 
 /// <summary>ADM-09: el residente junto al formulario del familiar.</summary>
-public sealed record FamilyMemberViewModel(AdministrativeResidentSummary Resident, FamilyMemberFormModel Form);
+/// <summary>SharedWith es a cuántos otros residentes está vinculado también el familiar que se edita (sus datos de contacto valen para todos).</summary>
+public sealed record FamilyMemberViewModel(AdministrativeResidentSummary Resident, FamilyMemberFormModel Form, int SharedWith = 0);
+
+/// <summary>Vincular a un residente un familiar que ya existe: se elige entre los vinculables y se escribe la relación con este residente.
+/// OperacionId nace con el formulario y es el identificador del vínculo.</summary>
+public sealed class LinkFamilyFormModel
+{
+    public Guid ResidenteId { get; set; }
+
+    public Guid OperacionId { get; set; }
+
+    [Required(ErrorMessage = "Elige un familiar.")]
+    [Display(Name = "Familiar")]
+    public Guid? FamiliarId { get; set; }
+
+    [Required(ErrorMessage = "Escribe la relación con el residente.")]
+    [StringLength(FamilyMember.MaxRelationshipLength, ErrorMessage = "La relación no puede pasar de {1} caracteres.")]
+    [Display(Name = "Relación con este residente (p. ej., «Hija»)")]
+    public string? Relacion { get; set; }
+}
+
+public sealed record LinkFamilyViewModel(
+    AdministrativeResidentSummary Resident, IReadOnlyList<LinkableFamilyMember> Candidates, LinkFamilyFormModel Form);
 
 /// <summary>ADM-10/ADM-11 (0022): un cambio de la autorización. CambiosEsperados es cuántos cambios tenía al abrir la
 /// pantalla: si otro se adelanta, da conflicto.</summary>

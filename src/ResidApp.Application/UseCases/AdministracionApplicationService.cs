@@ -27,6 +27,11 @@ public sealed record AddFamilyMemberCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid OperacionId, string? NombreVisible, string? Relacion,
     string? Telefono, string? Correo);
 
+/// <summary>Vincular al residente un familiar que ya existe (ver LinkableFamilyMember). OperacionId nace con el formulario y es el
+/// identificador del vínculo, así que un reenvío no lo duplica; Relacion es la de este residente.</summary>
+public sealed record LinkFamilyMemberCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid OperacionId, Guid FamiliarId, string? Relacion);
+
 /// <summary>VersionEsperada es FamilyMemberData.Version de los datos que enseñaba la pantalla al abrirla.</summary>
 public sealed record UpdateFamilyMemberCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string? NombreVisible, string? Relacion,
@@ -130,6 +135,25 @@ public sealed class AdministracionApplicationService(
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             var data = FamilyMember.Validate(command.NombreVisible, command.Relacion, command.Telefono, command.Correo);
             return await families.AddAsync(target, command.OperacionId, data, ct);
+        });
+
+    /// <summary>Los familiares que se pueden vincular al residente: ya vinculados a otro residente del ámbito y no a este.</summary>
+    public Task<ApplicationResult<IReadOnlyList<LinkableFamilyMember>>> ListLinkableFamilyAsync(
+        FindAdministrativeResidentQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            await EnsureAdministrationScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            _ = await directory.FindAsync(query.AmbitoPerfilId, query.CentroId, query.ResidenteId, ct) ?? throw new AccessDeniedException();
+            return await directory.ListLinkableFamilyAsync(query.AmbitoPerfilId, query.CentroId, query.ResidenteId, ct);
+        });
+
+    /// <summary>Devuelve el vínculo creado.</summary>
+    public Task<ApplicationResult<Guid>> LinkFamilyMemberAsync(LinkFamilyMemberCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
+            var relationship = FamilyMember.ValidateRelationship(command.Relacion);
+            return await families.LinkExistingAsync(target, command.AmbitoPerfilId, command.OperacionId, command.FamiliarId, relationship, ct);
         });
 
     public Task<ApplicationResult<bool>> UpdateFamilyMemberAsync(UpdateFamilyMemberCommand command, CancellationToken ct = default) =>

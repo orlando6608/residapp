@@ -58,6 +58,7 @@ public static class AdministrativeAudit
         ("RESIDENT_IDENTITY_CORRECT", AuditCategory.ResidentesYFamilias),
         ("FAMILY_MEMBER_CREATE", AuditCategory.ResidentesYFamilias),
         ("FAMILY_MEMBER_UPDATE", AuditCategory.ResidentesYFamilias),
+        ("FAMILY_MEMBER_LINK", AuditCategory.ResidentesYFamilias),
         ("FAMILY_AUTHORIZATION_CHANGE", AuditCategory.ResidentesYFamilias),
         ("EMERGENCY_CONTACT_DESIGNATE", AuditCategory.ResidentesYFamilias),
         ("SHIFT_CREATE", AuditCategory.TurnosYEquipos),

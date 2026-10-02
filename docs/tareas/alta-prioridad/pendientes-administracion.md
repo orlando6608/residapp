@@ -351,11 +351,19 @@ Huecos de lo ya construido:
   Medicina y Auxiliar ven la habitación y la plaza junto a la unidad (listas, ficha y registro del residente; `ResidentLocationLabel`, sin script). Una unidad o una habitación que se inactive justo mientras llega un
   alta a ella no se bloquea (carrera muy estrecha, como la de las unidades).
 - **Usuarios:** no se vincula una cuenta que ya existe en otro centro (llegará con las invitaciones del proveedor de identidad);
-  no se restringe por residente a Enfermería, Medicina o Dirección; no hay «Mi cuenta» (ADM-30). Fuera de estas pantallas, el
+  no se restringe por residente a Enfermería, Medicina o Dirección; no hay «Mi cuenta» (ADM-30: credenciales, segundo factor y sesión dependen del proveedor de identidad; el cambio de perfil ya es «Cambiar ámbito»). Fuera de estas pantallas, el
   nombre de la cuenta solo se usa en la firma del PDF de derivación (2026-10-01). Los permisos no se eligen en el alta ni
   en «Conceder perfil», sino después en la pantalla del perfil.
-- **Familiares:** un familiar no se puede vincular a un segundo residente (habría que crearlo otra vez) ni desvincular; la edición
+- **Familiares:** desde el 2026-10-02 un familiar se vincula a un segundo residente (`VincularFamiliar`, sin script; auditoría `FAMILY_MEMBER_LINK`;
+  ver más abajo), pero **no se puede desvincular**; la edición
   de sus datos lleva desde el 2026-10-02 un token de concurrencia (huella SHA-256 de los datos que enseñó la pantalla, `FamilyMemberData.Version`, sin
   script): si otra persona los cambió entretanto, se rechaza (`FAMILY_MEMBER_CONFLICT`) y se vuelve a enseñar el formulario con los datos actuales; un
   cambio que deja los datos como estaban (A→B→A) no se detecta. La «fecha efectiva» de ADM-11 es siempre el momento del cambio. Ninguna cuenta
   de familiar existe todavía: llegará con el Portal Familiar y el proveedor de identidad.
+  - **Vincular un familiar existente (2026-10-02; suposiciones mías, sin confirmar con el usuario ni con CJ):** solo se ofrecen los familiares ya
+    vinculados a algún residente **del ámbito de quien gestiona** y no a este (`SqlAdministracionResidentDirectory.LinkableFamilySelect`; así nadie
+    descubre a personas ligadas solo a residentes ajenos u otros centros), y la escritura repite ese filtro dentro de su transacción; la relación se
+    escribe para cada residente; vincular no abre la autorización (FAM-01); un par ya vinculado es conflicto y cualquier otro motivo, acceso denegado;
+    el identificador del formulario es el del vínculo (un reenvío no duplica). Los datos de contacto son compartidos: editarlos desde un residente
+    cambia a todos, y la pantalla de edición avisa con el número de otros residentes (`ResidentFamilyMember.OtherResidentLinks`), sin decir cuáles.
+    **Quedan abiertos:** desvincular, y que quien edita un familiar compartido no ve ni controla los residentes ajenos a su ámbito.

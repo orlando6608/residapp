@@ -37,6 +37,29 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                 WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
         """;
 
+    /// <summary>Familiares vinculables al residente @ResidentId: ya vinculados a algún residente del ámbito @ProfileScopeId (así nadie descubre
+    /// a personas ligadas solo a residentes ajenos) y todavía no a este. Lo usa la lista y lo repite la escritura dentro de su transacción.</summary>
+    internal static readonly string LinkableFamilySelect = $"""
+        SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, f.telefono AS Phone
+          FROM dbo.familiares f
+         WHERE f.centro_id = @CenterId
+           AND EXISTS (SELECT 1 FROM dbo.residentes_familiares other
+                         JOIN ({ScopedResidentsSelect}) scoped ON scoped.ResidentId = other.residente_id
+                        WHERE other.familiar_id = f.id AND other.centro_id = f.centro_id)
+           AND NOT EXISTS (SELECT 1 FROM dbo.residentes_familiares mine
+                            WHERE mine.familiar_id = f.id AND mine.centro_id = f.centro_id AND mine.residente_id = @ResidentId)
+        """;
+
+    public async Task<IReadOnlyList<LinkableFamilyMember>> ListLinkableFamilyAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var rows = await connection.QueryAsync<LinkableRow>(new CommandDefinition(
+            LinkableFamilySelect + " ORDER BY f.nombre_visible, f.telefono",
+            new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value }, cancellationToken: ct));
+        return rows.Select(r => new LinkableFamilyMember(r.FamilyId, r.DisplayName, r.Phone)).ToList();
+    }
+
     public async Task<IReadOnlyList<AdministrativeResidentSummary>> ListAsync(
         Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
     {
@@ -100,13 +123,16 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                 c.Number, EnumCode.ParseCode<FamilyAuthorizationStatus>(c.StatusCode),
                 c.ValidUntil is { } until ? DateOnly.FromDateTime(until) : null, c.Reason, Utc(c.At)));
         var family = (await connection.QueryAsync<FamilyRow>(new CommandDefinition("""
-            SELECT link.id AS LinkId, f.nombre_visible AS DisplayName, link.relacion AS Relationship, f.telefono AS Phone, f.correo AS Email
+            SELECT link.id AS LinkId, f.nombre_visible AS DisplayName, link.relacion AS Relationship, f.telefono AS Phone, f.correo AS Email,
+                   (SELECT COUNT(*) FROM dbo.residentes_familiares o
+                     WHERE o.familiar_id = link.familiar_id AND o.centro_id = link.centro_id AND o.id <> link.id) AS OtherResidentLinks
               FROM dbo.residentes_familiares link
               JOIN dbo.familiares f ON f.id = link.familiar_id AND f.centro_id = link.centro_id
              WHERE link.residente_id = @ResidentId AND link.centro_id = @CenterId
              ORDER BY f.nombre_visible
             """, parameters, cancellationToken: ct)))
-            .Select(f => new ResidentFamilyMember(f.LinkId, f.DisplayName, f.Relationship, f.Phone, f.Email, changes[f.LinkId].ToList()))
+            .Select(f => new ResidentFamilyMember(
+                f.LinkId, f.DisplayName, f.Relationship, f.Phone, f.Email, changes[f.LinkId].ToList(), f.OtherResidentLinks))
             .ToList();
         var contacts = (await connection.QueryAsync<ContactRow>(new CommandDefinition("""
             SELECT d.numero AS Number, d.vinculo_id AS LinkId, f.nombre_visible AS DisplayName, d.designado_en AS At
@@ -138,7 +164,9 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
 
     private sealed record AuthorizationChangeRow(Guid LinkId, int Number, string StatusCode, DateTime? ValidUntil, string? Reason, DateTime At);
 
-    private sealed record FamilyRow(Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email);
+    private sealed record FamilyRow(Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email, int OtherResidentLinks);
+
+    private sealed record LinkableRow(Guid FamilyId, string DisplayName, string Phone);
 
     private sealed record ContactRow(int Number, Guid? LinkId, string? DisplayName, DateTime At);
 }

@@ -89,7 +89,10 @@
             </table>
         </div>
     }
-    <a asp-action="AnadirFamiliar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Añadir familiar</a>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="AnadirFamiliar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Añadir familiar</a>
+        <a asp-action="VincularFamiliar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Vincular un familiar que ya existe</a>
+    </div>
 </section>
 
 <section class="mb-4">

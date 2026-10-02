@@ -13,6 +13,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Vincular un familiar que ya existe a otro residente (2026-10-02, sin script):** `VincularFamiliar` (GET/POST, vista nueva, enlace en la ficha
+  administrativa). Los candidatos son los familiares ya vinculados a algún residente del ámbito y no a este (`LinkableFamilySelect`, reutiliza
+  `ScopedResidentsSelect`); `SqlResidentFamilyRepository.LinkExistingAsync` repite el filtro dentro de la transacción (idempotente por el `OperacionId`
+  del formulario, que es el id del vínculo), `FamilyMember.ValidateRelationship`, auditoría `FAMILY_MEMBER_LINK` (en la lista cerrada y en
+  `AuditActionDisplay`). `ResidentFamilyMember.OtherResidentLinks` y el aviso de la pantalla de edición («vinculado también a N residentes: el cambio vale
+  para todos»). **Suposiciones mías, sin confirmar** (detalle en `pendientes-administracion.md`): ámbito de los candidatos, relación por residente,
+  autorización por vínculo. Tests: `Vincular_UnFamiliarDeOtroResidenteDelAmbito_…` y `Vincular_NoOfrece…` (el segundo falla sin el filtro de ámbito) y los
+  unitarios de la relación. Suite en verde (252, 313 y 61). Curl en local: «Familiar concurrencia prueba» vinculado a «Residente Integrado Dos
+  (ficticio)» como «Sobrina»; el reenvío no duplica (2 vínculos); la edición avisa. **No hecho:** desvincular. **ADM-30 «Mi cuenta» no se ha
+  construido:** pide credenciales, segundo factor y sesión, que dependen del proveedor de identidad sin decidir; el cambio de perfil ya existe
+  (Cambiar ámbito).
 - **Token de concurrencia en la edición de familiares (2026-10-02, sin script):** la pantalla `EditarFamiliar` lleva `Form.Version`, la huella SHA-256 de
   los datos que enseñó (`FamilyMemberData.Version`, que une nombre, relación, teléfono y correo con un separador). `SqlResidentFamilyRepository.UpdateAsync`
   la compara con los datos actuales, ya con el vínculo bloqueado (`UPDLOCK`), y si no coinciden lanza `FAMILY_MEMBER_CONFLICT` (en `ConflictPattern`). Se

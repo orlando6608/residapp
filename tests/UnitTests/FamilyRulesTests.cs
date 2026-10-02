@@ -79,6 +79,23 @@ public class FamilyRulesTests
         Assert.Throws<DomainValidationException>(() => FamilyAuthorizationRules.Validate(
             effective, change, validUntilOffset is { } days ? Today.AddDays(days) : null, reason, Today));
 
+    [Theory]
+    [InlineData("Hija", "Hija")]
+    [InlineData("  Sobrina  ", "Sobrina")]
+    public void ValidarRelacion_RecortaLosEspacios(string value, string expected) =>
+        Assert.Equal(expected, FamilyMember.ValidateRelationship(value));
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ValidarRelacion_RechazaLaVacia(string? value) =>
+        Assert.Throws<DomainValidationException>(() => FamilyMember.ValidateRelationship(value));
+
+    [Fact]
+    public void ValidarRelacion_RechazaLaQuePasaDelMaximo() =>
+        Assert.Throws<DomainValidationException>(() => FamilyMember.ValidateRelationship(new string('a', FamilyMember.MaxRelationshipLength + 1)));
+
     [Fact]
     public void Version_EsEstableYCambiaConCualquierDato()
     {

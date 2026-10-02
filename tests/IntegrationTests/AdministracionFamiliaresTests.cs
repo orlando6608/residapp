@@ -215,6 +215,83 @@ public class AdministracionFamiliaresTests
         Assert.Equal(2, await CountAuditAsync(residentId, "FAMILY_MEMBER_UPDATE"));
     }
 
+    [Fact]
+    public async Task Vincular_UnFamiliarDeOtroResidenteDelAmbito_ConSuPropiaRelacion_SinAbrirAutorizacion_YElReenvioNoLoDuplica()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var first = await CreateResidentAsync(admin, "Residente Primero");
+        var second = await CreateResidentAsync(admin, "Residente Segundo");
+        var service = Build(admin.ExternalSubject);
+        var familyId = Guid.NewGuid();
+        await service.AddFamilyMemberAsync(Add(admin, first, familyId, "Marta Gil", "611 000 111"));
+        FindAdministrativeResidentQuery Query(ResidentId resident) => new(admin.ProfileScopeId, admin.CenterId, resident);
+        LinkFamilyMemberCommand Link(Guid operationId, string? relation = "Sobrina") =>
+            new(admin.ProfileScopeId, admin.CenterId, second, operationId, familyId, relation);
+
+        var beforeFirst = (await service.ListLinkableFamilyAsync(Query(first))).Value!;
+        var beforeSecond = (await service.ListLinkableFamilyAsync(Query(second))).Value!;
+        var operation = Guid.NewGuid();
+        var linked = await service.LinkFamilyMemberAsync(Link(operation));
+        var resent = await service.LinkFamilyMemberAsync(Link(operation));
+        var again = await service.LinkFamilyMemberAsync(Link(Guid.NewGuid()));
+        var reused = await service.LinkFamilyMemberAsync(Link(operation, "Prima"));
+        var blank = await service.LinkFamilyMemberAsync(new LinkFamilyMemberCommand(admin.ProfileScopeId, admin.CenterId, second, Guid.NewGuid(), familyId, "  "));
+        var afterSecond = (await service.ListLinkableFamilyAsync(Query(second))).Value!;
+        var firstDetail = await DetailAsync(admin, first);
+        var secondDetail = await DetailAsync(admin, second);
+
+        Assert.Empty(beforeFirst);
+        Assert.Equal([new LinkableFamilyMember(familyId, "Marta Gil", "611 000 111")], beforeSecond);
+        Assert.True(linked.Ok, linked.Error?.Message);
+        Assert.Equal(operation, linked.Value);
+        Assert.Equal(operation, resent.Value);
+        Assert.Equal(ApplicationFailureCode.Conflict, again.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, reused.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, blank.Error!.Code);
+        Assert.Empty(afterSecond);
+        var inFirst = Assert.Single(firstDetail.Family);
+        var inSecond = Assert.Single(secondDetail.Family);
+        Assert.Equal(("Hija", 1), (inFirst.Relationship, inFirst.OtherResidentLinks));
+        Assert.Equal(("Sobrina", 1, "Marta Gil", operation), (inSecond.Relationship, inSecond.OtherResidentLinks, inSecond.DisplayName, inSecond.LinkId));
+        Assert.Null(inSecond.CurrentAuthorization);
+        Assert.Equal(1, await CountAuditAsync(second, "FAMILY_MEMBER_LINK"));
+        Assert.Equal(0, await CountAuditAsync(first, "FAMILY_MEMBER_LINK"));
+    }
+
+    [Fact]
+    public async Task Vincular_NoOfreceNiAdmiteFamiliaresLigadosSoloAResidentesAjenosAlAmbito_NiDeOtroCentro_NiAOtroPerfil()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var otherUnit = await AddUnitAsync(admin.CenterId);
+        var other = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, admin.CenterId, otherUnit);
+        var foreignCenter = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var mine = await CreateResidentAsync(admin, "Residente Propio");
+        var theirs = await CreateResidentAsync(other, "Residente Ajeno", otherUnit);
+        var foreign = await CreateResidentAsync(foreignCenter, "Residente De Otro Centro");
+        var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
+        var theirFamily = Guid.NewGuid();
+        var foreignFamily = Guid.NewGuid();
+        await Build(other.ExternalSubject).AddFamilyMemberAsync(Add(other, theirs, theirFamily));
+        await Build(foreignCenter.ExternalSubject).AddFamilyMemberAsync(Add(foreignCenter, foreign, foreignFamily));
+        var service = Build(admin.ExternalSubject);
+        LinkFamilyMemberCommand Link(Guid familyId) => new(admin.ProfileScopeId, admin.CenterId, mine, Guid.NewGuid(), familyId, "Amigo");
+
+        var listed = (await service.ListLinkableFamilyAsync(new FindAdministrativeResidentQuery(admin.ProfileScopeId, admin.CenterId, mine))).Value!;
+        var ofTheirs = await service.LinkFamilyMemberAsync(Link(theirFamily));
+        var ofForeignCenter = await service.LinkFamilyMemberAsync(Link(foreignFamily));
+        var unknown = await service.LinkFamilyMemberAsync(Link(Guid.NewGuid()));
+        var forTheirResident = await service.LinkFamilyMemberAsync(new LinkFamilyMemberCommand(
+            admin.ProfileScopeId, admin.CenterId, theirs, Guid.NewGuid(), theirFamily, "Amigo"));
+        var byNurse = await Build(nurse.ExternalSubject).LinkFamilyMemberAsync(new LinkFamilyMemberCommand(
+            nurse.ProfileScopeId, nurse.CenterId, mine, Guid.NewGuid(), theirFamily, "Amigo"));
+        var nurseList = await Build(nurse.ExternalSubject).ListLinkableFamilyAsync(new FindAdministrativeResidentQuery(nurse.ProfileScopeId, nurse.CenterId, mine));
+
+        Assert.Empty(listed);
+        Assert.All(new[] { ofTheirs, ofForeignCenter, unknown, forTheirResident, byNurse }, r => Assert.Equal(ApplicationFailureCode.AccessDenied, r.Error!.Code));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, nurseList.Error!.Code);
+        Assert.Empty((await DetailAsync(admin, mine)).Family);
+    }
+
     private static async Task<string> FamilyVersionAsync(SeededProfile admin, ResidentId residentId)
     {
         var member = Assert.Single((await DetailAsync(admin, residentId)).Family);

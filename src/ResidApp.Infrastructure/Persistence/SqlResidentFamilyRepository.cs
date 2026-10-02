@@ -65,6 +65,64 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         }
     }
 
+    public async Task<Guid> LinkExistingAsync(
+        AdministrativeResidentTarget target, Guid profileScopeId, Guid operationId, Guid familyId, string relationship,
+        CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var parameters = new
+        {
+            ProfileScopeId = profileScopeId, CenterId = target.CenterId.Value, ResidentId = target.ResidentId.Value, FamilyId = familyId,
+            LinkId = operationId, Relationship = relationship, AccountId = target.AccountId.Value, UnitId = target.UnitId.Value,
+            ResourceType = "FAMILY_MEMBER", ResourceId = familyId, Action = "FAMILY_MEMBER_LINK", OccurredAt = DateTimeOffset.UtcNow,
+        };
+        var previous = await connection.QuerySingleOrDefaultAsync<LinkRow>(new CommandDefinition("""
+            SELECT residente_id AS ResidentId, familiar_id AS FamilyId, relacion AS Relationship
+              FROM dbo.residentes_familiares WHERE id = @LinkId AND centro_id = @CenterId
+            """, parameters, transaction, cancellationToken: ct));
+        if (previous is not null)
+        {
+            // Un reenvío del mismo formulario no duplica el vínculo; el mismo identificador con otros datos es otra petición.
+            return previous.ResidentId == target.ResidentId.Value && previous.FamilyId == familyId
+                && string.Equals(previous.Relationship, relationship, StringComparison.Ordinal)
+                ? operationId
+                : throw new DomainValidationException("IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST");
+        }
+
+        if (await connection.ExecuteScalarAsync<int>(new CommandDefinition(
+                $"SELECT COUNT(*) FROM ({SqlAdministracionResidentDirectory.LinkableFamilySelect}) linkable WHERE linkable.FamilyId = @FamilyId",
+                parameters, transaction, cancellationToken: ct)) == 0)
+        {
+            // Ya vinculado a este residente es un conflicto (la ficha lo enseña); cualquier otro motivo, acceso denegado sin distinguir.
+            throw await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+                SELECT COUNT(*) FROM dbo.residentes_familiares
+                 WHERE residente_id = @ResidentId AND familiar_id = @FamilyId AND centro_id = @CenterId
+                """, parameters, transaction, cancellationToken: ct)) > 0
+                ? (Exception)new DomainValidationException("FAMILY_MEMBER_CONFLICT")
+                : new AccessDeniedException();
+        }
+
+        try
+        {
+            await connection.ExecuteAsync(new CommandDefinition($"""
+                INSERT INTO dbo.residentes_familiares
+                    (id, centro_id, residente_id, familiar_id, relacion, vinculado_por_cuenta_id, vinculado_en)
+                VALUES (@LinkId, @CenterId, @ResidentId, @FamilyId, @Relationship, @AccountId, @OccurredAt);
+
+                {InsertAudit}
+                """, parameters, transaction, cancellationToken: ct));
+        }
+        catch (SqlException error) when (error.Number is 2601 or 2627)
+        {
+            // UX_rfa_par: otro vínculo del mismo par se adelantó.
+            throw new DomainValidationException("FAMILY_MEMBER_CONFLICT");
+        }
+
+        transaction.Commit();
+        return operationId;
+    }
+
     public async Task UpdateAsync(
         AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, string expectedVersion, CancellationToken ct = default)
     {
@@ -249,6 +307,8 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
             ? link
             : throw new DomainValidationException("IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST");
     }
+
+    private sealed record LinkRow(Guid ResidentId, Guid FamilyId, string Relationship);
 
     private sealed record MemberRow(Guid FamilyId, string DisplayName, string Relationship, string Phone, string? Email);
 

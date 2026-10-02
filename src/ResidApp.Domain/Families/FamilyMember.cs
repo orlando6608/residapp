@@ -48,6 +48,15 @@ public static class FamilyMember
         return new FamilyMemberData(name, relation, phoneText!, emailText);
     }
 
+    /// <summary>La relación de un familiar con un residente (texto libre, obligatorio), ya sin espacios sobrantes.</summary>
+    public static string ValidateRelationship(string? relationship)
+    {
+        var relation = relationship?.Trim();
+        return string.IsNullOrEmpty(relation) || relation.Length > MaxRelationshipLength
+            ? throw new DomainValidationException(InvalidCode)
+            : relation;
+    }
+
     private static bool IsPhone(string? phone)
     {
         if (string.IsNullOrEmpty(phone) || phone.Length > MaxPhoneLength || !phone.All(c => char.IsAsciiDigit(c) || " +-.()".Contains(c)))

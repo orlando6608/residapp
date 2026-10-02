@@ -25,12 +25,18 @@ public sealed record FamilyAuthorizationChangeEntry(
 
 /// <summary>ADM-08 (0022): un familiar vinculado al residente. LinkId identifica el vínculo; AuthorizationChanges va del
 /// primero al último y está vacía si la autorización no se ha abierto.</summary>
+/// <summary>OtherResidentLinks es a cuántos otros residentes del centro está vinculado también el familiar (sus datos de contacto
+/// son compartidos); no dice cuáles.</summary>
 public sealed record ResidentFamilyMember(
     Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email,
-    IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges)
+    IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges, int OtherResidentLinks = 0)
 {
     public FamilyAuthorizationChangeEntry? CurrentAuthorization => AuthorizationChanges.Count == 0 ? null : AuthorizationChanges[^1];
 }
+
+/// <summary>Un familiar que se puede vincular a otro residente: ya está vinculado a algún residente del ámbito de quien gestiona
+/// y todavía no al residente de la pantalla. Nombre y teléfono bastan para distinguir a dos personas con el mismo nombre.</summary>
+public sealed record LinkableFamilyMember(Guid FamilyId, string DisplayName, string Phone);
 
 /// <summary>ADM-08 (0022): una designación de contacto urgente. LinkId null es «sin contacto urgente»; DisplayName es el
 /// nombre vigente del familiar.</summary>
@@ -55,6 +61,10 @@ public interface IAdministracionResidentDirectory
     Task<IReadOnlyList<AdministrativeResidentSummary>> ListAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
     Task<AdministrativeResidentDetail?> FindAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+
+    /// <summary>Los familiares vinculables al residente (ver LinkableFamilyMember), por nombre. El residente ya está comprobado en el ámbito.</summary>
+    Task<IReadOnlyList<LinkableFamilyMember>> ListLinkableFamilyAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 }
 
@@ -81,6 +91,13 @@ public interface IResidentFamilyRepository
     /// <summary>Crea el familiar con el identificador operationId y lo vincula al residente, sin autorización. Un reenvío
     /// con el mismo operationId no duplica nada: devuelve el vínculo ya creado.</summary>
     Task<Guid> AddAsync(AdministrativeResidentTarget target, Guid operationId, FamilyMemberData data, CancellationToken ct = default);
+
+    /// <summary>Vincula al residente un familiar que ya existe y que es vinculable (ver LinkableFamilyMember; si no, acceso denegado,
+    /// sin distinguir el motivo), con la relación propia de este residente y sin abrir su autorización. operationId es el identificador del
+    /// vínculo: un reenvío no lo duplica. Si ya estaba vinculado al residente, FAMILY_MEMBER_CONFLICT. Devuelve el vínculo.</summary>
+    Task<Guid> LinkExistingAsync(
+        AdministrativeResidentTarget target, Guid profileScopeId, Guid operationId, Guid familyId, string relationship,
+        CancellationToken ct = default);
 
     /// <summary>expectedVersion es FamilyMemberData.Version de los datos que vio quien edita; si ya no coincide con los actuales,
     /// FAMILY_MEMBER_CONFLICT.</summary>

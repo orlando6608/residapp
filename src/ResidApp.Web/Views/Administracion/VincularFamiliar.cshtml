@@ -1,0 +1,67 @@
+@using ResidApp.Web.Models
+@model LinkFamilyViewModel
+@{
+    var resident = Model.Resident;
+    ViewData["Title"] = "Vincular un familiar";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Vincular un familiar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Vincular un familiar que ya existe</h1>
+<p class="text-muted">
+    Familiar de @resident.DisplayName. Se ofrecen los familiares que ya están vinculados a otros residentes de tu ámbito. Sus datos de contacto son
+    los mismos para todos sus residentes; la relación es solo de este residente. Vincularlo no le da acceso a nada: su autorización se abre y se
+    activa aparte.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        @if (Model.Candidates.Count == 0)
+        {
+            <p class="mb-3">No hay familiares de otros residentes de tu ámbito que se puedan vincular a este residente.</p>
+            <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Volver a la ficha</a>
+        }
+        else
+        {
+            <form asp-action="VincularFamiliar" method="post">
+                <input type="hidden" name="Form.ResidenteId" value="@Model.Form.ResidenteId" />
+                <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+
+                <div class="mb-3">
+                    <label asp-for="Form.FamiliarId" class="form-label"></label>
+                    <select asp-for="Form.FamiliarId" class="form-select form-select-lg">
+                        <option value="">Elige un familiar</option>
+                        @foreach (var candidate in Model.Candidates)
+                        {
+                            <option value="@candidate.FamilyId" selected="@(Model.Form.FamiliarId == candidate.FamilyId)">@candidate.DisplayName · @candidate.Phone</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Form.FamiliarId" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Form.Relacion" class="form-label"></label>
+                    <input asp-for="Form.Relacion" class="form-control form-control-lg" autocomplete="off" />
+                    <span asp-validation-for="Form.Relacion" class="text-danger"></span>
+                </div>
+
+                <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                    <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-lg">Vincular familiar</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
