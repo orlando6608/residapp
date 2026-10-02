@@ -13,6 +13,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Login de desarrollo sin callejón sin salida (2026-10-02, commit `ff61368`, sin push):** `DevAuth/Login` rechaza un usuario sin cuenta activa o sin ningún
+  ámbito activo (`IProfileScopeDirectoryProvider.ListActiveAsync` vacío) y no escribe la cookie; antes `dev-kk` dejaba la sesión atrapada en
+  `ProfileScope/Select`, sin enlaces, y «Inicio» redirigía de nuevo allí. Un login rechazado vuelve a pintar el formulario con la identidad previa
+  (y su botón «Salir»). `Select.cshtml`: con 0 ámbitos ofrece «Cambiar de identidad» y «Salir»; si falla la carga de ámbitos (p. ej. BD caída)
+  muestra el error y «Reintentar» en vez de «no tiene ningún ámbito»; el texto «varios ámbitos» solo sale con más de uno. Manual actualizado.
+  4 tests funcionales nuevos (fallan sin el cambio); suite en verde (240, 304 y 61).
 - **Consulta auditada de basal de Dirección y firma suelta (2026-10-02, sin push):** `/Baseline/Direction` toma el ámbito y el centro
   del ámbito activo y el residente se elige en un desplegable (`DireccionApplicationService.ListResidentsAsync`, que reutiliza
   `SqlEnfermeriaResidentDirectory` admitiendo ahora `DIRECCION_CLINICA`). Se retiró la pantalla suelta `/Baseline/Sign` y su tarjeta del
