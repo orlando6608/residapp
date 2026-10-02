@@ -70,7 +70,7 @@ else
     <div class="card mb-3">
         <div class="card-body">
             <h2 class="h5 card-title">Borrador activo</h2>
-            <p class="mb-1">Motivo: <strong>@Model.Draft.ReasonCode</strong></p>
+            <p class="mb-1">Motivo: <strong>@EnumDisplay.Label(Model.Draft.ReasonCode)</strong></p>
             <p class="mb-1">Fuente de la información: <strong>@EnumDisplay.Label(Model.Draft.CommonInformationSourceCode)@(Model.Draft.CommonInformationSourceOtherText is null ? "" : $" ({Model.Draft.CommonInformationSourceOtherText})")</strong></p>
             <p class="mb-0">Fecha de la información: <strong>@Model.Draft.CommonInformationDate.ToString("dd/MM/yyyy")</strong></p>
         </div>

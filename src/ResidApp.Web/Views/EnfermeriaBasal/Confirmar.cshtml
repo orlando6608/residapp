@@ -23,7 +23,7 @@
 <div class="card mb-3">
     <div class="card-body">
         <h2 class="h5 card-title">Datos comunes</h2>
-        <p class="mb-1">Motivo: <strong>@Model.ReasonCode</strong></p>
+        <p class="mb-1">Motivo: <strong>@EnumDisplay.Label(Model.ReasonCode)</strong></p>
         <p class="mb-1">Fuente de la información: <strong>@EnumDisplay.Label(Model.CommonInformationSourceCode)</strong></p>
         <p class="mb-0">Fecha de la información: <strong>@Model.CommonInformationDate.ToString("dd/MM/yyyy")</strong></p>
     </div>

@@ -924,6 +924,11 @@ Repite estos pasos antes de dar un bloque por cerrado:
 
 ## Lecciones técnicas que conviene no redescubrir
 
+- **Enums en español en pantalla:** un enum con `[Code("X_Y")]` que el formulario envía como texto se pinta con
+  `EnumDisplay.Label(valor)` (necesita `[Display(Name=…)]` en español) y `value="@valor.ToCode()"`; no sirve
+  `GetEnumSelectList` porque envía el número. Nunca imprimas `@x.AlgoCode` ni `ToString()` de un enum: sale el nombre
+  del miembro o el código en inglés. Revisado el 2026-10-02: Dirección Clínica (tipo de recurso y propósito) y el
+  motivo del basal ya cumplen.
 - **PDFsharp/MigraDoc no admite generar documentos a la vez:** comparten estado de fuentes y un título puede salir con una
   palabra en la fuente equivocada. Cualquier renderizador nuevo debe serializar el renderizado como
   `ReferralReportPdfRenderer`. Para revisar un PDF sin abrirlo, compara el contenido de su página

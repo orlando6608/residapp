@@ -1,3 +1,5 @@
+@using ResidApp.Application.Authorization
+@using ResidApp.Shared
 @model ResidApp.Web.Models.DirectionBaselineQueryModel
 @{
     ViewData["Title"] = "Consulta de Dirección Clínica";
@@ -12,8 +14,8 @@
 
 <h1 class="h3">Consulta auditada de basal (Dirección Clínica)</h1>
 <p class="text-muted">
-    Requiere perfil activo Dirección Clínica con permiso <code>CLINICAL_DETAIL_READ</code>; cada consulta
-    autorizada queda registrada en <code>eventos_auditoria</code> de forma obligatoria.
+    Requiere perfil activo Dirección Clínica con permiso de lectura del detalle clínico; cada consulta
+    autorizada queda registrada en la auditoría de forma obligatoria.
 </p>
 
 <div class="card">
@@ -41,13 +43,20 @@
             <div class="mb-3">
                 <label asp-for="TipoRecurso" class="form-label"></label>
                 <select asp-for="TipoRecurso" class="form-select form-select-lg">
-                    <option value="BASELINE_CURRENT">BASELINE_CURRENT</option>
-                    <option value="BASELINE_HISTORY">BASELINE_HISTORY</option>
+                    @foreach (var tipo in Enum.GetValues<ClinicalResourceType>())
+                    {
+                        <option value="@tipo.ToCode()">@EnumDisplay.Label(tipo)</option>
+                    }
                 </select>
             </div>
             <div class="mb-3">
                 <label asp-for="Proposito" class="form-label"></label>
-                <input asp-for="Proposito" class="form-control form-control-lg" />
+                <select asp-for="Proposito" class="form-select form-select-lg">
+                    @foreach (var proposito in Enum.GetValues<ClinicalDetailAccessPurpose>())
+                    {
+                        <option value="@proposito.ToCode()">@EnumDisplay.Label(proposito)</option>
+                    }
+                </select>
                 <span asp-validation-for="Proposito" class="text-danger"></span>
             </div>
 

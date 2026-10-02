@@ -35,7 +35,7 @@ else
                 {
                     <tr>
                         <td>@header.VersionNumber</td>
-                        <td>@header.ReasonCode</td>
+                        <td>@EnumDisplay.Label(header.ReasonCode)</td>
                         <td>@header.SignedAt</td>
                     </tr>
                 }
@@ -49,7 +49,7 @@ else
             <div class="card mb-2">
                 <div class="card-body">
                     <h5 class="card-title mb-1">Versión @header.VersionNumber</h5>
-                    <p class="card-text mb-1"><strong>Motivo:</strong> @header.ReasonCode</p>
+                    <p class="card-text mb-1"><strong>Motivo:</strong> @EnumDisplay.Label(header.ReasonCode)</p>
                     <p class="card-text text-muted mb-0"><strong>Firmado:</strong> @header.SignedAt</p>
                 </div>
             </div>

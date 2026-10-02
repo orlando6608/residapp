@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using ResidApp.Domain.Baseline;
 using ResidApp.Domain.Residents;
 using ResidApp.Shared;
@@ -16,14 +17,14 @@ public enum ResidentBaselinePermission
 /// <summary>Traduce CLINICAL_DETAIL_ACCESS_PURPOSES de policy.ts.</summary>
 public enum ClinicalDetailAccessPurpose
 {
-    [Code("SUPERVISION_CLINICA")] SupervisionClinica,
+    [Code("SUPERVISION_CLINICA")] [Display(Name = "Supervisión clínica")] SupervisionClinica,
 }
 
 /// <summary>Traduce el literal "BASELINE_CURRENT" | "BASELINE_HISTORY" de ClinicalDetailAuditObligation.</summary>
 public enum ClinicalResourceType
 {
-    [Code("BASELINE_CURRENT")] BaselineCurrent,
-    [Code("BASELINE_HISTORY")] BaselineHistory,
+    [Code("BASELINE_CURRENT")] [Display(Name = "Basal vigente")] BaselineCurrent,
+    [Code("BASELINE_HISTORY")] [Display(Name = "Historial de basal")] BaselineHistory,
 }
 
 /// <summary>Traduce AuthorizationDenialReason de policy.ts.</summary>
