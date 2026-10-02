@@ -68,6 +68,16 @@ public sealed class DireccionApplicationService(
             return new SupervisionPendingList(shown, episodes.Count);
         });
 
+    /// <summary>DIR-12: el estado de las derivaciones en curso del ámbito (episodios abiertos con protocolo urgente). Solo el estado del
+    /// proceso, sin permiso ni auditoría, como el resto de la supervisión operativa: el informe firmado no se entrega aquí.</summary>
+    public Task<ApplicationResult<IReadOnlyList<SupervisionReferral>>> ListReferralsAsync(
+        SupervisionQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await directory.ListReferralsAsync(query.AmbitoPerfilId, query.CentroId, ct);
+        });
+
     public Task<ApplicationResult<SupervisionEpisodeDetail>> FindEpisodeAsync(
         FindSupervisionEpisodeQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>

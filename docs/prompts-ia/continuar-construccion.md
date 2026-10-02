@@ -13,6 +13,13 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Derivaciones en solo lectura para Dirección, DIR-12 (2026-10-02, sin script ni push):** `/Direccion/Derivaciones` (tarjeta nueva del inicio). `ISupervisionDirectory.ListReferralsAsync`
+  (`SqlSupervisionDirectory`, reutiliza `ScopedEventsFrom/Where`) devuelve `SupervisionReferral`: episodios **abiertos** con protocolo urgente, con el protocolo
+  (perfil y hora), el informe firmado si lo hay (perfil y hora) y el número y la hora de la última llamada a la familia; `DireccionApplicationService.ListReferralsAsync`
+  exige el ámbito de Dirección. Sin texto clínico, contacto, resultado de llamadas ni contenido del informe (test por reflexión). **Suposiciones mías, sin confirmar:**
+  solo abiertos, sin permiso ni auditoría. **Sigue bloqueado por CJ:** leer el informe firmado (permiso clínico y finalidades) y DIR-13 (comunicación familiar,
+  que espera a Portal Familiar). Test `Derivaciones_MuestranElEstadoDelProcesoDeLosProtocolosAbiertosDelAmbito_SinContenido`. Suite en verde (264, 315 y 61).
+  Curl en local: Dirección ve «1 en curso, 1 firmada, 1 con llamadas» (cuadra con SQL); Enfermería, Medicina, Auxiliar y Administración reciben «No se puede acceder».
 - **Seguimientos con la fecha vencida por periodo en los indicadores de Dirección (2026-10-02, sin script):** `SupervisionIndicatorCounts` gana
   `FollowUpsOpen` y `FollowUpsOverdue` (con valor por defecto 0), `SupervisionIndicatorFacts` gana `FollowUps`, y `SqlSupervisionDirectory.ListIndicatorFactsAsync`
   los lee (seguimientos de Enfermería y de Medicina con sus reprogramaciones, una fila por reprogramación agrupada en C#). La regla pura es

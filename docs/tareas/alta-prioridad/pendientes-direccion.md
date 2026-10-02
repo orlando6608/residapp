@@ -61,8 +61,14 @@ En el orden propuesto:
    historial de eventos cerrados y correcciones y rectificaciones en solo lectura.
    **Bloqueado por una decisión de CJ:** la matriz de permisos del prototipo marca `CLINICAL_DETAIL_READ` como «aprobado; ámbito/finalidades
    pendientes». Se le han preguntado en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 1); no se construye ni se inventan hasta su respuesta.
-2. **Bloque 3 — derivaciones y comunicación familiar en solo lectura (historia 5; DIR-12, DIR-13).** La comunicación familiar depende de que
-   exista la aprobación y publicación (Administración y Familia).
+2. **Bloque 3 — derivaciones y comunicación familiar en solo lectura (historia 5; DIR-12, DIR-13).**
+   - **Derivaciones (DIR-12), hecho el 2026-10-02 (sin script; suposiciones mías, sin confirmar con el usuario ni con CJ):** `/Direccion/Derivaciones`
+     (tarjeta del inicio) lista los **episodios abiertos** del ámbito con protocolo urgente, del más reciente al más antiguo, con quién y cuándo activó el
+     protocolo, si el informe está firmado (cuándo y por qué perfil), el número de llamadas a la familia y la última, y un resumen (en curso, firmadas,
+     sin firmar, con llamadas). `SupervisionReferral` no tiene texto clínico, ni el contacto, ni el resultado de las llamadas, ni el contenido del informe
+     (lo comprueba un test por reflexión); sin permiso ni auditoría, como el resto de la supervisión operativa. Solo abiertos: los cerrados salen en los
+     indicadores agregados, no por nombre. **Sigue bloqueado:** consultar el informe firmado, que exige permiso clínico y las finalidades que fijará CJ (tema 1).
+   - **Comunicación familiar (DIR-13):** depende de que exista la aprobación y publicación (Administración y Familia).
 3. **Revisión de calidad de proceso (DIR-11 del boceto):** «cumplimiento de hitos definidos y excepciones». Nadie ha definido qué hitos
    ni con qué plazos; es una decisión clínica que habría que pedir a CJ con un documento en `docs/pendientes-cj/`.
 

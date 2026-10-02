@@ -33,6 +33,18 @@ public sealed record SupervisionMilestone(SupervisionMilestoneKind Kind, SystemP
 /// <summary>DIR-04: el episodio con sus hitos, del más antiguo al más reciente.</summary>
 public sealed record SupervisionEpisodeDetail(SupervisionEpisode Episode, IReadOnlyList<SupervisionMilestone> Milestones);
 
+/// <summary>DIR-12: una derivación en curso, vista por Dirección: un episodio abierto con protocolo urgente, con solo el estado de su proceso.
+/// ReportSignedAt es null mientras no se ha firmado el informe de derivación; FamilyCallAttempts cuenta las llamadas a la familia
+/// registradas (sin quién ni el resultado). Ningún campo de texto clínico ni el contenido del informe: leerlo necesita el permiso clínico
+/// (DIR-06).</summary>
+public sealed record SupervisionReferral(
+    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string UnitName, SystemProfile ProtocolProfile,
+    DateTimeOffset ProtocolActivatedAt, SystemProfile? ReportProfile, DateTimeOffset? ReportSignedAt, int FamilyCallAttempts,
+    DateTimeOffset? LastCallAt)
+{
+    public bool ReportSigned => ReportSignedAt is not null;
+}
+
 /// <summary>DIR-17: lo que el ámbito activo de Dirección puede supervisar. Permissions son los códigos vigentes.</summary>
 public sealed record SupervisionScopeInfo(
     string CenterName, IReadOnlyList<(UnitId Id, string Name)> Units, bool RestrictedToResidents, IReadOnlyList<string> Permissions);
@@ -47,6 +59,9 @@ public interface ISupervisionDirectory
     Task<SupervisionEpisodeDetail?> FindEpisodeAsync(Guid profileScopeId, CenterId centerId, Guid eventId, CancellationToken ct = default);
 
     Task<SupervisionScopeInfo?> FindScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>DIR-12: los episodios abiertos del ámbito con protocolo urgente, del más reciente al más antiguo, con el estado de su derivación.</summary>
+    Task<IReadOnlyList<SupervisionReferral>> ListReferralsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
     /// <summary>DIR-08 a DIR-10: hechos del ámbito con fecha en [from, toExclusive), abiertos o cerrados. Los límites son
     /// UTC, como las fechas guardadas (ver SupervisionIndicatorRules.UtcBounds).</summary>

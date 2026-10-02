@@ -1,0 +1,91 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model SupervisionReferralsViewModel
+@{
+    ViewData["Title"] = "Derivaciones a Urgencias";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Dirección Clínica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Derivaciones</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Derivaciones a Urgencias</h1>
+<p class="text-muted">
+    Episodios abiertos de tu ámbito con protocolo urgente, del más reciente al más antiguo, y en qué punto está su derivación. Solo el estado
+    del proceso: ni el contenido del informe ni las llamadas. Dirección no genera ni firma informes.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Referrals.Count == 0)
+{
+    <p class="text-muted">No hay derivaciones en curso.</p>
+}
+else
+{
+    <p role="status">
+        <span class="badge text-bg-primary">@Model.Referrals.Count</span> en curso ·
+        <span class="badge text-bg-secondary">@Model.Signed</span> con informe firmado ·
+        <span class="badge text-bg-warning">@Model.Unsigned</span> sin informe firmado ·
+        <span class="badge text-bg-secondary">@Model.WithCalls</span> con alguna llamada a la familia registrada
+    </p>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <caption class="visually-hidden">Derivaciones en curso: residente, unidad, protocolo urgente, informe de derivación y llamadas a la familia</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Residente</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Protocolo urgente</th>
+                    <th scope="col">Informe de derivación</th>
+                    <th scope="col">Llamadas a la familia</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Referrals)
+                {
+                    <tr>
+                        <td>@item.ResidentDisplayName</td>
+                        <td>@item.UnitName</td>
+                        <td>
+                            Activado el @item.ProtocolActivatedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(item.ProtocolActivatedAt))
+                            · @ProfileLabel(item.ProtocolProfile)
+                        </td>
+                        <td>
+                            @if (item.ReportSigned)
+                            {
+                                <span class="badge text-bg-success">Firmado</span>
+                                @:el @item.ReportSignedAt!.Value.ToLocalTime().ToString("g") · @ProfileLabel(item.ReportProfile!.Value)
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-warning">Sin firmar</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.FamilyCallAttempts == 0)
+                            {
+                                @:Ninguna registrada
+                            }
+                            else
+                            {
+                                @:@item.FamilyCallAttempts · la última el @item.LastCallAt!.Value.ToLocalTime().ToString("g")
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Episodio" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle operativo</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@functions {
+    static string ProfileLabel(ResidApp.Shared.SystemProfile profile) => profile == ResidApp.Shared.SystemProfile.Medicina ? "Medicina" : "Enfermería";
+}

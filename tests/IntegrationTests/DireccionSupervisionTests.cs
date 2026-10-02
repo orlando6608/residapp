@@ -203,6 +203,44 @@ public class DireccionSupervisionTests
     }
 
     [Fact]
+    public async Task Derivaciones_MuestranElEstadoDelProcesoDeLosProtocolosAbiertosDelAmbito_SinContenido()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var unsigned = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
+        Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, unsigned, await StartAndSaveAsync(enfermera, unsigned)))).Ok);
+        var signed = await RegisterAsync(enfermera, residentId, "Dolor torácico.");
+        var revision = (await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, signed, await StartAndSaveAsync(enfermera, signed)))).Value;
+        revision = (await service.SignReferralReportAsync(SignCommand(enfermera, signed, revision, Guid.NewGuid()))).Value;
+        var called = await service.RecordFamilyCallAttemptAsync(CallCommand(enfermera, signed, revision));
+        Assert.True(called.Ok, called.Error?.Message);
+        var withoutProtocol = await RegisterAsync(enfermera, residentId, "Tos productiva.");
+        var (otherDirection, otherNurse, otherResident) = await SeedCenterAsync();
+        var foreign = await RegisterAsync(otherNurse, otherResident, "Disnea.");
+        Assert.True((await BuildService(otherNurse.ExternalSubject).ActivateUrgentProtocolAsync(
+            ActivateCommand(otherNurse, foreign, await StartAndSaveAsync(otherNurse, foreign)))).Ok);
+
+        var result = await BuildDireccion(direccion.ExternalSubject).ListReferralsAsync(Query(direccion));
+        var asNurse = await BuildDireccion(enfermera.ExternalSubject).ListReferralsAsync(Query(enfermera));
+        var foreignList = (await BuildDireccion(otherDirection.ExternalSubject).ListReferralsAsync(Query(otherDirection))).Value!;
+
+        Assert.True(result.Ok, result.Error?.Message);
+        Assert.Equal([signed, unsigned], result.Value!.Select(r => r.EventId));   // el más reciente primero
+        var withReport = result.Value![0];
+        Assert.True(withReport.ReportSigned);
+        Assert.Equal((SystemProfile.Enfermeria, SystemProfile.Enfermeria, 1), (withReport.ProtocolProfile, withReport.ReportProfile, withReport.FamilyCallAttempts));
+        Assert.NotNull(withReport.LastCallAt);
+        var withoutReport = result.Value[1];
+        Assert.Equal((false, null, 0, null), (withoutReport.ReportSigned, withoutReport.ReportProfile, withoutReport.FamilyCallAttempts, withoutReport.LastCallAt));
+        Assert.DoesNotContain(result.Value, r => r.EventId == withoutProtocol);
+        Assert.Equal(foreign, Assert.Single(foreignList).EventId);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, asNurse.Error!.Code);
+        // Garantía estructural: nada de texto clínico, del contacto ni del contenido del informe (solo nombres de residente y unidad).
+        Assert.Equal(["ResidentDisplayName", "UnitName"], typeof(SupervisionReferral).GetProperties()
+            .Where(p => p.PropertyType == typeof(string)).Select(p => p.Name).Order());
+    }
+
+    [Fact]
     public async Task Indicadores_SeguimientosConLaFechaVencidaEnElPeriodo_SiguenElPlanVigenteYElCierre()
     {
         var (direccion, enfermera, residentId) = await SeedCenterAsync();

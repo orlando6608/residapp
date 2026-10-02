@@ -58,6 +58,25 @@ public sealed class DireccionController(DireccionApplicationService service) : C
         return View(new SupervisionPendingViewModel(list.Value!, filtro, scope.Value!.Units.Select(u => (u.Id.Value, u.Name)).ToList(), today));
     }
 
+    /// <summary>DIR-12: estado de las derivaciones en curso, solo lectura. No entrega el informe firmado.</summary>
+    public async Task<IActionResult> Derivaciones(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Derivaciones)) });
+        }
+
+        var result = await service.ListReferralsAsync(new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(new SupervisionReferralsViewModel([]));
+        }
+
+        return View(new SupervisionReferralsViewModel(result.Value!));
+    }
+
     /// <summary>DIR-04: detalle operativo. Si no existe, está cerrado o no está en el ámbito, se vuelve a los pendientes
     /// sin distinguir el motivo.</summary>
     public async Task<IActionResult> Episodio(Guid eventoId, CancellationToken ct)

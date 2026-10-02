@@ -10,6 +10,14 @@ public sealed record DireccionInicioViewModel(IReadOnlyList<SupervisionUnitSumma
     public int FollowUpsOverdue => Units.Sum(u => u.FollowUpsOverdue);
 }
 
+/// <summary>DIR-12: las derivaciones en curso con su resumen (cuántas tienen el informe firmado, cuántas no y cuántas llamadas a la familia constan).</summary>
+public sealed record SupervisionReferralsViewModel(IReadOnlyList<SupervisionReferral> Referrals)
+{
+    public int Signed => Referrals.Count(r => r.ReportSigned);
+    public int Unsigned => Referrals.Count - Signed;
+    public int WithCalls => Referrals.Count(r => r.FamilyCallAttempts > 0);
+}
+
 /// <summary>DIR-03: filtrar los pendientes por tipo y unidad. Llega por GET (?tipo=&amp;unidad=); los campos vacíos no filtran.</summary>
 public sealed class SupervisionFilter
 {
