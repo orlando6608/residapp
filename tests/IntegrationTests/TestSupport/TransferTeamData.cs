@@ -22,4 +22,21 @@ internal static class TransferTeamData
             });
         return id;
     }
+
+    /// <summary>Añade a la cuenta como miembro vigente del equipo; <paramref name="grantedBy"/> es quien lo concede (cualquier cuenta del centro).</summary>
+    internal static async Task AddMemberAsync(Guid teamId, SeededProfile member, SeededProfile grantedBy, bool revoked = false)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync(
+            """
+            INSERT INTO dbo.equipos_miembros (id, centro_id, equipo_id, cuenta_id, concedido_en, concedido_por_cuenta_id, revocado_en, revocado_por_cuenta_id)
+            VALUES (@Id, @CenterId, @TeamId, @MemberId, SYSUTCDATETIME(), @GrantedBy,
+                    CASE WHEN @Revoked = 1 THEN SYSUTCDATETIME() END, CASE WHEN @Revoked = 1 THEN @GrantedBy END)
+            """,
+            new
+            {
+                Id = Guid.NewGuid(), CenterId = member.CenterId.Value, TeamId = teamId, MemberId = member.AccountId.Value,
+                GrantedBy = grantedBy.AccountId.Value, Revoked = revoked,
+            });
+    }
 }

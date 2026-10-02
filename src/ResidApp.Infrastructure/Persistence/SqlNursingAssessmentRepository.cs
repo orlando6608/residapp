@@ -218,7 +218,7 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
             throw new DomainValidationException("CLINICAL_EVENT_REVISION_CONFLICT");
         }
 
-        var inserted = await connection.ExecuteAsync(new CommandDefinition("""
+        var inserted = await connection.ExecuteAsync(new CommandDefinition($"""
             INSERT INTO dbo.seguimiento_acciones
                 (id, seguimiento_id, tipo_codigo, texto, fecha_prevista, criterio, equipo_entrante, equipo_entrante_id, transferencia_id,
                  registrado_por_cuenta_id, registrado_en)
@@ -230,7 +230,8 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
                AND (@TransferId IS NULL OR EXISTS (
                    SELECT 1 FROM dbo.seguimiento_acciones t
                     WHERE t.id = @TransferId AND t.seguimiento_id = s.id AND t.tipo_codigo = 'TRANSFERENCIA'
-                      AND NOT EXISTS (SELECT 1 FROM dbo.seguimiento_acciones r WHERE r.transferencia_id = t.id)))
+                      AND NOT EXISTS (SELECT 1 FROM dbo.seguimiento_acciones r WHERE r.transferencia_id = t.id)
+                      AND {TransferReceptionSql.CanReceive("t", "@AccountId")}))
             """, new
         {
             Id = Guid.NewGuid(), TypeCode = action.Type.ToCode(), action.Text, action.Plan?.DueDate, action.Plan?.Criterion,

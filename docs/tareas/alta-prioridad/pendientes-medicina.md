@@ -151,4 +151,5 @@ Huecos de lo ya construido:
   `pendientes-enfermeria.md`.
 - **Seguimiento médico (historia 5)**: desde el 2026-10-01 (script `0028`) el equipo entrante de una transferencia se elige entre los equipos activos de
   la unidad del evento, como en Enfermería (sin equipos activos no se puede transferir; las transferencias anteriores conservan su texto). La fecha
-  prevista es solo fecha, sin hora, como en Enfermería.
+  prevista es solo fecha, sin hora, como en Enfermería. Desde el 2026-10-02 la recepción (opcional) solo la confirman los miembros vigentes del equipo
+  entrante, con la misma excepción que en Enfermería (equipo sin miembros o transferencia anterior a `0028`).

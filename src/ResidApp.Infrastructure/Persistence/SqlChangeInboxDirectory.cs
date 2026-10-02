@@ -159,11 +159,12 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
               JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
              WHERE s.evento_id = @EventId
             """, new { ProfileScopeId = profileScopeId, EventId = eventId }, cancellationToken: ct));
-        var followUpActions = followUp is null ? [] : (await connection.QueryAsync<FollowUpActionRow>(new CommandDefinition("""
+        var followUpActions = followUp is null ? [] : (await connection.QueryAsync<FollowUpActionRow>(new CommandDefinition($"""
             SELECT a.id AS Id, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate, a.criterio AS Criterion,
                    a.equipo_entrante AS IncomingTeam, a.transferencia_id AS TransferId,
                    CAST(CASE WHEN a.registrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ByCurrentAccount,
-                   a.registrado_en AS RecordedAt
+                   a.registrado_en AS RecordedAt,
+                   CAST(CASE WHEN {TransferReceptionSql.CanReceive("a", "profile.cuenta_id")} THEN 1 ELSE 0 END AS BIT) AS CanConfirmReception
               FROM dbo.seguimiento_acciones a
               JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
              WHERE a.seguimiento_id = @FollowUpId
@@ -472,11 +473,12 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             return null;
         }
 
-        var actions = (await connection.QueryAsync<FollowUpActionRow>(new CommandDefinition("""
+        var actions = (await connection.QueryAsync<FollowUpActionRow>(new CommandDefinition($"""
             SELECT a.id AS Id, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate, a.criterio AS Criterion,
                    a.equipo_entrante AS IncomingTeam, a.transferencia_id AS TransferId,
                    CAST(CASE WHEN a.registrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ByCurrentAccount,
-                   a.registrado_en AS RecordedAt
+                   a.registrado_en AS RecordedAt,
+                   CAST(CASE WHEN {TransferReceptionSql.CanReceive("a", "profile.cuenta_id")} THEN 1 ELSE 0 END AS BIT) AS CanConfirmReception
               FROM dbo.seguimiento_medico_acciones a
               JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
              WHERE a.seguimiento_id = @FollowUpId
@@ -493,7 +495,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
     private static FollowUpActionSummary ToSummary(FollowUpActionRow a) => new(
         a.Id, EnumCode.ParseCode<FollowUpActionType>(a.TypeCode), a.Text,
         a.DueDate is null ? null : DateOnly.FromDateTime(a.DueDate.Value), a.Criterion, a.IncomingTeam, a.TransferId,
-        a.ByCurrentAccount, new DateTimeOffset(a.RecordedAt, TimeSpan.Zero));
+        a.ByCurrentAccount, new DateTimeOffset(a.RecordedAt, TimeSpan.Zero), a.CanConfirmReception);
 
     private static async Task<MedicalAssessmentDraft?> FindMedicalAssessmentAsync(
         System.Data.IDbConnection connection, Guid profileScopeId, Guid eventId, CancellationToken ct)
@@ -763,7 +765,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
 
     private sealed record FollowUpActionRow(
         Guid Id, string TypeCode, string? Text, DateTime? DueDate, string? Criterion, string? IncomingTeam, Guid? TransferId,
-        bool ByCurrentAccount, DateTime RecordedAt);
+        bool ByCurrentAccount, DateTime RecordedAt, bool CanConfirmReception);
 
     private sealed record FollowUpSummaryRow(
         Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, DateTime? DueDate, string? Criterion,

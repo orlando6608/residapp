@@ -847,6 +847,32 @@ public class MedicinaApplicationServiceTests
     }
 
     [Fact]
+    public async Task SeguimientoMedico_Recepcion_ConMiembrosEnElEquipo_SoloLaConfirmanSusMiembros()
+    {
+        var (_, _, medica, eventId) = await SeedEscalatedAsync();
+        var companero = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, medica.CenterId, medica.UnitId);
+        var service = BuildMedicina(medica.ExternalSubject);
+        var other = BuildMedicina(companero.ExternalSubject);
+        var yesterday = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+        var revision = (await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, await StartAndSaveMedicalAsync(medica, eventId), yesterday))).Value;
+        var team = await TransferTeamData.CreateAsync(medica, "Guardia con miembros");
+        await TransferTeamData.AddMemberAsync(team, medica, medica);
+        revision = (await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Transferencia,
+            "Revisar el informe.", incomingTeamId: team))).Value;
+        var transferOutsider = (await FindAsync(companero, eventId))!.Medical.FollowUp!.Tracking.PendingTransfer!;
+        var transferMember = (await FindAsync(medica, eventId))!.Medical.FollowUp!.Tracking.PendingTransfer!;
+
+        var refused = await other.RecordMedicalFollowUpActionAsync(FollowUpAction(companero, eventId, revision, FollowUpActionType.Recepcion, transferId: transferOutsider.Id));
+        var received = await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Recepcion, transferId: transferMember.Id));
+
+        Assert.False(transferOutsider.CanConfirmReception);
+        Assert.True(transferMember.CanConfirmReception);
+        Assert.Equal(ApplicationFailureCode.Conflict, refused.Error!.Code);
+        Assert.True(received.Ok, received.Error?.Message);
+        Assert.Equal(1, await CountAuditAsync(eventId, "MEDICAL_FOLLOW_UP_RECEIVE"));
+    }
+
+    [Fact]
     public async Task SeguimientoMedico_Vencido_SigueEnLaBandeja_YSeResuelveConIndicacionOCierre()
     {
         var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();

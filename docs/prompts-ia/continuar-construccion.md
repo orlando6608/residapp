@@ -13,6 +13,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Recepción de transferencias limitada a los miembros del equipo (2026-10-02, sin script ni push):** una transferencia con equipo entrante
+  (`equipo_entrante_id`, script `0028`) solo la confirma un miembro vigente de ese equipo (`equipos_miembros`, `0027`). **Suposición mía, no
+  confirmada con el usuario ni con CJ:** si el equipo no tiene miembros vigentes, o la transferencia es anterior a `0028` (sin equipo), la
+  confirma cualquiera del ámbito como hasta ahora, para que ninguna transferencia quede sin salida. Regla única en `TransferReceptionSql.CanReceive`
+  (fragmento SQL), usada por `SqlNursingAssessmentRepository` y `SqlMedicalAssessmentRepository` (el `INSERT` de la recepción) y por
+  `SqlChangeInboxDirectory` (`FollowUpActionSummary.CanConfirmReception`). Las pantallas de seguimiento de Enfermería y Medicina esconden el botón y dicen
+  «Solo los miembros del equipo «X» pueden confirmar la recepción.»; un envío forzado recibe el conflicto genérico de siempre
+  (`FOLLOW_UP_TRANSFER_NOT_PENDING`, sin código nuevo). Tests: `Recepcion_ConMiembrosEnElEquipo_SoloLaConfirmanSusMiembros` (Enfermería),
+  `SeguimientoMedico_Recepcion_ConMiembrosEnElEquipo_…` y `Recepcion_SiElEquipoNoTieneMiembrosVigentes_…`; fallan sin la regla. Suite en verde (245, 309 y 61).
+  Pantalla comprobada en local insertando por SQL dos transferencias en el seguimiento abierto de la unidad integrada («Equipo I2 prueba», del que
+  `dev-integrado-enfermeria` no es miembro, muestra el aviso; «Equipo I1 prueba», del que sí, el botón). Quedan esas dos filas de prueba.
 - **Habitación y plaza en Enfermería, Medicina y Auxiliar (2026-10-02, sin script ni push):** `ScopeResidentSummary` y `AssignedResidentSummary` llevan
   `RoomName` y `PlaceName` (opcionales, al final) y `LocationLabel` («Unidad · Habitación · Plaza», vía `ResidentLocationLabel.Format`, omitiendo lo que
   no consta). `SqlEnfermeriaResidentDirectory` (que sirve también a Medicina y al desplegable de Dirección, que no lo muestra) y
@@ -122,8 +133,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Lectura:** `ITransferTeamDirectory`/`SqlTransferTeamDirectory` (reutiliza `SqlChangeInboxDirectory.ScopedEventsFrom`, así el evento tiene que
     ser visible para el ámbito) y el caso de uso `ListTransferTeams` (exige el perfil del ámbito); `ListTransferTeamsAsync` en
     `EnfermeriaApplicationService` y `MedicinaApplicationService`. `SeguimientoViewModel` (compartido) lleva `Teams`.
-  - **Pendiente de este bloque:** que la transferencia tenga en cuenta el turno planificado, y que la recepción se limite a miembros del equipo
-    (hoy la confirma cualquiera de Enfermería/Medicina del ámbito). No hay test funcional de la pantalla de seguimiento (ninguno existía; se
+  - **Pendiente de este bloque:** que la transferencia tenga en cuenta el turno planificado, (la recepción limitada a miembros del equipo se hizo después, ver la primera
+    entrada). No hay test funcional de la pantalla de seguimiento (ninguno existía; se
     verificó con curl).
   - **Verificación:**
     - suite en verde antes (232, 276 y 48) y después 3 veces (232, 280 y 48), más CI con BD nueva (una vuelta dio 2 fallos de integración y

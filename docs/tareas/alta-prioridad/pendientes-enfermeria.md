@@ -284,7 +284,8 @@ Huecos de lo ya construido:
 - **Seguimiento (historia 4)**: desde el 2026-10-01 (script `0028`) el equipo entrante de una transferencia se elige entre los equipos activos de la unidad
   del evento (los crea Administración) y se guarda su vínculo y su nombre; ya no es texto libre, y sin equipos activos no se puede transferir. Las
   transferencias anteriores conservan su texto. El equipo responsable sigue siendo la Enfermería de la unidad del evento. La fecha prevista es solo
-  fecha (sin hora) y vence al día siguiente.
+  fecha (sin hora) y vence al día siguiente. Desde el 2026-10-02 la recepción solo la confirman los miembros vigentes del equipo entrante; si el equipo no
+  tiene miembros (o la transferencia es anterior a `0028`), la confirma cualquiera del ámbito. Sigue sin mirar el turno planificado.
 - **Comunicación familiar (historia 3)**: solo se guarda la comunicación preparada, pendiente de
   aprobación. Quedan para Portal Familiar / Administración: aprobarla o volver a editarla (ENF-15), la
   audiencia autorizada (ENF-14), el momento de publicación y la publicación. `comunicaciones_familiares`
