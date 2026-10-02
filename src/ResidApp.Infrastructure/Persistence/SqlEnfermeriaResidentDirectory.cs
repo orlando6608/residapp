@@ -11,7 +11,10 @@ namespace ResidApp.Infrastructure.Persistence;
 /// SqlAuthorizationEvidenceProvider aplica para un único residente: sin ninguna fila en
 /// ambitos_perfil_residente para este ámbito, todos los residentes ubicados en unidades concedidas son
 /// visibles; si existe alguna, solo esos residentes lo son. Sirve también a la lista de Medicina (MED-19),
-/// que aplica el mismo criterio; el caso de uso comprueba que el perfil del ámbito es el que se pide.
+/// que aplica el mismo criterio; el caso de uso comprueba que el perfil del ámbito es el que se pide. Y al
+/// desplegable de la consulta auditada de basal de Dirección Clínica (DireccionApplicationService.ListResidentsAsync):
+/// ListScopeResidents y RegisterClinicalEvent siguen exigiendo Enfermería o Medicina, así que admitir aquí
+/// DIRECCION_CLINICA no abre a Dirección la ficha, la línea temporal ni el basal.
 /// </summary>
 public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connections) : IEnfermeriaResidentDirectory
 {
@@ -35,7 +38,7 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
               LEFT JOIN dbo.basales_vigentes_residente current_baseline ON current_baseline.residente_id = resident.id
                    AND current_baseline.centro_id = profile.centro_id
              WHERE profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
-               AND profile.perfil_codigo IN ('ENFERMERIA', 'MEDICINA') AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+               AND profile.perfil_codigo IN ('ENFERMERIA', 'MEDICINA', 'DIRECCION_CLINICA') AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
                AND (resident_scope.id IS NOT NULL OR NOT EXISTS (
                    SELECT 1 FROM dbo.ambitos_perfil_residente restriction
                     WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))

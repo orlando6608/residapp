@@ -13,6 +13,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Consulta auditada de basal de Dirección y firma suelta (2026-10-02, sin push):** `/Baseline/Direction` toma el ámbito y el centro
+  del ámbito activo y el residente se elige en un desplegable (`DireccionApplicationService.ListResidentsAsync`, que reutiliza
+  `SqlEnfermeriaResidentDirectory` admitiendo ahora `DIRECCION_CLINICA`). Se retiró la pantalla suelta `/Baseline/Sign` y su tarjeta del
+  Inicio (decisión del usuario): el GET redirige a Residentes del perfil, y el POST queda solo para `EnfermeriaBasal/Confirmar`, al que
+  vuelve con el mensaje si la firma falla. Antes, los identificadores de los dos formularios se prerrellenaban con `Guid.Empty` y daban
+  un 500 (commit `77048c5`). Un residente sin basal firmado ya no se deniega: el resultado dice «Este residente todavía no tiene
+  ningún basal firmado.» (ver la lección de abajo). Verificado con la suite (240, 304 y 57) y en local con `dev-integrado-direccion`
+  («Residente Integrado Uno» muestra su versión y se audita; «Prueba selector unidad», sin basal, da el mensaje y no deja auditoría).
 - **Manual de usuario revisado (2026-10-02):** «Próximamente» al día con los `pendientes-*.md` (fuera lo ya hecho: turnos recurrentes y
   auditoría; añadidos cambio de habitación o plaza, habitación y plaza en las vistas clínicas, aportación a un borrador ajeno, organigrama,
   rangos por residente y la tarjeta «Comunicaciones» de Medicina). También se actualizaron la introducción por perfil, las cuentas de prueba,
@@ -1098,6 +1106,18 @@ Repite estos pasos antes de dar un bloque por cerrado:
 - **Campos ocultos tras un POST:** `asp-for` pinta el valor enviado (ModelState) y no el del modelo. Para
   una revisión o una huella que el servidor actualiza al volver a mostrar la vista, escribe `value="@..."`
   explícito (ver `Shared/_Derivacion`).
+- **`ListScopeResidents` es una puerta clínica, no solo un listado:** `FindScopeResident` lo reutiliza, y de él dependen la
+  ficha, la línea temporal, el contacto de urgencia y el basal de Enfermería y Medicina (`EnfermeriaBasalController.ResolveAsync`
+  pasa el perfil activo). No lo abras a otro perfil para obtener una lista de residentes: haz un caso de uso propio que exija ese
+  perfil y llame al directorio (como `DireccionApplicationService.ListResidentsAsync`). Lo comprueba
+  `Residentes_OtrosPerfilesNoEntran_YDireccionSigueSinLaFichaDeEnfermeriaNiMedicina`.
+- **Desplegable que conserve la elección tras un POST:** usa `asp-items` con `SelectListItem` (como `Residents/Create`). Con
+  `<option>` escritos a mano dentro de un `<select asp-for>`, la opción enviada no salía marcada como `selected`.
+- **Consulta auditada de basal sin basal firmado:** `SqlBaselineRepository.ReadAsClinicalDirectionAsync` evalúa primero la
+  autorización (`@Authorized`) y solo entonces audita cada versión. Sin autorización lanza `CLINICAL_DETAIL_READ_NOT_AUTHORIZED`,
+  como el prototipo; autorizado y sin basal devuelve una lista vacía, sin auditoría, y la pantalla dice que no hay basal (desvío
+  deliberado del prototipo, que denegaba también este caso). Para ver versiones hace falta un residente con basal, como «Residente
+  Integrado Uno» de la semilla.
 - **Verificación manual con curl:** una cuenta con un solo ámbito se autoselecciona, y
   `ProfileScope/Select` redirige. Sigue las redirecciones con `-L`. Guarda cada página con formulario en un
   fichero y lee de él el token, la revisión y el `OperacionId`. En la prueba en Azure del evento propio, una

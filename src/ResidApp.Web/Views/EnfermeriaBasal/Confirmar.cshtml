@@ -20,6 +20,11 @@
 <h1 class="h3">Confirmación y firma — @resident.DisplayName</h1>
 <div asp-validation-summary="All" class="text-danger"></div>
 
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
 <div class="card mb-3">
     <div class="card-body">
         <h2 class="h5 card-title">Datos comunes</h2>

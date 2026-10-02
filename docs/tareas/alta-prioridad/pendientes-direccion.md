@@ -72,5 +72,9 @@ Huecos de lo ya construido:
   un seguimiento de estar abierto (solo el cierre del evento), así que «vencido en el periodo» habría que deducirlo.
 
 - **Responsables de equipo:** el detalle operativo no los muestra porque no hay equipos ni turnos hasta que exista Administración.
-- **Lectura de basal (`/Baseline/Direction`):** sigue pidiendo el propósito como texto libre, sin la lista de finalidades válidas que
-  fijará CJ.
+- **Lectura de basal (`/Baseline/Direction`):** desde 2026-10-02 toma el ámbito y el centro del ámbito activo y el residente se
+  elige en un desplegable (`DireccionApplicationService.ListResidentsAsync`, con el mismo criterio de ámbito que la autorización de
+  la lectura). El propósito sigue siendo la única finalidad provisional, sin la lista de finalidades válidas que fijará CJ (tema 1).
+  Un residente sin ningún basal firmado ya no se deniega como un acceso no autorizado: tras autorizar, la consulta devuelve una lista
+  vacía, sin auditoría, y el resultado dice «Este residente todavía no tiene ningún basal firmado.». Quien no está autorizado sigue
+  recibiendo el mensaje neutro (`SqlBaselineRepositoryTests`).

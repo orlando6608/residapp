@@ -31,7 +31,8 @@ public sealed record SupervisionPendingList(IReadOnlyList<SupervisionEpisode> Ep
 /// de la cuenta, y el directorio devuelve vacío fuera de sus unidades.
 /// </summary>
 public sealed class DireccionApplicationService(
-    IProfileScopeDirectoryProvider scopes, ISupervisionDirectory directory, ISessionIdentityProvider session)
+    IProfileScopeDirectoryProvider scopes, ISupervisionDirectory directory, ISessionIdentityProvider session,
+    IEnfermeriaResidentDirectory residents)
 {
     public Task<ApplicationResult<IReadOnlyList<SupervisionUnitSummary>>> ReadPanelAsync(
         SupervisionQuery query, CancellationToken ct = default) =>
@@ -103,6 +104,17 @@ public sealed class DireccionApplicationService(
             var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, zone);
             var facts = await directory.ListIndicatorFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
             return SupervisionIndicatorRules.Aggregate(facts, info, query.From, query.To, zone);
+        });
+
+    /// <summary>Residentes del ámbito para elegir a quién consultar en la consulta auditada de basal: nombre y unidad,
+    /// con el mismo criterio de ámbito que la autorización de esa lectura. No entrega contenido clínico; ese sigue saliendo
+    /// solo de la consulta auditada.</summary>
+    public Task<ApplicationResult<IReadOnlyList<ScopeResidentSummary>>> ListResidentsAsync(
+        SupervisionQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await residents.ListAsync(query.AmbitoPerfilId, query.CentroId, ct);
         });
 
     private async Task EnsureDirectionScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct)

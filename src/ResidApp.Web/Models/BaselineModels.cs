@@ -32,20 +32,13 @@ public sealed class SignBaselineFormModel
     public Guid OperacionId { get; set; }
 }
 
-/// <summary>Modelo de la consulta de historial/estado basal vigente para el perfil Dirección Clínica.
+/// <summary>Modelo de la consulta de historial/estado basal vigente para el perfil Dirección Clínica. El ámbito y el
+/// centro salen del ámbito activo, no del formulario; el residente se elige entre los del ámbito.
 /// TipoRecurso/Proposito viajan como texto libre, igual que en el caso de uso: es la política quien decide
 /// si son válidos, no este formulario.</summary>
 public sealed class DirectionBaselineQueryModel
 {
-    [Required(ErrorMessage = "Indica el ámbito de perfil.")]
-    [Display(Name = "Ámbito de perfil")]
-    public Guid? AmbitoPerfilId { get; set; }
-
-    [Required(ErrorMessage = "Indica el centro.")]
-    [Display(Name = "Centro")]
-    public Guid? CentroId { get; set; }
-
-    [Required(ErrorMessage = "Indica el residente.")]
+    [Required(ErrorMessage = "Elige el residente.")]
     [Display(Name = "Residente")]
     public Guid? ResidenteId { get; set; }
 

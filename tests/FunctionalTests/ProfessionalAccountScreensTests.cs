@@ -558,13 +558,24 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     [Theory]
     [InlineData("ENFERMERIA", ProfilePermissions.BaselineInitialComplete)]
     [InlineData("MEDICINA", ProfilePermissions.BaselineReevaluate)]
-    public async Task Inicio_FirmarBorradorDeBasal_SoloConUnPermisoDeBasal(string profileCode, string permission)
+    public async Task Inicio_SinTarjetaDeFirmaSuelta_AunqueTengaPermisoDeBasal(string profileCode, string permission)
     {
-        var without = await PageAsync(profileCode, null);
+        // El basal se firma desde la ficha del residente (Estado basal → Confirmar y firmar), no desde el Inicio.
         var with = await PageAsync(profileCode, permission);
 
-        Assert.DoesNotContain("Firmar borrador de basal", without);
-        Assert.Contains("Firmar borrador de basal", with);
+        Assert.DoesNotContain("Firmar borrador de basal", with);
+    }
+
+    [Fact]
+    public async Task ConsultaDeDireccion_SinResidentesEnElAmbito_LoDiceYElAmbitoSaleDelActivo()
+    {
+        var page = await PageAsync("DIRECCION_CLINICA", null, "/Baseline/Direction");
+
+        Assert.Contains("No hay residentes en tu ámbito.", page);
+        Assert.DoesNotContain("name=\"ResidenteId\"", page);
+        Assert.DoesNotContain("name=\"AmbitoPerfilId\"", page);
+        Assert.DoesNotContain("name=\"CentroId\"", page);
+        Assert.Contains("Ámbito activo: <strong>Dirección Clínica</strong>", page);
     }
 
     [Theory]

@@ -272,18 +272,15 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
 
             // Patrón "auditoría o nada": el SELECT final solo ve resource_id que ESTE INSERT acaba de
             // auditar (capturado vía OUTPUT en una tabla variable), dentro de la misma transacción. Si el
-            // EXISTS de autorización no matchea, la tabla queda vacía y se aborta antes de llegar al
-            // SELECT — sin distinguir "no autorizado" de "recurso inexistente", igual que el original.
+            // EXISTS de autorización no matchea, se aborta antes de auditar nada y sin distinguir un residente
+            // ajeno de uno inexistente (tenga o no basal), igual que el original. A diferencia del
+            // original, un lector autorizado sobre un residente sin ningún basal firmado recibe una lista vacía
+            // (sin auditoría: no se ha leído contenido clínico), para que la pantalla diga que no hay basal en
+            // vez de denegar; a este repositorio solo se llega tras la autorización completa en C#.
             var sql = $"""
                 DECLARE @AuditedResourceIds TABLE (ResourceId UNIQUEIDENTIFIER PRIMARY KEY);
 
-                INSERT INTO dbo.eventos_auditoria
-                    (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, proposito_codigo, ocurrido_en)
-                OUTPUT inserted.recurso_id INTO @AuditedResourceIds
-                SELECT NEWID(), @AccountId, 'DIRECCION_CLINICA', @CenterId, @UnitId, @ResidentId, @ResourceType, resource.id,
-                       'CLINICAL_DETAIL_READ', 'SUPERVISION_CLINICA', @OccurredAt
-                  FROM ({resourceSql}) resource
-                 WHERE EXISTS (
+                DECLARE @Authorized BIT = CASE WHEN EXISTS (
                     SELECT 1 FROM dbo.cuentas account
                     JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id AND profile.centro_id = @CenterId
                          AND profile.perfil_codigo = 'DIRECCION_CLINICA' AND profile.estado = 'ACTIVE'
@@ -296,10 +293,17 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
                     JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id
                          AND location.centro_id = resident.centro_id AND location.unidad_id = unit_scope.unidad_id AND location.vigente_hasta IS NULL
                    WHERE account.id = @AccountId AND account.estado = 'ACTIVE'
-                 );
+                ) THEN 1 ELSE 0 END;
 
-                IF (SELECT COUNT(*) FROM @AuditedResourceIds) < 1
+                IF @Authorized = 0
                     THROW 51000, 'CLINICAL_DETAIL_READ_NOT_AUTHORIZED', 1;
+
+                INSERT INTO dbo.eventos_auditoria
+                    (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, proposito_codigo, ocurrido_en)
+                OUTPUT inserted.recurso_id INTO @AuditedResourceIds
+                SELECT NEWID(), @AccountId, 'DIRECCION_CLINICA', @CenterId, @UnitId, @ResidentId, @ResourceType, resource.id,
+                       'CLINICAL_DETAIL_READ', 'SUPERVISION_CLINICA', @OccurredAt
+                  FROM ({resourceSql}) resource;
 
                 {finalSelect}
                 """;

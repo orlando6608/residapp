@@ -8,7 +8,7 @@
         <p>Versión número: <code>@ViewBag.VersionNumber</code></p>
         <p>Id de versión: <code>@ViewBag.BaselineVersionId</code></p>
         <div class="d-grid d-md-flex">
-            <a asp-controller="Baseline" asp-action="Sign" class="btn btn-primary btn-lg">Firmar otro borrador</a>
+            <a asp-controller="EnfermeriaBasal" asp-action="Draft" asp-route-residenteId="@ViewBag.ResidenteId" class="btn btn-primary btn-lg">Volver al estado basal</a>
             <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg">Volver al inicio</a>
         </div>
     </div>

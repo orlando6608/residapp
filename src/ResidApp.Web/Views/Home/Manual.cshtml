@@ -77,9 +77,8 @@
     <p>
         El <strong>Inicio</strong> muestra solo los accesos del perfil con el que estás trabajando. Por ejemplo,
         con Enfermería no verás el de Medicina. <strong>Alta de residente</strong> (Enfermería) y <strong>Rangos de
-        referencia</strong> (Medicina y Dirección Clínica) solo aparecen si Administración te ha concedido ese permiso, y
-        <strong>Firmar borrador de basal</strong> (Enfermería y Medicina), si tienes el de basal inicial o el de reevaluar. Si
-        abres el alta de residente sin el permiso, verás un aviso en lugar del formulario. Si una pantalla necesita además un
+        referencia</strong> (Medicina y Dirección Clínica) solo aparecen si Administración te ha concedido ese permiso. El
+        basal se firma desde la ficha del residente (ver "Crear, completar y firmar el estado basal"). Si abres el alta de residente sin el permiso, verás un aviso en lugar del formulario. Si una pantalla necesita además un
         permiso que tu cuenta no tiene, la app te denegará la acción.
     </p>
     <p class="mb-0">
@@ -179,22 +178,14 @@
         </li>
         <li>
             Cambia a <code>dev-integrado-direccion</code> y abre
-            <a asp-controller="Baseline" asp-action="Direction">Consultar el histórico de basal</a>. Pega
-            estos tres valores (son fijos, siempre los mismos mientras no se reescriba el script de datos
-            semilla) y elige "Basal vigente" como tipo de recurso:
-            <ul>
-                <li>Ámbito de perfil: <code>a1000000-0000-0000-0000-000000000003</code></li>
-                <li>Centro: <code>a1000000-0000-0000-0000-000000000001</code></li>
-                <li>Residente: <code>a1000000-0000-0000-0000-000000000002</code></li>
-            </ul>
+            <a asp-controller="Baseline" asp-action="Direction">Consultar el histórico de basal</a>. Elige
+            "Residente Integrado Uno" en la lista de residentes y "Basal vigente" como tipo de recurso.
             Verás el basal que acabas de firmar, en modo de solo lectura y auditado.
         </li>
     </ol>
     <p class="mb-0">
-        "Residente Integrado Dos" no tiene un identificador fijo: si quieres repetir el recorrido desde cero
-        con él, abre su ficha como Auxiliar o Enfermería y copia el identificador que aparece al final de la
-        dirección web (<code>...?residenteId=...</code>) para poder pegarlo después en la consulta de
-        Dirección Clínica.
+        Para repetir el recorrido desde cero, hazlo con "Residente Integrado Dos": también aparece en la lista de
+        la consulta de Dirección Clínica.
     </p>
 </section>
 
@@ -468,9 +459,11 @@
     </h2>
     <p class="mb-0">
         Dirección Clínica puede consultar, en modo de solo lectura, el basal vigente o el histórico de
-        versiones de un residente. En «Tipo de recurso» eliges «Basal vigente» o «Historial de basal», y en
-        «Propósito», la finalidad de la consulta (hoy solo hay una: «Supervisión clínica»). Cada consulta queda
-        registrada obligatoriamente en la auditoría.
+        versiones de un residente. La consulta se hace en tu ámbito activo (lo ves arriba, con el enlace para
+        cambiarlo), y el residente se elige en una lista con los de tu ámbito, con su unidad. En «Tipo de recurso»
+        eliges «Basal vigente» o «Historial de basal», y en «Propósito», la finalidad de la consulta (hoy solo hay
+        una: «Supervisión clínica»). Si el residente todavía no tiene ningún basal firmado, el resultado te lo indica.
+        Cada consulta que muestra un basal queda registrada obligatoriamente en la auditoría.
     </p>
 </section>
 

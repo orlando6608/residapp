@@ -99,70 +99,115 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
-    public async Task BaselineDirection_SinIdentificadores_VuelveAlFormularioConErroresEnEspañol()
+    public async Task BaselineDirection_ElResidenteSeEligeDeLaLista_YElAmbitoSaleDelActivo()
     {
+        // Administración da de alta un residente y Dirección Clínica, en el mismo centro y unidad, lo consulta.
         var seed = await SeedAsync();
-        var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var createPage = await admin.GetStringAsync("/Residents/Create");
+        var created = await (await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = seed.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+            ["__RequestVerificationToken"] = ExtractValue(createPage, "__RequestVerificationToken"),
+            ["OperacionId"] = ExtractValue(createPage, "OperacionId"),
+            ["AmbitoPerfilId"] = seed.ProfileScopeId.ToString(),
+            ["CentroId"] = seed.CenterId.ToString(),
+            ["UnidadId"] = seed.UnitId.ToString(),
+            ["NombreVisible"] = "Residente Consulta Dirección",
+            ["FechaNacimiento"] = "1938-02-20",
+            ["SexoDocumentadoCodigo"] = "Hombre",
+        }))).Content.ReadAsStringAsync();
+        var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
+        var direccion = await LoginAsync(await GrantDirectionAsync(seed));
 
-        // Antes los identificadores venían prerrellenados con Guid.Empty y CenterId.From lanzaba una excepción (500).
-        var queryPage = await client.GetStringAsync("/Baseline/Direction");
-        var response = await client.PostAsync("/Baseline/Direction", new FormUrlEncodedContent(new Dictionary<string, string>
+        var queryPage = WebUtility.HtmlDecode(await direccion.GetStringAsync("/Baseline/Direction"));
+        async Task<(HttpStatusCode Status, string Body)> QueryAsync(string resident)
         {
-            ["__RequestVerificationToken"] = ExtractValue(queryPage, "__RequestVerificationToken"),
-            ["OperacionId"] = ExtractValue(queryPage, "OperacionId"),
-            ["AmbitoPerfilId"] = "",
-            ["CentroId"] = "",
-            ["ResidenteId"] = "",
-            ["TipoRecurso"] = "BASELINE_HISTORY",
-            ["Proposito"] = "SUPERVISION_CLINICA",
-        }));
-        var body = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            var response = await direccion.PostAsync("/Baseline/Direction", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(queryPage, "__RequestVerificationToken"),
+                ["OperacionId"] = Guid.NewGuid().ToString(),
+                ["ResidenteId"] = resident,
+                ["TipoRecurso"] = "BASELINE_HISTORY",
+                ["Proposito"] = "SUPERVISION_CLINICA",
+            }));
+            return (response.StatusCode, WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()));
+        }
+        var empty = await QueryAsync("");
+        var chosen = await QueryAsync(residentId);
 
-        Assert.DoesNotContain(Guid.Empty.ToString(), queryPage);
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("Indica el ámbito de perfil.", body);
-        Assert.Contains("Indica el centro.", body);
-        Assert.Contains("Indica el residente.", body);
+        Assert.NotEmpty(residentId);
+        Assert.Contains($"<option value=\"{residentId}\">Residente Consulta Dirección (", queryPage);
+        Assert.Contains("<option value=\"\">Elige un residente</option>", queryPage);
+        Assert.DoesNotContain("name=\"AmbitoPerfilId\"", queryPage);
+        Assert.DoesNotContain("name=\"CentroId\"", queryPage);
+        Assert.Equal(HttpStatusCode.OK, empty.Status);
+        Assert.Contains("Elige el residente.", empty.Body);
+        Assert.Equal(HttpStatusCode.OK, chosen.Status);
+        // La consulta se autoriza con el ámbito activo y el residente elegido; como aún no tiene ningún basal firmado, el
+        // resultado lo dice en vez de denegar.
+        Assert.Contains("Historial de basal auditado", chosen.Body);
+        Assert.Contains("Este residente todavía no tiene ningún basal firmado.", chosen.Body);
+        Assert.DoesNotContain("No se puede acceder a esta operación.", chosen.Body);
     }
 
     [Fact]
-    public async Task BaselineSign_SinIdentificadores_VuelveAlFormularioConErroresEnEspañol()
+    public async Task BaselineSign_SinPantallaPropia_RedirigeAResidentes()
     {
         var seed = await SeedAsync();
+        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = seed.ExternalSubject,
+        }));
+        var tokenPage = await client.GetStringAsync("/DevAuth/Login");
+
+        var get = await client.GetAsync("/Baseline/Sign");
+        // Sin los campos que rellena la confirmación: antes acababa en un 500 al construir los identificadores.
+        var post = await client.PostAsync("/Baseline/Sign", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(tokenPage, "__RequestVerificationToken"),
+            ["OperacionId"] = Guid.NewGuid().ToString(),
+            ["RevisionBorradorEsperada"] = "1",
+        }));
+
+        Assert.Equal(HttpStatusCode.Redirect, get.StatusCode);
+        Assert.Equal("/Enfermeria/Residentes", get.Headers.Location?.OriginalString);
+        Assert.Equal(HttpStatusCode.Redirect, post.StatusCode);
+        Assert.Equal("/Enfermeria/Residentes", post.Headers.Location?.OriginalString);
+    }
+
+    private async Task<HttpClient> LoginAsync(string externalSubject)
+    {
         var client = _factory.CreateClient();
         var loginPage = await client.GetStringAsync("/DevAuth/Login");
         (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = seed.ExternalSubject,
+            ["externalSubject"] = externalSubject,
         }))).EnsureSuccessStatusCode();
+        return client;
+    }
 
-        // Mismo defecto que en Baseline/Direction: Guid.Empty prerrellenado acababa en un 500.
-        var signPage = await client.GetStringAsync("/Baseline/Sign");
-        var response = await client.PostAsync("/Baseline/Sign", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(signPage, "__RequestVerificationToken"),
-            ["OperacionId"] = ExtractValue(signPage, "OperacionId"),
-            ["AmbitoPerfilId"] = "",
-            ["CentroId"] = "",
-            ["ResidenteId"] = "",
-            ["BorradorId"] = "",
-            ["RevisionBorradorEsperada"] = "1",
-        }));
-        var body = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
-
-        Assert.DoesNotContain(Guid.Empty.ToString(), signPage);
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("Indica el ámbito de perfil.", body);
-        Assert.Contains("Indica el centro.", body);
-        Assert.Contains("Indica el residente.", body);
-        Assert.Contains("Indica el borrador.", body);
+    /// <summary>Una cuenta de Dirección Clínica con permiso de lectura del detalle clínico, en el centro y la unidad de la semilla.</summary>
+    private static async Task<string> GrantDirectionAsync((string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed)
+    {
+        var accountId = Guid.NewGuid();
+        var profileScopeId = Guid.NewGuid();
+        var externalSubject = $"functional-dir-{Guid.NewGuid().ToString("N")[..12]}";
+        var now = DateTimeOffset.UtcNow.UtcDateTime;
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@accountId, @externalSubject, 'ACTIVE', @now);
+            INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+            VALUES (@profileScopeId, @accountId, @centerId, 'DIRECCION_CLINICA', 'ACTIVE', @now, @accountId);
+            INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @profileScopeId, @centerId, @unitId, @now, @accountId);
+            INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @profileScopeId, @centerId, 'CLINICAL_DETAIL_READ', @now, @accountId);
+            """, new { accountId, externalSubject, now, profileScopeId, centerId = seed.CenterId, unitId = seed.UnitId });
+        return externalSubject;
     }
 
     private static async Task<Guid> GrantUnitAsync((string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed, string name)

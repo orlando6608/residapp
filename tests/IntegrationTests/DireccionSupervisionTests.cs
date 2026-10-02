@@ -20,7 +20,8 @@ public class DireccionSupervisionTests
     private static DireccionApplicationService BuildDireccion(string externalSubject) => new(
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory),
         new SqlSupervisionDirectory(TestDatabase.ConnectionFactory),
-        new FixedDireccionSessionIdentityProvider(externalSubject));
+        new FixedDireccionSessionIdentityProvider(externalSubject),
+        new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory));
 
     /// <summary>Un centro con una unidad, una cuenta de Dirección y una de Enfermería, y un residente.</summary>
     private static async Task<(SeededProfile Direccion, SeededProfile Enfermera, ResidentId ResidentId)> SeedCenterAsync()
@@ -238,6 +239,55 @@ public class DireccionSupervisionTests
         Assert.Equal(direccion.UnitId, Assert.Single(scope.Units).Id);
         Assert.Equal(["CLINICAL_DETAIL_READ"], scope.Permissions);
         Assert.False(scope.RestrictedToResidents);
+    }
+
+    [Fact]
+    public async Task Residentes_SonLosDelAmbito_YRespetanLaRestriccionPorResidente()
+    {
+        var direccion = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica);
+        var admin = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, direccion.CenterId, direccion.UnitId);
+        var asignado = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Desplegable Asignado");
+        var otro = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Desplegable Otro");
+        var (otraDireccion, _, _) = await SeedCenterAsync();
+        var dir = BuildDireccion(direccion.ExternalSubject);
+
+        var todos = (await dir.ListResidentsAsync(Query(direccion))).Value!;
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.ambitos_perfil_residente (id, ambito_perfil_id, centro_id, residente_id, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @ProfileScopeId, @CenterId, @ResidentId, SYSUTCDATETIME(), @AccountId)
+                """, new
+            {
+                direccion.ProfileScopeId, CenterId = direccion.CenterId.Value, ResidentId = asignado.Value,
+                AccountId = admin.AccountId.Value,
+            });
+        }
+        var restringidos = (await dir.ListResidentsAsync(Query(direccion))).Value!;
+        var ajenos = await BuildDireccion(otraDireccion.ExternalSubject).ListResidentsAsync(Query(direccion));
+
+        Assert.Equal(new[] { asignado.Value, otro.Value }.Order(), todos.Select(r => r.ResidentId.Value).Order());
+        Assert.Equal("Residente Desplegable Asignado", Assert.Single(restringidos).DisplayName);
+        Assert.False(ajenos.Ok);
+    }
+
+    [Fact]
+    public async Task Residentes_OtrosPerfilesNoEntran_YDireccionSigueSinLaFichaDeEnfermeriaNiMedicina()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+
+        var asNurse = await BuildDireccion(enfermera.ExternalSubject).ListResidentsAsync(Query(enfermera));
+        // El listado admite ya el perfil Dirección, pero las puertas de Enfermería y Medicina (ficha, línea temporal y basal)
+        // siguen exigiendo su propio perfil: la lectura clínica de Dirección es otro bloque.
+        var enfermeria = BuildService(direccion.ExternalSubject);
+        var lista = await enfermeria.ListScopeResidentsAsync(
+            new ListScopeResidentsCommand(direccion.ProfileScopeId, direccion.CenterId, SystemProfile.DireccionClinica));
+        var ficha = await enfermeria.FindScopeResidentAsync(
+            new FindScopeResidentCommand(direccion.ProfileScopeId, direccion.CenterId, residentId, SystemProfile.DireccionClinica));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, asNurse.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, lista.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, ficha.Error!.Code);
     }
 
     [Fact]

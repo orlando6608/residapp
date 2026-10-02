@@ -2,28 +2,28 @@ using Microsoft.AspNetCore.Mvc;
 using ResidApp.Application.UseCases;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
+using ResidApp.Web.Security;
 
 namespace ResidApp.Web.Controllers;
 
 /// <summary>
 /// Cableado de los otros dos casos de uso ya construidos del vertical Residente/Basal: firma de basal y
-/// lectura auditada para Dirección Clínica. Aviso: ni este puerto ni el prototipo legado tienen todavía un
-/// caso de uso para autorizar/crear el contenido de un borrador de basal (las 9 áreas más Barthel) — sin
-/// un borrador previo sembrado directamente en base de datos, Sign siempre devolverá un fallo de
-/// aplicación. No se ha improvisado ese sembrado a mano: replicaría en SQL una lógica de negocio (el
-/// trigger maestro de validación de 7 comprobaciones) que todavía no está diseñada en C#.
+/// lectura auditada para Dirección Clínica. La firma ya no tiene pantalla propia: se firma desde
+/// EnfermeriaBasal/Confirmar (Enfermería y Medicina), que envía aquí el borrador en campos ocultos; un fallo
+/// vuelve a esa confirmación con el mensaje.
 /// </summary>
-public sealed class BaselineController(ResidentBaselineApplicationService service) : Controller
+public sealed class BaselineController(ResidentBaselineApplicationService service, DireccionApplicationService direccionService) : Controller
 {
-    public IActionResult Sign() => View(new SignBaselineFormModel { OperacionId = Guid.NewGuid() });
+    public IActionResult Sign() => BackToResidents();
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Sign(SignBaselineFormModel form, CancellationToken ct)
     {
+        // Los campos los rellena la confirmación: si faltan, la petición no viene de ella.
         if (!ModelState.IsValid)
         {
-            return View(form);
+            return BackToResidents();
         }
 
         var command = new SignBaselineCommand(
@@ -33,38 +33,73 @@ public sealed class BaselineController(ResidentBaselineApplicationService servic
         var result = await service.SignBaselineAsync(command, ct);
         if (!result.Ok)
         {
-            ModelState.AddModelError(string.Empty, result.Error!.Message);
-            return View(form);
+            TempData["Error"] = result.Error!.Message;
+            return RedirectToAction("Confirmar", "EnfermeriaBasal", new { residenteId = form.ResidenteId });
         }
 
         ViewBag.VersionNumber = result.Value!.VersionNumber;
         ViewBag.BaselineVersionId = result.Value.BaselineVersionId.Value;
+        ViewBag.ResidenteId = form.ResidenteId;
         return View("Signed");
     }
 
-    public IActionResult Direction() => View(new DirectionBaselineQueryModel { OperacionId = Guid.NewGuid() });
+    public async Task<IActionResult> Direction(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Direction)) });
+        }
+
+        await ShowResidentsAsync(activeScope, ct);
+        return View(new DirectionBaselineQueryModel { OperacionId = Guid.NewGuid() });
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Direction(DirectionBaselineQueryModel form, CancellationToken ct)
     {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Direction)) });
+        }
+
         if (!ModelState.IsValid)
         {
+            await ShowResidentsAsync(activeScope, ct);
             return View(form);
         }
 
         var command = new ReadDirectionBaselineCommand(
-            form.AmbitoPerfilId!.Value, CenterId.From(form.CentroId!.Value), ResidentId.From(form.ResidenteId!.Value),
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId!.Value),
             form.TipoRecurso, form.Proposito, form.OperacionId);
 
         var result = await service.ReadDirectionBaselineAsync(command, ct);
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
+            await ShowResidentsAsync(activeScope, ct);
             return View(form);
         }
 
         ViewBag.Headers = result.Value;
         return View("DirectionResult", form);
     }
+
+    private async Task ShowResidentsAsync(ActiveProfileScopeCookieValue activeScope, CancellationToken ct)
+    {
+        ViewBag.AmbitoCentroNombre = activeScope.CenterName;
+        ViewBag.AmbitoPerfilLabel = SystemProfileDisplay.Label(activeScope.Profile);
+        var result = await direccionService.ListResidentsAsync(
+            new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+        }
+        ViewBag.Residentes = result.Value ?? [];
+    }
+
+    private IActionResult BackToResidents() =>
+        RedirectToAction("Residentes", BaselineModuleDisplay.ProfileController(Request));
 }
