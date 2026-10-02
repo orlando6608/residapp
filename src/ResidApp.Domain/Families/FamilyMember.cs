@@ -12,6 +12,11 @@ public sealed record FamilyMemberData(string DisplayName, string Relationship, s
         && string.Equals(Relationship, other.Relationship, StringComparison.Ordinal)
         && string.Equals(Phone, other.Phone, StringComparison.Ordinal)
         && string.Equals(Email, other.Email, StringComparison.Ordinal);
+
+    /// <summary>Huella de los datos tal como están: la edición la lleva en el formulario y el servidor la compara con la actual para
+    /// detectar que otra persona cambió al familiar entretanto. Distinta para cualquier cambio, mayúsculas y acentos incluidos.</summary>
+    public string Version => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+        System.Text.Encoding.UTF8.GetBytes(string.Join('\u001F', DisplayName, Relationship, Phone, Email ?? string.Empty))));
 }
 
 /// <summary>

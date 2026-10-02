@@ -65,7 +65,8 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         }
     }
 
-    public async Task UpdateAsync(AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, CancellationToken ct = default)
+    public async Task UpdateAsync(
+        AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, string expectedVersion, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -77,7 +78,13 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
             """, new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value },
             transaction, cancellationToken: ct))
             ?? throw new AccessDeniedException();
-        if (new FamilyMemberData(current.DisplayName, current.Relationship, current.Phone, current.Email).SameAs(data))
+        var currentData = new FamilyMemberData(current.DisplayName, current.Relationship, current.Phone, current.Email);
+        if (!string.Equals(currentData.Version, expectedVersion, StringComparison.Ordinal))
+        {
+            throw new DomainValidationException("FAMILY_MEMBER_CONFLICT");
+        }
+
+        if (currentData.SameAs(data))
         {
             throw new DomainValidationException(FamilyMember.InvalidCode);
         }

@@ -27,9 +27,10 @@ public sealed record AddFamilyMemberCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid OperacionId, string? NombreVisible, string? Relacion,
     string? Telefono, string? Correo);
 
+/// <summary>VersionEsperada es FamilyMemberData.Version de los datos que enseñaba la pantalla al abrirla.</summary>
 public sealed record UpdateFamilyMemberCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string? NombreVisible, string? Relacion,
-    string? Telefono, string? Correo);
+    string? Telefono, string? Correo, string VersionEsperada);
 
 /// <summary>ADM-10/ADM-11 (0022): CambiosEsperados es cuántos cambios tenía la autorización al abrir la pantalla.</summary>
 public sealed record ChangeFamilyAuthorizationCommand(
@@ -136,7 +137,7 @@ public sealed class AdministracionApplicationService(
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             var data = FamilyMember.Validate(command.NombreVisible, command.Relacion, command.Telefono, command.Correo);
-            await families.UpdateAsync(target, command.VinculoId, data, ct);
+            await families.UpdateAsync(target, command.VinculoId, data, command.VersionEsperada, ct);
             return true;
         });
 

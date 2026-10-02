@@ -94,6 +94,9 @@ public sealed class FamilyMemberFormModel
 
     public Guid? VinculoId { get; set; }
 
+    /// <summary>Solo al editar: FamilyMemberData.Version de los datos con que se abrió el formulario.</summary>
+    public string? Version { get; set; }
+
     [Required(ErrorMessage = "Escribe el nombre.")]
     [StringLength(FamilyMember.MaxDisplayNameLength, ErrorMessage = "El nombre no puede pasar de {1} caracteres.")]
     [Display(Name = "Nombre")]

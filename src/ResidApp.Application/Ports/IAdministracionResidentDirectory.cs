@@ -82,7 +82,10 @@ public interface IResidentFamilyRepository
     /// con el mismo operationId no duplica nada: devuelve el vínculo ya creado.</summary>
     Task<Guid> AddAsync(AdministrativeResidentTarget target, Guid operationId, FamilyMemberData data, CancellationToken ct = default);
 
-    Task UpdateAsync(AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, CancellationToken ct = default);
+    /// <summary>expectedVersion es FamilyMemberData.Version de los datos que vio quien edita; si ya no coincide con los actuales,
+    /// FAMILY_MEMBER_CONFLICT.</summary>
+    Task UpdateAsync(
+        AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, string expectedVersion, CancellationToken ct = default);
 
     /// <summary>Registra el cambio si el vínculo sigue teniendo expectedChanges cambios (si no, conflicto) y es válido desde
     /// su estado efectivo de hoy. Devuelve cuántos cambios tiene ya.</summary>

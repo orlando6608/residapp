@@ -352,5 +352,7 @@ Huecos de lo ya construido:
   nombre de la cuenta solo se usa en la firma del PDF de derivación (2026-10-01). Los permisos no se eligen en el alta ni
   en «Conceder perfil», sino después en la pantalla del perfil.
 - **Familiares:** un familiar no se puede vincular a un segundo residente (habría que crearlo otra vez) ni desvincular; la edición
-  no tiene token de concurrencia (gana la última). La «fecha efectiva» de ADM-11 es siempre el momento del cambio. Ninguna cuenta
+  de sus datos lleva desde el 2026-10-02 un token de concurrencia (huella SHA-256 de los datos que enseñó la pantalla, `FamilyMemberData.Version`, sin
+  script): si otra persona los cambió entretanto, se rechaza (`FAMILY_MEMBER_CONFLICT`) y se vuelve a enseñar el formulario con los datos actuales; un
+  cambio que deja los datos como estaban (A→B→A) no se detecta. La «fecha efectiva» de ADM-11 es siempre el momento del cambio. Ninguna cuenta
   de familiar existe todavía: llegará con el Portal Familiar y el proveedor de identidad.

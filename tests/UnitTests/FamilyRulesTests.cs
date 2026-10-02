@@ -78,4 +78,19 @@ public class FamilyRulesTests
         FamilyAuthorizationStatus effective, FamilyAuthorizationChange change, int? validUntilOffset, string? reason) =>
         Assert.Throws<DomainValidationException>(() => FamilyAuthorizationRules.Validate(
             effective, change, validUntilOffset is { } days ? Today.AddDays(days) : null, reason, Today));
+
+    [Fact]
+    public void Version_EsEstableYCambiaConCualquierDato()
+    {
+        var data = new FamilyMemberData("Lucía Pérez", "Hija", "600 123 456", "lucia@example.org");
+
+        Assert.Equal(data.Version, new FamilyMemberData("Lucía Pérez", "Hija", "600 123 456", "lucia@example.org").Version);
+        Assert.NotEqual(data.Version, (data with { DisplayName = "Lucia Pérez" }).Version);
+        Assert.NotEqual(data.Version, (data with { Relationship = "hija" }).Version);
+        Assert.NotEqual(data.Version, (data with { Phone = "600 123 457" }).Version);
+        Assert.NotEqual(data.Version, (data with { Email = null }).Version);
+        // Los campos no se confunden al unirlos.
+        Assert.NotEqual(
+            new FamilyMemberData("ab", "c", "600 123 456", null).Version, new FamilyMemberData("a", "bc", "600 123 456", null).Version);
+    }
 }

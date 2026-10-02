@@ -217,16 +217,20 @@ public sealed partial class AdministracionController(
             return detail is null ? RedirectToAction(nameof(Residentes)) : RedirectToAction(nameof(Residente), new { residenteId });
         }
 
-        return View("Familiar", new FamilyMemberViewModel(detail!.Resident, new FamilyMemberFormModel
-        {
-            ResidenteId = residenteId,
-            VinculoId = vinculoId,
-            NombreVisible = member.DisplayName,
-            Relacion = member.Relationship,
-            Telefono = member.Phone,
-            Correo = member.Email,
-        }));
+        return View("Familiar", new FamilyMemberViewModel(detail!.Resident, EditForm(residenteId, member)));
     }
+
+    /// <summary>El formulario de edición con los datos actuales del familiar y su versión (ver FamilyMemberData.Version).</summary>
+    private static FamilyMemberFormModel EditForm(Guid residenteId, ResidentFamilyMember member) => new()
+    {
+        ResidenteId = residenteId,
+        VinculoId = member.LinkId,
+        Version = new FamilyMemberData(member.DisplayName, member.Relationship, member.Phone, member.Email).Version,
+        NombreVisible = member.DisplayName,
+        Relacion = member.Relationship,
+        Telefono = member.Phone,
+        Correo = member.Email,
+    };
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -248,7 +252,7 @@ public sealed partial class AdministracionController(
         {
             var result = await service.UpdateFamilyMemberAsync(new UpdateFamilyMemberCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), linkId,
-                form.NombreVisible, form.Relacion, form.Telefono, form.Correo), ct);
+                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Version ?? string.Empty), ct);
             if (result.Ok)
             {
                 TempData["Mensaje"] = "Datos del familiar guardados.";
@@ -258,6 +262,22 @@ public sealed partial class AdministracionController(
             if (result.Error!.Code == ApplicationFailureCode.AccessDenied)
             {
                 return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
+            }
+
+            if (result.Error.Code == ApplicationFailureCode.Conflict)
+            {
+                // Otra persona cambió al familiar mientras se editaba: se enseñan los datos actuales y se pide revisarlos.
+                var fresh = await FindAsync(activeScope, form.ResidenteId, ct);
+                var current = fresh?.Family.FirstOrDefault(f => f.LinkId == linkId);
+                if (fresh is null || current is null)
+                {
+                    return RedirectToAction(nameof(Residentes));
+                }
+
+                ModelState.Clear();
+                ModelState.AddModelError(string.Empty,
+                    "Otra persona ha cambiado los datos de este familiar mientras los editabas. Aquí tienes los datos actuales: revísalos y vuelve a guardar si aún hace falta.");
+                return View("Familiar", new FamilyMemberViewModel(fresh.Resident, EditForm(form.ResidenteId, current)));
             }
 
             ModelState.AddModelError(string.Empty, FamilyMemberError(result.Error, editing: true));

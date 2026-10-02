@@ -170,13 +170,15 @@ public class AdministracionFamiliaresTests
         var otherResident = await CreateResidentAsync(admin, "Residente Otro");
         var service = Build(admin.ExternalSubject);
         var linkId = (await service.AddFamilyMemberAsync(Add(admin, residentId))).Value;
-        UpdateFamilyMemberCommand Update(ResidentId resident, string phone, string? email) =>
-            new(admin.ProfileScopeId, admin.CenterId, resident, linkId, "Lucía Pérez", "Hija", phone, email);
+        UpdateFamilyMemberCommand Update(ResidentId resident, string phone, string? email, string version) =>
+            new(admin.ProfileScopeId, admin.CenterId, resident, linkId, "Lucía Pérez", "Hija", phone, email, version);
 
-        var updated = await service.UpdateFamilyMemberAsync(Update(residentId, "+34 611 222 333", "lucia@example.org"));
-        var unchanged = await service.UpdateFamilyMemberAsync(Update(residentId, "+34 611 222 333", "lucia@example.org"));
-        var badEmail = await service.UpdateFamilyMemberAsync(Update(residentId, "+34 611 222 333", "lucia.example.org"));
-        var foreign = await service.UpdateFamilyMemberAsync(Update(otherResident, "699 999 999", null));
+        var initialVersion = await FamilyVersionAsync(admin, residentId);
+        var updated = await service.UpdateFamilyMemberAsync(Update(residentId, "+34 611 222 333", "lucia@example.org", initialVersion));
+        var currentVersion = await FamilyVersionAsync(admin, residentId);
+        var unchanged = await service.UpdateFamilyMemberAsync(Update(residentId, "+34 611 222 333", "lucia@example.org", currentVersion));
+        var badEmail = await service.UpdateFamilyMemberAsync(Update(residentId, "+34 611 222 333", "lucia.example.org", currentVersion));
+        var foreign = await service.UpdateFamilyMemberAsync(Update(otherResident, "699 999 999", null, initialVersion));
         var member = Assert.Single((await DetailAsync(admin, residentId)).Family);
 
         Assert.True(updated.Ok, updated.Error?.Message);
@@ -185,6 +187,38 @@ public class AdministracionFamiliaresTests
         Assert.Equal(ApplicationFailureCode.AccessDenied, foreign.Error!.Code);
         Assert.Equal(("+34 611 222 333", "lucia@example.org"), (member.Phone, member.Email));
         Assert.Equal(1, await CountAuditAsync(residentId, "FAMILY_MEMBER_UPDATE"));
+    }
+
+    [Fact]
+    public async Task Editar_ConUnaVersionObsoleta_EsConflicto_YNoPisaElCambioDeOtraPersona()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var residentId = await CreateResidentAsync(admin, "Residente Concurrencia");
+        var service = Build(admin.ExternalSubject);
+        var linkId = (await service.AddFamilyMemberAsync(Add(admin, residentId))).Value;
+        UpdateFamilyMemberCommand Update(string phone, string version) =>
+            new(admin.ProfileScopeId, admin.CenterId, residentId, linkId, "Lucía Pérez", "Hija", phone, null, version);
+        var openedByBoth = await FamilyVersionAsync(admin, residentId);
+
+        var first = await service.UpdateFamilyMemberAsync(Update("+34 611 000 111", openedByBoth));
+        var second = await service.UpdateFamilyMemberAsync(Update("+34 622 000 222", openedByBoth));
+        var blank = await service.UpdateFamilyMemberAsync(Update("+34 633 000 333", ""));
+        var afterConflicts = Assert.Single((await DetailAsync(admin, residentId)).Family);
+        var retried = await service.UpdateFamilyMemberAsync(Update("+34 622 000 222", await FamilyVersionAsync(admin, residentId)));
+
+        Assert.True(first.Ok, first.Error?.Message);
+        Assert.Equal(ApplicationFailureCode.Conflict, second.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, blank.Error!.Code);
+        Assert.Equal("+34 611 000 111", afterConflicts.Phone);
+        Assert.True(retried.Ok, retried.Error?.Message);
+        Assert.Equal("+34 622 000 222", Assert.Single((await DetailAsync(admin, residentId)).Family).Phone);
+        Assert.Equal(2, await CountAuditAsync(residentId, "FAMILY_MEMBER_UPDATE"));
+    }
+
+    private static async Task<string> FamilyVersionAsync(SeededProfile admin, ResidentId residentId)
+    {
+        var member = Assert.Single((await DetailAsync(admin, residentId)).Family);
+        return new FamilyMemberData(member.DisplayName, member.Relationship, member.Phone, member.Email).Version;
     }
 
     [Fact]

@@ -13,6 +13,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Token de concurrencia en la edición de familiares (2026-10-02, sin script):** la pantalla `EditarFamiliar` lleva `Form.Version`, la huella SHA-256 de
+  los datos que enseñó (`FamilyMemberData.Version`, que une nombre, relación, teléfono y correo con un separador). `SqlResidentFamilyRepository.UpdateAsync`
+  la compara con los datos actuales, ya con el vínculo bloqueado (`UPDLOCK`), y si no coinciden lanza `FAMILY_MEMBER_CONFLICT` (en `ConflictPattern`). Se
+  comprueba **después** del acceso (familiar ajeno sigue siendo acceso denegado) y **antes** de «sin cambios». El parámetro es obligatorio en
+  `UpdateFamilyMemberCommand.VersionEsperada` y en el puerto: un envío sin versión es conflicto. En el conflicto el controlador (`EditForm`) vuelve a
+  pintar el formulario con los datos actuales y un aviso, tras `ModelState.Clear()` para que los campos no conserven lo escrito. Límite conocido: A→B→A
+  deja la misma huella y no se detecta. Tests: `Editar_ConUnaVersionObsoleta_EsConflicto_…` (falla sin la comprobación), `Version_EsEstableYCambiaConCualquierDato`
+  y el de edición adaptado. Suite en verde (246, 310 y 61). Curl en local con dos pestañas sobre «Familiar concurrencia prueba»: la primera guarda, la segunda
+  recibe el aviso con el teléfono de la primera, y reintentar guarda. Queda ese familiar de prueba en la base local.
 - **Recepción de transferencias limitada a los miembros del equipo (2026-10-02, sin script ni push):** una transferencia con equipo entrante
   (`equipo_entrante_id`, script `0028`) solo la confirma un miembro vigente de ese equipo (`equipos_miembros`, `0027`). **Suposición mía, no
   confirmada con el usuario ni con CJ:** si el equipo no tiene miembros vigentes, o la transferencia es anterior a `0028` (sin equipo), la
