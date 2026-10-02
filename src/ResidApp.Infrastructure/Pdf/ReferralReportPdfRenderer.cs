@@ -21,6 +21,9 @@ public sealed class ReferralReportPdfRenderer : IReferralReportPdfRenderer
     /// con palabras de un título en la fuente que no toca (visto en las pruebas en paralelo). Se generan de uno en uno.</summary>
     private static readonly Lock RenderLock = new();
 
+    /// <summary>Icono de la app en color para el encabezado, en memoria con el prefijo base64: de MigraDoc.</summary>
+    private static readonly string Logo = "base64:" + Convert.ToBase64String(EmbeddedResource("ResidApp.Images.logo.png"));
+
     static ReferralReportPdfRenderer() => GlobalFontSettings.FontResolver = new EmbeddedFontResolver();
 
     public byte[] Render(string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature)
@@ -44,6 +47,27 @@ public sealed class ReferralReportPdfRenderer : IReferralReportPdfRenderer
         section.PageSetup = document.DefaultPageSetup.Clone();
         section.PageSetup.PageFormat = PageFormat.A4;
         section.PageSetup.LeftMargin = section.PageSetup.RightMargin = Unit.FromCentimeter(2);
+        section.PageSetup.TopMargin = Unit.FromCentimeter(3.2);
+        section.PageSetup.HeaderDistance = Unit.FromCentimeter(1);
+
+        // Encabezado en todas las páginas: icono de la app y su nombre, separados del cuerpo por una línea fina.
+        var header = section.Headers.Primary.AddTable();
+        header.LeftPadding = header.RightPadding = 0;
+        header.AddColumn(Unit.FromCentimeter(1.8));
+        header.AddColumn(Unit.FromCentimeter(15.2));
+        var headerRow = header.AddRow();
+        headerRow.VerticalAlignment = MigraDoc.DocumentObjectModel.Tables.VerticalAlignment.Center;
+        headerRow.BottomPadding = Unit.FromPoint(4);
+        headerRow.Borders.Bottom.Width = 0.5;
+        headerRow.Borders.Bottom.Color = Colors.Gray;
+        var logo = headerRow.Cells[0].AddImage(Logo);
+        logo.Width = Unit.FromCentimeter(1.4);
+        logo.LockAspectRatio = true;
+        var brand = headerRow.Cells[1].AddParagraph();
+        brand.Format.Font.Size = 9;
+        brand.Format.Font.Color = Colors.DimGray;
+        brand.AddFormattedText("ResidApp", TextFormat.Bold);
+        brand.AddText(" · Plataforma Asistencial Geriátrica");
 
         var footer = section.Footers.Primary.AddParagraph();
         footer.Format.Font.Size = 8;
@@ -93,6 +117,15 @@ public sealed class ReferralReportPdfRenderer : IReferralReportPdfRenderer
 
     private static string Profile(SystemProfile profile) => profile == SystemProfile.Medicina ? "Medicina" : "Enfermería";
 
+    private static byte[] EmbeddedResource(string name)
+    {
+        using var resource = typeof(ReferralReportPdfRenderer).Assembly.GetManifestResourceStream(name)
+            ?? throw new InvalidOperationException($"Falta el recurso incrustado {name}.");
+        using var bytes = new MemoryStream();
+        resource.CopyTo(bytes);
+        return bytes.ToArray();
+    }
+
     /// <summary>Toda familia se resuelve a Liberation Sans incrustada (normal o negrita; la cursiva se simula),
     /// para que el PDF salga igual en Windows y en Linux, donde PDFsharp no lee fuentes del sistema.</summary>
     private sealed class EmbeddedFontResolver : IFontResolver
@@ -103,13 +136,6 @@ public sealed class ReferralReportPdfRenderer : IReferralReportPdfRenderer
         public FontResolverInfo ResolveTypeface(string familyName, bool isBold, bool isItalic) =>
             new(isBold ? Bold : Regular, false, isItalic);
 
-        public byte[] GetFont(string faceName)
-        {
-            using var resource = typeof(EmbeddedFontResolver).Assembly.GetManifestResourceStream($"ResidApp.Fonts.{faceName}.ttf")
-                ?? throw new InvalidOperationException($"Falta la fuente incrustada {faceName}.");
-            using var bytes = new MemoryStream();
-            resource.CopyTo(bytes);
-            return bytes.ToArray();
-        }
+        public byte[] GetFont(string faceName) => EmbeddedResource($"ResidApp.Fonts.{faceName}.ttf");
     }
 }

@@ -934,6 +934,11 @@ Repite estos pasos antes de dar un bloque por cerrado:
   `ReferralReportPdfRenderer`. Para revisar un PDF sin abrirlo, compara el contenido de su página
   (`PdfReader.Open(...).Pages[0].Contents`, `UnfilteredValue`): el texto va con la fuente incrustada y no se busca como
   texto plano.
+- **Imágenes en el PDF:** PDFsharp no importa SVG. El icono del encabezado es `wwwroot\images\logo.svg` rasterizado a
+  PNG de 256 px (`Infrastructure\Pdf\Images\logo.png`, generado con Chrome headless `--screenshot` y
+  `--default-background-color=00000000`), incrustado como recurso y pasado a MigraDoc con el prefijo `base64:`, sin
+  ficheros temporales. Si cambia el SVG, hay que regenerar el PNG. Para ver un PDF como imagen sin poppler, usa
+  `Windows.Data.Pdf` desde Windows PowerShell 5.1; Chrome headless no pinta su visor de PDF.
 - **Decimales en formularios:** la cultura del servidor es es-ES. Un decimal enlazado desde
   `type="text"` convierte «37.8» en 378. Usa `type="number" step="0.1"`, que ASP.NET Core enlaza con
   cultura invariante gracias al campo oculto `__Invariant`. En un campo oculto que reenvía un decimal,

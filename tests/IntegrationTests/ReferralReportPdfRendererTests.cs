@@ -30,6 +30,26 @@ public class ReferralReportPdfRendererTests
         Assert.All(rendered, page => Assert.Equal(expected, page));
     }
 
+    /// <summary>El encabezado lleva el icono de la app: la primera página dibuja una imagen.</summary>
+    [Fact]
+    public void Encabezado_LlevaElIconoDeLaApp()
+    {
+        var content = ReferralReportContent.Compose(
+            [new("Evolución", true, ["Sin datos registrados."])],
+            new ReferralReportInput("Motivo de prueba.", null));
+        var signature = new ReferralReportSignature(
+            SystemProfile.Medicina, "test-pdf", new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero), "huella", null);
+
+        using var document = PdfReader.Open(
+            new MemoryStream(new ReferralReportPdfRenderer().Render("Residente de prueba", content, signature)), PdfDocumentOpenMode.Import);
+        var xObjects = document.Pages[0].Resources.Elements.GetDictionary("/XObject");
+
+        Assert.NotNull(xObjects);
+        Assert.Contains(xObjects.Elements.Values,
+            item => item is PdfSharp.Pdf.Advanced.PdfReference { Value: PdfSharp.Pdf.PdfDictionary image }
+                && image.Elements.GetName("/Subtype") == "/Image");
+    }
+
     /// <summary>El contenido de la primera página sin comprimir: texto, fuentes y posiciones, sin la fecha ni el id del
     /// documento, que cambian en cada PDF.</summary>
     private static string PageContent(byte[] pdf)
