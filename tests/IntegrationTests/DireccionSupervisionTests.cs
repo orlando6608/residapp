@@ -203,6 +203,43 @@ public class DireccionSupervisionTests
     }
 
     [Fact]
+    public async Task Indicadores_SeguimientosConLaFechaVencidaEnElPeriodo_SiguenElPlanVigenteYElCierre()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        async Task<(Guid EventId, int Revision)> FollowUpAsync(string text, DateOnly due)
+        {
+            var id = await RegisterAsync(enfermera, residentId, text);
+            var revision = await StartAndSaveAsync(enfermera, id);
+            return (id, (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, id, revision, due))).Value);
+        }
+
+        var overdue = await FollowUpAsync("Seguimiento vencido.", today.AddDays(-1));
+        var notDue = await FollowUpAsync("Seguimiento con plazo.", today.AddDays(7));
+        var rescheduled = await FollowUpAsync("Seguimiento reprogramado hoy.", today.AddDays(-1));
+        Assert.True((await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, rescheduled.EventId, rescheduled.Revision, FollowUpActionType.Reprogramacion,
+            "Persiste el cuadro.", today.AddDays(7)))).Ok);
+        var closed = await FollowUpAsync("Seguimiento cerrado hoy.", today.AddDays(-1));
+        Assert.True((await service.CloseClinicalEventAsync(CloseCommand(enfermera, closed.EventId, closed.Revision, Guid.NewGuid()))).Ok);
+        var dir = BuildDireccion(direccion.ExternalSubject);
+
+        var inToday = (await dir.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today))).Value!.Total;
+        var inTomorrow = (await dir.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(
+            direccion.ProfileScopeId, direccion.CenterId, today.AddDays(1), today.AddDays(1)))).Value!.Total;
+        var before = (await dir.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(
+            direccion.ProfileScopeId, direccion.CenterId, today.AddDays(-5), today.AddDays(-3)))).Value!.Total;
+
+        // Hoy: el vencido, el reprogramado hoy (empezó el día con el plan vencido) y el cerrado hoy (ese día seguía vencido); el de plazo, no.
+        Assert.Equal((4, 3), (inToday.FollowUpsOpen, inToday.FollowUpsOverdue));
+        // Mañana: ya no está abierto el cerrado; el reprogramado tiene plazo; solo sigue vencido el primero.
+        Assert.Equal((3, 1), (inTomorrow.FollowUpsOpen, inTomorrow.FollowUpsOverdue));
+        Assert.Equal((0, 0), (before.FollowUpsOpen, before.FollowUpsOverdue));
+        _ = notDue;
+    }
+
+    [Fact]
     public async Task Indicadores_OtrosPerfilesNoEntran_YUnPeriodoImposibleSeRechaza()
     {
         var (direccion, enfermera, _) = await SeedCenterAsync();

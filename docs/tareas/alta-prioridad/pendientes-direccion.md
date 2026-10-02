@@ -68,8 +68,13 @@ En el orden propuesto:
 
 Huecos de lo ya construido:
 
-- **Seguimientos vencidos por periodo:** los indicadores no los incluyen. El inicio da los vencidos de hoy, pero no se guarda cuándo dejó
-  un seguimiento de estar abierto (solo el cierre del evento), así que «vencido en el periodo» habría que deducirlo.
+- **Seguimientos vencidos por periodo (2026-10-02, sin script):** los indicadores los incluyen en «Continuidad entre turnos» y en la evolución mensual,
+  como «n de m»: m son los seguimientos abiertos algún día del periodo y n los que tuvieron su fecha prevista pasada algún día, con el plan vigente al
+  empezar ese día (`SupervisionIndicatorRules.WasOverdue`, función pura; reprogramar el mismo día en que vence no lo borra). **Es una deducción mía, sin
+  confirmar con el usuario ni con CJ.** Un seguimiento deja de estar abierto al cerrarse el episodio, al escalarse (solo Enfermería) o al activarse el
+  protocolo urgente, lo primero que ocurra tras iniciarse; **no se guarda cuándo termina por otras vías** (p. ej. una indicación médica), y esos casos
+  cuentan hasta el cierre del episodio. Cada mes de la evolución se calcula por separado (un seguimiento puede contar en varios). Tests:
+  `SupervisionIndicatorRulesTests` (la regla, con zona horaria) e `Indicadores_SeguimientosConLaFechaVencidaEnElPeriodo_…` (SQL; falla si se pierde el cierre).
 
 - **Responsables de equipo:** el detalle operativo no los muestra porque no hay equipos ni turnos hasta que exista Administración.
 - **Lectura de basal (`/Baseline/Direction`):** desde 2026-10-02 toma el ámbito y el centro del ámbito activo y el residente se

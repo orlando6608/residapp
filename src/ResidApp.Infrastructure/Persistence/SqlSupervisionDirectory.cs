@@ -241,6 +241,49 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
                AND transfer_fact.At >= @From AND transfer_fact.At < @To
             """, parameters, cancellationToken: ct));
 
+        // Seguimientos con alguna fecha abierta antes del fin del periodo y no terminados antes de su inicio, con sus reprogramaciones (una fila
+        // por reprogramación, o una sola sin ellas). Termina por lo primero que ocurra tras iniciarse: el cierre, el escalado (solo Enfermería)
+        // o el protocolo urgente. No se guarda cuándo deja de estar abierto por otras vías (ver IndicatorFollowUpFact).
+        var nursingFollowUps = await connection.QueryAsync<FollowUpFactRow>(new CommandDefinition($"""
+            SELECT fu.FollowUpId, fu.UnitId, fu.StartedAt, fu.EndedAt, fu.InitialDue, r.registrado_en AS RescheduleAt, r.fecha_prevista AS RescheduleDue
+              FROM (
+                  SELECT s.id AS FollowUpId, ea.unidad_id AS UnitId, s.iniciado_en AS StartedAt, s.fecha_prevista AS InitialDue,
+                         (SELECT MIN(t) FROM (VALUES (ea.cerrado_en), (esc.At), (pr.At)) v(t)) AS EndedAt
+                {ScopedEventsFrom}
+                  JOIN dbo.seguimientos s ON s.evento_id = ea.id
+                  OUTER APPLY (SELECT MIN(x.escalado_en) AS At FROM dbo.escalados_medicina x
+                                WHERE x.evento_id = ea.id AND x.escalado_en > s.iniciado_en) esc
+                  OUTER APPLY (SELECT MIN(x.activado_en) AS At FROM dbo.protocolos_urgentes x
+                                WHERE x.evento_id = ea.id AND x.activado_en > s.iniciado_en) pr
+                {ScopedEventsWhere}
+                   AND s.iniciado_en < @To) fu
+              LEFT JOIN dbo.seguimiento_acciones r ON r.seguimiento_id = fu.FollowUpId AND r.tipo_codigo = 'REPROGRAMACION'
+             WHERE fu.EndedAt IS NULL OR fu.EndedAt >= @From
+            """, parameters, cancellationToken: ct));
+        var medicalFollowUps = await connection.QueryAsync<FollowUpFactRow>(new CommandDefinition($"""
+            SELECT fu.FollowUpId, fu.UnitId, fu.StartedAt, fu.EndedAt, fu.InitialDue, r.registrado_en AS RescheduleAt, r.fecha_prevista AS RescheduleDue
+              FROM (
+                  SELECT s.id AS FollowUpId, ea.unidad_id AS UnitId, s.iniciado_en AS StartedAt, s.fecha_prevista AS InitialDue,
+                         (SELECT MIN(t) FROM (VALUES (ea.cerrado_en), (pr.At)) v(t)) AS EndedAt
+                {ScopedEventsFrom}
+                  JOIN dbo.seguimientos_medicos s ON s.evento_id = ea.id
+                  OUTER APPLY (SELECT MIN(x.activado_en) AS At FROM dbo.protocolos_urgentes x
+                                WHERE x.evento_id = ea.id AND x.activado_en > s.iniciado_en) pr
+                {ScopedEventsWhere}
+                   AND s.iniciado_en < @To) fu
+              LEFT JOIN dbo.seguimiento_medico_acciones r ON r.seguimiento_id = fu.FollowUpId AND r.tipo_codigo = 'REPROGRAMACION'
+             WHERE fu.EndedAt IS NULL OR fu.EndedAt >= @From
+            """, parameters, cancellationToken: ct));
+        var followUps = nursingFollowUps.Concat(medicalFollowUps)
+            .GroupBy(r => r.FollowUpId)
+            .Select(g => new IndicatorFollowUpFact(
+                UnitId.From(g.First().UnitId), g.First().StartedAt, g.First().EndedAt,
+                g.First().InitialDue is { } initial ? DateOnly.FromDateTime(initial) : null,
+                g.Where(r => r.RescheduleAt is not null)
+                    .Select(r => new IndicatorReschedule(r.RescheduleAt!.Value, r.RescheduleDue is { } due ? DateOnly.FromDateTime(due) : null))
+                    .ToList()))
+            .ToList();
+
         return new SupervisionIndicatorFacts(
             episodes.Select(r => new IndicatorEpisodeFact(
                 UnitId.From(r.UnitId), EnumCode.ParseCode<ClinicalEventOrigin>(r.OriginCode),
@@ -250,7 +293,8 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
             indications.Select(r => new IndicatorIndicationFact(
                 UnitId.From(r.UnitId), r.IssuedAt, EnumCode.ParseCode<MedicalIndicationStatus>(r.StatusCode))).ToList(),
             transfers.Select(r => new IndicatorTransferFact(
-                UnitId.From(r.UnitId), EnumCode.ParseCode<SystemProfile>(r.ProfileCode), r.At, r.Received)).ToList());
+                UnitId.From(r.UnitId), EnumCode.ParseCode<SystemProfile>(r.ProfileCode), r.At, r.Received)).ToList(),
+            followUps);
     }
 
     private static SupervisionEpisode ToEpisode(EpisodeRow r) => new(
@@ -281,4 +325,7 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
     private sealed record IndicationFactRow(Guid UnitId, DateTime IssuedAt, string StatusCode);
 
     private sealed record TransferFactRow(Guid UnitId, string ProfileCode, DateTime At, bool Received);
+
+    private sealed record FollowUpFactRow(
+        Guid FollowUpId, Guid UnitId, DateTime StartedAt, DateTime? EndedAt, DateTime? InitialDue, DateTime? RescheduleAt, DateTime? RescheduleDue);
 }

@@ -70,18 +70,32 @@ public sealed record IndicatorIndicationFact(UnitId UnitId, DateTime IssuedAt, M
 /// <summary>Una transferencia de seguimiento (de Enfermería o de Medicina) y si se confirmó su recepción.</summary>
 public sealed record IndicatorTransferFact(UnitId UnitId, SystemProfile Profile, DateTime At, bool Received);
 
+/// <summary>Una reprogramación del plan de un seguimiento: cuándo se registró (UTC) y la fecha prevista nueva (null si el plan ya no tiene fecha).</summary>
+public sealed record IndicatorReschedule(DateTime At, DateOnly? Due);
+
+/// <summary>Un seguimiento (de Enfermería o de Medicina) que estuvo abierto en algún momento del periodo o antes de su fin: desde
+/// StartedAt hasta EndedAt (null si sigue abierto), con su fecha prevista inicial y sus reprogramaciones. EndedAt es lo primero que
+/// ocurrió del cierre del episodio, el escalado a Medicina o la activación del protocolo urgente tras iniciarse el seguimiento: no se
+/// guarda cuándo un seguimiento deja de estar abierto por otras vías.</summary>
+public sealed record IndicatorFollowUpFact(
+    UnitId UnitId, DateTime StartedAt, DateTime? EndedAt, DateOnly? InitialDue, IReadOnlyList<IndicatorReschedule> Reschedules);
+
 public sealed record SupervisionIndicatorFacts(
     IReadOnlyList<IndicatorEpisodeFact> Episodes, IReadOnlyList<IndicatorClosureFact> Closures,
-    IReadOnlyList<IndicatorIndicationFact> Indications, IReadOnlyList<IndicatorTransferFact> Transfers);
+    IReadOnlyList<IndicatorIndicationFact> Indications, IReadOnlyList<IndicatorTransferFact> Transfers,
+    IReadOnlyList<IndicatorFollowUpFact> FollowUps);
 
 /// <summary>DIR-08/DIR-09: recuentos de un periodo. Registered es el denominador de Escalated, UrgentProtocols y Referrals;
 /// IndicationsIssued, el de los estados de las indicaciones; cada recuento de transferencias, el de sus recepciones.
-/// Closed cuenta los cierres del periodo, aunque el episodio se registrara antes, y no tiene denominador.</summary>
+/// Closed cuenta los cierres del periodo, aunque el episodio se registrara antes, y no tiene denominador. FollowUpsOpen son los
+/// seguimientos abiertos en algún momento del periodo (ver SupervisionIndicatorRules.WasOverdue), el denominador de
+/// FollowUpsOverdue, los que tuvieron su fecha prevista vencida en algún día del periodo.</summary>
 public sealed record SupervisionIndicatorCounts(
     int Registered, int FromAuxiliar, int FromNursing, int FromMedicine, int Priority, int Closed,
     int Escalated, int UrgentProtocols, int Referrals,
     int IndicationsIssued, int IndicationsRead, int IndicationsDone, int IndicationsNotDone, int IndicationsUnresolved,
-    int NursingTransfers, int NursingTransfersReceived, int MedicalTransfers, int MedicalTransfersReceived);
+    int NursingTransfers, int NursingTransfersReceived, int MedicalTransfers, int MedicalTransfersReceived,
+    int FollowUpsOpen = 0, int FollowUpsOverdue = 0);
 
 public sealed record SupervisionUnitIndicators(UnitId UnitId, string UnitName, SupervisionIndicatorCounts Counts);
 
@@ -147,8 +161,61 @@ public static class SupervisionIndicatorRules
             indications.Count(i => i.Status == MedicalIndicationStatus.Realizada),
             indications.Count(i => i.Status == MedicalIndicationStatus.NoRealizada),
             indications.Count(i => i.Status is MedicalIndicationStatus.PendienteLectura or MedicalIndicationStatus.Leida),
-            nursing.Count, nursing.Count(t => t.Received), medical.Count, medical.Count(t => t.Received));
+            nursing.Count, nursing.Count(t => t.Received), medical.Count, medical.Count(t => t.Received),
+            facts.FollowUps.Count(f => (unit is null || f.UnitId == unit) && WasOpen(f, from, to, zone)),
+            facts.FollowUps.Count(f => (unit is null || f.UnitId == unit) && WasOverdue(f, from, to, zone)));
     }
+
+    /// <summary>Si el seguimiento estuvo abierto algún día de [from, to]: desde el día en que se inició hasta el día en que terminó (ese día incluido).</summary>
+    public static bool WasOpen(IndicatorFollowUpFact followUp, DateOnly from, DateOnly to, TimeZoneInfo zone)
+    {
+        var (start, end) = OpenDays(followUp, zone);
+        return start <= to && (end is null || end >= from);
+    }
+
+    /// <summary>Si el seguimiento tuvo su fecha prevista vencida algún día de [from, to]: un día d cuenta si el seguimiento estaba abierto
+    /// y el plan vigente al empezar ese día (el de la última reprogramación registrada en un día anterior) tenía una fecha anterior a d.
+    /// Así, un seguimiento que se reprograma el mismo día en que vence ya cuenta como vencido ese día; una reprogramación a una fecha
+    /// sin fecha, o un plan sin fecha, no vence nunca. Los días son los de la zona horaria zone, la misma del periodo.</summary>
+    public static bool WasOverdue(IndicatorFollowUpFact followUp, DateOnly from, DateOnly to, TimeZoneInfo zone)
+    {
+        var (start, end) = OpenDays(followUp, zone);
+        var windowFrom = start > from ? start : from;
+        var windowTo = end is { } e && e < to ? e : to;
+        var reschedules = followUp.Reschedules
+            .Select(r => (Day: DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(r.At, zone)), r.At, r.Due))
+            .OrderBy(r => r.At)
+            .ToList();
+
+        // El plan i rige los días d con r_i < d <= r_(i+1) (el plan inicial, los días hasta la primera reprogramación incluida).
+        var segmentFrom = DateOnly.MinValue;
+        var due = followUp.InitialDue;
+        for (var i = 0; i <= reschedules.Count; i++)
+        {
+            var segmentTo = i < reschedules.Count ? reschedules[i].Day : DateOnly.MaxValue;
+            if (due is { } d && d != DateOnly.MaxValue)
+            {
+                var lo = new[] { segmentFrom, d.AddDays(1), windowFrom }.Max();
+                var hi = new[] { segmentTo, windowTo }.Min();
+                if (lo <= hi)
+                {
+                    return true;
+                }
+            }
+
+            if (i < reschedules.Count)
+            {
+                segmentFrom = reschedules[i].Day.AddDays(1);
+                due = reschedules[i].Due;
+            }
+        }
+
+        return false;
+    }
+
+    private static (DateOnly Start, DateOnly? End) OpenDays(IndicatorFollowUpFact followUp, TimeZoneInfo zone) =>
+        (DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(followUp.StartedAt, zone)),
+         followUp.EndedAt is { } ended ? DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(ended, zone)) : null);
 }
 
 /// <summary>DIR-03: tipos de pendiente por los que se filtra la lista. Un episodio puede cumplir varios.</summary>

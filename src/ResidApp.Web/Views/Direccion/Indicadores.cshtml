@@ -81,6 +81,7 @@
                 <li><strong>Cerrados en el periodo:</strong> episodios cerrados en esas fechas, aunque se registraran antes. No tiene denominador.</li>
                 <li><strong>Indicaciones:</strong> indicaciones médicas emitidas en el periodo, que son el denominador, con su estado de hoy. «Sin resolver» son las que aún no se han registrado como realizadas o no realizadas.</li>
                 <li><strong>Continuidad:</strong> transferencias de un seguimiento al equipo o turno entrante registradas en el periodo, y cuántas tienen la recepción confirmada. En Medicina confirmar la recepción es opcional.</li>
+                <li><strong>Seguimientos con la fecha prevista vencida:</strong> de los seguimientos que estuvieron abiertos algún día del periodo (el denominador), cuántos tuvieron su fecha prevista ya pasada algún día del periodo, con el plan que regía ese día (una reprogramación posterior no lo borra). Un seguimiento deja de estar abierto al cerrarse el episodio, al escalarse a Medicina o al activarse el protocolo urgente; no se guarda cuándo termina por otras vías, así que esos casos cuentan hasta el cierre. Los seguimientos sin fecha no vencen. En la evolución mensual cada mes se calcula por separado, así que un mismo seguimiento puede contar en varios meses.</li>
                 <li>La unidad es la del episodio. Las horas son las del centro.</li>
             </ul>
         </div>
@@ -182,12 +183,13 @@
     <h2 class="h5">Continuidad entre turnos</h2>
     <div class="table-responsive mb-4">
         <table class="table align-middle">
-            <caption class="visually-hidden">Transferencias de seguimiento registradas en el periodo y cuántas tienen la recepción confirmada, por unidad</caption>
+            <caption class="visually-hidden">Transferencias de seguimiento registradas en el periodo y cuántas tienen la recepción confirmada, y seguimientos con la fecha prevista vencida en el periodo, por unidad</caption>
             <thead>
                 <tr>
                     <th scope="col">Unidad</th>
                     <th scope="col" class="text-end">Transferencias de Enfermería recibidas</th>
                     <th scope="col" class="text-end">Transferencias de Medicina recibidas</th>
+                    <th scope="col" class="text-end">Seguimientos con la fecha prevista vencida</th>
                 </tr>
             </thead>
             <tbody>
@@ -198,6 +200,7 @@
                         <th scope="row">@row.Name</th>
                         <td class="text-end">@Of(c.NursingTransfersReceived, c.NursingTransfers)</td>
                         <td class="text-end">@Of(c.MedicalTransfersReceived, c.MedicalTransfers)</td>
+                        <td class="text-end">@Of(c.FollowUpsOverdue, c.FollowUpsOpen)</td>
                     </tr>
                 }
             </tbody>
@@ -219,6 +222,7 @@
                     <th scope="col" class="text-end">Con derivación</th>
                     <th scope="col" class="text-end">Indicaciones emitidas</th>
                     <th scope="col" class="text-end">Transferencias recibidas</th>
+                    <th scope="col" class="text-end">Seguimientos con la fecha vencida</th>
                 </tr>
             </thead>
             <tbody>
@@ -234,6 +238,7 @@
                         <td class="text-end">@Of(c.Referrals, c.Registered)</td>
                         <td class="text-end">@c.IndicationsIssued</td>
                         <td class="text-end">@Of(c.NursingTransfersReceived + c.MedicalTransfersReceived, c.NursingTransfers + c.MedicalTransfers)</td>
+                        <td class="text-end">@Of(c.FollowUpsOverdue, c.FollowUpsOpen)</td>
                     </tr>
                 }
             </tbody>

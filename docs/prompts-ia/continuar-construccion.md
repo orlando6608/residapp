@@ -13,6 +13,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Seguimientos con la fecha vencida por periodo en los indicadores de Dirección (2026-10-02, sin script):** `SupervisionIndicatorCounts` gana
+  `FollowUpsOpen` y `FollowUpsOverdue` (con valor por defecto 0), `SupervisionIndicatorFacts` gana `FollowUps`, y `SqlSupervisionDirectory.ListIndicatorFactsAsync`
+  los lee (seguimientos de Enfermería y de Medicina con sus reprogramaciones, una fila por reprogramación agrupada en C#). La regla pura es
+  `SupervisionIndicatorRules.WasOpen/WasOverdue` (días en la zona del centro; el plan vigente es el de las reprogramaciones registradas un día anterior; el día
+  de terminar cuenta como abierto). Columna nueva en «Continuidad entre turnos» y en la evolución mensual, con su explicación en «Cómo se cuenta».
+  **Deducción mía, sin confirmar** (límites en `pendientes-direccion.md`: un seguimiento termina por cierre, escalado o protocolo; otras vías no se guardan).
+  Tests: 12 unitarios nuevos y 1 de integración (falla si se pierde el cierre). Suite en verde (264, 314 y 61). Control en local: «2 de 5» seguimientos de
+  la unidad integrada en el periodo 01/08–02/10, y 5 con una consulta `sqlcmd` independiente.
 - **Vincular un familiar que ya existe a otro residente (2026-10-02, sin script):** `VincularFamiliar` (GET/POST, vista nueva, enlace en la ficha
   administrativa). Los candidatos son los familiares ya vinculados a algún residente del ámbito y no a este (`LinkableFamilySelect`, reutiliza
   `ScopedResidentsSelect`); `SqlResidentFamilyRepository.LinkExistingAsync` repite el filtro dentro de la transacción (idempotente por el `OperacionId`
