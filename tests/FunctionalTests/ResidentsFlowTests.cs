@@ -98,6 +98,73 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.DoesNotContain("is not valid", empty + malformed);
     }
 
+    [Fact]
+    public async Task BaselineDirection_SinIdentificadores_VuelveAlFormularioConErroresEnEspañol()
+    {
+        var seed = await SeedAsync();
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = seed.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        // Antes los identificadores venían prerrellenados con Guid.Empty y CenterId.From lanzaba una excepción (500).
+        var queryPage = await client.GetStringAsync("/Baseline/Direction");
+        var response = await client.PostAsync("/Baseline/Direction", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(queryPage, "__RequestVerificationToken"),
+            ["OperacionId"] = ExtractValue(queryPage, "OperacionId"),
+            ["AmbitoPerfilId"] = "",
+            ["CentroId"] = "",
+            ["ResidenteId"] = "",
+            ["TipoRecurso"] = "BASELINE_HISTORY",
+            ["Proposito"] = "SUPERVISION_CLINICA",
+        }));
+        var body = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.DoesNotContain(Guid.Empty.ToString(), queryPage);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Indica el ámbito de perfil.", body);
+        Assert.Contains("Indica el centro.", body);
+        Assert.Contains("Indica el residente.", body);
+    }
+
+    [Fact]
+    public async Task BaselineSign_SinIdentificadores_VuelveAlFormularioConErroresEnEspañol()
+    {
+        var seed = await SeedAsync();
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = seed.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        // Mismo defecto que en Baseline/Direction: Guid.Empty prerrellenado acababa en un 500.
+        var signPage = await client.GetStringAsync("/Baseline/Sign");
+        var response = await client.PostAsync("/Baseline/Sign", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(signPage, "__RequestVerificationToken"),
+            ["OperacionId"] = ExtractValue(signPage, "OperacionId"),
+            ["AmbitoPerfilId"] = "",
+            ["CentroId"] = "",
+            ["ResidenteId"] = "",
+            ["BorradorId"] = "",
+            ["RevisionBorradorEsperada"] = "1",
+        }));
+        var body = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.DoesNotContain(Guid.Empty.ToString(), signPage);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Indica el ámbito de perfil.", body);
+        Assert.Contains("Indica el centro.", body);
+        Assert.Contains("Indica el residente.", body);
+        Assert.Contains("Indica el borrador.", body);
+    }
+
     private static async Task<Guid> GrantUnitAsync((string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed, string name)
     {
         var unitId = Guid.NewGuid();

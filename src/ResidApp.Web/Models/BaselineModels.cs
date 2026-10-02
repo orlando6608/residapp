@@ -7,21 +7,21 @@ namespace ResidApp.Web.Models;
 /// más Barthel) — ver el aviso en Views/Baseline/Sign.cshtml.</summary>
 public sealed class SignBaselineFormModel
 {
-    [Required]
+    [Required(ErrorMessage = "Indica el ámbito de perfil.")]
     [Display(Name = "Ámbito de perfil")]
-    public Guid AmbitoPerfilId { get; set; }
+    public Guid? AmbitoPerfilId { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Indica el centro.")]
     [Display(Name = "Centro")]
-    public Guid CentroId { get; set; }
+    public Guid? CentroId { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Indica el residente.")]
     [Display(Name = "Residente")]
-    public Guid ResidenteId { get; set; }
+    public Guid? ResidenteId { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Indica el borrador.")]
     [Display(Name = "Borrador")]
-    public Guid BorradorId { get; set; }
+    public Guid? BorradorId { get; set; }
 
     [Required]
     [Range(1, int.MaxValue)]
@@ -37,17 +37,17 @@ public sealed class SignBaselineFormModel
 /// si son válidos, no este formulario.</summary>
 public sealed class DirectionBaselineQueryModel
 {
-    [Required]
+    [Required(ErrorMessage = "Indica el ámbito de perfil.")]
     [Display(Name = "Ámbito de perfil")]
-    public Guid AmbitoPerfilId { get; set; }
+    public Guid? AmbitoPerfilId { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Indica el centro.")]
     [Display(Name = "Centro")]
-    public Guid CentroId { get; set; }
+    public Guid? CentroId { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Indica el residente.")]
     [Display(Name = "Residente")]
-    public Guid ResidenteId { get; set; }
+    public Guid? ResidenteId { get; set; }
 
     [Required]
     [Display(Name = "Tipo de recurso")]

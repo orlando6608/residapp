@@ -27,8 +27,8 @@ public sealed class BaselineController(ResidentBaselineApplicationService servic
         }
 
         var command = new SignBaselineCommand(
-            form.AmbitoPerfilId, CenterId.From(form.CentroId), ResidentId.From(form.ResidenteId),
-            BaselineDraftId.From(form.BorradorId), form.RevisionBorradorEsperada, form.OperacionId);
+            form.AmbitoPerfilId!.Value, CenterId.From(form.CentroId!.Value), ResidentId.From(form.ResidenteId!.Value),
+            BaselineDraftId.From(form.BorradorId!.Value), form.RevisionBorradorEsperada, form.OperacionId);
 
         var result = await service.SignBaselineAsync(command, ct);
         if (!result.Ok)
@@ -54,7 +54,7 @@ public sealed class BaselineController(ResidentBaselineApplicationService servic
         }
 
         var command = new ReadDirectionBaselineCommand(
-            form.AmbitoPerfilId, CenterId.From(form.CentroId), ResidentId.From(form.ResidenteId),
+            form.AmbitoPerfilId!.Value, CenterId.From(form.CentroId!.Value), ResidentId.From(form.ResidenteId!.Value),
             form.TipoRecurso, form.Proposito, form.OperacionId);
 
         var result = await service.ReadDirectionBaselineAsync(command, ct);
