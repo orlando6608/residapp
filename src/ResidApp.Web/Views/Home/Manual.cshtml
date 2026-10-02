@@ -7,22 +7,24 @@
 <div class="alert alert-info">
     ResidApp es un registro trazable del estado cotidiano de los residentes, pensado para dar continuidad
     entre turnos y perfiles profesionales, y para mantener informadas a las familias. <strong>No diagnostica
-    ni sustituye protocolos clínicos.</strong> La app está en desarrollo: hoy funcionan de principio a fin
-    el vertical <strong>Residente / Basal</strong> (incluida la creación, autoría de las nueve áreas, el
-    índice de Barthel y la firma del estado basal) y el vertical <strong>Auxiliar</strong>; del vertical
-    <strong>Enfermería</strong> funciona la navegación, la autoría completa del basal, el registro de un
-    evento propio, las bandejas de cambios ordinarios y prioritarios que Auxiliar genera, la valoración de
-    esos eventos, su cierre con la decisión de comunicación familiar, el seguimiento, el escalado a Medicina y
-    el protocolo urgente; de <strong>Medicina</strong>, la lista de residentes con el registro de un evento
-    propio, la bandeja de escalados recibidos y eventos propios, la valoración médica
-    y las indicaciones a Enfermería, que Enfermería lee y registra, el seguimiento médico con la continuidad
-    entre turnos, el protocolo urgente con la derivación a Urgencias, el cierre médico del evento y, con
-    permiso, la autoría del basal; y, para los
-    dos perfiles, el historial de eventos cerrados y de versiones del basal de cada residente, su línea
-    temporal completa y la corrección o rectificación de la propia valoración. El resto de
-    módulos aparece
-    descrito al final como "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong> (no hay todavía un
-    inicio de sesión con usuario y contraseña definitivo).
+    ni sustituye protocolos clínicos.</strong> La app está en desarrollo. Hoy funciona, por perfil:
+    <ul class="mt-2 mb-2">
+        <li><strong>Auxiliar:</strong> sus residentes asignados, el registro cotidiano y el registro de cambios ordinarios o prioritarios.</li>
+        <li><strong>Enfermería:</strong> residentes, estado basal completo (nueve áreas, Barthel y firma), evento propio, bandejas,
+            valoración, cierre con la decisión de comunicación familiar, seguimiento, escalado a Medicina, indicaciones médicas,
+            protocolo urgente y derivación a Urgencias.</li>
+        <li><strong>Medicina:</strong> residentes, evento propio, escalados recibidos, valoración médica, indicaciones a Enfermería,
+            seguimiento médico, protocolo urgente, derivación a Urgencias, cierre médico y, con permiso, el estado basal.</li>
+        <li><strong>Enfermería y Medicina:</strong> el historial y la línea temporal de cada residente, y la corrección o rectificación de
+            la propia valoración.</li>
+        <li><strong>Administración:</strong> residentes y su ficha, familiares y autorizaciones, usuarios y permisos, estructura del
+            centro (unidades, edificios, habitaciones y plazas), turnos, equipos y planificación, y auditoría.</li>
+        <li><strong>Dirección Clínica:</strong> supervisión operativa por unidad, indicadores e informe de actividad, y la consulta
+            auditada del basal.</li>
+        <li><strong>Plataforma:</strong> alta de centros nuevos.</li>
+    </ul>
+    Lo que falta aparece al final, en "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong>: todavía
+    no hay un inicio de sesión definitivo con usuario y contraseña.
 </div>
 
 <div class="card mb-4">
@@ -35,7 +37,7 @@
             <a class="list-group-item list-group-item-action" href="#residentes-administracion">Residentes y ficha administrativa (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#familiares-administracion">Familiares, autorizaciones y contacto urgente (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#usuarios-administracion">Usuarios, perfiles y unidades (Administración)</a>
-            <a class="list-group-item list-group-item-action" href="#estructura-administracion">Estructura del centro: unidades (Administración)</a>
+            <a class="list-group-item list-group-item-action" href="#estructura-administracion">Estructura del centro: unidades, edificios, habitaciones y plazas (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#auditoria-administracion">Auditoría administrativa (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#turnos-equipos-administracion">Turnos, equipos y planificación (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#plataforma-centros">Centros nuevos (Plataforma)</a>
@@ -110,7 +112,7 @@
                 <tr>
                     <td><code>dev-admin</code></td>
                     <td>Administración</td>
-                    <td>Dar de alta un residente nuevo y consultar la lista y la ficha administrativa de su centro.</td>
+                    <td>Las pantallas de Administración en su propio centro de desarrollo: residentes y alta, usuarios, estructura, turnos y auditoría.</td>
                 </tr>
                 <tr>
                     <td><code>dev-auxiliar</code></td>
@@ -126,9 +128,9 @@
                     <td><code>dev-multi</code></td>
                     <td>Enfermería y Medicina (mismo centro); Dirección Clínica y Familiar (otro centro)</td>
                     <td>
-                        Ver la pantalla de selección de ámbito con varias opciones a la vez. Medicina y
-                        Familiar todavía no tienen ninguna pantalla propia: solo demuestran que el selector
-                        también funciona con ellos.
+                        Ver la pantalla de selección de ámbito con varias opciones a la vez. Familiar
+                        todavía no tiene ninguna pantalla propia: solo demuestra que el selector también
+                        funciona con ese perfil.
                     </td>
                 </tr>
                 <tr>
@@ -138,7 +140,10 @@
                         <code>dev-integrado-direccion</code>
                     </td>
                     <td>Auxiliar, Enfermería y Dirección Clínica (mismo centro y unidad)</td>
-                    <td>Recorrido guiado de extremo a extremo cruzando los tres perfiles — ver más abajo.</td>
+                    <td>
+                        Recorrido guiado de extremo a extremo cruzando los tres perfiles — ver más abajo. Con
+                        <code>dev-integrado-direccion</code> se ven además la supervisión, los indicadores y los rangos de referencia.
+                    </td>
                 </tr>
                 <tr>
                     <td><code>dev-integrado-medicina</code></td>
@@ -196,12 +201,12 @@
 <section id="alta-residente" class="mb-4">
     <h2 class="h5">
         Dar de alta un residente
-        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración (o Enfermería con permiso)</span>
     </h2>
     <p>
         Este paso crea la ficha administrativa de un residente nuevo: unidad donde vive, nombre visible,
         fecha de nacimiento, sexo documentado y una referencia interna. Si la unidad tiene habitaciones o plazas, puedes elegir una
-        (opcional; ver «Estructura del centro: unidades»). Al completarlo, el residente queda
+        (opcional; ver «Estructura del centro: unidades, edificios, habitaciones y plazas»). Al completarlo, el residente queda
         dado de alta pero su estado basal queda <strong>pendiente</strong> hasta que Enfermería o Medicina lo
         complete y firme.
     </p>
@@ -218,7 +223,7 @@
     </h2>
     <p>
         El inicio de Administración tiene ocho tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
-        ámbito, <strong>Alta de residente</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»). En el alta, la unidad se elige en una lista con las unidades de tu
+        ámbito, <strong>Alta de residente</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»). En el alta, la unidad se elige en una lista con las unidades de tu
         ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves el nombre, la edad (calculada a partir
         de la fecha de nacimiento), el sexo documentado, la unidad y la fecha de alta. Puedes buscar por nombre, sin
         importar mayúsculas ni acentos, y filtrar por unidad si tu ámbito tiene más de una.
@@ -313,7 +318,7 @@
 
 <section id="estructura-administracion" class="mb-4">
     <h2 class="h5">
-        Estructura del centro: unidades
+        Estructura del centro: unidades, edificios, habitaciones y plazas
         <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
     </h2>
     <p>
@@ -354,8 +359,8 @@
     </h2>
     <p>
         <strong>Auditoría</strong> lista, del más reciente al más antiguo, lo que se ha hecho en tu ámbito con cuentas, perfiles y
-        permisos, estructura (centro y unidades), residentes (alta y corrección de identidad) y familias (familiares, autorizaciones y
-        contacto urgente). Cada fila dice cuándo, qué acción, quién la hizo y con qué perfil, y cuando consta, la cuenta afectada, la
+        permisos, estructura (centro, unidades, edificios, plantas, habitaciones y plazas), residentes (alta y corrección de identidad),
+        familias (familiares, autorizaciones y contacto urgente) y turnos y equipos (turnos, equipos y sus miembros, y planificación). Cada fila dice cuándo, qué acción, quién la hizo y con qué perfil, y cuando consta, la cuenta afectada, la
         unidad y el residente. Los eventos de una unidad solo salen si la unidad está concedida a tu ámbito.
     </p>
     <p>
@@ -463,8 +468,9 @@
     </h2>
     <p class="mb-0">
         Dirección Clínica puede consultar, en modo de solo lectura, el basal vigente o el histórico de
-        versiones de un residente. Cada consulta requiere indicar un propósito y queda registrada
-        obligatoriamente en auditoría.
+        versiones de un residente. En «Tipo de recurso» eliges «Basal vigente» o «Historial de basal», y en
+        «Propósito», la finalidad de la consulta (hoy solo hay una: «Supervisión clínica»). Cada consulta queda
+        registrada obligatoriamente en la auditoría.
     </p>
 </section>
 
@@ -1051,11 +1057,14 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Los turnos recurrentes con excepciones, y que el equipo entrante de una transferencia tenga en cuenta el turno planificado.</li>
-        <li>Aprobación y publicación de las comunicaciones para familias.</li>
+        <li>Traslado de un residente entre unidades o centros, incluido el cambio de habitación o plaza, y su baja y reactivación (pendiente de que CJ decida qué pasa con su trabajo clínico en curso).</li>
+        <li>Ver la habitación y la plaza del residente desde Auxiliar, Enfermería y Medicina (hoy solo aparecen en la ficha administrativa).</li>
+        <li>Que un segundo profesional autorizado aporte a un borrador de basal ajeno (pendiente de que CJ lo defina).</li>
+        <li>Aprobación y publicación de las comunicaciones para familias, incluida la tarjeta «Comunicaciones» del inicio de Medicina.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
-        <li>Más gestión administrativa: turnos, publicaciones, citas y auditoría.</li>
-        <li>Traslado de un residente entre unidades o centros, y su baja y reactivación (pendiente de que CJ decida qué pasa con su trabajo clínico en curso).</li>
-        <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, y la revisión de calidad de proceso (cumplimiento de hitos y plazos, pendiente de definir).</li>
+        <li>Más gestión administrativa: organigrama y cargos, publicaciones, citas y un panel completo.</li>
+        <li>Que la transferencia de un seguimiento tenga en cuenta el turno planificado (hoy se elige el equipo entrante sin mirarlo).</li>
+        <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
+        <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, la revisión de calidad de proceso (cumplimiento de hitos y plazos, pendiente de definir) y la lista de finalidades de la consulta del basal que fije CJ.</li>
     </ul>
 </section>

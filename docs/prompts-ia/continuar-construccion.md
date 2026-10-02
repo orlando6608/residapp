@@ -13,6 +13,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Manual de usuario revisado (2026-10-02):** «Próximamente» al día con los `pendientes-*.md` (fuera lo ya hecho: turnos recurrentes y
+  auditoría; añadidos cambio de habitación o plaza, habitación y plaza en las vistas clínicas, aportación a un borrador ajeno, organigrama,
+  rangos por residente y la tarjeta «Comunicaciones» de Medicina). También se actualizaron la introducción por perfil, las cuentas de prueba,
+  el título de Estructura, la lista de la auditoría y la consulta del basal de Dirección. Al cerrar cada bloque, revisa «Próximamente».
 - **Administración, edificios, plantas, habitaciones y plazas (historia 2; script `0029`; sin cambios en el seed):** hecho el 2026-10-02 en `main`
   **sin push** (Azure en `0028`). Dos fases, dos commits (`449f02b` y la fase 2) más `f88a5fa` (corrección de los tests, ver abajo). Detalle, decisiones y
   suposiciones en `pendientes-administracion.md`.
