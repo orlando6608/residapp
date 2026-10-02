@@ -341,8 +341,11 @@ Huecos de lo ya construido:
 - **Auditoría:** solo cubre las acciones que existen hoy. Las de horarios, citas y retiradas de publicaciones se añadirán a la lista cerrada
   cuando se construyan. No se audita la propia consulta, ni hay exportación. Los eventos de acciones sin unidad (cuentas y perfiles) los
   ve cualquier Administración del centro, aunque la cuenta afectada tenga unidades de otro ámbito.
-- **Estructura:** no hay forma de conceder una unidad ya existente a otro ámbito de Administración ni de ver las del centro que no
-  estén en el ámbito propio; el organigrama (ADM-07) y los cargos tampoco existen.
+- **Estructura:** una unidad que ya está en tu ámbito sí se concede al perfil de otra cuenta, **también a otra Administración** (Usuarios → persona →
+  perfil → «Añadir unidad»; lo cubre `UnaUnidadDelAmbito_SeConcedeAlPerfilDeOtraAdministracion_…`; este pendiente decía lo contrario por error). Lo que
+  sigue sin existir: ver las unidades del centro que no están en el ámbito propio y concederse (o conceder) una unidad que no se tiene, de modo que una
+  unidad que ningún ámbito de Administración tenga no se puede recuperar desde la app. Es una decisión de política (¿quién puede ampliar su propio
+  ámbito dentro del centro?) que no está en ningún documento; el organigrama (ADM-07) y los cargos tampoco existen.
 - **Niveles de ubicación:** edificios, plantas, habitaciones y plazas existen (script `0029`) y se eligen al dar de alta, pero **cambiar de habitación o de plaza**
   (y liberar una plaza al dar de baja) es un traslado y espera a CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`). Desde el 2026-10-02 Enfermería,
   Medicina y Auxiliar ven la habitación y la plaza junto a la unidad (listas, ficha y registro del residente; `ResidentLocationLabel`, sin script). Una unidad o una habitación que se inactive justo mientras llega un

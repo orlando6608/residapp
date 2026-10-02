@@ -223,6 +223,25 @@ public class AdministracionUsuariosTests
     }
 
     [Fact]
+    public async Task UnaUnidadDelAmbito_SeConcedeAlPerfilDeOtraAdministracion_YEstaLaVeEnEstructura()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var otherUnit = await AddUnitAsync(admin.CenterId);
+        var other = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, admin.CenterId, otherUnit);
+        var structure = BuildEstructura(other.ExternalSubject);
+        var before = (await structure.ListStructureUnitsAsync(new AdministracionQuery(other.ProfileScopeId, other.CenterId))).Value!;
+
+        var granted = await Build(admin.ExternalSubject).ChangeProfileUnitAsync(Unit(admin, other, admin.UnitId, grant: true));
+        var after = (await structure.ListStructureUnitsAsync(new AdministracionQuery(other.ProfileScopeId, other.CenterId))).Value!;
+
+        Assert.DoesNotContain(before, u => u.UnitId == admin.UnitId);
+        Assert.True(granted.Ok, granted.Error?.Message);
+        Assert.Contains(after, u => u.UnitId == admin.UnitId);
+        Assert.Contains(after, u => u.UnitId == otherUnit);
+        Assert.Equal(1, await CountAuditAsync(other.ProfileScopeId, "PROFILE_UNIT_GRANT"));
+    }
+
+    [Fact]
     public async Task Auxiliar_SoloVeLosResidentesAsignados_YRetirarElUltimoNoAmpliaSuAcceso()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
