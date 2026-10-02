@@ -2,8 +2,12 @@ using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using Dapper;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
 using ResidApp.Infrastructure.Persistence;
+using ResidApp.Shared;
 using ResidApp.Web.Models;
 
 namespace ResidApp.FunctionalTests;
@@ -590,6 +594,104 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
 
         Assert.Equal(canCreate, page.Contains("name=\"NombreVisible\""));
         Assert.Equal(!canCreate, page.Contains("Tu ámbito activo no tiene permiso para dar de alta residentes."));
+    }
+
+    private const string DevSubjectCookie = "residapp_dev_subject";
+
+    private async Task<HttpResponseMessage> PostLoginAsync(HttpClient client, string externalSubject)
+    {
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        return await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = externalSubject,
+        }));
+    }
+
+    [Fact]
+    public async Task Login_ConUnaIdentidadSinCuenta_SeRechazaYNoSeIniciaSesion()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await PostLoginAsync(client, $"dev-inexistente-{Guid.NewGuid():N}");
+        var page = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        var home = WebUtility.HtmlDecode(await client.GetStringAsync("/"));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("No existe ninguna cuenta con ese usuario", page);
+        Assert.DoesNotContain(response.Headers.TryGetValues("Set-Cookie", out var cookies) ? cookies : [], c => c.Contains(DevSubjectCookie));
+        Assert.Contains("No hay ninguna identidad de desarrollo activa", home);
+    }
+
+    [Fact]
+    public async Task Login_Rechazado_ConservaLaIdentidadPrevia_YSuBotonSalir()
+    {
+        var account = await SeedAdministratorAsync();
+        var client = _factory.CreateClient();
+        (await PostLoginAsync(client, account.ExternalSubject)).EnsureSuccessStatusCode();
+
+        var rejected = WebUtility.HtmlDecode(await (await PostLoginAsync(client, $"dev-inexistente-{Guid.NewGuid():N}")).Content.ReadAsStringAsync());
+        var empty = WebUtility.HtmlDecode(await (await PostLoginAsync(client, " ")).Content.ReadAsStringAsync());
+        var home = WebUtility.HtmlDecode(await client.GetStringAsync("/"));
+
+        Assert.Contains("No existe ninguna cuenta con ese usuario", rejected);
+        Assert.Contains($"Salir ({account.ExternalSubject})", rejected);
+        Assert.Contains("Escribe el sujeto externo", empty);
+        Assert.Contains($"Salir ({account.ExternalSubject})", empty);
+        Assert.Contains($"<code>{account.ExternalSubject}</code>", home);
+    }
+
+    [Fact]
+    public async Task SeleccionDeAmbito_CuentaQuePierdeSusAmbitos_OfreceCambiarDeIdentidadYSalir()
+    {
+        var account = await SeedAdministratorAsync();
+        var client = _factory.CreateClient();
+        (await PostLoginAsync(client, account.ExternalSubject)).EnsureSuccessStatusCode();
+        using (var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                UPDATE dbo.ambitos_perfil SET estado = 'REVOKED', revocado_en = SYSUTCDATETIME(), revocado_por_cuenta_id = @accountId
+                 WHERE cuenta_id = @accountId
+                """, new { account.AccountId });
+        }
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync("/ProfileScope/Select"));
+
+        Assert.Contains("Tu cuenta no tiene ningún ámbito activo", page);
+        Assert.DoesNotContain("varios ámbitos", page);
+        Assert.Contains("href=\"/DevAuth/Login\"", page);
+        Assert.Contains("action=\"/DevAuth/Logout\"", page);
+        Assert.DoesNotContain("Reintentar", page);
+    }
+
+    [Fact]
+    public async Task SeleccionDeAmbito_SiNoSePuedenCargarLosAmbitos_MuestraElErrorYNoDiceQueNoTiene()
+    {
+        var failing = _factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.AddScoped<IProfileScopeDirectoryProvider, UnavailableProfileScopeDirectory>()));
+        var client = failing.CreateClient();
+        client.DefaultRequestHeaders.Add("Cookie", $"{DevSubjectCookie}=dev-cualquiera");
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync("/ProfileScope/Select"));
+
+        Assert.Contains("No se ha podido completar la operación.", page);
+        Assert.DoesNotContain("no tiene ningún ámbito activo", page);
+        Assert.Contains("Reintentar", page);
+        Assert.Contains("href=\"/DevAuth/Login\"", page);
+    }
+
+    private sealed class UnavailableProfileScopeDirectory : IProfileScopeDirectoryProvider
+    {
+        public Task<IReadOnlyList<ActiveProfileScope>> ListActiveAsync(string externalSubject, CancellationToken ct = default) =>
+            throw new InvalidOperationException("La base de datos no responde.");
+
+        public Task<IReadOnlyList<ScopeUnit>> ListUnitsAsync(
+            string externalSubject, Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
+            throw new InvalidOperationException("La base de datos no responde.");
+
+        public Task<IReadOnlyList<string>> ListPermissionsAsync(
+            string externalSubject, Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
+            throw new InvalidOperationException("La base de datos no responde.");
     }
 
     /// <summary>Una página (por defecto el Inicio), ya decodificada, de una cuenta nueva con un ámbito del perfil indicado

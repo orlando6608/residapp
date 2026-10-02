@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using ResidApp.Application.Ports;
 using ResidApp.Web.Security;
 
 namespace ResidApp.Web.Controllers;
@@ -10,18 +11,26 @@ namespace ResidApp.Web.Controllers;
 /// ejercitar el motor de autorización deny-by-default sin depender de un proveedor productivo todavía sin
 /// decidir.
 /// </summary>
-public sealed class DevAuthController : Controller
+public sealed class DevAuthController(IProfileScopeDirectoryProvider directory) : Controller
 {
     public IActionResult Login() => View((object?)Request.Cookies[DevSessionIdentityProvider.CookieName]);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Login(string externalSubject)
+    public async Task<IActionResult> Login(string externalSubject, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(externalSubject))
         {
             ModelState.AddModelError(string.Empty, "Escribe el sujeto externo de una cuenta sembrada.");
-            return View((object?)null);
+            return View((object?)Request.Cookies[DevSessionIdentityProvider.CookieName]);
+        }
+
+        // Sin cuenta activa con algún ámbito activo no se podría operar: se rechaza aquí en vez de dejar la sesión
+        // atrapada en la selección de ámbito. La identidad anterior, si la había, se conserva.
+        if ((await directory.ListActiveAsync(externalSubject.Trim(), ct)).Count == 0)
+        {
+            ModelState.AddModelError(string.Empty, "No existe ninguna cuenta con ese usuario, o no tiene ningún ámbito activo. Revisa el nombre.");
+            return View((object?)Request.Cookies[DevSessionIdentityProvider.CookieName]);
         }
 
         Response.Cookies.Append(DevSessionIdentityProvider.CookieName, externalSubject.Trim(), new CookieOptions

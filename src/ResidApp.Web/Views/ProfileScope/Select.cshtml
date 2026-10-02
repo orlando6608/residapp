@@ -11,10 +11,13 @@
 </nav>
 
 <h1 class="h3">Seleccionar ámbito</h1>
-<p class="text-muted">
-    Tu cuenta tiene varios ámbitos activos (centro y perfil). Elige con cuál quieres operar; podrás
-    cambiarlo en cualquier momento desde "Cambiar ámbito".
-</p>
+@if (Model.Options.Count > 1)
+{
+    <p class="text-muted">
+        Tu cuenta tiene varios ámbitos activos (centro y perfil). Elige con cuál quieres operar; podrás
+        cambiarlo en cualquier momento desde "Cambiar ámbito".
+    </p>
+}
 
 <div asp-validation-summary="All" class="text-danger"></div>
 
@@ -22,7 +25,22 @@
 {
     <div class="card">
         <div class="card-body">
-            <p class="mb-0">Tu cuenta no tiene ningún ámbito activo en este momento. Contacta con Administración.</p>
+            @* Con error de carga (p. ej. la base de datos no responde) no se sabe si la cuenta tiene ámbitos: solo se
+               muestra el error del resumen, no la afirmación de que no los tiene. *@
+            @if (ViewData.ModelState.IsValid)
+            {
+                <p>Tu cuenta no tiene ningún ámbito activo en este momento. Contacta con Administración.</p>
+            }
+            <div class="d-flex flex-wrap gap-2">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <a asp-controller="ProfileScope" asp-action="Select" asp-route-returnUrl="@Model.ReturnUrl" class="btn btn-primary">Reintentar</a>
+                }
+                <a asp-controller="DevAuth" asp-action="Login" class="btn @(ViewData.ModelState.IsValid ? "btn-primary" : "btn-outline-secondary")">Cambiar de identidad</a>
+                <form asp-controller="DevAuth" asp-action="Logout" method="post">
+                    <button type="submit" class="btn btn-outline-secondary">Salir</button>
+                </form>
+            </div>
         </div>
     </div>
 }

@@ -71,8 +71,13 @@
         Al entrar en la app, si tu cuenta puede actuar con un único perfil (por ejemplo, Enfermería) en un
         único centro, ese ámbito se selecciona automáticamente. Si tu cuenta tiene varias combinaciones
         posibles de centro y perfil, se te muestra una pantalla para elegir con cuál vas a trabajar en ese
-        momento. Si tu cuenta no tiene ningún ámbito activo, la app te lo indica y debes contactar con
-        Administración.
+        momento. Si el usuario que escribes al entrar no existe o su cuenta no tiene ningún ámbito activo, el
+        acceso lo rechaza con un aviso y sigues en la pantalla de acceso (si ya tenías una sesión abierta, se
+        mantiene). Si una cuenta pierde todos sus ámbitos con la sesión ya abierta, la pantalla de selección te lo
+        indica y puedes pulsar <strong>«Cambiar de identidad»</strong> o <strong>«Salir»</strong>; debes contactar con
+        Administración para que te devuelvan un ámbito. Si esa pantalla no puede cargar tus ámbitos (por ejemplo,
+        un fallo de conexión), te muestra el error con un botón <strong>«Reintentar»</strong> en lugar de decir que
+        no tienes ámbitos.
     </p>
     <p>
         El <strong>Inicio</strong> muestra solo los accesos del perfil con el que estás trabajando. Por ejemplo,
@@ -95,7 +100,8 @@
         directamente con ella, sin contraseña. Para <strong>cambiar de usuario</strong> no hace falta cerrar
         sesión antes: vuelve a <code>/DevAuth/Login</code> y escribe el nombre de otra cuenta — el propio
         login sustituye tu identidad y limpia el ámbito activo, así que la app te pedirá elegirlo de nuevo
-        si esa cuenta tiene más de uno.
+        si esa cuenta tiene más de uno. Si escribes un nombre que no existe (por ejemplo <code>dev-kk</code>), el
+        acceso no inicia sesión: te avisa y conservas la identidad que tuvieras activa.
     </p>
 
     <div class="table-responsive">
