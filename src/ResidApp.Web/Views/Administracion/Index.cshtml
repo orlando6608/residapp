@@ -22,10 +22,10 @@
         <a asp-action="Residentes" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Residentes</h2>
-                <p class="card-text mb-0">
-                    <span class="badge text-bg-primary">@Model.Residents</span> residente(s) en tu ámbito: ficha administrativa,
-                    historial de ubicación y corrección de identidad.
-                </p>
+                @* Cifra grande con plural real (guia-diseno-sistema-visual.md, 2.B). *@
+                <span class="cifra">@Model.Residents</span>
+                <span class="d-block">@(Model.Residents == 1 ? "residente en tu ámbito" : "residentes en tu ámbito")</span>
+                <p class="card-text text-body-secondary mb-0">Ficha administrativa, historial de ubicación y corrección de identidad.</p>
             </div>
         </a>
     </div>
@@ -41,10 +41,9 @@
         <a asp-action="Usuarios" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Usuarios</h2>
-                <p class="card-text mb-0">
-                    <span class="badge text-bg-primary">@Model.Accounts</span> cuenta(s) con perfil en el centro: alta, suspensión,
-                    perfiles, unidades y residentes asignados.
-                </p>
+                <span class="cifra">@Model.Accounts</span>
+                <span class="d-block">@(Model.Accounts == 1 ? "cuenta con perfil en el centro" : "cuentas con perfil en el centro")</span>
+                <p class="card-text text-body-secondary mb-0">Alta, suspensión, perfiles, unidades y residentes asignados.</p>
             </div>
         </a>
     </div>

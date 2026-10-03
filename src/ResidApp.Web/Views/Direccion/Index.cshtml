@@ -24,13 +24,14 @@
         <a asp-action="Pendientes" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Supervisión de pendientes</h2>
-                <p class="card-text mb-0">
-                    <span class="badge text-bg-primary">@Model.Open</span> episodio(s) abierto(s)
-                    @if (Model.FollowUpsOverdue > 0)
-                    {
-                        <span>· <span class="badge text-bg-warning">@Model.FollowUpsOverdue</span> seguimiento(s) vencido(s)</span>
-                    }
-                </p>
+                @* Cifra grande con plural real (guia-diseno-sistema-visual.md, 2.B). Los vencidos van en ámbar, como en
+                   Pendientes y Episodio: Dirección supervisa, no actúa clínicamente. *@
+                <span class="cifra">@Model.Open</span>
+                <span class="text-body-secondary">@(Model.Open == 1 ? "episodio abierto" : "episodios abiertos")</span>
+                @if (Model.FollowUpsOverdue > 0)
+                {
+                    <span class="d-block text-warning-emphasis fw-semibold mt-1">@Model.FollowUpsOverdue @(Model.FollowUpsOverdue == 1 ? "seguimiento vencido" : "seguimientos vencidos")</span>
+                }
             </div>
         </a>
     </div>

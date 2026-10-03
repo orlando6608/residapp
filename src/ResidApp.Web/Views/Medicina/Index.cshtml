@@ -13,67 +13,70 @@
 <h1 class="h3">Inicio de Medicina</h1>
 <div asp-validation-summary="All" class="text-danger"></div>
 
+@* Fichas con contador (guia-diseno-sistema-visual.md, 2.B y 2.D): cifra grande con plural real y color según el
+   valor (rojo solo si un contador urgente pasa de 0; ámbar si hay indicaciones sin leer). El orden es fijo, con lo
+   urgente primero. *@
 <div class="row g-3">
-    <div class="col-12 col-md-4">
+    <div class="col-6 col-lg-4">
         <a asp-action="Escalados" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Escalados y eventos propios</h2>
-                <p class="card-text mb-0"><span class="badge text-bg-primary">@Model.Escalados</span> escalado(s) de Enfermería o evento(s) propio(s) por valorar.</p>
+                <h2 class="h6 card-title">Escalados y eventos propios</h2>
+                <span class="cifra">@Model.Escalados</span>
+                <span class="text-body-secondary">@(Model.Escalados == 1 ? "escalado de Enfermería o evento propio por valorar" : "escalados de Enfermería o eventos propios por valorar")</span>
             </div>
         </a>
     </div>
-    <div class="col-12 col-md-4">
+    <div class="col-6 col-lg-4">
+        <a asp-action="Protocolos" class="card text-decoration-none h-100 @(Model.Protocolos > 0 ? "border-start border-4 border-danger" : "")">
+            <div class="card-body">
+                <h2 class="h6 card-title">Protocolos urgentes</h2>
+                <span class="cifra @(Model.Protocolos > 0 ? "text-danger" : "")">@Model.Protocolos</span>
+                <span class="text-body-secondary">@(Model.Protocolos == 1 ? "protocolo urgente activo" : "protocolos urgentes activos")</span>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-4">
+        <a asp-action="Seguimientos" class="card text-decoration-none h-100 @(Model.SeguimientosVencidos > 0 ? "border-start border-4 border-danger" : "")">
+            <div class="card-body">
+                <h2 class="h6 card-title">Seguimientos</h2>
+                <span class="cifra">@Model.Seguimientos</span>
+                <span class="text-body-secondary">@(Model.Seguimientos == 1 ? "seguimiento médico abierto" : "seguimientos médicos abiertos")</span>
+                @if (Model.SeguimientosVencidos > 0)
+                {
+                    <span class="d-block text-danger fw-semibold mt-1">@Model.SeguimientosVencidos @(Model.SeguimientosVencidos == 1 ? "vencido" : "vencidos")</span>
+                }
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-4">
+        <a asp-action="Indicaciones" class="card text-decoration-none h-100 @(Model.IndicacionesConIncidencia > 0 ? "border-start border-4 border-danger" : Model.IndicacionesSinLeer > 0 ? "border-start border-4 border-warning" : "")">
+            <div class="card-body">
+                <h2 class="h6 card-title">Indicaciones</h2>
+                <span class="cifra">@Model.Indicaciones</span>
+                <span class="text-body-secondary">@(Model.Indicaciones == 1 ? "indicación emitida" : "indicaciones emitidas")</span>
+                @if (Model.IndicacionesSinLeer > 0)
+                {
+                    <span class="d-block text-warning-emphasis fw-semibold mt-1">@Model.IndicacionesSinLeer sin leer</span>
+                }
+                @if (Model.IndicacionesConIncidencia > 0)
+                {
+                    <span class="d-block text-danger fw-semibold mt-1">@Model.IndicacionesConIncidencia con incidencia</span>
+                }
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-4">
         <a asp-action="Residentes" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Residentes</h2>
-                <p class="card-text mb-0">Residentes de tu ámbito, con su ficha y el registro de un evento que observes.</p>
+                <h2 class="h6 card-title">Residentes</h2>
+                <p class="card-text text-body-secondary mb-0">Residentes de tu ámbito, con su ficha y el registro de un evento que observes.</p>
             </div>
         </a>
     </div>
-    <div class="col-12 col-md-4">
-        <a asp-action="Indicaciones" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Indicaciones</h2>
-                <p class="card-text mb-0">
-                    <span class="badge text-bg-info">@Model.Indicaciones</span> indicación(es) emitida(s)
-                    @if (Model.IndicacionesSinLeer > 0)
-                    {
-                        <span>· <span class="badge text-bg-warning">@Model.IndicacionesSinLeer</span> sin leer</span>
-                    }
-                    @if (Model.IndicacionesConIncidencia > 0)
-                    {
-                        <span>· <span class="badge text-bg-danger">@Model.IndicacionesConIncidencia</span> con incidencia</span>
-                    }
-                </p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a asp-action="Protocolos" class="card text-decoration-none h-100 border-danger">
-            <div class="card-body">
-                <h2 class="h5 card-title">Protocolos urgentes</h2>
-                <p class="card-text mb-0"><span class="badge text-bg-danger">@Model.Protocolos</span> protocolo(s) urgente(s) activo(s).</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a asp-action="Seguimientos" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Seguimientos</h2>
-                <p class="card-text mb-0">
-                    <span class="badge text-bg-info">@Model.Seguimientos</span> seguimiento(s) médico(s) abierto(s)
-                    @if (Model.SeguimientosVencidos > 0)
-                    {
-                        <span>· <span class="badge text-bg-danger">@Model.SeguimientosVencidos</span> vencido(s)</span>
-                    }
-                </p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
+    <div class="col-6 col-lg-4">
         <div class="card h-100 text-muted">
             <div class="card-body">
-                <h2 class="h5 card-title">Comunicaciones</h2>
+                <h2 class="h6 card-title">Comunicaciones</h2>
                 <p class="card-text mb-0">Próximamente: comunicaciones familiares pendientes de aprobación.</p>
             </div>
         </div>

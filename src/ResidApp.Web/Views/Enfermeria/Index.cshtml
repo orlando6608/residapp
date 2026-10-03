@@ -12,80 +12,86 @@
 
 <h1 class="h3">Inicio de Enfermería</h1>
 
+@* Fichas con contador (guia-diseno-sistema-visual.md, 2.B y 2.D): cifra grande con plural real y color según el
+   valor (rojo solo si un contador urgente pasa de 0; ámbar si hay indicaciones sin leer). El orden es fijo, con lo
+   urgente primero. *@
 <div class="row g-3">
-    <div class="col-12 col-md-4">
-        <a asp-action="Residentes" class="card text-decoration-none h-100">
+    <div class="col-6 col-xl-3">
+        <a asp-action="Prioritarios" class="card text-decoration-none h-100 @(Model.Prioritarios > 0 ? "border-start border-4 border-danger" : "")">
             <div class="card-body">
-                <h2 class="h5 card-title">Residentes</h2>
-                <p class="card-text text-muted mb-0">Residentes de tu ámbito, con su estado basal vigente o pendiente.</p>
+                <h2 class="h6 card-title">Bandeja prioritaria</h2>
+                <span class="cifra @(Model.Prioritarios > 0 ? "text-danger" : "")">@Model.Prioritarios</span>
+                <span class="text-body-secondary">@(Model.Prioritarios == 1 ? "evento prioritario abierto" : "eventos prioritarios abiertos")</span>
             </div>
         </a>
     </div>
-    <div class="col-12 col-md-4">
-        <a asp-action="Prioritarios" class="card text-decoration-none h-100">
+    <div class="col-6 col-xl-3">
+        <a asp-action="Protocolos" class="card text-decoration-none h-100 @(Model.Protocolos > 0 ? "border-start border-4 border-danger" : "")">
             <div class="card-body">
-                <h2 class="h5 card-title">Bandeja prioritaria</h2>
-                <p class="card-text mb-0"><span class="badge text-bg-danger">@Model.Prioritarios</span> evento(s) prioritario(s) abierto(s).</p>
+                <h2 class="h6 card-title">Protocolos urgentes</h2>
+                <span class="cifra @(Model.Protocolos > 0 ? "text-danger" : "")">@Model.Protocolos</span>
+                <span class="text-body-secondary">@(Model.Protocolos == 1 ? "protocolo urgente activo" : "protocolos urgentes activos")</span>
             </div>
         </a>
     </div>
-    <div class="col-12 col-md-4">
+    <div class="col-6 col-xl-3">
+        <a asp-action="Seguimientos" class="card text-decoration-none h-100 @(Model.SeguimientosVencidos > 0 ? "border-start border-4 border-danger" : "")">
+            <div class="card-body">
+                <h2 class="h6 card-title">Seguimientos</h2>
+                <span class="cifra">@Model.Seguimientos</span>
+                <span class="text-body-secondary">@(Model.Seguimientos == 1 ? "seguimiento abierto" : "seguimientos abiertos")</span>
+                @if (Model.SeguimientosVencidos > 0)
+                {
+                    <span class="d-block text-danger fw-semibold mt-1">@Model.SeguimientosVencidos @(Model.SeguimientosVencidos == 1 ? "vencido" : "vencidos")</span>
+                }
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-xl-3">
+        <a asp-action="Indicaciones" class="card text-decoration-none h-100 @(Model.IndicacionesSinLeer > 0 ? "border-start border-4 border-warning" : "")">
+            <div class="card-body">
+                <h2 class="h6 card-title">Indicaciones</h2>
+                <span class="cifra">@Model.Indicaciones</span>
+                <span class="text-body-secondary">@(Model.Indicaciones == 1 ? "indicación de Medicina pendiente" : "indicaciones de Medicina pendientes")</span>
+                @if (Model.IndicacionesSinLeer > 0)
+                {
+                    <span class="d-block text-warning-emphasis fw-semibold mt-1">@Model.IndicacionesSinLeer sin leer</span>
+                }
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-xl-3">
         <a asp-action="Ordinarios" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Cambios ordinarios</h2>
-                <p class="card-text mb-0"><span class="badge text-bg-secondary">@Model.Ordinarios</span> evento(s) ordinario(s) abierto(s).</p>
+                <h2 class="h6 card-title">Cambios ordinarios</h2>
+                <span class="cifra">@Model.Ordinarios</span>
+                <span class="text-body-secondary">@(Model.Ordinarios == 1 ? "evento ordinario abierto" : "eventos ordinarios abiertos")</span>
             </div>
         </a>
     </div>
-    <div class="col-12 col-md-4">
-        <a asp-action="Protocolos" class="card text-decoration-none h-100 border-danger">
-            <div class="card-body">
-                <h2 class="h5 card-title">Protocolos urgentes</h2>
-                <p class="card-text mb-0"><span class="badge text-bg-danger">@Model.Protocolos</span> protocolo(s) urgente(s) activo(s).</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a asp-action="Seguimientos" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Seguimientos</h2>
-                <p class="card-text mb-0">
-                    <span class="badge text-bg-info">@Model.Seguimientos</span> seguimiento(s) abierto(s)@(Model.SeguimientosVencidos > 0 ? "," : ".")
-                    @if (Model.SeguimientosVencidos > 0)
-                    {
-                        <span><span class="badge text-bg-danger">@Model.SeguimientosVencidos</span> vencido(s).</span>
-                    }
-                </p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
+    <div class="col-6 col-xl-3">
         <a asp-action="Escalados" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Escalados a Medicina</h2>
-                <p class="card-text mb-0"><span class="badge text-bg-info">@Model.Escalados</span> escalado(s) abierto(s) en Medicina.</p>
+                <h2 class="h6 card-title">Escalados a Medicina</h2>
+                <span class="cifra">@Model.Escalados</span>
+                <span class="text-body-secondary">@(Model.Escalados == 1 ? "escalado abierto en Medicina" : "escalados abiertos en Medicina")</span>
             </div>
         </a>
     </div>
-    <div class="col-12 col-md-4">
-        <a asp-action="Indicaciones" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Indicaciones</h2>
-                <p class="card-text mb-0">
-                    <span class="badge text-bg-info">@Model.Indicaciones</span> indicación(es) de Medicina pendiente(s)@(Model.IndicacionesSinLeer > 0 ? "," : ".")
-                    @if (Model.IndicacionesSinLeer > 0)
-                    {
-                        <span><span class="badge text-bg-warning">@Model.IndicacionesSinLeer</span> sin leer.</span>
-                    }
-                </p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
+    <div class="col-6 col-xl-3">
         <a asp-action="Comunicaciones" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Comunicaciones</h2>
-                <p class="card-text mb-0"><span class="badge text-bg-secondary">@Model.Comunicaciones</span> comunicación(es) familiar(es) pendiente(s) de aprobación.</p>
+                <h2 class="h6 card-title">Comunicaciones</h2>
+                <span class="cifra">@Model.Comunicaciones</span>
+                <span class="text-body-secondary">@(Model.Comunicaciones == 1 ? "comunicación familiar pendiente de aprobación" : "comunicaciones familiares pendientes de aprobación")</span>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-xl-3">
+        <a asp-action="Residentes" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h6 card-title">Residentes</h2>
+                <p class="card-text text-body-secondary mb-0">Residentes de tu ámbito, con su estado basal vigente o pendiente.</p>
             </div>
         </a>
     </div>
