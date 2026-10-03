@@ -19,30 +19,103 @@
     @{
         var devSubjectLayout = Context.Request.Cookies[ResidApp.Web.Security.DevSessionIdentityProvider.CookieName];
         var activeScopeLayout = ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request);
+        var profileLabelLayout = activeScopeLayout is null ? null : ResidApp.Web.Models.SystemProfileDisplay.Label(activeScopeLayout.Profile);
+        // «Mi panel»: inicio del perfil activo (Familiar todavía no tiene pantallas).
+        var panelLayout = activeScopeLayout?.Profile switch
+        {
+            ResidApp.Shared.SystemProfile.Plataforma => "Plataforma",
+            ResidApp.Shared.SystemProfile.Administracion => "Administracion",
+            ResidApp.Shared.SystemProfile.DireccionClinica => "Direccion",
+            ResidApp.Shared.SystemProfile.Auxiliar => "Auxiliar",
+            ResidApp.Shared.SystemProfile.Enfermeria => "Enfermeria",
+            ResidApp.Shared.SystemProfile.Medicina => "Medicina",
+            _ => null,
+        };
     }
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark navbar-residapp border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-md navbar-dark navbar-residapp border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
                     <img src="~/images/logo.svg" alt="" width="28" height="28" />
                     ResidApp
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal" aria-controls="menu-principal"
+                        aria-expanded="false" aria-label="Mostrar u ocultar el menú">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-end">
-                    @if (!string.IsNullOrWhiteSpace(devSubjectLayout))
-                    {
-                        <span class="badge text-bg-light">Identidad: @devSubjectLayout</span>
-                    }
-                    @if (activeScopeLayout is not null)
-                    {
-                        <span class="badge text-bg-light text-wrap text-start">
-                            Ámbito: @ResidApp.Web.Models.SystemProfileDisplay.Label(activeScopeLayout.Profile) · @activeScopeLayout.CenterName
-                        </span>
-                        <a asp-controller="ProfileScope" asp-action="Select" class="nav-link">Cambiar ámbito</a>
-                    }
+                <div id="menu-principal" class="navbar-collapse collapse">
+                    <ul class="navbar-nav ms-auto align-items-md-center">
+                        @if (panelLayout is not null)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="@panelLayout" asp-action="Index">Mi panel</a>
+                            </li>
+                        }
+                        @* Tema claro, oscuro o automático: los botones los gestiona wwwroot/js/tema.js. Iconos de Bootstrap Icons (MIT). *@
+                        <li class="nav-item dropdown">
+                            <button class="nav-link dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15A7 7 0 1 0 8 1zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16" /></svg>
+                                Tema
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2" data-tema-opcion="claro" aria-pressed="false">
+                                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708" /></svg>
+                                        Claro
+                                    </button>
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2" data-tema-opcion="oscuro" aria-pressed="false">
+                                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278" /></svg>
+                                        Oscuro
+                                    </button>
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2" data-tema-opcion="auto" aria-pressed="false">
+                                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15A7 7 0 1 0 8 1zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16" /></svg>
+                                        Automático (como el dispositivo)
+                                    </button>
+                                </li>
+                            </ul>
+                        </li>
+                        @if (!string.IsNullOrWhiteSpace(devSubjectLayout))
+                        {
+                            <li class="nav-item dropdown">
+                                <button class="nav-link dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    @(profileLabelLayout ?? devSubjectLayout)
+                                    @if (activeScopeLayout is not null)
+                                    {
+                                        <span class="d-none d-lg-inline-block text-truncate opacity-75 centro-activo">· @activeScopeLayout.CenterName</span>
+                                    }
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><span class="dropdown-item-text small">Identidad: <code>@devSubjectLayout</code></span></li>
+                                    @if (activeScopeLayout is not null)
+                                    {
+                                        <li><span class="dropdown-item-text small">Ámbito: @profileLabelLayout · @activeScopeLayout.CenterName</span></li>
+                                    }
+                                    <li><hr class="dropdown-divider" /></li>
+                                    @if (activeScopeLayout is not null)
+                                    {
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="ProfileScope" asp-action="Select">Cambiar ámbito</a></li>
+                                    }
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="DevAuth" asp-action="Login">Cambiar de identidad</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-area="" asp-controller="DevAuth" asp-action="Logout" method="post">
+                                            <button type="submit" class="dropdown-item">Salir</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="DevAuth" asp-action="Login">Iniciar sesión</a>
+                            </li>
+                        }
+                    </ul>
                 </div>
             </div>
         </nav>
@@ -63,9 +136,12 @@
     </div>
 
     <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - ResidApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a> - <a asp-area="" asp-controller="Home" asp-action="Manual">Manual de usuario</a>
-            <br /><a href="~/pendientes-cj/index.html">Documentos de CJ</a>
+        @* Los enlaces pasan a la línea siguiente cuando no caben (antes desbordaban en móvil). *@
+        <div class="container d-flex flex-wrap column-gap-3 row-gap-1">
+            <span>&copy; 2026 ResidApp</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
+            <a asp-area="" asp-controller="Home" asp-action="Manual">Manual de usuario</a>
+            <a href="~/pendientes-cj/index.html">Documentos de CJ</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

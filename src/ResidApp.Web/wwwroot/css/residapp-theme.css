@@ -85,6 +85,17 @@ body {
   }
 }
 
+/* Enlaces del pie subrayados solo al pasar el ratón. Va aquí y no en _Layout.cshtml.css porque los enlaces con
+   tag helper (asp-action) no reciben el atributo del CSS aislado. */
+body > footer a {
+  text-decoration: none;
+}
+
+body > footer a:hover,
+body > footer a:focus-visible {
+  text-decoration: underline;
+}
+
 /* Jerarquía: títulos en peso 600. */
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
@@ -109,6 +120,12 @@ h1, h2, h3, h4, h5, h6,
 
 .navbar-residapp .navbar-toggler {
   border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Nombre del centro junto al perfil en el menú de usuario: se recorta para no desbordar la cabecera. */
+.navbar-residapp .centro-activo {
+  max-width: 16rem;
+  vertical-align: bottom;
 }
 
 /* Tarjetas: radio de 12px y borde fino, sin sombra. */

@@ -16,17 +16,8 @@ button.accept-policy {
   line-height: inherit;
 }
 
-/* Pie en el flujo normal (residapp-theme.css lo empuja al final en páginas cortas): sin posición absoluta ni
-   nowrap, que desbordaban en móvil. Enlaces subrayados solo al pasar el ratón. */
+/* Pie en el flujo normal (residapp-theme.css lo empuja al final en páginas cortas y quita el subrayado a sus
+   enlaces): sin posición absoluta ni nowrap, que desbordaban en móvil. */
 .footer {
   padding: 1rem 0;
-}
-
-.footer a {
-  text-decoration: none;
-}
-
-.footer a:hover,
-.footer a:focus-visible {
-  text-decoration: underline;
 }
