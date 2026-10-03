@@ -95,7 +95,9 @@
     }
 
     <div class="d-grid d-md-flex justify-content-md-end gap-2">
-        <a asp-action="RegistrarCambio" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-secondary btn-lg">Volver a editar</a>
+        @* Reenvía los campos ocultos de este formulario a RegistrarCambio, que lo vuelve a pintar relleno (un enlace
+           abría el formulario vacío y se perdía lo escrito). *@
+        <button type="submit" asp-action="RegistrarCambio" formnovalidate name="editar" value="true" class="btn btn-outline-secondary btn-lg">Volver a editar</button>
         <button type="submit" class="btn @(esPrioritario ? "btn-danger" : "btn-success") btn-lg">Confirmar y enviar</button>
     </div>
 </form>

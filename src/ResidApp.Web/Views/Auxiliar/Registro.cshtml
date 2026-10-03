@@ -29,31 +29,15 @@
     <div class="alert alert-danger">@error</div>
 }
 
-<div class="card mb-3">
-    <div class="card-body">
-        <h2 class="h5 card-title">Estado basal vigente</h2>
-        @if (Model.Baseline is null)
-        {
-            <p class="text-muted mb-0">Sin basal vigente registrado.</p>
-        }
-        else
-        {
-            <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
-            <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
-        }
-        <a asp-action="Basal" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-secondary btn-lg mt-3">
-            Consultar estado basal
-        </a>
-    </div>
-</div>
-
-<div class="row g-3">
-    <div class="col-12 col-md-6">
+@* Las tres salidas excluyentes del cierre (registro-cotidiano-auxiliar.md) van juntas, arriba y con el mismo peso:
+   destacar una empujaría a elegirla. El basal queda debajo, como consulta. *@
+<div class="row g-3 mb-3">
+    <div class="col-12 col-md-4">
         <div class="card h-100">
-            <div class="card-body">
+            <div class="card-body d-flex flex-column">
                 <h2 class="h5 card-title">Sin cambios</h2>
                 <p class="text-muted">Confirma que la situación habitual del residente se mantiene. No genera tarea para Enfermería.</p>
-                <form asp-action="SinCambios" method="post">
+                <form asp-action="SinCambios" method="post" class="mt-auto">
                     <input type="hidden" name="residenteId" value="@Model.Resident.ResidentId.Value" />
                     <input type="hidden" name="operacionId" value="@Model.SinCambiosOperacionId" />
                     <button type="submit" class="btn btn-success btn-lg w-100">Confirmar sin cambios</button>
@@ -61,12 +45,23 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-md-4">
         <div class="card h-100">
-            <div class="card-body">
+            <div class="card-body d-flex flex-column">
+                <h2 class="h5 card-title">Registrar cambio</h2>
+                <p class="text-muted">Documenta cambios observados en una o varias áreas y clasifícalos como ordinarios o prioritarios.</p>
+                <a asp-action="RegistrarCambio" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-primary btn-lg w-100 mt-auto">
+                    Registrar cambio
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-body d-flex flex-column">
                 <h2 class="h5 card-title">No valorable</h2>
                 <p class="text-muted">Indica que no fue posible valorar al residente en este turno. Nunca equivale a estabilidad clínica.</p>
-                <form asp-controller="Auxiliar" asp-action="NoValorable" method="post">
+                <form asp-controller="Auxiliar" asp-action="NoValorable" method="post" class="mt-auto">
                     <input type="hidden" name="OperacionId" value="@Model.NoValorableOperacionId" />
                     <input type="hidden" name="ResidenteId" value="@Model.Resident.ResidentId.Value" />
                     <div class="mb-3">
@@ -80,12 +75,25 @@
     </div>
 </div>
 
-<div class="card mt-3">
+<div class="card">
     <div class="card-body">
-        <h2 class="h5 card-title">Registrar cambio</h2>
-        <p class="text-muted">Documenta cambios observados en una o varias áreas y clasifícalos como ordinarios o prioritarios.</p>
-        <a asp-action="RegistrarCambio" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-primary btn-lg">
-            Registrar cambio
+        <h2 class="h5 card-title">Estado basal vigente</h2>
+        @if (Model.Baseline is null)
+        {
+            <p class="text-muted mb-0">Sin basal vigente registrado.</p>
+        }
+        else
+        {
+            <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
+            @* Barra en color neutro: sin umbrales clínicos de dependencia, que tendría que fijar CJ. *@
+            <div class="progress mb-2" role="progressbar" aria-label="Índice de Barthel" aria-valuenow="@Model.Baseline.BarthelTotal"
+                 aria-valuemin="0" aria-valuemax="100" style="height: 0.5rem">
+                <div class="progress-bar bg-secondary" style="width: @(Model.Baseline.BarthelTotal)%"></div>
+            </div>
+            <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
+        }
+        <a asp-action="Basal" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg mt-3">
+            Consultar estado basal
         </a>
     </div>
 </div>

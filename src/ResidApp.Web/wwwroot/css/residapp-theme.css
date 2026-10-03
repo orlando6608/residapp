@@ -317,10 +317,23 @@ a.card:focus-visible,
   }
 
   .navbar-residapp .nav-link,
-  .dropdown-item {
+  .dropdown-item,
+  details > summary {
     padding-top: 0.75rem;
     padding-bottom: 0.75rem;
   }
+}
+
+/* Contenido bajo demanda (<details>, p. ej. «Añadir nota»): el resumen se presenta como un enlace. */
+details > summary {
+  color: var(--bs-link-color);
+  cursor: pointer;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+details[open] > summary {
+  margin-bottom: 0.5rem;
 }
 
 /* Cifra grande de los paneles de inicio (guía, sección 2.B). */

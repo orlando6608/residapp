@@ -119,12 +119,21 @@ public sealed class AuxiliarController(AuxiliarApplicationService service) : Con
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RegistrarCambio(RegistrarCambioFormModel form, CancellationToken ct)
+    public async Task<IActionResult> RegistrarCambio(RegistrarCambioFormModel form, bool editar, CancellationToken ct)
     {
         var resolved = await ResolveAssignedResidentAsync(form.ResidenteId, ct);
         if (resolved is null)
         {
             return RedirectToAction(nameof(Index));
+        }
+
+        ViewBag.Resident = resolved.Value.Resident;
+
+        // «Volver a editar» desde ConfirmarCambio: reenvía los campos ocultos y el formulario vuelve relleno, sin
+        // validar todavía; mismo OperacionId, así que la idempotencia no cambia.
+        if (editar)
+        {
+            return View(form);
         }
 
         // AUX-06: exige al menos un área con contenido (texto u opción marcada). AUX-10: un prioritario
@@ -140,7 +149,6 @@ public sealed class AuxiliarController(AuxiliarApplicationService service) : Con
             ModelState.AddModelError(nameof(form.MotivoPrioritario), "Elige el motivo prioritario.");
         }
 
-        ViewBag.Resident = resolved.Value.Resident;
         return ModelState.IsValid ? View("ConfirmarCambio", form) : View(form);
     }
 
