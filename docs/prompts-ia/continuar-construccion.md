@@ -13,6 +13,23 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Rediseño visual, primera tanda (2026-10-03, sin script):** revisión crítica de `docs/bocetos-pantallas/residapp-recomendaciones-diseno.md`
+  (documento del usuario, sin versionar: se adoptó una parte, se adaptó otra y se descartó el resto con motivo; ver los commits). Cambios:
+  - **Guía vinculante actualizada** (`guia-diseno-sistema-visual.md`): neutros y enlaces que cumplen AA (enlaces `#0A58CA`, secundario `#5B6676`
+    sobre `#F5F7FA`), tokens del modo oscuro, color según el valor (un 0 nunca en rojo), etiquetas suaves, franja lateral, 48 px en táctil
+    (`any-pointer: coarse`) y prohibido `bg-white`/`text-dark`/`btn-dark` en las vistas.
+  - **Tema y modo oscuro:** `residapp-theme.css` asigna los tokens a las variables de Bootstrap 5.3; `wwwroot/js/tema.js` (en `<head>`) pone
+    `data-bs-theme` según el dispositivo o la elección Claro/Oscuro/Automático (en `localStorage`, por dispositivo) y fuerza el claro al imprimir.
+    Texto base de 16 px también en móvil (la plantilla bajaba a 14 px).
+  - **Cabecera:** «Mi panel», selector de tema y menú de usuario (identidad, ámbito, Cambiar ámbito, Cambiar de identidad, Salir).
+  - **Paneles** de Enfermería, Medicina, Dirección y Administración con cifra grande, plural real y color según el valor; **listas de
+    residentes** con la tarjeta entera pulsable (`stretched-link`).
+  - **Registro del Auxiliar:** tres salidas juntas y con el mismo peso; Registrar cambio con chips (`btn-check`), «Añadir nota» (`<details>`)
+    y barra fija; **«Volver a editar» ya no pierde los datos** (`AuxiliarController.RegistrarCambio` con `editar=true` devuelve el formulario
+    relleno, mismo `OperacionId`).
+  - Verificado con capturas de Chrome sin interfaz en claro y oscuro, escritorio y 390 px (ver la lección «Capturas con sesión»), y la prueba
+    de «Volver a editar» de punta a punta. Suite en verde (264, 315 y 68). Medido: Registrar cambio pasa de 2.197 a 2.063 px en escritorio,
+    pero **de 2.208 a 2.785 px a 390 px** por los chips de 48 px; la barra fija mantiene «Continuar» a mano.
 - **Documentos de CJ publicados en la web (2026-10-03):** `docs/pendientes-cj/*.html` (incluido el nuevo `index.html`, lista estática a mano) se sirven en `/pendientes-cj/` con la propia app: `ResidApp.Web.csproj` los incluye como `Content` enlazado (fuente única, sin copia en `wwwroot`) y `Program.cs` los expone con `UseStaticFiles` + `PhysicalFileProvider` sobre `AppContext.BaseDirectory/pendientes-cj`. Enlace «Documentos de CJ» en el pie del `_Layout`. Públicos (sin datos de residentes; las respuestas no pasan por el servidor). **Cambio de canal:** CJ ya no sube el JSON a GitHub; lo descarga con «Guardar respuestas» y se lo envía a Orlando por correo o WhatsApp (textos de los 5 HTML y `README.md` ajustados; se quitó `UPLOAD` del script). Test `PendientesCjPagesTests`. Al añadir un documento nuevo, hay que añadirlo también a `index.html`. Aviso sin corregir: `ProfessionalAccountScreensTests.Plataforma_CreaUnCentro_ElInicioSoloLaOfreceAEsePerfil_YOtroPerfilNoEntra` falla también sin estos cambios.
 - **Documentos de CJ con respuestas guardadas (2026-10-02):** los `.html` de `docs/pendientes-cj/` ya no se rellenan editando «por definir»: CJ
   los abre en el navegador, responde con opciones, texto y tablas (borrador en `localStorage`), pulsa «Guardar respuestas» y sube a la misma
@@ -951,6 +968,19 @@ usuario cuando encajen:
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de
   prueba allí.
 
+- **Rediseño visual, segunda tanda (anotada el 2026-10-03, sin empezar):**
+  - fichas del residente y DetalleCambio en dos columnas en escritorio, con la acción principal arriba (hoy al fondo, tras hasta 9 tarjetas);
+  - tablas de Dirección («Por unidad», Indicadores) y de Administración como tarjetas en móvil: hoy incumplen `directrices-pwa-movil.md` §2;
+  - Indicadores con «Cómo se cuenta» plegado y barras en las cifras «n de m»; índice fijo en el Manual;
+  - estados vacíos, párrafos introductorios y los 19 «(s)» que quedan (de 56; sobre todo en Administración);
+  - un parcial para los mensajes de aviso con `aria-live` (hoy hay 48 copias pegadas);
+  - `_EventosAbiertos` y `Enfermeria/Escalados` se saltan `ClinicalEventStatusDisplay.BadgeClass`; «Vencido» es ámbar en Dirección y rojo en el resto;
+  - Barthel sin total en vivo mientras se rellena;
+  - `manifest.json` con `orientation: portrait-primary` bloquea las tablets en vertical;
+  - el shell de `sw.js` nunca encuentra `site.css`/`site.js` (se piden con `?v=`) y no guarda `residapp-theme.css`;
+  - en ConfirmarCambio, las dos rutas de error (sin JavaScript o datos manipulados) siguen redirigiendo al formulario vacío.
+- **Pregunta para CJ (2026-10-03):** «Basal pendiente» sale en rojo, como fija la guía «por exigencia estricta del PRD», y compite con las urgencias
+  reales. El documento de recomendaciones propone ámbar. Es una decisión clínica de saliencia: no se ha cambiado.
 - **Preguntas para CJ (2026-09-30):** `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` recoge las finalidades de la lectura clínica de Dirección, la
   aportación a un borrador de basal ajeno y el campo «Comunicaciones» del informe de derivación. Revisa si
   CJ ha respondido antes de proponer el bloque 2 de Dirección o la aportación.
@@ -971,7 +1001,7 @@ usuario cuando encajen:
   un módulo marcado como «Próximamente».
 - **Interfaz:** siempre en español, incluidos los enums que aparecen en un `<select>`. Sigue
   `docs/bocetos-pantallas/guia-diseno-sistema-visual.md` (Bootstrap 5, WCAG AA, `btn-lg`, nada de texto
-  blanco sobre amarillo).
+  blanco sobre amarillo, ningún color fijo en las vistas) y revisa cada pantalla en claro y en oscuro.
 - **Valores clínicos:** nunca los inventes. Si hace falta uno, se pide a CJ con un documento en
   `docs/pendientes-cj/`.
 - **Contradicciones:** si el código contradice `docs/flujos-clinicos/`, para y avisa.
@@ -1005,6 +1035,19 @@ Repite estos pasos antes de dar un bloque por cerrado:
    pipeline termina en verde, con `build-and-test` y `deploy`.
 
 ## Lecciones técnicas que conviene no redescubrir
+
+- **`border-start border-4 border-<color>` en una `.card` dibuja un marco**, no una franja: `.border-4` fija el ancho de los
+  cuatro lados y `.border-<color>` los colorea todos. `residapp-theme.css` devuelve los otros tres lados al borde neutro;
+  no lo quites.
+- **El CSS aislado (`_Layout.cshtml.css`) no llega a los enlaces con tag helper** (`<a asp-action>`): no reciben el atributo
+  `b-xxxx`. Las reglas para esos enlaces van en `residapp-theme.css`.
+- **Modo oscuro:** los colores salen de los tokens `--color-*` de `residapp-theme.css`, asignados a las variables de Bootstrap.
+  En oscuro, `text-danger`/`text-success` y los `btn-outline-*` de serie se quedan en 3,7:1 y el tema los pasa a
+  `--bs-*-text-emphasis`; para un color nuevo, usa esos tonos. `text-warning` no sirve como texto ni en claro (1,6:1): usa
+  `text-warning-emphasis`.
+- **Capturas con sesión para revisar una pantalla:** `puppeteer-core` (en el directorio temporal, con el Chrome instalado) inicia
+  sesión rellenando `/DevAuth/Login`, emula `prefers-color-scheme` y, con `isMobile` y `hasTouch`, también `any-pointer: coarse`.
+  En Git Bash, un argumento que empiece por `/` se convierte en una ruta de Windows: exporta `MSYS_NO_PATHCONV=1`.
 
 - **Enums en español en pantalla:** un enum con `[Code("X_Y")]` que el formulario envía como texto se pinta con
   `EnumDisplay.Label(valor)` (necesita `[Display(Name=…)]` en español) y `value="@valor.ToCode()"`; no sirve

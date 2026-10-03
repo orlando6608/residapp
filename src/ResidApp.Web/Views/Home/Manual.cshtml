@@ -32,6 +32,7 @@
         <h2 class="h6 card-title mb-3">Índice</h2>
         <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action" href="#entrar-ambito">Entrar y elegir tu ámbito de trabajo</a>
+            <a class="list-group-item list-group-item-action" href="#apariencia">Apariencia: colores, modo claro y modo oscuro</a>
             <a class="list-group-item list-group-item-action" href="#cuentas-prueba">Cuentas de prueba y cómo cambiar de usuario</a>
             <a class="list-group-item list-group-item-action" href="#alta-residente">Dar de alta un residente</a>
             <a class="list-group-item list-group-item-action" href="#residentes-administracion">Residentes y ficha administrativa (Administración)</a>
@@ -87,8 +88,28 @@
         permiso que tu cuenta no tiene, la app te denegará la acción.
     </p>
     <p class="mb-0">
-        Desde cualquier pantalla que dependa del ámbito activo puedes pulsar <strong>«Cambiar ámbito»</strong>
-        para volver a elegir con qué perfil o centro quieres trabajar.
+        La cabecera está en todas las pantallas. <strong>«Mi panel»</strong> te lleva al inicio de tu perfil (por
+        ejemplo, el inicio de Enfermería). El menú con el nombre de tu perfil muestra tu identidad y tu ámbito activo, y
+        desde él puedes pulsar <strong>«Cambiar ámbito»</strong> para volver a elegir con qué perfil o centro trabajas,
+        <strong>«Cambiar de identidad»</strong> o <strong>«Salir»</strong>. En el móvil, todo esto está tras el botón de
+        menú de la esquina superior derecha.
+    </p>
+</section>
+
+<section id="apariencia" class="mb-4">
+    <h2 class="h5">Apariencia: colores, modo claro y modo oscuro</h2>
+    <p>
+        En el inicio de cada perfil, cada tarjeta muestra su cifra en grande. Una cifra en <strong>rojo</strong>, con una
+        franja roja a la izquierda de la tarjeta, indica algo urgente pendiente: eventos prioritarios abiertos,
+        protocolos urgentes activos, seguimientos vencidos o indicaciones con incidencia. En <strong>ámbar</strong>
+        aparecen las indicaciones sin leer. Una tarjeta a cero nunca sale en rojo. El texto de la tarjeta siempre dice
+        lo mismo que el color, para quien no distinga bien los colores.
+    </p>
+    <p class="mb-0">
+        En la cabecera, <strong>«Tema»</strong> permite elegir <strong>Claro</strong>, <strong>Oscuro</strong> o
+        <strong>Automático</strong>, que sigue el ajuste del dispositivo (por ejemplo, oscuro por la noche si el
+        teléfono o la tablet lo tienen así). La elección se recuerda en ese dispositivo. Al imprimir o guardar como
+        PDF, la página sale siempre en modo claro.
     </p>
 </section>
 
@@ -552,25 +573,29 @@
     </h2>
     <p>
         Muestra únicamente los residentes con asignación vigente para tu ámbito de trabajo. Cada tarjeta
-        indica si el residente ya tiene un estado basal vigente (verde) o sigue pendiente (rojo). Al abrir
-        un residente ves su registro cotidiano: identidad mínima y un resumen del basal vigente (nunca
-        versiones históricas, borradores, respuestas detalladas de Barthel, firma ni corrección), con acceso
-        a la consulta completa de las nueve áreas y el total de Barthel.
+        indica, con una franja a la izquierda y una etiqueta, si el residente ya tiene un estado basal vigente (verde)
+        o sigue pendiente (rojo). Pulsa en cualquier punto de la tarjeta para abrir el registro cotidiano del
+        residente: identidad mínima y un resumen del basal vigente con el total de Barthel (nunca versiones históricas,
+        borradores, respuestas detalladas de Barthel, firma ni corrección), con acceso a la consulta completa de las
+        nueve áreas.
     </p>
     <p class="mb-0">
-        Desde el registro cotidiano puedes cerrar el turno de dos formas: <strong>Sin cambios</strong>
-        (confirma que la situación habitual se mantiene; no genera tarea para Enfermería) o
-        <strong>No valorable</strong> (exige indicar un motivo; nunca se interpreta como estabilidad
-        clínica). La tarjeta de "Mis residentes" muestra si el turno de hoy ya está cerrado.
+        Arriba del registro cotidiano están, juntas, las tres formas de cerrar el turno: <strong>Sin cambios</strong>
+        (confirma que la situación habitual se mantiene; no genera tarea para Enfermería),
+        <strong>Registrar cambio</strong> y <strong>No valorable</strong> (exige indicar un motivo; nunca se interpreta
+        como estabilidad clínica). La tarjeta de "Mis residentes" muestra si el turno de hoy ya está cerrado.
     </p>
     <p class="mb-0">
-        La tercera forma de cerrar el turno es <strong>Registrar cambio</strong>: documenta el cambio en
-        una o varias de las diez áreas de observación cotidiana (siete con opciones rápidas predefinidas
-        más texto opcional, las otras tres solo con texto libre), añade la temperatura si procede y
-        clasifícalo como
+        <strong>Registrar cambio</strong> documenta el cambio en una o varias de las diez áreas de observación
+        cotidiana. En siete de ellas, las opciones rápidas predefinidas son botones que se marcan con un toque (llevan
+        una ✓ cuando están marcados) y la nota opcional se abre con <strong>«Añadir nota»</strong>; las otras tres
+        son solo de texto libre. Añade la temperatura si procede y clasifícalo como
         <strong>ordinario</strong> (pasa a la bandeja ordinaria de Enfermería) o <strong>prioritario</strong>
         (exige elegir un motivo de una lista cerrada y documentar el aviso directo antes de confirmar;
-        pasa a la bandeja prioritaria). Antes de enviarlo se muestra siempre un resumen para revisar.
+        pasa a la bandeja prioritaria). El botón <strong>Continuar</strong> queda siempre a la vista al pie de la
+        pantalla. Antes de enviarlo se muestra siempre un resumen para revisar; desde él,
+        <strong>«Volver a editar»</strong> regresa al formulario con todo lo que habías marcado y escrito, incluido el
+        aviso directo.
     </p>
 </section>
 
@@ -581,8 +606,9 @@
     </h2>
     <p>
         Muestra los residentes de tu ámbito: por defecto, todos los que están en tus unidades concedidas;
-        si tu ámbito tiene restringido el acceso a residentes concretos, solo esos. Cada tarjeta indica si
-        el residente ya tiene un estado basal vigente (verde) o sigue pendiente (rojo).
+        si tu ámbito tiene restringido el acceso a residentes concretos, solo esos. Cada tarjeta indica, con una
+        franja a la izquierda y una etiqueta, si el residente ya tiene un estado basal vigente (verde) o sigue pendiente
+        (rojo). Pulsa en cualquier punto de la tarjeta para abrir la ficha del residente.
     </p>
     <p>
         Encima de la lista puedes <strong>buscar por nombre</strong> (sin importar mayúsculas ni acentos: «jose»
