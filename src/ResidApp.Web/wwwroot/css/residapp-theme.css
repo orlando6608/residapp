@@ -1,9 +1,11 @@
 /*
- * Directiva de diseño visual de ResidApp — ver docs/bocetos-pantallas/guia-diseno-sistema-visual.md.
- * Paleta y reglas de aplicación tomadas literalmente de ese documento (vinculante).
+ * Directiva de diseño visual de ResidApp — ver docs/bocetos-pantallas/guia-diseno-sistema-visual.md (vinculante).
+ * Los tokens --color-* son los de la guía y se asignan a las variables de Bootstrap 5.3, de modo que el modo oscuro
+ * (data-bs-theme="dark", lo pone wwwroot/js/tema.js) solo tiene que redefinir los tokens.
  */
-:root {
-  /* Colores principales (marca, rigor técnico y seguridad) */
+:root,
+[data-bs-theme=light] {
+  /* Colores principales (marca, rigor técnico y seguridad): los del logo */
   --color-primary-brand: #0D6EFD;
   --color-primary-dark: #0A58CA;
 
@@ -12,25 +14,86 @@
   --color-secondary-light: #20C997;
 
   /* Neutros de superficie */
-  --color-bg-main: #F8F9FA;
+  --color-bg-main: #F5F7FA;
   --color-bg-card: #FFFFFF;
-  --color-text-dark: #212529;
-  --color-text-muted: #6C757D;
+  --color-text-dark: #1A2433;
+  --color-text-muted: #5B6676;
+  --color-border: #E3E8EF;
+  --color-border-control: #7C8796;
+  --color-link: #0A58CA;
+  --color-link-rgb: 10, 88, 202;
+  --color-link-hover-rgb: 8, 66, 152;
+  --color-navbar-bg: #0A58CA;
 
   /* Sistema semafórico de alertas clínicas */
   --color-alert-danger: #DC3545;
   --color-alert-warning: #FFC107;
   --color-alert-info: #0DCAF0;
+
+  /* Bootstrap: la superficie es el fondo de los componentes (tarjetas, campos, desplegables); el fondo de página va
+     en body. */
+  --bs-body-bg: var(--color-bg-card);
+  --bs-body-bg-rgb: 255, 255, 255;
+  --bs-body-color: var(--color-text-dark);
+  --bs-body-color-rgb: 26, 36, 51;
+  --bs-secondary-color: var(--color-text-muted);
+  --bs-border-color: var(--color-border);
+  --bs-link-color: var(--color-link);
+  --bs-link-color-rgb: var(--color-link-rgb);
+  --bs-link-hover-color-rgb: var(--color-link-hover-rgb);
+  --bs-border-radius: 0.5rem;
+  --bs-border-radius-lg: 0.5rem;
+}
+
+[data-bs-theme=dark] {
+  --color-bg-main: #0F141B;
+  --color-bg-card: #171D26;
+  --color-text-dark: #E3E8EF;
+  --color-text-muted: #A3ADBA;
+  --color-border: #2A3340;
+  --color-border-control: #6B7685;
+  --color-link: #6EA8FE;
+  --color-link-rgb: 110, 168, 254;
+  --color-link-hover-rgb: 158, 197, 254;
+  --color-navbar-bg: #131B26;
+
+  --bs-body-bg: var(--color-bg-card);
+  --bs-body-bg-rgb: 23, 29, 38;
+  --bs-body-color: var(--color-text-dark);
+  --bs-body-color-rgb: 227, 232, 239;
+  --bs-secondary-color: var(--color-text-muted);
+  --bs-border-color: var(--color-border);
+  --bs-link-color: var(--color-link);
+  --bs-link-color-rgb: var(--color-link-rgb);
+  --bs-link-hover-color-rgb: var(--color-link-hover-rgb);
 }
 
 body {
   background-color: var(--color-bg-main);
-  color: var(--color-text-dark);
 }
 
-/* Cabecera: fondo azul oscuro corporativo con isotipo en blanco (guía, sección 2.B). */
+/* Pie al final de la pantalla en páginas cortas. Solo en pantalla: la impresión tiene su propio maquetado (site.css). */
+@media screen {
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body > footer {
+    margin-top: auto;
+  }
+}
+
+/* Jerarquía: títulos en peso 600. */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-weight: 600;
+}
+
+/* Cabecera: fondo azul oscuro corporativo (guía, sección 2.B); en modo oscuro, una superficie oscura. */
 .navbar-residapp {
-  background-color: var(--color-primary-dark);
+  background-color: var(--color-navbar-bg);
 }
 
 .navbar-residapp .navbar-brand,
@@ -48,23 +111,228 @@ body {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Tarjetas de contenido sobre el fondo gris claro (guía, secciones 2.B y 2.C). */
+/* Tarjetas: radio de 12px y borde fino, sin sombra. */
 .card {
-  background-color: var(--color-bg-card);
+  --bs-card-border-radius: 0.75rem;
+  --bs-card-inner-border-radius: calc(0.75rem - 1px);
 }
 
-.text-muted {
-  color: var(--color-text-muted) !important;
+/* Tarjetas pulsables: enteras (a.card) o con un enlace estirado dentro (.stretched-link). */
+a.card,
+.card:has(.stretched-link) {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+a.card:hover,
+.card:has(.stretched-link):hover {
+  border-color: var(--color-primary-brand);
+  box-shadow: 0 0.25rem 0.75rem rgba(16, 24, 40, 0.12);
+}
+
+a.card:focus-visible,
+.card:has(.stretched-link:focus-visible) {
+  outline: 3px solid var(--color-link);
+  outline-offset: 2px;
+}
+
+.card .stretched-link:focus-visible {
+  outline: none;
+}
+
+/* Franja lateral de estado (guía, sección 2.B): en Bootstrap, border-4 engorda los cuatro lados y border-<color> los
+   colorea todos, lo que dibuja un marco. Se devuelven los otros tres lados al borde neutro. */
+.border-start.border-4 {
+  border-width: var(--bs-border-width) !important;
+  border-left-width: 4px !important;
+  border-top-color: var(--bs-border-color) !important;
+  border-right-color: var(--bs-border-color) !important;
+  border-bottom-color: var(--bs-border-color) !important;
+}
+
+/* Etiquetas de estado (guía, sección 2.D): fondo suave, texto oscuro del mismo tono y un punto de color delante. Los
+   tonos -subtle y -text-emphasis de Bootstrap ya tienen su versión oscura. */
+.badge[class*="text-bg-"] {
+  --bs-badge-font-size: 0.8125rem;
+  --bs-badge-font-weight: 600;
+  --bs-badge-border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.badge[class*="text-bg-"]::before {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-right: 0.4em;
+  border-radius: 50%;
+  vertical-align: 0.1em;
+  background-color: var(--punto-estado);
+}
+
+.badge.text-bg-primary {
+  --punto-estado: var(--bs-primary);
+  color: var(--bs-primary-text-emphasis) !important;
+  background-color: var(--bs-primary-bg-subtle) !important;
+  border-color: var(--bs-primary-border-subtle);
+}
+
+.badge.text-bg-secondary,
+.badge.text-bg-light,
+.badge.text-bg-dark {
+  --punto-estado: var(--bs-secondary);
+  color: var(--bs-secondary-text-emphasis) !important;
+  background-color: var(--bs-secondary-bg-subtle) !important;
+  border-color: var(--bs-secondary-border-subtle);
+}
+
+.badge.text-bg-success {
+  --punto-estado: var(--bs-success);
+  color: var(--bs-success-text-emphasis) !important;
+  background-color: var(--bs-success-bg-subtle) !important;
+  border-color: var(--bs-success-border-subtle);
+}
+
+.badge.text-bg-danger {
+  --punto-estado: var(--bs-danger);
+  color: var(--bs-danger-text-emphasis) !important;
+  background-color: var(--bs-danger-bg-subtle) !important;
+  border-color: var(--bs-danger-border-subtle);
+}
+
+.badge.text-bg-warning {
+  --punto-estado: var(--bs-warning);
+  color: var(--bs-warning-text-emphasis) !important;
+  background-color: var(--bs-warning-bg-subtle) !important;
+  border-color: var(--bs-warning-border-subtle);
+}
+
+.badge.text-bg-info {
+  --punto-estado: var(--bs-info);
+  color: var(--bs-info-text-emphasis) !important;
+  background-color: var(--bs-info-bg-subtle) !important;
+  border-color: var(--bs-info-border-subtle);
 }
 
 /* Accesibilidad WCAG 2.2 AA: texto en negro sobre fondo de alerta amarillo (guía, sección 3.1). */
-.alert-warning {
+:root:not([data-bs-theme=dark]) .alert-warning {
   color: #000000;
 }
 
-/* Accesibilidad WCAG 2.2 AA: altura táctil mínima de 48px en controles interactivos (guía, sección 3.2). */
+/* Modo oscuro: los textos y los botones de contorno de color de serie se quedan en 3,7:1 sobre la superficie oscura;
+   pasan a los tonos -text-emphasis (guía, «Modo oscuro»). */
+[data-bs-theme=dark] .text-danger {
+  color: var(--bs-danger-text-emphasis) !important;
+}
+
+[data-bs-theme=dark] .text-success {
+  color: var(--bs-success-text-emphasis) !important;
+}
+
+[data-bs-theme=dark] .btn-outline-primary {
+  --bs-btn-color: var(--bs-primary-text-emphasis);
+  --bs-btn-border-color: var(--bs-primary-text-emphasis);
+}
+
+[data-bs-theme=dark] .btn-outline-secondary {
+  --bs-btn-color: var(--bs-secondary-text-emphasis);
+  --bs-btn-border-color: var(--bs-secondary-text-emphasis);
+}
+
+[data-bs-theme=dark] .btn-outline-success {
+  --bs-btn-color: var(--bs-success-text-emphasis);
+  --bs-btn-border-color: var(--bs-success-text-emphasis);
+}
+
+[data-bs-theme=dark] .btn-outline-danger {
+  --bs-btn-color: var(--bs-danger-text-emphasis);
+  --bs-btn-border-color: var(--bs-danger-text-emphasis);
+}
+
+/* Contraste de bordes de controles (guía, sección 3.4, WCAG 1.4.11). */
+.form-control,
+.form-select,
+.form-check-input {
+  border-color: var(--color-border-control);
+}
+
+/* Accesibilidad WCAG 2.2 AA: altura táctil mínima de 48px (guía, sección 3.2). Los controles -lg ya miden 48px; con
+   pantalla táctil, los de tamaño normal y pequeño crecen por relleno (sin cambiar su display) y casillas y radios se
+   agrandan con una fila de 48px. */
 .form-control-lg,
 .form-select-lg,
 .btn-lg {
   min-height: 48px;
+}
+
+@media (any-pointer: coarse) {
+  .btn:not(.btn-lg):not(.btn-sm) {
+    --bs-btn-padding-y: 0.6875rem;
+  }
+
+  .btn-sm {
+    --bs-btn-padding-y: 0.78125rem;
+  }
+
+  .form-control:not(.form-control-lg):not(textarea),
+  .form-select:not(.form-select-lg) {
+    padding-top: 0.6875rem;
+    padding-bottom: 0.6875rem;
+  }
+
+  .form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3rem;
+    padding-left: 0;
+    margin-bottom: 0;
+  }
+
+  .form-check-inline {
+    display: inline-flex;
+  }
+
+  .form-check .form-check-input {
+    float: none;
+    width: 1.375rem;
+    height: 1.375rem;
+    margin: 0;
+  }
+
+  .navbar-residapp .nav-link,
+  .dropdown-item {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
+/* Cifra grande de los paneles de inicio (guía, sección 2.B). */
+.cifra {
+  display: block;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Opciones de selección rápida como botones-chip (input.btn-check + label.btn.chip, guía, sección 3.2). La marca ✓
+   indica la selección sin depender solo del color. */
+.chip {
+  --bs-btn-border-radius: 999px;
+  --bs-btn-font-weight: 500;
+}
+
+.btn-check:checked + .chip::before {
+  content: "✓ ";
+}
+
+/* Barra de acción fija abajo, para que la acción principal de un formulario largo esté siempre a mano. */
+.barra-accion {
+  position: sticky;
+  bottom: 0;
+  z-index: 1020;
+  margin-top: 1rem;
+  padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom));
+  background-color: var(--color-bg-main);
+  border-top: var(--bs-border-width) solid var(--bs-border-color);
 }
