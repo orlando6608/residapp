@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-02. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-03. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -9,10 +9,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > (`docs/prompts-ia/continuar-construccion.md`), `docs/tareas/alta-prioridad/pendientes-enfermeria.md` y
 > `docs/tareas/alta-prioridad/pendientes-medicina.md`, `docs/tareas/alta-prioridad/pendientes-direccion.md` y
 > `docs/tareas/alta-prioridad/pendientes-administracion.md`.
-> Mira si CJ ha subido respuestas en `docs/pendientes-cj/` (ficheros `*.respuestas.json`, ver su `README.md`). Después
+> Mira si hay respuestas de CJ en `docs/pendientes-cj/` (ficheros `*.respuestas.json`, ver su `README.md`; las recibe Orlando por correo o WhatsApp y las guarda ahí). Después
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Documentos de CJ publicados en la web (2026-10-03):** `docs/pendientes-cj/*.html` (incluido el nuevo `index.html`, lista estática a mano) se sirven en `/pendientes-cj/` con la propia app: `ResidApp.Web.csproj` los incluye como `Content` enlazado (fuente única, sin copia en `wwwroot`) y `Program.cs` los expone con `UseStaticFiles` + `PhysicalFileProvider` sobre `AppContext.BaseDirectory/pendientes-cj`. Enlace «Documentos de CJ» en el pie del `_Layout`. Públicos (sin datos de residentes; las respuestas no pasan por el servidor). **Cambio de canal:** CJ ya no sube el JSON a GitHub; lo descarga con «Guardar respuestas» y se lo envía a Orlando por correo o WhatsApp (textos de los 5 HTML y `README.md` ajustados; se quitó `UPLOAD` del script). Test `PendientesCjPagesTests`. Al añadir un documento nuevo, hay que añadirlo también a `index.html`. Aviso sin corregir: `ProfessionalAccountScreensTests.Plataforma_CreaUnCentro_ElInicioSoloLaOfreceAEsePerfil_YOtroPerfilNoEntra` falla también sin estos cambios.
 - **Documentos de CJ con respuestas guardadas (2026-10-02):** los `.html` de `docs/pendientes-cj/` ya no se rellenan editando «por definir»: CJ
   los abre en el navegador, responde con opciones, texto y tablas (borrador en `localStorage`), pulsa «Guardar respuestas» y sube a la misma
   carpeta `<documento>.respuestas.json`, que es lo que lee ingeniería (formato en el `README.md` de la carpeta; lleva el texto de cada pregunta

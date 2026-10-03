@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.FileProviders;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Infrastructure.Authorization;
@@ -180,6 +181,11 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
 }
 app.UseRequestLocalization();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(AppContext.BaseDirectory, "pendientes-cj")),
+    RequestPath = "/pendientes-cj"
+});
 app.UseRouting();
 
 app.UseAuthorization();

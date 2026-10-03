@@ -5,15 +5,20 @@ inventar. Cuando CJ los completa, ingeniería revisa las respuestas y las incorp
 
 ## Cómo responderlos (CJ)
 
-1. Abre el `.html` en GitHub, pulsa «Download raw file» y abre el fichero descargado con el navegador.
+1. Abre la web de ResidApp, pulsa «Documentos de CJ» en el pie de página (o entra en `/pendientes-cj/index.html`) y abre el documento.
 2. Responde en la propia página: pulsa una opción o escribe tu respuesta, y añade un comentario si quieres.
    Lo que marcas se guarda en ese navegador mientras trabajas.
 3. Pulsa «Guardar respuestas» (barra de abajo). Se descarga `<documento>.respuestas.json`.
-4. Súbelo a esta carpeta: en GitHub, «Add file → Upload files» (o el enlace del propio documento), arrastra el
-   fichero y pulsa «Commit changes». Si ya existía, se sustituye.
+4. Envíaselo a Orlando por correo o WhatsApp. Si lo cambias y lo vuelves a guardar, envía el nuevo.
 
-Para seguir en otro ordenador: abre el documento y pulsa «Abrir respuestas guardadas» con tu fichero. Si la página
-se sirve por http desde el repositorio (no desde disco), carga sola el `.respuestas.json` de la carpeta.
+Para seguir en otro ordenador: abre el documento y pulsa «Abrir respuestas guardadas» con tu fichero.
+
+Los `.html` se publican con la aplicación en `/pendientes-cj/` (`ResidApp.Web.csproj` los incluye desde esta carpeta, sin copiarlos),
+así que llegan a la web con el siguiente despliegue.
+
+## Cómo guardar las respuestas recibidas (ingeniería)
+
+Guarda el `<documento>.respuestas.json` que envíe CJ en esta carpeta (si ya existía, se sustituye) y haz commit. Es lo que se lee a continuación.
 
 ## Cómo leer las respuestas (ingeniería)
 
@@ -45,7 +50,7 @@ Cada `<documento>.respuestas.json` se entiende sin abrir el HTML:
 Copia uno existente y cambia el `<title>`, `data-doc` (el nombre del fichero, sin `.html`), `data-version` y el
 contenido de `<div class="page">`. El estilo y el script del final son iguales en todos y no hace falta tocarlos. Cada
 pregunta es un elemento con `data-q` (clave única en el JSON); sus campos llevan `data-field`, y las opciones son
-`input type="radio"` dentro de `label.choice`. Para agrupar el avance por temas, cada tema es una `section.tema` con `id`.
+`input type="radio"` dentro de `label.choice`. Para agrupar el avance por temas, cada tema es una `section.tema` con `id`. Añade también su entrada a `index.html` (lista estática de la web) y a la tabla de abajo.
 
 ## Documentos
 

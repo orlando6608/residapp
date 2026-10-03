@@ -331,8 +331,8 @@
         <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se queda en este navegador: puedes cerrar y seguir otro día.</span></li>
       <li><span class="step-n">2</span><strong>Guarda</strong>
         <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>rangos-referencia-constantes.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
-      <li><span class="step-n">3</span><strong>Súbelo a GitHub</strong>
-        <span>Abre la <a href="https://github.com/orlando6608/residapp/upload/main/docs/pendientes-cj" target="_blank" rel="noopener">carpeta de documentos</a>, arrastra el fichero y pulsa «Commit changes». Si ya habías subido uno, se sustituye.</span></li>
+      <li><span class="step-n">3</span><strong>Envíaselo a Orlando</strong>
+        <span>Mándale el fichero descargado por correo o por WhatsApp. Si lo cambias y lo vuelves a guardar, envía el nuevo.</span></li>
     </ol>
     <p class="prose meta">
       ¿Desde otro ordenador? Abre este documento y pulsa «Abrir respuestas guardadas» con tu fichero para seguir donde lo dejaste.
@@ -603,7 +603,6 @@
   var VERSION = document.body.dataset.version;
   var FILE = DOC + ".respuestas.json";
   var KEY = "residapp-pendientes-cj:" + DOC;
-  var UPLOAD = "https://github.com/orlando6608/residapp/upload/main/docs/pendientes-cj";
   var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
   var estado = document.getElementById("estado");
   var dirty = false;
@@ -654,14 +653,9 @@
     });
   }
 
-  function say(kind, text, link) {
+  function say(kind, text) {
     estado.className = "estado" + (kind ? " " + kind : "");
     estado.textContent = text;
-    if (link) {
-      var a = document.createElement("a");
-      a.href = UPLOAD; a.target = "_blank"; a.rel = "noopener"; a.textContent = link[0];
-      estado.append(a, link[1]);
-    }
   }
 
   function status() {
@@ -741,8 +735,7 @@
     dirty = false;
     savedAt = data.guardado;
     store(data);
-    say("ok", "Guardado como «" + FILE + "». Ahora súbelo: abre la ",
-      ["carpeta de documentos en GitHub", ", arrastra el fichero y pulsa «Commit changes»."]);
+    say("ok", "Guardado como «" + FILE + "». Ahora envíaselo a Orlando por correo o por WhatsApp.");
   }
 
   document.addEventListener("input", onChange);

@@ -6,6 +6,11 @@
     <ProjectReference Include="..\ResidApp.Shared\ResidApp.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Documentos que CJ responde en el navegador: se sirven en /pendientes-cj (Program.cs) desde la misma carpeta de docs. -->
+    <Content Include="..\..\docs\pendientes-cj\*.html" Link="pendientes-cj\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
