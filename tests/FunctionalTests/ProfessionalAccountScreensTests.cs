@@ -521,7 +521,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         var nursePage = await PageAsync("ENFERMERIA", null, "/Administracion/Planificacion");
         var nurseSeries = await PageAsync("ENFERMERIA", null, $"/Administracion/SeriePlanificacion?loteId={seriesId}");
 
-        Assert.Contains("Planificado en 1 fecha(s).", first);
+        Assert.Contains("Planificado en 1 fecha.", first);
         Assert.Contains(morningName, first);
         Assert.Contains("Solapamientos (1)", overlap);
         Assert.Contains($"«Equipo {suffix}» ya está planificado en «{morningName}», que se solapa con «{afternoonName}».", overlap);
@@ -529,7 +529,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.False(string.IsNullOrEmpty(seen));
         Assert.Contains("Escribe por qué sigues adelante a pesar de los solapamientos.", noJustification);
         Assert.Contains("Los solapamientos han cambiado desde que los viste.", changed);
-        Assert.Contains("Planificado en 1 fecha(s).", confirmed);
+        Assert.Contains("Planificado en 1 fecha.", confirmed);
         Assert.Contains("Queda anotada tu justificación del solapamiento.", confirmed);
         Assert.Contains("Solapamiento justificado", confirmed);
         Assert.Contains("Refuerzo por baja (ficticio)", confirmed);
@@ -537,7 +537,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("No queda ninguna fecha", allSkipped);
         Assert.Contains("Serie de turnos", seriesPage);
         Assert.Contains("Retirar la serie desde esa fecha", seriesPage);
-        Assert.Contains("Serie retirada: 1 fecha(s) desde esa fecha.", retiredSeries);
+        Assert.Contains("Serie retirada: 1 fecha desde esa fecha.", retiredSeries);
         Assert.Contains("La serie no tiene fechas planificadas desde esa fecha", retiredAgain);
         Assert.Contains("No se puede acceder a esta operación", nursePage);
         Assert.DoesNotContain("Planificar un turno", nursePage);

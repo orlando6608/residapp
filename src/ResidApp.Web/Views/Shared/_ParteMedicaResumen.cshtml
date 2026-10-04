@@ -99,7 +99,7 @@
             <p class="mb-1">Plan: @FollowUpDisplay.Plan(seguimientoMedico.Tracking.DueDate, seguimientoMedico.Tracking.Criterion)</p>
             <p class="text-muted mb-0">
                 Iniciado por Medicina el @seguimientoMedico.Tracking.StartedAt.ToLocalTime().ToString("g") ·
-                @seguimientoMedico.Tracking.Actions.Count acción(es) registrada(s)
+                @seguimientoMedico.Tracking.Actions.Count @(seguimientoMedico.Tracking.Actions.Count == 1 ? "acción registrada" : "acciones registradas")
             </p>
         </div>
     </div>

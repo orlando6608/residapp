@@ -99,7 +99,7 @@
                                     </div>
                                 </th>
                                 <td>
-                                    @entry.TeamName <span class="text-muted">(@entry.TeamMembers miembro(s))</span>
+                                    @entry.TeamName <span class="text-muted">(@entry.TeamMembers @(entry.TeamMembers == 1 ? "miembro" : "miembros"))</span>
                                     @if (entry.Justification is not null)
                                     {
                                         <div class="small"><span class="badge text-bg-warning">Solapamiento justificado</span> @entry.Justification</div>

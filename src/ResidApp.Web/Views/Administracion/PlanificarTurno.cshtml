@@ -50,7 +50,7 @@
                                 <optgroup label="@unitGroup.Key">
                                     @foreach (var team in unitGroup)
                                     {
-                                        <option value="@team.TeamId" selected="@(team.TeamId == Model.Form.EquipoId)">@team.Name (@team.Members.Count miembro(s))</option>
+                                        <option value="@team.TeamId" selected="@(team.TeamId == Model.Form.EquipoId)">@team.Name (@team.Members.Count @(team.Members.Count == 1 ? "miembro" : "miembros"))</option>
                                     }
                                 </optgroup>
                             }
@@ -105,14 +105,14 @@
                 @if (Model.Preview is { } preview)
                 {
                     <div class="alert alert-info">
-                        Se planificaría en <strong>@preview.ToCreate.Count</strong> fecha(s).
+                        Se planificaría en <strong>@preview.ToCreate.Count</strong> @(preview.ToCreate.Count == 1 ? "fecha" : "fechas").
                         @if (Model.Form.SkippedInRange() > 0)
                         {
-                            <span>Se saltan @Model.Form.SkippedInRange() fecha(s) del rango.</span>
+                            <span>@(Model.Form.SkippedInRange() == 1 ? "Se salta 1 fecha del rango." : $"Se saltan {Model.Form.SkippedInRange()} fechas del rango.")</span>
                         }
                         @if (preview.AlreadyPlanned.Count > 0)
                         {
-                            <span>@preview.AlreadyPlanned.Count fecha(s) ya tienen ese equipo en ese turno y se omitirán.</span>
+                            <span>@(preview.AlreadyPlanned.Count == 1 ? "1 fecha ya tiene ese equipo en ese turno y se omitirá." : $"{preview.AlreadyPlanned.Count} fechas ya tienen ese equipo en ese turno y se omitirán.")</span>
                         }
                     </div>
                 }

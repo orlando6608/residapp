@@ -177,7 +177,7 @@
             <p class="text-muted mb-0">
                 Iniciado @(seguimientoMedico.Tracking.StartedByCurrentAccount ? "por ti" : "por otro profesional de Medicina")
                 el @seguimientoMedico.Tracking.StartedAt.ToLocalTime().ToString("g") ·
-                @seguimientoMedico.Tracking.Actions.Count acción(es) registrada(s)
+                @seguimientoMedico.Tracking.Actions.Count @(seguimientoMedico.Tracking.Actions.Count == 1 ? "acción registrada" : "acciones registradas")
             </p>
         </div>
     </div>

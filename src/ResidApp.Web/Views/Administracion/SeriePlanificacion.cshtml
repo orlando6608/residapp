@@ -34,7 +34,7 @@
         Una serie son las fechas que se guardaron juntas en un mismo envío de «Planificar un turno».
         <strong>@series.TeamName</strong> en <strong>@series.ShiftName</strong>
         (@series.Start.ToString("HH\\:mm") – @series.End.ToString("HH\\:mm")@(series.CrossesMidnight ? ", termina al día siguiente" : "")),
-        unidad @series.UnitName. @series.ActiveDates.Count fecha(s) planificada(s)@(series.RetiredDates > 0 ? $" y {series.RetiredDates} retirada(s)" : "").
+        unidad @series.UnitName. @series.ActiveDates.Count @(series.ActiveDates.Count == 1 ? "fecha planificada" : "fechas planificadas")@(series.RetiredDates > 0 ? $" y {series.RetiredDates} {(series.RetiredDates == 1 ? "retirada" : "retiradas")}" : "").
     </p>
 
     <div class="card mb-3">

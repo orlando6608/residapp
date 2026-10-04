@@ -134,7 +134,7 @@ public sealed partial class AdministracionController
         }
 
         var created = result.Value!.Created;
-        TempData["Mensaje"] = $"Planificado en {created.Count} fecha(s)."
+        TempData["Mensaje"] = $"Planificado en {created.Count} {(created.Count == 1 ? "fecha" : "fechas")}."
             + (result.Value.Skipped.Count > 0 ? $" {result.Value.Skipped.Count} ya estaban planificadas y se han omitido." : "")
             + (conflicts.Count > 0 ? " Queda anotada tu justificación del solapamiento." : "");
         return RedirectToAction(nameof(Planificacion), new { desde = created.Min().ToString("yyyy-MM-dd") });
@@ -205,7 +205,7 @@ public sealed partial class AdministracionController
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), loteId, desde ?? DateOnly.FromDateTime(DateTime.Today)), ct);
         if (result.Ok)
         {
-            TempData["Mensaje"] = $"Serie retirada: {result.Value} fecha(s) desde esa fecha.";
+            TempData["Mensaje"] = $"Serie retirada: {result.Value} {(result.Value == 1 ? "fecha" : "fechas")} desde esa fecha.";
         }
         else if (result.Error!.Code != ApplicationFailureCode.AccessDenied)
         {

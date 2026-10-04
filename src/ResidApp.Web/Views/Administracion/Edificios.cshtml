@@ -58,7 +58,7 @@
                 <h2 class="h5 mb-0" id="edificio-@building.BuildingId">
                     @building.Name
                     <span class="badge @(building.Active ? "text-bg-success" : "text-bg-secondary") align-middle">@(building.Active ? "Activo" : "Inactivo")</span>
-                    <span class="text-muted small fw-normal">@building.ActiveUnits unidad(es) activa(s)</span>
+                    <span class="text-muted small fw-normal">@building.ActiveUnits @(building.ActiveUnits == 1 ? "unidad activa" : "unidades activas")</span>
                 </h2>
                 <div class="d-flex flex-wrap gap-2">
                     <a asp-action="NombreEdificio" asp-route-edificioId="@building.BuildingId" class="btn btn-outline-primary">Cambiar nombre</a>

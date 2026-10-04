@@ -71,21 +71,7 @@
 
 @if (indicators is not null)
 {
-    <p class="fw-semibold">Periodo @period.</p>
-
-    <section class="card mb-4">
-        <div class="card-body">
-            <h2 class="h5 card-title">Cómo se cuenta</h2>
-            <ul class="mb-0">
-                <li><strong>Registrados:</strong> episodios registrados en el periodo (cambios de Auxiliar y eventos de Enfermería o de Medicina). Son el denominador de los escalados, protocolos y derivaciones, que cuentan lo que pasó después con esos episodios, hasta hoy.</li>
-                <li><strong>Cerrados en el periodo:</strong> episodios cerrados en esas fechas, aunque se registraran antes. No tiene denominador.</li>
-                <li><strong>Indicaciones:</strong> indicaciones médicas emitidas en el periodo, que son el denominador, con su estado de hoy. «Sin resolver» son las que aún no se han registrado como realizadas o no realizadas.</li>
-                <li><strong>Continuidad:</strong> transferencias de un seguimiento al equipo o turno entrante registradas en el periodo, y cuántas tienen la recepción confirmada. En Medicina confirmar la recepción es opcional.</li>
-                <li><strong>Seguimientos con la fecha prevista vencida:</strong> de los seguimientos que estuvieron abiertos algún día del periodo (el denominador), cuántos tuvieron su fecha prevista ya pasada algún día del periodo, con el plan que regía ese día (una reprogramación posterior no lo borra). Un seguimiento deja de estar abierto al cerrarse el episodio, al escalarse a Medicina o al activarse el protocolo urgente; no se guarda cuándo termina por otras vías, así que esos casos cuentan hasta el cierre. Los seguimientos sin fecha no vencen. En la evolución mensual cada mes se calcula por separado, así que un mismo seguimiento puede contar en varios meses.</li>
-                <li>La unidad es la del episodio. Las horas son las del centro.</li>
-            </ul>
-        </div>
-    </section>
+    <p><span class="fw-semibold">Periodo @period.</span> <a href="#como-se-cuenta" class="d-print-none">Cómo se cuenta cada cifra</a></p>
 
     <h2 class="h5">Actividad</h2>
     <div class="table-responsive mb-4">
@@ -244,4 +230,20 @@
             </tbody>
         </table>
     </div>
+
+    @* Primero las cifras y después cómo se cuentan (antes la explicación ocupaba media pantalla antes de los datos);
+       sigue saliendo en el informe impreso. *@
+    <section id="como-se-cuenta" class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5 card-title">Cómo se cuenta</h2>
+            <ul class="mb-0">
+                <li><strong>Registrados:</strong> episodios registrados en el periodo (cambios de Auxiliar y eventos de Enfermería o de Medicina). Son el denominador de los escalados, protocolos y derivaciones, que cuentan lo que pasó después con esos episodios, hasta hoy.</li>
+                <li><strong>Cerrados en el periodo:</strong> episodios cerrados en esas fechas, aunque se registraran antes. No tiene denominador.</li>
+                <li><strong>Indicaciones:</strong> indicaciones médicas emitidas en el periodo, que son el denominador, con su estado de hoy. «Sin resolver» son las que aún no se han registrado como realizadas o no realizadas.</li>
+                <li><strong>Continuidad:</strong> transferencias de un seguimiento al equipo o turno entrante registradas en el periodo, y cuántas tienen la recepción confirmada. En Medicina confirmar la recepción es opcional.</li>
+                <li><strong>Seguimientos con la fecha prevista vencida:</strong> de los seguimientos que estuvieron abiertos algún día del periodo (el denominador), cuántos tuvieron su fecha prevista ya pasada algún día del periodo, con el plan que regía ese día (una reprogramación posterior no lo borra). Un seguimiento deja de estar abierto al cerrarse el episodio, al escalarse a Medicina o al activarse el protocolo urgente; no se guarda cuándo termina por otras vías, así que esos casos cuentan hasta el cierre. Los seguimientos sin fecha no vencen. En la evolución mensual cada mes se calcula por separado, así que un mismo seguimiento puede contar en varios meses.</li>
+                <li>La unidad es la del episodio. Las horas son las del centro.</li>
+            </ul>
+        </div>
+    </section>
 }

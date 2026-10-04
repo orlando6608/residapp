@@ -60,7 +60,7 @@
                 <h2 class="h5 mb-0" id="habitacion-@room.RoomId">
                     @room.Name
                     <span class="badge @(room.Active ? "text-bg-success" : "text-bg-secondary") align-middle">@(room.Active ? "Activa" : "Inactiva")</span>
-                    <span class="text-muted small fw-normal">@room.CurrentResidents residente(s) ubicado(s)</span>
+                    <span class="text-muted small fw-normal">@room.CurrentResidents @(room.CurrentResidents == 1 ? "residente ubicado" : "residentes ubicados")</span>
                 </h2>
                 <div class="d-flex flex-wrap gap-2">
                     <a asp-action="NombreHabitacion" asp-route-unidadId="@unitId" asp-route-habitacionId="@room.RoomId" class="btn btn-outline-primary">Cambiar nombre</a>

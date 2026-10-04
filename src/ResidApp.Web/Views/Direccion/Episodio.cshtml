@@ -56,7 +56,7 @@
             @if (episode.IndicationsPending > 0 || episode.IndicationsNotDone > 0)
             {
                 <dt class="col-sm-3">Indicaciones</dt>
-                <dd class="col-sm-9">@episode.IndicationsPending pendiente(s) · @episode.IndicationsNotDone no realizada(s)</dd>
+                <dd class="col-sm-9">@episode.IndicationsPending @(episode.IndicationsPending == 1 ? "pendiente" : "pendientes") · @episode.IndicationsNotDone @(episode.IndicationsNotDone == 1 ? "no realizada" : "no realizadas")</dd>
             }
         </dl>
     </div>
