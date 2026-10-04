@@ -72,7 +72,38 @@ else
     }
     @if (Model.List.Episodes.Count > 0)
     {
-        <div class="table-responsive">
+        @* En pantallas estrechas, una tarjeta pulsable por episodio en lugar de la tabla (directrices-pwa-movil.md,
+           sección 2). *@
+        <div class="d-md-none">
+            @foreach (var item in Model.List.Episodes)
+            {
+                <div class="card mb-3">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="flex-grow-1">
+                            <h2 class="h6 card-title mb-1">
+                                <a asp-action="Episodio" asp-route-eventoId="@item.EventId" class="stretched-link text-body text-decoration-none">@item.ResidentDisplayName</a>
+                            </h2>
+                            <p class="mb-1">
+                                <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, item.Classification == DailyChangeClassification.Prioritario)">@ClinicalEventStatusDisplay.Label(item.Status)</span>
+                                @if (SupervisionPendingRules.IsOverdue(item, Model.Today))
+                                {
+                                    <span class="badge text-bg-warning">Seguimiento vencido</span>
+                                }
+                                @if (item.IndicationsNotDone > 0)
+                                {
+                                    <span class="badge text-bg-danger">Indicación no realizada</span>
+                                }
+                            </p>
+                            <p class="text-body-secondary small mb-0">
+                                @item.UnitName · registrado el @item.ReceivedAt.ToLocalTime().ToString("g") (hace @ElapsedTimeDisplay.Since(item.ReceivedAt))
+                            </p>
+                        </div>
+                        <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="table-responsive d-none d-md-block">
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>

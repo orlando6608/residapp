@@ -27,7 +27,33 @@
 }
 else
 {
-    <div class="table-responsive">
+    @* En pantallas estrechas, una tarjeta pulsable por evento en lugar de la tabla (directrices-pwa-movil.md,
+       sección 2). *@
+    <div class="d-md-none">
+        @foreach (var item in Model)
+        {
+            <div class="card mb-3 border-start border-4 border-danger">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="flex-grow-1">
+                        <h2 class="h6 card-title mb-1">
+                            <a asp-action="DetalleCambio" asp-route-eventoId="@item.EventId" class="stretched-link text-body text-decoration-none">@item.ResidentDisplayName</a>
+                        </h2>
+                        <p class="mb-1">
+                            <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, prioritario: true)">@ClinicalEventStatusDisplay.Label(item.Status)</span>
+                            <span class="text-body-secondary small">hace @ElapsedTimeDisplay.Since(item.OccurredAt) · @(item.UnitName ?? "Sin unidad")</span>
+                        </p>
+                        <p class="mb-1">@(item.Origin == ClinicalEventOrigin.EventoEnfermeria ? "Evento observado por Enfermería" : item.PriorityReason is null ? "—" : DailyChangePriorityReasonDisplay.Label(item.PriorityReason.Value))</p>
+                        @if (item.DirectNoticeNotes is not null)
+                        {
+                            <p class="text-body-secondary small mb-0">Aviso directo: @item.DirectNoticeNotes</p>
+                        }
+                    </div>
+                    <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="table-responsive d-none d-md-block">
         <table class="table table-hover align-middle">
             <thead>
                 <tr>

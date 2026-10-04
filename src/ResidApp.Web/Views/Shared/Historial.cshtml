@@ -43,7 +43,33 @@
     }
     else
     {
-        <div class="table-responsive">
+        @* En pantallas estrechas, una tarjeta pulsable por evento en lugar de la tabla (directrices-pwa-movil.md,
+           sección 2). *@
+        <div class="d-md-none">
+            @foreach (var item in Model.Events)
+            {
+                <div class="card mb-3">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="flex-grow-1">
+                            <p class="mb-1">
+                                @if (item.Classification == ResidApp.Domain.Auxiliar.DailyChangeClassification.Prioritario)
+                                {
+                                    <span class="badge text-bg-danger me-1">Prioritario</span>
+                                }
+                                <a asp-action="@Model.DetailAction" asp-route-eventoId="@item.EventId" class="stretched-link text-body text-decoration-none fw-semibold">@ResidentHistoryDisplay.Summary(item)</a>
+                            </p>
+                            <p class="text-body-secondary small mb-1">
+                                Registrado el @item.OccurredAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(item.AuthorProfile) ·
+                                cerrado el @item.ClosedAt.ToLocalTime().ToString("g") por @ResidentHistoryDisplay.ClosedBy(item)
+                            </p>
+                            <p class="text-body-secondary small mb-0">@ResidentHistoryDisplay.Context(item.Context)</p>
+                        </div>
+                        <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="table-responsive d-none d-md-block">
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
@@ -93,7 +119,31 @@
     }
     else
     {
-        <div class="table-responsive">
+        <div class="d-md-none">
+            @foreach (var version in Model.Baselines)
+            {
+                <div class="card mb-3">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="flex-grow-1">
+                            <p class="mb-1">
+                                <a asp-action="VersionBasal" asp-route-residenteId="@Model.Resident.ResidentId.Value" asp-route-version="@version.VersionNumber" class="stretched-link text-body text-decoration-none fw-semibold">Versión @version.VersionNumber</a>
+                                <span class="badge @(version.IsCurrent ? "text-bg-success" : "text-bg-secondary") ms-1">@(version.IsCurrent ? "Vigente" : "Histórica")</span>
+                            </p>
+                            <p class="mb-1">@BaselineReasonDisplay.Label(version.ReasonCode) · Barthel @version.BarthelTotal / 100</p>
+                            <p class="text-body-secondary small mb-0">
+                                Firmado el @version.SignedAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(version.SignedByProfile)
+                                @if (version.ReplacesVersionNumber is { } anterior)
+                                {
+                                    <span>· sustituye a la versión @anterior</span>
+                                }
+                            </p>
+                        </div>
+                        <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="table-responsive d-none d-md-block">
             <table class="table align-middle">
                 <thead>
                     <tr>

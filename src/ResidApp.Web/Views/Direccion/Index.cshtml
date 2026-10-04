@@ -76,7 +76,41 @@
 }
 else
 {
-    <div class="table-responsive">
+    @* En pantallas estrechas, una tarjeta por unidad en lugar de la tabla de diez columnas
+       (directrices-pwa-movil.md, sección 2). *@
+    <div class="d-md-none">
+        @foreach (var unit in Model.Units)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h3 class="h6 card-title">
+                        <a asp-action="Pendientes" asp-route-unidad="@unit.UnitId.Value" class="stretched-link">@unit.UnitName</a>
+                    </h3>
+                    <span class="cifra">@unit.Open</span>
+                    <span class="text-body-secondary">@(unit.Open == 1 ? "episodio abierto" : "episodios abiertos")</span>
+                    <dl class="row mb-0 mt-2">
+                        <dt class="col-8 fw-normal text-body-secondary">Sin valorar</dt>
+                        <dd class="col-4 text-end mb-1">@unit.WithoutAssessment de @unit.Open</dd>
+                        <dt class="col-8 fw-normal text-body-secondary">En valoración</dt>
+                        <dd class="col-4 text-end mb-1">@unit.InAssessment de @unit.Open</dd>
+                        <dt class="col-8 fw-normal text-body-secondary">Escalados</dt>
+                        <dd class="col-4 text-end mb-1">@unit.Escalated de @unit.Open</dd>
+                        <dt class="col-8 fw-normal text-body-secondary">Seguimientos</dt>
+                        <dd class="col-4 text-end mb-1">@unit.FollowUps de @unit.Open</dd>
+                        <dt class="col-8 fw-normal text-body-secondary">Seguimientos vencidos</dt>
+                        <dd class="col-4 text-end mb-1">@unit.FollowUpsOverdue de @unit.FollowUps</dd>
+                        <dt class="col-8 fw-normal text-body-secondary">Indicaciones pendientes</dt>
+                        <dd class="col-4 text-end mb-1">@unit.IndicationsPending</dd>
+                        <dt class="col-8 fw-normal text-body-secondary">Indicaciones no realizadas</dt>
+                        <dd class="col-4 text-end mb-1">@unit.IndicationsNotDone</dd>
+                        <dt class="col-8 fw-normal text-body-secondary">Protocolos urgentes</dt>
+                        <dd class="col-4 text-end mb-0">@unit.UrgentProtocols de @unit.Open</dd>
+                    </dl>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="table-responsive d-none d-md-block">
         <table class="table align-middle">
             <caption class="visually-hidden">Episodios abiertos por unidad, con el total de la unidad como denominador</caption>
             <thead>
