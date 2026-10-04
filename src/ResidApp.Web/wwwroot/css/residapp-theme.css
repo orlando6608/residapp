@@ -369,6 +369,21 @@ details[open] > summary {
   height: 100%;
 }
 
+/* En un grupo d-grid el botón ocupa todo el ancho, como sin el envoltorio. */
+.chip-par > .btn {
+  flex-grow: 1;
+}
+
+/* Barra fina bajo una cifra «n de m» (Indicadores), alineada a la derecha como la cifra. */
+.barra-proporcion {
+  height: 0.375rem;
+  width: 100%;
+  min-width: 5rem;
+  max-width: 7rem;
+  margin-top: 0.25rem;
+  margin-left: auto;
+}
+
 /* Listado o bandeja vacía: un recuadro que se ve como respuesta, no como una línea gris suelta que pasa por texto de
    relleno. */
 .estado-vacio {

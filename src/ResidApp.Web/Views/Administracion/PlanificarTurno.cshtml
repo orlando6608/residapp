@@ -5,7 +5,8 @@
     ViewData["Title"] = "Planificar un turno";
     var conflicts = Model.Preview?.Conflicts ?? [];
     var hasConflicts = conflicts.Count > 0;
-    string Day(DateOnly date) => date.ToString("dddd, d 'de' MMMM 'de' yyyy");
+    // Solo la primera letra en mayúscula («Miércoles, 4 de noviembre»); text-capitalize la ponía en cada palabra.
+    string Day(DateOnly date) { var text = date.ToString("dddd, d 'de' MMMM 'de' yyyy"); return char.ToUpper(text[0]) + text[1..]; }
 }
 
 <nav aria-label="breadcrumb">
@@ -128,7 +129,7 @@
                         <ul class="mb-3">
                             @foreach (var conflict in conflicts)
                             {
-                                <li><strong class="text-capitalize">@Day(conflict.Date)</strong>: @ScheduleConflictDisplay.Describe(conflict)</li>
+                                <li><strong>@Day(conflict.Date)</strong>: @ScheduleConflictDisplay.Describe(conflict)</li>
                             }
                         </ul>
                         <label asp-for="Form.Justificacion" class="form-label"></label>

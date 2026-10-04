@@ -37,8 +37,10 @@
                 @foreach (var decision in decisiones)
                 {
                     var inputId = $"comunicacion-{decision}";
-                    <input type="radio" class="btn-check" asp-for="Comunicacion" value="@decision" id="@inputId" autocomplete="off" />
-                    <label class="btn btn-outline-primary btn-lg" for="@inputId">@FamilyCommunicationDisplay.Label(decision)</label>
+                    <span class="chip-par">
+                        <input type="radio" class="btn-check" asp-for="Comunicacion" value="@decision" id="@inputId" autocomplete="off" />
+                        <label class="btn btn-outline-primary btn-lg" for="@inputId">@FamilyCommunicationDisplay.Label(decision)</label>
+                    </span>
                 }
             </div>
             <span asp-validation-for="Comunicacion" class="text-danger"></span>

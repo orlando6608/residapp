@@ -9,6 +9,40 @@
         ? []
         : [.. indicators.Units.Select(u => (u.UnitName, u.Counts, false)), ("Total del ámbito", indicators.Total, true)];
     static string Of(int part, int total) => $"{part} de {total}";
+
+    // Barra neutra de la proporción «n de m»: acompaña a la cifra, que es la que lo dice (de ahí aria-hidden). Sin color
+    // semafórico: los indicadores no valoran el trabajo de nadie. No se imprime (los navegadores no imprimen fondos).
+    void Barra(int part, int total)
+    {
+        var pct = total == 0 ? 0 : (int)Math.Round(part * 100.0 / total);
+        <div class="progress barra-proporcion d-print-none" aria-hidden="true"><div class="progress-bar bg-secondary" style="width: @pct%"></div></div>
+    }
+
+    // En pantallas estrechas, una tarjeta por unidad (o por mes) con sus cifras en lugar de una tabla de 4 a 9 columnas
+    // (directrices-pwa-movil.md, sección 2). Al imprimir salen las tablas.
+    void Ficha(string nombre, bool esTotal, params (string Etiqueta, int Parte, int? De)[] cifras)
+    {
+        <div class="card mb-2 @(esTotal ? "border-secondary" : null)">
+            <div class="card-body py-3">
+                <h3 class="h6 card-title mb-2">@nombre</h3>
+                <dl class="mb-0">
+                    @foreach (var cifra in cifras)
+                    {
+                        <div class="d-flex justify-content-between align-items-start gap-3 py-1 border-top">
+                            <dt class="fw-normal">@cifra.Etiqueta</dt>
+                            <dd class="mb-0 text-end text-nowrap fw-semibold">
+                                @(cifra.De is int de ? Of(cifra.Parte, de) : cifra.Parte.ToString())
+                                @if (cifra.De is int total)
+                                {
+                                    Barra(cifra.Parte, total);
+                                }
+                            </dd>
+                        </div>
+                    }
+                </dl>
+            </div>
+        </div>
+    }
 }
 
 @* DIR-16: al imprimir solo queda el informe; la navegación, el pie y el formulario no salen. *@
@@ -74,7 +108,20 @@
     <p><span class="fw-semibold">Periodo @period.</span> <a href="#como-se-cuenta" class="d-print-none">Cómo se cuenta cada cifra</a></p>
 
     <h2 class="h5">Actividad</h2>
-    <div class="table-responsive mb-4">
+    <div class="d-md-none d-print-none mb-4">
+        @foreach (var row in rows)
+        {
+            var c = row.Counts;
+            Ficha(row.Name, row.IsTotal,
+                ("Registrados", c.Registered, null),
+                ("De Auxiliar", c.FromAuxiliar, c.Registered),
+                ("De Enfermería", c.FromNursing, c.Registered),
+                ("De Medicina", c.FromMedicine, c.Registered),
+                ("Prioritarios", c.Priority, c.Registered),
+                ("Cerrados en el periodo", c.Closed, null));
+        }
+    </div>
+    <div class="table-responsive mb-4 d-none d-md-block d-print-block">
         <table class="table align-middle">
             <caption class="visually-hidden">Episodios registrados y cerrados en el periodo, por unidad</caption>
             <thead>
@@ -95,10 +142,10 @@
                     <tr class="@(row.IsTotal ? "fw-semibold table-group-divider" : null)">
                         <th scope="row">@row.Name</th>
                         <td class="text-end">@c.Registered</td>
-                        <td class="text-end">@Of(c.FromAuxiliar, c.Registered)</td>
-                        <td class="text-end">@Of(c.FromNursing, c.Registered)</td>
-                        <td class="text-end">@Of(c.FromMedicine, c.Registered)</td>
-                        <td class="text-end">@Of(c.Priority, c.Registered)</td>
+                        <td class="text-end">@Of(c.FromAuxiliar, c.Registered)@{ Barra(c.FromAuxiliar, c.Registered); }</td>
+                        <td class="text-end">@Of(c.FromNursing, c.Registered)@{ Barra(c.FromNursing, c.Registered); }</td>
+                        <td class="text-end">@Of(c.FromMedicine, c.Registered)@{ Barra(c.FromMedicine, c.Registered); }</td>
+                        <td class="text-end">@Of(c.Priority, c.Registered)@{ Barra(c.Priority, c.Registered); }</td>
                         <td class="text-end">@c.Closed</td>
                     </tr>
                 }
@@ -107,7 +154,18 @@
     </div>
 
     <h2 class="h5">Escalados y urgencias</h2>
-    <div class="table-responsive mb-4">
+    <div class="d-md-none d-print-none mb-4">
+        @foreach (var row in rows)
+        {
+            var c = row.Counts;
+            Ficha(row.Name, row.IsTotal,
+                ("Registrados", c.Registered, null),
+                ("Escalados a Medicina", c.Escalated, c.Registered),
+                ("Con protocolo urgente", c.UrgentProtocols, c.Registered),
+                ("Con informe de derivación firmado", c.Referrals, c.Registered));
+        }
+    </div>
+    <div class="table-responsive mb-4 d-none d-md-block d-print-block">
         <table class="table align-middle">
             <caption class="visually-hidden">De los episodios registrados en el periodo, cuántos se escalaron, activaron protocolo urgente o se derivaron, por unidad</caption>
             <thead>
@@ -126,9 +184,9 @@
                     <tr class="@(row.IsTotal ? "fw-semibold table-group-divider" : null)">
                         <th scope="row">@row.Name</th>
                         <td class="text-end">@c.Registered</td>
-                        <td class="text-end">@Of(c.Escalated, c.Registered)</td>
-                        <td class="text-end">@Of(c.UrgentProtocols, c.Registered)</td>
-                        <td class="text-end">@Of(c.Referrals, c.Registered)</td>
+                        <td class="text-end">@Of(c.Escalated, c.Registered)@{ Barra(c.Escalated, c.Registered); }</td>
+                        <td class="text-end">@Of(c.UrgentProtocols, c.Registered)@{ Barra(c.UrgentProtocols, c.Registered); }</td>
+                        <td class="text-end">@Of(c.Referrals, c.Registered)@{ Barra(c.Referrals, c.Registered); }</td>
                     </tr>
                 }
             </tbody>
@@ -136,7 +194,19 @@
     </div>
 
     <h2 class="h5">Indicaciones médicas</h2>
-    <div class="table-responsive mb-4">
+    <div class="d-md-none d-print-none mb-4">
+        @foreach (var row in rows)
+        {
+            var c = row.Counts;
+            Ficha(row.Name, row.IsTotal,
+                ("Emitidas", c.IndicationsIssued, null),
+                ("Leídas", c.IndicationsRead, c.IndicationsIssued),
+                ("Realizadas", c.IndicationsDone, c.IndicationsIssued),
+                ("No realizadas", c.IndicationsNotDone, c.IndicationsIssued),
+                ("Sin resolver", c.IndicationsUnresolved, c.IndicationsIssued));
+        }
+    </div>
+    <div class="table-responsive mb-4 d-none d-md-block d-print-block">
         <table class="table align-middle">
             <caption class="visually-hidden">Indicaciones médicas emitidas en el periodo y su estado de hoy, por unidad</caption>
             <thead>
@@ -156,10 +226,10 @@
                     <tr class="@(row.IsTotal ? "fw-semibold table-group-divider" : null)">
                         <th scope="row">@row.Name</th>
                         <td class="text-end">@c.IndicationsIssued</td>
-                        <td class="text-end">@Of(c.IndicationsRead, c.IndicationsIssued)</td>
-                        <td class="text-end">@Of(c.IndicationsDone, c.IndicationsIssued)</td>
-                        <td class="text-end">@Of(c.IndicationsNotDone, c.IndicationsIssued)</td>
-                        <td class="text-end">@Of(c.IndicationsUnresolved, c.IndicationsIssued)</td>
+                        <td class="text-end">@Of(c.IndicationsRead, c.IndicationsIssued)@{ Barra(c.IndicationsRead, c.IndicationsIssued); }</td>
+                        <td class="text-end">@Of(c.IndicationsDone, c.IndicationsIssued)@{ Barra(c.IndicationsDone, c.IndicationsIssued); }</td>
+                        <td class="text-end">@Of(c.IndicationsNotDone, c.IndicationsIssued)@{ Barra(c.IndicationsNotDone, c.IndicationsIssued); }</td>
+                        <td class="text-end">@Of(c.IndicationsUnresolved, c.IndicationsIssued)@{ Barra(c.IndicationsUnresolved, c.IndicationsIssued); }</td>
                     </tr>
                 }
             </tbody>
@@ -167,7 +237,17 @@
     </div>
 
     <h2 class="h5">Continuidad entre turnos</h2>
-    <div class="table-responsive mb-4">
+    <div class="d-md-none d-print-none mb-4">
+        @foreach (var row in rows)
+        {
+            var c = row.Counts;
+            Ficha(row.Name, row.IsTotal,
+                ("Transferencias de Enfermería recibidas", c.NursingTransfersReceived, c.NursingTransfers),
+                ("Transferencias de Medicina recibidas", c.MedicalTransfersReceived, c.MedicalTransfers),
+                ("Seguimientos con la fecha prevista vencida", c.FollowUpsOverdue, c.FollowUpsOpen));
+        }
+    </div>
+    <div class="table-responsive mb-4 d-none d-md-block d-print-block">
         <table class="table align-middle">
             <caption class="visually-hidden">Transferencias de seguimiento registradas en el periodo y cuántas tienen la recepción confirmada, y seguimientos con la fecha prevista vencida en el periodo, por unidad</caption>
             <thead>
@@ -184,9 +264,9 @@
                     var c = row.Counts;
                     <tr class="@(row.IsTotal ? "fw-semibold table-group-divider" : null)">
                         <th scope="row">@row.Name</th>
-                        <td class="text-end">@Of(c.NursingTransfersReceived, c.NursingTransfers)</td>
-                        <td class="text-end">@Of(c.MedicalTransfersReceived, c.MedicalTransfers)</td>
-                        <td class="text-end">@Of(c.FollowUpsOverdue, c.FollowUpsOpen)</td>
+                        <td class="text-end">@Of(c.NursingTransfersReceived, c.NursingTransfers)@{ Barra(c.NursingTransfersReceived, c.NursingTransfers); }</td>
+                        <td class="text-end">@Of(c.MedicalTransfersReceived, c.MedicalTransfers)@{ Barra(c.MedicalTransfersReceived, c.MedicalTransfers); }</td>
+                        <td class="text-end">@Of(c.FollowUpsOverdue, c.FollowUpsOpen)@{ Barra(c.FollowUpsOverdue, c.FollowUpsOpen); }</td>
                     </tr>
                 }
             </tbody>
@@ -195,7 +275,22 @@
 
     <h2 class="h5">Evolución mes a mes</h2>
     <p class="text-muted">Totales del ámbito en cada mes del periodo. Los meses de los extremos pueden estar incompletos.</p>
-    <div class="table-responsive mb-4">
+    <div class="d-md-none d-print-none mb-4">
+        @foreach (var month in indicators.Months)
+        {
+            var c = month.Counts;
+            Ficha(SupervisionDisplay.MonthLabel(month), false,
+                ("Registrados", c.Registered, null),
+                ("Cerrados", c.Closed, null),
+                ("Escalados", c.Escalated, c.Registered),
+                ("Con protocolo urgente", c.UrgentProtocols, c.Registered),
+                ("Con derivación", c.Referrals, c.Registered),
+                ("Indicaciones emitidas", c.IndicationsIssued, null),
+                ("Transferencias recibidas", c.NursingTransfersReceived + c.MedicalTransfersReceived, c.NursingTransfers + c.MedicalTransfers),
+                ("Seguimientos con la fecha vencida", c.FollowUpsOverdue, c.FollowUpsOpen));
+        }
+    </div>
+    <div class="table-responsive mb-4 d-none d-md-block d-print-block">
         <table class="table align-middle">
             <caption class="visually-hidden">Totales del ámbito por mes dentro del periodo</caption>
             <thead>
@@ -219,12 +314,12 @@
                         <th scope="row">@SupervisionDisplay.MonthLabel(month)</th>
                         <td class="text-end">@c.Registered</td>
                         <td class="text-end">@c.Closed</td>
-                        <td class="text-end">@Of(c.Escalated, c.Registered)</td>
-                        <td class="text-end">@Of(c.UrgentProtocols, c.Registered)</td>
-                        <td class="text-end">@Of(c.Referrals, c.Registered)</td>
+                        <td class="text-end">@Of(c.Escalated, c.Registered)@{ Barra(c.Escalated, c.Registered); }</td>
+                        <td class="text-end">@Of(c.UrgentProtocols, c.Registered)@{ Barra(c.UrgentProtocols, c.Registered); }</td>
+                        <td class="text-end">@Of(c.Referrals, c.Registered)@{ Barra(c.Referrals, c.Registered); }</td>
                         <td class="text-end">@c.IndicationsIssued</td>
-                        <td class="text-end">@Of(c.NursingTransfersReceived + c.MedicalTransfersReceived, c.NursingTransfers + c.MedicalTransfers)</td>
-                        <td class="text-end">@Of(c.FollowUpsOverdue, c.FollowUpsOpen)</td>
+                        <td class="text-end">@Of(c.NursingTransfersReceived + c.MedicalTransfersReceived, c.NursingTransfers + c.MedicalTransfers)@{ Barra(c.NursingTransfersReceived + c.MedicalTransfersReceived, c.NursingTransfers + c.MedicalTransfers); }</td>
+                        <td class="text-end">@Of(c.FollowUpsOverdue, c.FollowUpsOpen)@{ Barra(c.FollowUpsOverdue, c.FollowUpsOpen); }</td>
                     </tr>
                 }
             </tbody>

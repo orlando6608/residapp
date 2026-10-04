@@ -4,7 +4,8 @@
     ViewData["Title"] = "Serie de turnos";
     var today = DateOnly.FromDateTime(DateTime.Today);
     var series = Model.Series;
-    string Day(DateOnly date) => date.ToString("dddd, d 'de' MMMM 'de' yyyy");
+    // Solo la primera letra en mayúscula («Miércoles, 4 de noviembre»); text-capitalize la ponía en cada palabra.
+    string Day(DateOnly date) { var text = date.ToString("dddd, d 'de' MMMM 'de' yyyy"); return char.ToUpper(text[0]) + text[1..]; }
 }
 
 <nav aria-label="breadcrumb">
@@ -81,7 +82,7 @@
                         @foreach (var date in series.ActiveDates)
                         {
                             <tr>
-                                <th scope="row" class="text-capitalize">
+                                <th scope="row">
                                     @Day(date.Date)
                                     @if (date.Justification is not null)
                                     {

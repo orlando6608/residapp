@@ -13,6 +13,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Rediseño visual, cierre (2026-10-04, sin script):** Indicadores con una tarjeta por unidad (o por mes) en el móvil y una barra gris
+  (`.barra-proporcion`, `aria-hidden`, sin color semafórico) en cada cifra «n de m»; al imprimir salen las cinco tablas y ni tarjetas ni
+  barras a cualquier ancho (comprobado con `emulateMediaType("print")`). Fechas de Planificación, Serie y PlanificarTurno con solo la
+  primera letra en mayúscula (`text-capitalize` ponía «4 De Noviembre De 2026»). `.chip-par` también en `_ComunicacionFamiliarFormulario`
+  (`.chip-par > .btn` crece para seguir a todo el ancho en `d-grid`). Serie de planificación revisada a 390 px: no se desborda.
 - **Rediseño visual, tercera tanda (2026-10-04, sin script):** Confirmar cambio ya no vacía el formulario en sus dos rutas de error (sin
   aviso directo con el navegador saltado, o datos manipulados): vuelve a pintar la confirmación o el formulario con lo enviado y el mismo
   `OperacionId` (probado con Chrome sin interfaz, sin escribir nada). Índice del Manual plegado en el móvil (`collapse d-lg-block`).
@@ -984,11 +989,10 @@ usuario cuando encajen:
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de
   prueba allí.
 
-- **Rediseño visual, lo que queda tras la tercera tanda (2026-10-04):**
-  - las cinco tablas de Indicadores siguen con scroll horizontal en el móvil (es un informe para imprimir), y sin barras en las cifras «n de m»;
-  - párrafos introductorios largos en muchas pantallas (Planificación, Estructura, Usuarios…);
-  - «Vencido» es ámbar en Dirección y rojo en el resto (coherente dentro de cada perfil);
-  - el resto de grupos `btn-check` (`_ComunicacionFamiliarFormulario`) no lleva `.chip-par`: no tiene barra fija y el grupo es corto.
+- **Rediseño visual, lo que queda (2026-10-04, tras el cierre):**
+  - párrafos introductorios largos en muchas pantallas (Planificación, Estructura, Usuarios…): el usuario decidió no acortarlos mientras la app
+    siga en desarrollo;
+  - «Vencido» es ámbar en Dirección y rojo en el resto (coherente dentro de cada perfil): va con la pregunta a CJ de «Basal pendiente».
 - **Pregunta para CJ (2026-10-03):** «Basal pendiente» sale en rojo, como fija la guía «por exigencia estricta del PRD», y compite con las urgencias
   reales. El documento de recomendaciones propone ámbar. Es una decisión clínica de saliencia: no se ha cambiado.
 - **Preguntas para CJ (2026-09-30):** `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` recoge las finalidades de la lectura clínica de Dirección, la
