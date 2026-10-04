@@ -28,11 +28,11 @@ else
 {
     @foreach (var item in Model)
     {
-        <a asp-action="DetalleCambio" asp-route-eventoId="@item.EventId" class="card mb-3 text-decoration-none text-body border-start border-4 border-info">
+        <a asp-action="DetalleCambio" asp-route-eventoId="@item.EventId" class="card mb-3 text-decoration-none text-body border-start border-4 border-primary">
             <div class="card-body">
                 <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
                 <p class="mb-1">
-                    <span class="badge text-bg-info">@EnumDisplay.Label(item.Status)</span>
+                    <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, false)">@EnumDisplay.Label(item.Status)</span>
                     @if (item.EscalatedByCurrentAccount)
                     {
                         <span class="badge text-bg-secondary">Escalado por ti</span>

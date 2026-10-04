@@ -41,6 +41,37 @@
     <div class="alert alert-danger">@error</div>
 }
 
+@* Acción principal arriba, antes de las tarjetas del evento (antes quedaba al fondo de la página). *@
+<div class="d-grid d-md-flex justify-content-md-end gap-2 mb-3">
+    <a asp-action="Escalados" class="btn btn-outline-secondary btn-lg">Volver a la bandeja</a>
+    @if (evento.Status == ClinicalEventStatus.EscaladoMedicina)
+    {
+        <form asp-action="EmpezarValoracion" method="post">
+            <input type="hidden" name="eventoId" value="@evento.EventId" />
+            <input type="hidden" name="revision" value="@evento.Revision" />
+            <button type="submit" class="btn btn-primary btn-lg w-100">Iniciar valoración médica</button>
+        </form>
+    }
+    else if (evento.Status == ClinicalEventStatus.EnValoracionMedica)
+    {
+        <a asp-action="Valoracion" asp-route-eventoId="@evento.EventId" class="btn @(medico.Assessment is null ? "btn-primary" : "btn-outline-primary") btn-lg">
+            @(medico.Assessment is null ? "Completar valoración médica" : "Continuar valoración médica")
+        </a>
+    }
+    @if (evento.Status == ClinicalEventStatus.EnSeguimientoMedico)
+    {
+        <a asp-action="Seguimiento" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Ver seguimiento médico</a>
+    }
+    else if (evento.Status == ClinicalEventStatus.ProtocoloUrgenteMedico)
+    {
+        <a asp-action="Protocolo" asp-route-eventoId="@evento.EventId" class="btn btn-danger btn-lg">Ver el protocolo urgente</a>
+    }
+    else if (medico.Assessment is not null && evento.Status is ClinicalEventStatus.EnValoracionMedica or ClinicalEventStatus.ConIndicacionPendiente)
+    {
+        <a asp-action="Conducta" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Pasar a conducta médica</a>
+    }
+</div>
+
 @if (escalado is not null)
 {
     <div class="card mb-3 border-start border-4 border-primary">
@@ -173,33 +204,3 @@
 </p>
 
 <partial name="_InformacionReunida" model="new InformacionReunidaViewModel(evento, Model.Baseline)" />
-
-<div class="d-grid d-md-flex justify-content-md-end gap-2 mb-3">
-    <a asp-action="Escalados" class="btn btn-outline-secondary btn-lg">Volver a la bandeja</a>
-    @if (evento.Status == ClinicalEventStatus.EscaladoMedicina)
-    {
-        <form asp-action="EmpezarValoracion" method="post">
-            <input type="hidden" name="eventoId" value="@evento.EventId" />
-            <input type="hidden" name="revision" value="@evento.Revision" />
-            <button type="submit" class="btn btn-primary btn-lg w-100">Iniciar valoración médica</button>
-        </form>
-    }
-    else if (evento.Status == ClinicalEventStatus.EnValoracionMedica)
-    {
-        <a asp-action="Valoracion" asp-route-eventoId="@evento.EventId" class="btn @(medico.Assessment is null ? "btn-primary" : "btn-outline-primary") btn-lg">
-            @(medico.Assessment is null ? "Completar valoración médica" : "Continuar valoración médica")
-        </a>
-    }
-    @if (evento.Status == ClinicalEventStatus.EnSeguimientoMedico)
-    {
-        <a asp-action="Seguimiento" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Ver seguimiento médico</a>
-    }
-    else if (evento.Status == ClinicalEventStatus.ProtocoloUrgenteMedico)
-    {
-        <a asp-action="Protocolo" asp-route-eventoId="@evento.EventId" class="btn btn-danger btn-lg">Ver el protocolo urgente</a>
-    }
-    else if (medico.Assessment is not null && evento.Status is ClinicalEventStatus.EnValoracionMedica or ClinicalEventStatus.ConIndicacionPendiente)
-    {
-        <a asp-action="Conducta" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Pasar a conducta médica</a>
-    }
-</div>

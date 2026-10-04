@@ -78,20 +78,7 @@
 <div class="card">
     <div class="card-body">
         <h2 class="h5 card-title">Estado basal vigente</h2>
-        @if (Model.Baseline is null)
-        {
-            <p class="text-muted mb-0">Sin basal vigente registrado.</p>
-        }
-        else
-        {
-            <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
-            @* Barra en color neutro: sin umbrales clínicos de dependencia, que tendría que fijar CJ. *@
-            <div class="progress mb-2" role="progressbar" aria-label="Índice de Barthel" aria-valuenow="@Model.Baseline.BarthelTotal"
-                 aria-valuemin="0" aria-valuemax="100" style="height: 0.5rem">
-                <div class="progress-bar bg-secondary" style="width: @(Model.Baseline.BarthelTotal)%"></div>
-            </div>
-            <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
-        }
+        <partial name="_ResumenBasal" model="Model.Baseline" />
         <a asp-action="Basal" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg mt-3">
             Consultar estado basal
         </a>

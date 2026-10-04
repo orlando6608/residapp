@@ -29,7 +29,7 @@
                         <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
                             <div>
                                 <p class="mb-1">
-                                    <span class="badge text-bg-info">@EnumDisplay.Label(item.Status)</span>
+                                    <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, item.Classification == DailyChangeClassification.Prioritario)">@EnumDisplay.Label(item.Status)</span>
                                     @if (item.Classification == DailyChangeClassification.Prioritario)
                                     {
                                         <span class="badge text-bg-danger">Prioritario</span>

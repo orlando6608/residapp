@@ -30,15 +30,7 @@
         else
         {
             <h2 class="h5 card-title">Basal vigente</h2>
-            @if (Model.Baseline is null)
-            {
-                <p class="text-muted mb-0">Sin basal vigente registrado.</p>
-            }
-            else
-            {
-                <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
-                <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
-            }
+            <partial name="_ResumenBasal" model="Model.Baseline" />
         }
         @* HIS-02: la línea temporal completa del residente, bajo demanda (no se carga hasta que se pide). *@
         <a asp-action="LineaTemporal" asp-route-residenteId="@Model.Event.ResidentId.Value" class="btn btn-outline-secondary btn-sm mt-2">

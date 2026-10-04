@@ -25,48 +25,31 @@
     <div class="alert alert-danger">@error</div>
 }
 
-<partial name="_ContactoUrgente" model="new EmergencyContactCardModel(Model.EmergencyContact)" />
-
-<div class="card mb-3">
-    <div class="card-body">
-        <h2 class="h5 card-title">Estado basal vigente</h2>
-        @if (Model.Baseline is null)
-        {
-            <p class="text-muted mb-0">Sin basal vigente registrado.</p>
-        }
-        else
-        {
-            <p class="mb-1">Barthel total: <strong>@Model.Baseline.BarthelTotal / 100</strong></p>
-            <p class="text-muted mb-0">Firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")</p>
-        }
-        <a asp-controller="EnfermeriaBasal" asp-action="Draft" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-primary btn-lg mt-3">
-            @(Model.Baseline is null ? "Crear borrador de basal" : "Iniciar reevaluación")
-        </a>
-    </div>
+@* Acciones arriba; en escritorio, lo clínico (eventos abiertos) a la izquierda y el basal y el contacto urgente en una
+   columna lateral (guia-diseno-sistema-visual.md, 2.B). En móvil, una sola columna en ese orden. *@
+<div class="d-grid d-sm-flex flex-wrap gap-2 mb-3">
+    <a asp-action="RegistrarEvento" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-primary btn-lg">
+        Registrar evento
+    </a>
+    <a asp-action="Historial" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">
+        Ver historial
+    </a>
 </div>
 
-<div class="card mb-3">
-    <div class="card-body">
-        <h2 class="h5 card-title">Registrar evento</h2>
-        <p class="text-muted">
-            Documenta directamente un evento que observas, sin que pase primero por Auxiliar.
-        </p>
-        <a asp-action="RegistrarEvento" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">
-            Registrar evento
-        </a>
+<div class="row g-3">
+    <div class="col-12 col-lg-8">
+        <partial name="_EventosAbiertos" model="Model" />
     </div>
-</div>
-
-<partial name="_EventosAbiertos" model="Model" />
-
-<div class="card mb-3">
-    <div class="card-body">
-        <h2 class="h5 card-title">Historial</h2>
-        <p class="text-muted">
-            Eventos cerrados, con el basal y la ubicación de su fecha, y las versiones firmadas del basal.
-        </p>
-        <a asp-action="Historial" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">
-            Ver historial
-        </a>
+    <div class="col-12 col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5 card-title">Estado basal vigente</h2>
+                <partial name="_ResumenBasal" model="Model.Baseline" />
+                <a asp-controller="EnfermeriaBasal" asp-action="Draft" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-primary btn-lg w-100 mt-3">
+                    @(Model.Baseline is null ? "Crear borrador de basal" : "Iniciar reevaluación")
+                </a>
+            </div>
+        </div>
+        <partial name="_ContactoUrgente" model="new EmergencyContactCardModel(Model.EmergencyContact)" />
     </div>
 </div>
