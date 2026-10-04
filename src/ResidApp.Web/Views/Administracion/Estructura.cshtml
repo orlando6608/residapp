@@ -37,11 +37,42 @@
 
 @if (ViewData.ModelState.IsValid && Model.Count == 0)
 {
-    <p class="text-muted">Tu ámbito no tiene ninguna unidad.</p>
+    <p class="estado-vacio">Tu ámbito no tiene ninguna unidad.</p>
 }
 else if (Model.Count > 0)
 {
-    <div class="table-responsive">
+    @* En pantallas estrechas, una entrada por unidad en lugar de la tabla de seis columnas (directrices-pwa-movil.md,
+       sección 2). *@
+    <ul class="list-group d-md-none mb-3">
+        @foreach (var unit in Model)
+        {
+            <li class="list-group-item py-3">
+                <div class="fw-semibold">
+                    @unit.Name
+                    <span class="badge @(unit.Active ? "text-bg-success" : "text-bg-secondary") align-middle">@(unit.Active ? "Activa" : "Inactiva")</span>
+                </div>
+                <div class="text-body-secondary small">
+                    <code>@unit.Code</code> · @unit.CurrentResidents @(unit.CurrentResidents == 1 ? "residente ubicado" : "residentes ubicados")
+                </div>
+                <div class="text-body-secondary small mb-2">
+                    @(unit.BuildingName is null ? "Sin edificio" : unit.FloorName is null ? unit.BuildingName : $"{unit.BuildingName} · {unit.FloorName}")
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-action="NombreUnidad" asp-route-unidadId="@unit.UnitId.Value" class="btn btn-outline-primary">Cambiar nombre</a>
+                    <a asp-action="UbicacionUnidad" asp-route-unidadId="@unit.UnitId.Value" class="btn btn-outline-primary">Edificio y planta</a>
+                    <a asp-action="Habitaciones" asp-route-unidadId="@unit.UnitId.Value" class="btn btn-outline-primary">Habitaciones y plazas</a>
+                    <form asp-action="EstadoUnidad" method="post">
+                        <input type="hidden" name="unidadId" value="@unit.UnitId.Value" />
+                        <input type="hidden" name="activa" value="@(unit.Active ? "false" : "true")" />
+                        <button type="submit" class="btn @(unit.Active ? "btn-outline-danger" : "btn-outline-success")">
+                            @(unit.Active ? "Inactivar" : "Reactivar")
+                        </button>
+                    </form>
+                </div>
+            </li>
+        }
+    </ul>
+    <div class="table-responsive d-none d-md-block">
         <table class="table align-middle">
             <caption class="visually-hidden">Unidades del ámbito</caption>
             <thead>

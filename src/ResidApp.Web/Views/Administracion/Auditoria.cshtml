@@ -79,11 +79,34 @@
 
     @if (page.Entries.Count == 0)
     {
-        <p class="text-muted">Ningún evento coincide con la búsqueda.</p>
+        <p class="estado-vacio">Ningún evento coincide con la búsqueda.</p>
     }
     else
     {
-        <div class="table-responsive">
+        @* En pantallas estrechas, una entrada por evento en lugar de la tabla de seis columnas (directrices-pwa-movil.md,
+           sección 2); solo se muestran los datos que tiene cada evento. *@
+        <ul class="list-group d-md-none mb-3">
+            @foreach (var entry in page.Entries)
+            {
+                <li class="list-group-item py-3">
+                    <div class="fw-semibold">@AuditActionDisplay.Label(entry.Action)</div>
+                    <div class="text-body-secondary small">@entry.OccurredAt.LocalDateTime.ToString("g") · @entry.ActorName (@SystemProfileDisplay.Label(entry.ActorProfile))</div>
+                    @if (entry.AffectedName is not null)
+                    {
+                        <div class="small">Cuenta afectada: @entry.AffectedName</div>
+                    }
+                    @if (entry.UnitName is not null)
+                    {
+                        <div class="small">Unidad: @entry.UnitName</div>
+                    }
+                    @if (entry.ResidentName is not null)
+                    {
+                        <div class="small">Residente: @entry.ResidentName</div>
+                    }
+                </li>
+            }
+        </ul>
+        <div class="table-responsive d-none d-md-block">
             <table class="table align-middle">
                 <caption class="visually-hidden">Eventos de auditoría administrativa, del más reciente al más antiguo</caption>
                 <thead>

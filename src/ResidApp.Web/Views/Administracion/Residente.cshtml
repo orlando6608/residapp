@@ -49,7 +49,35 @@
     }
     else
     {
-        <div class="table-responsive">
+        @* En pantallas estrechas, una entrada por familiar en lugar de la tabla de seis columnas (directrices-pwa-movil.md,
+           sección 2). *@
+        <ul class="list-group d-md-none mb-3">
+            @foreach (var member in Model.Detail.Family)
+            {
+                <li class="list-group-item py-3">
+                    <div class="fw-semibold">
+                        @member.DisplayName
+                        @if (Model.Detail.CurrentEmergencyContact == member.LinkId)
+                        {
+                            <span class="badge text-bg-primary ms-1 align-middle">Contacto urgente</span>
+                        }
+                    </div>
+                    <div class="text-body-secondary small">@member.Relationship · @member.Phone</div>
+                    @if (member.Email is not null)
+                    {
+                        <div class="text-body-secondary small text-break">@member.Email</div>
+                    }
+                    <div class="small mb-2">@AdministrativeResidentDisplay.Authorization(member, Model.Today)</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a asp-action="AutorizacionFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
+                           class="btn btn-outline-primary">Autorización</a>
+                        <a asp-action="EditarFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
+                           class="btn btn-outline-secondary">Editar</a>
+                    </div>
+                </li>
+            }
+        </ul>
+        <div class="table-responsive d-none d-md-block">
             <table class="table align-middle">
                 <caption class="visually-hidden">Familiares vinculados al residente</caption>
                 <thead>
@@ -134,7 +162,25 @@
 <section class="mb-4">
     <h2 class="h5">Historial de ubicación</h2>
     <p class="text-muted">Del más reciente al más antiguo. Cada cambio de ubicación cierra el anterior; ninguno se reescribe.</p>
-    <div class="table-responsive">
+    @* En pantallas estrechas, una entrada por intervalo en lugar de la tabla (directrices-pwa-movil.md, sección 2). *@
+    <ul class="list-group d-md-none mb-3">
+        @foreach (var location in Model.Detail.Locations)
+        {
+            <li class="list-group-item py-3">
+                <div class="fw-semibold">@location.UnitName</div>
+                @if (location.RoomName is not null)
+                {
+                    <div class="text-body-secondary small">@location.RoomName@(location.PlaceName is null ? "" : $" · {location.PlaceName}")</div>
+                }
+                <div class="small">
+                    Desde el @location.From.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    · @(location.Until is { } until ? $"hasta el {until.ToLocalTime():dd/MM/yyyy HH:mm}" : "vigente")
+                </div>
+                <div class="text-body-secondary small">Registrado por @SystemProfileDisplay.Label(location.RecordedBy)</div>
+            </li>
+        }
+    </ul>
+    <div class="table-responsive d-none d-md-block">
         <table class="table align-middle">
             <caption class="visually-hidden">Intervalos de ubicación del residente</caption>
             <thead>

@@ -35,11 +35,32 @@
 
 @if (ViewData.ModelState.IsValid && Model.Count == 0)
 {
-    <p class="text-muted">El centro todavía no tiene turnos.</p>
+    <p class="estado-vacio">El centro todavía no tiene turnos.</p>
 }
 else if (Model.Count > 0)
 {
-    <div class="table-responsive">
+    @* En pantallas estrechas, una entrada por turno en lugar de la tabla (directrices-pwa-movil.md, sección 2). *@
+    <ul class="list-group d-md-none mb-3">
+        @foreach (var shift in Model)
+        {
+            <li class="list-group-item py-3">
+                <div class="fw-semibold">
+                    @shift.Name
+                    <span class="badge @(shift.Active ? "text-bg-success" : "text-bg-secondary") align-middle">@(shift.Active ? "Activo" : "Inactivo")</span>
+                </div>
+                <div class="text-body-secondary small mb-2">@SchedulingDisplay.Hours(shift)</div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-action="NombreTurno" asp-route-turnoId="@shift.ShiftId" class="btn btn-outline-primary">Cambiar nombre</a>
+                    <form asp-action="EstadoTurno" method="post">
+                        <input type="hidden" name="turnoId" value="@shift.ShiftId" />
+                        <input type="hidden" name="activo" value="@(shift.Active ? "false" : "true")" />
+                        <button type="submit" class="btn @(shift.Active ? "btn-outline-danger" : "btn-outline-success")">@(shift.Active ? "Inactivar" : "Reactivar")</button>
+                    </form>
+                </div>
+            </li>
+        }
+    </ul>
+    <div class="table-responsive d-none d-md-block">
         <table class="table align-middle">
             <caption class="visually-hidden">Turnos del centro</caption>
             <thead>

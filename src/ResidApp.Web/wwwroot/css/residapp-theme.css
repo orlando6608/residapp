@@ -356,6 +356,30 @@ details[open] > summary {
   content: "✓ ";
 }
 
+/* La casilla oculta de cada chip ocupa el mismo hueco que su botón. Sin esto queda al principio del grupo, y al
+   recibir el foco el navegador desplaza la página hasta allí y no hasta el chip, que puede quedar bajo la barra fija. */
+.chip-par {
+  position: relative;
+  display: inline-flex;
+}
+
+.chip-par > .btn-check {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Listado o bandeja vacía: un recuadro que se ve como respuesta, no como una línea gris suelta que pasa por texto de
+   relleno. */
+.estado-vacio {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--bs-secondary-color);
+  background-color: var(--bs-body-bg);
+  border: 1px dashed var(--color-border-control);
+  border-radius: var(--bs-border-radius-lg);
+}
+
 /* Índice del Manual: en escritorio, columna lateral fija con su propio desplazamiento. */
 @media (min-width: 992px) {
   .indice-manual {
@@ -381,4 +405,10 @@ details[open] > summary {
   padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom));
   background-color: var(--color-bg-main);
   border-top: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+/* Que la barra no tape el campo que recibe el foco al tabular o al tocarlo (WCAG 2.4.11): el navegador lo desplaza
+   por encima de ella. */
+html:has(.barra-accion) {
+  scroll-padding-bottom: 7rem;
 }

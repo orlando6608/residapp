@@ -13,6 +13,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Rediseño visual, tercera tanda (2026-10-04, sin script):** Confirmar cambio ya no vacía el formulario en sus dos rutas de error (sin
+  aviso directo con el navegador saltado, o datos manipulados): vuelve a pintar la confirmación o el formulario con lo enviado y el mismo
+  `OperacionId` (probado con Chrome sin interfaz, sin escribir nada). Índice del Manual plegado en el móvil (`collapse d-lg-block`).
+  `.estado-vacio` en 28 listas y bandejas a página completa. Tarjetas o `list-group` en el móvil para Usuarios, Usuario, ficha del
+  residente (familiares y ubicación), Estructura, Edificios, Habitaciones, Turnos, Equipos, Planificación, Auditoría, Plataforma y el
+  historial de Rangos; el formulario de Rangos pasa de tabla a rejilla (los campos no se pueden duplicar). En Registrar cambio, cada chip va
+  en `.chip-par` y la página reserva `scroll-padding-bottom`: tabulando, ningún elemento con foco queda bajo la barra fija (antes, 8).
+  `manifest.json`: `background_color` con el fondo nuevo.
 - **Rediseño visual, segunda tanda (2026-10-04, sin script):** fichas del residente (Enfermería y Medicina) con acciones arriba y dos
   columnas en escritorio; acción principal arriba en DetalleCambio y Escalado; parcial `_ResumenBasal` (Barthel con barra neutra);
   tarjetas en móvil para las bandejas de Enfermería, el Historial, Dirección (inicio «Por unidad», Pendientes, Derivaciones) y los residentes de
@@ -976,14 +984,11 @@ usuario cuando encajen:
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de
   prueba allí.
 
-- **Rediseño visual, lo que queda tras la segunda tanda (2026-10-04):**
-  - tablas de Administración (Usuarios, Estructura, Edificios, Habitaciones, Turnos, Equipos, Auditoría, Planificación, ficha del
-    residente), Plataforma, Rangos de referencia y las cinco de Indicadores siguen con scroll horizontal en móvil (4–9 columnas);
-    se dejaron porque son trabajo de oficina o un informe para imprimir;
-  - estados vacíos (una línea gris) y párrafos introductorios largos en muchas pantallas;
-  - barras en las cifras «n de m» de Indicadores; «Vencido» es ámbar en Dirección y rojo en el resto (coherente dentro de cada perfil);
-  - en el móvil, el índice del Manual (31 enlaces) sigue arriba, sin plegar;
-  - en ConfirmarCambio, las dos rutas de error (sin JavaScript o datos manipulados) siguen redirigiendo al formulario vacío.
+- **Rediseño visual, lo que queda tras la tercera tanda (2026-10-04):**
+  - las cinco tablas de Indicadores siguen con scroll horizontal en el móvil (es un informe para imprimir), y sin barras en las cifras «n de m»;
+  - párrafos introductorios largos en muchas pantallas (Planificación, Estructura, Usuarios…);
+  - «Vencido» es ámbar en Dirección y rojo en el resto (coherente dentro de cada perfil);
+  - el resto de grupos `btn-check` (`_ComunicacionFamiliarFormulario`) no lleva `.chip-par`: no tiene barra fija y el grupo es corto.
 - **Pregunta para CJ (2026-10-03):** «Basal pendiente» sale en rojo, como fija la guía «por exigencia estricta del PRD», y compite con las urgencias
   reales. El documento de recomendaciones propone ámbar. Es una decisión clínica de saliencia: no se ha cambiado.
 - **Preguntas para CJ (2026-09-30):** `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` recoge las finalidades de la lectura clínica de Dirección, la
@@ -1044,6 +1049,11 @@ Repite estos pasos antes de dar un bloque por cerrado:
 - **`border-start border-4 border-<color>` en una `.card` dibuja un marco**, no una franja: `.border-4` fija el ancho de los
   cuatro lados y `.border-<color>` los colorea todos. `residapp-theme.css` devuelve los otros tres lados al borde neutro;
   no lo quites.
+- **`<legend>` como columna de una `fieldset.row`** solo funciona con el `float: left` que le da Bootstrap: con `float-none` vuelve a
+  ser la leyenda del recuadro, sale de la rejilla y ocupa toda la fila.
+- **`input.btn-check` es `position: absolute`** sin coordenadas: se queda al principio de su contenedor y, al recibir el foco, el
+  navegador desplaza la página hasta allí y no hasta el chip. Por eso cada pareja va en `.chip-par`.
+- **Puppeteer `page.type` en un campo dentro de un `<details>` cerrado** no escribe nada (no se puede enfocar) y no da error.
 - **El CSS aislado (`_Layout.cshtml.css`) no llega a los enlaces con tag helper** (`<a asp-action>`): no reciben el atributo
   `b-xxxx`. Las reglas para esos enlaces van en `residapp-theme.css`.
 - **Modo oscuro:** los colores salen de los tokens `--color-*` de `residapp-theme.css`, asignados a las variables de Bootstrap.

@@ -46,7 +46,7 @@
 
     @if (Model.Buildings.Count == 0)
     {
-        <p class="text-muted">El centro todavía no tiene edificios.</p>
+        <p class="estado-vacio">El centro todavía no tiene edificios.</p>
     }
 }
 
@@ -78,7 +78,30 @@
             }
             else
             {
-                <div class="table-responsive">
+                @* En pantallas estrechas, una entrada por planta en lugar de la tabla (directrices-pwa-movil.md, sección 2). *@
+                <ul class="list-group d-md-none mb-3">
+                    @foreach (var floor in building.Floors)
+                    {
+                        <li class="list-group-item py-3">
+                            <div class="fw-semibold">
+                                @floor.Name
+                                <span class="badge @(floor.Active ? "text-bg-success" : "text-bg-secondary") align-middle">@(floor.Active ? "Activa" : "Inactiva")</span>
+                            </div>
+                            <div class="text-body-secondary small mb-2">@floor.ActiveUnits @(floor.ActiveUnits == 1 ? "unidad activa" : "unidades activas")</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-action="NombrePlanta" asp-route-plantaId="@floor.FloorId" class="btn btn-outline-primary">Cambiar nombre</a>
+                                <form asp-action="EstadoPlanta" method="post">
+                                    <input type="hidden" name="plantaId" value="@floor.FloorId" />
+                                    <input type="hidden" name="activa" value="@(floor.Active ? "false" : "true")" />
+                                    <button type="submit" class="btn @(floor.Active ? "btn-outline-danger" : "btn-outline-success")">
+                                        @(floor.Active ? "Inactivar" : "Reactivar")
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    }
+                </ul>
+                <div class="table-responsive d-none d-md-block">
                     <table class="table align-middle">
                         <caption class="visually-hidden">Plantas de @building.Name</caption>
                         <thead>

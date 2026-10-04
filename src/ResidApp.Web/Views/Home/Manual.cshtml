@@ -27,14 +27,17 @@
     no hay un inicio de sesión definitivo con usuario y contraseña.
 </div>
 
-@* En escritorio, el índice queda en una columna lateral fija mientras se lee (residapp-theme.css, .indice-manual). *@
+@* En escritorio, el índice queda en una columna lateral fija mientras se lee (residapp-theme.css, .indice-manual).
+   En el móvil se pliega tras un botón, para no empujar el contenido una treintena de enlaces más abajo. *@
 <div class="row g-4">
 <div class="col-12 col-lg-3">
 <nav class="indice-manual" aria-label="Índice del manual">
 <div class="card mb-4">
     <div class="card-body">
-        <h2 class="h6 card-title mb-3">Índice</h2>
-        <div class="list-group list-group-flush">
+        <h2 class="h6 card-title mb-3 d-none d-lg-block">Índice</h2>
+        <button class="btn btn-outline-primary w-100 d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#indice-manual-lista"
+                aria-expanded="false" aria-controls="indice-manual-lista">Índice del manual</button>
+        <div class="list-group list-group-flush collapse d-lg-block mt-2 mt-lg-0" id="indice-manual-lista">
             <a class="list-group-item list-group-item-action" href="#entrar-ambito">Entrar y elegir tu ámbito de trabajo</a>
             <a class="list-group-item list-group-item-action" href="#apariencia">Apariencia: colores, modo claro y modo oscuro</a>
             <a class="list-group-item list-group-item-action" href="#cuentas-prueba">Cuentas de prueba y cómo cambiar de usuario</a>
@@ -111,6 +114,13 @@
         protocolos urgentes activos, seguimientos vencidos o indicaciones con incidencia. En <strong>ámbar</strong>
         aparecen las indicaciones sin leer. Una tarjeta a cero nunca sale en rojo. El texto de la tarjeta siempre dice
         lo mismo que el color, para quien no distinga bien los colores.
+    </p>
+    <p>
+        En el móvil, las listas que en una pantalla ancha son tablas se muestran como tarjetas, una por fila, sin
+        tener que desplazarse de lado. El índice de este manual se abre con el botón <strong>«Índice del
+        manual»</strong>. Cuando una lista está vacía, lo dice en un recuadro. La app se usa en vertical y en
+        horizontal; si la instalaste en el móvil o la tablet antes del 4 de octubre de 2026 y no gira al girar el
+        dispositivo, quítala de la pantalla de inicio y vuelve a instalarla desde el navegador.
     </p>
     <p class="mb-0">
         En la cabecera, <strong>«Tema»</strong> permite elegir <strong>Claro</strong>, <strong>Oscuro</strong> o
@@ -603,7 +613,8 @@
         pasa a la bandeja prioritaria). El botón <strong>Continuar</strong> queda siempre a la vista al pie de la
         pantalla. Antes de enviarlo se muestra siempre un resumen para revisar; desde él,
         <strong>«Volver a editar»</strong> regresa al formulario con todo lo que habías marcado y escrito, incluido el
-        aviso directo.
+        aviso directo. Si al confirmar falta algo o hay un dato que no se puede leer, la app te lo indica en la misma
+        pantalla sin borrar nada de lo escrito.
     </p>
 </section>
 
