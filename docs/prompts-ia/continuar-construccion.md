@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-03. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-04. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -13,6 +13,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Propuesta de proveedor de identidad (2026-10-04, solo documentación):** ADR 0007 en estado propuesto. Microsoft Entra External
+  ID con tenant en la UE; Auth0 UE como respaldo si se exige TOTP o se rechaza el código por correo como segundo factor. El alta crea
+  el usuario por Graph y guarda `<tenant>|<oid>` como `sujeto_externo`. Las puertas de aceptación y los incrementos I1–I5 están en el
+  ADR. No se ha creado ningún tenant ni se ha tocado `src/`; Portal Familiar y ADM-30 siguen esperando a que se acepte.
 - **Rediseño visual, cierre (2026-10-04, sin script):** Indicadores con una tarjeta por unidad (o por mes) en el móvil y una barra gris
   (`.barra-proporcion`, `aria-hidden`, sin color semafórico) en cada cifra «n de m»; al imprimir salen las cinco tablas y ni tarjetas ni
   barras a cualquier ancho (comprobado con `emulateMediaType("print")`). Fechas de Planificación, Serie y PlanificarTurno con solo la

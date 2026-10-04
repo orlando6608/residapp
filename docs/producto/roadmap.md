@@ -44,7 +44,7 @@ Sin pendiente crítico propio. Detalle en `docs/tareas/alta-prioridad/pendientes
 
 | Decisión | Estado |
 | --- | --- |
-| Autenticación y segundo factor productivos | En el prototipo legado, la selección de proveedor de autenticación seguía en estado "Propuesto" (nunca aceptada), con Auth0 como recomendación principal y WorkOS AuthKit como respaldo condicionado. En la nueva arquitectura .NET esta decisión sigue completamente abierta: no hay proveedor equivalente decidido todavía. |
+| Autenticación y segundo factor productivos | En el legado, Auth0 era la recomendación principal y WorkOS AuthKit el respaldo, sin llegar a aceptarse. Para la pila .NET/Azure hay una propuesta (2026-10-04): Microsoft Entra External ID con tenant en la UE y Auth0 UE como respaldo. Ver `docs/decisiones-arquitectura/0007-proveedor-identidad.md`. Pendiente de validación de CJ, Seguridad y DPO; nada implementado. |
 | SLA, RPO, RTO y copias de seguridad | Pendiente de definir antes de producción. |
 | EIPD, contratos y seguridad | Pendiente de formalizar antes de tratar datos reales. |
 | Configuración real de citas, equipos y tiempos | Pendiente de definir junto con cada centro piloto. |

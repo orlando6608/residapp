@@ -238,7 +238,7 @@ El estado detallado vive en [`docs/producto/roadmap.md`](docs/producto/roadmap.m
 
 | Decisión | Estado |
 | --- | --- |
-| Autenticación y segundo factor productivos | En el prototipo legado la selección de proveedor seguía en estado "Propuesto" (nunca aceptada). En la arquitectura .NET esta decisión sigue completamente abierta: no hay proveedor equivalente decidido. |
+| Autenticación y segundo factor productivos | Propuesta (2026-10-04): Microsoft Entra External ID con tenant en la UE y Auth0 UE como respaldo. Ver [ADR 0007](docs/decisiones-arquitectura/0007-proveedor-identidad.md). Pendiente de validación de CJ, Seguridad y DPO; nada implementado. |
 | SLA, RPO, RTO y copias de seguridad | Pendiente de definir antes de producción. |
 | EIPD, contratos y seguridad | Pendiente de formalizar antes de tratar datos reales. |
 | Configuración real de citas, equipos y tiempos | Pendiente de definir junto con cada centro piloto. |
