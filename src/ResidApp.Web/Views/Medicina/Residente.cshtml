@@ -18,11 +18,11 @@
 
 @if (TempData["Mensaje"] is string mensaje)
 {
-    <div class="alert alert-success">@mensaje</div>
+    <div class="alert alert-success" role="status">@mensaje</div>
 }
 @if (TempData["Error"] is string error)
 {
-    <div class="alert alert-danger">@error</div>
+    <div class="alert alert-danger" role="alert">@error</div>
 }
 
 @* Acciones arriba; en escritorio, lo clínico (eventos abiertos) a la izquierda y el basal y el contacto urgente en una

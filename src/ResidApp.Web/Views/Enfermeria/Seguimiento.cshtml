@@ -31,7 +31,7 @@
 
 @if (TempData["Mensaje"] is string mensaje)
 {
-    <div class="alert alert-success">@mensaje</div>
+    <div class="alert alert-success" role="status">@mensaje</div>
 }
 <div asp-validation-summary="All" class="text-danger"></div>
 

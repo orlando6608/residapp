@@ -21,11 +21,11 @@
 </p>
 @if (TempData["Mensaje"] is string mensaje)
 {
-    <div class="alert alert-success">@mensaje</div>
+    <div class="alert alert-success" role="status">@mensaje</div>
 }
 @if (TempData["Error"] is string error)
 {
-    <div class="alert alert-danger">@error</div>
+    <div class="alert alert-danger" role="alert">@error</div>
 }
 <div asp-validation-summary="All" class="text-danger"></div>
 

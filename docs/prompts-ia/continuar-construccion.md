@@ -13,6 +13,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Rediseño visual, segunda tanda (2026-10-04, sin script):** fichas del residente (Enfermería y Medicina) con acciones arriba y dos
+  columnas en escritorio; acción principal arriba en DetalleCambio y Escalado; parcial `_ResumenBasal` (Barthel con barra neutra);
+  tarjetas en móvil para las bandejas de Enfermería, el Historial, Dirección (inicio «Por unidad», Pendientes, Derivaciones) y los residentes de
+  Administración; Barthel con fieldset y total en vivo en una barra fija (solo la suma, sin bandas); Indicadores con «Cómo se cuenta» al final;
+  sin «(s)» en ninguna vista; `role="status"`/`role="alert"` en los 48 mensajes de resultado; índice lateral fijo en el Manual;
+  `manifest.json` con `orientation: any`; `sw.js` (`residapp-shell-v2`) en red primero y, sin red, el shell ignorando `?v=`: la página sin
+  conexión sale con el tema (comprobado parando el servidor). Para probar Barthel se creó y se canceló un borrador en la BD local
+  («Prueba Enfermería nueva (ficticia)»).
 - **Rediseño visual, primera tanda (2026-10-03, sin script):** revisión crítica de `docs/bocetos-pantallas/residapp-recomendaciones-diseno.md`
   (documento del usuario, sin versionar: se adoptó una parte, se adaptó otra y se descartó el resto con motivo; ver los commits). Cambios:
   - **Guía vinculante actualizada** (`guia-diseno-sistema-visual.md`): neutros y enlaces que cumplen AA (enlaces `#0A58CA`, secundario `#5B6676`
@@ -968,16 +976,13 @@ usuario cuando encajen:
   usuario confirmó el 2026-09-30 que toda la BD de Azure es de desarrollo, así que se pueden crear datos de
   prueba allí.
 
-- **Rediseño visual, segunda tanda (anotada el 2026-10-03, sin empezar):**
-  - fichas del residente y DetalleCambio en dos columnas en escritorio, con la acción principal arriba (hoy al fondo, tras hasta 9 tarjetas);
-  - tablas de Dirección («Por unidad», Indicadores) y de Administración como tarjetas en móvil: hoy incumplen `directrices-pwa-movil.md` §2;
-  - Indicadores con «Cómo se cuenta» plegado y barras en las cifras «n de m»; índice fijo en el Manual;
-  - estados vacíos, párrafos introductorios y los 19 «(s)» que quedan (de 56; sobre todo en Administración);
-  - un parcial para los mensajes de aviso con `aria-live` (hoy hay 48 copias pegadas);
-  - `_EventosAbiertos` y `Enfermeria/Escalados` se saltan `ClinicalEventStatusDisplay.BadgeClass`; «Vencido» es ámbar en Dirección y rojo en el resto;
-  - Barthel sin total en vivo mientras se rellena;
-  - `manifest.json` con `orientation: portrait-primary` bloquea las tablets en vertical;
-  - el shell de `sw.js` nunca encuentra `site.css`/`site.js` (se piden con `?v=`) y no guarda `residapp-theme.css`;
+- **Rediseño visual, lo que queda tras la segunda tanda (2026-10-04):**
+  - tablas de Administración (Usuarios, Estructura, Edificios, Habitaciones, Turnos, Equipos, Auditoría, Planificación, ficha del
+    residente), Plataforma, Rangos de referencia y las cinco de Indicadores siguen con scroll horizontal en móvil (4–9 columnas);
+    se dejaron porque son trabajo de oficina o un informe para imprimir;
+  - estados vacíos (una línea gris) y párrafos introductorios largos en muchas pantallas;
+  - barras en las cifras «n de m» de Indicadores; «Vencido» es ámbar en Dirección y rojo en el resto (coherente dentro de cada perfil);
+  - en el móvil, el índice del Manual (31 enlaces) sigue arriba, sin plegar;
   - en ConfirmarCambio, las dos rutas de error (sin JavaScript o datos manipulados) siguen redirigiendo al formulario vacío.
 - **Pregunta para CJ (2026-10-03):** «Basal pendiente» sale en rojo, como fija la guía «por exigencia estricta del PRD», y compite con las urgencias
   reales. El documento de recomendaciones propone ámbar. Es una decisión clínica de saliencia: no se ha cambiado.

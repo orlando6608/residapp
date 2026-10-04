@@ -356,6 +356,22 @@ details[open] > summary {
   content: "✓ ";
 }
 
+/* Índice del Manual: en escritorio, columna lateral fija con su propio desplazamiento. */
+@media (min-width: 992px) {
+  .indice-manual {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+
+  .indice-manual .list-group-item {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    font-size: 0.875rem;
+  }
+}
+
 /* Barra de acción fija abajo, para que la acción principal de un formulario largo esté siempre a mano. */
 .barra-accion {
   position: sticky;

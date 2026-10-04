@@ -21,7 +21,7 @@
 
 @if (TempData["Error"] is string error)
 {
-    <div class="alert alert-danger">@error</div>
+    <div class="alert alert-danger" role="alert">@error</div>
 }
 
 <form asp-action="RegistrarCambio" method="post">

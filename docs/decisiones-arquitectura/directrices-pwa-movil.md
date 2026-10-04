@@ -42,6 +42,11 @@ viewport.
 - El service worker cachea el shell de la aplicación (assets estáticos) y sirve `/Home/Offline` como
   fallback de navegación cuando no hay red. **No** cachea ni reintenta envíos de formularios clínicos —
   eso es responsabilidad de la idempotencia del punto 4, no del service worker.
+- Los assets se piden primero a la red y solo sin conexión se sirven del shell, buscando sin la query
+  (`?v=` de `asp-append-version`), para que la página sin conexión salga con el tema. Si se añade una hoja,
+  un script o una imagen que necesite esa página, va en `SHELL_ASSETS` y se sube `CACHE_NAME`.
+- `orientation: any` en el manifest: las tablets de planta se usan también en horizontal (hasta el
+  2026-10-04 estaba fijada en vertical sin decisión documentada).
 
 Estado actual: hecho. `manifest.json` (nombre, iconos en `wwwroot/images/logo.svg` /
 `wwwroot/images/logo-maskable.svg`, `display: standalone`) y `sw.js` (shell cacheado, fallback de

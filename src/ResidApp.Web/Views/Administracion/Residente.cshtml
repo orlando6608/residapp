@@ -18,7 +18,7 @@
 <p class="text-muted">Ficha administrativa. No incluye el basal ni ningún contenido clínico.</p>
 @if (TempData["Mensaje"] is string mensaje)
 {
-    <div class="alert alert-success">@mensaje</div>
+    <div class="alert alert-success" role="status">@mensaje</div>
 }
 
 <section class="card mb-4">

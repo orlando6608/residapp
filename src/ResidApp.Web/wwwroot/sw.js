@@ -6,12 +6,16 @@
 // ante un reintento por pérdida de cobertura es la idempotencia por operationId en el servidor
 // (dbo.idempotency_operations), no este service worker.
 
-const CACHE_NAME = "residapp-shell-v1";
+const CACHE_NAME = "residapp-shell-v2";
 const OFFLINE_URL = "/Home/Offline";
 const SHELL_ASSETS = [
   OFFLINE_URL,
   "/css/site.css",
+  "/css/residapp-theme.css",
+  "/ResidApp.Web.styles.css",
   "/js/site.js",
+  "/js/tema.js",
+  "/images/logo.svg",
   "/lib/bootstrap/dist/css/bootstrap.min.css",
   "/lib/bootstrap/dist/js/bootstrap.bundle.min.js",
 ];
@@ -45,5 +49,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(caches.match(event.request).then((cached) => cached ?? fetch(event.request)));
+  // Red primero: con conexión siempre llega la versión actual. Sin red, la copia del shell; ignoreSearch porque el
+  // layout pide las hojas y scripts con ?v= (asp-append-version) y el shell los guarda sin él.
+  event.respondWith(
+    fetch(event.request).catch(() =>
+      caches.match(event.request, { ignoreSearch: true }).then((cached) => cached ?? Response.error())
+    )
+  );
 });
