@@ -163,15 +163,24 @@ public sealed class AuxiliarController(AuxiliarApplicationService service) : Con
         {
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(RegistrarCambio), new { residenteId = form.ResidenteId }) });
         }
-        if (!ModelState.IsValid)
+        // Sin JavaScript o con datos manipulados: se vuelve a pintar con lo enviado (redirigir abría el formulario vacío
+        // y se perdía lo escrito).
+        if (!ModelState.IsValid || (form.Clasificacion == DailyChangeClassification.Prioritario && string.IsNullOrWhiteSpace(form.AvisoDirecto)))
         {
-            TempData["Error"] = "Revisa los datos del cambio antes de confirmar.";
-            return RedirectToAction(nameof(RegistrarCambio), new { residenteId = form.ResidenteId });
-        }
-        if (form.Clasificacion == DailyChangeClassification.Prioritario && string.IsNullOrWhiteSpace(form.AvisoDirecto))
-        {
-            TempData["Error"] = "Documenta el aviso directo antes de confirmar un evento prioritario.";
-            return RedirectToAction(nameof(RegistrarCambio), new { residenteId = form.ResidenteId });
+            var resolved = await ResolveAssignedResidentAsync(form.ResidenteId, ct);
+            if (resolved is null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.Resident = resolved.Value.Resident;
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError(string.Empty, "Revisa los datos del cambio antes de confirmar.");
+                return View(nameof(RegistrarCambio), form);
+            }
+            ModelState.AddModelError(nameof(form.AvisoDirecto), "Documenta el aviso directo antes de confirmar un evento prioritario.");
+            return View(form);
         }
 
         var areas = BuildAreas(form);

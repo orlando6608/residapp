@@ -51,9 +51,11 @@
                                 var opcionCode = opcion.ToCode();
                                 var inputId = $"opcion-{code}-{opcionCode}";
                                 var entrada = $"{code}:{opcionCode}";
-                                <input type="checkbox" class="btn-check" id="@inputId" name="AreaOpciones" value="@entrada" autocomplete="off"
-                                       checked="@Model.AreaOpciones.Contains(entrada)" />
-                                <label class="btn btn-outline-primary chip" for="@inputId">@DailyChangeAreaOptionDisplay.Label(opcion)</label>
+                                <span class="chip-par">
+                                    <input type="checkbox" class="btn-check" id="@inputId" name="AreaOpciones" value="@entrada" autocomplete="off"
+                                           checked="@Model.AreaOpciones.Contains(entrada)" />
+                                    <label class="btn btn-outline-primary chip" for="@inputId">@DailyChangeAreaOptionDisplay.Label(opcion)</label>
+                                </span>
                             }
                         </div>
                         @* Nota opcional bajo demanda; abierta si ya tiene texto (por ejemplo, al volver a editar). *@
@@ -94,12 +96,16 @@
             <fieldset class="mb-3">
                 <legend class="visually-hidden">Clasificación</legend>
                 <div class="d-flex flex-wrap gap-2">
-                    <input class="btn-check" type="radio" name="Clasificacion" id="clasificacion-ordinario" autocomplete="off"
-                           value="@DailyChangeClassification.Ordinario" checked="@(Model.Clasificacion != DailyChangeClassification.Prioritario)" />
-                    <label class="btn btn-outline-secondary chip" for="clasificacion-ordinario">Ordinario</label>
-                    <input class="btn-check" type="radio" name="Clasificacion" id="clasificacion-prioritario" autocomplete="off"
-                           value="@DailyChangeClassification.Prioritario" checked="@(Model.Clasificacion == DailyChangeClassification.Prioritario)" />
-                    <label class="btn btn-outline-danger chip" for="clasificacion-prioritario">Prioritario</label>
+                    <span class="chip-par">
+                        <input class="btn-check" type="radio" name="Clasificacion" id="clasificacion-ordinario" autocomplete="off"
+                               value="@DailyChangeClassification.Ordinario" checked="@(Model.Clasificacion != DailyChangeClassification.Prioritario)" />
+                        <label class="btn btn-outline-secondary chip" for="clasificacion-ordinario">Ordinario</label>
+                    </span>
+                    <span class="chip-par">
+                        <input class="btn-check" type="radio" name="Clasificacion" id="clasificacion-prioritario" autocomplete="off"
+                               value="@DailyChangeClassification.Prioritario" checked="@(Model.Clasificacion == DailyChangeClassification.Prioritario)" />
+                        <label class="btn btn-outline-danger chip" for="clasificacion-prioritario">Prioritario</label>
+                    </span>
                 </div>
             </fieldset>
             <div class="mb-0">
