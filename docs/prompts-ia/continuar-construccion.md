@@ -13,7 +13,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **G1, RLS por centro, tanda 3: estructura y planificación (2026-10-06, rama `g1-rls-estructura`, sin commit ni push):** `0034_rls_estructura.sql` amplía
+- **G1, RLS por centro, tanda 3: estructura y planificación (2026-10-06, PR #4, en `main` y aplicada en Azure dev; el despliegue devuelve 200):** `0034_rls_estructura.sql` amplía
   `seg.pol_centro` a 10 tablas: `edificios`, `plantas`, `habitaciones`, `plazas`, `equipos`, `equipos_miembros`, `turnos_catalogo`, `planificacion_turnos`,
   `rangos_referencia_constantes` y su historial (las unidades no entran: las escribe `PLATAFORMA`). Con la política activa, los funcionales existentes
   ya creaban filas por la app real en 7 de las 10 (se midió ejecutando solo los funcionales en Docker antes de nada). Para las otras 3 se amplió el test
