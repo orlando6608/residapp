@@ -47,11 +47,11 @@ public sealed class SqlAssessmentCorrectionRepository(SqlConnectionFactory conne
         var vitals = content.Vitals;
         await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.valoraciones_enfermeria_correcciones
-                (id, valoracion_id, evento_id, hallazgos, valoracion, actuaciones, comunicaciones, resultado,
+                (id, centro_id, valoracion_id, evento_id, hallazgos, valoracion, actuaciones, comunicaciones, resultado,
                  temperatura_celsius, tension_sistolica_mmhg, tension_diastolica_mmhg, frecuencia_cardiaca_lpm, frecuencia_respiratoria_rpm,
                  saturacion_o2_pct, soporte_respiratorio_codigo, flujo_o2_lpm, glucemia_mg_dl,
                  otra_constante_nombre, otra_constante_valor, otra_constante_unidad, motivo, corregido_por_cuenta_id, corregido_en)
-            VALUES (@Id, @AssessmentId, @EventId, @Findings, @Assessment, @Actions, @Communications, @Outcome,
+            VALUES (@Id, @CenterId, @AssessmentId, @EventId, @Findings, @Assessment, @Actions, @Communications, @Outcome,
                     @TemperatureCelsius, @SystolicMmHg, @DiastolicMmHg, @HeartRateBpm, @RespiratoryRateRpm,
                     @OxygenSaturationPct, @RespiratorySupportCode, @OxygenFlowLpm, @GlucoseMgDl,
                     @OtherName, @OtherValue, @OtherUnit, @Reason, @AccountId, @OccurredAt);
@@ -67,7 +67,7 @@ public sealed class SqlAssessmentCorrectionRepository(SqlConnectionFactory conne
              WHERE id = @AssessmentId;
             """, new
         {
-            Id = Guid.NewGuid(), state.AssessmentId, input.EventId,
+            Id = Guid.NewGuid(), CenterId = input.CenterId.Value, state.AssessmentId, input.EventId,
             content.Findings, content.Assessment, content.Actions, content.Communications, content.Outcome,
             vitals.TemperatureCelsius, vitals.SystolicMmHg, vitals.DiastolicMmHg, vitals.HeartRateBpm, vitals.RespiratoryRateRpm,
             vitals.OxygenSaturationPct, RespiratorySupportCode = vitals.RespiratorySupport?.ToCode(), vitals.OxygenFlowLpm,
@@ -96,11 +96,11 @@ public sealed class SqlAssessmentCorrectionRepository(SqlConnectionFactory conne
         var vitals = content.Vitals;
         await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.valoraciones_medicas_correcciones
-                (id, valoracion_id, evento_id, hallazgos_exploracion, valoracion, actuaciones,
+                (id, centro_id, valoracion_id, evento_id, hallazgos_exploracion, valoracion, actuaciones,
                  temperatura_celsius, tension_sistolica_mmhg, tension_diastolica_mmhg, frecuencia_cardiaca_lpm, frecuencia_respiratoria_rpm,
                  saturacion_o2_pct, soporte_respiratorio_codigo, flujo_o2_lpm, glucemia_mg_dl,
                  otra_constante_nombre, otra_constante_valor, otra_constante_unidad, motivo, corregido_por_cuenta_id, corregido_en)
-            VALUES (@Id, @AssessmentId, @EventId, @Findings, @Assessment, @Actions,
+            VALUES (@Id, @CenterId, @AssessmentId, @EventId, @Findings, @Assessment, @Actions,
                     @TemperatureCelsius, @SystolicMmHg, @DiastolicMmHg, @HeartRateBpm, @RespiratoryRateRpm,
                     @OxygenSaturationPct, @RespiratorySupportCode, @OxygenFlowLpm, @GlucoseMgDl,
                     @OtherName, @OtherValue, @OtherUnit, @Reason, @AccountId, @OccurredAt);
@@ -116,7 +116,7 @@ public sealed class SqlAssessmentCorrectionRepository(SqlConnectionFactory conne
              WHERE id = @AssessmentId;
             """, new
         {
-            Id = Guid.NewGuid(), state.AssessmentId, input.EventId,
+            Id = Guid.NewGuid(), CenterId = input.CenterId.Value, state.AssessmentId, input.EventId,
             Findings = content.FindingsAndExamination, content.Assessment, content.Actions,
             vitals.TemperatureCelsius, vitals.SystolicMmHg, vitals.DiastolicMmHg, vitals.HeartRateBpm, vitals.RespiratoryRateRpm,
             vitals.OxygenSaturationPct, RespiratorySupportCode = vitals.RespiratorySupport?.ToCode(), vitals.OxygenFlowLpm,

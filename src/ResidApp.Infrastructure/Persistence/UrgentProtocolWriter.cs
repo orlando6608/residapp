@@ -93,8 +93,8 @@ internal static class UrgentProtocolWriter
         var entryId = Guid.NewGuid();
         await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.protocolo_urgente_registros
-                (id, protocolo_id, tipo_codigo, texto, servicio_contactado, contactado_en, registrado_por_cuenta_id, registrado_en)
-            SELECT @Id, p.id, @TypeCode, @Text, @Service, @ContactedAt, @AccountId, @OccurredAt
+                (id, centro_id, protocolo_id, tipo_codigo, texto, servicio_contactado, contactado_en, registrado_por_cuenta_id, registrado_en)
+            SELECT @Id, p.centro_id, p.id, @TypeCode, @Text, @Service, @ContactedAt, @AccountId, @OccurredAt
               FROM dbo.protocolos_urgentes p WITH (FORCESEEK)
              WHERE p.evento_id = @EventId
             """, new

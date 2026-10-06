@@ -39,11 +39,11 @@ public sealed class SqlDailyClosureRepository(SqlConnectionFactory connections) 
             var result = new DailyClosureResult(closureId, occurredAt);
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
-                VALUES (@Id, @AccountId, @ActionCode, @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, centro_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
+                VALUES (@Id, @AccountId, @CenterId, @ActionCode, @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
                 """, new
             {
-                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, ActionCode = actionCode,
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, CenterId = input.CenterId.Value, ActionCode = actionCode,
                 input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
@@ -116,11 +116,11 @@ public sealed class SqlDailyClosureRepository(SqlConnectionFactory connections) 
             var result = new DailyClosureResult(closureId, occurredAt);
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
-                VALUES (@Id, @AccountId, @ActionCode, @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, centro_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
+                VALUES (@Id, @AccountId, @CenterId, @ActionCode, @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
                 """, new
             {
-                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, ActionCode = CambioEnviadoAction,
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, CenterId = input.CenterId.Value, ActionCode = CambioEnviadoAction,
                 input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
@@ -169,11 +169,11 @@ public sealed class SqlDailyClosureRepository(SqlConnectionFactory connections) 
                 foreach (var opcion in area.Options)
                 {
                     await connection.ExecuteAsync(new CommandDefinition("""
-                        INSERT INTO dbo.cierres_cotidianos_cambio_area_opciones (id, area_id, area_codigo, opcion_codigo)
-                        VALUES (@Id, @AreaId, @AreaCode, @OptionCode)
+                        INSERT INTO dbo.cierres_cotidianos_cambio_area_opciones (id, centro_id, area_id, area_codigo, opcion_codigo)
+                        VALUES (@Id, @CenterId, @AreaId, @AreaCode, @OptionCode)
                         """, new
                     {
-                        Id = Guid.NewGuid(), AreaId = areaId, AreaCode = areaCode, OptionCode = opcion.ToCode(),
+                        Id = Guid.NewGuid(), CenterId = input.CenterId.Value, AreaId = areaId, AreaCode = areaCode, OptionCode = opcion.ToCode(),
                     }, transaction, cancellationToken: ct));
                 }
             }

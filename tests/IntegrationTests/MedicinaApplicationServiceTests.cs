@@ -975,7 +975,7 @@ public class MedicinaApplicationServiceTests
             ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_VALORACION_MEDICA', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
             ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_SEGUIMIENTO', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
             ("INSERT INTO dbo.seguimientos_medicos (id, evento_id, residente_id, centro_id, fecha_prevista, criterio, objetivo, iniciado_por_cuenta_id, iniciado_en) SELECT NEWID(), id, residente_id, centro_id, '20300101', NULL, 'Otro', @AccountId, SYSUTCDATETIME() FROM dbo.eventos_asistenciales WHERE id = @EventId", "UX_segm_evento"),
-            ("INSERT INTO dbo.seguimiento_medico_acciones (id, seguimiento_id, tipo_codigo, texto, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), id, 'TRANSFERENCIA', 'Sin equipo', @AccountId, SYSUTCDATETIME() FROM dbo.seguimientos_medicos WHERE evento_id = @EventId", "CK_sma_tipo"),
+            ("INSERT INTO dbo.seguimiento_medico_acciones (id, centro_id, seguimiento_id, tipo_codigo, texto, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), centro_id, id, 'TRANSFERENCIA', 'Sin equipo', @AccountId, SYSUTCDATETIME() FROM dbo.seguimientos_medicos WHERE evento_id = @EventId", "CK_sma_tipo"),
         })
         {
             var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { EventId = eventId, AccountId = medica.AccountId.Value }));

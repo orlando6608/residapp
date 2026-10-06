@@ -98,11 +98,11 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
         // Histórico: el borrador se sobrescribe, pero cada guardado deja su copia inmutable.
         await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.valoraciones_medicas_versiones
-                (id, valoracion_id, evento_id, revision_evento, hallazgos_exploracion, valoracion, actuaciones,
+                (id, centro_id, valoracion_id, evento_id, revision_evento, hallazgos_exploracion, valoracion, actuaciones,
                  temperatura_celsius, tension_sistolica_mmhg, tension_diastolica_mmhg, frecuencia_cardiaca_lpm, frecuencia_respiratoria_rpm,
                  saturacion_o2_pct, soporte_respiratorio_codigo, flujo_o2_lpm, glucemia_mg_dl,
                  otra_constante_nombre, otra_constante_valor, otra_constante_unidad, guardado_por_cuenta_id, guardado_en)
-            SELECT @Id, v.id, v.evento_id, @Revision, v.hallazgos_exploracion, v.valoracion, v.actuaciones,
+            SELECT @Id, v.centro_id, v.id, v.evento_id, @Revision, v.hallazgos_exploracion, v.valoracion, v.actuaciones,
                    v.temperatura_celsius, v.tension_sistolica_mmhg, v.tension_diastolica_mmhg, v.frecuencia_cardiaca_lpm, v.frecuencia_respiratoria_rpm,
                    v.saturacion_o2_pct, v.soporte_respiratorio_codigo, v.flujo_o2_lpm, v.glucemia_mg_dl,
                    v.otra_constante_nombre, v.otra_constante_valor, v.otra_constante_unidad, v.actualizado_por_cuenta_id, v.actualizado_en
@@ -231,9 +231,9 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
 
         var inserted = await connection.ExecuteAsync(new CommandDefinition($"""
             INSERT INTO dbo.seguimiento_medico_acciones
-                (id, seguimiento_id, tipo_codigo, texto, fecha_prevista, criterio, equipo_entrante, equipo_entrante_id, transferencia_id,
+                (id, centro_id, seguimiento_id, tipo_codigo, texto, fecha_prevista, criterio, equipo_entrante, equipo_entrante_id, transferencia_id,
                  registrado_por_cuenta_id, registrado_en)
-            SELECT @Id, s.id, @TypeCode, @Text, @DueDate, @Criterion, q.nombre_visible, q.id, @TransferId, @AccountId, @OccurredAt
+            SELECT @Id, s.centro_id, s.id, @TypeCode, @Text, @DueDate, @Criterion, q.nombre_visible, q.id, @TransferId, @AccountId, @OccurredAt
               FROM dbo.seguimientos_medicos s WITH (FORCESEEK)
               JOIN dbo.eventos_asistenciales ea ON ea.id = s.evento_id
               LEFT JOIN dbo.equipos q ON q.id = @IncomingTeamId AND q.centro_id = ea.centro_id AND q.unidad_id = ea.unidad_id AND q.estado = 'ACTIVE'

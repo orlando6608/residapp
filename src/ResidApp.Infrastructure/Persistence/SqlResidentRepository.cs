@@ -40,11 +40,11 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
             var activeProfileCode = input.ActiveProfile.ToCode();
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
-                VALUES (@Id, @AccountId, 'RESIDENT_CREATE', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, centro_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
+                VALUES (@Id, @AccountId, @CenterId, 'RESIDENT_CREATE', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
                 """, new
             {
-                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, CenterId = input.CenterId.Value, input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
             await connection.ExecuteAsync(new CommandDefinition("""

@@ -49,6 +49,18 @@ jobs:
           SQL_SERVER=localhost SQL_DATABASE=ResidAppTest SQL_USER=sa SQL_PASSWORD="$SA_PASSWORD" SQLCMD_EXTRA=-C \
             bash database/aplicar-scripts.sh
 
+      # La seguridad por filas (0030, ADR 0008) deja pasar a db_owner: para probarla de verdad, la aplicación de los tests
+      # funcionales se conecta con un usuario sin db_owner; el sembrado y las comprobaciones siguen con sa.
+      - name: Crear usuario limitado de la aplicación
+        env:
+          SA_PASSWORD: ${{ secrets.CI_SQL_SA_PASSWORD }}
+        run: |
+          app_password="App-$(openssl rand -hex 16)-x1!"
+          echo "::add-mask::$app_password"
+          echo "APP_SQL_PASSWORD=$app_password" >> "$GITHUB_ENV"
+          sqlcmd -C -S localhost -d ResidAppTest -U sa -P "$SA_PASSWORD" -b -v CONTRASENA="$app_password" \
+            -i database/seguridad/crear_usuario_aplicacion.sql
+
       - name: Restore
         run: dotnet restore src/ResidApp.sln
 
@@ -58,7 +70,9 @@ jobs:
       - name: Test
         env:
           RESIDAPP_TEST_CONNECTION_STRING: "Server=localhost,1433;Database=ResidAppTest;User Id=sa;Password=${{ secrets.CI_SQL_SA_PASSWORD }};TrustServerCertificate=True;MultipleActiveResultSets=true;"
-        run: dotnet test src/ResidApp.sln --no-build --configuration Release
+        run: |
+          export RESIDAPP_TEST_APP_CONNECTION_STRING="Server=localhost,1433;Database=ResidAppTest;User Id=residapp_app;Password=$APP_SQL_PASSWORD;TrustServerCertificate=True;MultipleActiveResultSets=true;"
+          dotnet test src/ResidApp.sln --no-build --configuration Release
 
   deploy:
     needs: build-and-test

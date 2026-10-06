@@ -730,8 +730,8 @@ public class EnfermeriaApplicationServiceTests
             ("DELETE FROM dbo.seguimientos WHERE evento_id = @EventId", "FOLLOW_UP_IMMUTABLE"),
             ("UPDATE a SET texto = 'x' FROM dbo.seguimiento_acciones a JOIN dbo.seguimientos s ON s.id = a.seguimiento_id WHERE s.evento_id = @EventId", "FOLLOW_UP_ACTION_IMMUTABLE"),
             ("""
-             INSERT INTO dbo.seguimiento_acciones (id, seguimiento_id, tipo_codigo, transferencia_id, registrado_por_cuenta_id, registrado_en)
-             SELECT NEWID(), a.seguimiento_id, 'RECEPCION', a.id, a.registrado_por_cuenta_id, SYSUTCDATETIME()
+             INSERT INTO dbo.seguimiento_acciones (id, centro_id, seguimiento_id, tipo_codigo, transferencia_id, registrado_por_cuenta_id, registrado_en)
+             SELECT NEWID(), a.centro_id, a.seguimiento_id, 'RECEPCION', a.id, a.registrado_por_cuenta_id, SYSUTCDATETIME()
                FROM dbo.seguimiento_acciones a JOIN dbo.seguimientos s ON s.id = a.seguimiento_id
               CROSS JOIN (VALUES (1), (2)) twice(n)
               WHERE s.evento_id = @EventId AND a.tipo_codigo = 'TRANSFERENCIA'
@@ -1144,8 +1144,8 @@ public class EnfermeriaApplicationServiceTests
             ("DELETE FROM dbo.protocolos_urgentes WHERE evento_id = @EventId", "URGENT_PROTOCOL_IMMUTABLE"),
             ("UPDATE r SET texto = 'x' FROM dbo.protocolo_urgente_registros r JOIN dbo.protocolos_urgentes p ON p.id = r.protocolo_id WHERE p.evento_id = @EventId", "URGENT_PROTOCOL_ENTRY_IMMUTABLE"),
             ("DELETE r FROM dbo.protocolo_urgente_registros r JOIN dbo.protocolos_urgentes p ON p.id = r.protocolo_id WHERE p.evento_id = @EventId", "URGENT_PROTOCOL_ENTRY_IMMUTABLE"),
-            ("INSERT INTO dbo.protocolo_urgente_registros (id, protocolo_id, tipo_codigo, texto, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), p.id, 'CONTACTO', 'Sin servicio', p.activado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.protocolos_urgentes p WHERE p.evento_id = @EventId", "CK_pur_tipo"),
-            ("INSERT INTO dbo.protocolo_urgente_registros (id, protocolo_id, tipo_codigo, servicio_contactado, contactado_en, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), p.id, 'CONTACTO', '112', DATEADD(HOUR, 1, SYSUTCDATETIME()), p.activado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.protocolos_urgentes p WHERE p.evento_id = @EventId", "CK_pur_contacto_no_futuro"),
+            ("INSERT INTO dbo.protocolo_urgente_registros (id, centro_id, protocolo_id, tipo_codigo, texto, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), p.centro_id, p.id, 'CONTACTO', 'Sin servicio', p.activado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.protocolos_urgentes p WHERE p.evento_id = @EventId", "CK_pur_tipo"),
+            ("INSERT INTO dbo.protocolo_urgente_registros (id, centro_id, protocolo_id, tipo_codigo, servicio_contactado, contactado_en, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), p.centro_id, p.id, 'CONTACTO', '112', DATEADD(HOUR, 1, SYSUTCDATETIME()), p.activado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.protocolos_urgentes p WHERE p.evento_id = @EventId", "CK_pur_contacto_no_futuro"),
             ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'EN_VALORACION', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
             ("UPDATE dbo.eventos_asistenciales SET estado_codigo = 'ESCALADO_MEDICINA', revision = revision + 1 WHERE id = @EventId", "CLINICAL_EVENT_TRANSITION_INVALID"),
         })
@@ -1315,8 +1315,8 @@ public class EnfermeriaApplicationServiceTests
             ("DELETE FROM dbo.informes_derivacion WHERE evento_id = @EventId", "REFERRAL_REPORT_IMMUTABLE"),
             ("UPDATE dbo.intentos_llamada_familia SET nota = 'x' WHERE evento_id = @EventId", "FAMILY_CALL_ATTEMPT_IMMUTABLE"),
             ("DELETE FROM dbo.intentos_llamada_familia WHERE evento_id = @EventId", "FAMILY_CALL_ATTEMPT_IMMUTABLE"),
-            ("INSERT INTO dbo.intentos_llamada_familia (id, informe_id, evento_id, contacto, llamado_en, resultado_codigo, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), d.id, d.evento_id, 'Hija', SYSUTCDATETIME(), 'OTRO', d.firmado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.informes_derivacion d WHERE d.evento_id = @EventId", "CK_ilf_resultado"),
-            ("INSERT INTO dbo.intentos_llamada_familia (id, informe_id, evento_id, contacto, llamado_en, resultado_codigo, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), d.id, d.evento_id, 'Hija', DATEADD(HOUR, 1, SYSUTCDATETIME()), 'CONTACTADO', d.firmado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.informes_derivacion d WHERE d.evento_id = @EventId", "CK_ilf_no_futuro"),
+            ("INSERT INTO dbo.intentos_llamada_familia (id, centro_id, informe_id, evento_id, contacto, llamado_en, resultado_codigo, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), d.centro_id, d.id, d.evento_id, 'Hija', SYSUTCDATETIME(), 'OTRO', d.firmado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.informes_derivacion d WHERE d.evento_id = @EventId", "CK_ilf_resultado"),
+            ("INSERT INTO dbo.intentos_llamada_familia (id, centro_id, informe_id, evento_id, contacto, llamado_en, resultado_codigo, registrado_por_cuenta_id, registrado_en) SELECT NEWID(), d.centro_id, d.id, d.evento_id, 'Hija', DATEADD(HOUR, 1, SYSUTCDATETIME()), 'CONTACTADO', d.firmado_por_cuenta_id, SYSUTCDATETIME() FROM dbo.informes_derivacion d WHERE d.evento_id = @EventId", "CK_ilf_no_futuro"),
         })
         {
             var ex = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { EventId = eventId }));

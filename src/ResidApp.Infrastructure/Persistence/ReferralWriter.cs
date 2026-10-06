@@ -39,11 +39,11 @@ internal static class ReferralWriter
         try
         {
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
-                VALUES (@Id, @AccountId, @ActionCode, @OperationId, @RequestHash, 'IN_PROGRESS', @SignedAt)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, centro_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
+                VALUES (@Id, @AccountId, @CenterId, @ActionCode, @OperationId, @RequestHash, 'IN_PROGRESS', @SignedAt)
                 """, new
             {
-                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, ActionCode = SignActionCode, input.OperationId,
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, CenterId = input.CenterId.Value, ActionCode = SignActionCode, input.OperationId,
                 RequestHash = requestHash, input.SignedAt,
             }, transaction, cancellationToken: ct));
 
@@ -129,8 +129,8 @@ internal static class ReferralWriter
         var attemptId = Guid.NewGuid();
         var inserted = await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.intentos_llamada_familia
-                (id, informe_id, evento_id, contacto, llamado_en, resultado_codigo, nota, registrado_por_cuenta_id, registrado_en)
-            SELECT @Id, d.id, d.evento_id, @Contact, @CalledAt, @ResultCode, @Note, @AccountId, @OccurredAt
+                (id, centro_id, informe_id, evento_id, contacto, llamado_en, resultado_codigo, nota, registrado_por_cuenta_id, registrado_en)
+            SELECT @Id, d.centro_id, d.id, d.evento_id, @Contact, @CalledAt, @ResultCode, @Note, @AccountId, @OccurredAt
               FROM dbo.informes_derivacion d WITH (FORCESEEK)
              WHERE d.evento_id = @EventId
             """, new

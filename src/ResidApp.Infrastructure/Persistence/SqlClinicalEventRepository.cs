@@ -37,11 +37,11 @@ public sealed class SqlClinicalEventRepository(SqlConnectionFactory connections)
             var isMedical = input.Profile == SystemProfile.Medicina;
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
-                VALUES (@Id, @AccountId, @ActionCode, @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, centro_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
+                VALUES (@Id, @AccountId, @CenterId, @ActionCode, @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
                 """, new
             {
-                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, ActionCode, input.OperationId,
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, CenterId = input.CenterId.Value, ActionCode, input.OperationId,
                 RequestHash = requestHash, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
