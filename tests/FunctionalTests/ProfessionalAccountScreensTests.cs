@@ -433,7 +433,24 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
             ["Form.Nombre"] = "Equipo A (ficticio)",
         });
         var teamId = Regex.Match(teams, "equipoId=([0-9a-f-]{36})").Groups[1].Value;
+        // Una cuenta de Enfermería en la unidad del equipo, para añadirla como miembro (escribe en equipos_miembros por la app real).
+        var memberAccountId = Guid.NewGuid();
+        using (var seedConnection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync())
+        {
+            await seedConnection.ExecuteAsync("""
+                DECLARE @centerId UNIQUEIDENTIFIER = (SELECT centro_id FROM dbo.unidades WHERE id = @unitId), @scopeId UNIQUEIDENTIFIER = NEWID();
+                INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@memberAccountId, @subject, 'ACTIVE', SYSUTCDATETIME());
+                INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+                VALUES (@scopeId, @memberAccountId, @centerId, 'ENFERMERIA', 'ACTIVE', SYSUTCDATETIME(), @memberAccountId);
+                INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @scopeId, @centerId, @unitId, SYSUTCDATETIME(), @memberAccountId);
+                """, new { memberAccountId, subject = $"functional-miembro-{Guid.NewGuid():N}"[..30], unitId = admin.UnitId });
+        }
         var membersPage = WebUtility.HtmlDecode(await client.GetStringAsync($"/Administracion/MiembrosEquipo?equipoId={teamId}"));
+        var memberAdded = await PostFormAsync("/Administracion/MiembroEquipo", membersPage, new()
+        {
+            ["equipoId"] = teamId, ["cuentaId"] = memberAccountId.ToString(), ["anadir"] = "true",
+        });
         var nursePage = await PageAsync("ENFERMERIA", null, "/Administracion/Turnos");
 
         Assert.Contains("Escribe el nombre del turno.", emptyShift);
@@ -447,6 +464,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("Equipo creado.", teams);
         Assert.Contains("Equipo A (ficticio)", teams);
         Assert.Contains("El equipo todavía no tiene miembros.", membersPage);
+        Assert.Contains("Miembro añadido al equipo.", memberAdded);
         Assert.Contains("No se puede acceder a esta operación", nursePage);
         Assert.DoesNotContain("Nuevo turno", nursePage);
     }
@@ -547,6 +565,39 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
 
     private static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
+
+    [Fact]
+    public async Task RangosReferencia_UnaMedicaConPermisoLosGuarda_ConLaAppEntera()
+    {
+        // Con la app conectada como usuario limitado (RESIDAPP_TEST_APP_CONNECTION_STRING) escribe en las tablas de rangos bajo la seguridad por filas.
+        var doctor = await SeedAdministratorAsync("MEDICINA", "REFERENCE_RANGES_MANAGE");
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = doctor.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        var page = await client.GetStringAsync("/RangosReferencia");
+        var saved = WebUtility.HtmlDecode(await (await client.PostAsync("/RangosReferencia", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["Form.Version"] = ExtractValue(page, "Form.Version"),
+            ["Form.Rangos[0].Constante"] = "Temperatura",
+            ["Form.Rangos[0].Minimo"] = "36",
+            ["Form.Rangos[0].Maximo"] = "38",
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Rangos de referencia guardados.", saved);
+        using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.rangos_referencia_constantes WHERE centro_id = (SELECT centro_id FROM dbo.unidades WHERE id = @unitId)",
+            new { unitId = doctor.UnitId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.rangos_referencia_constantes_historial WHERE centro_id = (SELECT centro_id FROM dbo.unidades WHERE id = @unitId)",
+            new { unitId = doctor.UnitId }));
+    }
 
     [Fact]
     public async Task Inicio_EnfermeriaSoloVeElAltaDeResidenteConElPermiso()
