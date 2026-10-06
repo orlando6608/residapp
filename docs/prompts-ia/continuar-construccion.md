@@ -13,7 +13,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **G1, RLS por centro, tanda 4b: las tablas de la autorización (2026-10-06, rama `g1-rls-autorizacion`, sin push):** `0036_rls_autorizacion.sql` amplía
+- **G1, activación en Azure, paso 1 y 2 (2026-10-06, rama `g1-activacion-azure`, sin commit ni push):** el usuario limitado `residapp_app` ya existe en la base de Azure dev
+  (usuario contenido con contraseña, sin `db_owner`; lo creó Orlando con `database/seguridad/crear_usuario_aplicacion_azure.sql` y comprobó `IS_MEMBER('db_owner') = 0`
+  y `COUNT(*)` de `residentes` = 0 sin ámbito). El deploy aplica ahora los scripts y los seeds con los secretos de GitHub `AZURE_SQL_ADMIN_USER` y
+  `AZURE_SQL_ADMIN_PASSWORD` si existen (si no, con el usuario de la cadena de la app, como hasta ahora). **Decisión:** las credenciales de administrador van en
+  secretos de GitHub y NO en la Web App (las cadenas de la Web App llegan al entorno del proceso de la app: si se comprometiera, el atacante tendría el administrador).
+  **Siguiente:** Orlando crea los dos secretos con las credenciales actuales de administrador; se mergea; se comprueba que un deploy aplica con ellos; entonces se cambia
+  la cadena `ResidApp` de la Web App a `residapp_app` (la vuelta atrás es restaurarla) y se prueba la app en dev con datos de prueba antes de pedir a CJ que la recorra.
+- **G1, RLS por centro, tanda 4b: las tablas de la autorización (2026-10-06, PR #6, en `main` y aplicada en Azure dev; el despliegue devuelve 200):** `0036_rls_autorizacion.sql` amplía
   `seg.pol_centro` a las últimas 4 tablas: `permisos_perfil`, `ambitos_perfil_residente`, `episodios_residente_centro` e `intervalos_ubicacion_residente`. La
   autorización de cada petición las lee, pero siempre con el ámbito activo y su centro: la política no cambia ningún resultado y, sin ámbito activo, no se
   ve ninguna fila y la autorización deniega. Los 73 funcionales existentes ya pasaban con las 4 bajo política; se añadió
