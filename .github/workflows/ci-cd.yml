@@ -74,6 +74,12 @@ jobs:
           export RESIDAPP_TEST_APP_CONNECTION_STRING="Server=localhost,1433;Database=ResidAppTest;User Id=residapp_app;Password=$APP_SQL_PASSWORD;TrustServerCertificate=True;MultipleActiveResultSets=true;"
           dotnet test src/ResidApp.sln --no-build --configuration Release
 
+      # Tras las pruebas las tablas tienen datos de varios centros: el usuario limitado, con un ámbito de cada centro, solo debe ver los suyos.
+      - name: Comprobar el aislamiento por centro con los datos de las pruebas
+        env:
+          SA_PASSWORD: ${{ secrets.CI_SQL_SA_PASSWORD }}
+        run: sqlcmd -C -S localhost -d ResidAppTest -U sa -P "$SA_PASSWORD" -b -W -i database/seguridad/comprobar_aislamiento.sql
+
   deploy:
     needs: build-and-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'

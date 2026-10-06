@@ -197,6 +197,68 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Enfermeria_RegistraUnEventoYGuardaSuValoracion_ConLaAppEntera()
+    {
+        // Flujo clínico por la app real con cookie y ámbito: con la app conectada como usuario limitado
+        // (RESIDAPP_TEST_APP_CONNECTION_STRING) pasa por la seguridad por filas de los eventos y las valoraciones.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var createPage = await admin.GetStringAsync("/Residents/Create");
+        var created = await (await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(createPage, "__RequestVerificationToken"),
+            ["OperacionId"] = ExtractValue(createPage, "OperacionId"),
+            ["AmbitoPerfilId"] = seed.ProfileScopeId.ToString(),
+            ["CentroId"] = seed.CenterId.ToString(),
+            ["UnidadId"] = seed.UnitId.ToString(),
+            ["NombreVisible"] = "Residente Evento Funcional",
+            ["FechaNacimiento"] = "1938-02-20",
+            ["SexoDocumentadoCodigo"] = "Hombre",
+        }))).Content.ReadAsStringAsync();
+        var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Tos productiva desde la mañana (prueba funcional).",
+            ["Clasificacion"] = "Ordinario",
+        }))).Content.ReadAsStringAsync();
+        var eventId = await connection.ExecuteScalarAsync<Guid>(
+            "SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        var revision = await connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+
+        var started = WebUtility.HtmlDecode(await (await nurse.PostAsync("/Enfermeria/EmpezarValoracion", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(detailPage, "__RequestVerificationToken"),
+            ["eventoId"] = eventId.ToString(),
+            ["revision"] = revision.ToString(),
+        }))).Content.ReadAsStringAsync());
+        var revisionAfterStart = await connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+        var assessmentPage = await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}");
+        var saved = WebUtility.HtmlDecode(await (await nurse.PostAsync("/Enfermeria/Valoracion", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(assessmentPage, "__RequestVerificationToken"),
+            ["Form.EventoId"] = eventId.ToString(),
+            ["Form.Revision"] = revisionAfterStart.ToString(),
+            ["Form.Hallazgos"] = "Crepitantes en base derecha.",
+            ["Form.Actuaciones"] = "Se incorpora a 45 grados.",
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Evento registrado.", WebUtility.HtmlDecode(detailPage));
+        Assert.True(revisionAfterStart > revision, "Empezar la valoración debería subir la revisión del evento.");
+        Assert.Contains("Valoración guardada.", saved);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.valoraciones_enfermeria WHERE evento_id = @eventId", new { eventId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.valoraciones_enfermeria_versiones WHERE evento_id = @eventId", new { eventId }));
+    }
+
+    [Fact]
     public async Task BaselineSign_SinPantallaPropia_RedirigeAResidentes()
     {
         var seed = await SeedAsync();
