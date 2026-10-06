@@ -13,7 +13,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **G1, RLS por centro, tanda 2: flujo clínico (2026-10-06, rama `g1-rls-clinicas`, sin commit ni push):** `0033_rls_flujo_clinico.sql` amplía
+- **G1, RLS por centro, tanda 3: estructura y planificación (2026-10-06, rama `g1-rls-estructura`, sin commit ni push):** `0034_rls_estructura.sql` amplía
+  `seg.pol_centro` a 10 tablas: `edificios`, `plantas`, `habitaciones`, `plazas`, `equipos`, `equipos_miembros`, `turnos_catalogo`, `planificacion_turnos`,
+  `rangos_referencia_constantes` y su historial (las unidades no entran: las escribe `PLATAFORMA`). Con la política activa, los funcionales existentes
+  ya creaban filas por la app real en 7 de las 10 (se midió ejecutando solo los funcionales en Docker antes de nada). Para las otras 3 se amplió el test
+  de turnos y equipos (añade un miembro de Enfermería a un equipo) y se añadió `RangosReferencia_UnaMedicaConPermisoLosGuarda_ConLaAppEntera` (el
+  permiso `REFERENCE_RANGES_MANAGE` solo lo admiten `MEDICINA` y `DIRECCION_CLINICA`: un trigger lo impone). En Docker, con la app como `residapp_app`:
+  264, 71 y 330 en verde, dos vueltas, y las 43 tablas cubiertas `OK` en `comprobar_aislamiento.sql`. **Con esta tanda, todo lo estructural queda probado
+  por la app entera.**
+- **G1, RLS por centro, tanda 2: flujo clínico (2026-10-06, PR #3 mergeado: `0033` en `main` y aplicado a Azure de desarrollo; el paso de aislamiento del CI pasó también en Actions):** `0033_rls_flujo_clinico.sql` amplía
   `seg.pol_centro` a 20 tablas: `eventos_clinicos`, `eventos_contexto`, `escalados_medicina`, las valoraciones de Enfermería y de Medicina con sus versiones y
   correcciones, `valoraciones_rectificaciones`, los dos seguimientos y sus acciones, `indicaciones_medicas`, `protocolos_urgentes` y sus registros,
   `informes_derivacion`, `intentos_llamada_familia` y `comunicaciones_familiares`. Varias consultas usan `WITH (FORCESEEK)` sobre estas tablas: se
@@ -55,9 +63,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     La instancia local `ACER-ORLANDO` es solo Windows: para repetirlo en local, levanta un contenedor (`docker run ... -p 14333:1433`),
     aplica los scripts con `aplicar-scripts.sh`, crea el login y exporta las dos variables.
   - **Cobertura de la política (`CoberturaRlsTests`, 2026-10-06):** toda tabla de `dbo` está bajo `seg.pol_centro` o figura en la lista
-    `Excepciones` del test con su motivo; una tabla nueva sin decidir, o una excepción ya cubierta, hacen fallar el test. Hoy: 33 cubiertas
-    (3 de `0030`, 10 del basal de `0032` y 20 del flujo clínico de `0033`), 5 por diseño (`centros`, `cuentas`, `ambitos_perfil`, `scripts_aplicados`, `sysdiagrams`), 3 de provisión
-    (`unidades`, `ambitos_perfil_unidad`, `eventos_auditoria`) y 22 pendientes, **todas con `centro_id`** (las cifras anteriores, 53 y 43, iban una por encima: eran 52 y 42). Al cubrir una tabla, quítala de `Excepciones`.
+    `Excepciones` del test con su motivo; una tabla nueva sin decidir, o una excepción ya cubierta, hacen fallar el test. Hoy: 43 cubiertas
+    (3 de `0030`, 10 del basal de `0032`, 20 del flujo clínico de `0033` y 10 de estructura de `0034`), 5 por diseño (`centros`, `cuentas`, `ambitos_perfil`, `scripts_aplicados`, `sysdiagrams`), 3 de provisión
+    (`unidades`, `ambitos_perfil_unidad`, `eventos_auditoria`) y 12 pendientes, **todas con `centro_id`** (las cifras anteriores a la tanda 2, 53 y 43, iban una por encima: eran 52 y 42). Al cubrir una tabla, quítala de `Excepciones`.
   - **`0031_centro_id_en_tablas_hijas.sql` (2026-10-06, en `main` y en Azure de desarrollo):** diez hijas sin `centro_id` (`valoraciones_enfermeria_versiones` y
     `_correcciones`, `valoraciones_medicas_versiones` y `_correcciones`, `seguimiento_acciones`, `seguimiento_medico_acciones`,
     `protocolo_urgente_registros`, `intentos_llamada_familia`, `cierres_cotidianos_cambio_area_opciones`, `operaciones_idempotencia`) llevan
@@ -70,8 +78,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Lección (`EXECUTE AS` en tests):** con `MultipleActiveResultSets=true` falla de forma intermitente («a simultaneous batch has called
     it») cuando corren a la vez varios proyectos de test; las conexiones suplantadas de `RlsCentroTests` van sin pool y sin MARS. La
     fábrica de producción usa `sp_set_session_context`, que no tiene ese límite.
-  - **Pendiente de G1:** cubrir las 22 tablas restantes (cierres cotidianos e idempotencia; estructura: edificios, plantas, habitaciones, plazas,
-    equipos, turnos, rangos; permisos y ámbitos del residente, episodios y ubicación, familiares y contacto urgente, correcciones de identidad);
+  - **Pendiente de G1:** cubrir las 12 tablas restantes (cierres cotidianos e idempotencia; permisos y ámbitos del residente, episodios y ubicación,
+    familiares y contacto urgente, correcciones de identidad);
     los funcionales ejercitan `residentes`, el borrador de basal y el registro y valoración de un evento, no `familiares` ni `eventos_asistenciales` por separado; usuario limitado
     en Azure y cambio de la cadena de la app (con una segunda cadena de administrador para scripts y seeds: hoy el despliegue lee la de la
     app para aplicar los scripts); salto de `PLATAFORMA` solo en tablas de provisión. Un push a `main` aplica los scripts nuevos a Azure antes
@@ -81,7 +89,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   cadena. Decide: sin claims de centro, sin borrado lógico genérico, grupo como `grupos` + `centros.grupo_id NULL` (sin `grupo_id` en
   tablas clínicas), RLS por centro por fases con salto de `PLATAFORMA` solo en las tablas de provisión (nunca en las clínicas, por el
   ADR 0006) y separación futura a otra base por grupo, con catálogo aparte. Incrementos G1–G3 en el ADR; el siguiente número de script
-  libre es `0034`. No se ha tocado `src/` ni `database/`. Decidido por el usuario el mismo día: un administrador de grupo **no** ve datos
+  libre es `0035`. No se ha tocado `src/` ni `database/`. Decidido por el usuario el mismo día: un administrador de grupo **no** ve datos
   clínicos de varias residencias, solo estructura y agregados.
 - **Propuesta de proveedor de identidad (2026-10-04, solo documentación):** ADR 0007 en estado propuesto. Microsoft Entra External
   ID con tenant en la UE; Auth0 UE como respaldo si se exige TOTP o se rechaza el código por correo como segundo factor. El alta crea
