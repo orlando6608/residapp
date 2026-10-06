@@ -63,11 +63,11 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             var result = new SignBaselineDraftResult(versionId, versionNumber);
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
-                VALUES (@Id, @AccountId, 'BASELINE_SIGN', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, centro_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
+                VALUES (@Id, @AccountId, @CenterId, 'BASELINE_SIGN', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
                 """, new
             {
-                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, CenterId = input.CenterId.Value, input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
             await connection.ExecuteAsync(new CommandDefinition("""
@@ -239,11 +239,11 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             var occurredAt = DateTimeOffset.UtcNow;
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
-                VALUES (@Id, @AccountId, 'CLINICAL_DETAIL_READ', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, centro_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
+                VALUES (@Id, @AccountId, @CenterId, 'CLINICAL_DETAIL_READ', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
                 """, new
             {
-                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, CenterId = input.CenterId.Value, input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
             var isCurrent = input.ResourceType == ClinicalResourceType.BaselineCurrent;
@@ -492,11 +492,11 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             var result = new CreateBaselineDraftResult(draftId, 1);
 
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
-                VALUES (@Id, @AccountId, 'BASELINE_DRAFT_CREATE', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
+                INSERT INTO dbo.operaciones_idempotencia (id, cuenta_id, centro_id, accion_codigo, operacion_id, hash_solicitud, estado, creado_en)
+                VALUES (@Id, @AccountId, @CenterId, 'BASELINE_DRAFT_CREATE', @OperationId, @RequestHash, 'IN_PROGRESS', @OccurredAt)
                 """, new
             {
-                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
+                Id = Guid.NewGuid(), AccountId = input.AccountId.Value, CenterId = input.CenterId.Value, input.OperationId, RequestHash = requestHash, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
             var activeProfileCode = input.ActiveProfile.ToCode();

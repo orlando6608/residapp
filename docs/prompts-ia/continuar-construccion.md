@@ -13,6 +13,52 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **G1, RLS por centro, primera tanda (2026-10-06, rama `g1-rls-centro`, sin commit ni push):** script `0030_rls_centro.sql` (esquema `seg`,
+  `seg.fn_centro_del_ambito`, `SECURITY POLICY seg.pol_centro` sobre `residentes`, `eventos_asistenciales` y `familiares`), aplicado solo en la
+  BD local. `ITenantContext` (Application) + `RequestTenantContext` (Web) + `SqlConnectionFactory(cadena, tenant = null)`: cada conexión fija
+  `sujeto_externo` y `ambito_perfil_id` en `SESSION_CONTEXT` (`read_only`), con o sin ámbito. `Program.cs` registra la fábrica como scoped.
+  `RlsCentroTests`: 10 pruebas; suite completa en verde (264 unitarias, 324 de integración, 68 funcionales).
+  - **El predicado se aplica a todos, también a `dbo`/sysadmin; deja pasar a `db_owner`.** Por eso la política está latente mientras la
+    aplicación use un usuario `db_owner` (hoy, también en Azure, que usa el mismo usuario para los scripts). Sin ese cambio de usuario,
+    la RLS no protege nada en producción.
+  - **Lección:** una conexión con `EXECUTE AS USER` que vuelve al pool sin `REVERT` falla al restablecerse («session is in the kill state»):
+    las pruebas abren esas conexiones con `Pooling=false`. La instancia local es solo Windows (no admite logins SQL), así que las pruebas
+    suplantan con `EXECUTE AS USER ... WITHOUT LOGIN` en lugar de usar una cadena aparte.
+  - **La app entera con un usuario limitado (2026-10-06):** `database/seguridad/crear_usuario_aplicacion.sql` crea el login `residapp_app`
+    (`db_datareader` + `db_datawriter`, sin `db_owner`). `WebAppFactory` acepta `RESIDAPP_TEST_APP_CONNECTION_STRING`: la app se conecta con
+    ese usuario y el sembrado y las comprobaciones siguen con `TestConnectionString`. Verificado en un SQL Server de Docker (la misma
+    imagen que el CI, puerto 14333, ya eliminado): los 68 funcionales pasan con la app como `residapp_app` (se vieron sesiones de ese
+    login durante la ejecución), la suite completa pasa (264, 68, 325) y, sin contexto, `residapp_app` ve 0 de 6 residentes. El CI tiene
+    un paso nuevo («Crear usuario limitado de la aplicación») y ejecuta toda la suite así; **no se ha ejecutado en GitHub Actions todavía**.
+    La instancia local `ACER-ORLANDO` es solo Windows: para repetirlo en local, levanta un contenedor (`docker run ... -p 14333:1433`),
+    aplica los scripts con `aplicar-scripts.sh`, crea el login y exporta las dos variables.
+  - **Cobertura de la política (`CoberturaRlsTests`, 2026-10-06):** toda tabla de `dbo` está bajo `seg.pol_centro` o figura en la lista
+    `Excepciones` del test con su motivo; una tabla nueva sin decidir, o una excepción ya cubierta, hacen fallar el test. Hoy: 3 cubiertas,
+    5 por diseño (`centros`, `cuentas`, `ambitos_perfil`, `scripts_aplicados`, `sysdiagrams`), 3 de provisión (`unidades`,
+    `ambitos_perfil_unidad`, `eventos_auditoria`) y 53 pendientes, **todas con `centro_id`**. Al cubrir una tabla, quítala de `Excepciones`.
+  - **`0031_centro_id_en_tablas_hijas.sql` (2026-10-06, sin push):** diez hijas sin `centro_id` (`valoraciones_enfermeria_versiones` y
+    `_correcciones`, `valoraciones_medicas_versiones` y `_correcciones`, `seguimiento_acciones`, `seguimiento_medico_acciones`,
+    `protocolo_urgente_registros`, `intentos_llamada_familia`, `cierres_cotidianos_cambio_area_opciones`, `operaciones_idempotencia`) llevan
+    ahora `centro_id NOT NULL` con clave foránea compuesta con su padre (índices únicos nuevos `UX_*_centro*` en los padres; en
+    `operaciones_idempotencia`, FK simple a `centros`). Una sola transacción; para el relleno desactiva y reactiva los triggers de
+    inmutabilidad. En `operaciones_idempotencia` el centro sale del recurso guardado; lo que no se resuelve queda en el centro reservado
+    «Plataforma» (en la BD local: 0 de 86.324). Todos los `INSERT` de la app y de los tests pasan ya `centro_id`: **una escritura nueva en
+    esas tablas sin `centro_id` falla** (NOT NULL). Verificado: ensayo con `ROLLBACK` sobre la BD local, aplicación real, 32 scripts desde
+    cero en Docker y la suite completa con la app como `residapp_app` (264, 68, 328).
+  - **Lección (`EXECUTE AS` en tests):** con `MultipleActiveResultSets=true` falla de forma intermitente («a simultaneous batch has called
+    it») cuando corren a la vez varios proyectos de test; las conexiones suplantadas de `RlsCentroTests` van sin pool y sin MARS. La
+    fábrica de producción usa `sp_set_session_context`, que no tiene ese límite.
+  - **Pendiente de G1:** cubrir esas tablas por tandas; los funcionales no crean filas en `familiares` ni en `eventos_asistenciales`
+    (solo `residentes`), así que la app entera con usuario limitado aún no ejercita esas dos tablas; usuario limitado en Azure y cambio de
+    la cadena de la app (con confirmación del usuario); salto de `PLATAFORMA` solo en tablas de provisión. **No hagas push de `0030` a
+    `main` sin haberlo hablado:** el despliegue aplica los scripts a Azure.
+- **Propuesta de multi-centro y grupos empresariales (2026-10-06, solo documentación):** ADR 0008 en estado propuesto. El esquema ya es
+  multi-centro por filas (`centro_id` en todo, claves compuestas); no hay `ITenantProvider` y `SqlConnectionFactory` tiene una sola
+  cadena. Decide: sin claims de centro, sin borrado lógico genérico, grupo como `grupos` + `centros.grupo_id NULL` (sin `grupo_id` en
+  tablas clínicas), RLS por centro por fases con salto de `PLATAFORMA` solo en las tablas de provisión (nunca en las clínicas, por el
+  ADR 0006) y separación futura a otra base por grupo, con catálogo aparte. Incrementos G1–G3 en el ADR; el siguiente número de script
+  libre es `0030`. No se ha tocado `src/` ni `database/`. Decidido por el usuario el mismo día: un administrador de grupo **no** ve datos
+  clínicos de varias residencias, solo estructura y agregados.
 - **Propuesta de proveedor de identidad (2026-10-04, solo documentación):** ADR 0007 en estado propuesto. Microsoft Entra External
   ID con tenant en la UE; Auth0 UE como respaldo si se exige TOTP o se rechaza el código por correo como segundo factor. El alta crea
   el usuario por Graph y guarda `<tenant>|<oid>` como `sujeto_externo`. Las puertas de aceptación y los incrementos I1–I5 están en el

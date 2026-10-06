@@ -34,7 +34,9 @@ var connectionString = builder.Configuration.GetConnectionString("ResidApp")
         "Falta la cadena de conexión 'ResidApp'. En desarrollo, configúrala con " +
         "\"dotnet user-secrets set ConnectionStrings:ResidApp <cadena>\" desde src/ResidApp.Web; nunca en appsettings.json.");
 DapperDateOnlyTypeHandler.Register();
-builder.Services.AddSingleton(new SqlConnectionFactory(connectionString));
+// ADR 0008: cada conexión lleva el sujeto verificado y el ámbito activo para la seguridad por filas de SQL (0030).
+builder.Services.AddScoped<ITenantContext, RequestTenantContext>();
+builder.Services.AddScoped(services => new SqlConnectionFactory(connectionString, services.GetRequiredService<ITenantContext>()));
 
 builder.Services.AddScoped<IResidentRepository, SqlResidentRepository>();
 builder.Services.AddScoped<IBaselineRepository, SqlBaselineRepository>();

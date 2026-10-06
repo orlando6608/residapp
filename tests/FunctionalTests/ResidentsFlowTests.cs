@@ -268,12 +268,18 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             Environment.GetEnvironmentVariable("RESIDAPP_TEST_CONNECTION_STRING")
             ?? "Server=ACER-ORLANDO;Database=ResidApp;Integrated Security=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
+        // Cadena con la que se conecta la aplicación. Por defecto es la de las pruebas (db_owner, para la que la seguridad por
+        // filas es transparente). Con RESIDAPP_TEST_APP_CONNECTION_STRING la aplicación se conecta con el usuario limitado
+        // (database/seguridad/crear_usuario_aplicacion.sql) mientras el sembrado y las comprobaciones siguen con TestConnectionString.
+        public static string AppConnectionString =>
+            Environment.GetEnvironmentVariable("RESIDAPP_TEST_APP_CONNECTION_STRING") ?? TestConnectionString;
+
         // Program.cs lee ConnectionStrings:ResidApp directamente sobre builder.Configuration antes de
         // builder.Build() (falla rápido si falta). Las sobrescrituras de WebApplicationFactory vía
         // ConfigureWebHost/ConfigureAppConfiguration solo se aplican en el momento de Build(), demasiado
         // tarde para ese chequeo — por eso se fija aquí como variable de entorno del proceso, que
         // CreateBuilder(args) sí incorpora desde el arranque, sea cual sea el entorno (Development o no).
         public WebAppFactory() =>
-            Environment.SetEnvironmentVariable("ConnectionStrings__ResidApp", TestConnectionString);
+            Environment.SetEnvironmentVariable("ConnectionStrings__ResidApp", AppConnectionString);
     }
 }
