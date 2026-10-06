@@ -13,6 +13,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **G1, RLS por centro, tanda 4a: cierres, idempotencia y familias (2026-10-06, rama `g1-rls-cierres-y-familias`, sin push):** `0035_rls_cierres_y_familias.sql` amplía
+  `seg.pol_centro` a 8 tablas: los tres `cierres_cotidianos_*`, `operaciones_idempotencia`, `residentes_contacto_urgente`, `residentes_familiares`,
+  `residentes_identidad_correcciones` y `familiares_autorizaciones_cambios`. Ninguna interviene en la autorización de cada petición (esas cuatro van en la
+  tanda 4b). Medido ejecutando solo los funcionales en Docker: solo `operaciones_idempotencia` recibía filas por la app real; las otras 7 no. Se añadieron
+  `Administracion_CorrigeIdentidadYGestionaFamiliares_ConLaAppEntera` (corregir identidad, añadir familiar, abrir y activar su autorización, designarlo
+  contacto urgente) y `Auxiliar_RegistraSinCambiosYUnCambioConOpciones_ConLaAppEntera` (cierre sin cambios y cambio con área de texto y opción rápida).
+  En Docker, con la app como `residapp_app`: 264, 73 y 330 en verde y las 51 tablas cubiertas `OK` en `comprobar_aislamiento.sql`. **Quedan 4 tablas**
+  (`permisos_perfil`, `ambitos_perfil_residente`, `episodios_residente_centro`, `intervalos_ubicacion_residente`: la autorización las lee en cada petición,
+  pero siempre con el ámbito activo y el centro, así que la política no cambia ningún resultado y, si algo falla, la autorización deniega). Siguiente script: `0036`.
 - **G1, RLS por centro, tanda 3: estructura y planificación (2026-10-06, PR #4, en `main` y aplicada en Azure dev; el despliegue devuelve 200):** `0034_rls_estructura.sql` amplía
   `seg.pol_centro` a 10 tablas: `edificios`, `plantas`, `habitaciones`, `plazas`, `equipos`, `equipos_miembros`, `turnos_catalogo`, `planificacion_turnos`,
   `rangos_referencia_constantes` y su historial (las unidades no entran: las escribe `PLATAFORMA`). Con la política activa, los funcionales existentes
@@ -78,9 +87,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Lección (`EXECUTE AS` en tests):** con `MultipleActiveResultSets=true` falla de forma intermitente («a simultaneous batch has called
     it») cuando corren a la vez varios proyectos de test; las conexiones suplantadas de `RlsCentroTests` van sin pool y sin MARS. La
     fábrica de producción usa `sp_set_session_context`, que no tiene ese límite.
-  - **Pendiente de G1:** cubrir las 12 tablas restantes (cierres cotidianos e idempotencia; permisos y ámbitos del residente, episodios y ubicación,
-    familiares y contacto urgente, correcciones de identidad);
-    los funcionales ejercitan `residentes`, el borrador de basal y el registro y valoración de un evento, no `familiares` ni `eventos_asistenciales` por separado; usuario limitado
+  - **Pendiente de G1:** cubrir las 4 tablas restantes (permisos y ámbitos del residente, episodios y ubicación: la tanda 4b);
+    usuario limitado
     en Azure y cambio de la cadena de la app (con una segunda cadena de administrador para scripts y seeds: hoy el despliegue lee la de la
     app para aplicar los scripts); salto de `PLATAFORMA` solo en tablas de provisión. Un push a `main` aplica los scripts nuevos a Azure antes
     de desplegar el código: la política es latente mientras la app use `db_owner`.
