@@ -13,13 +13,23 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **G1, activación en Azure, paso 1 y 2 (2026-10-06, rama `g1-activacion-azure`, sin commit ni push):** el usuario limitado `residapp_app` ya existe en la base de Azure dev
-  (usuario contenido con contraseña, sin `db_owner`; lo creó Orlando con `database/seguridad/crear_usuario_aplicacion_azure.sql` y comprobó `IS_MEMBER('db_owner') = 0`
-  y `COUNT(*)` de `residentes` = 0 sin ámbito). El deploy aplica ahora los scripts y los seeds con los secretos de GitHub `AZURE_SQL_ADMIN_USER` y
-  `AZURE_SQL_ADMIN_PASSWORD` si existen (si no, con el usuario de la cadena de la app, como hasta ahora). **Decisión:** las credenciales de administrador van en
-  secretos de GitHub y NO en la Web App (las cadenas de la Web App llegan al entorno del proceso de la app: si se comprometiera, el atacante tendría el administrador).
-  **Siguiente:** Orlando crea los dos secretos con las credenciales actuales de administrador; se mergea; se comprueba que un deploy aplica con ellos; entonces se cambia
-  la cadena `ResidApp` de la Web App a `residapp_app` (la vuelta atrás es restaurarla) y se prueba la app en dev con datos de prueba antes de pedir a CJ que la recorra.
+- **G1 completo y activo en Azure dev (2026-10-06, PR #7, en `main`; la app responde 200):** la política `seg.pol_centro` cubre las 55 tablas de datos y ahora **se aplica de verdad**:
+  la app de Azure dev se conecta como `residapp_app` (usuario contenido con contraseña, sin `db_owner`; lo creó Orlando con
+  `database/seguridad/crear_usuario_aplicacion_azure.sql` y comprobó `IS_MEMBER('db_owner') = 0` y `COUNT(*)` de `residentes` = 0 sin ámbito). El despliegue aplica
+  scripts y seeds con los secretos de GitHub `AZURE_SQL_ADMIN_USER` y `AZURE_SQL_ADMIN_PASSWORD` (si faltan, con el usuario de la cadena de la app). **Decisión:**
+  las credenciales de administrador van en secretos de GitHub y NO en la Web App (las cadenas de la Web App llegan al entorno del proceso de la app: si se
+  comprometiera, el atacante tendría el administrador). **Dónde está la cadena:** en la Web App `app-residapp-dev` hay DOS sitios con el mismo valor, la variable de
+  entorno `ConnectionStrings__ResidApp` y la cadena de conexión `ResidApp` (tipo `SQLAzure`, que el despliegue lee para sacar servidor y base). Ambas llevan
+  `residapp_app` (se compararon por hash: idénticas). Vuelta atrás: poner otra vez el administrador en esa variable.
+  **Recorrido por HTTP contra Azure dev con la app limitada** (residente ficticio «Prueba Activación RLS Azure», con 6 eventos cerrados y un basal firmado v1): registrar
+  evento y valoración; escalar a Medicina, valoración médica, indicación y su confirmación y realización por Enfermería; cierre con comunicación a la familia; protocolo
+  urgente con derivación firmada, intento de llamada y cierre (iniciado por Enfermería y por Medicina); seguimiento de Enfermería (actuación, reprogramación,
+  transferencia al Equipo B) y seguimiento médico; las 6 pantallas de Dirección y el detalle de un episodio abierto; Administración y Auxiliar (asignar un residente y
+  registrar «sin cambios»; el Auxiliar lo ve solo mientras está asignado); basal completo (borrador, 9 áreas, Barthel, firma y borrador de reevaluación, cancelado).
+  Sin ningún fallo atribuible a la seguridad por filas; los únicos rechazos fueron reglas de producto (tras una derivación a Urgencias hay que preparar la
+  comunicación a la familia y registrar antes un intento de llamada). **No recorrido:** el alta de centros por Plataforma (cubierta por un test funcional con el usuario
+  limitado), quién aprueba las comunicaciones a familias («pendiente de aprobación») y el perfil Familiar. **Pendiente:** que CJ recorra sus flujos en dev; dejar una sola
+  de las dos cadenas; el salto de `PLATAFORMA` en las tablas de provisión; y, opcional, autenticación sin contraseña con Microsoft Entra (identidad administrada).
 - **G1, RLS por centro, tanda 4b: las tablas de la autorización (2026-10-06, PR #6, en `main` y aplicada en Azure dev; el despliegue devuelve 200):** `0036_rls_autorizacion.sql` amplía
   `seg.pol_centro` a las últimas 4 tablas: `permisos_perfil`, `ambitos_perfil_residente`, `episodios_residente_centro` e `intervalos_ubicacion_residente`. La
   autorización de cada petición las lee, pero siempre con el ámbito activo y su centro: la política no cambia ningún resultado y, sin ámbito activo, no se
@@ -70,9 +80,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   `ITenantContext` (Application) + `RequestTenantContext` (Web) + `SqlConnectionFactory(cadena, tenant = null)`: cada conexión fija
   `sujeto_externo` y `ambito_perfil_id` en `SESSION_CONTEXT` (`read_only`), con o sin ámbito. `Program.cs` registra la fábrica como scoped.
   `RlsCentroTests`: 10 pruebas; suite completa en verde (264 unitarias, 324 de integración, 68 funcionales).
-  - **El predicado se aplica a todos, también a `dbo`/sysadmin; deja pasar a `db_owner`.** Por eso la política está latente mientras la
-    aplicación use un usuario `db_owner` (hoy, también en Azure, que usa el mismo usuario para los scripts). Sin ese cambio de usuario,
-    la RLS no protege nada en producción.
+  - **El predicado se aplica a todos, también a `dbo`/sysadmin; deja pasar a `db_owner`.** Por eso la política queda latente en cualquier
+    entorno cuya aplicación use un usuario `db_owner`. En Azure dev ya no es así (la app usa `residapp_app`, ver el primer punto de «Dónde estamos»);
+    en un entorno nuevo hay que crear el usuario limitado antes de dar la RLS por activa.
   - **Lección:** una conexión con `EXECUTE AS USER` que vuelve al pool sin `REVERT` falla al restablecerse («session is in the kill state»):
     las pruebas abren esas conexiones con `Pooling=false`. La instancia local es solo Windows (no admite logins SQL), así que las pruebas
     suplantan con `EXECUTE AS USER ... WITHOUT LOGIN` en lugar de usar una cadena aparte.
@@ -101,10 +111,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Lección (`EXECUTE AS` en tests):** con `MultipleActiveResultSets=true` falla de forma intermitente («a simultaneous batch has called
     it») cuando corren a la vez varios proyectos de test; las conexiones suplantadas de `RlsCentroTests` van sin pool y sin MARS. La
     fábrica de producción usa `sp_set_session_context`, que no tiene ese límite.
-  - **Pendiente de G1:** usuario limitado
-    en Azure y cambio de la cadena de la app (con una segunda cadena de administrador para scripts y seeds: hoy el despliegue lee la de la
-    app para aplicar los scripts); salto de `PLATAFORMA` solo en tablas de provisión. Un push a `main` aplica los scripts nuevos a Azure antes
-    de desplegar el código: la política es latente mientras la app use `db_owner`.
+  - **Pendiente de G1:** ver el primer punto de «Dónde estamos» (la activación en Azure ya está hecha; quedan la prueba con CJ, una sola cadena de conexión y el salto de `PLATAFORMA`).
 - **Propuesta de multi-centro y grupos empresariales (2026-10-06, solo documentación):** ADR 0008 en estado propuesto. El esquema ya es
   multi-centro por filas (`centro_id` en todo, claves compuestas); no hay `ITenantProvider` y `SqlConnectionFactory` tiene una sola
   cadena. Decide: sin claims de centro, sin borrado lógico genérico, grupo como `grupos` + `centros.grupo_id NULL` (sin `grupo_id` en
