@@ -13,7 +13,18 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **G1, RLS por centro, tanda 1: basal (2026-10-06, rama `g1-rls-basal`, sin commit ni push):** `0032_rls_basal.sql` amplía `seg.pol_centro` a
+- **G1, RLS por centro, tanda 2: flujo clínico (2026-10-06, rama `g1-rls-clinicas`, sin commit ni push):** `0033_rls_flujo_clinico.sql` amplía
+  `seg.pol_centro` a 20 tablas: `eventos_clinicos`, `eventos_contexto`, `escalados_medicina`, las valoraciones de Enfermería y de Medicina con sus versiones y
+  correcciones, `valoraciones_rectificaciones`, los dos seguimientos y sus acciones, `indicaciones_medicas`, `protocolos_urgentes` y sus registros,
+  `informes_derivacion`, `intentos_llamada_familia` y `comunicaciones_familiares`. Varias consultas usan `WITH (FORCESEEK)` sobre estas tablas: se
+  vigiló que no chocaran con el predicado (no chocan). **Comprobación nueva sobre datos reales:** `database/seguridad/comprobar_aislamiento.sql`
+  toma, para cada tabla cubierta, el centro con más filas, entra con un ámbito de ese centro como usuario limitado (`EXECUTE AS`) y exige ver
+  exactamente sus filas y ninguna ajena; falla con `exit 1` si no (probado quitando un filtro). Es un paso del CI **después de las pruebas**
+  («Comprobar el aislamiento por centro con los datos de las pruebas»), así que no depende del orden de los tests. Prueba funcional nueva
+  `Enfermeria_RegistraUnEventoYGuardaSuValoracion_ConLaAppEntera` (registrar evento, empezar y guardar la valoración por la app real). En Docker, con
+  la app como `residapp_app`: 264, 70 y 330 en verde y las 33 tablas `OK`. Siguen sin prueba por la app entera: escalar, cerrar con comunicación,
+  seguimientos, protocolo urgente, derivación y Medicina (solo por repositorio y por la comprobación de aislamiento).
+- **G1, RLS por centro, tanda 1: basal (2026-10-06, PR #2 mergeado: `0032` en `main` y aplicado a Azure de desarrollo):** `0032_rls_basal.sql` amplía `seg.pol_centro` a
   las diez tablas del basal (`basales_borrador` y sus áreas y Barthel, `basales_version` y sus áreas y Barthel, `basales_vigentes_residente`,
   `basales_sustituciones`). Aplicado en la BD local y en un SQL Server de Docker (ya eliminado). Pruebas nuevas: `RlsCentroTests.Las_tablas_de_basal_solo_se_ven_en_su_centro`
   (siembra dos centros con un basal firmado y otro reevaluado: las 10 tablas con filas propias y ninguna ajena; falla si se quita un filtro) y
@@ -44,9 +55,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     La instancia local `ACER-ORLANDO` es solo Windows: para repetirlo en local, levanta un contenedor (`docker run ... -p 14333:1433`),
     aplica los scripts con `aplicar-scripts.sh`, crea el login y exporta las dos variables.
   - **Cobertura de la política (`CoberturaRlsTests`, 2026-10-06):** toda tabla de `dbo` está bajo `seg.pol_centro` o figura en la lista
-    `Excepciones` del test con su motivo; una tabla nueva sin decidir, o una excepción ya cubierta, hacen fallar el test. Hoy: 13 cubiertas
-    (3 de `0030` y 10 del basal de `0032`), 5 por diseño (`centros`, `cuentas`, `ambitos_perfil`, `scripts_aplicados`, `sysdiagrams`), 3 de provisión
-    (`unidades`, `ambitos_perfil_unidad`, `eventos_auditoria`) y 43 pendientes, **todas con `centro_id`**. Al cubrir una tabla, quítala de `Excepciones`.
+    `Excepciones` del test con su motivo; una tabla nueva sin decidir, o una excepción ya cubierta, hacen fallar el test. Hoy: 33 cubiertas
+    (3 de `0030`, 10 del basal de `0032` y 20 del flujo clínico de `0033`), 5 por diseño (`centros`, `cuentas`, `ambitos_perfil`, `scripts_aplicados`, `sysdiagrams`), 3 de provisión
+    (`unidades`, `ambitos_perfil_unidad`, `eventos_auditoria`) y 22 pendientes, **todas con `centro_id`** (las cifras anteriores, 53 y 43, iban una por encima: eran 52 y 42). Al cubrir una tabla, quítala de `Excepciones`.
   - **`0031_centro_id_en_tablas_hijas.sql` (2026-10-06, en `main` y en Azure de desarrollo):** diez hijas sin `centro_id` (`valoraciones_enfermeria_versiones` y
     `_correcciones`, `valoraciones_medicas_versiones` y `_correcciones`, `seguimiento_acciones`, `seguimiento_medico_acciones`,
     `protocolo_urgente_registros`, `intentos_llamada_familia`, `cierres_cotidianos_cambio_area_opciones`, `operaciones_idempotencia`) llevan
@@ -59,9 +70,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Lección (`EXECUTE AS` en tests):** con `MultipleActiveResultSets=true` falla de forma intermitente («a simultaneous batch has called
     it») cuando corren a la vez varios proyectos de test; las conexiones suplantadas de `RlsCentroTests` van sin pool y sin MARS. La
     fábrica de producción usa `sp_set_session_context`, que no tiene ese límite.
-  - **Pendiente de G1:** cubrir las 43 tablas restantes por tandas (clínicas: eventos, valoraciones, seguimientos, indicaciones, protocolos,
-    informes, cierres cotidianos; estructura: edificios, plantas, habitaciones, plazas, equipos, turnos, rangos; permisos y ámbitos del
-    residente); los funcionales solo ejercitan `residentes` y el borrador de basal, no `familiares` ni `eventos_asistenciales`; usuario limitado
+  - **Pendiente de G1:** cubrir las 22 tablas restantes (cierres cotidianos e idempotencia; estructura: edificios, plantas, habitaciones, plazas,
+    equipos, turnos, rangos; permisos y ámbitos del residente, episodios y ubicación, familiares y contacto urgente, correcciones de identidad);
+    los funcionales ejercitan `residentes`, el borrador de basal y el registro y valoración de un evento, no `familiares` ni `eventos_asistenciales` por separado; usuario limitado
     en Azure y cambio de la cadena de la app (con una segunda cadena de administrador para scripts y seeds: hoy el despliegue lee la de la
     app para aplicar los scripts); salto de `PLATAFORMA` solo en tablas de provisión. Un push a `main` aplica los scripts nuevos a Azure antes
     de desplegar el código: la política es latente mientras la app use `db_owner`.
@@ -70,7 +81,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   cadena. Decide: sin claims de centro, sin borrado lógico genérico, grupo como `grupos` + `centros.grupo_id NULL` (sin `grupo_id` en
   tablas clínicas), RLS por centro por fases con salto de `PLATAFORMA` solo en las tablas de provisión (nunca en las clínicas, por el
   ADR 0006) y separación futura a otra base por grupo, con catálogo aparte. Incrementos G1–G3 en el ADR; el siguiente número de script
-  libre es `0033`. No se ha tocado `src/` ni `database/`. Decidido por el usuario el mismo día: un administrador de grupo **no** ve datos
+  libre es `0034`. No se ha tocado `src/` ni `database/`. Decidido por el usuario el mismo día: un administrador de grupo **no** ve datos
   clínicos de varias residencias, solo estructura y agregados.
 - **Propuesta de proveedor de identidad (2026-10-04, solo documentación):** ADR 0007 en estado propuesto. Microsoft Entra External
   ID con tenant en la UE; Auth0 UE como respaldo si se exige TOTP o se rechaza el código por correo como segundo factor. El alta crea
