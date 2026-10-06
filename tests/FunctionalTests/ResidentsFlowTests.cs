@@ -404,6 +404,61 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             """, new { changedResident }));
     }
 
+    [Fact]
+    public async Task Administracion_ConcedeYRevocaUnPermisoYAsignaUnResidente_ConLaAppEntera()
+    {
+        // Los permisos y las asignaciones de residente se escriben por la app real con el usuario limitado, y la autorización de la
+        // cuenta afectada (que lee esas mismas tablas en cada petición) refleja el cambio: el Auxiliar ve al residente mientras está asignado.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Asignado Funcional");
+        var auxiliarSubject = await GrantAuxiliarAsync(seed);
+        var nurseSubject = await GrantNursingAsync(seed);
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var (auxiliarAccount, auxiliarScope) = await connection.QuerySingleAsync<(Guid, Guid)>(
+            "SELECT c.id, a.id FROM dbo.cuentas c JOIN dbo.ambitos_perfil a ON a.cuenta_id = c.id WHERE c.sujeto_externo = @auxiliarSubject",
+            new { auxiliarSubject });
+        var (nurseAccount, nurseScope) = await connection.QuerySingleAsync<(Guid, Guid)>(
+            "SELECT c.id, a.id FROM dbo.cuentas c JOIN dbo.ambitos_perfil a ON a.cuenta_id = c.id WHERE c.sujeto_externo = @nurseSubject",
+            new { nurseSubject });
+        var auxiliar = await LoginAsync(auxiliarSubject);
+
+        async Task<string> ChangeAsync(string action, Guid account, Guid scope, Dictionary<string, string> fields)
+        {
+            var page = await admin.GetStringAsync($"/Administracion/PerfilUsuario?cuentaId={account}&ambitoId={scope}");
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            fields["cuentaId"] = account.ToString();
+            fields["ambitoId"] = scope.ToString();
+            return WebUtility.HtmlDecode(await (await admin.PostAsync($"/Administracion/{action}", new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+
+        var before = await auxiliar.GetStringAsync("/Auxiliar");
+        var assigned = await ChangeAsync("ResidentePerfil", auxiliarAccount, auxiliarScope,
+            new() { ["residenteId"] = residentId, ["asignar"] = "true" });
+        var whileAssigned = await auxiliar.GetStringAsync("/Auxiliar");
+        var retired = await ChangeAsync("ResidentePerfil", auxiliarAccount, auxiliarScope,
+            new() { ["residenteId"] = residentId, ["asignar"] = "false" });
+        var afterRetired = await auxiliar.GetStringAsync("/Auxiliar");
+
+        var granted = await ChangeAsync("PermisoPerfil", nurseAccount, nurseScope,
+            new() { ["permiso"] = "BASELINE_REEVALUATE", ["conceder"] = "true" });
+        var revoked = await ChangeAsync("PermisoPerfil", nurseAccount, nurseScope,
+            new() { ["permiso"] = "BASELINE_REEVALUATE", ["conceder"] = "false" });
+
+        Assert.DoesNotContain("Residente Asignado Funcional", WebUtility.HtmlDecode(before));
+        Assert.Contains("Residente asignado.", assigned);
+        Assert.Contains("Residente Asignado Funcional", WebUtility.HtmlDecode(whileAssigned));
+        Assert.Contains("Residente retirado.", retired);
+        Assert.DoesNotContain("Residente Asignado Funcional", WebUtility.HtmlDecode(afterRetired));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.ambitos_perfil_residente WHERE ambito_perfil_id = @auxiliarScope AND revocado_en IS NOT NULL", new { auxiliarScope }));
+        Assert.Contains("Permiso concedido.", granted);
+        Assert.Contains("Permiso revocado.", revoked);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.permisos_perfil WHERE ambito_perfil_id = @nurseScope AND permiso_codigo = 'BASELINE_REEVALUATE' AND revocado_en IS NOT NULL",
+            new { nurseScope }));
+    }
+
     private async Task<string> CreateResidentAsync(
         HttpClient admin, (string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed, string name)
     {
