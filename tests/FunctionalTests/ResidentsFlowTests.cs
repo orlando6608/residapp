@@ -151,6 +151,52 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task EnfermeriaBasal_CreaYCancelaUnBorrador_ConLaAppEntera()
+    {
+        // Recorrido por la app real con cookie y ámbito: con la app conectada como usuario limitado
+        // (RESIDAPP_TEST_APP_CONNECTION_STRING) pasa por la seguridad por filas de las tablas del basal.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var createPage = await admin.GetStringAsync("/Residents/Create");
+        var created = await (await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(createPage, "__RequestVerificationToken"),
+            ["OperacionId"] = ExtractValue(createPage, "OperacionId"),
+            ["AmbitoPerfilId"] = seed.ProfileScopeId.ToString(),
+            ["CentroId"] = seed.CenterId.ToString(),
+            ["UnidadId"] = seed.UnitId.ToString(),
+            ["NombreVisible"] = "Residente Borrador Funcional",
+            ["FechaNacimiento"] = "1938-02-20",
+            ["SexoDocumentadoCodigo"] = "Hombre",
+        }))).Content.ReadAsStringAsync();
+        var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+
+        var hub = await nurse.GetStringAsync($"/EnfermeriaBasal/Draft?residenteId={residentId}");
+        var afterCreate = WebUtility.HtmlDecode(await (await nurse.PostAsync("/EnfermeriaBasal/CrearBorrador", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(hub, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = Guid.NewGuid().ToString(),
+            ["Motivo"] = "Alta",
+            ["FuenteInformacionComun"] = "ValoracionDirecta",
+            ["FechaInformacionComun"] = "2026-10-06",
+        }))).Content.ReadAsStringAsync());
+        var afterCancel = WebUtility.HtmlDecode(await (await nurse.PostAsync("/EnfermeriaBasal/CancelarBorrador", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(afterCreate, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["Motivo"] = "Prueba funcional de la seguridad por filas",
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Borrador creado.", afterCreate);
+        Assert.Contains("Borrador cancelado.", afterCancel);
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.basales_borrador WHERE residente_id = @residentId", new { residentId }));
+    }
+
+    [Fact]
     public async Task BaselineSign_SinPantallaPropia_RedirigeAResidentes()
     {
         var seed = await SeedAsync();
@@ -206,6 +252,26 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             VALUES (NEWID(), @profileScopeId, @centerId, @unitId, @now, @accountId);
             INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
             VALUES (NEWID(), @profileScopeId, @centerId, 'CLINICAL_DETAIL_READ', @now, @accountId);
+            """, new { accountId, externalSubject, now, profileScopeId, centerId = seed.CenterId, unitId = seed.UnitId });
+        return externalSubject;
+    }
+
+    /// <summary>Una cuenta de Enfermería con permiso de basal inicial, en el centro y la unidad de la semilla.</summary>
+    private static async Task<string> GrantNursingAsync((string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed)
+    {
+        var accountId = Guid.NewGuid();
+        var profileScopeId = Guid.NewGuid();
+        var externalSubject = $"functional-enf-{Guid.NewGuid().ToString("N")[..12]}";
+        var now = DateTimeOffset.UtcNow.UtcDateTime;
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@accountId, @externalSubject, 'ACTIVE', @now);
+            INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+            VALUES (@profileScopeId, @accountId, @centerId, 'ENFERMERIA', 'ACTIVE', @now, @accountId);
+            INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @profileScopeId, @centerId, @unitId, @now, @accountId);
+            INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @profileScopeId, @centerId, 'BASELINE_INITIAL_COMPLETE', @now, @accountId);
             """, new { accountId, externalSubject, now, profileScopeId, centerId = seed.CenterId, unitId = seed.UnitId });
         return externalSubject;
     }

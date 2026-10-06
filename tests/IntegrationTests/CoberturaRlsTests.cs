@@ -26,16 +26,6 @@ public sealed class CoberturaRlsTests
         ["eventos_auditoria"] = Provision,
 
         ["ambitos_perfil_residente"] = PendienteConCentro,
-        ["basales_borrador"] = PendienteConCentro,
-        ["basales_borrador_areas"] = PendienteConCentro,
-        ["basales_borrador_barthel"] = PendienteConCentro,
-        ["basales_borrador_barthel_items"] = PendienteConCentro,
-        ["basales_sustituciones"] = PendienteConCentro,
-        ["basales_version"] = PendienteConCentro,
-        ["basales_version_areas"] = PendienteConCentro,
-        ["basales_version_barthel"] = PendienteConCentro,
-        ["basales_version_barthel_items"] = PendienteConCentro,
-        ["basales_vigentes_residente"] = PendienteConCentro,
         ["cierres_cotidianos_cambio_areas"] = PendienteConCentro,
         ["cierres_cotidianos_residente"] = PendienteConCentro,
         ["comunicaciones_familiares"] = PendienteConCentro,
@@ -118,6 +108,22 @@ public sealed class CoberturaRlsTests
 
         Assert.Empty(ChildTables.Where(name => !required.Contains(name)));
         Assert.Empty(ChildTables.Where(name => !withForeignKey.Contains(name)));
+    }
+
+    [Fact]
+    public async Task Toda_tabla_cubierta_tiene_filtro_y_bloqueo_al_insertar_y_al_actualizar()
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var predicates = (await connection.QueryAsync<(string Table, string Type, string Operation)>("""
+            SELECT OBJECT_NAME(target_object_id), predicate_type_desc, ISNULL(operation_desc, N'') FROM sys.security_predicates
+            """)).ToList();
+
+        string[] required = ["FILTER|", "BLOCK|AFTER INSERT", "BLOCK|AFTER UPDATE"];
+        var incomplete = predicates.Select(p => p.Table).Distinct()
+            .Where(table => required.Any(r => !predicates.Any(p => p.Table == table && $"{p.Type}|{p.Operation}" == r)))
+            .Order().ToList();
+
+        Assert.True(incomplete.Count == 0, "Tablas con la política a medias (falta FILTER o BLOCK al insertar/actualizar): " + string.Join(", ", incomplete));
     }
 
     [Fact]

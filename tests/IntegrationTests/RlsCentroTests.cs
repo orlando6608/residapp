@@ -1,6 +1,10 @@
 using Dapper;
 using Microsoft.Data.SqlClient;
+using ResidApp.Application.Authorization;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Baseline;
+using ResidApp.Domain.Baseline.Catalogs;
+using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
 using ResidApp.Shared;
@@ -110,6 +114,71 @@ public sealed class RlsCentroTests
         var visible = (await connection.QueryAsync<Guid>("SELECT id FROM dbo.familiares WHERE id IN @familyIds", new { familyIds })).ToList();
 
         Assert.Equal([familyIds[0]], visible);
+    }
+
+    private static readonly string[] BaselineTables =
+    [
+        "basales_borrador", "basales_borrador_areas", "basales_borrador_barthel", "basales_borrador_barthel_items",
+        "basales_version", "basales_version_areas", "basales_version_barthel", "basales_version_barthel_items",
+        "basales_vigentes_residente", "basales_sustituciones",
+    ];
+
+    /// <summary>Un residente con un basal firmado y otro firmado después (la reevaluación genera la sustitución): todas las tablas
+    /// del basal reciben filas del centro.</summary>
+    private static async Task<SeededProfile> SeedCenterWithSignedBaselinesAsync()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var nurse = await SeedFixture.AddProfileToCenterAsync(
+            SystemProfile.Enfermeria, admin.CenterId, admin.UnitId, ["BASELINE_INITIAL_COMPLETE", "BASELINE_REEVALUATE"]);
+        var resident = await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(new CreateResidentInput(
+            admin.AccountId, SystemProfile.Administracion, admin.CenterId, admin.UnitId,
+            "Residente Basal RLS", new DateOnly(1940, 5, 5), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+        var repository = new SqlBaselineRepository(TestDatabase.ConnectionFactory);
+        foreach (var reason in new[] { BaselineReason.Alta, BaselineReason.RevisionProgramada })
+        {
+            var created = await repository.CreateDraftAsync(new CreateBaselineDraftInput(
+                nurse.AccountId, SystemProfile.Enfermeria, nurse.CenterId, nurse.UnitId, resident.ResidentId, reason,
+                InformationSourceCode.ValoracionDirecta, null, new DateOnly(2026, 9, 14), Guid.NewGuid()));
+            var owner = new OwnedActiveDraftInput(nurse.AccountId, SystemProfile.Enfermeria, nurse.CenterId, resident.ResidentId);
+            foreach (var (area, answer) in BaselineTestData.NineAreas())
+            {
+                await repository.SaveAreaAsync(new SaveBaselineDraftAreaInput(owner, area, answer, null));
+            }
+            await repository.SaveBarthelAsync(new SaveBaselineDraftBarthelInput(owner, new DateOnly(2026, 9, 14), BaselineTestData.FullBarthelItems()));
+            await repository.SignDraftAsync(new SignBaselineDraftInput(
+                nurse.AccountId, SystemProfile.Enfermeria, nurse.CenterId, nurse.UnitId, resident.ResidentId,
+                created.DraftId, created.DraftRevision, Guid.NewGuid()));
+        }
+        return nurse;
+    }
+
+    [Fact]
+    public async Task Las_tablas_de_basal_solo_se_ven_en_su_centro()
+    {
+        var a = await SeedCenterWithSignedBaselinesAsync();
+        var b = await SeedCenterWithSignedBaselinesAsync();
+
+        async Task<Dictionary<string, (int Own, int Other)>> CountAsync(SeededProfile viewer, SeededProfile other)
+        {
+            using var connection = await OpenLimitedAsync(ScopeOf(viewer));
+            var counts = new Dictionary<string, (int, int)>();
+            foreach (var table in BaselineTables)
+            {
+                counts[table] = (
+                    await connection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM dbo.{table} WHERE centro_id = @CenterId", new { CenterId = viewer.CenterId.Value }),
+                    await connection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM dbo.{table} WHERE centro_id = @CenterId", new { CenterId = other.CenterId.Value }));
+            }
+            return counts;
+        }
+
+        foreach (var (viewer, other) in new[] { (a, b), (b, a) })
+        {
+            foreach (var (table, (own, foreign)) in await CountAsync(viewer, other))
+            {
+                Assert.True(own > 0, $"{table}: el centro propio debería tener filas (si no, la siembra no llena la tabla y la prueba no prueba nada).");
+                Assert.True(foreign == 0, $"{table}: se ven {foreign} filas de otro centro.");
+            }
+        }
     }
 
     [Fact]

@@ -13,9 +13,19 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **G1, RLS por centro, primera tanda (2026-10-06, rama `g1-rls-centro`, sin commit ni push):** script `0030_rls_centro.sql` (esquema `seg`,
-  `seg.fn_centro_del_ambito`, `SECURITY POLICY seg.pol_centro` sobre `residentes`, `eventos_asistenciales` y `familiares`), aplicado solo en la
-  BD local. `ITenantContext` (Application) + `RequestTenantContext` (Web) + `SqlConnectionFactory(cadena, tenant = null)`: cada conexión fija
+- **G1, RLS por centro, tanda 1: basal (2026-10-06, rama `g1-rls-basal`, sin commit ni push):** `0032_rls_basal.sql` amplía `seg.pol_centro` a
+  las diez tablas del basal (`basales_borrador` y sus áreas y Barthel, `basales_version` y sus áreas y Barthel, `basales_vigentes_residente`,
+  `basales_sustituciones`). Aplicado en la BD local y en un SQL Server de Docker (ya eliminado). Pruebas nuevas: `RlsCentroTests.Las_tablas_de_basal_solo_se_ven_en_su_centro`
+  (siembra dos centros con un basal firmado y otro reevaluado: las 10 tablas con filas propias y ninguna ajena; falla si se quita un filtro) y
+  `CoberturaRlsTests.Toda_tabla_cubierta_tiene_filtro_y_bloqueo...` (toda tabla cubierta lleva FILTER y BLOCK al insertar y al actualizar), y
+  `ResidentsFlowTests.EnfermeriaBasal_CreaYCancelaUnBorrador_ConLaAppEntera` (crea y cancela un borrador por la app real). **Hallazgo:** antes de
+  esa prueba funcional, los 68 funcionales no creaban ni una fila de basal, así que «la app con usuario limitado» no ejercitaba nada de esta tanda;
+  la prueba de política (integración, con `EXECUTE AS`) y la funcional se complementan. Suite completa con la app como `residapp_app` en Docker,
+  dos vueltas en verde (264, 69, 330). Los flujos de firma y reevaluación por la app entera siguen sin prueba funcional (solo por repositorio).
+- **G1, RLS por centro, primera tanda (2026-10-06, PR #1 mergeado: `0030` y `0031` están en `main` y se aplicaron a Azure de desarrollo):** script
+  `0030_rls_centro.sql` (esquema `seg`,
+  `seg.fn_centro_del_ambito`, `SECURITY POLICY seg.pol_centro` sobre `residentes`, `eventos_asistenciales` y `familiares`).
+  `ITenantContext` (Application) + `RequestTenantContext` (Web) + `SqlConnectionFactory(cadena, tenant = null)`: cada conexión fija
   `sujeto_externo` y `ambito_perfil_id` en `SESSION_CONTEXT` (`read_only`), con o sin ámbito. `Program.cs` registra la fábrica como scoped.
   `RlsCentroTests`: 10 pruebas; suite completa en verde (264 unitarias, 324 de integración, 68 funcionales).
   - **El predicado se aplica a todos, también a `dbo`/sysadmin; deja pasar a `db_owner`.** Por eso la política está latente mientras la
@@ -29,14 +39,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     ese usuario y el sembrado y las comprobaciones siguen con `TestConnectionString`. Verificado en un SQL Server de Docker (la misma
     imagen que el CI, puerto 14333, ya eliminado): los 68 funcionales pasan con la app como `residapp_app` (se vieron sesiones de ese
     login durante la ejecución), la suite completa pasa (264, 68, 325) y, sin contexto, `residapp_app` ve 0 de 6 residentes. El CI tiene
-    un paso nuevo («Crear usuario limitado de la aplicación») y ejecuta toda la suite así; **no se ha ejecutado en GitHub Actions todavía**.
+    un paso nuevo («Crear usuario limitado de la aplicación») y ejecuta toda la suite así; en GitHub Actions pasó (PR #1 y push a `main`), y el despliegue aplicó `0030` y `0031` a Azure de desarrollo (la
+    app responde 200). **No se hizo antes el ensayo con `ROLLBACK` de `0031` contra Azure**; salió bien igualmente.
     La instancia local `ACER-ORLANDO` es solo Windows: para repetirlo en local, levanta un contenedor (`docker run ... -p 14333:1433`),
     aplica los scripts con `aplicar-scripts.sh`, crea el login y exporta las dos variables.
   - **Cobertura de la política (`CoberturaRlsTests`, 2026-10-06):** toda tabla de `dbo` está bajo `seg.pol_centro` o figura en la lista
-    `Excepciones` del test con su motivo; una tabla nueva sin decidir, o una excepción ya cubierta, hacen fallar el test. Hoy: 3 cubiertas,
-    5 por diseño (`centros`, `cuentas`, `ambitos_perfil`, `scripts_aplicados`, `sysdiagrams`), 3 de provisión (`unidades`,
-    `ambitos_perfil_unidad`, `eventos_auditoria`) y 53 pendientes, **todas con `centro_id`**. Al cubrir una tabla, quítala de `Excepciones`.
-  - **`0031_centro_id_en_tablas_hijas.sql` (2026-10-06, sin push):** diez hijas sin `centro_id` (`valoraciones_enfermeria_versiones` y
+    `Excepciones` del test con su motivo; una tabla nueva sin decidir, o una excepción ya cubierta, hacen fallar el test. Hoy: 13 cubiertas
+    (3 de `0030` y 10 del basal de `0032`), 5 por diseño (`centros`, `cuentas`, `ambitos_perfil`, `scripts_aplicados`, `sysdiagrams`), 3 de provisión
+    (`unidades`, `ambitos_perfil_unidad`, `eventos_auditoria`) y 43 pendientes, **todas con `centro_id`**. Al cubrir una tabla, quítala de `Excepciones`.
+  - **`0031_centro_id_en_tablas_hijas.sql` (2026-10-06, en `main` y en Azure de desarrollo):** diez hijas sin `centro_id` (`valoraciones_enfermeria_versiones` y
     `_correcciones`, `valoraciones_medicas_versiones` y `_correcciones`, `seguimiento_acciones`, `seguimiento_medico_acciones`,
     `protocolo_urgente_registros`, `intentos_llamada_familia`, `cierres_cotidianos_cambio_area_opciones`, `operaciones_idempotencia`) llevan
     ahora `centro_id NOT NULL` con clave foránea compuesta con su padre (índices únicos nuevos `UX_*_centro*` en los padres; en
@@ -48,16 +59,18 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Lección (`EXECUTE AS` en tests):** con `MultipleActiveResultSets=true` falla de forma intermitente («a simultaneous batch has called
     it») cuando corren a la vez varios proyectos de test; las conexiones suplantadas de `RlsCentroTests` van sin pool y sin MARS. La
     fábrica de producción usa `sp_set_session_context`, que no tiene ese límite.
-  - **Pendiente de G1:** cubrir esas tablas por tandas; los funcionales no crean filas en `familiares` ni en `eventos_asistenciales`
-    (solo `residentes`), así que la app entera con usuario limitado aún no ejercita esas dos tablas; usuario limitado en Azure y cambio de
-    la cadena de la app (con confirmación del usuario); salto de `PLATAFORMA` solo en tablas de provisión. **No hagas push de `0030` a
-    `main` sin haberlo hablado:** el despliegue aplica los scripts a Azure.
+  - **Pendiente de G1:** cubrir las 43 tablas restantes por tandas (clínicas: eventos, valoraciones, seguimientos, indicaciones, protocolos,
+    informes, cierres cotidianos; estructura: edificios, plantas, habitaciones, plazas, equipos, turnos, rangos; permisos y ámbitos del
+    residente); los funcionales solo ejercitan `residentes` y el borrador de basal, no `familiares` ni `eventos_asistenciales`; usuario limitado
+    en Azure y cambio de la cadena de la app (con una segunda cadena de administrador para scripts y seeds: hoy el despliegue lee la de la
+    app para aplicar los scripts); salto de `PLATAFORMA` solo en tablas de provisión. Un push a `main` aplica los scripts nuevos a Azure antes
+    de desplegar el código: la política es latente mientras la app use `db_owner`.
 - **Propuesta de multi-centro y grupos empresariales (2026-10-06, solo documentación):** ADR 0008 en estado propuesto. El esquema ya es
   multi-centro por filas (`centro_id` en todo, claves compuestas); no hay `ITenantProvider` y `SqlConnectionFactory` tiene una sola
   cadena. Decide: sin claims de centro, sin borrado lógico genérico, grupo como `grupos` + `centros.grupo_id NULL` (sin `grupo_id` en
   tablas clínicas), RLS por centro por fases con salto de `PLATAFORMA` solo en las tablas de provisión (nunca en las clínicas, por el
   ADR 0006) y separación futura a otra base por grupo, con catálogo aparte. Incrementos G1–G3 en el ADR; el siguiente número de script
-  libre es `0030`. No se ha tocado `src/` ni `database/`. Decidido por el usuario el mismo día: un administrador de grupo **no** ve datos
+  libre es `0033`. No se ha tocado `src/` ni `database/`. Decidido por el usuario el mismo día: un administrador de grupo **no** ve datos
   clínicos de varias residencias, solo estructura y agregados.
 - **Propuesta de proveedor de identidad (2026-10-04, solo documentación):** ADR 0007 en estado propuesto. Microsoft Entra External
   ID con tenant en la UE; Auth0 UE como respaldo si se exige TOTP o se rechaza el código por correo como segundo factor. El alta crea
@@ -1060,6 +1073,10 @@ usuario cuando encajen:
 
 - **Push:** siempre con confirmación explícita del usuario. El push a `main` aplica los scripts nuevos
   y el seed en Azure SQL.
+- **Rama y PR (decidido el 2026-10-06):** todo cambio con un script de migración en `database/scripts/` va en una rama y se mergea con PR,
+  para que el CI lo pruebe antes de `main` (los scripts son inmutables una vez aplicados en Azure). Los cambios sin migración
+  (documentación, tests, ajustes de código) pueden ir directos a `main`, salvo que sean grandes o arriesgados. El despliegue ya depende de que
+  pasen los tests, así que un cambio roto no llega a Azure en ningún caso; el PR evita dejar un commit en rojo en `main`.
 - **Esquema:** siempre un script nuevo numerado; nunca se edita uno ya aplicado en Azure.
 - **Manual:** actualiza `Views/Home/Manual.cshtml` cuando cambie una pantalla que describa o se construya
   un módulo marcado como «Próximamente».
