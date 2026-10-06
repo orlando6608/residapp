@@ -5,13 +5,12 @@ using Xunit;
 namespace ResidApp.IntegrationTests;
 
 /// <summary>Cada tabla de dbo está bajo la política de seguridad por filas (database/scripts/0030, ADR 0008) o figura aquí con su motivo.
-/// Así una tabla nueva no queda sin proteger sin que nadie lo decida, y la lista de pendientes solo puede encogerse: al cubrir una tabla
-/// hay que quitarla de la lista.</summary>
+/// Así una tabla nueva no queda sin proteger sin que nadie lo decida: o se añade a la política o se justifica aquí. Si una tabla
+/// de la lista pasa a estar cubierta, hay que quitarla.</summary>
 public sealed class CoberturaRlsTests
 {
     private const string Diseno = "Por diseño: la lee el login antes de que haya ámbito, o no es de datos";
     private const string Provision = "Provisión: la escribe PLATAFORMA en otro centro; llevará política con su salto (ADR 0008)";
-    private const string PendienteConCentro = "Pendiente: tiene centro_id, falta añadirla a la política";
 
     private static readonly Dictionary<string, string> Excepciones = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -24,12 +23,6 @@ public sealed class CoberturaRlsTests
         ["unidades"] = Provision,
         ["ambitos_perfil_unidad"] = Provision,
         ["eventos_auditoria"] = Provision,
-
-        ["ambitos_perfil_residente"] = PendienteConCentro,
-        ["episodios_residente_centro"] = PendienteConCentro,
-        ["intervalos_ubicacion_residente"] = PendienteConCentro,
-        ["permisos_perfil"] = PendienteConCentro,
-
     };
 
     private sealed record TableRow(string Name, bool HasPolicy);
