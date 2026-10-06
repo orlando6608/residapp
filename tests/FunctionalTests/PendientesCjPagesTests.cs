@@ -17,6 +17,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("traslado-y-baja-residente")]
     [InlineData("administracion-ambito-familiares-cargos")]
     [InlineData("continuidad-supervision-comunicacion")]
+    [InlineData("guia-de-pruebas-cj")]
     public async Task Document_IsServedAsHtml(string name)
     {
         var response = await _factory.CreateClient().GetAsync($"/pendientes-cj/{name}.html");

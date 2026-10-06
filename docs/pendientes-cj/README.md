@@ -52,10 +52,14 @@ contenido de `<div class="page">`. El estilo y el script del final son iguales e
 pregunta es un elemento con `data-q` (clave única en el JSON); sus campos llevan `data-field`, y las opciones son
 `input type="radio"` dentro de `label.choice`. Para agrupar el avance por temas, cada tema es una `section.tema` con `id`. Añade también su entrada a `index.html` (lista estática de la web) y a la tabla de abajo.
 
+
+El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **prueba** con pasos y «qué debería ocurrir», y las opciones son A funciona · B con problema · C no funciona · D no probada. Usa el mismo estilo y script; solo cambian los textos del script («Sin probar»/«Probada» y «completadas», y «Pendiente»/«Respondida» en las preguntas con `class="abierta"`). Está generado a partir de una lista de pruebas; si cambia una pantalla descrita en un paso, edita el HTML y sube `data-version`.
+
 ## Documentos
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
+| [guia-de-pruebas-cj.html](guia-de-pruebas-cj.html) | `guia-de-pruebas-cj.respuestas.json` | Guía de pruebas en el entorno de desarrollo: 49 pruebas paso a paso (A funciona, B con problema, C no funciona, D no probada) más 3 preguntas finales; 18 imprescindibles | Pendiente |
 | [rangos-referencia-constantes.html](rangos-referencia-constantes.html) | `rangos-referencia-constantes.respuestas.json` | Mínimo y máximo de las 7 constantes con aviso visual, y 5 preguntas abiertas | Pendiente |
 | [decisiones-direccion-basal-derivacion.html](decisiones-direccion-basal-derivacion.html) | `decisiones-direccion-basal-derivacion.respuestas.json` | Finalidades de la lectura clínica de Dirección, aportación a un borrador de basal ajeno y el campo «Comunicaciones» en el informe de derivación (7 respuestas) | Pendiente |
 | [traslado-y-baja-residente.html](traslado-y-baja-residente.html) | `traslado-y-baja-residente.respuestas.json` | Traslado entre unidades o centros (episodios abiertos, borrador de basal, quién lo hace) y baja y reactivación del residente (6 respuestas) | Pendiente |

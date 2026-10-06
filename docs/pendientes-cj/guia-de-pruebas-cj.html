@@ -1,0 +1,1514 @@
+<!doctype html>
+<!--
+  Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan en «guia-de-pruebas-cj.respuestas.json», en esta misma carpeta;
+  ingeniería las lee de ese fichero. Cómo funciona: docs/pendientes-cj/README.md.
+  A diferencia de los demás documentos, aquí cada pregunta es una prueba con pasos; el estilo y el script son los mismos
+  (solo cambian los textos «Sin probar»/«Probada» y «completadas»).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de pruebas para CJ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .bar, .howto, .toc { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+
+  /* Guía de pruebas: pasos, resultado esperado y tablas de preparación */
+  .prueba-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.9rem; color: var(--muted); margin: 2px 0 8px; align-items: center; }
+  .tag-imp { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0 9px; font-size: 0.78rem; font-weight: 600; }
+  ol.pasos { margin: 6px 0 10px 1.3rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .esperado { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 4px; margin: 6px 0 12px; font-size: 0.95rem; }
+  .esperado strong { display: block; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .tabla-wrap { overflow-x: auto; }
+  table.datos { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--surface); }
+  table.datos th, table.datos td { border: 1px solid var(--rule); padding: 7px 10px; text-align: left; vertical-align: top; }
+  table.datos th { background: var(--accent-soft); font-weight: 600; }
+  .aviso { padding-left: 12px; border-left: 3px solid var(--danger); }
+  ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+</style>
+</head>
+<body data-doc="guia-de-pruebas-cj" data-version="2026-10-06">
+
+<div class="page">
+  <header>
+    <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Para CJ</p>
+    <h1>Guía de pruebas para CJ</h1>
+    <p class="meta">Estado a 06/10/2026 · Para CJ, responsable de producto</p>
+    <p class="lead prose">
+      Ya están construidos los circuitos del Auxiliar, Enfermería, Medicina, Dirección Clínica y Administración, el basal con
+      Barthel y la protección de los datos por centro. Los tests automáticos no pueden decir si las pantallas hacen lo que tú
+      esperas como clínica. Esta guía te propone 49 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
+      si coincide y nos cuentas lo que no.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué es</span><span>49 pruebas en 7 temas, más 3 preguntas finales. 18 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
+    <div role="listitem"><span class="k">Cuánto</span><span>Las imprescindibles, hora y media aproximadamente; todas, entre tres y cuatro horas. Puedes dejarlo y seguir otro día.</span></div>
+  </div>
+
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Haz la prueba y marca</strong>
+        <span>Abre la aplicación en otra pestaña, sigue los pasos y marca A, B, C o D. Añade un comentario si algo no te convence. Lo que marcas se queda en este navegador: puedes cerrar y seguir otro día.</span></li>
+      <li><span class="step-n">2</span><strong>Guarda</strong>
+        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>guia-de-pruebas-cj.respuestas.json</code>. No hace falta haberlo hecho todo.</span></li>
+      <li><span class="step-n">3</span><strong>Envíaselo a Orlando</strong>
+        <span>Mándale el fichero descargado por correo o por WhatsApp. Si lo cambias y lo vuelves a guardar, envía el nuevo.</span></li>
+    </ol>
+    <p class="prose meta">
+      ¿Desde otro ordenador? Abre este documento y pulsa «Abrir respuestas guardadas» con tu fichero para seguir donde lo dejaste.
+    </p>
+  </section>
+
+  <nav class="toc" id="indice" aria-label="Temas del documento"></nav>
+
+  <section id="preparacion">
+    <h2>Antes de empezar</h2>
+    <div class="stack prose">
+      <p>
+        Esta guía te lleva por la aplicación real, en el entorno de desarrollo de Azure
+        (<code>https://app-residapp-dev.azurewebsites.net</code>), con datos ficticios. Todo lo que hagas se queda guardado en ese
+        entorno, pero no afecta a ningún residente real. Si algo sale mal, no pasa nada: apunta lo que viste en el comentario de la
+        prueba.
+      </p>
+      <p><strong>Cómo se entra.</strong> Esto no es un acceso real: escribes el nombre de una cuenta de prueba en el campo «Usuario» y
+        pulsas «Entrar». Para cambiar de cuenta, usa «Cambiar de identidad» en el menú de tu perfil (arriba a la derecha) o vuelve a
+        <code>/DevAuth/Login</code>. Si una cuenta tiene varios ámbitos, la aplicación te deja elegir cuál usar.</p>
+    </div>
+
+    <h3>Cuentas de prueba</h3>
+    <div class="tabla-wrap"><table class="datos">
+      <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
+      <tbody>
+        <tr><td><code>dev-integrado-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (4).</td></tr>
+        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
+        <tr><td><code>dev-integrado-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios. Puede crear y firmar basales.</td></tr>
+        <tr><td><code>dev-integrado-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad y consulta auditada del basal; puede fijar los rangos de referencia.</td></tr>
+        <tr><td><code>dev-integrado-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), familias, usuarios, estructura, turnos y auditoría.</td></tr>
+        <tr><td><code>dev-enfermeria</code></td><td>Enfermería de otro centro</td><td>Otro centro, con sus propios residentes. Solo se usa en el tema 7.</td></tr>
+        <tr><td><code>dev-multi</code></td><td>Cuatro ámbitos</td><td>Enfermería y Medicina del «Centro de desarrollo A»; Dirección Clínica y Familiar del «Centro de desarrollo B». Solo se usa en el tema 7.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Residentes de prueba</h3>
+    <div class="tabla-wrap"><table class="datos">
+      <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
+      <tbody>
+        <tr><td>Residente Prueba CJ Uno (ficticio)</td><td>Con basal firmado (versión 1) y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
+        <tr><td>Residente Prueba CJ Dos (ficticio)</td><td>Sin basal y asignado al Auxiliar. Úsalo para crear un basal desde cero y para los cierres del Auxiliar.</td></tr>
+        <tr><td>Prueba Activación RLS Azure (ficticio)</td><td>Ya tiene historial: seis eventos cerrados, dos informes de derivación firmados y un basal firmado. Úsalo solo para mirar (historial, línea temporal, PDF), no para pruebas nuevas.</td></tr>
+        <tr><td>Residente Integrado Uno (ficticio)</td><td>NO LO TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
+        <tr><td>Residente Integrado Dos (ficticio)</td><td>Se puede usar si te falta un residente. Ya tiene un escalado y un seguimiento de pruebas anteriores.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="stack prose">
+      <p class="context">
+        Verás también residentes y eventos de pruebas anteriores («Prueba familiares azure», «Prueba selector unidad azure»,
+        «Prueba Corrección Identidad azure», y algunos eventos abiertos de Integrado Uno y Dos). Ignóralos, salvo que una prueba te
+        mande a ellos. Los eventos no se pueden borrar: cada prueba que hagas dejará sus datos.
+      </p>
+    </div>
+
+    <h3>Cómo marcar cada prueba</h3>
+    <ul class="lista prose">
+      <li><strong>A · Funciona como esperaba.</strong> Lo que ves coincide con «Qué debería ocurrir».</li>
+      <li><strong>B · Funciona, pero con un problema.</strong> Hace lo que debe, pero algo no te convence: un texto confuso, un paso de más, algo clínicamente raro. Cuéntalo en el comentario: es lo más valioso.</li>
+      <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
+      <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
+    </ul>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (18 de 49).</p>
+
+    <h3>Qué NO se prueba, porque todavía no existe</h3>
+    <ul class="lista prose">
+      <li>El Portal Familiar (la cuenta Familiar de <code>dev-multi</code> entra, pero no tiene pantallas).</li>
+      <li>La aprobación y publicación de las comunicaciones a familias: las comunicaciones preparadas quedan «pendientes de aprobación».</li>
+      <li>El traslado de un residente entre unidades o centros, el cambio de habitación o plaza, y la baja y reactivación.</li>
+      <li>Que un segundo profesional aporte a un borrador de basal ajeno.</li>
+      <li>Rangos de referencia por residente, y la lectura clínica detallada de Dirección sobre un episodio.</li>
+      <li>La tarjeta «Comunicaciones» de Medicina.</li>
+    </ul>
+    <p class="why">El orden importa un poco: algunas pruebas usan lo que dejó otra (por ejemplo, la 2.1 necesita lo que registraste en la 1.3 y la 1.4, y la 2.9 necesita la 3.3). Si te saltas una, marca D en la que dependa de ella.</p>
+  </section>
+
+  <section class="tema" id="tema-1">
+    <h2>Tema 1 · Auxiliar</h2>
+    <div class="stack prose">
+      <p>Entra con <code>dev-integrado-auxiliar</code>. El Auxiliar solo ve a los residentes que Administración le asigna y cierra el turno de cada uno de tres formas: sin cambios, un cambio registrado, o no valorable.</p>
+      <p class="why">Referencia: docs/flujos-clinicos/registro-cotidiano-auxiliar.md (AUX-01 a AUX-13)</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">Ver mis residentes</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>En Inicio, pulsa «Mis residentes (Auxiliar)».</li>
+          <li>Mira las tarjetas: cada una tiene una franja y una etiqueta que dicen si el residente tiene basal vigente (verde) o pendiente (rojo), y si el turno de hoy ya está «Cerrado hoy».</li>
+          <li>Pulsa una tarjeta para abrir su registro cotidiano.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves cuatro residentes (Integrado Uno, Integrado Dos, Prueba CJ Uno y Prueba CJ Dos) y ninguno más. En el registro de un residente con basal ves un resumen con el total de Barthel, sin versiones antiguas ni borradores.</div>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">«Sin cambios»</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <ol class="pasos">
+          <li>Abre el registro cotidiano de «Residente Prueba CJ Dos (ficticio)».</li>
+          <li>Pulsa «Confirmar sin cambios».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Vuelves a «Mis residentes» con el aviso «Cierre registrado: sin cambios.» y la tarjeta del residente pasa a «Cerrado hoy». No aparece nada en las bandejas de Enfermería.</div>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="1.3">
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">Registrar un cambio ordinario</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <ol class="pasos">
+          <li>En el registro del residente, pulsa «Registrar cambio».</li>
+          <li>En «Áreas observadas» marca una o más opciones rápidas (por ejemplo, en Alimentación e hidratación) y, en otra área, pulsa «Añadir nota» y escribe algo.</li>
+          <li>Escribe una temperatura si quieres. En «Clasificación» elige «Ordinario».</li>
+          <li>Pulsa «Continuar». Revisa el resumen. Prueba «Volver a editar»: todo lo marcado debe seguir ahí. Vuelve a «Continuar» y pulsa «Confirmar y enviar».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Aviso de que el cambio se ha enviado a la bandeja ordinaria de Enfermería. Las áreas y las opciones del resumen son las que marcaste; las tres áreas sin opciones rápidas solo admiten texto.</div>
+        <fieldset class="choices" aria-labelledby="t-1-3">
+          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="1.4">
+        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">Registrar un cambio prioritario</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>Abre «Registrar cambio» de «Residente Prueba CJ Uno (ficticio)» y marca un área con una opción rápida.</li>
+          <li>En «Clasificación» elige «Prioritario». Intenta continuar sin elegir motivo: no debe dejarte.</li>
+          <li>Elige un motivo de la lista cerrada. Pulsa «Continuar» y, en el resumen, intenta confirmar sin escribir el aviso directo: tampoco debe dejarte.</li>
+          <li>Escribe el aviso directo («a quién avisaste y qué dijo») y pulsa «Confirmar y enviar».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Un prioritario exige motivo y aviso directo documentado. Al confirmar, queda en la bandeja prioritaria de Enfermería (lo comprobarás en la prueba 2.1).</div>
+        <fieldset class="choices" aria-labelledby="t-1-4">
+          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="1.5">
+        <div class="q-head"><span class="n">1.5</span><h3 class="q-title" id="t-1-5">«No valorable»</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <ol class="pasos">
+          <li>En el registro del residente, escribe un motivo y pulsa «Marcar no valorable». Antes, prueba a pulsarlo sin motivo.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin motivo no se registra. Con motivo, el cierre queda como «no valorable» (nunca como estabilidad clínica) y no genera tarea para Enfermería.</div>
+        <fieldset class="choices" aria-labelledby="t-1-5">
+          <label class="choice"><input type="radio" name="r-1-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2">
+    <h2>Tema 2 · Enfermería</h2>
+    <div class="stack prose">
+      <p>Entra con <code>dev-integrado-enfermeria</code>. Enfermería recibe lo que registra el Auxiliar y lo que observa ella misma, lo valora y decide cómo termina: cerrarlo, hacerle seguimiento, escalarlo a Medicina o activar el protocolo urgente.</p>
+      <p class="why">Referencia: docs/flujos-clinicos/valoracion-escalado-enfermeria.md (ENF-01 a ENF-16) y derivacion-urgencias.md (DER-01 a DER-06)</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="2.1">
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">Las bandejas reciben lo del Auxiliar</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>En Inicio de Enfermería abre «Bandeja prioritaria» y «Cambios ordinarios».</li>
+          <li>Busca los cambios que acabas de registrar como Auxiliar en las pruebas 1.3 y 1.4.</li>
+          <li>Abre uno con «Ver detalle».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El prioritario de Prueba CJ Uno está en la bandeja prioritaria, con su motivo y el aviso directo; el ordinario de Prueba CJ Dos, en la ordinaria. El detalle muestra la observación original (no editable), la temperatura y el basal vigente resumido. Es posible que veas también eventos de pruebas anteriores.</div>
+        <fieldset class="choices" aria-labelledby="t-2-1">
+          <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.2">
+        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">Registrar un evento propio</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>En «Residentes» abre «Residente Prueba CJ Uno (ficticio)» y pulsa «Registrar evento».</li>
+          <li>Escribe una observación («Tos productiva desde la mañana», por ejemplo), elige «Ordinario» y pulsa «Guardar evento».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Pasas al detalle del evento, con el aviso «Evento registrado. Ya puedes empezar su valoración.». La observación no se puede editar después. En la bandeja aparece como «Evento observado por Enfermería».</div>
+        <fieldset class="choices" aria-labelledby="t-2-2">
+          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.3">
+        <div class="q-head"><span class="n">2.3</span><h3 class="q-title" id="t-2-3">Valorar un evento, con las constantes</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>En el detalle del evento de la prueba 2.2, pulsa «Empezar valoración».</li>
+          <li>Escribe hallazgos y actuaciones y anota algunas constantes (por ejemplo, saturación de O₂ 89 %; si anotas la saturación, indica también si respira «Aire ambiente» u «Oxigenoterapia»). Pulsa «Guardar borrador».</li>
+          <li>Si Dirección ha fijado un rango para esa constante (prueba 5.6), verás el rango bajo el campo y un aviso amarillo al guardar un valor fuera de él.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Hay que guardar al menos un dato. Tras guardar vuelves al detalle con el resumen y quién lo guardó. El aviso de rango es solo informativo: no impide guardar ni cambia la prioridad. En el detalle aparece «Pasar a decisión asistencial».</div>
+        <fieldset class="choices" aria-labelledby="t-2-3">
+          <label class="choice"><input type="radio" name="r-2-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-3" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-3" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.4">
+        <div class="q-head"><span class="n">2.4</span><h3 class="q-title" id="t-2-4">Cerrar un evento sin comunicar a la familia</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>Con la valoración guardada, pulsa «Pasar a decisión asistencial» y elige «Cerrar el evento».</li>
+          <li>Fíjate en que debes decidir de forma explícita «No comunicar» o «Preparar comunicación». Prueba a cerrar sin elegir.</li>
+          <li>Elige «No comunicar» y pulsa «Cerrar evento».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin decidir no se cierra. Al cerrar, el evento sale de las bandejas, la valoración deja de poder modificarse y el detalle muestra quién lo cerró, cuándo y la decisión.</div>
+        <fieldset class="choices" aria-labelledby="t-2-4">
+          <label class="choice"><input type="radio" name="r-2-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-4" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-4" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.5">
+        <div class="q-head"><span class="n">2.5</span><h3 class="q-title" id="t-2-5">Escalar a Medicina</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>Registra y valora otro evento en «Residente Prueba CJ Uno» (como en 2.2 y 2.3).</li>
+          <li>En la decisión asistencial elige «Escalar a Medicina». Revisa lo que se enviará.</li>
+          <li>Intenta escalar sin motivo: no debe dejarte. Escribe el motivo y escala.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La pantalla enseña toda la información que recibirá Medicina, sin ningún resumen automático. Al escalar, el evento sale de las bandejas de Enfermería y su detalle dice «Escalado a Medicina» con el motivo. Aparece en la tarjeta «Escalados a Medicina».</div>
+        <fieldset class="choices" aria-labelledby="t-2-5">
+          <label class="choice"><input type="radio" name="r-2-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-5" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-5" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.6">
+        <div class="q-head"><span class="n">2.6</span><h3 class="q-title" id="t-2-6">Seguimiento y transferencia al equipo entrante</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>Registra y valora un tercer evento y, en la decisión asistencial, elige «Iniciar seguimiento». Indica una fecha prevista, un criterio, o ambos.</li>
+          <li>En la pantalla del seguimiento, registra una actuación («Registrar actuación»), reprograma («Reprogramar», con justificación) y transfiere al «Equipo entrante» con una nota de continuidad («Transferir»).</li>
+          <li>Abre la tarjeta «Seguimientos» y busca el evento. Después, «Resolver» y cierra el evento.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El evento sale de las bandejas y entra en «Seguimientos». La transferencia queda «pendiente de recepción» hasta que alguien pulsa «Confirmar recepción»; si el equipo tiene miembros, solo ellos pueden. Un seguimiento con fecha pasada aparece «Vencido» pero no se cierra solo.</div>
+        <fieldset class="choices" aria-labelledby="t-2-6">
+          <label class="choice"><input type="radio" name="r-2-6" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-6" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-6" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-6" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.7">
+        <div class="q-head"><span class="n">2.7</span><h3 class="q-title" id="t-2-7">Protocolo urgente</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>Registra un evento prioritario en «Residente Prueba CJ Uno», empieza y guarda la valoración y elige «Activar protocolo urgente». Escribe una nota opcional y activa.</li>
+          <li>En la pantalla del protocolo registra una actuación, una evolución y un contacto con un servicio (por ejemplo, el 112, con su hora).</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Activarlo es un solo paso, sin trabas. Cada registro guarda quién lo hizo y cuándo y no se puede modificar. El evento pasa a «Protocolo urgente activo» y entra en la tarjeta «Protocolos urgentes». El contacto con el servicio no puede tener una hora futura.</div>
+        <fieldset class="choices" aria-labelledby="t-2-7">
+          <label class="choice"><input type="radio" name="r-2-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-7" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-7" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.8">
+        <div class="q-head"><span class="n">2.8</span><h3 class="q-title" id="t-2-8">Derivar a Urgencias, llamar a la familia y cerrar</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>Desde el protocolo urgente del paso anterior, pulsa «Derivar a Urgencias». Escribe el motivo y pulsa «Ver la vista previa».</li>
+          <li>Revisa el informe entero: cada sección está marcada como dato automático o escrito por ti, y tiene una huella. Prueba «Volver a editar». Después pulsa «Firmar y generar PDF» y «Descargar el informe en PDF».</li>
+          <li>Intenta cerrar el evento ahora: no debe dejarte sin un intento de llamada. Registra un intento de llamada a la familia (a quién, hora, resultado).</li>
+          <li>Cierra el evento: la comunicación a la familia es obligatoria y solo se ofrece «Preparar comunicación».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El PDF lleva el icono y el nombre de ResidApp, la identificación, el basal, las valoraciones y la evolución, pero no los contactos con servicios. Cada evento admite un solo informe. Tras cerrar, la comunicación queda «pendiente de aprobación» (todavía no se publica).</div>
+        <fieldset class="choices" aria-labelledby="t-2-8">
+          <label class="choice"><input type="radio" name="r-2-8" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-8" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-8" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-8" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.9">
+        <div class="q-head"><span class="n">2.9</span><h3 class="q-title" id="t-2-9">Indicaciones de Medicina: leer y realizar</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>Primero haz la prueba 3.3 (Medicina emite una indicación). Después, como Enfermería, abre la tarjeta «Indicaciones».</li>
+          <li>Pulsa «Confirmar lectura». Luego prueba «Registrar como realizada» en una y, en otra, escribe la incidencia y pulsa «Registrar como no realizada».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Confirmar la lectura nunca la marca como realizada. Para «no realizada» hace falta describir la incidencia. Ninguna indicación caduca: sigue en la lista hasta que se registre su resultado, aunque Medicina ya haya cerrado el evento.</div>
+        <fieldset class="choices" aria-labelledby="t-2-9">
+          <label class="choice"><input type="radio" name="r-2-9" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-9" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-9" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-9" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.10">
+        <div class="q-head"><span class="n">2.10</span><h3 class="q-title" id="t-2-10">Corregir y rectificar una valoración</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>En un evento ya avanzado (por ejemplo, el escalado de la prueba 2.5), abre su detalle. Quien guardó la valoración la última vez ve «Corregir valoración» durante las 6 horas siguientes: escribe el motivo y guarda.</li>
+          <li>Pasadas esas 6 horas solo queda «Añadir rectificación». Si hoy no puedes esperar, anota en el comentario si el plazo de 6 horas te parece razonable.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La versión corregida es la que se muestra, con un aviso de la corrección y su motivo. La original no se pierde (queda en la línea temporal). Otro profesional ve las correcciones pero no puede hacerlas.</div>
+        <fieldset class="choices" aria-labelledby="t-2-10">
+          <label class="choice"><input type="radio" name="r-2-10" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-10" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-10" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-10" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.11">
+        <div class="q-head"><span class="n">2.11</span><h3 class="q-title" id="t-2-11">Bandeja de comunicaciones a familias</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>En Inicio de Enfermería abre la tarjeta «Comunicaciones».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves las comunicaciones que has preparado al cerrar, pendientes de aprobación. Hoy no se pueden aprobar ni publicar (llega con el Portal Familiar). Cuéntanos en el comentario si lo que ves te basta.</div>
+        <fieldset class="choices" aria-labelledby="t-2-11">
+          <label class="choice"><input type="radio" name="r-2-11" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-11" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-11" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-11" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Medicina</h2>
+    <div class="stack prose">
+      <p>Entra con <code>dev-integrado-medicina</code>. Medicina recibe los escalados de Enfermería, los valora y decide: indicar a Enfermería, hacer un seguimiento médico, cerrar o activar el protocolo urgente. También puede registrar eventos propios.</p>
+      <p class="why">Referencia: docs/flujos-clinicos/valoracion-conducta-medicina.md (MED-01 a MED-18) y derivacion-urgencias.md</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">Bandeja de escalados</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>En Inicio de Medicina abre «Escalados y eventos propios».</li>
+          <li>Busca el evento que escalaste en la prueba 2.5 y ábrelo.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El escalado muestra el motivo, las constantes y las actuaciones. La observación original y la valoración de Enfermería son de solo lectura: Medicina nunca las modifica.</div>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">Valoración médica</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>En el escalado, pulsa «Iniciar valoración médica».</li>
+          <li>Escribe hallazgos y exploración, valoración y actuaciones, y alguna constante. Pulsa «Guardar borrador».</li>
+          <li>Pulsa «Pasar a conducta médica».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Cada guardado queda como una versión que no se puede modificar. Cualquier profesional de Medicina de la unidad puede continuar una valoración empezada por otro. La conducta muestra cuatro salidas.</div>
+        <fieldset class="choices" aria-labelledby="t-3-2">
+          <label class="choice"><input type="radio" name="r-3-2" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="3.3">
+        <div class="q-head"><span class="n">3.3</span><h3 class="q-title" id="t-3-3">Indicación a Enfermería</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>En la conducta médica elige «Registrar indicaciones a Enfermería».</li>
+          <li>Escribe el texto, una fecha prevista o un criterio (o ambos) e información adicional si hace falta. Guarda.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>No hay prioridad automática. El evento pasa a «Con indicación pendiente» y sale de la bandeja de escalados. Enfermería la verá en «Indicaciones» (prueba 2.9). Puedes añadir más indicaciones o cerrar el evento.</div>
+        <fieldset class="choices" aria-labelledby="t-3-3">
+          <label class="choice"><input type="radio" name="r-3-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-3-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3-3" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-3-3" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="3.4">
+        <div class="q-head"><span class="n">3.4</span><h3 class="q-title" id="t-3-4">Seguimiento médico y fin de turno</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>Con otro escalado, elige «Iniciar seguimiento médico». Escribe el objetivo (qué resultado esperas antes de decidir) y una fecha o un criterio.</li>
+          <li>Registra una revisión. En el bloque «Al terminar tu turno» prueba «Transferir» a un equipo entrante, con nota, y, en otro seguimiento, «Conservar».</li>
+          <li>Pulsa «Resolver».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El evento entra en la tarjeta «Seguimientos» de Medicina. Cada evento admite un solo seguimiento médico. Resolver vuelve a la conducta, desde donde se cierra o se indica a Enfermería.</div>
+        <fieldset class="choices" aria-labelledby="t-3-4">
+          <label class="choice"><input type="radio" name="r-3-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-3-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3-4" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-3-4" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="3.5">
+        <div class="q-head"><span class="n">3.5</span><h3 class="q-title" id="t-3-5">Cerrar con comunicación a la familia</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>En la conducta médica elige «Cerrar el evento». Revisa el resumen de tu valoración y los pendientes.</li>
+          <li>Elige «Preparar comunicación», tipo ordinaria o relevante, y escribe un texto comprensible para la familia. Pulsa «Cerrar evento».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Puedes cerrar aunque haya indicaciones sin resolver: siguen en la bandeja de Enfermería. La comunicación queda pendiente de aprobación. Enfermería no tiene que cerrar el evento otra vez (verá «Cerrado por Medicina»).</div>
+        <fieldset class="choices" aria-labelledby="t-3-5">
+          <label class="choice"><input type="radio" name="r-3-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-3-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3-5" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-3-5" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="3.6">
+        <div class="q-head"><span class="n">3.6</span><h3 class="q-title" id="t-3-6">Evento propio de Medicina</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <ol class="pasos">
+          <li>En «Residentes» abre «Residente Prueba CJ Dos (ficticio)» y pulsa «Registrar evento». Escribe la observación y guarda.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El evento queda directamente en valoración médica, iniciada por ti, y aparece en «Escalados y eventos propios» como «Evento observado por Medicina». No entra en las bandejas de Enfermería.</div>
+        <fieldset class="choices" aria-labelledby="t-3-6">
+          <label class="choice"><input type="radio" name="r-3-6" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-3-6" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3-6" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-3-6" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="3.7">
+        <div class="q-head"><span class="n">3.7</span><h3 class="q-title" id="t-3-7">Protocolo urgente y derivación iniciados por Medicina</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <ol class="pasos">
+          <li>Con un evento propio valorado, elige «Activar protocolo urgente» en la conducta médica.</li>
+          <li>Documenta una actuación, deriva a Urgencias, firma, registra el intento de llamada y cierra (como en las pruebas 2.7 y 2.8).</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Funciona igual que en Enfermería. El protocolo pertenece a Medicina: Enfermería lo ve en solo lectura. Solo quien lo activó puede derivar.</div>
+        <fieldset class="choices" aria-labelledby="t-3-7">
+          <label class="choice"><input type="radio" name="r-3-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-3-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3-7" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-3-7" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-4">
+    <h2>Tema 4 · Basal y Barthel</h2>
+    <div class="stack prose">
+      <p>El basal es el estado habitual de referencia del residente: nueve áreas más la escala de Barthel. Se crea con Enfermería (<code>dev-integrado-enfermeria</code>) o con Medicina (<code>dev-integrado-medicina</code>), que usan las mismas pantallas.</p>
+      <p class="why">Referencia: docs/flujos-clinicos/gestion-basal-barthel.md (BAS-01 a BAS-19)</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="4.1">
+        <div class="q-head"><span class="n">4.1</span><h3 class="q-title" id="t-4-1">Crear un borrador de basal</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <ol class="pasos">
+          <li>Como Enfermería, abre «Residente Prueba CJ Dos (ficticio)» (no tiene basal) y pulsa «Crear borrador de basal».</li>
+          <li>Elige el motivo (Alta), la fuente de la información y su fecha. Pulsa «Crear borrador».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Aviso «Borrador creado». Ves las nueve áreas y el índice de Barthel, todos «Pendiente». Solo puede haber un borrador activo por residente.</div>
+        <fieldset class="choices" aria-labelledby="t-4-1">
+          <label class="choice"><input type="radio" name="r-4-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="4.2">
+        <div class="q-head"><span class="n">4.2</span><h3 class="q-title" id="t-4-2">Completar las nueve áreas</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>Abre cada área (Movilidad, Alimentación, Continencia, Aseo e higiene, Cognición, Comunicación, Conducta, Sueño y Ayudas habituales), elige las opciones y guarda.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Cada área queda marcada como completada. Lee las opciones de cada área: ¿faltan o sobran categorías desde el punto de vista clínico? Anótalo en el comentario.</div>
+        <fieldset class="choices" aria-labelledby="t-4-2">
+          <label class="choice"><input type="radio" name="r-4-2" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="4.3">
+        <div class="q-head"><span class="n">4.3</span><h3 class="q-title" id="t-4-3">Índice de Barthel</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Abre «Índice de Barthel» y elige una opción en cada uno de los diez ítems. Mira la barra del pie mientras lo haces.</li>
+          <li>Guarda.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El total sobre 100 se calcula solo y la barra del pie muestra el total y cuántos ítems llevas. Comprueba que las puntuaciones son las de la escala de Barthel que usas.</div>
+        <fieldset class="choices" aria-labelledby="t-4-3">
+          <label class="choice"><input type="radio" name="r-4-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-4-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-4-3" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-4-3" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="4.4">
+        <div class="q-head"><span class="n">4.4</span><h3 class="q-title" id="t-4-4">Confirmar y firmar</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <ol class="pasos">
+          <li>Con las nueve áreas y Barthel completos, pulsa «Confirmar y firmar». Revisa el resumen completo.</li>
+          <li>Firma.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El basal pasa a «versión vigente». Aviso «Basal firmado» con el número de versión. La tarjeta del residente pasa a verde.</div>
+        <fieldset class="choices" aria-labelledby="t-4-4">
+          <label class="choice"><input type="radio" name="r-4-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="4.5">
+        <div class="q-head"><span class="n">4.5</span><h3 class="q-title" id="t-4-5">Solo firma quien creó el borrador</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>Como Enfermería, inicia una reevaluación de «Residente Prueba CJ Uno (ficticio)» y completa lo que quieras.</li>
+          <li>Entra como Medicina (<code>dev-integrado-medicina</code>), abre el mismo residente y mira si ve ese borrador; intenta crear uno propio.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Medicina no ve el borrador de Enfermería: en la ficha le ofrece «Crear borrador» como si no existiera ninguno. Si intenta crear otro, la app lo rechaza con el mensaje «Revisa los datos de la operación.», que quizá no explica bien el motivo (ya hay un borrador activo): dinos si te parece suficiente. Solo puede firmar la misma cuenta que creó el borrador, con el mismo perfil. Todavía no se puede aportar a un borrador ajeno (está en «Próximamente»).</div>
+        <fieldset class="choices" aria-labelledby="t-4-5">
+          <label class="choice"><input type="radio" name="r-4-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-4-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-4-5" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-4-5" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="4.6">
+        <div class="q-head"><span class="n">4.6</span><h3 class="q-title" id="t-4-6">Reevaluar el basal y cancelar un borrador</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <ol class="pasos">
+          <li>En el borrador de reevaluación, escribe un motivo en «Cancelar borrador» y cancélalo.</li>
+          <li>Vuelve a abrir uno nuevo («Iniciar reevaluación»), complétalo y fírmalo.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Al cancelar queda registrado el motivo. Al firmar, la versión anterior pasa a histórica y la nueva a vigente, en una sola operación.</div>
+        <fieldset class="choices" aria-labelledby="t-4-6">
+          <label class="choice"><input type="radio" name="r-4-6" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-4-6" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-4-6" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-4-6" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="4.7">
+        <div class="q-head"><span class="n">4.7</span><h3 class="q-title" id="t-4-7">Historial y versiones</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Prueba Activación RLS Azure</strong></span></div>
+        <ol class="pasos">
+          <li>Abre «Prueba Activación RLS Azure (ficticio)» y pulsa «Ver historial». Mira «Eventos cerrados» y «Versiones del basal».</li>
+          <li>Abre una versión con «Ver versión», un evento con «Ver detalle» y «Ver línea temporal».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Cada evento cerrado muestra el basal y la unidad que estaban vigentes cuando se registró, no los actuales. La línea temporal reúne todos los pasos, del más reciente al más antiguo, con el perfil que los hizo. Nada se puede modificar.</div>
+        <fieldset class="choices" aria-labelledby="t-4-7">
+          <label class="choice"><input type="radio" name="r-4-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-4-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-4-7" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-4-7" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-5">
+    <h2>Tema 5 · Dirección Clínica</h2>
+    <div class="stack prose">
+      <p>Entra con <code>dev-integrado-direccion</code>. Dirección supervisa, no valora ni indica: ve el estado y los hitos de los episodios, nunca las observaciones ni las valoraciones. Para estas pruebas tiene que haber episodios abiertos; hay algunos de pruebas anteriores, y si cierras todo en los temas anteriores, deja uno abierto.</p>
+      <p class="why">Referencia: docs/flujos-clinicos/supervision-clinica-direccion.md (DIR-01 a DIR-16)</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="5.1">
+        <div class="q-head"><span class="n">5.1</span><h3 class="q-title" id="t-5-1">Supervisión de pendientes</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>En Inicio de Dirección, mira las cifras por unidad. Abre «Supervisión de pendientes», filtra por tipo y unidad con «Buscar» y abre «Ver detalle operativo» de uno.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Las cifras (sin valorar, en valoración, escalados, seguimiento y vencidos, protocolo urgente, indicaciones) cuadran con lo que ves en la lista. El detalle muestra estado e hitos (quién, por perfil, y cuándo), sin observaciones, valoraciones ni indicaciones, y sin ninguna acción asistencial.</div>
+        <fieldset class="choices" aria-labelledby="t-5-1">
+          <label class="choice"><input type="radio" name="r-5-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="5.2">
+        <div class="q-head"><span class="n">5.2</span><h3 class="q-title" id="t-5-2">Derivaciones a Urgencias</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>Abre «Derivaciones a Urgencias».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Episodios abiertos con protocolo urgente, con cuándo y quién lo activó, si el informe está firmado y cuántas llamadas a la familia constan. No se muestra el contenido del informe ni de las llamadas.</div>
+        <fieldset class="choices" aria-labelledby="t-5-2">
+          <label class="choice"><input type="radio" name="r-5-2" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="5.3">
+        <div class="q-head"><span class="n">5.3</span><h3 class="q-title" id="t-5-3">Indicadores e informe de actividad</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>Abre «Indicadores e informe de actividad». Cambia las fechas «Desde» y «Hasta» y pulsa «Aplicar».</li>
+          <li>Pulsa «Imprimir / guardar como PDF».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Cifras agregadas por unidad, cada una como «n de m», sin residentes ni profesionales y sin colores de alerta. El informe impreso lleva el icono y el nombre de ResidApp, el centro, las unidades, el periodo y la fecha. Dinos si alguna cifra no se entiende o no se usa.</div>
+        <fieldset class="choices" aria-labelledby="t-5-3">
+          <label class="choice"><input type="radio" name="r-5-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5-3" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5-3" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="5.4">
+        <div class="q-head"><span class="n">5.4</span><h3 class="q-title" id="t-5-4">Mi ámbito de supervisión</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>Abre «Mi ámbito de supervisión».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves el centro, las unidades y los permisos vigentes de tu perfil. Consultarlo no los amplía.</div>
+        <fieldset class="choices" aria-labelledby="t-5-4">
+          <label class="choice"><input type="radio" name="r-5-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5-4" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5-4" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="5.5">
+        <div class="q-head"><span class="n">5.5</span><h3 class="q-title" id="t-5-5">Consulta auditada del basal</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Abre «Consulta auditada del basal». Elige un residente de la lista, «Basal vigente» o «Historial de basal» y, en «Propósito», «Supervisión clínica». Consulta.</li>
+          <li>Repite con «Historial de basal».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Aparece el basal en solo lectura (prueba con «Residente Prueba CJ Uno», que lo tiene firmado, y con uno sin basal: te dice que no hay). Cada consulta que muestra un basal queda registrada de forma obligatoria con su propósito; la pantalla de auditoría de Administración todavía no la muestra: dinos si debería.</div>
+        <fieldset class="choices" aria-labelledby="t-5-5">
+          <label class="choice"><input type="radio" name="r-5-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5-5" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5-5" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="5.6">
+        <div class="q-head"><span class="n">5.6</span><h3 class="q-title" id="t-5-6">Rangos de referencia de constantes</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>En Inicio, abre «Rangos de referencia de constantes». Fija, por ejemplo, un mínimo de saturación de O₂ de 92 y pulsa «Guardar rangos».</li>
+          <li>Como Enfermería, valora un evento y guarda una saturación de 89.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Los rangos son por centro. Se guardan con su historial (fecha, valor anterior y nuevo, perfil). En la valoración de Enfermería aparece un aviso amarillo, solo informativo. Administración no puede usar esta pantalla.</div>
+        <fieldset class="choices" aria-labelledby="t-5-6">
+          <label class="choice"><input type="radio" name="r-5-6" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5-6" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5-6" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5-6" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-6">
+    <h2>Tema 6 · Administración y familias</h2>
+    <div class="stack prose">
+      <p>Entra con <code>dev-integrado-administracion</code>. Administración gestiona el centro y solo ve datos administrativos de los residentes: nunca observaciones ni valoraciones clínicas.</p>
+      <p class="why">Referencia: docs/historias-usuarios/administracion.md</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="6.1">
+        <div class="q-head"><span class="n">6.1</span><h3 class="q-title" id="t-6-1">Dar de alta a un residente</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>En Inicio pulsa «Alta de residente». Elige la unidad, escribe un nombre ficticio, la fecha de nacimiento y el sexo documentado, y guarda.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Aviso «Residente dado de alta» con su identificador. Aparece en «Residentes» y en las listas de Enfermería y Medicina con el basal pendiente. Usa un nombre ficticio que empiece por «CJ» para reconocerlo después.</div>
+        <fieldset class="choices" aria-labelledby="t-6-1">
+          <label class="choice"><input type="radio" name="r-6-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-1" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-1" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.2">
+        <div class="q-head"><span class="n">6.2</span><h3 class="q-title" id="t-6-2">Corregir la identidad</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>Abre un residente en «Residentes» y pulsa «Corregir identidad». Cambia el nombre y escribe el motivo. Prueba a guardar sin motivo.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El motivo es obligatorio. Tras corregir, la ficha muestra la identidad nueva y, en «Correcciones de identidad», cada cambio con su fecha, quién lo hizo, el valor de «Antes», el de «Después» y el motivo.</div>
+        <fieldset class="choices" aria-labelledby="t-6-2">
+          <label class="choice"><input type="radio" name="r-6-2" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-2" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-2" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-2" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.3">
+        <div class="q-head"><span class="n">6.3</span><h3 class="q-title" id="t-6-3">Añadir un familiar y su autorización</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>En la ficha de un residente, sección «Familiares», pulsa «Añadir familiar». Escribe nombre, relación («Hija») y teléfono.</li>
+          <li>Pulsa «Autorización»: ábrela (queda pendiente) y actívala, con una fecha «válida hasta» opcional. Después prueba «Suspender» y «Revocar» (piden motivo).</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Un familiar nuevo NO tiene autorización de acceso hasta que se abre y se activa. Cada cambio queda con su fecha y quién lo hizo. Revocar y suspender exigen motivo.</div>
+        <fieldset class="choices" aria-labelledby="t-6-3">
+          <label class="choice"><input type="radio" name="r-6-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-3" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-3" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.4">
+        <div class="q-head"><span class="n">6.4</span><h3 class="q-title" id="t-6-4">Contacto urgente</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>En la ficha del residente abre «Contacto urgente» y designa a uno de sus familiares. Después quítalo.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El contacto designado aparece con su teléfono en la ficha de Enfermería y de Medicina y rellena «A quién se llama» al registrar un intento de llamada. Al quitarlo, desaparece.</div>
+        <fieldset class="choices" aria-labelledby="t-6-4">
+          <label class="choice"><input type="radio" name="r-6-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-4" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-4" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.5">
+        <div class="q-head"><span class="n">6.5</span><h3 class="q-title" id="t-6-5">Usuarios, perfiles y permisos</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>Abre «Usuarios» y entra en «Gestionar» sobre una cuenta de pruebas (por ejemplo, <code>dev-integrado-enfermeria</code>).</li>
+          <li>En «Permisos» concede un permiso y revócalo. Prueba también a conceder una unidad y revocarla.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Solo se ofrecen los permisos que corresponden al perfil. No se puede revocar la última unidad de un perfil (hay que revocar el perfil). Cada cambio queda en la auditoría.</div>
+        <fieldset class="choices" aria-labelledby="t-6-5">
+          <label class="choice"><input type="radio" name="r-6-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-5" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-5" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.6">
+        <div class="q-head"><span class="n">6.6</span><h3 class="q-title" id="t-6-6">Asignar residentes a un Auxiliar</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>En «Gestionar» de <code>dev-integrado-auxiliar</code>, retira a «Residente Prueba CJ Dos» y mira «Mis residentes» como Auxiliar. Vuelve a asignarlo.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Mientras no está asignado, el Auxiliar no lo ve ni puede abrirlo. Al asignarlo vuelve a aparecer. Solo se asignan residentes de las unidades del perfil.</div>
+        <fieldset class="choices" aria-labelledby="t-6-6">
+          <label class="choice"><input type="radio" name="r-6-6" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-6" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-6" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-6" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.7">
+        <div class="q-head"><span class="n">6.7</span><h3 class="q-title" id="t-6-7">Estructura: habitaciones y plazas</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>Abre «Estructura del centro» y «Habitaciones y plazas». Crea una habitación y una plaza. Intenta crear otra habitación con el mismo nombre (aunque cambies mayúsculas y minúsculas).</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La habitación queda asociada a la unidad, y la plaza a la habitación. No deja repetir un nombre dentro de la misma unidad, sin distinguir mayúsculas. Todavía no se puede cambiar de habitación o plaza a un residente (está en «Próximamente»).</div>
+        <fieldset class="choices" aria-labelledby="t-6-7">
+          <label class="choice"><input type="radio" name="r-6-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-7" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-7" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.8">
+        <div class="q-head"><span class="n">6.8</span><h3 class="q-title" id="t-6-8">Auditoría administrativa</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Abre «Auditoría». Filtra por periodo, tipo de acción y cuenta afectada.</li>
+          <li>Busca lo que acabas de hacer (permisos, perfiles, familiares, altas).</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves quién hizo qué y cuándo. El registro no se puede modificar ni borrar y no contiene texto clínico. Muestra como máximo 500 eventos.</div>
+        <fieldset class="choices" aria-labelledby="t-6-8">
+          <label class="choice"><input type="radio" name="r-6-8" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-8" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-8" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-8" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.9">
+        <div class="q-head"><span class="n">6.9</span><h3 class="q-title" id="t-6-9">Turnos, equipos y planificación</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>Abre «Turnos», crea uno. En «Equipos» crea un equipo y añade miembros. En «Planificación de turnos» planifica un turno para varios días y prueba «Ver serie» y retira una fecha («Retirar esta fecha») o desde una fecha («Retirar desde»).</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Los equipos creados aquí son los que reciben las transferencias de seguimiento (pruebas 2.6 y 3.4). Planificar un turno que se solapa pide una justificación.</div>
+        <fieldset class="choices" aria-labelledby="t-6-9">
+          <label class="choice"><input type="radio" name="r-6-9" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-9" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-9" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-9" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-7">
+    <h2>Tema 7 · Aislamiento entre centros</h2>
+    <div class="stack prose">
+      <p>Estas pruebas comprueban lo que protege la seguridad por filas: que cada centro vea únicamente sus datos. Hay dos centros con residentes: el «Centro de desarrollo — escenario integrado» (las cuentas <code>dev-integrado-…</code>) y otro centro distinto (la cuenta <code>dev-enfermeria</code>). Son pruebas rápidas, de pocos minutos.</p>
+      <p class="why">Referencia: docs/decisiones-arquitectura/0008-multicentro-y-grupos.md</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="7.1">
+        <div class="q-head"><span class="n">7.1</span><h3 class="q-title" id="t-7-1">Cada centro ve solo sus residentes</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>dev-enfermeria</code> y abre «Residentes» (Enfermería). Apunta los nombres que ves.</li>
+          <li>Sal («Cambiar de identidad») y entra con <code>dev-integrado-enfermeria</code>. Abre «Residentes» y compara.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Con <code>dev-enfermeria</code> solo ves «Residente Enfermería Uno» y «Residente Enfermería Dos». Con <code>dev-integrado-enfermeria</code> ves los residentes del escenario integrado y ninguno de los otros dos.</div>
+        <fieldset class="choices" aria-labelledby="t-7-1">
+          <label class="choice"><input type="radio" name="r-7-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-7-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-7-1" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-7-1" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="7.2">
+        <div class="q-head"><span class="n">7.2</span><h3 class="q-title" id="t-7-2">Abrir a mano un residente de otro centro</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>dev-integrado-enfermeria</code>.</li>
+          <li>Cambia la dirección del navegador para ir a: <code>/Enfermeria/Residente?residenteId=443194d9-dfe4-4edc-b9a1-c3cf70d161b1</code> (es «Residente Enfermería Uno», de otro centro). Prueba también <code>/Enfermeria/RegistrarEvento?residenteId=443194d9-dfe4-4edc-b9a1-c3cf70d161b1</code>.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>No se abre ni se muestra ningún dato de ese residente: la aplicación te devuelve a tu lista de residentes. Si ves su nombre, su ficha o un formulario para registrarle un evento, es un fallo grave: dínoslo cuanto antes.</div>
+        <fieldset class="choices" aria-labelledby="t-7-2">
+          <label class="choice"><input type="radio" name="r-7-2" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-7-2" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-7-2" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-7-2" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="7.3">
+        <div class="q-head"><span class="n">7.3</span><h3 class="q-title" id="t-7-3">Cambiar de ámbito con una cuenta de varios centros</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>Entra con <code>dev-multi</code>. Aparece «Seleccionar ámbito» con cuatro ámbitos: Enfermería y Medicina del Centro A, Dirección Clínica y Familiar del Centro B.</li>
+          <li>Elige uno, mira qué pantallas te ofrece y cambia con «Cambiar ámbito» (menú del perfil). Repite con otro.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>En cada ámbito solo ves las pantallas de su perfil y los datos de su centro: ninguno de los residentes del escenario integrado aparece en ninguno de los cuatro. El ámbito Familiar no tiene pantallas todavía.</div>
+        <fieldset class="choices" aria-labelledby="t-7-3">
+          <label class="choice"><input type="radio" name="r-7-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-7-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-7-3" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-7-3" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="7.4">
+        <div class="q-head"><span class="n">7.4</span><h3 class="q-title" id="t-7-4">Un Auxiliar solo ve a sus asignados</h3><span class="chip">Sin probar</span></div>
+        
+        <ol class="pasos">
+          <li>Entra con <code>dev-integrado-auxiliar</code> y comprueba que ves exactamente los cuatro residentes asignados.</li>
+          <li>Intenta abrir a mano: <code>/Auxiliar/Registro?residenteId=fcb9e800-af32-4e43-8aca-84144ef684a8</code> (un residente de tu centro que NO te han asignado).</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Te devuelve a «Mis residentes» sin mostrar nada del residente no asignado.</div>
+        <fieldset class="choices" aria-labelledby="t-7-4">
+          <label class="choice"><input type="radio" name="r-7-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-7-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-7-4" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-7-4" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-8">
+    <h2>Tema 8 · Para terminar</h2>
+    <div class="stack prose">
+      <p>Tres preguntas abiertas, para lo que no cabe en ninguna prueba concreta.</p>
+    </div>
+    <div class="qs">
+      <article class="q abierta" data-q="8.1">
+        <div class="q-head"><span class="n">8.1</span><h3 class="q-title" id="t-8-1">¿Has visto algo clínicamente raro, incompleto o confuso en los flujos (por ejemplo, una opción que falta, un orden de pasos que no es el de tu trabajo)?</h3><span class="chip">Pendiente</span></div>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="3"></textarea></label>
+      </article>
+      <article class="q abierta" data-q="8.2">
+        <div class="q-head"><span class="n">8.2</span><h3 class="q-title" id="t-8-2">¿Hay algún texto, aviso o mensaje de error que no se entienda o que esté mal escrito?</h3><span class="chip">Pendiente</span></div>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="3"></textarea></label>
+      </article>
+      <article class="q abierta" data-q="8.3">
+        <div class="q-head"><span class="n">8.3</span><h3 class="q-title" id="t-8-3">¿Has notado lentitud o algo incómodo, sobre todo si lo has probado desde el móvil o como aplicación instalada?</h3><span class="chip">Pendiente</span></div>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="3"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. Ingeniería no da ninguna prueba por buena: eres tú quien decide si cada
+    pantalla hace lo que debe. Cuando subas tus respuestas, ingeniería las revisa, te consulta lo que no quede claro y corrige lo
+    que haga falta. La aplicación no lee este fichero ni sus respuestas.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Guardar respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 completadas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+    <div class="actions">
+      <button type="button" class="btn" id="btn-abrir">Abrir respuestas guardadas</button>
+      <button type="button" class="btn primary" id="btn-guardar">Guardar respuestas</button>
+      <input type="file" id="fichero" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var FILE = DOC + ".respuestas.json";
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;
+  var savedAt = null;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (dirty) say("", "Tienes cambios que aún no están en el fichero. Pulsa «Guardar respuestas» cuando quieras.");
+    else if (savedAt) say("ok", "Fichero al día (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda en este navegador.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) var abierta = q.classList.contains("abierta"); chip.textContent = done ? (abierta ? "Respondida" : "Probada") : (abierta ? "Pendiente" : "Sin probar");
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " completadas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  function loaded(data, origin) {
+    apply(data);
+    dirty = false;
+    savedAt = data.guardado || null;
+    store(refresh());
+    var msg = "Respuestas cargadas " + origin + " (guardadas el " + when(data.guardado) + ").";
+    if (data.cuestionario !== VERSION) {
+      say("error", msg + " Son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+    } else {
+      say("ok", msg);
+    }
+  }
+
+  function download(json) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  async function save() {
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    try {
+      if (!window.showSaveFilePicker) throw new Error("sin selector");
+      var handle = await window.showSaveFilePicker({ suggestedName: FILE,
+        types: [{ description: "Respuestas (JSON)", accept: { "application/json": [".json"] } }] });
+      var w = await handle.createWritable();
+      await w.write(json);
+      await w.close();
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      download(json);
+    }
+    dirty = false;
+    savedAt = data.guardado;
+    store(data);
+    say("ok", "Guardado como «" + FILE + "». Ahora envíaselo a Orlando por correo o por WhatsApp.");
+  }
+
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    store(refresh());
+    status();
+  }
+
+  document.getElementById("btn-guardar").addEventListener("click", save);
+  document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
+  document.getElementById("fichero").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    file.text().then(function (t) {
+      var data = JSON.parse(t);
+      if (data.documento !== DOC) {
+        say("error", "Ese fichero es de otro documento («" + data.documento + "»). Elige «" + FILE + "».");
+        return;
+      }
+      loaded(data, "del fichero");
+    }).catch(function () {
+      say("error", "No se ha podido leer ese fichero. Elige «" + FILE + "».");
+    }).finally(function () { e.target.value = ""; });
+  });
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+
+  // Si la página se sirve por http (no desde disco), carga las respuestas ya subidas al repositorio.
+  if (location.protocol.indexOf("http") === 0) {
+    fetch(FILE, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.documento !== DOC) return;
+        if (dirty) {
+          say("", "Hay respuestas en el repositorio (guardadas el " + when(data.guardado) +
+            "), pero mantienes los cambios de este navegador, que aún no están en el fichero.");
+          return;
+        }
+        loaded(data, "del repositorio");
+      })
+      .catch(function () { /* sin fichero de respuestas */ });
+  }
+})();
+</script>
+
+</body>
+</html>

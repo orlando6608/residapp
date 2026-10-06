@@ -13,6 +13,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Guía de pruebas para CJ (2026-10-06, rama `docs-guia-pruebas-cj`, sin commit ni push):** `docs/pendientes-cj/guia-de-pruebas-cj.html`, publicado en `/pendientes-cj/guia-de-pruebas-cj.html` con el siguiente
+  despliegue. 49 pruebas paso a paso en 7 temas (Auxiliar, Enfermería, Medicina, basal y Barthel, Dirección, Administración y familias, aislamiento entre centros) más 3
+  preguntas finales; 18 marcadas «Imprescindible». Cada prueba lleva sus pasos, «qué debería ocurrir» y cuatro opciones (A funciona · B con problema · C no funciona ·
+  D no probada) con comentario; el fichero de respuestas es `guia-de-pruebas-cj.respuestas.json`, como en los demás documentos (mismo estilo y script; solo cambian
+  los textos «Sin probar»/«Probada»). **Datos preparados en Azure dev** (solo por la app): «Residente Prueba CJ Uno (ficticio)» (basal v1 firmado, asignado al
+  Auxiliar), «Residente Prueba CJ Dos (ficticio)» (sin basal, asignado al Auxiliar) y el residente de mi recorrido «Prueba Activación RLS Azure (ficticio)» (historial y dos
+  informes de derivación) para mirar; «Residente Integrado Uno» queda intacto, sin basal, para el recorrido guiado del Manual. Los pasos se comprobaron por HTTP contra
+  Azure dev con la app limitada, y eso corrigió varias suposiciones: Medicina no ve el borrador de basal de Enfermería (si intenta crear otro, recibe «Revisa los datos de
+  la operación.», un mensaje poco claro, que la guía deja anotar a CJ); la auditoría de Administración no muestra las consultas auditadas del basal de Dirección; abrir
+  a mano un residente de otro centro devuelve a la lista propia. **Siguiente:** que Orlando la publique y se la pase a CJ con las cuentas; cuando CJ devuelva
+  `guia-de-pruebas-cj.respuestas.json`, guardarlo en `docs/pendientes-cj/` y convertir cada B o C en una tarea.
 - **G1 completo y activo en Azure dev (2026-10-06, PR #7, en `main`; la app responde 200):** la política `seg.pol_centro` cubre las 55 tablas de datos y ahora **se aplica de verdad**:
   la app de Azure dev se conecta como `residapp_app` (usuario contenido con contraseña, sin `db_owner`; lo creó Orlando con
   `database/seguridad/crear_usuario_aplicacion_azure.sql` y comprobó `IS_MEMBER('db_owner') = 0` y `COUNT(*)` de `residentes` = 0 sin ámbito). El despliegue aplica
