@@ -3,7 +3,7 @@
  * seguridad por filas (database/scripts/0030_rls_centro.sql, ADR 0008) se le aplique. No es un script de esquema: no lo ejecuta
  * aplicar-scripts.sh. Se ejecuta después de aplicar los scripts, con la contraseña en una variable de sqlcmd, nunca escrita aquí:
  *   sqlcmd -S <servidor> -d <base> -U <admin> -C -b -v CONTRASENA="<contraseña>" -i database/seguridad/crear_usuario_aplicacion.sql
- * Azure SQL (usuario contenido o identidad administrada) se decide aparte.
+ * Para Azure SQL Database, crear_usuario_aplicacion_azure.sql (usuario contenido, sin LOGIN).
  */
 
 IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = N'residapp_app')

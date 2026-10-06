@@ -112,6 +112,12 @@ jobs:
       # Entorno de desarrollo/piloto interno con datos ficticios: aplica esquema pendiente y seeds dev-*.
       # Nunca replicar APLICAR_SEED=1 en un entorno de producción con datos reales.
       - name: Aplicar esquema y seed en Azure SQL
+        env:
+          # Administrador de la base de datos, solo para los scripts y los seeds. La aplicación se conecta con un usuario limitado
+          # (database/seguridad/crear_usuario_aplicacion_azure.sql, ADR 0008) para que la seguridad por filas le aplique: estas
+          # credenciales NO deben estar en la configuración de la Web App. Si faltan, se usa el usuario de la cadena de la app.
+          SQL_ADMIN_USER: ${{ secrets.AZURE_SQL_ADMIN_USER }}
+          SQL_ADMIN_PASSWORD: ${{ secrets.AZURE_SQL_ADMIN_PASSWORD }}
         run: |
           cadena="$(az webapp config connection-string list --name app-residapp-dev --resource-group rg-residapp-dev \
             --query "[?name=='ResidApp'].value | [0]" -o tsv)"
@@ -119,8 +125,8 @@ jobs:
           server="$(valor Server)"; server="${server#tcp:}"
           export SQL_SERVER="$server"
           export SQL_DATABASE="$(valor 'Initial Catalog')"
-          export SQL_USER="$(valor 'User ID')"
-          export SQL_PASSWORD="$(valor Password)"
+          export SQL_USER="${SQL_ADMIN_USER:-$(valor 'User ID')}"
+          export SQL_PASSWORD="${SQL_ADMIN_PASSWORD:-$(valor Password)}"
           echo "::add-mask::$SQL_PASSWORD"
           APLICAR_SEED=1 bash database/aplicar-scripts.sh
 
