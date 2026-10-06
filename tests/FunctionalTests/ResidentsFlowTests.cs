@@ -286,6 +286,168 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Equal("/Enfermeria/Residentes", post.Headers.Location?.OriginalString);
     }
 
+    [Fact]
+    public async Task Administracion_CorrigeIdentidadYGestionaFamiliares_ConLaAppEntera()
+    {
+        // Identidad corregida, familiar añadido, su autorización abierta y activada y su designación como contacto urgente, por la
+        // app real: con el usuario limitado pasan por la seguridad por filas de las cuatro tablas de familias y correcciones.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Familias Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var identityPage = await admin.GetStringAsync($"/Administracion/CorregirIdentidad?residenteId={residentId}");
+        var corrected = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/CorregirIdentidad", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(identityPage, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = residentId,
+            ["Form.CorreccionesEsperadas"] = "0",
+            ["Form.NombreVisible"] = "Residente Familias Corregido",
+            ["Form.FechaNacimiento"] = "1938-02-21",
+            ["Form.SexoDocumentado"] = "Hombre",
+            ["Form.Motivo"] = "Error de transcripción (prueba funcional).",
+        }))).Content.ReadAsStringAsync());
+
+        var addPage = await admin.GetStringAsync($"/Administracion/AnadirFamiliar?residenteId={residentId}");
+        var added = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/AnadirFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(addPage, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = residentId,
+            ["Form.OperacionId"] = ExtractValue(addPage, "Form.OperacionId"),
+            ["Form.NombreVisible"] = "Familiar Funcional",
+            ["Form.Relacion"] = "Hija",
+            ["Form.Telefono"] = "600000000",
+        }))).Content.ReadAsStringAsync());
+        var linkId = await connection.ExecuteScalarAsync<Guid>(
+            "SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId });
+
+        var changes = 0;
+        foreach (var change in new[] { "Abrir", "Activar" })
+        {
+            var authorizationPage = await admin.GetStringAsync($"/Administracion/AutorizacionFamiliar?residenteId={residentId}&vinculoId={linkId}");
+            await admin.PostAsync("/Administracion/AutorizacionFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(authorizationPage, "__RequestVerificationToken"),
+                ["Form.ResidenteId"] = residentId,
+                ["Form.VinculoId"] = linkId.ToString(),
+                ["Form.CambiosEsperados"] = changes.ToString(),
+                ["Form.Cambio"] = change,
+            }));
+            changes++;
+        }
+
+        var contactPage = await admin.GetStringAsync($"/Administracion/ContactoUrgente?residenteId={residentId}");
+        var designated = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/ContactoUrgente", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(contactPage, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = residentId,
+            ["Form.DesignacionesEsperadas"] = "0",
+            ["Form.VinculoId"] = linkId.ToString(),
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Identidad corregida.", corrected);
+        Assert.Contains("Familiar añadido.", added);
+        Assert.Contains("Contacto urgente designado.", designated);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.residentes_identidad_correcciones WHERE residente_id = @residentId", new { residentId }));
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.familiares_autorizaciones_cambios WHERE vinculo_id = @linkId", new { linkId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }));
+    }
+
+    [Fact]
+    public async Task Auxiliar_RegistraSinCambiosYUnCambioConOpciones_ConLaAppEntera()
+    {
+        // Los tres cierres cotidianos por la app real: el «sin cambios» (cierre del residente) y un cambio con un área de texto
+        // y otra con opción rápida (cierre, áreas y opciones), con el usuario limitado.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var quietResident = await CreateResidentAsync(admin, seed, "Residente Sin Cambios Funcional");
+        var changedResident = await CreateResidentAsync(admin, seed, "Residente Con Cambio Funcional");
+        var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, quietResident, changedResident));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var quietPage = await auxiliar.GetStringAsync($"/Auxiliar/Registro?residenteId={quietResident}");
+        var quiet = WebUtility.HtmlDecode(await (await auxiliar.PostAsync("/Auxiliar/SinCambios", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(quietPage, "__RequestVerificationToken"),
+            ["residenteId"] = quietResident,
+            ["operacionId"] = Guid.NewGuid().ToString(),
+        }))).Content.ReadAsStringAsync());
+
+        var changePage = await auxiliar.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={changedResident}");
+        var changed = WebUtility.HtmlDecode(await (await auxiliar.PostAsync("/Auxiliar/ConfirmarCambio", new FormUrlEncodedContent(new[]
+        {
+            KeyValuePair.Create("__RequestVerificationToken", ExtractValue(changePage, "__RequestVerificationToken")),
+            KeyValuePair.Create("ResidenteId", changedResident),
+            KeyValuePair.Create("OperacionId", ExtractValue(changePage, "OperacionId")),
+            KeyValuePair.Create("AreaOpciones", "ALIMENTACION_HIDRATACION:NULA_INGESTA"),
+            KeyValuePair.Create("AreaTexto[ESTADO_CONCIENCIA]", "Más somnoliento de lo habitual (prueba funcional)."),
+            KeyValuePair.Create("Clasificacion", "Ordinario"),
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Cierre registrado: sin cambios.", quiet);
+        Assert.Contains("Cambio registrado", changed);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.cierres_cotidianos_residente WHERE residente_id = @quietResident", new { quietResident }));
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>("""
+            SELECT COUNT(*) FROM dbo.cierres_cotidianos_cambio_areas area
+              JOIN dbo.cierres_cotidianos_residente closure ON closure.id = area.cierre_id
+             WHERE closure.residente_id = @changedResident
+            """, new { changedResident }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("""
+            SELECT COUNT(*) FROM dbo.cierres_cotidianos_cambio_area_opciones option_row
+              JOIN dbo.cierres_cotidianos_cambio_areas area ON area.id = option_row.area_id
+              JOIN dbo.cierres_cotidianos_residente closure ON closure.id = area.cierre_id
+             WHERE closure.residente_id = @changedResident
+            """, new { changedResident }));
+    }
+
+    private async Task<string> CreateResidentAsync(
+        HttpClient admin, (string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed, string name)
+    {
+        var createPage = await admin.GetStringAsync("/Residents/Create");
+        var created = await (await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(createPage, "__RequestVerificationToken"),
+            ["OperacionId"] = ExtractValue(createPage, "OperacionId"),
+            ["AmbitoPerfilId"] = seed.ProfileScopeId.ToString(),
+            ["CentroId"] = seed.CenterId.ToString(),
+            ["UnidadId"] = seed.UnitId.ToString(),
+            ["NombreVisible"] = name,
+            ["FechaNacimiento"] = "1938-02-20",
+            ["SexoDocumentadoCodigo"] = "Hombre",
+        }))).Content.ReadAsStringAsync();
+        return Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
+    }
+
+    /// <summary>Una cuenta de Auxiliar con los residentes dados asignados, en el centro y la unidad de la semilla.</summary>
+    private static async Task<string> GrantAuxiliarAsync(
+        (string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed, params string[] residentIds)
+    {
+        var accountId = Guid.NewGuid();
+        var profileScopeId = Guid.NewGuid();
+        var externalSubject = $"functional-aux-{Guid.NewGuid().ToString("N")[..12]}";
+        var now = DateTimeOffset.UtcNow.UtcDateTime;
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@accountId, @externalSubject, 'ACTIVE', @now);
+            INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+            VALUES (@profileScopeId, @accountId, @centerId, 'AUXILIAR', 'ACTIVE', @now, @accountId);
+            INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @profileScopeId, @centerId, @unitId, @now, @accountId);
+            """, new { accountId, externalSubject, now, profileScopeId, centerId = seed.CenterId, unitId = seed.UnitId });
+        foreach (var residentId in residentIds)
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.ambitos_perfil_residente (id, ambito_perfil_id, centro_id, residente_id, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @profileScopeId, @centerId, @residentId, @now, @accountId)
+                """, new { profileScopeId, centerId = seed.CenterId, residentId = Guid.Parse(residentId), now, accountId });
+        }
+        return externalSubject;
+    }
+
     private async Task<HttpClient> LoginAsync(string externalSubject)
     {
         var client = _factory.CreateClient();

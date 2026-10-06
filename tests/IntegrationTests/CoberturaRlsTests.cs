@@ -26,18 +26,10 @@ public sealed class CoberturaRlsTests
         ["eventos_auditoria"] = Provision,
 
         ["ambitos_perfil_residente"] = PendienteConCentro,
-        ["cierres_cotidianos_cambio_areas"] = PendienteConCentro,
-        ["cierres_cotidianos_residente"] = PendienteConCentro,
         ["episodios_residente_centro"] = PendienteConCentro,
-        ["familiares_autorizaciones_cambios"] = PendienteConCentro,
         ["intervalos_ubicacion_residente"] = PendienteConCentro,
         ["permisos_perfil"] = PendienteConCentro,
-        ["residentes_contacto_urgente"] = PendienteConCentro,
-        ["residentes_familiares"] = PendienteConCentro,
-        ["residentes_identidad_correcciones"] = PendienteConCentro,
 
-        ["cierres_cotidianos_cambio_area_opciones"] = PendienteConCentro,
-        ["operaciones_idempotencia"] = PendienteConCentro,
     };
 
     private sealed record TableRow(string Name, bool HasPolicy);
