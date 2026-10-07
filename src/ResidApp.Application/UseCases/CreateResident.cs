@@ -1,3 +1,4 @@
+using ResidApp.Domain.Families;
 using ResidApp.Application.Authorization;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
@@ -10,7 +11,7 @@ namespace ResidApp.Application.UseCases;
 public sealed record CreateResidentCommand(
     Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, string NombreVisible, DateOnly FechaNacimiento,
     DocumentedSexCode SexoDocumentadoCodigo, string? ReferenciaInterna, Guid? EdificioId, Guid? PlantaId,
-    Guid? HabitacionId, Guid? PlazaId, Guid OperacionId);
+    Guid? HabitacionId, Guid? PlazaId, Guid OperacionId, IReadOnlyList<NewResidentFamilyInput>? Familiares = null);
 
 /// <summary>
 /// Traduce createResident de lib/application/resident-baseline-service.ts. Composición interna por
@@ -28,7 +29,8 @@ public sealed class CreateResident(
                 evidenceProvider, session, selection, new AuthorizationTarget.Create(command.UnidadId), ct: ct);
             var payload = new ResidentCreatePayload(
                 command.NombreVisible, command.FechaNacimiento, command.SexoDocumentadoCodigo, command.ReferenciaInterna,
-                command.EdificioId, command.PlantaId, command.HabitacionId, command.PlazaId, command.OperacionId);
+                command.EdificioId, command.PlantaId, command.HabitacionId, command.PlazaId, command.OperacionId,
+                ResidentFamilyAtAdmission.Validate(command.Familiares));
             return await RequestAuthorizationContextResolver.ExecuteResidentCreateAsync(context, repository, payload, ct);
         });
 }

@@ -46,6 +46,18 @@ public sealed class ResidentsController(
             return View(form);
         }
 
+        try
+        {
+            _ = ResidApp.Domain.Families.ResidentFamilyAtAdmission.Validate(form.FamilyInputs());
+        }
+        catch (DomainValidationException)
+        {
+            ModelState.AddModelError(nameof(form.Familiares),
+                "Revisa los familiares: cada uno necesita nombre, relación y un teléfono válido (y un correo válido si lo escribes), y solo puede haber un contacto prioritario.");
+            await ShowActiveScopeAsync(ActiveProfileScopeCookie.Read(Request), ct);
+            return View(form);
+        }
+
         if (form.ParseLocation() is not { } location)
         {
             ModelState.AddModelError(nameof(form.Ubicacion), "Elige una ubicación de la lista.");
@@ -57,7 +69,7 @@ public sealed class ResidentsController(
         var command = new CreateResidentCommand(
             form.AmbitoPerfilId, CenterId.From(form.CentroId), UnitId.From(form.UnidadId!.Value), form.NombreVisible,
             form.FechaNacimiento!.Value, form.SexoDocumentadoCodigo, form.ReferenciaInterna,
-            EdificioId: null, PlantaId: null, location.RoomId, location.PlaceId, form.OperacionId);
+            EdificioId: null, PlantaId: null, location.RoomId, location.PlaceId, form.OperacionId, form.FamilyInputs());
 
         var result = await service.CreateResidentAsync(command, ct);
         if (!result.Ok)

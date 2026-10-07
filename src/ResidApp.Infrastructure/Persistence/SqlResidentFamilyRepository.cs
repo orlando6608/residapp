@@ -42,13 +42,13 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
                 VALUES (@FamilyId, @CenterId, @DisplayName, @Phone, @Email, @AccountId, @OccurredAt);
 
                 INSERT INTO dbo.residentes_familiares
-                    (id, centro_id, residente_id, familiar_id, relacion, vinculado_por_cuenta_id, vinculado_en)
-                VALUES (@LinkId, @CenterId, @ResidentId, @FamilyId, @Relationship, @AccountId, @OccurredAt);
+                    (id, centro_id, residente_id, familiar_id, relacion, es_referente, es_tutor_legal, vinculado_por_cuenta_id, vinculado_en)
+                VALUES (@LinkId, @CenterId, @ResidentId, @FamilyId, @Relationship, @IsReferent, @IsLegalGuardian, @AccountId, @OccurredAt);
 
                 {InsertAudit}
                 """, new
             {
-                FamilyId = operationId, LinkId = linkId, data.DisplayName, data.Phone, data.Email, data.Relationship,
+                FamilyId = operationId, LinkId = linkId, data.DisplayName, data.Phone, data.Email, data.Relationship, data.IsReferent, data.IsLegalGuardian,
                 AccountId = target.AccountId.Value, CenterId = target.CenterId.Value, UnitId = target.UnitId.Value,
                 ResidentId = target.ResidentId.Value, ResourceType = "FAMILY_MEMBER", ResourceId = operationId,
                 Action = "FAMILY_MEMBER_CREATE", OccurredAt = occurredAt,
@@ -129,14 +129,15 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
         var current = await connection.QuerySingleOrDefaultAsync<MemberRow>(new CommandDefinition("""
-            SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, link.relacion AS Relationship, f.telefono AS Phone, f.correo AS Email
+            SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, link.relacion AS Relationship, f.telefono AS Phone, f.correo AS Email,
+                   link.es_referente AS IsReferent, link.es_tutor_legal AS IsLegalGuardian
               FROM dbo.residentes_familiares link WITH (UPDLOCK, ROWLOCK)
               JOIN dbo.familiares f WITH (UPDLOCK, ROWLOCK) ON f.id = link.familiar_id AND f.centro_id = link.centro_id
              WHERE link.id = @LinkId AND link.residente_id = @ResidentId AND link.centro_id = @CenterId
             """, new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value },
             transaction, cancellationToken: ct))
             ?? throw new AccessDeniedException();
-        var currentData = new FamilyMemberData(current.DisplayName, current.Relationship, current.Phone, current.Email);
+        var currentData = new FamilyMemberData(current.DisplayName, current.Relationship, current.Phone, current.Email, current.IsReferent, current.IsLegalGuardian);
         if (!string.Equals(currentData.Version, expectedVersion, StringComparison.Ordinal))
         {
             throw new DomainValidationException("FAMILY_MEMBER_CONFLICT");
@@ -151,12 +152,13 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
             UPDATE dbo.familiares SET nombre_visible = @DisplayName, telefono = @Phone, correo = @Email
              WHERE id = @FamilyId AND centro_id = @CenterId;
 
-            UPDATE dbo.residentes_familiares SET relacion = @Relationship WHERE id = @LinkId AND centro_id = @CenterId;
+            UPDATE dbo.residentes_familiares SET relacion = @Relationship, es_referente = @IsReferent, es_tutor_legal = @IsLegalGuardian
+             WHERE id = @LinkId AND centro_id = @CenterId;
 
             {InsertAudit}
             """, new
         {
-            current.FamilyId, LinkId = linkId, data.DisplayName, data.Phone, data.Email, data.Relationship,
+            current.FamilyId, LinkId = linkId, data.DisplayName, data.Phone, data.Email, data.Relationship, data.IsReferent, data.IsLegalGuardian,
             AccountId = target.AccountId.Value, CenterId = target.CenterId.Value, UnitId = target.UnitId.Value,
             ResidentId = target.ResidentId.Value, ResourceType = "FAMILY_MEMBER", ResourceId = current.FamilyId,
             Action = "FAMILY_MEMBER_UPDATE", OccurredAt = DateTimeOffset.UtcNow,
@@ -310,7 +312,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
 
     private sealed record LinkRow(Guid ResidentId, Guid FamilyId, string Relationship);
 
-    private sealed record MemberRow(Guid FamilyId, string DisplayName, string Relationship, string Phone, string? Email);
+    private sealed record MemberRow(Guid FamilyId, string DisplayName, string Relationship, string Phone, string? Email, bool IsReferent, bool IsLegalGuardian);
 
     private sealed record AuthorizationRow(int Number, string StatusCode, DateTime? ValidUntil);
 

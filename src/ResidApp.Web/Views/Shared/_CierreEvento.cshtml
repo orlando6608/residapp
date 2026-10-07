@@ -4,7 +4,8 @@
     // Un evento escalado solo lo puede cerrar Medicina (TR_ea_transition_guard): Enfermería no lo cierra otra vez.
     // Un evento propio de Medicina tampoco lo cierra Enfermería (CK_ea_inicio, 0017).
     var cierre = Model.Closure!;
-    var autor = cierre.ClosedByCurrentAccount ? "por ti"
+    var autor = cierre.ClosedBySystemForDeath ? "por el sistema al dar de baja al residente por fallecimiento"
+        : cierre.ClosedByCurrentAccount ? "por ti"
         : Model.Escalation is not null || Model.Origin == ClinicalEventOrigin.EventoMedicina ? "por Medicina"
         : "por otro profesional de Enfermería";
 }

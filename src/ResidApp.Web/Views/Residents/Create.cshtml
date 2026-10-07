@@ -106,6 +106,60 @@
                 <span asp-validation-for="ReferenciaInterna" class="text-danger"></span>
             </div>
 
+            <fieldset class="mb-3">
+                <legend class="h6">Familiares de contacto</legend>
+                <p class="form-text">
+                    Registra a los familiares de contacto prioritario, referentes y tutores legales del residente. Cada uno necesita nombre, relación y
+                    teléfono; deja en blanco las filas que no uses (puedes añadir más después desde su ficha). Solo uno puede ser el contacto prioritario
+                    (el contacto urgente). Añadirlos no les da acceso al Portal Familiar.
+                </p>
+                <span asp-validation-for="Familiares" class="text-danger d-block mb-2"></span>
+                <div class="form-check mb-3">
+                    <input type="radio" name="ContactoPrioritario" value="" id="contacto-prioritario-ninguno" class="form-check-input"
+                           checked="@(Model.ContactoPrioritario is null)" />
+                    <label for="contacto-prioritario-ninguno" class="form-check-label">Sin contacto prioritario por ahora</label>
+                </div>
+                @for (var i = 0; i < Model.Familiares.Count; i++)
+                {
+                    <div class="border rounded p-3 mb-3">
+                        <p class="fw-semibold mb-2">Familiar @(i + 1)</p>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <label asp-for="Familiares[i].NombreVisible" class="form-label"></label>
+                                <input asp-for="Familiares[i].NombreVisible" class="form-control" autocomplete="off" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label asp-for="Familiares[i].Relacion" class="form-label"></label>
+                                <input asp-for="Familiares[i].Relacion" class="form-control" autocomplete="off" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label asp-for="Familiares[i].Telefono" class="form-label"></label>
+                                <input asp-for="Familiares[i].Telefono" type="tel" class="form-control" autocomplete="off" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label asp-for="Familiares[i].Correo" class="form-label"></label>
+                                <input asp-for="Familiares[i].Correo" type="email" class="form-control" autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="form-check">
+                                <input type="radio" name="ContactoPrioritario" value="@i" id="contacto-prioritario-@i" class="form-check-input"
+                                       checked="@(Model.ContactoPrioritario == i)" />
+                                <label for="contacto-prioritario-@i" class="form-check-label">Contacto prioritario (contacto urgente)</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="Familiares[i].Referente" class="form-check-input" />
+                                <label asp-for="Familiares[i].Referente" class="form-check-label"></label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="Familiares[i].TutorLegal" class="form-check-input" />
+                                <label asp-for="Familiares[i].TutorLegal" class="form-check-label"></label>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </fieldset>
+
             <div class="d-grid d-md-flex justify-content-md-end">
                 <button type="submit" class="btn btn-primary btn-lg">Dar de alta</button>
             </div>

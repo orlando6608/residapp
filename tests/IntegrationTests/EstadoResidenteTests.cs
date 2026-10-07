@@ -172,6 +172,53 @@ public class EstadoResidenteTests
     }
 
     [Fact]
+    public async Task Baja_PorFallecimiento_CierraSolaLosEventosAbiertos_ConUnaAnotacionDeSistema_YOtroMotivoNo()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
+        var deceased = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Fallecimiento Integración");
+        var leaving = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Alta Voluntaria Integración");
+        var nursing = EnfermeriaApplicationServiceTests.BuildService(nurse.ExternalSubject);
+        async Task<Guid> OpenEventAsync(ResidentId resident) => (await nursing.RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+            nurse.ProfileScopeId, nurse.CenterId, resident, "Disnea progresiva.", DailyChangeClassification.Ordinario, null, Guid.NewGuid()))).Value!.EventId;
+        var deceasedEvent = await OpenEventAsync(deceased);
+        var leavingEvent = await OpenEventAsync(leaving);
+        var service = Build(admin.ExternalSubject);
+
+        var closed = await service.DischargeAsync(Discharge(admin, deceased, ResidentDischargeReason.Fallecimiento));
+        var notClosed = await service.DischargeAsync(Discharge(admin, leaving, ResidentDischargeReason.AltaVoluntaria));
+
+        Assert.Equal(1, closed.Value);
+        Assert.Equal(0, notClosed.Value);
+        Assert.Equal("CERRADO", await QueryAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @id", new { id = deceasedEvent }));
+        Assert.Equal("FALLECIMIENTO", await QueryAsync<string>("SELECT cierre_sistema_codigo FROM dbo.eventos_asistenciales WHERE id = @id", new { id = deceasedEvent }));
+        Assert.Equal(admin.AccountId.Value, await QueryAsync<Guid>("SELECT cerrado_por_cuenta_id FROM dbo.eventos_asistenciales WHERE id = @id", new { id = deceasedEvent }));
+        Assert.Equal("PENDIENTE", await QueryAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @id", new { id = leavingEvent }));
+        var detail = (await nursing.FindPendingChangeDetailAsync(new FindPendingChangeDetailCommand(nurse.ProfileScopeId, nurse.CenterId, deceasedEvent))).Value;
+        Assert.True(detail!.Closure!.ClosedBySystemForDeath);
+    }
+
+    [Fact]
+    public async Task LaBaseDeDatos_NoDejaCerrarUnEventoComoSistemaSinUnaBajaPorFallecimientoDeEsaTransaccion()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
+        var resident = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Cierre Ilegal");
+        var eventId = (await EnfermeriaApplicationServiceTests.BuildService(nurse.ExternalSubject).RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+            nurse.ProfileScopeId, nurse.CenterId, resident, "Tos.", DailyChangeClassification.Ordinario, null, Guid.NewGuid()))).Value!.EventId;
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+
+        var ex = await Assert.ThrowsAsync<Microsoft.Data.SqlClient.SqlException>(() => connection.ExecuteAsync("""
+            UPDATE dbo.eventos_asistenciales
+               SET estado_codigo = 'CERRADO', revision = revision + 1, cerrado_por_cuenta_id = @accountId, cerrado_en = SYSUTCDATETIME(),
+                   comunicacion_familiar_codigo = 'NO_COMUNICAR', cierre_sistema_codigo = 'FALLECIMIENTO'
+             WHERE id = @eventId
+            """, new { accountId = admin.AccountId.Value, eventId }));
+
+        Assert.Contains("CLINICAL_EVENT_TRANSITION_INVALID", ex.Message);
+    }
+
+    [Fact]
     public async Task Baja_DeUnResidenteSuspendido_TerminaLaSuspension()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);

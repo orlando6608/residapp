@@ -194,7 +194,7 @@ public sealed partial class AdministracionController(
         {
             var result = await service.AddFamilyMemberAsync(new AddFamilyMemberCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.OperacionId,
-                form.NombreVisible, form.Relacion, form.Telefono, form.Correo), ct);
+                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Referente, form.TutorLegal), ct);
             if (result.Ok)
             {
                 TempData["Mensaje"] = "Familiar añadido. No tiene autorización de acceso hasta que la abras y la actives.";
@@ -297,11 +297,13 @@ public sealed partial class AdministracionController(
     {
         ResidenteId = residenteId,
         VinculoId = member.LinkId,
-        Version = new FamilyMemberData(member.DisplayName, member.Relationship, member.Phone, member.Email).Version,
+        Version = new FamilyMemberData(member.DisplayName, member.Relationship, member.Phone, member.Email, member.IsReferent, member.IsLegalGuardian).Version,
         NombreVisible = member.DisplayName,
         Relacion = member.Relationship,
         Telefono = member.Phone,
         Correo = member.Email,
+        Referente = member.IsReferent,
+        TutorLegal = member.IsLegalGuardian,
     };
 
     [HttpPost]
@@ -324,7 +326,7 @@ public sealed partial class AdministracionController(
         {
             var result = await service.UpdateFamilyMemberAsync(new UpdateFamilyMemberCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), linkId,
-                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Version ?? string.Empty), ct);
+                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Version ?? string.Empty, form.Referente, form.TutorLegal), ct);
             if (result.Ok)
             {
                 TempData["Mensaje"] = "Datos del familiar guardados.";

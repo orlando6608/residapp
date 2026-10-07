@@ -68,7 +68,8 @@ public sealed partial class AdministracionController
                 form.Motivo, form.MotivoTexto), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = $"{found.DisplayName} se ha dado de baja. Sus datos se conservan {ResidentDischarge.RetentionYears} años.";
+                TempData["Mensaje"] = $"{found.DisplayName} se ha dado de baja. Sus datos se conservan {ResidentDischarge.RetentionYears} años."
+                    + (result.Value > 0 ? $" Se {(result.Value == 1 ? "cerró 1 episodio abierto" : $"cerraron {result.Value} episodios abiertos")} por fallecimiento." : string.Empty);
                 return RedirectToAction(nameof(Bajas));
             }
 

@@ -117,6 +117,12 @@ public sealed class FamilyMemberFormModel
     [EmailAddress(ErrorMessage = "Escribe un correo válido.")]
     [Display(Name = "Correo electrónico (opcional)")]
     public string? Correo { get; set; }
+
+    [Display(Name = "Familiar referente")]
+    public bool Referente { get; set; }
+
+    [Display(Name = "Tutor legal")]
+    public bool TutorLegal { get; set; }
 }
 
 /// <summary>ADM-09: el residente junto al formulario del familiar.</summary>

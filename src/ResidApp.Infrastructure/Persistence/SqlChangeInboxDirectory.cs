@@ -122,7 +122,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                        AS AssessmentStartedByCurrentAccount,
                    ea.valoracion_iniciada_en AS AssessmentStartedAt,
                    CAST(CASE WHEN ea.cerrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ClosedByCurrentAccount,
-                   ea.cerrado_en AS ClosedAt, ea.comunicacion_familiar_codigo AS FamilyCommunicationDecisionCode,
+                   ea.cerrado_en AS ClosedAt, ea.cierre_sistema_codigo AS SystemClosureCode, ea.comunicacion_familiar_codigo AS FamilyCommunicationDecisionCode,
                    family.tipo_codigo AS FamilyCommunicationTypeCode, family.texto AS FamilyCommunicationText,
                    family.preparado_en AS FamilyCommunicationPreparedAt, escalation.motivo AS EscalationReason,
                    CAST(CASE WHEN escalation.escalado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS EscalatedByCurrentAccount,
@@ -221,7 +221,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                 EnumCode.ParseCode<FamilyCommunicationDecision>(row.FamilyCommunicationDecisionCode!),
                 row.FamilyCommunicationTypeCode is null ? null : new PreparedFamilyCommunication(
                     EnumCode.ParseCode<FamilyCommunicationType>(row.FamilyCommunicationTypeCode), row.FamilyCommunicationText!,
-                    new DateTimeOffset(row.FamilyCommunicationPreparedAt!.Value, TimeSpan.Zero))),
+                    new DateTimeOffset(row.FamilyCommunicationPreparedAt!.Value, TimeSpan.Zero)),
+                row.SystemClosureCode == "FALLECIMIENTO"),
             followUp is null ? null : new FollowUpDetail(
                 followUp.DueDate is null ? null : DateOnly.FromDateTime(followUp.DueDate.Value), followUp.Criterion,
                 followUp.ContinuityNotes, followUp.StartedByCurrentAccount, new DateTimeOffset(followUp.StartedAt, TimeSpan.Zero),
@@ -840,7 +841,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         Guid EventId, string OriginCode, Guid ResidentId, string ResidentDisplayName, Guid UnitId, string? UnitName, string ClassificationCode,
         decimal? TemperatureCelsius, string? Observation, string? ClinicalData, string AuthorProfileCode, string? PriorityReasonCode,
         string? DirectNoticeNotes, DateTime OccurredAt, string StatusCode, int Revision, bool? AssessmentStartedByCurrentAccount,
-        DateTime? AssessmentStartedAt, bool ClosedByCurrentAccount, DateTime? ClosedAt, string? FamilyCommunicationDecisionCode,
+        DateTime? AssessmentStartedAt, bool ClosedByCurrentAccount, DateTime? ClosedAt, string? SystemClosureCode, string? FamilyCommunicationDecisionCode,
         string? FamilyCommunicationTypeCode, string? FamilyCommunicationText, DateTime? FamilyCommunicationPreparedAt,
         string? EscalationReason, bool EscalatedByCurrentAccount, DateTime? EscalatedAt, bool? MedicalStartedByCurrentAccount,
         DateTime? MedicalStartedAt);

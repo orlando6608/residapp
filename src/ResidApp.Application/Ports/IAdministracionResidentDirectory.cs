@@ -29,7 +29,8 @@ public sealed record FamilyAuthorizationChangeEntry(
 /// son compartidos); no dice cuáles.</summary>
 public sealed record ResidentFamilyMember(
     Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email,
-    IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges, int OtherResidentLinks = 0)
+    IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges, int OtherResidentLinks = 0, bool IsReferent = false,
+    bool IsLegalGuardian = false)
 {
     public FamilyAuthorizationChangeEntry? CurrentAuthorization => AuthorizationChanges.Count == 0 ? null : AuthorizationChanges[^1];
 }

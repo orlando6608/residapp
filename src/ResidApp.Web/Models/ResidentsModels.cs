@@ -64,8 +64,43 @@ public sealed class CreateResidentFormModel
         };
     }
 
+    /// <summary>Los familiares de contacto prioritario, referentes y tutores legales (CJ, 2026-10-07). Tres filas en el formulario; las que
+    /// se dejan en blanco se ignoran, y más desde la ficha del residente.</summary>
+    public List<NewResidentFamilyFormRow> Familiares { get; set; } = [new(), new(), new()];
+
+    /// <summary>Índice de la fila del contacto prioritario (el contacto urgente de siempre); solo puede haber uno.</summary>
+    [Display(Name = "Contacto prioritario")]
+    public int? ContactoPrioritario { get; set; }
+
+    public IReadOnlyList<ResidApp.Domain.Families.NewResidentFamilyInput> FamilyInputs() =>
+        Familiares.Select((row, index) => new ResidApp.Domain.Families.NewResidentFamilyInput(
+            row.NombreVisible, row.Relacion, row.Telefono, row.Correo, row.Referente, row.TutorLegal, ContactoPrioritario == index)).ToList();
+
     /// <summary>Se genera al mostrar el formulario y viaja oculto: da soporte a la idempotencia del caso de
     /// uso (un reenvío accidental con el mismo OperacionId no duplica el alta).</summary>
     [Required]
     public Guid OperacionId { get; set; }
+}
+
+/// <summary>Una fila de familiar del formulario de alta. Sin validación de campo: una fila en blanco se ignora y una a medias la rechaza la
+/// regla de ResidentFamilyAtAdmission, que usa las reglas de siempre de un familiar.</summary>
+public sealed class NewResidentFamilyFormRow
+{
+    [Display(Name = "Nombre")]
+    public string? NombreVisible { get; set; }
+
+    [Display(Name = "Relación con el residente (p. ej., «Hija»)")]
+    public string? Relacion { get; set; }
+
+    [Display(Name = "Teléfono")]
+    public string? Telefono { get; set; }
+
+    [Display(Name = "Correo electrónico (opcional)")]
+    public string? Correo { get; set; }
+
+    [Display(Name = "Familiar referente")]
+    public bool Referente { get; set; }
+
+    [Display(Name = "Tutor legal")]
+    public bool TutorLegal { get; set; }
 }

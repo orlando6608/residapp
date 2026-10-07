@@ -124,6 +124,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                 c.ValidUntil is { } until ? DateOnly.FromDateTime(until) : null, c.Reason, Utc(c.At)));
         var family = (await connection.QueryAsync<FamilyRow>(new CommandDefinition("""
             SELECT link.id AS LinkId, f.nombre_visible AS DisplayName, link.relacion AS Relationship, f.telefono AS Phone, f.correo AS Email,
+                   link.es_referente AS IsReferent, link.es_tutor_legal AS IsLegalGuardian,
                    (SELECT COUNT(*) FROM dbo.residentes_familiares o
                      WHERE o.familiar_id = link.familiar_id AND o.centro_id = link.centro_id AND o.id <> link.id) AS OtherResidentLinks
               FROM dbo.residentes_familiares link
@@ -132,7 +133,8 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
              ORDER BY f.nombre_visible
             """, parameters, cancellationToken: ct)))
             .Select(f => new ResidentFamilyMember(
-                f.LinkId, f.DisplayName, f.Relationship, f.Phone, f.Email, changes[f.LinkId].ToList(), f.OtherResidentLinks))
+                f.LinkId, f.DisplayName, f.Relationship, f.Phone, f.Email, changes[f.LinkId].ToList(), f.OtherResidentLinks,
+                f.IsReferent, f.IsLegalGuardian))
             .ToList();
         var contacts = (await connection.QueryAsync<ContactRow>(new CommandDefinition("""
             SELECT d.numero AS Number, d.vinculo_id AS LinkId, f.nombre_visible AS DisplayName, d.designado_en AS At
@@ -164,7 +166,8 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
 
     private sealed record AuthorizationChangeRow(Guid LinkId, int Number, string StatusCode, DateTime? ValidUntil, string? Reason, DateTime At);
 
-    private sealed record FamilyRow(Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email, int OtherResidentLinks);
+    private sealed record FamilyRow(
+        Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email, bool IsReferent, bool IsLegalGuardian, int OtherResidentLinks);
 
     private sealed record LinkableRow(Guid FamilyId, string DisplayName, string Phone);
 

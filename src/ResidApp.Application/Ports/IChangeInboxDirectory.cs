@@ -45,7 +45,7 @@ public sealed record PreparedFamilyCommunication(FamilyCommunicationType Type, s
 /// el nombre de otros profesionales no se expone) y la decisión de comunicación familiar.</summary>
 public sealed record ClinicalEventClosure(
     bool ClosedByCurrentAccount, DateTimeOffset ClosedAt, FamilyCommunicationDecision Decision,
-    PreparedFamilyCommunication? Communication);
+    PreparedFamilyCommunication? Communication, bool ClosedBySystemForDeath = false);
 
 /// <summary>Una comunicación familiar pendiente de aprobación en el ámbito (tarjeta "Comunicaciones" de
 /// ENF-01), con el evento del que procede.</summary>

@@ -59,6 +59,18 @@
 <section class="mb-4">
     <h2 class="h5">Familiares</h2>
     <p class="text-muted">Solo una autorización Activa dará acceso al Portal Familiar cuando exista. Añadir un familiar no la abre.</p>
+    @if (Model.Detail.Family.Count > 0 && Model.Detail.CurrentEmergencyContact is null && !Model.Detail.Family.Any(f => f.IsReferent || f.IsLegalGuardian))
+    {
+        <div class="alert alert-warning" role="status">
+            No hay ningún familiar de contacto prioritario, referente ni tutor legal. Márcalos al editar a cada familiar o designa el contacto urgente.
+        </div>
+    }
+    @if (Model.Detail.Family.Count == 0)
+    {
+        <div class="alert alert-warning" role="status">
+            Este residente no tiene familiares registrados. Añade al menos a su contacto prioritario, referente o tutor legal.
+        </div>
+    }
     @if (Model.Detail.Family.Count == 0)
     {
         <p class="text-muted">No hay familiares vinculados.</p>
@@ -76,6 +88,14 @@
                         @if (Model.Detail.CurrentEmergencyContact == member.LinkId)
                         {
                             <span class="badge text-bg-primary ms-1 align-middle">Contacto urgente</span>
+                        }
+                        @if (member.IsReferent)
+                        {
+                            <span class="badge text-bg-secondary ms-1 align-middle">Referente</span>
+                        }
+                        @if (member.IsLegalGuardian)
+                        {
+                            <span class="badge text-bg-secondary ms-1 align-middle">Tutor legal</span>
                         }
                     </div>
                     <div class="text-body-secondary small">@member.Relationship · @member.Phone</div>
@@ -116,6 +136,14 @@
                                 {
                                     <span class="badge text-bg-primary ms-1">Contacto urgente</span>
                                 }
+                    @if (member.IsReferent)
+                    {
+                        <span class="badge text-bg-secondary ms-1">Referente</span>
+                    }
+                    @if (member.IsLegalGuardian)
+                    {
+                        <span class="badge text-bg-secondary ms-1">Tutor legal</span>
+                    }
                             </th>
                             <td>@member.Relationship</td>
                             <td>@member.Phone</td>

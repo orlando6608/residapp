@@ -82,6 +82,45 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
                 OccurredAt = occurredAt, AccountId = input.AccountId.Value, ActiveProfile = activeProfileCode,
             }, transaction, cancellationToken: ct));
 
+
+            // CJ (2026-10-07): el alta registra a los familiares de contacto prioritario, referentes y tutores legales. No abre su autorización
+            // (FAM-01). El contacto prioritario es el contacto urgente de siempre; lo designa quien da el alta (script 0043).
+            var familyNumber = 0;
+            foreach (var member in input.Family ?? [])
+            {
+                var familyId = Guid.NewGuid();
+                var linkId = Guid.NewGuid();
+                await connection.ExecuteAsync(new CommandDefinition("""
+                    INSERT INTO dbo.familiares (id, centro_id, nombre_visible, telefono, correo, creado_por_cuenta_id, creado_en)
+                    VALUES (@FamilyId, @CenterId, @DisplayName, @Phone, @Email, @AccountId, @OccurredAt);
+
+                    INSERT INTO dbo.residentes_familiares
+                        (id, centro_id, residente_id, familiar_id, relacion, es_referente, es_tutor_legal, vinculado_por_cuenta_id, vinculado_en)
+                    VALUES (@LinkId, @CenterId, @ResidentId, @FamilyId, @Relationship, @IsReferent, @IsLegalGuardian, @AccountId, @OccurredAt);
+
+                    INSERT INTO dbo.eventos_auditoria
+                        (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
+                    VALUES (NEWID(), @AccountId, @ActiveProfile, @CenterId, @UnitId, @ResidentId, 'FAMILY_MEMBER', @FamilyId, 'FAMILY_MEMBER_CREATE', @OccurredAt);
+                    """, new
+                {
+                    FamilyId = familyId, LinkId = linkId, CenterId = input.CenterId.Value, ResidentId = residentId.Value, UnitId = input.UnitId.Value,
+                    member.Data.DisplayName, member.Data.Phone, member.Data.Email, member.Data.Relationship,
+                    member.Data.IsReferent, member.Data.IsLegalGuardian, AccountId = input.AccountId.Value, ActiveProfile = activeProfileCode,
+                    OccurredAt = occurredAt,
+                }, transaction, cancellationToken: ct));
+                if (member.IsPriorityContact)
+                {
+                    await connection.ExecuteAsync(new CommandDefinition("""
+                        INSERT INTO dbo.residentes_contacto_urgente
+                            (id, centro_id, residente_id, numero, vinculo_id, designado_por_cuenta_id, designado_por_perfil, designado_en)
+                        VALUES (NEWID(), @CenterId, @ResidentId, @Number, @LinkId, @AccountId, @ActiveProfile, @OccurredAt)
+                        """, new
+                    {
+                        CenterId = input.CenterId.Value, ResidentId = residentId.Value, Number = ++familyNumber, LinkId = linkId,
+                        AccountId = input.AccountId.Value, ActiveProfile = activeProfileCode, OccurredAt = occurredAt,
+                    }, transaction, cancellationToken: ct));
+                }
+            }
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.eventos_auditoria
                     (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
@@ -212,6 +251,7 @@ file static class RequestHash
             UnitId = input.UnitId.Value, input.DisplayName, BirthDate = input.BirthDate.ToString("yyyy-MM-dd"),
             DocumentedSexCode = input.DocumentedSexCode.ToCode(), input.InternalReference, input.BuildingId,
             input.FloorId, input.RoomId, input.PlaceId, OperationId = input.OperationId,
+            Family = (input.Family ?? []).Select(m => new { m.Data, m.IsPriorityContact }).ToList(),
         });
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }

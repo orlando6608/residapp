@@ -21,7 +21,7 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
         VALUES (NEWID(), @AccountId, 'ADMINISTRACION', @CenterId, @UnitId, @ResidentId, 'RESIDENT', @ResidentId, @Action, @OccurredAt);
         """;
 
-    public async Task DischargeAsync(DischargeResidentInput input, CancellationToken ct = default)
+    public async Task<int> DischargeAsync(DischargeResidentInput input, CancellationToken ct = default)
     {
         var target = input.Target;
         using var connection = await connections.OpenAsync(ct);
@@ -33,7 +33,7 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
                     "SELECT COUNT(*) FROM dbo.bajas_residente WHERE id = @DischargeId AND residente_id = @ResidentId AND centro_id = @CenterId",
                     p, transaction, cancellationToken: ct)) > 0)
             {
-                return;
+                return 0;
             }
 
             await LockResidentAsync(connection, transaction, p.ResidentId, p.CenterId, "ACTIVE", ct);
@@ -71,7 +71,17 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
                 RetainUntil = ResidentDischarge.RetainUntil(occurredAt).ToDateTime(TimeOnly.MinValue),
                 AccountId = target.AccountId.Value, OccurredAt = occurredAt, Action = "RESIDENT_DISCHARGE",
             }, transaction, cancellationToken: ct));
+
+            // CJ (2026-10-07): la baja por fallecimiento cierra sola los episodios abiertos, con una anotación de sistema (script 0042).
+            // TR_ea_transition_guard lo admite solo con esta baja creada en la misma transacción.
+            var closed = input.Reason != ResidentDischargeReason.Fallecimiento ? 0 : await connection.ExecuteAsync(new CommandDefinition("""
+                UPDATE dbo.eventos_asistenciales
+                   SET estado_codigo = 'CERRADO', revision = revision + 1, cerrado_por_cuenta_id = @AccountId, cerrado_en = @OccurredAt,
+                       comunicacion_familiar_codigo = 'NO_COMUNICAR', cierre_sistema_codigo = 'FALLECIMIENTO'
+                 WHERE residente_id = @ResidentId AND centro_id = @CenterId AND estado_codigo <> 'CERRADO'
+                """, new { p.ResidentId, p.CenterId, AccountId = target.AccountId.Value, OccurredAt = occurredAt }, transaction, cancellationToken: ct));
             transaction.Commit();
+            return closed;
         }
         catch (SqlException error) when (error.Number is 2601 or 2627)
         {

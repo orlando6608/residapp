@@ -51,13 +51,13 @@ public sealed class ResidentStatusApplicationService(
             return await directory.FindSuspensionAsync(centerId, residentId, ct);
         });
 
-    public Task<ApplicationResult<bool>> DischargeAsync(DischargeResidentCommand command, CancellationToken ct = default) =>
+    /// <summary>Devuelve cuántos eventos abiertos cerró la baja (solo por fallecimiento).</summary>
+    public Task<ApplicationResult<int>> DischargeAsync(DischargeResidentCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
             var target = await ResolveActiveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             var text = ResidentDischarge.ValidateReasonText(command.Motivo, command.MotivoTexto);
-            await statuses.DischargeAsync(new DischargeResidentInput(target, command.OperacionId, command.Motivo, text), ct);
-            return true;
+            return await statuses.DischargeAsync(new DischargeResidentInput(target, command.OperacionId, command.Motivo, text), ct);
         });
 
     public Task<ApplicationResult<bool>> ReactivateAsync(ReactivateResidentCommand command, CancellationToken ct = default) =>

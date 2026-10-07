@@ -49,6 +49,62 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Create_RegistraLosFamiliaresDeContacto_ConLaAppEntera_YRechazaUnaFilaAMedias()
+    {
+        // El alta con familiares por la app real y el usuario limitado: pasan por la seguridad por filas de familiares y contacto urgente.
+        var seed = await SeedAsync();
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var partialName = $"Residente Familia A Medias {suffix}";
+        var completeName = $"Residente Familia {suffix}";
+        var admin = await LoginAsync(seed.ExternalSubject);
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var page = await admin.GetStringAsync("/Residents/Create");
+        Assert.Contains("Familiares de contacto", page);
+        Assert.Contains("name=\"Familiares[2].NombreVisible\"", page);
+        Dictionary<string, string> Form(string name) => new()
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["OperacionId"] = ExtractValue(page, "OperacionId"),
+            ["AmbitoPerfilId"] = seed.ProfileScopeId.ToString(),
+            ["CentroId"] = seed.CenterId.ToString(),
+            ["UnidadId"] = seed.UnitId.ToString(),
+            ["NombreVisible"] = name,
+            ["FechaNacimiento"] = "1938-02-20",
+            ["SexoDocumentadoCodigo"] = "Mujer",
+        };
+
+        var partial = Form(partialName);
+        partial["Familiares[0].NombreVisible"] = "Ana Ruiz";
+        var rejected = WebUtility.HtmlDecode(await (await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(partial))).Content.ReadAsStringAsync());
+
+        var complete = Form(completeName);
+        complete["Familiares[0].NombreVisible"] = "Ana Ruiz";
+        complete["Familiares[0].Relacion"] = "Hija";
+        complete["Familiares[0].Telefono"] = "600123456";
+        complete["Familiares[0].Referente"] = "true";
+        complete["Familiares[1].NombreVisible"] = "Luis Gil";
+        complete["Familiares[1].Relacion"] = "Sobrino";
+        complete["Familiares[1].Telefono"] = "600765432";
+        complete["Familiares[1].TutorLegal"] = "true";
+        complete["ContactoPrioritario"] = "1";
+        var created = await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(complete));
+
+        Assert.Contains("Revisa los familiares", rejected);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.residentes WHERE nombre_visible = @partialName", new { partialName }));
+        Assert.Contains("Id del residente", await created.Content.ReadAsStringAsync());
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>("""
+            SELECT COUNT(*) FROM dbo.residentes_familiares l JOIN dbo.residentes r ON r.id = l.residente_id
+             WHERE r.nombre_visible = @completeName
+            """, new { completeName }));
+        Assert.Equal("Luis Gil", await connection.ExecuteScalarAsync<string>("""
+            SELECT f.nombre_visible FROM dbo.residentes_contacto_urgente d
+              JOIN dbo.residentes_familiares l ON l.id = d.vinculo_id JOIN dbo.familiares f ON f.id = l.familiar_id
+              JOIN dbo.residentes r ON r.id = d.residente_id WHERE r.nombre_visible = @completeName
+            """, new { completeName }));
+    }
+
+    [Fact]
     public async Task Create_LaUnidadSeEligeEntreLasDelAmbito_YSusErroresSalenEnEspañol()
     {
         var seed = await SeedAsync();

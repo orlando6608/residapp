@@ -28,8 +28,9 @@ public sealed record SuspendResidentInput(AdministrativeResidentTarget Target, G
 public interface IResidentStatusRepository
 {
     /// <summary>Cierra el episodio y la ubicación vigentes, pone al residente inactivo, termina su suspensión si la tenía y guarda la baja
-    /// (los datos no se borran).</summary>
-    Task DischargeAsync(DischargeResidentInput input, CancellationToken ct = default);
+    /// (los datos no se borran). Si el motivo es fallecimiento, cierra además los eventos abiertos con una anotación de sistema (script 0042).
+    /// Devuelve cuántos eventos cerró.</summary>
+    Task<int> DischargeAsync(DischargeResidentInput input, CancellationToken ct = default);
 
     /// <summary>Abre un episodio y una ubicación nuevos en la unidad indicada, pone al residente activo y marca la baja como reactivada.</summary>
     Task ReactivateAsync(ReactivateResidentInput input, CancellationToken ct = default);
