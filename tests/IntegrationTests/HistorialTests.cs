@@ -414,6 +414,87 @@ public class HistorialTests
         Assert.Equal(1, again.Value!.Traceability!.Entries.Count(e => e.Action == "CLINICAL_EVENT_REGISTER"));
     }
 
+    /// <summary>DIR-12: Dirección Clínica ve la lista de los informes de derivación firmados de un residente (auditada) y descarga cada PDF solo con la
+    /// declaración de acceso vigente, dejando una fila de auditoría por descarga; sin declaración, sin permiso o con un evento que no es del residente,
+    /// no recibe nada.</summary>
+    [Fact]
+    public async Task Direccion_ListaYDescargaElInformeFirmado_ConDeclaracionVigente_YCadaDescargaQuedaAuditada()
+    {
+        var (enfermera, _, residentId) = await SeedResidentAsync();
+        using (var nameConnection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await Dapper.SqlMapper.ExecuteAsync(nameConnection, "UPDATE dbo.cuentas SET nombre_visible = N'Marta Ficticia' WHERE id = @Id", new { Id = enfermera.AccountId.Value });
+        }
+        var nursing = BuildService(enfermera.ExternalSubject);
+        var eventId = await RegisterAsync(enfermera, residentId, "Dolor torácico.");
+        var revision = (await nursing.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, eventId, await StartAndSaveAsync(enfermera, eventId)))).Value;
+        Assert.True((await nursing.SignReferralReportAsync(SignCommand(enfermera, eventId, revision, Guid.NewGuid()))).Ok);
+
+        var direccion = await SeedFixture.AddProfileToCenterAsync(
+            SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId, ["CLINICAL_DETAIL_READ"]);
+        var sinPermiso = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId, []);
+        var evidence = new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory);
+        var declarationId = Guid.NewGuid();
+        Task<ApplicationResult<DirectionBaselineRead>> List(SeededProfile who, Guid operationId) =>
+            new ReadDirectionBaseline(evidence, new FixedHistorialSessionIdentityProvider(who.ExternalSubject), _baselines,
+                    new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory))
+                .ExecuteAsync(new ReadDirectionBaselineCommand(
+                    who.ProfileScopeId, who.CenterId, residentId, "REFERRAL_REPORTS", "INCIDENCIA_RECLAMACION", operationId, "Reclamación familiar (prueba)."));
+        Task<ApplicationResult<ReferralReportPdf>> Download(SeededProfile who, Guid event_, Guid declaration) =>
+            new DownloadDirectionReferralReport(evidence, new FixedHistorialSessionIdentityProvider(who.ExternalSubject), _baselines,
+                    new SqlReferralReportRepository(TestDatabase.ConnectionFactory))
+                .ExecuteAsync(new DownloadDirectionReferralReportCommand(who.ProfileScopeId, who.CenterId, residentId, event_, declaration));
+        async Task<int> AuditedAsync(string type)
+        {
+            using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+            return await Dapper.SqlMapper.ExecuteScalarAsync<int>(connection,
+                "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ' AND tipo_recurso = @type",
+                new { Id = residentId.Value, type });
+        }
+
+        // Sin permiso, o sin haber declarado, no hay lista ni PDF.
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await List(sinPermiso, Guid.NewGuid())).Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Download(direccion, eventId, declarationId)).Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Download(sinPermiso, eventId, declarationId)).Error!.Code);
+        Assert.Equal(0, await AuditedAsync("REFERRAL_REPORTS") + await AuditedAsync("REFERRAL_REPORT"));
+
+        var list = await List(direccion, declarationId);
+        Assert.True(list.Ok, list.Error?.Message);
+        var report = Assert.Single(list.Value!.ReferralReports!);
+        Assert.Equal(eventId, report.EventId);
+        Assert.Equal("Marta Ficticia", report.SignerName);
+        Assert.Equal(SystemProfile.Enfermeria, report.SignerProfile);
+        Assert.Equal(1, await AuditedAsync("REFERRAL_REPORTS"));
+
+        // Con la declaración vigente se descarga, y cada descarga deja su fila (con la finalidad y la justificación de la declaración).
+        var pdf = await Download(direccion, eventId, declarationId);
+        Assert.True(pdf.Ok, pdf.Error?.Message);
+        Assert.StartsWith("%PDF", System.Text.Encoding.ASCII.GetString(pdf.Value!.Content, 0, 4));
+        Assert.Equal(1, await AuditedAsync("REFERRAL_REPORT"));
+        Assert.True((await Download(direccion, eventId, declarationId)).Ok);
+        Assert.Equal(2, await AuditedAsync("REFERRAL_REPORT"));
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            var audited = await Dapper.SqlMapper.QueryFirstAsync<(string Purpose, string Justification)>(connection,
+                "SELECT TOP 1 proposito_codigo AS Purpose, justificacion AS Justification FROM dbo.eventos_auditoria WHERE residente_id = @Id AND tipo_recurso = 'REFERRAL_REPORT' AND accion_codigo = 'CLINICAL_DETAIL_READ'",
+                new { Id = residentId.Value });
+            Assert.Equal(("INCIDENCIA_RECLAMACION", "Reclamación familiar (prueba)."), audited);
+        }
+
+        // Un evento que no es del residente, una declaración ajena o Enfermería no descargan nada ni auditan.
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Download(direccion, Guid.NewGuid(), declarationId)).Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Download(direccion, eventId, Guid.NewGuid())).Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Download(enfermera, eventId, declarationId)).Error!.Code);
+        // El repositorio repite la comprobación por su cuenta (defensa en profundidad): una declaración ajena o un evento ajeno devuelven null.
+        var repository = new SqlReferralReportRepository(TestDatabase.ConnectionFactory);
+        DirectionReferralDownloadInput Input(Guid event_, Guid declaration) =>
+            new(direccion.AccountId, direccion.ProfileScopeId, direccion.CenterId, residentId, event_, declaration);
+        Assert.NotNull(await repository.DownloadAsDirectionAsync(Input(eventId, declarationId)));
+        Assert.Null(await repository.DownloadAsDirectionAsync(Input(eventId, Guid.NewGuid())));
+        Assert.Null(await repository.DownloadAsDirectionAsync(Input(Guid.NewGuid(), declarationId)));
+        Assert.Equal(3, await AuditedAsync("REFERRAL_REPORT"));
+    }
+
     /// <summary>Un residente en la unidad de una enfermera con permisos de basal y de una médica.</summary>
     private static async Task<(SeededProfile Enfermera, SeededProfile Medica, ResidentId ResidentId)> SeedResidentAsync()
     {

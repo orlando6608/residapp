@@ -97,8 +97,14 @@ En el orden propuesto:
      derivación, llamadas y comunicaciones a la familia, basal y lecturas de Dirección); las administrativas (alta, familiares, permisos) tienen su auditoría en ADM-28 y no entran. Repite en SQL el ámbito de Dirección activo y que la unidad del hito esté
      concedida a él. Etiquetas en `ClinicalTraceabilityDisplay` (una acción nueva en la lista sin etiqueta hace fallar `ClinicalTraceabilityDisplayTests`). **Decisiones mías, sin confirmar:** qué acciones cuentan como «hitos clínicos» (lo anterior), incluir las
      propias lecturas de Dirección (útil para saber quién vio el expediente) y no mostrar la justificación. Test: `Direccion_LeeLaTrazabilidadClinica_Auditada_SoloConAccionesClinicas` (falla sin el filtro de acciones). No es un ranking: solo por residente, sin recuentos por persona.
-   - **Falta construir sobre este mecanismo**, cada pantalla con su `tipo_recurso`:
-     el informe de derivación firmado. Notas del repositorio de lectura:
+   - **DIR-12, informe de derivación firmado, hecho el 2026-10-07 (sin script) — con lo que el bloque 2 queda completo salvo la 4ª finalidad:** quinto tipo de recurso, «Informes de derivación firmados» (`REFERRAL_REPORTS`, acción `ReferralReportsRead`),
+     que lista los informes del residente (evento, fecha de firma, perfil y nombre de quien firmó; sin su contenido; sale de la línea temporal de Dirección con `includeAuthorNames`). Cada PDF se abre con `GET /Baseline/InformeDerivacion?residenteId=&eventoId=`
+     (`DownloadDirectionReferralReport`, `SqlReferralReportRepository.DownloadAsDirectionAsync`): exige la declaración de acceso vigente del residente (la cookie `residapp_clinical_access`; sin ella o caducada, vuelve a la consulta con un aviso para declarar
+     de nuevo) y la comprobación de la política; el SQL vuelve a exigir en una sola consulta cuenta activa, ámbito de Dirección, permiso `CLINICAL_DETAIL_READ`, evento de ese residente en una unidad concedida y la declaración, y **audita cada descarga**
+     (`CLINICAL_DETAIL_READ` sobre `REFERRAL_REPORT`, con la finalidad y la justificación guardadas en la declaración, no las que mande quien llama) en la misma transacción. Dirección no genera ni firma informes. `Derivaciones` enlaza a la consulta de cada residente
+     con informe firmado. Tests: `Direccion_ListaYDescargaElInformeFirmado_ConDeclaracionVigente_YCadaDescargaQuedaAuditada` (incluye llamadas directas al repositorio: falla sin la comprobación de la declaración en SQL). **Decisión mía, sin confirmar:** el nombre de
+     quien firmó se ve (como en DIR-15), pero el motivo del informe solo está dentro del PDF. Comprobado por HTTP con un PDF real.
+   - **Notas del repositorio de lectura:**
      `ReadAsClinicalDirectionAsync` (`SqlBaselineRepository`) es el patrón «auditoría o nada»; `SqlChangeInboxDirectory.ScopedEventsFrom` fija
      `perfil_codigo IN ('ENFERMERIA','MEDICINA')` y no sirve a Dirección tal cual (`SqlSupervisionDirectory.ScopedEventsFrom` es el gemelo); no reutilizar la ruta de
      Enfermería/Medicina (`HistorialTests` fija que Dirección recibe acceso denegado ahí).
@@ -110,7 +116,7 @@ En el orden propuesto:
      sin firmar, con llamadas). `SupervisionReferral` no tiene texto clínico, ni el contacto, ni el resultado de las llamadas, ni el contenido del informe
      (lo comprueba un test por reflexión); sin permiso ni auditoría, como el resto de la supervisión operativa. Solo abiertos: los cerrados salen en los
      indicadores agregados, no por nombre. Pedido a CJ que lo confirme (solo abiertos; auditoría) en `docs/pendientes-cj/continuidad-supervision-comunicacion.html`
-     (tema 2). **Sigue bloqueado:** consultar el informe firmado, que exige permiso clínico y la declaración de finalidad (hecha el 2026-10-07, ver el bloque 2); falta la pantalla.
+     (tema 2). Consultar el informe firmado (permiso clínico y declaración de finalidad) está hecho desde el 2026-10-07: ver el bloque 2, DIR-12.
    - **Comunicación familiar (DIR-13):** depende de que exista la aprobación y publicación (Administración y Familia).
 3. **Revisión de calidad de proceso (DIR-11 del boceto):** «cumplimiento de hitos definidos y excepciones». Nadie ha definido qué hitos
    ni con qué plazos; es una decisión clínica. Preguntado a CJ el 2026-10-02 en `docs/pendientes-cj/continuidad-supervision-comunicacion.html`

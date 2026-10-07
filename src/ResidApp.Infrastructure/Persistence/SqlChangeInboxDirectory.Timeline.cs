@@ -172,12 +172,13 @@ public sealed partial class SqlChangeInboxDirectory
                     }));
             }
 
-            var referrals = (await connection.QueryAsync<TimelineReferralRow>(new CommandDefinition("""
-                SELECT evento_id AS EventId, perfil_codigo AS ProfileCode, motivo AS Reason, firmado_en AS SignedAt
+            var referrals = (await connection.QueryAsync<TimelineReferralRow>(new CommandDefinition($"""
+                SELECT evento_id AS EventId, perfil_codigo AS ProfileCode, motivo AS Reason, firmado_en AS SignedAt,
+                       {Author("firmado_por_cuenta_id")} AS AuthorName
                   FROM dbo.informes_derivacion WHERE evento_id IN @EventIds
                 """, parameters, cancellationToken: ct))).ToDictionary(r => r.EventId);
             entries.AddRange(referrals.Values.Select(r => new TimelineEntry.ReferralSigned(
-                Utc(r.SignedAt), r.EventId, EnumCode.ParseCode<SystemProfile>(r.ProfileCode), r.Reason)));
+                Utc(r.SignedAt), r.EventId, EnumCode.ParseCode<SystemProfile>(r.ProfileCode), r.Reason) { AuthorName = r.AuthorName }));
             entries.AddRange((await connection.QueryAsync<TimelineCallRow>(new CommandDefinition("""
                 SELECT evento_id AS EventId, contacto AS Contact, llamado_en AS CalledAt, resultado_codigo AS ResultCode, nota AS Note,
                        registrado_en AS RecordedAt
@@ -278,7 +279,7 @@ public sealed partial class SqlChangeInboxDirectory
     private sealed record TimelineProtocolEntryRow(
         Guid ProtocolId, string TypeCode, string? Text, string? Service, DateTime? ContactedAt, DateTime RecordedAt);
 
-    private sealed record TimelineReferralRow(Guid EventId, string ProfileCode, string Reason, DateTime SignedAt);
+    private sealed record TimelineReferralRow(Guid EventId, string ProfileCode, string Reason, DateTime SignedAt, string? AuthorName);
 
     private sealed record TimelineCallRow(Guid EventId, string Contact, DateTime CalledAt, string ResultCode, string? Note, DateTime RecordedAt);
 

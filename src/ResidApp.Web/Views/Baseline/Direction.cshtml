@@ -24,6 +24,11 @@
     autorizada queda registrada en la auditoría de forma obligatoria.
 </p>
 
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
 <div class="card">
     <div class="card-body">
         <div asp-validation-summary="All" class="text-danger"></div>

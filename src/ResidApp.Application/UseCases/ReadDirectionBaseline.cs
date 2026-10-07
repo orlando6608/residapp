@@ -85,11 +85,27 @@ public sealed class ReadDirectionBaseline(
                     await directory.ListDirectionTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, includeAuthorNames: true, ct: ct),
                     await repository.ReadHistoryAsync(new ReadCurrentBaselineSummaryInput(command.CentroId, command.ResidenteId), ct))
                 : null;
+            // DIR-12: los informes firmados del residente (sin su contenido), con quién los firmó. El PDF se descarga aparte y queda auditado cada vez.
+            IReadOnlyList<DirectionReferralReport>? referralReports = null;
+            if (resourceType == ClinicalResourceType.ReferralReports)
+            {
+                var entries = await directory.ListDirectionTimelineAsync(
+                    command.AmbitoPerfilId, command.CentroId, command.ResidenteId, includeAuthorNames: true, ct: ct);
+                referralReports = entries.OfType<TimelineEntry.ReferralSigned>()
+                    .Where(signed => signed.EventId is not null && signed.Profile is not null)
+                    .Select(signed => new DirectionReferralReport(
+                        signed.EventId!.Value,
+                        entries.OfType<TimelineEntry.EventRegistered>().FirstOrDefault(e => e.EventId == signed.EventId)?.At ?? signed.At,
+                        signed.At, signed.Profile!.Value, signed.AuthorName))
+                    .OrderByDescending(report => report.SignedAt)
+                    .ToList();
+            }
+
             // DIR-14: la auditoría clínica del residente; incluye la propia lectura que acaba de quedar registrada.
             var traceability = resourceType == ClinicalResourceType.ClinicalTraceability
                 ? await directory.ListDirectionTraceabilityAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct)
                 : null;
-            return new DirectionBaselineRead(headers, content, timeline, closedEvents, amendments, traceability);
+            return new DirectionBaselineRead(headers, content, timeline, closedEvents, amendments, traceability, referralReports);
         });
 }
 

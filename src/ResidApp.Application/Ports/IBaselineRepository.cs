@@ -42,7 +42,13 @@ public sealed record AuditedBaselineHeader(BaselineVersionId Id, int VersionNumb
 public sealed record DirectionBaselineRead(
     IReadOnlyList<AuditedBaselineHeader> Headers, BaselineVersionDetail? Content,
     IReadOnlyList<TimelineEntry>? Timeline = null, IReadOnlyList<ClosedEventSummary>? ClosedEvents = null,
-    ResidentAmendmentHistory? Amendments = null, ClinicalTraceabilityPage? Traceability = null);
+    ResidentAmendmentHistory? Amendments = null, ClinicalTraceabilityPage? Traceability = null,
+    IReadOnlyList<DirectionReferralReport>? ReferralReports = null);
+
+/// <summary>DIR-12: un informe de derivación firmado de un evento del residente (sin su contenido: el PDF se descarga aparte, con su auditoría).
+/// SignerName es el nombre visible de la cuenta que firmó, null si no tiene.</summary>
+public sealed record DirectionReferralReport(
+    Guid EventId, DateTimeOffset EventRegisteredAt, DateTimeOffset SignedAt, SystemProfile SignerProfile, string? SignerName);
 
 /// <summary>Entrada de la lectura resumida del basal vigente para el cuidado cotidiano (AUX-03/ENF-20/MED-21):
 /// no lleva OperationId porque, a diferencia de ClinicalDirectionReadInput, no escribe ningún evento de

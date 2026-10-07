@@ -25,4 +25,13 @@ public interface IReferralReportRepository
 {
     Task<ReferralReportPdf?> DownloadAsync(
         AccountId accountId, SystemProfile profile, Guid profileScopeId, CenterId centerId, Guid eventId, CancellationToken ct = default);
+
+    /// <summary>DIR-12: la descarga de Dirección Clínica. Exige en SQL el ámbito de Dirección activo, el permiso clínico, el evento de ese residente
+    /// en sus unidades y la declaración de acceso vigente (de la que toma la finalidad y la justificación que audita); cada descarga deja su
+    /// fila CLINICAL_DETAIL_READ sobre REFERRAL_REPORT en la misma transacción. Null si algo de eso falla.</summary>
+    Task<ReferralReportPdf?> DownloadAsDirectionAsync(DirectionReferralDownloadInput input, CancellationToken ct = default);
 }
+
+/// <summary>DIR-12: lo que identifica la descarga del informe de un evento por Dirección Clínica; todo sale de una autorización ya resuelta.</summary>
+public sealed record DirectionReferralDownloadInput(
+    AccountId AccountId, Guid ProfileScopeId, CenterId CenterId, ResidentId ResidentId, Guid EventId, Guid DeclarationId);

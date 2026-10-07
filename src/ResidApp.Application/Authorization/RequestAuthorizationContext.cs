@@ -125,6 +125,7 @@ public static class RequestAuthorizationContextResolver
                 ClinicalResourceType.ClosedEventsHistory => ResidentBaselineAction.ClosedEventsHistoryRead,
                 ClinicalResourceType.AssessmentAmendments => ResidentBaselineAction.AssessmentAmendmentsRead,
                 ClinicalResourceType.ClinicalTraceability => ResidentBaselineAction.ClinicalTraceabilityRead,
+                ClinicalResourceType.ReferralReports => ResidentBaselineAction.ReferralReportsRead,
                 _ => ResidentBaselineAction.BaselineHistoryRead,
             },
             AuthorizationTarget.Draft draft => draft.Reason == BaselineReason.Alta
@@ -230,6 +231,22 @@ public static class RequestAuthorizationContextResolver
             obligation.ResourceType, obligation.Purpose, payload.OperationId,
             operation.ProfileScopeId, payload.Justification, payload.ReuseDeclarationId, payload.DeclarationMinutes);
         return await repository.ReadAsClinicalDirectionAsync(input, ct);
+    }
+
+    /// <summary>DIR-12: descarga del informe firmado de un evento por Dirección Clínica. La autorización (permiso clínico y finalidad, de la
+    /// declaración vigente) ya está resuelta; el repositorio vuelve a exigir en SQL el ámbito, el evento del residente y la declaración, y audita la
+    /// descarga en la misma transacción.</summary>
+    public static async Task<ReferralReportPdf?> ExecuteDirectionReferralDownloadAsync(
+        RequestAuthorizationContext context, IReferralReportRepository repository, Guid eventId, Guid declarationId, CancellationToken ct = default)
+    {
+        var operation = RequireTarget<AuthorizationTarget.Read>(context);
+        if (operation.Decision.Obligations.Count == 0)
+        {
+            throw new AccessDeniedException();
+        }
+        var obligation = operation.Decision.Obligations[0];
+        return await repository.DownloadAsDirectionAsync(new DirectionReferralDownloadInput(
+            obligation.AccountId, operation.ProfileScopeId, obligation.CenterId, obligation.ResidentId, eventId, declarationId), ct);
     }
 
     /// <summary>Lectura resumida del basal vigente para el cuidado cotidiano (AUX-03/ENF-20/MED-21): a

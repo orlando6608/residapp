@@ -10,6 +10,7 @@
     var cerrados = ViewBag.ClosedEvents as IReadOnlyList<ClosedEventSummary>;
     var correcciones = ViewBag.Amendments as ResidentAmendmentHistory;
     var trazabilidad = ViewBag.Traceability as ClinicalTraceabilityPage;
+    var informes = ViewBag.ReferralReports as IReadOnlyList<DirectionReferralReport>;
 }
 
 <nav aria-label="breadcrumb">
@@ -20,9 +21,38 @@
     </ol>
 </nav>
 
-<h1 class="h3">@(linea is not null ? "Línea temporal auditada" : cerrados is not null ? "Eventos cerrados auditados" : correcciones is not null ? "Correcciones y rectificaciones auditadas" : trazabilidad is not null ? "Trazabilidad clínica auditada" : contenido is null ? "Historial de basal auditado" : "Basal vigente auditado")</h1>
+<h1 class="h3">@(linea is not null ? "Línea temporal auditada" : cerrados is not null ? "Eventos cerrados auditados" : correcciones is not null ? "Correcciones y rectificaciones auditadas" : trazabilidad is not null ? "Trazabilidad clínica auditada" : informes is not null ? "Informes de derivación firmados" : contenido is null ? "Historial de basal auditado" : "Basal vigente auditado")</h1>
 
-@if (trazabilidad is not null)
+@if (informes is not null)
+{
+    <p class="text-muted">
+        Solo lectura. Los informes de derivación a Urgencias firmados de este residente. Esta consulta ha quedado registrada en la auditoría; cada PDF que
+        abras queda auditado aparte, con la misma finalidad y justificación. Dirección no genera ni firma informes.
+    </p>
+    if (informes.Count == 0)
+    {
+        <p class="text-muted">Este residente no tiene ningún informe de derivación firmado.</p>
+    }
+    else
+    {
+        <ul class="list-group mb-3">
+            @foreach (var informe in informes)
+            {
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <strong>Evento registrado el @informe.EventRegisteredAt.ToLocalTime().ToString("g")</strong>
+                        <div class="text-body-secondary small">
+                            Informe firmado el @informe.SignedAt.ToLocalTime().ToString("g") por @(informe.SignerName ?? "Cuenta sin nombre registrado") (@SystemProfileDisplay.Label(informe.SignerProfile))
+                        </div>
+                    </div>
+                    <a asp-controller="Baseline" asp-action="InformeDerivacion" asp-route-residenteId="@Model.ResidenteId" asp-route-eventoId="@informe.EventId"
+                       class="btn btn-outline-primary">Abrir PDF</a>
+                </li>
+            }
+        </ul>
+    }
+}
+else if (trazabilidad is not null)
 {
     <p class="text-muted">
         Solo lectura. Quién hizo qué sobre este residente, según la auditoría: la persona, su perfil, la unidad, la acción, el recurso y la hora. No incluye

@@ -13,6 +13,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Dirección, bloque 2 completo con DIR-12 (2026-10-07, rama `despliegue-limpio`, sin script):** tipo de recurso «Informes de derivación firmados» (`REFERRAL_REPORTS`) en `/Baseline/Direction`: lista los informes del residente (con el nombre de quien firmó) y cada PDF se abre con
+  `GET /Baseline/InformeDerivacion?residenteId=&eventoId=` (`DownloadDirectionReferralReport`, `SqlReferralReportRepository.DownloadAsDirectionAsync`), que exige la declaración de acceso vigente y **audita cada descarga** en la misma transacción (finalidad y justificación de la declaración). `Derivaciones` enlaza a la consulta.
+  Suite: 279, 127 y 346 en verde; comprobado por HTTP con un PDF real. **Del bloque 2 solo falta la 4ª finalidad** (calidad asistencial; espera a CJ). **Siguiente:** el bloque 3 de Dirección (DIR-13 comunicación familiar, DIR-11 calidad de proceso) depende de Portal Familiar y de CJ; mientras tanto, lo desbloqueado está en Administración (desvincular familiar) y en infraestructura (cierre de G1, CI antes del 19/10).
 - **Dirección, bloque 2: DIR-14 hecho (2026-10-07, rama `despliegue-limpio`, sin script):** tipo de recurso «Trazabilidad clínica» (`CLINICAL_TRACEABILITY`) en `/Baseline/Direction`: la auditoría de las acciones clínicas del residente (lista cerrada
   `ClinicalTraceability.ActionCodes`), con nombre de la cuenta, perfil, unidad, acción, recurso y hora; `SqlChangeInboxDirectory.Traceability.cs`, `Ports/ClinicalTraceability.cs`, `Models/TrazabilidadModels.cs` (etiquetas) y `_TrazabilidadClinica.cshtml`.
   Suite: 279, 127 y 345 en verde; comprobado por HTTP. **Queda del bloque 2 solo el informe de derivación firmado** (DIR-12, acción condicionada); después el bloque 3 de Dirección. Si añades una acción de auditoría clínica nueva, ponla en `ActionCodes` y en `ClinicalTraceabilityDisplay`.
@@ -1145,7 +1148,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
      finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).
    - Siguen sin respuesta: `docs/pendientes-cj/traslado-y-baja-residente.html` (6 respuestas): traslado y baja del residente en Administración.
-   - **Dirección, bloque 2 (el resto):** el informe de derivación firmado sobre la declaración de acceso ya construida (ver `pendientes-direccion.md`).
+   - **Dirección, bloque 2:** solo falta la 4ª finalidad (calidad asistencial), pendiente de la respuesta de CJ (ver `pendientes-direccion.md`).
 2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): el organigrama y los cargos (ADM-07; ningún documento los define: pregunta a CJ); después publicaciones,
    citas, auditoría administrativa y panel.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar

@@ -37,6 +37,8 @@ public enum ClinicalResourceType
     [Code("ASSESSMENT_AMENDMENTS")] [Display(Name = "Correcciones y rectificaciones")] AssessmentAmendments,
     // DIR-14: quién hizo qué sobre el residente (la auditoría de sus acciones clínicas), con el mismo requisito de finalidad y justificación.
     [Code("CLINICAL_TRACEABILITY")] [Display(Name = "Trazabilidad clínica")] ClinicalTraceability,
+    // DIR-12: los informes de derivación firmados del residente (lista); cada PDF se descarga después con su propia auditoría.
+    [Code("REFERRAL_REPORTS")] [Display(Name = "Informes de derivación firmados")] ReferralReports,
 }
 
 /// <summary>Traduce AuthorizationDenialReason de policy.ts.</summary>
@@ -107,6 +109,7 @@ public enum ResidentBaselineAction
     ClosedEventsHistoryRead,
     AssessmentAmendmentsRead,
     ClinicalTraceabilityRead,
+    ReferralReportsRead,
 }
 
 /// <summary>

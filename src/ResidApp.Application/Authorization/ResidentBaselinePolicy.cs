@@ -41,6 +41,8 @@ public static class ResidentBaselinePolicy
                 AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.AssessmentAmendments),
             ResidentBaselineAction.ClinicalTraceabilityRead =>
                 AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.ClinicalTraceability),
+            ResidentBaselineAction.ReferralReportsRead =>
+                AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.ReferralReports),
             _ => DenyByDefault(),
         };
     }
