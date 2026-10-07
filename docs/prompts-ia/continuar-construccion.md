@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-04. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-07. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -13,7 +13,34 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Guía de pruebas para CJ (2026-10-06, rama `docs-guia-pruebas-cj`, sin commit ni push):** `docs/pendientes-cj/guia-de-pruebas-cj.html`, publicado en `/pendientes-cj/guia-de-pruebas-cj.html` con el siguiente
+- **Respuestas de CJ incorporadas (2026-10-07, rama `respuestas-cj-rangos-derivacion-direccion`, sin push):** CJ devolvió `rangos-referencia-constantes.respuestas.json` (12/12) y
+  `decisiones-direccion-basal-derivacion.respuestas.json` (7/7), ya versionados. Tres bloques construidos y uno en espera, en commits aparte:
+  - **Rangos de constantes (sin script):** botón «Cargar valores sugeridos» (`VitalSignReferenceRanges.Suggested`, `RangosReferenciaController.Index(sugeridos)`: rellena el
+    formulario sin guardar; quien tiene `REFERENCE_RANGES_MANAGE` lo revisa y guarda, con historial). Valores de CJ iguales en todos los centros: T 36–37,9; PA 90–139/60–89; FC 60–100;
+    FR 12–20; SatO₂ 95–100; glucemia mínimo 70 sin máximo. `Evaluate` no avisa de SatO₂ con oxigenoterapia (**suposición mía**); el campo del flujo de O₂ solo aparece con ella
+    (`_ConstantesFormulario`). Aviso visual de temperatura de la Auxiliar (`AuxiliarTemperatureAlerts`: >37 mantener seguimiento, >38 avisar a Enfermería; parcial
+    `_AvisoTemperaturaAuxiliar` en la confirmación y en el detalle de Enfermería; no cambia la clasificación). **No construido, sin definir por CJ:** «>37 en varias ocasiones
+    seguidas». Rangos por residente (fase 2): CJ dice que no entra en el mínimo producto. El permiso lo sigue concediendo Administración persona a persona.
+  - **«Comunicaciones» en el informe de derivación (script `0037`):** columna opcional `informes_derivacion.comunicaciones` (hasta 4000), sección «Comunicaciones» no automática del
+    informe, tercer textarea en `_Derivacion.cshtml`. **Suposición mía:** campo propio que escribe el profesional, NO copia el de la valoración ni los contactos del protocolo (DER-04 sigue
+    vigente para lo automático). Informes firmados antes: sin él.
+  - **Declaración de acceso clínico de Dirección (script `0038`):** finalidades `CONTINUIDAD_ASISTENCIAL`, `INCIDENCIA_RECLAMACION`, `TRAZABILIDAD_DOCUMENTAL` (la cuarta, calidad asistencial, NO:
+    Dirección y Coordinación son el mismo perfil `DIRECCION_CLINICA`), justificación siempre (≤300), una declaración por residente y ámbito de 1 hora (`AccesoClinico:DuracionMinutos`) que termina al
+    cambiar de residente, ámbito o perfil, al cerrar sesión o al caducar. Tabla `declaraciones_acceso_clinico` (se crea y se termina, con RLS), `eventos_auditoria.justificacion`,
+    cookie `residapp_clinical_access` (solo el id), `ClinicalAccessDeclarations`. La declaración se crea dentro de la primera lectura auditada y cada apertura sigue auditando antes de
+    entregar. **Solo aplicado a `/Baseline/Direction`** (cabeceras de versión); falta construir sobre el mecanismo DIR-05/06/07/14/15 y el informe firmado (ver `pendientes-direccion.md`, bloque 2).
+    Hueco corregido: `CK_audit_direction_read` aceptaba una finalidad nula (un `CHECK` acepta UNKNOWN).
+  - **En espera, a la respuesta de CJ:** aportaciones a un borrador de basal ajeno (contradicción: su comentario pide que no firme quien aportó, la opción elegida hace firmar al autor; hoy
+    `CK_bv_signer`/`LoadAuthorizedDraftAsync`/`BaselineActivation` exigen que firme el autor; `BASELINE_DRAFT_CONTRIBUTE` no se ofrece; `revision_borrador` nunca se incrementa), la 4ª finalidad,
+    las temperaturas seguidas. Todo preguntado en `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (11 preguntas, nuevo, añadido al índice y al README).
+  - **Verificado:** suite completa en una base SQL Server desechable de Docker con los 38 scripts desde cero y la app como `residapp_app`: 276, 83 y 341 en verde, dos vueltas, y `declaraciones_acceso_clinico`
+    `OK` en `comprobar_aislamiento.sql` (el contenedor ya está eliminado). **Estado de la base local `ACER-ORLANDO\ResidApp` (leer antes de seguir):** tiene aplicados `0035` a `0038`, pero **le falta la restricción
+    `CK_audit_direction_read`**: un test mío falló a mitad, dejó una fila de auditoría ficticia con finalidad nula (justificación «Sin finalidad.») y, al re-crear la restricción corregida, SQL Server la rechazó por esa
+    fila. La tabla de auditoría es de solo inserción y no se tocó. Hasta decidirlo con Orlando, en local falla `ClinicalAccessDeclarationTests.LaAuditoria_DeLecturaClinicaDeDireccion_ExigeFinalidadDeLaListaYJustificacion`
+    (el resto, en verde: 276, 83 y 340 de 341). Opciones: recrear la base local desde cero con los scripts, o decidir qué hacer con esa fila.
+  - **Intermitencia vista de nuevo:** dos ejecuciones completas de la solución dieron timeouts masivos de SQL de 35–55 s en pruebas ajenas, y las tres siguientes salieron limpias; sin causa explicada (como la anomalía
+    ya anotada en el bloque de Administración).
+- **Guía de pruebas para CJ (2026-10-06, rama `docs-guia-pruebas-cj`, commit `f7c25a5`):** `docs/pendientes-cj/guia-de-pruebas-cj.html`, publicado en `/pendientes-cj/guia-de-pruebas-cj.html` con el siguiente
   despliegue. 49 pruebas paso a paso en 7 temas (Auxiliar, Enfermería, Medicina, basal y Barthel, Dirección, Administración y familias, aislamiento entre centros) más 3
   preguntas finales; 18 marcadas «Imprescindible». Cada prueba lleva sus pasos, «qué debería ocurrir» y cuatro opciones (A funciona · B con problema · C no funciona ·
   D no probada) con comentario; el fichero de respuestas es `guia-de-pruebas-cj.respuestas.json`, como en los demás documentos (mismo estilo y script; solo cambian
@@ -1086,12 +1113,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Revisar las respuestas de CJ:**
-   - `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (preparado el 2026-09-30, 7 respuestas). Si ha respondido
-     al tema 1, el siguiente bloque es el 2 de Dirección (lectura clínica auditada); si ha respondido al tema 2, la aportación a
-     un borrador de basal ajeno; el tema 3 es un cambio pequeño en el informe de derivación.
-   - `docs/pendientes-cj/traslado-y-baja-residente.html` (preparado el 2026-10-01, 6 respuestas): traslado y baja del
-     residente en Administración.
+1. **Decidir qué hacer con la base local `ResidApp`** (le falta `CK_audit_direction_read`; ver el primer punto de «Dónde estamos») y **revisar las respuestas de CJ** que lleguen:
+   - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
+     finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).
+   - Siguen sin respuesta: `docs/pendientes-cj/traslado-y-baja-residente.html` (6 respuestas): traslado y baja del residente en Administración.
+   - **Dirección, bloque 2 (el resto):** DIR-05/06/07/14/15 y el informe firmado sobre la declaración de acceso ya construida (ver `pendientes-direccion.md`).
 2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): el organigrama y los cargos (ADM-07; ningún documento los define: pregunta a CJ); después publicaciones,
    citas, auditoría administrativa y panel.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar

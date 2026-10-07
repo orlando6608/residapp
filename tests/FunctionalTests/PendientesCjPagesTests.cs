@@ -12,6 +12,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
 
     [Theory]
     [InlineData("index")]
+    [InlineData("aclaraciones-respuestas-cj")]
     [InlineData("rangos-referencia-constantes")]
     [InlineData("decisiones-direccion-basal-derivacion")]
     [InlineData("traslado-y-baja-residente")]
