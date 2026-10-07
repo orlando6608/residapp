@@ -1,8 +1,11 @@
 @using ResidApp.Application.Authorization
 @using ResidApp.Shared
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
 @model ResidApp.Web.Models.DirectionBaselineQueryModel
 @{
     ViewData["Title"] = "Consulta de Dirección Clínica";
+    var declaracion = ViewBag.Declaracion as ClinicalAccessDeclaration;
     var residentes = ((IReadOnlyList<ResidApp.Application.Ports.ScopeResidentSummary>)ViewBag.Residentes)
         .Select(r => new SelectListItem($"{r.DisplayName} ({r.UnitName})", r.ResidentId.Value.ToString()))
         .ToList();
@@ -56,16 +59,45 @@
                     }
                 </select>
             </div>
-            <div class="mb-3">
-                <label asp-for="Proposito" class="form-label"></label>
-                <select asp-for="Proposito" class="form-select form-select-lg">
+            @if (declaracion is not null)
+            {
+                <div class="alert alert-info" role="status">
+                    Ya has declarado la finalidad del acceso para este residente
+                    (<strong>@EnumDisplay.Label(declaracion.Purpose)</strong>) y vale hasta las
+                    <strong>@declaracion.ExpiresAt.ToLocalTime().ToString("HH:mm")</strong>. No hace falta repetirla; cada consulta
+                    sigue quedando en la auditoría.
+                </div>
+            }
+            else
+            {
+                <fieldset class="mb-3">
+                    <legend class="form-label fs-6">Finalidad del acceso</legend>
+                    <div id="finalidad-ayuda" class="form-text mb-2">
+                        Elige para qué necesitas ver contenido clínico de este residente. La finalidad y tu justificación valen una hora
+                        para todas sus pantallas clínicas y quedan en la auditoría de cada acceso. Si ya la declaraste para este residente
+                        en la última hora, puedes dejarlas en blanco.
+                    </div>
                     @foreach (var proposito in Enum.GetValues<ClinicalDetailAccessPurpose>())
                     {
-                        <option value="@proposito.ToCode()">@EnumDisplay.Label(proposito)</option>
+                        var id = $"finalidad-{proposito.ToCode()}";
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="Proposito" id="@id" value="@proposito.ToCode()"
+                                   checked="@(Model.Proposito == proposito.ToCode())" aria-describedby="@id-desc" />
+                            <label class="form-check-label fw-semibold" for="@id">@EnumDisplay.Label(proposito)</label>
+                            <div id="@id-desc" class="form-text">@ClinicalDetailAccessPurposeDisplay.Description(proposito)</div>
+                        </div>
                     }
-                </select>
-                <span asp-validation-for="Proposito" class="text-danger"></span>
-            </div>
+                    <span asp-validation-for="Proposito" class="text-danger"></span>
+                </fieldset>
+                <div class="mb-3">
+                    <label asp-for="Justificacion" class="form-label"></label>
+                    <div id="justificacion-ayuda" class="form-text mb-1">
+                        Describe el motivo concreto sin copiar información clínica ni datos personales innecesarios (hasta 300 caracteres).
+                    </div>
+                    <textarea asp-for="Justificacion" class="form-control" rows="3" maxlength="300" aria-describedby="justificacion-ayuda"></textarea>
+                    <span asp-validation-for="Justificacion" class="text-danger"></span>
+                </div>
+            }
 
             <div class="d-grid d-md-flex justify-content-md-end">
                 <button type="submit" class="btn btn-primary btn-lg">Consultar</button>

@@ -1,6 +1,8 @@
+@using ResidApp.Application.Ports
 @model ResidApp.Web.Models.DirectionBaselineQueryModel
 @{
     ViewData["Title"] = "Resultado de la consulta";
+    var declaracion = ViewBag.Declaracion as ClinicalAccessDeclaration;
     var headers = (IReadOnlyList<ResidApp.Application.Ports.AuditedBaselineHeader>)ViewBag.Headers;
 }
 
@@ -57,6 +59,17 @@ else
     </div>
 }
 
-<div class="d-grid d-md-block">
+@if (declaracion is not null)
+{
+    <p class="text-body-secondary">
+        Finalidad declarada: <strong>@EnumDisplay.Label(declaracion.Purpose)</strong>. Vale hasta las
+        <strong>@declaracion.ExpiresAt.ToLocalTime().ToString("HH:mm")</strong> para este residente; cada consulta queda en la auditoría.
+    </p>
+}
+<div class="d-grid d-md-flex gap-2">
+    @if (declaracion is not null && Model.ResidenteId is { } residenteId)
+    {
+        <a asp-controller="Baseline" asp-action="Direction" asp-route-residenteId="@residenteId" class="btn btn-primary btn-lg">Consultar otro recurso de este residente</a>
+    }
     <a asp-controller="Baseline" asp-action="Direction" class="btn btn-secondary btn-lg">Nueva consulta</a>
 </div>

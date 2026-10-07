@@ -128,7 +128,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
                 ["OperacionId"] = Guid.NewGuid().ToString(),
                 ["ResidenteId"] = resident,
                 ["TipoRecurso"] = "BASELINE_HISTORY",
-                ["Proposito"] = "SUPERVISION_CLINICA",
+                ["Proposito"] = "CONTINUIDAD_ASISTENCIAL",
+                ["Justificacion"] = "Revisión de continuidad de un caso (prueba funcional).",
             }));
             return (response.StatusCode, WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()));
         }
@@ -148,6 +149,83 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Historial de basal auditado", chosen.Body);
         Assert.Contains("Este residente todavía no tiene ningún basal firmado.", chosen.Body);
         Assert.DoesNotContain("No se puede acceder a esta operación.", chosen.Body);
+    }
+
+    [Fact]
+    public async Task BaselineDirection_LaDeclaracionDeAcceso_ExigeFinalidadYJustificacion_ValeParaElResidente_YTerminaAlSalirOCambiarDeAmbito()
+    {
+        // CJ (2026-10-06): finalidad y justificación obligatorias, una declaración por residente que vale 1 hora, y termina al cambiar
+        // de residente, de ámbito o al cerrar sesión. Por la app real, con el usuario limitado.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentOne = await CreateResidentAsync(admin, seed, "Residente Declaracion Uno Funcional");
+        var residentTwo = await CreateResidentAsync(admin, seed, "Residente Declaracion Dos Funcional");
+        var directionSubject = await GrantDirectionAsync(seed);
+        var direccion = await LoginAsync(directionSubject);
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var page = WebUtility.HtmlDecode(await direccion.GetStringAsync("/Baseline/Direction"));
+
+        async Task<string> QueryAsync(string resident, string? purpose, string? justification)
+        {
+            var fields = new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+                ["OperacionId"] = Guid.NewGuid().ToString(),
+                ["ResidenteId"] = resident,
+                ["TipoRecurso"] = "BASELINE_HISTORY",
+            };
+            if (purpose is not null) fields["Proposito"] = purpose;
+            if (justification is not null) fields["Justificacion"] = justification;
+            return WebUtility.HtmlDecode(await (await direccion.PostAsync("/Baseline/Direction", new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+        Task<int> OpenDeclarationsAsync() => connection.ExecuteScalarAsync<int>("""
+            SELECT COUNT(*) FROM dbo.declaraciones_acceso_clinico d JOIN dbo.cuentas c ON c.id = d.cuenta_id
+             WHERE c.sujeto_externo = @directionSubject AND d.terminada_en IS NULL AND d.caduca_en > SYSUTCDATETIME()
+            """, new { directionSubject });
+
+        var withoutJustification = await QueryAsync(residentOne, "CONTINUIDAD_ASISTENCIAL", "   ");
+        var withoutPurpose = await QueryAsync(residentOne, null, "Revisión de un seguimiento vencido (prueba funcional).");
+        var oldPurpose = await QueryAsync(residentOne, "SUPERVISION_CLINICA", "Una finalidad que ya no se ofrece.");
+        var declaredNothing = await OpenDeclarationsAsync();
+
+        var first = await QueryAsync(residentOne, "CONTINUIDAD_ASISTENCIAL", "Revisión de un seguimiento vencido (prueba funcional).");
+        var openAfterFirst = await OpenDeclarationsAsync();
+        var minutes = await connection.ExecuteScalarAsync<int>("""
+            SELECT DATEDIFF(MINUTE, d.creada_en, d.caduca_en) FROM dbo.declaraciones_acceso_clinico d
+             WHERE d.id = (SELECT TOP 1 id FROM dbo.declaraciones_acceso_clinico ORDER BY creada_en DESC)
+               AND d.residente_id = @residentOne
+            """, new { residentOne });
+        var rememberedPage = WebUtility.HtmlDecode(await direccion.GetStringAsync($"/Baseline/Direction?residenteId={residentOne}"));
+        var reused = await QueryAsync(residentOne, null, null);
+        var openAfterReuse = await OpenDeclarationsAsync();
+        var other = await QueryAsync(residentTwo, null, null);
+        var otherDeclared = await QueryAsync(residentTwo, "INCIDENCIA_RECLAMACION", "Reclamación familiar registrada (prueba funcional).");
+        var openAfterOther = await OpenDeclarationsAsync();
+        var backToOne = await QueryAsync(residentOne, null, null);
+
+        (await direccion.PostAsync("/DevAuth/Logout", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+        }))).EnsureSuccessStatusCode();
+        var openAfterLogout = await OpenDeclarationsAsync();
+
+        Assert.Contains("Escribe una justificación breve del acceso.", withoutJustification);
+        Assert.Contains("Elige la finalidad del acceso.", withoutPurpose);
+        Assert.Contains("Elige la finalidad del acceso.", oldPurpose);
+        Assert.Equal(0, declaredNothing);
+        Assert.Contains("Historial de basal auditado", first);
+        Assert.Contains("Finalidad declarada:", first);
+        Assert.Equal(1, openAfterFirst);
+        Assert.Equal(60, minutes);
+        Assert.Contains("Ya has declarado la finalidad del acceso para este residente", rememberedPage);
+        Assert.Contains("Historial de basal auditado", reused);
+        Assert.Equal(1, openAfterReuse);
+        // Otro residente: la declaración del primero no sirve; al declarar de nuevo, la anterior termina.
+        Assert.Contains("Elige la finalidad del acceso.", other);
+        Assert.Contains("Historial de basal auditado", otherDeclared);
+        Assert.Equal(1, openAfterOther);
+        Assert.Contains("Elige la finalidad del acceso.", backToOne);
+        Assert.Equal(0, openAfterLogout);
     }
 
     [Fact]

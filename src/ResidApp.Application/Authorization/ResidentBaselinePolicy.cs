@@ -169,13 +169,12 @@ public static class ResidentBaselinePolicy
         {
             return AuthorizationDecision.Deny(AuthorizationDenialReason.PermissionRequired);
         }
-        if (request.Purpose != ClinicalDetailAccessPurpose.SupervisionClinica)
+        if (request.Purpose is not { } purpose || !Enum.IsDefined(purpose))
         {
             return AuthorizationDecision.Deny(AuthorizationDenialReason.AccessPurposeRequired);
         }
         var obligation = new ClinicalDetailAuditObligation(
-            resourceType, context.AccountId, request.CenterId, request.UnitId, request.ResidentId!.Value,
-            ClinicalDetailAccessPurpose.SupervisionClinica);
+            resourceType, context.AccountId, request.CenterId, request.UnitId, request.ResidentId!.Value, purpose);
         return AuthorizationDecision.Allow(obligation);
     }
 

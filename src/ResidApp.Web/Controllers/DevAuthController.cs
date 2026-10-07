@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ResidApp.Application.Ports;
+using ResidApp.Application.UseCases;
 using ResidApp.Web.Security;
 
 namespace ResidApp.Web.Controllers;
@@ -11,7 +12,7 @@ namespace ResidApp.Web.Controllers;
 /// ejercitar el motor de autorización deny-by-default sin depender de un proveedor productivo todavía sin
 /// decidir.
 /// </summary>
-public sealed class DevAuthController(IProfileScopeDirectoryProvider directory) : Controller
+public sealed class DevAuthController(IProfileScopeDirectoryProvider directory, ClinicalAccessDeclarations declarations) : Controller
 {
     public IActionResult Login() => View((object?)Request.Cookies[DevSessionIdentityProvider.CookieName]);
 
@@ -40,15 +41,19 @@ public sealed class DevAuthController(IProfileScopeDirectoryProvider directory) 
             IsEssential = true,
         });
         ActiveProfileScopeCookie.Clear(Response);
+        ClinicalAccessDeclarationCookie.Clear(Response);
         return RedirectToAction("Index", "Home");
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout(CancellationToken ct)
     {
+        // Cerrar sesión termina las declaraciones de acceso clínico (CJ, 2026-10-06), mientras la identidad y el ámbito aún están.
+        await declarations.EndAllAsync(ct);
         Response.Cookies.Delete(DevSessionIdentityProvider.CookieName);
         ActiveProfileScopeCookie.Clear(Response);
+        ClinicalAccessDeclarationCookie.Clear(Response);
         return RedirectToAction("Index", "Home");
     }
 

@@ -80,7 +80,12 @@ builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>
 
 builder.Services.AddScoped<CreateResident>();
 builder.Services.AddScoped<SignBaseline>();
+// Declaración de acceso clínico de Dirección (CJ, 2026-10-06): 1 hora, global hasta que se ajuste por centro.
+builder.Services.AddSingleton(new ClinicalAccessSettings(
+    builder.Configuration.GetValue<int?>("AccesoClinico:DuracionMinutos")
+    ?? throw new InvalidOperationException("Falta AccesoClinico:DuracionMinutos en appsettings.json.")));
 builder.Services.AddScoped<ReadDirectionBaseline>();
+builder.Services.AddScoped<ClinicalAccessDeclarations>();
 builder.Services.AddScoped<ListActiveProfileScopes>();
 builder.Services.AddScoped<ListActiveScopeUnits>();
 builder.Services.AddScoped<ListActiveScopeLocations>();

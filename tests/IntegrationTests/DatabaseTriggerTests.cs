@@ -179,9 +179,8 @@ public class DatabaseTriggerTests
         // Lectura de Dirección Clínica: deja una fila CLINICAL_DETAIL_READ en eventos_auditoria.
         var direction = await SeedFixture.AddProfileToCenterAsync(
             SystemProfile.DireccionClinica, enfermeria.CenterId, enfermeria.UnitId, [ResidentBaselinePermission.ClinicalDetailRead.ToCode()]);
-        await repository.ReadAsClinicalDirectionAsync(new ClinicalDirectionReadInput(
-            direction.AccountId, enfermeria.CenterId, enfermeria.UnitId, residentId,
-            ClinicalResourceType.BaselineCurrent, ClinicalDetailAccessPurpose.SupervisionClinica, Guid.NewGuid()));
+        await repository.ReadAsClinicalDirectionAsync(DirectionReadTestData.Input(
+            direction, enfermeria.CenterId, enfermeria.UnitId, residentId, ClinicalResourceType.BaselineCurrent, Guid.NewGuid()));
 
         // Borrador cancelado con un Barthel sin ítems (insertado a mano mientras estaba activo).
         var cancelled = await repository.CreateDraftAsync(DraftInput(enfermeria, residentId, BaselineReason.RevisionProgramada));
