@@ -1,10 +1,13 @@
 @using ResidApp.Application.Ports
+@using ResidApp.Web.Models
 @model ResidApp.Web.Models.DirectionBaselineQueryModel
 @{
     ViewData["Title"] = "Resultado de la consulta";
     var declaracion = ViewBag.Declaracion as ClinicalAccessDeclaration;
     var headers = (IReadOnlyList<ResidApp.Application.Ports.AuditedBaselineHeader>)ViewBag.Headers;
     var contenido = ViewBag.Content as BaselineVersionDetail;
+    var linea = ViewBag.Timeline as IReadOnlyList<TimelineEntry>;
+    var cerrados = ViewBag.ClosedEvents as IReadOnlyList<ClosedEventSummary>;
 }
 
 <nav aria-label="breadcrumb">
@@ -15,9 +18,39 @@
     </ol>
 </nav>
 
-<h1 class="h3">@(contenido is null ? "Historial de basal auditado" : "Basal vigente auditado")</h1>
+<h1 class="h3">@(linea is not null ? "Línea temporal auditada" : cerrados is not null ? "Eventos cerrados auditados" : contenido is null ? "Historial de basal auditado" : "Basal vigente auditado")</h1>
 
-@if (headers.Count == 0)
+@if (linea is not null)
+{
+    <p class="text-muted">
+        Solo lectura, del registro más reciente al más antiguo: eventos de las unidades de tu ámbito con cada paso de su atención,
+        versiones del basal y cambios de ubicación. Esta consulta ha quedado registrada en la auditoría.
+    </p>
+    if (linea.Count == 0)
+    {
+        <p class="text-muted">Este residente todavía no tiene registros en la línea temporal.</p>
+    }
+    else
+    {
+        <partial name="_LineaTemporalLista" model="new TimelineListModel(linea, null)" />
+    }
+}
+else if (cerrados is not null)
+{
+    <p class="text-muted">
+        Solo lectura. Cada evento muestra el basal y la ubicación que estaban vigentes cuando se registró, no los actuales. Esta
+        consulta ha quedado registrada en la auditoría.
+    </p>
+    if (cerrados.Count == 0)
+    {
+        <p class="text-muted">Este residente no tiene eventos cerrados.</p>
+    }
+    else
+    {
+        <partial name="_EventosCerradosLista" model="new ClosedEventsListModel(cerrados, null)" />
+    }
+}
+else if (headers.Count == 0)
 {
     <p class="text-muted">Este residente todavía no tiene ningún basal firmado.</p>
 }

@@ -13,13 +13,18 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Dirección, bloque 2: DIR-05 hecho (2026-10-07, rama `despliegue-limpio`, sin commit ni push, sin script):** `/Baseline/Direction` con «Basal vigente» muestra el contenido de la versión vigente (nueve áreas y
+- **Dirección, bloque 2: DIR-06 y DIR-07 hechos (2026-10-07, rama `despliegue-limpio`, sin script):** en `/Baseline/Direction`, tipos de recurso nuevos «Línea temporal» (`RESIDENT_TIMELINE`) y «Historial de eventos cerrados» (`CLOSED_EVENTS_HISTORY`),
+  con acciones nuevas en la política y la misma declaración de acceso. Se audita el residente (una fila por lectura). `ReadAsClinicalDirectionAsync` devuelve cabeceras vacías para ellos y solo después `ReadDirectionBaseline` pide
+  `ListDirectionTimelineAsync` / `ListDirectionClosedEventsAsync` (`SqlChangeInboxDirectory`, con `DirectionScopedEventsFrom`). `DirectionBaselineRead` gana `Timeline` y `ClosedEvents`; `ReadDirectionBaseline` recibe ahora `IChangeInboxDirectory`.
+  Parciales `_LineaTemporalLista` y `_EventosCerradosLista` compartidos con Enfermería y Medicina. Detalle y decisiones en `pendientes-direccion.md`. Suite: 276, 125 y 343 en verde; comprobado por HTTP en local con «Residente Prueba DIR-06 (ficticio)» (cuenta
+  `test-…` de las pruebas). **Siguiente:** DIR-15 (correcciones y rectificaciones; versiones de basal vinculadas), DIR-14 (trazabilidad) y el informe de derivación firmado.
+- **Dirección, bloque 2: DIR-05 hecho (2026-10-07, rama `despliegue-limpio`, commit `905b4ae`, sin push, sin script):** `/Baseline/Direction` con «Basal vigente» muestra el contenido de la versión vigente (nueve áreas y
   Barthel), no solo cabeceras. `ReadDirectionBaseline` devuelve ahora `DirectionBaselineRead(Headers, Content)`: primero la lectura auditada (`ReadAsClinicalDirectionAsync`, sin cambios) y solo después
   `ReadVersionAsync` de la versión auditada; «Historial de basal» sigue sin contenido. Parcial nuevo `Views/Shared/_ContenidoVersionBasal.cshtml` (extraído de `VersionBasal.cshtml`, que ahora lo usa).
   `tipo_recurso` no tiene `CHECK` de valores: **las pantallas siguientes (DIR-06/07/14/15, informe firmado) no necesitan script por eso**, solo ampliar `ClinicalResourceType`. Suite: 276, 125 y 342 en verde.
   Test `Direccion_LeeElContenidoDelBasalVigenteAuditado_…` (mutación comprobada). Comprobado por HTTP en local con «Residente Prueba Contenido DIR-05 (ficticio)» (basal firmado, unidad integrada).
   **Lección:** si dejas la app local en marcha (`dotnet run`), `ResidApp.Web.exe` bloquea la compilación de los tests funcionales (la suite parece pasar pero no sale la línea de funcionales): páralo antes.
-  **Siguiente:** DIR-06/07 (línea temporal e historial de eventos cerrados con ámbito de Dirección), luego DIR-15, DIR-14 y el informe firmado.
+  (DIR-06 y DIR-07 se hicieron después: ver el punto anterior.)
 - **El despliegue a Azure limpia `wwwroot` (2026-10-07, rama `despliegue-limpio`):** el paso «Desplegar en Azure Web App» lleva `clean: true`. Antes, OneDeploy añadía ficheros pero no borraba los de
   despliegues anteriores, y los documentos de CJ movidos a `archivados/` siguieron sirviéndose desde su ruta antigua (se borraron a mano por Kudu). `wwwroot` no guarda estado de la app (claves de Data Protection
   en `/home/ASP.NET`, logs en `/home/LogFiles`, datos en SQL). **Límite:** deja un corte de segundos con `wwwroot` a medias; vale para desarrollo (B1, sin slots, datos ficticios). Con usuarios reales,
@@ -1135,7 +1140,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
      finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).
    - Siguen sin respuesta: `docs/pendientes-cj/traslado-y-baja-residente.html` (6 respuestas): traslado y baja del residente en Administración.
-   - **Dirección, bloque 2 (el resto):** DIR-06/07/14/15 y el informe firmado sobre la declaración de acceso ya construida (ver `pendientes-direccion.md`).
+   - **Dirección, bloque 2 (el resto):** DIR-14/15 y el informe firmado sobre la declaración de acceso ya construida (ver `pendientes-direccion.md`).
 2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): el organigrama y los cargos (ADM-07; ningún documento los define: pregunta a CJ); después publicaciones,
    citas, auditoría administrativa y panel.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar

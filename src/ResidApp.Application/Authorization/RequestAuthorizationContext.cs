@@ -118,9 +118,13 @@ public static class RequestAuthorizationContextResolver
             AuthorizationTarget.Sign => evidence.DraftReason == BaselineReason.Alta
                 ? ResidentBaselineAction.BaselineInitialComplete
                 : ResidentBaselineAction.BaselineReevaluate,
-            AuthorizationTarget.Read => resourceType == ClinicalResourceType.BaselineCurrent
-                ? ResidentBaselineAction.BaselineCurrentRead
-                : ResidentBaselineAction.BaselineHistoryRead,
+            AuthorizationTarget.Read => resourceType switch
+            {
+                ClinicalResourceType.BaselineCurrent => ResidentBaselineAction.BaselineCurrentRead,
+                ClinicalResourceType.ResidentTimeline => ResidentBaselineAction.ResidentTimelineRead,
+                ClinicalResourceType.ClosedEventsHistory => ResidentBaselineAction.ClosedEventsHistoryRead,
+                _ => ResidentBaselineAction.BaselineHistoryRead,
+            },
             AuthorizationTarget.Draft draft => draft.Reason == BaselineReason.Alta
                 ? ResidentBaselineAction.BaselineInitialComplete
                 : ResidentBaselineAction.BaselineReevaluate,

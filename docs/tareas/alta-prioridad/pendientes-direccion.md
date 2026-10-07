@@ -78,7 +78,15 @@ En el orden propuesto:
      devolviendo solo cabeceras. `eventos_auditoria.tipo_recurso` no tiene `CHECK` de valores, así que no hizo falta script. **Decisión mía, sin confirmar:** el contenido de versiones
      históricas no se entrega aquí (llegará con DIR-15, versiones vinculadas). Test: `Direccion_LeeElContenidoDelBasalVigenteAuditado_ElHistorialSoloCabeceras_YSinPermisoNada`
      (falla si el historial entrega contenido). Comprobado por HTTP en local con un residente ficticio con basal firmado.
-   - **Falta construir sobre este mecanismo**, cada pantalla con su `tipo_recurso`: línea temporal (DIR-06), historial de eventos cerrados (DIR-07),
+   - **DIR-06 y DIR-07 hechos el 2026-10-07 (sin script):** en el mismo `/Baseline/Direction`, dos tipos de recurso nuevos, «Línea temporal» (`RESIDENT_TIMELINE`) y «Historial de eventos cerrados»
+     (`CLOSED_EVENTS_HISTORY`), con acciones propias en la política (`ResidentTimelineRead`, `ClosedEventsHistoryRead`: solo `DIRECCION_CLINICA` con `CLINICAL_DETAIL_READ`, finalidad y
+     declaración). **Se audita el residente (una fila por lectura, `recurso_id` = residente), no cada evento** (decisión mía, sin confirmar). `ReadAsClinicalDirectionAsync` hace la
+     auditoría con el mismo SQL y devuelve cabeceras vacías para estos tipos; solo entonces `ReadDirectionBaseline` pide `ListDirectionTimelineAsync` / `ListDirectionClosedEventsAsync`
+     (`SqlChangeInboxDirectory`, con `DirectionScopedEventsFrom`, el gemelo de `ScopedEventsFrom` para Dirección: todos los eventos de las unidades y residentes del ámbito, sin la regla
+     de Medicina; el SQL de la línea temporal y del historial se parametrizó por ese fragmento, sin duplicarse). Parciales `_LineaTemporalLista` y `_EventosCerradosLista`, compartidos con
+     Enfermería y Medicina; sin `DetailAction` no hay enlaces a eventos ni al PDF (son de otros perfiles). Tests: `Direccion_LeeLineaTemporalYEventosCerrados_Auditados_ConTodosLosEventosDeSuAmbito`
+     (falla con el ámbito de Enfermería). La línea temporal incluye el contenido clínico de los eventos (valoraciones, indicaciones, protocolo): es el detalle que pedía DIR-06.
+   - **Falta construir sobre este mecanismo**, cada pantalla con su `tipo_recurso`:
      trazabilidad clínica (DIR-14), correcciones y rectificaciones (DIR-15) y el informe de derivación firmado. Notas del repositorio de lectura:
      `ReadAsClinicalDirectionAsync` (`SqlBaselineRepository`) es el patrón «auditoría o nada»; `SqlChangeInboxDirectory.ScopedEventsFrom` fija
      `perfil_codigo IN ('ENFERMERIA','MEDICINA')` y no sirve a Dirección tal cual (`SqlSupervisionDirectory.ScopedEventsFrom` es el gemelo); no reutilizar la ruta de

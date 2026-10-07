@@ -21,6 +21,13 @@ public sealed record ResidentHistoryViewModel(
         new(resident, events.Ok ? events.Value : null, baselines.Ok ? baselines.Value : null, detailAction);
 }
 
+/// <summary>Lista de eventos cerrados (parcial _EventosCerradosLista) de Enfermería, Medicina y Dirección. DetailAction null: sin
+/// enlace al detalle (la lectura auditada de Dirección no ofrece las pantallas de otros perfiles).</summary>
+public sealed record ClosedEventsListModel(IReadOnlyList<ClosedEventSummary> Events, string? DetailAction);
+
+/// <summary>Hitos de la línea temporal (parcial _LineaTemporalLista), con la misma convención de DetailAction.</summary>
+public sealed record TimelineListModel(IReadOnlyList<TimelineEntry> Entries, string? DetailAction);
+
 /// <summary>ENF-24 (historia 11 de Enfermería, 9 de Medicina): una versión firmada del basal, vista común a
 /// Enfermería y Medicina.</summary>
 public sealed record BaselineVersionViewModel(ScopeResidentSummary Resident, BaselineVersionDetail Version);

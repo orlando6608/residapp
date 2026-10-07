@@ -33,6 +33,10 @@ public static class ResidentBaselinePolicy
             ResidentBaselineAction.BaselineReevaluate =>
                 AuthorizeProfessionalWrite(context, ResidentBaselinePermission.BaselineReevaluate),
             ResidentBaselineAction.BaselineHistoryRead => AuthorizeBaselineHistoryRead(request, context),
+            ResidentBaselineAction.ResidentTimelineRead =>
+                AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.ResidentTimeline),
+            ResidentBaselineAction.ClosedEventsHistoryRead =>
+                AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.ClosedEventsHistory),
             _ => DenyByDefault(),
         };
     }

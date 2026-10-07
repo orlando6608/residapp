@@ -13,8 +13,16 @@ namespace ResidApp.Infrastructure.Persistence;
 /// fuentes son de solo inserción o guardan la hora de cada hito, así que la línea temporal no reconstruye nada.</summary>
 public sealed partial class SqlChangeInboxDirectory
 {
-    public async Task<IReadOnlyList<TimelineEntry>> ListTimelineAsync(
-        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default)
+    public Task<IReadOnlyList<TimelineEntry>> ListTimelineAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
+        ListTimelineAsync(ScopedEventsFrom, profileScopeId, centerId, residentId, ct);
+
+    public Task<IReadOnlyList<TimelineEntry>> ListDirectionTimelineAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
+        ListTimelineAsync(DirectionScopedEventsFrom, profileScopeId, centerId, residentId, ct);
+
+    private async Task<IReadOnlyList<TimelineEntry>> ListTimelineAsync(
+        string scopedEventsFrom, Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct)
     {
         using var connection = await connections.OpenAsync(ct);
         var entries = new List<TimelineEntry>();
@@ -26,7 +34,7 @@ public sealed partial class SqlChangeInboxDirectory
                    ea.recibido_en AS OccurredAt, ea.cerrado_en AS ClosedAt, ea.comunicacion_familiar_codigo AS DecisionCode,
                    escalation.motivo AS EscalationReason, escalation.escalado_en AS EscalatedAt,
                    family.tipo_codigo AS FamilyTypeCode, family.texto AS FamilyText, family.preparado_en AS FamilyPreparedAt
-            {ScopedEventsFrom}
+            {scopedEventsFrom}
                AND ea.residente_id = @ResidentId
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value },
             cancellationToken: ct))).ToList();

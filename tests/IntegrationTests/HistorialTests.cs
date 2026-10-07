@@ -221,6 +221,66 @@ public class HistorialTests
         }
     }
 
+    /// <summary>DIR-06 y DIR-07: Dirección Clínica lee la línea temporal y el historial de eventos cerrados de un residente de su
+    /// ámbito solo con permiso clínico, finalidad y justificación, y cada lectura deja su fila de auditoría; ve todos los eventos
+    /// (también los escalados). Sin permiso o con el ámbito de otro centro no recibe nada ni deja auditoría.</summary>
+    [Fact]
+    public async Task Direccion_LeeLineaTemporalYEventosCerrados_Auditados_ConTodosLosEventosDeSuAmbito()
+    {
+        var (enfermera, _, residentId) = await SeedResidentAsync();
+        await SignBaselineAsync(enfermera, residentId, BaselineReason.Alta);
+        var nursing = BuildService(enfermera.ExternalSubject);
+        var closedId = await RegisterAsync(enfermera, residentId, "Caída sin lesiones en el baño.");
+        Assert.True((await nursing.CloseClinicalEventAsync(new CloseClinicalEventCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, closedId, await StartAndSaveAsync(enfermera, closedId), Guid.NewGuid(),
+            FamilyCommunicationDecision.NoComunicar, null, null))).Ok);
+        var escalatedId = await RegisterAsync(enfermera, residentId, "Disnea de esfuerzo.");
+        Assert.True((await nursing.EscalateClinicalEventAsync(
+            EscalateCommand(enfermera, escalatedId, await StartAndSaveAsync(enfermera, escalatedId)))).Ok);
+
+        var direccion = await SeedFixture.AddProfileToCenterAsync(
+            SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId, ["CLINICAL_DETAIL_READ"]);
+        var sinPermiso = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId, []);
+        var otroCentro = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica, ["CLINICAL_DETAIL_READ"]);
+        Task<ApplicationResult<DirectionBaselineRead>> Read(SeededProfile who, string type) =>
+            new ReadDirectionBaseline(
+                    new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), new FixedHistorialSessionIdentityProvider(who.ExternalSubject),
+                    _baselines, new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory))
+                .ExecuteAsync(new ReadDirectionBaselineCommand(
+                    who.ProfileScopeId, who.CenterId, residentId, type, "CONTINUIDAD_ASISTENCIAL",
+                    Guid.NewGuid(), "Revisión de continuidad (prueba)."));
+        async Task<int> AuditedAsync(string type)
+        {
+            using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+            return await Dapper.SqlMapper.ExecuteScalarAsync<int>(connection,
+                "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ' AND tipo_recurso = @type",
+                new { Id = residentId.Value, type });
+        }
+
+        foreach (var (who, type) in new[] { (sinPermiso, "RESIDENT_TIMELINE"), (otroCentro, "RESIDENT_TIMELINE"), (sinPermiso, "CLOSED_EVENTS_HISTORY"), (otroCentro, "CLOSED_EVENTS_HISTORY") })
+        {
+            Assert.Equal(ApplicationFailureCode.AccessDenied, (await Read(who, type)).Error!.Code);
+        }
+        // Enfermería no entra por esta lectura aunque el residente sea de su ámbito.
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Read(enfermera, "RESIDENT_TIMELINE")).Error!.Code);
+        Assert.Equal(0, await AuditedAsync("RESIDENT_TIMELINE") + await AuditedAsync("CLOSED_EVENTS_HISTORY"));
+
+        var timeline = await Read(direccion, "RESIDENT_TIMELINE");
+        Assert.True(timeline.Ok, timeline.Error?.Message);
+        Assert.Empty(timeline.Value!.Headers);
+        Assert.Null(timeline.Value.ClosedEvents);
+        Assert.Equal(new[] { closedId, escalatedId }.Order(), timeline.Value.Timeline!.OfType<TimelineEntry.EventRegistered>().Select(e => e.EventId!.Value).Order());
+        Assert.Single(timeline.Value.Timeline!.OfType<TimelineEntry.BaselineSigned>());
+        Assert.Equal(1, await AuditedAsync("RESIDENT_TIMELINE"));
+        Assert.Equal(0, await AuditedAsync("CLOSED_EVENTS_HISTORY"));
+
+        var closed = await Read(direccion, "CLOSED_EVENTS_HISTORY");
+        Assert.True(closed.Ok, closed.Error?.Message);
+        Assert.Null(closed.Value!.Timeline);
+        Assert.Equal(closedId, Assert.Single(closed.Value.ClosedEvents!).EventId);
+        Assert.Equal(1, await AuditedAsync("CLOSED_EVENTS_HISTORY"));
+    }
+
     /// <summary>Un residente en la unidad de una enfermera con permisos de basal y de una médica.</summary>
     private static async Task<(SeededProfile Enfermera, SeededProfile Medica, ResidentId ResidentId)> SeedResidentAsync()
     {

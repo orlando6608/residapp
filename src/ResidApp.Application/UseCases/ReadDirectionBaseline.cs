@@ -25,7 +25,7 @@ public sealed record ReadDirectionBaselineCommand(
 /// <summary>Traduce readDirectionBaseline de lib/application/resident-baseline-service.ts.</summary>
 public sealed class ReadDirectionBaseline(
     IAuthorizationEvidenceProvider evidenceProvider, ISessionIdentityProvider session, IBaselineRepository repository,
-    ClinicalAccessSettings? settings = null)
+    IChangeInboxDirectory directory, ClinicalAccessSettings? settings = null)
 {
     private readonly ClinicalAccessSettings _settings = settings ?? ClinicalAccessSettings.Default;
 
@@ -70,7 +70,16 @@ public sealed class ReadDirectionBaseline(
                 ? await repository.ReadVersionAsync(
                     new ReadCurrentBaselineSummaryInput(command.CentroId, command.ResidenteId), headers[0].VersionNumber, ct)
                 : null;
-            return new DirectionBaselineRead(headers, content);
+
+            // DIR-06/DIR-07: la lectura anterior ya autorizó, declaró y auditó el residente entero (sin ella habría lanzado). El ámbito
+            // se pasa a la consulta, que además lo exige en SQL (perfil de Dirección activo y sus unidades y residentes).
+            var timeline = resourceType == ClinicalResourceType.ResidentTimeline
+                ? await directory.ListDirectionTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct)
+                : null;
+            var closedEvents = resourceType == ClinicalResourceType.ClosedEventsHistory
+                ? await directory.ListDirectionClosedEventsAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct)
+                : null;
+            return new DirectionBaselineRead(headers, content, timeline, closedEvents);
         });
 }
 

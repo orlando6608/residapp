@@ -29,7 +29,7 @@ public class ResidentBaselineApplicationServiceTests
         return new ResidentBaselineApplicationService(
             new CreateResident(evidenceProvider, session, residents),
             new SignBaseline(evidenceProvider, session, baselines),
-            new ReadDirectionBaseline(evidenceProvider, session, baselines),
+            new ReadDirectionBaseline(evidenceProvider, session, baselines, new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory)),
             new CreateBaselineDraft(evidenceProvider, session, baselines),
             new LoadBaselineDraft(scopes, baselines, session),
             new SaveBaselineDraftArea(scopes, baselines, session),
