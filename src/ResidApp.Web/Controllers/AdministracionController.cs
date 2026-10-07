@@ -18,7 +18,9 @@ namespace ResidApp.Web.Controllers;
 /// AdministracionApplicationService; la autorización no vive aquí.
 /// </summary>
 public sealed partial class AdministracionController(
-    AdministracionApplicationService service, AdministracionEstructuraApplicationService estructura,
+    AdministracionApplicationService service, ResidentTransferApplicationService transfers, ResidentStatusApplicationService statuses,
+    ListActiveScopeUnits listUnits,
+    ListActiveScopeLocations listLocations, AdministracionEstructuraApplicationService estructura,
     AdministracionTurnosApplicationService turnos) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -71,9 +73,13 @@ public sealed partial class AdministracionController(
 
         var result = await service.FindResidentAsync(new FindAdministrativeResidentQuery(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId)), ct);
-        return result.Ok
-            ? View(new AdministrativeResidentViewModel(result.Value!, DateOnly.FromDateTime(DateTime.Today)))
-            : RedirectToAction(nameof(Residentes));
+        if (!result.Ok)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        var suspension = await statuses.FindSuspensionAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), ct);
+        return View(new AdministrativeResidentViewModel(result.Value!, DateOnly.FromDateTime(DateTime.Today), suspension.Value));
     }
 
     public async Task<IActionResult> CorregirIdentidad(Guid residenteId, CancellationToken ct)

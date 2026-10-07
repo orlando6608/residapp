@@ -52,7 +52,8 @@ public sealed record AdministrativeResidentListViewModel(
 }
 
 /// <summary>ADM-03: la ficha administrativa y la fecha de hoy, para la edad.</summary>
-public sealed record AdministrativeResidentViewModel(AdministrativeResidentDetail Detail, DateOnly Today);
+public sealed record AdministrativeResidentViewModel(
+    AdministrativeResidentDetail Detail, DateOnly Today, ResidentSuspension? Suspension = null);
 
 /// <summary>ADM-03 (0021): formulario de corrección de identidad. CorreccionesEsperadas es cuántas correcciones tenía el
 /// residente al abrirlo: si otra se adelanta, la corrección da conflicto y se conserva lo escrito.</summary>

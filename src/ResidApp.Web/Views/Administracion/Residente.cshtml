@@ -20,6 +20,16 @@
 {
     <div class="alert alert-success" role="status">@mensaje</div>
 }
+@if (Model.Suspension is { } suspension)
+{
+    <div class="alert alert-warning" role="status">
+        <p class="fw-semibold mb-1">Suspendido por ingreso hospitalario desde el @suspension.Since.ToLocalTime().ToString("dd/MM/yyyy")</p>
+        <p class="mb-2">No se puede actuar sobre este residente (cambios, eventos, constantes, basales ni comunicados a familias) hasta que se reanude.@(suspension.Note is null ? "" : " Nota: " + suspension.Note)</p>
+        <form asp-action="Reanudar" asp-route-residenteId="@resident.ResidentId.Value" method="post">
+            <button type="submit" class="btn btn-outline-dark">Reanudar atención</button>
+        </form>
+    </div>
+}
 
 <section class="card mb-4">
     <div class="card-body">
@@ -37,6 +47,12 @@
             <dd class="col-sm-8">@resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
         </dl>
         <a asp-action="CorregirIdentidad" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Corregir identidad</a>
+        <a asp-action="Trasladar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Trasladar</a>
+        @if (Model.Suspension is null)
+        {
+            <a asp-action="Suspender" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Suspender (ingreso hospitalario)</a>
+        }
+        <a asp-action="DarDeBaja" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-danger btn-lg">Dar de baja</a>
     </div>
 </section>
 

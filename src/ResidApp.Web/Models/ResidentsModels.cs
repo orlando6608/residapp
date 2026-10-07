@@ -45,9 +45,12 @@ public sealed class CreateResidentFormModel
     public string? Ubicacion { get; set; }
 
     /// <summary>La habitación y la plaza elegidas, o null si el texto no es ninguna de las formas válidas (vacío es válido: ninguna).</summary>
-    public (Guid? RoomId, Guid? PlaceId)? ParseLocation()
+    public (Guid? RoomId, Guid? PlaceId)? ParseLocation() => ParseLocation(Ubicacion);
+
+    /// <summary>Lo mismo para un texto «r:{habitación}» / «p:{plaza}» de cualquier formulario con selector de ubicación.</summary>
+    public static (Guid? RoomId, Guid? PlaceId)? ParseLocation(string? ubicacion)
     {
-        var text = Ubicacion?.Trim();
+        var text = ubicacion?.Trim();
         if (string.IsNullOrEmpty(text))
         {
             return (null, null);

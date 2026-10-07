@@ -1,0 +1,92 @@
+@using ResidApp.Web.Models
+@model TransferResidentViewModel
+@{
+    var resident = Model.Resident;
+    ViewData["Title"] = "Trasladar residente";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Trasladar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Trasladar residente</h1>
+<p class="text-muted">
+    Cambia al residente de unidad dentro del centro, o de habitación o plaza dentro de su unidad. Los episodios abiertos pasan a la unidad de
+    destino y la unidad de origen deja de verlos. Si tenía un borrador de basal a medias y cambia de unidad, el borrador se cancela y el basal
+    se rehace en la unidad de destino. Los episodios cerrados no cambian de unidad.
+</p>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h6 card-title">Ubicación actual</h2>
+        <p class="mb-0">@resident.DisplayName · @resident.UnitName</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        @if (Model.Units.Count == 0)
+        {
+            <div class="alert alert-warning" role="alert">Tu ámbito activo no tiene ninguna unidad a la que trasladar.</div>
+        }
+        else
+        {
+            <form asp-action="Trasladar" method="post">
+                <input type="hidden" name="Form.ResidenteId" value="@Model.Form.ResidenteId" />
+                <input type="hidden" name="Form.UnidadOrigenId" value="@Model.Form.UnidadOrigenId" />
+                <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+
+                <div class="mb-3">
+                    <label asp-for="Form.UnidadDestinoId" class="form-label"></label>
+                    <select asp-for="Form.UnidadDestinoId" class="form-select form-select-lg" asp-items="Model.Units"></select>
+                    <span asp-validation-for="Form.UnidadDestinoId" class="text-danger"></span>
+                </div>
+                @if (Model.Locations.Count > 0)
+                {
+                    <div class="mb-3">
+                        <label asp-for="Form.Ubicacion" class="form-label"></label>
+                        <select asp-for="Form.Ubicacion" class="form-select form-select-lg" aria-describedby="ayuda-ubicacion">
+                            <option value="">Sin habitación ni plaza</option>
+                            @foreach (var unitGroup in Model.Locations.GroupBy(l => l.UnitName))
+                            {
+                                <optgroup label="@unitGroup.Key">
+                                    @foreach (var option in unitGroup)
+                                    {
+                                        @if (option.PlaceId is { } placeId)
+                                        {
+                                            <option value="p:@placeId">@option.RoomName · @option.PlaceName</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="r:@option.RoomId">@option.RoomName</option>
+                                        }
+                                    }
+                                </optgroup>
+                            }
+                        </select>
+                        <div id="ayuda-ubicacion" class="form-text">
+                            Opcional. Debe ser de la unidad de destino; las plazas ocupadas no se ofrecen.
+                        </div>
+                        <span asp-validation-for="Form.Ubicacion" class="text-danger"></span>
+                    </div>
+                }
+
+                <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                    <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-lg">Trasladar</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

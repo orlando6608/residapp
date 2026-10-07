@@ -115,3 +115,22 @@ public interface IResidentFamilyRepository
     Task<int> DesignateEmergencyContactAsync(
         AdministrativeResidentTarget target, Guid? linkId, int expectedDesignations, CancellationToken ct = default);
 }
+
+/// <summary>Traslado del residente (script 0040). ExpectedUnitId es la unidad en la que estaba al abrir el formulario; OperationId
+/// es el identificador del traslado, así que un reenvío no lo repite. Sin habitación ni plaza, queda sin ellas.</summary>
+public sealed record TransferResidentInput(
+    AdministrativeResidentTarget Target, Guid OperationId, UnitId ExpectedUnitId, UnitId DestinationUnitId, Guid? RoomId, Guid? PlaceId);
+
+/// <summary>Qué hizo el traslado: cuántos eventos abiertos pasaron a la unidad de destino y si se canceló un borrador de basal.</summary>
+public sealed record TransferResidentResult(int OpenEventsMoved, bool BaselineDraftCancelled);
+
+/// <summary>
+/// Traslado del residente a otra unidad del centro, o a otra habitación o plaza de la misma. En una transacción cierra la ubicación
+/// vigente y abre la nueva, pasa a la unidad de destino los eventos no cerrados, cancela el borrador de basal si cambia de unidad y
+/// deja RESIDENT_TRANSFER en la auditoría. Si el residente ya no está en ExpectedUnitId, RESIDENT_TRANSFER_CONFLICT; si no cambia
+/// nada, RESIDENT_TRANSFER_INVALID.
+/// </summary>
+public interface IResidentTransferRepository
+{
+    Task<TransferResidentResult> TransferAsync(TransferResidentInput input, CancellationToken ct = default);
+}

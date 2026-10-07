@@ -274,6 +274,28 @@
         el historial de la ficha, y la corrección queda en la auditoría. Si la identidad ha cambiado desde que abriste el
         formulario, la pantalla te lo indica y conserva lo que escribiste.
     </p>
+    <p class="mb-0">
+        <strong>Trasladar</strong> cambia al residente de unidad dentro del centro (a una unidad de tu ámbito), o de habitación o plaza
+        dentro de su unidad. Elige la unidad de destino y, si quieres, una habitación o una plaza libre de esa unidad. Los episodios
+        abiertos del residente pasan a la unidad de destino y la unidad de origen deja de verlos; los episodios ya cerrados no
+        cambian. Si cambia de unidad y tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad
+        de destino. El traslado queda en el historial de ubicación de la ficha y en la auditoría, y un reenvío del formulario no lo
+        repite. Hoy lo hace Administración; que Enfermería también pueda, con un permiso específico, queda para cuando un centro lo pida.
+    </p>
+    <p class="mb-0">
+        <strong>Dar de baja</strong> cierra la estancia del residente en el centro. Elige el motivo (fallecimiento, alta voluntaria,
+        traslado a otro centro u otro motivo, que exige escribir cuál). Los datos no se borran: se conservan 5 años desde la baja. El
+        residente sale de las listas activas y pasa a <strong>Residentes dados de baja</strong> (en Administración), una lista de solo
+        lectura con el motivo y la fecha hasta la que se conservan sus datos. Desde ahí, <strong>Reactivar</strong> lo devuelve al centro
+        en la unidad que elijas, con una estancia nueva; su historial anterior se conserva. Los episodios que tuviera abiertos no se
+        cierran con la baja.
+    </p>
+    <p class="mb-0">
+        <strong>Suspender (ingreso hospitalario)</strong> es para un ingreso prolongado: el residente sigue activo, pero no se puede
+        registrar nada sobre él (ni cambios, ni eventos, ni constantes, ni basales, ni comunicados a sus familiares) hasta que se
+        reanude con <strong>Reanudar atención</strong> en su ficha. Quien intente registrar algo verá un aviso de que está suspendido. No
+        es una baja y no conserva ningún dato aparte.
+    </p>
 </section>
 
 <section id="familiares-administracion" class="mb-4">
@@ -392,7 +414,7 @@
         inactivar una habitación o una plaza con un residente ubicado en ella, ni reactivar una plaza de una habitación inactiva. Al dar de
         alta a un residente puedes elegir, de forma opcional, una habitación o una plaza libre de su unidad; una plaza solo la ocupa un
         residente a la vez. La ficha administrativa del residente muestra su habitación y su plaza en el historial de ubicación, y Enfermería, Medicina y Auxiliar las ven junto a la unidad en sus listas de residentes y en la ficha o el registro del residente. Cambiar después de
-        habitación o plaza es un traslado y todavía no está disponible.
+        habitación o plaza es un traslado (ficha del residente → <strong>Trasladar</strong>).
     </p>
 </section>
 
@@ -1156,8 +1178,6 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Traslado de un residente entre unidades o centros, incluido el cambio de habitación o plaza, y su baja y reactivación (pendiente de que CJ decida qué pasa con su trabajo clínico en curso).</li>
-        <li>Que un segundo profesional autorizado aporte a un borrador de basal ajeno (pendiente de que CJ lo defina).</li>
         <li>Aprobación y publicación de las comunicaciones para familias, incluida la tarjeta «Comunicaciones» del inicio de Medicina.</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
         <li>Más gestión administrativa: organigrama y cargos, publicaciones, citas y un panel completo.</li>

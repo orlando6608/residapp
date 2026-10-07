@@ -513,6 +513,81 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Administracion_TrasladaUnResidenteDeUnidad_ConLaAppEntera()
+    {
+        // El traslado por la app real con el usuario limitado: cierra y abre la ubicación, guarda el traslado (con seguridad por filas) y
+        // audita. Un reenvío del mismo formulario no lo repite; sin permiso de unidad de destino, no se traslada.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Traslado Funcional");
+        var destinationId = await GrantUnitAsync(seed, "Planta traslado funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var page = await admin.GetStringAsync($"/Administracion/Trasladar?residenteId={residentId}");
+        var form = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = residentId,
+            ["Form.UnidadOrigenId"] = ExtractValue(page, "Form.UnidadOrigenId"),
+            ["Form.OperacionId"] = ExtractValue(page, "Form.OperacionId"),
+            ["Form.UnidadDestinoId"] = destinationId.ToString(),
+        };
+        var moved = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/Trasladar", new FormUrlEncodedContent(form))).Content.ReadAsStringAsync());
+        var resent = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/Trasladar", new FormUrlEncodedContent(form))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Residente trasladado.", moved);
+        Assert.Contains("Residente trasladado.", resent);
+        Assert.Equal(destinationId, await connection.ExecuteScalarAsync<Guid>(
+            "SELECT unidad_id FROM dbo.intervalos_ubicacion_residente WHERE residente_id = @residentId AND vigente_hasta IS NULL", new { residentId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.traslados_residente WHERE residente_id = @residentId", new { residentId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @residentId AND accion_codigo = 'RESIDENT_TRANSFER'", new { residentId }));
+    }
+
+    [Fact]
+    public async Task Administracion_SuspendeDaDeBajaYReactivaUnResidente_ConLaAppEntera()
+    {
+        // Suspensión, reanudación, baja y reactivación por la app real con el usuario limitado: pasan por la seguridad por filas de las
+        // tablas de bajas y suspensiones y por los disparadores de la base de datos.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Estado Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        async Task<string> PostAsync(string path, string getPath, Dictionary<string, string> fields)
+        {
+            var page = await admin.GetStringAsync(getPath);
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            if (fields.ContainsKey("Form.OperacionId"))
+            {
+                fields["Form.OperacionId"] = ExtractValue(page, "Form.OperacionId");
+            }
+
+            return WebUtility.HtmlDecode(await (await admin.PostAsync(path, new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+
+        var suspended = await PostAsync("/Administracion/Suspender", $"/Administracion/Suspender?residenteId={residentId}",
+            new() { ["Form.ResidenteId"] = residentId, ["Form.OperacionId"] = "", ["Form.Nota"] = "Hospital de prueba." });
+        var resumed = await PostAsync($"/Administracion/Reanudar?residenteId={residentId}", $"/Administracion/Residente?residenteId={residentId}", new());
+        var discharged = await PostAsync("/Administracion/DarDeBaja", $"/Administracion/DarDeBaja?residenteId={residentId}",
+            new() { ["Form.ResidenteId"] = residentId, ["Form.OperacionId"] = "", ["Form.Motivo"] = "TrasladoOtroCentro" });
+        var reactivated = await PostAsync("/Administracion/Reactivar", $"/Administracion/Reactivar?residenteId={residentId}",
+            new() { ["Form.ResidenteId"] = residentId, ["Form.OperacionId"] = "", ["Form.UnidadId"] = seed.UnitId.ToString() });
+
+        Assert.Contains("Residente suspendido", suspended);
+        Assert.Contains("Atención reanudada", resumed);
+        Assert.Contains("se ha dado de baja", discharged);
+        Assert.Contains("Residente Estado Funcional", discharged);
+        Assert.Contains("Residente reactivado.", reactivated);
+        Assert.Equal("ACTIVE", await connection.ExecuteScalarAsync<string>("SELECT estado FROM dbo.residentes WHERE id = @residentId", new { residentId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.bajas_residente WHERE residente_id = @residentId AND reactivada_en IS NOT NULL", new { residentId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.suspensiones_residente WHERE residente_id = @residentId AND finalizada_en IS NOT NULL", new { residentId }));
+    }
+
+    [Fact]
     public async Task Auxiliar_RegistraSinCambiosYUnCambioConOpciones_ConLaAppEntera()
     {
         // Los tres cierres cotidianos por la app real: el «sin cambios» (cierre del residente) y un cambio con un área de texto
