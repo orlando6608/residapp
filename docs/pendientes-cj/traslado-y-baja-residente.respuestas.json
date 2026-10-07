@@ -1,0 +1,49 @@
+{
+  "documento": "traslado-y-baja-residente",
+  "cuestionario": "2026-10-01",
+  "guardado": "2026-10-07T17:06:16.432Z",
+  "respondidas": 6,
+  "total": 6,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Qué traslados necesita el centro?",
+      "opcion": "A",
+      "textoOpcion": "Solo entre unidades del mismo centro.",
+      "texto": "Para que tengas una idea. Los centros residenciales tiene unidades de personas que son funcionales y de personas que son grandes dependientes. Puede ser que una persona ingrese en la unidad de funcionales pero que con el pasar del tiempo se vuelva dependiente completamente y tengan que trasladarlo a grandes dependientes. Ese es el principal traslado que existe. \nDe momento nuestro Horizonte sería trabajar con residencias pequeñas, no con grandes grupos que tengan mas de un centro. Si en algún momento lo hiciéramos tendríamos que cambiarlo pero creo que no es objetivo de un producto mínimo.\nEn realidad al ser centro pequeños debe ser el mismo equipo de enfermería el que trabaje con las 2 unidades. Pero si no fuera asi al trasladar a un paciente que tenga un evento abierto al encontrarse en otra ubicación debería migrar todos sus datos y eventos abiertos.\nLo del borrador del basal ya no sería un problema pues quedó resuelto.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Qué pasa con los episodios abiertos del residente al trasladarlo?",
+      "opcion": "B",
+      "textoOpcion": "Pasan a la unidad de destino, que los continúa desde sus bandejas. La unidad de origen deja de verlos.",
+      "texto": "",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "¿Y un borrador de basal que esté a medias?",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "Esto ya no es un problema. Si el residente se traslada sin terminar su basal se debe hacer de nuevo en la otra unidad. Sería raro el caso.",
+      "respondida": true
+    },
+    "1.4": {
+      "pregunta": "¿Quién puede hacer el traslado?",
+      "opcion": "B",
+      "textoOpcion": "Administración, y Enfermería con un permiso específico, como en el alta.",
+      "texto": "Inicialmente administración. Pero debemos dejarlo asi por si un centro lo pide.",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Qué motivos de baja hay que recoger?",
+      "texto": "No sería una lista cerrada. yo propondría hacer la siguiente lista.\n-fallecimiento: Se guardan los datos del paciente (solo para lectura por parte de administración o si un familiar pide información) el tiempo que exija la RPGD que en cataluña es de 5 años.\n-alta voluntaria: Igual que el apartado anterior\n-traslado a otro centro: Se guardan los datos durante 5 años\n-ingreso hospitalario prolongado: El perfil del paciente permance activo pero al marcar esta casilla no se puede actuar sobre este paciente. No se escribe, toman constantes ni se emiten comunicados a familiares.\n -otro. Marcar motivo\n\nEn todos los casos los datos no se deben borrar. deben guardarse durante 5 años por si necesitan ser consultados.",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "Tras la baja, ¿qué se puede seguir consultando y se puede reactivar?",
+      "opcion": "A",
+      "textoOpcion": "Aparece en una lista aparte de residentes dados de baja, en solo lectura, y Administración puede reactivarlo.",
+      "texto": "",
+      "respondida": true
+    }
+  }
+}
