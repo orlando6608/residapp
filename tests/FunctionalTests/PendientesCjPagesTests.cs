@@ -221,6 +221,20 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     }
 
     [Theory]
+    [InlineData("rangos-referencia-constantes")]
+    [InlineData("decisiones-direccion-basal-derivacion")]
+    public async Task LosArchivados_LlevanArribaLosEnlacesAlIndiceYALaAplicacion(string document)
+    {
+        var page = await (await LoggedInAsync()).GetStringAsync($"/pendientes-cj/archivados/{document}.html");
+
+        var nav = Regex.Match(page, "<nav class=\"back\"[^>]*>(.*?)</nav>", RegexOptions.Singleline);
+        Assert.True(nav.Success, "Falta el bloque de enlaces.");
+        Assert.Contains("<a href=\"../index.html\">← Documentos para CJ</a>", nav.Groups[1].Value);
+        Assert.Contains("<a href=\"/\">Volver a ResidApp</a>", nav.Groups[1].Value);
+        Assert.True(nav.Index < page.IndexOf("<h1>", StringComparison.Ordinal), "Los enlaces van arriba, antes del título.");
+    }
+
+    [Theory]
     [InlineData("/pendientes-cj/rangos-referencia-constantes.html")]
     [InlineData("/pendientes-cj/decisiones-direccion-basal-derivacion.html")]
     [InlineData("/pendientes-cj/rangos-referencia-constantes.respuestas.json")]

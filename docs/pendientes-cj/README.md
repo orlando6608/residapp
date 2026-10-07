@@ -52,9 +52,10 @@ Al publicarse, el documento se abre con esas respuestas cargadas («del reposito
 Cuando el documento está contestado y lo que pedía está implementado:
 
 1. `git mv` del `.html` y del `.respuestas.json` a `archivados/`.
-2. En el `.html`, bajo el «eyebrow» de la cabecera, la línea «Archivado el AAAA-MM-DD: lo que respondiste ya está implementado…» (como en los dos ya archivados) y «Archivado» en lugar de «Pendiente de CJ».
+2. En el `.html`, bajo el «eyebrow» de la cabecera, la línea «Archivado el AAAA-MM-DD: lo que respondiste ya está implementado…» (como en los dos ya archivados) y «Archivado» en lugar de «Pendiente de CJ». Arriba de la cabecera, el bloque `<nav class="back">` con «← Documentos para CJ» (`../index.html`) y «Volver a ResidApp» (`/`), con su CSS y su regla de impresión; cópialo de uno ya archivado.
 3. Quitarlo de `preguntas.html` y añadirlo a `archivo.html` (con una frase de qué se hizo y dónde sigue lo pendiente), y moverlo en la tabla de abajo.
 4. Actualizar las rutas que lo citan en `docs/` (`pendientes-*.md`, `docs/prompts-ia/continuar-construccion.md`).
+5. Tras el despliegue, borrar en Azure la copia antigua de la raíz (`site/wwwroot/pendientes-cj/<documento>.html`): el despliegue añade ficheros pero no borra los de antes, y esa copia seguiría abierta (con clave) y sin respuestas. Kudu tiene desactivado el acceso básico: se borra con la API `vfs` y un token de Entra ID (`az account get-access-token --resource https://management.azure.com`, `DELETE` con `If-Match: *`).
 
 ## Cómo leer las respuestas (ingeniería)
 
