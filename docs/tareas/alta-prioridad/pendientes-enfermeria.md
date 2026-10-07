@@ -301,7 +301,7 @@ Huecos de lo ya construido:
 - Los borradores de valoración anteriores a `0009` solo tienen una versión (su contenido en ese momento):
   las versiones intermedias previas no se guardaron.
 - **Rangos de referencia de constantes (fase 1 hecha; valores de CJ incorporados el 2026-10-07)**: CJ respondió el
-  2026-10-06 (`docs/pendientes-cj/rangos-referencia-constantes.respuestas.json`). Valores iguales para todos los centros por ahora:
+  2026-10-06 (`docs/pendientes-cj/archivados/rangos-referencia-constantes.respuestas.json`). Valores iguales para todos los centros por ahora:
   temperatura 36–37,9; PA 90–139 / 60–89; FC 60–100; FR 12–20; SatO₂ 95–100 (aire ambiente); glucemia mínimo 70, sin máximo.
   **Hecho:** botón «Cargar valores sugeridos» en la pantalla de rangos (`VitalSignReferenceRanges.Suggested`; rellena el formulario sin
   guardar, quien tiene el permiso lo revisa y guarda por el camino de siempre, con historial); el aviso de SatO₂ se omite con
@@ -317,7 +317,7 @@ Huecos de lo ya construido:
   (nunca Administración, ADM-29); historial inmutable de cada cambio; rangos por residente en una segunda
   fase. Script `0008`. En desarrollo tiene el permiso `dev-integrado-direccion` (seed del escenario
   integrado). Pendiente de CJ (lo recoge
-  [`docs/pendientes-cj/rangos-referencia-constantes.html`](../../pendientes-cj/rangos-referencia-constantes.html),
+  [`docs/pendientes-cj/archivados/rangos-referencia-constantes.html`](../../pendientes-cj/archivados/rangos-referencia-constantes.html),
   que CJ completa con los valores y las respuestas a las preguntas abiertas):
   - Fijar los valores en la pantalla en cada centro real (CJ: «una vez concretado el uso en un centro»); sin ellos no se muestra ningún aviso.
   - Decidir a quién se concede el permiso en cada centro real. Desde el 2026-10-01 lo concede Administración en
@@ -327,7 +327,7 @@ Huecos de lo ya construido:
   estado basal, cambian con el tiempo, los podría fijar Enfermería pero preferiblemente Medicina, y depende del centro (en algunos, Medicina no tendrá tiempo).
   Sin construir.
 - Historia 9: la aportación de otro profesional autorizado a un borrador ajeno (permiso
-  `BASELINE_DRAFT_CONTRIBUTE`) no está construida; hoy solo el autor del borrador puede editarlo. Pendiente de CJ en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 2): qué es una aportación, sobre qué y quién.
+  `BASELINE_DRAFT_CONTRIBUTE`) no está construida; hoy solo el autor del borrador puede editarlo. Pendiente de CJ en `docs/pendientes-cj/archivados/decisiones-direccion-basal-derivacion.html` (tema 2): qué es una aportación, sobre qué y quién.
 
 Al construir cada historia, actualizar el Manual de usuario (`src/ResidApp.Web/Views/Home/Manual.cshtml`),
 sección "Próximamente".

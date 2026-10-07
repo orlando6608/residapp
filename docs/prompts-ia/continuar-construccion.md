@@ -13,6 +13,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Documentos de CJ con clave y tres secciones (2026-10-07, misma rama, sin push):** `/pendientes-cj/` (índice, secciones, documentos y `.respuestas.json`) ya no es público: pide una clave
+  (`PendientesCj:Clave` en `appsettings.json`, hoy `CJ123`; sobrescribible con `PendientesCj__Clave`; sin clave configurada no entra nadie). Middleware en `Program.cs` antes de los estáticos
+  (páginas → 302 a `/AccesoCj?returnUrl=…`, `.json` → 401), `PendientesCjAccess` (cookie de sesión `residapp_cj_acceso` = SHA-256 de la clave, recalculada en cada petición), `AccesoCjController`
+  y su vista; `GET /AccesoCj/Salir`. **Límite:** freno de desarrollo, no autenticación real; el repo de GitHub es público, así que la clave y las respuestas también lo son.
+  El índice tiene tres fichas —**Preguntas** (`preguntas.html`), **Pruebas** (`pruebas.html`) y **Archivo** (`archivo.html`)—, listas estáticas que se mantienen a mano. **Regla de archivo:** un documento pasa a
+  `archivados/` cuando está contestado **e implementado**; hoy `rangos-referencia-constantes` y `decisiones-direccion-basal-derivacion` (movidos con `git mv`, con una nota «Archivado el 07/10/2026»).
+  Lo que queda sin hacer de ellos está en `aclaraciones-respuestas-cj` (Preguntas). Causa del problema original (documentos que no se veían contestados): el csproj solo publicaba `*.html`, así que el
+  `.respuestas.json` hermano daba 404; ahora se publican los `.html` y `.respuestas.json` de toda la carpeta, subcarpetas incluidas (los documentos se abren con sus respuestas cargadas, «del repositorio»).
+  Las respuestas de cada documento nuevo que llegue se guardan junto a su `.html` (README de `pendientes-cj`: flujo para guardar y para archivar). Tests: `PendientesCjPagesTests` (49, con mutación comprobada).
 - **Respuestas de CJ incorporadas (2026-10-07, rama `respuestas-cj-rangos-derivacion-direccion`, sin push):** CJ devolvió `rangos-referencia-constantes.respuestas.json` (12/12) y
   `decisiones-direccion-basal-derivacion.respuestas.json` (7/7), ya versionados. Tres bloques construidos y uno en espera, en commits aparte:
   - **Rangos de constantes (sin script):** botón «Cargar valores sugeridos» (`VitalSignReferenceRanges.Suggested`, `RangosReferenciaController.Index(sugeridos)`: rellena el
@@ -1060,7 +1069,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   `.../actions/runs/<id>/jobs`. Los logs piden autenticación y `gh` no está instalado.
 - CJ no ha completado nada nuevo (comprobado también en GitHub el 2026-10-01): `decisiones-direccion-basal-derivacion.html`
   sigue con sus 7 respuestas «por definir», y
-  `docs/pendientes-cj/rangos-referencia-constantes.html` sigue con 19 huecos «por definir» (14 celdas de la
+  `docs/pendientes-cj/archivados/rangos-referencia-constantes.html` sigue con 19 huecos «por definir» (14 celdas de la
   tabla y 5 respuestas; antes se contaban mal como 17). El 2026-10-01 se añadió
   `docs/pendientes-cj/traslado-y-baja-residente.html` (6 respuestas).
 - Residente/Basal y Auxiliar (historias 1-6) están completados. Enfermería está en curso: historias 1 a 10
@@ -1142,7 +1151,7 @@ usuario cuando encajen:
   - «Vencido» es ámbar en Dirección y rojo en el resto (coherente dentro de cada perfil): va con la pregunta a CJ de «Basal pendiente».
 - **Pregunta para CJ (2026-10-03):** «Basal pendiente» sale en rojo, como fija la guía «por exigencia estricta del PRD», y compite con las urgencias
   reales. El documento de recomendaciones propone ámbar. Es una decisión clínica de saliencia: no se ha cambiado.
-- **Preguntas para CJ (2026-09-30):** `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` recoge las finalidades de la lectura clínica de Dirección, la
+- **Preguntas para CJ (2026-09-30):** `docs/pendientes-cj/archivados/decisiones-direccion-basal-derivacion.html` recoge las finalidades de la lectura clínica de Dirección, la
   aportación a un borrador de basal ajeno y el campo «Comunicaciones» del informe de derivación. Revisa si
   CJ ha respondido antes de proponer el bloque 2 de Dirección o la aportación.
 - **CI (anotaciones de GitHub Actions):**

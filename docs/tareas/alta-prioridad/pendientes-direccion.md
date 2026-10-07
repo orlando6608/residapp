@@ -59,7 +59,7 @@ En el orden propuesto:
 1. **Bloque 2 — lectura clínica auditada (historias 3 y 6; DIR-05, DIR-06, DIR-07, DIR-14, DIR-15):** detalle clínico con permiso, finalidad
    válida, ámbito y auditoría registrada **antes** de entregar el contenido; línea temporal (HIS-02, que reutilizaría `ReadResidentTimeline`),
    historial de eventos cerrados y correcciones y rectificaciones en solo lectura.
-   **Decisión de CJ (2026-10-06, `docs/pendientes-cj/decisiones-direccion-basal-derivacion.respuestas.json`, tema 1) y mecanismo hecho el 2026-10-07 (script `0038`):**
+   **Decisión de CJ (2026-10-06, `docs/pendientes-cj/archivados/decisiones-direccion-basal-derivacion.respuestas.json`, tema 1) y mecanismo hecho el 2026-10-07 (script `0038`):**
    - **Finalidades de Dirección:** «Revisión de continuidad asistencial», «Revisión de una incidencia o reclamación asistencial» y
      «Verificación de trazabilidad documental» (`ClinicalDetailAccessPurpose`; la antigua `SUPERVISION_CLINICA` ya no se ofrece y solo
      sobrevive en las filas de auditoría anteriores). **La cuarta, «revisión de calidad asistencial», NO está:** CJ dice que debería pertenecer
