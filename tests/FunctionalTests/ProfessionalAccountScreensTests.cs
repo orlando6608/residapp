@@ -245,6 +245,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
                 ["OperacionId"] = ExtractValue(createPage, "OperacionId"), ["AmbitoPerfilId"] = ExtractValue(createPage, "AmbitoPerfilId"),
                 ["CentroId"] = ExtractValue(createPage, "CentroId"), ["UnidadId"] = admin.UnitId.ToString(), ["NombreVisible"] = $"Residente {Guid.NewGuid():N}"[..18],
                 ["FechaNacimiento"] = "1938-02-20", ["SexoDocumentadoCodigo"] = "Hombre", ["Ubicacion"] = location,
+                ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
             };
             return await PostAsync("/Residents/Create", createPage, fields);
         }

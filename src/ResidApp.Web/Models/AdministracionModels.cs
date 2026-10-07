@@ -182,7 +182,7 @@ public sealed record FamilyAuthorizationViewModel(
     public IReadOnlyList<FamilyAuthorizationChange> Allowed => FamilyAuthorizationRules.Allowed(Effective);
 }
 
-/// <summary>ADM-08 (0022): designar el contacto urgente. VinculoId null es «sin contacto urgente»;
+/// <summary>ADM-08 (0022, 0044): designar los contactos urgentes. VinculosIds son los que quedan (vacío es «sin contacto urgente»);
 /// DesignacionesEsperadas es cuántas designaciones tenía el residente al abrir la pantalla.</summary>
 public sealed class EmergencyContactFormModel
 {
@@ -190,7 +190,7 @@ public sealed class EmergencyContactFormModel
 
     public int DesignacionesEsperadas { get; set; }
 
-    public Guid? VinculoId { get; set; }
+    public List<Guid> VinculosIds { get; set; } = [];
 }
 
 public sealed record EmergencyContactViewModel(AdministrativeResidentDetail Detail, EmergencyContactFormModel Form);

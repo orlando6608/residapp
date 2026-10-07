@@ -68,7 +68,7 @@ public class AltaConFamiliaresTests
     }
 
     [Fact]
-    public async Task Alta_ConUnaFilaAMediasONingunFamiliar_SeRechazaOSeDaDeAltaSinFamiliares()
+    public async Task Alta_ConUnaFilaAMedias_SeRechaza_YSinFamiliares_NoPasaPorElFormulario()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var service = Build(admin.ExternalSubject);
@@ -97,15 +97,31 @@ public class AltaConFamiliaresTests
     }
 
     [Fact]
-    public async Task Alta_ConDosContactosPrioritarios_NoDaDeAltaNiGuardaNada()
+    public async Task Alta_ConDosContactosPrioritarios_LosDesignaAmbos()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+
+        var result = await Build(admin.ExternalSubject).ExecuteAsync(Command(admin, [
+            new("Ana Ruiz", "Hija", "600123456", null, false, false, true), new("Luis Gil", "Hijo", "600765432", null, false, false, true)]));
+
+        Assert.True(result.Ok);
+        Assert.Equal(2, await QueryAsync<int>(
+            "SELECT COUNT(*) FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId AND accion_codigo = 'AGREGAR'",
+            new { residentId = result.Value!.ResidentId.Value }));
+    }
+
+    [Fact]
+    public async Task Alta_DesdeElFormularioSinContactoPrioritario_NoDaDeAltaNiGuardaNada()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var before = await QueryAsync<int>("SELECT COUNT(*) FROM dbo.residentes WHERE centro_id = @centerId", new { centerId = admin.CenterId.Value });
 
         var result = await Build(admin.ExternalSubject).ExecuteAsync(Command(admin, [
-            new("Ana Ruiz", "Hija", "600123456", null, false, false, true), new("Luis Gil", "Hijo", "600765432", null, false, false, true)]));
+            new("Ana Ruiz", "Hija", "600123456", null, true, false, false), new(null, null, null, null, false, false, false)]));
+        var withoutRows = await Build(admin.ExternalSubject).ExecuteAsync(Command(admin, []));
 
         Assert.Equal(ApplicationFailureCode.InvalidInput, result.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutRows.Error!.Code);
         Assert.Equal(before, await QueryAsync<int>("SELECT COUNT(*) FROM dbo.residentes WHERE centro_id = @centerId", new { centerId = admin.CenterId.Value }));
     }
 }

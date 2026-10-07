@@ -436,7 +436,7 @@ public sealed partial class AdministracionController(
         return View(new FamilyAuthorizationViewModel(detail!.Resident, member, DateOnly.FromDateTime(DateTime.Today), form));
     }
 
-    /// <summary>ADM-08 (0022): designar, cambiar o quitar el contacto urgente entre los familiares del residente.</summary>
+    /// <summary>ADM-08 (0022, 0044): designar, cambiar o quitar los contactos urgentes (puede haber varios) entre los familiares del residente.</summary>
     public async Task<IActionResult> ContactoUrgente(Guid residenteId, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -452,7 +452,7 @@ public sealed partial class AdministracionController(
             {
                 ResidenteId = residenteId,
                 DesignacionesEsperadas = detail.EmergencyContacts.Count,
-                VinculoId = detail.CurrentEmergencyContact,
+                VinculosIds = detail.CurrentEmergencyContacts.ToList(),
             }));
     }
 
@@ -469,19 +469,21 @@ public sealed partial class AdministracionController(
         if (ModelState.IsValid)
         {
             var result = await service.DesignateEmergencyContactAsync(new DesignateEmergencyContactCommand(
-                activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.VinculoId,
+                activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.VinculosIds,
                 form.DesignacionesEsperadas), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = form.VinculoId is null ? "Contacto urgente quitado." : "Contacto urgente designado.";
+                TempData["Mensaje"] = "Contactos urgentes guardados.";
                 return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
             }
 
             ModelState.AddModelError(string.Empty, result.Error!.Code switch
             {
                 ApplicationFailureCode.Conflict =>
-                    "El contacto urgente ha cambiado desde que abriste la pantalla. Revisa el vigente y, si hace falta, vuelve a elegir.",
-                ApplicationFailureCode.InvalidInput => "Elige un contacto distinto del vigente.",
+                    "Los contactos urgentes han cambiado desde que abriste la pantalla. Revisa los vigentes y, si hace falta, vuelve a elegir.",
+                ApplicationFailureCode.InvalidInput => form.VinculosIds.Count == 0
+                    ? "Tiene que haber al menos un contacto urgente: marca a quién avisar."
+                    : "No has cambiado ningún contacto urgente.",
                 _ => result.Error.Message,
             });
         }

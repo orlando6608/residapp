@@ -39,9 +39,9 @@ public sealed record ResidentFamilyMember(
 /// y todavía no al residente de la pantalla. Nombre y teléfono bastan para distinguir a dos personas con el mismo nombre.</summary>
 public sealed record LinkableFamilyMember(Guid FamilyId, string DisplayName, string Phone);
 
-/// <summary>ADM-08 (0022): una designación de contacto urgente. LinkId null es «sin contacto urgente»; DisplayName es el
+/// <summary>ADM-08 (0022, 0044): una designación de contacto urgente (Action: ver EmergencyContactSet). LinkId null es «sin contacto urgente»; DisplayName es el
 /// nombre vigente del familiar.</summary>
-public sealed record EmergencyContactDesignation(int Number, Guid? LinkId, string? DisplayName, DateTimeOffset At);
+public sealed record EmergencyContactDesignation(int Number, string Action, Guid? LinkId, string? DisplayName, DateTimeOffset At);
 
 /// <summary>ADM-03: la ficha administrativa. Corrections y EmergencyContacts van de la más antigua a la más reciente;
 /// Family, por nombre.</summary>
@@ -50,8 +50,8 @@ public sealed record AdministrativeResidentDetail(
     IReadOnlyList<ResidentIdentityCorrectionEntry> Corrections, IReadOnlyList<ResidentFamilyMember> Family,
     IReadOnlyList<EmergencyContactDesignation> EmergencyContacts)
 {
-    /// <summary>El vínculo del contacto urgente vigente, o null si no hay.</summary>
-    public Guid? CurrentEmergencyContact => EmergencyContacts.Count == 0 ? null : EmergencyContacts[^1].LinkId;
+    /// <summary>Los vínculos de los contactos urgentes vigentes, en el orden en que se designaron.</summary>
+    public IReadOnlyList<Guid> CurrentEmergencyContacts => EmergencyContactSet.Current(EmergencyContacts.Select(d => (d.Action, d.LinkId)));
 }
 
 /// <summary>ADM-02/ADM-03: lectura de Administración. Aplica en la propia consulta la regla de ámbito de
@@ -111,10 +111,10 @@ public interface IResidentFamilyRepository
         AdministrativeResidentTarget target, Guid linkId, FamilyAuthorizationChange change, DateOnly? validUntil, string? reason,
         int expectedChanges, DateOnly today, CancellationToken ct = default);
 
-    /// <summary>Designa el contacto urgente (linkId null lo quita) si el residente sigue teniendo expectedDesignations
-    /// designaciones (si no, conflicto) y cambia algo. Devuelve cuántas tiene ya.</summary>
+    /// <summary>Deja como contactos urgentes exactamente a linkIds (vacío: ninguno) si el residente sigue teniendo expectedDesignations
+    /// designaciones (si no, conflicto) y cambia algo. Devuelve cuántas tiene ya (una por cada familiar añadido o quitado).</summary>
     Task<int> DesignateEmergencyContactAsync(
-        AdministrativeResidentTarget target, Guid? linkId, int expectedDesignations, CancellationToken ct = default);
+        AdministrativeResidentTarget target, IReadOnlyList<Guid> linkIds, int expectedDesignations, CancellationToken ct = default);
 }
 
 /// <summary>Traslado del residente (script 0040). ExpectedUnitId es la unidad en la que estaba al abrir el formulario; OperationId

@@ -42,7 +42,7 @@ public class ReferralReportBuilderTests
             // Ya firmado y con contacto urgente (0022): ni el contacto ni las llamadas entran en el informe (DER-04).
             Referral: new ReferralDetail(SystemProfile.Enfermeria, "Desaturación.", true, At, new string('0', 64),
                 [new FamilyCallAttemptSummary("Lucía Contacto (Hija)", At, FamilyCallResult.NoContesta, "Buzón de voz.", true, At)],
-                new EmergencyContactSummary("Lucía Contacto", "Hija", "600 999 888")));
+                [new EmergencyContactSummary("Lucía Contacto", "Hija", "600 999 888")]));
         var baseline = new CurrentBaselineSummary(BaselineVersionId.New(), 2, BaselineReason.Alta, At.AddDays(-30),
         [
             new BaselineAreaSummary(BaselineArea.Comunicacion, new CommunicationAreaAnswer(

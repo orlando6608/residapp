@@ -86,9 +86,9 @@
 {
     var llamada = Model.Call;
     var horaLlamada = (llamada.LlamadoEn ?? DateTime.Now).ToString("yyyy-MM-ddTHH:mm");
-    var contactoUrgente = evento.Referral.EmergencyContact;
-    // Precargado con el contacto designado (editable: se puede llamar a otra persona); se guarda como texto.
-    var aQuien = llamada.Contacto ?? (contactoUrgente is null ? null : EmergencyContactDisplay.WhoIsCalled(contactoUrgente));
+    var contactosUrgentes = evento.Referral.EmergencyContacts;
+    // Precargado con el primer contacto designado (editable: se puede llamar a otra persona); se guarda como texto.
+    var aQuien = llamada.Contacto ?? (contactosUrgentes.Count == 0 ? null : EmergencyContactDisplay.WhoIsCalled(contactosUrgentes[0]));
 
     <partial name="_DerivacionResumen" model="evento" />
 
@@ -98,17 +98,19 @@
             <input type="hidden" name="Call.Revision" value="@llamada.Revision" />
             <h2 class="h5 card-title">Registrar un intento de llamada a la familia</h2>
             <p class="text-muted">Toda derivación exige documentar el intento de llamada al contacto familiar. Hazlo cuando puedas: la atención va primero.</p>
-            <p>
-                @if (contactoUrgente is null)
+            <ul class="list-unstyled">
+                @if (contactosUrgentes.Count == 0)
                 {
-                    <span class="text-muted">No hay contacto urgente designado (lo designa Administración).</span>
+                    <li class="text-muted">No hay contacto urgente designado (lo designa Administración).</li>
                 }
-                else
+                @foreach (var contactoUrgente in contactosUrgentes)
                 {
-                    @:Contacto urgente: <strong>@contactoUrgente.DisplayName</strong> (@contactoUrgente.Relationship) ·
-                    <a href="@EmergencyContactDisplay.TelHref(contactoUrgente.Phone)">@contactoUrgente.Phone</a>
+                    <li>
+                        Contacto urgente: <strong>@contactoUrgente.DisplayName</strong> (@contactoUrgente.Relationship) ·
+                        <a href="@EmergencyContactDisplay.TelHref(contactoUrgente.Phone)">@contactoUrgente.Phone</a>
+                    </li>
                 }
-            </p>
+            </ul>
             <div class="row g-3 mb-3">
                 <div class="col-12 col-md-5">
                     <label for="llamada-contacto" class="form-label">A quién se llama</label>

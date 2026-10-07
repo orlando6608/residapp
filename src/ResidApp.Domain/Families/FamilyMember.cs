@@ -22,7 +22,7 @@ public sealed record FamilyMemberData(
 }
 
 /// <summary>Un familiar que se registra al dar de alta al residente (CJ, 2026-10-07): sus datos, si es referente o tutor legal y si es el
-/// contacto prioritario (el contacto urgente de siempre; solo puede haber uno).</summary>
+/// contacto prioritario (contacto urgente; puede haber varios, script 0044).</summary>
 public sealed record NewResidentFamilyMember(FamilyMemberData Data, bool IsPriorityContact);
 
 /// <summary>Un familiar tal como llega del formulario de alta, sin validar. Una fila sin ningún dato ni marca se ignora.</summary>
@@ -39,11 +39,13 @@ public static class ResidentFamilyAtAdmission
     public const int MaxMembers = 5;
 
     /// <summary>Valida las filas con las reglas de siempre de un familiar (nombre, relación y teléfono obligatorios). Las filas en blanco se
-    /// ignoran; una fila a medias, más de cinco o más de un contacto prioritario son FAMILY_MEMBER_INVALID.</summary>
+    /// ignoran; una fila a medias, más de cinco o ningún contacto prioritario son FAMILY_MEMBER_INVALID. Sin filas (null: un alta que no pasa
+    /// por el formulario) no se exige nada.</summary>
     public static IReadOnlyList<NewResidentFamilyMember> Validate(IReadOnlyList<NewResidentFamilyInput>? rows)
     {
         var filled = (rows ?? []).Where(r => !r.IsBlank).ToList();
-        if (filled.Count > MaxMembers || filled.Count(r => r.IsPriorityContact) > 1)
+        // Desde el formulario de alta (rows no es null) tiene que haber al menos un contacto prioritario (CJ, 2026-10-07).
+        if (filled.Count > MaxMembers || (rows is not null && !filled.Any(r => r.IsPriorityContact)))
         {
             throw new DomainValidationException(FamilyMember.InvalidCode);
         }

@@ -137,14 +137,14 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                 f.IsReferent, f.IsLegalGuardian))
             .ToList();
         var contacts = (await connection.QueryAsync<ContactRow>(new CommandDefinition("""
-            SELECT d.numero AS Number, d.vinculo_id AS LinkId, f.nombre_visible AS DisplayName, d.designado_en AS At
+            SELECT d.numero AS Number, d.accion_codigo AS Action, d.vinculo_id AS LinkId, f.nombre_visible AS DisplayName, d.designado_en AS At
               FROM dbo.residentes_contacto_urgente d
               LEFT JOIN dbo.residentes_familiares link ON link.id = d.vinculo_id AND link.centro_id = d.centro_id
               LEFT JOIN dbo.familiares f ON f.id = link.familiar_id AND f.centro_id = link.centro_id
              WHERE d.residente_id = @ResidentId AND d.centro_id = @CenterId
              ORDER BY d.numero
             """, parameters, cancellationToken: ct)))
-            .Select(d => new EmergencyContactDesignation(d.Number, d.LinkId, d.DisplayName, Utc(d.At)))
+            .Select(d => new EmergencyContactDesignation(d.Number, d.Action, d.LinkId, d.DisplayName, Utc(d.At)))
             .ToList();
         return new AdministrativeResidentDetail(ToSummary(row), locations, corrections, family, contacts);
     }
@@ -171,5 +171,5 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
 
     private sealed record LinkableRow(Guid FamilyId, string DisplayName, string Phone);
 
-    private sealed record ContactRow(int Number, Guid? LinkId, string? DisplayName, DateTime At);
+    private sealed record ContactRow(int Number, string Action, Guid? LinkId, string? DisplayName, DateTime At);
 }

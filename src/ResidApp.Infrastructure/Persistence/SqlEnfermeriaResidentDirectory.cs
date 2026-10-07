@@ -54,7 +54,7 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
             .ToList();
     }
 
-    public async Task<EmergencyContactSummary?> FindEmergencyContactAsync(
+    public async Task<IReadOnlyList<EmergencyContactSummary>> FindEmergencyContactAsync(
         CenterId centerId, ResidentId residentId, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);

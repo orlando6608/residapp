@@ -59,10 +59,10 @@
 <section class="mb-4">
     <h2 class="h5">Familiares</h2>
     <p class="text-muted">Solo una autorización Activa dará acceso al Portal Familiar cuando exista. Añadir un familiar no la abre.</p>
-    @if (Model.Detail.Family.Count > 0 && Model.Detail.CurrentEmergencyContact is null && !Model.Detail.Family.Any(f => f.IsReferent || f.IsLegalGuardian))
+    @if (Model.Detail.Family.Count > 0 && Model.Detail.CurrentEmergencyContacts.Count == 0 && !Model.Detail.Family.Any(f => f.IsReferent || f.IsLegalGuardian))
     {
         <div class="alert alert-warning" role="status">
-            No hay ningún familiar de contacto prioritario, referente ni tutor legal. Márcalos al editar a cada familiar o designa el contacto urgente.
+            No hay ningún familiar de contacto prioritario, referente ni tutor legal. Márcalos al editar a cada familiar o designa los contactos urgentes.
         </div>
     }
     @if (Model.Detail.Family.Count == 0)
@@ -85,7 +85,7 @@
                 <li class="list-group-item py-3">
                     <div class="fw-semibold">
                         @member.DisplayName
-                        @if (Model.Detail.CurrentEmergencyContact == member.LinkId)
+                        @if (Model.Detail.CurrentEmergencyContacts.Contains(member.LinkId))
                         {
                             <span class="badge text-bg-primary ms-1 align-middle">Contacto urgente</span>
                         }
@@ -132,7 +132,7 @@
                         <tr>
                             <th scope="row">
                                 @member.DisplayName
-                                @if (Model.Detail.CurrentEmergencyContact == member.LinkId)
+                                @if (Model.Detail.CurrentEmergencyContacts.Contains(member.LinkId))
                                 {
                                     <span class="badge text-bg-primary ms-1">Contacto urgente</span>
                                 }
@@ -168,24 +168,28 @@
 </section>
 
 <section class="mb-4">
-    <h2 class="h5">Contacto urgente</h2>
+    <h2 class="h5">Contactos urgentes</h2>
     @{
-        var currentContact = Model.Detail.Family.FirstOrDefault(f => f.LinkId == Model.Detail.CurrentEmergencyContact);
+        var currentContacts = Model.Detail.CurrentEmergencyContacts
+            .Select(linkId => Model.Detail.Family.FirstOrDefault(f => f.LinkId == linkId)).OfType<ResidApp.Application.Ports.ResidentFamilyMember>().ToList();
     }
-    <p>
-        @if (currentContact is null)
-        {
-            <span class="text-muted">No hay contacto urgente designado.</span>
-        }
-        else
-        {
-            <strong>@currentContact.DisplayName</strong> @($"({currentContact.Relationship}) · {currentContact.Phone}")
-        }
-    </p>
+    @if (currentContacts.Count == 0)
+    {
+        <p class="text-muted">No hay contacto urgente designado.</p>
+    }
+    else
+    {
+        <ul class="list-unstyled">
+            @foreach (var currentContact in currentContacts)
+            {
+                <li><strong>@currentContact.DisplayName</strong> @($"({currentContact.Relationship}) · {currentContact.Phone}")</li>
+            }
+        </ul>
+    }
     @if (Model.Detail.Family.Count > 0)
     {
         <a asp-action="ContactoUrgente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg mb-3">
-            @(currentContact is null ? "Designar contacto urgente" : "Cambiar contacto urgente")
+            @(currentContacts.Count == 0 ? "Designar contactos urgentes" : "Cambiar contactos urgentes")
         </a>
     }
     @if (Model.Detail.EmergencyContacts.Count > 0)
@@ -196,7 +200,12 @@
             {
                 <li class="list-group-item">
                     @designation.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Administración ·
-                    @(designation.DisplayName ?? "Sin contacto urgente")
+                    @(designation.Action switch
+                    {
+                        "AGREGAR" => "Contacto urgente añadido: " + designation.DisplayName,
+                        "QUITAR" => "Contacto urgente quitado: " + designation.DisplayName,
+                        _ => designation.DisplayName ?? "Sin contacto urgente",
+                    })
                 </li>
             }
         </ol>

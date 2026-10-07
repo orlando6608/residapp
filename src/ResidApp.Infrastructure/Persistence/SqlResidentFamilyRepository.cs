@@ -228,56 +228,69 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
     }
 
     public async Task<int> DesignateEmergencyContactAsync(
-        AdministrativeResidentTarget target, Guid? linkId, int expectedDesignations, CancellationToken ct = default)
+        AdministrativeResidentTarget target, IReadOnlyList<Guid> linkIds, int expectedDesignations, CancellationToken ct = default)
     {
+        var wanted = linkIds.Distinct().ToList();
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
-        var parameters = new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value };
+        var parameters = new { ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value };
         // El bloqueo del residente ordena las designaciones simultáneas.
         await connection.ExecuteAsync(new CommandDefinition("""
             SELECT id FROM dbo.residentes WITH (UPDLOCK, ROWLOCK) WHERE id = @ResidentId AND centro_id = @CenterId
             """, parameters, transaction, cancellationToken: ct));
-        var latest = await connection.QuerySingleOrDefaultAsync<DesignationRow>(new CommandDefinition("""
-            SELECT TOP 1 numero AS Number, vinculo_id AS LinkId
+        var designations = (await connection.QueryAsync<DesignationRow>(new CommandDefinition("""
+            SELECT numero AS Number, accion_codigo AS Action, vinculo_id AS LinkId
               FROM dbo.residentes_contacto_urgente
              WHERE residente_id = @ResidentId AND centro_id = @CenterId
-             ORDER BY numero DESC
-            """, parameters, transaction, cancellationToken: ct));
-        var designations = latest?.Number ?? 0;
-        if (designations != expectedDesignations)
+             ORDER BY numero
+            """, parameters, transaction, cancellationToken: ct))).ToList();
+        var number = designations.Count == 0 ? 0 : designations[^1].Number;
+        if (number != expectedDesignations)
         {
             throw new DomainValidationException("EMERGENCY_CONTACT_CONFLICT");
         }
 
-        if (linkId is not null && await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+        if (wanted.Count > 0 && await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
                 SELECT COUNT(*) FROM dbo.residentes_familiares
-                 WHERE id = @LinkId AND residente_id = @ResidentId AND centro_id = @CenterId
-                """, parameters, transaction, cancellationToken: ct)) == 0)
+                 WHERE id IN @LinkIds AND residente_id = @ResidentId AND centro_id = @CenterId
+                """, new { LinkIds = wanted, parameters.ResidentId, parameters.CenterId }, transaction, cancellationToken: ct)) != wanted.Count)
         {
             throw new AccessDeniedException();
         }
 
-        if (linkId == latest?.LinkId)
+        var current = EmergencyContactSet.Current(designations.Select(d => (d.Action, d.LinkId)));
+        if (wanted.Count == 0 && current.Count > 0)
         {
-            // Designar el que ya está, o quitarlo cuando no hay ninguno.
+            // Al menos un contacto urgente (CJ, 2026-10-07): se puede cambiar, pero no dejar al residente sin ninguno.
             throw new DomainValidationException("EMERGENCY_CONTACT_INVALID");
         }
 
-        var number = designations + 1;
+        var changes = current.Where(c => !wanted.Contains(c)).Select(c => (EmergencyContactSet.Remove, c))
+            .Concat(wanted.Where(w => !current.Contains(w)).Select(w => (EmergencyContactSet.Add, w))).ToList();
+        if (changes.Count == 0)
+        {
+            // Designar los que ya están, o quitar cuando no hay ninguno.
+            throw new DomainValidationException("EMERGENCY_CONTACT_INVALID");
+        }
+
+        var occurredAt = DateTimeOffset.UtcNow;
         try
         {
-            await connection.ExecuteAsync(new CommandDefinition($"""
-                INSERT INTO dbo.residentes_contacto_urgente
-                    (id, centro_id, residente_id, numero, vinculo_id, designado_por_cuenta_id, designado_por_perfil, designado_en)
-                VALUES (NEWID(), @CenterId, @ResidentId, @Number, @LinkId, @AccountId, 'ADMINISTRACION', @OccurredAt);
-
-                {InsertAudit}
-                """, new
+            foreach (var (action, linkId) in changes)
             {
-                LinkId = linkId, Number = number, AccountId = target.AccountId.Value, CenterId = target.CenterId.Value,
-                UnitId = target.UnitId.Value, ResidentId = target.ResidentId.Value, ResourceType = "RESIDENT",
-                ResourceId = target.ResidentId.Value, Action = "EMERGENCY_CONTACT_DESIGNATE", OccurredAt = DateTimeOffset.UtcNow,
-            }, transaction, cancellationToken: ct));
+                await connection.ExecuteAsync(new CommandDefinition($"""
+                    INSERT INTO dbo.residentes_contacto_urgente
+                        (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, designado_por_cuenta_id, designado_por_perfil, designado_en)
+                    VALUES (NEWID(), @CenterId, @ResidentId, @Number, @LinkId, @ContactAction, @AccountId, 'ADMINISTRACION', @OccurredAt);
+
+                    {InsertAudit}
+                    """, new
+                {
+                    LinkId = linkId, Number = ++number, ContactAction = action, AccountId = target.AccountId.Value, CenterId = target.CenterId.Value,
+                    UnitId = target.UnitId.Value, ResidentId = target.ResidentId.Value, ResourceType = "RESIDENT",
+                    ResourceId = target.ResidentId.Value, Action = "EMERGENCY_CONTACT_DESIGNATE", OccurredAt = occurredAt,
+                }, transaction, cancellationToken: ct));
+            }
         }
         catch (SqlException error) when (error.Number is 2601 or 2627)
         {
@@ -316,7 +329,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
 
     private sealed record AuthorizationRow(int Number, string StatusCode, DateTime? ValidUntil);
 
-    private sealed record DesignationRow(int Number, Guid? LinkId);
+    private sealed record DesignationRow(int Number, string Action, Guid? LinkId);
 
     private sealed record AddedRow(Guid CenterId, Guid? LinkId);
 }

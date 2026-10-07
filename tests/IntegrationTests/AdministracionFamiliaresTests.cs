@@ -25,8 +25,8 @@ public class AdministracionFamiliaresTests
         DateOnly? validUntil = null, string? reason = null) =>
         new(seed.ProfileScopeId, seed.CenterId, residentId, linkId, change, validUntil, reason, expected);
 
-    private static DesignateEmergencyContactCommand Designate(SeededProfile seed, ResidentId residentId, Guid? linkId, int expected) =>
-        new(seed.ProfileScopeId, seed.CenterId, residentId, linkId, expected);
+    private static DesignateEmergencyContactCommand Designate(SeededProfile seed, ResidentId residentId, int expected, params Guid[] linkIds) =>
+        new(seed.ProfileScopeId, seed.CenterId, residentId, linkIds, expected);
 
     private static async Task<AdministrativeResidentDetail> DetailAsync(SeededProfile seed, ResidentId residentId) =>
         (await Build(seed.ExternalSubject).FindResidentAsync(new FindAdministrativeResidentQuery(seed.ProfileScopeId, seed.CenterId, residentId))).Value!;
@@ -58,7 +58,7 @@ public class AdministracionFamiliaresTests
         var member = Assert.Single(detail.Family);
         Assert.Equal(("Lucía Pérez", "Hija", "600 123 456", (string?)null), (member.DisplayName, member.Relationship, member.Phone, member.Email));
         Assert.Null(member.CurrentAuthorization);
-        Assert.Null(detail.CurrentEmergencyContact);
+        Assert.Empty(detail.CurrentEmergencyContacts);
         Assert.Equal(1, await CountAuditAsync(residentId, "FAMILY_MEMBER_CREATE"));
     }
 
@@ -133,7 +133,7 @@ public class AdministracionFamiliaresTests
     }
 
     [Fact]
-    public async Task ContactoUrgente_SeDesignaEntreSusFamiliares_SeCambiaYSeQuita()
+    public async Task ContactoUrgente_PuedeHaberVarios_SeCambianYNuncaSeQuedaSinNinguno()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var residentId = await CreateResidentAsync(admin, "Residente Contacto");
@@ -143,23 +143,24 @@ public class AdministracionFamiliaresTests
         var son = (await service.AddFamilyMemberAsync(Add(admin, residentId, name: "Hijo Contacto"))).Value;
         var neighbour = (await service.AddFamilyMemberAsync(Add(admin, otherResident, name: "Familiar Ajeno"))).Value;
 
-        var first = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, daughter, 0));
-        var same = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, daughter, 1));
-        var foreign = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, neighbour, 1));
-        var changed = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, son, 1));
-        var stale = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, daughter, 1));
-        var removed = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, null, 2));
-        var removedAgain = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, null, 3));
+        var first = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 0, daughter));
+        var same = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 1, daughter));
+        var foreign = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 1, neighbour));
+        var changed = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 1, son));
+        var stale = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 1, daughter));
+        var both = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 3, daughter, son));
+        var none = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 4));
         var detail = await DetailAsync(admin, residentId);
 
-        Assert.Equal([1, 2, 3], new[] { first, changed, removed }.Select(r => r.Value));
+        Assert.Equal([1, 3, 4], new[] { first, changed, both }.Select(r => r.Value));
         Assert.Equal(ApplicationFailureCode.InvalidInput, same.Error!.Code);
         Assert.Equal(ApplicationFailureCode.AccessDenied, foreign.Error!.Code);
         Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
-        Assert.Equal(ApplicationFailureCode.InvalidInput, removedAgain.Error!.Code);
-        Assert.Equal(new string?[] { "Hija Contacto", "Hijo Contacto", null }, detail.EmergencyContacts.Select(c => c.DisplayName));
-        Assert.Null(detail.CurrentEmergencyContact);
-        Assert.Equal(3, await CountAuditAsync(residentId, "EMERGENCY_CONTACT_DESIGNATE"));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, none.Error!.Code);
+        Assert.Equal(["AGREGAR", "QUITAR", "AGREGAR", "AGREGAR"], detail.EmergencyContacts.Select(c => c.Action));
+        Assert.Equal(["Hija Contacto", "Hija Contacto", "Hijo Contacto", "Hija Contacto"], detail.EmergencyContacts.Select(c => c.DisplayName));
+        Assert.Equal([son, daughter], detail.CurrentEmergencyContacts);
+        Assert.Equal(4, await CountAuditAsync(residentId, "EMERGENCY_CONTACT_DESIGNATE"));
     }
 
     [Fact]
@@ -312,7 +313,7 @@ public class AdministracionFamiliaresTests
             var service = Build(other.ExternalSubject);
             denied.Add((await service.AddFamilyMemberAsync(Add(other, residentId))).Error?.Code);
             denied.Add((await service.ChangeFamilyAuthorizationAsync(Change(other, residentId, linkId, FamilyAuthorizationChange.Abrir, 0))).Error?.Code);
-            denied.Add((await service.DesignateEmergencyContactAsync(Designate(other, residentId, linkId, 0))).Error?.Code);
+            denied.Add((await service.DesignateEmergencyContactAsync(Designate(other, residentId, 0, linkId))).Error?.Code);
         }
 
         denied.Add((await Build(otherAdmin.ExternalSubject).AddFamilyMemberAsync(Add(otherAdmin, residentId))).Error?.Code);
@@ -321,7 +322,7 @@ public class AdministracionFamiliaresTests
 
         Assert.All(denied, code => Assert.Equal(ApplicationFailureCode.AccessDenied, code));
         Assert.Null(Assert.Single((await DetailAsync(admin, residentId)).Family).CurrentAuthorization);
-        Assert.Null((await DetailAsync(admin, residentId)).CurrentEmergencyContact);
+        Assert.Empty((await DetailAsync(admin, residentId)).CurrentEmergencyContacts);
     }
 
     [Fact]
@@ -332,7 +333,7 @@ public class AdministracionFamiliaresTests
         var service = Build(admin.ExternalSubject);
         var linkId = (await service.AddFamilyMemberAsync(Add(admin, residentId))).Value;
         Assert.True((await service.ChangeFamilyAuthorizationAsync(Change(admin, residentId, linkId, FamilyAuthorizationChange.Abrir, 0))).Ok);
-        Assert.True((await service.DesignateEmergencyContactAsync(Designate(admin, residentId, linkId, 0))).Ok);
+        Assert.True((await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 0, linkId))).Ok);
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var parameters = new { LinkId = linkId, CenterId = admin.CenterId.Value, AccountId = admin.AccountId.Value, ResidentId = residentId.Value };
 

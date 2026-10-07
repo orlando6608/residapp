@@ -42,6 +42,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["NombreVisible"] = "Residente Funcional",
             ["FechaNacimiento"] = "1938-02-20",
             ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }));
 
         var body = await response.Content.ReadAsStringAsync();
@@ -86,10 +87,17 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         complete["Familiares[1].Relacion"] = "Sobrino";
         complete["Familiares[1].Telefono"] = "600765432";
         complete["Familiares[1].TutorLegal"] = "true";
-        complete["ContactoPrioritario"] = "1";
+        complete["Familiares[0].ContactoPrioritario"] = "true";
+        complete["Familiares[1].ContactoPrioritario"] = "true";
+        var noPriority = Form($"Residente Familia Sin Prioritario {suffix}");
+        noPriority["Familiares[0].NombreVisible"] = "Ana Ruiz";
+        noPriority["Familiares[0].Relacion"] = "Hija";
+        noPriority["Familiares[0].Telefono"] = "600123456";
+        var rejectedNoPriority = WebUtility.HtmlDecode(await (await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(noPriority))).Content.ReadAsStringAsync());
         var created = await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(complete));
 
         Assert.Contains("Revisa los familiares", rejected);
+        Assert.Contains("al menos un contacto prioritario", rejectedNoPriority);
         Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.residentes WHERE nombre_visible = @partialName", new { partialName }));
         Assert.Contains("Id del residente", await created.Content.ReadAsStringAsync());
@@ -97,11 +105,11 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             SELECT COUNT(*) FROM dbo.residentes_familiares l JOIN dbo.residentes r ON r.id = l.residente_id
              WHERE r.nombre_visible = @completeName
             """, new { completeName }));
-        Assert.Equal("Luis Gil", await connection.ExecuteScalarAsync<string>("""
+        Assert.Equal(new[] { "Ana Ruiz", "Luis Gil" }, (await connection.QueryAsync<string>("""
             SELECT f.nombre_visible FROM dbo.residentes_contacto_urgente d
               JOIN dbo.residentes_familiares l ON l.id = d.vinculo_id JOIN dbo.familiares f ON f.id = l.familiar_id
-              JOIN dbo.residentes r ON r.id = d.residente_id WHERE r.nombre_visible = @completeName
-            """, new { completeName }));
+              JOIN dbo.residentes r ON r.id = d.residente_id WHERE r.nombre_visible = @completeName ORDER BY d.numero
+            """, new { completeName })).ToArray());
     }
 
     [Fact]
@@ -131,6 +139,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
                 ["NombreVisible"] = "Residente Funcional",
                 ["FechaNacimiento"] = "1938-02-20",
                 ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
             }))).Content.ReadAsStringAsync());
         var empty = await PostWithUnitAsync("");
         var malformed = await PostWithUnitAsync("no-es-un-guid");
@@ -171,6 +180,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["NombreVisible"] = "Residente Consulta Dirección",
             ["FechaNacimiento"] = "1938-02-20",
             ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
         var direccion = await LoginAsync(await GrantDirectionAsync(seed));
@@ -302,6 +312,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["NombreVisible"] = "Residente Borrador Funcional",
             ["FechaNacimiento"] = "1938-02-20",
             ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
         var nurse = await LoginAsync(await GrantNursingAsync(seed));
@@ -348,6 +359,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["NombreVisible"] = "Residente Evento Funcional",
             ["FechaNacimiento"] = "1938-02-20",
             ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
         var nurse = await LoginAsync(await GrantNursingAsync(seed));
@@ -531,7 +543,10 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["Form.Telefono"] = "600000000",
         }))).Content.ReadAsStringAsync());
         var linkId = await connection.ExecuteScalarAsync<Guid>(
-            "SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId });
+            """
+            SELECT l.id FROM dbo.residentes_familiares l JOIN dbo.familiares f ON f.id = l.familiar_id
+             WHERE l.residente_id = @residentId AND f.nombre_visible = 'Familiar Funcional'
+            """, new { residentId });
 
         var changes = 0;
         foreach (var change in new[] { "Abrir", "Activar" })
@@ -553,18 +568,19 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         {
             ["__RequestVerificationToken"] = ExtractValue(contactPage, "__RequestVerificationToken"),
             ["Form.ResidenteId"] = residentId,
-            ["Form.DesignacionesEsperadas"] = "0",
-            ["Form.VinculoId"] = linkId.ToString(),
+            ["Form.DesignacionesEsperadas"] = "1",
+            ["Form.VinculosIds"] = linkId.ToString(),
         }))).Content.ReadAsStringAsync());
 
         Assert.Contains("Identidad corregida.", corrected);
         Assert.Contains("Familiar añadido.", added);
-        Assert.Contains("Contacto urgente designado.", designated);
+        Assert.Contains("Contactos urgentes guardados.", designated);
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.residentes_identidad_correcciones WHERE residente_id = @residentId", new { residentId }));
         Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.familiares_autorizaciones_cambios WHERE vinculo_id = @linkId", new { linkId }));
-        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+        // El alta ya dejó un contacto prioritario; elegir otro lo quita y añade el nuevo: 1 + 2 designaciones.
+        Assert.Equal(3, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }));
     }
 
@@ -760,6 +776,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["NombreVisible"] = name,
             ["FechaNacimiento"] = "1938-02-20",
             ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         return Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
     }

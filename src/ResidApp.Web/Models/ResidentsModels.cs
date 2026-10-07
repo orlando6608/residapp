@@ -68,13 +68,9 @@ public sealed class CreateResidentFormModel
     /// se dejan en blanco se ignoran, y más desde la ficha del residente.</summary>
     public List<NewResidentFamilyFormRow> Familiares { get; set; } = [new(), new(), new()];
 
-    /// <summary>Índice de la fila del contacto prioritario (el contacto urgente de siempre); solo puede haber uno.</summary>
-    [Display(Name = "Contacto prioritario")]
-    public int? ContactoPrioritario { get; set; }
-
     public IReadOnlyList<ResidApp.Domain.Families.NewResidentFamilyInput> FamilyInputs() =>
-        Familiares.Select((row, index) => new ResidApp.Domain.Families.NewResidentFamilyInput(
-            row.NombreVisible, row.Relacion, row.Telefono, row.Correo, row.Referente, row.TutorLegal, ContactoPrioritario == index)).ToList();
+        Familiares.Select(row => new ResidApp.Domain.Families.NewResidentFamilyInput(
+            row.NombreVisible, row.Relacion, row.Telefono, row.Correo, row.Referente, row.TutorLegal, row.ContactoPrioritario)).ToList();
 
     /// <summary>Se genera al mostrar el formulario y viaja oculto: da soporte a la idempotencia del caso de
     /// uso (un reenvío accidental con el mismo OperacionId no duplica el alta).</summary>
@@ -103,4 +99,7 @@ public sealed class NewResidentFamilyFormRow
 
     [Display(Name = "Tutor legal")]
     public bool TutorLegal { get; set; }
+
+    [Display(Name = "Contacto prioritario (contacto urgente)")]
+    public bool ContactoPrioritario { get; set; }
 }

@@ -1029,7 +1029,7 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service, F
         var contact = await findEmergencyContact.ExecuteAsync(
             new FindScopeResidentCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId), ct);
         return View(new EnfermeriaResidentDetailViewModel(findResult.Value, baselineResult.Ok ? baselineResult.Value : null,
-            OpenEvents: openEvents.Ok ? openEvents.Value : null, EmergencyContact: contact.Ok ? contact.Value : null));
+            OpenEvents: openEvents.Ok ? openEvents.Value : null, EmergencyContacts: contact.Ok ? contact.Value : null));
     }
 
     /// <summary>ENF-23/ENF-24 (historia 11): eventos cerrados del residente, con el basal y la ubicación de su

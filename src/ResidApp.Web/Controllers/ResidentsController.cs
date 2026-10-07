@@ -53,7 +53,7 @@ public sealed class ResidentsController(
         catch (DomainValidationException)
         {
             ModelState.AddModelError(nameof(form.Familiares),
-                "Revisa los familiares: cada uno necesita nombre, relación y un teléfono válido (y un correo válido si lo escribes), y solo puede haber un contacto prioritario.");
+                "Revisa los familiares: tiene que haber al menos un contacto prioritario, y cada familiar necesita nombre, relación y un teléfono válido (y un correo válido si lo escribes).");
             await ShowActiveScopeAsync(ActiveProfileScopeCookie.Read(Request), ct);
             return View(form);
         }

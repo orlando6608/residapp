@@ -128,21 +128,23 @@ public class ResidentFamilyAtAdmissionTests
         Assert.Equal(2, result.Count);
         Assert.True(result[0].Data.IsReferent && result[0].IsPriorityContact && !result[0].Data.IsLegalGuardian);
         Assert.True(result[1].Data.IsLegalGuardian && !result[1].IsPriorityContact);
-        Assert.Empty(ResidentFamilyAtAdmission.Validate([Blank, Blank]));
+        Assert.Throws<DomainValidationException>(() => ResidentFamilyAtAdmission.Validate([Blank, Blank]));
         Assert.Empty(ResidentFamilyAtAdmission.Validate(null));
     }
 
     [Fact]
-    public void Validate_UnaFilaAMediasUnTelefonoMalo_MasDeUnPrioritarioOMasDeCinco_SonInvalidos()
+    public void Validate_UnaFilaAMediasUnTelefonoMalo_SinPrioritarioOMasDeCinco_SonInvalidos()
     {
         var invalid = new[]
         {
-            new[] { Row(phone: null) },
-            new[] { Row(relationship: " ") },
-            new[] { Row(phone: "abc") },
+            new[] { Row(phone: null, priority: true) },
+            new[] { Row(relationship: " ", priority: true) },
+            new[] { Row(phone: "abc", priority: true) },
             new[] { new NewResidentFamilyInput(null, null, null, null, true, false, false) },
-            new[] { Row(priority: true), Row("Luis Gil", priority: true) },
-            Enumerable.Range(0, 6).Select(i => Row($"Familiar {i}")).ToArray(),
+            new[] { Row(referent: true) },
+            new NewResidentFamilyInput[] { Blank },
+            Array.Empty<NewResidentFamilyInput>(),
+            Enumerable.Range(0, 6).Select(i => Row($"Familiar {i}", priority: true)).ToArray(),
         };
 
         foreach (var rows in invalid)
@@ -160,5 +162,22 @@ public class ResidentFamilyAtAdmissionTests
         Assert.NotEqual(data.Version, (data with { IsLegalGuardian = true }).Version);
         Assert.False(data.SameAs(data with { IsReferent = true }));
         Assert.True((FamilyMember.Validate("Ana Ruiz", "Hija", "600123456", null, true, true)).IsLegalGuardian);
+    }
+}
+
+public class EmergencyContactSetTests
+{
+    private static readonly Guid A = Guid.NewGuid(), B = Guid.NewGuid(), C = Guid.NewGuid();
+
+    [Fact]
+    public void Current_RecorreLasDesignacionesPorOrden()
+    {
+        Assert.Empty(EmergencyContactSet.Current([]));
+        Assert.Equal([A, B], EmergencyContactSet.Current([("AGREGAR", A), ("AGREGAR", B), ("AGREGAR", A)]));
+        Assert.Equal([B, C], EmergencyContactSet.Current([("AGREGAR", A), ("AGREGAR", B), ("QUITAR", A), ("AGREGAR", C)]));
+        // Una designación de antes de los varios contactos sustituía al anterior, y sin vínculo los quitaba todos.
+        Assert.Equal([C], EmergencyContactSet.Current([("REEMPLAZAR", A), ("REEMPLAZAR", B), ("REEMPLAZAR", C)]));
+        Assert.Empty(EmergencyContactSet.Current([("REEMPLAZAR", A), ("REEMPLAZAR", null)]));
+        Assert.Equal([B, C], EmergencyContactSet.Current([("REEMPLAZAR", A), ("REEMPLAZAR", B), ("AGREGAR", C)]));
     }
 }

@@ -112,8 +112,8 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
                 {
                     await connection.ExecuteAsync(new CommandDefinition("""
                         INSERT INTO dbo.residentes_contacto_urgente
-                            (id, centro_id, residente_id, numero, vinculo_id, designado_por_cuenta_id, designado_por_perfil, designado_en)
-                        VALUES (NEWID(), @CenterId, @ResidentId, @Number, @LinkId, @AccountId, @ActiveProfile, @OccurredAt)
+                            (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, designado_por_cuenta_id, designado_por_perfil, designado_en)
+                        VALUES (NEWID(), @CenterId, @ResidentId, @Number, @LinkId, 'AGREGAR', @AccountId, @ActiveProfile, @OccurredAt)
                         """, new
                     {
                         CenterId = input.CenterId.Value, ResidentId = residentId.Value, Number = ++familyNumber, LinkId = linkId,
