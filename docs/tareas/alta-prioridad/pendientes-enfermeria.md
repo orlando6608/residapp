@@ -295,7 +295,17 @@ Huecos de lo ya construido:
   aprobar el texto familiar separado"). Preguntado en `docs/pendientes-cj/continuidad-supervision-comunicacion.html` (tema 5).
 - Los borradores de valoración anteriores a `0009` solo tienen una versión (su contenido en ese momento):
   las versiones intermedias previas no se guardaron.
-- **Rangos de referencia de constantes (fase 1 hecha, sin valores)**: decisiones del 2026-09-28 — aviso
+- **Rangos de referencia de constantes (fase 1 hecha; valores de CJ incorporados el 2026-10-07)**: CJ respondió el
+  2026-10-06 (`docs/pendientes-cj/rangos-referencia-constantes.respuestas.json`). Valores iguales para todos los centros por ahora:
+  temperatura 36–37,9; PA 90–139 / 60–89; FC 60–100; FR 12–20; SatO₂ 95–100 (aire ambiente); glucemia mínimo 70, sin máximo.
+  **Hecho:** botón «Cargar valores sugeridos» en la pantalla de rangos (`VitalSignReferenceRanges.Suggested`; rellena el formulario sin
+  guardar, quien tiene el permiso lo revisa y guarda por el camino de siempre, con historial); el aviso de SatO₂ se omite con
+  oxigenoterapia (**suposición mía**, a confirmar); el campo de flujo de O₂ solo aparece al elegir «Oxigenoterapia»; aviso visual de
+  temperatura para la Auxiliar (`AuxiliarTemperatureAlerts`: >37 mantener seguimiento, >38 avisar a Enfermería; en la confirmación y
+  en el detalle de Enfermería; no cambia la clasificación). **No hecho, sin definir por CJ:** «>37 en varias ocasiones seguidas»
+  (cuántas, plazo, de qué registros), cómo se concreta el «seguimiento por las auxiliares», y si el aviso de la Auxiliar convive con el rango
+  36–37,9. El permiso lo sigue concediendo Administración persona a persona (CJ: «Dirección no tiene por qué»; Dirección y Coordinación
+  son el mismo perfil). Decisiones del 2026-09-28 — aviso
   solo visual, que no bloquea ni cambia clasificación, prioridad ni desenlace; rangos por centro fijados en
   la pantalla "Rangos de referencia de constantes" (`RangosReferenciaController`) con el permiso
   `REFERENCE_RANGES_MANAGE`, que la BD solo deja conceder a Medicina o Dirección/Coordinación Clínica
@@ -304,12 +314,13 @@ Huecos de lo ya construido:
   integrado). Pendiente de CJ (lo recoge
   [`docs/pendientes-cj/rangos-referencia-constantes.html`](../../pendientes-cj/rangos-referencia-constantes.html),
   que CJ completa con los valores y las respuestas a las preguntas abiertas):
-  - Fijar los valores en la pantalla: sin ellos no se muestra ningún aviso.
+  - Fijar los valores en la pantalla en cada centro real (CJ: «una vez concretado el uso en un centro»); sin ellos no se muestra ningún aviso.
   - Decidir a quién se concede el permiso en cada centro real. Desde el 2026-10-01 lo concede Administración en
     Usuarios (pantalla de cada perfil, solo a Medicina o Dirección Clínica).
-- **Rangos de referencia por residente (fase 2, pendiente)**: excepciones individuales (p. ej. objetivo de
-  SpO2 88-92 % en EPOC). Queda por decidir con CJ quién las fija (Enfermería o Medicina) y si forman
-  parte del basal.
+- **Rangos de referencia por residente (fase 2, pendiente; fuera del mínimo producto)**: excepciones individuales (p. ej. objetivo de
+  SpO2 88-92 % en EPOC). CJ (2026-10-06): sería lo ideal pero no entra en el mínimo producto salvo que sea sencillo; formarían parte del
+  estado basal, cambian con el tiempo, los podría fijar Enfermería pero preferiblemente Medicina, y depende del centro (en algunos, Medicina no tendrá tiempo).
+  Sin construir.
 - Historia 9: la aportación de otro profesional autorizado a un borrador ajeno (permiso
   `BASELINE_DRAFT_CONTRIBUTE`) no está construida; hoy solo el autor del borrador puede editarlo. Pendiente de CJ en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 2): qué es una aportación, sobre qué y quién.
 

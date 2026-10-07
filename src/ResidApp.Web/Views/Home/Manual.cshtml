@@ -608,7 +608,9 @@
         <strong>Registrar cambio</strong> documenta el cambio en una o varias de las diez áreas de observación
         cotidiana. En siete de ellas, las opciones rápidas predefinidas son botones que se marcan con un toque (llevan
         una ✓ cuando están marcados) y la nota opcional se abre con <strong>«Añadir nota»</strong>; las otras tres
-        son solo de texto libre. Añade la temperatura si procede y clasifícalo como
+        son solo de texto libre. Añade la temperatura si procede (al confirmar, un aviso te recuerda mantener el
+        seguimiento si supera 37 °C y avisar a Enfermería si supera 38 °C; es solo visual y no impide registrar)
+        y clasifícalo como
         <strong>ordinario</strong> (pasa a la bandeja ordinaria de Enfermería) o <strong>prioritario</strong>
         (exige elegir un motivo de una lista cerrada y documentar el aviso directo antes de confirmar;
         pasa a la bandeja prioritaria). El botón <strong>Continuar</strong> queda siempre a la vista al pie de la
@@ -684,7 +686,8 @@
     </p>
     <p>
         Al abrir el detalle de un evento ves la observación original completa (inmutable), la temperatura
-        si se registró, y el basal vigente resumido del residente. Si está pendiente, pulsa
+        si se registró (con un aviso si supera 37 °C, o 38 °C, que no cambia la clasificación), y el basal
+        vigente resumido del residente. Si está pendiente, pulsa
         <strong>Empezar valoración</strong>: queda registrado quién la empieza y a qué hora, sin que eso te
         haga responsable exclusivo del evento; cualquier profesional de Enfermería de la unidad puede
         continuarla.
@@ -703,7 +706,8 @@
         él (por ejemplo, "Saturación de O₂ 89 %: por debajo del rango de referencia"). Es solo informativo:
         no impide guardar ni cambia la clasificación o la prioridad del evento; la decisión es siempre del
         profesional. Los rangos se fijan por centro en la pantalla "Rangos de referencia de constantes"
-        (ver la sección siguiente).
+        (ver la sección siguiente). La saturación se compara con el rango de aire ambiente: si eliges
+        <strong>Oxigenoterapia</strong>, aparece el campo del flujo de O₂ (L/min) y esa saturación no genera aviso.
     </p>
     <p>
         Si otra persona modifica el evento mientras lo tienes abierto, al guardar se te pedirá recargar
@@ -1072,8 +1076,17 @@
         el centro.
     </p>
     <p>
+        <strong>Cargar valores sugeridos</strong> rellena el formulario con los valores que propone el equipo
+        clínico de producto: temperatura 36–37,9 °C; presión arterial 90–139 / 60–89 mmHg; frecuencia cardíaca
+        60–100 lpm; frecuencia respiratoria 12–20 rpm; saturación 95–100 %; glucemia desde 70 mg/dL, sin
+        máximo (el resto de valores de glucemia se individualiza). No guarda nada: revísalos, cámbialos si tu
+        centro lo necesita y pulsa <strong>Guardar rangos</strong>. El rango de la saturación es el de aire
+        ambiente: si la medida se registró con oxigenoterapia, no se avisa.
+    </p>
+    <p>
         Solo pueden usar esta pantalla los perfiles Medicina o Dirección/Coordinación Clínica a los que se
-        haya concedido el permiso específico en ese centro; Administración nunca puede. Cada cambio queda en
+        haya concedido el permiso específico en ese centro (Administración lo concede a una persona concreta;
+        ningún perfil lo tiene por defecto, tampoco Dirección); Administración nunca puede fijar rangos. Cada cambio queda en
         el historial de la propia pantalla (fecha, constante, valor anterior y nuevo, y perfil), que no se
         puede modificar. Si otra persona cambia los rangos mientras tienes la pantalla abierta, al guardar
         se te pedirá recargar.

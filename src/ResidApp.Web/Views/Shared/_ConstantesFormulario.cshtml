@@ -54,10 +54,10 @@
                 </select>
                 <span asp-validation-for="SoporteRespiratorio" class="text-danger"></span>
             </div>
-            <div class="col-6 col-md-4">
+            <div class="col-6 col-md-4" id="flujo-o2-campo">
                 <label asp-for="FlujoO2" class="form-label"></label>
                 <input asp-for="FlujoO2" type="number" class="form-control form-control-lg" inputmode="decimal" step="0.1" />
-                <div class="form-text">Solo con oxigenoterapia.</div>
+                <div class="form-text">Solo con oxigenoterapia. El rango de referencia de la saturación es el de aire ambiente.</div>
                 <span asp-validation-for="FlujoO2" class="text-danger"></span>
             </div>
             <div class="col-6 col-md-4">
@@ -67,6 +67,18 @@
                 <span asp-validation-for="Glucemia" class="text-danger"></span>
             </div>
         </div>
+
+        @* El flujo solo se pide con oxigenoterapia: sin JavaScript el campo queda visible, como antes. *@
+        <script>
+            (() => {
+                const soporte = document.getElementById("@Html.IdFor(m => m.SoporteRespiratorio)");
+                const campo = document.getElementById("flujo-o2-campo");
+                if (!soporte || !campo) return;
+                const actualizar = () => { campo.hidden = soporte.value !== "@((int)RespiratorySupportCode.Oxigenoterapia)"; };
+                soporte.addEventListener("change", actualizar);
+                actualizar();
+            })();
+        </script>
 
         <h3 class="h6 mt-4">Otra constante</h3>
         <div class="row g-3">

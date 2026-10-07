@@ -65,6 +65,8 @@
     </div>
 </div>
 
+<partial name="_AvisoTemperaturaAuxiliar" model="new AvisoTemperaturaAuxiliarViewModel(Model.Temperatura, false)" />
+
 <form asp-action="ConfirmarCambio" method="post">
     <input type="hidden" asp-for="ResidenteId" />
     <input type="hidden" asp-for="OperacionId" />

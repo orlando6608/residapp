@@ -1,0 +1,14 @@
+@using ResidApp.Domain.Auxiliar
+@using ResidApp.Web.Models
+@model AvisoTemperaturaAuxiliarViewModel
+@* Aviso informativo: no bloquea el registro ni cambia la clasificación del cambio. *@
+@{
+    var alerta = AuxiliarTemperatureAlerts.Evaluate(Model.Temperatura);
+    var mensaje = AuxiliarTemperatureDisplay.Message(alerta, Model.ParaEnfermeria);
+}
+@if (mensaje is not null)
+{
+    <div class="alert @(alerta == AuxiliarTemperatureAlert.AvisarEnfermeria ? "alert-danger" : "alert-warning")" role="status">
+        <p class="fw-semibold mb-0">⚠ @mensaje</p>
+    </div>
+}

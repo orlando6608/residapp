@@ -404,6 +404,43 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             """, new { changedResident }));
     }
 
+    [Theory]
+    [InlineData("36.8", null)]
+    [InlineData("37", null)]
+    [InlineData("37.5", "Temperatura por encima de 37 °C: mantén el seguimiento de este residente.")]
+    [InlineData("38.4", "Temperatura por encima de 38 °C: avisa a Enfermería.")]
+    public async Task Auxiliar_LaConfirmacionAvisaDeLaTemperaturaAlta_SinImpedirRegistrar(string temperatura, string? aviso)
+    {
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var resident = await CreateResidentAsync(admin, seed, $"Residente Temperatura {temperatura} Funcional");
+        var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, resident));
+
+        var changePage = await auxiliar.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={resident}");
+        var confirmation = WebUtility.HtmlDecode(await (await auxiliar.PostAsync("/Auxiliar/RegistrarCambio", new FormUrlEncodedContent(new[]
+        {
+            KeyValuePair.Create("__RequestVerificationToken", ExtractValue(changePage, "__RequestVerificationToken")),
+            KeyValuePair.Create("ResidenteId", resident),
+            KeyValuePair.Create("OperacionId", ExtractValue(changePage, "OperacionId")),
+            KeyValuePair.Create("AreaTexto[ESTADO_CONCIENCIA]", "Prueba funcional del aviso de temperatura."),
+            KeyValuePair.Create("Temperatura", temperatura),
+            // Lo que envía el navegador con type="number": sin él, la cultura es-ES leería «36.8» como 368.
+            KeyValuePair.Create("__Invariant", "Temperatura"),
+            KeyValuePair.Create("Clasificacion", "Ordinario"),
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Confirmar cambio", confirmation);
+        Assert.Contains("Confirmar y enviar", confirmation);
+        if (aviso is null)
+        {
+            Assert.DoesNotContain("Temperatura por encima de", confirmation);
+        }
+        else
+        {
+            Assert.Contains(aviso, confirmation);
+        }
+    }
+
     [Fact]
     public async Task Administracion_ConcedeYRevocaUnPermisoYAsignaUnResidente_ConLaAppEntera()
     {

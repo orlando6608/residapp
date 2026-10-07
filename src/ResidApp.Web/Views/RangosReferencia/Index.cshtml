@@ -34,8 +34,26 @@
     Estos rangos se aplican a todo el centro. Cuando Enfermería registra una constante fuera de su rango, la
     valoración muestra un aviso <strong>solo informativo</strong>: no impide guardar ni cambia la
     clasificación o la prioridad del evento. Deja vacíos el mínimo y el máximo de una constante para que no
-    tenga rango.
+    tenga rango. El rango de la saturación es el de aire ambiente: si se registró con oxigenoterapia, no se
+    avisa. El permiso para fijar los rangos lo concede Administración a una persona concreta (de Medicina o de
+    Dirección/Coordinación Clínica); ningún perfil lo tiene por defecto.
 </div>
+
+@if (Model.SugeridosCargados)
+{
+    <div class="alert alert-warning" role="status">
+        Se han cargado los <strong>valores sugeridos</strong> en el formulario, pero
+        <strong>todavía no se han guardado</strong>. Revísalos y pulsa «Guardar rangos». La glucemia solo tiene
+        mínimo: el resto de valores se individualiza.
+    </div>
+}
+else
+{
+    <p>
+        <a asp-action="Index" asp-route-sugeridos="true" class="btn btn-outline-secondary">Cargar valores sugeridos</a>
+        <span class="form-text d-block">Rellena el formulario con los valores propuestos; no se guarda nada hasta que lo hagas.</span>
+    </p>
+}
 
 <form asp-action="Index" method="post">
     <input type="hidden" asp-for="Form.Version" />
