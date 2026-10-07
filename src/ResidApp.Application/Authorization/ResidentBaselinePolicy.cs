@@ -33,6 +33,16 @@ public static class ResidentBaselinePolicy
             ResidentBaselineAction.BaselineReevaluate =>
                 AuthorizeProfessionalWrite(context, ResidentBaselinePermission.BaselineReevaluate),
             ResidentBaselineAction.BaselineHistoryRead => AuthorizeBaselineHistoryRead(request, context),
+            ResidentBaselineAction.ResidentTimelineRead =>
+                AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.ResidentTimeline),
+            ResidentBaselineAction.ClosedEventsHistoryRead =>
+                AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.ClosedEventsHistory),
+            ResidentBaselineAction.AssessmentAmendmentsRead =>
+                AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.AssessmentAmendments),
+            ResidentBaselineAction.ClinicalTraceabilityRead =>
+                AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.ClinicalTraceability),
+            ResidentBaselineAction.ReferralReportsRead =>
+                AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.ReferralReports),
             _ => DenyByDefault(),
         };
     }

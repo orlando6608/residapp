@@ -25,11 +25,11 @@ public sealed record ReadDirectionBaselineCommand(
 /// <summary>Traduce readDirectionBaseline de lib/application/resident-baseline-service.ts.</summary>
 public sealed class ReadDirectionBaseline(
     IAuthorizationEvidenceProvider evidenceProvider, ISessionIdentityProvider session, IBaselineRepository repository,
-    ClinicalAccessSettings? settings = null)
+    IChangeInboxDirectory directory, ClinicalAccessSettings? settings = null)
 {
     private readonly ClinicalAccessSettings _settings = settings ?? ClinicalAccessSettings.Default;
 
-    public Task<ApplicationResult<IReadOnlyList<AuditedBaselineHeader>>> ExecuteAsync(
+    public Task<ApplicationResult<DirectionBaselineRead>> ExecuteAsync(
         ReadDirectionBaselineCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
@@ -62,7 +62,50 @@ public sealed class ReadDirectionBaseline(
             }
 
             var payload = new ClinicalDirectionReadPayload(command.OperacionId, justification, declaration?.Id, _settings.DeclarationMinutes);
-            return await RequestAuthorizationContextResolver.ExecuteDirectionBaselineReadAsync(context, repository, payload, ct);
+            var headers = await RequestAuthorizationContextResolver.ExecuteDirectionBaselineReadAsync(context, repository, payload, ct);
+
+            // DIR-05: el contenido del basal vigente se entrega solo si la lectura ya dejó su auditoría (la versión es la que
+            // acaba de auditar); también al repetir una operación ya registrada. Sin versión auditada, no hay contenido.
+            var content = resourceType == ClinicalResourceType.BaselineCurrent && headers.Count == 1
+                ? await repository.ReadVersionAsync(
+                    new ReadCurrentBaselineSummaryInput(command.CentroId, command.ResidenteId), headers[0].VersionNumber, ct)
+                : null;
+
+            // DIR-06/DIR-07: la lectura anterior ya autorizó, declaró y auditó el residente entero (sin ella habría lanzado). El ámbito
+            // se pasa a la consulta, que además lo exige en SQL (perfil de Dirección activo y sus unidades y residentes).
+            var timeline = resourceType == ClinicalResourceType.ResidentTimeline
+                ? await directory.ListDirectionTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct: ct)
+                : null;
+            var closedEvents = resourceType == ClinicalResourceType.ClosedEventsHistory
+                ? await directory.ListDirectionClosedEventsAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct)
+                : null;
+            // DIR-15: se parte de la línea temporal del ámbito de Dirección y de las versiones firmadas del basal (cabeceras, ya autorizadas).
+            var amendments = resourceType == ClinicalResourceType.AssessmentAmendments
+                ? ResidentAmendmentHistory.From(
+                    await directory.ListDirectionTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, includeAuthorNames: true, ct: ct),
+                    await repository.ReadHistoryAsync(new ReadCurrentBaselineSummaryInput(command.CentroId, command.ResidenteId), ct))
+                : null;
+            // DIR-12: los informes firmados del residente (sin su contenido), con quién los firmó. El PDF se descarga aparte y queda auditado cada vez.
+            IReadOnlyList<DirectionReferralReport>? referralReports = null;
+            if (resourceType == ClinicalResourceType.ReferralReports)
+            {
+                var entries = await directory.ListDirectionTimelineAsync(
+                    command.AmbitoPerfilId, command.CentroId, command.ResidenteId, includeAuthorNames: true, ct: ct);
+                referralReports = entries.OfType<TimelineEntry.ReferralSigned>()
+                    .Where(signed => signed.EventId is not null && signed.Profile is not null)
+                    .Select(signed => new DirectionReferralReport(
+                        signed.EventId!.Value,
+                        entries.OfType<TimelineEntry.EventRegistered>().FirstOrDefault(e => e.EventId == signed.EventId)?.At ?? signed.At,
+                        signed.At, signed.Profile!.Value, signed.AuthorName))
+                    .OrderByDescending(report => report.SignedAt)
+                    .ToList();
+            }
+
+            // DIR-14: la auditoría clínica del residente; incluye la propia lectura que acaba de quedar registrada.
+            var traceability = resourceType == ClinicalResourceType.ClinicalTraceability
+                ? await directory.ListDirectionTraceabilityAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct)
+                : null;
+            return new DirectionBaselineRead(headers, content, timeline, closedEvents, amendments, traceability, referralReports);
         });
 }
 

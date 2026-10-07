@@ -87,6 +87,7 @@ builder.Services.AddSingleton(new ClinicalAccessSettings(
     builder.Configuration.GetValue<int?>("AccesoClinico:DuracionMinutos")
     ?? throw new InvalidOperationException("Falta AccesoClinico:DuracionMinutos en appsettings.json.")));
 builder.Services.AddScoped<ReadDirectionBaseline>();
+builder.Services.AddScoped<DownloadDirectionReferralReport>();
 builder.Services.AddScoped<ClinicalAccessDeclarations>();
 builder.Services.AddScoped<ListActiveProfileScopes>();
 builder.Services.AddScoped<ListActiveScopeUnits>();

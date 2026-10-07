@@ -247,14 +247,27 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             }, transaction, cancellationToken: ct));
 
             var isCurrent = input.ResourceType == ClinicalResourceType.BaselineCurrent;
+            // DIR-06/DIR-07: la línea temporal y el historial de eventos cerrados son del residente entero. Se audita el residente
+            // (una fila) y no se devuelve ninguna cabecera de basal: la lista vacía es también lo que guarda la idempotencia, y quien
+            // llama entrega el contenido solo si esta lectura terminó sin error, es decir, con la auditoría ya escrita.
+            var isResidentLevel = input.ResourceType is ClinicalResourceType.ResidentTimeline or ClinicalResourceType.ClosedEventsHistory
+                or ClinicalResourceType.AssessmentAmendments or ClinicalResourceType.ClinicalTraceability
+                or ClinicalResourceType.ReferralReports;
             // "current" es palabra reservada en T-SQL (sintaxis de cursores FOR UPDATE OF ... CURRENT OF);
             // usarla como alias de tabla rompe el parser ("Incorrect syntax near the keyword 'current'"),
             // descubierto al ejercitar por primera vez BASELINE_CURRENT con un basal realmente firmado. Se
             // usa "cur", mismo alias seguro que ya usa ReadCurrentSummaryAsync más abajo en este archivo.
-            var resourceSql = isCurrent
+            var resourceSql = isResidentLevel
+                ? "SELECT @ResidentId AS id"
+                : isCurrent
                 ? "SELECT version.id FROM dbo.basales_vigentes_residente cur JOIN dbo.basales_version version ON version.id = cur.version_basal_id WHERE cur.centro_id = @CenterId AND cur.residente_id = @ResidentId"
                 : "SELECT version.id FROM dbo.basales_version version WHERE version.centro_id = @CenterId AND version.residente_id = @ResidentId";
-            var finalSelect = isCurrent
+            var finalSelect = isResidentLevel
+                ? """
+                  SELECT TOP (0) version.id AS Id, version.numero_version AS VersionNumber, version.motivo_codigo AS ReasonCode, version.firmado_en AS SignedAt
+                    FROM dbo.basales_version version
+                  """
+                : isCurrent
                 ? """
                   SELECT version.id AS Id, version.numero_version AS VersionNumber, version.motivo_codigo AS ReasonCode, version.firmado_en AS SignedAt
                     FROM dbo.basales_vigentes_residente cur

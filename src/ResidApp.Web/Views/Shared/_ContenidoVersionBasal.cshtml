@@ -1,0 +1,86 @@
+@using ResidApp.Application.Ports
+@model BaselineVersionDetail
+@{
+    var version = Model;
+    var header = version.Header;
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <p class="mb-2">
+            @if (header.IsCurrent)
+            {
+                <span class="badge text-bg-success">Vigente</span>
+            }
+            else
+            {
+                <span class="badge text-bg-secondary">Histórica</span>
+            }
+        </p>
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Motivo</dt>
+            <dd class="col-sm-8">@BaselineReasonDisplay.Label(header.ReasonCode)</dd>
+            <dt class="col-sm-4">Firmado</dt>
+            <dd class="col-sm-8">@header.SignedAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(header.SignedByProfile)</dd>
+            <dt class="col-sm-4">Sustituye a</dt>
+            <dd class="col-sm-8">@(header.ReplacesVersionNumber is { } previous ? $"Versión {previous}" : "—")</dd>
+            <dt class="col-sm-4">Fuente de la información</dt>
+            <dd class="col-sm-8">
+                @EnumDisplay.Label(version.InformationSource)@(version.InformationSourceOtherText is { } other ? $": {other}" : "")
+            </dd>
+            <dt class="col-sm-4">Fecha de la información</dt>
+            <dd class="col-sm-8 mb-0">@version.InformationDate.ToString("d")</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    @foreach (var area in version.Areas.OrderBy(a => a.AreaCode))
+    {
+        <div class="col-12 col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 card-title">@BaselineAreaDisplay.Label(area.AreaCode)</h2>
+                    <ul class="mb-0">
+                        @foreach (var value in BaselineAreaDisplay.Summarize(area.Answer))
+                        {
+                            <li>@value</li>
+                        }
+                    </ul>
+                    @if (!string.IsNullOrWhiteSpace(area.Observation))
+                    {
+                        <p class="text-muted mt-2 mb-0">@area.Observation</p>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title">Índice de Barthel: @header.BarthelTotal / 100</h2>
+        <p class="text-muted">Valorado el @version.BarthelDate.ToString("d").</p>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Ítem</th>
+                        <th scope="col">Opción</th>
+                        <th scope="col" class="text-end">Puntos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in version.BarthelItems)
+                    {
+                        <tr>
+                            <td>@EnumDisplay.Label(item.ItemCode)</td>
+                            <td>@BaselineVersionDisplay.BarthelOption(item)</td>
+                            <td class="text-end">@item.AwardedScore</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

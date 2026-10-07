@@ -21,6 +21,13 @@ public sealed record ResidentHistoryViewModel(
         new(resident, events.Ok ? events.Value : null, baselines.Ok ? baselines.Value : null, detailAction);
 }
 
+/// <summary>Lista de eventos cerrados (parcial _EventosCerradosLista) de Enfermería, Medicina y Dirección. DetailAction null: sin
+/// enlace al detalle (la lectura auditada de Dirección no ofrece las pantallas de otros perfiles).</summary>
+public sealed record ClosedEventsListModel(IReadOnlyList<ClosedEventSummary> Events, string? DetailAction);
+
+/// <summary>Hitos de la línea temporal (parcial _LineaTemporalLista), con la misma convención de DetailAction.</summary>
+public sealed record TimelineListModel(IReadOnlyList<TimelineEntry> Entries, string? DetailAction);
+
 /// <summary>ENF-24 (historia 11 de Enfermería, 9 de Medicina): una versión firmada del basal, vista común a
 /// Enfermería y Medicina.</summary>
 public sealed record BaselineVersionViewModel(ScopeResidentSummary Resident, BaselineVersionDetail Version);
@@ -71,6 +78,13 @@ public sealed record ResidentTimelineViewModel(ScopeResidentSummary Resident, IR
 /// <summary>Textos en español de cada hito de la línea temporal: su título y sus campos, sin los vacíos.</summary>
 public static class TimelineDisplay
 {
+    /// <summary>Quién lo hizo, para DIR-15: el nombre visible de la cuenta con su perfil, o solo el perfil si la cuenta aún no tiene nombre.</summary>
+    public static string Author(TimelineEntry entry)
+    {
+        var profile = entry.Profile is { } p ? SystemProfileDisplay.Label(p) : "perfil desconocido";
+        return string.IsNullOrWhiteSpace(entry.AuthorName) ? $"{profile} (cuenta sin nombre registrado)" : $"{entry.AuthorName} ({profile})";
+    }
+
     public static string Title(TimelineEntry entry) => entry switch
     {
         TimelineEntry.EventRegistered e => e.Origin == ClinicalEventOrigin.CambioAuxiliar ? "Cambio registrado por Auxiliar" : "Evento registrado",

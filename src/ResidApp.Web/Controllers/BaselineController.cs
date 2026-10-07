@@ -16,7 +16,8 @@ namespace ResidApp.Web.Controllers;
 /// vuelve a esa confirmación con el mensaje.
 /// </summary>
 public sealed class BaselineController(
-    ResidentBaselineApplicationService service, DireccionApplicationService direccionService, ClinicalAccessDeclarations declarations) : Controller
+    ResidentBaselineApplicationService service, DireccionApplicationService direccionService, ClinicalAccessDeclarations declarations,
+    DownloadDirectionReferralReport downloadReferral) : Controller
 {
     public IActionResult Sign() => BackToResidents();
 
@@ -119,9 +120,38 @@ public sealed class BaselineController(
         {
             ClinicalAccessDeclarationCookie.Write(Response, form.OperacionId);
         }
-        ViewBag.Headers = result.Value;
+        ViewBag.Headers = result.Value!.Headers;
+        ViewBag.Content = result.Value.Content;
+        ViewBag.Timeline = result.Value.Timeline;
+        ViewBag.ClosedEvents = result.Value.ClosedEvents;
+        ViewBag.Amendments = result.Value.Amendments;
+        ViewBag.Traceability = result.Value.Traceability;
+        ViewBag.ReferralReports = result.Value.ReferralReports;
         ViewBag.Declaracion = declaration ?? await FindDeclarationAsync(activeScope, form.ResidenteId!.Value, ct, form.OperacionId);
         return View("DirectionResult", form);
+    }
+
+    /// <summary>DIR-12: el PDF firmado de un informe de derivación de un residente del ámbito. Exige la declaración de acceso vigente de ese
+    /// residente (la que crea cualquier lectura del residente); cada descarga queda auditada. Si falla, vuelve a la consulta del residente.</summary>
+    public async Task<IActionResult> InformeDerivacion(Guid residenteId, Guid eventoId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Direction), new { residenteId }) });
+        }
+
+        var declarationId = ClinicalAccessDeclarationCookie.Read(Request);
+        var result = declarationId is null
+            ? null
+            : await downloadReferral.ExecuteAsync(new DownloadDirectionReferralReportCommand(
+                activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), eventoId, declarationId.Value), ct);
+        if (result is null || !result.Ok)
+        {
+            TempData["Error"] = "No se ha podido abrir el informe. Si la declaración de acceso de este residente ha caducado, indica de nuevo la finalidad y la justificación.";
+            return RedirectToAction(nameof(Direction), new { residenteId });
+        }
+        return File(result.Value!.Content, "application/pdf", ReferralDisplay.FileName(result.Value.SignedAt));
     }
 
     /// <summary>La declaración vigente para este residente, según la cookie (o el id indicado, recién creado); null si no hay.</summary>

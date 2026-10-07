@@ -40,6 +40,30 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                 WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
         """;
 
+    /// <summary>DIR-06/DIR-07: la misma forma que ScopedEventsFrom (mismos alias) para un ámbito de Dirección Clínica, que ve todos los
+    /// eventos de sus unidades y residentes, sin la regla de Medicina. Solo la usan las lecturas auditadas de Dirección
+    /// (ListDirection*): el resto de métodos siguen con ScopedEventsFrom y su ámbito de Enfermería o Medicina.</summary>
+    internal const string DirectionScopedEventsFrom = """
+          FROM dbo.eventos_asistenciales ea
+          JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
+               AND profile.perfil_codigo = 'DIRECCION_CLINICA' AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+          JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
+               AND unit_scope.centro_id = profile.centro_id AND unit_scope.unidad_id = ea.unidad_id AND unit_scope.revocado_en IS NULL
+          JOIN dbo.unidades unit ON unit.id = ea.unidad_id AND unit.centro_id = profile.centro_id
+          JOIN dbo.residentes resident ON resident.id = ea.residente_id AND resident.centro_id = profile.centro_id
+          LEFT JOIN dbo.ambitos_perfil_residente resident_scope ON resident_scope.ambito_perfil_id = profile.id
+               AND resident_scope.centro_id = profile.centro_id AND resident_scope.residente_id = ea.residente_id
+               AND resident_scope.revocado_en IS NULL
+          LEFT JOIN dbo.cierres_cotidianos_residente closure ON closure.id = ea.cierre_id
+          LEFT JOIN dbo.eventos_clinicos clinical ON clinical.id = ea.evento_clinico_id
+          LEFT JOIN dbo.comunicaciones_familiares family ON family.evento_id = ea.id
+          LEFT JOIN dbo.escalados_medicina escalation ON escalation.evento_id = ea.id
+         WHERE ea.centro_id = @CenterId
+           AND (resident_scope.id IS NOT NULL OR NOT EXISTS (
+               SELECT 1 FROM dbo.ambitos_perfil_residente restriction
+                WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
+        """;
+
     public async Task<IReadOnlyList<PendingChangeSummary>> ListAsync(
         Guid profileScopeId, CenterId centerId, DailyChangeClassification classification, CancellationToken ct = default)
     {
@@ -216,8 +240,16 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             (await FindContextsAsync(connection, [eventId], ct)).GetValueOrDefault(eventId));
     }
 
-    public async Task<IReadOnlyList<ClosedEventSummary>> ListClosedEventsAsync(
-        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default)
+    public Task<IReadOnlyList<ClosedEventSummary>> ListClosedEventsAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
+        ListClosedEventsAsync(ScopedEventsFrom, profileScopeId, centerId, residentId, ct);
+
+    public Task<IReadOnlyList<ClosedEventSummary>> ListDirectionClosedEventsAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
+        ListClosedEventsAsync(DirectionScopedEventsFrom, profileScopeId, centerId, residentId, ct);
+
+    private async Task<IReadOnlyList<ClosedEventSummary>> ListClosedEventsAsync(
+        string scopedEventsFrom, Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct)
     {
         using var connection = await connections.OpenAsync(ct);
 
@@ -227,7 +259,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                    COALESCE(closure.registrado_por_perfil, clinical.registrado_por_perfil) AS AuthorProfileCode,
                    ea.recibido_en AS OccurredAt, ea.cerrado_en AS ClosedAt,
                    CAST(CASE WHEN escalation.id IS NULL THEN 0 ELSE 1 END AS BIT) AS Escalated
-            {ScopedEventsFrom}
+            {scopedEventsFrom}
                AND ea.residente_id = @ResidentId
                AND ea.estado_codigo = 'CERRADO'
              ORDER BY ea.cerrado_en DESC

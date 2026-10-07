@@ -13,6 +13,26 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Dirección, bloque 2 completo con DIR-12 (2026-10-07, rama `despliegue-limpio`, sin script):** tipo de recurso «Informes de derivación firmados» (`REFERRAL_REPORTS`) en `/Baseline/Direction`: lista los informes del residente (con el nombre de quien firmó) y cada PDF se abre con
+  `GET /Baseline/InformeDerivacion?residenteId=&eventoId=` (`DownloadDirectionReferralReport`, `SqlReferralReportRepository.DownloadAsDirectionAsync`), que exige la declaración de acceso vigente y **audita cada descarga** en la misma transacción (finalidad y justificación de la declaración). `Derivaciones` enlaza a la consulta.
+  Suite: 279, 127 y 346 en verde; comprobado por HTTP con un PDF real. **Del bloque 2 solo falta la 4ª finalidad** (calidad asistencial; espera a CJ). **Siguiente:** el bloque 3 de Dirección (DIR-13 comunicación familiar, DIR-11 calidad de proceso) depende de Portal Familiar y de CJ; mientras tanto, lo desbloqueado está en Administración (desvincular familiar) y en infraestructura (cierre de G1, CI antes del 19/10).
+- **Dirección, bloque 2: DIR-14 hecho (2026-10-07, rama `despliegue-limpio`, sin script):** tipo de recurso «Trazabilidad clínica» (`CLINICAL_TRACEABILITY`) en `/Baseline/Direction`: la auditoría de las acciones clínicas del residente (lista cerrada
+  `ClinicalTraceability.ActionCodes`), con nombre de la cuenta, perfil, unidad, acción, recurso y hora; `SqlChangeInboxDirectory.Traceability.cs`, `Ports/ClinicalTraceability.cs`, `Models/TrazabilidadModels.cs` (etiquetas) y `_TrazabilidadClinica.cshtml`.
+  Suite: 279, 127 y 345 en verde; comprobado por HTTP. **Queda del bloque 2 solo el informe de derivación firmado** (DIR-12, acción condicionada); después el bloque 3 de Dirección. Si añades una acción de auditoría clínica nueva, ponla en `ActionCodes` y en `ClinicalTraceabilityDisplay`.
+- **Dirección, bloque 2: DIR-15 hecho (2026-10-07, rama `despliegue-limpio`, sin script):** tipo de recurso «Correcciones y rectificaciones» (`ASSESSMENT_AMENDMENTS`) en `/Baseline/Direction`, con auditoría de una fila por lectura. `ResidentAmendmentHistory.From` (pura, en
+  `Ports/ResidentAmendmentHistory.cs`) agrupa la línea temporal del ámbito de Dirección por evento y tipo de valoración (original, correcciones con motivo, rectificaciones) y añade los basales firmados como versiones vinculadas (`ReadHistoryAsync`). Autor = nombre visible de la cuenta + perfil (decisión de Orlando, 2026-10-07; `includeAuthorNames` solo en DIR-15). Suite: 279, 125 y 344 en verde; comprobado por HTTP en local. **Siguiente:** DIR-14 (trazabilidad clínica) y el informe de derivación firmado; después el bloque 3 de Dirección.
+- **Dirección, bloque 2: DIR-06 y DIR-07 hechos (2026-10-07, rama `despliegue-limpio`, sin script):** en `/Baseline/Direction`, tipos de recurso nuevos «Línea temporal» (`RESIDENT_TIMELINE`) y «Historial de eventos cerrados» (`CLOSED_EVENTS_HISTORY`),
+  con acciones nuevas en la política y la misma declaración de acceso. Se audita el residente (una fila por lectura). `ReadAsClinicalDirectionAsync` devuelve cabeceras vacías para ellos y solo después `ReadDirectionBaseline` pide
+  `ListDirectionTimelineAsync` / `ListDirectionClosedEventsAsync` (`SqlChangeInboxDirectory`, con `DirectionScopedEventsFrom`). `DirectionBaselineRead` gana `Timeline` y `ClosedEvents`; `ReadDirectionBaseline` recibe ahora `IChangeInboxDirectory`.
+  Parciales `_LineaTemporalLista` y `_EventosCerradosLista` compartidos con Enfermería y Medicina. Detalle y decisiones en `pendientes-direccion.md`. Suite: 276, 125 y 343 en verde; comprobado por HTTP en local con «Residente Prueba DIR-06 (ficticio)» (cuenta
+  `test-…` de las pruebas). **Siguiente:** (DIR-15 se hizo después, ver el punto siguiente) DIR-14 (trazabilidad) y el informe de derivación firmado.
+- **Dirección, bloque 2: DIR-05 hecho (2026-10-07, rama `despliegue-limpio`, commit `905b4ae`, sin push, sin script):** `/Baseline/Direction` con «Basal vigente» muestra el contenido de la versión vigente (nueve áreas y
+  Barthel), no solo cabeceras. `ReadDirectionBaseline` devuelve ahora `DirectionBaselineRead(Headers, Content)`: primero la lectura auditada (`ReadAsClinicalDirectionAsync`, sin cambios) y solo después
+  `ReadVersionAsync` de la versión auditada; «Historial de basal» sigue sin contenido. Parcial nuevo `Views/Shared/_ContenidoVersionBasal.cshtml` (extraído de `VersionBasal.cshtml`, que ahora lo usa).
+  `tipo_recurso` no tiene `CHECK` de valores: **las pantallas siguientes (DIR-06/07/14/15, informe firmado) no necesitan script por eso**, solo ampliar `ClinicalResourceType`. Suite: 276, 125 y 342 en verde.
+  Test `Direccion_LeeElContenidoDelBasalVigenteAuditado_…` (mutación comprobada). Comprobado por HTTP en local con «Residente Prueba Contenido DIR-05 (ficticio)» (basal firmado, unidad integrada).
+  **Lección:** si dejas la app local en marcha (`dotnet run`), `ResidApp.Web.exe` bloquea la compilación de los tests funcionales (la suite parece pasar pero no sale la línea de funcionales): páralo antes.
+  (DIR-06 y DIR-07 se hicieron después: ver el punto anterior.)
 - **El despliegue a Azure limpia `wwwroot` (2026-10-07, rama `despliegue-limpio`):** el paso «Desplegar en Azure Web App» lleva `clean: true`. Antes, OneDeploy añadía ficheros pero no borraba los de
   despliegues anteriores, y los documentos de CJ movidos a `archivados/` siguieron sirviéndose desde su ruta antigua (se borraron a mano por Kudu). `wwwroot` no guarda estado de la app (claves de Data Protection
   en `/home/ASP.NET`, logs en `/home/LogFiles`, datos en SQL). **Límite:** deja un corte de segundos con `wwwroot` a medias; vale para desarrollo (B1, sin slots, datos ficticios). Con usuarios reales,
@@ -47,10 +67,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     `CK_bv_signer`/`LoadAuthorizedDraftAsync`/`BaselineActivation` exigen que firme el autor; `BASELINE_DRAFT_CONTRIBUTE` no se ofrece; `revision_borrador` nunca se incrementa), la 4ª finalidad,
     las temperaturas seguidas. Todo preguntado en `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (11 preguntas, nuevo, añadido al índice y al README).
   - **Verificado:** suite completa en una base SQL Server desechable de Docker con los 38 scripts desde cero y la app como `residapp_app`: 276, 83 y 341 en verde, dos vueltas, y `declaraciones_acceso_clinico`
-    `OK` en `comprobar_aislamiento.sql` (el contenedor ya está eliminado). **Estado de la base local `ACER-ORLANDO\ResidApp` (leer antes de seguir):** tiene aplicados `0035` a `0038`, pero **le falta la restricción
-    `CK_audit_direction_read`**: un test mío falló a mitad, dejó una fila de auditoría ficticia con finalidad nula (justificación «Sin finalidad.») y, al re-crear la restricción corregida, SQL Server la rechazó por esa
-    fila. La tabla de auditoría es de solo inserción y no se tocó. Hasta decidirlo con Orlando, en local falla `ClinicalAccessDeclarationTests.LaAuditoria_DeLecturaClinicaDeDireccion_ExigeFinalidadDeLaListaYJustificacion`
-    (el resto, en verde: 276, 83 y 340 de 341). Opciones: recrear la base local desde cero con los scripts, o decidir qué hacer con esa fila.
+    `OK` en `comprobar_aislamiento.sql` (el contenedor ya está eliminado). **Base local `ACER-ORLANDO\ResidApp`:** tenía una fila de auditoría ficticia que impedía recrear `CK_audit_direction_read`; el 2026-10-07 Orlando autorizó recrearla
+    desde cero (collation `Modern_Spanish_CI_AS`, `aplicar-scripts.sh` con `APLICAR_SEED=1`: 39 filas en `scripts_aplicados`) y quedó con la restricción y la suite entera en verde (276, 125 y 341).
   - **Intermitencia vista de nuevo:** dos ejecuciones completas de la solución dieron timeouts masivos de SQL de 35–55 s en pruebas ajenas, y las tres siguientes salieron limpias; sin causa explicada (como la anomalía
     ya anotada en el bloque de Administración).
 - **Guía de pruebas para CJ (2026-10-06, rama `docs-guia-pruebas-cj`, commit `f7c25a5`):** `docs/pendientes-cj/guia-de-pruebas-cj.html`, publicado en `/pendientes-cj/guia-de-pruebas-cj.html` con el siguiente
@@ -1126,11 +1144,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-1. **Decidir qué hacer con la base local `ResidApp`** (le falta `CK_audit_direction_read`; ver el primer punto de «Dónde estamos») y **revisar las respuestas de CJ** que lleguen:
+1. **Revisar las respuestas de CJ** que lleguen:
    - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
      finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).
    - Siguen sin respuesta: `docs/pendientes-cj/traslado-y-baja-residente.html` (6 respuestas): traslado y baja del residente en Administración.
-   - **Dirección, bloque 2 (el resto):** DIR-05/06/07/14/15 y el informe firmado sobre la declaración de acceso ya construida (ver `pendientes-direccion.md`).
+   - **Dirección, bloque 2:** solo falta la 4ª finalidad (calidad asistencial), pendiente de la respuesta de CJ (ver `pendientes-direccion.md`).
 2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): el organigrama y los cargos (ADM-07; ningún documento los define: pregunta a CJ); después publicaciones,
    citas, auditoría administrativa y panel.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar

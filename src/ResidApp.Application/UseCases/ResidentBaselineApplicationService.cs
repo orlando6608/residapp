@@ -21,7 +21,7 @@ public sealed class ResidentBaselineApplicationService(
         SignBaselineCommand command, CancellationToken ct = default) =>
         signBaseline.ExecuteAsync(command, ct);
 
-    public Task<ApplicationResult<IReadOnlyList<AuditedBaselineHeader>>> ReadDirectionBaselineAsync(
+    public Task<ApplicationResult<DirectionBaselineRead>> ReadDirectionBaselineAsync(
         ReadDirectionBaselineCommand command, CancellationToken ct = default) =>
         readDirectionBaseline.ExecuteAsync(command, ct);
 

@@ -16,7 +16,7 @@
 <h1 class="h3">Derivaciones a Urgencias</h1>
 <p class="text-muted">
     Episodios abiertos de tu ámbito con protocolo urgente, del más reciente al más antiguo, y en qué punto está su derivación. Solo el estado
-    del proceso: ni el contenido del informe ni las llamadas. Dirección no genera ni firma informes.
+    del proceso: ni el contenido del informe ni las llamadas. El informe firmado se consulta aparte, con finalidad y justificación, y queda registrado en la auditoría. Dirección no genera ni firma informes.
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
 
@@ -56,6 +56,7 @@ else
                                 {
                                     <span class="badge text-bg-success">Firmado</span>
                                     @:el @item.ReportSignedAt!.Value.ToLocalTime().ToString("g") · @ProfileLabel(item.ReportProfile!.Value)
+                                    <div><a asp-controller="Baseline" asp-action="Direction" asp-route-residenteId="@item.ResidentId.Value" class="small position-relative z-3">Consultar el informe (con registro en la auditoría)</a></div>
                                 }
                                 else
                                 {
@@ -108,6 +109,7 @@ else
                             {
                                 <span class="badge text-bg-success">Firmado</span>
                                 @:el @item.ReportSignedAt!.Value.ToLocalTime().ToString("g") · @ProfileLabel(item.ReportProfile!.Value)
+                                <div><a asp-controller="Baseline" asp-action="Direction" asp-route-residenteId="@item.ResidentId.Value" class="small">Consultar el informe (con registro en la auditoría)</a></div>
                             }
                             else
                             {

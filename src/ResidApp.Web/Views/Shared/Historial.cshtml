@@ -43,67 +43,7 @@
     }
     else
     {
-        @* En pantallas estrechas, una tarjeta pulsable por evento en lugar de la tabla (directrices-pwa-movil.md,
-           sección 2). *@
-        <div class="d-md-none">
-            @foreach (var item in Model.Events)
-            {
-                <div class="card mb-3">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="flex-grow-1">
-                            <p class="mb-1">
-                                @if (item.Classification == ResidApp.Domain.Auxiliar.DailyChangeClassification.Prioritario)
-                                {
-                                    <span class="badge text-bg-danger me-1">Prioritario</span>
-                                }
-                                <a asp-action="@Model.DetailAction" asp-route-eventoId="@item.EventId" class="stretched-link text-body text-decoration-none fw-semibold">@ResidentHistoryDisplay.Summary(item)</a>
-                            </p>
-                            <p class="text-body-secondary small mb-1">
-                                Registrado el @item.OccurredAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(item.AuthorProfile) ·
-                                cerrado el @item.ClosedAt.ToLocalTime().ToString("g") por @ResidentHistoryDisplay.ClosedBy(item)
-                            </p>
-                            <p class="text-body-secondary small mb-0">@ResidentHistoryDisplay.Context(item.Context)</p>
-                        </div>
-                        <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
-                    </div>
-                </div>
-            }
-        </div>
-        <div class="table-responsive d-none d-md-block">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th scope="col">Registrado</th>
-                        <th scope="col">Evento</th>
-                        <th scope="col">Autor</th>
-                        <th scope="col">Basal y ubicación de su fecha</th>
-                        <th scope="col">Cerrado</th>
-                        <th scope="col"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.Events)
-                    {
-                        <tr>
-                            <td>@item.OccurredAt.ToLocalTime().ToString("g")</td>
-                            <td>
-                                @if (item.Classification == ResidApp.Domain.Auxiliar.DailyChangeClassification.Prioritario)
-                                {
-                                    <span class="badge text-bg-danger me-1">Prioritario</span>
-                                }
-                                @ResidentHistoryDisplay.Summary(item)
-                            </td>
-                            <td>@SystemProfileDisplay.Label(item.AuthorProfile)</td>
-                            <td>@ResidentHistoryDisplay.Context(item.Context)</td>
-                            <td>@item.ClosedAt.ToLocalTime().ToString("g") por @ResidentHistoryDisplay.ClosedBy(item)</td>
-                            <td>
-                                <a asp-action="@Model.DetailAction" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+        <partial name="_EventosCerradosLista" model="new ClosedEventsListModel(Model.Events, Model.DetailAction)" />
     }
 </section>
 

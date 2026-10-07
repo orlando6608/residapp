@@ -30,6 +30,15 @@ public enum ClinicalResourceType
 {
     [Code("BASELINE_CURRENT")] [Display(Name = "Basal vigente")] BaselineCurrent,
     [Code("BASELINE_HISTORY")] [Display(Name = "Historial de basal")] BaselineHistory,
+    // DIR-06 y DIR-07: recursos del residente entero (se audita el residente, no cada fila). Solo los lee Dirección Clínica.
+    [Code("RESIDENT_TIMELINE")] [Display(Name = "Línea temporal")] ResidentTimeline,
+    [Code("CLOSED_EVENTS_HISTORY")] [Display(Name = "Historial de eventos cerrados")] ClosedEventsHistory,
+    // DIR-15: correcciones y rectificaciones de las valoraciones del residente, con los basales firmados como versiones vinculadas.
+    [Code("ASSESSMENT_AMENDMENTS")] [Display(Name = "Correcciones y rectificaciones")] AssessmentAmendments,
+    // DIR-14: quién hizo qué sobre el residente (la auditoría de sus acciones clínicas), con el mismo requisito de finalidad y justificación.
+    [Code("CLINICAL_TRACEABILITY")] [Display(Name = "Trazabilidad clínica")] ClinicalTraceability,
+    // DIR-12: los informes de derivación firmados del residente (lista); cada PDF se descarga después con su propia auditoría.
+    [Code("REFERRAL_REPORTS")] [Display(Name = "Informes de derivación firmados")] ReferralReports,
 }
 
 /// <summary>Traduce AuthorizationDenialReason de policy.ts.</summary>
@@ -96,6 +105,11 @@ public enum ResidentBaselineAction
     BaselineInitialComplete,
     BaselineReevaluate,
     BaselineHistoryRead,
+    ResidentTimelineRead,
+    ClosedEventsHistoryRead,
+    AssessmentAmendmentsRead,
+    ClinicalTraceabilityRead,
+    ReferralReportsRead,
 }
 
 /// <summary>

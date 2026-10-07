@@ -72,9 +72,39 @@ En el orden propuesto:
      al cerrar sesión (`DevAuthController.Logout`) o al cumplirse la hora. Cada apertura sigue comprobando permiso y ámbito en SQL y escribiendo su propia
      fila de auditoría antes de entregar el contenido. Tabla `declaraciones_acceso_clinico` (solo se crea y se termina; con seguridad por filas),
      cookie `residapp_clinical_access` (solo el id; SQL revalida todo), `ClinicalAccessDeclarations` (consultar la vigente y terminarlas).
-   - **Hecho solo para la consulta que ya existía** (`/Baseline/Direction`: historial y basal vigente, solo cabeceras de versión). **Falta construir sobre este
-     mecanismo**, cada pantalla con su `tipo_recurso`: contenido del basal para Dirección, línea temporal (DIR-06), historial de eventos cerrados (DIR-07),
-     trazabilidad clínica (DIR-14), correcciones y rectificaciones (DIR-15) y el informe de derivación firmado. Notas del repositorio de lectura:
+   - **DIR-05 hecho el 2026-10-07 (sin script):** `/Baseline/Direction` con «Basal vigente» muestra ahora el contenido de la versión vigente (nueve áreas y Barthel por
+     ítem), con el parcial `_ContenidoVersionBasal` (el mismo de Enfermería/Medicina, `VersionBasal`). `ReadDirectionBaseline` devuelve `DirectionBaselineRead(Headers, Content)`: primero
+     la lectura auditada («auditoría o nada», sin cambios en `ReadAsClinicalDirectionAsync`) y solo después `ReadVersionAsync` de la versión que acaba de auditar; «Historial de basal» sigue
+     devolviendo solo cabeceras. `eventos_auditoria.tipo_recurso` no tiene `CHECK` de valores, así que no hizo falta script. **Decisión mía, sin confirmar:** el contenido de versiones
+     históricas no se entrega aquí (llegará con DIR-15, versiones vinculadas). Test: `Direccion_LeeElContenidoDelBasalVigenteAuditado_ElHistorialSoloCabeceras_YSinPermisoNada`
+     (falla si el historial entrega contenido). Comprobado por HTTP en local con un residente ficticio con basal firmado.
+   - **DIR-06 y DIR-07 hechos el 2026-10-07 (sin script):** en el mismo `/Baseline/Direction`, dos tipos de recurso nuevos, «Línea temporal» (`RESIDENT_TIMELINE`) y «Historial de eventos cerrados»
+     (`CLOSED_EVENTS_HISTORY`), con acciones propias en la política (`ResidentTimelineRead`, `ClosedEventsHistoryRead`: solo `DIRECCION_CLINICA` con `CLINICAL_DETAIL_READ`, finalidad y
+     declaración). **Se audita el residente (una fila por lectura, `recurso_id` = residente), no cada evento** (decisión mía, sin confirmar). `ReadAsClinicalDirectionAsync` hace la
+     auditoría con el mismo SQL y devuelve cabeceras vacías para estos tipos; solo entonces `ReadDirectionBaseline` pide `ListDirectionTimelineAsync` / `ListDirectionClosedEventsAsync`
+     (`SqlChangeInboxDirectory`, con `DirectionScopedEventsFrom`, el gemelo de `ScopedEventsFrom` para Dirección: todos los eventos de las unidades y residentes del ámbito, sin la regla
+     de Medicina; el SQL de la línea temporal y del historial se parametrizó por ese fragmento, sin duplicarse). Parciales `_LineaTemporalLista` y `_EventosCerradosLista`, compartidos con
+     Enfermería y Medicina; sin `DetailAction` no hay enlaces a eventos ni al PDF (son de otros perfiles). Tests: `Direccion_LeeLineaTemporalYEventosCerrados_Auditados_ConTodosLosEventosDeSuAmbito`
+     (falla con el ámbito de Enfermería). La línea temporal incluye el contenido clínico de los eventos (valoraciones, indicaciones, protocolo): es el detalle que pedía DIR-06.
+   - **DIR-15 hecho el 2026-10-07 (sin script):** tercer tipo de recurso nuevo, «Correcciones y rectificaciones» (`ASSESSMENT_AMENDMENTS`, acción `AssessmentAmendmentsRead`), misma declaración y auditoría (una fila por lectura). Se construye en
+     Application a partir de la línea temporal del ámbito de Dirección (`ResidentAmendmentHistory.From`, función pura): por cada valoración (Enfermería o Medicina, por evento) corregida o rectificada, el original (la última versión guardada), cada
+     corrección (contenido corregido y motivo) y cada rectificación, y todos los basales firmados como versiones vinculadas (cabeceras de `ReadHistoryAsync`: vigente, «sustituye a la versión n», firmante, Barthel; nunca como edición). **Decisión de
+     Orlando (2026-10-07): se ve el nombre de quien corrigió.** Cada hito lleva `TimelineEntry.AuthorName` (el `nombre_visible` de la cuenta, `0023`; sin nombre: «cuenta sin nombre registrado»), que solo se rellena si `ListDirectionTimelineAsync` se llama con `includeAuthorNames: true` (solo DIR-15; ni la línea temporal de DIR-06 ni las de Enfermería y Medicina lo llevan). Vista `_CorreccionesRectificaciones` y `_CamposHito`. Tests:
+     `ResidentAmendmentHistoryTests` (3, unitarios) y `Direccion_LeeCorreccionesYRectificaciones_Auditadas_ConLosBasalesComoVersionesVinculadas` (falla sin las versiones del basal).
+   - **DIR-14 hecho el 2026-10-07 (sin script):** cuarto tipo de recurso, «Trazabilidad clínica» (`CLINICAL_TRACEABILITY`, acción `ClinicalTraceabilityRead`), con la misma declaración y auditoría (una fila por lectura, que aparece la primera en la lista).
+     `SqlChangeInboxDirectory.ListDirectionTraceabilityAsync` lee `eventos_auditoria` del residente (hasta 500 hitos, los más recientes primero, con aviso si hay más): hora, nombre visible de la cuenta (o «cuenta sin nombre registrado»), perfil, unidad,
+     acción, recurso y, en las lecturas de Dirección, la finalidad (nunca la justificación ni texto clínico). **Solo las acciones de la lista cerrada `ClinicalTraceability.ActionCodes`** (39: eventos, valoraciones, indicaciones, seguimientos, protocolo urgente,
+     derivación, llamadas y comunicaciones a la familia, basal y lecturas de Dirección); las administrativas (alta, familiares, permisos) tienen su auditoría en ADM-28 y no entran. Repite en SQL el ámbito de Dirección activo y que la unidad del hito esté
+     concedida a él. Etiquetas en `ClinicalTraceabilityDisplay` (una acción nueva en la lista sin etiqueta hace fallar `ClinicalTraceabilityDisplayTests`). **Decisiones mías, sin confirmar:** qué acciones cuentan como «hitos clínicos» (lo anterior), incluir las
+     propias lecturas de Dirección (útil para saber quién vio el expediente) y no mostrar la justificación. Test: `Direccion_LeeLaTrazabilidadClinica_Auditada_SoloConAccionesClinicas` (falla sin el filtro de acciones). No es un ranking: solo por residente, sin recuentos por persona.
+   - **DIR-12, informe de derivación firmado, hecho el 2026-10-07 (sin script) — con lo que el bloque 2 queda completo salvo la 4ª finalidad:** quinto tipo de recurso, «Informes de derivación firmados» (`REFERRAL_REPORTS`, acción `ReferralReportsRead`),
+     que lista los informes del residente (evento, fecha de firma, perfil y nombre de quien firmó; sin su contenido; sale de la línea temporal de Dirección con `includeAuthorNames`). Cada PDF se abre con `GET /Baseline/InformeDerivacion?residenteId=&eventoId=`
+     (`DownloadDirectionReferralReport`, `SqlReferralReportRepository.DownloadAsDirectionAsync`): exige la declaración de acceso vigente del residente (la cookie `residapp_clinical_access`; sin ella o caducada, vuelve a la consulta con un aviso para declarar
+     de nuevo) y la comprobación de la política; el SQL vuelve a exigir en una sola consulta cuenta activa, ámbito de Dirección, permiso `CLINICAL_DETAIL_READ`, evento de ese residente en una unidad concedida y la declaración, y **audita cada descarga**
+     (`CLINICAL_DETAIL_READ` sobre `REFERRAL_REPORT`, con la finalidad y la justificación guardadas en la declaración, no las que mande quien llama) en la misma transacción. Dirección no genera ni firma informes. `Derivaciones` enlaza a la consulta de cada residente
+     con informe firmado. Tests: `Direccion_ListaYDescargaElInformeFirmado_ConDeclaracionVigente_YCadaDescargaQuedaAuditada` (incluye llamadas directas al repositorio: falla sin la comprobación de la declaración en SQL). **Decisión mía, sin confirmar:** el nombre de
+     quien firmó se ve (como en DIR-15), pero el motivo del informe solo está dentro del PDF. Comprobado por HTTP con un PDF real.
+   - **Notas del repositorio de lectura:**
      `ReadAsClinicalDirectionAsync` (`SqlBaselineRepository`) es el patrón «auditoría o nada»; `SqlChangeInboxDirectory.ScopedEventsFrom` fija
      `perfil_codigo IN ('ENFERMERIA','MEDICINA')` y no sirve a Dirección tal cual (`SqlSupervisionDirectory.ScopedEventsFrom` es el gemelo); no reutilizar la ruta de
      Enfermería/Medicina (`HistorialTests` fija que Dirección recibe acceso denegado ahí).
@@ -86,7 +116,7 @@ En el orden propuesto:
      sin firmar, con llamadas). `SupervisionReferral` no tiene texto clínico, ni el contacto, ni el resultado de las llamadas, ni el contenido del informe
      (lo comprueba un test por reflexión); sin permiso ni auditoría, como el resto de la supervisión operativa. Solo abiertos: los cerrados salen en los
      indicadores agregados, no por nombre. Pedido a CJ que lo confirme (solo abiertos; auditoría) en `docs/pendientes-cj/continuidad-supervision-comunicacion.html`
-     (tema 2). **Sigue bloqueado:** consultar el informe firmado, que exige permiso clínico y la declaración de finalidad (hecha el 2026-10-07, ver el bloque 2); falta la pantalla.
+     (tema 2). Consultar el informe firmado (permiso clínico y declaración de finalidad) está hecho desde el 2026-10-07: ver el bloque 2, DIR-12.
    - **Comunicación familiar (DIR-13):** depende de que exista la aprobación y publicación (Administración y Familia).
 3. **Revisión de calidad de proceso (DIR-11 del boceto):** «cumplimiento de hitos definidos y excepciones». Nadie ha definido qué hitos
    ni con qué plazos; es una decisión clínica. Preguntado a CJ el 2026-10-02 en `docs/pendientes-cj/continuidad-supervision-comunicacion.html`

@@ -1,9 +1,16 @@
 @using ResidApp.Application.Ports
+@using ResidApp.Web.Models
 @model ResidApp.Web.Models.DirectionBaselineQueryModel
 @{
     ViewData["Title"] = "Resultado de la consulta";
     var declaracion = ViewBag.Declaracion as ClinicalAccessDeclaration;
     var headers = (IReadOnlyList<ResidApp.Application.Ports.AuditedBaselineHeader>)ViewBag.Headers;
+    var contenido = ViewBag.Content as BaselineVersionDetail;
+    var linea = ViewBag.Timeline as IReadOnlyList<TimelineEntry>;
+    var cerrados = ViewBag.ClosedEvents as IReadOnlyList<ClosedEventSummary>;
+    var correcciones = ViewBag.Amendments as ResidentAmendmentHistory;
+    var trazabilidad = ViewBag.Traceability as ClinicalTraceabilityPage;
+    var informes = ViewBag.ReferralReports as IReadOnlyList<DirectionReferralReport>;
 }
 
 <nav aria-label="breadcrumb">
@@ -14,11 +21,92 @@
     </ol>
 </nav>
 
-<h1 class="h3">Historial de basal auditado</h1>
+<h1 class="h3">@(linea is not null ? "Línea temporal auditada" : cerrados is not null ? "Eventos cerrados auditados" : correcciones is not null ? "Correcciones y rectificaciones auditadas" : trazabilidad is not null ? "Trazabilidad clínica auditada" : informes is not null ? "Informes de derivación firmados" : contenido is null ? "Historial de basal auditado" : "Basal vigente auditado")</h1>
 
-@if (headers.Count == 0)
+@if (informes is not null)
+{
+    <p class="text-muted">
+        Solo lectura. Los informes de derivación a Urgencias firmados de este residente. Esta consulta ha quedado registrada en la auditoría; cada PDF que
+        abras queda auditado aparte, con la misma finalidad y justificación. Dirección no genera ni firma informes.
+    </p>
+    if (informes.Count == 0)
+    {
+        <p class="text-muted">Este residente no tiene ningún informe de derivación firmado.</p>
+    }
+    else
+    {
+        <ul class="list-group mb-3">
+            @foreach (var informe in informes)
+            {
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <strong>Evento registrado el @informe.EventRegisteredAt.ToLocalTime().ToString("g")</strong>
+                        <div class="text-body-secondary small">
+                            Informe firmado el @informe.SignedAt.ToLocalTime().ToString("g") por @(informe.SignerName ?? "Cuenta sin nombre registrado") (@SystemProfileDisplay.Label(informe.SignerProfile))
+                        </div>
+                    </div>
+                    <a asp-controller="Baseline" asp-action="InformeDerivacion" asp-route-residenteId="@Model.ResidenteId" asp-route-eventoId="@informe.EventId"
+                       class="btn btn-outline-primary">Abrir PDF</a>
+                </li>
+            }
+        </ul>
+    }
+}
+else if (trazabilidad is not null)
+{
+    <p class="text-muted">
+        Solo lectura. Quién hizo qué sobre este residente, según la auditoría: la persona, su perfil, la unidad, la acción, el recurso y la hora. No incluye
+        texto clínico ni valores. Esta consulta ha quedado registrada en la auditoría y aparece la primera.
+    </p>
+    <partial name="_TrazabilidadClinica" model="trazabilidad" />
+}
+else if (correcciones is not null)
+{
+    <p class="text-muted">
+        Solo lectura. Cada valoración corregida o rectificada se muestra con su versión original, sus correcciones y rectificaciones, el motivo, el
+        nombre y perfil de quien las hizo y su fecha. Los basales firmados se muestran como versiones vinculadas, nunca como una edición. Esta consulta ha quedado
+        registrada en la auditoría.
+    </p>
+    <partial name="_CorreccionesRectificaciones" model="correcciones" />
+}
+else if (linea is not null)
+{
+    <p class="text-muted">
+        Solo lectura, del registro más reciente al más antiguo: eventos de las unidades de tu ámbito con cada paso de su atención,
+        versiones del basal y cambios de ubicación. Esta consulta ha quedado registrada en la auditoría.
+    </p>
+    if (linea.Count == 0)
+    {
+        <p class="text-muted">Este residente todavía no tiene registros en la línea temporal.</p>
+    }
+    else
+    {
+        <partial name="_LineaTemporalLista" model="new TimelineListModel(linea, null)" />
+    }
+}
+else if (cerrados is not null)
+{
+    <p class="text-muted">
+        Solo lectura. Cada evento muestra el basal y la ubicación que estaban vigentes cuando se registró, no los actuales. Esta
+        consulta ha quedado registrada en la auditoría.
+    </p>
+    if (cerrados.Count == 0)
+    {
+        <p class="text-muted">Este residente no tiene eventos cerrados.</p>
+    }
+    else
+    {
+        <partial name="_EventosCerradosLista" model="new ClosedEventsListModel(cerrados, null)" />
+    }
+}
+else if (headers.Count == 0)
 {
     <p class="text-muted">Este residente todavía no tiene ningún basal firmado.</p>
+}
+else if (contenido is not null)
+{
+    <p class="text-muted">Solo lectura. Esta consulta ha quedado registrada en la auditoría.</p>
+    <partial name="_ContenidoVersionBasal" model="contenido" />
 }
 else
 {

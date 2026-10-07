@@ -252,6 +252,20 @@ public interface IChangeInboxDirectory
     Task<IReadOnlyList<TimelineEntry>> ListTimelineAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 
+    /// <summary>DIR-06: lo mismo con el ámbito de Dirección Clínica, que ve todos los eventos de sus unidades. No autoriza nada: solo
+    /// se llama después de una lectura auditada del residente (ReadDirectionBaseline).</summary>
+    Task<IReadOnlyList<TimelineEntry>> ListDirectionTimelineAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, bool includeAuthorNames = false, CancellationToken ct = default);
+
+    /// <summary>DIR-14: la trazabilidad clínica del residente (la auditoría de sus acciones clínicas, de ClinicalTraceability.ActionCodes), de la
+    /// más reciente a la más antigua. Como las otras lecturas de Dirección, solo se llama después de una lectura auditada del residente.</summary>
+    Task<ClinicalTraceabilityPage> ListDirectionTraceabilityAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+
+    /// <summary>DIR-07: lo mismo que ListClosedEventsAsync con el ámbito de Dirección Clínica; también solo tras una lectura auditada.</summary>
+    Task<IReadOnlyList<ClosedEventSummary>> ListDirectionClosedEventsAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+
     /// <summary>MED-02: escalados pendientes para un ámbito de Medicina. Con un ámbito de Medicina, FindAsync
     /// solo devuelve eventos escalados a Medicina.</summary>
     Task<IReadOnlyList<EscalationSummary>> ListEscalationsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);

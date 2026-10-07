@@ -1,0 +1,15 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model TimelineEntry
+@* Los campos con valor de un hito de la línea temporal (los mismos textos que la línea temporal). *@
+@{ var fields = TimelineDisplay.Fields(Model); }
+@if (fields.Count > 0)
+{
+    <dl class="row mb-0 small">
+        @foreach (var (label, value) in fields)
+        {
+            <dt class="col-sm-3 fw-normal text-muted">@label</dt>
+            <dd class="col-sm-9 mb-1" style="white-space: pre-line">@value</dd>
+        }
+    </dl>
+}
