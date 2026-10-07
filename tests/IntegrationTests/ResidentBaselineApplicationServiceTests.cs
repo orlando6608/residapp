@@ -1,3 +1,4 @@
+using Dapper;
 using ResidApp.Application.Authorization;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
@@ -193,6 +194,59 @@ public class ResidentBaselineApplicationServiceTests
         var (auxiliar, auxResident) = await SeedResidentWithProfileAsync(SystemProfile.Auxiliar, []);
         Assert.False((await BuildService(auxiliar.ExternalSubject)
             .CanManageBaselineAsync(auxiliar.ProfileScopeId, auxiliar.CenterId, auxResident.ResidentId)).Value);
+    }
+
+    /// <summary>DIR-05: Dirección Clínica ve el contenido del basal vigente solo tras dejar su auditoría; el historial sigue sin
+    /// contenido; sin el permiso clínico no hay contenido ni auditoría.</summary>
+    [Fact]
+    public async Task Direccion_LeeElContenidoDelBasalVigenteAuditado_ElHistorialSoloCabeceras_YSinPermisoNada()
+    {
+        var (nursing, resident) = await SeedResidentWithProfileAsync(SystemProfile.Enfermeria,
+            [ResidentBaselinePermission.BaselineInitialComplete.ToCode()]);
+        var nursingService = BuildService(nursing.ExternalSubject);
+        var residentId = resident.ResidentId;
+        Assert.True((await nursingService.CreateBaselineDraftAsync(DraftCommand(nursing, residentId, BaselineReason.Alta))).Ok);
+        foreach (var (area, answer) in BaselineTestData.NineAreas())
+        {
+            Assert.True((await nursingService.SaveBaselineDraftAreaAsync(
+                new SaveBaselineDraftAreaCommand(nursing.ProfileScopeId, nursing.CenterId, residentId, area, answer, null))).Ok);
+        }
+        Assert.True((await nursingService.SaveBaselineDraftBarthelAsync(new SaveBaselineDraftBarthelCommand(
+            nursing.ProfileScopeId, nursing.CenterId, residentId, new DateOnly(2026, 9, 14), BaselineTestData.FullBarthelItems()))).Ok);
+        var draft = (await nursingService.LoadBaselineDraftAsync(new LoadBaselineDraftCommand(nursing.ProfileScopeId, nursing.CenterId, residentId))).Value!;
+        Assert.True((await nursingService.SignBaselineAsync(new SignBaselineCommand(
+            nursing.ProfileScopeId, nursing.CenterId, residentId, draft.Id, draft.DraftRevision, Guid.NewGuid()))).Ok);
+
+        var direction = await SeedFixture.AddProfileToCenterAsync(
+            SystemProfile.DireccionClinica, nursing.CenterId, nursing.UnitId, [ResidentBaselinePermission.ClinicalDetailRead.ToCode()]);
+        var withoutPermission = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, nursing.CenterId, nursing.UnitId, []);
+        ReadDirectionBaselineCommand Read(SeededProfile who, string type) => new(
+            who.ProfileScopeId, who.CenterId, residentId, type, "CONTINUIDAD_ASISTENCIAL", Guid.NewGuid(), "Revisión de continuidad (prueba).");
+        async Task<int> AuditedReadsAsync(string type)
+        {
+            using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+            return await connection.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ' AND tipo_recurso = @type",
+                new { Id = residentId.Value, type });
+        }
+
+        var denied = await BuildService(withoutPermission.ExternalSubject).ReadDirectionBaselineAsync(Read(withoutPermission, "BASELINE_CURRENT"));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, denied.Error!.Code);
+        Assert.Equal(0, await AuditedReadsAsync("BASELINE_CURRENT"));
+
+        var directionService = BuildService(direction.ExternalSubject);
+        var history = await directionService.ReadDirectionBaselineAsync(Read(direction, "BASELINE_HISTORY"));
+        Assert.True(history.Ok, history.Error?.Message);
+        Assert.Single(history.Value!.Headers);
+        Assert.Null(history.Value.Content);
+        Assert.Equal(0, await AuditedReadsAsync("BASELINE_CURRENT"));
+
+        var current = await directionService.ReadDirectionBaselineAsync(Read(direction, "BASELINE_CURRENT"));
+        Assert.True(current.Ok, current.Error?.Message);
+        Assert.Equal(1, Assert.Single(current.Value!.Headers).VersionNumber);
+        Assert.Equal(9, current.Value.Content!.Areas.Count);
+        Assert.Equal(100, current.Value.Content.Header.BarthelTotal);
+        Assert.Equal(1, await AuditedReadsAsync("BASELINE_CURRENT"));
     }
 
     private static CreateBaselineDraftCommand DraftCommand(SeededProfile seed, ResidentId residentId, BaselineReason reason) =>

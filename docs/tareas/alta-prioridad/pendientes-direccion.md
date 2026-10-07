@@ -72,8 +72,13 @@ En el orden propuesto:
      al cerrar sesión (`DevAuthController.Logout`) o al cumplirse la hora. Cada apertura sigue comprobando permiso y ámbito en SQL y escribiendo su propia
      fila de auditoría antes de entregar el contenido. Tabla `declaraciones_acceso_clinico` (solo se crea y se termina; con seguridad por filas),
      cookie `residapp_clinical_access` (solo el id; SQL revalida todo), `ClinicalAccessDeclarations` (consultar la vigente y terminarlas).
-   - **Hecho solo para la consulta que ya existía** (`/Baseline/Direction`: historial y basal vigente, solo cabeceras de versión). **Falta construir sobre este
-     mecanismo**, cada pantalla con su `tipo_recurso`: contenido del basal para Dirección, línea temporal (DIR-06), historial de eventos cerrados (DIR-07),
+   - **DIR-05 hecho el 2026-10-07 (sin script):** `/Baseline/Direction` con «Basal vigente» muestra ahora el contenido de la versión vigente (nueve áreas y Barthel por
+     ítem), con el parcial `_ContenidoVersionBasal` (el mismo de Enfermería/Medicina, `VersionBasal`). `ReadDirectionBaseline` devuelve `DirectionBaselineRead(Headers, Content)`: primero
+     la lectura auditada («auditoría o nada», sin cambios en `ReadAsClinicalDirectionAsync`) y solo después `ReadVersionAsync` de la versión que acaba de auditar; «Historial de basal» sigue
+     devolviendo solo cabeceras. `eventos_auditoria.tipo_recurso` no tiene `CHECK` de valores, así que no hizo falta script. **Decisión mía, sin confirmar:** el contenido de versiones
+     históricas no se entrega aquí (llegará con DIR-15, versiones vinculadas). Test: `Direccion_LeeElContenidoDelBasalVigenteAuditado_ElHistorialSoloCabeceras_YSinPermisoNada`
+     (falla si el historial entrega contenido). Comprobado por HTTP en local con un residente ficticio con basal firmado.
+   - **Falta construir sobre este mecanismo**, cada pantalla con su `tipo_recurso`: línea temporal (DIR-06), historial de eventos cerrados (DIR-07),
      trazabilidad clínica (DIR-14), correcciones y rectificaciones (DIR-15) y el informe de derivación firmado. Notas del repositorio de lectura:
      `ReadAsClinicalDirectionAsync` (`SqlBaselineRepository`) es el patrón «auditoría o nada»; `SqlChangeInboxDirectory.ScopedEventsFrom` fija
      `perfil_codigo IN ('ENFERMERIA','MEDICINA')` y no sirve a Dirección tal cual (`SqlSupervisionDirectory.ScopedEventsFrom` es el gemelo); no reutilizar la ruta de

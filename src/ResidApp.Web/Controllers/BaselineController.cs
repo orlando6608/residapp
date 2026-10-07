@@ -119,7 +119,8 @@ public sealed class BaselineController(
         {
             ClinicalAccessDeclarationCookie.Write(Response, form.OperacionId);
         }
-        ViewBag.Headers = result.Value;
+        ViewBag.Headers = result.Value!.Headers;
+        ViewBag.Content = result.Value.Content;
         ViewBag.Declaracion = declaration ?? await FindDeclarationAsync(activeScope, form.ResidenteId!.Value, ct, form.OperacionId);
         return View("DirectionResult", form);
     }

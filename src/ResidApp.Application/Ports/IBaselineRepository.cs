@@ -36,6 +36,10 @@ public sealed record ClinicalAccessDeclaration(
 /// <summary>Traduce AuditedBaselineHeader de audit-repository.ts.</summary>
 public sealed record AuditedBaselineHeader(BaselineVersionId Id, int VersionNumber, BaselineReason ReasonCode, DateTimeOffset SignedAt);
 
+/// <summary>DIR-05: lo que recibe Dirección Clínica de una lectura auditada. Content (las nueve áreas y el Barthel) solo viene al
+/// leer el basal vigente, y solo después de que su auditoría esté escrita; el historial devuelve únicamente las cabeceras.</summary>
+public sealed record DirectionBaselineRead(IReadOnlyList<AuditedBaselineHeader> Headers, BaselineVersionDetail? Content);
+
 /// <summary>Entrada de la lectura resumida del basal vigente para el cuidado cotidiano (AUX-03/ENF-20/MED-21):
 /// no lleva OperationId porque, a diferencia de ClinicalDirectionReadInput, no escribe ningún evento de
 /// auditoría — ResidentBaselinePolicy.AuthorizeBaselineCurrentRead permite esta lectura a Auxiliar,

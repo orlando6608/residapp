@@ -4,6 +4,7 @@
     ViewData["Title"] = "Resultado de la consulta";
     var declaracion = ViewBag.Declaracion as ClinicalAccessDeclaration;
     var headers = (IReadOnlyList<ResidApp.Application.Ports.AuditedBaselineHeader>)ViewBag.Headers;
+    var contenido = ViewBag.Content as BaselineVersionDetail;
 }
 
 <nav aria-label="breadcrumb">
@@ -14,11 +15,16 @@
     </ol>
 </nav>
 
-<h1 class="h3">Historial de basal auditado</h1>
+<h1 class="h3">@(contenido is null ? "Historial de basal auditado" : "Basal vigente auditado")</h1>
 
 @if (headers.Count == 0)
 {
     <p class="text-muted">Este residente todavía no tiene ningún basal firmado.</p>
+}
+else if (contenido is not null)
+{
+    <p class="text-muted">Solo lectura. Esta consulta ha quedado registrada en la auditoría.</p>
+    <partial name="_ContenidoVersionBasal" model="contenido" />
 }
 else
 {

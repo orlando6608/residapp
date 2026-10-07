@@ -29,7 +29,7 @@ public sealed class ReadDirectionBaseline(
 {
     private readonly ClinicalAccessSettings _settings = settings ?? ClinicalAccessSettings.Default;
 
-    public Task<ApplicationResult<IReadOnlyList<AuditedBaselineHeader>>> ExecuteAsync(
+    public Task<ApplicationResult<DirectionBaselineRead>> ExecuteAsync(
         ReadDirectionBaselineCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
@@ -62,7 +62,15 @@ public sealed class ReadDirectionBaseline(
             }
 
             var payload = new ClinicalDirectionReadPayload(command.OperacionId, justification, declaration?.Id, _settings.DeclarationMinutes);
-            return await RequestAuthorizationContextResolver.ExecuteDirectionBaselineReadAsync(context, repository, payload, ct);
+            var headers = await RequestAuthorizationContextResolver.ExecuteDirectionBaselineReadAsync(context, repository, payload, ct);
+
+            // DIR-05: el contenido del basal vigente se entrega solo si la lectura ya dejó su auditoría (la versión es la que
+            // acaba de auditar); también al repetir una operación ya registrada. Sin versión auditada, no hay contenido.
+            var content = resourceType == ClinicalResourceType.BaselineCurrent && headers.Count == 1
+                ? await repository.ReadVersionAsync(
+                    new ReadCurrentBaselineSummaryInput(command.CentroId, command.ResidenteId), headers[0].VersionNumber, ct)
+                : null;
+            return new DirectionBaselineRead(headers, content);
         });
 }
 
