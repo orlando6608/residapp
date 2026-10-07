@@ -13,6 +13,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **El despliegue a Azure limpia `wwwroot` (2026-10-07, rama `despliegue-limpio`):** el paso «Desplegar en Azure Web App» lleva `clean: true`. Antes, OneDeploy añadía ficheros pero no borraba los de
+  despliegues anteriores, y los documentos de CJ movidos a `archivados/` siguieron sirviéndose desde su ruta antigua (se borraron a mano por Kudu). `wwwroot` no guarda estado de la app (claves de Data Protection
+  en `/home/ASP.NET`, logs en `/home/LogFiles`, datos en SQL). **Límite:** deja un corte de segundos con `wwwroot` a medias; vale para desarrollo (B1, sin slots, datos ficticios). Con usuarios reales,
+  repensarlo: `WEBSITE_RUN_FROM_PACKAGE=1` o slots de staging (plan Standard). Kudu tiene el acceso básico desactivado: se entra con un token de Entra ID (`az account get-access-token --resource https://management.azure.com`).
 - **Documentos de CJ con clave y tres secciones (2026-10-07, misma rama, sin push):** `/pendientes-cj/` (índice, secciones, documentos y `.respuestas.json`) ya no es público: pide una clave
   (`PendientesCj:Clave` en `appsettings.json`, hoy `CJ123`; sobrescribible con `PendientesCj__Clave`; sin clave configurada no entra nadie). Middleware en `Program.cs` antes de los estáticos
   (páginas → 302 a `/AccesoCj?returnUrl=…`, `.json` → 401), `PendientesCjAccess` (cookie de sesión `residapp_cj_acceso` = SHA-256 de la clave, recalculada en cada petición), `AccesoCjController`

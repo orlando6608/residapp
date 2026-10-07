@@ -130,8 +130,12 @@ jobs:
           echo "::add-mask::$SQL_PASSWORD"
           APLICAR_SEED=1 bash database/aplicar-scripts.sh
 
+      # clean: sin él, el despliegue añade ficheros pero no borra los de antes: un documento movido o borrado del repo seguía
+      # sirviéndose desde el servidor. Deja un corte de segundos con wwwroot a medias, aceptable en desarrollo con datos ficticios;
+      # con usuarios reales, repensar el despliegue (WEBSITE_RUN_FROM_PACKAGE o slots de staging en un plan Standard).
       - name: Desplegar en Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: app-residapp-dev
           package: ./publish
+          clean: true
