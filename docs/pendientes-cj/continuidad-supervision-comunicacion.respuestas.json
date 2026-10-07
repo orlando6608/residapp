@@ -1,0 +1,121 @@
+{
+  "documento": "continuidad-supervision-comunicacion",
+  "cuestionario": "2026-10-02",
+  "guardado": "2026-10-07T19:46:56.705Z",
+  "respondidas": 16,
+  "total": 16,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Quién puede confirmar la recepción?",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "La opción mas razonable que veo para no tener problemas y que no se pierda algún seguimiento es que exista una bandeja de seguimientos común para el servicio de enfermeria y otra para el servicio de medicina de cada unidad. Entonces al entrar cada turno y loguearse en dicha unidad le apareceran los seguimientos de las incidencias o eventos creados. \nPara un futuro si podemos crear en la aplicación un apartado donde dirección de enfermería gestione el calendario de los turnos y asigne en la aplicación quien va en cada turno y en cada unidad se podría gestionar para que apareciera en bandejas personales. Pero de momento no es un requisito para un producto mínimo viable. Aunque si puedes agrega esto al repositorio para que quede guardado para un futuro.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿La aplicación debe proponer el equipo entrante según los turnos planificados?",
+      "opcion": "B",
+      "textoOpcion": "No: se elige a mano entre los equipos de la unidad, como ahora.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Qué derivaciones debe ver Dirección en esa pantalla?",
+      "opcion": "B",
+      "textoOpcion": "También las de episodios ya cerrados, eligiendo un periodo.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "¿Debe quedar en la auditoría cada consulta de esa pantalla?",
+      "opcion": "A",
+      "textoOpcion": "No, como ahora.",
+      "texto": "",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Es correcta esta forma de contar los vencidos?",
+      "opcion": "C",
+      "textoOpcion": "Otra (descríbela en el comentario).",
+      "texto": "El episodio debe constar como abierto hasta que enfermería o Medicina lo cierran. Yo no los tomaría como vencidos sino como pendientes, Pendiente es un episodio que se ha abierto pero que aún no se ha valorado.\nLa palabra vencido me suena a que es algo que ya paso y no se hizo nada.\nTambién se cierra si se deriva el episodio a Urgencias.\nOjo si se escala a Medicina no se cierra el episodio. Sigue abierto. \nPor lo que el episodio debe constar como abierto si no sabes en que circunstancias está.",
+      "respondida": true
+    },
+    "3.2": {
+      "pregunta": "¿Hay otros momentos en que un seguimiento termina?",
+      "opcion": "B",
+      "textoOpcion": "Sí (di cuáles en el comentario; por ejemplo, cuando Medicina da una indicación).",
+      "texto": "De momento solo se cierra el episodio si lo hace enfermería o Medicina. \nSi se escala a Medicina no se cierra debe seguir abierto a no ser que este lo indique.\nSi se deriva a urgencias el evento se cierra.\nSi el paciente fallece también se cierra.",
+      "respondida": true
+    },
+    "hito-valoracion-enfermeria": {
+      "pregunta": "Valoración de Enfermería: desde el registro del cambio hasta el inicio de la valoración",
+      "plazo": "Menos de 8h",
+      "plazoPrioritario": "menos de 30min",
+      "notas": "Individualizar según centro y contexto.",
+      "respondida": true
+    },
+    "hito-valoracion-medica": {
+      "pregunta": "Valoración médica: desde el escalado hasta el inicio de la valoración médica",
+      "plazo": "Menos de 24h",
+      "plazoPrioritario": "menos de 30 min",
+      "notas": "Si no hay médico y se cree necesario derivar a urgencias.",
+      "respondida": true
+    },
+    "hito-recepcion": {
+      "pregunta": "Recepción de la transferencia: desde la transferencia hasta la confirmación de la recepción",
+      "plazo": "Menos de 8h",
+      "plazoPrioritario": "Menos de 30 min",
+      "notas": "",
+      "respondida": true
+    },
+    "hito-informe-derivacion": {
+      "pregunta": "Informe de derivación: desde la activación del protocolo urgente hasta la firma del informe",
+      "plazo": "Menos de 30min",
+      "plazoPrioritario": "Menos de 30min",
+      "notas": "",
+      "respondida": true
+    },
+    "hito-llamada-familia": {
+      "pregunta": "Llamada a la familia: desde la activación del protocolo urgente hasta el primer intento de llamada",
+      "plazo": "Menos de 1h",
+      "plazoPrioritario": "Menos de 30min",
+      "notas": "Si las circunstancias lo permiten",
+      "respondida": true
+    },
+    "hito-lectura-indicacion": {
+      "pregunta": "Lectura de la indicación médica: desde que Medicina la emite hasta que Enfermería confirma la lectura",
+      "plazo": "Menos de 8h",
+      "plazoPrioritario": "menos de 30min",
+      "notas": "",
+      "respondida": true
+    },
+    "hito-realizacion-indicacion": {
+      "pregunta": "Realización de la indicación médica: desde que Medicina la emite hasta que consta realizada o no realizada",
+      "plazo": "menos de 8h",
+      "plazoPrioritario": "menos de 30 min",
+      "notas": "Según contexto clínico",
+      "respondida": true
+    },
+    "4.1": {
+      "pregunta": "¿Qué hace la aplicación con un hito fuera de plazo?",
+      "opcion": "C",
+      "textoOpcion": "Además, el equipo responsable ve un aviso cuando un hito está a punto de pasar de plazo.",
+      "texto": "",
+      "respondida": true
+    },
+    "5.1": {
+      "pregunta": "¿Quién aprueba el texto para la familia?",
+      "opcion": "A",
+      "textoOpcion": "Quien lo prepara: al guardarlo ya queda aprobado.",
+      "texto": "",
+      "respondida": true
+    },
+    "5.2": {
+      "pregunta": "Una vez aprobado, ¿cuándo lo ve la familia?",
+      "opcion": "C",
+      "textoOpcion": "Otra (descríbela en el comentario).",
+      "texto": "Una vez aprobado creo que debemos dejar un margen de 1h para corregir cualquier error que se pueda cometer. Luego podríamos fijar una hora específica en la que se emitan todos los comunicados. Por Ejemplo 19h. \nAdministración puede forzar la publicación de un comunicado antes de la hora prevista.\nSi es una información urgente este no es el canal indicado. Se puede realizar pero siempre sumar otros canales.",
+      "respondida": true
+    }
+  }
+}
