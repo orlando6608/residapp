@@ -13,7 +13,8 @@
 <p class="text-muted">
     El informe reúne automáticamente la identificación, el basal, la observación, las valoraciones, las constantes,
     las actuaciones y la evolución. Esos datos no se editan aquí: tú escribes el motivo y, si quieres, información
-    adicional. No incluye los contactos con servicios, que quedan en la trazabilidad interna.
+    adicional y las comunicaciones. Los contactos con servicios del protocolo no se añaden solos al informe: solo
+    viaja lo que escribas en «Comunicaciones».
 </p>
 
 <div asp-validation-summary="All" class="text-danger"></div>
@@ -29,13 +30,23 @@
             <div class="card-body">
                 <div class="mb-3">
                     <label for="derivar-motivo" class="form-label">Motivo de la derivación</label>
-                    <textarea id="derivar-motivo" name="Form.Motivo" class="form-control" rows="4"
+                    <div id="derivar-motivo-ayuda" class="form-text mb-1">Explica brevemente lo que ha sucedido y por qué se deriva.</div>
+                    <textarea id="derivar-motivo" name="Form.Motivo" class="form-control" rows="4" aria-describedby="derivar-motivo-ayuda"
                               maxlength="@ResidApp.Domain.Enfermeria.ReferralReportInput.MaxReasonLength">@form.Motivo</textarea>
                 </div>
-                <div>
+                <div class="mb-3">
                     <label for="derivar-informacion" class="form-label">Información adicional para Urgencias (opcional)</label>
                     <textarea id="derivar-informacion" name="Form.InformacionAdicional" class="form-control" rows="4"
                               maxlength="@ResidApp.Domain.Enfermeria.ReferralReportInput.MaxAdditionalInformationLength">@form.InformacionAdicional</textarea>
+                </div>
+                <div>
+                    <label for="derivar-comunicaciones" class="form-label">Comunicaciones (opcional)</label>
+                    <div id="derivar-comunicaciones-ayuda" class="form-text mb-1">
+                        Anota los contactos de esta derivación. Por ejemplo: «Contacto telefónico con SEM a las 18 h. Avisamos a la
+                        familia del traslado a Urgencias». Viaja en el informe: escribe solo lo que Urgencias deba conocer.
+                    </div>
+                    <textarea id="derivar-comunicaciones" name="Form.Comunicaciones" class="form-control" rows="3" aria-describedby="derivar-comunicaciones-ayuda"
+                              maxlength="@ResidApp.Domain.Enfermeria.ReferralReportInput.MaxCommunicationsLength">@form.Comunicaciones</textarea>
                 </div>
             </div>
         </div>
@@ -48,6 +59,7 @@
     {
         <input type="hidden" name="Form.Motivo" value="@form.Motivo" />
         <input type="hidden" name="Form.InformacionAdicional" value="@form.InformacionAdicional" />
+        <input type="hidden" name="Form.Comunicaciones" value="@form.Comunicaciones" />
         <input type="hidden" name="Form.Huella" value="@Model.Preview.Hash()" />
 
         <div class="card mb-3">

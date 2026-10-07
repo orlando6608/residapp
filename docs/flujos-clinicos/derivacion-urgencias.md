@@ -22,12 +22,12 @@ Este fichero documenta solo el módulo de derivación en sí. No repite cómo se
 
 ## Contenido del informe
 
-El informe de derivación reúne: identificación del residente y del centro, el basal relevante, la puntuación de Barthel, cognición y comunicación documentadas, el motivo y la observación de origen, las valoraciones registradas, las constantes, la oxigenoterapia si procede, las actuaciones realizadas, la evolución, y el profesional firmante.
+El informe de derivación reúne: identificación del residente y del centro, el basal relevante, la puntuación de Barthel, cognición y comunicación documentadas, el motivo y la observación de origen, las valoraciones registradas, las constantes, la oxigenoterapia si procede, las actuaciones realizadas, la evolución, y el profesional firmante. El profesional escribe el motivo de la derivación (qué ha sucedido y por qué se deriva), obligatorio, y, opcionales, información adicional para Urgencias y un apartado «Comunicaciones» propio del informe, para anotar los contactos de esa derivación (por ejemplo, «Contacto telefónico con SEM a las 18 h. Avisamos a la familia del traslado a Urgencias»).
 
 ## Reglas de negocio
 
 - El informe nunca incluye la escala CFS: esta escala fue retirada por completo del producto y no existe como campo, puntuación, resumen ni contenido de informe.
-- Los servicios contactados y las horas de contacto se conservan en la trazabilidad interna del sistema, pero no forman parte del bloque del informe que se entrega externamente.
+- Los servicios contactados y las horas de contacto se conservan en la trazabilidad interna del sistema, pero no se añaden de forma automática al informe que se entrega externamente. Solo viaja con el informe lo que el profesional escribe en el apartado «Comunicaciones» (decisión de CJ, 2026-10-06); ese apartado no se rellena solo con los contactos del protocolo ni con el campo «Comunicaciones» de la valoración.
 - El comportamiento del módulo es idéntico se active desde Enfermería o desde Medicina: mismas pantallas, mismo contenido, misma vista previa obligatoria.
 - Toda derivación genera una actualización relevante para la familia y exige documentar el intento de llamada al contacto familiar designado, sin que esa documentación retrase la atención al residente.
 
@@ -38,7 +38,7 @@ El informe de derivación reúne: identificación del residente y del centro, el
 | Punto de entrada desde protocolo urgente | `DER-01` | ENF-11 (Enfermería), MED-13 (Medicina) |
 | Vista previa y edición del texto | `DER-02` | ENF-12, MED-14 |
 | Contenido del informe | `DER-03` | ENF-12, MED-14 |
-| Trazabilidad interna de contactos y horas | `DER-04` | ENF-12, MED-14 |
+| Trazabilidad interna de contactos y horas; apartado «Comunicaciones» escrito por el profesional | `DER-04` | ENF-12, MED-14 |
 | Firma y PDF vinculado al evento | `DER-05` | ENF-12, MED-14 |
 | Actualización relevante e intento de llamada | `DER-06` | ENF-14, MED-16 |
 

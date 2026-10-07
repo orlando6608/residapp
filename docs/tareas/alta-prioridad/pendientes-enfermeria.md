@@ -278,8 +278,13 @@ Huecos de lo ya construido:
   - **Contacto familiar:** desde el 2026-10-01 la pantalla muestra el contacto urgente que designa Administración y
     precarga «A quién se llama» con él (ver `pendientes-administracion.md`); se sigue guardando como texto, sin enlace al
     familiar.
-  - **Pendiente de CJ:** confirmar si el campo "Comunicaciones" de la valoración debe quedar fuera del
-    informe, como se hace hoy por prudencia (DER-04). Preguntado en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 3).
+  - **«Comunicaciones» (CJ, 2026-10-06; hecho el 2026-10-07, script `0037`):** CJ eligió incluirlo en el informe, y matizó que el campo donde se
+    explica lo ocurrido y el motivo es el «Motivo» (que ya existe), no «Comunicaciones»; este se deja para anotaciones de contacto («Contacto
+    telefónico con SEM a las 18 h. Avisamos a los familiares del traslado»). **Suposición mía, sin confirmar:** es un campo propio del informe
+    (`informes_derivacion.comunicaciones`, opcional, hasta 4000 caracteres; sección «Comunicaciones» no automática), y NO se copia el campo
+    «Comunicaciones» de la valoración (que solo existe en Enfermería) ni los contactos del protocolo. Los informes firmados antes quedan sin él. Preguntado en
+    `docs/pendientes-cj/aclaraciones-respuestas-cj.html`. Tests: `Derivacion_LasComunicacionesQueEscribeElProfesional_ViajanEnElInformeFirmado`
+    y `Informe_ConComunicaciones_…`.
 
 - **Seguimiento (historia 4)**: desde el 2026-10-01 (script `0028`) el equipo entrante de una transferencia se elige entre los equipos activos de la unidad
   del evento (los crea Administración) y se guarda su vínculo y su nombre; ya no es texto libre, y sin equipos activos no se puede transferir. Las

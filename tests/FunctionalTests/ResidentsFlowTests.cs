@@ -259,6 +259,84 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Enfermeria_DerivaAUrgenciasConComunicaciones_VistaPreviaFirmaYPdf_ConLaAppEntera()
+    {
+        // La pantalla de derivación de punta a punta: el apartado «Comunicaciones» se escribe, sale en la vista previa, viaja con la
+        // huella al firmar y queda en el informe (con el usuario limitado, bajo la seguridad por filas).
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Derivacion Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        Task<int> RevisionAsync(Guid id) => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @id", new { id });
+
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Disnea brusca (prueba funcional de derivación).",
+            ["Clasificacion"] = "Ordinario",
+        }))).Content.ReadAsStringAsync();
+        var eventId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        (await nurse.PostAsync("/Enfermeria/EmpezarValoracion", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(detailPage, "__RequestVerificationToken"),
+            ["eventoId"] = eventId.ToString(),
+            ["revision"] = (await RevisionAsync(eventId)).ToString(),
+        }))).EnsureSuccessStatusCode();
+        var assessmentPage = await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}");
+        (await nurse.PostAsync("/Enfermeria/Valoracion", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(assessmentPage, "__RequestVerificationToken"),
+            ["Form.EventoId"] = eventId.ToString(),
+            ["Form.Revision"] = (await RevisionAsync(eventId)).ToString(),
+            ["Form.Hallazgos"] = "Crepitantes bilaterales.",
+        }))).EnsureSuccessStatusCode();
+        var activatePage = await nurse.GetStringAsync($"/Enfermeria/ActivarProtocolo?eventoId={eventId}");
+        (await nurse.PostAsync("/Enfermeria/ActivarProtocolo", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(activatePage, "__RequestVerificationToken"),
+            ["Form.EventoId"] = eventId.ToString(),
+            ["Form.Revision"] = (await RevisionAsync(eventId)).ToString(),
+        }))).EnsureSuccessStatusCode();
+
+        const string communications = "Contacto telefónico con SEM a las 18 h. Avisamos a la familia del traslado a Urgencias.";
+        var referralPage = await nurse.GetStringAsync($"/Enfermeria/Derivar?eventoId={eventId}");
+        var preview = WebUtility.HtmlDecode(await (await nurse.PostAsync("/Enfermeria/Derivar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(referralPage, "__RequestVerificationToken"),
+            ["Form.EventoId"] = eventId.ToString(),
+            ["Form.Revision"] = (await RevisionAsync(eventId)).ToString(),
+            ["Form.OperacionId"] = ExtractValue(referralPage, "Form.OperacionId"),
+            ["Form.Motivo"] = "Desaturación que no remonta con oxigenoterapia.",
+            ["Form.Comunicaciones"] = communications,
+            ["Form.Accion"] = "VistaPrevia",
+        }))).Content.ReadAsStringAsync());
+        var signed = WebUtility.HtmlDecode(await (await nurse.PostAsync("/Enfermeria/Derivar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(preview, "__RequestVerificationToken"),
+            ["Form.EventoId"] = eventId.ToString(),
+            ["Form.Revision"] = ExtractValue(preview, "Form.Revision"),
+            ["Form.OperacionId"] = ExtractValue(preview, "Form.OperacionId"),
+            ["Form.Motivo"] = ExtractValue(preview, "Form.Motivo"),
+            ["Form.InformacionAdicional"] = "",
+            ["Form.Comunicaciones"] = ExtractValue(preview, "Form.Comunicaciones"),
+            ["Form.Huella"] = ExtractValue(preview, "Form.Huella"),
+            ["Form.Accion"] = "Firmar",
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Comunicaciones (opcional)", WebUtility.HtmlDecode(referralPage));
+        Assert.Contains("Vista previa del informe", preview);
+        Assert.Contains(communications, preview);
+        Assert.Contains("Informe de derivación firmado.", signed);
+        Assert.Contains(communications, signed);
+        Assert.Equal(communications, await connection.ExecuteScalarAsync<string>(
+            "SELECT comunicaciones FROM dbo.informes_derivacion WHERE evento_id = @eventId", new { eventId }));
+    }
+
+    [Fact]
     public async Task BaselineSign_SinPantallaPropia_RedirigeAResidentes()
     {
         var seed = await SeedAsync();

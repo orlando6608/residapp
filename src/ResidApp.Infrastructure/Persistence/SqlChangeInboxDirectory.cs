@@ -326,7 +326,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         var report = await connection.QuerySingleOrDefaultAsync<ReferralRow>(new CommandDefinition("""
             SELECT d.perfil_codigo AS ProfileCode, d.motivo AS Reason,
                    CAST(CASE WHEN d.firmado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS SignedByCurrentAccount,
-                   d.firmado_en AS SignedAt, d.huella_contenido AS ContentHash
+                   d.firmado_en AS SignedAt, d.huella_contenido AS ContentHash, d.comunicaciones AS Communications
               FROM dbo.informes_derivacion d
               JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
              WHERE d.evento_id = @EventId
@@ -353,10 +353,11 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         return new ReferralDetail(
             EnumCode.ParseCode<SystemProfile>(report.ProfileCode), report.Reason, report.SignedByCurrentAccount,
             new DateTimeOffset(report.SignedAt, TimeSpan.Zero), report.ContentHash, attempts,
-            await EmergencyContactQuery.FindAsync(connection, centerId, residentId, ct));
+            await EmergencyContactQuery.FindAsync(connection, centerId, residentId, ct), report.Communications);
     }
 
-    private sealed record ReferralRow(string ProfileCode, string Reason, bool SignedByCurrentAccount, DateTime SignedAt, string ContentHash);
+    private sealed record ReferralRow(
+        string ProfileCode, string Reason, bool SignedByCurrentAccount, DateTime SignedAt, string ContentHash, string? Communications);
 
     private sealed record FamilyCallAttemptRow(
         string Contact, DateTime CalledAt, string ResultCode, string? Note, bool ByCurrentAccount, DateTime RecordedAt);

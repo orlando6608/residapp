@@ -11,7 +11,8 @@ namespace ResidApp.Application.UseCases;
 /// no se editan; HuellaVistaPrevia es la que mostró la vista previa obligatoria (DER-02).</summary>
 public sealed record SignReferralReportCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId, int Revision, Guid OperacionId,
-    IReadOnlyList<ReferralReportSection> SeccionesAutomaticas, string? Motivo, string? InformacionAdicional, string? HuellaVistaPrevia);
+    IReadOnlyList<ReferralReportSection> SeccionesAutomaticas, string? Motivo, string? InformacionAdicional, string? HuellaVistaPrevia,
+    string? Comunicaciones = null);
 
 /// <summary>DER-06: un intento de llamada al contacto familiar, común a los dos perfiles.</summary>
 public sealed record RecordFamilyCallAttemptCommand(
@@ -54,7 +55,7 @@ internal static class ReferralSigning
         IReferralReportPdfRenderer renderer, SystemProfile profile, SignReferralReportCommand command,
         Func<SignReferralReportInput, Task<int>> persist, CancellationToken ct)
     {
-        var report = new ReferralReportInput(command.Motivo, command.InformacionAdicional);
+        var report = new ReferralReportInput(command.Motivo, command.InformacionAdicional, command.Comunicaciones);
         var content = ReferralReportContent.Compose(command.SeccionesAutomaticas, report);
 
         // Un informe por evento lo exige la BD (REFERRAL_REPORT_ALREADY_SIGNED) después de la idempotencia: repetir
