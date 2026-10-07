@@ -637,7 +637,8 @@ public static class VitalSignRangeDisplay
     };
 
     public static string Alert(VitalSignAlert alert) =>
-        $"{Label(alert.Code)} {alert.Value:0.#} {Unit(alert.Code)}: " +
+        $"{Label(alert.Code)} {alert.Value:0.#} {Unit(alert.Code)}" +
+        $"{(alert.OxygenFlowLpm is { } flow ? $" con oxígeno a {flow:0.#} L/min" : string.Empty)}: " +
         $"{(alert.Deviation == VitalSignDeviation.PorDebajo ? "por debajo" : "por encima")} del rango de referencia ({Range(alert.Range)})";
 
     /// <summary>Texto de ayuda bajo el campo del formulario, o null si el centro no tiene rango para esa constante.</summary>

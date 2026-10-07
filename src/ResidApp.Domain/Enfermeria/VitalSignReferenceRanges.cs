@@ -23,29 +23,31 @@ public enum VitalSignDeviation
     PorEncima,
 }
 
-/// <summary>Una constante registrada fuera del rango de referencia de su centro.</summary>
-public sealed record VitalSignAlert(VitalSignCode Code, decimal Value, VitalSignRange Range, VitalSignDeviation Deviation);
+/// <summary>Una constante registrada fuera del rango de referencia de su centro. <c>OxygenFlowLpm</c> solo se
+/// informa en la saturación medida con oxigenoterapia.</summary>
+public sealed record VitalSignAlert(
+    VitalSignCode Code, decimal Value, VitalSignRange Range, VitalSignDeviation Deviation, decimal? OxygenFlowLpm = null);
 
 /// <summary>
 /// Compara las constantes registradas con los rangos de referencia del centro. Solo produce avisos
 /// informativos: no bloquea el guardado ni cambia clasificación, prioridad ni desenlace (el sistema no
-/// decide clínicamente, docs/producto/alcance.md). Una constante sin valor o sin rango no genera aviso, ni
-/// tampoco la saturación medida con oxigenoterapia.
+/// decide clínicamente, docs/producto/alcance.md). Una constante sin valor o sin rango no genera aviso. La
+/// saturación con oxigenoterapia se compara con el mismo rango, indicando el flujo (CJ, 2026-10-07).
 /// </summary>
 public static class VitalSignReferenceRanges
 {
-    /// <summary>Valores que CJ propone para todos los centros (respuestas del 2026-10-06). Solo rellenan el
-    /// formulario de rangos: quien tiene REFERENCE_RANGES_MANAGE los revisa y los guarda. La glucemia solo
-    /// tiene mínimo; el resto «se individualiza». La saturación es la de aire ambiente.</summary>
+    /// <summary>Valores que CJ propone para todos los centros (respuestas del 2026-10-06 y 2026-10-07). Solo
+    /// rellenan el formulario de rangos: quien tiene REFERENCE_RANGES_MANAGE los revisa y los guarda. La
+    /// temperatura tiene un decimal, así que su máximo 36,9 avisa desde 37,0.</summary>
     public static IReadOnlyList<VitalSignRange> Suggested { get; } =
     [
-        new(VitalSignCode.Temperatura, 36m, 37.9m),
+        new(VitalSignCode.Temperatura, 36m, 36.9m),
         new(VitalSignCode.TensionSistolica, 90m, 139m),
         new(VitalSignCode.TensionDiastolica, 60m, 89m),
         new(VitalSignCode.FrecuenciaCardiaca, 60m, 100m),
         new(VitalSignCode.FrecuenciaRespiratoria, 12m, 20m),
         new(VitalSignCode.SaturacionO2, 95m, 100m),
-        new(VitalSignCode.Glucemia, 70m, null),
+        new(VitalSignCode.Glucemia, 70m, 120m),
     ];
 
     /// <summary>Un rango configurable: al menos un límite, positivos, mínimo menor que máximo y SpO2 como
@@ -72,18 +74,16 @@ public static class VitalSignReferenceRanges
             {
                 continue;
             }
-            // El rango de saturación es el de aire ambiente (CJ, 2026-10-06): con oxigenoterapia no se compara.
-            if (range.Code == VitalSignCode.SaturacionO2 && vitals.RespiratorySupport == RespiratorySupportCode.Oxigenoterapia)
-            {
-                continue;
-            }
+            var flow = range.Code == VitalSignCode.SaturacionO2 && vitals.RespiratorySupport == RespiratorySupportCode.Oxigenoterapia
+                ? vitals.OxygenFlowLpm
+                : null;
             if (range.Min is not null && value < range.Min)
             {
-                alerts.Add(new VitalSignAlert(range.Code, value.Value, range, VitalSignDeviation.PorDebajo));
+                alerts.Add(new VitalSignAlert(range.Code, value.Value, range, VitalSignDeviation.PorDebajo, flow));
             }
             else if (range.Max is not null && value > range.Max)
             {
-                alerts.Add(new VitalSignAlert(range.Code, value.Value, range, VitalSignDeviation.PorEncima));
+                alerts.Add(new VitalSignAlert(range.Code, value.Value, range, VitalSignDeviation.PorEncima, flow));
             }
         }
         return alerts.OrderBy(a => a.Code).ToList();

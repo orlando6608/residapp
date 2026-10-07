@@ -618,9 +618,9 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.DoesNotContain("todavía no se han guardado", normal);
         Assert.Contains("todavía no se han guardado", suggested);
         Assert.Contains("name=\"Form.Rangos[0].Minimo\"", suggested);
-        Assert.Matches("name=\"Form.Rangos\\[0\\]\\.Maximo\"[^>]*value=\"37.9\"", suggested);
+        Assert.Matches("name=\"Form.Rangos\\[0\\]\\.Maximo\"[^>]*value=\"36.9\"", suggested);
         Assert.Matches("name=\"Form.Rangos\\[6\\]\\.Minimo\"[^>]*value=\"70\"", suggested);
-        Assert.DoesNotMatch("name=\"Form.Rangos\\[6\\]\\.Maximo\"[^>]*value=\"\\d", suggested);
+        Assert.Matches("name=\"Form.Rangos\\[6\\]\\.Maximo\"[^>]*value=\"120\"", suggested);
         using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
         Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.rangos_referencia_constantes WHERE centro_id = (SELECT centro_id FROM dbo.unidades WHERE id = @unitId)",
