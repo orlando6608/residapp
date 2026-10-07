@@ -515,9 +515,21 @@
         Dirección Clínica puede consultar, en modo de solo lectura, el basal vigente o el histórico de
         versiones de un residente. La consulta se hace en tu ámbito activo (lo ves arriba, con el enlace para
         cambiarlo), y el residente se elige en una lista con los de tu ámbito, con su unidad. En «Tipo de recurso»
-        eliges «Basal vigente» o «Historial de basal», y en «Propósito», la finalidad de la consulta (hoy solo hay
-        una: «Supervisión clínica»). Si el residente todavía no tiene ningún basal firmado, el resultado te lo indica.
-        Cada consulta que muestra un basal queda registrada obligatoriamente en la auditoría.
+        eliges «Basal vigente» o «Historial de basal».
+    </p>
+    <p>
+        Para ver contenido clínico declaras <strong>para qué</strong> lo necesitas: eliges una <strong>finalidad</strong> («Revisión de
+        continuidad asistencial», «Revisión de una incidencia o reclamación asistencial» o «Verificación de trazabilidad documental») y
+        escribes siempre una <strong>justificación</strong> breve y concreta, sin copiar información clínica ni datos personales
+        innecesarios. Esa declaración vale <strong>una hora</strong> para todas las pantallas clínicas de ese residente, y termina antes si
+        cambias de residente, de perfil activo o de ámbito, o si cierras sesión. Mientras vale, la pantalla te lo dice y no vuelve a
+        pedirte la finalidad; si caduca o termina, te la pide de nuevo.
+    </p>
+    <p class="mb-0">
+        Si el residente todavía no tiene ningún basal firmado, el resultado te lo indica. Cada apertura que muestra un basal queda
+        registrada obligatoriamente en la auditoría, con la finalidad y la justificación, antes de entregarte el contenido (la declaración
+        no sustituye ni al permiso ni a esa auditoría). La «revisión de calidad asistencial» no está entre las finalidades: se añadirá
+        cuando se decida cómo distinguir la Coordinación Clínica.
     </p>
 </section>
 
@@ -543,7 +555,7 @@
         más antiguo, y en qué punto está cada derivación: cuándo y quién activó el protocolo, si el informe de derivación está firmado
         (cuándo y por qué perfil) y cuántas llamadas a la familia constan. Arriba aparece el resumen (cuántas están en curso, con informe
         firmado, sin firmar y con alguna llamada). No se muestra el contenido del informe ni el de las llamadas, y Dirección no genera ni
-        firma informes. Leer un informe firmado queda para la consulta clínica auditada, todavía pendiente de que CJ defina las finalidades.
+        firma informes. Leer un informe firmado queda para la consulta clínica auditada (la declaración de finalidad ya existe; falta construir esa pantalla).
     </p>
     <p class="mb-0">
         En <strong>Mi ámbito de supervisión</strong> consultas el centro, las unidades y los permisos vigentes de tu perfil
@@ -608,7 +620,9 @@
         <strong>Registrar cambio</strong> documenta el cambio en una o varias de las diez áreas de observación
         cotidiana. En siete de ellas, las opciones rápidas predefinidas son botones que se marcan con un toque (llevan
         una ✓ cuando están marcados) y la nota opcional se abre con <strong>«Añadir nota»</strong>; las otras tres
-        son solo de texto libre. Añade la temperatura si procede y clasifícalo como
+        son solo de texto libre. Añade la temperatura si procede (al confirmar, un aviso te recuerda mantener el
+        seguimiento si supera 37 °C y avisar a Enfermería si supera 38 °C; es solo visual y no impide registrar)
+        y clasifícalo como
         <strong>ordinario</strong> (pasa a la bandeja ordinaria de Enfermería) o <strong>prioritario</strong>
         (exige elegir un motivo de una lista cerrada y documentar el aviso directo antes de confirmar;
         pasa a la bandeja prioritaria). El botón <strong>Continuar</strong> queda siempre a la vista al pie de la
@@ -684,7 +698,8 @@
     </p>
     <p>
         Al abrir el detalle de un evento ves la observación original completa (inmutable), la temperatura
-        si se registró, y el basal vigente resumido del residente. Si está pendiente, pulsa
+        si se registró (con un aviso si supera 37 °C, o 38 °C, que no cambia la clasificación), y el basal
+        vigente resumido del residente. Si está pendiente, pulsa
         <strong>Empezar valoración</strong>: queda registrado quién la empieza y a qué hora, sin que eso te
         haga responsable exclusivo del evento; cualquier profesional de Enfermería de la unidad puede
         continuarla.
@@ -703,7 +718,8 @@
         él (por ejemplo, "Saturación de O₂ 89 %: por debajo del rango de referencia"). Es solo informativo:
         no impide guardar ni cambia la clasificación o la prioridad del evento; la decisión es siempre del
         profesional. Los rangos se fijan por centro en la pantalla "Rangos de referencia de constantes"
-        (ver la sección siguiente).
+        (ver la sección siguiente). La saturación se compara con el rango de aire ambiente: si eliges
+        <strong>Oxigenoterapia</strong>, aparece el campo del flujo de O₂ (L/min) y esa saturación no genera aviso.
     </p>
     <p>
         Si otra persona modifica el evento mientras lo tienes abierto, al guardar se te pedirá recargar
@@ -955,9 +971,12 @@
         informe reúne automáticamente la identificación del residente y del centro, el basal vigente (Barthel,
         cognición, comunicación y el resto de áreas), la observación de origen, las valoraciones, las constantes y
         la oxigenoterapia, las actuaciones y la evolución. Esos datos no se editan en el informe, y el informe no
-        cambia los registros de origen. Tú escribes el <strong>motivo de la derivación</strong> (obligatorio) y, si
-        quieres, <strong>información adicional para Urgencias</strong>. El informe nunca incluye los contactos
-        con servicios ni el campo "Comunicaciones" de la valoración, que quedan en la trazabilidad interna.
+        cambia los registros de origen. Tú escribes el <strong>motivo de la derivación</strong> (obligatorio: qué
+        ha sucedido y por qué se deriva) y, si quieres, <strong>información adicional para Urgencias</strong> y
+        <strong>comunicaciones</strong>, un apartado propio del informe para anotar los contactos de esta derivación
+        (por ejemplo, «Contacto telefónico con SEM a las 18 h. Avisamos a la familia del traslado a Urgencias»).
+        Lo que escribas en «Comunicaciones» viaja con el informe. El informe nunca añade por su cuenta los contactos
+        del protocolo ni el campo "Comunicaciones" de la valoración, que quedan en la trazabilidad interna.
     </p>
     <p>
         <strong>Ver la vista previa</strong> es obligatorio: muestra el informe completo, con cada sección marcada
@@ -1072,8 +1091,17 @@
         el centro.
     </p>
     <p>
+        <strong>Cargar valores sugeridos</strong> rellena el formulario con los valores que propone el equipo
+        clínico de producto: temperatura 36–37,9 °C; presión arterial 90–139 / 60–89 mmHg; frecuencia cardíaca
+        60–100 lpm; frecuencia respiratoria 12–20 rpm; saturación 95–100 %; glucemia desde 70 mg/dL, sin
+        máximo (el resto de valores de glucemia se individualiza). No guarda nada: revísalos, cámbialos si tu
+        centro lo necesita y pulsa <strong>Guardar rangos</strong>. El rango de la saturación es el de aire
+        ambiente: si la medida se registró con oxigenoterapia, no se avisa.
+    </p>
+    <p>
         Solo pueden usar esta pantalla los perfiles Medicina o Dirección/Coordinación Clínica a los que se
-        haya concedido el permiso específico en ese centro; Administración nunca puede. Cada cambio queda en
+        haya concedido el permiso específico en ese centro (Administración lo concede a una persona concreta;
+        ningún perfil lo tiene por defecto, tampoco Dirección); Administración nunca puede fijar rangos. Cada cambio queda en
         el historial de la propia pantalla (fecha, constante, valor anterior y nuevo, y perfil), que no se
         puede modificar. Si otra persona cambia los rangos mientras tienes la pantalla abierta, al guardar
         se te pedirá recargar.
@@ -1127,7 +1155,7 @@
         <li>Más gestión administrativa: organigrama y cargos, publicaciones, citas y un panel completo.</li>
         <li>Que la transferencia de un seguimiento tenga en cuenta el turno planificado (hoy se elige el equipo entrante sin mirarlo).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
-        <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, la revisión de calidad de proceso (cumplimiento de hitos y plazos, pendiente de definir) y la lista de finalidades de la consulta del basal que fije CJ.</li>
+        <li>De Dirección Clínica: la lectura clínica detallada y auditada de un episodio, la línea temporal y el historial, las derivaciones y la comunicación familiar, la revisión de calidad de proceso (cumplimiento de hitos y plazos, pendiente de definir) y la finalidad «revisión de calidad asistencial» (pendiente de decidir cómo distinguir la Coordinación Clínica de Dirección). La declaración de finalidad y la justificación ya están construidas para el historial de basal.</li>
     </ul>
 </section>
 </div>

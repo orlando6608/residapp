@@ -600,6 +600,34 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     }
 
     [Fact]
+    public async Task RangosReferencia_CargarValoresSugeridos_RellenaElFormularioSinGuardarNada()
+    {
+        var doctor = await SeedAdministratorAsync("MEDICINA", "REFERENCE_RANGES_MANAGE");
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = doctor.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        var normal = await client.GetStringAsync("/RangosReferencia");
+        var suggested = WebUtility.HtmlDecode(await client.GetStringAsync("/RangosReferencia?sugeridos=true"));
+
+        Assert.Contains("Cargar valores sugeridos", normal);
+        Assert.DoesNotContain("todavía no se han guardado", normal);
+        Assert.Contains("todavía no se han guardado", suggested);
+        Assert.Contains("name=\"Form.Rangos[0].Minimo\"", suggested);
+        Assert.Matches("name=\"Form.Rangos\\[0\\]\\.Maximo\"[^>]*value=\"37.9\"", suggested);
+        Assert.Matches("name=\"Form.Rangos\\[6\\]\\.Minimo\"[^>]*value=\"70\"", suggested);
+        Assert.DoesNotMatch("name=\"Form.Rangos\\[6\\]\\.Maximo\"[^>]*value=\"\\d", suggested);
+        using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.rangos_referencia_constantes WHERE centro_id = (SELECT centro_id FROM dbo.unidades WHERE id = @unitId)",
+            new { unitId = doctor.UnitId }));
+    }
+
+    [Fact]
     public async Task Inicio_EnfermeriaSoloVeElAltaDeResidenteConElPermiso()
     {
         var without = await PageAsync("ENFERMERIA", null);

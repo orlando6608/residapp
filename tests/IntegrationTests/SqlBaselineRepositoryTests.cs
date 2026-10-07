@@ -43,9 +43,8 @@ public class SqlBaselineRepositoryTests
         var directionSeed = await SeedFixture.AddProfileToCenterAsync(
             SystemProfile.DireccionClinica, adminSeed.CenterId, adminSeed.UnitId, [ResidentBaselinePermission.ClinicalDetailRead.ToCode()]);
 
-        var input = new ClinicalDirectionReadInput(
-            directionSeed.AccountId, adminSeed.CenterId, adminSeed.UnitId, resident.ResidentId,
-            ClinicalResourceType.BaselineHistory, ClinicalDetailAccessPurpose.SupervisionClinica, Guid.NewGuid());
+        var input = DirectionReadTestData.Input(
+            directionSeed, adminSeed.CenterId, adminSeed.UnitId, resident.ResidentId, ClinicalResourceType.BaselineHistory, Guid.NewGuid());
 
         // Lector autorizado: la pantalla puede decir que no hay basal en vez de denegar. Sin contenido clínico leído, no
         // se audita nada; un reintento con la misma operación devuelve lo mismo.
@@ -69,9 +68,8 @@ public class SqlBaselineRepositoryTests
         var directionSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, adminSeed.CenterId, adminSeed.UnitId);
 
         var operationId = Guid.NewGuid();
-        var input = new ClinicalDirectionReadInput(
-            directionSeed.AccountId, adminSeed.CenterId, adminSeed.UnitId, resident.ResidentId,
-            ClinicalResourceType.BaselineHistory, ClinicalDetailAccessPurpose.SupervisionClinica, operationId);
+        var input = DirectionReadTestData.Input(
+            directionSeed, adminSeed.CenterId, adminSeed.UnitId, resident.ResidentId, ClinicalResourceType.BaselineHistory, operationId);
 
         var ex = await Assert.ThrowsAsync<SqlException>(() => _repository.ReadAsClinicalDirectionAsync(input));
         Assert.Contains("CLINICAL_DETAIL_READ_NOT_AUTHORIZED", ex.Message);

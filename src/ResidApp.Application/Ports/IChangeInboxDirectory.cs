@@ -160,7 +160,7 @@ public sealed record FamilyCallAttemptSummary(
 /// urgente vigente del residente (0022), para registrar la llamada; no forma parte del informe (DER-04).</summary>
 public sealed record ReferralDetail(
     SystemProfile Profile, string Reason, bool SignedByCurrentAccount, DateTimeOffset SignedAt, string ContentHash,
-    IReadOnlyList<FamilyCallAttemptSummary> CallAttempts, EmergencyContactSummary? EmergencyContact);
+    IReadOnlyList<FamilyCallAttemptSummary> CallAttempts, EmergencyContactSummary? EmergencyContact, string? Communications = null);
 
 /// <summary>DER-03: identificación del residente y del centro para el informe de derivación.</summary>
 public sealed record ResidentIdentification(

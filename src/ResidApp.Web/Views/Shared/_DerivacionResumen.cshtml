@@ -15,6 +15,10 @@
             el @derivacion.SignedAt.ToLocalTime().ToString("g").
         </p>
         <p class="mb-2" style="white-space: pre-line"><strong>Motivo:</strong> @derivacion.Reason</p>
+        @if (derivacion.Communications is not null)
+        {
+            <p class="mb-2" style="white-space: pre-line"><strong>Comunicaciones:</strong> @derivacion.Communications</p>
+        }
         <p class="text-muted small text-break">Huella SHA-256 del contenido: @derivacion.ContentHash</p>
         <div class="d-grid d-md-flex mb-3">
             <a asp-action="InformeDerivacion" asp-route-eventoId="@Model.EventId" class="btn btn-outline-primary btn-lg">Descargar el informe en PDF</a>

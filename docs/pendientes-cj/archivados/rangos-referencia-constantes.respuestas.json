@@ -1,0 +1,90 @@
+{
+  "documento": "rangos-referencia-constantes",
+  "cuestionario": "2026-09-28",
+  "guardado": "2026-10-06T19:24:14.079Z",
+  "respondidas": 12,
+  "total": 12,
+  "respuestas": {
+    "1": {
+      "pregunta": "¿A quién se concede el permiso para fijar rangos en cada centro?",
+      "texto": "Los rangos generales los fijaremos una vez concretado la utilización del producto en un centro específico. Puede ser modificado por coordinación clínica.  Dirección no tien por que tener permiso.\nPero pienso que estos valores son bastante estándar para todos.",
+      "respondida": true
+    },
+    "2": {
+      "pregunta": "¿Los mismos valores para todos los centros?",
+      "texto": "Si. De momento utilizaremos estos.",
+      "respondida": true
+    },
+    "3": {
+      "pregunta": "¿La saturación necesita un rango distinto con oxigenoterapia?",
+      "texto": "La saturación este sería el rango ideal para todas las personas con aire ambiente. Si al momento de registrar la satO2 el paciente se encuentra con suplemento de O2 sería interesante y valioso tener al lado alguna pestaña en la que puedas marcar que diga que está con O2 suplementario y al marcarlo se abra una casilla en la que podamos poner el valor en litros de flujo de O2.",
+      "respondida": true
+    },
+    "4": {
+      "pregunta": "¿Debe avisar también la temperatura que registra Auxiliar?",
+      "texto": "Si auxiliar detecta temp > 37ºC debe tener una alerta visual para que se mantenga seguimiento por las mismas auxiliares o enfermería. Si >38ºC avisar a enfermería.",
+      "respondida": true
+    },
+    "5": {
+      "pregunta": "Fase 2, rangos por residente.",
+      "texto": "Esto sería lo ideal para el programa pero creo que no entra dentro de los requisitos de producto mínimo a no ser que no sea complicado de hacer. Si formaría parte del estado basal una vez se conozca por parte del servicio del centro.\nEj: llega un residente nuevo sin informes médicos previos. Podemos rellenar su informe basal y cuando sepamos sus constantes basales despues de valorarlo algunas semanas podemos rellenarlar. Creoq ue es algo que es cambiante en el tiempo. Pienso que podría fijarla enfermería pero preferiblemente decisión médica. Esto se ha de individualizar según centro, pues algunos los médicos no tendr´na tiempo para esto.",
+      "respondida": true
+    },
+    "temperatura": {
+      "pregunta": "Temperatura (°C), 1 decimal",
+      "minimo": "36",
+      "maximo": "37.9",
+      "sinRango": false,
+      "notas": "Si> 37ºC en varias ocasiones seguidas avisar.",
+      "respondida": true
+    },
+    "pa-sistolica": {
+      "pregunta": "PA sistólica (mmHg), entero",
+      "minimo": "90",
+      "maximo": "139",
+      "sinRango": false,
+      "notas": "",
+      "respondida": true
+    },
+    "pa-diastolica": {
+      "pregunta": "PA diastólica (mmHg), entero",
+      "minimo": "60",
+      "maximo": "89",
+      "sinRango": false,
+      "notas": "",
+      "respondida": true
+    },
+    "frecuencia-cardiaca": {
+      "pregunta": "Frecuencia cardíaca (lpm), entero",
+      "minimo": "60",
+      "maximo": "100",
+      "sinRango": false,
+      "notas": "",
+      "respondida": true
+    },
+    "frecuencia-respiratoria": {
+      "pregunta": "Frecuencia respiratoria (rpm), entero",
+      "minimo": "12",
+      "maximo": "20",
+      "sinRango": false,
+      "notas": "",
+      "respondida": true
+    },
+    "saturacion-o2": {
+      "pregunta": "Saturación de O₂ (%), entero, máx. 100",
+      "minimo": "95",
+      "maximo": "100",
+      "sinRango": false,
+      "notas": "",
+      "respondida": true
+    },
+    "glucemia": {
+      "pregunta": "Glucemia (mg/dL), entero",
+      "minimo": "70",
+      "maximo": "",
+      "sinRango": false,
+      "notas": "avisar si inferior a 70. resto de valores individualizar.",
+      "respondida": true
+    }
+  }
+}

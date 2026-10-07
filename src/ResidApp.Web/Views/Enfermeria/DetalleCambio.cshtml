@@ -104,6 +104,7 @@
             @if (evento.TemperatureCelsius is not null)
             {
                 <p class="mb-3">Temperatura: <strong>@evento.TemperatureCelsius.Value.ToString("0.0")°C</strong></p>
+                <partial name="_AvisoTemperaturaAuxiliar" model="new AvisoTemperaturaAuxiliarViewModel(evento.TemperatureCelsius, true)" />
             }
             @foreach (var area in evento.Areas)
             {

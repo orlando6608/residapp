@@ -43,6 +43,44 @@ public class VitalSignReferenceRangesTests
         Assert.Empty(VitalSignReferenceRanges.Evaluate(Vitals(temperature: 40m), []));
     }
 
+    [Fact]
+    public void Evaluate_SaturacionBajaConOxigenoterapia_NoAvisa_PeroConAireAmbienteSi()
+    {
+        var conOxigeno = new VitalSigns(null, null, null, null, null, 90, RespiratorySupportCode.Oxigenoterapia, 2m, null, null, null, null);
+        var aireAmbiente = new VitalSigns(null, null, null, null, null, 90, RespiratorySupportCode.AireAmbiente, null, null, null, null, null);
+
+        Assert.Empty(VitalSignReferenceRanges.Evaluate(conOxigeno, Ranges));
+        Assert.Equal(VitalSignCode.SaturacionO2, Assert.Single(VitalSignReferenceRanges.Evaluate(aireAmbiente, Ranges)).Code);
+    }
+
+    [Fact]
+    public void Evaluate_OtraConstanteFueraDeRango_SigueAvisandoConOxigenoterapia()
+    {
+        var vitals = new VitalSigns(39m, null, null, null, null, null, RespiratorySupportCode.Oxigenoterapia, 2m, null, null, null, null);
+
+        Assert.Equal(VitalSignCode.Temperatura, Assert.Single(VitalSignReferenceRanges.Evaluate(vitals, Ranges)).Code);
+    }
+
+    [Fact]
+    public void Suggested_SonLosValoresDeCJ_YTodosSonValidos()
+    {
+        Assert.Equal(Enum.GetValues<VitalSignCode>().Length, VitalSignReferenceRanges.Suggested.Count);
+        foreach (var range in VitalSignReferenceRanges.Suggested)
+        {
+            VitalSignReferenceRanges.Validate(range);
+        }
+
+        var byCode = VitalSignReferenceRanges.Suggested.ToDictionary(r => r.Code);
+        Assert.Equal((36m, 37.9m), (byCode[VitalSignCode.Temperatura].Min!.Value, byCode[VitalSignCode.Temperatura].Max!.Value));
+        Assert.Equal((90m, 139m), (byCode[VitalSignCode.TensionSistolica].Min!.Value, byCode[VitalSignCode.TensionSistolica].Max!.Value));
+        Assert.Equal((60m, 89m), (byCode[VitalSignCode.TensionDiastolica].Min!.Value, byCode[VitalSignCode.TensionDiastolica].Max!.Value));
+        Assert.Equal((60m, 100m), (byCode[VitalSignCode.FrecuenciaCardiaca].Min!.Value, byCode[VitalSignCode.FrecuenciaCardiaca].Max!.Value));
+        Assert.Equal((12m, 20m), (byCode[VitalSignCode.FrecuenciaRespiratoria].Min!.Value, byCode[VitalSignCode.FrecuenciaRespiratoria].Max!.Value));
+        Assert.Equal((95m, 100m), (byCode[VitalSignCode.SaturacionO2].Min!.Value, byCode[VitalSignCode.SaturacionO2].Max!.Value));
+        Assert.Equal(70m, byCode[VitalSignCode.Glucemia].Min);
+        Assert.Null(byCode[VitalSignCode.Glucemia].Max);
+    }
+
     [Theory]
     [InlineData(null, null)]
     [InlineData(38.0, 35.0)]

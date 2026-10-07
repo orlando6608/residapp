@@ -480,7 +480,7 @@ public sealed class MedicinaController(
             ModelState.AddModelError(string.Empty, "No se ha podido reunir la información del informe. Recarga e inténtalo de nuevo.");
             return View(new DerivarViewModel(detail, form, null));
         }
-        var preview = ReferralReportContent.Compose(sections, new ReferralReportInput(form.Motivo, form.InformacionAdicional));
+        var preview = ReferralReportContent.Compose(sections, new ReferralReportInput(form.Motivo, form.InformacionAdicional, form.Comunicaciones));
         if (form.Accion != DerivarFormModel.Firmar)
         {
             return View(new DerivarViewModel(detail, form, preview));
@@ -488,7 +488,7 @@ public sealed class MedicinaController(
 
         var result = await service.SignReferralReportAsync(new SignReferralReportCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.OperacionId,
-            sections, form.Motivo, form.InformacionAdicional, form.Huella), ct);
+            sections, form.Motivo, form.InformacionAdicional, form.Huella, form.Comunicaciones), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = "Informe de derivación firmado. Registra el intento de llamada a la familia cuando puedas: la atención va primero.";

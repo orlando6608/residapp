@@ -22,8 +22,11 @@ public sealed record BaselineSignPayload(int ExpectedDraftRevision, Guid Operati
 
 /// <summary>No existía en el original executeDirectionBaselineRead de request-context.ts (que no recibía
 /// payload alguno): se añade para poder pasar OperationId sin romper la firma pública existente de
-/// ExecuteDirectionBaselineReadAsync con un parámetro suelto.</summary>
-public sealed record ClinicalDirectionReadPayload(Guid OperationId);
+/// ExecuteDirectionBaselineReadAsync con un parámetro suelto. Justification es la que se declara al abrir (o la de la
+/// declaración que se reutiliza); ReuseDeclarationId, la declaración vigente que ampara la lectura; DeclarationMinutes,
+/// lo que dura una declaración nueva.</summary>
+public sealed record ClinicalDirectionReadPayload(
+    Guid OperationId, string Justification, Guid? ReuseDeclarationId, int DeclarationMinutes);
 
 /// <summary>Traduce los campos de entrada a ENF-19/ENF-20 "crear borrador": los campos comunes de versión
 /// (motivo, fuente y fecha de la información) que el flujo exige desde el momento de crear el borrador, no
@@ -218,7 +221,8 @@ public static class RequestAuthorizationContextResolver
         var obligation = operation.Decision.Obligations[0];
         var input = new ClinicalDirectionReadInput(
             obligation.AccountId, obligation.CenterId, obligation.UnitId, obligation.ResidentId,
-            obligation.ResourceType, obligation.Purpose, payload.OperationId);
+            obligation.ResourceType, obligation.Purpose, payload.OperationId,
+            operation.ProfileScopeId, payload.Justification, payload.ReuseDeclarationId, payload.DeclarationMinutes);
         return await repository.ReadAsClinicalDirectionAsync(input, ct);
     }
 

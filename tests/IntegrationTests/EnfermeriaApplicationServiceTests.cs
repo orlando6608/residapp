@@ -1217,6 +1217,7 @@ public class EnfermeriaApplicationServiceTests
         Assert.True(detail.Referral.SignedByCurrentAccount);
         Assert.Equal(ReferralHash(), detail.Referral.ContentHash);
         Assert.Empty(detail.Referral.CallAttempts);
+        Assert.Null(detail.Referral.Communications);
         Assert.Equal(eventId, Assert.Single(await ProtocolsAsync(enfermera)).EventId);
 
         var (reportId, pdf, pdfHash) = await ReadReportAsync(eventId);
@@ -1231,6 +1232,31 @@ public class EnfermeriaApplicationServiceTests
         // Tras firmar se sigue documentando en el protocolo.
         Assert.True((await service.RecordUrgentProtocolEntryAsync(
             EntryCommand(enfermera, eventId, signed.Value, UrgentProtocolEntryType.Evolucion, "Sale en ambulancia."))).Ok);
+    }
+
+    [Fact]
+    public async Task Derivacion_LasComunicacionesQueEscribeElProfesional_ViajanEnElInformeFirmado()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var revision = await ActivatedProtocolAsync(enfermera, eventId);
+        const string communications = "Contacto telefónico con SEM a las 18 h. Avisamos a la familia del traslado a Urgencias.";
+        var hash = ReferralReportContent.Compose(ReferralSections, new ReferralReportInput(ReferralReason, null, communications)).Hash();
+
+        // La huella de la vista previa sin comunicaciones ya no vale: lo firmado es lo que se revisó.
+        var withoutPreview = await service.SignReferralReportAsync(SignCommand(enfermera, eventId, revision, Guid.NewGuid()) with { Comunicaciones = communications });
+        var signed = await service.SignReferralReportAsync(SignCommand(enfermera, eventId, revision, Guid.NewGuid(), hash: hash) with { Comunicaciones = communications });
+
+        Assert.Equal(ApplicationFailureCode.Conflict, withoutPreview.Error!.Code);
+        Assert.True(signed.Ok);
+        var detail = await DetailAsync(enfermera, eventId);
+        Assert.Equal(communications, detail.Referral!.Communications);
+        Assert.Equal(ReferralReason, detail.Referral.Reason);
+        Assert.Equal(hash, detail.Referral.ContentHash);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var json = await connection.ExecuteScalarAsync<string>("SELECT contenido_json FROM dbo.informes_derivacion WHERE evento_id = @eventId", new { eventId });
+        Assert.Contains(ReferralReportContent.CommunicationsTitle, json);
+        Assert.Contains("SEM a las 18 h", json);
     }
 
     [Fact]

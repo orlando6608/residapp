@@ -12,7 +12,7 @@ namespace ResidApp.Web.Controllers;
 /// activo, se autoselecciona sin pedir confirmación. La selección solo se persiste en cookie como atajo de
 /// UX: cada operación posterior revalida el par elegido contra SQL Server vía IAuthorizationEvidenceProvider.
 /// </summary>
-public sealed class ProfileScopeController(ListActiveProfileScopes listActiveProfileScopes) : Controller
+public sealed class ProfileScopeController(ListActiveProfileScopes listActiveProfileScopes, ClinicalAccessDeclarations declarations) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Select(string? returnUrl, CancellationToken ct)
@@ -26,7 +26,7 @@ public sealed class ProfileScopeController(ListActiveProfileScopes listActivePro
 
         var scopes = result.Value!;
         return scopes.Count == 1
-            ? SelectScope(scopes[0], returnUrl)
+            ? await SelectScopeAsync(scopes[0], returnUrl, ct)
             : View(ToViewModel(scopes, returnUrl));
     }
 
@@ -49,11 +49,15 @@ public sealed class ProfileScopeController(ListActiveProfileScopes listActivePro
             return View(ToViewModel(scopes, returnUrl));
         }
 
-        return SelectScope(chosen, returnUrl);
+        return await SelectScopeAsync(chosen, returnUrl, ct);
     }
 
-    private IActionResult SelectScope(ActiveProfileScope scope, string? returnUrl)
+    /// <summary>Cambiar de ámbito o de perfil termina las declaraciones de acceso clínico de la cuenta (CJ, 2026-10-06). Se terminan
+    /// antes de escribir la cookie nueva, mientras la conexión aún lleva el ámbito anterior.</summary>
+    private async Task<IActionResult> SelectScopeAsync(ActiveProfileScope scope, string? returnUrl, CancellationToken ct)
     {
+        await declarations.EndAllAsync(ct);
+        ClinicalAccessDeclarationCookie.Clear(Response);
         ActiveProfileScopeCookie.Write(Response, scope.ProfileScopeId, scope.CenterId.Value, scope.CenterName, scope.Profile);
         return returnUrl is not null && Url.IsLocalUrl(returnUrl)
             ? Redirect(returnUrl)

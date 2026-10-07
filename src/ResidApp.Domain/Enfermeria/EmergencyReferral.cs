@@ -13,21 +13,31 @@ public sealed record ReferralReportInput
 {
     public const int MaxReasonLength = 2000;
     public const int MaxAdditionalInformationLength = 4000;
+    public const int MaxCommunicationsLength = 4000;
 
+    /// <summary>Qué ha ocurrido y por qué se deriva.</summary>
     public string Reason { get; }
     public string? AdditionalInformation { get; }
 
-    public ReferralReportInput(string? reason, string? additionalInformation)
+    /// <summary>Anotaciones sobre los contactos de la derivación (p. ej. «Contacto telefónico con SEM a las 18 h.
+    /// Avisamos a la familia del traslado»), escritas por el profesional (CJ, 2026-10-06). No se rellena sola
+    /// con los contactos del protocolo ni con el campo «Comunicaciones» de la valoración.</summary>
+    public string? Communications { get; }
+
+    public ReferralReportInput(string? reason, string? additionalInformation, string? communications = null)
     {
         reason = VitalSigns.Normalize(reason);
         additionalInformation = VitalSigns.Normalize(additionalInformation);
-        if (reason is null || reason.Length > MaxReasonLength || additionalInformation is { Length: > MaxAdditionalInformationLength })
+        communications = VitalSigns.Normalize(communications);
+        if (reason is null || reason.Length > MaxReasonLength || additionalInformation is { Length: > MaxAdditionalInformationLength }
+            || communications is { Length: > MaxCommunicationsLength })
         {
             throw new DomainValidationException("REFERRAL_REPORT_INVALID");
         }
 
         Reason = reason;
         AdditionalInformation = additionalInformation;
+        Communications = communications;
     }
 }
 
@@ -44,6 +54,7 @@ public sealed record ReferralReportContent
 {
     public const string ReasonTitle = "Motivo de la derivación";
     public const string AdditionalInformationTitle = "Información adicional para Urgencias";
+    public const string CommunicationsTitle = "Comunicaciones";
 
     public IReadOnlyList<ReferralReportSection> Sections { get; }
 
@@ -61,6 +72,10 @@ public sealed record ReferralReportContent
         if (input.AdditionalInformation is not null)
         {
             sections.Add(new ReferralReportSection(AdditionalInformationTitle, false, [input.AdditionalInformation]));
+        }
+        if (input.Communications is not null)
+        {
+            sections.Add(new ReferralReportSection(CommunicationsTitle, false, [input.Communications]));
         }
         return new ReferralReportContent(sections);
     }

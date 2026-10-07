@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using ResidApp.Application.Authorization;
+using ResidApp.Application.UseCases;
 
 namespace ResidApp.Web.Models;
 
@@ -46,9 +48,31 @@ public sealed class DirectionBaselineQueryModel
     [Display(Name = "Tipo de recurso")]
     public string TipoRecurso { get; set; } = "BASELINE_HISTORY";
 
-    [Display(Name = "Propósito")]
-    public string? Proposito { get; set; } = "SUPERVISION_CLINICA";
+    [Display(Name = "Finalidad")]
+    public string? Proposito { get; set; }
+
+    [StringLength(ClinicalAccessSettings.MaxJustificationLength, ErrorMessage = "La justificación admite hasta 300 caracteres.")]
+    [Display(Name = "Justificación")]
+    public string? Justificacion { get; set; }
 
     [Required]
     public Guid OperacionId { get; set; }
+}
+
+/// <summary>Qué significa cada finalidad que puede declarar Dirección, con las frases de CJ (2026-10-06).</summary>
+public static class ClinicalDetailAccessPurposeDisplay
+{
+    public static string Description(ClinicalDetailAccessPurpose purpose) => purpose switch
+    {
+        ClinicalDetailAccessPurpose.ContinuidadAsistencial =>
+            "Comprender la secuencia de actuaciones de un caso y comprobar su continuidad entre profesionales o turnos. " +
+            "Por ejemplo: revisar un seguimiento vencido para entender qué se hizo y qué quedó pendiente.",
+        ClinicalDetailAccessPurpose.IncidenciaReclamacion =>
+            "Aclarar los hechos de un caso ante una incidencia o reclamación documentada. " +
+            "Por ejemplo: revisar los hechos tras una reclamación familiar.",
+        ClinicalDetailAccessPurpose.TrazabilidadDocumental =>
+            "Comprobar autoría, secuencia y relación entre originales, correcciones y rectificaciones. " +
+            "Por ejemplo: revisar por qué se rectificó una valoración y qué información cambió.",
+        _ => string.Empty,
+    };
 }

@@ -32,6 +32,10 @@ public sealed class DerivarFormModel
     [Display(Name = "Información adicional para Urgencias (opcional)")]
     public string? InformacionAdicional { get; set; }
 
+    [StringLength(ReferralReportInput.MaxCommunicationsLength)]
+    [Display(Name = "Comunicaciones (opcional)")]
+    public string? Comunicaciones { get; set; }
+
     public string? Huella { get; set; }
 
     public string? Accion { get; set; }
@@ -124,8 +128,10 @@ public static class ReferralDisplay
 /// DER-03: reúne los datos automáticos del informe de derivación a partir de los registros de origen, en el
 /// orden del flujo: identificación y centro, basal (Barthel, cognición, comunicación y el resto de áreas),
 /// observación de origen, valoraciones, constantes y oxigenoterapia, actuaciones y evolución. Nunca incluye
-/// CFS (no existe en el producto) ni los contactos: ni los servicios contactados del protocolo ni el campo
-/// "Comunicaciones" de la valoración de Enfermería, que son trazabilidad interna (DER-04). Las horas se
+/// CFS (no existe en el producto) ni, de forma automática, los contactos: ni los servicios contactados del
+/// protocolo ni el campo "Comunicaciones" de la valoración de Enfermería, que son trazabilidad interna (DER-04).
+/// Las anotaciones de contacto que el profesional quiera que viajen con el informe las escribe él mismo en
+/// el apartado «Comunicaciones» del informe (ReferralReportInput.Communications; CJ, 2026-10-06). Las horas se
 /// escriben en la hora local del servidor con un formato fijo, para que la huella no dependa de la cultura.
 /// </summary>
 public static class ReferralReportBuilder

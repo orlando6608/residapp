@@ -128,7 +128,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
                 ["OperacionId"] = Guid.NewGuid().ToString(),
                 ["ResidenteId"] = resident,
                 ["TipoRecurso"] = "BASELINE_HISTORY",
-                ["Proposito"] = "SUPERVISION_CLINICA",
+                ["Proposito"] = "CONTINUIDAD_ASISTENCIAL",
+                ["Justificacion"] = "Revisión de continuidad de un caso (prueba funcional).",
             }));
             return (response.StatusCode, WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()));
         }
@@ -148,6 +149,83 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Historial de basal auditado", chosen.Body);
         Assert.Contains("Este residente todavía no tiene ningún basal firmado.", chosen.Body);
         Assert.DoesNotContain("No se puede acceder a esta operación.", chosen.Body);
+    }
+
+    [Fact]
+    public async Task BaselineDirection_LaDeclaracionDeAcceso_ExigeFinalidadYJustificacion_ValeParaElResidente_YTerminaAlSalirOCambiarDeAmbito()
+    {
+        // CJ (2026-10-06): finalidad y justificación obligatorias, una declaración por residente que vale 1 hora, y termina al cambiar
+        // de residente, de ámbito o al cerrar sesión. Por la app real, con el usuario limitado.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentOne = await CreateResidentAsync(admin, seed, "Residente Declaracion Uno Funcional");
+        var residentTwo = await CreateResidentAsync(admin, seed, "Residente Declaracion Dos Funcional");
+        var directionSubject = await GrantDirectionAsync(seed);
+        var direccion = await LoginAsync(directionSubject);
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var page = WebUtility.HtmlDecode(await direccion.GetStringAsync("/Baseline/Direction"));
+
+        async Task<string> QueryAsync(string resident, string? purpose, string? justification)
+        {
+            var fields = new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+                ["OperacionId"] = Guid.NewGuid().ToString(),
+                ["ResidenteId"] = resident,
+                ["TipoRecurso"] = "BASELINE_HISTORY",
+            };
+            if (purpose is not null) fields["Proposito"] = purpose;
+            if (justification is not null) fields["Justificacion"] = justification;
+            return WebUtility.HtmlDecode(await (await direccion.PostAsync("/Baseline/Direction", new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+        Task<int> OpenDeclarationsAsync() => connection.ExecuteScalarAsync<int>("""
+            SELECT COUNT(*) FROM dbo.declaraciones_acceso_clinico d JOIN dbo.cuentas c ON c.id = d.cuenta_id
+             WHERE c.sujeto_externo = @directionSubject AND d.terminada_en IS NULL AND d.caduca_en > SYSUTCDATETIME()
+            """, new { directionSubject });
+
+        var withoutJustification = await QueryAsync(residentOne, "CONTINUIDAD_ASISTENCIAL", "   ");
+        var withoutPurpose = await QueryAsync(residentOne, null, "Revisión de un seguimiento vencido (prueba funcional).");
+        var oldPurpose = await QueryAsync(residentOne, "SUPERVISION_CLINICA", "Una finalidad que ya no se ofrece.");
+        var declaredNothing = await OpenDeclarationsAsync();
+
+        var first = await QueryAsync(residentOne, "CONTINUIDAD_ASISTENCIAL", "Revisión de un seguimiento vencido (prueba funcional).");
+        var openAfterFirst = await OpenDeclarationsAsync();
+        var minutes = await connection.ExecuteScalarAsync<int>("""
+            SELECT DATEDIFF(MINUTE, d.creada_en, d.caduca_en) FROM dbo.declaraciones_acceso_clinico d
+             WHERE d.id = (SELECT TOP 1 id FROM dbo.declaraciones_acceso_clinico ORDER BY creada_en DESC)
+               AND d.residente_id = @residentOne
+            """, new { residentOne });
+        var rememberedPage = WebUtility.HtmlDecode(await direccion.GetStringAsync($"/Baseline/Direction?residenteId={residentOne}"));
+        var reused = await QueryAsync(residentOne, null, null);
+        var openAfterReuse = await OpenDeclarationsAsync();
+        var other = await QueryAsync(residentTwo, null, null);
+        var otherDeclared = await QueryAsync(residentTwo, "INCIDENCIA_RECLAMACION", "Reclamación familiar registrada (prueba funcional).");
+        var openAfterOther = await OpenDeclarationsAsync();
+        var backToOne = await QueryAsync(residentOne, null, null);
+
+        (await direccion.PostAsync("/DevAuth/Logout", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+        }))).EnsureSuccessStatusCode();
+        var openAfterLogout = await OpenDeclarationsAsync();
+
+        Assert.Contains("Escribe una justificación breve del acceso.", withoutJustification);
+        Assert.Contains("Elige la finalidad del acceso.", withoutPurpose);
+        Assert.Contains("Elige la finalidad del acceso.", oldPurpose);
+        Assert.Equal(0, declaredNothing);
+        Assert.Contains("Historial de basal auditado", first);
+        Assert.Contains("Finalidad declarada:", first);
+        Assert.Equal(1, openAfterFirst);
+        Assert.Equal(60, minutes);
+        Assert.Contains("Ya has declarado la finalidad del acceso para este residente", rememberedPage);
+        Assert.Contains("Historial de basal auditado", reused);
+        Assert.Equal(1, openAfterReuse);
+        // Otro residente: la declaración del primero no sirve; al declarar de nuevo, la anterior termina.
+        Assert.Contains("Elige la finalidad del acceso.", other);
+        Assert.Contains("Historial de basal auditado", otherDeclared);
+        Assert.Equal(1, openAfterOther);
+        Assert.Contains("Elige la finalidad del acceso.", backToOne);
+        Assert.Equal(0, openAfterLogout);
     }
 
     [Fact]
@@ -256,6 +334,84 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             "SELECT COUNT(*) FROM dbo.valoraciones_enfermeria WHERE evento_id = @eventId", new { eventId }));
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.valoraciones_enfermeria_versiones WHERE evento_id = @eventId", new { eventId }));
+    }
+
+    [Fact]
+    public async Task Enfermeria_DerivaAUrgenciasConComunicaciones_VistaPreviaFirmaYPdf_ConLaAppEntera()
+    {
+        // La pantalla de derivación de punta a punta: el apartado «Comunicaciones» se escribe, sale en la vista previa, viaja con la
+        // huella al firmar y queda en el informe (con el usuario limitado, bajo la seguridad por filas).
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Derivacion Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        Task<int> RevisionAsync(Guid id) => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @id", new { id });
+
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Disnea brusca (prueba funcional de derivación).",
+            ["Clasificacion"] = "Ordinario",
+        }))).Content.ReadAsStringAsync();
+        var eventId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        (await nurse.PostAsync("/Enfermeria/EmpezarValoracion", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(detailPage, "__RequestVerificationToken"),
+            ["eventoId"] = eventId.ToString(),
+            ["revision"] = (await RevisionAsync(eventId)).ToString(),
+        }))).EnsureSuccessStatusCode();
+        var assessmentPage = await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}");
+        (await nurse.PostAsync("/Enfermeria/Valoracion", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(assessmentPage, "__RequestVerificationToken"),
+            ["Form.EventoId"] = eventId.ToString(),
+            ["Form.Revision"] = (await RevisionAsync(eventId)).ToString(),
+            ["Form.Hallazgos"] = "Crepitantes bilaterales.",
+        }))).EnsureSuccessStatusCode();
+        var activatePage = await nurse.GetStringAsync($"/Enfermeria/ActivarProtocolo?eventoId={eventId}");
+        (await nurse.PostAsync("/Enfermeria/ActivarProtocolo", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(activatePage, "__RequestVerificationToken"),
+            ["Form.EventoId"] = eventId.ToString(),
+            ["Form.Revision"] = (await RevisionAsync(eventId)).ToString(),
+        }))).EnsureSuccessStatusCode();
+
+        const string communications = "Contacto telefónico con SEM a las 18 h. Avisamos a la familia del traslado a Urgencias.";
+        var referralPage = await nurse.GetStringAsync($"/Enfermeria/Derivar?eventoId={eventId}");
+        var preview = WebUtility.HtmlDecode(await (await nurse.PostAsync("/Enfermeria/Derivar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(referralPage, "__RequestVerificationToken"),
+            ["Form.EventoId"] = eventId.ToString(),
+            ["Form.Revision"] = (await RevisionAsync(eventId)).ToString(),
+            ["Form.OperacionId"] = ExtractValue(referralPage, "Form.OperacionId"),
+            ["Form.Motivo"] = "Desaturación que no remonta con oxigenoterapia.",
+            ["Form.Comunicaciones"] = communications,
+            ["Form.Accion"] = "VistaPrevia",
+        }))).Content.ReadAsStringAsync());
+        var signed = WebUtility.HtmlDecode(await (await nurse.PostAsync("/Enfermeria/Derivar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(preview, "__RequestVerificationToken"),
+            ["Form.EventoId"] = eventId.ToString(),
+            ["Form.Revision"] = ExtractValue(preview, "Form.Revision"),
+            ["Form.OperacionId"] = ExtractValue(preview, "Form.OperacionId"),
+            ["Form.Motivo"] = ExtractValue(preview, "Form.Motivo"),
+            ["Form.InformacionAdicional"] = "",
+            ["Form.Comunicaciones"] = ExtractValue(preview, "Form.Comunicaciones"),
+            ["Form.Huella"] = ExtractValue(preview, "Form.Huella"),
+            ["Form.Accion"] = "Firmar",
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Comunicaciones (opcional)", WebUtility.HtmlDecode(referralPage));
+        Assert.Contains("Vista previa del informe", preview);
+        Assert.Contains(communications, preview);
+        Assert.Contains("Informe de derivación firmado.", signed);
+        Assert.Contains(communications, signed);
+        Assert.Equal(communications, await connection.ExecuteScalarAsync<string>(
+            "SELECT comunicaciones FROM dbo.informes_derivacion WHERE evento_id = @eventId", new { eventId }));
     }
 
     [Fact]
@@ -402,6 +558,43 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
               JOIN dbo.cierres_cotidianos_residente closure ON closure.id = area.cierre_id
              WHERE closure.residente_id = @changedResident
             """, new { changedResident }));
+    }
+
+    [Theory]
+    [InlineData("36.8", null)]
+    [InlineData("37", null)]
+    [InlineData("37.5", "Temperatura por encima de 37 °C: mantén el seguimiento de este residente.")]
+    [InlineData("38.4", "Temperatura por encima de 38 °C: avisa a Enfermería.")]
+    public async Task Auxiliar_LaConfirmacionAvisaDeLaTemperaturaAlta_SinImpedirRegistrar(string temperatura, string? aviso)
+    {
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var resident = await CreateResidentAsync(admin, seed, $"Residente Temperatura {temperatura} Funcional");
+        var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, resident));
+
+        var changePage = await auxiliar.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={resident}");
+        var confirmation = WebUtility.HtmlDecode(await (await auxiliar.PostAsync("/Auxiliar/RegistrarCambio", new FormUrlEncodedContent(new[]
+        {
+            KeyValuePair.Create("__RequestVerificationToken", ExtractValue(changePage, "__RequestVerificationToken")),
+            KeyValuePair.Create("ResidenteId", resident),
+            KeyValuePair.Create("OperacionId", ExtractValue(changePage, "OperacionId")),
+            KeyValuePair.Create("AreaTexto[ESTADO_CONCIENCIA]", "Prueba funcional del aviso de temperatura."),
+            KeyValuePair.Create("Temperatura", temperatura),
+            // Lo que envía el navegador con type="number": sin él, la cultura es-ES leería «36.8» como 368.
+            KeyValuePair.Create("__Invariant", "Temperatura"),
+            KeyValuePair.Create("Clasificacion", "Ordinario"),
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Confirmar cambio", confirmation);
+        Assert.Contains("Confirmar y enviar", confirmation);
+        if (aviso is null)
+        {
+            Assert.DoesNotContain("Temperatura por encima de", confirmation);
+        }
+        else
+        {
+            Assert.Contains(aviso, confirmation);
+        }
     }
 
     [Fact]

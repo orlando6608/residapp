@@ -77,10 +77,17 @@ builder.Services.AddScoped<CorrectMedicalAssessment>();
 builder.Services.AddScoped<RectifyAssessment>();
 builder.Services.AddSingleton<IReferralReportPdfRenderer, ReferralReportPdfRenderer>();
 builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
+// La clave de los documentos de CJ (/pendientes-cj): un freno para el desarrollo, ver PendientesCjAccess.
+builder.Services.AddSingleton<PendientesCjAccess>();
 
 builder.Services.AddScoped<CreateResident>();
 builder.Services.AddScoped<SignBaseline>();
+// Declaración de acceso clínico de Dirección (CJ, 2026-10-06): 1 hora, global hasta que se ajuste por centro.
+builder.Services.AddSingleton(new ClinicalAccessSettings(
+    builder.Configuration.GetValue<int?>("AccesoClinico:DuracionMinutos")
+    ?? throw new InvalidOperationException("Falta AccesoClinico:DuracionMinutos en appsettings.json.")));
 builder.Services.AddScoped<ReadDirectionBaseline>();
+builder.Services.AddScoped<ClinicalAccessDeclarations>();
 builder.Services.AddScoped<ListActiveProfileScopes>();
 builder.Services.AddScoped<ListActiveScopeUnits>();
 builder.Services.AddScoped<ListActiveScopeLocations>();
@@ -183,6 +190,23 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
 }
 app.UseRequestLocalization();
+// Los documentos de CJ (y sus respuestas) piden la clave: sin ella, las páginas redirigen al formulario y los .json dan 401 (el script de
+// cada documento lo ignora en silencio). Va antes de servir los estáticos.
+app.UseWhen(context => context.Request.Path.StartsWithSegments(PendientesCjAccess.Prefix), branch => branch.Use(async (context, next) =>
+{
+    if (context.RequestServices.GetRequiredService<PendientesCjAccess>().HasAccess(context.Request))
+    {
+        await next(context);
+    }
+    else if (context.Request.Path.Value!.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+    }
+    else
+    {
+        context.Response.Redirect("/AccesoCj?returnUrl=" + Uri.EscapeDataString(context.Request.Path + context.Request.QueryString));
+    }
+}));
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(Path.Combine(AppContext.BaseDirectory, "pendientes-cj")),

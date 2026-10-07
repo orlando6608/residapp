@@ -283,6 +283,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
                 DECLARE @Authorized BIT = CASE WHEN EXISTS (
                     SELECT 1 FROM dbo.cuentas account
                     JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id AND profile.centro_id = @CenterId
+                         AND profile.id = @ProfileScopeId
                          AND profile.perfil_codigo = 'DIRECCION_CLINICA' AND profile.estado = 'ACTIVE'
                     JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
                          AND unit_scope.centro_id = profile.centro_id AND unit_scope.unidad_id = @UnitId AND unit_scope.revocado_en IS NULL
@@ -298,11 +299,37 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
                 IF @Authorized = 0
                     THROW 51000, 'CLINICAL_DETAIL_READ_NOT_AUTHORIZED', 1;
 
+                -- La declaración de acceso (CJ, 2026-10-06): se reutiliza una vigente de esta cuenta, ámbito y residente
+                -- (su finalidad y su justificación son las que se auditan) o se crea una nueva, y entonces termina las que
+                -- hubiera abiertas (otro residente). Nunca sustituye a la autorización de arriba ni a la auditoría de abajo.
+                DECLARE @Purpose NVARCHAR(32) = @NewPurpose;
+                DECLARE @Justification NVARCHAR(300) = @NewJustification;
+                IF @ReuseDeclarationId IS NOT NULL
+                BEGIN
+                    SELECT @Purpose = declaration.proposito_codigo, @Justification = declaration.justificacion
+                      FROM dbo.declaraciones_acceso_clinico declaration
+                     WHERE declaration.id = @ReuseDeclarationId AND declaration.cuenta_id = @AccountId
+                       AND declaration.ambito_perfil_id = @ProfileScopeId AND declaration.residente_id = @ResidentId
+                       AND declaration.terminada_en IS NULL AND declaration.caduca_en > SYSUTCDATETIME();
+                    IF @@ROWCOUNT = 0
+                        THROW 51002, 'CLINICAL_ACCESS_DECLARATION_INVALID', 1;
+                END
+                ELSE
+                BEGIN
+                    UPDATE dbo.declaraciones_acceso_clinico SET terminada_en = SYSUTCDATETIME()
+                     WHERE cuenta_id = @AccountId AND terminada_en IS NULL AND caduca_en > SYSUTCDATETIME();
+                    INSERT INTO dbo.declaraciones_acceso_clinico
+                        (id, centro_id, cuenta_id, ambito_perfil_id, residente_id, proposito_codigo, justificacion, creada_en, caduca_en)
+                    VALUES (@OperationId, @CenterId, @AccountId, @ProfileScopeId, @ResidentId, @Purpose, @Justification,
+                            SYSUTCDATETIME(), DATEADD(MINUTE, @DeclarationMinutes, SYSUTCDATETIME()));
+                END
+
                 INSERT INTO dbo.eventos_auditoria
-                    (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, proposito_codigo, ocurrido_en)
+                    (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, proposito_codigo,
+                     justificacion, ocurrido_en)
                 OUTPUT inserted.recurso_id INTO @AuditedResourceIds
                 SELECT NEWID(), @AccountId, 'DIRECCION_CLINICA', @CenterId, @UnitId, @ResidentId, @ResourceType, resource.id,
-                       'CLINICAL_DETAIL_READ', 'SUPERVISION_CLINICA', @OccurredAt
+                       'CLINICAL_DETAIL_READ', @Purpose, @Justification, @OccurredAt
                   FROM ({resourceSql}) resource;
 
                 {finalSelect}
@@ -312,6 +339,8 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             {
                 AccountId = input.AccountId.Value, CenterId = input.CenterId.Value, UnitId = input.UnitId.Value, ResidentId = input.ResidentId.Value,
                 ResourceType = input.ResourceType.ToCode(), OccurredAt = occurredAt,
+                ProfileScopeId = input.ProfileScopeId, OperationId = input.OperationId, ReuseDeclarationId = input.ReuseDeclarationId,
+                NewPurpose = input.Purpose.ToCode(), NewJustification = input.Justification, DeclarationMinutes = input.DeclarationMinutes,
             };
             var headers = (await connection.QueryAsync<AuditedHeaderRow>(
                 new CommandDefinition(sql, parameters, transaction, cancellationToken: ct)))
@@ -346,6 +375,40 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             throw;
         }
     }
+
+    public async Task<ClinicalAccessDeclaration?> FindActiveAccessDeclarationAsync(
+        string externalSubject, Guid declarationId, Guid profileScopeId, ResidentId residentId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var row = await connection.QuerySingleOrDefaultAsync<DeclarationRow>(new CommandDefinition("""
+            SELECT declaration.id AS Id, declaration.proposito_codigo AS PurposeCode, declaration.justificacion AS Justification,
+                   declaration.caduca_en AS ExpiresAt
+              FROM dbo.declaraciones_acceso_clinico declaration
+              JOIN dbo.cuentas account ON account.id = declaration.cuenta_id
+             WHERE declaration.id = @DeclarationId AND account.sujeto_externo = @ExternalSubject AND account.estado = 'ACTIVE'
+               AND declaration.ambito_perfil_id = @ProfileScopeId AND declaration.residente_id = @ResidentId
+               AND declaration.terminada_en IS NULL AND declaration.caduca_en > SYSUTCDATETIME()
+            """, new { DeclarationId = declarationId, ExternalSubject = externalSubject, ProfileScopeId = profileScopeId, ResidentId = residentId.Value },
+            cancellationToken: ct));
+        return row is null
+            ? null
+            : new ClinicalAccessDeclaration(
+                row.Id, EnumCode.ParseCode<ClinicalDetailAccessPurpose>(row.PurposeCode), row.Justification,
+                new DateTimeOffset(row.ExpiresAt, TimeSpan.Zero));
+    }
+
+    public async Task EndAccessDeclarationsAsync(string externalSubject, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE declaration SET terminada_en = SYSUTCDATETIME()
+              FROM dbo.declaraciones_acceso_clinico declaration
+              JOIN dbo.cuentas account ON account.id = declaration.cuenta_id
+             WHERE account.sujeto_externo = @ExternalSubject AND declaration.terminada_en IS NULL AND declaration.caduca_en > SYSUTCDATETIME()
+            """, new { ExternalSubject = externalSubject }, cancellationToken: ct));
+    }
+
+    private sealed record DeclarationRow(Guid Id, string PurposeCode, string Justification, DateTime ExpiresAt);
 
     /// <summary>Traduce AUX-03/ENF-20/MED-21: lectura resumida del basal vigente, sin auditoría (a
     /// diferencia de ReadAsClinicalDirectionAsync) porque ResidentBaselinePolicy.AuthorizeBaselineCurrentRead
@@ -959,12 +1022,14 @@ file static class CreateDraftRequestHash
 
 file static class ReadRequestHash
 {
+    // No incluye ReuseDeclarationId: reintentar la misma operación con la cookie ya escrita (la primera ya creó la
+    // declaración) es la misma petición, y su finalidad y justificación son las de la declaración.
     public static string Of(ClinicalDirectionReadInput input)
     {
         var canonical = JsonSerializer.Serialize(new object[]
         {
             input.AccountId.Value, input.CenterId.Value, input.UnitId.Value, input.ResidentId.Value,
-            input.ResourceType.ToCode(), input.Purpose.ToCode(), input.OperationId,
+            input.ResourceType.ToCode(), input.Purpose.ToCode(), input.OperationId, input.ProfileScopeId, input.Justification,
         });
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }

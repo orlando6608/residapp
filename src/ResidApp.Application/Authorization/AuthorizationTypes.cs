@@ -14,10 +14,15 @@ public enum ResidentBaselinePermission
     [Code("CLINICAL_DETAIL_READ")] ClinicalDetailRead,
 }
 
-/// <summary>Traduce CLINICAL_DETAIL_ACCESS_PURPOSES de policy.ts.</summary>
+/// <summary>Finalidades que puede declarar Dirección para leer contenido clínico (CJ, 2026-10-06). Lista cerrada, y la
+/// elegida queda en la auditoría de cada acceso. «Revisión de calidad asistencial» no está: CJ la quiere en Coordinación
+/// Clínica, que hoy es el mismo perfil que Dirección. La antigua «Supervisión clínica» ya no se ofrece (solo existe en las
+/// filas de auditoría anteriores).</summary>
 public enum ClinicalDetailAccessPurpose
 {
-    [Code("SUPERVISION_CLINICA")] [Display(Name = "Supervisión clínica")] SupervisionClinica,
+    [Code("CONTINUIDAD_ASISTENCIAL")] [Display(Name = "Revisión de continuidad asistencial")] ContinuidadAsistencial,
+    [Code("INCIDENCIA_RECLAMACION")] [Display(Name = "Revisión de una incidencia o reclamación asistencial")] IncidenciaReclamacion,
+    [Code("TRAZABILIDAD_DOCUMENTAL")] [Display(Name = "Verificación de trazabilidad documental")] TrazabilidadDocumental,
 }
 
 /// <summary>Traduce el literal "BASELINE_CURRENT" | "BASELINE_HISTORY" de ClinicalDetailAuditObligation.</summary>

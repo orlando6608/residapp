@@ -7,8 +7,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Documentos que CJ responde en el navegador: se sirven en /pendientes-cj (Program.cs) desde la misma carpeta de docs. -->
-    <Content Include="..\..\docs\pendientes-cj\*.html" Link="pendientes-cj\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Documentos que CJ responde en el navegador: se sirven en /pendientes-cj (Program.cs) desde la misma carpeta de docs, detrás de la clave
+         (PendientesCjAccess). Incluye las subcarpetas (archivados/) y los .respuestas.json, que cada documento carga junto a sí mismo. -->
+    <Content Include="..\..\docs\pendientes-cj\**\*.html" Link="pendientes-cj\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\docs\pendientes-cj\**\*.respuestas.json" Link="pendientes-cj\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>

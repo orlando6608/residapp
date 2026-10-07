@@ -140,9 +140,8 @@ public class SqlBaselineRepositoryDraftTests
         // real que leer. Descubierto al montar el escenario integrado de pruebas para CJ.
         var directionSeed = await SeedFixture.AddProfileToCenterAsync(
             SystemProfile.DireccionClinica, seed.CenterId, seed.UnitId, [ResidentBaselinePermission.ClinicalDetailRead.ToCode()]);
-        var headers = await _repository.ReadAsClinicalDirectionAsync(new ClinicalDirectionReadInput(
-            directionSeed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
-            ClinicalResourceType.BaselineCurrent, ClinicalDetailAccessPurpose.SupervisionClinica, Guid.NewGuid()));
+        var headers = await _repository.ReadAsClinicalDirectionAsync(DirectionReadTestData.Input(
+            directionSeed, seed.CenterId, seed.UnitId, resident.ResidentId, ClinicalResourceType.BaselineCurrent, Guid.NewGuid()));
         Assert.Single(headers);
         Assert.Equal(1, headers[0].VersionNumber);
     }

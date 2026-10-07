@@ -14,7 +14,8 @@ namespace ResidApp.Web.Controllers;
 /// </summary>
 public sealed class RangosReferenciaController(ReferenceRangesApplicationService service) : Controller
 {
-    public async Task<IActionResult> Index(CancellationToken ct)
+    /// <summary>Con <paramref name="sugeridos"/> el formulario trae los valores propuestos por CJ, sin guardarlos.</summary>
+    public async Task<IActionResult> Index(bool sugeridos = false, CancellationToken ct = default)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
@@ -23,9 +24,13 @@ public sealed class RangosReferenciaController(ReferenceRangesApplicationService
         }
 
         var result = await service.ReadAsync(new ReadReferenceRangesCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
-        return result.Ok
-            ? View(new RangosReferenciaViewModel(result.Value, RangosReferenciaFormModel.From(result.Value!)))
-            : View(new RangosReferenciaViewModel(null, new RangosReferenciaFormModel()));
+        if (!result.Ok)
+        {
+            return View(new RangosReferenciaViewModel(null, new RangosReferenciaFormModel()));
+        }
+        return View(sugeridos
+            ? new RangosReferenciaViewModel(result.Value, RangosReferenciaFormModel.FromSuggested(result.Value!), SugeridosCargados: true)
+            : new RangosReferenciaViewModel(result.Value, RangosReferenciaFormModel.From(result.Value!)));
     }
 
     /// <summary>Ante un conflicto de versión no se sobrescribe el cambio ajeno: se vuelve a mostrar lo

@@ -202,7 +202,7 @@ public class ResidentBaselinePolicyTests
     {
         var subject = Subject(SystemProfile.DireccionClinica, Scope(SystemProfile.DireccionClinica));
         var request = new ResidentBaselineAuthorizationRequest(
-            ResidentBaselineAction.BaselineCurrentRead, subject, Center, Unit, TargetResident, ClinicalDetailAccessPurpose.SupervisionClinica);
+            ResidentBaselineAction.BaselineCurrentRead, subject, Center, Unit, TargetResident, ClinicalDetailAccessPurpose.ContinuidadAsistencial);
 
         var denied = AssertDenied(ResidentBaselinePolicy.Authorize(request));
         Assert.Equal(AuthorizationDenialReason.PermissionRequired, denied.Reason);
@@ -223,7 +223,7 @@ public class ResidentBaselinePolicyTests
     {
         var subject = Subject(SystemProfile.DireccionClinica, Scope(SystemProfile.DireccionClinica, [ResidentBaselinePermission.ClinicalDetailRead]));
         var request = new ResidentBaselineAuthorizationRequest(
-            ResidentBaselineAction.BaselineHistoryRead, subject, Center, Unit, TargetResident, ClinicalDetailAccessPurpose.SupervisionClinica);
+            ResidentBaselineAction.BaselineHistoryRead, subject, Center, Unit, TargetResident, ClinicalDetailAccessPurpose.ContinuidadAsistencial);
 
         var allowed = AssertAllowed(ResidentBaselinePolicy.Authorize(request));
         var obligation = Assert.Single(allowed.Obligations);

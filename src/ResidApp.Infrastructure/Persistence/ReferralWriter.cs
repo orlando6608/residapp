@@ -59,9 +59,9 @@ internal static class ReferralWriter
             var reportId = Guid.NewGuid();
             var inserted = await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.informes_derivacion
-                    (id, evento_id, residente_id, centro_id, perfil_codigo, motivo, informacion_adicional, contenido_json,
+                    (id, evento_id, residente_id, centro_id, perfil_codigo, motivo, informacion_adicional, comunicaciones, contenido_json,
                      huella_contenido, pdf, huella_pdf, firmado_por_cuenta_id, firmado_en)
-                SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @ProfileCode, @Reason, @AdditionalInformation, @ContentJson,
+                SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @ProfileCode, @Reason, @AdditionalInformation, @Communications, @ContentJson,
                        @ContentHash, @Pdf, @PdfHash, @AccountId, @SignedAt
                   FROM dbo.eventos_asistenciales ea
                  WHERE ea.id = @EventId
@@ -69,7 +69,7 @@ internal static class ReferralWriter
                 """, new
             {
                 Id = reportId, rule.ProfileCode, input.Report.Reason, input.Report.AdditionalInformation,
-                ContentJson = input.Content.ToJson(), input.ContentHash, input.Pdf, input.PdfHash,
+                Communications = input.Report.Communications, ContentJson = input.Content.ToJson(), input.ContentHash, input.Pdf, input.PdfHash,
                 AccountId = input.AccountId.Value, SignedAt = input.SignedAt.UtcDateTime, input.EventId,
             }, transaction, cancellationToken: ct));
             if (inserted != 1)
@@ -156,7 +156,7 @@ internal static class ReferralWriter
         var canonical = JsonSerializer.Serialize(new object?[]
         {
             input.AccountId.Value, input.CenterId.Value, input.EventId, input.ExpectedRevision, input.OperationId,
-            input.ContentHash, input.Report.Reason, input.Report.AdditionalInformation,
+            input.ContentHash, input.Report.Reason, input.Report.AdditionalInformation, input.Report.Communications,
         });
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }

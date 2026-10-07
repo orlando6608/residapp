@@ -19,10 +19,19 @@ public sealed record SignBaselineDraftResult(BaselineVersionId BaselineVersionId
 /// desviación deliberada del original (que no lo tenía): el esquema SQL ya reservaba 'CLINICAL_DETAIL_READ'
 /// como action_code válido en idempotency_operations sin que ningún código lo usara — un reintento desde
 /// una tablet con cobertura inestable duplicaba la fila de auditoría. Ver
-/// docs/decisiones-arquitectura/directrices-pwa-movil.md, punto 4.</summary>
+/// docs/decisiones-arquitectura/directrices-pwa-movil.md, punto 4. ProfileScopeId es el ámbito activo del que lee (la
+/// declaración vale solo para él). Con ReuseDeclarationId la lectura se ampara en esa declaración vigente (su finalidad y su
+/// justificación son las que se auditan); sin ella se crea una declaración nueva con Purpose y Justification, cuyo id es el
+/// OperationId, y DeclarationMinutes es lo que dura.</summary>
 public sealed record ClinicalDirectionReadInput(
     AccountId AccountId, CenterId CenterId, UnitId UnitId, ResidentId ResidentId,
-    ClinicalResourceType ResourceType, ClinicalDetailAccessPurpose Purpose, Guid OperationId);
+    ClinicalResourceType ResourceType, ClinicalDetailAccessPurpose Purpose, Guid OperationId,
+    Guid ProfileScopeId, string Justification, Guid? ReuseDeclarationId, int DeclarationMinutes);
+
+/// <summary>Declaración de acceso clínico vigente de una cuenta para un residente (CJ, 2026-10-06): finalidad y
+/// justificación declaradas una vez y válidas hasta ExpiresAt para todas las pantallas clínicas de ese residente.</summary>
+public sealed record ClinicalAccessDeclaration(
+    Guid Id, ClinicalDetailAccessPurpose Purpose, string Justification, DateTimeOffset ExpiresAt);
 
 /// <summary>Traduce AuditedBaselineHeader de audit-repository.ts.</summary>
 public sealed record AuditedBaselineHeader(BaselineVersionId Id, int VersionNumber, BaselineReason ReasonCode, DateTimeOffset SignedAt);
@@ -97,6 +106,14 @@ public interface IBaselineRepository
 
     Task<IReadOnlyList<AuditedBaselineHeader>> ReadAsClinicalDirectionAsync(
         ClinicalDirectionReadInput input, CancellationToken ct = default);
+
+    /// <summary>La declaración vigente de esta cuenta para ese residente y ese ámbito, o null si no existe, es de otra
+    /// cuenta, residente o ámbito, ya terminó o caducó. No autoriza nada: solo evita repetir finalidad y justificación.</summary>
+    Task<ClinicalAccessDeclaration?> FindActiveAccessDeclarationAsync(
+        string externalSubject, Guid declarationId, Guid profileScopeId, ResidentId residentId, CancellationToken ct = default);
+
+    /// <summary>Termina las declaraciones abiertas de la cuenta (al cambiar de ámbito o cerrar sesión).</summary>
+    Task EndAccessDeclarationsAsync(string externalSubject, CancellationToken ct = default);
 
     Task<CurrentBaselineSummary?> ReadCurrentSummaryAsync(ReadCurrentBaselineSummaryInput input, CancellationToken ct = default);
 

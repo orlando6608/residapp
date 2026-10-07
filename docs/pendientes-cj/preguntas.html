@@ -1,0 +1,102 @@
+<!doctype html>
+<!--
+  Documentos para CJ. Es estático: al añadir, mover o archivar un documento de esta carpeta, actualiza a mano las listas de
+  preguntas.html, pruebas.html y archivo.html. Cómo funciona: docs/pendientes-cj/README.md.
+  Toda la carpeta /pendientes-cj está detrás de una clave (PendientesCjAccess, Program.cs).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preguntas · Documentos de CJ</title>
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+    }
+  }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); line-height: 1.6; padding-inline: 16px; }
+  .page { max-width: 880px; margin: 0 auto; padding-block: 48px 64px; display: flex; flex-direction: column; gap: 40px; }
+  h1, h2 { font-family: var(--serif); font-weight: 600; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  p, ol, ul { margin: 0; }
+  a { color: var(--accent); }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  header, section { display: flex; flex-direction: column; gap: 12px; }
+  .lead { font-size: 1.08rem; max-width: 66ch; }
+  .steps { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; max-width: 66ch; }
+  .docs { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .docs li { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .docs a { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; }
+  .docs p { color: var(--muted); font-size: 0.95rem; }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  .vacio { background: var(--surface); border: 1px dashed var(--rule); border-radius: 6px; padding: 16px 18px; color: var(--muted); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  a.card { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px;
+           padding: 22px 20px; color: var(--ink); text-decoration: none; min-height: 48px; }
+  a.card:hover { border-color: var(--accent); }
+  a.card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  a.card h2 { font-size: 1.35rem; color: var(--accent); }
+  a.card p { color: var(--muted); font-size: 0.98rem; }
+  a.card .go { margin-top: auto; padding-top: 6px; color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <p class="eyebrow">ResidApp · Pendientes de CJ · Preguntas</p>
+    <h1>Preguntas</h1>
+    <p class="lead">
+      Decisiones y valores clínicos que ingeniería no puede inventar. Abre cada documento, responde en la propia página, pulsa
+      «Guardar respuestas» y envía el fichero descargado a Orlando. Si ya has contestado alguno, verás tus respuestas cargadas.
+      Cuando un documento está contestado y ya lo hemos hecho en la aplicación, pasa a <a href="archivo.html">Archivo</a>.
+    </p>
+  </header>
+
+  <section aria-labelledby="documentos">
+    <h2 id="documentos">Documentos</h2>
+    <ul class="docs">
+      <li>
+        <a href="aclaraciones-respuestas-cj.html">Aclaraciones a tus últimas respuestas</a>
+        <p>Aportaciones al basal (quién firma, cómo se entera el autor), temperaturas seguidas, saturación con oxígeno, Dirección y Coordinación Clínica, y el apartado «Comunicaciones» del informe de derivación (11 respuestas).</p>
+      </li>
+      <li>
+        <a href="traslado-y-baja-residente.html">Traslado y baja del residente</a>
+        <p>Traslado entre unidades o centros (episodios abiertos, borrador de basal, quién lo hace) y baja y reactivación del residente (6 respuestas).</p>
+      </li>
+      <li>
+        <a href="administracion-ambito-familiares-cargos.html">Ámbito de Administración, familiares y cargos</a>
+        <p>Unidades que ninguna Administración tiene, desvincular y compartir familiares, y organigrama y cargos (7 respuestas).</p>
+      </li>
+      <li>
+        <a href="continuidad-supervision-comunicacion.html">Continuidad, supervisión y comunicación familiar</a>
+        <p>Confirmar recepción de seguimientos, derivaciones de Dirección y seguimientos vencidos; plazos de los hitos del proceso y quién aprueba la comunicación familiar (9 preguntas y 7 plazos).</p>
+      </li>
+    </ul>
+  </section>
+
+  <p class="back"><a href="index.html">← Documentos para CJ</a> <a href="/">Volver a ResidApp</a></p>
+</div>
+
+</body>
+</html>

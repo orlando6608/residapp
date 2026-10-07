@@ -59,8 +59,26 @@ En el orden propuesto:
 1. **Bloque 2 — lectura clínica auditada (historias 3 y 6; DIR-05, DIR-06, DIR-07, DIR-14, DIR-15):** detalle clínico con permiso, finalidad
    válida, ámbito y auditoría registrada **antes** de entregar el contenido; línea temporal (HIS-02, que reutilizaría `ReadResidentTimeline`),
    historial de eventos cerrados y correcciones y rectificaciones en solo lectura.
-   **Bloqueado por una decisión de CJ:** la matriz de permisos del prototipo marca `CLINICAL_DETAIL_READ` como «aprobado; ámbito/finalidades
-   pendientes». Se le han preguntado en `docs/pendientes-cj/decisiones-direccion-basal-derivacion.html` (tema 1); no se construye ni se inventan hasta su respuesta.
+   **Decisión de CJ (2026-10-06, `docs/pendientes-cj/archivados/decisiones-direccion-basal-derivacion.respuestas.json`, tema 1) y mecanismo hecho el 2026-10-07 (script `0038`):**
+   - **Finalidades de Dirección:** «Revisión de continuidad asistencial», «Revisión de una incidencia o reclamación asistencial» y
+     «Verificación de trazabilidad documental» (`ClinicalDetailAccessPurpose`; la antigua `SUPERVISION_CLINICA` ya no se ofrece y solo
+     sobrevive en las filas de auditoría anteriores). **La cuarta, «revisión de calidad asistencial», NO está:** CJ dice que debería pertenecer
+     al perfil de Coordinación Clínica, pero en el modelo Dirección y Coordinación son el mismo perfil (`DIRECCION_CLINICA`); se añadirá cuando se decida cómo
+     distinguirlas (¿perfil nuevo?, ¿permiso?; preguntado en `docs/pendientes-cj/aclaraciones-respuestas-cj.html`).
+   - **Justificación siempre:** texto breve (hasta 300 caracteres) en cada declaración, «sin copiar información clínica ni datos personales innecesarios»;
+     se guarda en la declaración y en cada fila de auditoría (`eventos_auditoria.justificacion`).
+   - **Una declaración por residente, 1 hora** (`AccesoClinico:DuracionMinutos` en `appsettings.json`, ajustable más adelante por centro): vale para
+     todas las pantallas clínicas autorizadas de ese residente; termina al cambiar de residente, de perfil activo o de ámbito (`ProfileScopeController`),
+     al cerrar sesión (`DevAuthController.Logout`) o al cumplirse la hora. Cada apertura sigue comprobando permiso y ámbito en SQL y escribiendo su propia
+     fila de auditoría antes de entregar el contenido. Tabla `declaraciones_acceso_clinico` (solo se crea y se termina; con seguridad por filas),
+     cookie `residapp_clinical_access` (solo el id; SQL revalida todo), `ClinicalAccessDeclarations` (consultar la vigente y terminarlas).
+   - **Hecho solo para la consulta que ya existía** (`/Baseline/Direction`: historial y basal vigente, solo cabeceras de versión). **Falta construir sobre este
+     mecanismo**, cada pantalla con su `tipo_recurso`: contenido del basal para Dirección, línea temporal (DIR-06), historial de eventos cerrados (DIR-07),
+     trazabilidad clínica (DIR-14), correcciones y rectificaciones (DIR-15) y el informe de derivación firmado. Notas del repositorio de lectura:
+     `ReadAsClinicalDirectionAsync` (`SqlBaselineRepository`) es el patrón «auditoría o nada»; `SqlChangeInboxDirectory.ScopedEventsFrom` fija
+     `perfil_codigo IN ('ENFERMERIA','MEDICINA')` y no sirve a Dirección tal cual (`SqlSupervisionDirectory.ScopedEventsFrom` es el gemelo); no reutilizar la ruta de
+     Enfermería/Medicina (`HistorialTests` fija que Dirección recibe acceso denegado ahí).
+   - **Defecto corregido de paso:** `CK_audit_direction_read` aceptaba una finalidad nula (`NULL = 'X'` da UNKNOWN y un `CHECK` acepta UNKNOWN); la nueva restricción lleva `proposito_codigo IS NOT NULL`.
 2. **Bloque 3 — derivaciones y comunicación familiar en solo lectura (historia 5; DIR-12, DIR-13).**
    - **Derivaciones (DIR-12), hecho el 2026-10-02 (sin script; suposiciones mías, sin confirmar con el usuario ni con CJ):** `/Direccion/Derivaciones`
      (tarjeta del inicio) lista los **episodios abiertos** del ámbito con protocolo urgente, del más reciente al más antiguo, con quién y cuándo activó el
@@ -68,7 +86,7 @@ En el orden propuesto:
      sin firmar, con llamadas). `SupervisionReferral` no tiene texto clínico, ni el contacto, ni el resultado de las llamadas, ni el contenido del informe
      (lo comprueba un test por reflexión); sin permiso ni auditoría, como el resto de la supervisión operativa. Solo abiertos: los cerrados salen en los
      indicadores agregados, no por nombre. Pedido a CJ que lo confirme (solo abiertos; auditoría) en `docs/pendientes-cj/continuidad-supervision-comunicacion.html`
-     (tema 2). **Sigue bloqueado:** consultar el informe firmado, que exige permiso clínico y las finalidades que fijará CJ (tema 1).
+     (tema 2). **Sigue bloqueado:** consultar el informe firmado, que exige permiso clínico y la declaración de finalidad (hecha el 2026-10-07, ver el bloque 2); falta la pantalla.
    - **Comunicación familiar (DIR-13):** depende de que exista la aprobación y publicación (Administración y Familia).
 3. **Revisión de calidad de proceso (DIR-11 del boceto):** «cumplimiento de hitos definidos y excepciones». Nadie ha definido qué hitos
    ni con qué plazos; es una decisión clínica. Preguntado a CJ el 2026-10-02 en `docs/pendientes-cj/continuidad-supervision-comunicacion.html`
@@ -87,7 +105,7 @@ Huecos de lo ya construido:
 - **Responsables de equipo:** el detalle operativo no los muestra porque no hay equipos ni turnos hasta que exista Administración.
 - **Lectura de basal (`/Baseline/Direction`):** desde 2026-10-02 toma el ámbito y el centro del ámbito activo y el residente se
   elige en un desplegable (`DireccionApplicationService.ListResidentsAsync`, con el mismo criterio de ámbito que la autorización de
-  la lectura). El propósito sigue siendo la única finalidad provisional, sin la lista de finalidades válidas que fijará CJ (tema 1).
+  la lectura). Desde 2026-10-07 la consulta pide una de las tres finalidades de CJ y una justificación (ver el bloque 2).
   Un residente sin ningún basal firmado ya no se deniega como un acceso no autorizado: tras autorizar, la consulta devuelve una lista
   vacía, sin auditoría, y el resultado dice «Este residente todavía no tiene ningún basal firmado.». Quien no está autorizado sigue
   recibiendo el mensaje neutro (`SqlBaselineRepositoryTests`).

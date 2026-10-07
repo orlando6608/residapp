@@ -1,0 +1,33 @@
+@model AccesoCjViewModel
+@{
+    ViewData["Title"] = "Documentos de CJ";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-3">Documentos de CJ</h1>
+                <p class="text-body-secondary small">
+                    Escribe la clave que te ha dado Orlando para ver las preguntas, las pruebas y los documentos archivados.
+                </p>
+
+                @if (Model.Error)
+                {
+                    <div class="alert alert-danger" role="alert">Clave incorrecta.</div>
+                }
+
+                <form asp-controller="AccesoCj" asp-action="Index" method="post">
+                    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                    <div class="mb-3">
+                        <label for="clave" class="form-label">Clave</label>
+                        <input type="password" class="form-control form-control-lg" id="clave" name="clave" autocomplete="off" autofocus required />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

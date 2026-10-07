@@ -24,6 +24,27 @@ public class EmergencyReferralTests
     }
 
     [Fact]
+    public void Informe_ConComunicaciones_LasAnadeComoSeccionDelProfesionalAlFinal_YSinEllasNoHaySeccion()
+    {
+        var content = ReferralReportContent.Compose(Automatic,
+            new ReferralReportInput("Disnea brusca.", "Portador de marcapasos.", "  Contacto telefónico con SEM a las 18 h.  "));
+        var without = ReferralReportContent.Compose(Automatic, new ReferralReportInput("Disnea brusca.", null, "   "));
+
+        Assert.Equal(
+            new[]
+            {
+                "Identificación del residente y del centro", ReferralReportContent.ReasonTitle,
+                ReferralReportContent.AdditionalInformationTitle, ReferralReportContent.CommunicationsTitle,
+            },
+            content.Sections.Select(s => s.Title));
+        Assert.Equal("Comunicaciones", ReferralReportContent.CommunicationsTitle);
+        Assert.False(content.Sections[3].Automatic);
+        Assert.Equal("Contacto telefónico con SEM a las 18 h.", content.Sections[3].Lines.Single());
+        Assert.DoesNotContain(without.Sections, s => s.Title == ReferralReportContent.CommunicationsTitle);
+        Assert.NotEqual(without.Hash(), ReferralReportContent.Compose(Automatic, new ReferralReportInput("Disnea brusca.", null, "Aviso a la familia.")).Hash());
+    }
+
+    [Fact]
     public void Informe_SinMotivo_ODemasiadoLargo_SeRechaza()
     {
         foreach (var build in new Func<ReferralReportInput>[]
@@ -31,6 +52,7 @@ public class EmergencyReferralTests
             () => new ReferralReportInput("  ", null),
             () => new ReferralReportInput(new string('a', ReferralReportInput.MaxReasonLength + 1), null),
             () => new ReferralReportInput("Disnea.", new string('a', ReferralReportInput.MaxAdditionalInformationLength + 1)),
+            () => new ReferralReportInput("Disnea.", null, new string('a', ReferralReportInput.MaxCommunicationsLength + 1)),
         })
         {
             Assert.Equal("REFERRAL_REPORT_INVALID", Assert.Throws<DomainValidationException>(build).Message);
