@@ -1179,10 +1179,9 @@ usuario cuando encajen:
 - **CI (anotaciones de GitHub Actions):**
   - `actions/checkout@v4` y `actions/setup-dotnet@v4` usan Node.js 20, que está obsoleto (hoy se fuerzan a
     Node 24);
-  - `ubuntu-latest` pasará a Ubuntu 26 a partir del 19 de octubre de 2026. Los dos jobs están fijados a
-    `ubuntu-24.04` (el sistema que era `latest`, con la misma ICU), que sigue con el repositorio de `sqlcmd` de
-    Ubuntu 22.04 (`.../config/ubuntu/22.04/prod.list`). Hay que revisarlo antes de pasar a Ubuntu 26 o si falla
-    «Instalar sqlcmd».
+  - `ubuntu-latest` pasa a Ubuntu 26 el 19 de octubre de 2026. Hecho el 2026-10-07 (PR #14): los dos jobs están fijados a
+    `ubuntu-26.04` y «Instalar sqlcmd» usa el repositorio de Microsoft de Ubuntu 26.04 (`.../config/ubuntu/26.04/prod.list`).
+    El CI de `main` pasó entero, incluido el despliegue. Si falla «Instalar sqlcmd», mira primero ese repositorio.
 
 ## Reglas de trabajo propias de este repositorio
 
