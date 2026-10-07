@@ -13,11 +13,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Dirección, bloque 2: DIR-15 hecho (2026-10-07, rama `despliegue-limpio`, sin script):** tipo de recurso «Correcciones y rectificaciones» (`ASSESSMENT_AMENDMENTS`) en `/Baseline/Direction`, con auditoría de una fila por lectura. `ResidentAmendmentHistory.From` (pura, en
+  `Ports/ResidentAmendmentHistory.cs`) agrupa la línea temporal del ámbito de Dirección por evento y tipo de valoración (original, correcciones con motivo, rectificaciones) y añade los basales firmados como versiones vinculadas (`ReadHistoryAsync`). Autor = perfil, no nombre de cuenta
+  (decisión mía, sin confirmar). Suite: 279, 125 y 344 en verde; comprobado por HTTP en local. **Siguiente:** DIR-14 (trazabilidad clínica) y el informe de derivación firmado; después el bloque 3 de Dirección.
 - **Dirección, bloque 2: DIR-06 y DIR-07 hechos (2026-10-07, rama `despliegue-limpio`, sin script):** en `/Baseline/Direction`, tipos de recurso nuevos «Línea temporal» (`RESIDENT_TIMELINE`) y «Historial de eventos cerrados» (`CLOSED_EVENTS_HISTORY`),
   con acciones nuevas en la política y la misma declaración de acceso. Se audita el residente (una fila por lectura). `ReadAsClinicalDirectionAsync` devuelve cabeceras vacías para ellos y solo después `ReadDirectionBaseline` pide
   `ListDirectionTimelineAsync` / `ListDirectionClosedEventsAsync` (`SqlChangeInboxDirectory`, con `DirectionScopedEventsFrom`). `DirectionBaselineRead` gana `Timeline` y `ClosedEvents`; `ReadDirectionBaseline` recibe ahora `IChangeInboxDirectory`.
   Parciales `_LineaTemporalLista` y `_EventosCerradosLista` compartidos con Enfermería y Medicina. Detalle y decisiones en `pendientes-direccion.md`. Suite: 276, 125 y 343 en verde; comprobado por HTTP en local con «Residente Prueba DIR-06 (ficticio)» (cuenta
-  `test-…` de las pruebas). **Siguiente:** DIR-15 (correcciones y rectificaciones; versiones de basal vinculadas), DIR-14 (trazabilidad) y el informe de derivación firmado.
+  `test-…` de las pruebas). **Siguiente:** (DIR-15 se hizo después, ver el punto siguiente) DIR-14 (trazabilidad) y el informe de derivación firmado.
 - **Dirección, bloque 2: DIR-05 hecho (2026-10-07, rama `despliegue-limpio`, commit `905b4ae`, sin push, sin script):** `/Baseline/Direction` con «Basal vigente» muestra el contenido de la versión vigente (nueve áreas y
   Barthel), no solo cabeceras. `ReadDirectionBaseline` devuelve ahora `DirectionBaselineRead(Headers, Content)`: primero la lectura auditada (`ReadAsClinicalDirectionAsync`, sin cambios) y solo después
   `ReadVersionAsync` de la versión auditada; «Historial de basal» sigue sin contenido. Parcial nuevo `Views/Shared/_ContenidoVersionBasal.cshtml` (extraído de `VersionBasal.cshtml`, que ahora lo usa).
@@ -1140,7 +1143,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
      finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).
    - Siguen sin respuesta: `docs/pendientes-cj/traslado-y-baja-residente.html` (6 respuestas): traslado y baja del residente en Administración.
-   - **Dirección, bloque 2 (el resto):** DIR-14/15 y el informe firmado sobre la declaración de acceso ya construida (ver `pendientes-direccion.md`).
+   - **Dirección, bloque 2 (el resto):** DIR-14 y el informe firmado sobre la declaración de acceso ya construida (ver `pendientes-direccion.md`).
 2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): el organigrama y los cargos (ADM-07; ningún documento los define: pregunta a CJ); después publicaciones,
    citas, auditoría administrativa y panel.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar

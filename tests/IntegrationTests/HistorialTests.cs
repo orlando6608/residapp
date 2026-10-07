@@ -281,6 +281,62 @@ public class HistorialTests
         Assert.Equal(1, await AuditedAsync("CLOSED_EVENTS_HISTORY"));
     }
 
+    /// <summary>DIR-15: Dirección Clínica ve, auditado, el original, la corrección y la rectificación de una valoración con su motivo, y
+    /// los basales firmados como versiones vinculadas; sin permiso no ve nada ni deja auditoría.</summary>
+    [Fact]
+    public async Task Direccion_LeeCorreccionesYRectificaciones_Auditadas_ConLosBasalesComoVersionesVinculadas()
+    {
+        var (enfermera, _, residentId) = await SeedResidentAsync();
+        await SignBaselineAsync(enfermera, residentId, BaselineReason.Alta);
+        await SignBaselineAsync(enfermera, residentId, BaselineReason.RevisionProgramada);
+        var eventId = await RegisterAsync(enfermera, residentId, "Disnea nocturna.");
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        Assert.True((await BuildService(enfermera.ExternalSubject).CloseClinicalEventAsync(new CloseClinicalEventCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, Guid.NewGuid(), FamilyCommunicationDecision.NoComunicar, null, null))).Ok);
+        Assert.True((await BuildService(enfermera.ExternalSubject).CorrectNursingAssessmentAsync(new CorrectNursingAssessmentCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, 0, "Hallazgo anotado en el lado equivocado.", "Crepitantes en base izquierda.", null,
+            "Se incorpora a 45º.", null, null, 37.8m, 130, 80, 92, 22, 93, RespiratorySupportCode.AireAmbiente, null, null, null, null, null))).Ok);
+        Assert.True((await BuildService(enfermera.ExternalSubject, TimeSpan.Zero).RectifyAssessmentAsync(new RectifyAssessmentCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, 0, "La crepitación era en la base izquierda.", "Aclaración posterior.",
+            SystemProfile.Enfermeria))).Ok);
+
+        var direccion = await SeedFixture.AddProfileToCenterAsync(
+            SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId, ["CLINICAL_DETAIL_READ"]);
+        var sinPermiso = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId, []);
+        Task<ApplicationResult<DirectionBaselineRead>> Read(SeededProfile who) =>
+            new ReadDirectionBaseline(
+                    new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), new FixedHistorialSessionIdentityProvider(who.ExternalSubject),
+                    _baselines, new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory))
+                .ExecuteAsync(new ReadDirectionBaselineCommand(
+                    who.ProfileScopeId, who.CenterId, residentId, "ASSESSMENT_AMENDMENTS", "TRAZABILIDAD_DOCUMENTAL", Guid.NewGuid(), "Verificación documental (prueba)."));
+        async Task<int> AuditedAsync()
+        {
+            using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+            return await Dapper.SqlMapper.ExecuteScalarAsync<int>(connection,
+                "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ' AND tipo_recurso = 'ASSESSMENT_AMENDMENTS'",
+                new { Id = residentId.Value });
+        }
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Read(sinPermiso)).Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Read(enfermera)).Error!.Code);
+        Assert.Equal(0, await AuditedAsync());
+
+        var result = await Read(direccion);
+        Assert.True(result.Ok, result.Error?.Message);
+        var amendments = result.Value!.Amendments!;
+        var item = Assert.Single(amendments.Assessments);
+        Assert.Equal(eventId, item.EventId);
+        Assert.Equal(SystemProfile.Enfermeria, item.Profile);
+        Assert.IsType<TimelineEntry.NursingAssessmentSaved>(item.Original);
+        var correction = Assert.IsType<TimelineEntry.NursingAssessmentCorrected>(Assert.Single(item.Corrections));
+        Assert.Equal("Crepitantes en base izquierda.", correction.Content.Findings);
+        Assert.Equal("Hallazgo anotado en el lado equivocado.", correction.Reason);
+        Assert.Equal("Aclaración posterior.", Assert.Single(item.Rectifications).Reason);
+        Assert.Equal([2, 1], amendments.Baselines.Select(b => b.VersionNumber));
+        Assert.Equal(1, amendments.Baselines[0].ReplacesVersionNumber);
+        Assert.Equal(1, await AuditedAsync());
+    }
+
     /// <summary>Un residente en la unidad de una enfermera con permisos de basal y de una médica.</summary>
     private static async Task<(SeededProfile Enfermera, SeededProfile Medica, ResidentId ResidentId)> SeedResidentAsync()
     {

@@ -8,6 +8,7 @@
     var contenido = ViewBag.Content as BaselineVersionDetail;
     var linea = ViewBag.Timeline as IReadOnlyList<TimelineEntry>;
     var cerrados = ViewBag.ClosedEvents as IReadOnlyList<ClosedEventSummary>;
+    var correcciones = ViewBag.Amendments as ResidentAmendmentHistory;
 }
 
 <nav aria-label="breadcrumb">
@@ -18,9 +19,18 @@
     </ol>
 </nav>
 
-<h1 class="h3">@(linea is not null ? "Línea temporal auditada" : cerrados is not null ? "Eventos cerrados auditados" : contenido is null ? "Historial de basal auditado" : "Basal vigente auditado")</h1>
+<h1 class="h3">@(linea is not null ? "Línea temporal auditada" : cerrados is not null ? "Eventos cerrados auditados" : correcciones is not null ? "Correcciones y rectificaciones auditadas" : contenido is null ? "Historial de basal auditado" : "Basal vigente auditado")</h1>
 
-@if (linea is not null)
+@if (correcciones is not null)
+{
+    <p class="text-muted">
+        Solo lectura. Cada valoración corregida o rectificada se muestra con su versión original, sus correcciones y rectificaciones, el motivo, el
+        perfil que las hizo y su fecha. Los basales firmados se muestran como versiones vinculadas, nunca como una edición. Esta consulta ha quedado
+        registrada en la auditoría.
+    </p>
+    <partial name="_CorreccionesRectificaciones" model="correcciones" />
+}
+else if (linea is not null)
 {
     <p class="text-muted">
         Solo lectura, del registro más reciente al más antiguo: eventos de las unidades de tu ámbito con cada paso de su atención,

@@ -79,7 +79,13 @@ public sealed class ReadDirectionBaseline(
             var closedEvents = resourceType == ClinicalResourceType.ClosedEventsHistory
                 ? await directory.ListDirectionClosedEventsAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct)
                 : null;
-            return new DirectionBaselineRead(headers, content, timeline, closedEvents);
+            // DIR-15: se parte de la línea temporal del ámbito de Dirección y de las versiones firmadas del basal (cabeceras, ya autorizadas).
+            var amendments = resourceType == ClinicalResourceType.AssessmentAmendments
+                ? ResidentAmendmentHistory.From(
+                    await directory.ListDirectionTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct),
+                    await repository.ReadHistoryAsync(new ReadCurrentBaselineSummaryInput(command.CentroId, command.ResidenteId), ct))
+                : null;
+            return new DirectionBaselineRead(headers, content, timeline, closedEvents, amendments);
         });
 }
 

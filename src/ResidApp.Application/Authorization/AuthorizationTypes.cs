@@ -33,6 +33,8 @@ public enum ClinicalResourceType
     // DIR-06 y DIR-07: recursos del residente entero (se audita el residente, no cada fila). Solo los lee Dirección Clínica.
     [Code("RESIDENT_TIMELINE")] [Display(Name = "Línea temporal")] ResidentTimeline,
     [Code("CLOSED_EVENTS_HISTORY")] [Display(Name = "Historial de eventos cerrados")] ClosedEventsHistory,
+    // DIR-15: correcciones y rectificaciones de las valoraciones del residente, con los basales firmados como versiones vinculadas.
+    [Code("ASSESSMENT_AMENDMENTS")] [Display(Name = "Correcciones y rectificaciones")] AssessmentAmendments,
 }
 
 /// <summary>Traduce AuthorizationDenialReason de policy.ts.</summary>
@@ -101,6 +103,7 @@ public enum ResidentBaselineAction
     BaselineHistoryRead,
     ResidentTimelineRead,
     ClosedEventsHistoryRead,
+    AssessmentAmendmentsRead,
 }
 
 /// <summary>

@@ -86,8 +86,13 @@ En el orden propuesto:
      de Medicina; el SQL de la línea temporal y del historial se parametrizó por ese fragmento, sin duplicarse). Parciales `_LineaTemporalLista` y `_EventosCerradosLista`, compartidos con
      Enfermería y Medicina; sin `DetailAction` no hay enlaces a eventos ni al PDF (son de otros perfiles). Tests: `Direccion_LeeLineaTemporalYEventosCerrados_Auditados_ConTodosLosEventosDeSuAmbito`
      (falla con el ámbito de Enfermería). La línea temporal incluye el contenido clínico de los eventos (valoraciones, indicaciones, protocolo): es el detalle que pedía DIR-06.
+   - **DIR-15 hecho el 2026-10-07 (sin script):** tercer tipo de recurso nuevo, «Correcciones y rectificaciones» (`ASSESSMENT_AMENDMENTS`, acción `AssessmentAmendmentsRead`), misma declaración y auditoría (una fila por lectura). Se construye en
+     Application a partir de la línea temporal del ámbito de Dirección (`ResidentAmendmentHistory.From`, función pura): por cada valoración (Enfermería o Medicina, por evento) corregida o rectificada, el original (la última versión guardada), cada
+     corrección (contenido corregido y motivo) y cada rectificación, y todos los basales firmados como versiones vinculadas (cabeceras de `ReadHistoryAsync`: vigente, «sustituye a la versión n», firmante, Barthel; nunca como edición). **Decisión mía,
+     sin confirmar:** el autor es el perfil (como en la línea temporal: las cuentas no tienen nombre visible allí y solo el autor puede corregir o rectificar), sin nombre de cuenta. Vista `_CorreccionesRectificaciones` y `_CamposHito`. Tests:
+     `ResidentAmendmentHistoryTests` (3, unitarios) y `Direccion_LeeCorreccionesYRectificaciones_Auditadas_ConLosBasalesComoVersionesVinculadas` (falla sin las versiones del basal).
    - **Falta construir sobre este mecanismo**, cada pantalla con su `tipo_recurso`:
-     trazabilidad clínica (DIR-14), correcciones y rectificaciones (DIR-15) y el informe de derivación firmado. Notas del repositorio de lectura:
+     trazabilidad clínica (DIR-14) y el informe de derivación firmado. Notas del repositorio de lectura:
      `ReadAsClinicalDirectionAsync` (`SqlBaselineRepository`) es el patrón «auditoría o nada»; `SqlChangeInboxDirectory.ScopedEventsFrom` fija
      `perfil_codigo IN ('ENFERMERIA','MEDICINA')` y no sirve a Dirección tal cual (`SqlSupervisionDirectory.ScopedEventsFrom` es el gemelo); no reutilizar la ruta de
      Enfermería/Medicina (`HistorialTests` fija que Dirección recibe acceso denegado ahí).

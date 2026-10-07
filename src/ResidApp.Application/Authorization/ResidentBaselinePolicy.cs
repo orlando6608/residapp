@@ -37,6 +37,8 @@ public static class ResidentBaselinePolicy
                 AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.ResidentTimeline),
             ResidentBaselineAction.ClosedEventsHistoryRead =>
                 AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.ClosedEventsHistory),
+            ResidentBaselineAction.AssessmentAmendmentsRead =>
+                AuthorizeClinicalDirectionRead(request, context, ClinicalResourceType.AssessmentAmendments),
             _ => DenyByDefault(),
         };
     }

@@ -123,6 +123,7 @@ public static class RequestAuthorizationContextResolver
                 ClinicalResourceType.BaselineCurrent => ResidentBaselineAction.BaselineCurrentRead,
                 ClinicalResourceType.ResidentTimeline => ResidentBaselineAction.ResidentTimelineRead,
                 ClinicalResourceType.ClosedEventsHistory => ResidentBaselineAction.ClosedEventsHistoryRead,
+                ClinicalResourceType.AssessmentAmendments => ResidentBaselineAction.AssessmentAmendmentsRead,
                 _ => ResidentBaselineAction.BaselineHistoryRead,
             },
             AuthorizationTarget.Draft draft => draft.Reason == BaselineReason.Alta

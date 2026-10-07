@@ -1,0 +1,74 @@
+@using ResidApp.Shared
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model ResidentAmendmentHistory
+@* DIR-15: solo lectura. Por cada valoración corregida o rectificada, el original, cada corrección y cada rectificación con su motivo, su
+   autor (el perfil) y su fecha; después, los basales firmados como versiones vinculadas. *@
+<section class="mb-4" aria-labelledby="valoraciones-modificadas">
+    <h2 id="valoraciones-modificadas" class="h5">Valoraciones corregidas o rectificadas</h2>
+    @if (Model.Assessments.Count == 0)
+    {
+        <p class="text-muted">Ninguna valoración de este residente se ha corregido ni rectificado.</p>
+    }
+    @foreach (var item in Model.Assessments)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h3 class="h6 card-title">
+                    @(item.Profile == SystemProfile.Medicina ? "Valoración médica" : "Valoración de Enfermería")
+                    @if (item.Event is { } registered)
+                    {
+                        <span class="fw-normal text-body-secondary">· evento registrado el @registered.At.ToLocalTime().ToString("g")</span>
+                    }
+                </h3>
+                @if (item.Original is { } original)
+                {
+                    <div class="border-start border-4 border-secondary ps-3 mb-3">
+                        <p class="fw-semibold mb-1">Original <span class="fw-normal text-body-secondary small">guardada el @original.At.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(item.Profile)</span></p>
+                        <partial name="_CamposHito" model="original" />
+                    </div>
+                }
+                @foreach (var correction in item.Corrections)
+                {
+                    <div class="border-start border-4 border-warning ps-3 mb-3">
+                        <p class="fw-semibold mb-1">Corrección <span class="fw-normal text-body-secondary small">el @correction.At.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(item.Profile)</span></p>
+                        <partial name="_CamposHito" model="correction" />
+                    </div>
+                }
+                @foreach (var rectification in item.Rectifications)
+                {
+                    <div class="border-start border-4 border-info ps-3 mb-3">
+                        <p class="fw-semibold mb-1">Rectificación <span class="fw-normal text-body-secondary small">el @rectification.At.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(item.Profile)</span></p>
+                        <partial name="_CamposHito" model="rectification" />
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</section>
+
+<section class="mb-4" aria-labelledby="versiones-vinculadas">
+    <h2 id="versiones-vinculadas" class="h5">Versiones del basal</h2>
+    <p class="text-muted small">Un basal firmado no se edita: cada cambio es una versión nueva que sustituye a la anterior.</p>
+    @if (Model.Baselines.Count == 0)
+    {
+        <p class="text-muted">Este residente no tiene ningún basal firmado.</p>
+    }
+    else
+    {
+        <ul class="list-group">
+            @foreach (var version in Model.Baselines)
+            {
+                <li class="list-group-item">
+                    <strong>Versión @version.VersionNumber</strong>
+                    <span class="badge @(version.IsCurrent ? "text-bg-success" : "text-bg-secondary") ms-1">@(version.IsCurrent ? "Vigente" : "Histórica")</span>
+                    <div>@BaselineReasonDisplay.Label(version.ReasonCode) · Barthel @version.BarthelTotal / 100</div>
+                    <div class="text-body-secondary small">
+                        Firmada el @version.SignedAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(version.SignedByProfile)
+                        @(version.ReplacesVersionNumber is { } previous ? $"· sustituye a la versión {previous}" : "")
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+</section>
