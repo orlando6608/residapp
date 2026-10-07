@@ -3,7 +3,7 @@
 @using ResidApp.Web.Models
 @model ResidentAmendmentHistory
 @* DIR-15: solo lectura. Por cada valoración corregida o rectificada, el original, cada corrección y cada rectificación con su motivo, su
-   autor (el perfil) y su fecha; después, los basales firmados como versiones vinculadas. *@
+   autor (nombre visible de la cuenta y perfil) y su fecha; después, los basales firmados como versiones vinculadas. *@
 <section class="mb-4" aria-labelledby="valoraciones-modificadas">
     <h2 id="valoraciones-modificadas" class="h5">Valoraciones corregidas o rectificadas</h2>
     @if (Model.Assessments.Count == 0)
@@ -24,21 +24,21 @@
                 @if (item.Original is { } original)
                 {
                     <div class="border-start border-4 border-secondary ps-3 mb-3">
-                        <p class="fw-semibold mb-1">Original <span class="fw-normal text-body-secondary small">guardada el @original.At.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(item.Profile)</span></p>
+                        <p class="fw-semibold mb-1">Original <span class="fw-normal text-body-secondary small">guardada el @original.At.ToLocalTime().ToString("g") por @TimelineDisplay.Author(original)</span></p>
                         <partial name="_CamposHito" model="original" />
                     </div>
                 }
                 @foreach (var correction in item.Corrections)
                 {
                     <div class="border-start border-4 border-warning ps-3 mb-3">
-                        <p class="fw-semibold mb-1">Corrección <span class="fw-normal text-body-secondary small">el @correction.At.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(item.Profile)</span></p>
+                        <p class="fw-semibold mb-1">Corrección <span class="fw-normal text-body-secondary small">el @correction.At.ToLocalTime().ToString("g") por @TimelineDisplay.Author(correction)</span></p>
                         <partial name="_CamposHito" model="correction" />
                     </div>
                 }
                 @foreach (var rectification in item.Rectifications)
                 {
                     <div class="border-start border-4 border-info ps-3 mb-3">
-                        <p class="fw-semibold mb-1">Rectificación <span class="fw-normal text-body-secondary small">el @rectification.At.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(item.Profile)</span></p>
+                        <p class="fw-semibold mb-1">Rectificación <span class="fw-normal text-body-secondary small">el @rectification.At.ToLocalTime().ToString("g") por @TimelineDisplay.Author(rectification)</span></p>
                         <partial name="_CamposHito" model="rectification" />
                     </div>
                 }

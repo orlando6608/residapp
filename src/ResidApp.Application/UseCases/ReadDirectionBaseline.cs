@@ -74,7 +74,7 @@ public sealed class ReadDirectionBaseline(
             // DIR-06/DIR-07: la lectura anterior ya autorizó, declaró y auditó el residente entero (sin ella habría lanzado). El ámbito
             // se pasa a la consulta, que además lo exige en SQL (perfil de Dirección activo y sus unidades y residentes).
             var timeline = resourceType == ClinicalResourceType.ResidentTimeline
-                ? await directory.ListDirectionTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct)
+                ? await directory.ListDirectionTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct: ct)
                 : null;
             var closedEvents = resourceType == ClinicalResourceType.ClosedEventsHistory
                 ? await directory.ListDirectionClosedEventsAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct)
@@ -82,7 +82,7 @@ public sealed class ReadDirectionBaseline(
             // DIR-15: se parte de la línea temporal del ámbito de Dirección y de las versiones firmadas del basal (cabeceras, ya autorizadas).
             var amendments = resourceType == ClinicalResourceType.AssessmentAmendments
                 ? ResidentAmendmentHistory.From(
-                    await directory.ListDirectionTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct),
+                    await directory.ListDirectionTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, includeAuthorNames: true, ct: ct),
                     await repository.ReadHistoryAsync(new ReadCurrentBaselineSummaryInput(command.CentroId, command.ResidenteId), ct))
                 : null;
             return new DirectionBaselineRead(headers, content, timeline, closedEvents, amendments);

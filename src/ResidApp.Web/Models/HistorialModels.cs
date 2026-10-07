@@ -78,6 +78,13 @@ public sealed record ResidentTimelineViewModel(ScopeResidentSummary Resident, IR
 /// <summary>Textos en español de cada hito de la línea temporal: su título y sus campos, sin los vacíos.</summary>
 public static class TimelineDisplay
 {
+    /// <summary>Quién lo hizo, para DIR-15: el nombre visible de la cuenta con su perfil, o solo el perfil si la cuenta aún no tiene nombre.</summary>
+    public static string Author(TimelineEntry entry)
+    {
+        var profile = entry.Profile is { } p ? SystemProfileDisplay.Label(p) : "perfil desconocido";
+        return string.IsNullOrWhiteSpace(entry.AuthorName) ? $"{profile} (cuenta sin nombre registrado)" : $"{entry.AuthorName} ({profile})";
+    }
+
     public static string Title(TimelineEntry entry) => entry switch
     {
         TimelineEntry.EventRegistered e => e.Origin == ClinicalEventOrigin.CambioAuxiliar ? "Cambio registrado por Auxiliar" : "Evento registrado",

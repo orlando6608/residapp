@@ -255,7 +255,7 @@ public interface IChangeInboxDirectory
     /// <summary>DIR-06: lo mismo con el ámbito de Dirección Clínica, que ve todos los eventos de sus unidades. No autoriza nada: solo
     /// se llama después de una lectura auditada del residente (ReadDirectionBaseline).</summary>
     Task<IReadOnlyList<TimelineEntry>> ListDirectionTimelineAsync(
-        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, bool includeAuthorNames = false, CancellationToken ct = default);
 
     /// <summary>DIR-07: lo mismo que ListClosedEventsAsync con el ámbito de Dirección Clínica; también solo tras una lectura auditada.</summary>
     Task<IReadOnlyList<ClosedEventSummary>> ListDirectionClosedEventsAsync(

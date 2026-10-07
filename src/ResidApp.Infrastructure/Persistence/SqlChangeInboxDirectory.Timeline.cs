@@ -15,15 +15,20 @@ public sealed partial class SqlChangeInboxDirectory
 {
     public Task<IReadOnlyList<TimelineEntry>> ListTimelineAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
-        ListTimelineAsync(ScopedEventsFrom, profileScopeId, centerId, residentId, ct);
+        ListTimelineAsync(ScopedEventsFrom, profileScopeId, centerId, residentId, false, ct);
 
     public Task<IReadOnlyList<TimelineEntry>> ListDirectionTimelineAsync(
-        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
-        ListTimelineAsync(DirectionScopedEventsFrom, profileScopeId, centerId, residentId, ct);
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, bool includeAuthorNames = false, CancellationToken ct = default) =>
+        ListTimelineAsync(DirectionScopedEventsFrom, profileScopeId, centerId, residentId, includeAuthorNames, ct);
 
     private async Task<IReadOnlyList<TimelineEntry>> ListTimelineAsync(
-        string scopedEventsFrom, Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct)
+        string scopedEventsFrom, Guid profileScopeId, CenterId centerId, ResidentId residentId, bool includeAuthorNames, CancellationToken ct)
     {
+        // Solo la lectura auditada de Dirección (DIR-15) pide el nombre visible de quien guardó, corrigió o rectificó; la línea temporal
+        // de Enfermería y Medicina sigue mostrando solo el perfil.
+        string Author(string column) => includeAuthorNames
+            ? $"(SELECT a.nombre_visible FROM dbo.cuentas a WHERE a.id = {column})"
+            : "CAST(NULL AS NVARCHAR(200))";
         using var connection = await connections.OpenAsync(ct);
         var entries = new List<TimelineEntry>();
 
@@ -77,45 +82,45 @@ public sealed partial class SqlChangeInboxDirectory
             var parameters = new { EventIds = ids };
             entries.AddRange((await connection.QueryAsync<AssessmentVersionRow>(new CommandDefinition($"""
                 SELECT evento_id AS EventId, guardado_en AS SavedAt, hallazgos AS Findings, valoracion AS Assessment, actuaciones AS Actions,
-                       comunicaciones AS Communications, resultado AS Outcome, {VitalSignColumns}, CAST(NULL AS NVARCHAR(500)) AS Reason
+                       comunicaciones AS Communications, resultado AS Outcome, {VitalSignColumns}, CAST(NULL AS NVARCHAR(500)) AS Reason, {Author("guardado_por_cuenta_id")} AS AuthorName
                   FROM dbo.valoraciones_enfermeria_versiones WHERE evento_id IN @EventIds
                 """, parameters, cancellationToken: ct)))
                 .Select(r => new TimelineEntry.NursingAssessmentSaved(Utc(r.SavedAt), r.EventId,
-                    new NursingAssessmentContent(r.Findings, r.Assessment, r.Actions, r.Communications, r.Outcome, Vitals(r)))));
+                    new NursingAssessmentContent(r.Findings, r.Assessment, r.Actions, r.Communications, r.Outcome, Vitals(r))) { AuthorName = r.AuthorName }));
 
             entries.AddRange((await connection.QueryAsync<AssessmentVersionRow>(new CommandDefinition($"""
                 SELECT evento_id AS EventId, guardado_en AS SavedAt, hallazgos_exploracion AS Findings, valoracion AS Assessment,
                        actuaciones AS Actions, CAST(NULL AS NVARCHAR(2000)) AS Communications, CAST(NULL AS NVARCHAR(2000)) AS Outcome,
-                       {VitalSignColumns}, CAST(NULL AS NVARCHAR(500)) AS Reason
+                       {VitalSignColumns}, CAST(NULL AS NVARCHAR(500)) AS Reason, {Author("guardado_por_cuenta_id")} AS AuthorName
                   FROM dbo.valoraciones_medicas_versiones WHERE evento_id IN @EventIds
                 """, parameters, cancellationToken: ct)))
                 .Select(r => new TimelineEntry.MedicalAssessmentSaved(Utc(r.SavedAt), r.EventId,
-                    new MedicalAssessmentContent(r.Findings, r.Assessment, r.Actions, Vitals(r)))));
+                    new MedicalAssessmentContent(r.Findings, r.Assessment, r.Actions, Vitals(r))) { AuthorName = r.AuthorName }));
 
             // COR-01/COR-02 (0020): las correcciones, con el contenido corregido y su motivo, y las rectificaciones.
             entries.AddRange((await connection.QueryAsync<AssessmentVersionRow>(new CommandDefinition($"""
                 SELECT evento_id AS EventId, corregido_en AS SavedAt, hallazgos AS Findings, valoracion AS Assessment, actuaciones AS Actions,
-                       comunicaciones AS Communications, resultado AS Outcome, {VitalSignColumns}, motivo AS Reason
+                       comunicaciones AS Communications, resultado AS Outcome, {VitalSignColumns}, motivo AS Reason, {Author("corregido_por_cuenta_id")} AS AuthorName
                   FROM dbo.valoraciones_enfermeria_correcciones WHERE evento_id IN @EventIds
                 """, parameters, cancellationToken: ct)))
                 .Select(r => new TimelineEntry.NursingAssessmentCorrected(Utc(r.SavedAt), r.EventId,
-                    new NursingAssessmentContent(r.Findings, r.Assessment, r.Actions, r.Communications, r.Outcome, Vitals(r)), r.Reason!)));
+                    new NursingAssessmentContent(r.Findings, r.Assessment, r.Actions, r.Communications, r.Outcome, Vitals(r)), r.Reason!) { AuthorName = r.AuthorName }));
 
             entries.AddRange((await connection.QueryAsync<AssessmentVersionRow>(new CommandDefinition($"""
                 SELECT evento_id AS EventId, corregido_en AS SavedAt, hallazgos_exploracion AS Findings, valoracion AS Assessment,
                        actuaciones AS Actions, CAST(NULL AS NVARCHAR(2000)) AS Communications, CAST(NULL AS NVARCHAR(2000)) AS Outcome,
-                       {VitalSignColumns}, motivo AS Reason
+                       {VitalSignColumns}, motivo AS Reason, {Author("corregido_por_cuenta_id")} AS AuthorName
                   FROM dbo.valoraciones_medicas_correcciones WHERE evento_id IN @EventIds
                 """, parameters, cancellationToken: ct)))
                 .Select(r => new TimelineEntry.MedicalAssessmentCorrected(Utc(r.SavedAt), r.EventId,
-                    new MedicalAssessmentContent(r.Findings, r.Assessment, r.Actions, Vitals(r)), r.Reason!)));
+                    new MedicalAssessmentContent(r.Findings, r.Assessment, r.Actions, Vitals(r)), r.Reason!) { AuthorName = r.AuthorName }));
 
-            entries.AddRange((await connection.QueryAsync<TimelineRectificationRow>(new CommandDefinition("""
-                SELECT evento_id AS EventId, perfil_codigo AS ProfileCode, texto AS [Text], motivo AS Reason, registrado_en AS RecordedAt
+            entries.AddRange((await connection.QueryAsync<TimelineRectificationRow>(new CommandDefinition($"""
+                SELECT evento_id AS EventId, perfil_codigo AS ProfileCode, texto AS [Text], motivo AS Reason, registrado_en AS RecordedAt, {Author("registrado_por_cuenta_id")} AS AuthorName
                   FROM dbo.valoraciones_rectificaciones WHERE evento_id IN @EventIds
                 """, parameters, cancellationToken: ct)))
                 .Select(r => new TimelineEntry.AssessmentRectified(
-                    Utc(r.RecordedAt), r.EventId, EnumCode.ParseCode<SystemProfile>(r.ProfileCode), r.Text, r.Reason)));
+                    Utc(r.RecordedAt), r.EventId, EnumCode.ParseCode<SystemProfile>(r.ProfileCode), r.Text, r.Reason) { AuthorName = r.AuthorName }));
 
             foreach (var i in await connection.QueryAsync<TimelineIndicationRow>(new CommandDefinition("""
                 SELECT evento_id AS EventId, texto AS [Text], fecha_prevista AS DueDate, criterio AS Criterion,
@@ -255,9 +260,9 @@ public sealed partial class SqlChangeInboxDirectory
         Guid EventId, DateTime SavedAt, string? Findings, string? Assessment, string? Actions, string? Communications, string? Outcome,
         decimal? TemperatureCelsius, short? SystolicMmHg, short? DiastolicMmHg, short? HeartRateBpm, short? RespiratoryRateRpm,
         short? OxygenSaturationPct, string? RespiratorySupportCode, decimal? OxygenFlowLpm, short? GlucoseMgDl,
-        string? OtherName, string? OtherValue, string? OtherUnit, string? Reason);
+        string? OtherName, string? OtherValue, string? OtherUnit, string? Reason, string? AuthorName);
 
-    private sealed record TimelineRectificationRow(Guid EventId, string ProfileCode, string Text, string Reason, DateTime RecordedAt);
+    private sealed record TimelineRectificationRow(Guid EventId, string ProfileCode, string Text, string Reason, DateTime RecordedAt, string? AuthorName);
 
     private sealed record TimelineIndicationRow(
         Guid EventId, string Text, DateTime? DueDate, string? Criterion, string? AdditionalInformation, DateTime IssuedAt,

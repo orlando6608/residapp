@@ -4,8 +4,8 @@ namespace ResidApp.Application.Ports;
 
 /// <summary>DIR-15: las valoraciones de un residente que se corrigieron o rectificaron, con la versión original, cada corrección
 /// (contenido corregido y motivo) y cada rectificación, y todos los basales firmados como versiones vinculadas (cada una sustituye a la
-/// anterior; un basal firmado no se edita). Solo lectura. El autor es el perfil que lo hizo: las cuentas no tienen nombre en la
-/// línea temporal, y solo el autor de una valoración puede corregirla o rectificarla.</summary>
+/// anterior; un basal firmado no se edita). Solo lectura. El autor es el nombre visible de la cuenta (TimelineEntry.AuthorName) con su perfil, y
+/// solo el autor de una valoración puede corregirla o rectificarla.</summary>
 public sealed record ResidentAmendmentHistory(
     IReadOnlyList<AmendedAssessment> Assessments, IReadOnlyList<BaselineHistoryEntry> Baselines)
 {

@@ -300,15 +300,20 @@ public class HistorialTests
             enfermera.ProfileScopeId, enfermera.CenterId, eventId, 0, "La crepitación era en la base izquierda.", "Aclaración posterior.",
             SystemProfile.Enfermeria))).Ok);
 
+        // Con nombre visible en la cuenta, Dirección lo ve junto al perfil de quien guardó, corrigió y rectificó.
+        using (var nameConnection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await Dapper.SqlMapper.ExecuteAsync(nameConnection, "UPDATE dbo.cuentas SET nombre_visible = N'Marta Ficticia' WHERE id = @Id", new { Id = enfermera.AccountId.Value });
+        }
         var direccion = await SeedFixture.AddProfileToCenterAsync(
             SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId, ["CLINICAL_DETAIL_READ"]);
         var sinPermiso = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId, []);
-        Task<ApplicationResult<DirectionBaselineRead>> Read(SeededProfile who) =>
+        Task<ApplicationResult<DirectionBaselineRead>> Read(SeededProfile who, string type = "ASSESSMENT_AMENDMENTS") =>
             new ReadDirectionBaseline(
                     new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), new FixedHistorialSessionIdentityProvider(who.ExternalSubject),
                     _baselines, new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory))
                 .ExecuteAsync(new ReadDirectionBaselineCommand(
-                    who.ProfileScopeId, who.CenterId, residentId, "ASSESSMENT_AMENDMENTS", "TRAZABILIDAD_DOCUMENTAL", Guid.NewGuid(), "Verificación documental (prueba)."));
+                    who.ProfileScopeId, who.CenterId, residentId, type, "TRAZABILIDAD_DOCUMENTAL", Guid.NewGuid(), "Verificación documental (prueba)."));
         async Task<int> AuditedAsync()
         {
             using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
@@ -333,8 +338,16 @@ public class HistorialTests
         Assert.Equal("Hallazgo anotado en el lado equivocado.", correction.Reason);
         Assert.Equal("Aclaración posterior.", Assert.Single(item.Rectifications).Reason);
         Assert.Equal([2, 1], amendments.Baselines.Select(b => b.VersionNumber));
+        Assert.Equal("Marta Ficticia", item.Original!.AuthorName);
+        Assert.Equal("Marta Ficticia", correction.AuthorName);
+        Assert.Equal("Marta Ficticia", item.Rectifications[0].AuthorName);
         Assert.Equal(1, amendments.Baselines[0].ReplacesVersionNumber);
         Assert.Equal(1, await AuditedAsync());
+
+        // La línea temporal de DIR-06 no lleva nombres: solo la lectura de correcciones y rectificaciones los pide.
+        var timeline = await Read(direccion, "RESIDENT_TIMELINE");
+        Assert.True(timeline.Ok, timeline.Error?.Message);
+        Assert.All(timeline.Value!.Timeline!, entry => Assert.Null(entry.AuthorName));
     }
 
     /// <summary>Un residente en la unidad de una enfermera con permisos de basal y de una médica.</summary>
