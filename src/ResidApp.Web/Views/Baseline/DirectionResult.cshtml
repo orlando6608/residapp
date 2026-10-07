@@ -9,6 +9,7 @@
     var linea = ViewBag.Timeline as IReadOnlyList<TimelineEntry>;
     var cerrados = ViewBag.ClosedEvents as IReadOnlyList<ClosedEventSummary>;
     var correcciones = ViewBag.Amendments as ResidentAmendmentHistory;
+    var trazabilidad = ViewBag.Traceability as ClinicalTraceabilityPage;
 }
 
 <nav aria-label="breadcrumb">
@@ -19,9 +20,17 @@
     </ol>
 </nav>
 
-<h1 class="h3">@(linea is not null ? "Línea temporal auditada" : cerrados is not null ? "Eventos cerrados auditados" : correcciones is not null ? "Correcciones y rectificaciones auditadas" : contenido is null ? "Historial de basal auditado" : "Basal vigente auditado")</h1>
+<h1 class="h3">@(linea is not null ? "Línea temporal auditada" : cerrados is not null ? "Eventos cerrados auditados" : correcciones is not null ? "Correcciones y rectificaciones auditadas" : trazabilidad is not null ? "Trazabilidad clínica auditada" : contenido is null ? "Historial de basal auditado" : "Basal vigente auditado")</h1>
 
-@if (correcciones is not null)
+@if (trazabilidad is not null)
+{
+    <p class="text-muted">
+        Solo lectura. Quién hizo qué sobre este residente, según la auditoría: la persona, su perfil, la unidad, la acción, el recurso y la hora. No incluye
+        texto clínico ni valores. Esta consulta ha quedado registrada en la auditoría y aparece la primera.
+    </p>
+    <partial name="_TrazabilidadClinica" model="trazabilidad" />
+}
+else if (correcciones is not null)
 {
     <p class="text-muted">
         Solo lectura. Cada valoración corregida o rectificada se muestra con su versión original, sus correcciones y rectificaciones, el motivo, el

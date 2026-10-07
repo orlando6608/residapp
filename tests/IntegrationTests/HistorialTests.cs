@@ -350,6 +350,70 @@ public class HistorialTests
         Assert.All(timeline.Value!.Timeline!, entry => Assert.Null(entry.AuthorName));
     }
 
+    /// <summary>DIR-14: Dirección Clínica ve, auditado, quién hizo qué sobre el residente (solo acciones clínicas, no las administrativas),
+    /// con el nombre de la cuenta, su perfil, la unidad y la finalidad de las lecturas; la propia lectura aparece la primera. Sin permiso no
+    /// ve nada ni deja auditoría.</summary>
+    [Fact]
+    public async Task Direccion_LeeLaTrazabilidadClinica_Auditada_SoloConAccionesClinicas()
+    {
+        var (enfermera, _, residentId) = await SeedResidentAsync();
+        using (var nameConnection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await Dapper.SqlMapper.ExecuteAsync(nameConnection, "UPDATE dbo.cuentas SET nombre_visible = N'Marta Ficticia' WHERE id = @Id", new { Id = enfermera.AccountId.Value });
+        }
+        await SignBaselineAsync(enfermera, residentId, BaselineReason.Alta);
+        var eventId = await RegisterAsync(enfermera, residentId, "Disnea nocturna.");
+        Assert.True((await BuildService(enfermera.ExternalSubject).CloseClinicalEventAsync(new CloseClinicalEventCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, await StartAndSaveAsync(enfermera, eventId), Guid.NewGuid(),
+            FamilyCommunicationDecision.NoComunicar, null, null))).Ok);
+
+        var direccion = await SeedFixture.AddProfileToCenterAsync(
+            SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId, ["CLINICAL_DETAIL_READ"]);
+        var sinPermiso = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId, []);
+        Task<ApplicationResult<DirectionBaselineRead>> Read(SeededProfile who) =>
+            new ReadDirectionBaseline(
+                    new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), new FixedHistorialSessionIdentityProvider(who.ExternalSubject),
+                    _baselines, new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory))
+                .ExecuteAsync(new ReadDirectionBaselineCommand(
+                    who.ProfileScopeId, who.CenterId, residentId, "CLINICAL_TRACEABILITY", "INCIDENCIA_RECLAMACION", Guid.NewGuid(), "Reclamación familiar (prueba)."));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Read(sinPermiso)).Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Read(enfermera)).Error!.Code);
+
+        var result = await Read(direccion);
+        Assert.True(result.Ok, result.Error?.Message);
+        Assert.Empty(result.Value!.Headers);
+        var page = result.Value.Traceability!;
+        Assert.False(page.Truncated);
+        var actions = page.Entries.Select(e => e.Action).ToList();
+        // Lo clínico y la propia lectura, y nada administrativo (el alta del residente también está en la auditoría).
+        Assert.Contains("BASELINE_DRAFT_CREATE", actions);
+        Assert.Contains("BASELINE_SIGN", actions);
+        Assert.Contains("CLINICAL_EVENT_REGISTER", actions);
+        Assert.Contains("NURSING_ASSESSMENT_SAVE", actions);
+        Assert.Contains("CLINICAL_EVENT_CLOSE", actions);
+        Assert.DoesNotContain("RESIDENT_CREATE", actions);
+        Assert.All(actions, action => Assert.Contains(action, ClinicalTraceability.ActionCodes));
+        var own = page.Entries[0];
+        Assert.Equal("CLINICAL_DETAIL_READ", own.Action);
+        Assert.Equal("CLINICAL_TRACEABILITY", own.ResourceType);
+        Assert.Equal("INCIDENCIA_RECLAMACION", own.Purpose);
+        Assert.Equal(SystemProfile.DireccionClinica, own.ActorProfile);
+        var closed = page.Entries.Single(e => e.Action == "CLINICAL_EVENT_CLOSE");
+        Assert.Equal("Marta Ficticia", closed.ActorName);
+        Assert.Equal(SystemProfile.Enfermeria, closed.ActorProfile);
+        Assert.NotNull(closed.UnitName);
+        Assert.Equal([.. page.Entries.Select(e => e.OccurredAt).OrderByDescending(t => t)], page.Entries.Select(e => e.OccurredAt));
+
+        // Otro residente del mismo centro no se mezcla: la trazabilidad es la de este residente.
+        var otherResident = await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(new CreateResidentInput(
+            enfermera.AccountId, SystemProfile.Enfermeria, enfermera.CenterId, enfermera.UnitId, "Otro Residente", new DateOnly(1941, 1, 1),
+            DocumentedSexCode.Hombre, null, null, null, null, null, Guid.NewGuid()));
+        await RegisterAsync(enfermera, otherResident.ResidentId, "Otra cosa.");
+        var again = await Read(direccion);
+        Assert.Equal(1, again.Value!.Traceability!.Entries.Count(e => e.Action == "CLINICAL_EVENT_REGISTER"));
+    }
+
     /// <summary>Un residente en la unidad de una enfermera con permisos de basal y de una médica.</summary>
     private static async Task<(SeededProfile Enfermera, SeededProfile Medica, ResidentId ResidentId)> SeedResidentAsync()
     {

@@ -35,6 +35,8 @@ public enum ClinicalResourceType
     [Code("CLOSED_EVENTS_HISTORY")] [Display(Name = "Historial de eventos cerrados")] ClosedEventsHistory,
     // DIR-15: correcciones y rectificaciones de las valoraciones del residente, con los basales firmados como versiones vinculadas.
     [Code("ASSESSMENT_AMENDMENTS")] [Display(Name = "Correcciones y rectificaciones")] AssessmentAmendments,
+    // DIR-14: quién hizo qué sobre el residente (la auditoría de sus acciones clínicas), con el mismo requisito de finalidad y justificación.
+    [Code("CLINICAL_TRACEABILITY")] [Display(Name = "Trazabilidad clínica")] ClinicalTraceability,
 }
 
 /// <summary>Traduce AuthorizationDenialReason de policy.ts.</summary>
@@ -104,6 +106,7 @@ public enum ResidentBaselineAction
     ResidentTimelineRead,
     ClosedEventsHistoryRead,
     AssessmentAmendmentsRead,
+    ClinicalTraceabilityRead,
 }
 
 /// <summary>

@@ -251,7 +251,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
             // (una fila) y no se devuelve ninguna cabecera de basal: la lista vacía es también lo que guarda la idempotencia, y quien
             // llama entrega el contenido solo si esta lectura terminó sin error, es decir, con la auditoría ya escrita.
             var isResidentLevel = input.ResourceType is ClinicalResourceType.ResidentTimeline or ClinicalResourceType.ClosedEventsHistory
-                or ClinicalResourceType.AssessmentAmendments;
+                or ClinicalResourceType.AssessmentAmendments or ClinicalResourceType.ClinicalTraceability;
             // "current" es palabra reservada en T-SQL (sintaxis de cursores FOR UPDATE OF ... CURRENT OF);
             // usarla como alias de tabla rompe el parser ("Incorrect syntax near the keyword 'current'"),
             // descubierto al ejercitar por primera vez BASELINE_CURRENT con un basal realmente firmado. Se

@@ -42,7 +42,7 @@ public sealed record AuditedBaselineHeader(BaselineVersionId Id, int VersionNumb
 public sealed record DirectionBaselineRead(
     IReadOnlyList<AuditedBaselineHeader> Headers, BaselineVersionDetail? Content,
     IReadOnlyList<TimelineEntry>? Timeline = null, IReadOnlyList<ClosedEventSummary>? ClosedEvents = null,
-    ResidentAmendmentHistory? Amendments = null);
+    ResidentAmendmentHistory? Amendments = null, ClinicalTraceabilityPage? Traceability = null);
 
 /// <summary>Entrada de la lectura resumida del basal vigente para el cuidado cotidiano (AUX-03/ENF-20/MED-21):
 /// no lleva OperationId porque, a diferencia de ClinicalDirectionReadInput, no escribe ningún evento de

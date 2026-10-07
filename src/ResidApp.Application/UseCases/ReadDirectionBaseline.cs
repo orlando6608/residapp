@@ -85,7 +85,11 @@ public sealed class ReadDirectionBaseline(
                     await directory.ListDirectionTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, includeAuthorNames: true, ct: ct),
                     await repository.ReadHistoryAsync(new ReadCurrentBaselineSummaryInput(command.CentroId, command.ResidenteId), ct))
                 : null;
-            return new DirectionBaselineRead(headers, content, timeline, closedEvents, amendments);
+            // DIR-14: la auditoría clínica del residente; incluye la propia lectura que acaba de quedar registrada.
+            var traceability = resourceType == ClinicalResourceType.ClinicalTraceability
+                ? await directory.ListDirectionTraceabilityAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct)
+                : null;
+            return new DirectionBaselineRead(headers, content, timeline, closedEvents, amendments, traceability);
         });
 }
 

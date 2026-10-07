@@ -91,8 +91,14 @@ En el orden propuesto:
      corrección (contenido corregido y motivo) y cada rectificación, y todos los basales firmados como versiones vinculadas (cabeceras de `ReadHistoryAsync`: vigente, «sustituye a la versión n», firmante, Barthel; nunca como edición). **Decisión de
      Orlando (2026-10-07): se ve el nombre de quien corrigió.** Cada hito lleva `TimelineEntry.AuthorName` (el `nombre_visible` de la cuenta, `0023`; sin nombre: «cuenta sin nombre registrado»), que solo se rellena si `ListDirectionTimelineAsync` se llama con `includeAuthorNames: true` (solo DIR-15; ni la línea temporal de DIR-06 ni las de Enfermería y Medicina lo llevan). Vista `_CorreccionesRectificaciones` y `_CamposHito`. Tests:
      `ResidentAmendmentHistoryTests` (3, unitarios) y `Direccion_LeeCorreccionesYRectificaciones_Auditadas_ConLosBasalesComoVersionesVinculadas` (falla sin las versiones del basal).
+   - **DIR-14 hecho el 2026-10-07 (sin script):** cuarto tipo de recurso, «Trazabilidad clínica» (`CLINICAL_TRACEABILITY`, acción `ClinicalTraceabilityRead`), con la misma declaración y auditoría (una fila por lectura, que aparece la primera en la lista).
+     `SqlChangeInboxDirectory.ListDirectionTraceabilityAsync` lee `eventos_auditoria` del residente (hasta 500 hitos, los más recientes primero, con aviso si hay más): hora, nombre visible de la cuenta (o «cuenta sin nombre registrado»), perfil, unidad,
+     acción, recurso y, en las lecturas de Dirección, la finalidad (nunca la justificación ni texto clínico). **Solo las acciones de la lista cerrada `ClinicalTraceability.ActionCodes`** (39: eventos, valoraciones, indicaciones, seguimientos, protocolo urgente,
+     derivación, llamadas y comunicaciones a la familia, basal y lecturas de Dirección); las administrativas (alta, familiares, permisos) tienen su auditoría en ADM-28 y no entran. Repite en SQL el ámbito de Dirección activo y que la unidad del hito esté
+     concedida a él. Etiquetas en `ClinicalTraceabilityDisplay` (una acción nueva en la lista sin etiqueta hace fallar `ClinicalTraceabilityDisplayTests`). **Decisiones mías, sin confirmar:** qué acciones cuentan como «hitos clínicos» (lo anterior), incluir las
+     propias lecturas de Dirección (útil para saber quién vio el expediente) y no mostrar la justificación. Test: `Direccion_LeeLaTrazabilidadClinica_Auditada_SoloConAccionesClinicas` (falla sin el filtro de acciones). No es un ranking: solo por residente, sin recuentos por persona.
    - **Falta construir sobre este mecanismo**, cada pantalla con su `tipo_recurso`:
-     trazabilidad clínica (DIR-14) y el informe de derivación firmado. Notas del repositorio de lectura:
+     el informe de derivación firmado. Notas del repositorio de lectura:
      `ReadAsClinicalDirectionAsync` (`SqlBaselineRepository`) es el patrón «auditoría o nada»; `SqlChangeInboxDirectory.ScopedEventsFrom` fija
      `perfil_codigo IN ('ENFERMERIA','MEDICINA')` y no sirve a Dirección tal cual (`SqlSupervisionDirectory.ScopedEventsFrom` es el gemelo); no reutilizar la ruta de
      Enfermería/Medicina (`HistorialTests` fija que Dirección recibe acceso denegado ahí).

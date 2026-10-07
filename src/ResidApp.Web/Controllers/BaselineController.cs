@@ -124,6 +124,7 @@ public sealed class BaselineController(
         ViewBag.Timeline = result.Value.Timeline;
         ViewBag.ClosedEvents = result.Value.ClosedEvents;
         ViewBag.Amendments = result.Value.Amendments;
+        ViewBag.Traceability = result.Value.Traceability;
         ViewBag.Declaracion = declaration ?? await FindDeclarationAsync(activeScope, form.ResidenteId!.Value, ct, form.OperacionId);
         return View("DirectionResult", form);
     }

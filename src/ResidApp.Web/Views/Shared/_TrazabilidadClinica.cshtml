@@ -1,0 +1,69 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model ClinicalTraceabilityPage
+@* DIR-14: solo lectura. Quién hizo qué sobre el residente, según la auditoría: sin texto clínico ni valores. *@
+@if (Model.Entries.Count == 0)
+{
+    <p class="text-muted">Este residente no tiene hitos clínicos registrados en la auditoría.</p>
+}
+else
+{
+    @if (Model.Truncated)
+    {
+        <div class="alert alert-info" role="status">
+            Se muestran los @ClinicalTraceabilityPage.MaxEntries hitos más recientes; hay más antiguos que no se enseñan.
+        </div>
+    }
+    @* En pantallas estrechas, una tarjeta por hito en lugar de la tabla (directrices-pwa-movil.md, sección 2). *@
+    <div class="d-md-none">
+        @foreach (var entry in Model.Entries)
+        {
+            <div class="card mb-2">
+                <div class="card-body">
+                    <p class="fw-semibold mb-1">@ClinicalTraceabilityDisplay.Action(entry.Action)</p>
+                    <p class="mb-1 small">@ClinicalTraceabilityDisplay.Resource(entry.ResourceType)@(entry.UnitName is null ? "" : $" · {entry.UnitName}")</p>
+                    <p class="text-body-secondary small mb-0">
+                        @entry.OccurredAt.ToLocalTime().ToString("g") · @(entry.ActorName ?? "Cuenta sin nombre registrado") (@SystemProfileDisplay.Label(entry.ActorProfile))
+                        @if (ClinicalTraceabilityDisplay.Purpose(entry.Purpose) is { } purpose)
+                        {
+                            <br /><span>Finalidad: @purpose</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Fecha y hora</th>
+                    <th scope="col">Quién</th>
+                    <th scope="col">Perfil</th>
+                    <th scope="col">Ámbito (unidad)</th>
+                    <th scope="col">Acción</th>
+                    <th scope="col">Recurso</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in Model.Entries)
+                {
+                    <tr>
+                        <td>@entry.OccurredAt.ToLocalTime().ToString("g")</td>
+                        <td>@(entry.ActorName ?? "Cuenta sin nombre registrado")</td>
+                        <td>@SystemProfileDisplay.Label(entry.ActorProfile)</td>
+                        <td>@(entry.UnitName ?? "—")</td>
+                        <td>
+                            @ClinicalTraceabilityDisplay.Action(entry.Action)
+                            @if (ClinicalTraceabilityDisplay.Purpose(entry.Purpose) is { } purpose)
+                            {
+                                <div class="text-body-secondary small">Finalidad: @purpose</div>
+                            }
+                        </td>
+                        <td>@ClinicalTraceabilityDisplay.Resource(entry.ResourceType)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

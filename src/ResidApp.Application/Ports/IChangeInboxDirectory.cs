@@ -257,6 +257,11 @@ public interface IChangeInboxDirectory
     Task<IReadOnlyList<TimelineEntry>> ListDirectionTimelineAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, bool includeAuthorNames = false, CancellationToken ct = default);
 
+    /// <summary>DIR-14: la trazabilidad clínica del residente (la auditoría de sus acciones clínicas, de ClinicalTraceability.ActionCodes), de la
+    /// más reciente a la más antigua. Como las otras lecturas de Dirección, solo se llama después de una lectura auditada del residente.</summary>
+    Task<ClinicalTraceabilityPage> ListDirectionTraceabilityAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+
     /// <summary>DIR-07: lo mismo que ListClosedEventsAsync con el ámbito de Dirección Clínica; también solo tras una lectura auditada.</summary>
     Task<IReadOnlyList<ClosedEventSummary>> ListDirectionClosedEventsAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
