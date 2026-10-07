@@ -1,0 +1,84 @@
+{
+  "documento": "aclaraciones-respuestas-cj",
+  "cuestionario": "2026-10-07",
+  "guardado": "2026-10-07T16:48:08.315Z",
+  "respondidas": 11,
+  "total": 11,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "Cuando un borrador tiene aportaciones de otra persona, ¿quién puede firmarlo?",
+      "opcion": "C",
+      "textoOpcion": "Otra regla (descríbela en el comentario).",
+      "texto": "Creo que nos estamos complicando con este tema.\nEl basal una vez que una persona lo crea si no le da tiempo a terminarlo al finalizar su turno  se debe quedar guardado en borrador hasta que vuelva a trabajar un próximo día.  Lo ideal es que una vez que lo empiece lo termine. Luego una vez ya creado y finalizado el estado basal o el barthel durante la estancia del residente si existe algún cambio cualquier perfil con autorización (Enfermería o Medicina) pueden registrar este cambio en el basal o barthel y firmarlo esa misma persona sin que tenga que revisarlo el primero que lo creó.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Qué pasa si alguien quiere corregir un basal que ya está firmado?",
+      "opcion": "B",
+      "textoOpcion": "Se puede aportar directamente sobre el basal firmado, y la aportación genera una versión nueva que firma otra persona.",
+      "texto": "",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "¿Cómo se entera el autor de que hay aportaciones?",
+      "opcion": "C",
+      "textoOpcion": "Otra (descríbela en el comentario).",
+      "texto": "Con lo que establecimos al responder la pregunta 1.1 no existirán las aportaciones. Si existe algún cambio se hace como dice en la pregunta 1.2.",
+      "respondida": true
+    },
+    "1.4": {
+      "pregunta": "¿Pueden aportar todos los profesionales de Enfermería y Medicina del ámbito, sin que Administración les conceda nada?",
+      "opcion": "A",
+      "textoOpcion": "Sí: todos pueden, sin permiso concedido (quitamos ese permiso).",
+      "texto": "",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "«Si > 37 ºC en varias ocasiones seguidas, avisar»: ¿cuántas veces y en cuánto tiempo?",
+      "texto": "Creo que esto sería complicar el sistema. Cambiemos el rango de valores. La Temperatura máxima exigiremos que sea 36.9ºC. Si Temperatura >=37ºC avisar a Enfermería. Porque sinceramente es algo que se debe correlacionar con la situación clínica del paciente. Por lo que debemos cambiar el valor a lo antes referido.",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "Para la Auxiliar, ¿qué significa «alerta visual para que se mantenga el seguimiento»?",
+      "opcion": "C",
+      "textoOpcion": "Otra (descríbela en el comentario).",
+      "texto": "En la pregunta 2.1 se queda respondido y este tema desaparece.",
+      "respondida": true
+    },
+    "2.3": {
+      "pregunta": "Saturación medida con oxígeno suplementario: ¿qué hacemos con el aviso de rango?",
+      "opcion": "B",
+      "textoOpcion": "Avisar igualmente con el mismo rango, indicando el flujo de oxígeno.",
+      "texto": "Si posteriormente desarrollamos constantes basales de cada paciente esto cambiaría.",
+      "respondida": true
+    },
+    "2.4": {
+      "pregunta": "Glucemia: ¿avisamos solo por debajo de 70 mg/dL?",
+      "opcion": "B",
+      "textoOpcion": "También por encima de un valor (indícalo en el comentario).",
+      "texto": "Pongamos 120 de valor superior.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Coordinación clínica y Dirección son personas distintas que necesitan perfiles distintos?",
+      "opcion": "A",
+      "textoOpcion": "Es la misma persona o el mismo perfil: basta con un perfil y la finalidad de calidad queda para él.",
+      "texto": "Pueden ser personas distintas o la misma persona, según el centro. Compartir perfil no obliga a compartir todos los permisos.\nRecomiendo mantener «Dirección / Coordinación Clínica» y distinguir sus capacidades mediante permisos específicos.\nAdministración asignaría ese permiso conforme a la designación del centro, no por el mero cargo de director ni por decisión propia sobre la competencia clínica del usuario.",
+      "respondida": true
+    },
+    "3.2": {
+      "pregunta": "¿Quién debe poder fijar los rangos de referencia?",
+      "opcion": "B",
+      "textoOpcion": "Solo quien coordina (no Medicina).",
+      "texto": "Pero si desarrollamos constantes basales de cada paciente enfermería y medicina deberían tener permisos para guardar estos rangos habituales de cada paciente.",
+      "respondida": true
+    },
+    "4.1": {
+      "pregunta": "¿Es eso lo que querías?",
+      "opcion": "A",
+      "textoOpcion": "Sí: un apartado propio que escribe el profesional al derivar.",
+      "texto": "",
+      "respondida": true
+    }
+  }
+}
