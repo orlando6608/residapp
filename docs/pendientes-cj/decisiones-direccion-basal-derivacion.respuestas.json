@@ -1,0 +1,56 @@
+{
+  "documento": "decisiones-direccion-basal-derivacion",
+  "cuestionario": "2026-09-30",
+  "guardado": "2026-10-06T20:42:20.312Z",
+  "respondidas": 7,
+  "total": 7,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Qué finalidades puede declarar Dirección?",
+      "opcion": "B",
+      "textoOpcion": "Una lista propia. Escribe cada finalidad con una frase que la explique (en el comentario).",
+      "texto": "-Revisión de continuidad asistencial: Comprender la secuencia de actuaciones de un caso y comprobar su continuidad entre profesionales o turnos (ej Revisar un seguimiento vencido para entender qué se hizo y qué quedó pendiente.)\n-Revisión de una incidencia o Reclamación Asistencial: Aclarar los hechos de un caso ante una incidencia o reclamación documentada. (Revisar los hechos tras una reclamación familiar.)\n-Verificación de Trazabilidad documental: Comprobar autoría, secuencia y relación entre originales, correcciones y rectificaciones. (ej Revisar por qué se rectificó una valoración y qué información cambió.)\n-Revisión de calidad asistencia (esto debería pertenecer al perfil de Coordinación clínica): Revisar un episodio concreto o una muestra definida dentro de una revisión de calidad. (ej Examinar el circuito seguido tras una caída y su derivación.)",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Además de elegir la finalidad, Dirección debe escribir una justificación breve en cada acceso?",
+      "opcion": "B",
+      "textoOpcion": "Sí, siempre.",
+      "texto": "Describe el motivo concreto sin copiar información clínica ni datos personales innecesarios.",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "¿Cuánto dura un acceso declarado?",
+      "opcion": "B",
+      "textoOpcion": "Una declaración por residente, que vale un tiempo (di cuánto en el comentario) para todas sus pantallas; cada pantalla abierta sigue quedando en la auditoría.",
+      "texto": "Durante 1 hora puede navegar por las pantallas clínicas autorizadas del mismo residente sin repetir la explicación. Cada apertura o nueva recuperación de contenido sigue exigiendo comprobación de permisos y auditoría previa.\nLa declaración termina al:\n- Cambiar de residente, perfil activo o ámbito.\n- Cerrar sesión.\n- Cumplirse la hora.\n\nEste tiempo es el que yo creo prudencial. Posteriormente podríamos ajustarlo según petición del centro.",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Qué es una aportación?",
+      "opcion": "A",
+      "textoOpcion": "Un cambio directo en una respuesta del borrador. Queda registrado quién cambió qué, y el autor lo ve antes de firmar.",
+      "texto": "Una vez ya esta firmado y terminado si hay una aportación no la debería firmar la misma persona que la creó. Todos los perfiles de enfermería y medicina deberían tener permisos para modificar basales y hacer aportaciones.",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "¿Sobre qué se puede aportar?",
+      "opcion": "A",
+      "textoOpcion": "Las nueve áreas y el Barthel.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.3": {
+      "pregunta": "¿Quién puede aportar y cómo se entera el autor?",
+      "texto": "Pueden realizar cambios o aportaciones los perfiles de enfermría y Medicina\nUna vez ya esta firmado y terminado si hay una aportación no la debería firmar la misma persona que la creó. Todos los perfiles de enfermería y medicina deberían tener permisos para modificar basales y hacer aportaciones.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Qué hacemos con el campo «Comunicaciones» en el informe de derivación?",
+      "opcion": "B",
+      "textoOpcion": "Incluirlo en el informe.",
+      "texto": "Hay un campo en el cual la enfermera o el médico debe explicar brevemente lo que ha sucedido en este evento registrado y el motivo de la derivación. Pienso que este apartado no sea ese.\nEl apartado comunicaciones podríamos dejarlo en el informe y aqui poner anotaciones como ej Conatcto telefónico con SEM a las 18h. Avisamos a familiares de traslado a Urgencias.",
+      "respondida": true
+    }
+  }
+}
