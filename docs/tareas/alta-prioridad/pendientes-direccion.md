@@ -64,7 +64,7 @@ En el orden propuesto:
      «Verificación de trazabilidad documental» (`ClinicalDetailAccessPurpose`; la antigua `SUPERVISION_CLINICA` ya no se ofrece y solo
      sobrevive en las filas de auditoría anteriores). **La cuarta, «revisión de calidad asistencial», NO está:** CJ dice que debería pertenecer
      al perfil de Coordinación Clínica, pero en el modelo Dirección y Coordinación son el mismo perfil (`DIRECCION_CLINICA`); se añadirá cuando se decida cómo
-     distinguirlas (¿perfil nuevo?, ¿permiso?; preguntado en `docs/pendientes-cj/aclaraciones-respuestas-cj.html`).
+     distinguirlas. **Respondido por CJ el 2026-10-07** (`docs/pendientes-cj/archivados/aclaraciones-respuestas-cj.html`, 3.1): se mantiene el perfil «Dirección / Coordinación Clínica» y la finalidad de calidad queda tras un **permiso específico** que Administración asigna según la designación del centro (no por el cargo de director). **Sin construir todavía:** el permiso nuevo y la cuarta finalidad.
    - **Justificación siempre:** texto breve (hasta 300 caracteres) en cada declaración, «sin copiar información clínica ni datos personales innecesarios»;
      se guarda en la declaración y en cada fila de auditoría (`eventos_auditoria.justificacion`).
    - **Una declaración por residente, 1 hora** (`AccesoClinico:DuracionMinutos` en `appsettings.json`, ajustable más adelante por centro): vale para

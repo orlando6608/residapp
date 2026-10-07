@@ -283,7 +283,7 @@ Huecos de lo ya construido:
     telefónico con SEM a las 18 h. Avisamos a los familiares del traslado»). **Suposición mía, sin confirmar:** es un campo propio del informe
     (`informes_derivacion.comunicaciones`, opcional, hasta 4000 caracteres; sección «Comunicaciones» no automática), y NO se copia el campo
     «Comunicaciones» de la valoración (que solo existe en Enfermería) ni los contactos del protocolo. Los informes firmados antes quedan sin él. Preguntado en
-    `docs/pendientes-cj/aclaraciones-respuestas-cj.html`. Tests: `Derivacion_LasComunicacionesQueEscribeElProfesional_ViajanEnElInformeFirmado`
+    `docs/pendientes-cj/archivados/aclaraciones-respuestas-cj.html` (4.1: un apartado propio que escribe el profesional, confirmado). Tests: `Derivacion_LasComunicacionesQueEscribeElProfesional_ViajanEnElInformeFirmado`
     y `Informe_ConComunicaciones_…`.
 
 - **Seguimiento (historia 4)**: desde el 2026-10-01 (script `0028`) el equipo entrante de una transferencia se elige entre los equipos activos de la unidad
@@ -302,7 +302,7 @@ Huecos de lo ya construido:
   las versiones intermedias previas no se guardaron.
 - **Rangos de referencia de constantes (fase 1 hecha; valores de CJ incorporados el 2026-10-07)**: CJ respondió el
   2026-10-06 (`docs/pendientes-cj/archivados/rangos-referencia-constantes.respuestas.json`) y aclaró el 2026-10-07
-  (`docs/pendientes-cj/aclaraciones-respuestas-cj.respuestas.json`). Valores iguales para todos los centros por ahora:
+  (`docs/pendientes-cj/archivados/aclaraciones-respuestas-cj.respuestas.json`). Valores iguales para todos los centros por ahora:
   temperatura 36–36,9 (un decimal: avisa desde 37,0); PA 90–139 / 60–89; FC 60–100; FR 12–20; SatO₂ 95–100; glucemia 70–120.
   **Hecho:** botón «Cargar valores sugeridos» en la pantalla de rangos (`VitalSignReferenceRanges.Suggested`; rellena el formulario sin
   guardar, quien tiene el permiso lo revisa y guarda por el camino de siempre, con historial); la SatO₂ con oxigenoterapia se avisa con el

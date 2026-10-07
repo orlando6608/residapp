@@ -5,6 +5,13 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
 
 ## Hecho
 
+- **Traslado, baja, reactivación y suspensión del residente (CJ, 2026-10-07; scripts `0040` y `0041`)** — ficha administrativa con «Trasladar», «Suspender» y «Dar de baja»; lista «Residentes dados de baja» (`/Administracion/Bajas`) con «Reactivar».
+  - **Traslado** (`ResidentTransferApplicationService`, `SqlResidentTransferRepository`, tabla `traslados_residente`): solo entre unidades del mismo centro (también cambia de habitación o plaza dentro de la unidad); la unidad de destino debe ser de su ámbito. En una transacción cierra la ubicación y abre la nueva, guarda el traslado, **pasa a la unidad de destino los eventos no cerrados** (`eventos_asistenciales.unidad_id`; `TR_ea_transition_guard` solo lo admite con un traslado creado en la misma transacción, `CURRENT_TRANSACTION_ID()`; la revisión sube 1 y un formulario abierto da conflicto) y **cancela el borrador de basal** si cambia de unidad (`basales_borrador.cancelado_por_traslado_id`; el basal se rehace en la unidad nueva). Idempotente por el `OperacionId` del formulario; audita `RESIDENT_TRANSFER`.
+    **Límites:** los eventos **cerrados** se quedan en su unidad (la unidad de destino no ve ese historial salvo que su ámbito incluya la de origen; si CJ quiere que migre «todo», hay que mover también los cerrados con el mismo mecanismo); un seguimiento con equipo entrante de la unidad de origen sigue la regla de recepción de siempre; las asignaciones de Auxiliares no se tocan (el Auxiliar de la unidad de origen deja de ver al residente porque su ubicación cambia). El traslado por Enfermería con permiso específico **no se ha construido** (CJ: «inicialmente Administración»).
+  - **Baja** (`SqlResidentStatusRepository`, tabla `bajas_residente`): motivos fallecimiento, alta voluntaria, traslado a otro centro y otro (texto obligatorio). Cierra el episodio y la ubicación, pone `residentes.estado = INACTIVE` (la autorización y las listas ya lo tratan como no activo), termina la suspensión si la había y guarda `conservar_hasta` (baja + 5 años; **no hay tarea de purga**: los datos no se borran). Los eventos abiertos del residente no se tocan. `Bajas` es la lista de solo lectura (con la regla de ámbito de la ficha sobre la última unidad) y **Reactivar** abre un episodio y una ubicación nuevos (la baja queda marcada como reactivada). Audita `RESIDENT_DISCHARGE` y `RESIDENT_REACTIVATE`.
+  - **Suspensión por ingreso hospitalario prolongado** (tabla `suspensiones_residente`): el residente sigue activo pero los disparadores `TR_cc/ec/bd/cf/ea_suspension_guard` impiden las escrituras clínicas (cambios cotidianos, eventos, basales, comunicados y cualquier acción sobre un evento) con `RESIDENT_SUSPENDED`, que la app muestra como conflicto con un texto claro. Se suspende y se reanuda desde la ficha (audita `RESIDENT_SUSPEND` y `RESIDENT_RESUME`). **Límites:** las listas de Enfermería, Medicina, Auxiliar y la de Administración no marcan al residente como suspendido (solo lo ve la ficha administrativa); el bloqueo es de escritura clínica, no de lectura.
+  - Tests: `TrasladoResidenteTests` (6), `EstadoResidenteTests` (6) y funcionales `Administracion_Traslada…` y `Administracion_SuspendeDaDeBajaYReactiva…` (con la app limitada). Manual al día.
+
 - **Alta de residente (historia 1, ADM-04)** — antes de este vertical, en Residente/Basal (`ResidentsController/Create`). El basal queda
   pendiente.
 - **Bloque 1 (residentes, ficha administrativa y corrección de identidad; ADM-01 a ADM-03, RES-01, RES-03, RES-04; historia 1)** — 2026-10-01.
@@ -19,8 +26,7 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
     - Ninguna pantalla muestra basal, Barthel ni contenido clínico.
   - **Decisiones del usuario (2026-10-01):**
     - primer bloque = residentes (historia 1);
-    - **sin traslado ni baja:** `docs/flujos-clinicos/gestion-basal-barthel.md` declara `D1-P04` diferida y denegada por defecto, y el PRD
-      y la matriz la dejan a producto y centro. Se ha preguntado a CJ en `docs/pendientes-cj/traslado-y-baja-residente.html`;
+    - **traslado y baja (decidido por CJ el 2026-10-07, hecho en los scripts `0040` y `0041`):** `docs/flujos-clinicos/gestion-basal-barthel.md` declara `D1-P04` diferida; CJ la resolvió en `docs/pendientes-cj/archivados/traslado-y-baja-residente.html` (ver más abajo);
     - la corrección de identidad lleva motivo obligatorio e histórico de solo inserción, además de la auditoría.
   - **Suposiciones aprobadas con el plan:**
     - la lista y la ficha siguen la regla de ámbito de Enfermería (unidades concedidas y, si los restringe, sus residentes), para un ámbito
@@ -321,7 +327,7 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
-1. **Traslado y baja/reactivación del residente:** bloqueado por CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`).
+1. **Traslado y baja/reactivación del residente:** hecho el 2026-10-07 (ver «Traslado, baja, reactivación y suspensión»); queda el traslado por Enfermería con permiso específico, para cuando un centro lo pida.
 2. **El organigrama y los cargos (ADM-07):** ningún documento los define; preguntado a CJ el 2026-10-02 en
    `docs/pendientes-cj/administracion-ambito-familiares-cargos.html` (tema 3). Los turnos recurrentes con excepciones (ADM-16), el equipo entrante de los seguimientos y los edificios, plantas, habitaciones y plazas ya están hechos (2026-10-01/02).
 3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8) y panel completo (10).**
@@ -349,7 +355,7 @@ Huecos de lo ya construido:
   ámbito dentro del centro?) que no está en ningún documento; el organigrama (ADM-07) y los cargos tampoco existen. Preguntado a CJ en
   `docs/pendientes-cj/administracion-ambito-familiares-cargos.html` (tema 1, con la opción de impedir que una unidad se quede sin Administración).
 - **Niveles de ubicación:** edificios, plantas, habitaciones y plazas existen (script `0029`) y se eligen al dar de alta, pero **cambiar de habitación o de plaza**
-  (y liberar una plaza al dar de baja) es un traslado y espera a CJ (`docs/pendientes-cj/traslado-y-baja-residente.html`). Desde el 2026-10-02 Enfermería,
+  (y liberar una plaza al dar de baja) se hace desde la ficha con «Trasladar» (script `0040`); dar de baja libera la plaza (script `0041`). Desde el 2026-10-02 Enfermería,
   Medicina y Auxiliar ven la habitación y la plaza junto a la unidad (listas, ficha y registro del residente; `ResidentLocationLabel`, sin script). Una unidad o una habitación que se inactive justo mientras llega un
   alta a ella no se bloquea (carrera muy estrecha, como la de las unidades).
 - **Usuarios:** no se vincula una cuenta que ya existe en otro centro (llegará con las invitaciones del proveedor de identidad);

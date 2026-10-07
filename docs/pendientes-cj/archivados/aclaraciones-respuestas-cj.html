@@ -110,6 +110,8 @@
     font-weight: 600;
   }
   header { display: flex; flex-direction: column; gap: 12px; }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
   .meta { color: var(--muted); font-size: 0.95rem; }
   .lead { font-size: 1.08rem; }
 
@@ -249,7 +251,7 @@
   footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
 
   @media print {
-    .bar, .howto, .toc { display: none; }
+    .bar, .howto, .toc, .back { display: none; }
     .page { padding-bottom: 24px; }
     .q { break-inside: avoid; }
   }
@@ -259,7 +261,12 @@
 
 <div class="page">
   <header>
-    <p class="eyebrow">ResidApp · Aclaraciones a tus respuestas · Pendiente de CJ</p>
+    <nav class="back" aria-label="Navegación">
+      <a href="../index.html">← Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Aclaraciones a tus respuestas · Archivado</p>
+    <p class="meta"><strong>Archivado el 07/10/2026:</strong> lo que respondiste ya está implementado. Tus respuestas están cargadas abajo; este documento queda solo como registro.</p>
     <h1>Aclaraciones a tus últimas respuestas</h1>
     <p class="meta">Estado a 07/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
