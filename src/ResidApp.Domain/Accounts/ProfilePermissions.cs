@@ -19,7 +19,7 @@ public static class ProfilePermissions
     public static IReadOnlyList<string> For(SystemProfile profile) => profile switch
     {
         SystemProfile.Enfermeria => [ResidentIdentityCreate, BaselineInitialComplete, BaselineReevaluate],
-        SystemProfile.Medicina => [BaselineInitialComplete, BaselineReevaluate, ReferenceRangesManage],
+        SystemProfile.Medicina => [BaselineInitialComplete, BaselineReevaluate],
         SystemProfile.DireccionClinica => [ClinicalDetailRead, ReferenceRangesManage],
         _ => [],
     };

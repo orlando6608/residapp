@@ -64,16 +64,6 @@ public class ReferenceRangesApplicationServiceTests
     }
 
     [Fact]
-    public async Task Medicina_ConPermiso_PuedeFijarRangos()
-    {
-        var medicina = await SeedFixture.CreateProfileAsync(SystemProfile.Medicina, [Permission]);
-
-        var result = await BuildService(medicina.ExternalSubject).SaveAsync(Save(medicina, 0, new ReferenceRangeCommandItem(VitalSignCode.FrecuenciaCardiaca, 50m, 100m)));
-
-        Assert.True(result.Ok);
-    }
-
-    [Fact]
     public async Task VersionAntigua_EsConflicto_YNoEscribeNada()
     {
         var direccion = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica, [Permission]);
@@ -93,9 +83,10 @@ public class ReferenceRangesApplicationServiceTests
     {
         var direccionSinPermiso = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica);
         var enfermeria = await SeedFixture.CreateProfileAsync(SystemProfile.Enfermeria);
+        var medicina = await SeedFixture.CreateProfileAsync(SystemProfile.Medicina);
         var administracion = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
 
-        foreach (var seed in new[] { direccionSinPermiso, enfermeria, administracion })
+        foreach (var seed in new[] { direccionSinPermiso, enfermeria, medicina, administracion })
         {
             var service = BuildService(seed.ExternalSubject);
             var read = await service.ReadAsync(new ReadReferenceRangesCommand(seed.ProfileScopeId, seed.CenterId));
@@ -119,10 +110,11 @@ public class ReferenceRangesApplicationServiceTests
     }
 
     [Theory]
+    [InlineData(SystemProfile.Medicina)]
     [InlineData(SystemProfile.Enfermeria)]
     [InlineData(SystemProfile.Administracion)]
     [InlineData(SystemProfile.Auxiliar)]
-    public async Task LaBaseDeDatos_SoloConcedeElPermisoAPerfilesClinicos(SystemProfile profile)
+    public async Task LaBaseDeDatos_SoloConcedeElPermisoADireccionClinica(SystemProfile profile)
     {
         var ex = await Assert.ThrowsAsync<SqlException>(() => SeedFixture.CreateProfileAsync(profile, [Permission]));
 

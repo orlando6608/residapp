@@ -312,7 +312,7 @@ Huecos de lo ya construido:
   basales): futuro; cuando existan, Enfermería y Medicina podrán guardar los habituales de cada paciente. Decisiones del 2026-09-28 — aviso
   solo visual, que no bloquea ni cambia clasificación, prioridad ni desenlace; rangos por centro fijados en
   la pantalla "Rangos de referencia de constantes" (`RangosReferenciaController`) con el permiso
-  `REFERENCE_RANGES_MANAGE`, que la BD solo deja conceder a Medicina o Dirección/Coordinación Clínica
+  `REFERENCE_RANGES_MANAGE`, que la BD solo deja conceder a Dirección/Coordinación Clínica
   (nunca Administración, ADM-29); historial inmutable de cada cambio; rangos por residente en una segunda
   fase. Script `0008`. En desarrollo tiene el permiso `dev-integrado-direccion` (seed del escenario
   integrado). Pendiente de CJ (lo recoge

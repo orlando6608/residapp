@@ -570,7 +570,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     public async Task RangosReferencia_UnaMedicaConPermisoLosGuarda_ConLaAppEntera()
     {
         // Con la app conectada como usuario limitado (RESIDAPP_TEST_APP_CONNECTION_STRING) escribe en las tablas de rangos bajo la seguridad por filas.
-        var doctor = await SeedAdministratorAsync("MEDICINA", "REFERENCE_RANGES_MANAGE");
+        var doctor = await SeedAdministratorAsync("DIRECCION_CLINICA", "REFERENCE_RANGES_MANAGE");
         var client = _factory.CreateClient();
         var loginPage = await client.GetStringAsync("/DevAuth/Login");
         (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -602,7 +602,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     [Fact]
     public async Task RangosReferencia_CargarValoresSugeridos_RellenaElFormularioSinGuardarNada()
     {
-        var doctor = await SeedAdministratorAsync("MEDICINA", "REFERENCE_RANGES_MANAGE");
+        var doctor = await SeedAdministratorAsync("DIRECCION_CLINICA", "REFERENCE_RANGES_MANAGE");
         var client = _factory.CreateClient();
         var loginPage = await client.GetStringAsync("/DevAuth/Login");
         (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
