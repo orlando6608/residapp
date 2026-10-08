@@ -1,6 +1,7 @@
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Supervision;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
@@ -129,6 +130,25 @@ public sealed class DireccionApplicationService(
             var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, zone);
             var facts = await directory.ListIndicatorFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
             return SupervisionIndicatorRules.Aggregate(facts, info, query.From, query.To, zone);
+        });
+
+    /// <summary>DIR-11: la revisión de calidad de proceso del periodo (días locales, ambos incluidos): hitos medidos y fuera de plazo por
+    /// unidad, nunca por profesional, y los episodios con algún hito fuera de plazo o a punto de vencer. Como el resto de la supervisión
+    /// operativa: sin permiso clínico ni contenido clínico, y la consulta no se audita.</summary>
+    public Task<ApplicationResult<ProcessQualityReport>> ReadProcessQualityAsync(
+        ReadSupervisionIndicatorsQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            if (query.From > query.To || query.To.DayNumber - query.From.DayNumber + 1 > SupervisionIndicatorRules.MaxPeriodDays)
+            {
+                throw new DomainValidationException("APPLICATION_INPUT_INVALID");
+            }
+
+            await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
+            var facts = await directory.ListMilestoneFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
+            return ProcessQualityRules.Build(facts, ProcessMilestoneRules.Defaults, info.Units, query.From, query.To, DateTime.UtcNow);
         });
 
     /// <summary>Residentes del ámbito para elegir a quién consultar en la consulta auditada de basal: nombre y unidad,

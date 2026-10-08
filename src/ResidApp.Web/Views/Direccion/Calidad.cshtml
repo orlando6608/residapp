@@ -1,0 +1,168 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Supervision
+@using ResidApp.Web.Models
+@model ProcessQualityViewModel
+@{
+    ViewData["Title"] = "Calidad de proceso";
+    var report = Model.Report;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Dirección Clínica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Calidad de proceso</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Calidad de proceso</h1>
+<p class="text-muted">
+    Cumplimiento de los plazos de cada hito del proceso, por unidad y periodo, y los episodios con algún hito fuera de plazo o a punto de
+    vencer. Nunca por profesional, y sin contenido clínico. Los plazos los fija el centro; no cambian categorías ni umbrales clínicos.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form method="get" asp-action="Calidad" class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-3">
+                <label for="periodo-desde" class="form-label">Desde</label>
+                <input id="periodo-desde" name="desde" type="date" class="form-control form-control-lg" value="@Model.From.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-12 col-md-3">
+                <label for="periodo-hasta" class="form-label">Hasta</label>
+                <input id="periodo-hasta" name="hasta" type="date" class="form-control form-control-lg" value="@Model.To.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-12 col-md-auto d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Aplicar</button>
+            </div>
+        </div>
+        <p class="form-text mb-0">Cada hito cuenta en el periodo en que empezó. Las dos fechas se incluyen; por defecto, los últimos @IndicatorPeriodFilter.DefaultDays días.</p>
+    </div>
+</form>
+
+@if (report is not null)
+{
+    <h2 class="h5">Plazos y cumplimiento del ámbito</h2>
+    <p class="text-muted">
+        «Fuera de plazo» son los hitos hechos tarde y los que siguen sin hacer con el plazo ya pasado, de los medidos. Un hito sin hacer de un
+        episodio ya cerrado no se mide.
+    </p>
+    <div class="table-responsive mb-4">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Hitos del proceso: plazo normal y prioritario, fuera de plazo sobre medidos y a punto de vencer en el ámbito</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Hito</th>
+                    <th scope="col">Plazo</th>
+                    <th scope="col">Plazo si es prioritario</th>
+                    <th scope="col" class="text-end">Fuera de plazo</th>
+                    <th scope="col" class="text-end">A punto de vencer</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var milestone in ProcessMilestoneRules.All)
+                {
+                    var deadline = report.Deadlines[milestone];
+                    var count = report.Total[milestone];
+                    <tr>
+                        <th scope="row">
+                            @ProcessMilestoneDisplay.Label(milestone)
+                            <div class="small text-body-secondary fw-normal">@ProcessMilestoneDisplay.Range(milestone)</div>
+                        </th>
+                        <td>@ProcessMilestoneDisplay.Term(deadline.Normal)</td>
+                        <td>@ProcessMilestoneDisplay.Term(deadline.Priority)</td>
+                        <td class="text-end text-nowrap">@count.OutOfTerm de @count.Measured</td>
+                        <td class="text-end">@count.DueSoon</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="h5">Por unidad</h2>
+    @if (report.Units.Count == 0)
+    {
+        <p class="estado-vacio">Tu ámbito no tiene unidades.</p>
+    }
+    else
+    {
+        <div class="table-responsive mb-4">
+            <table class="table align-middle">
+                <caption class="visually-hidden">Hitos fuera de plazo sobre los medidos, por unidad</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Unidad</th>
+                        @foreach (var milestone in ProcessMilestoneRules.All)
+                        {
+                            <th scope="col" class="text-end">@ProcessMilestoneDisplay.Label(milestone)</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var unit in report.Units)
+                    {
+                        <tr>
+                            <th scope="row">@unit.UnitName</th>
+                            @foreach (var milestone in ProcessMilestoneRules.All)
+                            {
+                                var count = unit.Counts[milestone];
+                                <td class="text-end text-nowrap">@count.OutOfTerm de @count.Measured</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <h2 class="h5">Episodios con algún hito fuera de plazo o a punto de vencer</h2>
+    @if (report.Exceptions.Count == 0)
+    {
+        <p class="estado-vacio">Ningún hito fuera de plazo ni a punto de vencer en este periodo.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <caption class="visually-hidden">Hitos fuera de plazo o a punto de vencer: residente, unidad, hito, inicio, plazo y estado</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Residente</th>
+                        <th scope="col">Unidad</th>
+                        <th scope="col">Hito</th>
+                        <th scope="col">Empezó</th>
+                        <th scope="col">Plazo</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in report.Exceptions)
+                    {
+                        <tr>
+                            <td>@item.ResidentDisplayName</td>
+                            <td>@item.UnitName</td>
+                            <td>@ProcessMilestoneDisplay.Label(item.Milestone)@(item.Priority ? " (prioritario)" : "")</td>
+                            <td>@item.Start.ToLocalTime().ToString("g")</td>
+                            <td>@ProcessMilestoneDisplay.Term(item.Term)</td>
+                            <td>
+                                <span class="badge @(item.Status == MilestoneStatus.APuntoDeVencer ? "text-bg-warning" : "text-bg-danger")">@ProcessMilestoneDisplay.Status(item.Status)</span>
+                            </td>
+                            <td>
+                                @if (!item.EpisodeClosed)
+                                {
+                                    <a asp-action="Episodio" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle operativo</a>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-dark">Cerrado</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}

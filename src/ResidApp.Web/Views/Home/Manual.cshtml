@@ -53,6 +53,7 @@
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
             <a class="list-group-item list-group-item-action" href="#supervision-direccion">Supervisión operativa por unidad (Dirección Clínica)</a>
             <a class="list-group-item list-group-item-action" href="#indicadores-direccion">Indicadores e informe de actividad (Dirección Clínica)</a>
+            <a class="list-group-item list-group-item-action" href="#calidad-direccion">Calidad de proceso (Dirección Clínica)</a>
             <a class="list-group-item list-group-item-action" href="#mis-residentes-auxiliar">Mis residentes (Auxiliar)</a>
             <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#registrar-evento-enfermeria">Registrar evento (Enfermería)</a>
@@ -645,6 +646,26 @@
         "Imprimir / guardar como PDF" abre la impresión del navegador con el <strong>informe de actividad agregado</strong>:
         arriba, el icono y el nombre de ResidApp; después, el centro, las unidades, el periodo y la fecha de generación,
         sin el menú ni el formulario.
+    </p>
+</section>
+
+<section id="calidad-direccion" class="mb-4">
+    <h2 class="h5">
+        Calidad de proceso
+        <span class="badge text-bg-secondary align-middle">Perfil: Dirección Clínica</span>
+    </h2>
+    <p>
+        <strong>Calidad de proceso</strong> (desde el inicio de Dirección) mide si se cumplen los plazos de siete hitos del proceso, por unidad y
+        periodo, nunca por profesional y sin contenido clínico: la valoración de Enfermería tras un cambio de Auxiliar (8 h; 30 min si el
+        evento es prioritario), la valoración médica tras el escalado (24 h; 30 min), la recepción de una transferencia de seguimiento de
+        Enfermería (8 h; 30 min), el informe de derivación (30 min), la primera llamada a la familia (1 h; 30 min), la lectura de una
+        indicación médica (8 h; 30 min) y su realización (8 h; 30 min). Son los plazos que fijó CJ.
+    </p>
+    <p>
+        Arriba ves, por hito, cuántos de los medidos están <strong>fuera de plazo</strong> (hechos tarde, o sin hacer con el plazo ya pasado) y cuántos
+        <strong>a punto de vencer</strong> (sin hacer, en el último cuarto del plazo); debajo, lo mismo por unidad, y al final los episodios con algún hito
+        fuera de plazo o a punto de vencer, con un enlace al detalle operativo. Un hito cuenta en el periodo en que empezó. No se mide un hito sin
+        hacer de un episodio ya cerrado, ni la recepción de transferencias de Medicina (allí es opcional). Consultar esta pantalla no queda en la auditoría.
     </p>
 </section>
 

@@ -147,6 +147,36 @@ public sealed class DireccionController(DireccionApplicationService service) : C
         return View(new SupervisionIndicatorsViewModel(from, to, result.Value, DateTime.Now));
     }
 
+    /// <summary>DIR-11: revisión de calidad de proceso del periodo, solo lectura: hitos medidos y fuera de plazo por unidad y la lista de
+    /// episodios con algún hito fuera de plazo o a punto de vencer, sin contenido clínico.</summary>
+    public async Task<IActionResult> Calidad(IndicatorPeriodFilter filtro, CancellationToken ct)
+    {
+        // Una fecha mal formada en la URL se ignora (toma el valor por defecto), no se muestra como error.
+        ModelState.Clear();
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var (from, to) = filtro.Resolve(today);
+        if (filtro.Validate(today) is { } invalid)
+        {
+            ModelState.AddModelError(string.Empty, invalid);
+            return View(new ProcessQualityViewModel(from, to, null));
+        }
+
+        var result = await service.ReadProcessQualityAsync(new ReadSupervisionIndicatorsQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+        }
+
+        return View(new ProcessQualityViewModel(from, to, result.Value));
+    }
+
     public async Task<IActionResult> Ambito(CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);

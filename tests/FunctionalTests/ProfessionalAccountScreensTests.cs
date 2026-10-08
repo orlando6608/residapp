@@ -664,6 +664,19 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     }
 
     [Fact]
+    public async Task Calidad_DeDireccion_EnseñaLosPlazosDeCadaHito_ConLaAppEntera()
+    {
+        var page = WebUtility.HtmlDecode(await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Calidad"));
+        var invalid = WebUtility.HtmlDecode(await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Calidad?desde=2026-10-05&hasta=2026-10-01"));
+
+        Assert.Contains("Calidad de proceso", page);
+        Assert.Contains("Valoración de Enfermería", page);
+        Assert.Contains("Realización de la indicación médica", page);
+        Assert.Contains("Ningún hito fuera de plazo ni a punto de vencer en este periodo.", page);
+        Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", invalid);
+    }
+
+    [Fact]
     public async Task ConsultaDeDireccion_SinResidentesEnElAmbito_LoDiceYElAmbitoSaleDelActivo()
     {
         var page = await PageAsync("DIRECCION_CLINICA", null, "/Baseline/Direction");

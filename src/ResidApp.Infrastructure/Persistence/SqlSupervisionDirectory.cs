@@ -3,6 +3,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Medicina;
+using ResidApp.Domain.Supervision;
 using ResidApp.Shared;
 
 namespace ResidApp.Infrastructure.Persistence;
@@ -213,6 +214,85 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
             r.ClosedAt is { } closed ? Utc(closed) : null)).ToList();
     }
 
+    /// <summary>DIR-11: siete consultas sobre la misma regla de ámbito, una por hito. Cada una devuelve el momento en que empezó el hito
+    /// (dentro del periodo) y cuándo se cumplió. Solo lee fechas, la unidad, el residente y si el evento es prioritario.</summary>
+    public async Task<IReadOnlyList<MilestoneFact>> ListMilestoneFactsAsync(
+        Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var parameters = new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, From = from, To = toExclusive };
+        const string columns = """
+            SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentName, ea.unidad_id AS UnitId,
+                   unit.nombre_visible AS UnitName, CAST(CASE WHEN ea.clasificacion_codigo = 'PRIORITARIO' THEN 1 ELSE 0 END AS BIT) AS Priority,
+                   CAST(CASE WHEN ea.estado_codigo = 'CERRADO' THEN 1 ELSE 0 END AS BIT) AS EpisodeClosed,
+            """;
+        var queries = new (ProcessMilestone Milestone, string Sql)[]
+        {
+            (ProcessMilestone.ValoracionEnfermeria, $"""
+                {columns} ea.recibido_en AS StartedAt, ea.valoracion_iniciada_en AS EndedAt
+                {ScopedEventsFrom}
+                {ScopedEventsWhere}
+                   AND ea.origen_codigo = 'CAMBIO_AUXILIAR' AND ea.recibido_en >= @From AND ea.recibido_en < @To
+                """),
+            (ProcessMilestone.ValoracionMedica, $"""
+                {columns} esc.At AS StartedAt, ea.valoracion_medica_iniciada_en AS EndedAt
+                {ScopedEventsFrom}
+                  CROSS APPLY (SELECT MIN(x.escalado_en) AS At FROM dbo.escalados_medicina x WHERE x.evento_id = ea.id) esc
+                {ScopedEventsWhere}
+                   AND esc.At >= @From AND esc.At < @To
+                """),
+            (ProcessMilestone.RecepcionTransferencia, $"""
+                {columns} transfer.registrado_en AS StartedAt,
+                       (SELECT MIN(r.registrado_en) FROM dbo.seguimiento_acciones r WHERE r.transferencia_id = transfer.id) AS EndedAt
+                {ScopedEventsFrom}
+                  JOIN dbo.seguimientos follow_up ON follow_up.evento_id = ea.id
+                  JOIN dbo.seguimiento_acciones transfer ON transfer.seguimiento_id = follow_up.id AND transfer.tipo_codigo = 'TRANSFERENCIA'
+                {ScopedEventsWhere}
+                   AND transfer.registrado_en >= @From AND transfer.registrado_en < @To
+                """),
+            (ProcessMilestone.InformeDerivacion, $"""
+                {columns} protocol.activado_en AS StartedAt, report.firmado_en AS EndedAt
+                {ScopedEventsFrom}
+                  JOIN dbo.protocolos_urgentes protocol ON protocol.evento_id = ea.id
+                  LEFT JOIN dbo.informes_derivacion report ON report.evento_id = ea.id
+                {ScopedEventsWhere}
+                   AND protocol.activado_en >= @From AND protocol.activado_en < @To
+                """),
+            (ProcessMilestone.LlamadaFamilia, $"""
+                {columns} protocol.activado_en AS StartedAt,
+                       (SELECT MIN(c.llamado_en) FROM dbo.intentos_llamada_familia c WHERE c.evento_id = ea.id) AS EndedAt
+                {ScopedEventsFrom}
+                  JOIN dbo.protocolos_urgentes protocol ON protocol.evento_id = ea.id
+                {ScopedEventsWhere}
+                   AND protocol.activado_en >= @From AND protocol.activado_en < @To
+                """),
+            (ProcessMilestone.LecturaIndicacion, $"""
+                {columns} indication.emitida_en AS StartedAt, indication.leida_en AS EndedAt
+                {ScopedEventsFrom}
+                  JOIN dbo.indicaciones_medicas indication ON indication.evento_id = ea.id
+                {ScopedEventsWhere}
+                   AND indication.emitida_en >= @From AND indication.emitida_en < @To
+                """),
+            (ProcessMilestone.RealizacionIndicacion, $"""
+                {columns} indication.emitida_en AS StartedAt, indication.resuelta_en AS EndedAt
+                {ScopedEventsFrom}
+                  JOIN dbo.indicaciones_medicas indication ON indication.evento_id = ea.id
+                {ScopedEventsWhere}
+                   AND indication.emitida_en >= @From AND indication.emitida_en < @To
+                """),
+        };
+        var facts = new List<MilestoneFact>();
+        foreach (var (milestone, sql) in queries)
+        {
+            var rows = await connection.QueryAsync<MilestoneFactRow>(new CommandDefinition(sql, parameters, cancellationToken: ct));
+            facts.AddRange(rows.Select(r => new MilestoneFact(
+                milestone, r.EventId, ResidentId.From(r.ResidentId), r.ResidentName, UnitId.From(r.UnitId), r.UnitName, r.Priority,
+                r.StartedAt, r.EndedAt, r.EpisodeClosed)));
+        }
+
+        return facts;
+    }
+
     public async Task<SupervisionIndicatorFacts> ListIndicatorFactsAsync(
         Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
     {
@@ -336,6 +416,10 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
         Guid EventId, Guid ResidentId, string ResidentName, Guid UnitId, string UnitName, string ProtocolProfileCode,
         DateTime ProtocolActivatedAt, string? ReportProfileCode, DateTime? ReportSignedAt, int FamilyCallAttempts, DateTime? LastCallAt,
         DateTime? ClosedAt);
+
+    private sealed record MilestoneFactRow(
+        Guid EventId, Guid ResidentId, string ResidentName, Guid UnitId, string UnitName, bool Priority, bool EpisodeClosed, DateTime StartedAt,
+        DateTime? EndedAt);
 
     private sealed record StartRow(DateTime? AssessmentStartedAt, DateTime? MedicalStartedAt);
 

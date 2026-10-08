@@ -119,6 +119,7 @@ En el orden propuesto:
      (tema 2). Consultar el informe firmado (permiso clínico y declaración de finalidad) está hecho desde el 2026-10-07: ver el bloque 2, DIR-12.
    - **Comunicación familiar (DIR-13):** depende de que exista la aprobación y publicación (Administración y Familia).
 3. **Revisión de calidad de proceso (DIR-11 del boceto):** «cumplimiento de hitos definidos y excepciones». Nadie ha definido qué hitos
+**Hecho el 2026-10-08, fase 1 (CJ tema 4; sin script):** `/Direccion/Calidad?desde=&hasta=` mide los 7 hitos con los plazos de CJ (`ProcessMilestoneRules.Defaults`: normal y prioritario, según la clasificación del evento) por hito y unidad (n de m, nunca por profesional) y lista los episodios con algún hito fuera de plazo o a punto de vencer (último cuarto del plazo; supuesto mío). `ISupervisionDirectory.ListMilestoneFactsAsync` (7 consultas, mismo ámbito) + `ProcessQualityRules.Build`. Supuestos: la valoración de Enfermería solo mide cambios de Auxiliar; la recepción solo la de Enfermería (en Medicina es opcional); un hito sin hacer de un episodio cerrado no se mide; la llamada se mide hasta `llamado_en`. Pantalla sin auditoría. **Quedan:** plazos configurables por centro (fase 2) y el aviso «a punto de vencer» al equipo responsable (fase 3, 4.1 C).
    ni con qué plazos; es una decisión clínica. Preguntado a CJ el 2026-10-02 en `docs/pendientes-cj/continuidad-supervision-comunicacion.html`
    (tema 4: tabla de plazos de 7 hitos y qué hacer con uno fuera de plazo).
 

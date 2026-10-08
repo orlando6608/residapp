@@ -132,3 +132,54 @@ public static class SupervisionDisplay
         _ => code,
     };
 }
+
+/// <summary>DIR-11: la revisión de calidad de proceso (null si el periodo no es válido o falló la lectura).</summary>
+public sealed record ProcessQualityViewModel(DateOnly From, DateOnly To, ProcessQualityReport? Report);
+
+/// <summary>DIR-11: textos de los hitos del proceso y de su estado.</summary>
+public static class ProcessMilestoneDisplay
+{
+    public static string Label(ResidApp.Domain.Supervision.ProcessMilestone milestone) => milestone switch
+    {
+        ResidApp.Domain.Supervision.ProcessMilestone.ValoracionEnfermeria => "Valoración de Enfermería",
+        ResidApp.Domain.Supervision.ProcessMilestone.ValoracionMedica => "Valoración médica",
+        ResidApp.Domain.Supervision.ProcessMilestone.RecepcionTransferencia => "Recepción de la transferencia",
+        ResidApp.Domain.Supervision.ProcessMilestone.InformeDerivacion => "Informe de derivación",
+        ResidApp.Domain.Supervision.ProcessMilestone.LlamadaFamilia => "Llamada a la familia",
+        ResidApp.Domain.Supervision.ProcessMilestone.LecturaIndicacion => "Lectura de la indicación médica",
+        _ => "Realización de la indicación médica",
+    };
+
+    public static string Range(ResidApp.Domain.Supervision.ProcessMilestone milestone) => milestone switch
+    {
+        ResidApp.Domain.Supervision.ProcessMilestone.ValoracionEnfermeria => "Desde que Auxiliar registra un cambio hasta que Enfermería empieza la valoración.",
+        ResidApp.Domain.Supervision.ProcessMilestone.ValoracionMedica => "Desde el escalado hasta que Medicina empieza su valoración.",
+        ResidApp.Domain.Supervision.ProcessMilestone.RecepcionTransferencia => "Desde la transferencia de un seguimiento de Enfermería hasta que se confirma la recepción.",
+        ResidApp.Domain.Supervision.ProcessMilestone.InformeDerivacion => "Desde la activación del protocolo urgente hasta la firma del informe.",
+        ResidApp.Domain.Supervision.ProcessMilestone.LlamadaFamilia => "Desde la activación del protocolo urgente hasta el primer intento de llamada.",
+        ResidApp.Domain.Supervision.ProcessMilestone.LecturaIndicacion => "Desde que Medicina la emite hasta que Enfermería confirma la lectura.",
+        _ => "Desde que Medicina la emite hasta que consta realizada o no realizada.",
+    };
+
+    public static string Status(ResidApp.Domain.Supervision.MilestoneStatus status) => status switch
+    {
+        ResidApp.Domain.Supervision.MilestoneStatus.EnPlazo => "En plazo",
+        ResidApp.Domain.Supervision.MilestoneStatus.HechoFueraDePlazo => "Hecho fuera de plazo",
+        ResidApp.Domain.Supervision.MilestoneStatus.Pendiente => "Pendiente, en plazo",
+        ResidApp.Domain.Supervision.MilestoneStatus.APuntoDeVencer => "A punto de vencer",
+        _ => "Sin hacer, fuera de plazo",
+    };
+
+    /// <summary>«30 min», «8 h», «1 h 30 min»; «No se mide» si no hay plazo.</summary>
+    public static string Term(TimeSpan? term)
+    {
+        if (term is not { } value)
+        {
+            return "No se mide";
+        }
+
+        var hours = (int)value.TotalHours;
+        var minutes = value.Minutes;
+        return hours == 0 ? $"{minutes} min" : minutes == 0 ? $"{hours} h" : $"{hours} h {minutes} min";
+    }
+}

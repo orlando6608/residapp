@@ -68,6 +68,11 @@ public interface ISupervisionDirectory
     Task<IReadOnlyList<SupervisionReferral>> ListReferralsAsync(
         Guid profileScopeId, CenterId centerId, DateTime? closedFrom = null, DateTime? closedToExclusive = null, CancellationToken ct = default);
 
+    /// <summary>DIR-11: los hitos del proceso del ámbito que empezaron en [from, toExclusive) (UTC), con cuándo se cumplieron, sin plazos ni
+    /// estados: eso lo pone ProcessQualityRules.</summary>
+    Task<IReadOnlyList<MilestoneFact>> ListMilestoneFactsAsync(
+        Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default);
+
     /// <summary>DIR-08 a DIR-10: hechos del ámbito con fecha en [from, toExclusive), abiertos o cerrados. Los límites son
     /// UTC, como las fechas guardadas (ver SupervisionIndicatorRules.UtcBounds).</summary>
     Task<SupervisionIndicatorFacts> ListIndicatorFactsAsync(
