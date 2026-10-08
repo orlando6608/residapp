@@ -128,6 +128,23 @@ END
 GO
 
 /*
+ * Añadido después (2026-10-08): permiso PROCESS_DEADLINES_MANAGE para Dirección Clínica, para que CJ pueda ajustar los plazos de los
+ * hitos del proceso (DIR-11) como 'dev-integrado-direccion'. No siembra ningún plazo: sin cambios del centro valen los de CJ.
+ */
+IF EXISTS (SELECT 1 FROM dbo.ambitos_perfil WHERE id = 'A1000000-0000-0000-0000-000000000003')
+   AND NOT EXISTS (
+       SELECT 1 FROM dbo.permisos_perfil
+        WHERE ambito_perfil_id = 'A1000000-0000-0000-0000-000000000003' AND permiso_codigo = 'PROCESS_DEADLINES_MANAGE'
+          AND revocado_en IS NULL)
+BEGIN
+    INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+    SELECT NEWID(), p.id, p.centro_id, 'PROCESS_DEADLINES_MANAGE', SYSUTCDATETIME(), p.cuenta_id
+      FROM dbo.ambitos_perfil p
+     WHERE p.id = 'A1000000-0000-0000-0000-000000000003';
+END
+GO
+
+/*
  * Añadido después (2026-09-28): cuenta 'dev-integrado-medicina' con un ámbito MEDICINA sobre la misma
  * unidad, para recorrer el escalado de Enfermería a Medicina (bandeja de escalados, MED-02/MED-03). Bloque
  * aparte e idempotente por su cuenta, igual que el anterior.

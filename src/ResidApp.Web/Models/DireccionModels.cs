@@ -129,12 +129,13 @@ public static class SupervisionDisplay
         "BASELINE_REEVALUATE" => "Reevaluar el basal",
         "CLINICAL_DETAIL_READ" => "Lectura clínica detallada y auditada",
         "REFERENCE_RANGES_MANAGE" => "Gestionar los rangos de referencia de constantes",
+        "PROCESS_DEADLINES_MANAGE" => "Gestionar los plazos de los hitos del proceso",
         _ => code,
     };
 }
 
 /// <summary>DIR-11: la revisión de calidad de proceso (null si el periodo no es válido o falló la lectura).</summary>
-public sealed record ProcessQualityViewModel(DateOnly From, DateOnly To, ProcessQualityReport? Report);
+public sealed record ProcessQualityViewModel(DateOnly From, DateOnly To, ProcessQualityReport? Report, bool CanManageDeadlines = false);
 
 /// <summary>DIR-11: textos de los hitos del proceso y de su estado.</summary>
 public static class ProcessMilestoneDisplay

@@ -33,7 +33,7 @@ public sealed record SupervisionPendingList(IReadOnlyList<SupervisionEpisode> Ep
 /// </summary>
 public sealed class DireccionApplicationService(
     IProfileScopeDirectoryProvider scopes, ISupervisionDirectory directory, ISessionIdentityProvider session,
-    IEnfermeriaResidentDirectory residents)
+    IEnfermeriaResidentDirectory residents, IProcessDeadlineRepository deadlines)
 {
     public Task<ApplicationResult<IReadOnlyList<SupervisionUnitSummary>>> ReadPanelAsync(
         SupervisionQuery query, CancellationToken ct = default) =>
@@ -148,7 +148,8 @@ public sealed class DireccionApplicationService(
             var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
             var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
             var facts = await directory.ListMilestoneFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
-            return ProcessQualityRules.Build(facts, ProcessMilestoneRules.Defaults, info.Units, query.From, query.To, DateTime.UtcNow);
+            var effective = await deadlines.GetEffectiveAsync(query.CentroId, ct);
+            return ProcessQualityRules.Build(facts, effective, info.Units, query.From, query.To, DateTime.UtcNow);
         });
 
     /// <summary>Residentes del ámbito para elegir a quién consultar en la consulta auditada de basal: nombre y unidad,

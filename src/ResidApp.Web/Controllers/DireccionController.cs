@@ -174,7 +174,9 @@ public sealed class DireccionController(DireccionApplicationService service) : C
             ModelState.AddModelError(string.Empty, result.Error!.Message);
         }
 
-        return View(new ProcessQualityViewModel(from, to, result.Value));
+        var scope = await service.ReadScopeAsync(new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        var canManage = scope.Ok && scope.Value!.Permissions.Contains(ResidApp.Domain.Accounts.ProfilePermissions.ProcessDeadlinesManage);
+        return View(new ProcessQualityViewModel(from, to, result.Value, canManage));
     }
 
     public async Task<IActionResult> Ambito(CancellationToken ct)

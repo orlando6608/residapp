@@ -568,6 +568,40 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
 
     [Fact]
+    public async Task PlazosDeLosHitos_DireccionConPermisoLosGuarda_ConLaAppEntera()
+    {
+        // Con el usuario limitado escribe en las tablas de plazos bajo la seguridad por filas, y la revisión de calidad ofrece el enlace.
+        var direccion = await SeedAdministratorAsync("DIRECCION_CLINICA", "PROCESS_DEADLINES_MANAGE");
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = direccion.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        var quality = await client.GetStringAsync("/Direccion/Calidad");
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync("/PlazosProceso"));
+        var saved = WebUtility.HtmlDecode(await (await client.PostAsync("/PlazosProceso", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["Form.Version"] = ExtractValue(page, "Form.Version"),
+            ["Form.Plazos[0].Hito"] = "ValoracionEnfermeria",
+            ["Form.Plazos[0].PlazoMinutos"] = "240",
+            ["Form.Plazos[0].PlazoPrioritarioMinutos"] = "20",
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Cambiar los plazos del centro", quality);
+        Assert.Contains("Valoración de Enfermería", page);
+        Assert.Contains("Plazos de los hitos guardados.", saved);
+        Assert.Contains("4 h", saved);
+        using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.plazos_hitos_centro_historial WHERE centro_id = (SELECT centro_id FROM dbo.unidades WHERE id = @unitId)",
+            new { unitId = direccion.UnitId }));
+    }
+
+    [Fact]
     public async Task RangosReferencia_UnaMedicaConPermisoLosGuarda_ConLaAppEntera()
     {
         // Con la app conectada como usuario limitado (RESIDAPP_TEST_APP_CONNECTION_STRING) escribe en las tablas de rangos bajo la seguridad por filas.

@@ -41,6 +41,11 @@
     </div>
 </form>
 
+@if (Model.CanManageDeadlines)
+{
+    <p><a asp-controller="PlazosProceso" asp-action="Index" class="btn btn-outline-primary">Cambiar los plazos del centro</a></p>
+}
+
 @if (report is not null)
 {
     <h2 class="h5">Plazos y cumplimiento del ámbito</h2>

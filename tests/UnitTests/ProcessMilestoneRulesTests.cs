@@ -95,3 +95,32 @@ public class ProcessMilestoneRulesTests
         Assert.Equal(ProcessMilestoneRules.All.Count, report.Total.Count);
     }
 }
+
+public class ProcessMilestoneDeadlineValidationTests
+{
+    [Fact]
+    public void ValidateMinutes_AdmiteDeUnMinutoAUnaSemana_YVacioEsNoSeMide()
+    {
+        Assert.Equal(new MilestoneDeadline(TimeSpan.FromMinutes(1), TimeSpan.FromDays(7)), ProcessMilestoneRules.ValidateMinutes(1, 10080));
+        Assert.Equal(new MilestoneDeadline(null, TimeSpan.FromMinutes(30)), ProcessMilestoneRules.ValidateMinutes(null, 30));
+        Assert.Null(ProcessMilestoneRules.ValidateMinutes(null, null).For(priority: false));
+    }
+
+    [Theory]
+    [InlineData(0, 30)]
+    [InlineData(-5, 30)]
+    [InlineData(30, 10081)]
+    public void ValidateMinutes_RechazaPlazosImposibles(int normal, int priority)
+    {
+        var error = Assert.Throws<DomainValidationException>(() => ProcessMilestoneRules.ValidateMinutes(normal, priority));
+
+        Assert.Equal("PROCESS_DEADLINES_INVALID", error.Message);
+    }
+
+    [Fact]
+    public void ToMinutes_EsLaInversa()
+    {
+        Assert.Equal(480, ProcessMilestoneRules.ToMinutes(TimeSpan.FromHours(8)));
+        Assert.Null(ProcessMilestoneRules.ToMinutes(null));
+    }
+}

@@ -1,3 +1,5 @@
+using ResidApp.Shared;
+
 namespace ResidApp.Domain.Supervision;
 
 /// <summary>
@@ -7,26 +9,26 @@ namespace ResidApp.Domain.Supervision;
 public enum ProcessMilestone
 {
     /// <summary>Desde que Auxiliar registra un cambio hasta que Enfermería empieza la valoración.</summary>
-    ValoracionEnfermeria,
+    [Code("VALORACION_ENFERMERIA")] ValoracionEnfermeria,
 
     /// <summary>Desde el escalado a Medicina hasta que Medicina empieza su valoración.</summary>
-    ValoracionMedica,
+    [Code("VALORACION_MEDICA")] ValoracionMedica,
 
     /// <summary>Desde la transferencia de un seguimiento de Enfermería hasta que se confirma la recepción. En Medicina la recepción es
     /// opcional, así que no se mide.</summary>
-    RecepcionTransferencia,
+    [Code("RECEPCION_TRANSFERENCIA")] RecepcionTransferencia,
 
     /// <summary>Desde la activación del protocolo urgente hasta la firma del informe de derivación.</summary>
-    InformeDerivacion,
+    [Code("INFORME_DERIVACION")] InformeDerivacion,
 
     /// <summary>Desde la activación del protocolo urgente hasta el primer intento de llamada a la familia.</summary>
-    LlamadaFamilia,
+    [Code("LLAMADA_FAMILIA")] LlamadaFamilia,
 
     /// <summary>Desde que Medicina emite una indicación hasta que Enfermería confirma la lectura.</summary>
-    LecturaIndicacion,
+    [Code("LECTURA_INDICACION")] LecturaIndicacion,
 
     /// <summary>Desde que Medicina emite una indicación hasta que consta realizada o no realizada.</summary>
-    RealizacionIndicacion,
+    [Code("REALIZACION_INDICACION")] RealizacionIndicacion,
 }
 
 /// <summary>Cómo está un hito en un momento dado.</summary>
@@ -60,6 +62,26 @@ public static class ProcessMilestoneRules
     public const double WarningFraction = 0.25;
 
     public static readonly IReadOnlyList<ProcessMilestone> All = Enum.GetValues<ProcessMilestone>();
+
+    /// <summary>El plazo más largo que se admite: una semana, en minutos.</summary>
+    public const int MaxDeadlineMinutes = 10080;
+
+    /// <summary>Los plazos de un hito escritos en minutos (null: no se mide). Cada uno, entre 1 minuto y una semana; si no,
+    /// PROCESS_DEADLINES_INVALID.</summary>
+    public static MilestoneDeadline ValidateMinutes(int? normal, int? priority)
+    {
+        static TimeSpan? Check(int? minutes) => minutes switch
+        {
+            null => null,
+            >= 1 and <= MaxDeadlineMinutes => TimeSpan.FromMinutes(minutes.Value),
+            _ => throw new DomainValidationException("PROCESS_DEADLINES_INVALID"),
+        };
+
+        return new MilestoneDeadline(Check(normal), Check(priority));
+    }
+
+    /// <summary>Minutos enteros de un plazo (null: no se mide).</summary>
+    public static int? ToMinutes(TimeSpan? term) => term is { } value ? (int)Math.Round(value.TotalMinutes) : null;
 
     /// <summary>Los plazos de CJ (documento continuidad-supervision-comunicacion, tema 4). Cada centro puede cambiarlos.</summary>
     public static IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline> Defaults { get; } = new Dictionary<ProcessMilestone, MilestoneDeadline>

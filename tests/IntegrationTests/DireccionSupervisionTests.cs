@@ -22,7 +22,7 @@ public class DireccionSupervisionTests
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory),
         new SqlSupervisionDirectory(TestDatabase.ConnectionFactory),
         new FixedDireccionSessionIdentityProvider(externalSubject),
-        new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory));
+        new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory), new SqlProcessDeadlineRepository(TestDatabase.ConnectionFactory));
 
     /// <summary>Un centro con una unidad, una cuenta de Dirección y una de Enfermería, y un residente.</summary>
     private static async Task<(SeededProfile Direccion, SeededProfile Enfermera, ResidentId ResidentId)> SeedCenterAsync()

@@ -25,6 +25,16 @@ public class ListMilestoneWarningsTests
             Task.FromResult<IReadOnlyList<string>>([]);
     }
 
+    private sealed class Deadlines(IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline>? map = null) : IProcessDeadlineRepository
+    {
+        public Task<ProcessDeadlinesView> ReadAsync(ProcessDeadlinesAccess access, CancellationToken ct = default) => throw new NotSupportedException();
+
+        public Task<int> SaveAsync(SaveProcessDeadlinesInput input, CancellationToken ct = default) => throw new NotSupportedException();
+
+        public Task<IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline>> GetEffectiveAsync(CenterId centerId, CancellationToken ct = default) =>
+            Task.FromResult(map ?? ProcessMilestoneRules.Defaults);
+    }
+
     private sealed class Session(bool signedIn = true) : ISessionIdentityProvider
     {
         public Task<VerifiedIdentity?> GetVerifiedIdentityAsync(CancellationToken ct = default) =>
@@ -51,7 +61,7 @@ public class ListMilestoneWarningsTests
             Fact(ProcessMilestone.ValoracionEnfermeria, TimeSpan.FromHours(1)),                            // en plazo, aún lejos
             Fact(ProcessMilestone.ValoracionEnfermeria, TimeSpan.FromHours(9), end: DateTime.UtcNow),      // hecho tarde: no es un aviso
             Fact(ProcessMilestone.ValoracionMedica, TimeSpan.FromHours(30), responsible: SystemProfile.Medicina)), // de Medicina
-            new Session());
+            new Session(), new Deadlines());
 
         var result = await useCase.ExecuteAsync(new ListMilestoneWarningsCommand(ScopeId, Center));
 
@@ -66,12 +76,29 @@ public class ListMilestoneWarningsTests
         var useCase = new ListMilestoneWarnings(new Scopes(SystemProfile.Medicina), new Facts(
             Fact(ProcessMilestone.ValoracionMedica, TimeSpan.FromHours(30), responsible: SystemProfile.Medicina),
             Fact(ProcessMilestone.InformeDerivacion, TimeSpan.FromMinutes(40), responsible: SystemProfile.Enfermeria),
-            Fact(ProcessMilestone.InformeDerivacion, TimeSpan.FromMinutes(40), responsible: SystemProfile.Medicina)), new Session());
+            Fact(ProcessMilestone.InformeDerivacion, TimeSpan.FromMinutes(40), responsible: SystemProfile.Medicina)), new Session(), new Deadlines());
 
         var result = await useCase.ExecuteAsync(new ListMilestoneWarningsCommand(ScopeId, Center));
 
         Assert.Equal([ProcessMilestone.ValoracionMedica, ProcessMilestone.InformeDerivacion], result.Value!.Select(w => w.Milestone).Order());
         Assert.Equal(2, result.Value!.Count);
+    }
+
+    [Fact]
+    public async Task UsaLosPlazosDelCentro_NoLosDeCJ()
+    {
+        var fact = Fact(ProcessMilestone.LecturaIndicacion, TimeSpan.FromHours(2));   // con el plazo de CJ (8 h) aún no avisa
+        var custom = new Dictionary<ProcessMilestone, MilestoneDeadline>(ProcessMilestoneRules.Defaults)
+        {
+            [ProcessMilestone.LecturaIndicacion] = new(TimeSpan.FromHours(1), TimeSpan.FromMinutes(15)),
+        };
+        var command = new ListMilestoneWarningsCommand(ScopeId, Center);
+
+        var byDefault = await new ListMilestoneWarnings(new Scopes(SystemProfile.Enfermeria), new Facts(fact), new Session(), new Deadlines()).ExecuteAsync(command);
+        var byCenter = await new ListMilestoneWarnings(new Scopes(SystemProfile.Enfermeria), new Facts(fact), new Session(), new Deadlines(custom)).ExecuteAsync(command);
+
+        Assert.Empty(byDefault.Value!);
+        Assert.Equal(MilestoneStatus.FueraDePlazo, Assert.Single(byCenter.Value!).Status);
     }
 
     [Theory]
@@ -80,7 +107,7 @@ public class ListMilestoneWarningsTests
     [InlineData(SystemProfile.DireccionClinica)]
     public async Task OtrosPerfiles_NoVenAvisos(SystemProfile profile)
     {
-        var result = await new ListMilestoneWarnings(new Scopes(profile), new Facts(), new Session())
+        var result = await new ListMilestoneWarnings(new Scopes(profile), new Facts(), new Session(), new Deadlines())
             .ExecuteAsync(new ListMilestoneWarningsCommand(ScopeId, Center));
 
         Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
@@ -89,9 +116,9 @@ public class ListMilestoneWarningsTests
     [Fact]
     public async Task SinSesionOConUnAmbitoAjeno_EsAccesoDenegado()
     {
-        var noSession = await new ListMilestoneWarnings(new Scopes(SystemProfile.Enfermeria), new Facts(), new Session(false))
+        var noSession = await new ListMilestoneWarnings(new Scopes(SystemProfile.Enfermeria), new Facts(), new Session(false), new Deadlines())
             .ExecuteAsync(new ListMilestoneWarningsCommand(ScopeId, Center));
-        var foreign = await new ListMilestoneWarnings(new Scopes(SystemProfile.Enfermeria), new Facts(), new Session())
+        var foreign = await new ListMilestoneWarnings(new Scopes(SystemProfile.Enfermeria), new Facts(), new Session(), new Deadlines())
             .ExecuteAsync(new ListMilestoneWarningsCommand(Guid.NewGuid(), Center));
 
         Assert.Equal(ApplicationFailureCode.AccessDenied, noSession.Error!.Code);

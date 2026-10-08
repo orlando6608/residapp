@@ -1,0 +1,111 @@
+@using ResidApp.Domain.Supervision
+@using ResidApp.Web.Models
+@model PlazosProcesoViewModel
+@{
+    ViewData["Title"] = "Plazos de los hitos del proceso";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Direccion" asp-action="Index">Dirección Clínica</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Direccion" asp-action="Calidad">Calidad de proceso</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Plazos</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Plazos de los hitos del proceso</h1>
+<p class="text-muted">
+    Cuánto tiempo se espera entre dos pasos del proceso. Sirven para medir el cumplimiento en la revisión de calidad de proceso y para avisar al
+    equipo responsable cuando un hito está a punto de pasar de plazo; no cambian ninguna categoría ni umbral clínico. Los valores de partida son
+    los que fijó CJ; cada centro puede cambiarlos. Escribe los minutos (1 h = 60, 8 h = 480, 24 h = 1440) o deja el campo vacío si ese plazo no
+    debe medirse.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.View is null)
+{
+    <div class="alert alert-warning" role="status">No se pueden mostrar los plazos: tu perfil no tiene el permiso para gestionarlos.</div>
+}
+else
+{
+    @if (Model.RestoredDefaults)
+    {
+        <div class="alert alert-info" role="status">Aquí tienes los plazos de CJ. No se guardan hasta que pulses «Guardar».</div>
+    }
+
+    <form asp-action="Index" method="post">
+        <input type="hidden" name="Form.Version" value="@Model.Form.Version" />
+        <div class="table-responsive mb-3">
+            <table class="table align-middle">
+                <caption class="visually-hidden">Plazo normal y plazo de un evento prioritario de cada hito, en minutos</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Hito</th>
+                        <th scope="col">Plazo (minutos)</th>
+                        <th scope="col">Plazo si es prioritario (minutos)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Form.Plazos.Count; i++)
+                    {
+                        var milestone = Model.Form.Plazos[i].Hito;
+                        <tr>
+                            <th scope="row">
+                                <input type="hidden" name="Form.Plazos[@i].Hito" value="@milestone" />
+                                @ProcessMilestoneDisplay.Label(milestone)
+                                <div class="small text-body-secondary fw-normal">@ProcessMilestoneDisplay.Range(milestone)</div>
+                                <div class="small text-body-secondary fw-normal">
+                                    Los de CJ: @ProcessMilestoneDisplay.Term(ProcessMilestoneRules.Defaults[milestone].Normal) y
+                                    @ProcessMilestoneDisplay.Term(ProcessMilestoneRules.Defaults[milestone].Priority) si es prioritario.
+                                </div>
+                            </th>
+                            <td>
+                                <label class="visually-hidden" for="plazo-@i">Plazo de @ProcessMilestoneDisplay.Label(milestone), en minutos</label>
+                                <input id="plazo-@i" name="Form.Plazos[@i].PlazoMinutos" type="number" min="1" max="@ProcessMilestoneRules.MaxDeadlineMinutes"
+                                       class="form-control form-control-lg" value="@Model.Form.Plazos[i].PlazoMinutos" inputmode="numeric" />
+                            </td>
+                            <td>
+                                <label class="visually-hidden" for="prioritario-@i">Plazo prioritario de @ProcessMilestoneDisplay.Label(milestone), en minutos</label>
+                                <input id="prioritario-@i" name="Form.Plazos[@i].PlazoPrioritarioMinutos" type="number" min="1" max="@ProcessMilestoneRules.MaxDeadlineMinutes"
+                                       class="form-control form-control-lg" value="@Model.Form.Plazos[i].PlazoPrioritarioMinutos" inputmode="numeric" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="d-grid d-md-flex justify-content-md-end gap-2">
+            <a asp-action="Index" asp-route-cj="true" class="btn btn-outline-secondary btn-lg">Ver los plazos de CJ</a>
+            <button type="submit" class="btn btn-primary btn-lg">Guardar</button>
+        </div>
+    </form>
+
+    <h2 class="h5 mt-4">Historial de cambios</h2>
+    @if (Model.View.History.Count == 0)
+    {
+        <p class="estado-vacio">Este centro sigue con los plazos de CJ.</p>
+    }
+    else
+    {
+        <ul class="list-group">
+            @foreach (var change in Model.View.History)
+            {
+                <li class="list-group-item">
+                    <div class="fw-semibold">@ProcessMilestoneDisplay.Label(change.Milestone)</div>
+                    <div class="small">
+                        @ProcessMilestoneDisplay.Term(change.Previous.Normal) / @ProcessMilestoneDisplay.Term(change.Previous.Priority)
+                        → @ProcessMilestoneDisplay.Term(change.New.Normal) / @ProcessMilestoneDisplay.Term(change.New.Priority)
+                    </div>
+                    <div class="small text-body-secondary">
+                        @change.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Dirección Clínica@(change.ChangedByCurrentAccount ? " · tú" : "")
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+}

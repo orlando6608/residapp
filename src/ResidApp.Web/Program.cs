@@ -115,6 +115,8 @@ builder.Services.AddScoped<ListScopeResidents>();
 builder.Services.AddScoped<FindScopeResident>();
 builder.Services.AddScoped<FindEmergencyContact>();
 builder.Services.AddScoped<IMilestoneFactDirectory>(sp => sp.GetRequiredService<IChangeInboxDirectory>());
+builder.Services.AddScoped<IProcessDeadlineRepository, SqlProcessDeadlineRepository>();
+builder.Services.AddScoped<ProcessDeadlinesApplicationService>();
 builder.Services.AddScoped<ListMilestoneWarnings>();
 builder.Services.AddScoped<RegisterClinicalEvent>();
 builder.Services.AddScoped<ListPendingChanges>();

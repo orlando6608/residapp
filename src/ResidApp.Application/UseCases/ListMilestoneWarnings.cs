@@ -14,7 +14,8 @@ public sealed record ListMilestoneWarningsCommand(Guid AmbitoPerfilId, CenterId 
 /// ya no es un aviso sino un olvido que Dirección ve en la revisión de calidad.
 /// </summary>
 public sealed class ListMilestoneWarnings(
-    IProfileScopeDirectoryProvider scopes, IMilestoneFactDirectory directory, ISessionIdentityProvider session)
+    IProfileScopeDirectoryProvider scopes, IMilestoneFactDirectory directory, ISessionIdentityProvider session,
+    IProcessDeadlineRepository deadlines)
 {
     public const int WindowDays = 30;
 
@@ -33,7 +34,8 @@ public sealed class ListMilestoneWarnings(
             var now = DateTime.UtcNow;
             var facts = await directory.ListMilestoneFactsAsync(command.AmbitoPerfilId, command.CentroId, now.AddDays(-WindowDays), now.AddMinutes(5), ct);
             var report = ProcessQualityRules.Build(
-                facts.Where(f => f.Responsible == scope.Profile).ToList(), ProcessMilestoneRules.Defaults, [], DateOnly.FromDateTime(now), DateOnly.FromDateTime(now), now);
+                facts.Where(f => f.Responsible == scope.Profile).ToList(), await deadlines.GetEffectiveAsync(command.CentroId, ct), [],
+                DateOnly.FromDateTime(now), DateOnly.FromDateTime(now), now);
             return (IReadOnlyList<MilestoneEntry>)report.Exceptions
                 .Where(e => e.End is null)
                 .OrderByDescending(e => e.Status == MilestoneStatus.FueraDePlazo)
