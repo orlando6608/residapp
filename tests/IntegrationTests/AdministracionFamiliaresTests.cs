@@ -243,6 +243,40 @@ public class AdministracionFamiliaresTests
     }
 
     [Fact]
+    public async Task FamiliarEnUnidadesDistintas_LoEditaCualquieraQueGestioneAAlgunoDeSusResidentes_SinVerLosDemas()
+    {
+        // CJ (2026-10-07, 2.2): los datos de contacto son compartidos y los cambia cualquiera que gestione a alguno de sus residentes.
+        var adminOne = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var unitTwo = await AdministracionResidentesTests.AddUnitAsync(adminOne.CenterId);
+        var adminTwo = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, adminOne.CenterId, unitTwo);
+        var residentOne = await CreateResidentAsync(adminOne, "Residente Unidad Uno");
+        var residentTwo = await CreateResidentAsync(adminOne, "Residente Unidad Dos", unitTwo);
+        var familyId = Guid.NewGuid();
+        var linkOne = (await Build(adminOne.ExternalSubject).AddFamilyMemberAsync(Add(adminOne, residentOne, familyId, "Hija Compartida"))).Value;
+        var linkTwo = Guid.NewGuid();
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.residentes_familiares (id, centro_id, residente_id, familiar_id, relacion, vinculado_por_cuenta_id, vinculado_en)
+                VALUES (@linkTwo, @centerId, @residentId, @familyId, 'Hija', @accountId, SYSUTCDATETIME())
+                """, new { linkTwo, centerId = adminOne.CenterId.Value, residentId = residentTwo.Value, familyId, accountId = adminOne.AccountId.Value });
+        }
+
+        var version = new FamilyMemberData("Hija Compartida", "Hija", "600 123 456", null).Version;
+        var edited = await Build(adminTwo.ExternalSubject).UpdateFamilyMemberAsync(new UpdateFamilyMemberCommand(
+            adminTwo.ProfileScopeId, adminTwo.CenterId, residentTwo, linkTwo, "Hija Compartida", "Hija", "699 000 111", null, version));
+        var throughOtherLink = await Build(adminTwo.ExternalSubject).UpdateFamilyMemberAsync(new UpdateFamilyMemberCommand(
+            adminTwo.ProfileScopeId, adminTwo.CenterId, residentOne, linkOne, "Hija Compartida", "Hija", "699 000 222", null, version));
+        var otherResident = await Build(adminTwo.ExternalSubject).FindResidentAsync(
+            new FindAdministrativeResidentQuery(adminTwo.ProfileScopeId, adminTwo.CenterId, residentOne));
+
+        Assert.True(edited.Ok, edited.Error?.Message);
+        Assert.Equal("699 000 111", Assert.Single((await DetailAsync(adminOne, residentOne)).Family).Phone);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, throughOtherLink.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, otherResident.Error!.Code);
+    }
+
+    [Fact]
     public async Task Editar_CambiaLosDatos_YRechazaSinCambiosOFamiliarAjeno()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);

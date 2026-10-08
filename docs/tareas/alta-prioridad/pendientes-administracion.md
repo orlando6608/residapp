@@ -379,7 +379,7 @@ Huecos de lo ya construido:
     escribe para cada residente; vincular no abre la autorización (FAM-01); un par ya vinculado es conflicto y cualquier otro motivo, acceso denegado;
     el identificador del formulario es el del vínculo (un reenvío no duplica). Los datos de contacto son compartidos: editarlos desde un residente
     cambia a todos, y la pantalla de edición avisa con el número de otros residentes (`ResidentFamilyMember.OtherResidentLinks`), sin decir cuáles.
-    **Quedan abiertos:** desvincular, y que quien edita un familiar compartido no ve ni controla los residentes ajenos a su ámbito. Preguntados
+    **Resuelto por CJ (2026-10-07):** desvincular (2.1, hecho en `0045`) y que quien edita un familiar compartido no ve los residentes ajenos a su ámbito (2.2, opción A: «está bien así», lo cambia cualquiera que gestione a alguno de sus residentes; fijado con `FamiliarEnUnidadesDistintas_LoEditaCualquieraQueGestioneAAlgunoDeSusResidentes_SinVerLosDemas`). Preguntados
     a CJ, con la confirmación del filtro por ámbito, en `docs/pendientes-cj/administracion-ambito-familiares-cargos.html` (tema 2).
 
 ## Guardado para el futuro (CJ, 2026-10-07)
