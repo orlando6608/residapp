@@ -257,9 +257,9 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var first = await QueryAsync(residentOne, "CONTINUIDAD_ASISTENCIAL", "Revisión de un seguimiento vencido (prueba funcional).");
         var openAfterFirst = await OpenDeclarationsAsync();
         var minutes = await connection.ExecuteScalarAsync<int>("""
-            SELECT DATEDIFF(MINUTE, d.creada_en, d.caduca_en) FROM dbo.declaraciones_acceso_clinico d
-             WHERE d.id = (SELECT TOP 1 id FROM dbo.declaraciones_acceso_clinico ORDER BY creada_en DESC)
-               AND d.residente_id = @residentOne
+            SELECT TOP 1 DATEDIFF(MINUTE, d.creada_en, d.caduca_en) FROM dbo.declaraciones_acceso_clinico d
+             WHERE d.residente_id = @residentOne
+             ORDER BY d.creada_en DESC
             """, new { residentOne });
         var rememberedPage = WebUtility.HtmlDecode(await direccion.GetStringAsync($"/Baseline/Direction?residenteId={residentOne}"));
         var reused = await QueryAsync(residentOne, null, null);
