@@ -818,20 +818,24 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
 
         var rows = await connection.QueryAsync<FamilyCommunicationRow>(new CommandDefinition($"""
             SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
-                   unit.nombre_visible AS UnitName, family.tipo_codigo AS TypeCode, family.texto AS Text, family.preparado_en AS PreparedAt
+                   unit.nombre_visible AS UnitName, family.tipo_codigo AS TypeCode, family.texto AS Text, family.preparado_en AS PreparedAt,
+                   (SELECT early.publicada_en FROM dbo.comunicaciones_familiares_publicacion_anticipada early
+                     WHERE early.comunicacion_id = family.id) AS PublishedEarlyAt
             {ScopedEventsFrom}
-               AND family.estado_codigo = 'PENDIENTE_APROBACION'
-             ORDER BY family.preparado_en ASC
-            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+               AND family.id IS NOT NULL AND family.preparado_en >= @Since
+             ORDER BY family.preparado_en DESC
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, Since = DateTime.UtcNow.AddDays(-30) }, cancellationToken: ct));
 
         return rows.Select(r => new PendingFamilyCommunicationSummary(
             r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName,
             new PreparedFamilyCommunication(
-                EnumCode.ParseCode<FamilyCommunicationType>(r.TypeCode), r.Text, new DateTimeOffset(r.PreparedAt, TimeSpan.Zero)))).ToList();
+                EnumCode.ParseCode<FamilyCommunicationType>(r.TypeCode), r.Text, new DateTimeOffset(r.PreparedAt, TimeSpan.Zero)),
+            r.PublishedEarlyAt is { } early ? new DateTimeOffset(early, TimeSpan.Zero) : null)).ToList();
     }
 
     private sealed record FamilyCommunicationRow(
-        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string TypeCode, string Text, DateTime PreparedAt);
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string TypeCode, string Text, DateTime PreparedAt,
+        DateTime? PublishedEarlyAt);
 
     private sealed record RangeRow(string Code, decimal? Min, decimal? Max);
 

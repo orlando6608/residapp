@@ -6,7 +6,7 @@ namespace ResidApp.Application.UseCases;
 
 public sealed record ListPendingFamilyCommunicationsCommand(Guid AmbitoPerfilId, CenterId CentroId);
 
-/// <summary>Comunicaciones familiares preparadas al cerrar un evento y pendientes de aprobación humana,
+/// <summary>Comunicaciones familiares preparadas al cerrar un evento en los últimos 30 días, con su estado de publicación,
 /// dentro del mismo ámbito que las bandejas (tarjeta "Comunicaciones" de ENF-01).</summary>
 public sealed class ListPendingFamilyCommunications(
     IProfileScopeDirectoryProvider scopes, IChangeInboxDirectory directory, ISessionIdentityProvider session)

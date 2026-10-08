@@ -813,7 +813,7 @@ public sealed class MedicinaController(
         if (result.Ok)
         {
             TempData["Mensaje"] = preparar
-                ? "Evento cerrado. Enfermería no tiene que cerrarlo. La comunicación familiar queda pendiente de aprobación."
+                ? "Evento cerrado. Enfermería no tiene que cerrarlo. La comunicación familiar queda programada para su publicación."
                 : "Evento cerrado. Enfermería no tiene que cerrarlo.";
             return RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
         }

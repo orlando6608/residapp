@@ -49,7 +49,7 @@ public sealed class EnfermeriaController(
             ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
-            comunicaciones.Ok ? comunicaciones.Value!.Count : 0,
+            comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.Communication.PreparedAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow, TimeZoneInfo.Local)) : 0,
             indicaciones.Ok ? indicaciones.Value!.Count : 0,
             indicaciones.Ok ? indicaciones.Value!.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) : 0,
             protocolos.Ok ? protocolos.Value!.Count : 0,
@@ -946,7 +946,7 @@ public sealed class EnfermeriaController(
         if (result.Ok)
         {
             TempData["Mensaje"] = preparar
-                ? "Evento cerrado. La comunicación familiar queda pendiente de aprobación."
+                ? "Evento cerrado. La comunicación familiar queda programada para su publicación."
                 : "Evento cerrado.";
             return RedirectToAction(nameof(DetalleCambio), new { eventoId = form.EventoId });
         }

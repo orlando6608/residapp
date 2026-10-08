@@ -808,6 +808,54 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         return Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
     }
 
+    [Fact]
+    public async Task Administracion_VeLosComunicadosAFamiliasYLosPublicaAntes_ConLaAppEntera()
+    {
+        // CJ (2026-10-07): el comunicado se aprueba al guardarlo, sale a una hora fija tras 1 h de margen y Administración puede publicarlo
+        // antes. Con el usuario limitado: lee y escribe bajo la seguridad por filas (script 0048).
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Comunicado Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Evento para un comunicado (prueba funcional).",
+            ["Clasificacion"] = "Ordinario",
+        }))).EnsureSuccessStatusCode();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.comunicaciones_familiares (id, evento_id, residente_id, centro_id, tipo_codigo, texto, preparado_por_cuenta_id, preparado_en)
+            SELECT NEWID(), ea.id, ea.residente_id, ea.centro_id, 'ORDINARIA', 'Hoy ha estado tranquila y ha comido bien.', account.id, SYSUTCDATETIME()
+              FROM dbo.eventos_asistenciales ea JOIN dbo.cuentas account ON account.sujeto_externo = @subject
+             WHERE ea.residente_id = @residentId
+            """, new { subject = seed.ExternalSubject, residentId });
+
+        var home = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion"));
+        var page = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/Comunicados"));
+        var communicationId = Regex.Match(page, "name=\"comunicadoId\" value=\"([0-9a-f-]{36})\"").Groups[1].Value;
+        var published = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/PublicarComunicado", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["comunicadoId"] = communicationId,
+        }))).Content.ReadAsStringAsync());
+        var nursePage = WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/Comunicaciones"));
+
+        Assert.Contains("Comunicados a la familia", home);
+        Assert.Contains("Hoy ha estado tranquila y ha comido bien.", page);
+        Assert.Contains("Se publica el", page);
+        Assert.Contains("Publicar ahora", page);
+        Assert.Contains("Comunicado publicado antes de su hora.", published);
+        Assert.Contains("Publicado antes de su hora", published);
+        Assert.DoesNotContain("Publicar ahora", published);
+        Assert.Contains("Publicada antes de su hora", nursePage);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.comunicaciones_familiares_publicacion_anticipada WHERE comunicacion_id = @communicationId", new { communicationId }));
+    }
+
     /// <summary>Una cuenta de Auxiliar con los residentes dados asignados, en el centro y la unidad de la semilla.</summary>
     private static async Task<string> GrantAuxiliarAsync(
         (string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed, params string[] residentIds)

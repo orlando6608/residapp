@@ -37,7 +37,7 @@ public sealed record AssessmentCorrectionSummary(string Reason, DateTimeOffset C
 
 public sealed record AssessmentRectificationSummary(string Text, string Reason, DateTimeOffset RecordedAt);
 
-/// <summary>ENF-15: comunicación familiar preparada al cerrar, pendiente de aprobación humana. Ante la
+/// <summary>ENF-15: comunicación familiar preparada al cerrar; quien la prepara la aprueba al guardarla. Ante la
 /// familia se firma siempre como FamilyCommunicationChoice.VisibleAuthor, nunca con el profesional.</summary>
 public sealed record PreparedFamilyCommunication(FamilyCommunicationType Type, string Text, DateTimeOffset PreparedAt);
 
@@ -47,10 +47,11 @@ public sealed record ClinicalEventClosure(
     bool ClosedByCurrentAccount, DateTimeOffset ClosedAt, FamilyCommunicationDecision Decision,
     PreparedFamilyCommunication? Communication, bool ClosedBySystemForDeath = false);
 
-/// <summary>Una comunicación familiar pendiente de aprobación en el ámbito (tarjeta "Comunicaciones" de
-/// ENF-01), con el evento del que procede.</summary>
+/// <summary>Una comunicación familiar de los últimos 30 días en el ámbito (tarjeta "Comunicaciones" de
+/// ENF-01), con el evento del que procede. Aprobada al guardarla; PublishedEarlyAt es cuando Administración la publicó antes de su hora.</summary>
 public sealed record PendingFamilyCommunicationSummary(
-    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, PreparedFamilyCommunication Communication);
+    Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, PreparedFamilyCommunication Communication,
+    DateTimeOffset? PublishedEarlyAt = null);
 
 /// <summary>ENF-08/ENF-09: una acción sobre un seguimiento, con su autoría (solo si fue la cuenta del ámbito
 /// que consulta). Según el tipo trae el texto, el plan reprogramado, el equipo entrante o la transferencia
