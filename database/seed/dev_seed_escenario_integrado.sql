@@ -213,6 +213,19 @@ BEGIN
 END
 GO
 
+/*
+ * Añadido después (2026-10-08): 'dev-integrado-administracion' es la Administración principal de su centro (script 0047), para poder
+ * añadirse unidades del centro desde la aplicación. Idempotente.
+ */
+INSERT INTO dbo.administraciones_principales_cambios (id, centro_id, ambito_perfil_id, numero, principal, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+SELECT NEWID(), profile.centro_id, profile.id, 1, 1, profile.cuenta_id, 'ADMINISTRACION', SYSUTCDATETIME()
+  FROM dbo.cuentas account
+  JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id AND profile.perfil_codigo = 'ADMINISTRACION' AND profile.estado = 'ACTIVE'
+ WHERE account.sujeto_externo = 'dev-integrado-administracion'
+   AND profile.centro_id = 'A1000000-0000-0000-0000-000000000001'
+   AND NOT EXISTS (SELECT 1 FROM dbo.administraciones_principales_cambios existing WHERE existing.ambito_perfil_id = profile.id);
+GO
+
 SELECT
     account.sujeto_externo AS ExternalSubject,
     profile.perfil_codigo AS Perfil,

@@ -331,6 +331,23 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.DoesNotContain("Dar de alta un centro con su primera unidad", adminHome);
         Assert.Contains("No se puede acceder a esta operación", adminPlatform);
         Assert.DoesNotContain("Nuevo centro", adminPlatform);
+        // El soporte ve las Administraciones del centro nuevo (la primera es la principal) y puede quitarle la marca.
+        using var platformConnection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        var newCenterId = await platformConnection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.centros WHERE codigo = @code", new { code = $"FUNC-{suffix}".ToUpperInvariant() });
+        var centerPage = WebUtility.HtmlDecode(await client.GetStringAsync($"/Plataforma/Centro?centroId={newCenterId}"));
+        var scopeId = await platformConnection.ExecuteScalarAsync<Guid>(
+            "SELECT id FROM dbo.ambitos_perfil WHERE centro_id = @newCenterId AND perfil_codigo = 'ADMINISTRACION'", new { newCenterId });
+        var unmarked = WebUtility.HtmlDecode(await (await client.PostAsync("/Plataforma/MarcarPrincipal", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(centerPage, "__RequestVerificationToken"),
+            ["centroId"] = newCenterId.ToString(),
+            ["ambitoId"] = scopeId.ToString(),
+            ["principal"] = "false",
+        }))).Content.ReadAsStringAsync());
+        Assert.Contains("Admin Funcional (ficticio)", centerPage);
+        Assert.Contains("Quitar la marca de principal", centerPage);
+        Assert.Contains("Ya no es Administración principal.", unmarked);
+        Assert.Contains("Marcar como Administración principal", unmarked);
     }
 
     /// <summary>Una cuenta con el perfil Plataforma, que vive en el centro reservado.</summary>
@@ -566,6 +583,42 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
 
     private static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
+
+    [Fact]
+    public async Task AdministracionPrincipal_VeLasUnidadesDelCentroYSeAnadeUna_ConLaAppEntera()
+    {
+        // Con el usuario limitado: la lista de unidades del centro y la ampliación del propio ámbito (ambitos_perfil_unidad, auditoría).
+        var admin = await SeedAdministratorAsync();
+        var secondUnit = Guid.NewGuid();
+        using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.unidades (id, centro_id, codigo, nombre_visible, estado, creado_en)
+            SELECT @secondUnit, centro_id, @code, @code, 'ACTIVE', SYSUTCDATETIME() FROM dbo.unidades WHERE id = @unitId;
+            INSERT INTO dbo.administraciones_principales_cambios (id, centro_id, ambito_perfil_id, numero, principal, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            SELECT NEWID(), centro_id, id, 1, 1, cuenta_id, 'ADMINISTRACION', SYSUTCDATETIME() FROM dbo.ambitos_perfil WHERE cuenta_id = @accountId;
+            """, new { secondUnit, code = $"SEGUNDA-{secondUnit:N}"[..20], unitId = admin.UnitId, accountId = admin.AccountId });
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = admin.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync("/Administracion/AmbitoCentro"));
+        var added = WebUtility.HtmlDecode(await (await client.PostAsync("/Administracion/AnadirUnidadAlAmbito", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["unidadId"] = secondUnit.ToString(),
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Eres la Administración principal del centro", page);
+        Assert.Contains("Fuera de tu ámbito", page);
+        Assert.Contains("Unidad añadida a tu ámbito.", added);
+        Assert.DoesNotContain("Fuera de tu ámbito", added);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @accountId AND accion_codigo = 'ADMIN_SCOPE_UNIT_ADD'", new { accountId = admin.AccountId }));
+    }
 
     [Fact]
     public async Task PlazosDeLosHitos_DireccionConPermisoLosGuarda_ConLaAppEntera()

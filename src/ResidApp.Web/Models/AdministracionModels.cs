@@ -289,7 +289,7 @@ public sealed record GrantAccountProfileViewModel(
 /// revocado y en Familiar.</summary>
 public sealed record AccountProfileViewModel(
     ProfessionalAccountDetail Detail, AccountProfileScope Profile, IReadOnlyList<ScopeUnit> AdministratorUnits,
-    IReadOnlyList<AssignableResident> AssignableResidents)
+    IReadOnlyList<AssignableResident> AssignableResidents, bool ViewerIsPrincipal = false)
 {
     public bool CanChange => !Detail.IsOwnAccount && Profile.Active && ProfessionalAccount.IsGrantable(Profile.Profile);
 
@@ -366,3 +366,6 @@ public sealed class UnlinkFamilyFormModel
 }
 
 public sealed record UnlinkFamilyViewModel(AdministrativeResidentSummary Resident, ResidentFamilyMember Member, UnlinkFamilyFormModel Form);
+
+/// <summary>CJ, 2026-10-07: las unidades del centro vistas por una Administración y si esta es la principal.</summary>
+public sealed record AdministrationScopeViewModel(ResidApp.Application.UseCases.AdministrationScopeView View);

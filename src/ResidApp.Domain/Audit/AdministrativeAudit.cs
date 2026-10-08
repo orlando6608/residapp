@@ -27,6 +27,8 @@ public static class AdministrativeAudit
         ("PROFILE_SCOPE_GRANT", AuditCategory.PerfilesYPermisos),
         ("PROFILE_SCOPE_REVOKE", AuditCategory.PerfilesYPermisos),
         ("PROFILE_UNIT_GRANT", AuditCategory.PerfilesYPermisos),
+        ("ADMIN_SCOPE_UNIT_ADD", AuditCategory.PerfilesYPermisos),
+        ("ADMIN_PRINCIPAL_SET", AuditCategory.PerfilesYPermisos),
         ("PROFILE_UNIT_REVOKE", AuditCategory.PerfilesYPermisos),
         ("PROFILE_RESIDENT_GRANT", AuditCategory.PerfilesYPermisos),
         ("PROFILE_RESIDENT_REVOKE", AuditCategory.PerfilesYPermisos),

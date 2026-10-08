@@ -74,6 +74,62 @@ public sealed class PlataformaController(PlatformApplicationService service) : C
         return View(new NewCenterViewModel(form));
     }
 
+    /// <summary>CJ, 2026-10-07 (administracion-ambito-familiares-cargos, 1.1): un centro con sus unidades y sus Administraciones, para marcar la
+    /// principal y añadir unidades a una Administración. Sin residentes ni contenido clínico.</summary>
+    public async Task<IActionResult> Centro(Guid centroId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Centro), new { centroId }) });
+        }
+
+        var result = await service.FindCenterAsync(new PlatformCenterQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(centroId)), ct);
+        return result.Ok ? View(result.Value) : RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarcarPrincipal(Guid centroId, Guid ambitoId, bool principal, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await service.SetAdministrationPrincipalAsync(new SetPlatformAdministrationPrincipalCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(centroId), ambitoId, principal), ct);
+        TempData[result.Ok ? "Mensaje" : "Error"] = result.Ok
+            ? (principal ? "Marcada como Administración principal." : "Ya no es Administración principal.")
+            : (result.Error!.Code == ApplicationFailureCode.Conflict ? "Ese perfil ya estaba así. Revisa el centro." : result.Error.Message);
+        return RedirectToAction(nameof(Centro), new { centroId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AnadirUnidad(Guid centroId, Guid ambitoId, Guid unidadId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await service.AddUnitToAdministrationAsync(new AddUnitToAdministrationCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(centroId), ambitoId, UnitId.From(unidadId)), ct);
+        TempData[result.Ok ? "Mensaje" : "Error"] = result.Ok
+            ? "Unidad añadida al ámbito de esa Administración. Queda en la auditoría."
+            : (result.Error!.Code switch
+            {
+                ApplicationFailureCode.Conflict => "Esa Administración ya tiene la unidad.",
+                ApplicationFailureCode.InvalidInput => "Esa unidad no existe o no está activa en el centro.",
+                _ => result.Error.Message,
+            });
+        return RedirectToAction(nameof(Centro), new { centroId });
+    }
+
     private static PlatformQuery Query(ActiveProfileScopeCookieValue activeScope) =>
         new(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId));
 }

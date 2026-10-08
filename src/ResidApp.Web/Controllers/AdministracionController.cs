@@ -21,7 +21,7 @@ public sealed partial class AdministracionController(
     AdministracionApplicationService service, ResidentTransferApplicationService transfers, ResidentStatusApplicationService statuses,
     ListActiveScopeUnits listUnits,
     ListActiveScopeLocations listLocations, AdministracionEstructuraApplicationService estructura,
-    AdministracionTurnosApplicationService turnos) : Controller
+    AdministracionTurnosApplicationService turnos, AdministrationScopeApplicationService scopeAdmin) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -742,7 +742,10 @@ public sealed partial class AdministracionController(
             return detail is null ? RedirectToAction(nameof(Usuarios)) : RedirectToAction(nameof(Usuario), new { cuentaId });
         }
 
-        var model = new AccountProfileViewModel(detail!, profile, await AdministratorUnitsAsync(activeScope, ct), []);
+        var scopeView = profile.Profile == SystemProfile.Administracion
+            ? await scopeAdmin.ReadAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct)
+            : null;
+        var model = new AccountProfileViewModel(detail!, profile, await AdministratorUnitsAsync(activeScope, ct), [], scopeView is { Ok: true } && scopeView.Value!.IsPrincipal);
         if (model.CanChange && profile.Profile == SystemProfile.Auxiliar)
         {
             var residents = await service.ListAssignableResidentsAsync(new FindProfessionalAccountQuery(

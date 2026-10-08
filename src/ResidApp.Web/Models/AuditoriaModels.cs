@@ -35,6 +35,8 @@ public static class AuditActionDisplay
         ["PROFILE_SCOPE_GRANT"] = "Perfil concedido",
         ["PROFILE_SCOPE_REVOKE"] = "Perfil revocado",
         ["PROFILE_UNIT_GRANT"] = "Unidad concedida a un perfil",
+        ["ADMIN_SCOPE_UNIT_ADD"] = "Unidad añadida al ámbito de una Administración",
+        ["ADMIN_PRINCIPAL_SET"] = "Marca de Administración principal cambiada",
         ["PROFILE_UNIT_REVOKE"] = "Unidad revocada a un perfil",
         ["PROFILE_RESIDENT_GRANT"] = "Residente asignado a un perfil",
         ["PROFILE_RESIDENT_REVOKE"] = "Residente retirado de un perfil",
