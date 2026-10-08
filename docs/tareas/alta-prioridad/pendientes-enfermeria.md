@@ -291,13 +291,13 @@ Huecos de lo ya construido:
   transferencias anteriores conservan su texto. El equipo responsable sigue siendo la Enfermería de la unidad del evento. La fecha prevista es solo
   fecha (sin hora) y vence al día siguiente. Desde el 2026-10-02 la recepción solo la confirman los miembros vigentes del equipo entrante; si el equipo no
   tiene miembros (o la transferencia es anterior a `0028`), la confirma cualquiera del ámbito. Sigue sin mirar el turno planificado. Las dos cosas
-  están preguntadas a CJ en `docs/pendientes-cj/continuidad-supervision-comunicacion.html` (tema 1).
+  están preguntadas a CJ en `docs/pendientes-cj/archivados/continuidad-supervision-comunicacion.html` (tema 1).
 - **Comunicación familiar (historia 3)**: solo se guarda la comunicación preparada, pendiente de
   aprobación. Quedan para Portal Familiar / Administración: aprobarla o volver a editarla (ENF-15), la
   audiencia autorizada (ENF-14), el momento de publicación y la publicación. `comunicaciones_familiares`
   es hoy inmutable (`TR_cf_immutable`); la aprobación tendrá que sustituir ese trigger por una guarda de
   transiciones. Queda por decidir con CJ quién aprueba (el PRD, ENF-12, dice que Enfermería "puede
-  aprobar el texto familiar separado"). Preguntado en `docs/pendientes-cj/continuidad-supervision-comunicacion.html` (tema 5).
+  aprobar el texto familiar separado"). Preguntado en `docs/pendientes-cj/archivados/continuidad-supervision-comunicacion.html` (tema 5).
 - Los borradores de valoración anteriores a `0009` solo tienen una versión (su contenido en ese momento):
   las versiones intermedias previas no se guardaron.
 - **Rangos de referencia de constantes (fase 1 hecha; valores de CJ incorporados el 2026-10-07)**: CJ respondió el
