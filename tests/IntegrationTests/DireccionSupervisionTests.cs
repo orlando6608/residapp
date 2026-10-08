@@ -4,6 +4,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Supervision;
 using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Persistence;
@@ -21,7 +22,7 @@ public class DireccionSupervisionTests
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory),
         new SqlSupervisionDirectory(TestDatabase.ConnectionFactory),
         new FixedDireccionSessionIdentityProvider(externalSubject),
-        new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory));
+        new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory), new SqlProcessDeadlineRepository(TestDatabase.ConnectionFactory));
 
     /// <summary>Un centro con una unidad, una cuenta de Dirección y una de Enfermería, y un residente.</summary>
     private static async Task<(SeededProfile Direccion, SeededProfile Enfermera, ResidentId ResidentId)> SeedCenterAsync()
@@ -259,6 +260,9 @@ public class DireccionSupervisionTests
         Assert.True((await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
             enfermera.ProfileScopeId, enfermera.CenterId, rescheduled.EventId, rescheduled.Revision, FollowUpActionType.Reprogramacion,
             "Persiste el cuadro.", today.AddDays(7)))).Ok);
+        // Escalar a Medicina no cierra el episodio ni el seguimiento (CJ, 2026-10-07): sigue abierto y pendiente.
+        var escalated = await FollowUpAsync("Seguimiento escalado a Medicina.", today.AddDays(-1));
+        Assert.True((await service.EscalateClinicalEventAsync(EscalateCommand(enfermera, escalated.EventId, escalated.Revision))).Ok);
         var closed = await FollowUpAsync("Seguimiento cerrado hoy.", today.AddDays(-1));
         Assert.True((await service.CloseClinicalEventAsync(CloseCommand(enfermera, closed.EventId, closed.Revision, Guid.NewGuid()))).Ok);
         var dir = BuildDireccion(direccion.ExternalSubject);
@@ -269,12 +273,112 @@ public class DireccionSupervisionTests
         var before = (await dir.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(
             direccion.ProfileScopeId, direccion.CenterId, today.AddDays(-5), today.AddDays(-3)))).Value!.Total;
 
-        // Hoy: el vencido, el reprogramado hoy (empezó el día con el plan vencido) y el cerrado hoy (ese día seguía vencido); el de plazo, no.
-        Assert.Equal((4, 3), (inToday.FollowUpsOpen, inToday.FollowUpsOverdue));
-        // Mañana: ya no está abierto el cerrado; el reprogramado tiene plazo; solo sigue vencido el primero.
-        Assert.Equal((3, 1), (inTomorrow.FollowUpsOpen, inTomorrow.FollowUpsOverdue));
+        // Hoy: el vencido, el escalado, el reprogramado hoy (empezó el día con el plan vencido) y el cerrado hoy (ese día seguía vencido); el de plazo, no.
+        Assert.Equal((5, 4), (inToday.FollowUpsOpen, inToday.FollowUpsOverdue));
+        // Mañana: ya no está abierto el cerrado; el reprogramado tiene plazo; siguen vencidos el primero y el escalado.
+        Assert.Equal((4, 2), (inTomorrow.FollowUpsOpen, inTomorrow.FollowUpsOverdue));
         Assert.Equal((0, 0), (before.FollowUpsOpen, before.FollowUpsOverdue));
         _ = notDue;
+    }
+
+    [Fact]
+    public async Task Derivaciones_LasDeEpisodiosCerradosSoloSalenSiSePideElPeriodo()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var open = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
+        Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, open, await StartAndSaveAsync(enfermera, open)))).Ok);
+        var closed = await RegisterAsync(enfermera, residentId, "Dolor torácico.");
+        var revision = (await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, closed, await StartAndSaveAsync(enfermera, closed)))).Value;
+        revision = (await service.SignReferralReportAsync(SignCommand(enfermera, closed, revision, Guid.NewGuid()))).Value;
+        revision = (await service.RecordFamilyCallAttemptAsync(CallCommand(enfermera, closed, revision))).Value;
+        var closing = await service.CloseClinicalEventAsync(CloseCommand(enfermera, closed, revision, Guid.NewGuid(),
+            FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Relevante, "Ha sido trasladado a Urgencias."));
+        Assert.True(closing.Ok, closing.Error?.Message);
+        var dir = BuildDireccion(direccion.ExternalSubject);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        var onlyOpen = (await dir.ListReferralsAsync(Query(direccion))).Value!;
+        var withClosed = (await dir.ListReferralsAsync(Query(direccion), today, today)).Value!;
+        var otherPeriod = (await dir.ListReferralsAsync(Query(direccion), today.AddDays(-10), today.AddDays(-5))).Value!;
+        var half = await dir.ListReferralsAsync(Query(direccion), today, null);
+        var reversed = await dir.ListReferralsAsync(Query(direccion), today, today.AddDays(-1));
+
+        Assert.Equal([open], onlyOpen.Select(r => r.EventId));
+        Assert.Equal([closed, open], withClosed.Select(r => r.EventId));   // el más reciente primero
+        Assert.True(withClosed[0].Closed);
+        Assert.NotNull(withClosed[0].ClosedAt);
+        Assert.False(withClosed[1].Closed);
+        Assert.Equal([open], otherPeriod.Select(r => r.EventId));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, half.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, reversed.Error!.Code);
+    }
+
+    [Fact]
+    public async Task Calidad_MideLosHitosDelProceso_PorUnidad_SinSalirseDelAmbito()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var medica = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, direccion.CenterId, direccion.UnitId);
+        var service = BuildService(enfermera.ExternalSubject);
+        // Escalado, valorado por Medicina y con una indicación sin leer: valoración médica hecha; lectura y realización, pendientes.
+        var escalated = await RegisterAsync(enfermera, residentId, "Disnea progresiva.");
+        var revision = await StartAndSaveAsync(enfermera, escalated);
+        Assert.True((await service.EscalateClinicalEventAsync(EscalateCommand(enfermera, escalated, revision))).Ok);
+        revision = await MedicinaApplicationServiceTests.StartAndSaveMedicalAsync(medica, escalated);
+        Assert.True((await MedicinaApplicationServiceTests.BuildMedicina(medica.ExternalSubject).RegisterMedicalIndicationAsync(
+            MedicinaApplicationServiceTests.Indication(medica, escalated, revision))).Ok);
+        // Protocolo urgente con informe firmado y una llamada: informe y llamada hechos a los pocos segundos.
+        var urgent = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
+        revision = (await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, urgent, await StartAndSaveAsync(enfermera, urgent)))).Value;
+        revision = (await service.SignReferralReportAsync(SignCommand(enfermera, urgent, revision, Guid.NewGuid()))).Value;
+        Assert.True((await service.RecordFamilyCallAttemptAsync(CallCommand(enfermera, urgent, revision))).Ok);
+        // Un protocolo sin informe todavía: pendiente (en plazo, de momento).
+        var unsigned = await RegisterAsync(enfermera, residentId, "Dolor torácico.");
+        Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, unsigned, await StartAndSaveAsync(enfermera, unsigned)))).Ok);
+        // Otro centro: no cuenta.
+        var (_, otraEnfermera, otroResidente) = await SeedCenterAsync();
+        var foreign = await RegisterAsync(otraEnfermera, otroResidente, "Disnea.");
+        Assert.True((await BuildService(otraEnfermera.ExternalSubject).ActivateUrgentProtocolAsync(
+            ActivateCommand(otraEnfermera, foreign, await StartAndSaveAsync(otraEnfermera, foreign)))).Ok);
+        var dir = BuildDireccion(direccion.ExternalSubject);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        var result = await dir.ReadProcessQualityAsync(new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today));
+        var asNurse = await BuildDireccion(enfermera.ExternalSubject).ReadProcessQualityAsync(
+            new ReadSupervisionIndicatorsQuery(enfermera.ProfileScopeId, enfermera.CenterId, today, today));
+        var reversed = await dir.ReadProcessQualityAsync(new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today.AddDays(-1)));
+
+        Assert.True(result.Ok, result.Error?.Message);
+        var total = result.Value!.Total;
+        // Los hitos empezaron hace segundos: todos dentro de plazo, ninguno vencido ni a punto de vencer.
+        Assert.Equal(new MilestoneCount(1, 0, 0), total[ProcessMilestone.ValoracionMedica]);
+        Assert.Equal(new MilestoneCount(2, 0, 0), total[ProcessMilestone.InformeDerivacion]);
+        Assert.Equal(new MilestoneCount(2, 0, 0), total[ProcessMilestone.LlamadaFamilia]);
+        Assert.Equal(new MilestoneCount(1, 0, 0), total[ProcessMilestone.LecturaIndicacion]);
+        Assert.Equal(new MilestoneCount(1, 0, 0), total[ProcessMilestone.RealizacionIndicacion]);
+        Assert.Equal(new MilestoneCount(0, 0, 0), total[ProcessMilestone.RecepcionTransferencia]);
+        Assert.Empty(result.Value.Exceptions);
+        var unit = Assert.Single(result.Value.Units);
+        Assert.Equal(direccion.UnitId, unit.UnitId);
+        Assert.Equal(total[ProcessMilestone.InformeDerivacion], unit.Counts[ProcessMilestone.InformeDerivacion]);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, asNurse.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, reversed.Error!.Code);
+
+        // Los mismos hitos vistos desde la bandeja de Enfermería y de Medicina (avisos al equipo responsable): cada uno ve los de su ámbito.
+        var inbox = new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory);
+        var from = DateTime.UtcNow.AddDays(-1);
+        var to = DateTime.UtcNow.AddMinutes(5);
+        var byNursing = await inbox.ListMilestoneFactsAsync(enfermera.ProfileScopeId, enfermera.CenterId, from, to);
+        var byMedicine = await inbox.ListMilestoneFactsAsync(medica.ProfileScopeId, medica.CenterId, from, to);
+        var foreignScope = await inbox.ListMilestoneFactsAsync(enfermera.ProfileScopeId, CenterId.From(Guid.NewGuid()), from, to);
+
+        Assert.Equal(2, byNursing.Count(f => f.Milestone == ProcessMilestone.InformeDerivacion && f.Responsible == SystemProfile.Enfermeria));
+        Assert.Equal(1, byNursing.Count(f => f.Milestone == ProcessMilestone.ValoracionMedica && f.Responsible == SystemProfile.Medicina));
+        // Medicina solo ve los eventos escalados (o suyos): la valoración médica y las indicaciones, no los protocolos de Enfermería.
+        Assert.Equal(1, byMedicine.Count(f => f.Milestone == ProcessMilestone.ValoracionMedica));
+        Assert.Equal(1, byMedicine.Count(f => f.Milestone == ProcessMilestone.LecturaIndicacion));
+        Assert.DoesNotContain(byMedicine, f => f.Milestone == ProcessMilestone.InformeDerivacion);
+        Assert.Empty(foreignScope);
     }
 
     [Fact]

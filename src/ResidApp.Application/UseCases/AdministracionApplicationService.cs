@@ -25,7 +25,7 @@ public sealed record CorrectResidentIdentityCommand(
 /// familiar, así que un reenvío no lo duplica.</summary>
 public sealed record AddFamilyMemberCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid OperacionId, string? NombreVisible, string? Relacion,
-    string? Telefono, string? Correo);
+    string? Telefono, string? Correo, bool Referente = false, bool TutorLegal = false);
 
 /// <summary>Vincular al residente un familiar que ya existe (ver LinkableFamilyMember). OperacionId nace con el formulario y es el
 /// identificador del vínculo, así que un reenvío no lo duplica; Relacion es la de este residente.</summary>
@@ -35,17 +35,20 @@ public sealed record LinkFamilyMemberCommand(
 /// <summary>VersionEsperada es FamilyMemberData.Version de los datos que enseñaba la pantalla al abrirla.</summary>
 public sealed record UpdateFamilyMemberCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string? NombreVisible, string? Relacion,
-    string? Telefono, string? Correo, string VersionEsperada);
+    string? Telefono, string? Correo, string VersionEsperada, bool Referente = false, bool TutorLegal = false);
+
+/// <summary>CJ, 2026-10-07: Motivo es obligatorio.</summary>
+public sealed record UnlinkFamilyMemberCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string? Motivo);
 
 /// <summary>ADM-10/ADM-11 (0022): CambiosEsperados es cuántos cambios tenía la autorización al abrir la pantalla.</summary>
 public sealed record ChangeFamilyAuthorizationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, FamilyAuthorizationChange Cambio,
     DateOnly? ValidaHasta, string? Motivo, int CambiosEsperados);
 
-/// <summary>ADM-08 (0022): VinculoId null quita el contacto urgente; DesignacionesEsperadas es cuántas designaciones
+/// <summary>ADM-08 (0022, 0044): VinculosIds son los contactos urgentes que quedan (vacío: ninguno); DesignacionesEsperadas es cuántas designaciones
 /// tenía el residente al abrir la pantalla.</summary>
 public sealed record DesignateEmergencyContactCommand(
-    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid? VinculoId, int DesignacionesEsperadas);
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, IReadOnlyList<Guid> VinculosIds, int DesignacionesEsperadas);
 
 /// <summary>ADM-13 (0023): una cuenta del centro, vista por quien la gestiona.</summary>
 public sealed record FindProfessionalAccountQuery(Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId);
@@ -133,7 +136,7 @@ public sealed class AdministracionApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
-            var data = FamilyMember.Validate(command.NombreVisible, command.Relacion, command.Telefono, command.Correo);
+            var data = FamilyMember.Validate(command.NombreVisible, command.Relacion, command.Telefono, command.Correo, command.Referente, command.TutorLegal);
             return await families.AddAsync(target, command.OperacionId, data, ct);
         });
 
@@ -160,8 +163,17 @@ public sealed class AdministracionApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
-            var data = FamilyMember.Validate(command.NombreVisible, command.Relacion, command.Telefono, command.Correo);
+            var data = FamilyMember.Validate(command.NombreVisible, command.Relacion, command.Telefono, command.Correo, command.Referente, command.TutorLegal);
             await families.UpdateAsync(target, command.VinculoId, data, command.VersionEsperada, ct);
+            return true;
+        });
+
+    /// <summary>CJ, 2026-10-07: desvincular a un familiar del residente indicando un motivo.</summary>
+    public Task<ApplicationResult<bool>> UnlinkFamilyMemberAsync(UnlinkFamilyMemberCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
+            await families.UnlinkAsync(target, command.VinculoId, FamilyMember.ValidateUnlinkReason(command.Motivo), ct);
             return true;
         });
 
@@ -182,7 +194,7 @@ public sealed class AdministracionApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
-            return await families.DesignateEmergencyContactAsync(target, command.VinculoId, command.DesignacionesEsperadas, ct);
+            return await families.DesignateEmergencyContactAsync(target, command.VinculosIds, command.DesignacionesEsperadas, ct);
         });
 
     public Task<ApplicationResult<IReadOnlyList<ProfessionalAccountSummary>>> ListAccountsAsync(

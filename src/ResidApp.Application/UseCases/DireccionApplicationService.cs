@@ -1,6 +1,7 @@
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Supervision;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
@@ -32,7 +33,7 @@ public sealed record SupervisionPendingList(IReadOnlyList<SupervisionEpisode> Ep
 /// </summary>
 public sealed class DireccionApplicationService(
     IProfileScopeDirectoryProvider scopes, ISupervisionDirectory directory, ISessionIdentityProvider session,
-    IEnfermeriaResidentDirectory residents)
+    IEnfermeriaResidentDirectory residents, IProcessDeadlineRepository deadlines)
 {
     public Task<ApplicationResult<IReadOnlyList<SupervisionUnitSummary>>> ReadPanelAsync(
         SupervisionQuery query, CancellationToken ct = default) =>
@@ -68,14 +69,29 @@ public sealed class DireccionApplicationService(
             return new SupervisionPendingList(shown, episodes.Count);
         });
 
-    /// <summary>DIR-12: el estado de las derivaciones en curso del ámbito (episodios abiertos con protocolo urgente). Solo el estado del
-    /// proceso, sin permiso ni auditoría, como el resto de la supervisión operativa: el informe firmado no se entrega aquí.</summary>
+    /// <summary>DIR-12: el estado de las derivaciones del ámbito (episodios abiertos con protocolo urgente). Con closedFrom y closedTo
+    /// (días locales, ambos incluidos) salen además las de episodios ya cerrados cuyo protocolo se activó en ese periodo (CJ, 2026-10-07).
+    /// Solo el estado del proceso, sin permiso ni auditoría (CJ, 2026-10-07), como el resto de la supervisión operativa: el informe
+    /// firmado no se entrega aquí.</summary>
     public Task<ApplicationResult<IReadOnlyList<SupervisionReferral>>> ListReferralsAsync(
-        SupervisionQuery query, CancellationToken ct = default) =>
+        SupervisionQuery query, DateOnly? closedFrom = null, DateOnly? closedTo = null, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
+            if (closedFrom is null != closedTo is null
+                || (closedFrom is { } from && closedTo is { } to
+                    && (from > to || to.DayNumber - from.DayNumber + 1 > SupervisionIndicatorRules.MaxPeriodDays)))
+            {
+                throw new DomainValidationException("APPLICATION_INPUT_INVALID");
+            }
+
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            return await directory.ListReferralsAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            if (closedFrom is not { } start || closedTo is not { } end)
+            {
+                return await directory.ListReferralsAsync(query.AmbitoPerfilId, query.CentroId, ct: ct);
+            }
+
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(start, end, TimeZoneInfo.Local);
+            return await directory.ListReferralsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
         });
 
     public Task<ApplicationResult<SupervisionEpisodeDetail>> FindEpisodeAsync(
@@ -114,6 +130,26 @@ public sealed class DireccionApplicationService(
             var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, zone);
             var facts = await directory.ListIndicatorFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
             return SupervisionIndicatorRules.Aggregate(facts, info, query.From, query.To, zone);
+        });
+
+    /// <summary>DIR-11: la revisión de calidad de proceso del periodo (días locales, ambos incluidos): hitos medidos y fuera de plazo por
+    /// unidad, nunca por profesional, y los episodios con algún hito fuera de plazo o a punto de vencer. Como el resto de la supervisión
+    /// operativa: sin permiso clínico ni contenido clínico, y la consulta no se audita.</summary>
+    public Task<ApplicationResult<ProcessQualityReport>> ReadProcessQualityAsync(
+        ReadSupervisionIndicatorsQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            if (query.From > query.To || query.To.DayNumber - query.From.DayNumber + 1 > SupervisionIndicatorRules.MaxPeriodDays)
+            {
+                throw new DomainValidationException("APPLICATION_INPUT_INVALID");
+            }
+
+            await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
+            var facts = await directory.ListMilestoneFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
+            var effective = await deadlines.GetEffectiveAsync(query.CentroId, ct);
+            return ProcessQualityRules.Build(facts, effective, info.Units, query.From, query.To, DateTime.UtcNow);
         });
 
     /// <summary>Residentes del ámbito para elegir a quién consultar en la consulta auditada de basal: nombre y unidad,

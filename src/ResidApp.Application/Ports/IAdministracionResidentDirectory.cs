@@ -29,28 +29,36 @@ public sealed record FamilyAuthorizationChangeEntry(
 /// son compartidos); no dice cuáles.</summary>
 public sealed record ResidentFamilyMember(
     Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email,
-    IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges, int OtherResidentLinks = 0)
+    IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges, int OtherResidentLinks = 0, bool IsReferent = false,
+    bool IsLegalGuardian = false)
 {
     public FamilyAuthorizationChangeEntry? CurrentAuthorization => AuthorizationChanges.Count == 0 ? null : AuthorizationChanges[^1];
 }
+
+/// <summary>Un familiar que dejó de estar vinculado al residente (CJ, 2026-10-07): el vínculo pasado se sigue viendo en el historial.</summary>
+public sealed record FormerFamilyMember(
+    string DisplayName, string Relationship, DateTimeOffset LinkedAt, DateTimeOffset UnlinkedAt, string Reason);
 
 /// <summary>Un familiar que se puede vincular a otro residente: ya está vinculado a algún residente del ámbito de quien gestiona
 /// y todavía no al residente de la pantalla. Nombre y teléfono bastan para distinguir a dos personas con el mismo nombre.</summary>
 public sealed record LinkableFamilyMember(Guid FamilyId, string DisplayName, string Phone);
 
-/// <summary>ADM-08 (0022): una designación de contacto urgente. LinkId null es «sin contacto urgente»; DisplayName es el
+/// <summary>ADM-08 (0022, 0044): una designación de contacto urgente (Action: ver EmergencyContactSet). LinkId null es «sin contacto urgente»; DisplayName es el
 /// nombre vigente del familiar.</summary>
-public sealed record EmergencyContactDesignation(int Number, Guid? LinkId, string? DisplayName, DateTimeOffset At);
+public sealed record EmergencyContactDesignation(int Number, string Action, Guid? LinkId, string? DisplayName, DateTimeOffset At);
 
 /// <summary>ADM-03: la ficha administrativa. Corrections y EmergencyContacts van de la más antigua a la más reciente;
 /// Family, por nombre.</summary>
 public sealed record AdministrativeResidentDetail(
     AdministrativeResidentSummary Resident, IReadOnlyList<ResidentLocationInterval> Locations,
     IReadOnlyList<ResidentIdentityCorrectionEntry> Corrections, IReadOnlyList<ResidentFamilyMember> Family,
-    IReadOnlyList<EmergencyContactDesignation> EmergencyContacts)
+    IReadOnlyList<EmergencyContactDesignation> EmergencyContacts, IReadOnlyList<FormerFamilyMember>? FormerFamily = null)
 {
-    /// <summary>El vínculo del contacto urgente vigente, o null si no hay.</summary>
-    public Guid? CurrentEmergencyContact => EmergencyContacts.Count == 0 ? null : EmergencyContacts[^1].LinkId;
+    /// <summary>Los familiares que ya no están vinculados, del desvínculo más reciente al más antiguo.</summary>
+    public IReadOnlyList<FormerFamilyMember> Former => FormerFamily ?? [];
+
+    /// <summary>Los vínculos de los contactos urgentes vigentes, en el orden en que se designaron.</summary>
+    public IReadOnlyList<Guid> CurrentEmergencyContacts => EmergencyContactSet.Current(EmergencyContacts.Select(d => (d.Action, d.LinkId)));
 }
 
 /// <summary>ADM-02/ADM-03: lectura de Administración. Aplica en la propia consulta la regla de ámbito de
@@ -110,8 +118,32 @@ public interface IResidentFamilyRepository
         AdministrativeResidentTarget target, Guid linkId, FamilyAuthorizationChange change, DateOnly? validUntil, string? reason,
         int expectedChanges, DateOnly today, CancellationToken ct = default);
 
-    /// <summary>Designa el contacto urgente (linkId null lo quita) si el residente sigue teniendo expectedDesignations
-    /// designaciones (si no, conflicto) y cambia algo. Devuelve cuántas tiene ya.</summary>
+    /// <summary>Deja como contactos urgentes exactamente a linkIds (vacío: ninguno) si el residente sigue teniendo expectedDesignations
+    /// designaciones (si no, conflicto) y cambia algo. Devuelve cuántas tiene ya (una por cada familiar añadido o quitado).</summary>
     Task<int> DesignateEmergencyContactAsync(
-        AdministrativeResidentTarget target, Guid? linkId, int expectedDesignations, CancellationToken ct = default);
+        AdministrativeResidentTarget target, IReadOnlyList<Guid> linkIds, int expectedDesignations, CancellationToken ct = default);
+
+    /// <summary>Desvincula al familiar del residente con un motivo (CJ, 2026-10-07): el vínculo se conserva como pasado y el familiar sigue con
+    /// los demás residentes. Si su autorización seguía abierta se revoca, y si era uno de los contactos urgentes se quita de ellos; si era el
+    /// único, EMERGENCY_CONTACT_INVALID (primero hay que designar otro). Un vínculo que ya está desvinculado: FAMILY_MEMBER_CONFLICT.</summary>
+    Task UnlinkAsync(AdministrativeResidentTarget target, Guid linkId, string reason, CancellationToken ct = default);
+}
+
+/// <summary>Traslado del residente (script 0040). ExpectedUnitId es la unidad en la que estaba al abrir el formulario; OperationId
+/// es el identificador del traslado, así que un reenvío no lo repite. Sin habitación ni plaza, queda sin ellas.</summary>
+public sealed record TransferResidentInput(
+    AdministrativeResidentTarget Target, Guid OperationId, UnitId ExpectedUnitId, UnitId DestinationUnitId, Guid? RoomId, Guid? PlaceId);
+
+/// <summary>Qué hizo el traslado: cuántos eventos abiertos pasaron a la unidad de destino y si se canceló un borrador de basal.</summary>
+public sealed record TransferResidentResult(int OpenEventsMoved, bool BaselineDraftCancelled);
+
+/// <summary>
+/// Traslado del residente a otra unidad del centro, o a otra habitación o plaza de la misma. En una transacción cierra la ubicación
+/// vigente y abre la nueva, pasa a la unidad de destino los eventos no cerrados, cancela el borrador de basal si cambia de unidad y
+/// deja RESIDENT_TRANSFER en la auditoría. Si el residente ya no está en ExpectedUnitId, RESIDENT_TRANSFER_CONFLICT; si no cambia
+/// nada, RESIDENT_TRANSFER_INVALID.
+/// </summary>
+public interface IResidentTransferRepository
+{
+    Task<TransferResidentResult> TransferAsync(TransferResidentInput input, CancellationToken ct = default);
 }

@@ -52,7 +52,8 @@ public sealed record AdministrativeResidentListViewModel(
 }
 
 /// <summary>ADM-03: la ficha administrativa y la fecha de hoy, para la edad.</summary>
-public sealed record AdministrativeResidentViewModel(AdministrativeResidentDetail Detail, DateOnly Today);
+public sealed record AdministrativeResidentViewModel(
+    AdministrativeResidentDetail Detail, DateOnly Today, ResidentSuspension? Suspension = null);
 
 /// <summary>ADM-03 (0021): formulario de corrección de identidad. CorreccionesEsperadas es cuántas correcciones tenía el
 /// residente al abrirlo: si otra se adelanta, la corrección da conflicto y se conserva lo escrito.</summary>
@@ -116,6 +117,12 @@ public sealed class FamilyMemberFormModel
     [EmailAddress(ErrorMessage = "Escribe un correo válido.")]
     [Display(Name = "Correo electrónico (opcional)")]
     public string? Correo { get; set; }
+
+    [Display(Name = "Familiar referente")]
+    public bool Referente { get; set; }
+
+    [Display(Name = "Tutor legal")]
+    public bool TutorLegal { get; set; }
 }
 
 /// <summary>ADM-09: el residente junto al formulario del familiar.</summary>
@@ -175,7 +182,7 @@ public sealed record FamilyAuthorizationViewModel(
     public IReadOnlyList<FamilyAuthorizationChange> Allowed => FamilyAuthorizationRules.Allowed(Effective);
 }
 
-/// <summary>ADM-08 (0022): designar el contacto urgente. VinculoId null es «sin contacto urgente»;
+/// <summary>ADM-08 (0022, 0044): designar los contactos urgentes. VinculosIds son los que quedan (vacío es «sin contacto urgente»);
 /// DesignacionesEsperadas es cuántas designaciones tenía el residente al abrir la pantalla.</summary>
 public sealed class EmergencyContactFormModel
 {
@@ -183,7 +190,7 @@ public sealed class EmergencyContactFormModel
 
     public int DesignacionesEsperadas { get; set; }
 
-    public Guid? VinculoId { get; set; }
+    public List<Guid> VinculosIds { get; set; } = [];
 }
 
 public sealed record EmergencyContactViewModel(AdministrativeResidentDetail Detail, EmergencyContactFormModel Form);
@@ -282,7 +289,7 @@ public sealed record GrantAccountProfileViewModel(
 /// revocado y en Familiar.</summary>
 public sealed record AccountProfileViewModel(
     ProfessionalAccountDetail Detail, AccountProfileScope Profile, IReadOnlyList<ScopeUnit> AdministratorUnits,
-    IReadOnlyList<AssignableResident> AssignableResidents)
+    IReadOnlyList<AssignableResident> AssignableResidents, bool ViewerIsPrincipal = false)
 {
     public bool CanChange => !Detail.IsOwnAccount && Profile.Active && ProfessionalAccount.IsGrantable(Profile.Profile);
 
@@ -344,3 +351,21 @@ public sealed class RenameUnitFormModel
 public sealed record RenameUnitViewModel(StructureUnit Unit, RenameUnitFormModel Form);
 
 public sealed record NewUnitViewModel(NewUnitFormModel Form);
+
+/// <summary>CJ, 2026-10-07: desvincular a un familiar de un residente. El motivo es obligatorio.</summary>
+public sealed class UnlinkFamilyFormModel
+{
+    public Guid ResidenteId { get; set; }
+
+    public Guid VinculoId { get; set; }
+
+    [Required(ErrorMessage = "Indica el motivo.")]
+    [StringLength(500, ErrorMessage = "El motivo no puede pasar de {1} caracteres.")]
+    [Display(Name = "Motivo")]
+    public string? Motivo { get; set; }
+}
+
+public sealed record UnlinkFamilyViewModel(AdministrativeResidentSummary Resident, ResidentFamilyMember Member, UnlinkFamilyFormModel Form);
+
+/// <summary>CJ, 2026-10-07: las unidades del centro vistas por una Administración y si esta es la principal.</summary>
+public sealed record AdministrationScopeViewModel(ResidApp.Application.UseCases.AdministrationScopeView View);

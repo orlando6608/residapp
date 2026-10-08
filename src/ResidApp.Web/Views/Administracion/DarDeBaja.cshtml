@@ -1,0 +1,54 @@
+@using ResidApp.Domain.Residents
+@using ResidApp.Web.Models
+@model DischargeResidentViewModel
+@{
+    var resident = Model.Resident;
+    ViewData["Title"] = "Dar de baja";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Dar de baja</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Dar de baja</h1>
+<p class="text-muted">
+    Cierra la estancia de @resident.DisplayName en el centro. Los datos no se borran: se conservan @ResidentDischarge.RetentionYears años desde la baja,
+    en solo lectura (los ve Administración en «Residentes dados de baja»), y Administración puede reactivar al residente. Si solo está ingresado
+    en un hospital durante un tiempo, usa <strong>Suspender</strong> en su ficha: no es una baja.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="DarDeBaja" method="post">
+            <input type="hidden" name="Form.ResidenteId" value="@Model.Form.ResidenteId" />
+            <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+
+            <div class="mb-3">
+                <label asp-for="Form.Motivo" class="form-label"></label>
+                <select asp-for="Form.Motivo" class="form-select form-select-lg" asp-items="Html.GetEnumSelectList<ResidentDischargeReason>()"></select>
+                <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.MotivoTexto" class="form-label"></label>
+                <textarea asp-for="Form.MotivoTexto" class="form-control form-control-lg" rows="3"></textarea>
+                <span asp-validation-for="Form.MotivoTexto" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-danger btn-lg">Dar de baja</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

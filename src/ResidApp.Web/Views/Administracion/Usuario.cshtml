@@ -85,6 +85,10 @@
             <li class="list-group-item py-3">
                 <div class="fw-semibold">
                     @SystemProfileDisplay.Label(profile.Profile)
+                    @if (profile.IsPrincipal)
+                    {
+                        <span class="badge text-bg-primary align-middle">Principal</span>
+                    }
                     @if (profile.RevokedAt is null)
                     {
                         <span class="badge text-bg-success align-middle">Vigente</span>
@@ -124,7 +128,7 @@
                 @foreach (var profile in account.Profiles)
                 {
                     <tr>
-                        <th scope="row">@SystemProfileDisplay.Label(profile.Profile)</th>
+                        <th scope="row">@SystemProfileDisplay.Label(profile.Profile)@if (profile.IsPrincipal) { <span class="badge text-bg-primary ms-1">Principal</span> }</th>
                         <td>@(profile.Active ? ProfessionalAccountDisplay.ActiveUnits(profile) : "—")</td>
                         <td>@profile.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @profile.GrantedBy</td>
                         <td>

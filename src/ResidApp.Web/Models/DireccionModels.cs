@@ -10,12 +10,27 @@ public sealed record DireccionInicioViewModel(IReadOnlyList<SupervisionUnitSumma
     public int FollowUpsOverdue => Units.Sum(u => u.FollowUpsOverdue);
 }
 
-/// <summary>DIR-12: las derivaciones en curso con su resumen (cuántas tienen el informe firmado, cuántas no y cuántas llamadas a la familia constan).</summary>
-public sealed record SupervisionReferralsViewModel(IReadOnlyList<SupervisionReferral> Referrals)
+/// <summary>DIR-12: la lista de derivaciones y, si se pidieron las de episodios cerrados, el periodo elegido (From y To incluidos).</summary>
+public sealed record SupervisionReferralsViewModel(
+    IReadOnlyList<SupervisionReferral> Referrals, bool IncludeClosed = false, DateOnly? From = null, DateOnly? To = null)
 {
     public int Signed => Referrals.Count(r => r.ReportSigned);
     public int Unsigned => Referrals.Count - Signed;
     public int WithCalls => Referrals.Count(r => r.FamilyCallAttempts > 0);
+    public int Closed => Referrals.Count(r => r.Closed);
+}
+
+/// <summary>DIR-12: pedir también las derivaciones de episodios cerrados, en un periodo. Llega por GET (?cerradas=true&amp;desde=&amp;hasta=);
+/// sin fechas, los últimos 30 días.</summary>
+public sealed class SupervisionReferralFilter
+{
+    public bool Cerradas { get; set; }
+
+    public DateOnly? Desde { get; set; }
+
+    public DateOnly? Hasta { get; set; }
+
+    public IndicatorPeriodFilter Period => new() { Desde = Desde, Hasta = Hasta };
 }
 
 /// <summary>DIR-03: filtrar los pendientes por tipo y unidad. Llega por GET (?tipo=&amp;unidad=); los campos vacíos no filtran.</summary>
@@ -86,7 +101,7 @@ public static class SupervisionDisplay
         SupervisionPendingType.SinValorar => "Sin valorar",
         SupervisionPendingType.Escalado => "Escalado a Medicina",
         SupervisionPendingType.Seguimiento => "En seguimiento",
-        SupervisionPendingType.SeguimientoVencido => "Seguimiento vencido",
+        SupervisionPendingType.SeguimientoVencido => "Seguimiento pendiente",
         SupervisionPendingType.IndicacionPendiente => "Con indicación pendiente",
         SupervisionPendingType.IndicacionConIncidencia => "Con indicación no realizada",
         SupervisionPendingType.ProtocoloUrgente => "Protocolo urgente activo",
@@ -114,6 +129,62 @@ public static class SupervisionDisplay
         "BASELINE_REEVALUATE" => "Reevaluar el basal",
         "CLINICAL_DETAIL_READ" => "Lectura clínica detallada y auditada",
         "REFERENCE_RANGES_MANAGE" => "Gestionar los rangos de referencia de constantes",
+        "PROCESS_DEADLINES_MANAGE" => "Gestionar los plazos de los hitos del proceso",
         _ => code,
     };
 }
+
+/// <summary>DIR-11: la revisión de calidad de proceso (null si el periodo no es válido o falló la lectura).</summary>
+public sealed record ProcessQualityViewModel(DateOnly From, DateOnly To, ProcessQualityReport? Report, bool CanManageDeadlines = false);
+
+/// <summary>DIR-11: textos de los hitos del proceso y de su estado.</summary>
+public static class ProcessMilestoneDisplay
+{
+    public static string Label(ResidApp.Domain.Supervision.ProcessMilestone milestone) => milestone switch
+    {
+        ResidApp.Domain.Supervision.ProcessMilestone.ValoracionEnfermeria => "Valoración de Enfermería",
+        ResidApp.Domain.Supervision.ProcessMilestone.ValoracionMedica => "Valoración médica",
+        ResidApp.Domain.Supervision.ProcessMilestone.RecepcionTransferencia => "Recepción de la transferencia",
+        ResidApp.Domain.Supervision.ProcessMilestone.InformeDerivacion => "Informe de derivación",
+        ResidApp.Domain.Supervision.ProcessMilestone.LlamadaFamilia => "Llamada a la familia",
+        ResidApp.Domain.Supervision.ProcessMilestone.LecturaIndicacion => "Lectura de la indicación médica",
+        _ => "Realización de la indicación médica",
+    };
+
+    public static string Range(ResidApp.Domain.Supervision.ProcessMilestone milestone) => milestone switch
+    {
+        ResidApp.Domain.Supervision.ProcessMilestone.ValoracionEnfermeria => "Desde que Auxiliar registra un cambio hasta que Enfermería empieza la valoración.",
+        ResidApp.Domain.Supervision.ProcessMilestone.ValoracionMedica => "Desde el escalado hasta que Medicina empieza su valoración.",
+        ResidApp.Domain.Supervision.ProcessMilestone.RecepcionTransferencia => "Desde la transferencia de un seguimiento de Enfermería hasta que se confirma la recepción.",
+        ResidApp.Domain.Supervision.ProcessMilestone.InformeDerivacion => "Desde la activación del protocolo urgente hasta la firma del informe.",
+        ResidApp.Domain.Supervision.ProcessMilestone.LlamadaFamilia => "Desde la activación del protocolo urgente hasta el primer intento de llamada.",
+        ResidApp.Domain.Supervision.ProcessMilestone.LecturaIndicacion => "Desde que Medicina la emite hasta que Enfermería confirma la lectura.",
+        _ => "Desde que Medicina la emite hasta que consta realizada o no realizada.",
+    };
+
+    public static string Status(ResidApp.Domain.Supervision.MilestoneStatus status) => status switch
+    {
+        ResidApp.Domain.Supervision.MilestoneStatus.EnPlazo => "En plazo",
+        ResidApp.Domain.Supervision.MilestoneStatus.HechoFueraDePlazo => "Hecho fuera de plazo",
+        ResidApp.Domain.Supervision.MilestoneStatus.Pendiente => "Pendiente, en plazo",
+        ResidApp.Domain.Supervision.MilestoneStatus.APuntoDeVencer => "A punto de vencer",
+        _ => "Sin hacer, fuera de plazo",
+    };
+
+    /// <summary>«30 min», «8 h», «1 h 30 min»; «No se mide» si no hay plazo.</summary>
+    public static string Term(TimeSpan? term)
+    {
+        if (term is not { } value)
+        {
+            return "No se mide";
+        }
+
+        var hours = (int)value.TotalHours;
+        var minutes = value.Minutes;
+        return hours == 0 ? $"{minutes} min" : minutes == 0 ? $"{hours} h" : $"{hours} h {minutes} min";
+    }
+}
+
+/// <summary>DIR-11: los avisos de hitos a punto de vencer o vencidos que ve Enfermería o Medicina en su inicio. Controller es el de su ficha
+/// de residente.</summary>
+public sealed record MilestoneWarningsModel(IReadOnlyList<MilestoneEntry>? Items, string Controller);

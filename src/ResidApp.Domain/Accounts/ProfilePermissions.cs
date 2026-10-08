@@ -15,12 +15,13 @@ public static class ProfilePermissions
     public const string BaselineReevaluate = "BASELINE_REEVALUATE";
     public const string ClinicalDetailRead = "CLINICAL_DETAIL_READ";
     public const string ReferenceRangesManage = "REFERENCE_RANGES_MANAGE";
+    public const string ProcessDeadlinesManage = "PROCESS_DEADLINES_MANAGE";
 
     public static IReadOnlyList<string> For(SystemProfile profile) => profile switch
     {
         SystemProfile.Enfermeria => [ResidentIdentityCreate, BaselineInitialComplete, BaselineReevaluate],
-        SystemProfile.Medicina => [BaselineInitialComplete, BaselineReevaluate, ReferenceRangesManage],
-        SystemProfile.DireccionClinica => [ClinicalDetailRead, ReferenceRangesManage],
+        SystemProfile.Medicina => [BaselineInitialComplete, BaselineReevaluate],
+        SystemProfile.DireccionClinica => [ClinicalDetailRead, ReferenceRangesManage, ProcessDeadlinesManage],
         _ => [],
     };
 }

@@ -12,6 +12,8 @@
 
 <h1 class="h3">Inicio de Enfermería</h1>
 
+<partial name="_AvisosHitos" model='new MilestoneWarningsModel(Model.Avisos, "Enfermeria")' />
+
 @* Fichas con contador (guia-diseno-sistema-visual.md, 2.B y 2.D): cifra grande con plural real y color según el
    valor (rojo solo si un contador urgente pasa de 0; ámbar si hay indicaciones sin leer). El orden es fijo, con lo
    urgente primero. *@
@@ -42,7 +44,7 @@
                 <span class="text-body-secondary">@(Model.Seguimientos == 1 ? "seguimiento abierto" : "seguimientos abiertos")</span>
                 @if (Model.SeguimientosVencidos > 0)
                 {
-                    <span class="d-block text-danger fw-semibold mt-1">@Model.SeguimientosVencidos @(Model.SeguimientosVencidos == 1 ? "vencido" : "vencidos")</span>
+                    <span class="d-block text-danger fw-semibold mt-1">@Model.SeguimientosVencidos @(Model.SeguimientosVencidos == 1 ? "pendiente" : "pendientes")</span>
                 }
             </div>
         </a>

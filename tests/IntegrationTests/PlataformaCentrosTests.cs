@@ -199,7 +199,8 @@ public class PlataformaCentrosTests
         var medicina = await MedicinaApplicationServiceTests.BuildMedicina(op.ExternalSubject)
             .ListScopeResidentsAsync(new ListScopeResidentsCommand(op.ProfileScopeId, op.CenterId, SystemProfile.Medicina));
         var direccion = await new DireccionApplicationService(
-                scopes, new SqlSupervisionDirectory(TestDatabase.ConnectionFactory), session, new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory))
+                scopes, new SqlSupervisionDirectory(TestDatabase.ConnectionFactory), session, new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory),
+                new SqlProcessDeadlineRepository(TestDatabase.ConnectionFactory))
             .ListPendingAsync(new ListSupervisionPendingQuery(op.ProfileScopeId, op.CenterId, DateOnly.FromDateTime(DateTime.Today)));
 
         foreach (var error in new[] { administracion.Error, estructura.Error, usuarios.Error, enfermeria.Error, medicina.Error, direccion.Error })

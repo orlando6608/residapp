@@ -41,13 +41,13 @@
         <p class="mb-1">
             @if (vencido)
             {
-                <span class="badge text-bg-danger">Vencido</span>
+                <span class="badge text-bg-danger">Pendiente</span>
             }
             <span style="white-space: pre-line">@FollowUpDisplay.Plan(seguimiento.DueDate, seguimiento.Criterion)</span>
         </p>
         @if (vencido)
         {
-            <p class="text-muted mb-1">Un seguimiento vencido sigue abierto: resuélvelo o reprográmalo justificadamente.</p>
+            <p class="text-muted mb-1">Un seguimiento con la fecha prevista pasada consta como pendiente y sigue abierto: resuélvelo o reprográmalo justificadamente.</p>
         }
         @if (seguimiento.ContinuityNotes is not null)
         {
@@ -68,20 +68,13 @@
                 <br /><span style="white-space: pre-line">Nota: @pendiente.Text</span>
             }
         </p>
-        @if (pendiente.CanConfirmReception)
-        {
-            <form asp-action="Seguimiento" method="post" class="d-grid d-md-flex">
-                <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
-                <input type="hidden" name="Form.Revision" value="@evento.Revision" />
-                <input type="hidden" name="Form.Tipo" value="@FollowUpActionType.Recepcion" />
-                <input type="hidden" name="Form.TransferenciaId" value="@pendiente.Id" />
-                <button type="submit" class="btn btn-primary btn-lg">Confirmar recepción</button>
-            </form>
-        }
-        else
-        {
-            <p class="mb-0">Solo los miembros del equipo «@pendiente.IncomingTeam» pueden confirmar la recepción.</p>
-        }
+        <form asp-action="Seguimiento" method="post" class="d-grid d-md-flex">
+            <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
+            <input type="hidden" name="Form.Revision" value="@evento.Revision" />
+            <input type="hidden" name="Form.Tipo" value="@FollowUpActionType.Recepcion" />
+            <input type="hidden" name="Form.TransferenciaId" value="@pendiente.Id" />
+            <button type="submit" class="btn btn-primary btn-lg">Confirmar recepción</button>
+        </form>
     </div>
 }
 

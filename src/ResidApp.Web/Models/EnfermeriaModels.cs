@@ -97,11 +97,11 @@ public sealed record PendingChangeListViewModel(
 /// <summary>ENF-18: identidad mínima del residente del ámbito más el resumen del basal vigente (null si
 /// todavía no tiene ninguno firmado). También es la ficha de Medicina (MED-20), donde CanManageBaseline dice si su
 /// ámbito tiene permiso para crear o reevaluar el basal (historia 8); Enfermería ofrece el acceso siempre. OpenEvents son
-/// los eventos abiertos del residente que ve el perfil (ENF-18/MED-20); null si no se pudieron cargar. EmergencyContact
-/// es el contacto urgente designado por Administración (0022), null si no hay.</summary>
+/// los eventos abiertos del residente que ve el perfil (ENF-18/MED-20); null si no se pudieron cargar. EmergencyContacts
+/// son los contactos urgentes designados por Administración (0022, 0044), null si no se pudieron cargar o no hay.</summary>
 public sealed record EnfermeriaResidentDetailViewModel(
     ScopeResidentSummary Resident, CurrentBaselineSummary? Baseline, bool CanManageBaseline = false,
-    IReadOnlyList<OpenEventSummary>? OpenEvents = null, EmergencyContactSummary? EmergencyContact = null);
+    IReadOnlyList<OpenEventSummary>? OpenEvents = null, IReadOnlyList<EmergencyContactSummary>? EmergencyContacts = null);
 
 /// <summary>ENF-01: contadores de las bandejas ya construidas (ordinarios, prioritarios y seguimientos,
 /// con cuántos de estos están vencidos), de las comunicaciones familiares pendientes de aprobación y de las
@@ -109,7 +109,7 @@ public sealed record EnfermeriaResidentDetailViewModel(
 /// escalados a Medicina que siguen abiertos.</summary>
 public sealed record EnfermeriaInicioViewModel(
     int Ordinarios, int Prioritarios, int Seguimientos, int SeguimientosVencidos, int Comunicaciones,
-    int Indicaciones, int IndicacionesSinLeer, int Protocolos, int Escalados);
+    int Indicaciones, int IndicacionesSinLeer, int Protocolos, int Escalados, IReadOnlyList<MilestoneEntry>? Avisos = null);
 
 /// <summary>ENF-04: detalle de un cambio recibido más el resumen del basal vigente del residente (null si
 /// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel. CorrectionWindow decide si
@@ -637,7 +637,8 @@ public static class VitalSignRangeDisplay
     };
 
     public static string Alert(VitalSignAlert alert) =>
-        $"{Label(alert.Code)} {alert.Value:0.#} {Unit(alert.Code)}: " +
+        $"{Label(alert.Code)} {alert.Value:0.#} {Unit(alert.Code)}" +
+        $"{(alert.OxygenFlowLpm is { } flow ? $" con oxígeno a {flow:0.#} L/min" : string.Empty)}: " +
         $"{(alert.Deviation == VitalSignDeviation.PorDebajo ? "por debajo" : "por encima")} del rango de referencia ({Range(alert.Range)})";
 
     /// <summary>Texto de ayuda bajo el campo del formulario, o null si el centro no tiene rango para esa constante.</summary>

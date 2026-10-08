@@ -10,7 +10,7 @@ namespace ResidApp.Web.Models;
 /// Historial de Medicina llegarán con el resto del vertical. Protocolos: protocolos urgentes activos.</summary>
 public sealed record MedicinaInicioViewModel(
     int Escalados, int Indicaciones, int IndicacionesSinLeer, int IndicacionesConIncidencia, int Seguimientos, int SeguimientosVencidos,
-    int Protocolos);
+    int Protocolos, IReadOnlyList<MilestoneEntry>? Avisos = null);
 
 /// <summary>MED-03: detalle del escalado con su información reunida (solo lectura), el basal vigente del
 /// residente (null si no tiene) y la parte médica (valoración e indicaciones). CorrectionWindow decide si se

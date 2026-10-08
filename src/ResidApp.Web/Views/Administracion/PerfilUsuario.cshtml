@@ -45,6 +45,38 @@
     <div class="alert alert-danger" role="alert">@error</div>
 }
 
+@if (profile.Profile == SystemProfile.Administracion)
+{
+    <section class="mb-4">
+        <h2 class="h5">Administración principal</h2>
+        <p class="text-muted">
+            La Administración principal del centro ve todas sus unidades y se añade las que no tiene (<a asp-action="AmbitoCentro">Unidades del centro</a>).
+            El centro tiene que conservar al menos una.
+        </p>
+        <p>
+            @if (profile.IsPrincipal)
+            {
+                <span class="badge text-bg-primary">Es Administración principal</span>
+            }
+            else
+            {
+                <span class="badge text-bg-secondary">No es Administración principal</span>
+            }
+        </p>
+        @if (Model.ViewerIsPrincipal && profile.Active)
+        {
+            <form asp-action="MarcarPrincipal" method="post">
+                <input type="hidden" name="cuentaId" value="@account.AccountId.Value" />
+                <input type="hidden" name="ambitoId" value="@profile.ProfileScopeId" />
+                <input type="hidden" name="principal" value="@(profile.IsPrincipal ? "false" : "true")" />
+                <button type="submit" class="btn @(profile.IsPrincipal ? "btn-outline-danger" : "btn-outline-primary")">
+                    @(profile.IsPrincipal ? "Quitar la marca de principal" : "Marcar como Administración principal")
+                </button>
+            </form>
+        }
+    </section>
+}
+
 <section class="mb-4">
     <h2 class="h5">Unidades</h2>
     <p class="text-muted">El perfil solo vale en estas unidades. La última no se revoca: si ya no hace falta, revoca el perfil.</p>

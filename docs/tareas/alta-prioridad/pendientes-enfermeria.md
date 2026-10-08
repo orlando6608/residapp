@@ -283,7 +283,7 @@ Huecos de lo ya construido:
     telefónico con SEM a las 18 h. Avisamos a los familiares del traslado»). **Suposición mía, sin confirmar:** es un campo propio del informe
     (`informes_derivacion.comunicaciones`, opcional, hasta 4000 caracteres; sección «Comunicaciones» no automática), y NO se copia el campo
     «Comunicaciones» de la valoración (que solo existe en Enfermería) ni los contactos del protocolo. Los informes firmados antes quedan sin él. Preguntado en
-    `docs/pendientes-cj/aclaraciones-respuestas-cj.html`. Tests: `Derivacion_LasComunicacionesQueEscribeElProfesional_ViajanEnElInformeFirmado`
+    `docs/pendientes-cj/archivados/aclaraciones-respuestas-cj.html` (4.1: un apartado propio que escribe el profesional, confirmado). Tests: `Derivacion_LasComunicacionesQueEscribeElProfesional_ViajanEnElInformeFirmado`
     y `Informe_ConComunicaciones_…`.
 
 - **Seguimiento (historia 4)**: desde el 2026-10-01 (script `0028`) el equipo entrante de una transferencia se elige entre los equipos activos de la unidad
@@ -301,19 +301,18 @@ Huecos de lo ya construido:
 - Los borradores de valoración anteriores a `0009` solo tienen una versión (su contenido en ese momento):
   las versiones intermedias previas no se guardaron.
 - **Rangos de referencia de constantes (fase 1 hecha; valores de CJ incorporados el 2026-10-07)**: CJ respondió el
-  2026-10-06 (`docs/pendientes-cj/archivados/rangos-referencia-constantes.respuestas.json`). Valores iguales para todos los centros por ahora:
-  temperatura 36–37,9; PA 90–139 / 60–89; FC 60–100; FR 12–20; SatO₂ 95–100 (aire ambiente); glucemia mínimo 70, sin máximo.
+  2026-10-06 (`docs/pendientes-cj/archivados/rangos-referencia-constantes.respuestas.json`) y aclaró el 2026-10-07
+  (`docs/pendientes-cj/archivados/aclaraciones-respuestas-cj.respuestas.json`). Valores iguales para todos los centros por ahora:
+  temperatura 36–36,9 (un decimal: avisa desde 37,0); PA 90–139 / 60–89; FC 60–100; FR 12–20; SatO₂ 95–100; glucemia 70–120.
   **Hecho:** botón «Cargar valores sugeridos» en la pantalla de rangos (`VitalSignReferenceRanges.Suggested`; rellena el formulario sin
-  guardar, quien tiene el permiso lo revisa y guarda por el camino de siempre, con historial); el aviso de SatO₂ se omite con
-  oxigenoterapia (**suposición mía**, a confirmar); el campo de flujo de O₂ solo aparece al elegir «Oxigenoterapia»; aviso visual de
-  temperatura para la Auxiliar (`AuxiliarTemperatureAlerts`: >37 mantener seguimiento, >38 avisar a Enfermería; en la confirmación y
-  en el detalle de Enfermería; no cambia la clasificación). **No hecho, sin definir por CJ:** «>37 en varias ocasiones seguidas»
-  (cuántas, plazo, de qué registros), cómo se concreta el «seguimiento por las auxiliares», y si el aviso de la Auxiliar convive con el rango
-  36–37,9. El permiso lo sigue concediendo Administración persona a persona (CJ: «Dirección no tiene por qué»; Dirección y Coordinación
-  son el mismo perfil). Decisiones del 2026-09-28 — aviso
+  guardar, quien tiene el permiso lo revisa y guarda por el camino de siempre, con historial); la SatO₂ con oxigenoterapia se avisa con el
+  mismo rango indicando el flujo (`VitalSignAlert.OxygenFlowLpm`); el campo de flujo de O₂ solo aparece al elegir «Oxigenoterapia».
+  **Retirado el 2026-10-07 por decisión de CJ:** el aviso visual de temperatura de la Auxiliar (`AuxiliarTemperatureAlerts`, >37 / >38) y la regla
+  «>37 en varias ocasiones seguidas»: basta el rango (CJ: «se debe correlacionar con la situación clínica»). Rangos por residente (constantes
+  basales): futuro; cuando existan, Enfermería y Medicina podrán guardar los habituales de cada paciente. Decisiones del 2026-09-28 — aviso
   solo visual, que no bloquea ni cambia clasificación, prioridad ni desenlace; rangos por centro fijados en
   la pantalla "Rangos de referencia de constantes" (`RangosReferenciaController`) con el permiso
-  `REFERENCE_RANGES_MANAGE`, que la BD solo deja conceder a Medicina o Dirección/Coordinación Clínica
+  `REFERENCE_RANGES_MANAGE`, que la BD solo deja conceder a Dirección/Coordinación Clínica
   (nunca Administración, ADM-29); historial inmutable de cada cambio; rangos por residente en una segunda
   fase. Script `0008`. En desarrollo tiene el permiso `dev-integrado-direccion` (seed del escenario
   integrado). Pendiente de CJ (lo recoge

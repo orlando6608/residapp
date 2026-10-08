@@ -38,12 +38,28 @@
         </a>
     </div>
     <div class="col-12 col-md-6">
+        <a asp-action="Bajas" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Residentes dados de baja</h2>
+                <p class="card-text mb-0">Lista de solo lectura con el motivo de cada baja y hasta cuándo se conservan sus datos. Desde ahí puedes reactivar a un residente.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6">
         <a asp-action="Usuarios" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Usuarios</h2>
                 <span class="cifra">@Model.Accounts</span>
                 <span class="d-block">@(Model.Accounts == 1 ? "cuenta con perfil en el centro" : "cuentas con perfil en el centro")</span>
                 <p class="card-text text-body-secondary mb-0">Alta, suspensión, perfiles, unidades y residentes asignados.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6">
+        <a asp-action="AmbitoCentro" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Unidades del centro</h2>
+                <p class="card-text mb-0">Todas las unidades del centro y las de tu ámbito; la Administración principal puede añadirse las que no tiene.</p>
             </div>
         </a>
     </div>

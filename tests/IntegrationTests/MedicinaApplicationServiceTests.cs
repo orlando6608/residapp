@@ -847,8 +847,9 @@ public class MedicinaApplicationServiceTests
     }
 
     [Fact]
-    public async Task SeguimientoMedico_Recepcion_ConMiembrosEnElEquipo_SoloLaConfirmanSusMiembros()
+    public async Task SeguimientoMedico_Recepcion_LaConfirmaCualquieraDelAmbito_AunqueElEquipoTengaMiembros()
     {
+        // CJ (2026-10-07): la bandeja es común a la unidad y al servicio; el equipo entrante no limita quién confirma.
         var (_, _, medica, eventId) = await SeedEscalatedAsync();
         var companero = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, medica.CenterId, medica.UnitId);
         var service = BuildMedicina(medica.ExternalSubject);
@@ -859,15 +860,10 @@ public class MedicinaApplicationServiceTests
         await TransferTeamData.AddMemberAsync(team, medica, medica);
         revision = (await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Transferencia,
             "Revisar el informe.", incomingTeamId: team))).Value;
-        var transferOutsider = (await FindAsync(companero, eventId))!.Medical.FollowUp!.Tracking.PendingTransfer!;
-        var transferMember = (await FindAsync(medica, eventId))!.Medical.FollowUp!.Tracking.PendingTransfer!;
+        var transfer = (await FindAsync(companero, eventId))!.Medical.FollowUp!.Tracking.PendingTransfer!;
 
-        var refused = await other.RecordMedicalFollowUpActionAsync(FollowUpAction(companero, eventId, revision, FollowUpActionType.Recepcion, transferId: transferOutsider.Id));
-        var received = await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Recepcion, transferId: transferMember.Id));
+        var received = await other.RecordMedicalFollowUpActionAsync(FollowUpAction(companero, eventId, revision, FollowUpActionType.Recepcion, transferId: transfer.Id));
 
-        Assert.False(transferOutsider.CanConfirmReception);
-        Assert.True(transferMember.CanConfirmReception);
-        Assert.Equal(ApplicationFailureCode.Conflict, refused.Error!.Code);
         Assert.True(received.Ok, received.Error?.Message);
         Assert.Equal(1, await CountAuditAsync(eventId, "MEDICAL_FOLLOW_UP_RECEIVE"));
     }

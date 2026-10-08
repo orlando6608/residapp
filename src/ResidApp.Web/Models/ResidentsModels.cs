@@ -45,9 +45,12 @@ public sealed class CreateResidentFormModel
     public string? Ubicacion { get; set; }
 
     /// <summary>La habitación y la plaza elegidas, o null si el texto no es ninguna de las formas válidas (vacío es válido: ninguna).</summary>
-    public (Guid? RoomId, Guid? PlaceId)? ParseLocation()
+    public (Guid? RoomId, Guid? PlaceId)? ParseLocation() => ParseLocation(Ubicacion);
+
+    /// <summary>Lo mismo para un texto «r:{habitación}» / «p:{plaza}» de cualquier formulario con selector de ubicación.</summary>
+    public static (Guid? RoomId, Guid? PlaceId)? ParseLocation(string? ubicacion)
     {
-        var text = Ubicacion?.Trim();
+        var text = ubicacion?.Trim();
         if (string.IsNullOrEmpty(text))
         {
             return (null, null);
@@ -61,8 +64,42 @@ public sealed class CreateResidentFormModel
         };
     }
 
+    /// <summary>Los familiares de contacto prioritario, referentes y tutores legales (CJ, 2026-10-07). Tres filas en el formulario; las que
+    /// se dejan en blanco se ignoran, y más desde la ficha del residente.</summary>
+    public List<NewResidentFamilyFormRow> Familiares { get; set; } = [new(), new(), new()];
+
+    public IReadOnlyList<ResidApp.Domain.Families.NewResidentFamilyInput> FamilyInputs() =>
+        Familiares.Select(row => new ResidApp.Domain.Families.NewResidentFamilyInput(
+            row.NombreVisible, row.Relacion, row.Telefono, row.Correo, row.Referente, row.TutorLegal, row.ContactoPrioritario)).ToList();
+
     /// <summary>Se genera al mostrar el formulario y viaja oculto: da soporte a la idempotencia del caso de
     /// uso (un reenvío accidental con el mismo OperacionId no duplica el alta).</summary>
     [Required]
     public Guid OperacionId { get; set; }
+}
+
+/// <summary>Una fila de familiar del formulario de alta. Sin validación de campo: una fila en blanco se ignora y una a medias la rechaza la
+/// regla de ResidentFamilyAtAdmission, que usa las reglas de siempre de un familiar.</summary>
+public sealed class NewResidentFamilyFormRow
+{
+    [Display(Name = "Nombre")]
+    public string? NombreVisible { get; set; }
+
+    [Display(Name = "Relación con el residente (p. ej., «Hija»)")]
+    public string? Relacion { get; set; }
+
+    [Display(Name = "Teléfono")]
+    public string? Telefono { get; set; }
+
+    [Display(Name = "Correo electrónico (opcional)")]
+    public string? Correo { get; set; }
+
+    [Display(Name = "Familiar referente")]
+    public bool Referente { get; set; }
+
+    [Display(Name = "Tutor legal")]
+    public bool TutorLegal { get; set; }
+
+    [Display(Name = "Contacto prioritario (contacto urgente)")]
+    public bool ContactoPrioritario { get; set; }
 }

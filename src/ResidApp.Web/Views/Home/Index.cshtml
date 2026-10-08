@@ -125,14 +125,26 @@ else
             </a>
         </div>
     }
-    @if (perfil is SystemProfile.Medicina or SystemProfile.DireccionClinica
+    @if (perfil is SystemProfile.DireccionClinica
          && permisos.Contains(ResidApp.Domain.Accounts.ProfilePermissions.ReferenceRangesManage))
     {
         <div class="col-12 col-md-4">
             <a asp-controller="RangosReferencia" asp-action="Index" class="card text-decoration-none h-100">
                 <div class="card-body">
                     <h2 class="h5 card-title">Rangos de referencia de constantes</h2>
-                    <p class="card-text text-muted mb-0">Fijar los rangos del centro (Medicina o Dirección Clínica con permiso).</p>
+                    <p class="card-text text-muted mb-0">Fijar los rangos del centro (Dirección / Coordinación Clínica con permiso).</p>
+                </div>
+            </a>
+        </div>
+    }
+    @if (perfil is SystemProfile.DireccionClinica
+         && permisos.Contains(ResidApp.Domain.Accounts.ProfilePermissions.ProcessDeadlinesManage))
+    {
+        <div class="col-12 col-md-4">
+            <a asp-controller="PlazosProceso" asp-action="Index" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Plazos de los hitos del proceso</h2>
+                    <p class="card-text text-muted mb-0">Fijar los plazos del centro para la revisión de calidad de proceso (Dirección / Coordinación Clínica con permiso).</p>
                 </div>
             </a>
         </div>

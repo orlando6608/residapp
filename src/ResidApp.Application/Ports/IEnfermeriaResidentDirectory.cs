@@ -32,9 +32,9 @@ public interface IEnfermeriaResidentDirectory
 {
     Task<IReadOnlyList<ScopeResidentSummary>> ListAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
-    /// <summary>ADM-08 (0022): el contacto urgente vigente de un residente que el caso de uso ya ha comprobado que está en
-    /// el ámbito (FindEmergencyContact); null si no tiene.</summary>
-    Task<EmergencyContactSummary?> FindEmergencyContactAsync(CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+    /// <summary>ADM-08 (0022, 0044): los contactos urgentes vigentes de un residente que el caso de uso ya ha comprobado que está en
+    /// el ámbito (FindEmergencyContact), en el orden en que se designaron; vacío si no tiene.</summary>
+    Task<IReadOnlyList<EmergencyContactSummary>> FindEmergencyContactAsync(CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 }
 
 /// <summary>ADM-08 (0022): el contacto urgente designado por Administración, tal como lo leen Enfermería y Medicina (la

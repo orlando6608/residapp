@@ -49,7 +49,7 @@
                     @(episode.FollowUpDue is { } due ? $"Fecha prevista {due:d}" : "Sin fecha prevista (por criterio)")
                     @if (episode.FollowUpDue < DateOnly.FromDateTime(DateTime.Today))
                     {
-                        <span class="badge text-bg-warning">Vencido</span>
+                        <span class="badge text-bg-warning">Pendiente</span>
                     }
                 </dd>
             }

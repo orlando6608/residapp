@@ -42,10 +42,74 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["NombreVisible"] = "Residente Funcional",
             ["FechaNacimiento"] = "1938-02-20",
             ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }));
 
         var body = await response.Content.ReadAsStringAsync();
         Assert.Contains("Id del residente", body);
+    }
+
+    [Fact]
+    public async Task Create_RegistraLosFamiliaresDeContacto_ConLaAppEntera_YRechazaUnaFilaAMedias()
+    {
+        // El alta con familiares por la app real y el usuario limitado: pasan por la seguridad por filas de familiares y contacto urgente.
+        var seed = await SeedAsync();
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var partialName = $"Residente Familia A Medias {suffix}";
+        var completeName = $"Residente Familia {suffix}";
+        var admin = await LoginAsync(seed.ExternalSubject);
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var page = await admin.GetStringAsync("/Residents/Create");
+        Assert.Contains("Familiares de contacto", page);
+        Assert.Contains("name=\"Familiares[2].NombreVisible\"", page);
+        Dictionary<string, string> Form(string name) => new()
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["OperacionId"] = ExtractValue(page, "OperacionId"),
+            ["AmbitoPerfilId"] = seed.ProfileScopeId.ToString(),
+            ["CentroId"] = seed.CenterId.ToString(),
+            ["UnidadId"] = seed.UnitId.ToString(),
+            ["NombreVisible"] = name,
+            ["FechaNacimiento"] = "1938-02-20",
+            ["SexoDocumentadoCodigo"] = "Mujer",
+        };
+
+        var partial = Form(partialName);
+        partial["Familiares[0].NombreVisible"] = "Ana Ruiz";
+        var rejected = WebUtility.HtmlDecode(await (await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(partial))).Content.ReadAsStringAsync());
+
+        var complete = Form(completeName);
+        complete["Familiares[0].NombreVisible"] = "Ana Ruiz";
+        complete["Familiares[0].Relacion"] = "Hija";
+        complete["Familiares[0].Telefono"] = "600123456";
+        complete["Familiares[0].Referente"] = "true";
+        complete["Familiares[1].NombreVisible"] = "Luis Gil";
+        complete["Familiares[1].Relacion"] = "Sobrino";
+        complete["Familiares[1].Telefono"] = "600765432";
+        complete["Familiares[1].TutorLegal"] = "true";
+        complete["Familiares[0].ContactoPrioritario"] = "true";
+        complete["Familiares[1].ContactoPrioritario"] = "true";
+        var noPriority = Form($"Residente Familia Sin Prioritario {suffix}");
+        noPriority["Familiares[0].NombreVisible"] = "Ana Ruiz";
+        noPriority["Familiares[0].Relacion"] = "Hija";
+        noPriority["Familiares[0].Telefono"] = "600123456";
+        var rejectedNoPriority = WebUtility.HtmlDecode(await (await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(noPriority))).Content.ReadAsStringAsync());
+        var created = await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(complete));
+
+        Assert.Contains("Revisa los familiares", rejected);
+        Assert.Contains("al menos un contacto prioritario", rejectedNoPriority);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.residentes WHERE nombre_visible = @partialName", new { partialName }));
+        Assert.Contains("Id del residente", await created.Content.ReadAsStringAsync());
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>("""
+            SELECT COUNT(*) FROM dbo.residentes_familiares l JOIN dbo.residentes r ON r.id = l.residente_id
+             WHERE r.nombre_visible = @completeName
+            """, new { completeName }));
+        Assert.Equal(new[] { "Ana Ruiz", "Luis Gil" }, (await connection.QueryAsync<string>("""
+            SELECT f.nombre_visible FROM dbo.residentes_contacto_urgente d
+              JOIN dbo.residentes_familiares l ON l.id = d.vinculo_id JOIN dbo.familiares f ON f.id = l.familiar_id
+              JOIN dbo.residentes r ON r.id = d.residente_id WHERE r.nombre_visible = @completeName ORDER BY d.numero
+            """, new { completeName })).ToArray());
     }
 
     [Fact]
@@ -75,6 +139,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
                 ["NombreVisible"] = "Residente Funcional",
                 ["FechaNacimiento"] = "1938-02-20",
                 ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
             }))).Content.ReadAsStringAsync());
         var empty = await PostWithUnitAsync("");
         var malformed = await PostWithUnitAsync("no-es-un-guid");
@@ -115,6 +180,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["NombreVisible"] = "Residente Consulta Dirección",
             ["FechaNacimiento"] = "1938-02-20",
             ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
         var direccion = await LoginAsync(await GrantDirectionAsync(seed));
@@ -246,6 +312,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["NombreVisible"] = "Residente Borrador Funcional",
             ["FechaNacimiento"] = "1938-02-20",
             ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
         var nurse = await LoginAsync(await GrantNursingAsync(seed));
@@ -292,6 +359,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["NombreVisible"] = "Residente Evento Funcional",
             ["FechaNacimiento"] = "1938-02-20",
             ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
         var nurse = await LoginAsync(await GrantNursingAsync(seed));
@@ -475,7 +543,10 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["Form.Telefono"] = "600000000",
         }))).Content.ReadAsStringAsync());
         var linkId = await connection.ExecuteScalarAsync<Guid>(
-            "SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId });
+            """
+            SELECT l.id FROM dbo.residentes_familiares l JOIN dbo.familiares f ON f.id = l.familiar_id
+             WHERE l.residente_id = @residentId AND f.nombre_visible = 'Familiar Funcional'
+            """, new { residentId });
 
         var changes = 0;
         foreach (var change in new[] { "Abrir", "Activar" })
@@ -497,19 +568,122 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         {
             ["__RequestVerificationToken"] = ExtractValue(contactPage, "__RequestVerificationToken"),
             ["Form.ResidenteId"] = residentId,
-            ["Form.DesignacionesEsperadas"] = "0",
-            ["Form.VinculoId"] = linkId.ToString(),
+            ["Form.DesignacionesEsperadas"] = "1",
+            ["Form.VinculosIds"] = linkId.ToString(),
         }))).Content.ReadAsStringAsync());
 
         Assert.Contains("Identidad corregida.", corrected);
         Assert.Contains("Familiar añadido.", added);
-        Assert.Contains("Contacto urgente designado.", designated);
+        Assert.Contains("Contactos urgentes guardados.", designated);
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.residentes_identidad_correcciones WHERE residente_id = @residentId", new { residentId }));
         Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.familiares_autorizaciones_cambios WHERE vinculo_id = @linkId", new { linkId }));
-        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+        // El alta ya dejó un contacto prioritario; elegir otro lo quita y añade el nuevo: 1 + 2 designaciones.
+        Assert.Equal(3, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }));
+
+        // Desvincular (script 0045): el único contacto urgente no se puede desvincular; el familiar del alta, que ya no lo es, sí.
+        async Task<string> UnlinkAsync(string name, string reason)
+        {
+            var id = await connection.ExecuteScalarAsync<Guid>("""
+                SELECT l.id FROM dbo.residentes_familiares l JOIN dbo.familiares f ON f.id = l.familiar_id
+                 WHERE l.residente_id = @residentId AND f.nombre_visible = @name
+                """, new { residentId, name });
+            var page = await admin.GetStringAsync($"/Administracion/DesvincularFamiliar?residenteId={residentId}&vinculoId={id}");
+            return WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/DesvincularFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+                ["Form.ResidenteId"] = residentId,
+                ["Form.VinculoId"] = id.ToString(),
+                ["Form.Motivo"] = reason,
+            }))).Content.ReadAsStringAsync());
+        }
+
+        var refusedUnlink = await UnlinkAsync("Familiar Funcional", "Prueba");
+        var unlinkedPage = await UnlinkAsync("Familiar Prueba", "Ya no tiene relación con el residente.");
+
+        Assert.Contains("único contacto urgente", refusedUnlink);
+        Assert.Contains("Familiar desvinculado.", unlinkedPage);
+        Assert.Contains("Familiares desvinculados", unlinkedPage);
+        Assert.Contains("Ya no tiene relación con el residente.", unlinkedPage);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.residentes_familiares WHERE residente_id = @residentId AND desvinculado_en IS NOT NULL", new { residentId }));
+    }
+
+    [Fact]
+    public async Task Administracion_TrasladaUnResidenteDeUnidad_ConLaAppEntera()
+    {
+        // El traslado por la app real con el usuario limitado: cierra y abre la ubicación, guarda el traslado (con seguridad por filas) y
+        // audita. Un reenvío del mismo formulario no lo repite; sin permiso de unidad de destino, no se traslada.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Traslado Funcional");
+        var destinationId = await GrantUnitAsync(seed, "Planta traslado funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var page = await admin.GetStringAsync($"/Administracion/Trasladar?residenteId={residentId}");
+        var form = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = residentId,
+            ["Form.UnidadOrigenId"] = ExtractValue(page, "Form.UnidadOrigenId"),
+            ["Form.OperacionId"] = ExtractValue(page, "Form.OperacionId"),
+            ["Form.UnidadDestinoId"] = destinationId.ToString(),
+        };
+        var moved = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/Trasladar", new FormUrlEncodedContent(form))).Content.ReadAsStringAsync());
+        var resent = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/Trasladar", new FormUrlEncodedContent(form))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Residente trasladado.", moved);
+        Assert.Contains("Residente trasladado.", resent);
+        Assert.Equal(destinationId, await connection.ExecuteScalarAsync<Guid>(
+            "SELECT unidad_id FROM dbo.intervalos_ubicacion_residente WHERE residente_id = @residentId AND vigente_hasta IS NULL", new { residentId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.traslados_residente WHERE residente_id = @residentId", new { residentId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @residentId AND accion_codigo = 'RESIDENT_TRANSFER'", new { residentId }));
+    }
+
+    [Fact]
+    public async Task Administracion_SuspendeDaDeBajaYReactivaUnResidente_ConLaAppEntera()
+    {
+        // Suspensión, reanudación, baja y reactivación por la app real con el usuario limitado: pasan por la seguridad por filas de las
+        // tablas de bajas y suspensiones y por los disparadores de la base de datos.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Estado Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        async Task<string> PostAsync(string path, string getPath, Dictionary<string, string> fields)
+        {
+            var page = await admin.GetStringAsync(getPath);
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            if (fields.ContainsKey("Form.OperacionId"))
+            {
+                fields["Form.OperacionId"] = ExtractValue(page, "Form.OperacionId");
+            }
+
+            return WebUtility.HtmlDecode(await (await admin.PostAsync(path, new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+
+        var suspended = await PostAsync("/Administracion/Suspender", $"/Administracion/Suspender?residenteId={residentId}",
+            new() { ["Form.ResidenteId"] = residentId, ["Form.OperacionId"] = "", ["Form.Nota"] = "Hospital de prueba." });
+        var resumed = await PostAsync($"/Administracion/Reanudar?residenteId={residentId}", $"/Administracion/Residente?residenteId={residentId}", new());
+        var discharged = await PostAsync("/Administracion/DarDeBaja", $"/Administracion/DarDeBaja?residenteId={residentId}",
+            new() { ["Form.ResidenteId"] = residentId, ["Form.OperacionId"] = "", ["Form.Motivo"] = "TrasladoOtroCentro" });
+        var reactivated = await PostAsync("/Administracion/Reactivar", $"/Administracion/Reactivar?residenteId={residentId}",
+            new() { ["Form.ResidenteId"] = residentId, ["Form.OperacionId"] = "", ["Form.UnidadId"] = seed.UnitId.ToString() });
+
+        Assert.Contains("Residente suspendido", suspended);
+        Assert.Contains("Atención reanudada", resumed);
+        Assert.Contains("se ha dado de baja", discharged);
+        Assert.Contains("Residente Estado Funcional", discharged);
+        Assert.Contains("Residente reactivado.", reactivated);
+        Assert.Equal("ACTIVE", await connection.ExecuteScalarAsync<string>("SELECT estado FROM dbo.residentes WHERE id = @residentId", new { residentId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.bajas_residente WHERE residente_id = @residentId AND reactivada_en IS NOT NULL", new { residentId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.suspensiones_residente WHERE residente_id = @residentId AND finalizada_en IS NOT NULL", new { residentId }));
     }
 
     [Fact]
@@ -558,43 +732,6 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
               JOIN dbo.cierres_cotidianos_residente closure ON closure.id = area.cierre_id
              WHERE closure.residente_id = @changedResident
             """, new { changedResident }));
-    }
-
-    [Theory]
-    [InlineData("36.8", null)]
-    [InlineData("37", null)]
-    [InlineData("37.5", "Temperatura por encima de 37 °C: mantén el seguimiento de este residente.")]
-    [InlineData("38.4", "Temperatura por encima de 38 °C: avisa a Enfermería.")]
-    public async Task Auxiliar_LaConfirmacionAvisaDeLaTemperaturaAlta_SinImpedirRegistrar(string temperatura, string? aviso)
-    {
-        var seed = await SeedAsync();
-        var admin = await LoginAsync(seed.ExternalSubject);
-        var resident = await CreateResidentAsync(admin, seed, $"Residente Temperatura {temperatura} Funcional");
-        var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, resident));
-
-        var changePage = await auxiliar.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={resident}");
-        var confirmation = WebUtility.HtmlDecode(await (await auxiliar.PostAsync("/Auxiliar/RegistrarCambio", new FormUrlEncodedContent(new[]
-        {
-            KeyValuePair.Create("__RequestVerificationToken", ExtractValue(changePage, "__RequestVerificationToken")),
-            KeyValuePair.Create("ResidenteId", resident),
-            KeyValuePair.Create("OperacionId", ExtractValue(changePage, "OperacionId")),
-            KeyValuePair.Create("AreaTexto[ESTADO_CONCIENCIA]", "Prueba funcional del aviso de temperatura."),
-            KeyValuePair.Create("Temperatura", temperatura),
-            // Lo que envía el navegador con type="number": sin él, la cultura es-ES leería «36.8» como 368.
-            KeyValuePair.Create("__Invariant", "Temperatura"),
-            KeyValuePair.Create("Clasificacion", "Ordinario"),
-        }))).Content.ReadAsStringAsync());
-
-        Assert.Contains("Confirmar cambio", confirmation);
-        Assert.Contains("Confirmar y enviar", confirmation);
-        if (aviso is null)
-        {
-            Assert.DoesNotContain("Temperatura por encima de", confirmation);
-        }
-        else
-        {
-            Assert.Contains(aviso, confirmation);
-        }
     }
 
     [Fact]
@@ -666,6 +803,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["NombreVisible"] = name,
             ["FechaNacimiento"] = "1938-02-20",
             ["SexoDocumentadoCodigo"] = "Hombre",
+            ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         return Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
     }

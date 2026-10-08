@@ -20,6 +20,16 @@
 {
     <div class="alert alert-success" role="status">@mensaje</div>
 }
+@if (Model.Suspension is { } suspension)
+{
+    <div class="alert alert-warning" role="status">
+        <p class="fw-semibold mb-1">Suspendido por ingreso hospitalario desde el @suspension.Since.ToLocalTime().ToString("dd/MM/yyyy")</p>
+        <p class="mb-2">No se puede actuar sobre este residente (cambios, eventos, constantes, basales ni comunicados a familias) hasta que se reanude.@(suspension.Note is null ? "" : " Nota: " + suspension.Note)</p>
+        <form asp-action="Reanudar" asp-route-residenteId="@resident.ResidentId.Value" method="post">
+            <button type="submit" class="btn btn-outline-dark">Reanudar atención</button>
+        </form>
+    </div>
+}
 
 <section class="card mb-4">
     <div class="card-body">
@@ -37,12 +47,30 @@
             <dd class="col-sm-8">@resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
         </dl>
         <a asp-action="CorregirIdentidad" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Corregir identidad</a>
+        <a asp-action="Trasladar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Trasladar</a>
+        @if (Model.Suspension is null)
+        {
+            <a asp-action="Suspender" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Suspender (ingreso hospitalario)</a>
+        }
+        <a asp-action="DarDeBaja" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-danger btn-lg">Dar de baja</a>
     </div>
 </section>
 
 <section class="mb-4">
     <h2 class="h5">Familiares</h2>
     <p class="text-muted">Solo una autorización Activa dará acceso al Portal Familiar cuando exista. Añadir un familiar no la abre.</p>
+    @if (Model.Detail.Family.Count > 0 && Model.Detail.CurrentEmergencyContacts.Count == 0 && !Model.Detail.Family.Any(f => f.IsReferent || f.IsLegalGuardian))
+    {
+        <div class="alert alert-warning" role="status">
+            No hay ningún familiar de contacto prioritario, referente ni tutor legal. Márcalos al editar a cada familiar o designa los contactos urgentes.
+        </div>
+    }
+    @if (Model.Detail.Family.Count == 0)
+    {
+        <div class="alert alert-warning" role="status">
+            Este residente no tiene familiares registrados. Añade al menos a su contacto prioritario, referente o tutor legal.
+        </div>
+    }
     @if (Model.Detail.Family.Count == 0)
     {
         <p class="text-muted">No hay familiares vinculados.</p>
@@ -57,9 +85,17 @@
                 <li class="list-group-item py-3">
                     <div class="fw-semibold">
                         @member.DisplayName
-                        @if (Model.Detail.CurrentEmergencyContact == member.LinkId)
+                        @if (Model.Detail.CurrentEmergencyContacts.Contains(member.LinkId))
                         {
                             <span class="badge text-bg-primary ms-1 align-middle">Contacto urgente</span>
+                        }
+                        @if (member.IsReferent)
+                        {
+                            <span class="badge text-bg-secondary ms-1 align-middle">Referente</span>
+                        }
+                        @if (member.IsLegalGuardian)
+                        {
+                            <span class="badge text-bg-secondary ms-1 align-middle">Tutor legal</span>
                         }
                     </div>
                     <div class="text-body-secondary small">@member.Relationship · @member.Phone</div>
@@ -73,6 +109,8 @@
                            class="btn btn-outline-primary">Autorización</a>
                         <a asp-action="EditarFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
                            class="btn btn-outline-secondary">Editar</a>
+                        <a asp-action="DesvincularFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
+                           class="btn btn-outline-danger">Desvincular</a>
                     </div>
                 </li>
             }
@@ -96,10 +134,18 @@
                         <tr>
                             <th scope="row">
                                 @member.DisplayName
-                                @if (Model.Detail.CurrentEmergencyContact == member.LinkId)
+                                @if (Model.Detail.CurrentEmergencyContacts.Contains(member.LinkId))
                                 {
                                     <span class="badge text-bg-primary ms-1">Contacto urgente</span>
                                 }
+                    @if (member.IsReferent)
+                    {
+                        <span class="badge text-bg-secondary ms-1">Referente</span>
+                    }
+                    @if (member.IsLegalGuardian)
+                    {
+                        <span class="badge text-bg-secondary ms-1">Tutor legal</span>
+                    }
                             </th>
                             <td>@member.Relationship</td>
                             <td>@member.Phone</td>
@@ -110,12 +156,30 @@
                                    class="btn btn-outline-primary">Autorización</a>
                                 <a asp-action="EditarFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
                                    class="btn btn-outline-secondary">Editar</a>
+                                <a asp-action="DesvincularFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
+                                   class="btn btn-outline-danger">Desvincular</a>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+    }
+    @if (Model.Detail.Former.Count > 0)
+    {
+        <h3 class="h6 mt-3">Familiares desvinculados</h3>
+        <ul class="list-group mb-3">
+            @foreach (var former in Model.Detail.Former)
+            {
+                <li class="list-group-item">
+                    <div class="fw-semibold">@former.DisplayName <span class="text-body-secondary fw-normal">(@former.Relationship)</span></div>
+                    <div class="small text-body-secondary">
+                        Vinculado el @former.LinkedAt.ToLocalTime().ToString("dd/MM/yyyy") · desvinculado el @former.UnlinkedAt.ToLocalTime().ToString("dd/MM/yyyy")
+                    </div>
+                    <div class="small">Motivo: @former.Reason</div>
+                </li>
+            }
+        </ul>
     }
     <div class="d-flex flex-wrap gap-2">
         <a asp-action="AnadirFamiliar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Añadir familiar</a>
@@ -124,24 +188,28 @@
 </section>
 
 <section class="mb-4">
-    <h2 class="h5">Contacto urgente</h2>
+    <h2 class="h5">Contactos urgentes</h2>
     @{
-        var currentContact = Model.Detail.Family.FirstOrDefault(f => f.LinkId == Model.Detail.CurrentEmergencyContact);
+        var currentContacts = Model.Detail.CurrentEmergencyContacts
+            .Select(linkId => Model.Detail.Family.FirstOrDefault(f => f.LinkId == linkId)).OfType<ResidApp.Application.Ports.ResidentFamilyMember>().ToList();
     }
-    <p>
-        @if (currentContact is null)
-        {
-            <span class="text-muted">No hay contacto urgente designado.</span>
-        }
-        else
-        {
-            <strong>@currentContact.DisplayName</strong> @($"({currentContact.Relationship}) · {currentContact.Phone}")
-        }
-    </p>
+    @if (currentContacts.Count == 0)
+    {
+        <p class="text-muted">No hay contacto urgente designado.</p>
+    }
+    else
+    {
+        <ul class="list-unstyled">
+            @foreach (var currentContact in currentContacts)
+            {
+                <li><strong>@currentContact.DisplayName</strong> @($"({currentContact.Relationship}) · {currentContact.Phone}")</li>
+            }
+        </ul>
+    }
     @if (Model.Detail.Family.Count > 0)
     {
         <a asp-action="ContactoUrgente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg mb-3">
-            @(currentContact is null ? "Designar contacto urgente" : "Cambiar contacto urgente")
+            @(currentContacts.Count == 0 ? "Designar contactos urgentes" : "Cambiar contactos urgentes")
         </a>
     }
     @if (Model.Detail.EmergencyContacts.Count > 0)
@@ -152,7 +220,12 @@
             {
                 <li class="list-group-item">
                     @designation.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Administración ·
-                    @(designation.DisplayName ?? "Sin contacto urgente")
+                    @(designation.Action switch
+                    {
+                        "AGREGAR" => "Contacto urgente añadido: " + designation.DisplayName,
+                        "QUITAR" => "Contacto urgente quitado: " + designation.DisplayName,
+                        _ => designation.DisplayName ?? "Sin contacto urgente",
+                    })
                 </li>
             }
         </ol>

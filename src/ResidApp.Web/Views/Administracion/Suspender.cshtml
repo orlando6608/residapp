@@ -1,0 +1,47 @@
+@using ResidApp.Web.Models
+@model SuspendResidentViewModel
+@{
+    var resident = Model.Resident;
+    ViewData["Title"] = "Suspender residente";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Suspender</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Suspender por ingreso hospitalario</h1>
+<p class="text-muted">
+    Para un ingreso hospitalario prolongado de @resident.DisplayName. Su perfil sigue activo, pero mientras esté suspendido no se puede actuar
+    sobre él: no se registran cambios, eventos, constantes ni basales, ni se emiten comunicados a sus familiares. Lo reanudas desde su ficha.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="Suspender" method="post">
+            <input type="hidden" name="Form.ResidenteId" value="@Model.Form.ResidenteId" />
+            <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+
+            <div class="mb-3">
+                <label asp-for="Form.Nota" class="form-label"></label>
+                <textarea asp-for="Form.Nota" class="form-control form-control-lg" rows="2"></textarea>
+                <span asp-validation-for="Form.Nota" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Suspender</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

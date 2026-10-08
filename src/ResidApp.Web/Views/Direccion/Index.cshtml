@@ -30,7 +30,7 @@
                 <span class="text-body-secondary">@(Model.Open == 1 ? "episodio abierto" : "episodios abiertos")</span>
                 @if (Model.FollowUpsOverdue > 0)
                 {
-                    <span class="d-block text-warning-emphasis fw-semibold mt-1">@Model.FollowUpsOverdue @(Model.FollowUpsOverdue == 1 ? "seguimiento vencido" : "seguimientos vencidos")</span>
+                    <span class="d-block text-warning-emphasis fw-semibold mt-1">@Model.FollowUpsOverdue @(Model.FollowUpsOverdue == 1 ? "seguimiento pendiente" : "seguimientos pendientes")</span>
                 }
             </div>
         </a>
@@ -48,6 +48,14 @@
             <div class="card-body">
                 <h2 class="h5 card-title">Indicadores e informe de actividad</h2>
                 <p class="card-text mb-0">Cifras agregadas por unidad y periodo, con su evolución mes a mes y versión para imprimir.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
+        <a asp-action="Calidad" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Calidad de proceso</h2>
+                <p class="card-text mb-0">Plazos de cada hito del proceso por unidad y periodo, con los episodios fuera de plazo o a punto de vencer.</p>
             </div>
         </a>
     </div>
@@ -97,7 +105,7 @@ else
                         <dd class="col-4 text-end mb-1">@unit.Escalated de @unit.Open</dd>
                         <dt class="col-8 fw-normal text-body-secondary">Seguimientos</dt>
                         <dd class="col-4 text-end mb-1">@unit.FollowUps de @unit.Open</dd>
-                        <dt class="col-8 fw-normal text-body-secondary">Seguimientos vencidos</dt>
+                        <dt class="col-8 fw-normal text-body-secondary">Seguimientos pendientes</dt>
                         <dd class="col-4 text-end mb-1">@unit.FollowUpsOverdue de @unit.FollowUps</dd>
                         <dt class="col-8 fw-normal text-body-secondary">Indicaciones pendientes</dt>
                         <dd class="col-4 text-end mb-1">@unit.IndicationsPending</dd>
@@ -121,7 +129,7 @@ else
                     <th scope="col" class="text-end">En valoración</th>
                     <th scope="col" class="text-end">Escalados</th>
                     <th scope="col" class="text-end">Seguimientos</th>
-                    <th scope="col" class="text-end">Vencidos</th>
+                    <th scope="col" class="text-end">Pendientes</th>
                     <th scope="col" class="text-end">Indicaciones pendientes</th>
                     <th scope="col" class="text-end">Indicaciones no realizadas</th>
                     <th scope="col" class="text-end">Protocolos urgentes</th>

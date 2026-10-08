@@ -245,6 +245,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
                 ["OperacionId"] = ExtractValue(createPage, "OperacionId"), ["AmbitoPerfilId"] = ExtractValue(createPage, "AmbitoPerfilId"),
                 ["CentroId"] = ExtractValue(createPage, "CentroId"), ["UnidadId"] = admin.UnitId.ToString(), ["NombreVisible"] = $"Residente {Guid.NewGuid():N}"[..18],
                 ["FechaNacimiento"] = "1938-02-20", ["SexoDocumentadoCodigo"] = "Hombre", ["Ubicacion"] = location,
+                ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
             };
             return await PostAsync("/Residents/Create", createPage, fields);
         }
@@ -330,6 +331,23 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.DoesNotContain("Dar de alta un centro con su primera unidad", adminHome);
         Assert.Contains("No se puede acceder a esta operación", adminPlatform);
         Assert.DoesNotContain("Nuevo centro", adminPlatform);
+        // El soporte ve las Administraciones del centro nuevo (la primera es la principal) y puede quitarle la marca.
+        using var platformConnection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        var newCenterId = await platformConnection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.centros WHERE codigo = @code", new { code = $"FUNC-{suffix}".ToUpperInvariant() });
+        var centerPage = WebUtility.HtmlDecode(await client.GetStringAsync($"/Plataforma/Centro?centroId={newCenterId}"));
+        var scopeId = await platformConnection.ExecuteScalarAsync<Guid>(
+            "SELECT id FROM dbo.ambitos_perfil WHERE centro_id = @newCenterId AND perfil_codigo = 'ADMINISTRACION'", new { newCenterId });
+        var unmarked = WebUtility.HtmlDecode(await (await client.PostAsync("/Plataforma/MarcarPrincipal", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(centerPage, "__RequestVerificationToken"),
+            ["centroId"] = newCenterId.ToString(),
+            ["ambitoId"] = scopeId.ToString(),
+            ["principal"] = "false",
+        }))).Content.ReadAsStringAsync());
+        Assert.Contains("Admin Funcional (ficticio)", centerPage);
+        Assert.Contains("Quitar la marca de principal", centerPage);
+        Assert.Contains("Ya no es Administración principal.", unmarked);
+        Assert.Contains("Marcar como Administración principal", unmarked);
     }
 
     /// <summary>Una cuenta con el perfil Plataforma, que vive en el centro reservado.</summary>
@@ -567,10 +585,80 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
 
     [Fact]
+    public async Task AdministracionPrincipal_VeLasUnidadesDelCentroYSeAnadeUna_ConLaAppEntera()
+    {
+        // Con el usuario limitado: la lista de unidades del centro y la ampliación del propio ámbito (ambitos_perfil_unidad, auditoría).
+        var admin = await SeedAdministratorAsync();
+        var secondUnit = Guid.NewGuid();
+        using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.unidades (id, centro_id, codigo, nombre_visible, estado, creado_en)
+            SELECT @secondUnit, centro_id, @code, @code, 'ACTIVE', SYSUTCDATETIME() FROM dbo.unidades WHERE id = @unitId;
+            INSERT INTO dbo.administraciones_principales_cambios (id, centro_id, ambito_perfil_id, numero, principal, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            SELECT NEWID(), centro_id, id, 1, 1, cuenta_id, 'ADMINISTRACION', SYSUTCDATETIME() FROM dbo.ambitos_perfil WHERE cuenta_id = @accountId;
+            """, new { secondUnit, code = $"SEGUNDA-{secondUnit:N}"[..20], unitId = admin.UnitId, accountId = admin.AccountId });
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = admin.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync("/Administracion/AmbitoCentro"));
+        var added = WebUtility.HtmlDecode(await (await client.PostAsync("/Administracion/AnadirUnidadAlAmbito", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["unidadId"] = secondUnit.ToString(),
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Eres la Administración principal del centro", page);
+        Assert.Contains("Fuera de tu ámbito", page);
+        Assert.Contains("Unidad añadida a tu ámbito.", added);
+        Assert.DoesNotContain("Fuera de tu ámbito", added);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @accountId AND accion_codigo = 'ADMIN_SCOPE_UNIT_ADD'", new { accountId = admin.AccountId }));
+    }
+
+    [Fact]
+    public async Task PlazosDeLosHitos_DireccionConPermisoLosGuarda_ConLaAppEntera()
+    {
+        // Con el usuario limitado escribe en las tablas de plazos bajo la seguridad por filas, y la revisión de calidad ofrece el enlace.
+        var direccion = await SeedAdministratorAsync("DIRECCION_CLINICA", "PROCESS_DEADLINES_MANAGE");
+        var client = _factory.CreateClient();
+        var loginPage = await client.GetStringAsync("/DevAuth/Login");
+        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
+            ["externalSubject"] = direccion.ExternalSubject,
+        }))).EnsureSuccessStatusCode();
+
+        var quality = await client.GetStringAsync("/Direccion/Calidad");
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync("/PlazosProceso"));
+        var saved = WebUtility.HtmlDecode(await (await client.PostAsync("/PlazosProceso", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["Form.Version"] = ExtractValue(page, "Form.Version"),
+            ["Form.Plazos[0].Hito"] = "ValoracionEnfermeria",
+            ["Form.Plazos[0].PlazoMinutos"] = "240",
+            ["Form.Plazos[0].PlazoPrioritarioMinutos"] = "20",
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Cambiar los plazos del centro", quality);
+        Assert.Contains("Valoración de Enfermería", page);
+        Assert.Contains("Plazos de los hitos guardados.", saved);
+        Assert.Contains("4 h", saved);
+        using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.plazos_hitos_centro_historial WHERE centro_id = (SELECT centro_id FROM dbo.unidades WHERE id = @unitId)",
+            new { unitId = direccion.UnitId }));
+    }
+
+    [Fact]
     public async Task RangosReferencia_UnaMedicaConPermisoLosGuarda_ConLaAppEntera()
     {
         // Con la app conectada como usuario limitado (RESIDAPP_TEST_APP_CONNECTION_STRING) escribe en las tablas de rangos bajo la seguridad por filas.
-        var doctor = await SeedAdministratorAsync("MEDICINA", "REFERENCE_RANGES_MANAGE");
+        var doctor = await SeedAdministratorAsync("DIRECCION_CLINICA", "REFERENCE_RANGES_MANAGE");
         var client = _factory.CreateClient();
         var loginPage = await client.GetStringAsync("/DevAuth/Login");
         (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -602,7 +690,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     [Fact]
     public async Task RangosReferencia_CargarValoresSugeridos_RellenaElFormularioSinGuardarNada()
     {
-        var doctor = await SeedAdministratorAsync("MEDICINA", "REFERENCE_RANGES_MANAGE");
+        var doctor = await SeedAdministratorAsync("DIRECCION_CLINICA", "REFERENCE_RANGES_MANAGE");
         var client = _factory.CreateClient();
         var loginPage = await client.GetStringAsync("/DevAuth/Login");
         (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -618,9 +706,9 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.DoesNotContain("todavía no se han guardado", normal);
         Assert.Contains("todavía no se han guardado", suggested);
         Assert.Contains("name=\"Form.Rangos[0].Minimo\"", suggested);
-        Assert.Matches("name=\"Form.Rangos\\[0\\]\\.Maximo\"[^>]*value=\"37.9\"", suggested);
+        Assert.Matches("name=\"Form.Rangos\\[0\\]\\.Maximo\"[^>]*value=\"36.9\"", suggested);
         Assert.Matches("name=\"Form.Rangos\\[6\\]\\.Minimo\"[^>]*value=\"70\"", suggested);
-        Assert.DoesNotMatch("name=\"Form.Rangos\\[6\\]\\.Maximo\"[^>]*value=\"\\d", suggested);
+        Assert.Matches("name=\"Form.Rangos\\[6\\]\\.Maximo\"[^>]*value=\"120\"", suggested);
         using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
         Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.rangos_referencia_constantes WHERE centro_id = (SELECT centro_id FROM dbo.unidades WHERE id = @unitId)",
@@ -647,6 +735,44 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         var with = await PageAsync(profileCode, permission);
 
         Assert.DoesNotContain("Firmar borrador de basal", with);
+    }
+
+    [Fact]
+    public async Task Derivaciones_DeDireccion_OfreceElPeriodoParaLasDeEpisodiosCerrados_ConLaAppEntera()
+    {
+        var plain = await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Derivaciones");
+        var withClosed = await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Derivaciones?cerradas=true");
+        var invalid = await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Derivaciones?cerradas=true&desde=2026-10-05&hasta=2026-10-01");
+
+        Assert.Contains("Incluir también las de episodios ya cerrados", plain);
+        Assert.Contains("No hay derivaciones en curso.", plain);
+        Assert.Contains("No hay derivaciones en curso ni de episodios cerrados en ese periodo.", withClosed);
+        Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", WebUtility.HtmlDecode(invalid));
+    }
+
+    [Fact]
+    public async Task Calidad_DeDireccion_EnseñaLosPlazosDeCadaHito_ConLaAppEntera()
+    {
+        var page = WebUtility.HtmlDecode(await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Calidad"));
+        var invalid = WebUtility.HtmlDecode(await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Calidad?desde=2026-10-05&hasta=2026-10-01"));
+
+        Assert.Contains("Calidad de proceso", page);
+        Assert.Contains("Valoración de Enfermería", page);
+        Assert.Contains("Realización de la indicación médica", page);
+        Assert.Contains("Ningún hito fuera de plazo ni a punto de vencer en este periodo.", page);
+        Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", invalid);
+    }
+
+    [Theory]
+    [InlineData("ENFERMERIA", "/Enfermeria", "Inicio de Enfermería")]
+    [InlineData("MEDICINA", "/Medicina", "Inicio de Medicina")]
+    public async Task InicioDeEnfermeriaYMedicina_ConAvisosDeHitos_CargaConLaAppEntera(string profile, string path, string title)
+    {
+        // La consulta de los avisos de hitos (DIR-11) pasa por la seguridad por filas con el usuario limitado; sin hitos, no sale el aviso.
+        var page = WebUtility.HtmlDecode(await PageAsync(profile, null, path));
+
+        Assert.Contains(title, page);
+        Assert.DoesNotContain("Hitos a punto de vencer", page);
     }
 
     [Fact]

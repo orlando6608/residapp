@@ -187,7 +187,7 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
     /// <summary>DIR-08 a DIR-10: cuatro consultas sobre la misma regla de ámbito, sin el filtro de abiertos. Solo leen la
     /// unidad, códigos y fechas.</summary>
     public async Task<IReadOnlyList<SupervisionReferral>> ListReferralsAsync(
-        Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
+        Guid profileScopeId, CenterId centerId, DateTime? closedFrom = null, DateTime? closedToExclusive = null, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         var rows = await connection.QueryAsync<ReferralRow>(new CommandDefinition($"""
@@ -195,19 +195,31 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
                    unit.nombre_visible AS UnitName, protocol.perfil_codigo AS ProtocolProfileCode, protocol.activado_en AS ProtocolActivatedAt,
                    report.perfil_codigo AS ReportProfileCode, report.firmado_en AS ReportSignedAt,
                    (SELECT COUNT(*) FROM dbo.intentos_llamada_familia call WHERE call.evento_id = ea.id) AS FamilyCallAttempts,
-                   (SELECT MAX(call.llamado_en) FROM dbo.intentos_llamada_familia call WHERE call.evento_id = ea.id) AS LastCallAt
+                   (SELECT MAX(call.llamado_en) FROM dbo.intentos_llamada_familia call WHERE call.evento_id = ea.id) AS LastCallAt,
+                   ea.cerrado_en AS ClosedAt
             {ScopedEventsFrom}
               JOIN dbo.protocolos_urgentes protocol ON protocol.evento_id = ea.id
               LEFT JOIN dbo.informes_derivacion report ON report.evento_id = ea.id
             {ScopedEventsWhere}
-               AND ea.estado_codigo <> 'CERRADO'
+               AND (ea.estado_codigo <> 'CERRADO'
+                    OR (@ClosedFrom IS NOT NULL AND protocol.activado_en >= @ClosedFrom AND protocol.activado_en < @ClosedTo))
              ORDER BY protocol.activado_en DESC
-            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ClosedFrom = closedFrom, ClosedTo = closedToExclusive }, cancellationToken: ct));
         return rows.Select(r => new SupervisionReferral(
             r.EventId, ResidentId.From(r.ResidentId), r.ResidentName, UnitId.From(r.UnitId), r.UnitName,
             EnumCode.ParseCode<SystemProfile>(r.ProtocolProfileCode), Utc(r.ProtocolActivatedAt),
             r.ReportProfileCode is null ? null : EnumCode.ParseCode<SystemProfile>(r.ReportProfileCode),
-            r.ReportSignedAt is { } signed ? Utc(signed) : null, r.FamilyCallAttempts, r.LastCallAt is { } last ? Utc(last) : null)).ToList();
+            r.ReportSignedAt is { } signed ? Utc(signed) : null, r.FamilyCallAttempts, r.LastCallAt is { } last ? Utc(last) : null,
+            r.ClosedAt is { } closed ? Utc(closed) : null)).ToList();
+    }
+
+    /// <summary>DIR-11: los hitos del proceso de todo el ámbito de Dirección (ver ProcessMilestoneQueries).</summary>
+    public async Task<IReadOnlyList<MilestoneFact>> ListMilestoneFactsAsync(
+        Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return await ProcessMilestoneQueries.ListAsync(
+            connection, ScopedEventsFrom + ScopedEventsWhere, profileScopeId, centerId, from, toExclusive, ct);
     }
 
     public async Task<SupervisionIndicatorFacts> ListIndicatorFactsAsync(
@@ -266,19 +278,15 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
             """, parameters, cancellationToken: ct));
 
         // Seguimientos con alguna fecha abierta antes del fin del periodo y no terminados antes de su inicio, con sus reprogramaciones (una fila
-        // por reprogramación, o una sola sin ellas). Termina por lo primero que ocurra tras iniciarse: el cierre, el escalado (solo Enfermería)
-        // o el protocolo urgente. No se guarda cuándo deja de estar abierto por otras vías (ver IndicatorFollowUpFact).
+        // por reprogramación, o una sola sin ellas). Termina con el cierre del episodio (CJ, 2026-10-07): escalar a Medicina o activar el protocolo
+        // urgente no lo cierran; derivar a Urgencias o el fallecimiento sí, porque cierran el episodio.
         var nursingFollowUps = await connection.QueryAsync<FollowUpFactRow>(new CommandDefinition($"""
             SELECT fu.FollowUpId, fu.UnitId, fu.StartedAt, fu.EndedAt, fu.InitialDue, r.registrado_en AS RescheduleAt, r.fecha_prevista AS RescheduleDue
               FROM (
                   SELECT s.id AS FollowUpId, ea.unidad_id AS UnitId, s.iniciado_en AS StartedAt, s.fecha_prevista AS InitialDue,
-                         (SELECT MIN(t) FROM (VALUES (ea.cerrado_en), (esc.At), (pr.At)) v(t)) AS EndedAt
+                         ea.cerrado_en AS EndedAt
                 {ScopedEventsFrom}
                   JOIN dbo.seguimientos s ON s.evento_id = ea.id
-                  OUTER APPLY (SELECT MIN(x.escalado_en) AS At FROM dbo.escalados_medicina x
-                                WHERE x.evento_id = ea.id AND x.escalado_en > s.iniciado_en) esc
-                  OUTER APPLY (SELECT MIN(x.activado_en) AS At FROM dbo.protocolos_urgentes x
-                                WHERE x.evento_id = ea.id AND x.activado_en > s.iniciado_en) pr
                 {ScopedEventsWhere}
                    AND s.iniciado_en < @To) fu
               LEFT JOIN dbo.seguimiento_acciones r ON r.seguimiento_id = fu.FollowUpId AND r.tipo_codigo = 'REPROGRAMACION'
@@ -288,11 +296,9 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
             SELECT fu.FollowUpId, fu.UnitId, fu.StartedAt, fu.EndedAt, fu.InitialDue, r.registrado_en AS RescheduleAt, r.fecha_prevista AS RescheduleDue
               FROM (
                   SELECT s.id AS FollowUpId, ea.unidad_id AS UnitId, s.iniciado_en AS StartedAt, s.fecha_prevista AS InitialDue,
-                         (SELECT MIN(t) FROM (VALUES (ea.cerrado_en), (pr.At)) v(t)) AS EndedAt
+                         ea.cerrado_en AS EndedAt
                 {ScopedEventsFrom}
                   JOIN dbo.seguimientos_medicos s ON s.evento_id = ea.id
-                  OUTER APPLY (SELECT MIN(x.activado_en) AS At FROM dbo.protocolos_urgentes x
-                                WHERE x.evento_id = ea.id AND x.activado_en > s.iniciado_en) pr
                 {ScopedEventsWhere}
                    AND s.iniciado_en < @To) fu
               LEFT JOIN dbo.seguimiento_medico_acciones r ON r.seguimiento_id = fu.FollowUpId AND r.tipo_codigo = 'REPROGRAMACION'
@@ -337,7 +343,8 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
 
     private sealed record ReferralRow(
         Guid EventId, Guid ResidentId, string ResidentName, Guid UnitId, string UnitName, string ProtocolProfileCode,
-        DateTime ProtocolActivatedAt, string? ReportProfileCode, DateTime? ReportSignedAt, int FamilyCallAttempts, DateTime? LastCallAt);
+        DateTime ProtocolActivatedAt, string? ReportProfileCode, DateTime? ReportSignedAt, int FamilyCallAttempts, DateTime? LastCallAt,
+        DateTime? ClosedAt);
 
     private sealed record StartRow(DateTime? AssessmentStartedAt, DateTime? MedicalStartedAt);
 

@@ -14,7 +14,7 @@ La web (`/pendientes-cj/index.html`) tiene tres secciones, cada una con su pági
 | **Archivo** | `archivo.html` | Documentos **contestados y ya implementados**, en `archivados/`, que se abren con sus respuestas cargadas |
 
 **Regla de archivo:** un documento se archiva cuando CJ lo ha contestado **y** lo que pedía ya está implementado. Lo que quede sin hacer
-se pregunta en otro documento de Preguntas (por ejemplo, `aclaraciones-respuestas-cj.html`), y el archivado lo cita. No se borra nada.
+se pregunta en otro documento de Preguntas (por ejemplo, `administracion-ambito-familiares-cargos.html`), y el archivado lo cita. No se borra nada.
 
 ## La clave
 
@@ -97,8 +97,6 @@ El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **p
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
-| [aclaraciones-respuestas-cj.html](aclaraciones-respuestas-cj.html) | `aclaraciones-respuestas-cj.respuestas.json` | Aclaraciones a las respuestas de rangos y de Dirección, basal y derivación: quién firma una aportación al basal y cómo se entera el autor, temperaturas seguidas, saturación con oxígeno, Dirección y Coordinación Clínica, y «Comunicaciones» del informe (11 respuestas) | Pendiente |
-| [traslado-y-baja-residente.html](traslado-y-baja-residente.html) | `traslado-y-baja-residente.respuestas.json` | Traslado entre unidades o centros (episodios abiertos, borrador de basal, quién lo hace) y baja y reactivación del residente (6 respuestas) | Pendiente |
 | [administracion-ambito-familiares-cargos.html](administracion-ambito-familiares-cargos.html) | `administracion-ambito-familiares-cargos.respuestas.json` | Unidades que ninguna Administración tiene, desvincular y compartir familiares, y organigrama y cargos (7 respuestas) | Pendiente |
 | [continuidad-supervision-comunicacion.html](continuidad-supervision-comunicacion.html) | `continuidad-supervision-comunicacion.respuestas.json` | Confirmar recepción de seguimientos, derivaciones de Dirección y seguimientos vencidos (ya construidos); plazos de los hitos del proceso y quién aprueba la comunicación familiar (9 preguntas y 7 plazos) | Pendiente |
 
@@ -114,3 +112,5 @@ El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **p
 | --- | --- | --- | --- |
 | [archivados/rangos-referencia-constantes.html](archivados/rangos-referencia-constantes.html) | `archivados/rangos-referencia-constantes.respuestas.json` | Mínimo y máximo de las 7 constantes con aviso visual, y 5 preguntas abiertas | Archivado 2026-10-07: hechos los valores sugeridos, el flujo de O₂ y el aviso de temperatura de la Auxiliar; lo pendiente, en «Aclaraciones» |
 | [archivados/decisiones-direccion-basal-derivacion.html](archivados/decisiones-direccion-basal-derivacion.html) | `archivados/decisiones-direccion-basal-derivacion.respuestas.json` | Finalidades de la lectura clínica de Dirección, aportación a un borrador de basal ajeno y el campo «Comunicaciones» en el informe de derivación (7 respuestas) | Archivado 2026-10-07: hechos las finalidades y la justificación de Dirección y «Comunicaciones»; las aportaciones al basal, en «Aclaraciones» |
+| [archivados/aclaraciones-respuestas-cj.html](archivados/aclaraciones-respuestas-cj.html) | `archivados/aclaraciones-respuestas-cj.respuestas.json` | Aclaraciones a las respuestas de rangos y de Dirección, basal y derivación (11 respuestas) | Archivado 2026-10-07: hechos los valores de temperatura y glucemia, la saturación con oxígeno, el aviso de la Auxiliar retirado, los rangos solo para Dirección / Coordinación y las aportaciones al basal descartadas |
+| [archivados/traslado-y-baja-residente.html](archivados/traslado-y-baja-residente.html) | `archivados/traslado-y-baja-residente.respuestas.json` | Traslado entre unidades, baja y reactivación del residente (6 respuestas) | Archivado 2026-10-07: hechos el traslado por Administración, la baja, la lista de bajas, la reactivación y la suspensión por ingreso hospitalario; queda el traslado por Enfermería con permiso, para cuando un centro lo pida |

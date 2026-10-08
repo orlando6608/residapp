@@ -17,11 +17,11 @@ public sealed record AccountScopeGrant(
 
 /// <summary>ADM-13: un perfil de la cuenta en el centro, vigente o revocado, con sus unidades, sus residentes (estos,
 /// solo en Auxiliar) y sus permisos configurables (0024). TargetId es el id de la unidad, del residente o de la fila del
-/// permiso; en los permisos, Name es el código.</summary>
+/// permiso; en los permisos, Name es el código. IsPrincipal es la marca de Administración principal (0047).</summary>
 public sealed record AccountProfileScope(
     Guid ProfileScopeId, SystemProfile Profile, DateTimeOffset GrantedAt, string GrantedBy, DateTimeOffset? RevokedAt,
     string? RevokedBy, IReadOnlyList<AccountScopeGrant> Units, IReadOnlyList<AccountScopeGrant> Residents,
-    IReadOnlyList<AccountScopeGrant> Permissions)
+    IReadOnlyList<AccountScopeGrant> Permissions, bool IsPrincipal = false)
 {
     public bool Active => RevokedAt is null;
 }

@@ -111,3 +111,73 @@ public class FamilyRulesTests
             new FamilyMemberData("ab", "c", "600 123 456", null).Version, new FamilyMemberData("a", "bc", "600 123 456", null).Version);
     }
 }
+
+public class ResidentFamilyAtAdmissionTests
+{
+    private static NewResidentFamilyInput Row(
+        string? name = "Ana Ruiz", string? relationship = "Hija", string? phone = "600123456", bool referent = false, bool guardian = false,
+        bool priority = false) => new(name, relationship, phone, null, referent, guardian, priority);
+
+    private static readonly NewResidentFamilyInput Blank = new(null, " ", null, "", false, false, false);
+
+    [Fact]
+    public void Validate_IgnoraLasFilasEnBlanco_YConservaLasMarcas()
+    {
+        var result = ResidentFamilyAtAdmission.Validate([Row(referent: true, priority: true), Blank, Row("Luis Gil", "Hijo", "600765432", guardian: true), Blank]);
+
+        Assert.Equal(2, result.Count);
+        Assert.True(result[0].Data.IsReferent && result[0].IsPriorityContact && !result[0].Data.IsLegalGuardian);
+        Assert.True(result[1].Data.IsLegalGuardian && !result[1].IsPriorityContact);
+        Assert.Throws<DomainValidationException>(() => ResidentFamilyAtAdmission.Validate([Blank, Blank]));
+        Assert.Empty(ResidentFamilyAtAdmission.Validate(null));
+    }
+
+    [Fact]
+    public void Validate_UnaFilaAMediasUnTelefonoMalo_SinPrioritarioOMasDeCinco_SonInvalidos()
+    {
+        var invalid = new[]
+        {
+            new[] { Row(phone: null, priority: true) },
+            new[] { Row(relationship: " ", priority: true) },
+            new[] { Row(phone: "abc", priority: true) },
+            new[] { new NewResidentFamilyInput(null, null, null, null, true, false, false) },
+            new[] { Row(referent: true) },
+            new NewResidentFamilyInput[] { Blank },
+            Array.Empty<NewResidentFamilyInput>(),
+            Enumerable.Range(0, 6).Select(i => Row($"Familiar {i}", priority: true)).ToArray(),
+        };
+
+        foreach (var rows in invalid)
+        {
+            Assert.Equal(FamilyMember.InvalidCode, Assert.Throws<DomainValidationException>(() => ResidentFamilyAtAdmission.Validate(rows)).Message);
+        }
+    }
+
+    [Fact]
+    public void LasMarcasDeReferenteYTutorCambianLaVersionYElIgual()
+    {
+        var data = new FamilyMemberData("Ana Ruiz", "Hija", "600123456", null);
+
+        Assert.NotEqual(data.Version, (data with { IsReferent = true }).Version);
+        Assert.NotEqual(data.Version, (data with { IsLegalGuardian = true }).Version);
+        Assert.False(data.SameAs(data with { IsReferent = true }));
+        Assert.True((FamilyMember.Validate("Ana Ruiz", "Hija", "600123456", null, true, true)).IsLegalGuardian);
+    }
+}
+
+public class EmergencyContactSetTests
+{
+    private static readonly Guid A = Guid.NewGuid(), B = Guid.NewGuid(), C = Guid.NewGuid();
+
+    [Fact]
+    public void Current_RecorreLasDesignacionesPorOrden()
+    {
+        Assert.Empty(EmergencyContactSet.Current([]));
+        Assert.Equal([A, B], EmergencyContactSet.Current([("AGREGAR", A), ("AGREGAR", B), ("AGREGAR", A)]));
+        Assert.Equal([B, C], EmergencyContactSet.Current([("AGREGAR", A), ("AGREGAR", B), ("QUITAR", A), ("AGREGAR", C)]));
+        // Una designación de antes de los varios contactos sustituía al anterior, y sin vínculo los quitaba todos.
+        Assert.Equal([C], EmergencyContactSet.Current([("REEMPLAZAR", A), ("REEMPLAZAR", B), ("REEMPLAZAR", C)]));
+        Assert.Empty(EmergencyContactSet.Current([("REEMPLAZAR", A), ("REEMPLAZAR", null)]));
+        Assert.Equal([B, C], EmergencyContactSet.Current([("REEMPLAZAR", A), ("REEMPLAZAR", B), ("AGREGAR", C)]));
+    }
+}

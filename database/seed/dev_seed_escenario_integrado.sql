@@ -128,6 +128,23 @@ END
 GO
 
 /*
+ * Añadido después (2026-10-08): permiso PROCESS_DEADLINES_MANAGE para Dirección Clínica, para que CJ pueda ajustar los plazos de los
+ * hitos del proceso (DIR-11) como 'dev-integrado-direccion'. No siembra ningún plazo: sin cambios del centro valen los de CJ.
+ */
+IF EXISTS (SELECT 1 FROM dbo.ambitos_perfil WHERE id = 'A1000000-0000-0000-0000-000000000003')
+   AND NOT EXISTS (
+       SELECT 1 FROM dbo.permisos_perfil
+        WHERE ambito_perfil_id = 'A1000000-0000-0000-0000-000000000003' AND permiso_codigo = 'PROCESS_DEADLINES_MANAGE'
+          AND revocado_en IS NULL)
+BEGIN
+    INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+    SELECT NEWID(), p.id, p.centro_id, 'PROCESS_DEADLINES_MANAGE', SYSUTCDATETIME(), p.cuenta_id
+      FROM dbo.ambitos_perfil p
+     WHERE p.id = 'A1000000-0000-0000-0000-000000000003';
+END
+GO
+
+/*
  * Añadido después (2026-09-28): cuenta 'dev-integrado-medicina' con un ámbito MEDICINA sobre la misma
  * unidad, para recorrer el escalado de Enfermería a Medicina (bandeja de escalados, MED-02/MED-03). Bloque
  * aparte e idempotente por su cuenta, igual que el anterior.
@@ -194,6 +211,19 @@ BEGIN
       FROM dbo.unidades u
      WHERE u.centro_id = @AdmCenterId AND u.codigo = 'UNIDAD-DEV-INTEGRADO';
 END
+GO
+
+/*
+ * Añadido después (2026-10-08): 'dev-integrado-administracion' es la Administración principal de su centro (script 0047), para poder
+ * añadirse unidades del centro desde la aplicación. Idempotente.
+ */
+INSERT INTO dbo.administraciones_principales_cambios (id, centro_id, ambito_perfil_id, numero, principal, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+SELECT NEWID(), profile.centro_id, profile.id, 1, 1, profile.cuenta_id, 'ADMINISTRACION', SYSUTCDATETIME()
+  FROM dbo.cuentas account
+  JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id AND profile.perfil_codigo = 'ADMINISTRACION' AND profile.estado = 'ACTIVE'
+ WHERE account.sujeto_externo = 'dev-integrado-administracion'
+   AND profile.centro_id = 'A1000000-0000-0000-0000-000000000001'
+   AND NOT EXISTS (SELECT 1 FROM dbo.administraciones_principales_cambios existing WHERE existing.ambito_perfil_id = profile.id);
 GO
 
 SELECT

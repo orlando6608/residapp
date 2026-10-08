@@ -22,17 +22,17 @@ public class ContactoUrgenteLecturaTests
         return new FindEmergencyContact(new FindScopeResident(listScopeResidents), directory);
     }
 
-    private static Task<ApplicationResult<EmergencyContactSummary?>> ReadAsync(SeededProfile seed, ResidentId residentId, SystemProfile profile) =>
+    private static Task<ApplicationResult<IReadOnlyList<EmergencyContactSummary>>> ReadAsync(SeededProfile seed, ResidentId residentId, SystemProfile profile) =>
         BuildReader(seed.ExternalSubject).ExecuteAsync(new FindScopeResidentCommand(seed.ProfileScopeId, seed.CenterId, residentId, profile));
 
-    /// <summary>Añade un familiar al residente como Administración y lo designa contacto urgente.</summary>
+    /// <summary>Añade un familiar al residente como Administración y lo deja como único contacto urgente (si había otro, lo sustituye).</summary>
     private static async Task<Guid> DesignateAsync(SeededProfile admin, ResidentId residentId, string name, string phone, int expected)
     {
         var service = AdministracionResidentesTests.Build(admin.ExternalSubject);
         var linkId = (await service.AddFamilyMemberAsync(new AddFamilyMemberCommand(
             admin.ProfileScopeId, admin.CenterId, residentId, Guid.NewGuid(), name, "Hija", phone, "no-se-muestra@example.org"))).Value;
         Assert.True((await service.DesignateEmergencyContactAsync(
-            new DesignateEmergencyContactCommand(admin.ProfileScopeId, admin.CenterId, residentId, linkId, expected))).Ok);
+            new DesignateEmergencyContactCommand(admin.ProfileScopeId, admin.CenterId, residentId, [linkId], expected))).Ok);
         return linkId;
     }
 
@@ -61,29 +61,32 @@ public class ContactoUrgenteLecturaTests
         };
 
         Assert.True(before.Ok);
-        Assert.Null(before.Value);
-        Assert.Equal(new EmergencyContactSummary("Lucía Contacto", "Hija", "600 111 222"), byNurse.Value);
+        Assert.Empty(before.Value!);
+        Assert.Equal(new EmergencyContactSummary("Lucía Contacto", "Hija", "600 111 222"), Assert.Single(byNurse.Value!));
         Assert.Equal(byNurse.Value, byDoctor.Value);
         Assert.All(denied, r => Assert.Equal(ApplicationFailureCode.AccessDenied, r.Error!.Code));
     }
 
     [Fact]
-    public async Task Ficha_MuestraElVigente_YNadaSiSeQuito()
+    public async Task Ficha_MuestraLosVigentes_VariosJuntos_YSoloLosQueQuedanTrasUnCambio()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var residentId = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Contacto Cambios");
         var enfermera = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
         await DesignateAsync(admin, residentId, "Primera Contacto", "600 111 222", 0);
-        await DesignateAsync(admin, residentId, "Segundo Contacto", "611 333 444", 1);
+        // Sustituir a la primera por la segunda son dos cambios (quitar y añadir): la designación pasa a tener 3.
+        var second = await DesignateAsync(admin, residentId, "Segundo Contacto", "611 333 444", 1);
+        var service = AdministracionResidentesTests.Build(admin.ExternalSubject);
+        var third = (await service.AddFamilyMemberAsync(new AddFamilyMemberCommand(
+            admin.ProfileScopeId, admin.CenterId, residentId, Guid.NewGuid(), "Tercero Contacto", "Hijo", "622 555 666", null))).Value;
 
-        var changed = (await ReadAsync(enfermera, residentId, SystemProfile.Enfermeria)).Value;
-        Assert.True((await AdministracionResidentesTests.Build(admin.ExternalSubject).DesignateEmergencyContactAsync(
-            new DesignateEmergencyContactCommand(admin.ProfileScopeId, admin.CenterId, residentId, null, 2))).Ok);
-        var removed = await ReadAsync(enfermera, residentId, SystemProfile.Enfermeria);
+        var changed = (await ReadAsync(enfermera, residentId, SystemProfile.Enfermeria)).Value!;
+        Assert.True((await service.DesignateEmergencyContactAsync(
+            new DesignateEmergencyContactCommand(admin.ProfileScopeId, admin.CenterId, residentId, [second, third], 3))).Ok);
+        var both = (await ReadAsync(enfermera, residentId, SystemProfile.Enfermeria)).Value!;
 
-        Assert.Equal("Segundo Contacto", changed!.DisplayName);
-        Assert.True(removed.Ok);
-        Assert.Null(removed.Value);
+        Assert.Equal("Segundo Contacto", Assert.Single(changed).DisplayName);
+        Assert.Equal(["Segundo Contacto", "Tercero Contacto"], both.Select(c => c.DisplayName));
     }
 
     [Fact]
@@ -101,8 +104,8 @@ public class ContactoUrgenteLecturaTests
         await DesignateAsync(admin, residentId, "Lucía Derivación", "+34 600 111 222", 0);
         var withContact = (await DetailAsync(enfermera, eventId)).Referral!;
 
-        Assert.Null(withoutContact.EmergencyContact);
-        Assert.Equal(new EmergencyContactSummary("Lucía Derivación", "Hija", "+34 600 111 222"), withContact.EmergencyContact);
+        Assert.Empty(withoutContact.EmergencyContacts);
+        Assert.Equal(new EmergencyContactSummary("Lucía Derivación", "Hija", "+34 600 111 222"), Assert.Single(withContact.EmergencyContacts));
         // El contacto no entra en el contenido firmado del informe (DER-04): la huella sigue siendo la del contenido de prueba.
         Assert.Equal(ReferralHash(), withContact.ContentHash);
     }

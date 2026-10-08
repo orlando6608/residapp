@@ -45,7 +45,7 @@ public sealed record PreparedFamilyCommunication(FamilyCommunicationType Type, s
 /// el nombre de otros profesionales no se expone) y la decisión de comunicación familiar.</summary>
 public sealed record ClinicalEventClosure(
     bool ClosedByCurrentAccount, DateTimeOffset ClosedAt, FamilyCommunicationDecision Decision,
-    PreparedFamilyCommunication? Communication);
+    PreparedFamilyCommunication? Communication, bool ClosedBySystemForDeath = false);
 
 /// <summary>Una comunicación familiar pendiente de aprobación en el ámbito (tarjeta "Comunicaciones" de
 /// ENF-01), con el evento del que procede.</summary>
@@ -54,11 +54,10 @@ public sealed record PendingFamilyCommunicationSummary(
 
 /// <summary>ENF-08/ENF-09: una acción sobre un seguimiento, con su autoría (solo si fue la cuenta del ámbito
 /// que consulta). Según el tipo trae el texto, el plan reprogramado, el equipo entrante o la transferencia
-/// que confirma. CanConfirmReception (solo importa en una transferencia) es falso si el equipo entrante tiene miembros vigentes y la
-/// cuenta del ámbito que consulta no es uno de ellos.</summary>
+/// que confirma.</summary>
 public sealed record FollowUpActionSummary(
     Guid Id, FollowUpActionType Type, string? Text, DateOnly? DueDate, string? Criterion, string? IncomingTeam,
-    Guid? TransferId, bool ByCurrentAccount, DateTimeOffset RecordedAt, bool CanConfirmReception = true);
+    Guid? TransferId, bool ByCurrentAccount, DateTimeOffset RecordedAt);
 
 /// <summary>ENF-07B a ENF-09: el seguimiento de un evento con su plan inicial y todas sus acciones, de la
 /// más antigua a la más reciente. El plan vigente es el de la última reprogramación, si la hay; la
@@ -156,11 +155,11 @@ public sealed record FamilyCallAttemptSummary(
 
 /// <summary>ENF-12/MED-14: el informe de derivación firmado de un evento: qué perfil derivó, con qué motivo,
 /// quién y cuándo firmó, la huella del contenido firmado y los intentos de llamada a la familia, del más
-/// antiguo al más reciente. El PDF se descarga aparte (IReferralReportRepository). EmergencyContact es el contacto
-/// urgente vigente del residente (0022), para registrar la llamada; no forma parte del informe (DER-04).</summary>
+/// antiguo al más reciente. El PDF se descarga aparte (IReferralReportRepository). EmergencyContacts son los contactos
+/// urgentes vigentes del residente (0022, 0044), para registrar la llamada; no forman parte del informe (DER-04).</summary>
 public sealed record ReferralDetail(
     SystemProfile Profile, string Reason, bool SignedByCurrentAccount, DateTimeOffset SignedAt, string ContentHash,
-    IReadOnlyList<FamilyCallAttemptSummary> CallAttempts, EmergencyContactSummary? EmergencyContact, string? Communications = null);
+    IReadOnlyList<FamilyCallAttemptSummary> CallAttempts, IReadOnlyList<EmergencyContactSummary> EmergencyContacts, string? Communications = null);
 
 /// <summary>DER-03: identificación del residente y del centro para el informe de derivación.</summary>
 public sealed record ResidentIdentification(
@@ -219,7 +218,7 @@ public sealed record ClosedEventSummary(
 /// (docs/flujos-clinicos/valoracion-escalado-enfermeria.md) no debe mostrar más residentes de los que el
 /// ámbito ya autoriza a nivel individual.
 /// </summary>
-public interface IChangeInboxDirectory
+public interface IChangeInboxDirectory : IMilestoneFactDirectory
 {
     Task<IReadOnlyList<PendingChangeSummary>> ListAsync(
         Guid profileScopeId, CenterId centerId, DailyChangeClassification classification, CancellationToken ct = default);

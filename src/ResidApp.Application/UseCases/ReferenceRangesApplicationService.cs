@@ -14,8 +14,8 @@ public sealed record SaveReferenceRangesCommand(
     Guid AmbitoPerfilId, CenterId CentroId, int Version, IReadOnlyList<ReferenceRangeCommandItem> Rangos);
 
 /// <summary>
-/// Pantalla de rangos de referencia de constantes del centro. Solo perfiles clínicos (Medicina o Dirección
-/// Clínica) con el permiso REFERENCE_RANGES_MANAGE, que comprueba el repositorio en la misma transacción;
+/// Pantalla de rangos de referencia de constantes del centro. Solo Dirección / Coordinación
+/// Clínica (no Medicina, CJ 2026-10-07) con el permiso REFERENCE_RANGES_MANAGE, que comprueba el repositorio en la misma transacción;
 /// nunca Administración (wireframe ADM-29). Los rangos solo alimentan un aviso visual en la valoración de
 /// Enfermería: no deciden nada clínicamente.
 /// </summary>
@@ -48,7 +48,7 @@ public sealed class ReferenceRangesApplicationService(
         var identity = await session.GetVerifiedIdentityAsync(ct) ?? throw new AccessDeniedException();
         var scope = (await scopes.ListActiveAsync(identity.ExternalSubject, ct))
             .FirstOrDefault(s => s.ProfileScopeId == profileScopeId && s.CenterId == centerId);
-        if (scope is null || scope.Profile is not (SystemProfile.Medicina or SystemProfile.DireccionClinica))
+        if (scope is null || scope.Profile is not SystemProfile.DireccionClinica)
         {
             throw new AccessDeniedException();
         }

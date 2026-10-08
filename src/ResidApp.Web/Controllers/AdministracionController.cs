@@ -18,8 +18,10 @@ namespace ResidApp.Web.Controllers;
 /// AdministracionApplicationService; la autorización no vive aquí.
 /// </summary>
 public sealed partial class AdministracionController(
-    AdministracionApplicationService service, AdministracionEstructuraApplicationService estructura,
-    AdministracionTurnosApplicationService turnos) : Controller
+    AdministracionApplicationService service, ResidentTransferApplicationService transfers, ResidentStatusApplicationService statuses,
+    ListActiveScopeUnits listUnits,
+    ListActiveScopeLocations listLocations, AdministracionEstructuraApplicationService estructura,
+    AdministracionTurnosApplicationService turnos, AdministrationScopeApplicationService scopeAdmin) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -71,9 +73,13 @@ public sealed partial class AdministracionController(
 
         var result = await service.FindResidentAsync(new FindAdministrativeResidentQuery(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId)), ct);
-        return result.Ok
-            ? View(new AdministrativeResidentViewModel(result.Value!, DateOnly.FromDateTime(DateTime.Today)))
-            : RedirectToAction(nameof(Residentes));
+        if (!result.Ok)
+        {
+            return RedirectToAction(nameof(Residentes));
+        }
+
+        var suspension = await statuses.FindSuspensionAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), ct);
+        return View(new AdministrativeResidentViewModel(result.Value!, DateOnly.FromDateTime(DateTime.Today), suspension.Value));
     }
 
     public async Task<IActionResult> CorregirIdentidad(Guid residenteId, CancellationToken ct)
@@ -188,7 +194,7 @@ public sealed partial class AdministracionController(
         {
             var result = await service.AddFamilyMemberAsync(new AddFamilyMemberCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.OperacionId,
-                form.NombreVisible, form.Relacion, form.Telefono, form.Correo), ct);
+                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Referente, form.TutorLegal), ct);
             if (result.Ok)
             {
                 TempData["Mensaje"] = "Familiar añadido. No tiene autorización de acceso hasta que la abras y la actives.";
@@ -291,11 +297,13 @@ public sealed partial class AdministracionController(
     {
         ResidenteId = residenteId,
         VinculoId = member.LinkId,
-        Version = new FamilyMemberData(member.DisplayName, member.Relationship, member.Phone, member.Email).Version,
+        Version = new FamilyMemberData(member.DisplayName, member.Relationship, member.Phone, member.Email, member.IsReferent, member.IsLegalGuardian).Version,
         NombreVisible = member.DisplayName,
         Relacion = member.Relationship,
         Telefono = member.Phone,
         Correo = member.Email,
+        Referente = member.IsReferent,
+        TutorLegal = member.IsLegalGuardian,
     };
 
     [HttpPost]
@@ -318,7 +326,7 @@ public sealed partial class AdministracionController(
         {
             var result = await service.UpdateFamilyMemberAsync(new UpdateFamilyMemberCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), linkId,
-                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Version ?? string.Empty), ct);
+                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Version ?? string.Empty, form.Referente, form.TutorLegal), ct);
             if (result.Ok)
             {
                 TempData["Mensaje"] = "Datos del familiar guardados.";
@@ -428,7 +436,7 @@ public sealed partial class AdministracionController(
         return View(new FamilyAuthorizationViewModel(detail!.Resident, member, DateOnly.FromDateTime(DateTime.Today), form));
     }
 
-    /// <summary>ADM-08 (0022): designar, cambiar o quitar el contacto urgente entre los familiares del residente.</summary>
+    /// <summary>ADM-08 (0022, 0044): designar, cambiar o quitar los contactos urgentes (puede haber varios) entre los familiares del residente.</summary>
     public async Task<IActionResult> ContactoUrgente(Guid residenteId, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -444,7 +452,7 @@ public sealed partial class AdministracionController(
             {
                 ResidenteId = residenteId,
                 DesignacionesEsperadas = detail.EmergencyContacts.Count,
-                VinculoId = detail.CurrentEmergencyContact,
+                VinculosIds = detail.CurrentEmergencyContacts.ToList(),
             }));
     }
 
@@ -461,19 +469,21 @@ public sealed partial class AdministracionController(
         if (ModelState.IsValid)
         {
             var result = await service.DesignateEmergencyContactAsync(new DesignateEmergencyContactCommand(
-                activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.VinculoId,
+                activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.VinculosIds,
                 form.DesignacionesEsperadas), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = form.VinculoId is null ? "Contacto urgente quitado." : "Contacto urgente designado.";
+                TempData["Mensaje"] = "Contactos urgentes guardados.";
                 return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
             }
 
             ModelState.AddModelError(string.Empty, result.Error!.Code switch
             {
                 ApplicationFailureCode.Conflict =>
-                    "El contacto urgente ha cambiado desde que abriste la pantalla. Revisa el vigente y, si hace falta, vuelve a elegir.",
-                ApplicationFailureCode.InvalidInput => "Elige un contacto distinto del vigente.",
+                    "Los contactos urgentes han cambiado desde que abriste la pantalla. Revisa los vigentes y, si hace falta, vuelve a elegir.",
+                ApplicationFailureCode.InvalidInput => form.VinculosIds.Count == 0
+                    ? "Tiene que haber al menos un contacto urgente: marca a quién avisar."
+                    : "No has cambiado ningún contacto urgente.",
                 _ => result.Error.Message,
             });
         }
@@ -732,7 +742,10 @@ public sealed partial class AdministracionController(
             return detail is null ? RedirectToAction(nameof(Usuarios)) : RedirectToAction(nameof(Usuario), new { cuentaId });
         }
 
-        var model = new AccountProfileViewModel(detail!, profile, await AdministratorUnitsAsync(activeScope, ct), []);
+        var scopeView = profile.Profile == SystemProfile.Administracion
+            ? await scopeAdmin.ReadAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct)
+            : null;
+        var model = new AccountProfileViewModel(detail!, profile, await AdministratorUnitsAsync(activeScope, ct), [], scopeView is { Ok: true } && scopeView.Value!.IsPrincipal);
         if (model.CanChange && profile.Profile == SystemProfile.Auxiliar)
         {
             var residents = await service.ListAssignableResidentsAsync(new FindProfessionalAccountQuery(

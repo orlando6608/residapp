@@ -88,6 +88,13 @@ public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connect
              WHERE profile.centro_id = @CenterId AND {accountFilter}
              ORDER BY CASE profile.estado WHEN 'ACTIVE' THEN 0 ELSE 1 END, profile.concedido_en DESC
             """, parameters, cancellationToken: ct))).ToList();
+        var principals = (await connection.QueryAsync<Guid>(new CommandDefinition($"""
+            SELECT profile.id
+              FROM dbo.ambitos_perfil profile
+             WHERE profile.centro_id = @CenterId AND {accountFilter} AND profile.perfil_codigo = 'ADMINISTRACION'
+               AND (SELECT TOP (1) change.principal FROM dbo.administraciones_principales_cambios change
+                     WHERE change.ambito_perfil_id = profile.id ORDER BY change.numero DESC) = 1
+            """, parameters, cancellationToken: ct))).ToHashSet();
         var units = (await connection.QueryAsync<GrantRow>(new CommandDefinition($"""
             SELECT grant_row.ambito_perfil_id AS Id, profile.cuenta_id AS OwnerId, unit.nombre_visible AS Code,
                    grant_row.unidad_id AS TargetId, grant_row.concedido_en AS GrantedAt,
@@ -134,7 +141,7 @@ public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connect
                     p.Id, EnumCode.ParseCode<SystemProfile>(p.Code), Utc(p.GrantedAt), p.GrantedBy,
                     p.RevokedAt is { } revoked ? Utc(revoked) : null, p.RevokedBy,
                     units[p.Id].Select(ToGrant).ToList(), residents[p.Id].Select(ToGrant).ToList(),
-                    permissions[p.Id].Select(ToGrant).ToList())).ToList()))
+                    permissions[p.Id].Select(ToGrant).ToList(), principals.Contains(p.Id))).ToList()))
             .ToList();
     }
 

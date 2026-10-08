@@ -1,0 +1,56 @@
+{
+  "documento": "administracion-ambito-familiares-cargos",
+  "cuestionario": "2026-10-02",
+  "guardado": "2026-10-07T19:11:44.305Z",
+  "respondidas": 7,
+  "total": 7,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Quién puede ver todas las unidades del centro y añadirse las que no tiene?",
+      "opcion": "B",
+      "textoOpcion": "Solo una Administración «principal» del centro, marcada como tal (por ejemplo, la persona responsable de la administración del centro).",
+      "texto": "También dejaría la opción de poder añadirla desde soporte de la plataforma.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Hay que impedir que una unidad se quede sin ninguna Administración?",
+      "opcion": "B",
+      "textoOpcion": "No hace falta, con la respuesta a la pregunta 1.1 basta para recuperarla.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Se puede desvincular a un familiar de un residente?",
+      "opcion": "A",
+      "textoOpcion": "Sí, Administración, indicando un motivo. El vínculo pasado se sigue viendo en el historial del residente y el familiar sigue con los demás residentes.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "Si un familiar está vinculado a residentes de unidades distintas, ¿quién puede cambiar sus datos de contacto?",
+      "opcion": "A",
+      "textoOpcion": "Está bien así: cualquiera que gestione a alguno de sus residentes.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.3": {
+      "pregunta": "Al vincular, ¿basta con ofrecer los familiares de residentes del propio ámbito?",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "esta pregunta no la entiendo. podrías explicarme mejor?\nSolo le ofreces añadir familiares que ya estan registrados? \nAl añadir a un residente se debe añadir al familiar o familiares de contacto prioritario o familiares referentes o tutores legales.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Para qué sirve el organigrama en la aplicación?",
+      "opcion": "C",
+      "textoOpcion": "No hace falta por ahora; se aplaza.",
+      "texto": "Organigrama es la estructura organizativa del personal del centro: qué cargos y equipos existen, quién los ocupa y de quién dependen. Por ejemplo: Dirección → Coordinación de Enfermería → equipo de Enfermería y Auxiliares, con sus responsables por unidad.\n\nAdministración debe poder registrar y actualizar esas relaciones. Es distinto de la estructura física —plantas, unidades y habitaciones— y de los turnos.\n\nOcupar un cargo en el organigrama no concede automáticamente permisos en la aplicación: los roles y ámbitos de acceso se asignan por separado.",
+      "respondida": true
+    },
+    "3.2": {
+      "pregunta": "Si hace falta, ¿qué cargos hay en un centro y de quién depende cada uno?",
+      "texto": "Como estructura orientativa y adaptable a cada centro, propondría:\n- Dirección del centro: depende de la entidad titular o gerencia. Un cargo por centro.\n- Dirección médica / Coordinación médica: depende organizativamente de Dirección del centro. Un cargo por centro, si existe.\n- Coordinación / Supervisión de Enfermería: depende de Dirección del centro, con coordinación funcional con Dirección médica. Un cargo por centro.\n- Responsable de unidad o planta: depende de Coordinación de Enfermería cuando su función es asistencial. Uno por unidad o planta, si el centro utiliza esta figura.\n- Medicina: depende de Dirección médica o, si no existe, de Dirección del centro.\n- Enfermería: depende de Coordinación de Enfermería; puede estar asignada a una o varias unidades o plantas.\n- Auxiliares / Gerocultores: dependen del responsable de unidad o planta o, si no existe, de Coordinación de Enfermería.\n- Responsable de Administración: depende de Dirección del centro. Un cargo por centro; el personal administrativo depende de este responsable.",
+      "respondida": true
+    }
+  }
+}

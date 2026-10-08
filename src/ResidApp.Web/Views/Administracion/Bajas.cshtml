@@ -1,0 +1,52 @@
+@using ResidApp.Web.Models
+@model DischargedResidentsViewModel
+@{
+    ViewData["Title"] = "Residentes dados de baja";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Residentes dados de baja</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Residentes dados de baja</h1>
+<p class="text-muted">
+    Solo lectura. Sus datos no se borran y se conservan hasta la fecha indicada; puedes reactivar a un residente si vuelve al centro.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+
+@if (Model.Residents.Count == 0)
+{
+    <p class="estado-vacio text-muted">No hay residentes dados de baja en tu ámbito.</p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var resident in Model.Residents)
+        {
+            <div class="list-group-item">
+                <div class="d-md-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <h2 class="h6 mb-1">@resident.DisplayName</h2>
+                        <p class="mb-1 small">
+                            @resident.BirthDate.ToString("dd/MM/yyyy") (@AdministrativeResidentDisplay.Age(resident.BirthDate, Model.Today) años) ·
+                            @EnumDisplay.Label(resident.DocumentedSex) · última unidad: @resident.LastUnitName
+                        </p>
+                        <p class="mb-1 small">
+                            Baja el @resident.DischargedAt.ToLocalTime().ToString("dd/MM/yyyy"): <strong>@EnumDisplay.Label(resident.Reason)</strong>@(resident.ReasonText is null ? "" : " · " + resident.ReasonText)
+                        </p>
+                        <p class="mb-0 small text-body-secondary">Datos conservados hasta el @resident.RetainUntil.ToString("dd/MM/yyyy").</p>
+                    </div>
+                    <a asp-action="Reactivar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary mt-2 mt-md-0">Reactivar</a>
+                </div>
+            </div>
+        }
+    </div>
+}

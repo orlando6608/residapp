@@ -1,14 +1,14 @@
 <!doctype html>
 <!--
   Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
-  Las respuestas se guardan en «traslado-y-baja-residente.respuestas.json», en esta misma carpeta;
+  Las respuestas se guardan en «aclaraciones-respuestas-cj.respuestas.json», en esta misma carpeta;
   ingeniería las lee de ese fichero. Cómo funciona: docs/pendientes-cj/README.md.
 -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Traslado y baja del residente</title>
+<title>Aclaraciones de producto pendientes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
@@ -110,6 +110,8 @@
     font-weight: 600;
   }
   header { display: flex; flex-direction: column; gap: 12px; }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
   .meta { color: var(--muted); font-size: 0.95rem; }
   .lead { font-size: 1.08rem; }
 
@@ -249,31 +251,36 @@
   footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
 
   @media print {
-    .bar, .howto, .toc { display: none; }
+    .bar, .howto, .toc, .back { display: none; }
     .page { padding-bottom: 24px; }
     .q { break-inside: avoid; }
   }
 </style>
 </head>
-<body data-doc="traslado-y-baja-residente" data-version="2026-10-01">
+<body data-doc="aclaraciones-respuestas-cj" data-version="2026-10-07">
 
 <div class="page">
   <header>
-    <p class="eyebrow">ResidApp · Administración · Pendiente de CJ</p>
-    <h1>Traslado y baja del residente</h1>
-    <p class="meta">Estado a 01/10/2026 · Para CJ, responsable de producto</p>
+    <nav class="back" aria-label="Navegación">
+      <a href="../index.html">← Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Aclaraciones a tus respuestas · Archivado</p>
+    <p class="meta"><strong>Archivado el 07/10/2026:</strong> lo que respondiste ya está implementado. Tus respuestas están cargadas abajo; este documento queda solo como registro.</p>
+    <h1>Aclaraciones a tus últimas respuestas</h1>
+    <p class="meta">Estado a 07/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
-      Administración ya puede consultar la ficha administrativa de cada residente, con su historial de ubicación, y corregir
-      errores de identidad. Lo que todavía no puede hacer es trasladar a un residente ni darle de baja. El flujo del basal
-      deja esa decisión expresamente pendiente («D1-P04»), porque afecta al trabajo clínico en curso. Este documento explica
-      lo que ocurre hoy y lo que falta decidir.
+      Gracias por las respuestas de los rangos de constantes y de las decisiones de Dirección, basal y derivación. Ya está
+      construido lo que quedaba claro. Antes de seguir, hay cosas en las que tus respuestas se pueden leer de más de una manera
+      o que no llegaste a concretar. Para cada una, abajo se dice qué hace hoy la aplicación; puedes elegir una opción o
+      responder con otra distinta en el comentario.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué bloquea</span><span>El traslado entre unidades o centros, y la baja y reactivación del residente.</span></div>
-    <div role="listitem"><span class="k">Qué no bloquea</span><span>La lista, la ficha administrativa y la corrección de identidad, que ya funcionan.</span></div>
-    <div role="listitem"><span class="k">Qué falta</span><span>6 respuestas, repartidas en 2 temas.</span></div>
+    <div role="listitem"><span class="k">Qué bloquea</span><span>Las aportaciones al basal (tema 1), el aviso de temperaturas seguidas (tema 2) y la finalidad de «revisión de calidad» (tema 3).</span></div>
+    <div role="listitem"><span class="k">Qué no bloquea</span><span>El resto de preguntas: ya hay una versión funcionando que se puede cambiar después.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>11 respuestas, repartidas en 4 temas.</span></div>
   </div>
 
   <section class="howto" aria-labelledby="como">
@@ -282,7 +289,7 @@
       <li><span class="step-n">1</span><strong>Responde aquí</strong>
         <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se queda en este navegador: puedes cerrar y seguir otro día.</span></li>
       <li><span class="step-n">2</span><strong>Guarda</strong>
-        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>traslado-y-baja-residente.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
+        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>aclaraciones-respuestas-cj.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
       <li><span class="step-n">3</span><strong>Envíaselo a Orlando</strong>
         <span>Mándale el fichero descargado por correo o por WhatsApp. Si lo cambias y lo vuelves a guardar, envía el nuevo.</span></li>
     </ol>
@@ -294,59 +301,57 @@
   <nav class="toc" id="indice" aria-label="Temas del documento"></nav>
 
   <section class="tema" id="tema-1">
-    <h2>Tema 1 · Trasladar a un residente</h2>
+    <h2>Tema 1 · Aportaciones a un borrador de basal ajeno</h2>
     <div class="stack prose">
       <p>
-        Cada residente tiene una única ubicación vigente (centro y unidad) y un historial que no se reescribe: un traslado
-        cerraría la ubicación anterior y abriría la nueva. Las listas de residentes de cada perfil, y el acceso a su ficha y
-        a su basal, siguen a esa ubicación vigente.
-      </p>
-      <p>
-        En cambio, cada episodio (un cambio de Auxiliar, un evento de Enfermería o de Medicina, con su valoración, escalado,
-        seguimiento, indicaciones o protocolo) pertenece a la unidad donde se registró, y es la Enfermería y la Medicina de
-        esa unidad quienes lo ven en sus bandejas.
+        Elegiste que una aportación es <strong>un cambio directo en una respuesta del borrador</strong>, que queda registrado
+        (quién cambió qué) y que el autor ve antes de firmar; que se puede aportar sobre las nueve áreas y el Barthel; y que pueden
+        aportar los perfiles de Enfermería y Medicina. Todavía no está construido, porque dos cosas chocan con lo que hace hoy la
+        aplicación.
       </p>
       <p class="context">
-        Por eso, si hoy se trasladara a un residente con episodios abiertos, esos episodios se quedarían en las bandejas de
-        la unidad de origen, mientras que el residente aparecería en las listas de la unidad de destino. Además, quien
-        tuviera a medias un borrador de su basal en la unidad de origen dejaría de poder abrirlo.
+        Hoy el borrador solo lo edita y lo firma <strong>la misma persona que lo creó</strong>, y la base de datos lo exige. Tu
+        comentario dice: «una vez ya está firmado y terminado, si hay una aportación no la debería firmar la misma persona que la
+        creó». Puede querer decir cosas distintas, y por eso lo preguntamos.
       </p>
     </div>
     <div class="qs">
       <article class="q" data-q="1.1">
-        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Qué traslados necesita el centro?</h3><span class="chip">Pendiente</span></div>
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">Cuando un borrador tiene aportaciones de otra persona, ¿quién puede firmarlo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Con la opción que elegiste (el autor ve la aportación antes de firmar) firma quien creó el borrador. Tu comentario sugiere otra regla.</p>
         <fieldset class="choices" aria-labelledby="t-1-1">
-          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Solo entre unidades del mismo centro.</span></label>
-          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Entre unidades y también entre centros del mismo grupo.</span></label>
-          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">Ninguno por ahora: los cambios de unidad son raros y se pueden aplazar.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Firma quien creó el borrador, después de ver las aportaciones. Quien aportó no firma ese borrador.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Firma una persona distinta de quien aportó (puede ser quien creó el borrador u otra). Nadie firma sus propios cambios.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">Otra regla (descríbela en el comentario).</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
       <article class="q" data-q="1.2">
-        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Qué pasa con los episodios abiertos del residente al trasladarlo?</h3><span class="chip">Pendiente</span></div>
-        <p class="why">Por ejemplo, un cambio sin valorar, un escalado en valoración médica, un seguimiento o una indicación sin realizar.</p>
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Qué pasa si alguien quiere corregir un basal que ya está firmado?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy un basal firmado no se edita: se hace una reevaluación en un borrador nuevo, que sustituye al anterior al firmarse.</p>
         <fieldset class="choices" aria-labelledby="t-1-2">
-          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Siguen en la unidad de origen hasta que se cierran. La unidad de destino los ve en la ficha del residente, pero no en sus bandejas.</span></label>
-          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Pasan a la unidad de destino, que los continúa desde sus bandejas. La unidad de origen deja de verlos.</span></label>
-          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">No se puede trasladar a un residente con episodios abiertos: hay que cerrarlos antes.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Se mantiene así: se abre un borrador de reevaluación, y ahí se aporta y se firma según lo que respondas en la 1.1.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Se puede aportar directamente sobre el basal firmado, y la aportación genera una versión nueva que firma otra persona.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">Otra (descríbela en el comentario).</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
       <article class="q" data-q="1.3">
-        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">¿Y un borrador de basal que esté a medias?</h3><span class="chip">Pendiente</span></div>
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">¿Cómo se entera el autor de que hay aportaciones?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">No llegaste a elegir.</p>
         <fieldset class="choices" aria-labelledby="t-1-3">
-          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">Se cancela con el motivo «traslado» y la unidad de destino crea uno nuevo.</span></label>
-          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">Se conserva y lo puede terminar su autor, aunque sea de la unidad de origen.</span></label>
-          <label class="choice"><input type="radio" name="r-1-3" value="C"><span class="letter">C</span><span class="txt">No se puede trasladar con un borrador abierto: hay que firmarlo o cancelarlo antes.</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">Una marca «con aportaciones» en el borrador y en la ficha del residente, y la lista de cambios al confirmar la firma.</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">Lo anterior más un aviso en la bandeja o en el inicio del autor.</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="C"><span class="letter">C</span><span class="txt">Otra (descríbela en el comentario).</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
       <article class="q" data-q="1.4">
-        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">¿Quién puede hacer el traslado?</h3><span class="chip">Pendiente</span></div>
-        <p class="why">Hoy el alta la hace Administración, y Enfermería solo con un permiso específico.</p>
+        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">¿Pueden aportar todos los profesionales de Enfermería y Medicina del ámbito, sin que Administración les conceda nada?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Escribiste que todos los perfiles de Enfermería y Medicina deberían poder modificar basales y hacer aportaciones. Hoy existe un permiso específico («aportar a un borrador ajeno») que nadie tiene concedido.</p>
         <fieldset class="choices" aria-labelledby="t-1-4">
-          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">Solo Administración.</span></label>
-          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">Administración, y Enfermería con un permiso específico, como en el alta.</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">Sí: todos pueden, sin permiso concedido (quitamos ese permiso).</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">Todos pueden por defecto, pero Administración puede retirárselo a una persona.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
@@ -354,25 +359,102 @@
   </section>
 
   <section class="tema" id="tema-2">
-    <h2>Tema 2 · Dar de baja y reactivar a un residente</h2>
+    <h2>Tema 2 · Constantes: temperatura, saturación y glucemia</h2>
     <div class="stack prose">
       <p>
-        La aplicación ya prevé que un residente pase a «inactivo» con un motivo, pero no hay ninguna pantalla para hacerlo ni
-        está decidido qué ocurre después. Un residente inactivo desaparece hoy de todas las listas y no se puede abrir.
+        Ya están cargados tus valores (el botón «Cargar valores sugeridos» en Rangos de referencia), el campo del flujo de oxígeno
+        solo aparece al elegir oxigenoterapia, y la Auxiliar ve un aviso al confirmar un cambio si la temperatura pasa de 37 °C
+        («mantén el seguimiento») o de 38 °C («avisa a Enfermería»). Es solo un aviso: no cambia la clasificación del cambio.
       </p>
     </div>
     <div class="qs">
       <article class="q" data-q="2.1">
-        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">¿Qué motivos de baja hay que recoger?</h3><span class="chip">Pendiente</span></div>
-        <p class="why">Por ejemplo: fallecimiento, alta voluntaria, traslado a otro centro, ingreso hospitalario prolongado u otro. Di si es una lista cerrada o si se admite «otro» con texto.</p>
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">«Si &gt; 37 ºC en varias ocasiones seguidas, avisar»: ¿cuántas veces y en cuánto tiempo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo, «tres temperaturas seguidas por encima de 37 °C en 24 horas». Hay que concretar también de qué registros se cuenta (los de la Auxiliar, los de Enfermería y Medicina, o todos) y a quién se avisa. Sin esto no se construye.</p>
         <label class="field">Tu respuesta<textarea data-field="texto" rows="3"></textarea></label>
       </article>
       <article class="q" data-q="2.2">
-        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">Tras la baja, ¿qué se puede seguir consultando y se puede reactivar?</h3><span class="chip">Pendiente</span></div>
+        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">Para la Auxiliar, ¿qué significa «alerta visual para que se mantenga el seguimiento»?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy el aviso solo sale en la pantalla de confirmar el cambio. El rango de 36 a 37,9 °C convive con ese aviso: una temperatura de 37,5 °C no sale como «fuera de rango» en Enfermería, pero sí avisa a la Auxiliar de que mantenga el seguimiento.</p>
         <fieldset class="choices" aria-labelledby="t-2-2">
-          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">Aparece en una lista aparte de residentes dados de baja, en solo lectura, y Administración puede reactivarlo.</span></label>
-          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">Aparece en esa lista en solo lectura, pero no se reactiva: si vuelve, se da de alta de nuevo.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">Basta con el aviso al registrar (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">Además, una marca visible en la lista de residentes de la Auxiliar mientras la última temperatura sea alta.</span></label>
           <label class="choice"><input type="radio" name="r-2-2" value="C"><span class="letter">C</span><span class="txt">Otra (descríbela en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.3">
+        <div class="q-head"><span class="n">2.3</span><h3 class="q-title" id="t-2-3">Saturación medida con oxígeno suplementario: ¿qué hacemos con el aviso de rango?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Dijiste que 95–100 % es el rango ideal con aire ambiente. Ahora, con oxigenoterapia elegida, la aplicación no compara la saturación con ese rango.</p>
+        <fieldset class="choices" aria-labelledby="t-2-3">
+          <label class="choice"><input type="radio" name="r-2-3" value="A"><span class="letter">A</span><span class="txt">No avisar con oxigenoterapia (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-2-3" value="B"><span class="letter">B</span><span class="txt">Avisar igualmente con el mismo rango, indicando el flujo de oxígeno.</span></label>
+          <label class="choice"><input type="radio" name="r-2-3" value="C"><span class="letter">C</span><span class="txt">Avisar con otro rango (indícalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.4">
+        <div class="q-head"><span class="n">2.4</span><h3 class="q-title" id="t-2-4">Glucemia: ¿avisamos solo por debajo de 70 mg/dL?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Escribiste «avisar si inferior a 70; el resto de valores, individualizar». Hoy la glucemia tiene solo mínimo (70) y ningún máximo.</p>
+        <fieldset class="choices" aria-labelledby="t-2-4">
+          <label class="choice"><input type="radio" name="r-2-4" value="A"><span class="letter">A</span><span class="txt">Sí, solo por debajo de 70.</span></label>
+          <label class="choice"><input type="radio" name="r-2-4" value="B"><span class="letter">B</span><span class="txt">También por encima de un valor (indícalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Dirección y Coordinación Clínica</h2>
+    <div class="stack prose">
+      <p>
+        En la aplicación hay un único perfil, <strong>«Dirección / Coordinación Clínica»</strong>. Dijiste que la «revisión de calidad
+        asistencial» debería ser de Coordinación clínica, y que quien fija los rangos es Coordinación clínica y no Dirección. Con un
+        solo perfil, no se puede dar algo a Coordinación sin dárselo también a Dirección, así que esa cuarta finalidad todavía no está.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">¿Coordinación clínica y Dirección son personas distintas que necesitan perfiles distintos?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Crear un perfil nuevo es un cambio grande. Hay una vía más pequeña: un permiso que Administración conceda a quien haga de coordinador.</p>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Es la misma persona o el mismo perfil: basta con un perfil y la finalidad de calidad queda para él.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Son distintos, pero basta un permiso que Administración conceda a la persona que coordina.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">Son perfiles distintos con pantallas distintas (cuéntame cuáles en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">¿Quién debe poder fijar los rangos de referencia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy puede quien tenga el permiso, de Medicina o de Dirección/Coordinación Clínica, y lo concede Administración a una persona concreta. Nadie lo tiene por defecto.</p>
+        <fieldset class="choices" aria-labelledby="t-3-2">
+          <label class="choice"><input type="radio" name="r-3-2" value="A"><span class="letter">A</span><span class="txt">Está bien así.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="B"><span class="letter">B</span><span class="txt">Solo quien coordina (no Medicina).</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="C"><span class="letter">C</span><span class="txt">Otra (descríbela en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-4">
+    <h2>Tema 4 · «Comunicaciones» en el informe de derivación</h2>
+    <div class="stack prose">
+      <p>
+        Elegiste incluir «Comunicaciones» en el informe y explicaste que sirve para anotaciones como «Contacto telefónico con SEM a las
+        18 h. Avisamos a familiares del traslado a Urgencias», y que lo ocurrido y el motivo van en el otro campo. Lo hemos construido como
+        <strong>un apartado propio del informe, que escribe el profesional</strong> al derivar (opcional). No se rellena solo con los
+        contactos del protocolo ni con el campo «Comunicaciones» de la valoración de Enfermería.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="4.1">
+        <div class="q-head"><span class="n">4.1</span><h3 class="q-title" id="t-4-1">¿Es eso lo que querías?</h3><span class="chip">Pendiente</span></div>
+        <fieldset class="choices" aria-labelledby="t-4-1">
+          <label class="choice"><input type="radio" name="r-4-1" value="A"><span class="letter">A</span><span class="txt">Sí: un apartado propio que escribe el profesional al derivar.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="B"><span class="letter">B</span><span class="txt">No: el informe debe copiar el campo «Comunicaciones» de la valoración de Enfermería.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="C"><span class="letter">C</span><span class="txt">Las dos cosas: el apartado propio y, además, lo escrito en la valoración.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

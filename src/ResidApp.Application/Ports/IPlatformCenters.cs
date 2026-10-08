@@ -14,6 +14,10 @@ public sealed record PlatformCenterSummary(CenterId CenterId, string Code, strin
 public interface IPlatformCenterDirectory
 {
     Task<IReadOnlyList<PlatformCenterSummary>> ListAsync(PlatformAccess access, CancellationToken ct = default);
+
+    /// <summary>Un centro con sus unidades y sus ámbitos de Administración vigentes (con su marca de principal y las unidades que tiene cada
+    /// uno). Null si el centro no existe o es el reservado. Nunca residentes.</summary>
+    Task<PlatformCenterDetail?> FindAsync(PlatformAccess access, CenterId centerId, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -26,4 +30,11 @@ public interface IPlatformCenterRepository
     /// <summary>Crea el centro (con OperationId como id). Reenviar la misma operación con los mismos datos devuelve el centro ya
     /// creado; con otros datos, es un conflicto.</summary>
     Task<CenterId> CreateCenterAsync(PlatformAccess access, Guid operationId, NewCenterData data, CancellationToken ct = default);
+
+    /// <summary>Marca o desmarca como principal un ámbito de Administración vigente del centro (el soporte puede dejar el centro sin
+    /// ninguna). Ya tenía esa marca: ACCOUNT_CHANGE_CONFLICT; ámbito ajeno al centro: acceso denegado.</summary>
+    Task SetAdministrationPrincipalAsync(PlatformAccess access, CenterId centerId, Guid profileScopeId, bool principal, CancellationToken ct = default);
+
+    /// <summary>Añade una unidad activa del centro al ámbito de una Administración del centro. Ya la tenía: ACCOUNT_CHANGE_CONFLICT.</summary>
+    Task AddUnitToAdministrationAsync(PlatformAccess access, CenterId centerId, Guid profileScopeId, UnitId unitId, CancellationToken ct = default);
 }

@@ -97,8 +97,34 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
         await AuditAsync(connection, transaction, access, operationId, null, "ACCOUNT", adminId, "ACCOUNT_CREATE", occurredAt, ct);
         await AuditAsync(connection, transaction, access, operationId, null, "PROFILE_SCOPE", profileScopeId, "PROFILE_SCOPE_GRANT", occurredAt, ct);
         await AuditAsync(connection, transaction, access, operationId, unitId, "PROFILE_SCOPE", profileScopeId, "PROFILE_UNIT_GRANT", occurredAt, ct);
+        // El primer administrador de un centro es su Administración principal (script 0047).
+        await SqlAdministrationScope.AppendPrincipalChangeAsync(
+            connection, transaction, CenterId.From(operationId), profileScopeId, true, access.AccountId, "PLATAFORMA", occurredAt, ct);
         transaction.Commit();
         return CenterId.From(operationId);
+    }
+
+    public async Task SetAdministrationPrincipalAsync(
+        PlatformAccess access, CenterId centerId, Guid profileScopeId, bool principal, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await EnsureOperatorAsync(connection, transaction, access, ct);
+        await SqlAdministrationScope.EnsureAdministrationScopeAsync(connection, transaction, centerId, profileScopeId, ct);
+        await SqlAdministrationScope.AppendPrincipalChangeAsync(
+            connection, transaction, centerId, profileScopeId, principal, access.AccountId, "PLATAFORMA", DateTimeOffset.UtcNow, ct);
+        transaction.Commit();
+    }
+
+    public async Task AddUnitToAdministrationAsync(
+        PlatformAccess access, CenterId centerId, Guid profileScopeId, UnitId unitId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await EnsureOperatorAsync(connection, transaction, access, ct);
+        await SqlAdministrationScope.AddUnitAsync(
+            connection, transaction, centerId, profileScopeId, unitId, access.AccountId, "PLATAFORMA", DateTimeOffset.UtcNow, ct);
+        transaction.Commit();
     }
 
     /// <summary>Quien opera sigue teniendo su ámbito de Plataforma vigente en el centro reservado, con la cuenta y el centro

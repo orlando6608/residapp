@@ -183,21 +183,3 @@ public static class EnumDisplay
             .GetCustomAttributes(typeof(DisplayAttribute), false).OfType<DisplayAttribute>().FirstOrDefault()?.Name
         ?? value.ToString();
 }
-
-/// <summary>Temperatura de un cambio de la Auxiliar y quién mira el aviso (la Auxiliar que registra o Enfermería
-/// que lo recibe), para el parcial _AvisoTemperaturaAuxiliar.</summary>
-public sealed record AvisoTemperaturaAuxiliarViewModel(decimal? Temperatura, bool ParaEnfermeria);
-
-/// <summary>Textos del aviso visual de temperatura de la Auxiliar (CJ, 2026-10-06). Nombra el umbral en texto: no
-/// depende solo del color.</summary>
-public static class AuxiliarTemperatureDisplay
-{
-    public static string? Message(AuxiliarTemperatureAlert alert, bool paraEnfermeria) => (alert, paraEnfermeria) switch
-    {
-        (AuxiliarTemperatureAlert.Seguimiento, false) => "Temperatura por encima de 37 °C: mantén el seguimiento de este residente.",
-        (AuxiliarTemperatureAlert.Seguimiento, true) => "Temperatura por encima de 37 °C: mantener el seguimiento.",
-        (AuxiliarTemperatureAlert.AvisarEnfermeria, false) => "Temperatura por encima de 38 °C: avisa a Enfermería.",
-        (AuxiliarTemperatureAlert.AvisarEnfermeria, true) => "Temperatura por encima de 38 °C registrada por la Auxiliar.",
-        _ => null,
-    };
-}

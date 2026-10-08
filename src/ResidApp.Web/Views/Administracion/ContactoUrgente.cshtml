@@ -2,7 +2,7 @@
 @model EmergencyContactViewModel
 @{
     var resident = Model.Detail.Resident;
-    ViewData["Title"] = "Contacto urgente";
+    ViewData["Title"] = "Contactos urgentes";
 }
 
 <nav aria-label="breadcrumb">
@@ -11,13 +11,13 @@
         <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
         <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
         <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Contacto urgente</li>
+        <li class="breadcrumb-item active" aria-current="page">Contactos urgentes</li>
     </ol>
 </nav>
 
-<h1 class="h3">Contacto urgente</h1>
+<h1 class="h3">Contactos urgentes</h1>
 <p class="text-muted">
-    Elige, entre los familiares de @resident.DisplayName, a quién se avisa en una urgencia. Ser contacto urgente no da acceso
+    Elige, entre los familiares de @resident.DisplayName, a quién o a quiénes se avisa en una urgencia. Ser contacto urgente no da acceso
     al Portal Familiar. Cada cambio queda en el historial de la ficha.
 </p>
 
@@ -28,21 +28,17 @@
             <input type="hidden" name="Form.ResidenteId" value="@Model.Form.ResidenteId" />
             <input type="hidden" name="Form.DesignacionesEsperadas" value="@Model.Form.DesignacionesEsperadas" />
             <fieldset class="mb-3">
-                <legend class="form-label fs-6">Contacto urgente</legend>
+                <legend class="form-label fs-6">Contactos urgentes</legend>
                 @foreach (var member in Model.Detail.Family)
                 {
                     var id = "contacto-" + member.LinkId;
                     <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="Form.VinculoId" id="@id" value="@member.LinkId"
-                               checked="@(Model.Form.VinculoId == member.LinkId)" />
+                        <input class="form-check-input" type="checkbox" name="Form.VinculosIds" id="@id" value="@member.LinkId"
+                               checked="@Model.Form.VinculosIds.Contains(member.LinkId)" />
                         <label class="form-check-label" for="@id">@member.DisplayName (@member.Relationship) · @member.Phone</label>
                     </div>
                 }
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="Form.VinculoId" id="contacto-ninguno" value=""
-                           checked="@(Model.Form.VinculoId is null)" />
-                    <label class="form-check-label" for="contacto-ninguno">Sin contacto urgente</label>
-                </div>
+                <div class="form-text">Marca al menos uno; puedes marcar varios.</div>
             </fieldset>
 
             <div class="d-grid d-md-flex justify-content-md-end gap-2">

@@ -25,8 +25,8 @@ public class AdministracionFamiliaresTests
         DateOnly? validUntil = null, string? reason = null) =>
         new(seed.ProfileScopeId, seed.CenterId, residentId, linkId, change, validUntil, reason, expected);
 
-    private static DesignateEmergencyContactCommand Designate(SeededProfile seed, ResidentId residentId, Guid? linkId, int expected) =>
-        new(seed.ProfileScopeId, seed.CenterId, residentId, linkId, expected);
+    private static DesignateEmergencyContactCommand Designate(SeededProfile seed, ResidentId residentId, int expected, params Guid[] linkIds) =>
+        new(seed.ProfileScopeId, seed.CenterId, residentId, linkIds, expected);
 
     private static async Task<AdministrativeResidentDetail> DetailAsync(SeededProfile seed, ResidentId residentId) =>
         (await Build(seed.ExternalSubject).FindResidentAsync(new FindAdministrativeResidentQuery(seed.ProfileScopeId, seed.CenterId, residentId))).Value!;
@@ -58,7 +58,7 @@ public class AdministracionFamiliaresTests
         var member = Assert.Single(detail.Family);
         Assert.Equal(("Lucía Pérez", "Hija", "600 123 456", (string?)null), (member.DisplayName, member.Relationship, member.Phone, member.Email));
         Assert.Null(member.CurrentAuthorization);
-        Assert.Null(detail.CurrentEmergencyContact);
+        Assert.Empty(detail.CurrentEmergencyContacts);
         Assert.Equal(1, await CountAuditAsync(residentId, "FAMILY_MEMBER_CREATE"));
     }
 
@@ -133,7 +133,7 @@ public class AdministracionFamiliaresTests
     }
 
     [Fact]
-    public async Task ContactoUrgente_SeDesignaEntreSusFamiliares_SeCambiaYSeQuita()
+    public async Task ContactoUrgente_PuedeHaberVarios_SeCambianYNuncaSeQuedaSinNinguno()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var residentId = await CreateResidentAsync(admin, "Residente Contacto");
@@ -143,23 +143,137 @@ public class AdministracionFamiliaresTests
         var son = (await service.AddFamilyMemberAsync(Add(admin, residentId, name: "Hijo Contacto"))).Value;
         var neighbour = (await service.AddFamilyMemberAsync(Add(admin, otherResident, name: "Familiar Ajeno"))).Value;
 
-        var first = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, daughter, 0));
-        var same = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, daughter, 1));
-        var foreign = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, neighbour, 1));
-        var changed = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, son, 1));
-        var stale = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, daughter, 1));
-        var removed = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, null, 2));
-        var removedAgain = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, null, 3));
+        var first = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 0, daughter));
+        var same = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 1, daughter));
+        var foreign = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 1, neighbour));
+        var changed = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 1, son));
+        var stale = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 1, daughter));
+        var both = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 3, daughter, son));
+        var none = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 4));
         var detail = await DetailAsync(admin, residentId);
 
-        Assert.Equal([1, 2, 3], new[] { first, changed, removed }.Select(r => r.Value));
+        Assert.Equal([1, 3, 4], new[] { first, changed, both }.Select(r => r.Value));
         Assert.Equal(ApplicationFailureCode.InvalidInput, same.Error!.Code);
         Assert.Equal(ApplicationFailureCode.AccessDenied, foreign.Error!.Code);
         Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
-        Assert.Equal(ApplicationFailureCode.InvalidInput, removedAgain.Error!.Code);
-        Assert.Equal(new string?[] { "Hija Contacto", "Hijo Contacto", null }, detail.EmergencyContacts.Select(c => c.DisplayName));
-        Assert.Null(detail.CurrentEmergencyContact);
-        Assert.Equal(3, await CountAuditAsync(residentId, "EMERGENCY_CONTACT_DESIGNATE"));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, none.Error!.Code);
+        Assert.Equal(["AGREGAR", "QUITAR", "AGREGAR", "AGREGAR"], detail.EmergencyContacts.Select(c => c.Action));
+        Assert.Equal(["Hija Contacto", "Hija Contacto", "Hijo Contacto", "Hija Contacto"], detail.EmergencyContacts.Select(c => c.DisplayName));
+        Assert.Equal([son, daughter], detail.CurrentEmergencyContacts);
+        Assert.Equal(4, await CountAuditAsync(residentId, "EMERGENCY_CONTACT_DESIGNATE"));
+    }
+
+    [Fact]
+    public async Task Desvincular_ConservaElVinculoPasado_RevocaLaAutorizacion_QuitaElContacto_YElFamiliarSigueConLosDemas()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var first = await CreateResidentAsync(admin, "Residente Desvincula Uno");
+        var second = await CreateResidentAsync(admin, "Residente Desvincula Dos");
+        var service = Build(admin.ExternalSubject);
+        var daughter = (await service.AddFamilyMemberAsync(Add(admin, first, name: "Hija Desvinculada"))).Value;
+        var son = (await service.AddFamilyMemberAsync(Add(admin, first, name: "Hijo Que Se Queda"))).Value;
+        var familyId = Guid.NewGuid();
+        await service.AddFamilyMemberAsync(Add(admin, first, familyId, "Prima Compartida", "611 000 222"));
+        var shared = (await DetailAsync(admin, first)).Family.Single(f => f.DisplayName == "Prima Compartida").LinkId;
+        Assert.True((await service.LinkFamilyMemberAsync(new LinkFamilyMemberCommand(
+            admin.ProfileScopeId, admin.CenterId, second, Guid.NewGuid(), familyId, "Sobrina"))).Ok);
+        Assert.True((await service.ChangeFamilyAuthorizationAsync(Change(admin, first, daughter, FamilyAuthorizationChange.Abrir, 0))).Ok);
+        Assert.True((await service.ChangeFamilyAuthorizationAsync(Change(admin, first, daughter, FamilyAuthorizationChange.Activar, 1))).Ok);
+        Assert.True((await service.DesignateEmergencyContactAsync(Designate(admin, first, 0, daughter, son))).Ok);
+        UnlinkFamilyMemberCommand Unlink(Guid link, string? reason = "Ya no mantiene relación con el residente.", ResidentId? resident = null) =>
+            new(admin.ProfileScopeId, admin.CenterId, resident ?? first, link, reason);
+
+        var noReason = await service.UnlinkFamilyMemberAsync(Unlink(daughter, "  "));
+        var unlinked = await service.UnlinkFamilyMemberAsync(Unlink(daughter));
+        var again = await service.UnlinkFamilyMemberAsync(Unlink(daughter));
+        var wrongResident = await service.UnlinkFamilyMemberAsync(Unlink(son, resident: second));
+        var lastContact = await service.UnlinkFamilyMemberAsync(Unlink(son));
+        var sharedUnlinked = await service.UnlinkFamilyMemberAsync(Unlink(shared, "Error al vincularla."));
+        var firstDetail = await DetailAsync(admin, first);
+        var secondDetail = await DetailAsync(admin, second);
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, noReason.Error!.Code);
+        Assert.True(unlinked.Ok, unlinked.Error?.Message);
+        Assert.Equal(ApplicationFailureCode.Conflict, again.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, wrongResident.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, lastContact.Error!.Code);
+        Assert.True(sharedUnlinked.Ok, sharedUnlinked.Error?.Message);
+        // El vínculo pasado se ve en el historial; el contacto urgente que queda es el hijo.
+        Assert.Equal(["Hijo Que Se Queda"], firstDetail.Family.Select(f => f.DisplayName));
+        Assert.Equal([son], firstDetail.CurrentEmergencyContacts);
+        Assert.Equal(["Prima Compartida", "Hija Desvinculada"], firstDetail.Former.Select(f => f.DisplayName));
+        Assert.Equal("Ya no mantiene relación con el residente.", firstDetail.Former[1].Reason);
+        // La prima sigue vinculada al otro residente, ya sin vínculos compartidos.
+        var inSecond = Assert.Single(secondDetail.Family);
+        Assert.Equal(("Prima Compartida", 0), (inSecond.DisplayName, inSecond.OtherResidentLinks));
+        Assert.Equal(2, await CountAuditAsync(first, "FAMILY_MEMBER_UNLINK"));
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal(["ACTIVA", "REVOCADA"], (await connection.QueryAsync<string>(
+            "SELECT estado_codigo FROM dbo.familiares_autorizaciones_cambios WHERE vinculo_id = @daughter AND estado_codigo <> 'PENDIENTE' ORDER BY numero",
+            new { daughter })).ToArray());
+        // La base de datos no deja tocar un vínculo desvinculado, y vincular de nuevo al mismo familiar crea un vínculo nuevo.
+        await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.residentes_familiares SET relacion = 'Otra' WHERE id = @daughter", new { daughter }));
+        var relinked = await service.LinkFamilyMemberAsync(new LinkFamilyMemberCommand(
+            admin.ProfileScopeId, admin.CenterId, first, Guid.NewGuid(), familyId, "Prima"));
+        Assert.True(relinked.Ok, relinked.Error?.Message);
+        Assert.NotEqual(shared, relinked.Value);
+    }
+
+    [Fact]
+    public async Task Desvincular_SoloLoHaceAdministracionDelAmbito()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var residentId = await CreateResidentAsync(admin, "Residente Desvincula Permisos");
+        var linkId = (await Build(admin.ExternalSubject).AddFamilyMemberAsync(Add(admin, residentId))).Value;
+        var otherAdmin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var denied = new List<ApplicationFailureCode?>();
+        foreach (var profile in new[] { SystemProfile.Enfermeria, SystemProfile.Medicina, SystemProfile.Auxiliar, SystemProfile.DireccionClinica })
+        {
+            var other = await SeedFixture.AddProfileToCenterAsync(profile, admin.CenterId, admin.UnitId);
+            denied.Add((await Build(other.ExternalSubject).UnlinkFamilyMemberAsync(
+                new UnlinkFamilyMemberCommand(other.ProfileScopeId, other.CenterId, residentId, linkId, "Motivo"))).Error?.Code);
+        }
+
+        denied.Add((await Build(otherAdmin.ExternalSubject).UnlinkFamilyMemberAsync(
+            new UnlinkFamilyMemberCommand(otherAdmin.ProfileScopeId, otherAdmin.CenterId, residentId, linkId, "Motivo"))).Error?.Code);
+
+        Assert.All(denied, code => Assert.Equal(ApplicationFailureCode.AccessDenied, code));
+        Assert.Single((await DetailAsync(admin, residentId)).Family);
+    }
+
+    [Fact]
+    public async Task FamiliarEnUnidadesDistintas_LoEditaCualquieraQueGestioneAAlgunoDeSusResidentes_SinVerLosDemas()
+    {
+        // CJ (2026-10-07, 2.2): los datos de contacto son compartidos y los cambia cualquiera que gestione a alguno de sus residentes.
+        var adminOne = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var unitTwo = await AdministracionResidentesTests.AddUnitAsync(adminOne.CenterId);
+        var adminTwo = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, adminOne.CenterId, unitTwo);
+        var residentOne = await CreateResidentAsync(adminOne, "Residente Unidad Uno");
+        var residentTwo = await CreateResidentAsync(adminOne, "Residente Unidad Dos", unitTwo);
+        var familyId = Guid.NewGuid();
+        var linkOne = (await Build(adminOne.ExternalSubject).AddFamilyMemberAsync(Add(adminOne, residentOne, familyId, "Hija Compartida"))).Value;
+        var linkTwo = Guid.NewGuid();
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.residentes_familiares (id, centro_id, residente_id, familiar_id, relacion, vinculado_por_cuenta_id, vinculado_en)
+                VALUES (@linkTwo, @centerId, @residentId, @familyId, 'Hija', @accountId, SYSUTCDATETIME())
+                """, new { linkTwo, centerId = adminOne.CenterId.Value, residentId = residentTwo.Value, familyId, accountId = adminOne.AccountId.Value });
+        }
+
+        var version = new FamilyMemberData("Hija Compartida", "Hija", "600 123 456", null).Version;
+        var edited = await Build(adminTwo.ExternalSubject).UpdateFamilyMemberAsync(new UpdateFamilyMemberCommand(
+            adminTwo.ProfileScopeId, adminTwo.CenterId, residentTwo, linkTwo, "Hija Compartida", "Hija", "699 000 111", null, version));
+        var throughOtherLink = await Build(adminTwo.ExternalSubject).UpdateFamilyMemberAsync(new UpdateFamilyMemberCommand(
+            adminTwo.ProfileScopeId, adminTwo.CenterId, residentOne, linkOne, "Hija Compartida", "Hija", "699 000 222", null, version));
+        var otherResident = await Build(adminTwo.ExternalSubject).FindResidentAsync(
+            new FindAdministrativeResidentQuery(adminTwo.ProfileScopeId, adminTwo.CenterId, residentOne));
+
+        Assert.True(edited.Ok, edited.Error?.Message);
+        Assert.Equal("699 000 111", Assert.Single((await DetailAsync(adminOne, residentOne)).Family).Phone);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, throughOtherLink.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, otherResident.Error!.Code);
     }
 
     [Fact]
@@ -312,7 +426,7 @@ public class AdministracionFamiliaresTests
             var service = Build(other.ExternalSubject);
             denied.Add((await service.AddFamilyMemberAsync(Add(other, residentId))).Error?.Code);
             denied.Add((await service.ChangeFamilyAuthorizationAsync(Change(other, residentId, linkId, FamilyAuthorizationChange.Abrir, 0))).Error?.Code);
-            denied.Add((await service.DesignateEmergencyContactAsync(Designate(other, residentId, linkId, 0))).Error?.Code);
+            denied.Add((await service.DesignateEmergencyContactAsync(Designate(other, residentId, 0, linkId))).Error?.Code);
         }
 
         denied.Add((await Build(otherAdmin.ExternalSubject).AddFamilyMemberAsync(Add(otherAdmin, residentId))).Error?.Code);
@@ -321,7 +435,7 @@ public class AdministracionFamiliaresTests
 
         Assert.All(denied, code => Assert.Equal(ApplicationFailureCode.AccessDenied, code));
         Assert.Null(Assert.Single((await DetailAsync(admin, residentId)).Family).CurrentAuthorization);
-        Assert.Null((await DetailAsync(admin, residentId)).CurrentEmergencyContact);
+        Assert.Empty((await DetailAsync(admin, residentId)).CurrentEmergencyContacts);
     }
 
     [Fact]
@@ -332,7 +446,7 @@ public class AdministracionFamiliaresTests
         var service = Build(admin.ExternalSubject);
         var linkId = (await service.AddFamilyMemberAsync(Add(admin, residentId))).Value;
         Assert.True((await service.ChangeFamilyAuthorizationAsync(Change(admin, residentId, linkId, FamilyAuthorizationChange.Abrir, 0))).Ok);
-        Assert.True((await service.DesignateEmergencyContactAsync(Designate(admin, residentId, linkId, 0))).Ok);
+        Assert.True((await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 0, linkId))).Ok);
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var parameters = new { LinkId = linkId, CenterId = admin.CenterId.Value, AccountId = admin.AccountId.Value, ResidentId = residentId.Value };
 

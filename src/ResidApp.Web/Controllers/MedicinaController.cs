@@ -20,7 +20,8 @@ namespace ResidApp.Web.Controllers;
 /// MedicinaApplicationService; la autorización y las reglas de negocio no viven aquí.
 /// </summary>
 public sealed class MedicinaController(
-    MedicinaApplicationService service, ResidentBaselineApplicationService baselineService, FindEmergencyContact findEmergencyContact) : Controller
+    MedicinaApplicationService service, ResidentBaselineApplicationService baselineService, FindEmergencyContact findEmergencyContact,
+    ListMilestoneWarnings milestoneWarnings) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -35,6 +36,7 @@ public sealed class MedicinaController(
         var indicaciones = await service.ListMedicalIndicationsAsync(new ListMedicalIndicationsCommand(activeScope.ProfileScopeId, centroId), ct);
         var seguimientos = await service.ListMedicalFollowUpsAsync(new ListMedicalFollowUpsCommand(activeScope.ProfileScopeId, centroId), ct);
         var protocolos = await service.ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(activeScope.ProfileScopeId, centroId), ct);
+        var avisos = await milestoneWarnings.ExecuteAsync(new ListMilestoneWarningsCommand(activeScope.ProfileScopeId, centroId), ct);
         if (!escalados.Ok)
         {
             ModelState.AddModelError(string.Empty, escalados.Error!.Message);
@@ -46,7 +48,7 @@ public sealed class MedicinaController(
             lista.Count(i => i.Indication.Status == MedicalIndicationStatus.NoRealizada),
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
-            protocolos.Ok ? protocolos.Value!.Count : 0));
+            protocolos.Ok ? protocolos.Value!.Count : 0, avisos.Ok ? avisos.Value : null));
     }
 
     /// <summary>MED-02: bandeja de escalados (pendientes y en valoración médica), del más antiguo al más reciente.</summary>

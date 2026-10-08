@@ -122,7 +122,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                        AS AssessmentStartedByCurrentAccount,
                    ea.valoracion_iniciada_en AS AssessmentStartedAt,
                    CAST(CASE WHEN ea.cerrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ClosedByCurrentAccount,
-                   ea.cerrado_en AS ClosedAt, ea.comunicacion_familiar_codigo AS FamilyCommunicationDecisionCode,
+                   ea.cerrado_en AS ClosedAt, ea.cierre_sistema_codigo AS SystemClosureCode, ea.comunicacion_familiar_codigo AS FamilyCommunicationDecisionCode,
                    family.tipo_codigo AS FamilyCommunicationTypeCode, family.texto AS FamilyCommunicationText,
                    family.preparado_en AS FamilyCommunicationPreparedAt, escalation.motivo AS EscalationReason,
                    CAST(CASE WHEN escalation.escalado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS EscalatedByCurrentAccount,
@@ -187,8 +187,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             SELECT a.id AS Id, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate, a.criterio AS Criterion,
                    a.equipo_entrante AS IncomingTeam, a.transferencia_id AS TransferId,
                    CAST(CASE WHEN a.registrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ByCurrentAccount,
-                   a.registrado_en AS RecordedAt,
-                   CAST(CASE WHEN {TransferReceptionSql.CanReceive("a", "profile.cuenta_id")} THEN 1 ELSE 0 END AS BIT) AS CanConfirmReception
+                   a.registrado_en AS RecordedAt
               FROM dbo.seguimiento_acciones a
               JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
              WHERE a.seguimiento_id = @FollowUpId
@@ -221,7 +220,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                 EnumCode.ParseCode<FamilyCommunicationDecision>(row.FamilyCommunicationDecisionCode!),
                 row.FamilyCommunicationTypeCode is null ? null : new PreparedFamilyCommunication(
                     EnumCode.ParseCode<FamilyCommunicationType>(row.FamilyCommunicationTypeCode), row.FamilyCommunicationText!,
-                    new DateTimeOffset(row.FamilyCommunicationPreparedAt!.Value, TimeSpan.Zero))),
+                    new DateTimeOffset(row.FamilyCommunicationPreparedAt!.Value, TimeSpan.Zero)),
+                row.SystemClosureCode == "FALLECIMIENTO"),
             followUp is null ? null : new FollowUpDetail(
                 followUp.DueDate is null ? null : DateOnly.FromDateTime(followUp.DueDate.Value), followUp.Criterion,
                 followUp.ContinuityNotes, followUp.StartedByCurrentAccount, new DateTimeOffset(followUp.StartedAt, TimeSpan.Zero),
@@ -510,8 +510,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             SELECT a.id AS Id, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate, a.criterio AS Criterion,
                    a.equipo_entrante AS IncomingTeam, a.transferencia_id AS TransferId,
                    CAST(CASE WHEN a.registrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ByCurrentAccount,
-                   a.registrado_en AS RecordedAt,
-                   CAST(CASE WHEN {TransferReceptionSql.CanReceive("a", "profile.cuenta_id")} THEN 1 ELSE 0 END AS BIT) AS CanConfirmReception
+                   a.registrado_en AS RecordedAt
               FROM dbo.seguimiento_medico_acciones a
               JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId
              WHERE a.seguimiento_id = @FollowUpId
@@ -528,7 +527,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
     private static FollowUpActionSummary ToSummary(FollowUpActionRow a) => new(
         a.Id, EnumCode.ParseCode<FollowUpActionType>(a.TypeCode), a.Text,
         a.DueDate is null ? null : DateOnly.FromDateTime(a.DueDate.Value), a.Criterion, a.IncomingTeam, a.TransferId,
-        a.ByCurrentAccount, new DateTimeOffset(a.RecordedAt, TimeSpan.Zero), a.CanConfirmReception);
+        a.ByCurrentAccount, new DateTimeOffset(a.RecordedAt, TimeSpan.Zero));
 
     private static async Task<MedicalAssessmentDraft?> FindMedicalAssessmentAsync(
         System.Data.IDbConnection connection, Guid profileScopeId, Guid eventId, CancellationToken ct)
@@ -736,6 +735,14 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             .ToList();
     }
 
+    /// <summary>DIR-11: los hitos del proceso de los eventos del ámbito de Enfermería o de Medicina (ver ProcessMilestoneQueries).</summary>
+    public async Task<IReadOnlyList<MilestoneFact>> ListMilestoneFactsAsync(
+        Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return await ProcessMilestoneQueries.ListAsync(connection, ScopedEventsFrom, profileScopeId, centerId, from, toExclusive, ct);
+    }
+
     /// <summary>MED-11: seguimientos médicos abiertos del ámbito, con el mismo plan vigente y el mismo orden que
     /// ListFollowUpsAsync, más el objetivo y la última decisión de continuidad (transferir o conservar).</summary>
     public async Task<IReadOnlyList<MedicalFollowUpSummary>> ListMedicalFollowUpsAsync(
@@ -798,7 +805,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
 
     private sealed record FollowUpActionRow(
         Guid Id, string TypeCode, string? Text, DateTime? DueDate, string? Criterion, string? IncomingTeam, Guid? TransferId,
-        bool ByCurrentAccount, DateTime RecordedAt, bool CanConfirmReception);
+        bool ByCurrentAccount, DateTime RecordedAt);
 
     private sealed record FollowUpSummaryRow(
         Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, DateTime? DueDate, string? Criterion,
@@ -840,7 +847,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         Guid EventId, string OriginCode, Guid ResidentId, string ResidentDisplayName, Guid UnitId, string? UnitName, string ClassificationCode,
         decimal? TemperatureCelsius, string? Observation, string? ClinicalData, string AuthorProfileCode, string? PriorityReasonCode,
         string? DirectNoticeNotes, DateTime OccurredAt, string StatusCode, int Revision, bool? AssessmentStartedByCurrentAccount,
-        DateTime? AssessmentStartedAt, bool ClosedByCurrentAccount, DateTime? ClosedAt, string? FamilyCommunicationDecisionCode,
+        DateTime? AssessmentStartedAt, bool ClosedByCurrentAccount, DateTime? ClosedAt, string? SystemClosureCode, string? FamilyCommunicationDecisionCode,
         string? FamilyCommunicationTypeCode, string? FamilyCommunicationText, DateTime? FamilyCommunicationPreparedAt,
         string? EscalationReason, bool EscalatedByCurrentAccount, DateTime? EscalatedAt, bool? MedicalStartedByCurrentAccount,
         DateTime? MedicalStartedAt);

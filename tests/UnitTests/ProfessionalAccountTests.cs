@@ -39,9 +39,9 @@ public class ProfessionalAccountTests
     {
         Assert.Equal(["RESIDENT_IDENTITY_CREATE", "BASELINE_INITIAL_COMPLETE", "BASELINE_REEVALUATE"],
             ProfilePermissions.For(SystemProfile.Enfermeria));
-        Assert.Equal(["BASELINE_INITIAL_COMPLETE", "BASELINE_REEVALUATE", "REFERENCE_RANGES_MANAGE"],
+        Assert.Equal(["BASELINE_INITIAL_COMPLETE", "BASELINE_REEVALUATE"],
             ProfilePermissions.For(SystemProfile.Medicina));
-        Assert.Equal(["CLINICAL_DETAIL_READ", "REFERENCE_RANGES_MANAGE"], ProfilePermissions.For(SystemProfile.DireccionClinica));
+        Assert.Equal(["CLINICAL_DETAIL_READ", "REFERENCE_RANGES_MANAGE", "PROCESS_DEADLINES_MANAGE"], ProfilePermissions.For(SystemProfile.DireccionClinica));
         Assert.All(new[] { SystemProfile.Auxiliar, SystemProfile.Administracion, SystemProfile.Familiar, SystemProfile.Plataforma },
             profile => Assert.Empty(ProfilePermissions.For(profile)));
         Assert.DoesNotContain(Enum.GetValues<SystemProfile>(), p => ProfilePermissions.For(p).Contains("BASELINE_DRAFT_CONTRIBUTE"));

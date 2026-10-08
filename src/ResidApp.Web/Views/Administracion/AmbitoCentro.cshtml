@@ -1,0 +1,73 @@
+@using ResidApp.Web.Models
+@model AdministrationScopeViewModel
+@{
+    ViewData["Title"] = "Unidades del centro";
+    var view = Model.View;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Unidades del centro</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Unidades del centro</h1>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (!view.IsPrincipal)
+{
+    <div class="alert alert-info" role="status">
+        Tu perfil de Administración trabaja solo sobre las unidades que se le han concedido. Ver todas las unidades del centro y añadirte las
+        que te faltan lo hace la <strong>Administración principal</strong> del centro. Si tu centro no tiene ninguna o necesitas recuperar una unidad,
+        pídelo al soporte de la plataforma.
+    </div>
+}
+else
+{
+    <p class="text-muted">
+        Eres la Administración principal del centro: ves todas sus unidades y puedes añadirte a tu ámbito las que no tienes. Cada ampliación queda en
+        la auditoría con quién y cuándo. Desde la ficha de otra cuenta de Administración puedes marcarla también como principal.
+    </p>
+    @if (view.Units.Count == 0)
+    {
+        <p class="estado-vacio">El centro no tiene unidades activas.</p>
+    }
+    else
+    {
+        <ul class="list-group">
+            @foreach (var unit in view.Units)
+            {
+                <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div>
+                        <span class="fw-semibold">@unit.Name</span>
+                        @if (unit.InScope)
+                        {
+                            <span class="badge text-bg-success ms-1">En tu ámbito</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-secondary ms-1">Fuera de tu ámbito</span>
+                        }
+                    </div>
+                    @if (!unit.InScope)
+                    {
+                        <form asp-action="AnadirUnidadAlAmbito" method="post">
+                            <input type="hidden" name="unidadId" value="@unit.UnitId.Value" />
+                            <button type="submit" class="btn btn-outline-primary">Añadir a mi ámbito</button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+    }
+}

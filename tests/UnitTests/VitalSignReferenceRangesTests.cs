@@ -44,13 +44,17 @@ public class VitalSignReferenceRangesTests
     }
 
     [Fact]
-    public void Evaluate_SaturacionBajaConOxigenoterapia_NoAvisa_PeroConAireAmbienteSi()
+    public void Evaluate_SaturacionBajaConOxigenoterapia_AvisaConElFlujo_YConAireAmbienteSinFlujo()
     {
         var conOxigeno = new VitalSigns(null, null, null, null, null, 90, RespiratorySupportCode.Oxigenoterapia, 2m, null, null, null, null);
         var aireAmbiente = new VitalSigns(null, null, null, null, null, 90, RespiratorySupportCode.AireAmbiente, null, null, null, null, null);
 
-        Assert.Empty(VitalSignReferenceRanges.Evaluate(conOxigeno, Ranges));
-        Assert.Equal(VitalSignCode.SaturacionO2, Assert.Single(VitalSignReferenceRanges.Evaluate(aireAmbiente, Ranges)).Code);
+        var conFlujo = Assert.Single(VitalSignReferenceRanges.Evaluate(conOxigeno, Ranges));
+        Assert.Equal(VitalSignCode.SaturacionO2, conFlujo.Code);
+        Assert.Equal(2m, conFlujo.OxygenFlowLpm);
+        var sinFlujo = Assert.Single(VitalSignReferenceRanges.Evaluate(aireAmbiente, Ranges));
+        Assert.Equal(VitalSignCode.SaturacionO2, sinFlujo.Code);
+        Assert.Null(sinFlujo.OxygenFlowLpm);
     }
 
     [Fact]
@@ -71,14 +75,23 @@ public class VitalSignReferenceRangesTests
         }
 
         var byCode = VitalSignReferenceRanges.Suggested.ToDictionary(r => r.Code);
-        Assert.Equal((36m, 37.9m), (byCode[VitalSignCode.Temperatura].Min!.Value, byCode[VitalSignCode.Temperatura].Max!.Value));
+        Assert.Equal((36m, 36.9m), (byCode[VitalSignCode.Temperatura].Min!.Value, byCode[VitalSignCode.Temperatura].Max!.Value));
         Assert.Equal((90m, 139m), (byCode[VitalSignCode.TensionSistolica].Min!.Value, byCode[VitalSignCode.TensionSistolica].Max!.Value));
         Assert.Equal((60m, 89m), (byCode[VitalSignCode.TensionDiastolica].Min!.Value, byCode[VitalSignCode.TensionDiastolica].Max!.Value));
         Assert.Equal((60m, 100m), (byCode[VitalSignCode.FrecuenciaCardiaca].Min!.Value, byCode[VitalSignCode.FrecuenciaCardiaca].Max!.Value));
         Assert.Equal((12m, 20m), (byCode[VitalSignCode.FrecuenciaRespiratoria].Min!.Value, byCode[VitalSignCode.FrecuenciaRespiratoria].Max!.Value));
         Assert.Equal((95m, 100m), (byCode[VitalSignCode.SaturacionO2].Min!.Value, byCode[VitalSignCode.SaturacionO2].Max!.Value));
-        Assert.Equal(70m, byCode[VitalSignCode.Glucemia].Min);
-        Assert.Null(byCode[VitalSignCode.Glucemia].Max);
+        Assert.Equal((70m, 120m), (byCode[VitalSignCode.Glucemia].Min!.Value, byCode[VitalSignCode.Glucemia].Max!.Value));
+    }
+
+    [Theory]
+    [InlineData(36.9, false)]
+    [InlineData(37.0, true)]
+    public void Suggested_LaTemperaturaAvisaDesde37(double celsius, bool avisa)
+    {
+        var alerts = VitalSignReferenceRanges.Evaluate(Vitals(temperature: (decimal)celsius), VitalSignReferenceRanges.Suggested);
+
+        Assert.Equal(avisa, alerts.Any(a => a.Code == VitalSignCode.Temperatura));
     }
 
     [Theory]

@@ -73,9 +73,9 @@ public sealed class IntentoLlamadaFormModel
 /// del informe completo con su huella (Preview null mientras se edita).</summary>
 public sealed record DerivarViewModel(PendingChangeDetail Event, DerivarFormModel Form, ReferralReportContent? Preview);
 
-/// <summary>ADM-08 (0022): la tarjeta del contacto urgente en la ficha de Enfermería y de Medicina. Va envuelto porque una
+/// <summary>ADM-08 (0022, 0044): la tarjeta de los contactos urgentes en la ficha de Enfermería y de Medicina. Va envuelto porque una
 /// vista parcial con modelo null recibe el de la vista padre.</summary>
-public sealed record EmergencyContactCardModel(EmergencyContactSummary? Contact);
+public sealed record EmergencyContactCardModel(IReadOnlyList<EmergencyContactSummary>? Contacts);
 
 /// <summary>ADM-08 (0022): cómo se muestra el contacto urgente a Enfermería y Medicina.</summary>
 public static class EmergencyContactDisplay
