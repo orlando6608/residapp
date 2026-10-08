@@ -270,7 +270,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="guia-de-pruebas-cj" data-version="2026-10-06">
+<body data-doc="guia-de-pruebas-cj" data-version="2026-10-08">
 
 <div class="page">
   <header>
@@ -280,13 +280,13 @@
     <p class="lead prose">
       Ya están construidos los circuitos del Auxiliar, Enfermería, Medicina, Dirección Clínica y Administración, el basal con
       Barthel y la protección de los datos por centro. Los tests automáticos no pueden decir si las pantallas hacen lo que tú
-      esperas como clínica. Esta guía te propone 49 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
+      esperas como clínica. Esta guía te propone 60 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
       si coincide y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>49 pruebas en 7 temas, más 3 preguntas finales. 18 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>60 pruebas en 7 temas, más 3 preguntas finales. 20 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Las imprescindibles, hora y media aproximadamente; todas, entre tres y cuatro horas. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -329,10 +329,11 @@
         <tr><td><code>dev-integrado-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (4).</td></tr>
         <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
         <tr><td><code>dev-integrado-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios. Puede crear y firmar basales.</td></tr>
-        <tr><td><code>dev-integrado-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad y consulta auditada del basal; puede fijar los rangos de referencia.</td></tr>
-        <tr><td><code>dev-integrado-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), familias, usuarios, estructura, turnos y auditoría.</td></tr>
+        <tr><td><code>dev-integrado-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad, calidad de proceso y consulta auditada del basal; puede fijar los rangos de referencia y los plazos de los hitos del proceso.</td></tr>
+        <tr><td><code>dev-integrado-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), traslados y bajas, familias, comunicados a la familia, usuarios, estructura, turnos y auditoría. Es la Administración principal del centro.</td></tr>
         <tr><td><code>dev-enfermeria</code></td><td>Enfermería de otro centro</td><td>Otro centro, con sus propios residentes. Solo se usa en el tema 7.</td></tr>
         <tr><td><code>dev-multi</code></td><td>Cuatro ámbitos</td><td>Enfermería y Medicina del «Centro de desarrollo A»; Dirección Clínica y Familiar del «Centro de desarrollo B». Solo se usa en el tema 7.</td></tr>
+        <tr><td><code>dev-plataforma</code></td><td>Plataforma</td><td>Los centros y, en cada uno, sus Administraciones y unidades. No ve residentes. Solo se usa en la prueba 7.5.</td></tr>
       </tbody>
     </table></div>
 
@@ -362,16 +363,15 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (18 de 49).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (20 de 60).</p>
 
     <h3>Qué NO se prueba, porque todavía no existe</h3>
     <ul class="lista prose">
-      <li>El Portal Familiar (la cuenta Familiar de <code>dev-multi</code> entra, pero no tiene pantallas).</li>
-      <li>La aprobación y publicación de las comunicaciones a familias: las comunicaciones preparadas quedan «pendientes de aprobación».</li>
-      <li>El traslado de un residente entre unidades o centros, el cambio de habitación o plaza, y la baja y reactivación.</li>
-      <li>Que un segundo profesional aporte a un borrador de basal ajeno.</li>
+      <li>El Portal Familiar (la cuenta Familiar de <code>dev-multi</code> entra, pero no tiene pantallas). Por eso los comunicados a la familia se aprueban y se publican, pero nadie los lee todavía.</li>
+      <li>El traslado de un residente a otro centro (solo es posible entre unidades del mismo centro) y que Enfermería traslade con un permiso específico.</li>
+      <li>Que un segundo profesional aporte a un borrador de basal ajeno (lo descartaste en las aclaraciones).</li>
       <li>Rangos de referencia por residente, y la lectura clínica detallada de Dirección sobre un episodio.</li>
-      <li>La tarjeta «Comunicaciones» de Medicina.</li>
+      <li>La tarjeta «Comunicaciones» de Medicina, el organigrama del personal y el calendario de turnos con bandejas personales (los dos últimos, aplazados).</li>
     </ul>
     <p class="why">El orden importa un poco: algunas pruebas usan lo que dejó otra (por ejemplo, la 2.1 necesita lo que registraste en la 1.3 y la 1.4, y la 2.9 necesita la 3.3). Si te saltas una, marca D en la que dependa de ella.</p>
   </section>
@@ -578,7 +578,7 @@
           <li>En la pantalla del seguimiento, registra una actuación («Registrar actuación»), reprograma («Reprogramar», con justificación) y transfiere al «Equipo entrante» con una nota de continuidad («Transferir»).</li>
           <li>Abre la tarjeta «Seguimientos» y busca el evento. Después, «Resolver» y cierra el evento.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>El evento sale de las bandejas y entra en «Seguimientos». La transferencia queda «pendiente de recepción» hasta que alguien pulsa «Confirmar recepción»; si el equipo tiene miembros, solo ellos pueden. Un seguimiento con fecha pasada aparece «Vencido» pero no se cierra solo.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El evento sale de las bandejas y entra en «Seguimientos». La transferencia queda «pendiente de recepción» hasta que alguien pulsa «Confirmar recepción»; la puede confirmar cualquiera de Enfermería de la unidad que entre, aunque el equipo entrante tenga miembros. Un seguimiento con fecha pasada aparece «Pendiente» pero no se cierra solo.</div>
         <fieldset class="choices" aria-labelledby="t-2-6">
           <label class="choice"><input type="radio" name="r-2-6" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-2-6" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -614,7 +614,7 @@
           <li>Intenta cerrar el evento ahora: no debe dejarte sin un intento de llamada. Registra un intento de llamada a la familia (a quién, hora, resultado).</li>
           <li>Cierra el evento: la comunicación a la familia es obligatoria y solo se ofrece «Preparar comunicación».</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>El PDF lleva el icono y el nombre de ResidApp, la identificación, el basal, las valoraciones y la evolución, pero no los contactos con servicios. Cada evento admite un solo informe. Tras cerrar, la comunicación queda «pendiente de aprobación» (todavía no se publica).</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El PDF lleva el icono y el nombre de ResidApp, la identificación, el basal, las valoraciones y la evolución, pero no los contactos con servicios. Cada evento admite un solo informe. Tras cerrar, la comunicación queda aprobada y programada para publicarse (1 hora de margen y a las 19:00); la verás en «Comunicaciones» (pruebas 2.11 y 2.12).</div>
         <fieldset class="choices" aria-labelledby="t-2-8">
           <label class="choice"><input type="radio" name="r-2-8" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-2-8" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -660,11 +660,11 @@
 
       <article class="q" data-q="2.11">
         <div class="q-head"><span class="n">2.11</span><h3 class="q-title" id="t-2-11">Bandeja de comunicaciones a familias</h3><span class="chip">Sin probar</span></div>
-        
         <ol class="pasos">
           <li>En Inicio de Enfermería abre la tarjeta «Comunicaciones».</li>
+          <li>Busca la comunicación que preparaste al cerrar un evento (pruebas 2.8 y 3.5) y mira la etiqueta de su hora.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves las comunicaciones que has preparado al cerrar, pendientes de aprobación. Hoy no se pueden aprobar ni publicar (llega con el Portal Familiar). Cuéntanos en el comentario si lo que ves te basta.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves las comunicaciones de los últimos 30 días, cada una con el residente, el tipo, el texto y la hora a la que se publica («Se publica el …»): tras 1 hora de margen, a las 19:00. Quien la prepara la aprueba al guardarla; no hay otra aprobación. Cuando llega su hora, o Administración la publica antes (prueba 6.15), pasa a «Publicada». Todavía no la lee nadie, porque no existe el Portal Familiar. Cuéntanos en el comentario si las 19:00 y la hora de margen te parecen bien.</div>
         <fieldset class="choices" aria-labelledby="t-2-11">
           <label class="choice"><input type="radio" name="r-2-11" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-2-11" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -674,6 +674,39 @@
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
     </div>
+
+      <article class="q" data-q="2.12">
+        <div class="q-head"><span class="n">2.12</span><h3 class="q-title" id="t-2-12">Corregir un comunicado durante la hora de margen</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Cierra un evento con «Preparar comunicación» (como en la prueba 3.5) y, antes de que pase una hora, abre la tarjeta «Comunicaciones».</li>
+          <li>En ese comunicado pulsa «Corregir». Cambia el texto (y, si quieres, el tipo) y pulsa «Guardar la corrección». Prueba antes a dejar el texto vacío.</li>
+          <li>Vuelve a «Comunicaciones»: debe salir el texto nuevo con «Corregido una vez». Pasada la hora, comprueba que ya no hay botón «Corregir».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Durante la primera hora cualquiera de Enfermería de la unidad puede corregir el texto y el tipo, no solo quien lo preparó. Sin texto no se guarda. La familia verá solo el texto vigente; las correcciones anteriores quedan en el historial y en la auditoría. Pasada la hora, o si Administración ya lo publicó antes, no se puede corregir. ¿Basta con una hora de margen, o preferirías poder corregir hasta que se publique?</div>
+        <fieldset class="choices" aria-labelledby="t-2-12">
+          <label class="choice"><input type="radio" name="r-2-12" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-12" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-12" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-12" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.13">
+        <div class="q-head"><span class="n">2.13</span><h3 class="q-title" id="t-2-13">Aviso de hitos a punto de vencer o vencidos</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Entra en Inicio de Enfermería y mira la parte de arriba. Haz lo mismo con dev-integrado-medicina.</li>
+          <li>Si ves un aviso, pulsa el nombre del residente. Después registra o valora el evento que aparece (por ejemplo, empieza la valoración) y vuelve a Inicio.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Hay una lista de los hitos de tu perfil a punto de pasar de plazo (el último cuarto del plazo) o ya pasados, con el residente, la unidad, el hito y la hora de vencimiento; lo vencido sale primero y en rojo. A Enfermería le tocan la valoración tras un cambio de Auxiliar, la recepción de transferencias y la lectura y realización de indicaciones; a Medicina, la valoración médica. El aviso desaparece al cumplir el hito. Como hay eventos antiguos de pruebas anteriores, es probable que veas avisos. ¿Los plazos (8 h; 30 min si es prioritario) y el aviso en el último cuarto te parecen adecuados?</div>
+        <fieldset class="choices" aria-labelledby="t-2-13">
+          <label class="choice"><input type="radio" name="r-2-13" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2-13" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-13" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-13" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
   </section>
 
   <section class="tema" id="tema-3">
@@ -760,7 +793,7 @@
           <li>En la conducta médica elige «Cerrar el evento». Revisa el resumen de tu valoración y los pendientes.</li>
           <li>Elige «Preparar comunicación», tipo ordinaria o relevante, y escribe un texto comprensible para la familia. Pulsa «Cerrar evento».</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Puedes cerrar aunque haya indicaciones sin resolver: siguen en la bandeja de Enfermería. La comunicación queda pendiente de aprobación. Enfermería no tiene que cerrar el evento otra vez (verá «Cerrado por Medicina»).</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Puedes cerrar aunque haya indicaciones sin resolver: siguen en la bandeja de Enfermería. La comunicación queda aprobada y programada para publicarse (1 hora de margen y a las 19:00). Enfermería no tiene que cerrar el evento otra vez (verá «Cerrado por Medicina»).</div>
         <fieldset class="choices" aria-labelledby="t-3-5">
           <label class="choice"><input type="radio" name="r-3-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-3-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -945,7 +978,7 @@
         <ol class="pasos">
           <li>En Inicio de Dirección, mira las cifras por unidad. Abre «Supervisión de pendientes», filtra por tipo y unidad con «Buscar» y abre «Ver detalle operativo» de uno.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Las cifras (sin valorar, en valoración, escalados, seguimiento y vencidos, protocolo urgente, indicaciones) cuadran con lo que ves en la lista. El detalle muestra estado e hitos (quién, por perfil, y cuándo), sin observaciones, valoraciones ni indicaciones, y sin ninguna acción asistencial.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Las cifras (sin valorar, en valoración, escalados, seguimiento y pendientes, protocolo urgente, indicaciones) cuadran con lo que ves en la lista. El detalle muestra estado e hitos (quién, por perfil, y cuándo), sin observaciones, valoraciones ni indicaciones, y sin ninguna acción asistencial.</div>
         <fieldset class="choices" aria-labelledby="t-5-1">
           <label class="choice"><input type="radio" name="r-5-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-5-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -957,11 +990,11 @@
 
       <article class="q" data-q="5.2">
         <div class="q-head"><span class="n">5.2</span><h3 class="q-title" id="t-5-2">Derivaciones a Urgencias</h3><span class="chip">Sin probar</span></div>
-        
         <ol class="pasos">
           <li>Abre «Derivaciones a Urgencias».</li>
+          <li>Marca «Incluir también las de episodios ya cerrados», deja el periodo por defecto (30 días) o cambia las fechas, y pulsa «Aplicar».</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Episodios abiertos con protocolo urgente, con cuándo y quién lo activó, si el informe está firmado y cuántas llamadas a la familia constan. No se muestra el contenido del informe ni de las llamadas.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Primero los episodios abiertos con protocolo urgente, con cuándo y quién lo activó, si el informe está firmado y cuántas llamadas a la familia constan. Al incluir los cerrados salen además los que activaron el protocolo en ese periodo, marcados como «Cerrado» y sin detalle operativo. No se muestra el contenido del informe ni de las llamadas, y consultar la pantalla no queda en la auditoría.</div>
         <fieldset class="choices" aria-labelledby="t-5-2">
           <label class="choice"><input type="radio" name="r-5-2" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-5-2" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1038,6 +1071,39 @@
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
     </div>
+
+      <article class="q" data-q="5.7">
+        <div class="q-head"><span class="n">5.7</span><h3 class="q-title" id="t-5-7">Calidad de proceso</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>En Inicio de Dirección abre «Calidad de proceso». Cambia las fechas «Desde» y «Hasta» y pulsa «Aplicar».</li>
+          <li>Mira por hito cuántos están fuera de plazo y a punto de vencer, y la lista de episodios con algún hito fuera de plazo. Abre el detalle operativo de uno.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Mide siete hitos con los plazos que fijaste (valoración de Enfermería, valoración médica, recepción de la transferencia, informe de derivación, primera llamada a la familia, lectura y realización de la indicación), por unidad y periodo, nunca por profesional y sin contenido clínico. «Fuera de plazo» son los hechos tarde y los que siguen sin hacer con el plazo ya pasado; «a punto de vencer», los que están en el último cuarto del plazo. No se mide un hito sin hacer de un episodio ya cerrado. ¿Cuadra con lo que esperabas de la revisión de calidad de proceso?</div>
+        <fieldset class="choices" aria-labelledby="t-5-7">
+          <label class="choice"><input type="radio" name="r-5-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5-7" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5-7" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="5.8">
+        <div class="q-head"><span class="n">5.8</span><h3 class="q-title" id="t-5-8">Plazos de los hitos del proceso</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Abre «Plazos de los hitos del proceso» desde la pantalla de Inicio, o pulsa «Cambiar los plazos del centro» en «Calidad de proceso». Cambia el plazo de la valoración de Enfermería (por ejemplo, 240 minutos) y pulsa «Guardar».</li>
+          <li>Pulsa «Ver los plazos de CJ» y «Guardar» para volver a los de partida. Mira el historial de cambios.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Se escriben en minutos (1 h = 60, 8 h = 480), con un plazo para el evento normal y otro para el prioritario; vacío significa que ese plazo no se mide. Los valores de partida son los tuyos. Cada cambio queda en el historial de la pantalla y en la auditoría; los plazos solo miden y avisan, no cambian ninguna categoría clínica. Solo la Dirección con el permiso puede hacerlo (dev-integrado-direccion lo tiene).</div>
+        <fieldset class="choices" aria-labelledby="t-5-8">
+          <label class="choice"><input type="radio" name="r-5-8" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5-8" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5-8" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5-8" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
   </section>
 
   <section class="tema" id="tema-6">
@@ -1049,11 +1115,12 @@
     <div class="qs">
       <article class="q" data-q="6.1">
         <div class="q-head"><span class="n">6.1</span><h3 class="q-title" id="t-6-1">Dar de alta a un residente</h3><span class="chip">Sin probar</span></div>
-        
         <ol class="pasos">
-          <li>En Inicio pulsa «Alta de residente». Elige la unidad, escribe un nombre ficticio, la fecha de nacimiento y el sexo documentado, y guarda.</li>
+          <li>En Inicio pulsa «Alta de residente». Elige la unidad, escribe un nombre ficticio, la fecha de nacimiento y el sexo documentado.</li>
+          <li>En los familiares escribe al menos uno (nombre, relación y teléfono) y marca «Contacto prioritario». Prueba antes a guardar sin ningún contacto prioritario.</li>
+          <li>Guarda.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Aviso «Residente dado de alta» con su identificador. Aparece en «Residentes» y en las listas de Enfermería y Medicina con el basal pendiente. Usa un nombre ficticio que empiece por «CJ» para reconocerlo después.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin ningún contacto prioritario el alta no se guarda. Con él, aviso «Residente dado de alta» con su identificador, y el familiar queda en la ficha (sin autorización de acceso hasta que se abra). Aparece en «Residentes» y en las listas de Enfermería y Medicina con el basal pendiente. Usa un nombre ficticio que empiece por «CJ» para reconocerlo después: lo usarás en las pruebas 6.11 y 6.12.</div>
         <fieldset class="choices" aria-labelledby="t-6-1">
           <label class="choice"><input type="radio" name="r-6-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1097,12 +1164,12 @@
       </article>
 
       <article class="q" data-q="6.4">
-        <div class="q-head"><span class="n">6.4</span><h3 class="q-title" id="t-6-4">Contacto urgente</h3><span class="chip">Sin probar</span></div>
-        
+        <div class="q-head"><span class="n">6.4</span><h3 class="q-title" id="t-6-4">Contactos urgentes</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>En la ficha del residente abre «Contacto urgente» y designa a uno de sus familiares. Después quítalo.</li>
+          <li>En la ficha de un residente con varios familiares abre «Contactos urgentes». Marca dos y guarda.</li>
+          <li>Vuelve a abrirlo, quita todas las marcas y prueba a guardar. Después deja uno solo marcado y guarda.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>El contacto designado aparece con su teléfono en la ficha de Enfermería y de Medicina y rellena «A quién se llama» al registrar un intento de llamada. Al quitarlo, desaparece.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Puede haber varios contactos urgentes y siempre al menos uno: sin ninguno marcado no se guarda. Los contactos aparecen con su teléfono en la ficha de Enfermería y de Medicina, y el primero rellena «A quién se llama» al registrar un intento de llamada. Cada cambio queda en el historial de la ficha. ¿Hace falta distinguir entre «prioritario» y «urgente»?</div>
         <fieldset class="choices" aria-labelledby="t-6-4">
           <label class="choice"><input type="radio" name="r-6-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1151,7 +1218,7 @@
         <ol class="pasos">
           <li>Abre «Estructura del centro» y «Habitaciones y plazas». Crea una habitación y una plaza. Intenta crear otra habitación con el mismo nombre (aunque cambies mayúsculas y minúsculas).</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>La habitación queda asociada a la unidad, y la plaza a la habitación. No deja repetir un nombre dentro de la misma unidad, sin distinguir mayúsculas. Todavía no se puede cambiar de habitación o plaza a un residente (está en «Próximamente»).</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La habitación queda asociada a la unidad, y la plaza a la habitación. No deja repetir un nombre dentro de la misma unidad, sin distinguir mayúsculas. Cambiar a un residente de habitación o plaza se hace con «Trasladar» (prueba 6.10).</div>
         <fieldset class="choices" aria-labelledby="t-6-7">
           <label class="choice"><input type="radio" name="r-6-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1194,6 +1261,106 @@
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
     </div>
+
+      <article class="q" data-q="6.10">
+        <div class="q-head"><span class="n">6.10</span><h3 class="q-title" id="t-6-10">Trasladar a un residente</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Con la habitación y la plaza de la prueba 6.7, abre la ficha del residente «CJ …» que diste de alta en la prueba 6.1 y pulsa «Trasladar». Elige su misma unidad y la plaza que creaste. Pulsa «Trasladar».</li>
+          <li>Opcional: crea antes una unidad nueva en «Estructura del centro» (por ejemplo «Unidad CJ B») y traslada al residente a ella. Mira después su historial de ubicación y sus eventos abiertos.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El traslado cambia de unidad (dentro del centro) o de habitación y plaza. Los episodios abiertos pasan a la unidad de destino y la de origen deja de verlos; los cerrados no cambian. Un borrador de basal a medias se cancela si cambia de unidad. Queda en el historial de ubicación y en la auditoría, y reenviar el formulario no lo repite. Si lo trasladas a una unidad nueva, devuélvelo a la original para no estropear las demás pruebas.</div>
+        <fieldset class="choices" aria-labelledby="t-6-10">
+          <label class="choice"><input type="radio" name="r-6-10" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-10" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-10" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-10" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.11">
+        <div class="q-head"><span class="n">6.11</span><h3 class="q-title" id="t-6-11">Dar de baja y reactivar</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Abre la ficha del residente «CJ …» que diste de alta en la prueba 6.1 y pulsa «Dar de baja». Elige un motivo («Otro motivo» exige escribir cuál) y confirma.</li>
+          <li>Abre «Residentes dados de baja» desde Inicio y comprueba que sale. Pulsa «Reactivar», elige una unidad y confirma.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La baja no borra nada: los datos se conservan 5 años, y el residente sale de las listas activas y pasa a la lista de bajas (solo lectura, con el motivo y la fecha hasta la que se conservan). Si el motivo es fallecimiento, los episodios abiertos se cierran solos con una anotación del sistema; con cualquier otro motivo no. Al reactivar vuelve al centro con una estancia nueva y su historial anterior se conserva. No uses un «Prueba CJ» ni un «Integrado» para esta prueba.</div>
+        <fieldset class="choices" aria-labelledby="t-6-11">
+          <label class="choice"><input type="radio" name="r-6-11" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-11" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-11" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-11" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.12">
+        <div class="q-head"><span class="n">6.12</span><h3 class="q-title" id="t-6-12">Suspender por ingreso hospitalario</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>En la ficha del residente «CJ …» pulsa «Suspender (ingreso hospitalario)» y confirma.</li>
+          <li>Como Enfermería, intenta registrar un evento sobre ese residente. Después, como Administración, pulsa «Reanudar atención» en su ficha.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El residente sigue activo, pero mientras está suspendido no se puede registrar nada sobre él (ni cambios, ni eventos, ni constantes, ni basales, ni comunicados) y quien lo intenta ve un aviso de que está suspendido. No es una baja. Al reanudar, vuelve a funcionar todo.</div>
+        <fieldset class="choices" aria-labelledby="t-6-12">
+          <label class="choice"><input type="radio" name="r-6-12" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-12" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-12" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-12" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.13">
+        <div class="q-head"><span class="n">6.13</span><h3 class="q-title" id="t-6-13">Compartir y desvincular un familiar</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Con dos residentes del ámbito (A, con un familiar, y B), abre la ficha de B y pulsa «Vincular un familiar que ya existe». Elige el familiar de A y escribe su relación con B.</li>
+          <li>Edita su teléfono desde A («Editar»): la pantalla te avisa de que el cambio vale para todos. Comprueba que B también lo ve cambiado.</li>
+          <li>En B pulsa «Desvincular» sobre ese familiar y escribe un motivo. Prueba también a desvincular al único contacto urgente de un residente.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Es la misma persona: nombre, teléfono y correo son los mismos para todos sus residentes y los puede cambiar cualquiera de Administración que gestione a alguno de ellos. La relación y la autorización son de cada residente y vincularlo no abre su autorización. Desvincular exige motivo, revoca la autorización, le quita el contacto urgente y deja el vínculo en «Familiares desvinculados» con las fechas y el motivo; sigue siendo familiar de sus otros residentes. Si es el único contacto urgente, no deja desvincularlo hasta designar otro.</div>
+        <fieldset class="choices" aria-labelledby="t-6-13">
+          <label class="choice"><input type="radio" name="r-6-13" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-13" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-13" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-13" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.14">
+        <div class="q-head"><span class="n">6.14</span><h3 class="q-title" id="t-6-14">Administración principal del centro</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>En Inicio de Administración abre «Unidades del centro» (dev-integrado-administracion es la Administración principal).</li>
+          <li>En «Usuarios» da de alta una cuenta con perfil Administración (por ejemplo «cj-admin-prueba») con tu unidad. Entra con ella en <code>/DevAuth/Login</code> y abre «Unidades del centro».</li>
+          <li>Vuelve a dev-integrado-administracion, abre la ficha de ese perfil y pulsa «Marcar como Administración principal». Entra otra vez con la cuenta nueva.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Solo la Administración principal ve todas las unidades del centro y se añade las que no tiene (cada ampliación queda en la auditoría). Una Administración que no es principal solo ve una explicación de quién puede hacerlo. La principal marca o quita la marca a otra; el centro siempre conserva al menos una. No se exige que cada unidad tenga una Administración. Este centro tiene una sola unidad, así que no verás «Añadir a mi ámbito».</div>
+        <fieldset class="choices" aria-labelledby="t-6-14">
+          <label class="choice"><input type="radio" name="r-6-14" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-14" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-14" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-14" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.15">
+        <div class="q-head"><span class="n">6.15</span><h3 class="q-title" id="t-6-15">Comunicados a la familia: publicar antes de su hora</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Cierra un evento con «Preparar comunicación» (pruebas 2.8 o 3.5).</li>
+          <li>Como Administración, abre «Comunicados a la familia» desde Inicio. Busca el comunicado y mira la hora a la que se publica.</li>
+          <li>Pulsa «Publicar ahora». Después abre «Auditoría» y busca la acción.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves los comunicados de los últimos 30 días de las unidades de tu ámbito, con el texto y la hora de publicación (tras 1 hora de margen, a las 19:00), sin el nombre de quien lo preparó. «Publicar ahora» lo publica antes de su hora, solo una vez, y queda en la auditoría. Si es urgente, este no es el canal: hay que avisar también por otros medios. ¿Quién, además de Administración, debería poder publicar antes?</div>
+        <fieldset class="choices" aria-labelledby="t-6-15">
+          <label class="choice"><input type="radio" name="r-6-15" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6-15" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-15" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6-15" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
   </section>
 
   <section class="tema" id="tema-7">
@@ -1271,6 +1438,22 @@
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
     </div>
+
+      <article class="q" data-q="7.5">
+        <div class="q-head"><span class="n">7.5</span><h3 class="q-title" id="t-7-5">Plataforma: Administraciones y unidades de un centro</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>dev-plataforma</code>. Abre «Centros» y, en uno de ellos, «Administraciones y unidades».</li>
+          <li>Mira las Administraciones del centro y, en una que no sea principal, pulsa «Marcar como Administración principal». Repite para quitar la marca.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El soporte de la plataforma ve las unidades y las Administraciones vigentes del centro, y puede marcar o quitar la marca de principal y añadir una unidad al ámbito de cualquier Administración (por ejemplo, para recuperar una unidad sin nadie). Cada cambio queda en la auditoría. No ve residentes ni contenido clínico. Si repites el mismo cambio, avisa de que ya estaba así.</div>
+        <fieldset class="choices" aria-labelledby="t-7-5">
+          <label class="choice"><input type="radio" name="r-7-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-7-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-7-5" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-7-5" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
   </section>
 
   <section class="tema" id="tema-8">
