@@ -536,8 +536,9 @@ public class EnfermeriaApplicationServiceTests
     }
 
     [Fact]
-    public async Task Recepcion_ConMiembrosEnElEquipo_SoloLaConfirmanSusMiembros()
+    public async Task Recepcion_LaConfirmaCualquieraDelAmbito_AunqueElEquipoTengaMiembros()
     {
+        // CJ (2026-10-07): la bandeja de seguimientos es común a la unidad y al servicio; el equipo entrante no limita quién confirma.
         var (enfermera, companera, eventId) = await SeedOwnEventAsync();
         var revision = await StartAndSaveAsync(enfermera, eventId);
         var mine = BuildService(enfermera.ExternalSubject);
@@ -548,42 +549,13 @@ public class EnfermeriaApplicationServiceTests
         revision = (await mine.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
             enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Transferencia,
             "Revisar a las 8.", EquipoEntranteId: team))).Value;
-        var transferId = (await DetailAsync(companera, eventId)).FollowUp!.PendingTransfer!.Id;
-
-        var outsiderView = (await DetailAsync(companera, eventId)).FollowUp!.PendingTransfer!;
-        var memberView = (await DetailAsync(enfermera, eventId)).FollowUp!.PendingTransfer!;
-        var refused = await theirs.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
-            companera.ProfileScopeId, companera.CenterId, eventId, revision, FollowUpActionType.Recepcion, TransferenciaId: transferId));
-        var received = await mine.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
-            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Recepcion, TransferenciaId: transferId));
-
-        Assert.False(outsiderView.CanConfirmReception);
-        Assert.True(memberView.CanConfirmReception);
-        Assert.Equal(ApplicationFailureCode.Conflict, refused.Error!.Code);
-        Assert.True(received.Ok, received.Error?.Message);
-        Assert.Equal(1, await CountAuditAsync(eventId, "FOLLOW_UP_RECEIVE"));
-    }
-
-    [Fact]
-    public async Task Recepcion_SiElEquipoNoTieneMiembrosVigentes_LaConfirmaCualquieraDelAmbito()
-    {
-        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
-        var revision = await StartAndSaveAsync(enfermera, eventId);
-        var mine = BuildService(enfermera.ExternalSubject);
-        var theirs = BuildService(companera.ExternalSubject);
-        revision = (await mine.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision, new DateOnly(2030, 1, 15)))).Value;
-        var team = await TransferTeamData.CreateAsync(enfermera, "Turno con un miembro dado de baja");
-        await TransferTeamData.AddMemberAsync(team, enfermera, enfermera, revoked: true);
-        revision = (await mine.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
-            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Transferencia,
-            "Revisar a las 8.", EquipoEntranteId: team))).Value;
         var pending = (await DetailAsync(companera, eventId)).FollowUp!.PendingTransfer!;
 
         var received = await theirs.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
             companera.ProfileScopeId, companera.CenterId, eventId, revision, FollowUpActionType.Recepcion, TransferenciaId: pending.Id));
 
-        Assert.True(pending.CanConfirmReception);
         Assert.True(received.Ok, received.Error?.Message);
+        Assert.Equal(1, await CountAuditAsync(eventId, "FOLLOW_UP_RECEIVE"));
     }
 
     [Fact]

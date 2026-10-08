@@ -284,7 +284,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   deja la misma huella y no se detecta. Tests: `Editar_ConUnaVersionObsoleta_EsConflicto_…` (falla sin la comprobación), `Version_EsEstableYCambiaConCualquierDato`
   y el de edición adaptado. Suite en verde (246, 310 y 61). Curl en local con dos pestañas sobre «Familiar concurrencia prueba»: la primera guarda, la segunda
   recibe el aviso con el teléfono de la primera, y reintentar guarda. Queda ese familiar de prueba en la base local.
-- **Recepción de transferencias limitada a los miembros del equipo (2026-10-02, sin script ni push):** una transferencia con equipo entrante
+- **Recepción de transferencias limitada a los miembros del equipo (2026-10-02) — REVERTIDA el 2026-10-08:** CJ (1.1 de `continuidad-supervision-comunicacion`) pidió una bandeja común por unidad y servicio, así que se quitó `TransferReceptionSql`, `FollowUpActionSummary.CanConfirmReception` y el aviso de las pantallas: la recepción la confirma cualquiera de Enfermería/Medicina de la unidad. Lo que sigue es el historial de aquella decisión.
   (`equipo_entrante_id`, script `0028`) solo la confirma un miembro vigente de ese equipo (`equipos_miembros`, `0027`). **Suposición mía, no
   confirmada con el usuario ni con CJ:** si el equipo no tiene miembros vigentes, o la transferencia es anterior a `0028` (sin equipo), la
   confirma cualquiera del ámbito como hasta ahora, para que ninguna transferencia quede sin salida. Regla única en `TransferReceptionSql.CanReceive`

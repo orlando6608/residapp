@@ -230,8 +230,7 @@ public sealed class SqlNursingAssessmentRepository(SqlConnectionFactory connecti
                AND (@TransferId IS NULL OR EXISTS (
                    SELECT 1 FROM dbo.seguimiento_acciones t
                     WHERE t.id = @TransferId AND t.seguimiento_id = s.id AND t.tipo_codigo = 'TRANSFERENCIA'
-                      AND NOT EXISTS (SELECT 1 FROM dbo.seguimiento_acciones r WHERE r.transferencia_id = t.id)
-                      AND {TransferReceptionSql.CanReceive("t", "@AccountId")}))
+                      AND NOT EXISTS (SELECT 1 FROM dbo.seguimiento_acciones r WHERE r.transferencia_id = t.id)))
             """, new
         {
             Id = Guid.NewGuid(), TypeCode = action.Type.ToCode(), action.Text, action.Plan?.DueDate, action.Plan?.Criterion,

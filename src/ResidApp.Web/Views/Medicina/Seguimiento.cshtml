@@ -66,20 +66,13 @@
                 <br /><span style="white-space: pre-line">Nota: @pendiente.Text</span>
             }
         </p>
-        @if (pendiente.CanConfirmReception)
-        {
-            <form asp-action="Seguimiento" method="post" class="d-grid d-md-flex">
-                <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
-                <input type="hidden" name="Form.Revision" value="@evento.Revision" />
-                <input type="hidden" name="Form.Tipo" value="@FollowUpActionType.Recepcion" />
-                <input type="hidden" name="Form.TransferenciaId" value="@pendiente.Id" />
-                <button type="submit" class="btn btn-primary btn-lg">Confirmar recepción</button>
-            </form>
-        }
-        else
-        {
-            <p class="mb-0">Solo los miembros del equipo «@pendiente.IncomingTeam» pueden confirmar la recepción.</p>
-        }
+        <form asp-action="Seguimiento" method="post" class="d-grid d-md-flex">
+            <input type="hidden" name="Form.EventoId" value="@evento.EventId" />
+            <input type="hidden" name="Form.Revision" value="@evento.Revision" />
+            <input type="hidden" name="Form.Tipo" value="@FollowUpActionType.Recepcion" />
+            <input type="hidden" name="Form.TransferenciaId" value="@pendiente.Id" />
+            <button type="submit" class="btn btn-primary btn-lg">Confirmar recepción</button>
+        </form>
     </div>
 }
 
