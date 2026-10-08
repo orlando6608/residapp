@@ -1,0 +1,32 @@
+@using ResidApp.Domain.Supervision
+@using ResidApp.Web.Models
+@model MilestoneWarningsModel
+@* DIR-11 (CJ, 2026-10-07, 4.1 C): aviso al equipo responsable de los hitos del proceso a punto de pasar de plazo o ya pasados y sin hacer.
+   Solo los de su perfil, con el residente enlazado a su ficha; sin contenido clínico. *@
+@if (Model.Items is { Count: > 0 } items)
+{
+    var vencidos = items.Count(i => i.Status == MilestoneStatus.FueraDePlazo);
+    <section class="alert @(vencidos > 0 ? "alert-danger" : "alert-warning") mt-3" aria-labelledby="avisos-hitos-titulo">
+        <h2 class="h6" id="avisos-hitos-titulo">
+            @(vencidos > 0 ? "Hitos fuera de plazo o a punto de vencer" : "Hitos a punto de vencer")
+        </h2>
+        <ul class="list-unstyled mb-0">
+            @foreach (var item in items)
+            {
+                var due = item.Start + item.Term;
+                <li class="py-1">
+                    <a asp-controller="@Model.Controller" asp-action="Residente" asp-route-residenteId="@item.ResidentId.Value">@item.ResidentDisplayName</a>
+                    · @item.UnitName · @ProcessMilestoneDisplay.Label(item.Milestone)@(item.Priority ? " (prioritario)" : "") ·
+                    @if (item.Status == MilestoneStatus.FueraDePlazo)
+                    {
+                        <strong>Plazo pasado desde las @due.ToLocalTime().ToString("g")</strong>
+                    }
+                    else
+                    {
+                        <strong>Vence a las @due.ToLocalTime().ToString("g")</strong>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+}

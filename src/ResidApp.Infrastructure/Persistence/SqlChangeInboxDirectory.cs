@@ -735,6 +735,14 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             .ToList();
     }
 
+    /// <summary>DIR-11: los hitos del proceso de los eventos del ámbito de Enfermería o de Medicina (ver ProcessMilestoneQueries).</summary>
+    public async Task<IReadOnlyList<MilestoneFact>> ListMilestoneFactsAsync(
+        Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return await ProcessMilestoneQueries.ListAsync(connection, ScopedEventsFrom, profileScopeId, centerId, from, toExclusive, ct);
+    }
+
     /// <summary>MED-11: seguimientos médicos abiertos del ámbito, con el mismo plan vigente y el mismo orden que
     /// ListFollowUpsAsync, más el objetivo y la última decisión de continuidad (transferir o conservar).</summary>
     public async Task<IReadOnlyList<MedicalFollowUpSummary>> ListMedicalFollowUpsAsync(

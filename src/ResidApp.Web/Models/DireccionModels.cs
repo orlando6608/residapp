@@ -183,3 +183,7 @@ public static class ProcessMilestoneDisplay
         return hours == 0 ? $"{minutes} min" : minutes == 0 ? $"{hours} h" : $"{hours} h {minutes} min";
     }
 }
+
+/// <summary>DIR-11: los avisos de hitos a punto de vencer o vencidos que ve Enfermería o Medicina en su inicio. Controller es el de su ficha
+/// de residente.</summary>
+public sealed record MilestoneWarningsModel(IReadOnlyList<MilestoneEntry>? Items, string Controller);

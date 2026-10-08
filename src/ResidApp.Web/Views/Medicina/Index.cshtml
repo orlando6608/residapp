@@ -11,6 +11,8 @@
 </nav>
 
 <h1 class="h3">Inicio de Medicina</h1>
+
+<partial name="_AvisosHitos" model='new MilestoneWarningsModel(Model.Avisos, "Medicina")' />
 <div asp-validation-summary="All" class="text-danger"></div>
 
 @* Fichas con contador (guia-diseno-sistema-visual.md, 2.B y 2.D): cifra grande con plural real y color según el

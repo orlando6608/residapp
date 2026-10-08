@@ -676,6 +676,18 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", invalid);
     }
 
+    [Theory]
+    [InlineData("ENFERMERIA", "/Enfermeria", "Inicio de Enfermería")]
+    [InlineData("MEDICINA", "/Medicina", "Inicio de Medicina")]
+    public async Task InicioDeEnfermeriaYMedicina_ConAvisosDeHitos_CargaConLaAppEntera(string profile, string path, string title)
+    {
+        // La consulta de los avisos de hitos (DIR-11) pasa por la seguridad por filas con el usuario limitado; sin hitos, no sale el aviso.
+        var page = WebUtility.HtmlDecode(await PageAsync(profile, null, path));
+
+        Assert.Contains(title, page);
+        Assert.DoesNotContain("Hitos a punto de vencer", page);
+    }
+
     [Fact]
     public async Task ConsultaDeDireccion_SinResidentesEnElAmbito_LoDiceYElAmbitoSaleDelActivo()
     {

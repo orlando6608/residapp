@@ -218,7 +218,7 @@ public sealed record ClosedEventSummary(
 /// (docs/flujos-clinicos/valoracion-escalado-enfermeria.md) no debe mostrar más residentes de los que el
 /// ámbito ya autoriza a nivel individual.
 /// </summary>
-public interface IChangeInboxDirectory
+public interface IChangeInboxDirectory : IMilestoneFactDirectory
 {
     Task<IReadOnlyList<PendingChangeSummary>> ListAsync(
         Guid profileScopeId, CenterId centerId, DailyChangeClassification classification, CancellationToken ct = default);

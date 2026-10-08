@@ -22,7 +22,8 @@ namespace ResidApp.Web.Controllers;
 /// sin la derivación todavía). Traduce a EnfermeriaApplicationService; la
 /// autorización y las reglas de negocio no viven aquí.
 /// </summary>
-public sealed class EnfermeriaController(EnfermeriaApplicationService service, FindEmergencyContact findEmergencyContact) : Controller
+public sealed class EnfermeriaController(
+    EnfermeriaApplicationService service, FindEmergencyContact findEmergencyContact, ListMilestoneWarnings milestoneWarnings) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -43,6 +44,7 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service, F
         var indicaciones = await service.ListPendingIndicationsAsync(new ListPendingIndicationsCommand(activeScope.ProfileScopeId, centroId), ct);
         var protocolos = await service.ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(activeScope.ProfileScopeId, centroId), ct);
         var escalados = await service.ListOpenEscalationsAsync(new ListOpenEscalationsCommand(activeScope.ProfileScopeId, centroId), ct);
+        var avisos = await milestoneWarnings.ExecuteAsync(new ListMilestoneWarningsCommand(activeScope.ProfileScopeId, centroId), ct);
         return View(new EnfermeriaInicioViewModel(
             ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
@@ -51,7 +53,7 @@ public sealed class EnfermeriaController(EnfermeriaApplicationService service, F
             indicaciones.Ok ? indicaciones.Value!.Count : 0,
             indicaciones.Ok ? indicaciones.Value!.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) : 0,
             protocolos.Ok ? protocolos.Value!.Count : 0,
-            escalados.Ok ? escalados.Value!.Count : 0));
+            escalados.Ok ? escalados.Value!.Count : 0, avisos.Ok ? avisos.Value : null));
     }
 
     /// <summary>ENF-10: indicaciones de Medicina pendientes de leer o de registrar su resultado, compartidas

@@ -57,7 +57,7 @@ public class ProcessMilestoneRulesTests
 
     private static MilestoneFact Fact(
         ProcessMilestone milestone, UnitId unit, DateTime start, DateTime? end, bool priority = false, bool closed = false) =>
-        new(milestone, Guid.NewGuid(), ResidentId.From(Guid.NewGuid()), "Residente", unit, "Unidad", priority, start, end, closed);
+        new(milestone, Guid.NewGuid(), ResidentId.From(Guid.NewGuid()), "Residente", unit, "Unidad", priority, start, end, closed, SystemProfile.Enfermeria);
 
     [Fact]
     public void Build_CuentaPorHitoYUnidad_UsaElPlazoPrioritario_YNoMideLoQueNoSePuedeHacerOQueNoTienePlazo()

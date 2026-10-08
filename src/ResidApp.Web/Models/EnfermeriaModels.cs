@@ -109,7 +109,7 @@ public sealed record EnfermeriaResidentDetailViewModel(
 /// escalados a Medicina que siguen abiertos.</summary>
 public sealed record EnfermeriaInicioViewModel(
     int Ordinarios, int Prioritarios, int Seguimientos, int SeguimientosVencidos, int Comunicaciones,
-    int Indicaciones, int IndicacionesSinLeer, int Protocolos, int Escalados);
+    int Indicaciones, int IndicacionesSinLeer, int Protocolos, int Escalados, IReadOnlyList<MilestoneEntry>? Avisos = null);
 
 /// <summary>ENF-04: detalle de un cambio recibido más el resumen del basal vigente del residente (null si
 /// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel. CorrectionWindow decide si

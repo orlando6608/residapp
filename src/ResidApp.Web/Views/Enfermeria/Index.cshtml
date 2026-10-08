@@ -12,6 +12,8 @@
 
 <h1 class="h3">Inicio de Enfermería</h1>
 
+<partial name="_AvisosHitos" model='new MilestoneWarningsModel(Model.Avisos, "Enfermeria")' />
+
 @* Fichas con contador (guia-diseno-sistema-visual.md, 2.B y 2.D): cifra grande con plural real y color según el
    valor (rojo solo si un contador urgente pasa de 0; ámbar si hay indicaciones sin leer). El orden es fijo, con lo
    urgente primero. *@

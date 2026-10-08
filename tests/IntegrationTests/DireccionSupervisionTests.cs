@@ -363,6 +363,22 @@ public class DireccionSupervisionTests
         Assert.Equal(total[ProcessMilestone.InformeDerivacion], unit.Counts[ProcessMilestone.InformeDerivacion]);
         Assert.Equal(ApplicationFailureCode.AccessDenied, asNurse.Error!.Code);
         Assert.Equal(ApplicationFailureCode.InvalidInput, reversed.Error!.Code);
+
+        // Los mismos hitos vistos desde la bandeja de Enfermería y de Medicina (avisos al equipo responsable): cada uno ve los de su ámbito.
+        var inbox = new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory);
+        var from = DateTime.UtcNow.AddDays(-1);
+        var to = DateTime.UtcNow.AddMinutes(5);
+        var byNursing = await inbox.ListMilestoneFactsAsync(enfermera.ProfileScopeId, enfermera.CenterId, from, to);
+        var byMedicine = await inbox.ListMilestoneFactsAsync(medica.ProfileScopeId, medica.CenterId, from, to);
+        var foreignScope = await inbox.ListMilestoneFactsAsync(enfermera.ProfileScopeId, CenterId.From(Guid.NewGuid()), from, to);
+
+        Assert.Equal(2, byNursing.Count(f => f.Milestone == ProcessMilestone.InformeDerivacion && f.Responsible == SystemProfile.Enfermeria));
+        Assert.Equal(1, byNursing.Count(f => f.Milestone == ProcessMilestone.ValoracionMedica && f.Responsible == SystemProfile.Medicina));
+        // Medicina solo ve los eventos escalados (o suyos): la valoración médica y las indicaciones, no los protocolos de Enfermería.
+        Assert.Equal(1, byMedicine.Count(f => f.Milestone == ProcessMilestone.ValoracionMedica));
+        Assert.Equal(1, byMedicine.Count(f => f.Milestone == ProcessMilestone.LecturaIndicacion));
+        Assert.DoesNotContain(byMedicine, f => f.Milestone == ProcessMilestone.InformeDerivacion);
+        Assert.Empty(foreignScope);
     }
 
     [Fact]
