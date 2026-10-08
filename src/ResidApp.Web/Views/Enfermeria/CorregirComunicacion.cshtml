@@ -1,0 +1,48 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model CorregirComunicacionViewModel
+@{
+    ViewData["Title"] = "Corregir comunicado a la familia";
+    var item = Model.Item;
+    var limit = item.Communication.PreparedAt + FamilyCommunicationSchedule.Margin;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="Comunicaciones">Comunicaciones familiares</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Corregir</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Corregir comunicado a la familia</h1>
+<p class="text-muted">
+    @item.ResidentDisplayName · @(item.UnitName ?? "Sin unidad"). Puedes corregir el texto y el tipo hasta el @limit.ToLocalTime().ToString("g"),
+    1 hora después de prepararlo, o hasta que Administración lo publique antes. Después ya no se puede cambiar. Cada corrección queda en la
+    auditoría; la familia verá solo el texto vigente, firmado como «@FamilyCommunicationChoice.VisibleAuthor».
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="CorregirComunicacion" method="post">
+    <input type="hidden" name="Form.ComunicadoId" value="@Model.Form.ComunicadoId" />
+    <input type="hidden" name="Form.Version" value="@Model.Form.Version" />
+    <div class="mb-3">
+        <label asp-for="Form.Tipo" class="form-label"></label>
+        <select asp-for="Form.Tipo" class="form-select form-select-lg">
+            @foreach (var tipo in Enum.GetValues<FamilyCommunicationType>())
+            {
+                <option value="@tipo" selected="@(Model.Form.Tipo == tipo)">@FamilyCommunicationDisplay.Label(tipo)</option>
+            }
+        </select>
+        <span asp-validation-for="Form.Tipo" class="text-danger"></span>
+        <div class="form-text">La relevancia la decides tú: una ordinaria se ve 30 días y una relevante 6 meses.</div>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Form.Texto" class="form-label"></label>
+        <textarea asp-for="Form.Texto" class="form-control" rows="5"></textarea>
+        <span asp-validation-for="Form.Texto" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary btn-lg">Guardar la corrección</button>
+    <a asp-action="Comunicaciones" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+</form>

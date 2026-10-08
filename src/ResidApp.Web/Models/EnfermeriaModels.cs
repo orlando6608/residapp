@@ -645,3 +645,24 @@ public static class VitalSignRangeDisplay
     public static string? Hint(IReadOnlyList<VitalSignRange> ranges, VitalSignCode code) =>
         ranges.FirstOrDefault(r => r.Code == code) is { } range ? $"Referencia del centro: {Range(range)}" : null;
 }
+
+/// <summary>Corrección del texto y el tipo de un comunicado a la familia durante su margen de 1 hora (script 0049). Version es el número
+/// de correcciones que tenía al abrir el formulario.</summary>
+public sealed class CorregirComunicacionFormModel
+{
+    [Required]
+    public Guid ComunicadoId { get; set; }
+
+    public int Version { get; set; }
+
+    [Required(ErrorMessage = "Indica el tipo de comunicación.")]
+    [Display(Name = "Tipo de comunicación")]
+    public FamilyCommunicationType? Tipo { get; set; }
+
+    [Required(ErrorMessage = "Escribe el texto para la familia.")]
+    [StringLength(FamilyCommunicationChoice.MaxTextLength)]
+    [Display(Name = "Texto para la familia")]
+    public string? Texto { get; set; }
+}
+
+public sealed record CorregirComunicacionViewModel(PendingFamilyCommunicationSummary Item, CorregirComunicacionFormModel Form);

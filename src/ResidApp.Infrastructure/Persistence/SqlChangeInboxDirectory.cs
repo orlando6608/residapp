@@ -123,7 +123,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                    ea.valoracion_iniciada_en AS AssessmentStartedAt,
                    CAST(CASE WHEN ea.cerrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ClosedByCurrentAccount,
                    ea.cerrado_en AS ClosedAt, ea.cierre_sistema_codigo AS SystemClosureCode, ea.comunicacion_familiar_codigo AS FamilyCommunicationDecisionCode,
-                   family.tipo_codigo AS FamilyCommunicationTypeCode, family.texto AS FamilyCommunicationText,
+                   {FamilyCommunicationSql.CurrentType} AS FamilyCommunicationTypeCode, {FamilyCommunicationSql.CurrentText} AS FamilyCommunicationText,
                    family.preparado_en AS FamilyCommunicationPreparedAt, escalation.motivo AS EscalationReason,
                    CAST(CASE WHEN escalation.escalado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS EscalatedByCurrentAccount,
                    escalation.escalado_en AS EscalatedAt,
@@ -817,21 +817,26 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         using var connection = await connections.OpenAsync(ct);
 
         var rows = await connection.QueryAsync<FamilyCommunicationRow>(new CommandDefinition($"""
-            SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
-                   unit.nombre_visible AS UnitName, family.tipo_codigo AS TypeCode, family.texto AS Text, family.preparado_en AS PreparedAt
+            SELECT family.id AS CommunicationId, ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
+                   unit.nombre_visible AS UnitName, {FamilyCommunicationSql.CurrentType} AS TypeCode, {FamilyCommunicationSql.CurrentText} AS Text, family.preparado_en AS PreparedAt,
+                   {FamilyCommunicationSql.Version} AS Version,
+                   (SELECT early.publicada_en FROM dbo.comunicaciones_familiares_publicacion_anticipada early
+                     WHERE early.comunicacion_id = family.id) AS PublishedEarlyAt
             {ScopedEventsFrom}
-               AND family.estado_codigo = 'PENDIENTE_APROBACION'
-             ORDER BY family.preparado_en ASC
-            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+               AND family.id IS NOT NULL AND family.preparado_en >= @Since
+             ORDER BY family.preparado_en DESC
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, Since = DateTime.UtcNow.AddDays(-30) }, cancellationToken: ct));
 
         return rows.Select(r => new PendingFamilyCommunicationSummary(
-            r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName,
+            r.CommunicationId, r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName,
             new PreparedFamilyCommunication(
-                EnumCode.ParseCode<FamilyCommunicationType>(r.TypeCode), r.Text, new DateTimeOffset(r.PreparedAt, TimeSpan.Zero)))).ToList();
+                EnumCode.ParseCode<FamilyCommunicationType>(r.TypeCode), r.Text, new DateTimeOffset(r.PreparedAt, TimeSpan.Zero)),
+            r.Version, r.PublishedEarlyAt is { } early ? new DateTimeOffset(early, TimeSpan.Zero) : null)).ToList();
     }
 
     private sealed record FamilyCommunicationRow(
-        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string TypeCode, string Text, DateTime PreparedAt);
+        Guid CommunicationId, Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string TypeCode, string Text, DateTime PreparedAt, int Version,
+        DateTime? PublishedEarlyAt);
 
     private sealed record RangeRow(string Code, decimal? Min, decimal? Max);
 

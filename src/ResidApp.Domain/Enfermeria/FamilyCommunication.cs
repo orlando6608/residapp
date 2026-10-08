@@ -21,7 +21,7 @@ public enum FamilyCommunicationType
 /// <summary>
 /// Decisión de comunicación familiar al cerrar un evento (ENF-12, ENF-14, ENF-15). La decisión es
 /// obligatoria; "preparar" exige tipo y un texto comprensible, y "no comunicar" no admite ninguno de los
-/// dos. El texto no se publica aquí: queda pendiente de aprobación humana y se firma siempre como
+/// dos. El texto no se publica aquí: lo aprueba quien lo prepara y se publica según FamilyCommunicationSchedule; se firma siempre como
 /// <see cref="VisibleAuthor"/>.
 /// </summary>
 public sealed record FamilyCommunicationChoice

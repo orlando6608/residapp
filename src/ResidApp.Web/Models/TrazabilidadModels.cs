@@ -45,6 +45,7 @@ public static class ClinicalTraceabilityDisplay
         ["REFERRAL_REPORT_DOWNLOAD"] = "Informe de derivación descargado",
         ["FAMILY_CALL_ATTEMPT"] = "Llamada a la familia registrada",
         ["FAMILY_COMMUNICATION_PREPARE"] = "Comunicación a la familia preparada",
+        ["FAMILY_COMMUNICATION_CORRECT"] = "Comunicación a la familia corregida",
         ["BASELINE_DRAFT_CREATE"] = "Borrador de basal creado",
         ["BASELINE_SIGN"] = "Basal firmado",
         ["CLINICAL_DETAIL_READ"] = "Lectura clínica de Dirección Clínica",
