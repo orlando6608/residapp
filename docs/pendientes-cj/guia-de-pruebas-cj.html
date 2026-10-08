@@ -276,7 +276,7 @@
   <header>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Para CJ</p>
     <h1>Guía de pruebas para CJ</h1>
-    <p class="meta">Estado a 06/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 08/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       Ya están construidos los circuitos del Auxiliar, Enfermería, Medicina, Dirección Clínica y Administración, el basal con
       Barthel y la protección de los datos por centro. Los tests automáticos no pueden decir si las pantallas hacen lo que tú
@@ -356,6 +356,17 @@
       </p>
     </div>
 
+    <h3>Palabras que verás</h3>
+    <ul class="lista prose">
+      <li><strong>Evento.</strong> Algo que se registra sobre un residente y que hay que valorar. Por ejemplo: «tos productiva desde la mañana».</li>
+      <li><strong>Basal.</strong> Cómo es el residente habitualmente (nueve áreas más la escala de Barthel). Sirve para notar cuándo algo ha cambiado.</li>
+      <li><strong>Hito.</strong> Un paso del proceso que tiene un plazo. Por ejemplo: la valoración de Enfermería, en 8 horas desde el cambio.</li>
+      <li><strong>Ámbito.</strong> Las unidades y el centro que una cuenta puede ver. Por ejemplo: una cuenta con la Unidad 1 no ve la Unidad 2.</li>
+      <li><strong>Administración principal.</strong> La Administración que ve todas las unidades del centro y puede ampliar el ámbito de las demás.</li>
+      <li><strong>Contacto urgente.</strong> El familiar al que se avisa primero en una urgencia.</li>
+      <li><strong>Comunicado publicado.</strong> Ya puede verlo la familia. Como todavía no existe el Portal Familiar, nadie lo lee aún.</li>
+    </ul>
+
     <h3>Cómo marcar cada prueba</h3>
     <ul class="lista prose">
       <li><strong>A · Funciona como esperaba.</strong> Lo que ves coincide con «Qué debería ocurrir».</li>
@@ -373,7 +384,17 @@
       <li>Rangos de referencia por residente, y la lectura clínica detallada de Dirección sobre un episodio.</li>
       <li>La tarjeta «Comunicaciones» de Medicina, el organigrama del personal y el calendario de turnos con bandejas personales (los dos últimos, aplazados).</li>
     </ul>
-    <p class="why">El orden importa un poco: algunas pruebas usan lo que dejó otra (por ejemplo, la 2.1 necesita lo que registraste en la 1.3 y la 1.4, y la 2.9 necesita la 3.3). Si te saltas una, marca D en la que dependa de ella.</p>
+    <h3>En qué orden hacerlas</h3>
+    <p class="prose">Algunas pruebas usan lo que dejó otra. Si las haces en el orden de la guía casi todo cuadra; estas son las excepciones:</p>
+    <ul class="lista prose">
+      <li><strong>2.1</strong> necesita lo que registraste en la 1.3 y la 1.4.</li>
+      <li><strong>2.9</strong> necesita la 3.3 (Medicina emite la indicación). Haz la 3.3 antes y vuelve a la 2.9.</li>
+      <li><strong>2.11 y 2.12</strong> necesitan un evento cerrado con «Preparar comunicación» (2.8 o 3.5). Haz la 2.12 dentro de la hora siguiente a cerrarlo.</li>
+      <li><strong>2.13 y 5.7</strong> necesitan eventos abiertos, que ya hay de pruebas anteriores.</li>
+      <li><strong>6.10, 6.11 y 6.12</strong> usan el residente «CJ…» que das de alta en la 6.1; la 6.10 también usa la habitación y la plaza de la 6.7.</li>
+      <li><strong>6.15</strong> necesita un comunicado preparado (2.8 o 3.5).</li>
+    </ul>
+    <p class="why">Si te saltas una prueba, marca D en la que dependa de ella.</p>
   </section>
 
   <section class="tema" id="tema-1">
@@ -423,7 +444,7 @@
         <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
         <ol class="pasos">
           <li>En el registro del residente, pulsa «Registrar cambio».</li>
-          <li>En «Áreas observadas» marca una o más opciones rápidas (por ejemplo, en Alimentación e hidratación) y, en otra área, pulsa «Añadir nota» y escribe algo.</li>
+          <li>En «Áreas observadas» marca una o más opciones rápidas (por ejemplo, en Alimentación e hidratación: «Ha comido poco») y, en otra área, pulsa «Añadir nota» y escribe algo (por ejemplo, «Refiere dolor al caminar»).</li>
           <li>Escribe una temperatura si quieres. En «Clasificación» elige «Ordinario».</li>
           <li>Pulsa «Continuar». Revisa el resumen. Prueba «Volver a editar»: todo lo marcado debe seguir ahí. Vuelve a «Continuar» y pulsa «Confirmar y enviar».</li>
         </ol>
@@ -444,7 +465,7 @@
           <li>Abre «Registrar cambio» de «Residente Prueba CJ Uno (ficticio)» y marca un área con una opción rápida.</li>
           <li>En «Clasificación» elige «Prioritario». Intenta continuar sin elegir motivo: no debe dejarte.</li>
           <li>Elige un motivo de la lista cerrada. Pulsa «Continuar» y, en el resumen, intenta confirmar sin escribir el aviso directo: tampoco debe dejarte.</li>
-          <li>Escribe el aviso directo («a quién avisaste y qué dijo») y pulsa «Confirmar y enviar».</li>
+          <li>Escribe el aviso directo («a quién avisaste y qué dijo»; por ejemplo, «Avisé a la enfermera Marta; dijo que pasa a verlo») y pulsa «Confirmar y enviar».</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Un prioritario exige motivo y aviso directo documentado. Al confirmar, queda en la bandeja prioritaria de Enfermería (lo comprobarás en la prueba 2.1).</div>
         <fieldset class="choices" aria-labelledby="t-1-4">
@@ -574,7 +595,7 @@
         <div class="q-head"><span class="n">2.6</span><h3 class="q-title" id="t-2-6">Seguimiento y transferencia al equipo entrante</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
         <ol class="pasos">
-          <li>Registra y valora un tercer evento y, en la decisión asistencial, elige «Iniciar seguimiento». Indica una fecha prevista, un criterio, o ambos.</li>
+          <li>Registra y valora un tercer evento y, en la decisión asistencial, elige «Iniciar seguimiento». Indica una fecha prevista, un criterio, o ambos (por ejemplo, fecha: mañana a las 10:00; criterio: «si la saturación sigue por debajo de 92»).</li>
           <li>En la pantalla del seguimiento, registra una actuación («Registrar actuación»), reprograma («Reprogramar», con justificación) y transfiere al «Equipo entrante» con una nota de continuidad («Transferir»).</li>
           <li>Abre la tarjeta «Seguimientos» y busca el evento. Después, «Resolver» y cierra el evento.</li>
         </ol>
@@ -646,9 +667,10 @@
         <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
         <ol class="pasos">
           <li>En un evento ya avanzado (por ejemplo, el escalado de la prueba 2.5), abre su detalle. Quien guardó la valoración la última vez ve «Corregir valoración» durante las 6 horas siguientes: escribe el motivo y guarda.</li>
-          <li>Pasadas esas 6 horas solo queda «Añadir rectificación». Si hoy no puedes esperar, anota en el comentario si el plazo de 6 horas te parece razonable.</li>
+          <li>Pasadas esas 6 horas solo queda «Añadir rectificación».</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>La versión corregida es la que se muestra, con un aviso de la corrección y su motivo. La original no se pierde (queda en la línea temporal). Otro profesional ve las correcciones pero no puede hacerlas.</div>
+        <p class="context">Tu opinión: si hoy no puedes esperar las 6 horas, anota en el comentario si ese plazo te parece razonable.</p>
         <fieldset class="choices" aria-labelledby="t-2-10">
           <label class="choice"><input type="radio" name="r-2-10" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-2-10" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -664,7 +686,8 @@
           <li>En Inicio de Enfermería abre la tarjeta «Comunicaciones».</li>
           <li>Busca la comunicación que preparaste al cerrar un evento (pruebas 2.8 y 3.5) y mira la etiqueta de su hora.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves las comunicaciones de los últimos 30 días, cada una con el residente, el tipo, el texto y la hora a la que se publica («Se publica el …»): tras 1 hora de margen, a las 19:00. Quien la prepara la aprueba al guardarla; no hay otra aprobación. Cuando llega su hora, o Administración la publica antes (prueba 6.15), pasa a «Publicada». Todavía no la lee nadie, porque no existe el Portal Familiar. Cuéntanos en el comentario si las 19:00 y la hora de margen te parecen bien.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves las comunicaciones de los últimos 30 días, cada una con el residente, el tipo, el texto y la hora a la que se publica («Se publica el …»): tras 1 hora de margen, a las 19:00. Por ejemplo, una comunicación preparada a las 16:10 sale hoy a las 19:00; una preparada a las 18:30 sale mañana a las 19:00. Quien la prepara la aprueba al guardarla; no hay otra aprobación. Cuando llega su hora, o Administración la publica antes (prueba 6.15), pasa a «Publicada». Todavía no la lee nadie, porque no existe el Portal Familiar.</div>
+        <p class="context">Tu opinión: si las 19:00 y la hora de margen deben ser iguales en todos los centros, lo recogemos en el documento «Confirmaciones de la segunda tanda», pregunta 5.1. Aquí solo comprueba que se ven bien.</p>
         <fieldset class="choices" aria-labelledby="t-2-11">
           <label class="choice"><input type="radio" name="r-2-11" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-2-11" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -673,7 +696,6 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
-    </div>
 
       <article class="q" data-q="2.12">
         <div class="q-head"><span class="n">2.12</span><h3 class="q-title" id="t-2-12">Corregir un comunicado durante la hora de margen</h3><span class="chip">Sin probar</span></div>
@@ -682,7 +704,8 @@
           <li>En ese comunicado pulsa «Corregir». Cambia el texto (y, si quieres, el tipo) y pulsa «Guardar la corrección». Prueba antes a dejar el texto vacío.</li>
           <li>Vuelve a «Comunicaciones»: debe salir el texto nuevo con «Corregido una vez». Pasada la hora, comprueba que ya no hay botón «Corregir».</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Durante la primera hora cualquiera de Enfermería de la unidad puede corregir el texto y el tipo, no solo quien lo preparó. Sin texto no se guarda. La familia verá solo el texto vigente; las correcciones anteriores quedan en el historial y en la auditoría. Pasada la hora, o si Administración ya lo publicó antes, no se puede corregir. ¿Basta con una hora de margen, o preferirías poder corregir hasta que se publique?</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Durante la primera hora cualquiera de Enfermería de la unidad puede corregir el texto y el tipo, no solo quien lo preparó. Sin texto no se guarda. La familia verá solo el texto vigente; las correcciones anteriores quedan en el historial y en la auditoría. Pasada la hora, o si Administración ya lo publicó antes, no se puede corregir.</div>
+        <p class="context">Tu opinión: si basta con una hora de margen o prefieres corregir hasta que se publique lo recogemos en el documento «Confirmaciones de la segunda tanda», pregunta 5.2. Aquí solo comprueba que funciona.</p>
         <fieldset class="choices" aria-labelledby="t-2-12">
           <label class="choice"><input type="radio" name="r-2-12" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-2-12" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -698,7 +721,8 @@
           <li>Entra en Inicio de Enfermería y mira la parte de arriba. Haz lo mismo con dev-integrado-medicina.</li>
           <li>Si ves un aviso, pulsa el nombre del residente. Después registra o valora el evento que aparece (por ejemplo, empieza la valoración) y vuelve a Inicio.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Hay una lista de los hitos de tu perfil a punto de pasar de plazo (el último cuarto del plazo) o ya pasados, con el residente, la unidad, el hito y la hora de vencimiento; lo vencido sale primero y en rojo. A Enfermería le tocan la valoración tras un cambio de Auxiliar, la recepción de transferencias y la lectura y realización de indicaciones; a Medicina, la valoración médica. El aviso desaparece al cumplir el hito. Como hay eventos antiguos de pruebas anteriores, es probable que veas avisos. ¿Los plazos (8 h; 30 min si es prioritario) y el aviso en el último cuarto te parecen adecuados?</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Hay una lista de los hitos de tu perfil a punto de pasar de plazo (el último cuarto del plazo) o ya pasados, con el residente, la unidad, el hito y la hora de vencimiento; lo vencido sale primero y en rojo. A Enfermería le tocan la valoración tras un cambio de Auxiliar, la recepción de transferencias y la lectura y realización de indicaciones; a Medicina, la valoración médica. El aviso desaparece al cumplir el hito. Como hay eventos antiguos de pruebas anteriores, es probable que veas avisos. Por ejemplo, con un plazo de 8 h el aviso aparece a partir de las 6 h; con uno de 30 min, a partir de los 22 min y medio.</div>
+        <p class="context">Tu opinión: los plazos (8 h; 30 min si es prioritario) son los que diste; si el aviso en el último cuarto te parece bien o prefieres otro momento lo recogemos en «Confirmaciones de la segunda tanda», pregunta 4.1. Aquí comprueba que el aviso aparece y desaparece al cumplir el hito.</p>
         <fieldset class="choices" aria-labelledby="t-2-13">
           <label class="choice"><input type="radio" name="r-2-13" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-2-13" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -707,6 +731,7 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
+    </div>
   </section>
 
   <section class="tema" id="tema-3">
@@ -756,7 +781,7 @@
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
         <ol class="pasos">
           <li>En la conducta médica elige «Registrar indicaciones a Enfermería».</li>
-          <li>Escribe el texto, una fecha prevista o un criterio (o ambos) e información adicional si hace falta. Guarda.</li>
+          <li>Escribe el texto (por ejemplo, «Control de temperatura cada 4 horas; avisar si pasa de 37,8»), una fecha prevista o un criterio (o ambos) e información adicional si hace falta. Guarda.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>No hay prioridad automática. El evento pasa a «Con indicación pendiente» y sale de la bandeja de escalados. Enfermería la verá en «Indicaciones» (prueba 2.9). Puedes añadir más indicaciones o cerrar el evento.</div>
         <fieldset class="choices" aria-labelledby="t-3-3">
@@ -772,7 +797,7 @@
         <div class="q-head"><span class="n">3.4</span><h3 class="q-title" id="t-3-4">Seguimiento médico y fin de turno</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
         <ol class="pasos">
-          <li>Con otro escalado, elige «Iniciar seguimiento médico». Escribe el objetivo (qué resultado esperas antes de decidir) y una fecha o un criterio.</li>
+          <li>Con otro escalado, elige «Iniciar seguimiento médico». Escribe el objetivo (qué resultado esperas antes de decidir; por ejemplo, «Descartar infección urinaria antes de decidir el antibiótico») y una fecha o un criterio.</li>
           <li>Registra una revisión. En el bloque «Al terminar tu turno» prueba «Transferir» a un equipo entrante, con nota, y, en otro seguimiento, «Conservar».</li>
           <li>Pulsa «Resolver».</li>
         </ol>
@@ -868,7 +893,8 @@
         <ol class="pasos">
           <li>Abre cada área (Movilidad, Alimentación, Continencia, Aseo e higiene, Cognición, Comunicación, Conducta, Sueño y Ayudas habituales), elige las opciones y guarda.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Cada área queda marcada como completada. Lee las opciones de cada área: ¿faltan o sobran categorías desde el punto de vista clínico? Anótalo en el comentario.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Cada área queda marcada como completada.</div>
+        <p class="context">Tu opinión: lee las opciones de cada área. ¿Faltan o sobran categorías desde el punto de vista clínico? Por ejemplo, en Movilidad, ¿falta alguna forma de desplazarse que tú uses? Anótalo en el comentario.</p>
         <fieldset class="choices" aria-labelledby="t-4-2">
           <label class="choice"><input type="radio" name="r-4-2" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-4-2" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -919,7 +945,8 @@
           <li>Como Enfermería, inicia una reevaluación de «Residente Prueba CJ Uno (ficticio)» y completa lo que quieras.</li>
           <li>Entra como Medicina (<code>dev-integrado-medicina</code>), abre el mismo residente y mira si ve ese borrador; intenta crear uno propio.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Medicina no ve el borrador de Enfermería: en la ficha le ofrece «Crear borrador» como si no existiera ninguno. Si intenta crear otro, la app lo rechaza con el mensaje «Revisa los datos de la operación.», que quizá no explica bien el motivo (ya hay un borrador activo): dinos si te parece suficiente. Solo puede firmar la misma cuenta que creó el borrador, con el mismo perfil. Todavía no se puede aportar a un borrador ajeno (está en «Próximamente»).</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Medicina no ve el borrador de Enfermería: en la ficha le ofrece «Crear borrador» como si no existiera ninguno. Si intenta crear otro, la app lo rechaza con el mensaje «Revisa los datos de la operación.», que quizá no explica bien el motivo (ya hay un borrador activo). Solo puede firmar la misma cuenta que creó el borrador, con el mismo perfil. Todavía no se puede aportar a un borrador ajeno (está en «Próximamente»).</div>
+        <p class="context">Tu opinión: ¿te parece suficiente ese mensaje, o debería decir «ya hay un borrador activo de Enfermería»?</p>
         <fieldset class="choices" aria-labelledby="t-4-5">
           <label class="choice"><input type="radio" name="r-4-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-4-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1011,7 +1038,8 @@
           <li>Abre «Indicadores e informe de actividad». Cambia las fechas «Desde» y «Hasta» y pulsa «Aplicar».</li>
           <li>Pulsa «Imprimir / guardar como PDF».</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Cifras agregadas por unidad, cada una como «n de m», sin residentes ni profesionales y sin colores de alerta. El informe impreso lleva el icono y el nombre de ResidApp, el centro, las unidades, el periodo y la fecha. Dinos si alguna cifra no se entiende o no se usa.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Cifras agregadas por unidad, cada una como «n de m», sin residentes ni profesionales y sin colores de alerta. El informe impreso lleva el icono y el nombre de ResidApp, el centro, las unidades, el periodo y la fecha. Por ejemplo, «Con informe de derivación firmado: 2 de 5» quiere decir que, de 5 derivaciones a Urgencias en el periodo, 2 tienen el informe firmado.</div>
+        <p class="context">Tu opinión: ¿alguna cifra no se entiende o no la usarías?</p>
         <fieldset class="choices" aria-labelledby="t-5-3">
           <label class="choice"><input type="radio" name="r-5-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-5-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1044,7 +1072,8 @@
           <li>Abre «Consulta auditada del basal». Elige un residente de la lista, «Basal vigente» o «Historial de basal» y, en «Propósito», «Supervisión clínica». Consulta.</li>
           <li>Repite con «Historial de basal».</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Aparece el basal en solo lectura (prueba con «Residente Prueba CJ Uno», que lo tiene firmado, y con uno sin basal: te dice que no hay). Cada consulta que muestra un basal queda registrada de forma obligatoria con su propósito; la pantalla de auditoría de Administración todavía no la muestra: dinos si debería.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Aparece el basal en solo lectura (prueba con «Residente Prueba CJ Uno», que lo tiene firmado, y con uno sin basal: te dice que no hay). Cada consulta que muestra un basal queda registrada de forma obligatoria con su propósito; la pantalla de auditoría de Administración todavía no la muestra.</div>
+        <p class="context">Tu opinión: ¿debería verla Administración en su auditoría (quién consultó el basal de quién y para qué)?</p>
         <fieldset class="choices" aria-labelledby="t-5-5">
           <label class="choice"><input type="radio" name="r-5-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-5-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1070,7 +1099,6 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
-    </div>
 
       <article class="q" data-q="5.7">
         <div class="q-head"><span class="n">5.7</span><h3 class="q-title" id="t-5-7">Calidad de proceso</h3><span class="chip">Sin probar</span></div>
@@ -1079,7 +1107,8 @@
           <li>En Inicio de Dirección abre «Calidad de proceso». Cambia las fechas «Desde» y «Hasta» y pulsa «Aplicar».</li>
           <li>Mira por hito cuántos están fuera de plazo y a punto de vencer, y la lista de episodios con algún hito fuera de plazo. Abre el detalle operativo de uno.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Mide siete hitos con los plazos que fijaste (valoración de Enfermería, valoración médica, recepción de la transferencia, informe de derivación, primera llamada a la familia, lectura y realización de la indicación), por unidad y periodo, nunca por profesional y sin contenido clínico. «Fuera de plazo» son los hechos tarde y los que siguen sin hacer con el plazo ya pasado; «a punto de vencer», los que están en el último cuarto del plazo. No se mide un hito sin hacer de un episodio ya cerrado. ¿Cuadra con lo que esperabas de la revisión de calidad de proceso?</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Mide siete hitos con los plazos que fijaste (valoración de Enfermería, valoración médica, recepción de la transferencia, informe de derivación, primera llamada a la familia, lectura y realización de la indicación), por unidad y periodo, nunca por profesional y sin contenido clínico. «Fuera de plazo» son los hechos tarde y los que siguen sin hacer con el plazo ya pasado; «a punto de vencer», los que están en el último cuarto del plazo. No se mide un hito sin hacer de un episodio ya cerrado. Por ejemplo, una valoración de Enfermería con plazo de 8 h, hecha a las 9 h, cuenta como fuera de plazo; si a las 9 h sigue sin hacer, también.</div>
+        <p class="context">Tu opinión: ¿cuadra con lo que esperabas de la revisión de calidad de proceso? Si no medir los hitos de episodios ya cerrados es lo correcto, lo recogemos en «Confirmaciones de la segunda tanda», pregunta 4.2.</p>
         <fieldset class="choices" aria-labelledby="t-5-7">
           <label class="choice"><input type="radio" name="r-5-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-5-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1104,6 +1133,7 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
+    </div>
   </section>
 
   <section class="tema" id="tema-6">
@@ -1169,7 +1199,8 @@
           <li>En la ficha de un residente con varios familiares abre «Contactos urgentes». Marca dos y guarda.</li>
           <li>Vuelve a abrirlo, quita todas las marcas y prueba a guardar. Después deja uno solo marcado y guarda.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Puede haber varios contactos urgentes y siempre al menos uno: sin ninguno marcado no se guarda. Los contactos aparecen con su teléfono en la ficha de Enfermería y de Medicina, y el primero rellena «A quién se llama» al registrar un intento de llamada. Cada cambio queda en el historial de la ficha. ¿Hace falta distinguir entre «prioritario» y «urgente»?</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Puede haber varios contactos urgentes y siempre al menos uno: sin ninguno marcado no se guarda. Los contactos aparecen con su teléfono en la ficha de Enfermería y de Medicina, y el primero rellena «A quién se llama» al registrar un intento de llamada. Cada cambio queda en el historial de la ficha.</div>
+        <p class="context">Tu opinión: si «prioritario» y «urgente» deben ser dos marcas distintas lo recogemos en «Confirmaciones de la segunda tanda», pregunta 2.2. Aquí comprueba que funciona.</p>
         <fieldset class="choices" aria-labelledby="t-6-4">
           <label class="choice"><input type="radio" name="r-6-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1249,7 +1280,7 @@
         <div class="q-head"><span class="n">6.9</span><h3 class="q-title" id="t-6-9">Turnos, equipos y planificación</h3><span class="chip">Sin probar</span></div>
         
         <ol class="pasos">
-          <li>Abre «Turnos», crea uno. En «Equipos» crea un equipo y añade miembros. En «Planificación de turnos» planifica un turno para varios días y prueba «Ver serie» y retira una fecha («Retirar esta fecha») o desde una fecha («Retirar desde»).</li>
+          <li>Abre «Turnos», crea uno. En «Equipos» crea un equipo y añade miembros. En «Planificación de turnos» planifica un turno para varios días (por ejemplo, el turno de mañana, de lunes a viernes) y prueba «Ver serie» y retira una fecha («Retirar esta fecha») o desde una fecha («Retirar desde»).</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Los equipos creados aquí son los que reciben las transferencias de seguimiento (pruebas 2.6 y 3.4). Planificar un turno que se solapa pide una justificación.</div>
         <fieldset class="choices" aria-labelledby="t-6-9">
@@ -1260,7 +1291,6 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
-    </div>
 
       <article class="q" data-q="6.10">
         <div class="q-head"><span class="n">6.10</span><h3 class="q-title" id="t-6-10">Trasladar a un residente</h3><span class="chip">Sin probar</span></div>
@@ -1313,7 +1343,7 @@
       <article class="q" data-q="6.13">
         <div class="q-head"><span class="n">6.13</span><h3 class="q-title" id="t-6-13">Compartir y desvincular un familiar</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Con dos residentes del ámbito (A, con un familiar, y B), abre la ficha de B y pulsa «Vincular un familiar que ya existe». Elige el familiar de A y escribe su relación con B.</li>
+          <li>Con dos residentes del ámbito (A, con un familiar, y B), abre la ficha de B y pulsa «Vincular un familiar que ya existe». Elige el familiar de A y escribe su relación con B. Por ejemplo: María es hija de A y de B; ya está registrada como hija de A y la vinculas a B como «Hija».</li>
           <li>Edita su teléfono desde A («Editar»): la pantalla te avisa de que el cambio vale para todos. Comprueba que B también lo ve cambiado.</li>
           <li>En B pulsa «Desvincular» sobre ese familiar y escribe un motivo. Prueba también a desvincular al único contacto urgente de un residente.</li>
         </ol>
@@ -1330,9 +1360,9 @@
       <article class="q" data-q="6.14">
         <div class="q-head"><span class="n">6.14</span><h3 class="q-title" id="t-6-14">Administración principal del centro</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>En Inicio de Administración abre «Unidades del centro» (dev-integrado-administracion es la Administración principal).</li>
-          <li>En «Usuarios» da de alta una cuenta con perfil Administración (por ejemplo «cj-admin-prueba») con tu unidad. Entra con ella en <code>/DevAuth/Login</code> y abre «Unidades del centro».</li>
-          <li>Vuelve a dev-integrado-administracion, abre la ficha de ese perfil y pulsa «Marcar como Administración principal». Entra otra vez con la cuenta nueva.</li>
+          <li>Con <code>dev-integrado-administracion</code> (la Administración principal), abre «Unidades del centro». <em>Verás:</em> todas las unidades del centro (aquí, una sola) y un texto que dice que eres la Administración principal.</li>
+          <li>En «Usuarios» da de alta una cuenta con perfil Administración (por ejemplo «cj-admin-prueba») con tu unidad. Entra con ella en <code>/DevAuth/Login</code> y abre «Unidades del centro». <em>Verás:</em> solo una explicación de que no eres la principal y a quién pedirlo.</li>
+          <li>Vuelve a <code>dev-integrado-administracion</code>, abre la ficha de ese perfil y pulsa «Marcar como Administración principal». Entra otra vez con la cuenta nueva y abre «Unidades del centro». <em>Verás:</em> ya la lista de unidades y el texto de Administración principal.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Solo la Administración principal ve todas las unidades del centro y se añade las que no tiene (cada ampliación queda en la auditoría). Una Administración que no es principal solo ve una explicación de quién puede hacerlo. La principal marca o quita la marca a otra; el centro siempre conserva al menos una. No se exige que cada unidad tenga una Administración. Este centro tiene una sola unidad, así que no verás «Añadir a mi ámbito».</div>
         <fieldset class="choices" aria-labelledby="t-6-14">
@@ -1352,7 +1382,8 @@
           <li>Como Administración, abre «Comunicados a la familia» desde Inicio. Busca el comunicado y mira la hora a la que se publica.</li>
           <li>Pulsa «Publicar ahora». Después abre «Auditoría» y busca la acción.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves los comunicados de los últimos 30 días de las unidades de tu ámbito, con el texto y la hora de publicación (tras 1 hora de margen, a las 19:00), sin el nombre de quien lo preparó. «Publicar ahora» lo publica antes de su hora, solo una vez, y queda en la auditoría. Si es urgente, este no es el canal: hay que avisar también por otros medios. ¿Quién, además de Administración, debería poder publicar antes?</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves los comunicados de los últimos 30 días de las unidades de tu ámbito, con el texto y la hora de publicación (tras 1 hora de margen, a las 19:00), sin el nombre de quien lo preparó. «Publicar ahora» lo publica antes de su hora, solo una vez, y queda en la auditoría. Si es urgente, este no es el canal: hay que avisar también por otros medios.</div>
+        <p class="context">Tu opinión: quién, además de Administración, debería poder publicar antes lo recogemos en «Confirmaciones de la segunda tanda», pregunta 5.3. Aquí comprueba que funciona.</p>
         <fieldset class="choices" aria-labelledby="t-6-15">
           <label class="choice"><input type="radio" name="r-6-15" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6-15" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1361,6 +1392,7 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
+    </div>
   </section>
 
   <section class="tema" id="tema-7">
@@ -1437,7 +1469,6 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
-    </div>
 
       <article class="q" data-q="7.5">
         <div class="q-head"><span class="n">7.5</span><h3 class="q-title" id="t-7-5">Plataforma: Administraciones y unidades de un centro</h3><span class="chip">Sin probar</span></div>
@@ -1454,6 +1485,7 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
+    </div>
   </section>
 
   <section class="tema" id="tema-8">
@@ -1482,7 +1514,7 @@
     pantalla hace lo que debe. Cuando subas tus respuestas, ingeniería las revisa, te consulta lo que no quede claro y corrige lo
     que haga falta. La aplicación no lee este fichero ni sus respuestas.
   </footer>
-</div>
+    </div>
 
 <div class="bar" role="region" aria-label="Guardar respuestas">
   <div class="bar-in">
@@ -1494,7 +1526,7 @@
       <input type="file" id="fichero" accept=".json,application/json" hidden>
     </div>
   </div>
-</div>
+    </div>
 
 <script>
 /* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). */
