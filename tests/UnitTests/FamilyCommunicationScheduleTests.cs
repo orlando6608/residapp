@@ -47,6 +47,17 @@ public class FamilyCommunicationScheduleTests
     }
 
     [Fact]
+    public void CanCorrect_SoloDuranteElMargen_YSinPublicacionAnticipada()
+    {
+        var prepared = Local(10, 8, 9, 30);
+
+        Assert.True(FamilyCommunicationSchedule.CanCorrect(prepared, null, prepared));
+        Assert.True(FamilyCommunicationSchedule.CanCorrect(prepared, null, prepared.AddMinutes(59)));
+        Assert.False(FamilyCommunicationSchedule.CanCorrect(prepared, null, prepared.AddHours(1)));
+        Assert.False(FamilyCommunicationSchedule.CanCorrect(prepared, prepared.AddMinutes(10), prepared.AddMinutes(20)));
+    }
+
+    [Fact]
     public void IsPublished_CuandoLlegaSuHoraOAdministracionLaPublicoAntes()
     {
         var prepared = Local(10, 8, 9, 30);

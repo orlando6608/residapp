@@ -856,6 +856,70 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             "SELECT COUNT(*) FROM dbo.comunicaciones_familiares_publicacion_anticipada WHERE comunicacion_id = @communicationId", new { communicationId }));
     }
 
+    [Fact]
+    public async Task Enfermeria_CorrigeUnComunicadoDentroDelMargen_YDejaDePoderHacerloSiSePublicaAntes_ConLaAppEntera()
+    {
+        // CJ (2026-10-07): 1 hora de margen para corregir. Con el usuario limitado: la corrección escribe bajo la seguridad por filas (script 0049).
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Correccion Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Evento para corregir un comunicado (prueba funcional).",
+            ["Clasificacion"] = "Ordinario",
+        }))).EnsureSuccessStatusCode();
+        var communicationId = Guid.NewGuid();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.comunicaciones_familiares (id, evento_id, residente_id, centro_id, tipo_codigo, texto, preparado_por_cuenta_id, preparado_en)
+            SELECT @communicationId, ea.id, ea.residente_id, ea.centro_id, 'ORDINARIA', 'Texto con una errata.', account.id, SYSUTCDATETIME()
+              FROM dbo.eventos_asistenciales ea JOIN dbo.cuentas account ON account.sujeto_externo = @subject
+             WHERE ea.residente_id = @residentId
+            """, new { communicationId, subject = seed.ExternalSubject, residentId });
+
+        var list = WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/Comunicaciones"));
+        var formPage = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/CorregirComunicacion?comunicadoId={communicationId}"));
+        Task<string> PostAsync(string text, string version) => nurse.PostAsync("/Enfermeria/CorregirComunicacion", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(formPage, "__RequestVerificationToken"),
+            ["Form.ComunicadoId"] = communicationId.ToString(),
+            ["Form.Version"] = version,
+            ["Form.Tipo"] = "Relevante",
+            ["Form.Texto"] = text,
+        })).ContinueWith(t => t.Result.Content.ReadAsStringAsync()).Unwrap().ContinueWith(t => WebUtility.HtmlDecode(t.Result));
+        var empty = await PostAsync("   ", "0");
+        var corrected = await PostAsync("Texto sin errata.", "0");
+        var stale = await PostAsync("Otro intento con la versión antigua.", "0");
+        var publicationPage = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/Comunicados"));
+        var adminList = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/PublicarComunicado", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(publicationPage, "__RequestVerificationToken"),
+            ["comunicadoId"] = communicationId.ToString(),
+        }))).Content.ReadAsStringAsync());
+        var afterPublication = WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/Comunicaciones"));
+        var closedForm = WebUtility.HtmlDecode(await (await nurse.GetAsync($"/Enfermeria/CorregirComunicacion?comunicadoId={communicationId}")).Content.ReadAsStringAsync());
+
+        Assert.Contains("Texto con una errata.", list);
+        Assert.Contains("Corregir", list);
+        Assert.Contains("Guardar la corrección", formPage);
+        Assert.Contains("Escribe el texto para la familia.", empty);
+        Assert.Contains("Comunicado corregido.", corrected);
+        Assert.Contains("Texto sin errata.", corrected);
+        Assert.Contains("Corregido una vez", corrected);
+        Assert.Contains("No se ha guardado: alguien lo corrigió antes", stale);
+        Assert.Contains("Texto sin errata.", adminList);
+        Assert.Contains("Comunicado publicado antes de su hora.", adminList);
+        Assert.DoesNotContain("btn btn-outline-primary me-2\">Corregir", afterPublication);
+        Assert.Contains("Ese comunicado ya no se puede corregir", closedForm);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.comunicaciones_familiares_correcciones WHERE comunicacion_id = @communicationId", new { communicationId }));
+    }
+
     /// <summary>Una cuenta de Auxiliar con los residentes dados asignados, en el centro y la unidad de la semilla.</summary>
     private static async Task<string> GrantAuxiliarAsync(
         (string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed, params string[] residentIds)

@@ -176,6 +176,8 @@ builder.Services.AddScoped<SqlFamilyCommunicationPublication>();
 builder.Services.AddScoped<IFamilyCommunicationDirectory>(sp => sp.GetRequiredService<SqlFamilyCommunicationPublication>());
 builder.Services.AddScoped<IFamilyCommunicationPublisher>(sp => sp.GetRequiredService<SqlFamilyCommunicationPublication>());
 builder.Services.AddScoped<AdministrationFamilyCommunicationApplicationService>();
+builder.Services.AddScoped<IFamilyCommunicationCorrector, SqlFamilyCommunicationCorrection>();
+builder.Services.AddScoped<CorrectFamilyCommunication>();
 builder.Services.AddScoped<ICenterLayoutDirectory, SqlCenterLayoutDirectory>();
 builder.Services.AddScoped<ICenterLayoutRepository, SqlCenterLayoutRepository>();
 builder.Services.AddScoped<AdministracionEstructuraApplicationService>();

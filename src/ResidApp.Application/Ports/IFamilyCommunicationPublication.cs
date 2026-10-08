@@ -24,3 +24,17 @@ public interface IFamilyCommunicationPublisher
 {
     Task PublishNowAsync(AccountAdministrationAccess access, Guid communicationId, CancellationToken ct = default);
 }
+
+/// <summary>Corrección del texto y el tipo de un comunicado por Enfermería del ámbito (script 0049). ExpectedVersion es el número de
+/// correcciones que tenía cuando se abrió el formulario (0 es el original).</summary>
+public sealed record FamilyCommunicationCorrectionInput(
+    AccountId AccountId, Guid ProfileScopeId, CenterId CenterId, Guid CommunicationId, int ExpectedVersion, FamilyCommunicationType Type, string Text);
+
+/// <summary>Corrige un comunicado dentro de una transacción que comprueba de nuevo el ámbito, el margen y la versión, y deja su auditoría
+/// (FAMILY_COMMUNICATION_CORRECT). Fuera de ámbito o inexistente, AccessDenied; pasado el margen o ya publicado,
+/// FAMILY_COMMUNICATION_CORRECTION_CLOSED; con otra versión vigente, FAMILY_COMMUNICATION_REVISION_CONFLICT; sin cambios,
+/// FAMILY_COMMUNICATION_INVALID.</summary>
+public interface IFamilyCommunicationCorrector
+{
+    Task CorrectAsync(FamilyCommunicationCorrectionInput input, CancellationToken ct = default);
+}

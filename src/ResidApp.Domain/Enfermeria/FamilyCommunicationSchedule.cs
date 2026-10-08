@@ -26,6 +26,10 @@ public static class FamilyCommunicationSchedule
         return new DateTimeOffset(candidate, zone.GetUtcOffset(candidate));
     }
 
+    /// <summary>Se puede corregir el texto durante el margen de 1 hora, y mientras Administración no la haya publicado antes.</summary>
+    public static bool CanCorrect(DateTimeOffset preparedAt, DateTimeOffset? publishedEarlyAt, DateTimeOffset now) =>
+        publishedEarlyAt is null && now < preparedAt + Margin;
+
     /// <summary>Publicada: llegó su hora o Administración la publicó antes.</summary>
     public static bool IsPublished(DateTimeOffset preparedAt, DateTimeOffset? publishedEarlyAt, DateTimeOffset now, TimeZoneInfo zone) =>
         publishedEarlyAt is not null || now >= ScheduledAt(preparedAt, zone);

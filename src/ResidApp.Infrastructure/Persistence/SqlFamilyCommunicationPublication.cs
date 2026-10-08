@@ -19,9 +19,9 @@ public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory conne
         AccountAdministrationAccess access, DateTimeOffset since, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
-        var rows = await connection.QueryAsync<CommunicationRow>(new CommandDefinition("""
+        var rows = await connection.QueryAsync<CommunicationRow>(new CommandDefinition($"""
             SELECT family.id AS Id, family.evento_id AS EventId, family.residente_id AS ResidentId, resident.nombre_visible AS ResidentName,
-                   unit.nombre_visible AS UnitName, family.tipo_codigo AS TypeCode, family.texto AS Text, family.preparado_en AS PreparedAt,
+                   unit.nombre_visible AS UnitName, {FamilyCommunicationSql.CurrentType} AS TypeCode, {FamilyCommunicationSql.CurrentText} AS Text, family.preparado_en AS PreparedAt,
                    early.publicada_en AS PublishedEarlyAt
               FROM dbo.comunicaciones_familiares family
               JOIN dbo.eventos_asistenciales ea ON ea.id = family.evento_id AND ea.centro_id = family.centro_id

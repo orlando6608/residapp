@@ -38,7 +38,7 @@ public sealed partial class SqlChangeInboxDirectory
                    COALESCE(closure.registrado_por_perfil, clinical.registrado_por_perfil) AS AuthorProfileCode,
                    ea.recibido_en AS OccurredAt, ea.cerrado_en AS ClosedAt, ea.comunicacion_familiar_codigo AS DecisionCode,
                    escalation.motivo AS EscalationReason, escalation.escalado_en AS EscalatedAt,
-                   family.tipo_codigo AS FamilyTypeCode, family.texto AS FamilyText, family.preparado_en AS FamilyPreparedAt
+                   {FamilyCommunicationSql.CurrentType} AS FamilyTypeCode, {FamilyCommunicationSql.CurrentText} AS FamilyText, family.preparado_en AS FamilyPreparedAt
             {scopedEventsFrom}
                AND ea.residente_id = @ResidentId
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value },
