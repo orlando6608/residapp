@@ -153,4 +153,4 @@ Huecos de lo ya construido:
   la unidad del evento, como en Enfermería (sin equipos activos no se puede transferir; las transferencias anteriores conservan su texto). La fecha
   prevista es solo fecha, sin hora, como en Enfermería. Desde el 2026-10-02 la recepción (opcional) solo la confirman los miembros vigentes del equipo
   entrante, con la misma excepción que en Enfermería (equipo sin miembros o transferencia anterior a `0028`). Pendiente de que CJ lo confirme, y de
-  si el equipo entrante debe salir del turno planificado: `docs/pendientes-cj/continuidad-supervision-comunicacion.html` (tema 1).
+  si el equipo entrante debe salir del turno planificado: `docs/pendientes-cj/archivados/continuidad-supervision-comunicacion.html` (tema 1).

@@ -14,7 +14,7 @@ La web (`/pendientes-cj/index.html`) tiene tres secciones, cada una con su pági
 | **Archivo** | `archivo.html` | Documentos **contestados y ya implementados**, en `archivados/`, que se abren con sus respuestas cargadas |
 
 **Regla de archivo:** un documento se archiva cuando CJ lo ha contestado **y** lo que pedía ya está implementado. Lo que quede sin hacer
-se pregunta en otro documento de Preguntas (por ejemplo, `administracion-ambito-familiares-cargos.html`), y el archivado lo cita. No se borra nada.
+se pregunta en otro documento de Preguntas (por ejemplo, `confirmaciones-segunda-tanda-cj.html`), y el archivado lo cita. No se borra nada.
 
 ## La clave
 
@@ -97,14 +97,13 @@ El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **p
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
-| [administracion-ambito-familiares-cargos.html](administracion-ambito-familiares-cargos.html) | `administracion-ambito-familiares-cargos.respuestas.json` | Unidades que ninguna Administración tiene, desvincular y compartir familiares, y organigrama y cargos (7 respuestas) | Pendiente |
-| [continuidad-supervision-comunicacion.html](continuidad-supervision-comunicacion.html) | `continuidad-supervision-comunicacion.respuestas.json` | Confirmar recepción de seguimientos, derivaciones de Dirección y seguimientos vencidos (ya construidos); plazos de los hitos del proceso y quién aprueba la comunicación familiar (9 preguntas y 7 plazos) | Pendiente |
+| [confirmaciones-segunda-tanda-cj.html](confirmaciones-segunda-tanda-cj.html) | `confirmaciones-segunda-tanda-cj.respuestas.json` | Lo que ingeniería tuvo que suponer al construir la segunda tanda de respuestas de CJ: vincular familiares, contactos urgentes, Administración principal, pendientes y avisos, y comunicados a la familia (12 respuestas) | Pendiente |
 
 ### Pruebas
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
-| [guia-de-pruebas-cj.html](guia-de-pruebas-cj.html) | `guia-de-pruebas-cj.respuestas.json` | Guía de pruebas en el entorno de desarrollo: 49 pruebas paso a paso (A funciona, B con problema, C no funciona, D no probada) más 3 preguntas finales; 18 imprescindibles | Pendiente |
+| [guia-de-pruebas-cj.html](guia-de-pruebas-cj.html) | `guia-de-pruebas-cj.respuestas.json` | Guía de pruebas en el entorno de desarrollo: 60 pruebas paso a paso (A funciona, B con problema, C no funciona, D no probada) más 3 preguntas finales; 20 imprescindibles | Pendiente |
 
 ### Archivo (contestados e implementados)
 
@@ -113,4 +112,6 @@ El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **p
 | [archivados/rangos-referencia-constantes.html](archivados/rangos-referencia-constantes.html) | `archivados/rangos-referencia-constantes.respuestas.json` | Mínimo y máximo de las 7 constantes con aviso visual, y 5 preguntas abiertas | Archivado 2026-10-07: hechos los valores sugeridos, el flujo de O₂ y el aviso de temperatura de la Auxiliar; lo pendiente, en «Aclaraciones» |
 | [archivados/decisiones-direccion-basal-derivacion.html](archivados/decisiones-direccion-basal-derivacion.html) | `archivados/decisiones-direccion-basal-derivacion.respuestas.json` | Finalidades de la lectura clínica de Dirección, aportación a un borrador de basal ajeno y el campo «Comunicaciones» en el informe de derivación (7 respuestas) | Archivado 2026-10-07: hechos las finalidades y la justificación de Dirección y «Comunicaciones»; las aportaciones al basal, en «Aclaraciones» |
 | [archivados/aclaraciones-respuestas-cj.html](archivados/aclaraciones-respuestas-cj.html) | `archivados/aclaraciones-respuestas-cj.respuestas.json` | Aclaraciones a las respuestas de rangos y de Dirección, basal y derivación (11 respuestas) | Archivado 2026-10-07: hechos los valores de temperatura y glucemia, la saturación con oxígeno, el aviso de la Auxiliar retirado, los rangos solo para Dirección / Coordinación y las aportaciones al basal descartadas |
+| [archivados/administracion-ambito-familiares-cargos.html](archivados/administracion-ambito-familiares-cargos.html) | `archivados/administracion-ambito-familiares-cargos.respuestas.json` | Unidades que ninguna Administración tiene, desvincular y compartir familiares, y organigrama y cargos (7 respuestas) | Archivado 2026-10-08: hechas la Administración principal (y desde soporte), desvincular con motivo, datos de un familiar compartido y familiares del alta; el organigrama, aplazado y guardado; lo supuesto, en «Confirmaciones» |
+| [archivados/continuidad-supervision-comunicacion.html](archivados/continuidad-supervision-comunicacion.html) | `archivados/continuidad-supervision-comunicacion.respuestas.json` | Recepción de seguimientos, derivaciones de Dirección, seguimientos pendientes, plazos de los hitos del proceso y comunicación familiar (16 respuestas) | Archivado 2026-10-08: hechos la bandeja común, las derivaciones con periodo, «pendientes», los siete plazos con calidad de proceso y avisos, y los comunicados (aprobar al guardar, margen, hora fija y publicación anticipada); falta el Portal Familiar y DIR-13; lo supuesto, en «Confirmaciones» |
 | [archivados/traslado-y-baja-residente.html](archivados/traslado-y-baja-residente.html) | `archivados/traslado-y-baja-residente.respuestas.json` | Traslado entre unidades, baja y reactivación del residente (6 respuestas) | Archivado 2026-10-07: hechos el traslado por Administración, la baja, la lista de bajas, la reactivación y la suspensión por ingreso hospitalario; queda el traslado por Enfermería con permiso, para cuando un centro lo pida |

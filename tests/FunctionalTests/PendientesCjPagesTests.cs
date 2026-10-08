@@ -42,10 +42,11 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     public static readonly TheoryData<string> Pages =
     [
         "index", "preguntas", "pruebas", "archivo",
-        "administracion-ambito-familiares-cargos",
-        "continuidad-supervision-comunicacion", "guia-de-pruebas-cj",
+        "confirmaciones-segunda-tanda-cj",
+        "guia-de-pruebas-cj",
         "archivados/rangos-referencia-constantes", "archivados/decisiones-direccion-basal-derivacion",
         "archivados/aclaraciones-respuestas-cj", "archivados/traslado-y-baja-residente",
+        "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
     ];
 
     [Theory]
@@ -63,6 +64,8 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("/pendientes-cj/archivados/decisiones-direccion-basal-derivacion.respuestas.json")]
     [InlineData("/pendientes-cj/archivados/aclaraciones-respuestas-cj.respuestas.json")]
     [InlineData("/pendientes-cj/archivados/traslado-y-baja-residente.respuestas.json")]
+    [InlineData("/pendientes-cj/archivados/administracion-ambito-familiares-cargos.respuestas.json")]
+    [InlineData("/pendientes-cj/archivados/continuidad-supervision-comunicacion.respuestas.json")]
     [InlineData("/pendientes-cj/otro-documento.respuestas.json")]
     public async Task SinClave_LasRespuestasDan401(string path)
     {
@@ -200,7 +203,9 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         var questions = await client.GetStringAsync("/pendientes-cj/preguntas.html");
         var archive = await client.GetStringAsync("/pendientes-cj/archivo.html");
 
-        Assert.Contains("administracion-ambito-familiares-cargos.html", questions);
+        Assert.Contains("confirmaciones-segunda-tanda-cj.html", questions);
+        Assert.DoesNotContain("administracion-ambito-familiares-cargos", questions);
+        Assert.DoesNotContain("continuidad-supervision-comunicacion", questions);
         Assert.DoesNotContain("aclaraciones-respuestas-cj", questions);
         Assert.DoesNotContain("traslado-y-baja-residente", questions);
         Assert.DoesNotContain("rangos-referencia-constantes", questions);
@@ -209,6 +214,8 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         Assert.Contains("archivados/decisiones-direccion-basal-derivacion.html", archive);
         Assert.Contains("archivados/aclaraciones-respuestas-cj.html", archive);
         Assert.Contains("archivados/traslado-y-baja-residente.html", archive);
+        Assert.Contains("archivados/administracion-ambito-familiares-cargos.html", archive);
+        Assert.Contains("archivados/continuidad-supervision-comunicacion.html", archive);
     }
 
     [Theory]
@@ -216,6 +223,8 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("decisiones-direccion-basal-derivacion", 7)]
     [InlineData("aclaraciones-respuestas-cj", 11)]
     [InlineData("traslado-y-baja-residente", 6)]
+    [InlineData("administracion-ambito-familiares-cargos", 7)]
+    [InlineData("continuidad-supervision-comunicacion", 16)]
     public async Task LosArchivados_TienenSusRespuestasAlLadoParaQueSeAbranContestados(string document, int answered)
     {
         var client = await LoggedInAsync();
@@ -226,7 +235,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         Assert.Contains($"\"documento\": \"{document}\"", json);
         Assert.Contains($"\"respondidas\": {answered}", json);
         Assert.Contains($"data-doc=\"{document}\"", page);
-        Assert.Contains("Archivado el 07/10/2026", page);
+        Assert.Matches("Archivado el 0[78]/10/2026", page);
     }
 
     [Theory]
@@ -234,6 +243,8 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("decisiones-direccion-basal-derivacion")]
     [InlineData("aclaraciones-respuestas-cj")]
     [InlineData("traslado-y-baja-residente")]
+    [InlineData("administracion-ambito-familiares-cargos")]
+    [InlineData("continuidad-supervision-comunicacion")]
     public async Task LosArchivados_LlevanArribaLosEnlacesAlIndiceYALaAplicacion(string document)
     {
         var page = await (await LoggedInAsync()).GetStringAsync($"/pendientes-cj/archivados/{document}.html");

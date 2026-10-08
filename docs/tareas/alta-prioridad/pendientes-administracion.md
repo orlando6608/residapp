@@ -334,7 +334,7 @@ En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** hecho el 2026-10-07 (ver «Traslado, baja, reactivación y suspensión»); queda el traslado por Enfermería con permiso específico, para cuando un centro lo pida.
 2. **El organigrama y los cargos (ADM-07):** ningún documento los define; preguntado a CJ el 2026-10-02 en
-   `docs/pendientes-cj/administracion-ambito-familiares-cargos.html` (tema 3). Los turnos recurrentes con excepciones (ADM-16), el equipo entrante de los seguimientos y los edificios, plantas, habitaciones y plazas ya están hechos (2026-10-01/02).
+   `docs/pendientes-cj/archivados/administracion-ambito-familiares-cargos.html` (tema 3). Los turnos recurrentes con excepciones (ADM-16), el equipo entrante de los seguimientos y los edificios, plantas, habitaciones y plazas ya están hechos (2026-10-01/02).
 3. **Publicaciones familiares (historias 5 y 6), citas (7 y 8) y panel completo (10).**
 
 Huecos de lo ya construido:
@@ -358,7 +358,7 @@ Huecos de lo ya construido:
   sigue sin existir: ver las unidades del centro que no están en el ámbito propio y concederse (o conceder) una unidad que no se tiene, de modo que una
   unidad que ningún ámbito de Administración tenga no se puede recuperar desde la app. Es una decisión de política (¿quién puede ampliar su propio
   ámbito dentro del centro?) que no está en ningún documento; el organigrama (ADM-07) y los cargos tampoco existen. Preguntado a CJ en
-  `docs/pendientes-cj/administracion-ambito-familiares-cargos.html` (tema 1, con la opción de impedir que una unidad se quede sin Administración).
+  `docs/pendientes-cj/archivados/administracion-ambito-familiares-cargos.html` (tema 1, con la opción de impedir que una unidad se quede sin Administración).
 - **Niveles de ubicación:** edificios, plantas, habitaciones y plazas existen (script `0029`) y se eligen al dar de alta, pero **cambiar de habitación o de plaza**
   (y liberar una plaza al dar de baja) se hace desde la ficha con «Trasladar» (script `0040`); dar de baja libera la plaza (script `0041`). Desde el 2026-10-02 Enfermería,
   Medicina y Auxiliar ven la habitación y la plaza junto a la unidad (listas, ficha y registro del residente; `ResidentLocationLabel`, sin script). Una unidad o una habitación que se inactive justo mientras llega un
@@ -380,7 +380,7 @@ Huecos de lo ya construido:
     el identificador del formulario es el del vínculo (un reenvío no duplica). Los datos de contacto son compartidos: editarlos desde un residente
     cambia a todos, y la pantalla de edición avisa con el número de otros residentes (`ResidentFamilyMember.OtherResidentLinks`), sin decir cuáles.
     **Resuelto por CJ (2026-10-07):** desvincular (2.1, hecho en `0045`) y que quien edita un familiar compartido no ve los residentes ajenos a su ámbito (2.2, opción A: «está bien así», lo cambia cualquiera que gestione a alguno de sus residentes; fijado con `FamiliarEnUnidadesDistintas_LoEditaCualquieraQueGestioneAAlgunoDeSusResidentes_SinVerLosDemas`). Preguntados
-    a CJ, con la confirmación del filtro por ámbito, en `docs/pendientes-cj/administracion-ambito-familiares-cargos.html` (tema 2).
+    a CJ, con la confirmación del filtro por ámbito, en `docs/pendientes-cj/archivados/administracion-ambito-familiares-cargos.html` (tema 2).
 
 ## Guardado para el futuro (CJ, 2026-10-07)
 
