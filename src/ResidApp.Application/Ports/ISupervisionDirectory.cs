@@ -40,9 +40,12 @@ public sealed record SupervisionEpisodeDetail(SupervisionEpisode Episode, IReadO
 public sealed record SupervisionReferral(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string UnitName, SystemProfile ProtocolProfile,
     DateTimeOffset ProtocolActivatedAt, SystemProfile? ReportProfile, DateTimeOffset? ReportSignedAt, int FamilyCallAttempts,
-    DateTimeOffset? LastCallAt)
+    DateTimeOffset? LastCallAt, DateTimeOffset? ClosedAt = null)
 {
     public bool ReportSigned => ReportSignedAt is not null;
+
+    /// <summary>Si el episodio ya está cerrado (solo salen cuando se pide un periodo).</summary>
+    public bool Closed => ClosedAt is not null;
 }
 
 /// <summary>DIR-17: lo que el ámbito activo de Dirección puede supervisar. Permissions son los códigos vigentes.</summary>
@@ -60,8 +63,10 @@ public interface ISupervisionDirectory
 
     Task<SupervisionScopeInfo?> FindScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
-    /// <summary>DIR-12: los episodios abiertos del ámbito con protocolo urgente, del más reciente al más antiguo, con el estado de su derivación.</summary>
-    Task<IReadOnlyList<SupervisionReferral>> ListReferralsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+    /// <summary>DIR-12: los episodios abiertos del ámbito con protocolo urgente, del más reciente al más antiguo, con el estado de su derivación.
+    /// Con closedFrom y closedToExclusive (UTC) salen además los episodios cerrados cuyo protocolo se activó en ese periodo (CJ, 2026-10-07).</summary>
+    Task<IReadOnlyList<SupervisionReferral>> ListReferralsAsync(
+        Guid profileScopeId, CenterId centerId, DateTime? closedFrom = null, DateTime? closedToExclusive = null, CancellationToken ct = default);
 
     /// <summary>DIR-08 a DIR-10: hechos del ámbito con fecha en [from, toExclusive), abiertos o cerrados. Los límites son
     /// UTC, como las fechas guardadas (ver SupervisionIndicatorRules.UtcBounds).</summary>

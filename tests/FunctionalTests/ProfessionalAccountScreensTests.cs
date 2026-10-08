@@ -651,6 +651,19 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     }
 
     [Fact]
+    public async Task Derivaciones_DeDireccion_OfreceElPeriodoParaLasDeEpisodiosCerrados_ConLaAppEntera()
+    {
+        var plain = await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Derivaciones");
+        var withClosed = await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Derivaciones?cerradas=true");
+        var invalid = await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Derivaciones?cerradas=true&desde=2026-10-05&hasta=2026-10-01");
+
+        Assert.Contains("Incluir también las de episodios ya cerrados", plain);
+        Assert.Contains("No hay derivaciones en curso.", plain);
+        Assert.Contains("No hay derivaciones en curso ni de episodios cerrados en ese periodo.", withClosed);
+        Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", WebUtility.HtmlDecode(invalid));
+    }
+
+    [Fact]
     public async Task ConsultaDeDireccion_SinResidentesEnElAmbito_LoDiceYElAmbitoSaleDelActivo()
     {
         var page = await PageAsync("DIRECCION_CLINICA", null, "/Baseline/Direction");

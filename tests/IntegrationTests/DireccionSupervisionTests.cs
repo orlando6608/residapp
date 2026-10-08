@@ -281,6 +281,39 @@ public class DireccionSupervisionTests
     }
 
     [Fact]
+    public async Task Derivaciones_LasDeEpisodiosCerradosSoloSalenSiSePideElPeriodo()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var open = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
+        Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, open, await StartAndSaveAsync(enfermera, open)))).Ok);
+        var closed = await RegisterAsync(enfermera, residentId, "Dolor torácico.");
+        var revision = (await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, closed, await StartAndSaveAsync(enfermera, closed)))).Value;
+        revision = (await service.SignReferralReportAsync(SignCommand(enfermera, closed, revision, Guid.NewGuid()))).Value;
+        revision = (await service.RecordFamilyCallAttemptAsync(CallCommand(enfermera, closed, revision))).Value;
+        var closing = await service.CloseClinicalEventAsync(CloseCommand(enfermera, closed, revision, Guid.NewGuid(),
+            FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Relevante, "Ha sido trasladado a Urgencias."));
+        Assert.True(closing.Ok, closing.Error?.Message);
+        var dir = BuildDireccion(direccion.ExternalSubject);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        var onlyOpen = (await dir.ListReferralsAsync(Query(direccion))).Value!;
+        var withClosed = (await dir.ListReferralsAsync(Query(direccion), today, today)).Value!;
+        var otherPeriod = (await dir.ListReferralsAsync(Query(direccion), today.AddDays(-10), today.AddDays(-5))).Value!;
+        var half = await dir.ListReferralsAsync(Query(direccion), today, null);
+        var reversed = await dir.ListReferralsAsync(Query(direccion), today, today.AddDays(-1));
+
+        Assert.Equal([open], onlyOpen.Select(r => r.EventId));
+        Assert.Equal([closed, open], withClosed.Select(r => r.EventId));   // el más reciente primero
+        Assert.True(withClosed[0].Closed);
+        Assert.NotNull(withClosed[0].ClosedAt);
+        Assert.False(withClosed[1].Closed);
+        Assert.Equal([open], otherPeriod.Select(r => r.EventId));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, half.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, reversed.Error!.Code);
+    }
+
+    [Fact]
     public async Task Indicadores_OtrosPerfilesNoEntran_YUnPeriodoImposibleSeRechaza()
     {
         var (direccion, enfermera, _) = await SeedCenterAsync();

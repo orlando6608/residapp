@@ -126,6 +126,7 @@ Huecos de lo ya construido:
 
 - **Seguimientos pendientes (antes «vencidos») por periodo (2026-10-02, sin script):** los indicadores los incluyen en «Continuidad entre turnos» y en la evolución mensual,
   - **Actualizado el 2026-10-08 (CJ 3.1/3.2):** el seguimiento solo deja de estar abierto al cerrarse el episodio; escalar a Medicina o activar el protocolo urgente ya no lo termina. En pantallas se dice «pendiente».
+- **Derivaciones de episodios cerrados con periodo (2026-10-08, CJ 2.1 y 2.2; sin script):** `/Direccion/Derivaciones?cerradas=true&desde=&hasta=` añade a las derivaciones abiertas las de episodios cerrados cuyo `protocolos_urgentes.activado_en` cae en el periodo (por defecto, 30 días; máximo `MaxPeriodDays`). `ListReferralsAsync(query, closedFrom, closedTo)`; `SupervisionReferral.ClosedAt`. Las cerradas se marcan y no enlazan a `Episodio`. Sin auditoría de la consulta (2.2: «como ahora»). Test `Derivaciones_LasDeEpisodiosCerradosSoloSalenSiSePideElPeriodo`.
   como «n de m»: m son los seguimientos abiertos algún día del periodo y n los que tuvieron su fecha prevista pasada algún día, con el plan vigente al
   empezar ese día (`SupervisionIndicatorRules.WasOverdue`, función pura; reprogramar el mismo día en que vence no lo borra). **Es una deducción mía, sin
   confirmar con el usuario ni con CJ.** Un seguimiento deja de estar abierto al cerrarse el episodio, al escalarse (solo Enfermería) o al activarse el

@@ -187,7 +187,7 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
     /// <summary>DIR-08 a DIR-10: cuatro consultas sobre la misma regla de ámbito, sin el filtro de abiertos. Solo leen la
     /// unidad, códigos y fechas.</summary>
     public async Task<IReadOnlyList<SupervisionReferral>> ListReferralsAsync(
-        Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
+        Guid profileScopeId, CenterId centerId, DateTime? closedFrom = null, DateTime? closedToExclusive = null, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         var rows = await connection.QueryAsync<ReferralRow>(new CommandDefinition($"""
@@ -195,19 +195,22 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
                    unit.nombre_visible AS UnitName, protocol.perfil_codigo AS ProtocolProfileCode, protocol.activado_en AS ProtocolActivatedAt,
                    report.perfil_codigo AS ReportProfileCode, report.firmado_en AS ReportSignedAt,
                    (SELECT COUNT(*) FROM dbo.intentos_llamada_familia call WHERE call.evento_id = ea.id) AS FamilyCallAttempts,
-                   (SELECT MAX(call.llamado_en) FROM dbo.intentos_llamada_familia call WHERE call.evento_id = ea.id) AS LastCallAt
+                   (SELECT MAX(call.llamado_en) FROM dbo.intentos_llamada_familia call WHERE call.evento_id = ea.id) AS LastCallAt,
+                   ea.cerrado_en AS ClosedAt
             {ScopedEventsFrom}
               JOIN dbo.protocolos_urgentes protocol ON protocol.evento_id = ea.id
               LEFT JOIN dbo.informes_derivacion report ON report.evento_id = ea.id
             {ScopedEventsWhere}
-               AND ea.estado_codigo <> 'CERRADO'
+               AND (ea.estado_codigo <> 'CERRADO'
+                    OR (@ClosedFrom IS NOT NULL AND protocol.activado_en >= @ClosedFrom AND protocol.activado_en < @ClosedTo))
              ORDER BY protocol.activado_en DESC
-            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ClosedFrom = closedFrom, ClosedTo = closedToExclusive }, cancellationToken: ct));
         return rows.Select(r => new SupervisionReferral(
             r.EventId, ResidentId.From(r.ResidentId), r.ResidentName, UnitId.From(r.UnitId), r.UnitName,
             EnumCode.ParseCode<SystemProfile>(r.ProtocolProfileCode), Utc(r.ProtocolActivatedAt),
             r.ReportProfileCode is null ? null : EnumCode.ParseCode<SystemProfile>(r.ReportProfileCode),
-            r.ReportSignedAt is { } signed ? Utc(signed) : null, r.FamilyCallAttempts, r.LastCallAt is { } last ? Utc(last) : null)).ToList();
+            r.ReportSignedAt is { } signed ? Utc(signed) : null, r.FamilyCallAttempts, r.LastCallAt is { } last ? Utc(last) : null,
+            r.ClosedAt is { } closed ? Utc(closed) : null)).ToList();
     }
 
     public async Task<SupervisionIndicatorFacts> ListIndicatorFactsAsync(
@@ -331,7 +334,8 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
 
     private sealed record ReferralRow(
         Guid EventId, Guid ResidentId, string ResidentName, Guid UnitId, string UnitName, string ProtocolProfileCode,
-        DateTime ProtocolActivatedAt, string? ReportProfileCode, DateTime? ReportSignedAt, int FamilyCallAttempts, DateTime? LastCallAt);
+        DateTime ProtocolActivatedAt, string? ReportProfileCode, DateTime? ReportSignedAt, int FamilyCallAttempts, DateTime? LastCallAt,
+        DateTime? ClosedAt);
 
     private sealed record StartRow(DateTime? AssessmentStartedAt, DateTime? MedicalStartedAt);
 

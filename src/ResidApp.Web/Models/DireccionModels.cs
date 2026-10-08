@@ -10,12 +10,27 @@ public sealed record DireccionInicioViewModel(IReadOnlyList<SupervisionUnitSumma
     public int FollowUpsOverdue => Units.Sum(u => u.FollowUpsOverdue);
 }
 
-/// <summary>DIR-12: las derivaciones en curso con su resumen (cuántas tienen el informe firmado, cuántas no y cuántas llamadas a la familia constan).</summary>
-public sealed record SupervisionReferralsViewModel(IReadOnlyList<SupervisionReferral> Referrals)
+/// <summary>DIR-12: la lista de derivaciones y, si se pidieron las de episodios cerrados, el periodo elegido (From y To incluidos).</summary>
+public sealed record SupervisionReferralsViewModel(
+    IReadOnlyList<SupervisionReferral> Referrals, bool IncludeClosed = false, DateOnly? From = null, DateOnly? To = null)
 {
     public int Signed => Referrals.Count(r => r.ReportSigned);
     public int Unsigned => Referrals.Count - Signed;
     public int WithCalls => Referrals.Count(r => r.FamilyCallAttempts > 0);
+    public int Closed => Referrals.Count(r => r.Closed);
+}
+
+/// <summary>DIR-12: pedir también las derivaciones de episodios cerrados, en un periodo. Llega por GET (?cerradas=true&amp;desde=&amp;hasta=);
+/// sin fechas, los últimos 30 días.</summary>
+public sealed class SupervisionReferralFilter
+{
+    public bool Cerradas { get; set; }
+
+    public DateOnly? Desde { get; set; }
+
+    public DateOnly? Hasta { get; set; }
+
+    public IndicatorPeriodFilter Period => new() { Desde = Desde, Hasta = Hasta };
 }
 
 /// <summary>DIR-03: filtrar los pendientes por tipo y unidad. Llega por GET (?tipo=&amp;unidad=); los campos vacíos no filtran.</summary>

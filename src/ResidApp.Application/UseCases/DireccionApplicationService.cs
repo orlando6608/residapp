@@ -68,14 +68,29 @@ public sealed class DireccionApplicationService(
             return new SupervisionPendingList(shown, episodes.Count);
         });
 
-    /// <summary>DIR-12: el estado de las derivaciones en curso del ámbito (episodios abiertos con protocolo urgente). Solo el estado del
-    /// proceso, sin permiso ni auditoría, como el resto de la supervisión operativa: el informe firmado no se entrega aquí.</summary>
+    /// <summary>DIR-12: el estado de las derivaciones del ámbito (episodios abiertos con protocolo urgente). Con closedFrom y closedTo
+    /// (días locales, ambos incluidos) salen además las de episodios ya cerrados cuyo protocolo se activó en ese periodo (CJ, 2026-10-07).
+    /// Solo el estado del proceso, sin permiso ni auditoría (CJ, 2026-10-07), como el resto de la supervisión operativa: el informe
+    /// firmado no se entrega aquí.</summary>
     public Task<ApplicationResult<IReadOnlyList<SupervisionReferral>>> ListReferralsAsync(
-        SupervisionQuery query, CancellationToken ct = default) =>
+        SupervisionQuery query, DateOnly? closedFrom = null, DateOnly? closedTo = null, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
+            if (closedFrom is null != closedTo is null
+                || (closedFrom is { } from && closedTo is { } to
+                    && (from > to || to.DayNumber - from.DayNumber + 1 > SupervisionIndicatorRules.MaxPeriodDays)))
+            {
+                throw new DomainValidationException("APPLICATION_INPUT_INVALID");
+            }
+
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            return await directory.ListReferralsAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            if (closedFrom is not { } start || closedTo is not { } end)
+            {
+                return await directory.ListReferralsAsync(query.AmbitoPerfilId, query.CentroId, ct: ct);
+            }
+
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(start, end, TimeZoneInfo.Local);
+            return await directory.ListReferralsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
         });
 
     public Task<ApplicationResult<SupervisionEpisodeDetail>> FindEpisodeAsync(

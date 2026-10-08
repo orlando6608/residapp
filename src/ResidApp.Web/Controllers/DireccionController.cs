@@ -58,24 +58,49 @@ public sealed class DireccionController(DireccionApplicationService service) : C
         return View(new SupervisionPendingViewModel(list.Value!, filtro, scope.Value!.Units.Select(u => (u.Id.Value, u.Name)).ToList(), today));
     }
 
-    /// <summary>DIR-12: estado de las derivaciones en curso, solo lectura. No entrega el informe firmado.</summary>
-    public async Task<IActionResult> Derivaciones(CancellationToken ct)
+    /// <summary>DIR-12: estado de las derivaciones, solo lectura. Las de episodios abiertos siempre; las de episodios cerrados, si se pide
+    /// y en el periodo elegido (CJ, 2026-10-07). No entrega el informe firmado.</summary>
+    public async Task<IActionResult> Derivaciones(SupervisionReferralFilter filtro, CancellationToken ct)
     {
+        // Una fecha mal formada en la URL se ignora (toma el valor por defecto), no se muestra como error.
+        ModelState.Clear();
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Derivaciones)) });
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
         }
 
-        var result = await service.ListReferralsAsync(new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        var query = new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId));
+        if (!filtro.Cerradas)
+        {
+            var open = await service.ListReferralsAsync(query, ct: ct);
+            if (!open.Ok)
+            {
+                ModelState.AddModelError(string.Empty, open.Error!.Message);
+                return View(new SupervisionReferralsViewModel([]));
+            }
+
+            return View(new SupervisionReferralsViewModel(open.Value!));
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var (from, to) = filtro.Period.Resolve(today);
+        if (filtro.Period.Validate(today) is { } invalid)
+        {
+            ModelState.AddModelError(string.Empty, invalid);
+            return View(new SupervisionReferralsViewModel([], true, from, to));
+        }
+
+        var result = await service.ListReferralsAsync(query, from, to, ct);
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
-            return View(new SupervisionReferralsViewModel([]));
+            return View(new SupervisionReferralsViewModel([], true, from, to));
         }
 
-        return View(new SupervisionReferralsViewModel(result.Value!));
+        return View(new SupervisionReferralsViewModel(result.Value!, true, from, to));
     }
+
 
     /// <summary>DIR-04: detalle operativo. Si no existe, está cerrado o no está en el ámbito, se vuelve a los pendientes
     /// sin distinguir el motivo.</summary>

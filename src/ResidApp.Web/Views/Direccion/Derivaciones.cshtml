@@ -15,19 +15,44 @@
 
 <h1 class="h3">Derivaciones a Urgencias</h1>
 <p class="text-muted">
-    Episodios abiertos de tu ámbito con protocolo urgente, del más reciente al más antiguo, y en qué punto está su derivación. Solo el estado
+    Episodios abiertos de tu ámbito con protocolo urgente (y, si lo pides, los de episodios ya cerrados en el periodo que elijas), del más reciente al más antiguo, y en qué punto está su derivación. Solo el estado
     del proceso: ni el contenido del informe ni las llamadas. El informe firmado se consulta aparte, con finalidad y justificación, y queda registrado en la auditoría. Dirección no genera ni firma informes.
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
 
+<form method="get" asp-action="Derivaciones" class="card card-body mb-3" aria-label="Incluir derivaciones de episodios cerrados">
+    <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="cerradas" name="cerradas" value="true" checked="@Model.IncludeClosed" />
+        <label class="form-check-label" for="cerradas">Incluir también las de episodios ya cerrados, con el protocolo activado en este periodo</label>
+    </div>
+    <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-3">
+            <label for="desde" class="form-label">Desde</label>
+            <input type="date" class="form-control" id="desde" name="desde" value="@Model.From?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-6 col-md-3">
+            <label for="hasta" class="form-label">Hasta</label>
+            <input type="date" class="form-control" id="hasta" name="hasta" value="@Model.To?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-12 col-md-3 d-grid">
+            <button type="submit" class="btn btn-primary">Aplicar</button>
+        </div>
+    </div>
+    <div class="form-text">Sin marcar la casilla solo salen las derivaciones de episodios abiertos. Sin fechas, los últimos 30 días.</div>
+</form>
+
 @if (Model.Referrals.Count == 0)
 {
-    <p class="estado-vacio">No hay derivaciones en curso.</p>
+    <p class="estado-vacio">@(Model.IncludeClosed ? "No hay derivaciones en curso ni de episodios cerrados en ese periodo." : "No hay derivaciones en curso.")</p>
 }
 else
 {
     <p role="status">
-        <span class="badge text-bg-primary">@Model.Referrals.Count</span> en curso ·
+        <span class="badge text-bg-primary">@(Model.Referrals.Count - Model.Closed)</span> en curso ·
+        @if (Model.IncludeClosed)
+        {
+            <span class="badge text-bg-dark">@Model.Closed</span> @:de episodios cerrados ·
+        }
         <span class="badge text-bg-secondary">@Model.Signed</span> con informe firmado ·
         <span class="badge text-bg-warning">@Model.Unsigned</span> sin informe firmado ·
         <span class="badge text-bg-secondary">@Model.WithCalls</span> con alguna llamada a la familia registrada
@@ -41,7 +66,15 @@ else
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="flex-grow-1">
                         <h2 class="h6 card-title mb-1">
-                            <a asp-action="Episodio" asp-route-eventoId="@item.EventId" class="stretched-link text-body text-decoration-none">@item.ResidentDisplayName</a>
+                            @if (item.Closed)
+                            {
+                                @item.ResidentDisplayName
+                                <span class="badge text-bg-dark ms-1">Cerrado</span>
+                            }
+                            else
+                            {
+                                <a asp-action="Episodio" asp-route-eventoId="@item.EventId" class="stretched-link text-body text-decoration-none">@item.ResidentDisplayName</a>
+                            }
                         </h2>
                         <p class="text-body-secondary small mb-1">@item.UnitName</p>
                         <dl class="row small mb-0">
@@ -76,7 +109,10 @@ else
                             </dd>
                         </dl>
                     </div>
-                    <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
+                    @if (!item.Closed)
+                    {
+                        <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
+                    }
                 </div>
             </div>
         }
@@ -127,7 +163,14 @@ else
                             }
                         </td>
                         <td>
-                            <a asp-action="Episodio" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle operativo</a>
+                            @if (item.Closed)
+                            {
+                                <span class="badge text-bg-dark">Episodio cerrado el @item.ClosedAt!.Value.ToLocalTime().ToString("g")</span>
+                            }
+                            else
+                            {
+                                <a asp-action="Episodio" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle operativo</a>
+                            }
                         </td>
                     </tr>
                 }
