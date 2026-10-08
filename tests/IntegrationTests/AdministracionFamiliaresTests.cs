@@ -164,6 +164,85 @@ public class AdministracionFamiliaresTests
     }
 
     [Fact]
+    public async Task Desvincular_ConservaElVinculoPasado_RevocaLaAutorizacion_QuitaElContacto_YElFamiliarSigueConLosDemas()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var first = await CreateResidentAsync(admin, "Residente Desvincula Uno");
+        var second = await CreateResidentAsync(admin, "Residente Desvincula Dos");
+        var service = Build(admin.ExternalSubject);
+        var daughter = (await service.AddFamilyMemberAsync(Add(admin, first, name: "Hija Desvinculada"))).Value;
+        var son = (await service.AddFamilyMemberAsync(Add(admin, first, name: "Hijo Que Se Queda"))).Value;
+        var familyId = Guid.NewGuid();
+        await service.AddFamilyMemberAsync(Add(admin, first, familyId, "Prima Compartida", "611 000 222"));
+        var shared = (await DetailAsync(admin, first)).Family.Single(f => f.DisplayName == "Prima Compartida").LinkId;
+        Assert.True((await service.LinkFamilyMemberAsync(new LinkFamilyMemberCommand(
+            admin.ProfileScopeId, admin.CenterId, second, Guid.NewGuid(), familyId, "Sobrina"))).Ok);
+        Assert.True((await service.ChangeFamilyAuthorizationAsync(Change(admin, first, daughter, FamilyAuthorizationChange.Abrir, 0))).Ok);
+        Assert.True((await service.ChangeFamilyAuthorizationAsync(Change(admin, first, daughter, FamilyAuthorizationChange.Activar, 1))).Ok);
+        Assert.True((await service.DesignateEmergencyContactAsync(Designate(admin, first, 0, daughter, son))).Ok);
+        UnlinkFamilyMemberCommand Unlink(Guid link, string? reason = "Ya no mantiene relación con el residente.", ResidentId? resident = null) =>
+            new(admin.ProfileScopeId, admin.CenterId, resident ?? first, link, reason);
+
+        var noReason = await service.UnlinkFamilyMemberAsync(Unlink(daughter, "  "));
+        var unlinked = await service.UnlinkFamilyMemberAsync(Unlink(daughter));
+        var again = await service.UnlinkFamilyMemberAsync(Unlink(daughter));
+        var wrongResident = await service.UnlinkFamilyMemberAsync(Unlink(son, resident: second));
+        var lastContact = await service.UnlinkFamilyMemberAsync(Unlink(son));
+        var sharedUnlinked = await service.UnlinkFamilyMemberAsync(Unlink(shared, "Error al vincularla."));
+        var firstDetail = await DetailAsync(admin, first);
+        var secondDetail = await DetailAsync(admin, second);
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, noReason.Error!.Code);
+        Assert.True(unlinked.Ok, unlinked.Error?.Message);
+        Assert.Equal(ApplicationFailureCode.Conflict, again.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, wrongResident.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, lastContact.Error!.Code);
+        Assert.True(sharedUnlinked.Ok, sharedUnlinked.Error?.Message);
+        // El vínculo pasado se ve en el historial; el contacto urgente que queda es el hijo.
+        Assert.Equal(["Hijo Que Se Queda"], firstDetail.Family.Select(f => f.DisplayName));
+        Assert.Equal([son], firstDetail.CurrentEmergencyContacts);
+        Assert.Equal(["Prima Compartida", "Hija Desvinculada"], firstDetail.Former.Select(f => f.DisplayName));
+        Assert.Equal("Ya no mantiene relación con el residente.", firstDetail.Former[1].Reason);
+        // La prima sigue vinculada al otro residente, ya sin vínculos compartidos.
+        var inSecond = Assert.Single(secondDetail.Family);
+        Assert.Equal(("Prima Compartida", 0), (inSecond.DisplayName, inSecond.OtherResidentLinks));
+        Assert.Equal(2, await CountAuditAsync(first, "FAMILY_MEMBER_UNLINK"));
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal(["ACTIVA", "REVOCADA"], (await connection.QueryAsync<string>(
+            "SELECT estado_codigo FROM dbo.familiares_autorizaciones_cambios WHERE vinculo_id = @daughter AND estado_codigo <> 'PENDIENTE' ORDER BY numero",
+            new { daughter })).ToArray());
+        // La base de datos no deja tocar un vínculo desvinculado, y vincular de nuevo al mismo familiar crea un vínculo nuevo.
+        await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.residentes_familiares SET relacion = 'Otra' WHERE id = @daughter", new { daughter }));
+        var relinked = await service.LinkFamilyMemberAsync(new LinkFamilyMemberCommand(
+            admin.ProfileScopeId, admin.CenterId, first, Guid.NewGuid(), familyId, "Prima"));
+        Assert.True(relinked.Ok, relinked.Error?.Message);
+        Assert.NotEqual(shared, relinked.Value);
+    }
+
+    [Fact]
+    public async Task Desvincular_SoloLoHaceAdministracionDelAmbito()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var residentId = await CreateResidentAsync(admin, "Residente Desvincula Permisos");
+        var linkId = (await Build(admin.ExternalSubject).AddFamilyMemberAsync(Add(admin, residentId))).Value;
+        var otherAdmin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var denied = new List<ApplicationFailureCode?>();
+        foreach (var profile in new[] { SystemProfile.Enfermeria, SystemProfile.Medicina, SystemProfile.Auxiliar, SystemProfile.DireccionClinica })
+        {
+            var other = await SeedFixture.AddProfileToCenterAsync(profile, admin.CenterId, admin.UnitId);
+            denied.Add((await Build(other.ExternalSubject).UnlinkFamilyMemberAsync(
+                new UnlinkFamilyMemberCommand(other.ProfileScopeId, other.CenterId, residentId, linkId, "Motivo"))).Error?.Code);
+        }
+
+        denied.Add((await Build(otherAdmin.ExternalSubject).UnlinkFamilyMemberAsync(
+            new UnlinkFamilyMemberCommand(otherAdmin.ProfileScopeId, otherAdmin.CenterId, residentId, linkId, "Motivo"))).Error?.Code);
+
+        Assert.All(denied, code => Assert.Equal(ApplicationFailureCode.AccessDenied, code));
+        Assert.Single((await DetailAsync(admin, residentId)).Family);
+    }
+
+    [Fact]
     public async Task Editar_CambiaLosDatos_YRechazaSinCambiosOFamiliarAjeno()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);

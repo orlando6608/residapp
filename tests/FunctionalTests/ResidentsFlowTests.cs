@@ -582,6 +582,33 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         // El alta ya dejó un contacto prioritario; elegir otro lo quita y añade el nuevo: 1 + 2 designaciones.
         Assert.Equal(3, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }));
+
+        // Desvincular (script 0045): el único contacto urgente no se puede desvincular; el familiar del alta, que ya no lo es, sí.
+        async Task<string> UnlinkAsync(string name, string reason)
+        {
+            var id = await connection.ExecuteScalarAsync<Guid>("""
+                SELECT l.id FROM dbo.residentes_familiares l JOIN dbo.familiares f ON f.id = l.familiar_id
+                 WHERE l.residente_id = @residentId AND f.nombre_visible = @name
+                """, new { residentId, name });
+            var page = await admin.GetStringAsync($"/Administracion/DesvincularFamiliar?residenteId={residentId}&vinculoId={id}");
+            return WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/DesvincularFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+                ["Form.ResidenteId"] = residentId,
+                ["Form.VinculoId"] = id.ToString(),
+                ["Form.Motivo"] = reason,
+            }))).Content.ReadAsStringAsync());
+        }
+
+        var refusedUnlink = await UnlinkAsync("Familiar Funcional", "Prueba");
+        var unlinkedPage = await UnlinkAsync("Familiar Prueba", "Ya no tiene relación con el residente.");
+
+        Assert.Contains("único contacto urgente", refusedUnlink);
+        Assert.Contains("Familiar desvinculado.", unlinkedPage);
+        Assert.Contains("Familiares desvinculados", unlinkedPage);
+        Assert.Contains("Ya no tiene relación con el residente.", unlinkedPage);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.residentes_familiares WHERE residente_id = @residentId AND desvinculado_en IS NOT NULL", new { residentId }));
     }
 
     [Fact]

@@ -109,6 +109,8 @@
                            class="btn btn-outline-primary">Autorización</a>
                         <a asp-action="EditarFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
                            class="btn btn-outline-secondary">Editar</a>
+                        <a asp-action="DesvincularFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
+                           class="btn btn-outline-danger">Desvincular</a>
                     </div>
                 </li>
             }
@@ -154,12 +156,30 @@
                                    class="btn btn-outline-primary">Autorización</a>
                                 <a asp-action="EditarFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
                                    class="btn btn-outline-secondary">Editar</a>
+                                <a asp-action="DesvincularFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId"
+                                   class="btn btn-outline-danger">Desvincular</a>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+    }
+    @if (Model.Detail.Former.Count > 0)
+    {
+        <h3 class="h6 mt-3">Familiares desvinculados</h3>
+        <ul class="list-group mb-3">
+            @foreach (var former in Model.Detail.Former)
+            {
+                <li class="list-group-item">
+                    <div class="fw-semibold">@former.DisplayName <span class="text-body-secondary fw-normal">(@former.Relationship)</span></div>
+                    <div class="small text-body-secondary">
+                        Vinculado el @former.LinkedAt.ToLocalTime().ToString("dd/MM/yyyy") · desvinculado el @former.UnlinkedAt.ToLocalTime().ToString("dd/MM/yyyy")
+                    </div>
+                    <div class="small">Motivo: @former.Reason</div>
+                </li>
+            }
+        </ul>
     }
     <div class="d-flex flex-wrap gap-2">
         <a asp-action="AnadirFamiliar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Añadir familiar</a>

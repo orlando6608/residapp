@@ -72,6 +72,7 @@ public static class AuditActionDisplay
         ["FAMILY_MEMBER_CREATE"] = "Familiar añadido",
         ["FAMILY_MEMBER_UPDATE"] = "Datos del familiar cambiados",
         ["FAMILY_MEMBER_LINK"] = "Familiar vinculado a otro residente",
+        ["FAMILY_MEMBER_UNLINK"] = "Familiar desvinculado del residente",
         ["FAMILY_AUTHORIZATION_CHANGE"] = "Autorización del familiar cambiada",
         ["EMERGENCY_CONTACT_DESIGNATE"] = "Contacto urgente designado",
         ["SHIFT_CREATE"] = "Turno creado",

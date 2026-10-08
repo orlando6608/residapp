@@ -1,0 +1,49 @@
+@using ResidApp.Web.Models
+@model UnlinkFamilyViewModel
+@{
+    var resident = Model.Resident;
+    var member = Model.Member;
+    ViewData["Title"] = "Desvincular familiar";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Desvincular familiar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Desvincular a @member.DisplayName</h1>
+<p class="text-muted">
+    @member.DisplayName (@member.Relationship) dejará de ser familiar de @resident.DisplayName. Su acceso al Portal Familiar para este residente se
+    revoca y, si era contacto urgente, deja de serlo (siempre tiene que quedar al menos uno). El vínculo pasado se sigue viendo en el historial de
+    la ficha, y @member.DisplayName sigue siendo familiar de sus demás residentes@(member.OtherResidentLinks > 0 ? $" ({member.OtherResidentLinks})" : "").
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="DesvincularFamiliar" method="post">
+            <input type="hidden" name="Form.ResidenteId" value="@Model.Form.ResidenteId" />
+            <input type="hidden" name="Form.VinculoId" value="@Model.Form.VinculoId" />
+
+            <div class="mb-3">
+                <label asp-for="Form.Motivo" class="form-label"></label>
+                <textarea asp-for="Form.Motivo" class="form-control form-control-lg" rows="3"></textarea>
+                <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+            </div>
+
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-danger btn-lg">Desvincular</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

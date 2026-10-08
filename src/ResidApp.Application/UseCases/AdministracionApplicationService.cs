@@ -37,6 +37,9 @@ public sealed record UpdateFamilyMemberCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string? NombreVisible, string? Relacion,
     string? Telefono, string? Correo, string VersionEsperada, bool Referente = false, bool TutorLegal = false);
 
+/// <summary>CJ, 2026-10-07: Motivo es obligatorio.</summary>
+public sealed record UnlinkFamilyMemberCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string? Motivo);
+
 /// <summary>ADM-10/ADM-11 (0022): CambiosEsperados es cuántos cambios tenía la autorización al abrir la pantalla.</summary>
 public sealed record ChangeFamilyAuthorizationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, FamilyAuthorizationChange Cambio,
@@ -162,6 +165,15 @@ public sealed class AdministracionApplicationService(
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             var data = FamilyMember.Validate(command.NombreVisible, command.Relacion, command.Telefono, command.Correo, command.Referente, command.TutorLegal);
             await families.UpdateAsync(target, command.VinculoId, data, command.VersionEsperada, ct);
+            return true;
+        });
+
+    /// <summary>CJ, 2026-10-07: desvincular a un familiar del residente indicando un motivo.</summary>
+    public Task<ApplicationResult<bool>> UnlinkFamilyMemberAsync(UnlinkFamilyMemberCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
+            await families.UnlinkAsync(target, command.VinculoId, FamilyMember.ValidateUnlinkReason(command.Motivo), ct);
             return true;
         });
 

@@ -45,9 +45,9 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
          WHERE f.centro_id = @CenterId
            AND EXISTS (SELECT 1 FROM dbo.residentes_familiares other
                          JOIN ({ScopedResidentsSelect}) scoped ON scoped.ResidentId = other.residente_id
-                        WHERE other.familiar_id = f.id AND other.centro_id = f.centro_id)
+                        WHERE other.familiar_id = f.id AND other.centro_id = f.centro_id AND other.desvinculado_en IS NULL)
            AND NOT EXISTS (SELECT 1 FROM dbo.residentes_familiares mine
-                            WHERE mine.familiar_id = f.id AND mine.centro_id = f.centro_id AND mine.residente_id = @ResidentId)
+                            WHERE mine.familiar_id = f.id AND mine.centro_id = f.centro_id AND mine.residente_id = @ResidentId AND mine.desvinculado_en IS NULL)
         """;
 
     public async Task<IReadOnlyList<LinkableFamilyMember>> ListLinkableFamilyAsync(
@@ -116,7 +116,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                    c.motivo AS Reason, c.registrado_en AS At
               FROM dbo.familiares_autorizaciones_cambios c
               JOIN dbo.residentes_familiares link ON link.id = c.vinculo_id AND link.centro_id = c.centro_id
-             WHERE link.residente_id = @ResidentId AND link.centro_id = @CenterId
+             WHERE link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
              ORDER BY c.numero
             """, parameters, cancellationToken: ct)))
             .ToLookup(c => c.LinkId, c => new FamilyAuthorizationChangeEntry(
@@ -126,10 +126,10 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
             SELECT link.id AS LinkId, f.nombre_visible AS DisplayName, link.relacion AS Relationship, f.telefono AS Phone, f.correo AS Email,
                    link.es_referente AS IsReferent, link.es_tutor_legal AS IsLegalGuardian,
                    (SELECT COUNT(*) FROM dbo.residentes_familiares o
-                     WHERE o.familiar_id = link.familiar_id AND o.centro_id = link.centro_id AND o.id <> link.id) AS OtherResidentLinks
+                     WHERE o.familiar_id = link.familiar_id AND o.centro_id = link.centro_id AND o.id <> link.id AND o.desvinculado_en IS NULL) AS OtherResidentLinks
               FROM dbo.residentes_familiares link
               JOIN dbo.familiares f ON f.id = link.familiar_id AND f.centro_id = link.centro_id
-             WHERE link.residente_id = @ResidentId AND link.centro_id = @CenterId
+             WHERE link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
              ORDER BY f.nombre_visible
             """, parameters, cancellationToken: ct)))
             .Select(f => new ResidentFamilyMember(
@@ -146,7 +146,17 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
             """, parameters, cancellationToken: ct)))
             .Select(d => new EmergencyContactDesignation(d.Number, d.Action, d.LinkId, d.DisplayName, Utc(d.At)))
             .ToList();
-        return new AdministrativeResidentDetail(ToSummary(row), locations, corrections, family, contacts);
+        var former = (await connection.QueryAsync<FormerRow>(new CommandDefinition("""
+            SELECT f.nombre_visible AS DisplayName, link.relacion AS Relationship, link.vinculado_en AS LinkedAt,
+                   link.desvinculado_en AS UnlinkedAt, link.desvinculado_motivo AS Reason
+              FROM dbo.residentes_familiares link
+              JOIN dbo.familiares f ON f.id = link.familiar_id AND f.centro_id = link.centro_id
+             WHERE link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NOT NULL
+             ORDER BY link.desvinculado_en DESC
+            """, parameters, cancellationToken: ct)))
+            .Select(f => new FormerFamilyMember(f.DisplayName, f.Relationship, Utc(f.LinkedAt), Utc(f.UnlinkedAt), f.Reason))
+            .ToList();
+        return new AdministrativeResidentDetail(ToSummary(row), locations, corrections, family, contacts, former);
     }
 
     private static AdministrativeResidentSummary ToSummary(ResidentRow r) => new(
@@ -170,6 +180,8 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
         Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email, bool IsReferent, bool IsLegalGuardian, int OtherResidentLinks);
 
     private sealed record LinkableRow(Guid FamilyId, string DisplayName, string Phone);
+
+    private sealed record FormerRow(string DisplayName, string Relationship, DateTime LinkedAt, DateTime UnlinkedAt, string Reason);
 
     private sealed record ContactRow(int Number, string Action, Guid? LinkId, string? DisplayName, DateTime At);
 }

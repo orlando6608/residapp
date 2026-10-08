@@ -97,7 +97,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
             // Ya vinculado a este residente es un conflicto (la ficha lo enseña); cualquier otro motivo, acceso denegado sin distinguir.
             throw await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
                 SELECT COUNT(*) FROM dbo.residentes_familiares
-                 WHERE residente_id = @ResidentId AND familiar_id = @FamilyId AND centro_id = @CenterId
+                 WHERE residente_id = @ResidentId AND familiar_id = @FamilyId AND centro_id = @CenterId AND desvinculado_en IS NULL
                 """, parameters, transaction, cancellationToken: ct)) > 0
                 ? (Exception)new DomainValidationException("FAMILY_MEMBER_CONFLICT")
                 : new AccessDeniedException();
@@ -133,7 +133,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
                    link.es_referente AS IsReferent, link.es_tutor_legal AS IsLegalGuardian
               FROM dbo.residentes_familiares link WITH (UPDLOCK, ROWLOCK)
               JOIN dbo.familiares f WITH (UPDLOCK, ROWLOCK) ON f.id = link.familiar_id AND f.centro_id = link.centro_id
-             WHERE link.id = @LinkId AND link.residente_id = @ResidentId AND link.centro_id = @CenterId
+             WHERE link.id = @LinkId AND link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
             """, new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value },
             transaction, cancellationToken: ct))
             ?? throw new AccessDeniedException();
@@ -175,7 +175,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         var parameters = new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value };
         var linked = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
             SELECT COUNT(*) FROM dbo.residentes_familiares WITH (UPDLOCK, ROWLOCK)
-             WHERE id = @LinkId AND residente_id = @ResidentId AND centro_id = @CenterId
+             WHERE id = @LinkId AND residente_id = @ResidentId AND centro_id = @CenterId AND desvinculado_en IS NULL
             """, parameters, transaction, cancellationToken: ct));
         if (linked == 0)
         {
@@ -252,7 +252,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
 
         if (wanted.Count > 0 && await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
                 SELECT COUNT(*) FROM dbo.residentes_familiares
-                 WHERE id IN @LinkIds AND residente_id = @ResidentId AND centro_id = @CenterId
+                 WHERE id IN @LinkIds AND residente_id = @ResidentId AND centro_id = @CenterId AND desvinculado_en IS NULL
                 """, new { LinkIds = wanted, parameters.ResidentId, parameters.CenterId }, transaction, cancellationToken: ct)) != wanted.Count)
         {
             throw new AccessDeniedException();
@@ -301,6 +301,84 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         return number;
     }
 
+    public async Task UnlinkAsync(AdministrativeResidentTarget target, Guid linkId, string reason, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var parameters = new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value };
+        // El bloqueo del residente ordena este cambio con los de contactos urgentes y otras escrituras sobre sus familiares.
+        await connection.ExecuteAsync(new CommandDefinition("""
+            SELECT id FROM dbo.residentes WITH (UPDLOCK, ROWLOCK) WHERE id = @ResidentId AND centro_id = @CenterId
+            """, parameters, transaction, cancellationToken: ct));
+        var link = await connection.QuerySingleOrDefaultAsync<UnlinkRow>(new CommandDefinition("""
+            SELECT familiar_id AS FamilyId, CAST(CASE WHEN desvinculado_en IS NULL THEN 0 ELSE 1 END AS BIT) AS Unlinked
+              FROM dbo.residentes_familiares WITH (UPDLOCK, ROWLOCK)
+             WHERE id = @LinkId AND residente_id = @ResidentId AND centro_id = @CenterId
+            """, parameters, transaction, cancellationToken: ct)) ?? throw new AccessDeniedException();
+        if (link.Unlinked)
+        {
+            throw new DomainValidationException("FAMILY_MEMBER_CONFLICT");
+        }
+
+        var occurredAt = DateTimeOffset.UtcNow;
+        var designations = (await connection.QueryAsync<DesignationRow>(new CommandDefinition("""
+            SELECT numero AS Number, accion_codigo AS Action, vinculo_id AS LinkId
+              FROM dbo.residentes_contacto_urgente WHERE residente_id = @ResidentId AND centro_id = @CenterId ORDER BY numero
+            """, parameters, transaction, cancellationToken: ct))).ToList();
+        var contacts = EmergencyContactSet.Current(designations.Select(d => (d.Action, d.LinkId)));
+        if (contacts.Contains(linkId))
+        {
+            if (contacts.Count == 1)
+            {
+                // Al menos un contacto urgente (CJ, 2026-10-07): primero hay que designar otro.
+                throw new DomainValidationException("EMERGENCY_CONTACT_INVALID");
+            }
+
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.residentes_contacto_urgente
+                    (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, designado_por_cuenta_id, designado_por_perfil, designado_en)
+                VALUES (NEWID(), @CenterId, @ResidentId, @Number, @LinkId, 'QUITAR', @AccountId, 'ADMINISTRACION', @OccurredAt)
+                """, new
+            {
+                parameters.CenterId, parameters.ResidentId, parameters.LinkId, Number = designations[^1].Number + 1,
+                AccountId = target.AccountId.Value, OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+        }
+
+        // Sin vínculo no hay acceso: una autorización abierta (pendiente, activa o suspendida) se revoca con el mismo motivo.
+        var latest = await connection.QuerySingleOrDefaultAsync<AuthorizationRow>(new CommandDefinition("""
+            SELECT TOP 1 numero AS Number, estado_codigo AS StatusCode, valida_hasta AS ValidUntil
+              FROM dbo.familiares_autorizaciones_cambios WHERE vinculo_id = @LinkId AND centro_id = @CenterId ORDER BY numero DESC
+            """, parameters, transaction, cancellationToken: ct));
+        if (latest is not null && latest.StatusCode != "REVOCADA")
+        {
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.familiares_autorizaciones_cambios
+                    (id, centro_id, vinculo_id, numero, estado_codigo, valida_hasta, motivo, registrado_por_cuenta_id,
+                     registrado_por_perfil, registrado_en)
+                VALUES (NEWID(), @CenterId, @LinkId, @Number, 'REVOCADA', NULL, @Reason, @AccountId, 'ADMINISTRACION', @OccurredAt)
+                """, new
+            {
+                parameters.CenterId, parameters.LinkId, Number = latest.Number + 1, Reason = "Familiar desvinculado: " + reason,
+                AccountId = target.AccountId.Value, OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+        }
+
+        await connection.ExecuteAsync(new CommandDefinition($"""
+            UPDATE dbo.residentes_familiares
+               SET desvinculado_en = @OccurredAt, desvinculado_por_cuenta_id = @AccountId, desvinculado_motivo = @Reason
+             WHERE id = @LinkId AND centro_id = @CenterId;
+
+            {InsertAudit}
+            """, new
+        {
+            parameters.LinkId, parameters.CenterId, Reason = reason, AccountId = target.AccountId.Value, UnitId = target.UnitId.Value,
+            ResidentId = target.ResidentId.Value, ResourceType = "FAMILY_MEMBER", ResourceId = link.FamilyId,
+            Action = "FAMILY_MEMBER_UNLINK", OccurredAt = occurredAt,
+        }, transaction, cancellationToken: ct));
+        transaction.Commit();
+    }
+
     /// <summary>El vínculo de un familiar ya creado con este identificador de operación; null si no existe. Si existe pero
     /// es de otro residente u otro centro, el identificador se ha reutilizado para otra petición.</summary>
     private static async Task<Guid?> FindAddedLinkAsync(
@@ -330,6 +408,8 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
     private sealed record AuthorizationRow(int Number, string StatusCode, DateTime? ValidUntil);
 
     private sealed record DesignationRow(int Number, string Action, Guid? LinkId);
+
+    private sealed record UnlinkRow(Guid FamilyId, bool Unlinked);
 
     private sealed record AddedRow(Guid CenterId, Guid? LinkId);
 }

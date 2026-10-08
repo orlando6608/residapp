@@ -64,6 +64,7 @@ public static class AdministrativeAudit
         ("FAMILY_MEMBER_CREATE", AuditCategory.ResidentesYFamilias),
         ("FAMILY_MEMBER_UPDATE", AuditCategory.ResidentesYFamilias),
         ("FAMILY_MEMBER_LINK", AuditCategory.ResidentesYFamilias),
+        ("FAMILY_MEMBER_UNLINK", AuditCategory.ResidentesYFamilias),
         ("FAMILY_AUTHORIZATION_CHANGE", AuditCategory.ResidentesYFamilias),
         ("EMERGENCY_CONTACT_DESIGNATE", AuditCategory.ResidentesYFamilias),
         ("SHIFT_CREATE", AuditCategory.TurnosYEquipos),

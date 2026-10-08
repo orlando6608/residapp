@@ -35,6 +35,10 @@ public sealed record ResidentFamilyMember(
     public FamilyAuthorizationChangeEntry? CurrentAuthorization => AuthorizationChanges.Count == 0 ? null : AuthorizationChanges[^1];
 }
 
+/// <summary>Un familiar que dejó de estar vinculado al residente (CJ, 2026-10-07): el vínculo pasado se sigue viendo en el historial.</summary>
+public sealed record FormerFamilyMember(
+    string DisplayName, string Relationship, DateTimeOffset LinkedAt, DateTimeOffset UnlinkedAt, string Reason);
+
 /// <summary>Un familiar que se puede vincular a otro residente: ya está vinculado a algún residente del ámbito de quien gestiona
 /// y todavía no al residente de la pantalla. Nombre y teléfono bastan para distinguir a dos personas con el mismo nombre.</summary>
 public sealed record LinkableFamilyMember(Guid FamilyId, string DisplayName, string Phone);
@@ -48,8 +52,11 @@ public sealed record EmergencyContactDesignation(int Number, string Action, Guid
 public sealed record AdministrativeResidentDetail(
     AdministrativeResidentSummary Resident, IReadOnlyList<ResidentLocationInterval> Locations,
     IReadOnlyList<ResidentIdentityCorrectionEntry> Corrections, IReadOnlyList<ResidentFamilyMember> Family,
-    IReadOnlyList<EmergencyContactDesignation> EmergencyContacts)
+    IReadOnlyList<EmergencyContactDesignation> EmergencyContacts, IReadOnlyList<FormerFamilyMember>? FormerFamily = null)
 {
+    /// <summary>Los familiares que ya no están vinculados, del desvínculo más reciente al más antiguo.</summary>
+    public IReadOnlyList<FormerFamilyMember> Former => FormerFamily ?? [];
+
     /// <summary>Los vínculos de los contactos urgentes vigentes, en el orden en que se designaron.</summary>
     public IReadOnlyList<Guid> CurrentEmergencyContacts => EmergencyContactSet.Current(EmergencyContacts.Select(d => (d.Action, d.LinkId)));
 }
@@ -115,6 +122,11 @@ public interface IResidentFamilyRepository
     /// designaciones (si no, conflicto) y cambia algo. Devuelve cuántas tiene ya (una por cada familiar añadido o quitado).</summary>
     Task<int> DesignateEmergencyContactAsync(
         AdministrativeResidentTarget target, IReadOnlyList<Guid> linkIds, int expectedDesignations, CancellationToken ct = default);
+
+    /// <summary>Desvincula al familiar del residente con un motivo (CJ, 2026-10-07): el vínculo se conserva como pasado y el familiar sigue con
+    /// los demás residentes. Si su autorización seguía abierta se revoca, y si era uno de los contactos urgentes se quita de ellos; si era el
+    /// único, EMERGENCY_CONTACT_INVALID (primero hay que designar otro). Un vínculo que ya está desvinculado: FAMILY_MEMBER_CONFLICT.</summary>
+    Task UnlinkAsync(AdministrativeResidentTarget target, Guid linkId, string reason, CancellationToken ct = default);
 }
 
 /// <summary>Traslado del residente (script 0040). ExpectedUnitId es la unidad en la que estaba al abrir el formulario; OperationId

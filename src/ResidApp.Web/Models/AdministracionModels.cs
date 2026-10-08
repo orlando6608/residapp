@@ -351,3 +351,18 @@ public sealed class RenameUnitFormModel
 public sealed record RenameUnitViewModel(StructureUnit Unit, RenameUnitFormModel Form);
 
 public sealed record NewUnitViewModel(NewUnitFormModel Form);
+
+/// <summary>CJ, 2026-10-07: desvincular a un familiar de un residente. El motivo es obligatorio.</summary>
+public sealed class UnlinkFamilyFormModel
+{
+    public Guid ResidenteId { get; set; }
+
+    public Guid VinculoId { get; set; }
+
+    [Required(ErrorMessage = "Indica el motivo.")]
+    [StringLength(500, ErrorMessage = "El motivo no puede pasar de {1} caracteres.")]
+    [Display(Name = "Motivo")]
+    public string? Motivo { get; set; }
+}
+
+public sealed record UnlinkFamilyViewModel(AdministrativeResidentSummary Resident, ResidentFamilyMember Member, UnlinkFamilyFormModel Form);

@@ -85,6 +85,15 @@ public static class FamilyMember
         return new FamilyMemberData(name, relation, phoneText!, emailText, isReferent, isLegalGuardian);
     }
 
+    public const int MaxUnlinkReasonLength = 500;
+
+    /// <summary>El motivo de desvincular a un familiar de un residente (obligatorio), ya sin espacios sobrantes.</summary>
+    public static string ValidateUnlinkReason(string? reason)
+    {
+        var text = reason?.Trim();
+        return string.IsNullOrEmpty(text) || text.Length > MaxUnlinkReasonLength ? throw new DomainValidationException(InvalidCode) : text;
+    }
+
     /// <summary>La relación de un familiar con un residente (texto libre, obligatorio), ya sin espacios sobrantes.</summary>
     public static string ValidateRelationship(string? relationship)
     {
