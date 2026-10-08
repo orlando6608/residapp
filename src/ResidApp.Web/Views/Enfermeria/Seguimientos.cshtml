@@ -14,7 +14,7 @@
 </nav>
 
 <h1 class="h3">Seguimientos abiertos</h1>
-<p class="text-muted">Compartidos por la Enfermería de cada unidad. Un seguimiento vencido sigue abierto hasta que alguien lo resuelve.</p>
+<p class="text-muted">Compartidos por la Enfermería de cada unidad. Un seguimiento con la fecha prevista pasada consta como pendiente y sigue abierto hasta que alguien lo resuelve.</p>
 <div asp-validation-summary="All" class="text-danger"></div>
 
 @if (Model.Count == 0)
@@ -33,7 +33,7 @@ else
                 <p class="mb-1">
                     @if (vencido)
                     {
-                        <span class="badge text-bg-danger">Vencido</span>
+                        <span class="badge text-bg-danger">Pendiente</span>
                     }
                     @if (item.TransferPending)
                     {

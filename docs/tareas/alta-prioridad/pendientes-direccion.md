@@ -124,7 +124,8 @@ En el orden propuesto:
 
 Huecos de lo ya construido:
 
-- **Seguimientos vencidos por periodo (2026-10-02, sin script):** los indicadores los incluyen en «Continuidad entre turnos» y en la evolución mensual,
+- **Seguimientos pendientes (antes «vencidos») por periodo (2026-10-02, sin script):** los indicadores los incluyen en «Continuidad entre turnos» y en la evolución mensual,
+  - **Actualizado el 2026-10-08 (CJ 3.1/3.2):** el seguimiento solo deja de estar abierto al cerrarse el episodio; escalar a Medicina o activar el protocolo urgente ya no lo termina. En pantallas se dice «pendiente».
   como «n de m»: m son los seguimientos abiertos algún día del periodo y n los que tuvieron su fecha prevista pasada algún día, con el plan vigente al
   empezar ese día (`SupervisionIndicatorRules.WasOverdue`, función pura; reprogramar el mismo día en que vence no lo borra). **Es una deducción mía, sin
   confirmar con el usuario ni con CJ.** Un seguimiento deja de estar abierto al cerrarse el episodio, al escalarse (solo Enfermería) o al activarse el

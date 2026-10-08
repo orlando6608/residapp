@@ -87,7 +87,7 @@ else
                                 <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, item.Classification == DailyChangeClassification.Prioritario)">@ClinicalEventStatusDisplay.Label(item.Status)</span>
                                 @if (SupervisionPendingRules.IsOverdue(item, Model.Today))
                                 {
-                                    <span class="badge text-bg-warning">Seguimiento vencido</span>
+                                    <span class="badge text-bg-warning">Seguimiento pendiente</span>
                                 }
                                 @if (item.IndicationsNotDone > 0)
                                 {
@@ -128,7 +128,7 @@ else
                             <td>
                                 @if (SupervisionPendingRules.IsOverdue(item, Model.Today))
                                 {
-                                    <span class="badge text-bg-warning">Seguimiento vencido</span>
+                                    <span class="badge text-bg-warning">Seguimiento pendiente</span>
                                 }
                                 @if (item.IndicationsNotDone > 0)
                                 {

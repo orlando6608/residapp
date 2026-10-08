@@ -266,19 +266,15 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
             """, parameters, cancellationToken: ct));
 
         // Seguimientos con alguna fecha abierta antes del fin del periodo y no terminados antes de su inicio, con sus reprogramaciones (una fila
-        // por reprogramación, o una sola sin ellas). Termina por lo primero que ocurra tras iniciarse: el cierre, el escalado (solo Enfermería)
-        // o el protocolo urgente. No se guarda cuándo deja de estar abierto por otras vías (ver IndicatorFollowUpFact).
+        // por reprogramación, o una sola sin ellas). Termina con el cierre del episodio (CJ, 2026-10-07): escalar a Medicina o activar el protocolo
+        // urgente no lo cierran; derivar a Urgencias o el fallecimiento sí, porque cierran el episodio.
         var nursingFollowUps = await connection.QueryAsync<FollowUpFactRow>(new CommandDefinition($"""
             SELECT fu.FollowUpId, fu.UnitId, fu.StartedAt, fu.EndedAt, fu.InitialDue, r.registrado_en AS RescheduleAt, r.fecha_prevista AS RescheduleDue
               FROM (
                   SELECT s.id AS FollowUpId, ea.unidad_id AS UnitId, s.iniciado_en AS StartedAt, s.fecha_prevista AS InitialDue,
-                         (SELECT MIN(t) FROM (VALUES (ea.cerrado_en), (esc.At), (pr.At)) v(t)) AS EndedAt
+                         ea.cerrado_en AS EndedAt
                 {ScopedEventsFrom}
                   JOIN dbo.seguimientos s ON s.evento_id = ea.id
-                  OUTER APPLY (SELECT MIN(x.escalado_en) AS At FROM dbo.escalados_medicina x
-                                WHERE x.evento_id = ea.id AND x.escalado_en > s.iniciado_en) esc
-                  OUTER APPLY (SELECT MIN(x.activado_en) AS At FROM dbo.protocolos_urgentes x
-                                WHERE x.evento_id = ea.id AND x.activado_en > s.iniciado_en) pr
                 {ScopedEventsWhere}
                    AND s.iniciado_en < @To) fu
               LEFT JOIN dbo.seguimiento_acciones r ON r.seguimiento_id = fu.FollowUpId AND r.tipo_codigo = 'REPROGRAMACION'
@@ -288,11 +284,9 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
             SELECT fu.FollowUpId, fu.UnitId, fu.StartedAt, fu.EndedAt, fu.InitialDue, r.registrado_en AS RescheduleAt, r.fecha_prevista AS RescheduleDue
               FROM (
                   SELECT s.id AS FollowUpId, ea.unidad_id AS UnitId, s.iniciado_en AS StartedAt, s.fecha_prevista AS InitialDue,
-                         (SELECT MIN(t) FROM (VALUES (ea.cerrado_en), (pr.At)) v(t)) AS EndedAt
+                         ea.cerrado_en AS EndedAt
                 {ScopedEventsFrom}
                   JOIN dbo.seguimientos_medicos s ON s.evento_id = ea.id
-                  OUTER APPLY (SELECT MIN(x.activado_en) AS At FROM dbo.protocolos_urgentes x
-                                WHERE x.evento_id = ea.id AND x.activado_en > s.iniciado_en) pr
                 {ScopedEventsWhere}
                    AND s.iniciado_en < @To) fu
               LEFT JOIN dbo.seguimiento_medico_acciones r ON r.seguimiento_id = fu.FollowUpId AND r.tipo_codigo = 'REPROGRAMACION'

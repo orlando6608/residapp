@@ -89,9 +89,9 @@ public sealed record IndicatorTransferFact(UnitId UnitId, SystemProfile Profile,
 public sealed record IndicatorReschedule(DateTime At, DateOnly? Due);
 
 /// <summary>Un seguimiento (de Enfermería o de Medicina) que estuvo abierto en algún momento del periodo o antes de su fin: desde
-/// StartedAt hasta EndedAt (null si sigue abierto), con su fecha prevista inicial y sus reprogramaciones. EndedAt es lo primero que
-/// ocurrió del cierre del episodio, el escalado a Medicina o la activación del protocolo urgente tras iniciarse el seguimiento: no se
-/// guarda cuándo un seguimiento deja de estar abierto por otras vías.</summary>
+/// StartedAt hasta EndedAt (null si sigue abierto), con su fecha prevista inicial y sus reprogramaciones. EndedAt es el cierre del episodio
+/// (CJ, 2026-10-07): escalar a Medicina o activar el protocolo urgente no cierra el seguimiento; derivar a Urgencias o el fallecimiento sí,
+/// porque cierran el episodio.</summary>
 public sealed record IndicatorFollowUpFact(
     UnitId UnitId, DateTime StartedAt, DateTime? EndedAt, DateOnly? InitialDue, IReadOnlyList<IndicatorReschedule> Reschedules);
 

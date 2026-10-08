@@ -44,13 +44,13 @@
         <p class="mb-1">
             @if (vencido)
             {
-                <span class="badge text-bg-danger">Vencido</span>
+                <span class="badge text-bg-danger">Pendiente</span>
             }
             <span style="white-space: pre-line">@FollowUpDisplay.Plan(seguimiento.DueDate, seguimiento.Criterion)</span>
         </p>
         @if (vencido)
         {
-            <p class="text-muted mb-0">Un seguimiento vencido sigue abierto: resuélvelo o reprográmalo justificadamente.</p>
+            <p class="text-muted mb-0">Un seguimiento con la fecha prevista pasada consta como pendiente y sigue abierto: resuélvelo o reprográmalo justificadamente.</p>
         }
     </div>
 </div>

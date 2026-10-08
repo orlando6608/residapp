@@ -86,7 +86,7 @@ public static class SupervisionDisplay
         SupervisionPendingType.SinValorar => "Sin valorar",
         SupervisionPendingType.Escalado => "Escalado a Medicina",
         SupervisionPendingType.Seguimiento => "En seguimiento",
-        SupervisionPendingType.SeguimientoVencido => "Seguimiento vencido",
+        SupervisionPendingType.SeguimientoVencido => "Seguimiento pendiente",
         SupervisionPendingType.IndicacionPendiente => "Con indicación pendiente",
         SupervisionPendingType.IndicacionConIncidencia => "Con indicación no realizada",
         SupervisionPendingType.ProtocoloUrgente => "Protocolo urgente activo",

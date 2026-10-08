@@ -244,18 +244,18 @@
             Ficha(row.Name, row.IsTotal,
                 ("Transferencias de Enfermería recibidas", c.NursingTransfersReceived, c.NursingTransfers),
                 ("Transferencias de Medicina recibidas", c.MedicalTransfersReceived, c.MedicalTransfers),
-                ("Seguimientos con la fecha prevista vencida", c.FollowUpsOverdue, c.FollowUpsOpen));
+                ("Seguimientos pendientes (fecha prevista pasada)", c.FollowUpsOverdue, c.FollowUpsOpen));
         }
     </div>
     <div class="table-responsive mb-4 d-none d-md-block d-print-block">
         <table class="table align-middle">
-            <caption class="visually-hidden">Transferencias de seguimiento registradas en el periodo y cuántas tienen la recepción confirmada, y seguimientos con la fecha prevista vencida en el periodo, por unidad</caption>
+            <caption class="visually-hidden">Transferencias de seguimiento registradas en el periodo y cuántas tienen la recepción confirmada, y seguimientos pendientes con la fecha prevista pasada en el periodo, por unidad</caption>
             <thead>
                 <tr>
                     <th scope="col">Unidad</th>
                     <th scope="col" class="text-end">Transferencias de Enfermería recibidas</th>
                     <th scope="col" class="text-end">Transferencias de Medicina recibidas</th>
-                    <th scope="col" class="text-end">Seguimientos con la fecha prevista vencida</th>
+                    <th scope="col" class="text-end">Seguimientos pendientes (fecha prevista pasada)</th>
                 </tr>
             </thead>
             <tbody>
@@ -287,7 +287,7 @@
                 ("Con derivación", c.Referrals, c.Registered),
                 ("Indicaciones emitidas", c.IndicationsIssued, null),
                 ("Transferencias recibidas", c.NursingTransfersReceived + c.MedicalTransfersReceived, c.NursingTransfers + c.MedicalTransfers),
-                ("Seguimientos con la fecha vencida", c.FollowUpsOverdue, c.FollowUpsOpen));
+                ("Seguimientos pendientes (fecha pasada)", c.FollowUpsOverdue, c.FollowUpsOpen));
         }
     </div>
     <div class="table-responsive mb-4 d-none d-md-block d-print-block">
@@ -303,7 +303,7 @@
                     <th scope="col" class="text-end">Con derivación</th>
                     <th scope="col" class="text-end">Indicaciones emitidas</th>
                     <th scope="col" class="text-end">Transferencias recibidas</th>
-                    <th scope="col" class="text-end">Seguimientos con la fecha vencida</th>
+                    <th scope="col" class="text-end">Seguimientos pendientes (fecha pasada)</th>
                 </tr>
             </thead>
             <tbody>
@@ -336,7 +336,7 @@
                 <li><strong>Cerrados en el periodo:</strong> episodios cerrados en esas fechas, aunque se registraran antes. No tiene denominador.</li>
                 <li><strong>Indicaciones:</strong> indicaciones médicas emitidas en el periodo, que son el denominador, con su estado de hoy. «Sin resolver» son las que aún no se han registrado como realizadas o no realizadas.</li>
                 <li><strong>Continuidad:</strong> transferencias de un seguimiento al equipo o turno entrante registradas en el periodo, y cuántas tienen la recepción confirmada. En Medicina confirmar la recepción es opcional.</li>
-                <li><strong>Seguimientos con la fecha prevista vencida:</strong> de los seguimientos que estuvieron abiertos algún día del periodo (el denominador), cuántos tuvieron su fecha prevista ya pasada algún día del periodo, con el plan que regía ese día (una reprogramación posterior no lo borra). Un seguimiento deja de estar abierto al cerrarse el episodio, al escalarse a Medicina o al activarse el protocolo urgente; no se guarda cuándo termina por otras vías, así que esos casos cuentan hasta el cierre. Los seguimientos sin fecha no vencen. En la evolución mensual cada mes se calcula por separado, así que un mismo seguimiento puede contar en varios meses.</li>
+                <li><strong>Seguimientos pendientes (fecha prevista pasada):</strong> de los seguimientos que estuvieron abiertos algún día del periodo (el denominador), cuántos tuvieron su fecha prevista ya pasada algún día del periodo, con el plan que regía ese día (una reprogramación posterior no lo borra). Un seguimiento sigue abierto, y por tanto pendiente, hasta que se cierra el episodio: escalarlo a Medicina o activar el protocolo urgente no lo cierra; derivarlo a Urgencias o el fallecimiento sí. Los seguimientos sin fecha no vencen. En la evolución mensual cada mes se calcula por separado, así que un mismo seguimiento puede contar en varios meses.</li>
                 <li>La unidad es la del episodio. Las horas son las del centro.</li>
             </ul>
         </div>

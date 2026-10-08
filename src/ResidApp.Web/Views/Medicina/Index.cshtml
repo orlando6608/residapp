@@ -43,7 +43,7 @@
                 <span class="text-body-secondary">@(Model.Seguimientos == 1 ? "seguimiento médico abierto" : "seguimientos médicos abiertos")</span>
                 @if (Model.SeguimientosVencidos > 0)
                 {
-                    <span class="d-block text-danger fw-semibold mt-1">@Model.SeguimientosVencidos @(Model.SeguimientosVencidos == 1 ? "vencido" : "vencidos")</span>
+                    <span class="d-block text-danger fw-semibold mt-1">@Model.SeguimientosVencidos @(Model.SeguimientosVencidos == 1 ? "pendiente" : "pendientes")</span>
                 }
             </div>
         </a>

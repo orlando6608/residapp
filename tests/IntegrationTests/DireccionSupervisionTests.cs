@@ -259,6 +259,9 @@ public class DireccionSupervisionTests
         Assert.True((await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
             enfermera.ProfileScopeId, enfermera.CenterId, rescheduled.EventId, rescheduled.Revision, FollowUpActionType.Reprogramacion,
             "Persiste el cuadro.", today.AddDays(7)))).Ok);
+        // Escalar a Medicina no cierra el episodio ni el seguimiento (CJ, 2026-10-07): sigue abierto y pendiente.
+        var escalated = await FollowUpAsync("Seguimiento escalado a Medicina.", today.AddDays(-1));
+        Assert.True((await service.EscalateClinicalEventAsync(EscalateCommand(enfermera, escalated.EventId, escalated.Revision))).Ok);
         var closed = await FollowUpAsync("Seguimiento cerrado hoy.", today.AddDays(-1));
         Assert.True((await service.CloseClinicalEventAsync(CloseCommand(enfermera, closed.EventId, closed.Revision, Guid.NewGuid()))).Ok);
         var dir = BuildDireccion(direccion.ExternalSubject);
@@ -269,10 +272,10 @@ public class DireccionSupervisionTests
         var before = (await dir.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(
             direccion.ProfileScopeId, direccion.CenterId, today.AddDays(-5), today.AddDays(-3)))).Value!.Total;
 
-        // Hoy: el vencido, el reprogramado hoy (empezó el día con el plan vencido) y el cerrado hoy (ese día seguía vencido); el de plazo, no.
-        Assert.Equal((4, 3), (inToday.FollowUpsOpen, inToday.FollowUpsOverdue));
-        // Mañana: ya no está abierto el cerrado; el reprogramado tiene plazo; solo sigue vencido el primero.
-        Assert.Equal((3, 1), (inTomorrow.FollowUpsOpen, inTomorrow.FollowUpsOverdue));
+        // Hoy: el vencido, el escalado, el reprogramado hoy (empezó el día con el plan vencido) y el cerrado hoy (ese día seguía vencido); el de plazo, no.
+        Assert.Equal((5, 4), (inToday.FollowUpsOpen, inToday.FollowUpsOverdue));
+        // Mañana: ya no está abierto el cerrado; el reprogramado tiene plazo; siguen vencidos el primero y el escalado.
+        Assert.Equal((4, 2), (inTomorrow.FollowUpsOpen, inTomorrow.FollowUpsOverdue));
         Assert.Equal((0, 0), (before.FollowUpsOpen, before.FollowUpsOverdue));
         _ = notDue;
     }

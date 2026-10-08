@@ -111,7 +111,7 @@
     <p>
         En el inicio de cada perfil, cada tarjeta muestra su cifra en grande. Una cifra en <strong>rojo</strong>, con una
         franja roja a la izquierda de la tarjeta, indica algo urgente pendiente: eventos prioritarios abiertos,
-        protocolos urgentes activos, seguimientos vencidos o indicaciones con incidencia. En <strong>ámbar</strong>
+        protocolos urgentes activos, seguimientos pendientes o indicaciones con incidencia. En <strong>ámbar</strong>
         aparecen las indicaciones sin leer. Una tarjeta a cero nunca sale en rojo. El texto de la tarjeta siempre dice
         lo mismo que el color, para quien no distinga bien los colores.
     </p>
@@ -583,7 +583,7 @@
     </h2>
     <p>
         El inicio de Dirección Clínica muestra, por cada unidad de tu ámbito, cuántos episodios siguen abiertos y cuántos
-        están sin valorar, en valoración, escalados a Medicina, en seguimiento (y cuántos de ellos vencidos) o con
+        están sin valorar, en valoración, escalados a Medicina, en seguimiento (y cuántos de ellos pendientes, con la fecha prevista pasada) o con
         protocolo urgente, junto con las indicaciones pendientes y las no realizadas. Cada cifra va acompañada del total
         de la unidad. Los episodios cerrados no cuentan.
     </p>
@@ -625,7 +625,7 @@
         <li><strong>Actividad:</strong> los episodios registrados en el periodo, por origen (Auxiliar, Enfermería o Medicina) y cuántos fueron prioritarios, y los episodios cerrados en esas fechas.</li>
         <li><strong>Escalados y urgencias:</strong> de los episodios registrados en el periodo, cuántos se escalaron a Medicina, activaron un protocolo urgente o tienen un informe de derivación firmado.</li>
         <li><strong>Indicaciones médicas:</strong> las emitidas en el periodo y cuántas están leídas, realizadas, no realizadas o sin resolver.</li>
-        <li><strong>Continuidad entre turnos:</strong> las transferencias de seguimiento de Enfermería y de Medicina, y cuántas tienen la recepción confirmada, y los <strong>seguimientos con la fecha prevista vencida</strong>: de los seguimientos que estuvieron abiertos algún día del periodo, cuántos tuvieron su fecha prevista ya pasada algún día (con el plan que regía ese día, aunque luego se reprogramase). Un seguimiento deja de contar como abierto al cerrarse el episodio, al escalarse a Medicina o al activarse el protocolo urgente.</li>
+        <li><strong>Continuidad entre turnos:</strong> las transferencias de seguimiento de Enfermería y de Medicina, y cuántas tienen la recepción confirmada, y los <strong>seguimientos pendientes (fecha prevista pasada)</strong>: de los seguimientos que estuvieron abiertos algún día del periodo, cuántos tuvieron su fecha prevista ya pasada algún día (con el plan que regía ese día, aunque luego se reprogramase). Un seguimiento sigue abierto, y pendiente, hasta que se cierra el episodio: escalarlo a Medicina o activar el protocolo urgente no lo cierra; derivarlo a Urgencias o el fallecimiento del residente sí.</li>
     </ul>
     <p>
         Cada cifra se muestra como "n de m", con su denominador y una barra gris que muestra esa proporción (sin colores de
@@ -804,7 +804,7 @@
         actuación y si hay una transferencia pendiente de recepción.
     </p>
     <p>
-        Un seguimiento cuya fecha ya ha pasado aparece como <strong>Vencido</strong>, pero sigue abierto y
+        Un seguimiento cuya fecha ya ha pasado aparece como <strong>Pendiente</strong>, pero sigue abierto y
         visible: nunca se cierra ni se oculta solo. Uno que solo tiene criterio no vence.
     </p>
     <p>
@@ -950,7 +950,7 @@
         evento pasa a "En seguimiento médico", sale de la bandeja de escalados y entra en la bandeja
         <strong>Seguimientos</strong> del inicio de Medicina, compartida por la unidad. La bandeja muestra el
         objetivo, la próxima revisión, la última actuación y quién lleva el seguimiento tras el último cambio de
-        turno. Un seguimiento cuya fecha ya ha pasado aparece como <strong>Vencido</strong>, pero sigue abierto
+        turno. Un seguimiento cuya fecha ya ha pasado aparece como <strong>Pendiente</strong>, pero sigue abierto
         y visible. Cada evento admite un solo seguimiento médico.
     </p>
     <p>
