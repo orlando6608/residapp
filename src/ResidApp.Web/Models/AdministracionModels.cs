@@ -3,6 +3,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
 using ResidApp.Domain.Structure;
@@ -145,10 +146,17 @@ public sealed class LinkFamilyFormModel
     [StringLength(FamilyMember.MaxRelationshipLength, ErrorMessage = "La relación no puede pasar de {1} caracteres.")]
     [Display(Name = "Relación con este residente (p. ej., «Hija»)")]
     public string? Relacion { get; set; }
+
+    /// <summary>La búsqueda con la que se llegó a la lista, para volver a pintarla si el envío falla.</summary>
+    public string? Q { get; set; }
 }
 
+/// <summary>Q es el texto buscado (null o corto: todavía no se busca); Candidates, los familiares del centro que lo contienen.</summary>
 public sealed record LinkFamilyViewModel(
-    AdministrativeResidentSummary Resident, IReadOnlyList<LinkableFamilyMember> Candidates, LinkFamilyFormModel Form);
+    AdministrativeResidentSummary Resident, IReadOnlyList<LinkableFamilyMember> Candidates, LinkFamilyFormModel Form, string? Q = null)
+{
+    public bool Searched => LinkableFamilySearch.Normalize(Q) is not null;
+}
 
 /// <summary>ADM-10/ADM-11 (0022): un cambio de la autorización. CambiosEsperados es cuántos cambios tenía al abrir la
 /// pantalla: si otro se adelanta, da conflicto.</summary>
@@ -191,6 +199,11 @@ public sealed class EmergencyContactFormModel
     public int DesignacionesEsperadas { get; set; }
 
     public List<Guid> VinculosIds { get; set; } = [];
+
+    /// <summary>Si no queda ningún contacto urgente marcado, el motivo (CJ, 2026-10-10: «sin familia conocida»).</summary>
+    [StringLength(ResidApp.Domain.Families.NoContact.MaxReasonLength, ErrorMessage = "El motivo no puede pasar de {1} caracteres.")]
+    [Display(Name = "Motivo de no tener contacto urgente")]
+    public string? MotivoSinContacto { get; set; }
 }
 
 public sealed record EmergencyContactViewModel(AdministrativeResidentDetail Detail, EmergencyContactFormModel Form);
@@ -365,7 +378,33 @@ public sealed class UnlinkFamilyFormModel
     public string? Motivo { get; set; }
 }
 
-public sealed record UnlinkFamilyViewModel(AdministrativeResidentSummary Resident, ResidentFamilyMember Member, UnlinkFamilyFormModel Form);
+public sealed record UnlinkFamilyViewModel(
+    AdministrativeResidentSummary Resident, ResidentFamilyMember Member, UnlinkFamilyFormModel Form, bool OnlyEmergencyContact = false);
 
 /// <summary>CJ, 2026-10-07: las unidades del centro vistas por una Administración y si esta es la principal.</summary>
 public sealed record AdministrationScopeViewModel(ResidApp.Application.UseCases.AdministrationScopeView View);
+
+/// <summary>Hora de publicación y margen de los comunicados a la familia del centro (script 0051; CJ, 2026-10-10). Version es la leída: si otra
+/// persona cambió el horario entretanto, el guardado se rechaza.</summary>
+public sealed class HorarioComunicadosFormModel
+{
+    public int Version { get; set; }
+
+    [Required(ErrorMessage = "Indica la hora de publicación.")]
+    [Display(Name = "Hora de publicación")]
+    public TimeOnly? HoraPublicacion { get; set; }
+
+    [Required(ErrorMessage = "Indica el margen en minutos.")]
+    [Range(0, FamilyCommunicationScheduleSettings.MaxMarginMinutes, ErrorMessage = "El margen va de 0 a {2} minutos.")]
+    [Display(Name = "Margen (minutos)")]
+    public int? MargenMinutos { get; set; }
+
+    public static HorarioComunicadosFormModel From(FamilyCommunicationScheduleSettings settings, int version) => new()
+    {
+        Version = version, HoraPublicacion = settings.PublicationTime, MargenMinutos = settings.MarginMinutes,
+    };
+}
+
+/// <summary>View es null si no se pudo leer (perfil sin acceso); RestoredDefaults, que el formulario trae el horario de CJ sin guardarlo.</summary>
+public sealed record HorarioComunicadosViewModel(
+    FamilyCommunicationScheduleView? View, HorarioComunicadosFormModel Form, bool RestoredDefaults = false);

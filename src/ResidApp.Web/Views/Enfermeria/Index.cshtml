@@ -63,6 +63,15 @@
         </a>
     </div>
     <div class="col-6 col-xl-3">
+        <a asp-action="ParaCerrar" class="card text-decoration-none h-100 @(Model.ParaCerrar > 0 ? "border-start border-4 border-success" : "")">
+            <div class="card-body">
+                <h2 class="h6 card-title">Para cerrar</h2>
+                <span class="cifra">@Model.ParaCerrar</span>
+                <span class="text-body-secondary">@(Model.ParaCerrar == 1 ? "episodio con las indicaciones cumplidas" : "episodios con las indicaciones cumplidas")</span>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-xl-3">
         <a asp-action="Ordinarios" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h6 card-title">Cambios ordinarios</h2>

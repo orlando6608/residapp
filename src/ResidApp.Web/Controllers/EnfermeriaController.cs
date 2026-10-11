@@ -24,7 +24,7 @@ namespace ResidApp.Web.Controllers;
 /// </summary>
 public sealed class EnfermeriaController(
     EnfermeriaApplicationService service, FindEmergencyContact findEmergencyContact, ListMilestoneWarnings milestoneWarnings,
-    CorrectFamilyCommunication correctFamilyCommunication) : Controller
+    CorrectFamilyCommunication correctFamilyCommunication, ListEventsReadyToClose readyToClose) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -46,15 +46,36 @@ public sealed class EnfermeriaController(
         var protocolos = await service.ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(activeScope.ProfileScopeId, centroId), ct);
         var escalados = await service.ListOpenEscalationsAsync(new ListOpenEscalationsCommand(activeScope.ProfileScopeId, centroId), ct);
         var avisos = await milestoneWarnings.ExecuteAsync(new ListMilestoneWarningsCommand(activeScope.ProfileScopeId, centroId), ct);
+        var paraCerrar = await readyToClose.ExecuteAsync(new ListEventsReadyToCloseCommand(activeScope.ProfileScopeId, centroId), ct);
         return View(new EnfermeriaInicioViewModel(
             ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
-            comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.Communication.PreparedAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow, TimeZoneInfo.Local)) : 0,
+            comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.ScheduledAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow)) : 0,
             indicaciones.Ok ? indicaciones.Value!.Count : 0,
             indicaciones.Ok ? indicaciones.Value!.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) : 0,
             protocolos.Ok ? protocolos.Value!.Count : 0,
-            escalados.Ok ? escalados.Value!.Count : 0, avisos.Ok ? avisos.Value : null));
+            escalados.Ok ? escalados.Value!.Count : 0, avisos.Ok ? avisos.Value : null, paraCerrar.Ok ? paraCerrar.Value!.Count : 0));
+    }
+
+    /// <summary>CJ, 4.2: episodios con las indicaciones de Medicina ya cumplidas, que cierra Enfermería.</summary>
+    public async Task<IActionResult> ParaCerrar(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(ParaCerrar)) });
+        }
+
+        var result = await readyToClose.ExecuteAsync(
+            new ListEventsReadyToCloseCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(Array.Empty<ReadyToCloseEvent>());
+        }
+
+        return View(result.Value);
     }
 
     /// <summary>ENF-10: indicaciones de Medicina pendientes de leer o de registrar su resultado, compartidas
@@ -101,6 +122,12 @@ public sealed class EnfermeriaController(
                 true => "Indicación registrada como realizada.",
                 false => "Indicación registrada como no realizada, con su incidencia.",
             };
+            // Cumplida la última indicación, el episodio lo cierra Enfermería (CJ, 4.2): se lleva al detalle, que ofrece cerrarlo.
+            if (realizada is not null && await FindEventAsync(eventoId, ct) is { } detail && CanCloseAfterIndications(detail))
+            {
+                TempData["Mensaje"] += " Ya están cumplidas todas las indicaciones de este episodio: puedes cerrarlo.";
+                return RedirectToAction(nameof(DetalleCambio), new { eventoId });
+            }
         }
         else
         {
@@ -177,13 +204,13 @@ public sealed class EnfermeriaController(
         return View(result.Value);
     }
 
-    /// <summary>Corregir un comunicado a la familia durante su margen de 1 hora (CJ, 2026-10-07; script 0049).</summary>
+    /// <summary>Corregir un comunicado a la familia hasta que se publique (CJ, 2026-10-07 y 2026-10-10; script 0049).</summary>
     public async Task<IActionResult> CorregirComunicacion(Guid comunicadoId, CancellationToken ct)
     {
         var item = await FindCommunicationAsync(comunicadoId, ct);
         if (item is null || !CanCorrect(item))
         {
-            TempData["Error"] = "Ese comunicado ya no se puede corregir: pasó su hora de margen o ya está publicado.";
+            TempData["Error"] = "Ese comunicado ya no se puede corregir: ya llegó su hora de publicación o ya está publicado.";
             return RedirectToAction(nameof(Comunicaciones));
         }
 
@@ -219,7 +246,7 @@ public sealed class EnfermeriaController(
         ModelState.AddModelError(string.Empty, result.Error!.Code switch
         {
             ApplicationFailureCode.Conflict =>
-                "No se ha guardado: alguien lo corrigió antes o ya pasó el margen de 1 hora. Vuelve a la lista para ver el estado actual. Lo que has escrito sigue aquí para que puedas copiarlo.",
+                "No se ha guardado: alguien lo corrigió antes o ya llegó su hora de publicación. Vuelve a la lista para ver el estado actual. Lo que has escrito sigue aquí para que puedas copiarlo.",
             ApplicationFailureCode.InvalidInput => "Revisa los datos: cambia el texto o el tipo, y escribe un texto de hasta 2000 caracteres.",
             _ => result.Error.Message,
         });
@@ -240,7 +267,7 @@ public sealed class EnfermeriaController(
     }
 
     private static bool CanCorrect(PendingFamilyCommunicationSummary item) =>
-        FamilyCommunicationSchedule.CanCorrect(item.Communication.PreparedAt, item.PublishedEarlyAt, DateTimeOffset.UtcNow);
+        FamilyCommunicationSchedule.CanCorrect(item.ScheduledAt, item.PublishedEarlyAt, DateTimeOffset.UtcNow);
 
     /// <summary>ENF-02: bandeja de cambios ordinarios (AUX-11A) y eventos propios ordinarios (ENF-16).</summary>
     public async Task<IActionResult> Ordinarios(PendingChangeFilter filtro, CancellationToken ct)
@@ -529,7 +556,17 @@ public sealed class EnfermeriaController(
 
     /// <summary>Además de desde la decisión asistencial, se cierra desde el protocolo urgente activo.</summary>
     private static bool CanClose(PendingChangeDetail detail) =>
-        CanDecide(detail) || (detail.Assessment is not null && detail.Status == ClinicalEventStatus.ProtocoloUrgente);
+        CanDecide(detail) || (detail.Assessment is not null && detail.Status == ClinicalEventStatus.ProtocoloUrgente)
+        || CanCloseAfterIndications(detail);
+
+    /// <summary>CJ, 4.2: un episodio con indicaciones de Medicina lo cierra Enfermería cuando todas están cumplidas (realizadas o no
+    /// realizadas con incidencia).</summary>
+    private static bool CanCloseAfterIndications(PendingChangeDetail detail) =>
+        detail.Status == ClinicalEventStatus.ConIndicacionPendiente && detail.Medical.Assessment is not null
+        && detail.Medical.Indications.Count > 0 && !HasUnfulfilledIndications(detail);
+
+    private static bool HasUnfulfilledIndications(PendingChangeDetail detail) =>
+        detail.Medical.Indications.Any(i => i.Status is MedicalIndicationStatus.PendienteLectura or MedicalIndicationStatus.Leida);
 
     /// <summary>ENF-11: confirmar la activación del protocolo urgente, con una nota opcional.</summary>
     public async Task<IActionResult> ActivarProtocolo(Guid eventoId, CancellationToken ct)
@@ -1020,6 +1057,8 @@ public sealed class EnfermeriaController(
         ModelState.AddModelError(string.Empty, result.Error!.Code switch
         {
             ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput when HasUnfulfilledIndications(detail) =>
+                "No se puede cerrar el evento mientras queden indicaciones de Medicina sin cumplir: léelas y registra si se realizaron.",
             ApplicationFailureCode.InvalidInput when detail.Referral is not null => ReferralDisplay.CloseMessage,
             ApplicationFailureCode.InvalidInput =>
                 "Revisa los datos: decide si se comunica a la familia y, si preparas la comunicación, elige el tipo y escribe el texto. Para cerrar hace falta una valoración guardada.",

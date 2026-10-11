@@ -39,19 +39,45 @@ public static class ResidentFamilyAtAdmission
     public const int MaxMembers = 5;
 
     /// <summary>Valida las filas con las reglas de siempre de un familiar (nombre, relación y teléfono obligatorios). Las filas en blanco se
-    /// ignoran; una fila a medias, más de cinco o ningún contacto prioritario son FAMILY_MEMBER_INVALID. Sin filas (null: un alta que no pasa
-    /// por el formulario) no se exige nada.</summary>
-    public static IReadOnlyList<NewResidentFamilyMember> Validate(IReadOnlyList<NewResidentFamilyInput>? rows)
+    /// ignoran; una fila a medias, más de cinco, o ningún contacto prioritario sin un motivo para no tenerlo (CJ, 2026-10-10: «sin familia
+    /// conocida») son FAMILY_MEMBER_INVALID. Sin filas (null: un alta que no pasa por el formulario) no se exige nada.</summary>
+    public static IReadOnlyList<NewResidentFamilyMember> Validate(IReadOnlyList<NewResidentFamilyInput>? rows, string? noContactReason = null)
     {
         var filled = (rows ?? []).Where(r => !r.IsBlank).ToList();
-        // Desde el formulario de alta (rows no es null) tiene que haber al menos un contacto prioritario (CJ, 2026-10-07).
-        if (filled.Count > MaxMembers || (rows is not null && !filled.Any(r => r.IsPriorityContact)))
+        // Desde el formulario de alta (rows no es null) tiene que haber al menos un contacto prioritario (CJ, 2026-10-07) o, si no hay
+        // ninguno, el motivo de que el residente se quede sin contacto urgente (CJ, 2026-10-10).
+        if (filled.Count > MaxMembers || (rows is not null && NoContactReason(rows, noContactReason) is null && !filled.Any(r => r.IsPriorityContact)))
         {
             throw new DomainValidationException(FamilyMember.InvalidCode);
         }
 
         return filled.Select(r => new NewResidentFamilyMember(
             FamilyMember.Validate(r.DisplayName, r.Relationship, r.Phone, r.Email, r.IsReferent, r.IsLegalGuardian), r.IsPriorityContact)).ToList();
+    }
+
+    /// <summary>El motivo de que el residente se quede sin contacto urgente, ya sin espacios sobrantes: solo cuenta si ninguna fila es contacto
+    /// prioritario (con uno, se ignora). Null si no hay motivo, no hace falta o no es válido (vacío o de más de
+    /// <see cref="NoContact.MaxReasonLength"/> caracteres).</summary>
+    public static string? NoContactReason(IReadOnlyList<NewResidentFamilyInput>? rows, string? reason)
+    {
+        var text = reason?.Trim();
+        return rows is not null && !rows.Any(r => !r.IsBlank && r.IsPriorityContact) && !string.IsNullOrEmpty(text)
+            && text.Length <= NoContact.MaxReasonLength
+            ? text
+            : null;
+    }
+}
+
+/// <summary>El residente sin contacto urgente (script 0050).</summary>
+public static class NoContact
+{
+    public const int MaxReasonLength = 500;
+
+    /// <summary>El motivo de quedarse sin contacto urgente (obligatorio), ya sin espacios sobrantes; si no, FAMILY_MEMBER_INVALID.</summary>
+    public static string ValidateReason(string? reason)
+    {
+        var text = reason?.Trim();
+        return string.IsNullOrEmpty(text) || text.Length > MaxReasonLength ? throw new DomainValidationException(FamilyMember.InvalidCode) : text;
     }
 }
 

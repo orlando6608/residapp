@@ -48,12 +48,12 @@ public sealed class ResidentsController(
 
         try
         {
-            _ = ResidApp.Domain.Families.ResidentFamilyAtAdmission.Validate(form.FamilyInputs());
+            _ = ResidApp.Domain.Families.ResidentFamilyAtAdmission.Validate(form.FamilyInputs(), form.MotivoSinContacto);
         }
         catch (DomainValidationException)
         {
             ModelState.AddModelError(nameof(form.Familiares),
-                "Revisa los familiares: tiene que haber al menos un contacto prioritario, y cada familiar necesita nombre, relación y un teléfono válido (y un correo válido si lo escribes).");
+                "Revisa los familiares: marca al menos un contacto prioritario o, si el residente no tiene contacto urgente, escribe el motivo; y cada familiar necesita nombre, relación y un teléfono válido (y un correo válido si lo escribes).");
             await ShowActiveScopeAsync(ActiveProfileScopeCookie.Read(Request), ct);
             return View(form);
         }
@@ -69,7 +69,7 @@ public sealed class ResidentsController(
         var command = new CreateResidentCommand(
             form.AmbitoPerfilId, CenterId.From(form.CentroId), UnitId.From(form.UnidadId!.Value), form.NombreVisible,
             form.FechaNacimiento!.Value, form.SexoDocumentadoCodigo, form.ReferenciaInterna,
-            EdificioId: null, PlantaId: null, location.RoomId, location.PlaceId, form.OperacionId, form.FamilyInputs());
+            EdificioId: null, PlantaId: null, location.RoomId, location.PlaceId, form.OperacionId, form.FamilyInputs(), form.MotivoSinContacto);
 
         var result = await service.CreateResidentAsync(command, ct);
         if (!result.Ok)

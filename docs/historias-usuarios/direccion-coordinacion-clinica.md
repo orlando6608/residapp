@@ -59,6 +59,7 @@ Códigos de origen: `DIR-08`, `DIR-09`.
 Criterios de aceptación:
 - Puedo consultar un informe de derivación firmado si tengo permiso, pero nunca generarlo ni firmarlo yo.
 - Puedo ver la frecuencia y el estado de las publicaciones familiares (pendientes, errores), pero no redacto, modifico ni apruebo ninguna.
+- Puedo publicar un comunicado a la familia antes de su hora (solo esa acción de escritura; CJ, 2026-10-10); queda en la auditoría con mi perfil.
 
 Códigos de origen: `DIR-06`, `DIR-07`.
 

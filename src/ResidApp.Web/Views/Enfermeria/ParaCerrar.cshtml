@@ -1,0 +1,46 @@
+@using ResidApp.Application.UseCases
+@model IReadOnlyList<ReadyToCloseEvent>
+@{
+    ViewData["Title"] = "Episodios para cerrar";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Para cerrar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Episodios para cerrar</h1>
+<p class="text-muted">
+    Episodios en los que Medicina indicó algo a Enfermería y ya está cumplido (realizado, o no realizado con su incidencia). Medicina
+    no los cierra mientras queden indicaciones sin cumplir: cuando estén cumplidas, los puede cerrar Enfermería desde aquí.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="estado-vacio">No hay episodios pendientes de cerrar.</p>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        <a asp-action="DetalleCambio" asp-route-eventoId="@item.EventId" class="card mb-3 text-decoration-none text-body border-start border-4 border-success">
+            <div class="card-body">
+                <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
+                <p class="mb-1">
+                    @item.Indications @(item.Indications == 1 ? "indicación cumplida" : "indicaciones cumplidas")
+                    @if (item.WithIncident > 0)
+                    {
+                        <span class="badge text-bg-warning">@item.WithIncident @(item.WithIncident == 1 ? "no realizada, con incidencia" : "no realizadas, con incidencia")</span>
+                    }
+                </p>
+                <p class="mb-0 text-muted">
+                    @(item.UnitName is null ? "" : item.UnitName + " · ")cumplidas el @item.FulfilledAt.ToLocalTime().ToString("g")
+                </p>
+            </div>
+        </a>
+    }
+}

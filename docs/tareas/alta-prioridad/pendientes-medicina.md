@@ -27,9 +27,25 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   Muestra el resumen y los pendientes, decide la comunicación familiar con el mismo mecanismo que Enfermería y
   cierra de forma idempotente. El evento queda CERRADO, sin segundo cierre de Enfermería, y su detalle dice
   "Cerrado por Medicina". El cierre es común a los dos perfiles (`ClinicalEventCloser`). **Decisión del
-  usuario:** se puede cerrar con indicaciones sin resolver. Siguen en la bandeja de Enfermería, y en
+  usuario (2026-09-28), SUSTITUIDA el 2026-10-10 por la regla de CJ (4.2):** se podía cerrar con indicaciones sin resolver; ahora Medicina no cierra con indicaciones sin cumplir (salvo en protocolo urgente) y, cumplidas, cierra Enfermería o Medicina (ver el bloque «Cierre del episodio con indicaciones»). Antes, siguen en la bandeja de Enfermería, y en
   `/Medicina/Indicaciones` siguen las no resueltas y las no realizadas después del cierre. Script
   `0013_medicina_cierre_evento` (solo el trigger de transiciones).
+- **Cierre del episodio con indicaciones (CJ 4.2 de las confirmaciones de la segunda tanda, 2026-10-10; sin script)** — sustituye a la
+  decisión del 2026-09-28 de la historia 4. Medicina **no cierra** un episodio con indicaciones sin cumplir (sin leer o sin resolver;
+  `MEDICAL_INDICATIONS_PENDING` en `ClinicalEventCloser`), salvo desde `PROTOCOLO_URGENTE_MEDICO` (una derivación a Urgencias puede dejar
+  indicaciones que ya no se cumplirán). Cumplidas todas (realizadas, o no realizadas con incidencia), cierra **Enfermería** desde
+  `CON_INDICACION_PENDIENTE` (la regla de Enfermería cierra entonces la valoración médica en borrador sin cambiar quién la guardó, así que
+  Medicina conserva su derecho a corregir) **o Medicina**; el trigger de transiciones no conoce el perfil y ya admitía ese paso. El perfil que cierra
+  se lee de la auditoría del cierre (`ClosedByProfileSql`) para el detalle, el historial y la línea temporal (antes se deducía «escalado ⇒ Medicina»).
+  Enfermería los encuentra en la tarjeta «Para cerrar» (`ListEventsReadyToClose`) y, al cumplir la última indicación, la app la lleva al detalle con
+  «Cerrar episodio». Medicina ve en `/Medicina/Indicaciones` las no realizadas de un evento que cerró Enfermería. **Límite:** un episodio con
+  indicaciones que nadie cumple (unidad sin Enfermería, baja distinta del fallecimiento) queda abierto; falta una salvaguarda para Dirección o
+  Administración (por consultar con CJ). Un cierre por fallecimiento no se ve afectado. Tests: `MedicinaApplicationServiceTests` (cierre rechazado,
+  cierre por Enfermería de un escalado y de un evento propio, protocolo urgente) y el funcional de punta a punta.
+- **Comunicaciones de Medicina (CJ 5.4, 2026-10-10; sin script)** — la tarjeta «Comunicaciones» del inicio de Medicina deja de ser «Próximamente»:
+  `/Medicina/Comunicaciones` lista las comunicaciones familiares de los eventos de su ámbito (los escalados a Medicina y los propios), con la hora de
+  publicación, y `/Medicina/CorregirComunicacion` las corrige hasta que se publiquen, con el perfil `MEDICINA` en la auditoría. **Suposición:**
+  mismo criterio que Enfermería (cualquier Medicina del ámbito del evento, no solo quien la preparó). Ver `pendientes-administracion.md`.
 - **Historia 5 (seguimiento médico y continuidad)** — 2026-09-29: salida "iniciar seguimiento médico" de
   la conducta (`/Medicina/IniciarSeguimiento`, MED-10). Se inicia desde EN_VALORACION_MEDICA (con la
   valoración guardada) o desde CON_INDICACION_PENDIENTE, con objetivo obligatorio y fecha prevista o

@@ -381,6 +381,30 @@ public class DireccionSupervisionTests
         Assert.Empty(foreignScope);
     }
 
+    /// <summary>CJ, 2026-10-10: un residente sin contacto urgente no tiene a quién llamar, así que el hito «llamada a la familia» no se mide
+    /// en sus derivaciones (el informe sí).</summary>
+    [Fact]
+    public async Task Calidad_LaLlamadaAFamiliaNoSeMideSiElResidenteNoTieneContactoUrgente()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var admin = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, direccion.CenterId, direccion.UnitId);
+        var service = BuildService(enfermera.ExternalSubject);
+        var urgent = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
+        Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, urgent, await StartAndSaveAsync(enfermera, urgent)))).Ok);
+        var dir = BuildDireccion(direccion.ExternalSubject);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var query = new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today);
+
+        var before = (await dir.ReadProcessQualityAsync(query)).Value!.Total;
+        Assert.True((await AdministracionResidentesTests.Build(admin.ExternalSubject).DesignateEmergencyContactAsync(
+            new DesignateEmergencyContactCommand(admin.ProfileScopeId, admin.CenterId, ResidentId.From(residentId.Value), [], 0, "Sin familia conocida"))).Ok);
+        var after = (await dir.ReadProcessQualityAsync(query)).Value!.Total;
+
+        Assert.Equal(1, before[ProcessMilestone.LlamadaFamilia].Measured);
+        Assert.Equal(new MilestoneCount(0, 0, 0), after[ProcessMilestone.LlamadaFamilia]);
+        Assert.Equal(1, after[ProcessMilestone.InformeDerivacion].Measured);
+    }
+
     [Fact]
     public async Task Indicadores_OtrosPerfilesNoEntran_YUnPeriodoImposibleSeRechaza()
     {

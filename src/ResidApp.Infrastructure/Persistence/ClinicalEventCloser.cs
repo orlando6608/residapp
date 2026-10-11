@@ -12,12 +12,14 @@ namespace ResidApp.Infrastructure.Persistence;
 
 /// <summary>Quién cierra: perfil de la auditoría, estados desde los que puede cerrar y valoración (en
 /// BORRADOR) que pasa a CERRADA; sin ella, <see cref="AssessmentRequiredCode"/>. Valores fijos del código,
-/// nunca entrada del usuario.</summary>
+/// nunca entrada del usuario. Enfermería también cierra desde CON_INDICACION_PENDIENTE (CJ, 4.2): ahí ya no tiene
+/// valoración propia en BORRADOR (la cerró al escalar, o el evento es propio de Medicina), así que pasa a CERRADA la
+/// valoración médica sin cambiar quién la guardó.</summary>
 internal sealed record ClinicalEventCloseRule(
     string ProfileCode, string AllowedStatesSql, string AssessmentTable, string AssessmentRequiredCode)
 {
     public static readonly ClinicalEventCloseRule Enfermeria = new(
-        "ENFERMERIA", "'EN_VALORACION', 'EN_SEGUIMIENTO', 'PROTOCOLO_URGENTE'", "dbo.valoraciones_enfermeria", "NURSING_ASSESSMENT_REQUIRED");
+        "ENFERMERIA", "'EN_VALORACION', 'EN_SEGUIMIENTO', 'PROTOCOLO_URGENTE', 'CON_INDICACION_PENDIENTE'", "dbo.valoraciones_enfermeria", "NURSING_ASSESSMENT_REQUIRED");
 
     public static readonly ClinicalEventCloseRule Medicina = new(
         "MEDICINA", "'EN_VALORACION_MEDICA', 'CON_INDICACION_PENDIENTE', 'EN_SEGUIMIENTO_MEDICO', 'PROTOCOLO_URGENTE_MEDICO'", "dbo.valoraciones_medicas", "MEDICAL_ASSESSMENT_REQUIRED");
@@ -30,6 +32,9 @@ internal sealed record ClinicalEventCloseRule(
 /// Un cierre distinto sobre un evento ya cerrado no encuentra un estado de origen y es un conflicto. Si el
 /// evento tiene un informe de derivación firmado, exige una comunicación Relevante
 /// (REFERRAL_FAMILY_UPDATE_REQUIRED) y al menos un intento de llamada (REFERRAL_CALL_ATTEMPT_REQUIRED).
+/// Ni Medicina ni Enfermería cierran con indicaciones médicas sin cumplir (sin leer o sin resolver,
+/// MEDICAL_INDICATIONS_PENDING), salvo en protocolo urgente médico: una derivación a Urgencias puede dejar
+/// indicaciones que ya no se cumplirán.
 /// </summary>
 internal static class ClinicalEventCloser
 {
@@ -62,6 +67,11 @@ internal static class ClinicalEventCloser
                 RequestHash = requestHash, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
 
+            var originState = await connection.QuerySingleOrDefaultAsync<string>(new CommandDefinition("""
+                SELECT estado_codigo FROM dbo.eventos_asistenciales WITH (UPDLOCK, HOLDLOCK)
+                 WHERE id = @EventId AND centro_id = @CenterId
+                """, new { input.EventId, CenterId = input.CenterId.Value }, transaction, cancellationToken: ct));
+
             var updated = await connection.ExecuteAsync(new CommandDefinition($"""
                 UPDATE dbo.eventos_asistenciales
                    SET estado_codigo = 'CERRADO', revision = revision + 1, cerrado_por_cuenta_id = @AccountId, cerrado_en = @OccurredAt,
@@ -78,15 +88,32 @@ internal static class ClinicalEventCloser
                 throw new DomainValidationException("CLINICAL_EVENT_REVISION_CONFLICT");
             }
 
-            var closedAssessments = await connection.ExecuteAsync(new CommandDefinition($"""
-                UPDATE v
-                   SET estado_codigo = 'CERRADA', actualizado_por_cuenta_id = @AccountId, actualizado_en = @OccurredAt
-                  FROM {rule.AssessmentTable} v WITH (FORCESEEK)
-                 WHERE v.evento_id = @EventId AND v.estado_codigo = 'BORRADOR'
-                """, new { AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId }, transaction, cancellationToken: ct));
+            if (originState != "PROTOCOLO_URGENTE_MEDICO" && await connection.ExecuteScalarAsync<bool>(new CommandDefinition("""
+                SELECT CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.indicaciones_medicas i WITH (FORCESEEK)
+                                               WHERE i.evento_id = @EventId AND i.estado_codigo IN ('PENDIENTE_LECTURA', 'LEIDA'))
+                            THEN 1 ELSE 0 END AS BIT)
+                """, new { input.EventId }, transaction, cancellationToken: ct)))
+            {
+                throw new DomainValidationException("MEDICAL_INDICATIONS_PENDING");
+            }
+
+            var nursingClosesMedical = rule == ClinicalEventCloseRule.Enfermeria && originState == "CON_INDICACION_PENDIENTE";
+            var closedAssessments = nursingClosesMedical
+                ? await connection.ExecuteAsync(new CommandDefinition("""
+                    UPDATE v
+                       SET estado_codigo = 'CERRADA'
+                      FROM dbo.valoraciones_medicas v WITH (FORCESEEK)
+                     WHERE v.evento_id = @EventId AND v.estado_codigo = 'BORRADOR'
+                    """, new { input.EventId }, transaction, cancellationToken: ct))
+                : await connection.ExecuteAsync(new CommandDefinition($"""
+                    UPDATE v
+                       SET estado_codigo = 'CERRADA', actualizado_por_cuenta_id = @AccountId, actualizado_en = @OccurredAt
+                      FROM {rule.AssessmentTable} v WITH (FORCESEEK)
+                     WHERE v.evento_id = @EventId AND v.estado_codigo = 'BORRADOR'
+                    """, new { AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId }, transaction, cancellationToken: ct));
             if (closedAssessments != 1)
             {
-                throw new DomainValidationException(rule.AssessmentRequiredCode);
+                throw new DomainValidationException(nursingClosesMedical ? "MEDICAL_ASSESSMENT_REQUIRED" : rule.AssessmentRequiredCode);
             }
 
             // DER-06: si se derivó a Urgencias, la familia recibe una actualización relevante y tiene que
@@ -95,7 +122,11 @@ internal static class ClinicalEventCloser
                 SELECT CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.informes_derivacion d WITH (FORCESEEK) WHERE d.evento_id = @EventId)
                             THEN 1 ELSE 0 END AS BIT) AS HasReport,
                        CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.intentos_llamada_familia c WITH (FORCESEEK) WHERE c.evento_id = @EventId)
-                            THEN 1 ELSE 0 END AS BIT) AS HasCallAttempt
+                            THEN 1 ELSE 0 END AS BIT) AS HasCallAttempt,
+                       CAST(CASE WHEN (SELECT TOP (1) d.accion_codigo FROM dbo.residentes_contacto_urgente d
+                                         JOIN dbo.eventos_asistenciales ea ON ea.residente_id = d.residente_id AND ea.centro_id = d.centro_id
+                                        WHERE ea.id = @EventId ORDER BY d.numero DESC) = 'SIN_CONTACTO'
+                            THEN 1 ELSE 0 END AS BIT) AS HasNoUrgentContact
                 """, new { input.EventId }, transaction, cancellationToken: ct));
             if (referral.HasReport)
             {
@@ -103,7 +134,8 @@ internal static class ClinicalEventCloser
                 {
                     throw new DomainValidationException("REFERRAL_FAMILY_UPDATE_REQUIRED");
                 }
-                if (!referral.HasCallAttempt)
+                // Sin contacto urgente (CJ, 2026-10-10) no hay a quién llamar: no se exige el intento de llamada.
+                if (!referral.HasCallAttempt && !referral.HasNoUrgentContact)
                 {
                     throw new DomainValidationException("REFERRAL_CALL_ATTEMPT_REQUIRED");
                 }
@@ -115,10 +147,13 @@ internal static class ClinicalEventCloser
             if (communication.Decision == FamilyCommunicationDecision.Preparar)
             {
                 var communicationId = Guid.NewGuid();
+                // La hora de publicación se fija ahora con el horario que tenga el centro (script 0051): cambiarlo después no mueve este comunicado.
+                var scheduledAt = FamilyCommunicationSchedule.ScheduledAt(
+                    occurredAt, await SqlFamilyCommunicationScheduleRepository.ReadEffectiveAsync(connection, transaction, input.CenterId, ct), TimeZoneInfo.Local);
                 await connection.ExecuteAsync(new CommandDefinition("""
                     INSERT INTO dbo.comunicaciones_familiares
-                        (id, evento_id, residente_id, centro_id, tipo_codigo, texto, preparado_por_cuenta_id, preparado_en)
-                    SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @TypeCode, @Text, @AccountId, @OccurredAt
+                        (id, evento_id, residente_id, centro_id, tipo_codigo, texto, preparado_por_cuenta_id, preparado_en, publicacion_programada_en)
+                    SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @TypeCode, @Text, @AccountId, @OccurredAt, @ScheduledAt
                       FROM dbo.eventos_asistenciales ea
                      WHERE ea.id = @EventId;
 
@@ -131,7 +166,7 @@ internal static class ClinicalEventCloser
                     """, new
                 {
                     Id = communicationId, AuditId = Guid.NewGuid(), TypeCode = communication.Type!.Value.ToCode(), communication.Text,
-                    AccountId = input.AccountId.Value, rule.ProfileCode, OccurredAt = occurredAt, input.EventId,
+                    AccountId = input.AccountId.Value, rule.ProfileCode, OccurredAt = occurredAt, input.EventId, ScheduledAt = scheduledAt.UtcDateTime,
                 }, transaction, cancellationToken: ct));
             }
 
@@ -195,7 +230,7 @@ internal static class ClinicalEventCloser
 
     private sealed record IdempotencyRow(string RequestHash, string Status, string? ResultJson);
 
-    private sealed record ReferralCloseRow(bool HasReport, bool HasCallAttempt);
+    private sealed record ReferralCloseRow(bool HasReport, bool HasCallAttempt, bool HasNoUrgentContact);
 }
 
 file static class CloseRequestHash

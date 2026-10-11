@@ -38,7 +38,9 @@ Criterios de aceptación:
 - Crear un familiar no le concede automáticamente acceso a ningún residente; la autorización es un paso separado.
 - Solo una autorización en estado Activa permite el acceso al Portal Familiar.
 - Revocar o suspender una autorización tiene efecto inmediato en las nuevas solicitudes, aunque exista una sesión abierta, y queda auditado.
-- Gestiono también el contacto urgente designado de cada residente.
+- Gestiono también el contacto urgente designado de cada residente: puede haber varios, y un residente puede quedarse sin ninguno indicando el motivo (por ejemplo, «sin familia conocida»); al dar de alta a un residente debo marcar al menos un contacto prioritario o indicar ese motivo (CJ, 2026-10-10).
+- Al vincular un familiar que ya existe, lo busco por nombre o teléfono entre todos los familiares del centro, no solo los de mi ámbito, para no duplicarlo (CJ, 2026-10-10).
+- Administración fija la hora de publicación y el margen de los comunicados a la familia de su centro; el cambio solo afecta a los comunicados que se guarden después (CJ, 2026-10-10).
 
 Códigos de origen: `ADM-03`, `FAM-01`.
 

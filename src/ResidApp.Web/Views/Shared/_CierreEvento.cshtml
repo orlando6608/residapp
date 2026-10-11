@@ -1,12 +1,16 @@
+@using ResidApp.Shared
 @using ResidApp.Domain.Enfermeria
 @model ResidApp.Application.Ports.PendingChangeDetail
 @{
-    // Un evento escalado solo lo puede cerrar Medicina (TR_ea_transition_guard): Enfermería no lo cierra otra vez.
-    // Un evento propio de Medicina tampoco lo cierra Enfermería (CK_ea_inicio, 0017).
+    // Quién cerró consta en la auditoría del cierre (CJ, 4.2: un escalado lo cierra Medicina, o Enfermería cuando ya se han
+    // cumplido las indicaciones). Sin ese dato, la deducción de siempre: un escalado o un evento propio de Medicina, Medicina.
     var cierre = Model.Closure!;
+    var cerroMedicina = cierre.ClosedByProfile is { } perfilCierre
+        ? perfilCierre == SystemProfile.Medicina
+        : Model.Escalation is not null || Model.Origin == ClinicalEventOrigin.EventoMedicina;
     var autor = cierre.ClosedBySystemForDeath ? "por el sistema al dar de baja al residente por fallecimiento"
         : cierre.ClosedByCurrentAccount ? "por ti"
-        : Model.Escalation is not null || Model.Origin == ClinicalEventOrigin.EventoMedicina ? "por Medicina"
+        : cerroMedicina ? "por Medicina"
         : "por otro profesional de Enfermería";
 }
 

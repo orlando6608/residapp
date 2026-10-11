@@ -56,10 +56,11 @@ public static class ResidentHistoryDisplay
         _ => observation is null ? "—" : observation.Length <= 120 ? observation : observation[..120] + "…",
     };
 
-    /// <summary>Quién cerró, con la misma deducción que Shared/_CierreEvento: un escalado solo lo cierra Medicina
-    /// y un evento propio de Medicina nunca pasa por Enfermería.</summary>
+    /// <summary>Quién cerró: el perfil de la auditoría del cierre; sin él, la deducción de siempre (un escalado o un evento propio
+    /// de Medicina lo cerraba Medicina).</summary>
     public static string ClosedBy(ClosedEventSummary item) =>
-        item.Escalated || item.Origin == ClinicalEventOrigin.EventoMedicina ? "Medicina" : "Enfermería";
+        item.ClosedByProfile is { } profile ? profile == SystemProfile.Medicina ? "Medicina" : "Enfermería"
+        : item.Escalated || item.Origin == ClinicalEventOrigin.EventoMedicina ? "Medicina" : "Enfermería";
 
     /// <summary>HIS-03: basal y ubicación de la fecha del evento.</summary>
     public static string Context(ClinicalEventContext? context) => context is null

@@ -12,6 +12,8 @@
     var sinResolver = evento.Medical.Indications
         .Where(i => i.Status is MedicalIndicationStatus.PendienteLectura or MedicalIndicationStatus.Leida).ToList();
     var conIncidencia = evento.Medical.Indications.Where(i => i.Status == MedicalIndicationStatus.NoRealizada).ToList();
+    // CJ, 4.2: con indicaciones sin cumplir no se cierra (salvo en protocolo urgente: una derivación a Urgencias puede dejarlas sin sentido).
+    var bloqueado = sinResolver.Count > 0 && evento.Status != ClinicalEventStatus.ProtocoloUrgenteMedico;
 }
 
 <nav aria-label="breadcrumb">
@@ -25,7 +27,7 @@
 </nav>
 
 <h1 class="h3">Cerrar el evento — @evento.ResidentDisplayName</h1>
-<p class="text-muted">El evento pasa a Historial. Enfermería no tiene que cerrarlo otra vez.</p>
+<p class="text-muted">El evento pasa a Historial.</p>
 <div asp-validation-summary="All" class="text-danger"></div>
 
 <div class="card mb-3">
@@ -63,9 +65,18 @@
         @if (sinResolver.Count > 0)
         {
             <p>
-                <strong>@sinResolver.Count @(sinResolver.Count == 1 ? "indicación sin resolver" : "indicaciones sin resolver").</strong>
-                Puedes cerrar igualmente. Las indicaciones sin resolver siguen en la bandeja de indicaciones de
-                Enfermería hasta que registre si se realizaron, y verás el resultado en tus indicaciones emitidas.
+                <strong>@sinResolver.Count @(sinResolver.Count == 1 ? "indicación sin cumplir" : "indicaciones sin cumplir").</strong>
+                @if (bloqueado)
+                {
+                    <text>No se puede cerrar el evento hasta que Enfermería las haya leído y registrado si se realizaron.
+                    Cuando estén cumplidas, el evento lo puede cerrar Enfermería (o tú). Puedes seguir su estado en
+                    <a asp-action="Indicaciones">tus indicaciones emitidas</a>.</text>
+                }
+                else
+                {
+                    <text>En protocolo urgente puedes cerrar igualmente (por ejemplo, tras derivar a Urgencias). Siguen en la bandeja
+                    de indicaciones de Enfermería hasta que registre si se realizaron.</text>
+                }
             </p>
             <ul class="list-unstyled">
                 @foreach (var indicacion in sinResolver)
@@ -107,7 +118,7 @@
 
     <div class="d-grid d-md-flex justify-content-md-end gap-2">
         <a asp-action="@volver" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin cerrar</a>
-        <button type="submit" class="btn btn-primary btn-lg">Cerrar evento</button>
+        <button type="submit" class="btn btn-primary btn-lg" disabled="@bloqueado">Cerrar evento</button>
     </div>
 </form>
 

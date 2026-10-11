@@ -1,0 +1,93 @@
+{
+  "documento": "confirmaciones-segunda-tanda-cj",
+  "cuestionario": "2026-10-08",
+  "guardado": "2026-10-10T22:11:51.846Z",
+  "respondidas": 12,
+  "total": 12,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Basta con ofrecer los familiares de residentes del propio ámbito?",
+      "opcion": "B",
+      "textoOpcion": "No: se debe poder buscar a cualquier familiar del centro (por ejemplo, por nombre o teléfono).",
+      "texto": "Esto no lo veo un problema. Ya que normalmente quien haría esta gestión debe ser alguien de administración que debe tener acceso a estos datos de todo el centro. normalmente pasa asi. Si es un centro muy grande que existan varias personas lo hacemos como he respondido en la opción B.",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Es correcto que un residente nunca se quede sin contacto urgente?",
+      "opcion": "B",
+      "textoOpcion": "Debe poder quedarse sin contacto, indicando un motivo (por ejemplo, «sin familia conocida»).",
+      "texto": "",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "¿«Contacto prioritario» y «contacto urgente» son lo mismo?",
+      "opcion": "A",
+      "textoOpcion": "Sí: el contacto prioritario es el contacto urgente, como ahora.",
+      "texto": "",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "Una Administración que no es principal, ¿qué debe ver en «Unidades del centro»?",
+      "opcion": "A",
+      "textoOpcion": "Solo la explicación, como ahora.",
+      "texto": "",
+      "respondida": true
+    },
+    "3.2": {
+      "pregunta": "En los centros que ya existen, ¿quién decide cuál es la Administración principal?",
+      "opcion": "A",
+      "textoOpcion": "El soporte de la plataforma la marca en cada centro, a petición del centro (como ahora).",
+      "texto": "",
+      "respondida": true
+    },
+    "4.1": {
+      "pregunta": "¿Cuándo está un hito «a punto de vencer»?",
+      "opcion": "A",
+      "textoOpcion": "Está bien: el último cuarto del plazo.",
+      "texto": "",
+      "respondida": true
+    },
+    "4.2": {
+      "pregunta": "Un hito sin hacer de un episodio que ya está cerrado, ¿se mide?",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "creo que existe un error. Si medicina emite una indicación a enfermería no puede cerrar el episodio hasta que no se haya cumplido esa indicación. en ese caso el episodio lo debe cerrar enfermería una vez cumpla la indicación.",
+      "respondida": true
+    },
+    "4.3": {
+      "pregunta": "Un seguimiento de Enfermería escalado a Medicina, ¿debe salir en la lista de pendientes de Dirección?",
+      "opcion": "B",
+      "textoOpcion": "Basta como está: en la lista sale como escalado a Medicina.",
+      "texto": "",
+      "respondida": true
+    },
+    "5.1": {
+      "pregunta": "La hora de publicación (19:00) y el margen (1 hora), ¿son iguales en todos los centros?",
+      "opcion": "B",
+      "textoOpcion": "Cada centro debe poder elegir su hora (y quizá su margen).",
+      "texto": "",
+      "respondida": true
+    },
+    "5.2": {
+      "pregunta": "¿Quién puede corregir un comunicado, y hasta cuándo?",
+      "opcion": "B",
+      "textoOpcion": "Se puede corregir hasta que se publique (a las 19:00), no solo la primera hora.",
+      "texto": "",
+      "respondida": true
+    },
+    "5.3": {
+      "pregunta": "Además de Administración, ¿quién puede publicar un comunicado antes de su hora?",
+      "opcion": "C",
+      "textoOpcion": "También la Dirección Clínica.",
+      "texto": "",
+      "respondida": true
+    },
+    "5.4": {
+      "pregunta": "¿Necesita Medicina su propia pantalla de comunicados?",
+      "opcion": "B",
+      "textoOpcion": "Sí, para ver y corregir los suyos.",
+      "texto": "",
+      "respondida": true
+    }
+  }
+}

@@ -404,6 +404,113 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             "SELECT COUNT(*) FROM dbo.valoraciones_enfermeria_versiones WHERE evento_id = @eventId", new { eventId }));
     }
 
+
+    [Fact]
+    public async Task Indicaciones_MedicinaNoCierraSinCumplirlas_YEnfermeriaCierraElEpisodio_ConLaAppEntera()
+    {
+        // CJ, 4.2 por la app real: Medicina indica algo a Enfermería y no puede cerrar mientras esté sin cumplir; al cumplirse, Enfermería
+        // lo encuentra en «Para cerrar» y cierra el episodio sobre la valoración médica (el escalado ya cerró la suya).
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Cierre Indicaciones Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Disnea progresiva (prueba funcional).",
+            ["Clasificacion"] = "Ordinario",
+        }))).Content.ReadAsStringAsync();
+        var eventId = await connection.ExecuteScalarAsync<Guid>(
+            "SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        Task<int> RevisionAsync() => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+        Task<string> PostAsync(HttpClient client, string url, string page, Dictionary<string, string> fields)
+        {
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            return client.PostAsync(url, new FormUrlEncodedContent(fields)).ContinueWith(async r => WebUtility.HtmlDecode(await r.Result.Content.ReadAsStringAsync())).Unwrap();
+        }
+
+        await PostAsync(nurse, "/Enfermeria/EmpezarValoracion", detailPage, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        var assessmentPage = await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}");
+        await PostAsync(nurse, "/Enfermeria/Valoracion", assessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Hallazgos"] = "Crepitantes en base derecha.",
+        });
+        var escalatePage = await nurse.GetStringAsync($"/Enfermeria/Escalar?eventoId={eventId}");
+        await PostAsync(nurse, "/Enfermeria/Escalar", escalatePage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Motivo"] = "Disnea progresiva pese a oxigenoterapia.",
+        });
+        Assert.Equal("ESCALADO_MEDICINA", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+
+        var medicalDetail = await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/EmpezarValoracion", medicalDetail, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        var medicalAssessmentPage = await doctor.GetStringAsync($"/Medicina/Valoracion?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/Valoracion", medicalAssessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.HallazgosExploracion"] = "Crepitantes bibasales.",
+            ["Form.Valoracion"] = "Posible infección respiratoria.", ["Form.Actuaciones"] = "Se solicita radiografía.",
+        });
+        var indicationPage = await doctor.GetStringAsync($"/Medicina/Indicacion?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/Indicacion", indicationPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Texto"] = "Control de SpO2 cada 4 horas.",
+            ["Form.Criterio"] = "Si baja de 90 %, avisar.",
+        });
+        Assert.Equal("CON_INDICACION_PENDIENTE", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+
+        // Medicina ve el bloqueo y, si fuerza el envío, el mensaje.
+        var blockedPage = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Cerrar?eventoId={eventId}"));
+        Assert.Contains("No se puede cerrar el evento hasta que Enfermería las haya leído", blockedPage);
+        Assert.Matches("<button[^>]*disabled[^>]*>Cerrar evento</button>", blockedPage);
+        var forced = await PostAsync(doctor, "/Medicina/Cerrar", blockedPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.OperacionId"] = Guid.NewGuid().ToString(),
+            ["Form.Comunicacion"] = "NoComunicar",
+        });
+        Assert.Contains("No se puede cerrar el evento mientras queden indicaciones sin cumplir", forced);
+        Assert.Equal("CON_INDICACION_PENDIENTE", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+
+        // Enfermería no lo tiene aún en «Para cerrar»; lee y realiza la indicación, y la pantalla le ofrece cerrar.
+        Assert.DoesNotContain("Residente Cierre Indicaciones Funcional", WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/ParaCerrar")));
+        var indicationId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId });
+        Task<int> IndicationRevisionAsync() => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.indicaciones_medicas WHERE id = @indicationId", new { indicationId });
+        var inbox = await nurse.GetStringAsync("/Enfermeria/Indicaciones");
+        await PostAsync(nurse, "/Enfermeria/ProgresoIndicacion", inbox, new()
+        {
+            ["eventoId"] = eventId.ToString(), ["indicacionId"] = indicationId.ToString(), ["revision"] = (await IndicationRevisionAsync()).ToString(),
+        });
+        var afterDone = await PostAsync(nurse, "/Enfermeria/ProgresoIndicacion", inbox, new()
+        {
+            ["eventoId"] = eventId.ToString(), ["indicacionId"] = indicationId.ToString(), ["revision"] = (await IndicationRevisionAsync()).ToString(),
+            ["realizada"] = "true",
+        });
+        Assert.Contains("Ya están cumplidas todas las indicaciones de este episodio: puedes cerrarlo.", afterDone);
+        Assert.Contains("Cerrar episodio", afterDone);
+
+        var forNurse = WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/ParaCerrar"));
+        Assert.Contains("Residente Cierre Indicaciones Funcional", forNurse);
+        var closePage = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Cerrar?eventoId={eventId}"));
+        Assert.Contains("Resumen de la valoración médica", closePage);
+        Assert.Contains("Control de SpO2 cada 4 horas.", closePage);
+        var closed = await PostAsync(nurse, "/Enfermeria/Cerrar", closePage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.OperacionId"] = Guid.NewGuid().ToString(),
+            ["Form.Comunicacion"] = "NoComunicar",
+        });
+
+        Assert.Contains("Evento cerrado.", closed);
+        Assert.Contains("Cerrado por ti", closed);
+        Assert.Contains("Cerrado por otro profesional de Enfermería", WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}")));
+        Assert.Equal("CERRADO", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+        Assert.Equal("CERRADA", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.valoraciones_medicas WHERE evento_id = @eventId", new { eventId }));
+        Assert.DoesNotContain("Residente Cierre Indicaciones Funcional", WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/ParaCerrar")));
+    }
     [Fact]
     public async Task Enfermeria_DerivaAUrgenciasConComunicaciones_VistaPreviaFirmaYPdf_ConLaAppEntera()
     {
@@ -583,31 +690,34 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Equal(3, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }));
 
-        // Desvincular (script 0045): el único contacto urgente no se puede desvincular; el familiar del alta, que ya no lo es, sí.
-        async Task<string> UnlinkAsync(string name, string reason)
+        // Desvincular (script 0045): el único contacto urgente sí se puede desvincular (CJ, 2026-10-10), con aviso: el residente se queda sin contacto
+        // urgente y el motivo del desvínculo consta también como motivo de ello; el familiar del alta, que ya no lo es, también.
+        async Task<(string Screen, string Result)> UnlinkAsync(string name, string reason)
         {
             var id = await connection.ExecuteScalarAsync<Guid>("""
                 SELECT l.id FROM dbo.residentes_familiares l JOIN dbo.familiares f ON f.id = l.familiar_id
                  WHERE l.residente_id = @residentId AND f.nombre_visible = @name
                 """, new { residentId, name });
             var page = await admin.GetStringAsync($"/Administracion/DesvincularFamiliar?residenteId={residentId}&vinculoId={id}");
-            return WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/DesvincularFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+            return (WebUtility.HtmlDecode(page), WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/DesvincularFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
                 ["Form.ResidenteId"] = residentId,
                 ["Form.VinculoId"] = id.ToString(),
                 ["Form.Motivo"] = reason,
-            }))).Content.ReadAsStringAsync());
+            }))).Content.ReadAsStringAsync()));
         }
 
-        var refusedUnlink = await UnlinkAsync("Familiar Funcional", "Prueba");
-        var unlinkedPage = await UnlinkAsync("Familiar Prueba", "Ya no tiene relación con el residente.");
+        var onlyContact = await UnlinkAsync("Familiar Funcional", "Se ha ido a vivir fuera.");
+        var unlinkedPage = (await UnlinkAsync("Familiar Prueba", "Ya no tiene relación con el residente.")).Result;
 
-        Assert.Contains("único contacto urgente", refusedUnlink);
+        Assert.Contains("Es el único contacto urgente del residente", onlyContact.Screen);
+        Assert.Contains("Familiar desvinculado.", onlyContact.Result);
+        Assert.Matches(@"Sin contacto urgente:\s*(<span[^>]*>)?Único contacto urgente desvinculado: Se ha ido a vivir fuera\.", onlyContact.Result);
         Assert.Contains("Familiar desvinculado.", unlinkedPage);
         Assert.Contains("Familiares desvinculados", unlinkedPage);
         Assert.Contains("Ya no tiene relación con el residente.", unlinkedPage);
-        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.residentes_familiares WHERE residente_id = @residentId AND desvinculado_en IS NOT NULL", new { residentId }));
     }
 
@@ -809,6 +919,228 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Administracion_CambiaElHorarioDeLosComunicados_ConLaAppEntera()
+    {
+        // CJ, 5.1 (2026-10-10): cada centro elige la hora de publicación y el margen. Con el usuario limitado: lee y escribe bajo la seguridad por filas (0051).
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        async Task<string> PostAsync(string time, string margin, string version)
+        {
+            var form = await admin.GetStringAsync("/Administracion/HorarioComunicados");
+            return WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/HorarioComunicados", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(form, "__RequestVerificationToken"), ["Form.Version"] = version,
+                ["Form.HoraPublicacion"] = time, ["Form.MargenMinutos"] = margin,
+            }))).Content.ReadAsStringAsync());
+        }
+
+        var initial = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/HorarioComunicados"));
+        var invalid = await PostAsync("20:30", "5000", "0");
+        var saved = await PostAsync("20:30", "120", "0");
+        var stale = await PostAsync("21:00", "30", "0");
+        var comunicados = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/Comunicados"));
+        var nurseDenied = await nurse.GetAsync("/Administracion/HorarioComunicados");
+
+        Assert.Contains("Este centro sigue con el horario de CJ.", initial);
+        Assert.Contains("El margen va de 0 a 1440 minutos.", invalid);
+        Assert.Contains("Horario de los comunicados guardado.", saved);
+        Assert.Matches(@"19:00 y 60 min\s*→ 20:30 y 120 min", saved);
+        Assert.Contains("Otra persona ha cambiado el horario", stale);
+        Assert.Contains("Cambiar la hora de publicación y el margen del centro", comunicados);
+        Assert.Equal(("20:30:00", 120), (
+            await connection.ExecuteScalarAsync<string>("SELECT CONVERT(VARCHAR(8), hora_publicacion) FROM dbo.comunicados_horario_centro WHERE centro_id = @c", new { c = seed.CenterId }),
+            await connection.ExecuteScalarAsync<int>("SELECT margen_minutos FROM dbo.comunicados_horario_centro WHERE centro_id = @c", new { c = seed.CenterId })));
+        var deniedPage = WebUtility.HtmlDecode(await nurseDenied.Content.ReadAsStringAsync());
+        Assert.Contains("No se puede mostrar el horario.", deniedPage);
+        Assert.DoesNotContain("Form.HoraPublicacion", deniedPage);
+    }
+
+    [Fact]
+    public async Task Comunicados_MedicinaLosVeYCorrige_DireccionLosPublicaAntes_ConLaAppEntera()
+    {
+        // CJ, 5.3 y 5.4 (2026-10-10): Medicina tiene su pantalla de comunicados, los corrige hasta que se publican, y Dirección Clínica puede
+        // publicarlos antes de su hora. Con el usuario limitado: lee y escribe bajo la seguridad por filas.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Comunicados Medicina Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        var direction = await LoginAsync(await GrantDirectionAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        async Task<string> PostAsync(HttpClient client, string url, string page, Dictionary<string, string> fields)
+        {
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            return WebUtility.HtmlDecode(await (await client.PostAsync(url, new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await PostAsync(nurse, "/Enfermeria/RegistrarEvento", registerPage, new()
+        {
+            ["ResidenteId"] = residentId, ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Fiebre desde la tarde (prueba funcional).", ["Clasificacion"] = "Ordinario",
+        });
+        var eventId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        Task<int> RevisionAsync() => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+        await PostAsync(nurse, "/Enfermeria/EmpezarValoracion", detailPage, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        await PostAsync(nurse, "/Enfermeria/Valoracion", await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Hallazgos"] = "Febrícula.",
+        });
+        await PostAsync(nurse, "/Enfermeria/Escalar", await nurse.GetStringAsync($"/Enfermeria/Escalar?eventoId={eventId}"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Motivo"] = "Fiebre persistente.",
+        });
+        await PostAsync(doctor, "/Medicina/EmpezarValoracion", await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}"), new()
+        {
+            ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString(),
+        });
+        await PostAsync(doctor, "/Medicina/Valoracion", await doctor.GetStringAsync($"/Medicina/Valoracion?eventoId={eventId}"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.HallazgosExploracion"] = "Febrícula sin foco.",
+        });
+        var closed = await PostAsync(doctor, "/Medicina/Cerrar", await doctor.GetStringAsync($"/Medicina/Cerrar?eventoId={eventId}"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.OperacionId"] = Guid.NewGuid().ToString(),
+            ["Form.Comunicacion"] = "Preparar", ["Form.TipoComunicacion"] = "Ordinaria", ["Form.TextoComunicacion"] = "Ha tenido algo de fiebre; la vigilamos.",
+        });
+        Assert.Contains("Evento cerrado.", closed);
+
+        var home = WebUtility.HtmlDecode(await doctor.GetStringAsync("/Medicina"));
+        var list = WebUtility.HtmlDecode(await doctor.GetStringAsync("/Medicina/Comunicaciones"));
+        var communicationId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.comunicaciones_familiares WHERE evento_id = @eventId", new { eventId });
+        var formPage = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/CorregirComunicacion?comunicadoId={communicationId}"));
+        var corrected = await PostAsync(doctor, "/Medicina/CorregirComunicacion", formPage, new()
+        {
+            ["Form.ComunicadoId"] = communicationId.ToString(), ["Form.Version"] = "0", ["Form.Tipo"] = "Relevante", ["Form.Texto"] = "Ha tenido fiebre; el equipo la vigila.",
+        });
+        var directionPage = WebUtility.HtmlDecode(await direction.GetStringAsync("/Direccion/Comunicados"));
+        var published = await PostAsync(direction, "/Direccion/PublicarComunicado", directionPage, new() { ["comunicadoId"] = communicationId.ToString() });
+        var afterPublication = WebUtility.HtmlDecode(await doctor.GetStringAsync("/Medicina/Comunicaciones"));
+        var closedForm = WebUtility.HtmlDecode(await (await doctor.GetAsync($"/Medicina/CorregirComunicacion?comunicadoId={communicationId}")).Content.ReadAsStringAsync());
+
+        Assert.Matches(@"<span class=""cifra"">1</span>\s*<span class=""text-body-secondary"">comunicación familiar pendiente de publicar", home);
+        Assert.Contains("Ha tenido algo de fiebre; la vigilamos.", list);
+        Assert.Contains("Se publica el", list);
+        Assert.Contains("Corregir", list);
+        Assert.Contains("Comunicado corregido.", corrected);
+        Assert.Contains("Ha tenido fiebre; el equipo la vigila.", corrected);
+        Assert.Contains("Publicar ahora", directionPage);
+        Assert.Contains("Comunicado publicado antes de su hora.", published);
+        Assert.Contains("Publicado antes de su hora", published);
+        Assert.Contains("Publicada antes de su hora", afterPublication);
+        Assert.DoesNotContain("CorregirComunicacion?comunicadoId", afterPublication);
+        Assert.Contains("ya no se puede corregir", closedForm);
+        Assert.Equal("DIRECCION_CLINICA", await connection.ExecuteScalarAsync<string>(
+            "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE accion_codigo = 'FAMILY_COMMUNICATION_PUBLISH_NOW' AND recurso_id = @communicationId", new { communicationId }));
+        Assert.Equal("MEDICINA", await connection.ExecuteScalarAsync<string>(
+            "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE accion_codigo = 'FAMILY_COMMUNICATION_CORRECT' AND recurso_id = @communicationId", new { communicationId }));
+    }
+
+    [Fact]
+    public async Task Alta_SinFamiliaConocida_ExigeElMotivo_YLoMuestranAdministracionEnfermeriaYElProtocolo_ConLaAppEntera()
+    {
+        // CJ, 2.1 (2026-10-10): un residente puede entrar sin contacto urgente si se indica el motivo; la ficha de Administración y la de
+        // Enfermería lo dicen, y la ficha deja volver a designar contactos cuando haya familia.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var name = $"Residente Sin Familia Funcional {Guid.NewGuid().ToString("N")[..8]}";
+
+        async Task<string> CreateAsync(string? reason)
+        {
+            var page = await admin.GetStringAsync("/Residents/Create");
+            var fields = new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"), ["OperacionId"] = ExtractValue(page, "OperacionId"),
+                ["AmbitoPerfilId"] = seed.ProfileScopeId.ToString(), ["CentroId"] = seed.CenterId.ToString(), ["UnidadId"] = seed.UnitId.ToString(),
+                ["NombreVisible"] = name, ["FechaNacimiento"] = "1938-02-20", ["SexoDocumentadoCodigo"] = "Hombre",
+            };
+            if (reason is not null)
+            {
+                fields["MotivoSinContacto"] = reason;
+            }
+
+            return WebUtility.HtmlDecode(await (await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+
+        var rejected = await CreateAsync(null);
+        var created = await CreateAsync("Sin familia conocida");
+        var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
+
+        Assert.Contains("escribe el motivo", rejected);
+        Assert.Contains("Id del residente", created);
+        Assert.Equal(("SIN_CONTACTO", "Sin familia conocida"), (
+            await connection.ExecuteScalarAsync<string>("SELECT accion_codigo FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }),
+            await connection.ExecuteScalarAsync<string>("SELECT motivo FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId })));
+        var adminFile = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/Residente?residenteId={residentId}"));
+        Assert.Matches(@"Sin contacto urgente:\s*(<span[^>]*>)?Sin familia conocida", adminFile);
+        Assert.DoesNotContain("no tiene familiares registrados", adminFile);
+        var nurseFile = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}"));
+        Assert.Matches(@"Sin contacto urgente:\s*(<span[^>]*>)?Sin familia conocida", nurseFile);
+
+        // Se vuelve a designar contacto en cuanto hay familia, y el motivo deja de verse.
+        var addPage = await admin.GetStringAsync($"/Administracion/AnadirFamiliar?residenteId={residentId}");
+        await admin.PostAsync("/Administracion/AnadirFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(addPage, "__RequestVerificationToken"), ["Form.ResidenteId"] = residentId,
+            ["Form.OperacionId"] = ExtractValue(addPage, "Form.OperacionId"), ["Form.NombreVisible"] = "Hija Aparecida", ["Form.Relacion"] = "Hija",
+            ["Form.Telefono"] = "600123456",
+        }));
+        var linkId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId });
+        var contactPage = await admin.GetStringAsync($"/Administracion/ContactoUrgente?residenteId={residentId}");
+        var designated = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/ContactoUrgente", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(contactPage, "__RequestVerificationToken"), ["Form.ResidenteId"] = residentId,
+            ["Form.DesignacionesEsperadas"] = "1", ["Form.VinculosIds"] = linkId.ToString(),
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Contactos urgentes guardados.", designated);
+        Assert.DoesNotContain("Sin contacto urgente: Sin familia conocida\n", WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}")));
+    }
+
+    [Fact]
+    public async Task Administracion_BuscaYVinculaUnFamiliarDelCentro_ConLaAppEntera()
+    {
+        // CJ, 1.1: vincular un familiar que ya existe se busca por nombre o teléfono entre los de todo el centro. Con el usuario limitado
+        // lee familiares y vínculos bajo la seguridad por filas.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var first = await CreateResidentAsync(admin, seed, "Residente Vincular Primero Funcional");
+        var second = await CreateResidentAsync(admin, seed, "Residente Vincular Segundo Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var empty = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}"));
+        var tooShort = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}&q=Fa"));
+        var noMatch = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}&q=Zacarias"));
+        var found = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}&q=familiar%20PRUEBA"));
+        var byPhone = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}&q=600%20123"));
+
+        Assert.Contains("Busca al familiar para vincularlo.", empty);
+        Assert.Contains("Busca al familiar para vincularlo.", tooShort);
+        Assert.Contains("Ningún familiar del centro coincide con «Zacarias»", noMatch);
+        Assert.Contains("Familiar Prueba · 600123456 · vinculado a 1 residente", found);
+        Assert.Contains("Familiar Prueba · 600123456 · vinculado a 1 residente", byPhone);
+
+        var familyId = await connection.ExecuteScalarAsync<Guid>(
+            "SELECT familiar_id FROM dbo.residentes_familiares WHERE residente_id = @first", new { first });
+        var linked = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/VincularFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(found, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = second, ["Form.OperacionId"] = ExtractValue(found, "Form.OperacionId"), ["Form.Q"] = "familiar PRUEBA",
+            ["Form.FamiliarId"] = familyId.ToString(), ["Form.Relacion"] = "Sobrina",
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Familiar vinculado.", linked);
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.residentes_familiares WHERE familiar_id = @familyId AND desvinculado_en IS NULL", new { familyId }));
+        var again = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}&q=familiar%20PRUEBA"));
+        Assert.DoesNotContain("vinculado a 1 residente", again);
+    }
+
+    [Fact]
     public async Task Administracion_VeLosComunicadosAFamiliasYLosPublicaAntes_ConLaAppEntera()
     {
         // CJ (2026-10-07): el comunicado se aprueba al guardarlo, sale a una hora fija tras 1 h de margen y Administración puede publicarlo
@@ -994,6 +1326,24 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             VALUES (NEWID(), @profileScopeId, @centerId, @unitId, @now, @accountId);
             INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
             VALUES (NEWID(), @profileScopeId, @centerId, 'BASELINE_INITIAL_COMPLETE', @now, @accountId);
+            """, new { accountId, externalSubject, now, profileScopeId, centerId = seed.CenterId, unitId = seed.UnitId });
+        return externalSubject;
+    }
+
+    /// <summary>Una cuenta de Medicina en el centro y la unidad de la semilla.</summary>
+    private static async Task<string> GrantMedicineAsync((string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed)
+    {
+        var accountId = Guid.NewGuid();
+        var profileScopeId = Guid.NewGuid();
+        var externalSubject = $"functional-med-{Guid.NewGuid().ToString("N")[..12]}";
+        var now = DateTimeOffset.UtcNow.UtcDateTime;
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@accountId, @externalSubject, 'ACTIVE', @now);
+            INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+            VALUES (@profileScopeId, @accountId, @centerId, 'MEDICINA', 'ACTIVE', @now, @accountId);
+            INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @profileScopeId, @centerId, @unitId, @now, @accountId);
             """, new { accountId, externalSubject, now, profileScopeId, centerId = seed.CenterId, unitId = seed.UnitId });
         return externalSubject;
     }

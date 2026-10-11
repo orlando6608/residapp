@@ -39,7 +39,8 @@ Criterios de aceptación:
 - Cerrar es una de cuatro salidas mutuamente excluyentes de la decisión asistencial.
 - El cierre es idempotente: repetirlo no genera dos cierres.
 - Al cerrar, debo decidir explícitamente entre no comunicar o preparar una comunicación familiar.
-- Si preparo una comunicación, esta requiere aprobación humana y se muestra siempre como "Equipo asistencial del centro".
+- Si preparo una comunicación, esta requiere aprobación humana y se muestra siempre como "Equipo asistencial del centro". Puedo corregirla (también Medicina, en su ámbito) hasta que se publique, a la hora que fije el centro.
+- Cuando Medicina me indica algo, no puede cerrar el episodio hasta que lo cumpla: al cumplir todas las indicaciones (realizadas, o no realizadas con incidencia) cierro yo el episodio, con la misma decisión sobre la comunicación familiar (CJ, 2026-10-10).
 
 Códigos de origen: `ENF-06`, `ENF-12`.
 

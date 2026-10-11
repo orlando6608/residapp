@@ -97,11 +97,25 @@
             <input type="hidden" name="Call.EventoId" value="@evento.EventId" />
             <input type="hidden" name="Call.Revision" value="@llamada.Revision" />
             <h2 class="h5 card-title">Registrar un intento de llamada a la familia</h2>
-            <p class="text-muted">Toda derivación exige documentar el intento de llamada al contacto familiar. Hazlo cuando puedas: la atención va primero.</p>
+            @if (evento.Referral.NoContactReason is not null && contactosUrgentes.Count == 0)
+            {
+                <p class="text-muted">El residente no tiene contacto urgente: no hace falta registrar un intento de llamada. Puedes registrar una llamada si llamas a otra persona.</p>
+            }
+            else
+            {
+                <p class="text-muted">Toda derivación exige documentar el intento de llamada al contacto familiar. Hazlo cuando puedas: la atención va primero.</p>
+            }
             <ul class="list-unstyled">
                 @if (contactosUrgentes.Count == 0)
                 {
-                    <li class="text-muted">No hay contacto urgente designado (lo designa Administración).</li>
+                    @if (evento.Referral.NoContactReason is { } sinContacto)
+                    {
+                        <li>Sin contacto urgente: <span style="white-space: pre-line">@sinContacto</span></li>
+                    }
+                    else
+                    {
+                        <li class="text-muted">No hay contacto urgente designado (lo designa Administración).</li>
+                    }
                 }
                 @foreach (var contactoUrgente in contactosUrgentes)
                 {

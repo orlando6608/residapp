@@ -1,0 +1,90 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model HorarioComunicadosViewModel
+@{
+    ViewData["Title"] = "Horario de los comunicados";
+    var defaults = FamilyCommunicationScheduleSettings.Default;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Comunicados">Comunicados a la familia</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Horario</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Horario de los comunicados a la familia</h1>
+<p class="text-muted">
+    Quien prepara un comunicado lo aprueba al guardarlo. El comunicado se publica a la hora que fijes aquí, siempre que al guardarlo falte al menos el
+    margen (el tiempo mínimo para corregir errores); si no, se publica a esa hora del día siguiente. Hasta que se publica se puede corregir. El horario de
+    partida es el que fijó CJ (@defaults.PublicationTime.ToString("HH:mm") y @defaults.MarginMinutes minutos). Un cambio solo vale para los comunicados
+    que se guarden a partir de entonces: los que ya están guardados conservan su hora.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.View is null)
+{
+    <div class="alert alert-warning" role="status">No se puede mostrar el horario.</div>
+}
+else
+{
+    @if (Model.RestoredDefaults)
+    {
+        <div class="alert alert-info" role="status">Aquí tienes el horario de CJ. No se guarda hasta que pulses «Guardar».</div>
+    }
+
+    <form asp-action="HorarioComunicados" method="post">
+        <input type="hidden" name="Form.Version" value="@Model.Form.Version" />
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-md-4">
+                <label asp-for="Form.HoraPublicacion" class="form-label"></label>
+                <input asp-for="Form.HoraPublicacion" type="time" class="form-control form-control-lg" value="@Model.Form.HoraPublicacion?.ToString("HH:mm")" />
+                <span asp-validation-for="Form.HoraPublicacion" class="text-danger"></span>
+            </div>
+            <div class="col-12 col-md-4">
+                <label asp-for="Form.MargenMinutos" class="form-label"></label>
+                <input asp-for="Form.MargenMinutos" type="number" min="0" max="@FamilyCommunicationScheduleSettings.MaxMarginMinutes" class="form-control form-control-lg"
+                       inputmode="numeric" />
+                <div class="form-text">De 0 a @FamilyCommunicationScheduleSettings.MaxMarginMinutes minutos (1 h = 60).</div>
+                <span asp-validation-for="Form.MargenMinutos" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="d-grid d-md-flex justify-content-md-end gap-2">
+            <a asp-action="HorarioComunicados" asp-route-cj="true" class="btn btn-outline-secondary btn-lg">Ver el horario de CJ</a>
+            <button type="submit" class="btn btn-primary btn-lg">Guardar</button>
+        </div>
+    </form>
+
+    <h2 class="h5 mt-4">Historial de cambios</h2>
+    @if (Model.View.History.Count == 0)
+    {
+        <p class="estado-vacio">Este centro sigue con el horario de CJ.</p>
+    }
+    else
+    {
+        <ul class="list-group">
+            @foreach (var change in Model.View.History)
+            {
+                <li class="list-group-item">
+                    <div>
+                        @change.Previous.PublicationTime.ToString("HH:mm") y @change.Previous.MarginMinutes min
+                        → @change.New.PublicationTime.ToString("HH:mm") y @change.New.MarginMinutes min
+                    </div>
+                    <div class="small text-body-secondary">
+                        @change.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Administración@(change.ChangedByCurrentAccount ? " · tú" : "")
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

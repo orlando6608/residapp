@@ -12,7 +12,8 @@ public sealed record CloseClinicalEventCommand(
 /// <summary>
 /// ENF-06/ENF-07A "cerrar el evento", una de las cuatro salidas de la decisión asistencial, con la decisión
 /// explícita de comunicación familiar (ENF-12, ENF-14, ENF-15). Mismo criterio de ámbito que empezar y
-/// guardar la valoración. El cierre es idempotente y el evento cerrado sale de las bandejas.
+/// guardar la valoración. El cierre es idempotente y el evento cerrado sale de las bandejas. CJ (4.2): también cierra un
+/// episodio con indicación pendiente de Medicina una vez cumplidas todas sus indicaciones.
 /// </summary>
 public sealed class CloseClinicalEvent(
     IProfileScopeDirectoryProvider scopes, IChangeInboxDirectory directory,

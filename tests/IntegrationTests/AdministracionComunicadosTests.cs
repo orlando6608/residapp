@@ -15,11 +15,11 @@ namespace ResidApp.IntegrationTests;
 /// publicación, y la publicación anticipada, que solo hace Administración y solo una vez.</summary>
 public class AdministracionComunicadosTests
 {
-    private static AdministrationFamilyCommunicationApplicationService Build(string externalSubject)
+    private static FamilyCommunicationPublicationApplicationService Build(string externalSubject)
     {
         var publication = new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory);
-        return new AdministrationFamilyCommunicationApplicationService(
-            new AdministrationAccessResolver(new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedComunicadosSessionIdentityProvider(externalSubject)),
+        return new FamilyCommunicationPublicationApplicationService(
+            new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedComunicadosSessionIdentityProvider(externalSubject),
             publication, publication);
     }
 
@@ -79,6 +79,43 @@ public class AdministracionComunicadosTests
         Assert.Equal(1, await CountAsync(
             "SELECT COUNT(*) FROM dbo.comunicaciones_familiares_publicacion_anticipada WHERE comunicacion_id = @c AND publicada_por_cuenta_id = @a",
             new { c = item.Communication.Id, a = admin.AccountId.Value }));
+    }
+
+    /// <summary>CJ, 2026-10-10 (5.3): además de Administración, la Dirección Clínica publica un comunicado antes de su hora; queda en la
+    /// auditoría con su perfil, y solo en su centro.</summary>
+    [Fact]
+    public async Task DireccionClinicaTambienPublicaAntes_ConSuPerfilEnLaAuditoria_YSoloEnSuCentro()
+    {
+        var (enfermera, admin, eventId) = await SeedCommunicationAsync();
+        var direccion = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, enfermera.CenterId, enfermera.UnitId);
+        var otherDirection = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica);
+        var service = Build(direccion.ExternalSubject);
+
+        var listed = (await service.ListAsync(direccion.ProfileScopeId, direccion.CenterId)).Value!;
+        var item = Assert.Single(listed);
+        var outside = (await Build(otherDirection.ExternalSubject).ListAsync(otherDirection.ProfileScopeId, otherDirection.CenterId)).Value!;
+        var byOther = await Build(otherDirection.ExternalSubject).PublishNowAsync(
+            new PublishFamilyCommunicationCommand(otherDirection.ProfileScopeId, otherDirection.CenterId, item.Communication.Id));
+        var published = await service.PublishNowAsync(new PublishFamilyCommunicationCommand(direccion.ProfileScopeId, direccion.CenterId, item.Communication.Id));
+        var again = await service.PublishNowAsync(new PublishFamilyCommunicationCommand(direccion.ProfileScopeId, direccion.CenterId, item.Communication.Id));
+        var asAdmin = (await Build(admin.ExternalSubject).ListAsync(admin.ProfileScopeId, admin.CenterId)).Value!.Single();
+
+        Assert.Equal(eventId, item.Communication.EventId);
+        Assert.False(item.Published);
+        Assert.Empty(outside);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOther.Error!.Code);
+        Assert.True(published.Ok, published.Error?.Message);
+        Assert.Equal(ApplicationFailureCode.Conflict, again.Error!.Code);
+        Assert.True(asAdmin.Published);
+        Assert.Equal("DIRECCION_CLINICA", (await CountAsyncString(
+            "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_PUBLISH_NOW' AND recurso_id = @c",
+            new { a = direccion.AccountId.Value, c = item.Communication.Id })));
+    }
+
+    private static async Task<string> CountAsyncString(string sql, object parameters)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        return await connection.ExecuteScalarAsync<string>(sql, parameters) ?? string.Empty;
     }
 
     [Fact]

@@ -15,6 +15,8 @@ public sealed record AdministracionQuery(Guid AmbitoPerfilId, CenterId CentroId)
 
 public sealed record FindAdministrativeResidentQuery(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId);
 
+public sealed record LinkableFamilyQuery(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, string? Search);
+
 /// <summary>ADM-03: la identidad tal como llega del formulario; ExpectedCorrections es cuántas correcciones tenía el
 /// residente al abrirlo.</summary>
 public sealed record CorrectResidentIdentityCommand(
@@ -45,10 +47,11 @@ public sealed record ChangeFamilyAuthorizationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, FamilyAuthorizationChange Cambio,
     DateOnly? ValidaHasta, string? Motivo, int CambiosEsperados);
 
-/// <summary>ADM-08 (0022, 0044): VinculosIds son los contactos urgentes que quedan (vacío: ninguno); DesignacionesEsperadas es cuántas designaciones
-/// tenía el residente al abrir la pantalla.</summary>
+/// <summary>ADM-08 (0022, 0044): VinculosIds son los contactos urgentes que quedan (vacío: ninguno, y entonces MotivoSinContacto es obligatorio);
+/// DesignacionesEsperadas es cuántas designaciones tenía el residente al abrir la pantalla.</summary>
 public sealed record DesignateEmergencyContactCommand(
-    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, IReadOnlyList<Guid> VinculosIds, int DesignacionesEsperadas);
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, IReadOnlyList<Guid> VinculosIds, int DesignacionesEsperadas,
+    string? MotivoSinContacto = null);
 
 /// <summary>ADM-13 (0023): una cuenta del centro, vista por quien la gestiona.</summary>
 public sealed record FindProfessionalAccountQuery(Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId);
@@ -140,14 +143,17 @@ public sealed class AdministracionApplicationService(
             return await families.AddAsync(target, command.OperacionId, data, ct);
         });
 
-    /// <summary>Los familiares que se pueden vincular al residente: ya vinculados a otro residente del ámbito y no a este.</summary>
+    /// <summary>Los familiares del centro que se pueden vincular al residente (CJ, 2026-10-10: no solo los del ámbito) y cuyo nombre o teléfono
+    /// contiene el texto buscado; sin al menos LinkableFamilySearch.MinLength caracteres, ninguno.</summary>
     public Task<ApplicationResult<IReadOnlyList<LinkableFamilyMember>>> ListLinkableFamilyAsync(
-        FindAdministrativeResidentQuery query, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
+        LinkableFamilyQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync<IReadOnlyList<LinkableFamilyMember>>(async () =>
         {
             await EnsureAdministrationScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             _ = await directory.FindAsync(query.AmbitoPerfilId, query.CentroId, query.ResidenteId, ct) ?? throw new AccessDeniedException();
-            return await directory.ListLinkableFamilyAsync(query.AmbitoPerfilId, query.CentroId, query.ResidenteId, ct);
+            return LinkableFamilySearch.Normalize(query.Search) is { } term
+                ? await directory.ListLinkableFamilyAsync(query.AmbitoPerfilId, query.CentroId, query.ResidenteId, term, ct)
+                : [];
         });
 
     /// <summary>Devuelve el vínculo creado.</summary>
@@ -194,7 +200,8 @@ public sealed class AdministracionApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
-            return await families.DesignateEmergencyContactAsync(target, command.VinculosIds, command.DesignacionesEsperadas, ct);
+            var noContactReason = command.VinculosIds.Count == 0 ? NoContact.ValidateReason(command.MotivoSinContacto) : null;
+            return await families.DesignateEmergencyContactAsync(target, command.VinculosIds, command.DesignacionesEsperadas, noContactReason, ct);
         });
 
     public Task<ApplicationResult<IReadOnlyList<ProfessionalAccountSummary>>> ListAccountsAsync(

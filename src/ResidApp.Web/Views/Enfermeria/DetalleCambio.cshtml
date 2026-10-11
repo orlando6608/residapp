@@ -1,3 +1,4 @@
+@using ResidApp.Domain.Medicina
 @using ResidApp.Domain.Enfermeria
 @using ResidApp.Web.Models
 @model EnfermeriaChangeDetailViewModel
@@ -62,6 +63,17 @@
     else if (evento.Status == ClinicalEventStatus.ProtocoloUrgente)
     {
         <a asp-action="Protocolo" asp-route-eventoId="@evento.EventId" class="btn btn-danger btn-lg">Ver el protocolo urgente</a>
+    }
+    else if (evento.Status == ClinicalEventStatus.ConIndicacionPendiente && evento.Medical.Indications.Count > 0)
+    {
+        @if (evento.Medical.Indications.Any(i => i.Status is MedicalIndicationStatus.PendienteLectura or MedicalIndicationStatus.Leida))
+        {
+            <a asp-action="Indicaciones" class="btn btn-primary btn-lg">Leer y registrar las indicaciones</a>
+        }
+        else if (evento.Medical.Assessment is not null)
+        {
+            <a asp-action="Cerrar" asp-route-eventoId="@evento.EventId" class="btn btn-primary btn-lg">Cerrar episodio</a>
+        }
     }
 </div>
 
@@ -190,7 +202,8 @@
             <h2 class="h5 card-title">Escalado a Medicina</h2>
             <p class="mb-2">
                 Escalado @(escalado.EscalatedByCurrentAccount ? "por ti" : "por otro profesional de Enfermería")
-                el @escalado.EscalatedAt.ToLocalTime().ToString("g"). El desenlace del evento corresponde ahora a Medicina.
+                el @escalado.EscalatedAt.ToLocalTime().ToString("g"). El desenlace del evento corresponde ahora a Medicina. Si Medicina te indica algo,
+                no lo cierra hasta que lo cumplas: entonces lo cierras tú.
             </p>
             <p class="fw-semibold mb-1">Motivo</p>
             <p class="mb-0" style="white-space: pre-line">@escalado.Reason</p>

@@ -18,7 +18,11 @@
 {
     <div class="alert alert-warning">
         <p class="mb-0">Este evento se derivó a Urgencias: la actualización relevante para la familia es obligatoria. Escribe el texto para la familia.</p>
-        @if (derivacion.CallAttempts.Count == 0)
+        @if (derivacion.CallAttempts.Count == 0 && derivacion.NoContactReason is not null)
+        {
+            <p class="mt-2 mb-0">El residente no tiene contacto urgente, así que no hace falta registrar un intento de llamada.</p>
+        }
+        else if (derivacion.CallAttempts.Count == 0)
         {
             <p class="mt-2 mb-0">
                 Todavía no consta ningún intento de llamada a la familia y hace falta al menos uno para cerrar.
@@ -49,7 +53,7 @@
         <fieldset>
             <legend class="h6">Si preparas la comunicación</legend>
             <p class="text-muted mb-3">
-                Se guarda aprobada, con 1 hora de margen para corregir errores, y se publica a las @FamilyCommunicationSchedule.PublicationTime.ToString("HH:mm") (Administración puede publicarla antes). La familia la verá firmada como
+                Se guarda aprobada y se publica a la hora que tenga fijada tu centro (por defecto las @FamilyCommunicationSchedule.PublicationTime.ToString("HH:mm")). Hasta entonces se puede corregir, y Administración o Dirección Clínica pueden publicarla antes. La familia la verá firmada como
                 «@FamilyCommunicationChoice.VisibleAuthor», nunca con tu nombre. Escribe un texto comprensible,
                 sin datos internos ni escalas.
             </p>

@@ -22,7 +22,7 @@ public sealed partial class AdministracionController(
     ListActiveScopeUnits listUnits,
     ListActiveScopeLocations listLocations, AdministracionEstructuraApplicationService estructura,
     AdministracionTurnosApplicationService turnos, AdministrationScopeApplicationService scopeAdmin,
-    AdministrationFamilyCommunicationApplicationService familyCommunications) : Controller
+    FamilyCommunicationPublicationApplicationService familyCommunications, FamilyCommunicationScheduleApplicationService communicationSchedule) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -208,8 +208,9 @@ public sealed partial class AdministracionController(
         return View("Familiar", new FamilyMemberViewModel(detail.Resident, form));
     }
 
-    /// <summary>Vincular a este residente un familiar que ya está vinculado a otro residente del ámbito. No abre su autorización (FAM-01).</summary>
-    public async Task<IActionResult> VincularFamiliar(Guid residenteId, CancellationToken ct)
+    /// <summary>Vincular a este residente un familiar que ya existe en el centro (CJ, 2026-10-10: se busca por nombre o teléfono entre todos los
+    /// familiares del centro, no solo los de las unidades del ámbito). No abre su autorización (FAM-01).</summary>
+    public async Task<IActionResult> VincularFamiliar(Guid residenteId, string? q, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
@@ -224,7 +225,8 @@ public sealed partial class AdministracionController(
         }
 
         return View(new LinkFamilyViewModel(
-            detail.Resident, await LinkableFamilyAsync(activeScope, residenteId, ct), new LinkFamilyFormModel { ResidenteId = residenteId, OperacionId = Guid.NewGuid() }));
+            detail.Resident, await LinkableFamilyAsync(activeScope, residenteId, q, ct),
+            new LinkFamilyFormModel { ResidenteId = residenteId, OperacionId = Guid.NewGuid(), Q = q }, q));
     }
 
     [HttpPost]
@@ -258,19 +260,19 @@ public sealed partial class AdministracionController(
             {
                 ApplicationFailureCode.InvalidInput => "Escribe la relación con el residente (hasta 100 caracteres).",
                 ApplicationFailureCode.Conflict => "Ese familiar ya está vinculado a este residente.",
-                ApplicationFailureCode.AccessDenied => "Ese familiar ya no se puede vincular. Elige otro de la lista.",
+                ApplicationFailureCode.AccessDenied => "Ese familiar ya no está disponible. Búscalo de nuevo.",
                 _ => result.Error.Message,
             });
         }
 
-        return View(new LinkFamilyViewModel(detail.Resident, await LinkableFamilyAsync(activeScope, form.ResidenteId, ct), form));
+        return View(new LinkFamilyViewModel(detail.Resident, await LinkableFamilyAsync(activeScope, form.ResidenteId, form.Q, ct), form, form.Q));
     }
 
     private async Task<IReadOnlyList<LinkableFamilyMember>> LinkableFamilyAsync(
-        ActiveProfileScopeCookieValue activeScope, Guid residenteId, CancellationToken ct)
+        ActiveProfileScopeCookieValue activeScope, Guid residenteId, string? search, CancellationToken ct)
     {
-        var result = await service.ListLinkableFamilyAsync(new FindAdministrativeResidentQuery(
-            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId)), ct);
+        var result = await service.ListLinkableFamilyAsync(new LinkableFamilyQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), search), ct);
         return result.Ok ? result.Value! : [];
     }
 
@@ -471,10 +473,10 @@ public sealed partial class AdministracionController(
         {
             var result = await service.DesignateEmergencyContactAsync(new DesignateEmergencyContactCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.VinculosIds,
-                form.DesignacionesEsperadas), ct);
+                form.DesignacionesEsperadas, form.MotivoSinContacto), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = "Contactos urgentes guardados.";
+                TempData["Mensaje"] = form.VinculosIds.Count == 0 ? "Contactos urgentes guardados: el residente queda sin contacto urgente." : "Contactos urgentes guardados.";
                 return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
             }
 
@@ -483,7 +485,7 @@ public sealed partial class AdministracionController(
                 ApplicationFailureCode.Conflict =>
                     "Los contactos urgentes han cambiado desde que abriste la pantalla. Revisa los vigentes y, si hace falta, vuelve a elegir.",
                 ApplicationFailureCode.InvalidInput => form.VinculosIds.Count == 0
-                    ? "Tiene que haber al menos un contacto urgente: marca a quién avisar."
+                    ? "Marca a quién avisar o, si el residente no tiene contacto urgente, escribe el motivo (hasta 500 caracteres)."
                     : "No has cambiado ningún contacto urgente.",
                 _ => result.Error.Message,
             });

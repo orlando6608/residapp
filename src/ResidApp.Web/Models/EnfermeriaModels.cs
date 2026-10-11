@@ -101,7 +101,7 @@ public sealed record PendingChangeListViewModel(
 /// son los contactos urgentes designados por Administración (0022, 0044), null si no se pudieron cargar o no hay.</summary>
 public sealed record EnfermeriaResidentDetailViewModel(
     ScopeResidentSummary Resident, CurrentBaselineSummary? Baseline, bool CanManageBaseline = false,
-    IReadOnlyList<OpenEventSummary>? OpenEvents = null, IReadOnlyList<EmergencyContactSummary>? EmergencyContacts = null);
+    IReadOnlyList<OpenEventSummary>? OpenEvents = null, ResidentEmergencyContacts? EmergencyContacts = null);
 
 /// <summary>ENF-01: contadores de las bandejas ya construidas (ordinarios, prioritarios y seguimientos,
 /// con cuántos de estos están vencidos), de las comunicaciones familiares pendientes de aprobación y de las
@@ -109,7 +109,8 @@ public sealed record EnfermeriaResidentDetailViewModel(
 /// escalados a Medicina que siguen abiertos.</summary>
 public sealed record EnfermeriaInicioViewModel(
     int Ordinarios, int Prioritarios, int Seguimientos, int SeguimientosVencidos, int Comunicaciones,
-    int Indicaciones, int IndicacionesSinLeer, int Protocolos, int Escalados, IReadOnlyList<MilestoneEntry>? Avisos = null);
+    int Indicaciones, int IndicacionesSinLeer, int Protocolos, int Escalados, IReadOnlyList<MilestoneEntry>? Avisos = null,
+    int ParaCerrar = 0);
 
 /// <summary>ENF-04: detalle de un cambio recibido más el resumen del basal vigente del residente (null si
 /// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel. CorrectionWindow decide si

@@ -45,13 +45,13 @@ public sealed record PreparedFamilyCommunication(FamilyCommunicationType Type, s
 /// el nombre de otros profesionales no se expone) y la decisión de comunicación familiar.</summary>
 public sealed record ClinicalEventClosure(
     bool ClosedByCurrentAccount, DateTimeOffset ClosedAt, FamilyCommunicationDecision Decision,
-    PreparedFamilyCommunication? Communication, bool ClosedBySystemForDeath = false);
+    PreparedFamilyCommunication? Communication, bool ClosedBySystemForDeath = false, SystemProfile? ClosedByProfile = null);
 
 /// <summary>Una comunicación familiar de los últimos 30 días en el ámbito (tarjeta "Comunicaciones" de
 /// ENF-01), con el evento del que procede. Aprobada al guardarla; Version es el número de correcciones (0 es el original) y PublishedEarlyAt cuando Administración la publicó antes de su hora.</summary>
 public sealed record PendingFamilyCommunicationSummary(
     Guid CommunicationId, Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, PreparedFamilyCommunication Communication,
-    int Version, DateTimeOffset? PublishedEarlyAt);
+    int Version, DateTimeOffset? PublishedEarlyAt, DateTimeOffset ScheduledAt);
 
 /// <summary>ENF-08/ENF-09: una acción sobre un seguimiento, con su autoría (solo si fue la cuenta del ámbito
 /// que consulta). Según el tipo trae el texto, el plan reprogramado, el equipo entrante o la transferencia
@@ -160,7 +160,8 @@ public sealed record FamilyCallAttemptSummary(
 /// urgentes vigentes del residente (0022, 0044), para registrar la llamada; no forman parte del informe (DER-04).</summary>
 public sealed record ReferralDetail(
     SystemProfile Profile, string Reason, bool SignedByCurrentAccount, DateTimeOffset SignedAt, string ContentHash,
-    IReadOnlyList<FamilyCallAttemptSummary> CallAttempts, IReadOnlyList<EmergencyContactSummary> EmergencyContacts, string? Communications = null);
+    IReadOnlyList<FamilyCallAttemptSummary> CallAttempts, IReadOnlyList<EmergencyContactSummary> EmergencyContacts, string? Communications = null,
+    string? NoContactReason = null);
 
 /// <summary>DER-03: identificación del residente y del centro para el informe de derivación.</summary>
 public sealed record ResidentIdentification(
@@ -177,7 +178,7 @@ public sealed record MedicalDetail(
 /// se cerró el evento (null si sigue abierto).</summary>
 public sealed record MedicalIndicationListItem(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, ClinicalEventStatus EventStatus,
-    DateTimeOffset? EventClosedAt, MedicalIndicationSummary Indication);
+    DateTimeOffset? EventClosedAt, MedicalIndicationSummary Indication, SystemProfile? EventClosedByProfile = null);
 
 /// <summary>ENF-04: detalle completo de un evento recibido. Según el origen trae las áreas y la temperatura
 /// del cambio de Auxiliar, o la observación y los datos clínicos del evento propio; en ambos casos la
@@ -209,7 +210,7 @@ public sealed record OpenEventSummary(
 public sealed record ClosedEventSummary(
     Guid EventId, ClinicalEventOrigin Origin, DailyChangeClassification Classification, IReadOnlyList<DailyChangeAreaCode> Areas,
     string? Observation, SystemProfile AuthorProfile, DateTimeOffset OccurredAt, DateTimeOffset ClosedAt, bool Escalated,
-    ClinicalEventContext? Context);
+    ClinicalEventContext? Context, SystemProfile? ClosedByProfile = null);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre

@@ -12,23 +12,25 @@ namespace ResidApp.Infrastructure.Persistence;
 /// </summary>
 internal static class EmergencyContactQuery
 {
-    public static async Task<IReadOnlyList<EmergencyContactSummary>> FindAsync(
+    public static async Task<ResidentEmergencyContacts> FindAsync(
         IDbConnection connection, Guid centerId, Guid residentId, CancellationToken ct)
     {
         var rows = (await connection.QueryAsync<Row>(new CommandDefinition("""
             SELECT d.accion_codigo AS Action, d.vinculo_id AS LinkId, f.nombre_visible AS DisplayName, link.relacion AS Relationship,
-                   f.telefono AS Phone
+                   f.telefono AS Phone, d.motivo AS Reason
               FROM dbo.residentes_contacto_urgente d
               LEFT JOIN dbo.residentes_familiares link ON link.id = d.vinculo_id AND link.centro_id = d.centro_id
               LEFT JOIN dbo.familiares f ON f.id = link.familiar_id AND f.centro_id = link.centro_id
              WHERE d.residente_id = @ResidentId AND d.centro_id = @CenterId
              ORDER BY d.numero
             """, new { CenterId = centerId, ResidentId = residentId }, cancellationToken: ct))).ToList();
-        return EmergencyContactSet.Current(rows.Select(r => (r.Action, r.LinkId)))
+        var contacts = EmergencyContactSet.Current(rows.Select(r => (r.Action, r.LinkId)))
             .Select(linkId => rows.Last(r => r.LinkId == linkId))
             .Select(r => new EmergencyContactSummary(r.DisplayName!, r.Relationship!, r.Phone!))
             .ToList();
+        // El motivo vale mientras la última designación sea «sin contacto»: cualquier designación posterior lo sustituye.
+        return new ResidentEmergencyContacts(contacts, rows is [.., { Action: EmergencyContactSet.NoContact } last] ? last.Reason : null);
     }
 
-    private sealed record Row(string Action, Guid? LinkId, string? DisplayName, string? Relationship, string? Phone);
+    private sealed record Row(string Action, Guid? LinkId, string? DisplayName, string? Relationship, string? Phone, string? Reason);
 }

@@ -253,7 +253,7 @@
     </p>
     <p class="mb-0">
         Administración nunca ve contenido clínico desde esta pantalla; solo gestiona el dato administrativo
-        de identidad y ubicación. El alta pide también al menos un familiar de contacto prioritario (ver «Familiares, autorizaciones y contacto urgente»).
+        de identidad y ubicación. El alta pide también al menos un familiar de contacto prioritario o, si el residente no tiene a nadie, el motivo (ver «Familiares, autorizaciones y contacto urgente»).
     </p>
 </section>
 
@@ -315,8 +315,9 @@
         <strong>Al dar de alta a un residente</strong> (Administración, o Enfermería con permiso) puedes registrar en el mismo formulario a sus
         familiares de contacto prioritario, referentes y tutores legales: hasta tres filas, cada una con nombre, relación, teléfono y, si
         quieres, correo, y las marcas «Familiar referente», «Tutor legal» y «Contacto prioritario» (un familiar puede tener varias). Tiene que haber al menos un
-        <strong>contacto prioritario</strong> (es el contacto urgente) y puede haber varios. Las filas en blanco se ignoran; una fila a medias, no. El alta no se guarda sin
-        él; la ficha avisa si el residente no tiene familiares o ninguno es de contacto, referente o tutor. Los
+        <strong>contacto prioritario</strong> (es el contacto urgente) y puede haber varios. Si el residente no tiene a nadie a quien avisar (por ejemplo,
+        «sin familia conocida»), no marques ninguno y escribe el <strong>motivo</strong>: queda anotado en la ficha. Las filas en blanco se ignoran; una fila a medias, no. El alta no se guarda sin
+        un contacto prioritario o un motivo; la ficha avisa si el residente no tiene familiares o ninguno es de contacto, referente o tutor (salvo que conste el motivo). Los
         familiares así registrados no tienen autorización de acceso hasta que Administración la abra. Después puedes añadir más con
         <strong>Añadir familiar</strong> y cambiar las marcas con <strong>Editar</strong>.
     </p>
@@ -329,17 +330,18 @@
         vuelvas a guardar.
     </p>
     <p>
-        Con <strong>Vincular un familiar que ya existe</strong> eliges, de una lista, a un familiar que ya está vinculado a otro residente de
-        tu ámbito (por ejemplo, la hija de dos hermanos que viven en la residencia) y escribes su relación con este residente. Es la misma
+        Con <strong>Vincular un familiar que ya existe</strong> <strong>buscas</strong>, por nombre o teléfono (al menos 3 letras o cifras), a un familiar de
+        <strong>cualquier unidad del centro</strong> (por ejemplo, la hija de dos padres que viven en unidades distintas) y escribes su relación con este
+        residente. La lista enseña su nombre, su teléfono y a cuántos residentes está vinculado, no a cuáles. Es la misma
         persona: su nombre, teléfono y correo son los mismos para todos sus residentes y, si los editas, el cambio vale para todos (la
         pantalla de edición te lo avisa). La relación y la autorización son de cada residente por separado, y vincularlo no abre su
-        autorización. Solo salen en la lista familiares de residentes de tu ámbito.
+        autorización. Salen como máximo 30 resultados y solo familiares de tu centro.
     </p>
     <p>
         Con <strong>Desvincular</strong> (en cada familiar) indicas el motivo y el familiar deja de serlo de ese residente. El vínculo no se borra: la
         ficha lo sigue enseñando en <strong>Familiares desvinculados</strong>, con las fechas y el motivo. Su autorización se revoca, si era
-        contacto urgente deja de serlo, y sigue siendo familiar de sus demás residentes. Si es el único contacto urgente del residente, no se puede
-        desvincular hasta designar otro. Si más adelante vuelve a ser familiar, se vincula de nuevo.
+        contacto urgente deja de serlo, y sigue siendo familiar de sus demás residentes. Si es el único contacto urgente del residente, la pantalla te avisa:
+        el residente se queda sin contacto urgente y el motivo que escribas consta también como motivo de ello. Si más adelante vuelve a ser familiar, se vincula de nuevo.
     </p>
     <p>
         <strong>Autorización</strong> abre la pantalla de acceso del familiar. Primero se <strong>abre</strong> (queda
@@ -350,17 +352,26 @@
         Activa dará acceso al Portal Familiar cuando exista; hoy el estado se registra, pero no da acceso a nada.
     </p>
     <p class="mb-0">
-        Los <strong>contactos urgentes</strong> son familiares del residente (puede haber varios, y al menos uno) a quienes se avisa en una urgencia (no
-        necesita autorización de acceso). Se marcan, se cambian o se quitan desde la ficha, sin dejar al residente sin ninguno, y cada cambio queda en su
-        historial. Enfermería y Medicina los ven (nombre, relación y teléfono) en la ficha del residente y al registrar la
-        llamada a la familia tras una derivación a urgencias. Si otra persona ha cambiado la autorización o el contacto desde que abriste la pantalla, te lo indica
+        Los <strong>contactos urgentes</strong> son familiares del residente (puede haber varios) a quienes se avisa en una urgencia (no
+        necesita autorización de acceso). Se marcan, se cambian o se quitan desde la ficha, y cada cambio queda en su historial. Un residente puede
+        quedarse <strong>sin contacto urgente</strong> (por ejemplo, «sin familia conocida»): no marcas a nadie y escribes el motivo, que consta en la
+        ficha; mientras no haya contacto, la ficha de Enfermería y Medicina lo dice con ese motivo. Enfermería y Medicina ven los contactos (nombre, relación y teléfono)
+        en la ficha del residente y al registrar la llamada a la familia tras una derivación a urgencias; si el residente no tiene contacto urgente, esa
+        derivación se cierra sin intento de llamada. Si otra persona ha cambiado la autorización o el contacto desde que abriste la pantalla, te lo indica
         en lugar de guardar.
     </p>
     <p>
         <strong>Comunicados a la familia.</strong> En <strong>Comunicados a la familia</strong> ves los comunicados de los últimos 30 días de las
         unidades de tu ámbito: el residente, el texto (sin el nombre de quien lo preparó: la familia lo verá firmado por el equipo asistencial) y la
-        hora a la que se publica. Quien lo prepara lo aprueba al guardarlo; tras 1 hora de margen sale a las 19:00 del día. Con
-        <strong>Publicar ahora</strong> lo publicas antes de su hora; solo se puede una vez y queda en la auditoría.
+        hora a la que se publica. Quien lo prepara lo aprueba al guardarlo y puede corregirlo hasta que se publique; cada comunicado se publica a la hora que tenía fijada el
+        centro al guardarlo (por defecto, a las 19:00 y con 1 hora de margen: si al guardarlo no queda ese margen, sale a las 19:00 del día siguiente). Con
+        <strong>Publicar ahora</strong> lo publicas antes de su hora; solo se puede una vez y queda en la auditoría. También puede publicarlo antes la Dirección Clínica.
+    </p>
+    <p>
+        <strong>Horario de los comunicados.</strong> Desde <strong>Comunicados a la familia</strong> → <strong>Cambiar la hora de publicación y el margen del centro</strong>
+        eliges la <strong>hora de publicación</strong> (por ejemplo, las 20:30, después de la cena) y el <strong>margen</strong> en minutos (de 0 a 1440). El cambio solo
+        vale para los comunicados que se guarden a partir de entonces: los ya guardados conservan su hora. «Ver el horario de CJ» propone 19:00 y 60 minutos sin guardarlos.
+        Si otra persona cambia el horario mientras lo editas, no se pisa su cambio. Cada cambio queda en el historial de la pantalla y en la auditoría.
     </p>
 </section>
 
@@ -634,6 +645,10 @@
         detalle operativo. Consultar la pantalla no queda en la auditoría. No se muestra el contenido del informe ni el de las llamadas, y Dirección no genera ni
         firma informes. Leer un informe firmado se hace en la consulta clínica auditada (tipo de recurso «Informes de derivación firmados»).
     </p>
+    <p>
+        En <strong>Comunicados a la familia</strong> ves los comunicados de los residentes de tu ámbito de los últimos 30 días, con la hora a la que se publican, y puedes
+        <strong>Publicar ahora</strong> uno antes de su hora (solo se puede una vez). Es la única acción de este perfil: queda en la auditoría con tu perfil, y no ves el nombre de quien lo preparó.
+    </p>
     <p class="mb-0">
         En <strong>Mi ámbito de supervisión</strong> consultas el centro, las unidades y los permisos vigentes de tu perfil
         activo; consultarlo no lo amplía. Si una pantalla te dice "No se puede acceder a esta operación", el episodio no
@@ -851,16 +866,22 @@
     </p>
     <p>
         La comunicación preparada <strong>queda aprobada al guardarla</strong> y aparece en la tarjeta <strong>Comunicaciones</strong> del
-        inicio de Enfermería, con la hora a la que se publica: tras <strong>1 hora de margen</strong> se publica a las <strong>19:00</strong> del
-        día (si el margen termina después de las 19:00, al día siguiente) y Administración puede publicarla antes. La familia la verá firmada
+        inicio de Enfermería, con la hora a la que se publica: la que tiene fijada el centro (por defecto, <strong>19:00</strong> con <strong>1 hora de margen</strong>; si
+        al guardarla no queda ese margen, sale al día siguiente). Administración y Dirección Clínica pueden publicarla antes. La familia la verá firmada
         siempre como "Equipo asistencial del centro", nunca con tu nombre. Todavía no existe el Portal Familiar: "publicada" significa que ya
         podrá verla, no que la haya visto. Si la información es urgente este no es el canal: avisa también por otros medios.
     </p>
     <p class="mb-0">
-        <strong>Corregir un comunicado.</strong> Durante esa primera hora, en <strong>Comunicaciones</strong> del inicio de Enfermería, el botón
-        <strong>Corregir</strong> te deja cambiar el texto y el tipo (ordinaria o relevante). Puede hacerlo cualquier Enfermería del ámbito del evento,
-        no solo quien lo preparó. Cada corrección queda en el historial y en la auditoría; la familia verá solo el texto vigente. Pasada la hora, o si
-        Administración lo publica antes, ya no se puede cambiar. Si dos personas corrigen a la vez, la segunda ve un aviso y conserva lo que escribió.
+        <strong>Corregir un comunicado.</strong> Hasta que se publique, en <strong>Comunicaciones</strong> del inicio de Enfermería, el botón
+        <strong>Corregir</strong> te deja cambiar el texto y el tipo (ordinaria o relevante). Puede hacerlo cualquier Enfermería (o Medicina) del ámbito del evento,
+        no solo quien lo preparó. Cada corrección queda en el historial y en la auditoría; la familia verá solo el texto vigente. Llegada su hora de publicación, o si
+        Administración o Dirección Clínica lo publican antes, ya no se puede cambiar. Si dos personas corrigen a la vez, la segunda ve un aviso y conserva lo que escribió.
+    </p>
+    <p class="mb-0">
+        <strong>Cerrar un episodio con indicaciones de Medicina.</strong> Cuando Medicina te indica algo, <strong>no puede cerrar el episodio hasta que lo hayas cumplido</strong>.
+        Al leer y registrar la última indicación (realizada, o no realizada con su incidencia) la app te lleva al detalle, con el botón <strong>Cerrar episodio</strong>; también los
+        encuentras en la tarjeta <strong>Para cerrar</strong> del inicio. El cierre muestra el resumen de la valoración médica y las indicaciones cumplidas, y pide la misma
+        decisión sobre la comunicación familiar. En el detalle verás quién cerró el episodio (Enfermería o Medicina).
     </p>
 </section>
 
@@ -987,12 +1008,18 @@
     </p>
     <p>
         <strong>Cerrar el evento</strong> muestra el resumen de tu valoración y los pendientes: las
-        indicaciones que Enfermería aún no ha leído o realizado y las no realizadas con su incidencia. Puedes
-        cerrar aunque haya indicaciones sin resolver: siguen en la bandeja de Enfermería hasta que registre su
-        resultado. Decides de forma obligatoria si se comunica a la familia, igual que en el cierre de
+        indicaciones que Enfermería aún no ha leído o realizado y las no realizadas con su incidencia. <strong>No puedes cerrar
+        mientras quede una indicación sin cumplir</strong> (sin leer o sin resolver): el botón está desactivado hasta que Enfermería la
+        lea y registre si se realizó. Cumplidas todas, el episodio lo puede cerrar Enfermería (lo verás en tus indicaciones emitidas, con las incidencias) o tú. La única excepción es el
+        protocolo urgente: tras derivar a Urgencias puedes cerrar con indicaciones sin cumplir, que siguen en la bandeja de Enfermería. Decides de forma obligatoria si se comunica a la familia, igual que en el cierre de
         Enfermería (la comunicación queda aprobada y programada para su publicación, firmada como "Equipo asistencial del
-        centro"). El evento queda "Cerrado" y Enfermería no tiene que cerrarlo otra vez: en su detalle verá
+        centro"). El evento queda "Cerrado" y, si lo cerraste tú, Enfermería no tiene que cerrarlo otra vez: en su detalle verá
         "Cerrado por Medicina". Si pulsas dos veces o repites el envío, el evento se cierra una sola vez.
+    </p>
+    <p>
+        <strong>Comunicaciones.</strong> La tarjeta <strong>Comunicaciones</strong> del inicio de Medicina lista las comunicaciones familiares de los eventos de tu ámbito (los que
+        te escalaron o que observaste tú), con la hora a la que se publican. Hasta que se publiquen puedes <strong>Corregir</strong> su texto y su tipo, igual que Enfermería;
+        la corrección queda en el historial y en la auditoría con tu perfil.
     </p>
     <p>
         La tarjeta <strong>Indicaciones</strong> del inicio de Medicina muestra las indicaciones emitidas, con
@@ -1117,7 +1144,7 @@
         la atención va primero. El contacto no forma parte del informe de derivación.
     </p>
     <p class="mb-0">
-        Para <strong>cerrar</strong> un evento derivado hace falta al menos un intento de llamada, y la
+        Para <strong>cerrar</strong> un evento derivado hace falta al menos un intento de llamada (salvo que el residente no tenga contacto urgente: entonces no hay a quién llamar), y la
         comunicación a la familia es obligatoria: solo se ofrece "Preparar comunicación" de tipo relevante, con
         el texto que escribas para la familia (no se copia el texto clínico). Se aprueba y se publica, con su margen y su hora, como
         las demás.
@@ -1262,7 +1289,7 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Que la familia lea los comunicados (Portal Familiar), la hora de publicación configurable por centro y la tarjeta «Comunicaciones» del inicio de Medicina.</li>
+        <li>Que la familia lea los comunicados (Portal Familiar).</li>
         <li>Portal Familiar (consulta de publicaciones y citas).</li>
         <li>Más gestión administrativa: organigrama y cargos (aplazado), citas y un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
