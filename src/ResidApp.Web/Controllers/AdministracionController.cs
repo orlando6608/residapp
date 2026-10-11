@@ -439,6 +439,37 @@ public sealed partial class AdministracionController(
         return View(new FamilyAuthorizationViewModel(detail!.Resident, member, DateOnly.FromDateTime(DateTime.Today), form));
     }
 
+    /// <summary>Portal Familiar (0052): da al familiar acceso al portal con su propia cuenta; la autorización se gestiona aparte.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AccesoPortalFamiliar(Guid residenteId, Guid vinculoId, string? usuario, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await service.GrantFamilyPortalAccessAsync(new GrantFamilyPortalAccessCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), vinculoId, usuario), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Acceso al Portal Familiar creado. Para que pueda ver la información, su autorización tiene que estar Activa.";
+        }
+        else
+        {
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.InvalidInput =>
+                    "Revisa el usuario: de 3 a 200 caracteres, sin espacios (letras, números y . _ - @).",
+                ApplicationFailureCode.Conflict => "Ese usuario ya existe o este familiar ya tiene acceso. Recarga la pantalla para ver su estado.",
+                _ => result.Error.Message,
+            };
+        }
+
+        return RedirectToAction(nameof(AutorizacionFamiliar), new { residenteId, vinculoId });
+    }
+
     /// <summary>ADM-08 (0022, 0044): designar, cambiar o quitar los contactos urgentes (puede haber varios) entre los familiares del residente.</summary>
     public async Task<IActionResult> ContactoUrgente(Guid residenteId, CancellationToken ct)
     {

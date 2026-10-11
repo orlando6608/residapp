@@ -47,6 +47,9 @@ public sealed record ChangeFamilyAuthorizationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, FamilyAuthorizationChange Cambio,
     DateOnly? ValidaHasta, string? Motivo, int CambiosEsperados);
 
+/// <summary>Portal Familiar (0052): Usuario es el identificador con el que entrará el familiar (hoy el del inicio de sesión de desarrollo).</summary>
+public sealed record GrantFamilyPortalAccessCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string? Usuario);
+
 /// <summary>ADM-08 (0022, 0044): VinculosIds son los contactos urgentes que quedan (vacío: ninguno, y entonces MotivoSinContacto es obligatorio);
 /// DesignacionesEsperadas es cuántas designaciones tenía el residente al abrir la pantalla.</summary>
 public sealed record DesignateEmergencyContactCommand(
@@ -192,6 +195,17 @@ public sealed class AdministracionApplicationService(
             return await families.ChangeAuthorizationAsync(
                 target, command.VinculoId, command.Cambio, command.ValidaHasta, command.Motivo, command.CambiosEsperados,
                 DateOnly.FromDateTime(DateTime.Today), ct);
+        });
+
+    /// <summary>Portal Familiar (0052): da al familiar acceso al portal, con su propia cuenta. No abre su autorización.</summary>
+    public Task<ApplicationResult<bool>> GrantFamilyPortalAccessAsync(
+        GrantFamilyPortalAccessCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var subject = ProfessionalAccount.ValidateSubject(command.Usuario);
+            var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
+            await families.GrantPortalAccessAsync(target, command.VinculoId, subject, ct);
+            return true;
         });
 
     /// <summary>Devuelve cuántas designaciones tiene ya el residente.</summary>

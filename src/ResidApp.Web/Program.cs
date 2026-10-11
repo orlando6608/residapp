@@ -182,6 +182,8 @@ builder.Services.AddScoped<IFamilyCommunicationScheduleRepository, SqlFamilyComm
 builder.Services.AddScoped<FamilyCommunicationScheduleApplicationService>();
 builder.Services.AddScoped<IFamilyCommunicationCorrector, SqlFamilyCommunicationCorrection>();
 builder.Services.AddScoped<CorrectFamilyCommunication>();
+builder.Services.AddScoped<IFamilyPortalReader, SqlFamilyPortalReader>();
+builder.Services.AddScoped<FamilyPortalApplicationService>();
 builder.Services.AddScoped<ICenterLayoutDirectory, SqlCenterLayoutDirectory>();
 builder.Services.AddScoped<ICenterLayoutRepository, SqlCenterLayoutRepository>();
 builder.Services.AddScoped<AdministracionEstructuraApplicationService>();

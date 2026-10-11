@@ -75,7 +75,7 @@ public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connect
                    account.estado AS StatusCode
               FROM dbo.cuentas account
              WHERE EXISTS (SELECT 1 FROM dbo.ambitos_perfil profile
-                            WHERE profile.cuenta_id = account.id AND profile.centro_id = @CenterId AND {accountFilter})
+                            WHERE profile.cuenta_id = account.id AND profile.centro_id = @CenterId AND profile.perfil_codigo <> 'FAMILIAR' AND {accountFilter})
              ORDER BY COALESCE(account.nombre_visible, account.sujeto_externo)
             """, parameters, cancellationToken: ct));
         var profiles = (await connection.QueryAsync<GrantRow>(new CommandDefinition($"""
@@ -85,7 +85,7 @@ public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connect
               FROM dbo.ambitos_perfil profile
               JOIN dbo.cuentas granter ON granter.id = profile.concedido_por_cuenta_id
               LEFT JOIN dbo.cuentas revoker ON revoker.id = profile.revocado_por_cuenta_id
-             WHERE profile.centro_id = @CenterId AND {accountFilter}
+             WHERE profile.centro_id = @CenterId AND profile.perfil_codigo <> 'FAMILIAR' AND {accountFilter}
              ORDER BY CASE profile.estado WHEN 'ACTIVE' THEN 0 ELSE 1 END, profile.concedido_en DESC
             """, parameters, cancellationToken: ct))).ToList();
         var principals = (await connection.QueryAsync<Guid>(new CommandDefinition($"""

@@ -1,0 +1,47 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model PortalFamiliarResidenteViewModel
+@{
+    var resident = Model.Home.Resident;
+    ViewData["Title"] = resident.ResidentName;
+    string Active(FamilyCommunicationType? type) => Model.Tipo == type ? "active" : "";
+    string? Current(FamilyCommunicationType? type) => Model.Tipo == type ? "page" : null;
+}
+
+<h1 class="h3">@resident.ResidentName</h1>
+<p class="text-muted">@resident.Relationship</p>
+
+<h2 class="h5">Novedades del centro</h2>
+<p class="text-muted">
+    Aquí ves lo que el equipo asistencial ha querido contarte. Las novedades ordinarias se ven 30 días y las relevantes, 6 meses.
+    Este portal no es un canal urgente: si necesitas información urgente, llama por teléfono al centro.
+</p>
+<ul class="nav nav-pills mb-3" aria-label="Filtrar novedades">
+    <li class="nav-item"><a class="nav-link @Active(null)" aria-current="@Current(null)" asp-action="Residente" asp-route-linkId="@resident.LinkId">Todas</a></li>
+    <li class="nav-item"><a class="nav-link @Active(FamilyCommunicationType.Relevante)" aria-current="@Current(FamilyCommunicationType.Relevante)" asp-action="Residente" asp-route-linkId="@resident.LinkId" asp-route-tipo="relevante">Relevantes</a></li>
+    <li class="nav-item"><a class="nav-link @Active(FamilyCommunicationType.Ordinaria)" aria-current="@Current(FamilyCommunicationType.Ordinaria)" asp-action="Residente" asp-route-linkId="@resident.LinkId" asp-route-tipo="ordinaria">Ordinarias</a></li>
+</ul>
+
+@if (Model.Comunicados.Count == 0)
+{
+    <div class="alert alert-secondary" role="status">
+        No hay novedades publicadas para mostrar. Que no haya novedades no significa que todo vaya bien ni que todo vaya mal: el centro te avisará
+        por teléfono si ocurre algo importante.
+    </div>
+}
+else
+{
+    foreach (var item in Model.Comunicados)
+    {
+        <a asp-action="Comunicado" asp-route-linkId="@resident.LinkId" asp-route-comunicadoId="@item.Id"
+           class="card text-decoration-none mb-3 border-start border-4 @(item.Type == FamilyCommunicationType.Relevante ? "border-warning" : "border-secondary")">
+            <div class="card-body">
+                <p class="text-muted mb-1">
+                    <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(item.Type)</span>
+                    · @item.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @FamilyCommunicationChoice.VisibleAuthor
+                </p>
+                <p class="card-text mb-0" style="white-space: pre-line">@item.Text</p>
+            </div>
+        </a>
+    }
+}

@@ -1,0 +1,22 @@
+@using ResidApp.Application.Ports
+@model IReadOnlyList<FamilyPortalResident>
+@{
+    ViewData["Title"] = "Mis residentes";
+}
+
+<h1 class="h3">Mis residentes</h1>
+<p class="text-muted">Elige a quién quieres ver. Solo aparecen los residentes para los que el centro te ha dado acceso.</p>
+<div class="row g-3">
+    @foreach (var resident in Model)
+    {
+        <div class="col-12 col-md-6">
+            <a asp-action="Residente" asp-route-linkId="@resident.LinkId" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">@resident.ResidentName</h2>
+                    <p class="card-text text-muted mb-0">@resident.Relationship</p>
+                </div>
+            </a>
+        </div>
+    }
+</div>
+<p class="small text-body-secondary mt-4">Este portal no es un canal urgente. Si necesitas información urgente, llama por teléfono al centro.</p>

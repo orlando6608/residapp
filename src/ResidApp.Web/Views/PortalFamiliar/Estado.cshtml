@@ -1,0 +1,15 @@
+@model ResidApp.Web.Models.PortalFamiliarEstadoViewModel
+@{
+    ViewData["Title"] = Model.Titulo;
+}
+
+<h1 class="h3">@Model.Titulo</h1>
+<div class="alert alert-secondary" role="status">@Model.Mensaje</div>
+<p>
+    @if (Model.PuedeReintentar)
+    {
+        <a class="btn btn-primary" href="javascript:location.reload()">Reintentar</a>
+    }
+    <a class="btn btn-outline-secondary" asp-action="Index" asp-route-elegir="true">Volver a mis residentes</a>
+</p>
+<p class="small text-body-secondary">Este portal no es un canal urgente. Si necesitas información urgente, llama por teléfono al centro.</p>

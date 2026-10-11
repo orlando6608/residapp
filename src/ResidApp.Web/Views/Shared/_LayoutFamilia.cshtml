@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0A58CA" />
+    <title>@ViewData["Title"] - ResidApp</title>
+    <link rel="manifest" href="~/manifest.json" />
+    <link rel="icon" href="~/images/logo.svg" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/residapp-theme.css" asp-append-version="true" />
+    @* Fija el tema claro u oscuro antes de pintar la página (guia-diseno-sistema-visual.md, «Modo oscuro»). *@
+    <script src="~/js/tema.js" asp-append-version="true"></script>
+</head>
+<body>
+    @* Portal Familiar: sin los enlaces ni los datos del personal (ni documentos de CJ ni la identidad en claro). *@
+    <header>
+        <nav class="navbar navbar-expand-md navbar-dark navbar-residapp border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="PortalFamiliar" asp-action="Index">
+                    <img src="~/images/logo.svg" alt="" width="28" height="28" />
+                    ResidApp · Familias
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-familia" aria-controls="menu-familia"
+                        aria-expanded="false" aria-label="Mostrar u ocultar el menú">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div id="menu-familia" class="navbar-collapse collapse">
+                    <ul class="navbar-nav ms-auto align-items-md-center">
+                        <li class="nav-item"><a class="nav-link" asp-controller="PortalFamiliar" asp-action="Index" asp-route-elegir="true">Cambiar de residente</a></li>
+                        <li class="nav-item dropdown">
+                            <button class="nav-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Tema</button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><button type="button" class="dropdown-item" data-tema-opcion="claro" aria-pressed="false">Claro</button></li>
+                                <li><button type="button" class="dropdown-item" data-tema-opcion="oscuro" aria-pressed="false">Oscuro</button></li>
+                                <li><button type="button" class="dropdown-item" data-tema-opcion="auto" aria-pressed="false">Automático (como el dispositivo)</button></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <form asp-controller="DevAuth" asp-action="Logout" method="post">
+                                <button type="submit" class="nav-link btn btn-link">Salir</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+    <footer class="border-top footer text-muted">
+        <div class="container d-flex flex-wrap column-gap-3 row-gap-1">
+            <span>&copy; 2026 ResidApp</span>
+            <a asp-controller="Home" asp-action="Privacy">Privacidad</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

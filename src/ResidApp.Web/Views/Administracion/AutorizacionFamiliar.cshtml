@@ -21,9 +21,13 @@
 
 <h1 class="h3">Autorización de @member.DisplayName</h1>
 <p class="text-muted">
-    @member.Relationship de @resident.DisplayName. Solo una autorización <strong>Activa</strong> dará acceso al Portal Familiar
-    cuando exista; mientras tanto, el estado se registra pero no da acceso a nada.
+    @member.Relationship de @resident.DisplayName. Solo una autorización <strong>Activa</strong> da acceso al Portal Familiar
+    (si el familiar tiene cuenta, ver abajo); mientras no lo esté, el estado se registra pero no da acceso a nada.
 </p>
+@if (TempData["Error"] is string errorMensaje)
+{
+    <div class="alert alert-danger" role="alert">@errorMensaje</div>
+}
 @if (TempData["Mensaje"] is string mensaje)
 {
     <div class="alert alert-success" role="status">@mensaje</div>
@@ -34,6 +38,32 @@
     <div class="card-body">
         <h2 class="h5 card-title">Estado de hoy</h2>
         <p class="fs-5 mb-0">@AdministrativeResidentDisplay.Authorization(member, Model.Today)</p>
+    </div>
+</section>
+
+<section class="card mb-4" aria-labelledby="acceso-portal">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="acceso-portal">Acceso al Portal Familiar</h2>
+        @if (member.PortalAccount is { } portalAccount)
+        {
+            <p class="mb-1">Tiene acceso al portal con el usuario <code>@portalAccount</code>.</p>
+            <p class="text-muted mb-0">Lo que ve depende de esta autorización: solo si está <strong>Activa</strong> puede ver al residente. Para cortarle el acceso, suspéndela o revócala.</p>
+        }
+        else
+        {
+            <p class="text-muted">Todavía no tiene cuenta para entrar al portal. El usuario es el identificador con el que entrará (de 3 a 200 caracteres, sin espacios). Dar el acceso no abre ni activa la autorización.</p>
+            <form asp-action="AccesoPortalFamiliar" method="post" class="row g-2 align-items-end">
+                <input type="hidden" name="residenteId" value="@Model.Form.ResidenteId" />
+                <input type="hidden" name="vinculoId" value="@Model.Form.VinculoId" />
+                <div class="col-12 col-md-6">
+                    <label for="usuario" class="form-label">Usuario</label>
+                    <input id="usuario" name="usuario" class="form-control" maxlength="200" autocomplete="off" />
+                </div>
+                <div class="col-12 col-md-auto">
+                    <button type="submit" class="btn btn-primary">Dar acceso al portal</button>
+                </div>
+            </form>
+        }
     </div>
 </section>
 
