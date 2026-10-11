@@ -145,10 +145,17 @@ public sealed class LinkFamilyFormModel
     [StringLength(FamilyMember.MaxRelationshipLength, ErrorMessage = "La relación no puede pasar de {1} caracteres.")]
     [Display(Name = "Relación con este residente (p. ej., «Hija»)")]
     public string? Relacion { get; set; }
+
+    /// <summary>La búsqueda con la que se llegó a la lista, para volver a pintarla si el envío falla.</summary>
+    public string? Q { get; set; }
 }
 
+/// <summary>Q es el texto buscado (null o corto: todavía no se busca); Candidates, los familiares del centro que lo contienen.</summary>
 public sealed record LinkFamilyViewModel(
-    AdministrativeResidentSummary Resident, IReadOnlyList<LinkableFamilyMember> Candidates, LinkFamilyFormModel Form);
+    AdministrativeResidentSummary Resident, IReadOnlyList<LinkableFamilyMember> Candidates, LinkFamilyFormModel Form, string? Q = null)
+{
+    public bool Searched => LinkableFamilySearch.Normalize(Q) is not null;
+}
 
 /// <summary>ADM-10/ADM-11 (0022): un cambio de la autorización. CambiosEsperados es cuántos cambios tenía al abrir la
 /// pantalla: si otro se adelanta, da conflicto.</summary>

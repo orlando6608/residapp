@@ -916,6 +916,45 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Administracion_BuscaYVinculaUnFamiliarDelCentro_ConLaAppEntera()
+    {
+        // CJ, 1.1: vincular un familiar que ya existe se busca por nombre o teléfono entre los de todo el centro. Con el usuario limitado
+        // lee familiares y vínculos bajo la seguridad por filas.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var first = await CreateResidentAsync(admin, seed, "Residente Vincular Primero Funcional");
+        var second = await CreateResidentAsync(admin, seed, "Residente Vincular Segundo Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var empty = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}"));
+        var tooShort = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}&q=Fa"));
+        var noMatch = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}&q=Zacarias"));
+        var found = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}&q=familiar%20PRUEBA"));
+        var byPhone = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}&q=600%20123"));
+
+        Assert.Contains("Busca al familiar para vincularlo.", empty);
+        Assert.Contains("Busca al familiar para vincularlo.", tooShort);
+        Assert.Contains("Ningún familiar del centro coincide con «Zacarias»", noMatch);
+        Assert.Contains("Familiar Prueba · 600123456 · vinculado a 1 residente", found);
+        Assert.Contains("Familiar Prueba · 600123456 · vinculado a 1 residente", byPhone);
+
+        var familyId = await connection.ExecuteScalarAsync<Guid>(
+            "SELECT familiar_id FROM dbo.residentes_familiares WHERE residente_id = @first", new { first });
+        var linked = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/VincularFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(found, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = second, ["Form.OperacionId"] = ExtractValue(found, "Form.OperacionId"), ["Form.Q"] = "familiar PRUEBA",
+            ["Form.FamiliarId"] = familyId.ToString(), ["Form.Relacion"] = "Sobrina",
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Familiar vinculado.", linked);
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.residentes_familiares WHERE familiar_id = @familyId AND desvinculado_en IS NULL", new { familyId }));
+        var again = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/VincularFamiliar?residenteId={second}&q=familiar%20PRUEBA"));
+        Assert.DoesNotContain("vinculado a 1 residente", again);
+    }
+
+    [Fact]
     public async Task Administracion_VeLosComunicadosAFamiliasYLosPublicaAntes_ConLaAppEntera()
     {
         // CJ (2026-10-07): el comunicado se aprueba al guardarlo, sale a una hora fija tras 1 h de margen y Administración puede publicarlo

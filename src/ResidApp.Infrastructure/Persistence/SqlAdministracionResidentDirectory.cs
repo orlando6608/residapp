@@ -37,28 +37,43 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                 WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
         """;
 
-    /// <summary>Familiares vinculables al residente @ResidentId: ya vinculados a algún residente del ámbito @ProfileScopeId (así nadie descubre
-    /// a personas ligadas solo a residentes ajenos) y todavía no a este. Lo usa la lista y lo repite la escritura dentro de su transacción.</summary>
-    internal static readonly string LinkableFamilySelect = $"""
-        SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, f.telefono AS Phone
+    /// <summary>Familiares vinculables al residente @ResidentId (CJ, 2026-10-10): cualquier familiar del centro @CenterId que todavía no esté vinculado a este
+    /// (así una hija con dos padres en unidades distintas no se da de alta dos veces). La barrera entre centros es este filtro explícito; ActiveLinks
+    /// cuenta sus vínculos vigentes sin enseñar a qué residentes. Lo usa la lista y lo repite la escritura dentro de su transacción.</summary>
+    internal const string LinkableFamilySelect = """
+        SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, f.telefono AS Phone,
+               (SELECT COUNT(*) FROM dbo.residentes_familiares linked
+                 WHERE linked.familiar_id = f.id AND linked.centro_id = f.centro_id AND linked.desvinculado_en IS NULL) AS ActiveLinks
           FROM dbo.familiares f
          WHERE f.centro_id = @CenterId
-           AND EXISTS (SELECT 1 FROM dbo.residentes_familiares other
-                         JOIN ({ScopedResidentsSelect}) scoped ON scoped.ResidentId = other.residente_id
-                        WHERE other.familiar_id = f.id AND other.centro_id = f.centro_id AND other.desvinculado_en IS NULL)
            AND NOT EXISTS (SELECT 1 FROM dbo.residentes_familiares mine
                             WHERE mine.familiar_id = f.id AND mine.centro_id = f.centro_id AND mine.residente_id = @ResidentId AND mine.desvinculado_en IS NULL)
         """;
 
     public async Task<IReadOnlyList<LinkableFamilyMember>> ListLinkableFamilyAsync(
-        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default)
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, string search, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
-        var rows = await connection.QueryAsync<LinkableRow>(new CommandDefinition(
-            LinkableFamilySelect + " ORDER BY f.nombre_visible, f.telefono",
-            new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value }, cancellationToken: ct));
-        return rows.Select(r => new LinkableFamilyMember(r.FamilyId, r.DisplayName, r.Phone)).ToList();
+        // El nombre se compara sin mayúsculas ni acentos; el teléfono por sus cifras (se guarda con espacios, guiones o prefijo).
+        var rows = await connection.QueryAsync<LinkableRow>(new CommandDefinition($"""
+            SELECT TOP ({LinkableFamilySearch.MaxResults}) linkable.FamilyId, linkable.DisplayName, linkable.Phone, linkable.ActiveLinks
+              FROM ({LinkableFamilySelect}) linkable
+             WHERE linkable.DisplayName COLLATE Latin1_General_100_CI_AI LIKE @NamePattern ESCAPE '\'
+                OR (@PhonePattern IS NOT NULL
+                    AND REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(linkable.Phone, ' ', ''), '-', ''), '.', ''), '(', ''), ')', ''), '+', '')
+                        LIKE @PhonePattern ESCAPE '\')
+             ORDER BY linkable.DisplayName, linkable.Phone
+            """,
+            new
+            {
+                CenterId = centerId.Value, ResidentId = residentId.Value, NamePattern = $"%{EscapeLike(search)}%",
+                PhonePattern = LinkableFamilySearch.PhoneDigits(search) is { } digits ? $"%{digits}%" : null,
+            }, cancellationToken: ct));
+        return rows.Select(r => new LinkableFamilyMember(r.FamilyId, r.DisplayName, r.Phone, r.ActiveLinks)).ToList();
     }
+
+    private static string EscapeLike(string text) =>
+        text.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_").Replace("[", "\\[");
 
     public async Task<IReadOnlyList<AdministrativeResidentSummary>> ListAsync(
         Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
@@ -179,7 +194,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
     private sealed record FamilyRow(
         Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email, bool IsReferent, bool IsLegalGuardian, int OtherResidentLinks);
 
-    private sealed record LinkableRow(Guid FamilyId, string DisplayName, string Phone);
+    private sealed record LinkableRow(Guid FamilyId, string DisplayName, string Phone, int ActiveLinks);
 
     private sealed record FormerRow(string DisplayName, string Relationship, DateTime LinkedAt, DateTime UnlinkedAt, string Reason);
 

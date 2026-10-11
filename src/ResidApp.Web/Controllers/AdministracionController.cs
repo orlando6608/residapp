@@ -208,8 +208,9 @@ public sealed partial class AdministracionController(
         return View("Familiar", new FamilyMemberViewModel(detail.Resident, form));
     }
 
-    /// <summary>Vincular a este residente un familiar que ya está vinculado a otro residente del ámbito. No abre su autorización (FAM-01).</summary>
-    public async Task<IActionResult> VincularFamiliar(Guid residenteId, CancellationToken ct)
+    /// <summary>Vincular a este residente un familiar que ya existe en el centro (CJ, 2026-10-10: se busca por nombre o teléfono entre todos los
+    /// familiares del centro, no solo los de las unidades del ámbito). No abre su autorización (FAM-01).</summary>
+    public async Task<IActionResult> VincularFamiliar(Guid residenteId, string? q, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
@@ -224,7 +225,8 @@ public sealed partial class AdministracionController(
         }
 
         return View(new LinkFamilyViewModel(
-            detail.Resident, await LinkableFamilyAsync(activeScope, residenteId, ct), new LinkFamilyFormModel { ResidenteId = residenteId, OperacionId = Guid.NewGuid() }));
+            detail.Resident, await LinkableFamilyAsync(activeScope, residenteId, q, ct),
+            new LinkFamilyFormModel { ResidenteId = residenteId, OperacionId = Guid.NewGuid(), Q = q }, q));
     }
 
     [HttpPost]
@@ -258,19 +260,19 @@ public sealed partial class AdministracionController(
             {
                 ApplicationFailureCode.InvalidInput => "Escribe la relación con el residente (hasta 100 caracteres).",
                 ApplicationFailureCode.Conflict => "Ese familiar ya está vinculado a este residente.",
-                ApplicationFailureCode.AccessDenied => "Ese familiar ya no se puede vincular. Elige otro de la lista.",
+                ApplicationFailureCode.AccessDenied => "Ese familiar ya no está disponible. Búscalo de nuevo.",
                 _ => result.Error.Message,
             });
         }
 
-        return View(new LinkFamilyViewModel(detail.Resident, await LinkableFamilyAsync(activeScope, form.ResidenteId, ct), form));
+        return View(new LinkFamilyViewModel(detail.Resident, await LinkableFamilyAsync(activeScope, form.ResidenteId, form.Q, ct), form, form.Q));
     }
 
     private async Task<IReadOnlyList<LinkableFamilyMember>> LinkableFamilyAsync(
-        ActiveProfileScopeCookieValue activeScope, Guid residenteId, CancellationToken ct)
+        ActiveProfileScopeCookieValue activeScope, Guid residenteId, string? search, CancellationToken ct)
     {
-        var result = await service.ListLinkableFamilyAsync(new FindAdministrativeResidentQuery(
-            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId)), ct);
+        var result = await service.ListLinkableFamilyAsync(new LinkableFamilyQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), search), ct);
         return result.Ok ? result.Value! : [];
     }
 

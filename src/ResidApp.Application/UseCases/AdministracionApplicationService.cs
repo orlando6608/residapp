@@ -15,6 +15,8 @@ public sealed record AdministracionQuery(Guid AmbitoPerfilId, CenterId CentroId)
 
 public sealed record FindAdministrativeResidentQuery(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId);
 
+public sealed record LinkableFamilyQuery(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, string? Search);
+
 /// <summary>ADM-03: la identidad tal como llega del formulario; ExpectedCorrections es cuántas correcciones tenía el
 /// residente al abrirlo.</summary>
 public sealed record CorrectResidentIdentityCommand(
@@ -140,14 +142,17 @@ public sealed class AdministracionApplicationService(
             return await families.AddAsync(target, command.OperacionId, data, ct);
         });
 
-    /// <summary>Los familiares que se pueden vincular al residente: ya vinculados a otro residente del ámbito y no a este.</summary>
+    /// <summary>Los familiares del centro que se pueden vincular al residente (CJ, 2026-10-10: no solo los del ámbito) y cuyo nombre o teléfono
+    /// contiene el texto buscado; sin al menos LinkableFamilySearch.MinLength caracteres, ninguno.</summary>
     public Task<ApplicationResult<IReadOnlyList<LinkableFamilyMember>>> ListLinkableFamilyAsync(
-        FindAdministrativeResidentQuery query, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () =>
+        LinkableFamilyQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync<IReadOnlyList<LinkableFamilyMember>>(async () =>
         {
             await EnsureAdministrationScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             _ = await directory.FindAsync(query.AmbitoPerfilId, query.CentroId, query.ResidenteId, ct) ?? throw new AccessDeniedException();
-            return await directory.ListLinkableFamilyAsync(query.AmbitoPerfilId, query.CentroId, query.ResidenteId, ct);
+            return LinkableFamilySearch.Normalize(query.Search) is { } term
+                ? await directory.ListLinkableFamilyAsync(query.AmbitoPerfilId, query.CentroId, query.ResidenteId, term, ct)
+                : [];
         });
 
     /// <summary>Devuelve el vínculo creado.</summary>

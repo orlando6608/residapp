@@ -39,9 +39,33 @@ public sealed record ResidentFamilyMember(
 public sealed record FormerFamilyMember(
     string DisplayName, string Relationship, DateTimeOffset LinkedAt, DateTimeOffset UnlinkedAt, string Reason);
 
-/// <summary>Un familiar que se puede vincular a otro residente: ya está vinculado a algún residente del ámbito de quien gestiona
-/// y todavía no al residente de la pantalla. Nombre y teléfono bastan para distinguir a dos personas con el mismo nombre.</summary>
-public sealed record LinkableFamilyMember(Guid FamilyId, string DisplayName, string Phone);
+/// <summary>Un familiar que se puede vincular a otro residente (CJ, 2026-10-10): cualquier familiar del centro que todavía no esté vinculado al residente
+/// de la pantalla, buscado por nombre o teléfono. Nombre y teléfono bastan para distinguir a dos personas con el mismo nombre; ActiveLinks es a
+/// cuántos residentes está vinculado ya, sin decir a cuáles (quien vincula no descubre qué residentes tiene cada familiar fuera de su ámbito).</summary>
+public sealed record LinkableFamilyMember(Guid FamilyId, string DisplayName, string Phone, int ActiveLinks);
+
+/// <summary>La búsqueda de familiares vinculables: no se lista el centro entero. Hace falta un mínimo de letras (o de cifras del teléfono) y
+/// salen como mucho MaxResults.</summary>
+public static class LinkableFamilySearch
+{
+    public const int MinLength = 3;
+
+    public const int MaxResults = 30;
+
+    /// <summary>El texto sin espacios sobrantes, o null si no llega al mínimo (no se busca).</summary>
+    public static string? Normalize(string? search)
+    {
+        var term = search?.Trim();
+        return term is { Length: >= MinLength } ? term : null;
+    }
+
+    /// <summary>Las cifras del texto, si hay al menos el mínimo: se busca también por teléfono, que se guarda con espacios, guiones o prefijo.</summary>
+    public static string? PhoneDigits(string term)
+    {
+        var digits = new string(term.Where(char.IsAsciiDigit).ToArray());
+        return digits.Length >= MinLength ? digits : null;
+    }
+}
 
 /// <summary>ADM-08 (0022, 0044): una designación de contacto urgente (Action: ver EmergencyContactSet). LinkId null es «sin contacto urgente»; DisplayName es el
 /// nombre vigente del familiar.</summary>
@@ -71,9 +95,10 @@ public interface IAdministracionResidentDirectory
     Task<AdministrativeResidentDetail?> FindAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 
-    /// <summary>Los familiares vinculables al residente (ver LinkableFamilyMember), por nombre. El residente ya está comprobado en el ámbito.</summary>
+    /// <summary>Los familiares del centro vinculables al residente (ver LinkableFamilyMember) cuyo nombre o teléfono contiene el texto, por nombre.
+    /// El texto ya viene normalizado (LinkableFamilySearch.Normalize). El residente ya está comprobado en el ámbito.</summary>
     Task<IReadOnlyList<LinkableFamilyMember>> ListLinkableFamilyAsync(
-        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, string search, CancellationToken ct = default);
 }
 
 public sealed record CorrectResidentIdentityInput(
