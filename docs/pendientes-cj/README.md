@@ -53,7 +53,7 @@ Cuando el documento está contestado y lo que pedía está implementado:
 
 1. `git mv` del `.html` y del `.respuestas.json` a `archivados/`.
 2. En el `.html`, bajo el «eyebrow» de la cabecera, la línea «Archivado el AAAA-MM-DD: lo que respondiste ya está implementado…» (como en los dos ya archivados) y «Archivado» en lugar de «Pendiente de CJ». Arriba de la cabecera, el bloque `<nav class="back">` con «← Documentos para CJ» (`../index.html`) y «Volver a ResidApp» (`/`), con su CSS y su regla de impresión; cópialo de uno ya archivado.
-3. Quitarlo de `preguntas.html` y añadirlo a `archivo.html` (con una frase de qué se hizo y dónde sigue lo pendiente), y moverlo en la tabla de abajo. Si `preguntas.html` se queda sin documentos, la ficha «Preguntas» de `index.html` lleva la clase `sin-pendientes` y el texto «Nada pendiente por ahora»; al añadir un documento de Preguntas, quítalos (ficha normal).
+3. Quitarlo de `preguntas.html` y añadirlo a `archivo.html` (con una frase de qué se hizo y dónde sigue lo pendiente), y moverlo en la tabla de abajo. Si `preguntas.html` se queda sin documentos, la ficha «Preguntas» de `index.html` lleva la clase `sin-pendientes` y el texto «Nada pendiente por ahora»; mientras haya documentos de Preguntas, la ficha es la normal.
 4. Actualizar las rutas que lo citan en `docs/` (`pendientes-*.md`, `docs/prompts-ia/continuar-construccion.md`).
 5. Tras el despliegue, borrar en Azure la copia antigua de la raíz (`site/wwwroot/pendientes-cj/<documento>.html`): el despliegue añade ficheros pero no borra los de antes, y esa copia seguiría abierta (con clave) y sin respuestas. Kudu tiene desactivado el acceso básico: se borra con la API `vfs` y un token de Entra ID (`az account get-access-token --resource https://management.azure.com`, `DELETE` con `If-Match: *`).
 
@@ -97,13 +97,13 @@ El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **p
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
-| _(ninguno por ahora)_ | | | |
+| [portal-familiar-confirmaciones-cj.html](portal-familiar-confirmaciones-cj.html) | `portal-familiar-confirmaciones-cj.respuestas.json` | Lo que ingeniería tuvo que suponer al construir la primera parte del Portal Familiar: qué ve la familia, derivaciones a Urgencias, privacidad y cómo debe identificarse un familiar (6 respuestas) | Pendiente de CJ |
 
 ### Pruebas
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
-| [guia-de-pruebas-cj.html](guia-de-pruebas-cj.html) | `guia-de-pruebas-cj.respuestas.json` | Guía de pruebas en el entorno de desarrollo: 66 pruebas paso a paso (A funciona, B con problema, C no funciona, D no probada) más 3 preguntas finales; 22 imprescindibles | Pendiente |
+| [guia-de-pruebas-cj.html](guia-de-pruebas-cj.html) | `guia-de-pruebas-cj.respuestas.json` | Guía de pruebas en el entorno de desarrollo: 70 pruebas paso a paso (A funciona, B con problema, C no funciona, D no probada) más 3 preguntas finales; 25 imprescindibles | Pendiente |
 
 ### Archivo (contestados e implementados)
 

@@ -270,7 +270,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="guia-de-pruebas-cj" data-version="2026-10-11">
+<body data-doc="guia-de-pruebas-cj" data-version="2026-10-12">
 
 <div class="page">
   <header>
@@ -280,13 +280,13 @@
     <p class="lead prose">
       Ya están construidos los circuitos del Auxiliar, Enfermería, Medicina, Dirección Clínica y Administración, el basal con
       Barthel y la protección de los datos por centro. Los tests automáticos no pueden decir si las pantallas hacen lo que tú
-      esperas como clínica. Esta guía te propone 66 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
+      esperas como clínica. Esta guía te propone 70 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
       si coincide y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>66 pruebas en 7 temas, más 3 preguntas finales. 22 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>70 pruebas en 7 temas, más 3 preguntas finales. 25 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Las imprescindibles, hora y media aproximadamente; todas, entre tres y cuatro horas. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -374,7 +374,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (22 de 66).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (25 de 70).</p>
 
     <h3>Qué NO se prueba, porque todavía no existe</h3>
     <ul class="lista prose">
@@ -1494,6 +1494,75 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
+
+      <article class="q" data-q="6.18">
+        <div class="q-head"><span class="n">6.18</span><h3 class="q-title" id="t-6-18">Dar acceso al Portal Familiar a un familiar</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>dev-integrado-administracion</code>, abre «Residentes» y elige un residente que tenga un familiar (el de la prueba 6.1, por ejemplo).</li>
+          <li>En su familiar pulsa «Autorización». Verás el estado y, debajo, «Acceso al Portal Familiar». Escribe un usuario (por ejemplo <code>familia-prueba-1</code>) y pulsa «Dar acceso al portal».</li>
+          <li>Después abre la autorización («Abrir autorización» y luego «Activar»). Comprueba también que ese usuario no aparece en «Usuarios».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sale «Acceso al Portal Familiar creado…» y la sección pasa a decir con qué usuario entra. Dar el acceso no activa la autorización: hay que abrirla y activarla aparte. El usuario de la familia no aparece en «Usuarios» (esa lista es solo de profesionales). En «Auditoría» consta «Acceso al Portal Familiar dado a un familiar».</div>
+        <fieldset class="choices" aria-labelledby="t-6-18">
+          <label class="choice"><input type="radio" name="r-6.18" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.18" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.18" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.18" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.19">
+        <div class="q-head"><span class="n">6.19</span><h3 class="q-title" id="t-6-19">La familia entra y lee las novedades publicadas</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>dev-integrado-familiar</code> (la hija de «Residente Portal Familiar (ficticio)»). Verás directamente las novedades de ese residente.</li>
+          <li>Para tener algo que leer, publica un comunicado de «Residente Portal Familiar»: como Enfermería (<code>dev-integrado-enfermeria</code>) registra un cambio y ciérralo con una comunicación (pruebas 2.8 o 3.5), y publícalo antes de su hora con Administración o Dirección (6.15 o 5.9).</li>
+          <li>Vuelve con <code>dev-integrado-familiar</code>, abre la novedad y prueba los filtros «Relevantes» y «Ordinarias».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Antes de publicar, dice que no hay novedades y avisa de que eso no significa que todo vaya bien. Después aparece el comunicado con su tipo, su fecha y la firma «Equipo asistencial del centro». El texto es el vigente (si se corrigió, el corregido). Siempre hay un aviso de que el portal no es un canal urgente.</div>
+        <fieldset class="choices" aria-labelledby="t-6-19">
+          <label class="choice"><input type="radio" name="r-6.19" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.19" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.19" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.19" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.20">
+        <div class="q-head"><span class="n">6.20</span><h3 class="q-title" id="t-6-20">La familia no ve nada más que lo suyo</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Con <code>dev-integrado-familiar</code>, mira todo lo que se ve: el menú, las novedades y el detalle de una novedad.</li>
+          <li>Intenta abrir a mano una pantalla del personal, por ejemplo <code>/Enfermeria/Residentes</code> o <code>/Administracion/Residentes</code>, y la de otro residente cambiando el identificador de la dirección <code>/Familia/Residente/…</code> por otro.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La familia solo ve el nombre de su residente, la relación y el texto de los comunicados publicados. No ve observaciones, valoraciones, constantes, indicaciones, derivaciones, nombres de profesionales, ni los teléfonos de otros familiares, ni enlaces a «Documentos de CJ». Las pantallas del personal y las de otros residentes no se abren («No tienes acceso a esto»).</div>
+        <fieldset class="choices" aria-labelledby="t-6-20">
+          <label class="choice"><input type="radio" name="r-6.20" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.20" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.20" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.20" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.21">
+        <div class="q-head"><span class="n">6.21</span><h3 class="q-title" id="t-6-21">Quitar o suspender el acceso de la familia</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>dev-integrado-administracion</code> y abre la autorización del familiar de «Residente Portal Familiar (ficticio)». Pulsa «Suspender» y escribe un motivo.</li>
+          <li>Sin cerrar sesión de la familia, vuelve a <code>dev-integrado-familiar</code> y recarga la página. Después, con Administración, vuelve a activarla.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>En cuanto se suspende, la familia ya no ve a su residente: «No tienes ninguna autorización activa», sin esperar a que caduque la sesión. Al activarla de nuevo, vuelve a ver sus novedades. Revocar tiene el mismo efecto, pero ya no se puede deshacer.</div>
+        <fieldset class="choices" aria-labelledby="t-6-21">
+          <label class="choice"><input type="radio" name="r-6.21" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.21" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.21" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.21" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
     </div>
   </section>
 
@@ -1545,7 +1614,7 @@
           <li>Entra con <code>dev-multi</code>. Aparece «Seleccionar ámbito» con cuatro ámbitos: Enfermería y Medicina del Centro A, Dirección Clínica y Familiar del Centro B.</li>
           <li>Elige uno, mira qué pantallas te ofrece y cambia con «Cambiar ámbito» (menú del perfil). Repite con otro.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>En cada ámbito solo ves las pantallas de su perfil y los datos de su centro: ninguno de los residentes del escenario integrado aparece en ninguno de los cuatro. El ámbito Familiar no tiene pantallas todavía.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>En cada ámbito solo ves las pantallas de su perfil y los datos de su centro: ninguno de los residentes del escenario integrado aparece en ninguno de los cuatro. En el ámbito Familiar solo se abre el Portal Familiar, y esa cuenta dice «No tienes ninguna autorización activa» porque no es familiar de ningún residente.</div>
         <fieldset class="choices" aria-labelledby="t-7-3">
           <label class="choice"><input type="radio" name="r-7-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-7-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
