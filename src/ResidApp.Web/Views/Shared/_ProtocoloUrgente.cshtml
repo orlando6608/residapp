@@ -163,7 +163,9 @@
                 <p class="card-text text-muted mb-0">
                     @(evento.Referral is null
                         ? "Sin derivar a Urgencias. Decides si se comunica a la familia y el evento pasa a Historial."
-                        : "Con la derivación firmada: exige al menos un intento de llamada y preparar la actualización relevante para la familia.")
+                        : evento.Referral.NoContactReason is not null && evento.Referral.EmergencyContacts.Count == 0
+                            ? "Con la derivación firmada: exige preparar la actualización relevante para la familia; el residente no tiene contacto urgente, así que no hace falta ningún intento de llamada."
+                            : "Con la derivación firmada: exige al menos un intento de llamada y preparar la actualización relevante para la familia.")
                 </p>
             </div>
         </a>

@@ -1081,6 +1081,46 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var nurseFile = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}"));
         Assert.Matches(@"Sin contacto urgente:\s*(<span[^>]*>)?Sin familia conocida", nurseFile);
 
+        // Con la derivación firmada y sin contacto urgente, la tarjeta de cierre no exige el intento de llamada (el cierre ya lo exime).
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"), ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"), ["Observacion"] = "Disnea brusca (prueba funcional).", ["Clasificacion"] = "Ordinario",
+        }))).Content.ReadAsStringAsync();
+        var eventId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        Task<int> RevisionAsync() => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+        async Task<string> PostAsync(string url, string page, Dictionary<string, string> fields)
+        {
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            return WebUtility.HtmlDecode(await (await nurse.PostAsync(url, new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+
+        await PostAsync("/Enfermeria/EmpezarValoracion", detailPage, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        await PostAsync("/Enfermeria/Valoracion", await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Hallazgos"] = "Crepitantes bilaterales.",
+        });
+        await PostAsync("/Enfermeria/ActivarProtocolo", await nurse.GetStringAsync($"/Enfermeria/ActivarProtocolo?eventoId={eventId}"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(),
+        });
+        var referralPage = await nurse.GetStringAsync($"/Enfermeria/Derivar?eventoId={eventId}");
+        var preview = await PostAsync("/Enfermeria/Derivar", referralPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.OperacionId"] = ExtractValue(referralPage, "Form.OperacionId"),
+            ["Form.Motivo"] = "Desaturación que no remonta.", ["Form.Comunicaciones"] = "Aviso al SEM.", ["Form.Accion"] = "VistaPrevia",
+        });
+        var signed = await PostAsync("/Enfermeria/Derivar", preview, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = ExtractValue(preview, "Form.Revision"), ["Form.OperacionId"] = ExtractValue(preview, "Form.OperacionId"),
+            ["Form.Motivo"] = ExtractValue(preview, "Form.Motivo"), ["Form.InformacionAdicional"] = "", ["Form.Comunicaciones"] = ExtractValue(preview, "Form.Comunicaciones"),
+            ["Form.Huella"] = ExtractValue(preview, "Form.Huella"), ["Form.Accion"] = "Firmar",
+        });
+        Assert.Contains("Informe de derivación firmado.", signed);
+        Assert.Contains("el residente no tiene contacto urgente, así que no hace falta ningún intento de llamada", signed);
+        Assert.DoesNotContain("exige al menos un intento de llamada", signed);
+
         // Se vuelve a designar contacto en cuanto hay familia, y el motivo deja de verse.
         var addPage = await admin.GetStringAsync($"/Administracion/AnadirFamiliar?residenteId={residentId}");
         await admin.PostAsync("/Administracion/AnadirFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
