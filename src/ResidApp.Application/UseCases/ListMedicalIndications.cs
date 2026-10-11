@@ -12,7 +12,8 @@ public sealed record ListMedicalIndicationsCommand(Guid AmbitoPerfilId, CenterId
 /// después pasaron a seguimiento médico o a protocolo urgente), con su
 /// lectura, realización e incidencias. Las no leídas, vencidas o con incidencia siguen visibles. De un evento
 /// ya cerrado por Medicina siguen las que Enfermería aún no ha resuelto y las no realizadas después del
-/// cierre (una incidencia que Medicina todavía no ha visto nunca desaparece en silencio).</summary>
+/// cierre (una incidencia que Medicina todavía no ha visto nunca desaparece en silencio). Si lo cerró Enfermería
+/// (CJ, 4.2: cumplidas las indicaciones), Medicina no ha visto al cerrar ninguna incidencia: siguen todas las no realizadas.</summary>
 public sealed class ListMedicalIndications(
     IProfileScopeDirectoryProvider scopes, IChangeInboxDirectory directory, ISessionIdentityProvider session)
 {
@@ -26,7 +27,8 @@ public sealed class ListMedicalIndications(
                         or ClinicalEventStatus.ProtocoloUrgenteMedico
                     || (i.EventStatus == ClinicalEventStatus.Cerrado
                         && (i.Indication.Status is MedicalIndicationStatus.PendienteLectura or MedicalIndicationStatus.Leida
-                            || (i.Indication.Status == MedicalIndicationStatus.NoRealizada && i.Indication.ResolvedAt > i.EventClosedAt))))
+                            || (i.Indication.Status == MedicalIndicationStatus.NoRealizada
+                                && (i.EventClosedByProfile == SystemProfile.Enfermeria || i.Indication.ResolvedAt > i.EventClosedAt)))))
                 .ToList();
         });
 }

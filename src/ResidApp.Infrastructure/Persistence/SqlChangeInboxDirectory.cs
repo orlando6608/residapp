@@ -18,6 +18,13 @@ namespace ResidApp.Infrastructure.Persistence;
 /// de Medicina ni al revés.</summary>
 public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connections) : IChangeInboxDirectory
 {
+    /// <summary>El perfil que cerró el evento, tal como consta en la auditoría del cierre (CJ, 4.2: un evento escalado puede cerrarlo
+    /// Medicina o Enfermería). Null en un cierre del sistema (fallecimiento), que no pasa por el cierre normal. Usa el alias <c>ea</c>.</summary>
+    internal const string ClosedByProfileSql = """
+        (SELECT TOP (1) cierre_auditoria.perfil_activo FROM dbo.eventos_auditoria cierre_auditoria
+          WHERE cierre_auditoria.recurso_id = ea.id AND cierre_auditoria.accion_codigo = 'CLINICAL_EVENT_CLOSE')
+        """;
+
     internal const string ScopedEventsFrom = """
           FROM dbo.eventos_asistenciales ea
           JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
@@ -123,6 +130,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                    ea.valoracion_iniciada_en AS AssessmentStartedAt,
                    CAST(CASE WHEN ea.cerrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ClosedByCurrentAccount,
                    ea.cerrado_en AS ClosedAt, ea.cierre_sistema_codigo AS SystemClosureCode, ea.comunicacion_familiar_codigo AS FamilyCommunicationDecisionCode,
+                   {ClosedByProfileSql} AS ClosedByProfileCode,
                    {FamilyCommunicationSql.CurrentType} AS FamilyCommunicationTypeCode, {FamilyCommunicationSql.CurrentText} AS FamilyCommunicationText,
                    family.preparado_en AS FamilyCommunicationPreparedAt, escalation.motivo AS EscalationReason,
                    CAST(CASE WHEN escalation.escalado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS EscalatedByCurrentAccount,
@@ -221,7 +229,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                 row.FamilyCommunicationTypeCode is null ? null : new PreparedFamilyCommunication(
                     EnumCode.ParseCode<FamilyCommunicationType>(row.FamilyCommunicationTypeCode), row.FamilyCommunicationText!,
                     new DateTimeOffset(row.FamilyCommunicationPreparedAt!.Value, TimeSpan.Zero)),
-                row.SystemClosureCode == "FALLECIMIENTO"),
+                row.SystemClosureCode == "FALLECIMIENTO",
+                row.ClosedByProfileCode is null ? null : EnumCode.ParseCode<SystemProfile>(row.ClosedByProfileCode)),
             followUp is null ? null : new FollowUpDetail(
                 followUp.DueDate is null ? null : DateOnly.FromDateTime(followUp.DueDate.Value), followUp.Criterion,
                 followUp.ContinuityNotes, followUp.StartedByCurrentAccount, new DateTimeOffset(followUp.StartedAt, TimeSpan.Zero),
@@ -258,7 +267,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                    clinical.observacion AS Observation,
                    COALESCE(closure.registrado_por_perfil, clinical.registrado_por_perfil) AS AuthorProfileCode,
                    ea.recibido_en AS OccurredAt, ea.cerrado_en AS ClosedAt,
-                   CAST(CASE WHEN escalation.id IS NULL THEN 0 ELSE 1 END AS BIT) AS Escalated
+                   CAST(CASE WHEN escalation.id IS NULL THEN 0 ELSE 1 END AS BIT) AS Escalated,
+                   {ClosedByProfileSql} AS ClosedByProfileCode
             {scopedEventsFrom}
                AND ea.residente_id = @ResidentId
                AND ea.estado_codigo = 'CERRADO'
@@ -279,7 +289,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             e.EventId, EnumCode.ParseCode<ClinicalEventOrigin>(e.OriginCode), EnumCode.ParseCode<DailyChangeClassification>(e.ClassificationCode),
             areasByClosureId.GetValueOrDefault(e.EventId, []), e.Observation, EnumCode.ParseCode<SystemProfile>(e.AuthorProfileCode),
             new DateTimeOffset(e.OccurredAt, TimeSpan.Zero), new DateTimeOffset(e.ClosedAt, TimeSpan.Zero), e.Escalated,
-            contexts.GetValueOrDefault(e.EventId))).ToList();
+            contexts.GetValueOrDefault(e.EventId),
+            e.ClosedByProfileCode is null ? null : EnumCode.ParseCode<SystemProfile>(e.ClosedByProfileCode))).ToList();
     }
 
     /// <summary>ENF-18/MED-20: eventos abiertos de un residente visibles para el ámbito (ScopedEventsFrom: Medicina solo
@@ -566,7 +577,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
 
         var scoped = (await connection.QueryAsync<IndicationEventRow>(new CommandDefinition($"""
             SELECT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
-                   unit.nombre_visible AS UnitName, ea.estado_codigo AS StatusCode, ea.cerrado_en AS ClosedAt
+                   unit.nombre_visible AS UnitName, ea.estado_codigo AS StatusCode, ea.cerrado_en AS ClosedAt,
+                   {ClosedByProfileSql} AS ClosedByProfileCode
             {ScopedEventsFrom}
                AND EXISTS (SELECT 1 FROM dbo.indicaciones_medicas i WHERE i.evento_id = ea.id)
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct))).ToDictionary(e => e.EventId);
@@ -583,7 +595,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             return new MedicalIndicationListItem(
                 e.EventId, ResidentId.From(e.ResidentId), e.ResidentDisplayName, e.UnitName,
                 EnumCode.ParseCode<ClinicalEventStatus>(e.StatusCode),
-                e.ClosedAt is null ? null : new DateTimeOffset(e.ClosedAt.Value, TimeSpan.Zero), i.Summary);
+                e.ClosedAt is null ? null : new DateTimeOffset(e.ClosedAt.Value, TimeSpan.Zero), i.Summary,
+                e.ClosedByProfileCode is null ? null : EnumCode.ParseCode<SystemProfile>(e.ClosedByProfileCode));
         }).ToList();
     }
 
@@ -609,7 +622,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
     }
 
     private sealed record IndicationEventRow(
-        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string StatusCode, DateTime? ClosedAt);
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string StatusCode, DateTime? ClosedAt,
+        string? ClosedByProfileCode);
 
     private sealed record IndicationRow(
         Guid Id, Guid EventId, string Text, DateTime? DueDate, string? Criterion, string? AdditionalInformation,
@@ -853,7 +867,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         decimal? TemperatureCelsius, string? Observation, string? ClinicalData, string AuthorProfileCode, string? PriorityReasonCode,
         string? DirectNoticeNotes, DateTime OccurredAt, string StatusCode, int Revision, bool? AssessmentStartedByCurrentAccount,
         DateTime? AssessmentStartedAt, bool ClosedByCurrentAccount, DateTime? ClosedAt, string? SystemClosureCode, string? FamilyCommunicationDecisionCode,
-        string? FamilyCommunicationTypeCode, string? FamilyCommunicationText, DateTime? FamilyCommunicationPreparedAt,
+        string? ClosedByProfileCode, string? FamilyCommunicationTypeCode, string? FamilyCommunicationText, DateTime? FamilyCommunicationPreparedAt,
         string? EscalationReason, bool EscalatedByCurrentAccount, DateTime? EscalatedAt, bool? MedicalStartedByCurrentAccount,
         DateTime? MedicalStartedAt);
 
@@ -867,7 +881,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
 
     private sealed record ClosedEventRow(
         Guid EventId, string OriginCode, string ClassificationCode, string? Observation, string AuthorProfileCode,
-        DateTime OccurredAt, DateTime ClosedAt, bool Escalated);
+        DateTime OccurredAt, DateTime ClosedAt, bool Escalated, string? ClosedByProfileCode);
 
     private sealed record ContextRow(Guid EventId, int? BaselineVersionNumber, DateTime? BaselineSignedAt, string? UnitName);
 

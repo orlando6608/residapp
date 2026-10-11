@@ -312,6 +312,11 @@ public sealed class MedicinaController(
     private static bool CanClose(PendingChangeDetail detail) =>
         CanDecide(detail) || (detail.Medical.Assessment is not null && detail.Status == ClinicalEventStatus.ProtocoloUrgenteMedico);
 
+    /// <summary>CJ, 4.2: con indicaciones sin leer o sin resolver no se cierra, salvo en protocolo urgente médico.</summary>
+    private static bool HasUnfulfilledIndications(PendingChangeDetail detail) =>
+        detail.Status != ClinicalEventStatus.ProtocoloUrgenteMedico
+        && detail.Medical.Indications.Any(i => i.Status is MedicalIndicationStatus.PendienteLectura or MedicalIndicationStatus.Leida);
+
     /// <summary>MED-13: confirmar la activación del protocolo urgente, con una nota opcional.</summary>
     public async Task<IActionResult> ActivarProtocolo(Guid eventoId, CancellationToken ct)
     {
@@ -821,6 +826,8 @@ public sealed class MedicinaController(
         ModelState.AddModelError(string.Empty, result.Error!.Code switch
         {
             ApplicationFailureCode.Conflict => ConcurrencyMessage + " Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput when HasUnfulfilledIndications(detail) =>
+                "No se puede cerrar el evento mientras queden indicaciones sin cumplir: Enfermería tiene que leerlas y registrar si se realizaron.",
             ApplicationFailureCode.InvalidInput when detail.Referral is not null => ReferralDisplay.CloseMessage,
             ApplicationFailureCode.InvalidInput =>
                 "Revisa los datos: decide si se comunica a la familia y, si preparas la comunicación, elige el tipo y escribe el texto. Para cerrar hace falta una valoración médica guardada.",

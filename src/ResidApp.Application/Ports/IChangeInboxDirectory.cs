@@ -45,7 +45,7 @@ public sealed record PreparedFamilyCommunication(FamilyCommunicationType Type, s
 /// el nombre de otros profesionales no se expone) y la decisión de comunicación familiar.</summary>
 public sealed record ClinicalEventClosure(
     bool ClosedByCurrentAccount, DateTimeOffset ClosedAt, FamilyCommunicationDecision Decision,
-    PreparedFamilyCommunication? Communication, bool ClosedBySystemForDeath = false);
+    PreparedFamilyCommunication? Communication, bool ClosedBySystemForDeath = false, SystemProfile? ClosedByProfile = null);
 
 /// <summary>Una comunicación familiar de los últimos 30 días en el ámbito (tarjeta "Comunicaciones" de
 /// ENF-01), con el evento del que procede. Aprobada al guardarla; Version es el número de correcciones (0 es el original) y PublishedEarlyAt cuando Administración la publicó antes de su hora.</summary>
@@ -177,7 +177,7 @@ public sealed record MedicalDetail(
 /// se cerró el evento (null si sigue abierto).</summary>
 public sealed record MedicalIndicationListItem(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, ClinicalEventStatus EventStatus,
-    DateTimeOffset? EventClosedAt, MedicalIndicationSummary Indication);
+    DateTimeOffset? EventClosedAt, MedicalIndicationSummary Indication, SystemProfile? EventClosedByProfile = null);
 
 /// <summary>ENF-04: detalle completo de un evento recibido. Según el origen trae las áreas y la temperatura
 /// del cambio de Auxiliar, o la observación y los datos clínicos del evento propio; en ambos casos la
@@ -209,7 +209,7 @@ public sealed record OpenEventSummary(
 public sealed record ClosedEventSummary(
     Guid EventId, ClinicalEventOrigin Origin, DailyChangeClassification Classification, IReadOnlyList<DailyChangeAreaCode> Areas,
     string? Observation, SystemProfile AuthorProfile, DateTimeOffset OccurredAt, DateTimeOffset ClosedAt, bool Escalated,
-    ClinicalEventContext? Context);
+    ClinicalEventContext? Context, SystemProfile? ClosedByProfile = null);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre

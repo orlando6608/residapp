@@ -134,6 +134,7 @@ builder.Services.AddScoped<ListTransferTeams>();
 builder.Services.AddScoped<ITransferTeamDirectory, SqlTransferTeamDirectory>();
 builder.Services.AddScoped<EscalateClinicalEvent>();
 builder.Services.AddScoped<ListPendingIndications>();
+builder.Services.AddScoped<ListEventsReadyToClose>();
 builder.Services.AddScoped<RecordIndicationProgress>();
 builder.Services.AddScoped<ListClosedEvents>();
 builder.Services.AddScoped<ReadBaselineHistory>();

@@ -1,3 +1,4 @@
+@using ResidApp.Domain.Medicina
 @using ResidApp.Domain.Enfermeria
 @using ResidApp.Web.Models
 @model CerrarViewModel
@@ -5,8 +6,13 @@
     ViewData["Title"] = "Cerrar el evento";
     var evento = Model.Event;
     ViewData["Derivacion"] = evento.Referral;
-    var content = evento.Assessment!.Content;
-    var (volver, volverTexto) = evento.Status == ClinicalEventStatus.ProtocoloUrgente ? ("Protocolo", "Protocolo urgente") : ("Decision", "Decisión asistencial");
+    // CJ, 4.2: con indicaciones de Medicina ya cumplidas el episodio lo cierra Enfermería. Ahí no hay valoración de Enfermería en borrador
+    // (se cerró al escalar, o el evento es propio de Medicina): se revisa la valoración médica y sus indicaciones.
+    var trasIndicaciones = evento.Status == ClinicalEventStatus.ConIndicacionPendiente;
+    var content = evento.Assessment?.Content;
+    var valoracionMedica = evento.Medical.Assessment;
+    var (volver, volverTexto) = evento.Status == ClinicalEventStatus.ProtocoloUrgente ? ("Protocolo", "Protocolo urgente")
+        : trasIndicaciones ? ("DetalleCambio", "Detalle del evento") : ("Decision", "Decisión asistencial");
 }
 
 <nav aria-label="breadcrumb">
@@ -14,7 +20,10 @@
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
         <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
         <li class="breadcrumb-item"><a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId">Detalle</a></li>
-        <li class="breadcrumb-item"><a asp-action="@volver" asp-route-eventoId="@evento.EventId">@volverTexto</a></li>
+        @if (!trasIndicaciones)
+        {
+            <li class="breadcrumb-item"><a asp-action="@volver" asp-route-eventoId="@evento.EventId">@volverTexto</a></li>
+        }
         <li class="breadcrumb-item active" aria-current="page">Cerrar</li>
     </ol>
 </nav>
@@ -22,30 +31,79 @@
 <h1 class="h3">Cerrar el evento — @evento.ResidentDisplayName</h1>
 <div asp-validation-summary="All" class="text-danger"></div>
 
-<div class="card mb-3">
-    <div class="card-body">
-        <h2 class="h5 card-title">Resumen de la valoración</h2>
-        <p class="text-muted">
-            Último guardado @(evento.Assessment.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
-            el @evento.Assessment.LastUpdatedAt.ToLocalTime().ToString("g"). Al cerrar, la valoración ya no se puede modificar.
-        </p>
-        <dl class="row mb-0">
-            @foreach (var (etiqueta, texto) in new[] { ("Hallazgos", content.Findings), ("Valoración", content.Assessment), ("Actuaciones", content.Actions), ("Comunicaciones", content.Communications), ("Resultado", content.Outcome) })
-            {
-                if (texto is not null)
+@if (trasIndicaciones && valoracionMedica is { } medica)
+{
+    var medico = medica.Content;
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Resumen de la valoración médica</h2>
+            <p class="text-muted">
+                Medicina indicó algo a Enfermería y ya está cumplido, así que el episodio lo cierras tú. Al cerrar, la valoración médica ya
+                no se puede modificar.
+            </p>
+            <dl class="row mb-0">
+                @foreach (var (etiqueta, texto) in new[] { ("Hallazgos y exploración", medico.FindingsAndExamination), ("Valoración", medico.Assessment), ("Actuaciones", medico.Actions) })
                 {
-                    <dt class="col-sm-3">@etiqueta</dt>
-                    <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                    if (texto is not null)
+                    {
+                        <dt class="col-sm-3">@etiqueta</dt>
+                        <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                    }
                 }
-            }
-            @if (!content.Vitals.IsEmpty)
-            {
-                <dt class="col-sm-3">Constantes</dt>
-                <dd class="col-sm-9">@VitalSignsDisplay.Summary(content.Vitals)</dd>
-            }
-        </dl>
+                @if (!medico.Vitals.IsEmpty)
+                {
+                    <dt class="col-sm-3">Constantes</dt>
+                    <dd class="col-sm-9">@VitalSignsDisplay.Summary(medico.Vitals)</dd>
+                }
+            </dl>
+        </div>
     </div>
-</div>
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Indicaciones cumplidas</h2>
+            <ul class="list-unstyled mb-0">
+                @foreach (var indicacion in evento.Medical.Indications)
+                {
+                    <li class="mb-2">
+                        <span class="badge @MedicalIndicationDisplay.BadgeClass(indicacion.Status)">@MedicalIndicationDisplay.Label(indicacion.Status)</span>
+                        <span style="white-space: pre-line">@indicacion.Text</span>
+                        @if (indicacion.Incident is not null)
+                        {
+                            <span class="d-block" style="white-space: pre-line"><strong>Incidencia:</strong> @indicacion.Incident</span>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">Resumen de la valoración</h2>
+            <p class="text-muted">
+                Último guardado @(evento.Assessment!.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
+                el @evento.Assessment.LastUpdatedAt.ToLocalTime().ToString("g"). Al cerrar, la valoración ya no se puede modificar.
+            </p>
+            <dl class="row mb-0">
+                @foreach (var (etiqueta, texto) in new[] { ("Hallazgos", content!.Findings), ("Valoración", content.Assessment), ("Actuaciones", content.Actions), ("Comunicaciones", content.Communications), ("Resultado", content.Outcome) })
+                {
+                    if (texto is not null)
+                    {
+                        <dt class="col-sm-3">@etiqueta</dt>
+                        <dd class="col-sm-9" style="white-space: pre-line">@texto</dd>
+                    }
+                }
+                @if (!content.Vitals.IsEmpty)
+                {
+                    <dt class="col-sm-3">Constantes</dt>
+                    <dd class="col-sm-9">@VitalSignsDisplay.Summary(content.Vitals)</dd>
+                }
+            </dl>
+        </div>
+    </div>
+}
 
 @if (evento.FollowUp is { } seguimiento)
 {

@@ -10,9 +10,9 @@ public sealed record CloseMedicalEventCommand(
     FamilyCommunicationDecision? Comunicacion, FamilyCommunicationType? TipoComunicacion, string? TextoComunicacion);
 
 /// <summary>
-/// MED-15 a MED-17 "cerrar el evento", salida de la conducta médica: cierre idempotente sin segundo cierre de
-/// Enfermería, con la decisión explícita de comunicación familiar (mismo mecanismo que CloseClinicalEvent).
-/// Se puede cerrar con indicaciones todavía pendientes: siguen visibles para Enfermería hasta resolverse.
+/// MED-15 a MED-17 "cerrar el evento", salida de la conducta médica: cierre idempotente con la decisión explícita de
+/// comunicación familiar (mismo mecanismo que CloseClinicalEvent). CJ (4.2): no se cierra con indicaciones sin cumplir
+/// (salvo desde el protocolo urgente médico); cumplidas, cierra Enfermería (CloseClinicalEvent) o Medicina.
 /// </summary>
 public sealed class CloseMedicalEvent(
     IProfileScopeDirectoryProvider scopes, IChangeInboxDirectory directory,

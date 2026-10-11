@@ -404,6 +404,113 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             "SELECT COUNT(*) FROM dbo.valoraciones_enfermeria_versiones WHERE evento_id = @eventId", new { eventId }));
     }
 
+
+    [Fact]
+    public async Task Indicaciones_MedicinaNoCierraSinCumplirlas_YEnfermeriaCierraElEpisodio_ConLaAppEntera()
+    {
+        // CJ, 4.2 por la app real: Medicina indica algo a Enfermería y no puede cerrar mientras esté sin cumplir; al cumplirse, Enfermería
+        // lo encuentra en «Para cerrar» y cierra el episodio sobre la valoración médica (el escalado ya cerró la suya).
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Cierre Indicaciones Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Disnea progresiva (prueba funcional).",
+            ["Clasificacion"] = "Ordinario",
+        }))).Content.ReadAsStringAsync();
+        var eventId = await connection.ExecuteScalarAsync<Guid>(
+            "SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        Task<int> RevisionAsync() => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+        Task<string> PostAsync(HttpClient client, string url, string page, Dictionary<string, string> fields)
+        {
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            return client.PostAsync(url, new FormUrlEncodedContent(fields)).ContinueWith(async r => WebUtility.HtmlDecode(await r.Result.Content.ReadAsStringAsync())).Unwrap();
+        }
+
+        await PostAsync(nurse, "/Enfermeria/EmpezarValoracion", detailPage, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        var assessmentPage = await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}");
+        await PostAsync(nurse, "/Enfermeria/Valoracion", assessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Hallazgos"] = "Crepitantes en base derecha.",
+        });
+        var escalatePage = await nurse.GetStringAsync($"/Enfermeria/Escalar?eventoId={eventId}");
+        await PostAsync(nurse, "/Enfermeria/Escalar", escalatePage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Motivo"] = "Disnea progresiva pese a oxigenoterapia.",
+        });
+        Assert.Equal("ESCALADO_MEDICINA", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+
+        var medicalDetail = await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/EmpezarValoracion", medicalDetail, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        var medicalAssessmentPage = await doctor.GetStringAsync($"/Medicina/Valoracion?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/Valoracion", medicalAssessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.HallazgosExploracion"] = "Crepitantes bibasales.",
+            ["Form.Valoracion"] = "Posible infección respiratoria.", ["Form.Actuaciones"] = "Se solicita radiografía.",
+        });
+        var indicationPage = await doctor.GetStringAsync($"/Medicina/Indicacion?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/Indicacion", indicationPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Texto"] = "Control de SpO2 cada 4 horas.",
+            ["Form.Criterio"] = "Si baja de 90 %, avisar.",
+        });
+        Assert.Equal("CON_INDICACION_PENDIENTE", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+
+        // Medicina ve el bloqueo y, si fuerza el envío, el mensaje.
+        var blockedPage = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Cerrar?eventoId={eventId}"));
+        Assert.Contains("No se puede cerrar el evento hasta que Enfermería las haya leído", blockedPage);
+        Assert.Matches("<button[^>]*disabled[^>]*>Cerrar evento</button>", blockedPage);
+        var forced = await PostAsync(doctor, "/Medicina/Cerrar", blockedPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.OperacionId"] = Guid.NewGuid().ToString(),
+            ["Form.Comunicacion"] = "NoComunicar",
+        });
+        Assert.Contains("No se puede cerrar el evento mientras queden indicaciones sin cumplir", forced);
+        Assert.Equal("CON_INDICACION_PENDIENTE", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+
+        // Enfermería no lo tiene aún en «Para cerrar»; lee y realiza la indicación, y la pantalla le ofrece cerrar.
+        Assert.DoesNotContain("Residente Cierre Indicaciones Funcional", WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/ParaCerrar")));
+        var indicationId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId });
+        Task<int> IndicationRevisionAsync() => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.indicaciones_medicas WHERE id = @indicationId", new { indicationId });
+        var inbox = await nurse.GetStringAsync("/Enfermeria/Indicaciones");
+        await PostAsync(nurse, "/Enfermeria/ProgresoIndicacion", inbox, new()
+        {
+            ["eventoId"] = eventId.ToString(), ["indicacionId"] = indicationId.ToString(), ["revision"] = (await IndicationRevisionAsync()).ToString(),
+        });
+        var afterDone = await PostAsync(nurse, "/Enfermeria/ProgresoIndicacion", inbox, new()
+        {
+            ["eventoId"] = eventId.ToString(), ["indicacionId"] = indicationId.ToString(), ["revision"] = (await IndicationRevisionAsync()).ToString(),
+            ["realizada"] = "true",
+        });
+        Assert.Contains("Ya están cumplidas todas las indicaciones de este episodio: puedes cerrarlo.", afterDone);
+        Assert.Contains("Cerrar episodio", afterDone);
+
+        var forNurse = WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/ParaCerrar"));
+        Assert.Contains("Residente Cierre Indicaciones Funcional", forNurse);
+        var closePage = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Cerrar?eventoId={eventId}"));
+        Assert.Contains("Resumen de la valoración médica", closePage);
+        Assert.Contains("Control de SpO2 cada 4 horas.", closePage);
+        var closed = await PostAsync(nurse, "/Enfermeria/Cerrar", closePage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.OperacionId"] = Guid.NewGuid().ToString(),
+            ["Form.Comunicacion"] = "NoComunicar",
+        });
+
+        Assert.Contains("Evento cerrado.", closed);
+        Assert.Contains("Cerrado por ti", closed);
+        Assert.Contains("Cerrado por otro profesional de Enfermería", WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}")));
+        Assert.Equal("CERRADO", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+        Assert.Equal("CERRADA", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.valoraciones_medicas WHERE evento_id = @eventId", new { eventId }));
+        Assert.DoesNotContain("Residente Cierre Indicaciones Funcional", WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/ParaCerrar")));
+    }
     [Fact]
     public async Task Enfermeria_DerivaAUrgenciasConComunicaciones_VistaPreviaFirmaYPdf_ConLaAppEntera()
     {
@@ -994,6 +1101,24 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             VALUES (NEWID(), @profileScopeId, @centerId, @unitId, @now, @accountId);
             INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
             VALUES (NEWID(), @profileScopeId, @centerId, 'BASELINE_INITIAL_COMPLETE', @now, @accountId);
+            """, new { accountId, externalSubject, now, profileScopeId, centerId = seed.CenterId, unitId = seed.UnitId });
+        return externalSubject;
+    }
+
+    /// <summary>Una cuenta de Medicina en el centro y la unidad de la semilla.</summary>
+    private static async Task<string> GrantMedicineAsync((string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed)
+    {
+        var accountId = Guid.NewGuid();
+        var profileScopeId = Guid.NewGuid();
+        var externalSubject = $"functional-med-{Guid.NewGuid().ToString("N")[..12]}";
+        var now = DateTimeOffset.UtcNow.UtcDateTime;
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@accountId, @externalSubject, 'ACTIVE', @now);
+            INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+            VALUES (@profileScopeId, @accountId, @centerId, 'MEDICINA', 'ACTIVE', @now, @accountId);
+            INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @profileScopeId, @centerId, @unitId, @now, @accountId);
             """, new { accountId, externalSubject, now, profileScopeId, centerId = seed.CenterId, unitId = seed.UnitId });
         return externalSubject;
     }

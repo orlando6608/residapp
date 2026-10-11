@@ -37,7 +37,7 @@ public sealed partial class SqlChangeInboxDirectory
                    clinical.observacion AS Observation,
                    COALESCE(closure.registrado_por_perfil, clinical.registrado_por_perfil) AS AuthorProfileCode,
                    ea.recibido_en AS OccurredAt, ea.cerrado_en AS ClosedAt, ea.comunicacion_familiar_codigo AS DecisionCode,
-                   escalation.motivo AS EscalationReason, escalation.escalado_en AS EscalatedAt,
+                   escalation.motivo AS EscalationReason, escalation.escalado_en AS EscalatedAt, {ClosedByProfileSql} AS ClosedByProfileCode,
                    {FamilyCommunicationSql.CurrentType} AS FamilyTypeCode, {FamilyCommunicationSql.CurrentText} AS FamilyText, family.preparado_en AS FamilyPreparedAt
             {scopedEventsFrom}
                AND ea.residente_id = @ResidentId
@@ -60,9 +60,10 @@ public sealed partial class SqlChangeInboxDirectory
                     Utc(e.OccurredAt), e.EventId, EnumCode.ParseCode<SystemProfile>(e.AuthorProfileCode),
                     EnumCode.ParseCode<ClinicalEventOrigin>(e.OriginCode), EnumCode.ParseCode<DailyChangeClassification>(e.ClassificationCode),
                     e.Observation, areas.GetValueOrDefault(e.EventId, [])));
-                // Un escalado solo lo cierra Medicina y un evento propio de Medicina nunca pasa por Enfermería
-                // (la misma deducción que Shared/_CierreEvento).
-                var closedBy = e.EscalatedAt is not null || e.OriginCode == "EVENTO_MEDICINA" ? SystemProfile.Medicina : SystemProfile.Enfermeria;
+                // El perfil que cerró consta en la auditoría del cierre (un escalado puede cerrarlo Medicina o, cumplidas las
+                // indicaciones, Enfermería); sin ella, la deducción de siempre.
+                var closedBy = e.ClosedByProfileCode is not null ? EnumCode.ParseCode<SystemProfile>(e.ClosedByProfileCode)
+                    : e.EscalatedAt is not null || e.OriginCode == "EVENTO_MEDICINA" ? SystemProfile.Medicina : SystemProfile.Enfermeria;
                 if (e.EscalatedAt is { } escalatedAt)
                 {
                     entries.Add(new TimelineEntry.Escalated(Utc(escalatedAt), e.EventId, e.EscalationReason!));
@@ -254,7 +255,7 @@ public sealed partial class SqlChangeInboxDirectory
 
     private sealed record TimelineEventRow(
         Guid EventId, string OriginCode, string ClassificationCode, string? Observation, string AuthorProfileCode, DateTime OccurredAt,
-        DateTime? ClosedAt, string? DecisionCode, string? EscalationReason, DateTime? EscalatedAt, string? FamilyTypeCode,
+        DateTime? ClosedAt, string? DecisionCode, string? EscalationReason, DateTime? EscalatedAt, string? ClosedByProfileCode, string? FamilyTypeCode,
         string? FamilyText, DateTime? FamilyPreparedAt);
 
     private sealed record AssessmentVersionRow(
