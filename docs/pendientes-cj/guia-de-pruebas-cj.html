@@ -270,7 +270,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="guia-de-pruebas-cj" data-version="2026-10-08">
+<body data-doc="guia-de-pruebas-cj" data-version="2026-10-11">
 
 <div class="page">
   <header>
@@ -280,13 +280,13 @@
     <p class="lead prose">
       Ya están construidos los circuitos del Auxiliar, Enfermería, Medicina, Dirección Clínica y Administración, el basal con
       Barthel y la protección de los datos por centro. Los tests automáticos no pueden decir si las pantallas hacen lo que tú
-      esperas como clínica. Esta guía te propone 60 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
+      esperas como clínica. Esta guía te propone 66 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
       si coincide y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>60 pruebas en 7 temas, más 3 preguntas finales. 20 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>66 pruebas en 7 temas, más 3 preguntas finales. 22 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Las imprescindibles, hora y media aproximadamente; todas, entre tres y cuatro horas. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -374,7 +374,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (20 de 60).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (22 de 66).</p>
 
     <h3>Qué NO se prueba, porque todavía no existe</h3>
     <ul class="lista prose">
@@ -392,7 +392,8 @@
       <li><strong>2.11 y 2.12</strong> necesitan un evento cerrado con «Preparar comunicación» (2.8 o 3.5). Haz la 2.12 dentro de la hora siguiente a cerrarlo.</li>
       <li><strong>2.13 y 5.7</strong> necesitan eventos abiertos, que ya hay de pruebas anteriores.</li>
       <li><strong>6.10, 6.11 y 6.12</strong> usan el residente «CJ…» que das de alta en la 6.1; la 6.10 también usa la habitación y la plaza de la 6.7.</li>
-      <li><strong>6.15</strong> necesita un comunicado preparado (2.8 o 3.5).</li>
+      <li><strong>2.14</strong> necesita la 3.3 (una indicación sin cumplir); la <strong>3.8</strong> también, y es mejor hacerla junto a la 2.14.</li>
+      <li><strong>3.9, 5.9 y 6.15</strong> necesitan un comunicado preparado (2.8 o 3.5); la <strong>6.16</strong> cambia el horario de los siguientes.</li>
     </ul>
     <p class="why">Si te saltas una prueba, marca D en la que dependa de ella.</p>
   </section>
@@ -686,8 +687,7 @@
           <li>En Inicio de Enfermería abre la tarjeta «Comunicaciones».</li>
           <li>Busca la comunicación que preparaste al cerrar un evento (pruebas 2.8 y 3.5) y mira la etiqueta de su hora.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves las comunicaciones de los últimos 30 días, cada una con el residente, el tipo, el texto y la hora a la que se publica («Se publica el …»): tras 1 hora de margen, a las 19:00. Por ejemplo, una comunicación preparada a las 16:10 sale hoy a las 19:00; una preparada a las 18:30 sale mañana a las 19:00. Quien la prepara la aprueba al guardarla; no hay otra aprobación. Cuando llega su hora, o Administración la publica antes (prueba 6.15), pasa a «Publicada». Todavía no la lee nadie, porque no existe el Portal Familiar.</div>
-        <p class="context">Tu opinión: si las 19:00 y la hora de margen deben ser iguales en todos los centros, lo recogemos en el documento «Confirmaciones de la segunda tanda», pregunta 5.1. Aquí solo comprueba que se ven bien.</p>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves las comunicaciones de los últimos 30 días, cada una con el residente, el tipo, el texto y la hora a la que se publica («Se publica el …»): la hora que fijó el centro al guardarla (por defecto, tras 1 hora de margen, a las 19:00). Por ejemplo, una comunicación preparada a las 16:10 sale hoy a las 19:00; una preparada a las 18:30 sale mañana a las 19:00. Quien la prepara la aprueba al guardarla; no hay otra aprobación. Cuando llega su hora, o Administración la publica antes (prueba 6.15), pasa a «Publicada». Todavía no la lee nadie, porque no existe el Portal Familiar.</div>
         <fieldset class="choices" aria-labelledby="t-2-11">
           <label class="choice"><input type="radio" name="r-2-11" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-2-11" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -698,14 +698,13 @@
       </article>
 
       <article class="q" data-q="2.12">
-        <div class="q-head"><span class="n">2.12</span><h3 class="q-title" id="t-2-12">Corregir un comunicado durante la hora de margen</h3><span class="chip">Sin probar</span></div>
+        <div class="q-head"><span class="n">2.12</span><h3 class="q-title" id="t-2-12">Corregir un comunicado hasta que se publique</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Cierra un evento con «Preparar comunicación» (como en la prueba 3.5) y, antes de que pase una hora, abre la tarjeta «Comunicaciones».</li>
+          <li>Cierra un evento con «Preparar comunicación» (como en la prueba 3.5) y, antes de que se publique, abre la tarjeta «Comunicaciones».</li>
           <li>En ese comunicado pulsa «Corregir». Cambia el texto (y, si quieres, el tipo) y pulsa «Guardar la corrección». Prueba antes a dejar el texto vacío.</li>
-          <li>Vuelve a «Comunicaciones»: debe salir el texto nuevo con «Corregido una vez». Pasada la hora, comprueba que ya no hay botón «Corregir».</li>
+          <li>Vuelve a «Comunicaciones»: debe salir el texto nuevo con «Corregido una vez». Comprueba que sigue el botón «Corregir» aunque haya pasado más de una hora; cuando se publique (o la publiquen antes, prueba 6.15), ya no lo hay.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Durante la primera hora cualquiera de Enfermería de la unidad puede corregir el texto y el tipo, no solo quien lo preparó. Sin texto no se guarda. La familia verá solo el texto vigente; las correcciones anteriores quedan en el historial y en la auditoría. Pasada la hora, o si Administración ya lo publicó antes, no se puede corregir.</div>
-        <p class="context">Tu opinión: si basta con una hora de margen o prefieres corregir hasta que se publique lo recogemos en el documento «Confirmaciones de la segunda tanda», pregunta 5.2. Aquí solo comprueba que funciona.</p>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Hasta que se publique, cualquiera de Enfermería (o de Medicina) de la unidad puede corregir el texto y el tipo, no solo quien lo preparó. Sin texto no se guarda. La familia verá solo el texto vigente; las correcciones anteriores quedan en el historial y en la auditoría. Llegada la hora de publicación, o si Administración o Dirección ya lo publicaron antes, no se puede corregir.</div>
         <fieldset class="choices" aria-labelledby="t-2-12">
           <label class="choice"><input type="radio" name="r-2-12" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-2-12" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -722,12 +721,29 @@
           <li>Si ves un aviso, pulsa el nombre del residente. Después registra o valora el evento que aparece (por ejemplo, empieza la valoración) y vuelve a Inicio.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Hay una lista de los hitos de tu perfil a punto de pasar de plazo (el último cuarto del plazo) o ya pasados, con el residente, la unidad, el hito y la hora de vencimiento; lo vencido sale primero y en rojo. A Enfermería le tocan la valoración tras un cambio de Auxiliar, la recepción de transferencias y la lectura y realización de indicaciones; a Medicina, la valoración médica. El aviso desaparece al cumplir el hito. Como hay eventos antiguos de pruebas anteriores, es probable que veas avisos. Por ejemplo, con un plazo de 8 h el aviso aparece a partir de las 6 h; con uno de 30 min, a partir de los 22 min y medio.</div>
-        <p class="context">Tu opinión: los plazos (8 h; 30 min si es prioritario) son los que diste; si el aviso en el último cuarto te parece bien o prefieres otro momento lo recogemos en «Confirmaciones de la segunda tanda», pregunta 4.1. Aquí comprueba que el aviso aparece y desaparece al cumplir el hito.</p>
         <fieldset class="choices" aria-labelledby="t-2-13">
           <label class="choice"><input type="radio" name="r-2-13" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-2-13" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-2-13" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-2-13" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2.14">
+        <div class="q-head"><span class="n">2.14</span><h3 class="q-title" id="t-2-14">Cerrar un episodio cuando Medicina ha indicado algo</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Con Medicina (prueba 3.3) deja una indicación sin cumplir en un evento escalado. Entra como Enfermería, abre el evento (desde «Escalados a Medicina») y comprueba que no hay botón de cerrar.</li>
+          <li>En «Indicaciones» pulsa «Confirmar lectura» y después «Registrar como realizada» (o, en otra indicación, «no realizada» con su incidencia).</li>
+          <li>Al registrar la última, la app te lleva al detalle del evento. Pulsa «Cerrar episodio», decide la comunicación a la familia y cierra. Mira también la tarjeta «Para cerrar» del inicio antes de cerrar.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Mientras quede una indicación sin cumplir, Enfermería no ve «Cerrar episodio» y Medicina tampoco puede cerrar (prueba 3.8). Cumplidas todas, el episodio aparece en «Para cerrar» y lo puedes cerrar con la misma decisión sobre la comunicación a la familia. En el detalle y en el Historial pone «Cerrado por Enfermería»; Medicina ve en sus indicaciones las que quedaron «no realizadas» con su incidencia.</div>
+        <fieldset class="choices" aria-labelledby="t-2-14">
+          <label class="choice"><input type="radio" name="r-2.14" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2.14" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2.14" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2.14" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
@@ -818,7 +834,7 @@
           <li>En la conducta médica elige «Cerrar el evento». Revisa el resumen de tu valoración y los pendientes.</li>
           <li>Elige «Preparar comunicación», tipo ordinaria o relevante, y escribe un texto comprensible para la familia. Pulsa «Cerrar evento».</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Puedes cerrar aunque haya indicaciones sin resolver: siguen en la bandeja de Enfermería. La comunicación queda aprobada y programada para publicarse (1 hora de margen y a las 19:00). Enfermería no tiene que cerrar el evento otra vez (verá «Cerrado por Medicina»).</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Solo puedes cerrar si no queda ninguna indicación sin cumplir (si la hay, ver la prueba 3.8). La comunicación queda aprobada y programada para publicarse a la hora que tenga fijada el centro (por defecto, a las 19:00 con 1 hora de margen). Enfermería no tiene que cerrar el evento otra vez (verá «Cerrado por Medicina»).</div>
         <fieldset class="choices" aria-labelledby="t-3-5">
           <label class="choice"><input type="radio" name="r-3-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-3-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -857,6 +873,42 @@
           <label class="choice"><input type="radio" name="r-3-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-3-7" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-3-7" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="3.8">
+        <div class="q-head"><span class="n">3.8</span><h3 class="q-title" id="t-3-8">Medicina no cierra con indicaciones sin cumplir</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Como Medicina, emite una indicación en un evento escalado (prueba 3.3) y, sin que Enfermería la lea, abre «Cerrar el evento».</li>
+          <li>Comprueba el aviso y el botón. Después deja que Enfermería cumpla la indicación (prueba 2.14) y vuelve a «Cerrar el evento».</li>
+          <li>Prueba también el protocolo urgente: con una indicación sin cumplir, activa el protocolo urgente, firma la derivación y registra la llamada, y cierra.
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Con una indicación sin leer o sin resolver, el botón «Cerrar evento» está desactivado y un aviso explica que Enfermería debe leerla y registrar si se realizó. Cumplidas todas, puedes cerrar tú o puede cerrar Enfermería. La excepción es el protocolo urgente: tras derivar a Urgencias puedes cerrar con indicaciones sin cumplir, que siguen en la bandeja de Enfermería.</div>
+        <fieldset class="choices" aria-labelledby="t-3-8">
+          <label class="choice"><input type="radio" name="r-3.8" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-3.8" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3.8" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-3.8" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="3.9">
+        <div class="q-head"><span class="n">3.9</span><h3 class="q-title" id="t-3-9">Comunicaciones de Medicina</h3><span class="chip">Sin probar</span></div>
+
+        <ol class="pasos">
+          <li>Cierra un evento con «Preparar comunicación» (prueba 3.5). En el inicio de Medicina, abre la tarjeta «Comunicaciones».</li>
+          <li>Mira la hora a la que se publica. Pulsa «Corregir», cambia el texto y guarda la corrección.</li>
+          <li>Publica el comunicado antes de su hora desde Administración o Dirección (pruebas 6.15 y 5.9) y vuelve a la lista de Medicina.
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Medicina ve las comunicaciones de los eventos de su ámbito, con la hora a la que se publican, y puede corregir su texto y su tipo hasta que se publiquen (la corrección queda en la auditoría con el perfil Medicina). Publicado el comunicado, desaparece el botón «Corregir».</div>
+        <fieldset class="choices" aria-labelledby="t-3-9">
+          <label class="choice"><input type="radio" name="r-3.9" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-3.9" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3.9" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-3.9" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
@@ -1108,7 +1160,6 @@
           <li>Mira por hito cuántos están fuera de plazo y a punto de vencer, y la lista de episodios con algún hito fuera de plazo. Abre el detalle operativo de uno.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Mide siete hitos con los plazos que fijaste (valoración de Enfermería, valoración médica, recepción de la transferencia, informe de derivación, primera llamada a la familia, lectura y realización de la indicación), por unidad y periodo, nunca por profesional y sin contenido clínico. «Fuera de plazo» son los hechos tarde y los que siguen sin hacer con el plazo ya pasado; «a punto de vencer», los que están en el último cuarto del plazo. No se mide un hito sin hacer de un episodio ya cerrado. Por ejemplo, una valoración de Enfermería con plazo de 8 h, hecha a las 9 h, cuenta como fuera de plazo; si a las 9 h sigue sin hacer, también.</div>
-        <p class="context">Tu opinión: ¿cuadra con lo que esperabas de la revisión de calidad de proceso? Si no medir los hitos de episodios ya cerrados es lo correcto, lo recogemos en «Confirmaciones de la segunda tanda», pregunta 4.2.</p>
         <fieldset class="choices" aria-labelledby="t-5-7">
           <label class="choice"><input type="radio" name="r-5-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-5-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1133,6 +1184,23 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
+
+      <article class="q" data-q="5.9">
+        <div class="q-head"><span class="n">5.9</span><h3 class="q-title" id="t-5-9">Dirección: publicar un comunicado antes de su hora</h3><span class="chip">Sin probar</span></div>
+
+        <ol class="pasos">
+          <li>Con un comunicado preparado (prueba 2.8 o 3.5), entra como Dirección y abre «Comunicados a la familia» desde Inicio.</li>
+          <li>Busca el comunicado y mira su hora. Pulsa «Publicar ahora».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Dirección ve los comunicados de los residentes de su ámbito de los últimos 30 días, con su hora de publicación y sin el nombre de quien los preparó. «Publicar ahora» lo publica antes de su hora, solo una vez, y queda en la auditoría con el perfil Dirección Clínica. Es la única acción que puede hacer este perfil.</div>
+        <fieldset class="choices" aria-labelledby="t-5-9">
+          <label class="choice"><input type="radio" name="r-5.9" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5.9" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5.9" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5.9" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
     </div>
   </section>
 
@@ -1147,10 +1215,10 @@
         <div class="q-head"><span class="n">6.1</span><h3 class="q-title" id="t-6-1">Dar de alta a un residente</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
           <li>En Inicio pulsa «Alta de residente». Elige la unidad, escribe un nombre ficticio, la fecha de nacimiento y el sexo documentado.</li>
-          <li>En los familiares escribe al menos uno (nombre, relación y teléfono) y marca «Contacto prioritario». Prueba antes a guardar sin ningún contacto prioritario.</li>
+          <li>En los familiares escribe al menos uno (nombre, relación y teléfono) y marca «Contacto prioritario». Prueba antes a guardar sin ningún contacto prioritario y sin motivo (la prueba 6.17 cubre el alta sin familia).</li>
           <li>Guarda.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin ningún contacto prioritario el alta no se guarda. Con él, aviso «Residente dado de alta» con su identificador, y el familiar queda en la ficha (sin autorización de acceso hasta que se abra). Aparece en «Residentes» y en las listas de Enfermería y Medicina con el basal pendiente. Usa un nombre ficticio que empiece por «CJ» para reconocerlo después: lo usarás en las pruebas 6.11 y 6.12.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin ningún contacto prioritario ni motivo el alta no se guarda. Con él, aviso «Residente dado de alta» con su identificador, y el familiar queda en la ficha (sin autorización de acceso hasta que se abra). Aparece en «Residentes» y en las listas de Enfermería y Medicina con el basal pendiente. Usa un nombre ficticio que empiece por «CJ» para reconocerlo después: lo usarás en las pruebas 6.11 y 6.12.</div>
         <fieldset class="choices" aria-labelledby="t-6-1">
           <label class="choice"><input type="radio" name="r-6-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1200,7 +1268,6 @@
           <li>Vuelve a abrirlo, quita todas las marcas y prueba a guardar. Después deja uno solo marcado y guarda.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Puede haber varios contactos urgentes y siempre al menos uno: sin ninguno marcado no se guarda. Los contactos aparecen con su teléfono en la ficha de Enfermería y de Medicina, y el primero rellena «A quién se llama» al registrar un intento de llamada. Cada cambio queda en el historial de la ficha.</div>
-        <p class="context">Tu opinión: si «prioritario» y «urgente» deben ser dos marcas distintas lo recogemos en «Confirmaciones de la segunda tanda», pregunta 2.2. Aquí comprueba que funciona.</p>
         <fieldset class="choices" aria-labelledby="t-6-4">
           <label class="choice"><input type="radio" name="r-6-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1343,11 +1410,11 @@
       <article class="q" data-q="6.13">
         <div class="q-head"><span class="n">6.13</span><h3 class="q-title" id="t-6-13">Compartir y desvincular un familiar</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Con dos residentes del ámbito (A, con un familiar, y B), abre la ficha de B y pulsa «Vincular un familiar que ya existe». Elige el familiar de A y escribe su relación con B. Por ejemplo: María es hija de A y de B; ya está registrada como hija de A y la vinculas a B como «Hija».</li>
+          <li>Con dos residentes (A, con un familiar, y B), aunque estén en unidades distintas, abre la ficha de B y pulsa «Vincular un familiar que ya existe». Busca al familiar de A por su nombre o por su teléfono (al menos 3 letras o cifras), elígelo y escribe su relación con B. Por ejemplo: María es hija de A y de B; ya está registrada como hija de A y la vinculas a B como «Hija».</li>
           <li>Edita su teléfono desde A («Editar»): la pantalla te avisa de que el cambio vale para todos. Comprueba que B también lo ve cambiado.</li>
           <li>En B pulsa «Desvincular» sobre ese familiar y escribe un motivo. Prueba también a desvincular al único contacto urgente de un residente.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Es la misma persona: nombre, teléfono y correo son los mismos para todos sus residentes y los puede cambiar cualquiera de Administración que gestione a alguno de ellos. La relación y la autorización son de cada residente y vincularlo no abre su autorización. Desvincular exige motivo, revoca la autorización, le quita el contacto urgente y deja el vínculo en «Familiares desvinculados» con las fechas y el motivo; sigue siendo familiar de sus otros residentes. Si es el único contacto urgente, no deja desvincularlo hasta designar otro.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La búsqueda encuentra a familiares de todo el centro (no solo de tu unidad) y dice a cuántos residentes están vinculados, sin decir a cuáles. Es la misma persona: nombre, teléfono y correo son los mismos para todos sus residentes y los puede cambiar cualquiera de Administración que gestione a alguno de ellos. La relación y la autorización son de cada residente y vincularlo no abre su autorización. Desvincular exige motivo, revoca la autorización, le quita el contacto urgente y deja el vínculo en «Familiares desvinculados» con las fechas y el motivo; sigue siendo familiar de sus otros residentes. Si es el único contacto urgente, la pantalla avisa y el residente se queda sin contacto urgente (ver la prueba 6.17).</div>
         <fieldset class="choices" aria-labelledby="t-6-13">
           <label class="choice"><input type="radio" name="r-6-13" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6-13" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -1378,17 +1445,52 @@
         <div class="q-head"><span class="n">6.15</span><h3 class="q-title" id="t-6-15">Comunicados a la familia: publicar antes de su hora</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Cierra un evento con «Preparar comunicación» (pruebas 2.8 o 3.5).</li>
+          <li>Cierra un evento con «Preparar comunicación» (pruebas 2.8 o 3.5). Si quieres, fija antes otro horario (prueba 6.16).</li>
           <li>Como Administración, abre «Comunicados a la familia» desde Inicio. Busca el comunicado y mira la hora a la que se publica.</li>
           <li>Pulsa «Publicar ahora». Después abre «Auditoría» y busca la acción.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves los comunicados de los últimos 30 días de las unidades de tu ámbito, con el texto y la hora de publicación (tras 1 hora de margen, a las 19:00), sin el nombre de quien lo preparó. «Publicar ahora» lo publica antes de su hora, solo una vez, y queda en la auditoría. Si es urgente, este no es el canal: hay que avisar también por otros medios.</div>
-        <p class="context">Tu opinión: quién, además de Administración, debería poder publicar antes lo recogemos en «Confirmaciones de la segunda tanda», pregunta 5.3. Aquí comprueba que funciona.</p>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves los comunicados de los últimos 30 días de las unidades de tu ámbito, con el texto y la hora de publicación (la fijada por el centro al guardarlo; por defecto, tras 1 hora de margen, a las 19:00), sin el nombre de quien lo preparó. Dirección también puede publicarlo antes (prueba 5.9). «Publicar ahora» lo publica antes de su hora, solo una vez, y queda en la auditoría. Si es urgente, este no es el canal: hay que avisar también por otros medios.</div>
         <fieldset class="choices" aria-labelledby="t-6-15">
           <label class="choice"><input type="radio" name="r-6-15" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6-15" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-6-15" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-6-15" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.16">
+        <div class="q-head"><span class="n">6.16</span><h3 class="q-title" id="t-6-16">Horario de los comunicados del centro</h3><span class="chip">Sin probar</span></div>
+
+        <ol class="pasos">
+          <li>Como Administración, abre «Comunicados a la familia» y pulsa «Cambiar la hora de publicación y el margen del centro».</li>
+          <li>Pon, por ejemplo, las 20:30 y 120 minutos de margen, y guarda. Prueba antes un margen de 5000 minutos. Pulsa «Ver el horario de CJ» para volver a 19:00 y 60 minutos (sin guardar).</li>
+          <li>Cierra un evento con «Preparar comunicación» (como en la prueba 3.5) y mira la hora a la que se publica; compárala con la de un comunicado que ya tuvieras guardado antes del cambio.
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Con un margen fuera de 0 a 1440 no deja guardar. El horario nuevo se aplica solo a los comunicados que se guarden después: los ya guardados conservan su hora. El cambio queda en el historial de la pantalla y en la auditoría. Si cambia el horario otra persona a la vez, no se pisa su cambio.</div>
+        <fieldset class="choices" aria-labelledby="t-6-16">
+          <label class="choice"><input type="radio" name="r-6.16" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.16" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.16" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.16" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.17">
+        <div class="q-head"><span class="n">6.17</span><h3 class="q-title" id="t-6-17">Residente sin contacto urgente</h3><span class="chip">Sin probar</span></div>
+
+        <ol class="pasos">
+          <li>Da de alta un residente nuevo sin marcar ningún «Contacto prioritario» y sin escribir el motivo: no debe dejar. Escribe «Sin familia conocida» como motivo y da de alta.</li>
+          <li>Abre su ficha como Administración y como Enfermería. Después añade un familiar y designa su contacto urgente desde la ficha.</li>
+          <li>Con otro residente que tenga un único contacto urgente, pulsa «Desvincular» sobre ese familiar: la pantalla debe avisarte. Escribe el motivo y desvincula.
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El alta exige un contacto prioritario o el motivo. La ficha de Administración y la de Enfermería y Medicina dicen «Sin contacto urgente» con el motivo. Desvincular al único contacto urgente ya no se rechaza: el residente se queda sin contacto y el motivo del desvínculo consta también como motivo. Si ese residente se deriva a Urgencias, la derivación se cierra sin intento de llamada.</div>
+        <fieldset class="choices" aria-labelledby="t-6-17">
+          <label class="choice"><input type="radio" name="r-6.17" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.17" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.17" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.17" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

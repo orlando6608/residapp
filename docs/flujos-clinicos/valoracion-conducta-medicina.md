@@ -24,7 +24,7 @@ Este flujo cubre la gestión de escalados, la valoración médica y la decisión
 4. Completa su valoración: hallazgos y exploración, valoración propiamente dicha, constantes opcionales, y actuaciones. La documentación previa de Enfermería no se modifica.
 5. Decide la conducta médica, eligiendo una de estas cuatro salidas mutuamente excluyentes:
    - **a. Registrar indicaciones a Enfermería**: texto de la indicación, fecha prevista o criterio, e información adicional, sin selector automático de prioridad. Enfermería confirma la lectura y, después, registra si la indicación fue realizada o no realizada (con incidencia en ese caso); ambos hitos permanecen visibles hasta su resolución, sin caducar silenciosamente.
-   - **b. Cerrar el evento**: confirma el cierre de forma idempotente. El evento pasa a Historial y **no exige un segundo cierre por parte de Enfermería**. Debe decidir si genera o no una comunicación familiar, con el mismo mecanismo de aprobación humana que en Enfermería.
+   - **b. Cerrar el evento**: confirma el cierre de forma idempotente. El evento pasa a Historial. **No se puede cerrar mientras haya indicaciones sin cumplir** (sin leer o sin resolver): cumplidas todas (realizadas, o no realizadas con su incidencia), el episodio lo cierra Enfermería, o Medicina; la única excepción es el protocolo urgente (derivación a Urgencias). Si cierra Medicina, no hace falta un segundo cierre de Enfermería. Debe decidir si genera o no una comunicación familiar, con el mismo mecanismo de aprobación humana que en Enfermería (CJ, 2026-10-10; sustituye a la decisión de 2026-09-28, «se puede cerrar con indicaciones sin resolver»).
    - **c. Iniciar seguimiento médico**: indica una fecha prevista o un criterio, el equipo responsable y el objetivo del seguimiento; si un resultado es necesario para decidir el desenlace, el evento permanece en seguimiento (el sistema nunca decide qué resultado es necesario). Al finalizar el turno, Medicina decide explícitamente entre transferir el seguimiento al equipo entrante o conservarlo para su propia próxima revisión; un seguimiento vencido nunca caduca ni desaparece por sí solo.
    - **d. Activar protocolo urgente**: documenta el protocolo y la evolución sin retrasar la atención. Si procede, desde aquí se abre el módulo común de derivación a Urgencias (ver [derivacion-urgencias.md](derivacion-urgencias.md)).
 6. Como alternativa a recibir un escalado, Medicina puede registrar un evento propio directamente, sin que este se reenvíe artificialmente a Enfermería; sigue el mismo ciclo descrito desde el paso 4.
@@ -35,15 +35,15 @@ Este flujo cubre la gestión de escalados, la valoración médica y la decisión
 | --- | --- | --- |
 | Pendiente médica | Escalado recibido o evento propio sin valorar | Enfermería (escalado), Medicina (evento propio) |
 | En valoración | Un profesional médico ha empezado a valorarlo | Medicina |
-| Con indicación pendiente | Indicación registrada, aún no leída o no realizada | Medicina |
+| Con indicación pendiente | Indicación registrada, aún no leída o no realizada; cumplidas todas, la cierra Enfermería o Medicina | Medicina (indica), Enfermería (cumple y puede cerrar) |
 | En seguimiento médico | Tiene fecha o criterio y equipo responsable pendiente | Medicina |
 | Protocolo urgente activo | En curso de protocolo urgente, posible derivación | Medicina |
-| Cerrado por Medicina | Gestión finalizada, pasa a Historial, sin cierre adicional de Enfermería | Medicina |
+| Cerrado | Gestión finalizada, pasa a Historial; el historial dice si lo cerró Medicina o Enfermería | Medicina o, cumplidas las indicaciones, Enfermería |
 
 ## Reglas de negocio
 
 - Las cuatro salidas de la conducta médica (indicaciones, cierre, seguimiento, protocolo urgente) son mutuamente excluyentes en un mismo ciclo de valoración.
-- Si Medicina cierra el evento, Enfermería no realiza un segundo cierre sobre el mismo evento.
+- Si Medicina cierra el evento, Enfermería no realiza un segundo cierre sobre el mismo evento. Medicina no cierra con indicaciones sin cumplir (salvo en protocolo urgente): cuando se cumplen, cierra Enfermería (o Medicina).
 - La continuidad entre médicos al cambio de turno exige una decisión explícita: transferir o conservar; nunca queda implícita.
 - Un seguimiento vencido, o una indicación no leída o con incidencia, permanecen visibles hasta su resolución.
 - Un evento propio de Medicina sigue exactamente el mismo ciclo de decisión que uno recibido por escalado.

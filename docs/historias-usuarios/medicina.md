@@ -47,6 +47,7 @@ Códigos de origen: `MED-05`, `MED-06`, `MED-08`.
 
 Criterios de aceptación:
 - Cerrar un evento desde Medicina no exige un segundo cierre por parte de Enfermería.
+- No puedo cerrar un evento con indicaciones sin cumplir (sin leer o sin resolver), salvo en protocolo urgente; cuando Enfermería las cumple, el episodio lo cierra Enfermería (o yo) (CJ, 2026-10-10, sustituye a la decisión de 2026-09-28).
 - El cierre es idempotente: repetirlo no genera dos cierres.
 - Al cerrar como punto final del caso, decido y apruebo la comunicación familiar, con el mismo mecanismo de aprobación humana que en Enfermería.
 

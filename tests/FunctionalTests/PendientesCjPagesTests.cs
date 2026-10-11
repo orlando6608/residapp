@@ -42,11 +42,12 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     public static readonly TheoryData<string> Pages =
     [
         "index", "preguntas", "pruebas", "archivo",
-        "confirmaciones-segunda-tanda-cj",
+
         "guia-de-pruebas-cj",
         "archivados/rangos-referencia-constantes", "archivados/decisiones-direccion-basal-derivacion",
         "archivados/aclaraciones-respuestas-cj", "archivados/traslado-y-baja-residente",
         "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
+        "archivados/confirmaciones-segunda-tanda-cj",
     ];
 
     [Theory]
@@ -187,7 +188,11 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         var links = Regex.Matches(html, "<li>\\s*<a href=\"([^\"#]+\\.html)\"").Select(m => m.Groups[1].Value).ToList();
 
         Assert.Contains($"<h1>{char.ToUpper(section[0])}{section[1..]}</h1>", html);
-        Assert.NotEmpty(links);
+        if (section != "preguntas")
+        {
+            // Preguntas puede estar vacía cuando CJ lo ha contestado todo (y está archivado).
+            Assert.NotEmpty(links);
+        }
         foreach (var link in links)
         {
             var response = await client.GetAsync($"/pendientes-cj/{link}");
@@ -203,7 +208,8 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         var questions = await client.GetStringAsync("/pendientes-cj/preguntas.html");
         var archive = await client.GetStringAsync("/pendientes-cj/archivo.html");
 
-        Assert.Contains("confirmaciones-segunda-tanda-cj.html", questions);
+        Assert.DoesNotContain("confirmaciones-segunda-tanda-cj", questions);
+        Assert.Contains("archivados/confirmaciones-segunda-tanda-cj.html", archive);
         Assert.DoesNotContain("administracion-ambito-familiares-cargos", questions);
         Assert.DoesNotContain("continuidad-supervision-comunicacion", questions);
         Assert.DoesNotContain("aclaraciones-respuestas-cj", questions);

@@ -100,7 +100,7 @@ Adaptación del wireframe legado de Medicina a la especificación vigente. El wi
 
 - **Muestra:** resumen y pendientes.
 - **Acción:** confirmar cierre idempotente.
-- **Regla:** pasa a Historial y no requiere segundo cierre de Enfermería.
+- **Regla:** pasa a Historial. No se puede cerrar con indicaciones sin cumplir (salvo en protocolo urgente); cumplidas, cierra Enfermería o Medicina (CJ, 2026-10-10).
 
 ### MED-16. Decisión sobre comunicación familiar
 

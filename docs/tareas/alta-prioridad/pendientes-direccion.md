@@ -6,6 +6,14 @@ Flujo: [`supervision-clinica-direccion.md`](../../flujos-clinicos/supervision-cl
 
 ## Hecho
 
+- **Publicar comunicados a la familia antes de hora (CJ 5.3 de las confirmaciones de la segunda tanda, 2026-10-10; sin script)** — Dirección Clínica
+  puede publicar un comunicado antes de su hora (`Direccion/Comunicados` + `PublicarComunicado`, `FamilyCommunicationPublicationApplicationService`),
+  además de Administración. Es la **única acción de escritura** de este perfil (el resto sigue en solo lectura). Alcance: los eventos de sus unidades y
+  residentes (`DirectionScopedEventsFrom`, con la restricción por residente si la tiene); no hace falta permiso ni declaración de acceso clínico porque no
+  se lee contenido clínico, solo el texto aprobado del comunicado, sin el nombre de quien lo preparó. Auditoría `FAMILY_COMMUNICATION_PUBLISH_NOW` con
+  el perfil `DIRECCION_CLINICA`. Con un residente sin contacto urgente, el hito «llamada a la familia» de la calidad de proceso no se mide (CJ 2.1).
+  Sobre 4.2 (cierre del episodio): `IProcessQuality` no cambia; un episodio con indicaciones sin cumplir ya no se cierra, salvo por fallecimiento o
+  protocolo urgente (ver `pendientes-medicina.md`).
 - **Bloque 1 (supervisión operativa, solo lectura; DIR-01 a DIR-04, DIR-17; historias 1, 2 y 8)** — 2026-09-30.
   - **Qué hace:** inicio de Dirección (`/Direccion`) con los contadores por unidad del ámbito y su denominador (episodios abiertos,
     sin valorar, en valoración, escalados, seguimientos y vencidos, indicaciones pendientes y no realizadas, protocolos urgentes);
