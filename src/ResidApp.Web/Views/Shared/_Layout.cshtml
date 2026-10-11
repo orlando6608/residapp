@@ -20,7 +20,7 @@
         var devSubjectLayout = Context.Request.Cookies[ResidApp.Web.Security.DevSessionIdentityProvider.CookieName];
         var activeScopeLayout = ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request);
         var profileLabelLayout = activeScopeLayout is null ? null : ResidApp.Web.Models.SystemProfileDisplay.Label(activeScopeLayout.Profile);
-        // «Mi panel»: inicio del perfil activo (Familiar todavía no tiene pantallas).
+        // «Mi panel»: inicio del perfil activo.
         var panelLayout = activeScopeLayout?.Profile switch
         {
             ResidApp.Shared.SystemProfile.Plataforma => "Plataforma",
@@ -29,6 +29,7 @@
             ResidApp.Shared.SystemProfile.Auxiliar => "Auxiliar",
             ResidApp.Shared.SystemProfile.Enfermeria => "Enfermeria",
             ResidApp.Shared.SystemProfile.Medicina => "Medicina",
+            ResidApp.Shared.SystemProfile.Familiar => "PortalFamiliar",
             _ => null,
         };
     }

@@ -26,11 +26,11 @@ public sealed record FamilyAuthorizationChangeEntry(
 /// <summary>ADM-08 (0022): un familiar vinculado al residente. LinkId identifica el vínculo; AuthorizationChanges va del
 /// primero al último y está vacía si la autorización no se ha abierto.</summary>
 /// <summary>OtherResidentLinks es a cuántos otros residentes del centro está vinculado también el familiar (sus datos de contacto
-/// son compartidos); no dice cuáles.</summary>
+/// son compartidos); no dice cuáles. PortalAccount es el usuario con el que entra al Portal Familiar (script 0052), null si aún no tiene acceso.</summary>
 public sealed record ResidentFamilyMember(
     Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email,
     IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges, int OtherResidentLinks = 0, bool IsReferent = false,
-    bool IsLegalGuardian = false)
+    bool IsLegalGuardian = false, string? PortalAccount = null)
 {
     public FamilyAuthorizationChangeEntry? CurrentAuthorization => AuthorizationChanges.Count == 0 ? null : AuthorizationChanges[^1];
 }
@@ -158,6 +158,11 @@ public interface IResidentFamilyRepository
     /// único, el residente se queda sin contacto urgente (CJ, 2026-10-10) y el motivo de la desvinculación consta también como motivo de ello.
     /// Un vínculo que ya está desvinculado: FAMILY_MEMBER_CONFLICT.</summary>
     Task UnlinkAsync(AdministrativeResidentTarget target, Guid linkId, string reason, CancellationToken ct = default);
+
+    /// <summary>Da al familiar del vínculo acceso al Portal Familiar (script 0052): crea su cuenta con el usuario subject, con un ámbito FAMILIAR en
+    /// el centro y sin unidades, y la enlaza al familiar. No toca la autorización, que se abre y se activa aparte. Si el familiar ya tiene cuenta,
+    /// FAMILY_PORTAL_ACCESS_CONFLICT; si el usuario ya existe, ACCOUNT_SUBJECT_TAKEN; un vínculo que no es del residente, acceso denegado.</summary>
+    Task GrantPortalAccessAsync(AdministrativeResidentTarget target, Guid linkId, string subject, CancellationToken ct = default);
 }
 
 /// <summary>Traslado del residente (script 0040). ExpectedUnitId es la unidad en la que estaba al abrir el formulario; OperationId

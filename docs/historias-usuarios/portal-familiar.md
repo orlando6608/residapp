@@ -2,6 +2,10 @@
 
 El Portal Familiar da acceso al familiar autorizado a las publicaciones aprobadas sobre "su" residente, y le permite gestionar citas con el equipo asistencial. No expone ningún contenido clínico interno.
 
+## Estado de la construcción
+
+**Primera entrega (2026-10-11, script `0052`):** historia 1 (menos el segundo factor y «Mi cuenta», que dependen del proveedor de identidad, ADR 0007), historia 2 (inicio e historial de novedades con la ventana de 30 días / 6 meses) y las partes de la historia 6 que no dependen del proveedor (sesión sin ámbito, sin autorización activa, sin novedades y fallo técnico, siempre distintos). La cuenta del familiar la da Administración desde la autorización del familiar; el acceso a cada residente sale del vínculo y de una autorización Activa y vigente. Suposiciones sin confirmar con CJ: `docs/pendientes-cj/portal-familiar-confirmaciones-cj.html`. **Pendiente:** historia 3 (publicación correctora y retirada), historias 4 y 5 (citas, que además necesitan la configuración de Administración, historias 7 y 8), y el resumen periódico por residente.
+
 ## Cómo leer estas historias
 
 Cada historia sigue el formato "Como familiar, quiero..., para...", agrupa varios requisitos del PRD con sentido de negocio común, e incluye criterios de aceptación verificables en lenguaje llano.
