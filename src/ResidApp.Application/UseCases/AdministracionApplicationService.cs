@@ -47,10 +47,11 @@ public sealed record ChangeFamilyAuthorizationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, FamilyAuthorizationChange Cambio,
     DateOnly? ValidaHasta, string? Motivo, int CambiosEsperados);
 
-/// <summary>ADM-08 (0022, 0044): VinculosIds son los contactos urgentes que quedan (vacío: ninguno); DesignacionesEsperadas es cuántas designaciones
-/// tenía el residente al abrir la pantalla.</summary>
+/// <summary>ADM-08 (0022, 0044): VinculosIds son los contactos urgentes que quedan (vacío: ninguno, y entonces MotivoSinContacto es obligatorio);
+/// DesignacionesEsperadas es cuántas designaciones tenía el residente al abrir la pantalla.</summary>
 public sealed record DesignateEmergencyContactCommand(
-    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, IReadOnlyList<Guid> VinculosIds, int DesignacionesEsperadas);
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, IReadOnlyList<Guid> VinculosIds, int DesignacionesEsperadas,
+    string? MotivoSinContacto = null);
 
 /// <summary>ADM-13 (0023): una cuenta del centro, vista por quien la gestiona.</summary>
 public sealed record FindProfessionalAccountQuery(Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId);
@@ -199,7 +200,8 @@ public sealed class AdministracionApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
-            return await families.DesignateEmergencyContactAsync(target, command.VinculosIds, command.DesignacionesEsperadas, ct);
+            var noContactReason = command.VinculosIds.Count == 0 ? NoContact.ValidateReason(command.MotivoSinContacto) : null;
+            return await families.DesignateEmergencyContactAsync(target, command.VinculosIds, command.DesignacionesEsperadas, noContactReason, ct);
         });
 
     public Task<ApplicationResult<IReadOnlyList<ProfessionalAccountSummary>>> ListAccountsAsync(

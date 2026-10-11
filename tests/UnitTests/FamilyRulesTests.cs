@@ -130,6 +130,7 @@ public class ResidentFamilyAtAdmissionTests
         Assert.True(result[1].Data.IsLegalGuardian && !result[1].IsPriorityContact);
         Assert.Throws<DomainValidationException>(() => ResidentFamilyAtAdmission.Validate([Blank, Blank]));
         Assert.Empty(ResidentFamilyAtAdmission.Validate(null));
+        Assert.Empty(ResidentFamilyAtAdmission.Validate(null, null));
     }
 
     [Fact]
@@ -151,6 +152,51 @@ public class ResidentFamilyAtAdmissionTests
         {
             Assert.Equal(FamilyMember.InvalidCode, Assert.Throws<DomainValidationException>(() => ResidentFamilyAtAdmission.Validate(rows)).Message);
         }
+    }
+
+    /// <summary>CJ, 2026-10-10: sin contacto prioritario el alta solo vale con el motivo de no tener contacto urgente (p. ej. «sin familia conocida»).</summary>
+    [Fact]
+    public void Validate_SinContactoPrioritario_ExigeUnMotivo_YConUnoSeIgnora()
+    {
+        var withoutPriority = new[] { Row(referent: true) };
+
+        Assert.Single(ResidentFamilyAtAdmission.Validate(withoutPriority, "  Sin familia conocida "));
+        Assert.Empty(ResidentFamilyAtAdmission.Validate([Blank], "Sin familia conocida"));
+        Assert.Equal("Sin familia conocida", ResidentFamilyAtAdmission.NoContactReason(withoutPriority, "  Sin familia conocida "));
+        Assert.Equal("Sin familia conocida", ResidentFamilyAtAdmission.NoContactReason([Blank], "Sin familia conocida"));
+        // Con un contacto prioritario el motivo no cuenta.
+        Assert.Null(ResidentFamilyAtAdmission.NoContactReason([Row(priority: true)], "Sin familia conocida"));
+        Assert.Single(ResidentFamilyAtAdmission.Validate([Row(priority: true)], "Sin familia conocida"));
+        // Sin motivo, con motivo en blanco o demasiado largo, o sin formulario (null), no hay motivo.
+        Assert.All(new string?[] { null, "", "   ", new string('x', NoContact.MaxReasonLength + 1) }, reason =>
+        {
+            Assert.Null(ResidentFamilyAtAdmission.NoContactReason(withoutPriority, reason));
+            Assert.Throws<DomainValidationException>(() => ResidentFamilyAtAdmission.Validate(withoutPriority, reason));
+        });
+        Assert.Null(ResidentFamilyAtAdmission.NoContactReason(null, "Sin familia conocida"));
+        Assert.Empty(ResidentFamilyAtAdmission.Validate(null, "Sin familia conocida"));
+    }
+
+    [Fact]
+    public void NoContact_ValidateReason_RecortaYExigeTexto()
+    {
+        Assert.Equal("Sin familia", NoContact.ValidateReason("  Sin familia "));
+        Assert.Equal(NoContact.MaxReasonLength, NoContact.ValidateReason(new string('x', NoContact.MaxReasonLength)).Length);
+        foreach (var invalid in new string?[] { null, "", "  ", new string('x', NoContact.MaxReasonLength + 1) })
+        {
+            Assert.Equal(FamilyMember.InvalidCode, Assert.Throws<DomainValidationException>(() => NoContact.ValidateReason(invalid)).Message);
+        }
+    }
+
+    [Fact]
+    public void EmergencyContactSet_SinContacto_VaciaElConjunto_YUnaDesignacionPosteriorLoRehace()
+    {
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+
+        Assert.Equal([a, b], EmergencyContactSet.Current([(EmergencyContactSet.Add, a), (EmergencyContactSet.Add, b)]));
+        Assert.Empty(EmergencyContactSet.Current([(EmergencyContactSet.Add, a), (EmergencyContactSet.Add, b), (EmergencyContactSet.NoContact, null)]));
+        Assert.Equal([b], EmergencyContactSet.Current([(EmergencyContactSet.Add, a), (EmergencyContactSet.NoContact, null), (EmergencyContactSet.Add, b)]));
     }
 
     [Fact]

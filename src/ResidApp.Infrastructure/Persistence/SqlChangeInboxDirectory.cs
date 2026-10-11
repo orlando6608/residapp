@@ -393,10 +393,11 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                 r.ByCurrentAccount, new DateTimeOffset(r.RecordedAt, TimeSpan.Zero)))
             .ToList();
 
+        var emergencyContacts = await EmergencyContactQuery.FindAsync(connection, centerId, residentId, ct);
         return new ReferralDetail(
             EnumCode.ParseCode<SystemProfile>(report.ProfileCode), report.Reason, report.SignedByCurrentAccount,
             new DateTimeOffset(report.SignedAt, TimeSpan.Zero), report.ContentHash, attempts,
-            await EmergencyContactQuery.FindAsync(connection, centerId, residentId, ct), report.Communications);
+            emergencyContacts.Contacts, report.Communications, emergencyContacts.NoContactReason);
     }
 
     private sealed record ReferralRow(

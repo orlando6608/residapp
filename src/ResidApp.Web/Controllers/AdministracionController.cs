@@ -473,10 +473,10 @@ public sealed partial class AdministracionController(
         {
             var result = await service.DesignateEmergencyContactAsync(new DesignateEmergencyContactCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.VinculosIds,
-                form.DesignacionesEsperadas), ct);
+                form.DesignacionesEsperadas, form.MotivoSinContacto), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = "Contactos urgentes guardados.";
+                TempData["Mensaje"] = form.VinculosIds.Count == 0 ? "Contactos urgentes guardados: el residente queda sin contacto urgente." : "Contactos urgentes guardados.";
                 return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
             }
 
@@ -485,7 +485,7 @@ public sealed partial class AdministracionController(
                 ApplicationFailureCode.Conflict =>
                     "Los contactos urgentes han cambiado desde que abriste la pantalla. Revisa los vigentes y, si hace falta, vuelve a elegir.",
                 ApplicationFailureCode.InvalidInput => form.VinculosIds.Count == 0
-                    ? "Tiene que haber al menos un contacto urgente: marca a quién avisar."
+                    ? "Marca a quién avisar o, si el residente no tiene contacto urgente, escribe el motivo (hasta 500 caracteres)."
                     : "No has cambiado ningún contacto urgente.",
                 _ => result.Error.Message,
             });

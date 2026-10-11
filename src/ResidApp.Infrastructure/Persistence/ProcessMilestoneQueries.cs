@@ -64,6 +64,8 @@ internal static class ProcessMilestoneQueries
                   FROM {scoped}
                   JOIN dbo.protocolos_urgentes protocol ON protocol.evento_id = s.EventId
                  WHERE protocol.activado_en >= @From AND protocol.activado_en < @To
+                   AND ISNULL((SELECT TOP (1) c.accion_codigo FROM dbo.residentes_contacto_urgente c
+                                WHERE c.residente_id = s.ResidentId AND c.centro_id = @CenterId ORDER BY c.numero DESC), '') <> 'SIN_CONTACTO'
                 """),
             (ProcessMilestone.LecturaIndicacion, $"""
                 SELECT {columns} indication.emitida_en AS StartedAt, indication.leida_en AS EndedAt, 'ENFERMERIA' AS ResponsibleCode

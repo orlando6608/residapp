@@ -69,7 +69,7 @@ public static class LinkableFamilySearch
 
 /// <summary>ADM-08 (0022, 0044): una designación de contacto urgente (Action: ver EmergencyContactSet). LinkId null es «sin contacto urgente»; DisplayName es el
 /// nombre vigente del familiar.</summary>
-public sealed record EmergencyContactDesignation(int Number, string Action, Guid? LinkId, string? DisplayName, DateTimeOffset At);
+public sealed record EmergencyContactDesignation(int Number, string Action, Guid? LinkId, string? DisplayName, DateTimeOffset At, string? Reason = null);
 
 /// <summary>ADM-03: la ficha administrativa. Corrections y EmergencyContacts van de la más antigua a la más reciente;
 /// Family, por nombre.</summary>
@@ -83,6 +83,9 @@ public sealed record AdministrativeResidentDetail(
 
     /// <summary>Los vínculos de los contactos urgentes vigentes, en el orden en que se designaron.</summary>
     public IReadOnlyList<Guid> CurrentEmergencyContacts => EmergencyContactSet.Current(EmergencyContacts.Select(d => (d.Action, d.LinkId)));
+
+    /// <summary>El motivo de que no tenga contacto urgente (0050), si la última designación es «sin contacto».</summary>
+    public string? NoContactReason => EmergencyContacts is [.., { Action: EmergencyContactSet.NoContact } last] ? last.Reason : null;
 }
 
 /// <summary>ADM-02/ADM-03: lectura de Administración. Aplica en la propia consulta la regla de ámbito de
@@ -143,14 +146,17 @@ public interface IResidentFamilyRepository
         AdministrativeResidentTarget target, Guid linkId, FamilyAuthorizationChange change, DateOnly? validUntil, string? reason,
         int expectedChanges, DateOnly today, CancellationToken ct = default);
 
-    /// <summary>Deja como contactos urgentes exactamente a linkIds (vacío: ninguno) si el residente sigue teniendo expectedDesignations
-    /// designaciones (si no, conflicto) y cambia algo. Devuelve cuántas tiene ya (una por cada familiar añadido o quitado).</summary>
+    /// <summary>Deja como contactos urgentes exactamente a linkIds (vacío: ninguno, con su motivo noContactReason: CJ, 2026-10-10) si el
+    /// residente sigue teniendo expectedDesignations designaciones (si no, conflicto) y cambia algo. Devuelve cuántas tiene ya (una por cada
+    /// familiar añadido o quitado, o una si se queda sin contacto). Dejarlo sin contacto sin motivo es EMERGENCY_CONTACT_INVALID.</summary>
     Task<int> DesignateEmergencyContactAsync(
-        AdministrativeResidentTarget target, IReadOnlyList<Guid> linkIds, int expectedDesignations, CancellationToken ct = default);
+        AdministrativeResidentTarget target, IReadOnlyList<Guid> linkIds, int expectedDesignations, string? noContactReason = null,
+        CancellationToken ct = default);
 
     /// <summary>Desvincula al familiar del residente con un motivo (CJ, 2026-10-07): el vínculo se conserva como pasado y el familiar sigue con
     /// los demás residentes. Si su autorización seguía abierta se revoca, y si era uno de los contactos urgentes se quita de ellos; si era el
-    /// único, EMERGENCY_CONTACT_INVALID (primero hay que designar otro). Un vínculo que ya está desvinculado: FAMILY_MEMBER_CONFLICT.</summary>
+    /// único, el residente se queda sin contacto urgente (CJ, 2026-10-10) y el motivo de la desvinculación consta también como motivo de ello.
+    /// Un vínculo que ya está desvinculado: FAMILY_MEMBER_CONFLICT.</summary>
     Task UnlinkAsync(AdministrativeResidentTarget target, Guid linkId, string reason, CancellationToken ct = default);
 }
 

@@ -20,9 +20,9 @@ public class AltaConFamiliaresTests
         new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), new FixedAltaSessionIdentityProvider(externalSubject),
         new SqlResidentRepository(TestDatabase.ConnectionFactory));
 
-    private static CreateResidentCommand Command(SeededProfile seed, IReadOnlyList<NewResidentFamilyInput>? family, Guid? operationId = null) =>
+    private static CreateResidentCommand Command(SeededProfile seed, IReadOnlyList<NewResidentFamilyInput>? family, Guid? operationId = null, string? noContactReason = null) =>
         new(seed.ProfileScopeId, seed.CenterId, seed.UnitId, "Residente Alta Familiares", new DateOnly(1941, 6, 6), DocumentedSexCode.Mujer,
-            null, null, null, null, null, operationId ?? Guid.NewGuid(), family);
+            null, null, null, null, null, operationId ?? Guid.NewGuid(), family, noContactReason);
 
     private static readonly IReadOnlyList<NewResidentFamilyInput> Family =
     [
@@ -123,6 +123,49 @@ public class AltaConFamiliaresTests
         Assert.Equal(ApplicationFailureCode.InvalidInput, result.Error!.Code);
         Assert.Equal(ApplicationFailureCode.InvalidInput, withoutRows.Error!.Code);
         Assert.Equal(before, await QueryAsync<int>("SELECT COUNT(*) FROM dbo.residentes WHERE centro_id = @centerId", new { centerId = admin.CenterId.Value }));
+    }
+
+    /// <summary>CJ, 2026-10-10: un residente puede entrar sin contacto urgente (p. ej. «sin familia conocida») si se indica el motivo.</summary>
+    [Fact]
+    public async Task Alta_SinContactoPrioritarioPeroConMotivo_DaDeAlta_YGuardaElMotivoSinFamiliares()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var operationId = Guid.NewGuid();
+        var service = Build(admin.ExternalSubject);
+
+        var created = await service.ExecuteAsync(Command(admin, [new(null, null, null, null, false, false, false)], operationId, "  Sin familia conocida  "));
+        var resent = await service.ExecuteAsync(Command(admin, [new(null, null, null, null, false, false, false)], operationId, "  Sin familia conocida  "));
+        var reused = await service.ExecuteAsync(Command(admin, [new(null, null, null, null, false, false, false)], operationId, "Otro motivo"));
+        var withoutReason = await service.ExecuteAsync(Command(admin, [new(null, null, null, null, false, false, false)], noContactReason: " "));
+        var tooLong = await service.ExecuteAsync(Command(admin, [new(null, null, null, null, false, false, false)], noContactReason: new string('x', 501)));
+
+        Assert.True(created.Ok, created.Error?.Message);
+        Assert.Equal(created.Value, resent.Value);
+        Assert.Equal(ApplicationFailureCode.Conflict, reused.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutReason.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, tooLong.Error!.Code);
+        var residentId = created.Value!.ResidentId.Value;
+        Assert.Equal("SIN_CONTACTO", await QueryAsync<string>(
+            "SELECT accion_codigo FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }));
+        Assert.Equal("Sin familia conocida", await QueryAsync<string>(
+            "SELECT motivo FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }));
+        Assert.Equal(1, await QueryAsync<int>(
+            "SELECT numero FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }));
+        Assert.Equal(0, await QueryAsync<int>("SELECT COUNT(*) FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId }));
+    }
+
+    [Fact]
+    public async Task Alta_ConUnContactoPrioritario_IgnoraElMotivoDeNoTenerContacto()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+
+        var result = await Build(admin.ExternalSubject).ExecuteAsync(Command(
+            admin, [new("Ana Ruiz", "Hija", "600123456", null, false, false, true)], noContactReason: "Sin familia conocida"));
+
+        Assert.True(result.Ok, result.Error?.Message);
+        var actions = await QueryAsync<string>(
+            "SELECT accion_codigo FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId = result.Value!.ResidentId.Value });
+        Assert.Equal("AGREGAR", actions);
     }
 }
 

@@ -228,7 +228,8 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
     }
 
     public async Task<int> DesignateEmergencyContactAsync(
-        AdministrativeResidentTarget target, IReadOnlyList<Guid> linkIds, int expectedDesignations, CancellationToken ct = default)
+        AdministrativeResidentTarget target, IReadOnlyList<Guid> linkIds, int expectedDesignations, string? noContactReason = null,
+        CancellationToken ct = default)
     {
         var wanted = linkIds.Distinct().ToList();
         using var connection = await connections.OpenAsync(ct);
@@ -259,17 +260,16 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         }
 
         var current = EmergencyContactSet.Current(designations.Select(d => (d.Action, d.LinkId)));
-        if (wanted.Count == 0 && current.Count > 0)
-        {
-            // Al menos un contacto urgente (CJ, 2026-10-07): se puede cambiar, pero no dejar al residente sin ninguno.
-            throw new DomainValidationException("EMERGENCY_CONTACT_INVALID");
-        }
-
-        var changes = current.Where(c => !wanted.Contains(c)).Select(c => (EmergencyContactSet.Remove, c))
-            .Concat(wanted.Where(w => !current.Contains(w)).Select(w => (EmergencyContactSet.Add, w))).ToList();
+        // Quitar a todos deja al residente sin contacto urgente, con su motivo (CJ, 2026-10-10): una sola designación SIN_CONTACTO. También se
+        // puede anotar el motivo en un residente que nunca tuvo ninguno. Repetirlo, o sin motivo, no es un cambio válido.
+        var alreadyWithoutContact = designations.Count > 0 && designations[^1].Action == EmergencyContactSet.NoContact;
+        List<(string Action, Guid? LinkId)> changes = wanted.Count == 0
+            ? (!alreadyWithoutContact && !string.IsNullOrWhiteSpace(noContactReason) ? [(EmergencyContactSet.NoContact, null)] : [])
+            : current.Where(c => !wanted.Contains(c)).Select(c => (EmergencyContactSet.Remove, (Guid?)c))
+                .Concat(wanted.Where(w => !current.Contains(w)).Select(w => (EmergencyContactSet.Add, (Guid?)w))).ToList();
         if (changes.Count == 0)
         {
-            // Designar los que ya están, o quitar cuando no hay ninguno.
+            // Designar los que ya están, o quitar cuando no hay ninguno o sin motivo.
             throw new DomainValidationException("EMERGENCY_CONTACT_INVALID");
         }
 
@@ -280,13 +280,14 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
             {
                 await connection.ExecuteAsync(new CommandDefinition($"""
                     INSERT INTO dbo.residentes_contacto_urgente
-                        (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, designado_por_cuenta_id, designado_por_perfil, designado_en)
-                    VALUES (NEWID(), @CenterId, @ResidentId, @Number, @LinkId, @ContactAction, @AccountId, 'ADMINISTRACION', @OccurredAt);
+                        (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, motivo, designado_por_cuenta_id, designado_por_perfil, designado_en)
+                    VALUES (NEWID(), @CenterId, @ResidentId, @Number, @LinkId, @ContactAction, @Reason, @AccountId, 'ADMINISTRACION', @OccurredAt);
 
                     {InsertAudit}
                     """, new
                 {
-                    LinkId = linkId, Number = ++number, ContactAction = action, AccountId = target.AccountId.Value, CenterId = target.CenterId.Value,
+                    LinkId = linkId, Number = ++number, ContactAction = action, Reason = action == EmergencyContactSet.NoContact ? noContactReason : null,
+                    AccountId = target.AccountId.Value, CenterId = target.CenterId.Value,
                     UnitId = target.UnitId.Value, ResidentId = target.ResidentId.Value, ResourceType = "RESIDENT",
                     ResourceId = target.ResidentId.Value, Action = "EMERGENCY_CONTACT_DESIGNATE", OccurredAt = occurredAt,
                 }, transaction, cancellationToken: ct));
@@ -328,19 +329,18 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         var contacts = EmergencyContactSet.Current(designations.Select(d => (d.Action, d.LinkId)));
         if (contacts.Contains(linkId))
         {
-            if (contacts.Count == 1)
-            {
-                // Al menos un contacto urgente (CJ, 2026-10-07): primero hay que designar otro.
-                throw new DomainValidationException("EMERGENCY_CONTACT_INVALID");
-            }
-
+            // Si era el único contacto urgente, el residente se queda sin él (CJ, 2026-10-10) y el motivo del desvínculo consta también como
+            // motivo de no tener contacto; si no, solo se quita a este.
+            var onlyContact = contacts.Count == 1;
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.residentes_contacto_urgente
-                    (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, designado_por_cuenta_id, designado_por_perfil, designado_en)
-                VALUES (NEWID(), @CenterId, @ResidentId, @Number, @LinkId, 'QUITAR', @AccountId, 'ADMINISTRACION', @OccurredAt)
+                    (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, motivo, designado_por_cuenta_id, designado_por_perfil, designado_en)
+                VALUES (NEWID(), @CenterId, @ResidentId, @Number, @ContactLinkId, @ContactAction, @NoContactReason, @AccountId, 'ADMINISTRACION', @OccurredAt)
                 """, new
             {
-                parameters.CenterId, parameters.ResidentId, parameters.LinkId, Number = designations[^1].Number + 1,
+                parameters.CenterId, parameters.ResidentId, ContactLinkId = onlyContact ? (Guid?)null : linkId, Number = designations[^1].Number + 1,
+                ContactAction = onlyContact ? EmergencyContactSet.NoContact : EmergencyContactSet.Remove,
+                NoContactReason = onlyContact ? NoContactReasonAfterUnlink(reason) : null,
                 AccountId = target.AccountId.Value, OccurredAt = occurredAt,
             }, transaction, cancellationToken: ct));
         }
@@ -377,6 +377,13 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
             Action = "FAMILY_MEMBER_UNLINK", OccurredAt = occurredAt,
         }, transaction, cancellationToken: ct));
         transaction.Commit();
+    }
+
+    /// <summary>El motivo de quedarse sin contacto urgente cuando se desvincula al único: el del desvínculo, con su origen, sin pasar de lo que cabe.</summary>
+    private static string NoContactReasonAfterUnlink(string unlinkReason)
+    {
+        var text = "Único contacto urgente desvinculado: " + unlinkReason;
+        return text.Length <= NoContact.MaxReasonLength ? text : text[..NoContact.MaxReasonLength];
     }
 
     /// <summary>El vínculo de un familiar ya creado con este identificador de operación; null si no existe. Si existe pero

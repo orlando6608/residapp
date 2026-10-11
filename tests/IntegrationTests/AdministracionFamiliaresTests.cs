@@ -133,7 +133,7 @@ public class AdministracionFamiliaresTests
     }
 
     [Fact]
-    public async Task ContactoUrgente_PuedeHaberVarios_SeCambianYNuncaSeQuedaSinNinguno()
+    public async Task ContactoUrgente_PuedeHaberVarios_SeCambian_YSeQuedaSinNingunoSoloConUnMotivo()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var residentId = await CreateResidentAsync(admin, "Residente Contacto");
@@ -161,6 +161,62 @@ public class AdministracionFamiliaresTests
         Assert.Equal(["Hija Contacto", "Hija Contacto", "Hijo Contacto", "Hija Contacto"], detail.EmergencyContacts.Select(c => c.DisplayName));
         Assert.Equal([son, daughter], detail.CurrentEmergencyContacts);
         Assert.Equal(4, await CountAuditAsync(residentId, "EMERGENCY_CONTACT_DESIGNATE"));
+
+        // CJ, 2026-10-10: el residente puede quedarse sin contacto urgente, con su motivo (una sola designación), y no se repite.
+        DesignateEmergencyContactCommand NoContact(int expected, string? reason) =>
+            new(admin.ProfileScopeId, admin.CenterId, residentId, [], expected, reason);
+        var blank = await service.DesignateEmergencyContactAsync(NoContact(4, "   "));
+        var tooLong = await service.DesignateEmergencyContactAsync(NoContact(4, new string('x', 501)));
+        var unwanted = await service.DesignateEmergencyContactAsync(new DesignateEmergencyContactCommand(
+            admin.ProfileScopeId, admin.CenterId, residentId, [daughter, son], 4, "Se ignora con contactos"));
+        var withReason = await service.DesignateEmergencyContactAsync(NoContact(4, "  Sin familia conocida  "));
+        var emptied = await DetailAsync(admin, residentId);
+        var again = await service.DesignateEmergencyContactAsync(NoContact(5, "Otra vez"));
+        var designatedAgain = await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 5, son));
+        var restored = await DetailAsync(admin, residentId);
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, blank.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, tooLong.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, unwanted.Error!.Code);
+        Assert.Equal(5, withReason.Value);
+        Assert.Empty(emptied.CurrentEmergencyContacts);
+        Assert.Equal("Sin familia conocida", emptied.NoContactReason);
+        Assert.Equal(["AGREGAR", "QUITAR", "AGREGAR", "AGREGAR", "SIN_CONTACTO"], emptied.EmergencyContacts.Select(c => c.Action));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, again.Error!.Code);
+        Assert.Equal(6, designatedAgain.Value);
+        Assert.Equal([son], restored.CurrentEmergencyContacts);
+        Assert.Null(restored.NoContactReason);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        // La base de datos exige el motivo en «sin contacto» y lo prohíbe en las demás acciones.
+        foreach (var sql in new[]
+        {
+            "INSERT INTO dbo.residentes_contacto_urgente (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, motivo, designado_por_cuenta_id, designado_por_perfil, designado_en) SELECT NEWID(), centro_id, residente_id, 99, NULL, 'SIN_CONTACTO', NULL, designado_por_cuenta_id, designado_por_perfil, designado_en FROM dbo.residentes_contacto_urgente WHERE residente_id = @ResidentId AND numero = 1",
+            "INSERT INTO dbo.residentes_contacto_urgente (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, motivo, designado_por_cuenta_id, designado_por_perfil, designado_en) SELECT NEWID(), centro_id, residente_id, 99, vinculo_id, 'AGREGAR', 'no debería llevar motivo', designado_por_cuenta_id, designado_por_perfil, designado_en FROM dbo.residentes_contacto_urgente WHERE residente_id = @ResidentId AND numero = 1",
+            "UPDATE dbo.residentes_contacto_urgente SET motivo = 'otro motivo' WHERE residente_id = @ResidentId AND accion_codigo = 'SIN_CONTACTO'",
+        })
+        {
+            await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(sql, new { ResidentId = residentId.Value }));
+        }
+    }
+
+    [Fact]
+    public async Task Desvincular_ElUnicoContactoUrgente_DejaAlResidenteSinContacto_ConElMotivoDelDesvinculo()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var residentId = await CreateResidentAsync(admin, "Residente Unico Contacto");
+        var service = Build(admin.ExternalSubject);
+        var daughter = (await service.AddFamilyMemberAsync(Add(admin, residentId, name: "Hija Unica"))).Value;
+        Assert.True((await service.DesignateEmergencyContactAsync(Designate(admin, residentId, 0, daughter))).Ok);
+
+        var unlinked = await service.UnlinkFamilyMemberAsync(new UnlinkFamilyMemberCommand(
+            admin.ProfileScopeId, admin.CenterId, residentId, daughter, "Se ha trasladado a otro país."));
+        var detail = await DetailAsync(admin, residentId);
+
+        Assert.True(unlinked.Ok, unlinked.Error?.Message);
+        Assert.Empty(detail.CurrentEmergencyContacts);
+        Assert.Equal("Único contacto urgente desvinculado: Se ha trasladado a otro país.", detail.NoContactReason);
+        Assert.Equal(["AGREGAR", "SIN_CONTACTO"], detail.EmergencyContacts.Select(c => c.Action));
+        Assert.Empty(detail.Family);
     }
 
     [Fact]
@@ -187,7 +243,6 @@ public class AdministracionFamiliaresTests
         var unlinked = await service.UnlinkFamilyMemberAsync(Unlink(daughter));
         var again = await service.UnlinkFamilyMemberAsync(Unlink(daughter));
         var wrongResident = await service.UnlinkFamilyMemberAsync(Unlink(son, resident: second));
-        var lastContact = await service.UnlinkFamilyMemberAsync(Unlink(son));
         var sharedUnlinked = await service.UnlinkFamilyMemberAsync(Unlink(shared, "Error al vincularla."));
         var firstDetail = await DetailAsync(admin, first);
         var secondDetail = await DetailAsync(admin, second);
@@ -196,7 +251,6 @@ public class AdministracionFamiliaresTests
         Assert.True(unlinked.Ok, unlinked.Error?.Message);
         Assert.Equal(ApplicationFailureCode.Conflict, again.Error!.Code);
         Assert.Equal(ApplicationFailureCode.AccessDenied, wrongResident.Error!.Code);
-        Assert.Equal(ApplicationFailureCode.InvalidInput, lastContact.Error!.Code);
         Assert.True(sharedUnlinked.Ok, sharedUnlinked.Error?.Message);
         // El vínculo pasado se ve en el historial; el contacto urgente que queda es el hijo.
         Assert.Equal(["Hijo Que Se Queda"], firstDetail.Family.Select(f => f.DisplayName));

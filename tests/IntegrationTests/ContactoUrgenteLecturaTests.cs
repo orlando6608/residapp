@@ -1,6 +1,7 @@
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
+using ResidApp.Domain.Enfermeria;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
@@ -22,7 +23,7 @@ public class ContactoUrgenteLecturaTests
         return new FindEmergencyContact(new FindScopeResident(listScopeResidents), directory);
     }
 
-    private static Task<ApplicationResult<IReadOnlyList<EmergencyContactSummary>>> ReadAsync(SeededProfile seed, ResidentId residentId, SystemProfile profile) =>
+    private static Task<ApplicationResult<ResidentEmergencyContacts>> ReadAsync(SeededProfile seed, ResidentId residentId, SystemProfile profile) =>
         BuildReader(seed.ExternalSubject).ExecuteAsync(new FindScopeResidentCommand(seed.ProfileScopeId, seed.CenterId, residentId, profile));
 
     /// <summary>Añade un familiar al residente como Administración y lo deja como único contacto urgente (si había otro, lo sustituye).</summary>
@@ -61,9 +62,9 @@ public class ContactoUrgenteLecturaTests
         };
 
         Assert.True(before.Ok);
-        Assert.Empty(before.Value!);
-        Assert.Equal(new EmergencyContactSummary("Lucía Contacto", "Hija", "600 111 222"), Assert.Single(byNurse.Value!));
-        Assert.Equal(byNurse.Value, byDoctor.Value);
+        Assert.Empty(before.Value!.Contacts);
+        Assert.Equal(new EmergencyContactSummary("Lucía Contacto", "Hija", "600 111 222"), Assert.Single(byNurse.Value!.Contacts));
+        Assert.Equal(byNurse.Value.Contacts, byDoctor.Value!.Contacts);
         Assert.All(denied, r => Assert.Equal(ApplicationFailureCode.AccessDenied, r.Error!.Code));
     }
 
@@ -85,8 +86,65 @@ public class ContactoUrgenteLecturaTests
             new DesignateEmergencyContactCommand(admin.ProfileScopeId, admin.CenterId, residentId, [second, third], 3))).Ok);
         var both = (await ReadAsync(enfermera, residentId, SystemProfile.Enfermeria)).Value!;
 
-        Assert.Equal("Segundo Contacto", Assert.Single(changed).DisplayName);
-        Assert.Equal(["Segundo Contacto", "Tercero Contacto"], both.Select(c => c.DisplayName));
+        Assert.Equal("Segundo Contacto", Assert.Single(changed.Contacts).DisplayName);
+        Assert.Equal(["Segundo Contacto", "Tercero Contacto"], both.Contacts.Select(c => c.DisplayName));
+    }
+
+    private static Task<ApplicationResult<int>> LeaveWithoutContactAsync(SeededProfile admin, ResidentId residentId, int expected, string reason) =>
+        AdministracionResidentesTests.Build(admin.ExternalSubject).DesignateEmergencyContactAsync(
+            new DesignateEmergencyContactCommand(admin.ProfileScopeId, admin.CenterId, residentId, [], expected, reason));
+
+    [Fact]
+    public async Task Ficha_SinContacto_EnfermeriaYMedicinaLeenElMotivo_HastaQueSeDesigneOtroContacto()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var residentId = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Sin Contacto Ficha");
+        var enfermera = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
+        var medica = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, admin.CenterId, admin.UnitId);
+        await DesignateAsync(admin, residentId, "Lucía Contacto", "600 111 222", 0);
+
+        Assert.True((await LeaveWithoutContactAsync(admin, residentId, 1, "Sin familia conocida")).Ok);
+        var byNurse = (await ReadAsync(enfermera, residentId, SystemProfile.Enfermeria)).Value!;
+        var byDoctor = (await ReadAsync(medica, residentId, SystemProfile.Medicina)).Value!;
+        await DesignateAsync(admin, residentId, "Nuevo Contacto", "611 000 111", 2);
+        var afterwards = (await ReadAsync(enfermera, residentId, SystemProfile.Enfermeria)).Value!;
+
+        Assert.Empty(byNurse.Contacts);
+        Assert.Equal("Sin familia conocida", byNurse.NoContactReason);
+        Assert.Equal("Sin familia conocida", byDoctor.NoContactReason);
+        Assert.Equal("Nuevo Contacto", Assert.Single(afterwards.Contacts).DisplayName);
+        Assert.Null(afterwards.NoContactReason);
+    }
+
+    /// <summary>CJ, 2026-10-10: sin contacto urgente no hay a quién llamar, así que la derivación se cierra sin intento de llamada (y la
+    /// actualización relevante a la familia sigue siendo obligatoria).</summary>
+    [Fact]
+    public async Task Derivacion_SinContactoUrgente_SeCierraSinIntentoDeLlamada_YLlevaElMotivo()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var revision = (await service.ActivateUrgentProtocolAsync(
+            ActivateCommand(enfermera, eventId, await StartAndSaveAsync(enfermera, eventId)))).Value;
+        revision = (await service.SignReferralReportAsync(SignCommand(enfermera, eventId, revision, Guid.NewGuid()))).Value;
+        var residentId = (await DetailAsync(enfermera, eventId)).ResidentId;
+        var admin = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, enfermera.CenterId, enfermera.UnitId);
+        CloseClinicalEventCommand Close(FamilyCommunicationDecision decision, FamilyCommunicationType? type, string? text) =>
+            new(enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, Guid.NewGuid(), decision, type, text);
+
+        var withContactBefore = await service.CloseClinicalEventAsync(Close(FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Relevante, "Trasladada a Urgencias."));
+        Assert.True((await LeaveWithoutContactAsync(admin, residentId, 0, "Sin familia conocida")).Ok);
+        var referral = (await DetailAsync(companera, eventId)).Referral!;
+        var notRelevant = await service.CloseClinicalEventAsync(Close(FamilyCommunicationDecision.NoComunicar, null, null));
+        var closed = await service.CloseClinicalEventAsync(Close(FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Relevante, "Trasladada a Urgencias."));
+
+        // Con el residente sin contacto designado todavía (nunca se designó ninguno) la llamada sigue siendo obligatoria.
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withContactBefore.Error!.Code);
+        Assert.Empty(referral.EmergencyContacts);
+        Assert.Equal("Sin familia conocida", referral.NoContactReason);
+        Assert.Empty(referral.CallAttempts);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, notRelevant.Error!.Code);
+        Assert.True(closed.Ok, closed.Error?.Message);
+        Assert.Equal(ClinicalEventStatus.Cerrado, (await DetailAsync(enfermera, eventId)).Status);
     }
 
     [Fact]

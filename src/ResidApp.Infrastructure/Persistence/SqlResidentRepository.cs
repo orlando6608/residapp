@@ -121,6 +121,19 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
                     }, transaction, cancellationToken: ct));
                 }
             }
+            if (input.NoContactReason is { } noContactReason)
+            {
+                // CJ (2026-10-10): un residente puede entrar sin contacto urgente (p. ej. «sin familia conocida»), con su motivo (script 0050).
+                await connection.ExecuteAsync(new CommandDefinition("""
+                    INSERT INTO dbo.residentes_contacto_urgente
+                        (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, motivo, designado_por_cuenta_id, designado_por_perfil, designado_en)
+                    VALUES (NEWID(), @CenterId, @ResidentId, @Number, NULL, 'SIN_CONTACTO', @Reason, @AccountId, @ActiveProfile, @OccurredAt)
+                    """, new
+                {
+                    CenterId = input.CenterId.Value, ResidentId = residentId.Value, Number = ++familyNumber, Reason = noContactReason,
+                    AccountId = input.AccountId.Value, ActiveProfile = activeProfileCode, OccurredAt = occurredAt,
+                }, transaction, cancellationToken: ct));
+            }
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.eventos_auditoria
                     (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
@@ -251,7 +264,7 @@ file static class RequestHash
             UnitId = input.UnitId.Value, input.DisplayName, BirthDate = input.BirthDate.ToString("yyyy-MM-dd"),
             DocumentedSexCode = input.DocumentedSexCode.ToCode(), input.InternalReference, input.BuildingId,
             input.FloorId, input.RoomId, input.PlaceId, OperationId = input.OperationId,
-            Family = (input.Family ?? []).Select(m => new { m.Data, m.IsPriorityContact }).ToList(),
+            Family = (input.Family ?? []).Select(m => new { m.Data, m.IsPriorityContact }).ToList(), input.NoContactReason,
         });
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }

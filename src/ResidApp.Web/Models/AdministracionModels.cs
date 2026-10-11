@@ -198,6 +198,11 @@ public sealed class EmergencyContactFormModel
     public int DesignacionesEsperadas { get; set; }
 
     public List<Guid> VinculosIds { get; set; } = [];
+
+    /// <summary>Si no queda ningún contacto urgente marcado, el motivo (CJ, 2026-10-10: «sin familia conocida»).</summary>
+    [StringLength(ResidApp.Domain.Families.NoContact.MaxReasonLength, ErrorMessage = "El motivo no puede pasar de {1} caracteres.")]
+    [Display(Name = "Motivo de no tener contacto urgente")]
+    public string? MotivoSinContacto { get; set; }
 }
 
 public sealed record EmergencyContactViewModel(AdministrativeResidentDetail Detail, EmergencyContactFormModel Form);
@@ -372,7 +377,8 @@ public sealed class UnlinkFamilyFormModel
     public string? Motivo { get; set; }
 }
 
-public sealed record UnlinkFamilyViewModel(AdministrativeResidentSummary Resident, ResidentFamilyMember Member, UnlinkFamilyFormModel Form);
+public sealed record UnlinkFamilyViewModel(
+    AdministrativeResidentSummary Resident, ResidentFamilyMember Member, UnlinkFamilyFormModel Form, bool OnlyEmergencyContact = false);
 
 /// <summary>CJ, 2026-10-07: las unidades del centro vistas por una Administración y si esta es la principal.</summary>
 public sealed record AdministrationScopeViewModel(ResidApp.Application.UseCases.AdministrationScopeView View);

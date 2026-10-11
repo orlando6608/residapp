@@ -690,31 +690,34 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Equal(3, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }));
 
-        // Desvincular (script 0045): el único contacto urgente no se puede desvincular; el familiar del alta, que ya no lo es, sí.
-        async Task<string> UnlinkAsync(string name, string reason)
+        // Desvincular (script 0045): el único contacto urgente sí se puede desvincular (CJ, 2026-10-10), con aviso: el residente se queda sin contacto
+        // urgente y el motivo del desvínculo consta también como motivo de ello; el familiar del alta, que ya no lo es, también.
+        async Task<(string Screen, string Result)> UnlinkAsync(string name, string reason)
         {
             var id = await connection.ExecuteScalarAsync<Guid>("""
                 SELECT l.id FROM dbo.residentes_familiares l JOIN dbo.familiares f ON f.id = l.familiar_id
                  WHERE l.residente_id = @residentId AND f.nombre_visible = @name
                 """, new { residentId, name });
             var page = await admin.GetStringAsync($"/Administracion/DesvincularFamiliar?residenteId={residentId}&vinculoId={id}");
-            return WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/DesvincularFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+            return (WebUtility.HtmlDecode(page), WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/DesvincularFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
                 ["Form.ResidenteId"] = residentId,
                 ["Form.VinculoId"] = id.ToString(),
                 ["Form.Motivo"] = reason,
-            }))).Content.ReadAsStringAsync());
+            }))).Content.ReadAsStringAsync()));
         }
 
-        var refusedUnlink = await UnlinkAsync("Familiar Funcional", "Prueba");
-        var unlinkedPage = await UnlinkAsync("Familiar Prueba", "Ya no tiene relación con el residente.");
+        var onlyContact = await UnlinkAsync("Familiar Funcional", "Se ha ido a vivir fuera.");
+        var unlinkedPage = (await UnlinkAsync("Familiar Prueba", "Ya no tiene relación con el residente.")).Result;
 
-        Assert.Contains("único contacto urgente", refusedUnlink);
+        Assert.Contains("Es el único contacto urgente del residente", onlyContact.Screen);
+        Assert.Contains("Familiar desvinculado.", onlyContact.Result);
+        Assert.Matches(@"Sin contacto urgente:\s*(<span[^>]*>)?Único contacto urgente desvinculado: Se ha ido a vivir fuera\.", onlyContact.Result);
         Assert.Contains("Familiar desvinculado.", unlinkedPage);
         Assert.Contains("Familiares desvinculados", unlinkedPage);
         Assert.Contains("Ya no tiene relación con el residente.", unlinkedPage);
-        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.residentes_familiares WHERE residente_id = @residentId AND desvinculado_en IS NOT NULL", new { residentId }));
     }
 
@@ -913,6 +916,69 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         return Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
+    }
+
+    [Fact]
+    public async Task Alta_SinFamiliaConocida_ExigeElMotivo_YLoMuestranAdministracionEnfermeriaYElProtocolo_ConLaAppEntera()
+    {
+        // CJ, 2.1 (2026-10-10): un residente puede entrar sin contacto urgente si se indica el motivo; la ficha de Administración y la de
+        // Enfermería lo dicen, y la ficha deja volver a designar contactos cuando haya familia.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var name = $"Residente Sin Familia Funcional {Guid.NewGuid().ToString("N")[..8]}";
+
+        async Task<string> CreateAsync(string? reason)
+        {
+            var page = await admin.GetStringAsync("/Residents/Create");
+            var fields = new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"), ["OperacionId"] = ExtractValue(page, "OperacionId"),
+                ["AmbitoPerfilId"] = seed.ProfileScopeId.ToString(), ["CentroId"] = seed.CenterId.ToString(), ["UnidadId"] = seed.UnitId.ToString(),
+                ["NombreVisible"] = name, ["FechaNacimiento"] = "1938-02-20", ["SexoDocumentadoCodigo"] = "Hombre",
+            };
+            if (reason is not null)
+            {
+                fields["MotivoSinContacto"] = reason;
+            }
+
+            return WebUtility.HtmlDecode(await (await admin.PostAsync("/Residents/Create", new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+
+        var rejected = await CreateAsync(null);
+        var created = await CreateAsync("Sin familia conocida");
+        var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
+
+        Assert.Contains("escribe el motivo", rejected);
+        Assert.Contains("Id del residente", created);
+        Assert.Equal(("SIN_CONTACTO", "Sin familia conocida"), (
+            await connection.ExecuteScalarAsync<string>("SELECT accion_codigo FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId }),
+            await connection.ExecuteScalarAsync<string>("SELECT motivo FROM dbo.residentes_contacto_urgente WHERE residente_id = @residentId", new { residentId })));
+        var adminFile = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/Residente?residenteId={residentId}"));
+        Assert.Matches(@"Sin contacto urgente:\s*(<span[^>]*>)?Sin familia conocida", adminFile);
+        Assert.DoesNotContain("no tiene familiares registrados", adminFile);
+        var nurseFile = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}"));
+        Assert.Matches(@"Sin contacto urgente:\s*(<span[^>]*>)?Sin familia conocida", nurseFile);
+
+        // Se vuelve a designar contacto en cuanto hay familia, y el motivo deja de verse.
+        var addPage = await admin.GetStringAsync($"/Administracion/AnadirFamiliar?residenteId={residentId}");
+        await admin.PostAsync("/Administracion/AnadirFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(addPage, "__RequestVerificationToken"), ["Form.ResidenteId"] = residentId,
+            ["Form.OperacionId"] = ExtractValue(addPage, "Form.OperacionId"), ["Form.NombreVisible"] = "Hija Aparecida", ["Form.Relacion"] = "Hija",
+            ["Form.Telefono"] = "600123456",
+        }));
+        var linkId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId });
+        var contactPage = await admin.GetStringAsync($"/Administracion/ContactoUrgente?residenteId={residentId}");
+        var designated = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/ContactoUrgente", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(contactPage, "__RequestVerificationToken"), ["Form.ResidenteId"] = residentId,
+            ["Form.DesignacionesEsperadas"] = "1", ["Form.VinculosIds"] = linkId.ToString(),
+        }))).Content.ReadAsStringAsync());
+
+        Assert.Contains("Contactos urgentes guardados.", designated);
+        Assert.DoesNotContain("Sin contacto urgente: Sin familia conocida\n", WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}")));
     }
 
     [Fact]

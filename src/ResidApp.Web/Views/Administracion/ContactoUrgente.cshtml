@@ -38,8 +38,15 @@
                         <label class="form-check-label" for="@id">@member.DisplayName (@member.Relationship) · @member.Phone</label>
                     </div>
                 }
-                <div class="form-text">Marca al menos uno; puedes marcar varios.</div>
+                <div class="form-text">Puedes marcar varios. Si no marcas a nadie, el residente queda sin contacto urgente y tienes que escribir el motivo.</div>
             </fieldset>
+
+            <div class="mb-3">
+                <label asp-for="Form.MotivoSinContacto" class="form-label"></label>
+                <textarea asp-for="Form.MotivoSinContacto" class="form-control form-control-lg" rows="2" autocomplete="off"></textarea>
+                <div class="form-text">Solo si no marcas ningún contacto, por ejemplo «sin familia conocida». Queda en el historial de la ficha.</div>
+                <span asp-validation-for="Form.MotivoSinContacto" class="text-danger"></span>
+            </div>
 
             <div class="d-grid d-md-flex justify-content-md-end gap-2">
                 <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>

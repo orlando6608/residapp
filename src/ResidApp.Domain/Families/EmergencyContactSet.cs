@@ -3,13 +3,14 @@ namespace ResidApp.Domain.Families;
 /// <summary>
 /// Los contactos urgentes de un residente (script 0044): varios a la vez. Se guardan como un historial de designaciones por orden de número y
 /// el conjunto vigente es lo que queda al recorrerlas: REEMPLAZAR lo deja solo en ese familiar (o vacío si no lleva ninguno), AGREGAR lo
-/// añade y QUITAR lo retira.
+/// añade y QUITAR lo retira. SIN_CONTACTO (script 0050) lo deja vacío con un motivo: el residente puede no tener contacto urgente.
 /// </summary>
 public static class EmergencyContactSet
 {
     public const string Replace = "REEMPLAZAR";
     public const string Add = "AGREGAR";
     public const string Remove = "QUITAR";
+    public const string NoContact = "SIN_CONTACTO";
 
     /// <summary>Los vínculos vigentes, en el orden en que se designaron.</summary>
     public static IReadOnlyList<Guid> Current(IEnumerable<(string Action, Guid? LinkId)> designationsInOrder)
@@ -24,6 +25,9 @@ public static class EmergencyContactSet
                     break;
                 case Remove when linkId is { } removed:
                     current.Remove(removed);
+                    break;
+                case NoContact:
+                    current.Clear();
                     break;
                 case Replace:
                     current.Clear();

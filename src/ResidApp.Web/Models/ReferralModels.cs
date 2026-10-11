@@ -75,7 +75,7 @@ public sealed record DerivarViewModel(PendingChangeDetail Event, DerivarFormMode
 
 /// <summary>ADM-08 (0022, 0044): la tarjeta de los contactos urgentes en la ficha de Enfermería y de Medicina. Va envuelto porque una
 /// vista parcial con modelo null recibe el de la vista padre.</summary>
-public sealed record EmergencyContactCardModel(IReadOnlyList<EmergencyContactSummary>? Contacts);
+public sealed record EmergencyContactCardModel(ResidentEmergencyContacts? Contacts);
 
 /// <summary>ADM-08 (0022): cómo se muestra el contacto urgente a Enfermería y Medicina.</summary>
 public static class EmergencyContactDisplay
@@ -110,7 +110,7 @@ public static class ReferralDisplay
 
     public const string CloseMessage =
         "Con una derivación a Urgencias, al cerrar hay que preparar la actualización relevante para la familia y " +
-        "antes tiene que constar al menos un intento de llamada.";
+        "antes tiene que constar al menos un intento de llamada (salvo que el residente no tenga contacto urgente).";
 
     public static string FileName(DateTimeOffset signedAt) =>
         $"informe-derivacion-{signedAt.ToLocalTime():yyyyMMdd-HHmm}.pdf";

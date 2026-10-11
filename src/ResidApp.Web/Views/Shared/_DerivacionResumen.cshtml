@@ -25,7 +25,11 @@
         </div>
 
         <h3 class="h6">Intentos de llamada a la familia</h3>
-        @if (derivacion.CallAttempts.Count == 0)
+        @if (derivacion.CallAttempts.Count == 0 && derivacion.NoContactReason is not null)
+        {
+            <p class="mb-0">El residente no tiene contacto urgente, así que no hace falta ningún intento de llamada para cerrar el evento.</p>
+        }
+        else if (derivacion.CallAttempts.Count == 0)
         {
             <p class="text-danger mb-0">Todavía no consta ningún intento de llamada. Hace falta al menos uno para cerrar el evento.</p>
         }

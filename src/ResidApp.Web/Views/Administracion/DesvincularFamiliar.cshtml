@@ -19,9 +19,16 @@
 <h1 class="h3">Desvincular a @member.DisplayName</h1>
 <p class="text-muted">
     @member.DisplayName (@member.Relationship) dejará de ser familiar de @resident.DisplayName. Su acceso al Portal Familiar para este residente se
-    revoca y, si era contacto urgente, deja de serlo (siempre tiene que quedar al menos uno). El vínculo pasado se sigue viendo en el historial de
+    revoca y, si era contacto urgente, deja de serlo. El vínculo pasado se sigue viendo en el historial de
     la ficha, y @member.DisplayName sigue siendo familiar de sus demás residentes@(member.OtherResidentLinks > 0 ? $" ({member.OtherResidentLinks})" : "").
 </p>
+@if (Model.OnlyEmergencyContact)
+{
+    <div class="alert alert-warning" role="status">
+        Es el único contacto urgente del residente: al desvincularlo se queda sin contacto urgente, y el motivo que escribas aquí constará también
+        como motivo de ello. Puedes designar otro después, desde la ficha.
+    </div>
+}
 
 <div class="card">
     <div class="card-body">

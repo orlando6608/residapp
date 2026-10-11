@@ -111,7 +111,8 @@
                 <p class="form-text">
                     Registra a los familiares de contacto prioritario, referentes y tutores legales del residente. Cada uno necesita nombre, relación y
                     teléfono; deja en blanco las filas que no uses (puedes añadir más después desde su ficha). Marca al menos un contacto prioritario (puedes marcar varios)
-                    (contactos urgentes). Añadirlos no les da acceso al Portal Familiar.
+                    (contactos urgentes). Si el residente no tiene a nadie a quien avisar, no marques ninguno y escribe el motivo más abajo.
+                    Añadirlos no les da acceso al Portal Familiar.
                 </p>
                 <span asp-validation-for="Familiares" class="text-danger d-block mb-2"></span>
                 @for (var i = 0; i < Model.Familiares.Count; i++)
@@ -152,6 +153,12 @@
                         </div>
                     </div>
                 }
+                <div class="mb-3">
+                    <label asp-for="MotivoSinContacto" class="form-label"></label>
+                    <textarea asp-for="MotivoSinContacto" class="form-control" rows="2" autocomplete="off"></textarea>
+                    <div class="form-text">Solo si no marcas ningún contacto prioritario: queda anotado en la ficha como motivo de no tener contacto urgente.</div>
+                    <span asp-validation-for="MotivoSinContacto" class="text-danger"></span>
+                </div>
             </fieldset>
 
             <div class="d-grid d-md-flex justify-content-md-end">

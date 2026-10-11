@@ -68,6 +68,12 @@ public sealed class CreateResidentFormModel
     /// se dejan en blanco se ignoran, y más desde la ficha del residente.</summary>
     public List<NewResidentFamilyFormRow> Familiares { get; set; } = [new(), new(), new()];
 
+    /// <summary>Si ninguna fila es contacto prioritario (el residente se queda sin contacto urgente, p. ej. «sin familia conocida»), el motivo
+    /// (CJ, 2026-10-10). Con un contacto prioritario se ignora.</summary>
+    [StringLength(ResidApp.Domain.Families.NoContact.MaxReasonLength, ErrorMessage = "El motivo no puede pasar de {1} caracteres.")]
+    [Display(Name = "Motivo de no tener contacto urgente (p. ej., «sin familia conocida»)")]
+    public string? MotivoSinContacto { get; set; }
+
     public IReadOnlyList<ResidApp.Domain.Families.NewResidentFamilyInput> FamilyInputs() =>
         Familiares.Select(row => new ResidApp.Domain.Families.NewResidentFamilyInput(
             row.NombreVisible, row.Relacion, row.Telefono, row.Correo, row.Referente, row.TutorLegal, row.ContactoPrioritario)).ToList();

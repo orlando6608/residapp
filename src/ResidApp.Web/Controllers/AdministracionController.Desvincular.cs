@@ -26,7 +26,8 @@ public sealed partial class AdministracionController
             return detail is null ? RedirectToAction(nameof(Residentes)) : RedirectToAction(nameof(Residente), new { residenteId });
         }
 
-        return View(new UnlinkFamilyViewModel(detail!.Resident, member, new UnlinkFamilyFormModel { ResidenteId = residenteId, VinculoId = vinculoId }));
+        return View(new UnlinkFamilyViewModel(
+            detail!.Resident, member, new UnlinkFamilyFormModel { ResidenteId = residenteId, VinculoId = vinculoId }, detail.CurrentEmergencyContacts is [var only] && only == vinculoId));
     }
 
     [HttpPost]
@@ -37,16 +38,6 @@ public sealed partial class AdministracionController
         if (activeScope is null)
         {
             return RedirectToAction("Select", "ProfileScope");
-        }
-
-        if (ModelState.IsValid)
-        {
-            var current = await FindAsync(activeScope, form.ResidenteId, ct);
-            if (current is not null && current.CurrentEmergencyContacts is [var only] && only == form.VinculoId)
-            {
-                // Al menos un contacto urgente (CJ, 2026-10-07); el repositorio lo vuelve a comprobar dentro de la transacción.
-                ModelState.AddModelError(string.Empty, "Es el único contacto urgente del residente: designa antes otro y vuelve a desvincularlo.");
-            }
         }
 
         if (ModelState.IsValid)
@@ -67,7 +58,7 @@ public sealed partial class AdministracionController
             ModelState.AddModelError(string.Empty, result.Error.Code switch
             {
                 ApplicationFailureCode.Conflict => "Este familiar ya estaba desvinculado. Revisa la ficha.",
-                ApplicationFailureCode.InvalidInput => "Revisa el motivo (obligatorio, hasta 500 caracteres). Si este familiar es el único contacto urgente, designa antes otro.",
+                ApplicationFailureCode.InvalidInput => "Revisa el motivo (obligatorio, hasta 500 caracteres).",
                 _ => result.Error.Message,
             });
         }
@@ -76,6 +67,6 @@ public sealed partial class AdministracionController
         var member = detail?.Family.FirstOrDefault(f => f.LinkId == form.VinculoId);
         return member is null
             ? RedirectToAction(nameof(Residentes))
-            : View(new UnlinkFamilyViewModel(detail!.Resident, member, form));
+            : View(new UnlinkFamilyViewModel(detail!.Resident, member, form, detail.CurrentEmergencyContacts is [var only] && only == form.VinculoId));
     }
 }

@@ -122,7 +122,11 @@ internal static class ClinicalEventCloser
                 SELECT CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.informes_derivacion d WITH (FORCESEEK) WHERE d.evento_id = @EventId)
                             THEN 1 ELSE 0 END AS BIT) AS HasReport,
                        CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.intentos_llamada_familia c WITH (FORCESEEK) WHERE c.evento_id = @EventId)
-                            THEN 1 ELSE 0 END AS BIT) AS HasCallAttempt
+                            THEN 1 ELSE 0 END AS BIT) AS HasCallAttempt,
+                       CAST(CASE WHEN (SELECT TOP (1) d.accion_codigo FROM dbo.residentes_contacto_urgente d
+                                         JOIN dbo.eventos_asistenciales ea ON ea.residente_id = d.residente_id AND ea.centro_id = d.centro_id
+                                        WHERE ea.id = @EventId ORDER BY d.numero DESC) = 'SIN_CONTACTO'
+                            THEN 1 ELSE 0 END AS BIT) AS HasNoUrgentContact
                 """, new { input.EventId }, transaction, cancellationToken: ct));
             if (referral.HasReport)
             {
@@ -130,7 +134,8 @@ internal static class ClinicalEventCloser
                 {
                     throw new DomainValidationException("REFERRAL_FAMILY_UPDATE_REQUIRED");
                 }
-                if (!referral.HasCallAttempt)
+                // Sin contacto urgente (CJ, 2026-10-10) no hay a quién llamar: no se exige el intento de llamada.
+                if (!referral.HasCallAttempt && !referral.HasNoUrgentContact)
                 {
                     throw new DomainValidationException("REFERRAL_CALL_ATTEMPT_REQUIRED");
                 }
@@ -222,7 +227,7 @@ internal static class ClinicalEventCloser
 
     private sealed record IdempotencyRow(string RequestHash, string Status, string? ResultJson);
 
-    private sealed record ReferralCloseRow(bool HasReport, bool HasCallAttempt);
+    private sealed record ReferralCloseRow(bool HasReport, bool HasCallAttempt, bool HasNoUrgentContact);
 }
 
 file static class CloseRequestHash

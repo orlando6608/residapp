@@ -34,9 +34,13 @@ public interface IEnfermeriaResidentDirectory
 
     /// <summary>ADM-08 (0022, 0044): los contactos urgentes vigentes de un residente que el caso de uso ya ha comprobado que está en
     /// el ámbito (FindEmergencyContact), en el orden en que se designaron; vacío si no tiene.</summary>
-    Task<IReadOnlyList<EmergencyContactSummary>> FindEmergencyContactAsync(CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+    Task<ResidentEmergencyContacts> FindEmergencyContactAsync(CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 }
 
 /// <summary>ADM-08 (0022): el contacto urgente designado por Administración, tal como lo leen Enfermería y Medicina (la
 /// matriz les da lectura): nombre, relación y teléfono, sin correo.</summary>
 public sealed record EmergencyContactSummary(string DisplayName, string Relationship, string Phone);
+
+/// <summary>Los contactos urgentes vigentes de un residente y, si consta que no tiene ninguno, el motivo (script 0050, «sin familia conocida»).
+/// NoContactReason es null si tiene contacto, o si no tiene y nunca se anotó un motivo (los residentes anteriores al 0050).</summary>
+public sealed record ResidentEmergencyContacts(IReadOnlyList<EmergencyContactSummary> Contacts, string? NoContactReason = null);
