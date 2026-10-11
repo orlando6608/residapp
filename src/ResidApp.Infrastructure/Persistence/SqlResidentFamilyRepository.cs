@@ -227,6 +227,53 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         return number;
     }
 
+    public async Task GrantPortalAccessAsync(AdministrativeResidentTarget target, Guid linkId, string subject, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        // El bloqueo del familiar ordena dos altas simultáneas de su acceso: la segunda ya lo ve con cuenta.
+        var family = await connection.QuerySingleOrDefaultAsync<PortalFamilyRow>(new CommandDefinition("""
+            SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, f.cuenta_id AS AccountId
+              FROM dbo.residentes_familiares link
+              JOIN dbo.familiares f WITH (UPDLOCK, ROWLOCK) ON f.id = link.familiar_id AND f.centro_id = link.centro_id
+             WHERE link.id = @LinkId AND link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
+            """, new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value }, transaction, cancellationToken: ct))
+            ?? throw new AccessDeniedException();
+        if (family.AccountId is not null)
+        {
+            throw new DomainValidationException("FAMILY_PORTAL_ACCESS_CONFLICT");
+        }
+
+        var accountId = Guid.NewGuid();
+        var occurredAt = DateTimeOffset.UtcNow;
+        try
+        {
+            await connection.ExecuteAsync(new CommandDefinition($"""
+                INSERT INTO dbo.cuentas (id, sujeto_externo, nombre_visible, estado, creado_en)
+                VALUES (@NewAccountId, @Subject, @DisplayName, 'ACTIVE', @OccurredAt);
+
+                INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @NewAccountId, @CenterId, 'FAMILIAR', 'ACTIVE', @OccurredAt, @AccountId);
+
+                UPDATE dbo.familiares SET cuenta_id = @NewAccountId WHERE id = @FamilyId AND centro_id = @CenterId;
+
+                {InsertAudit}
+                """, new
+            {
+                NewAccountId = accountId, Subject = subject, family.DisplayName, family.FamilyId, AccountId = target.AccountId.Value,
+                CenterId = target.CenterId.Value, UnitId = target.UnitId.Value, ResidentId = target.ResidentId.Value,
+                ResourceType = "FAMILY_MEMBER", ResourceId = family.FamilyId, Action = "FAMILY_PORTAL_ACCESS_GRANT", OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+        }
+        catch (SqlException error) when (error.Number is 2601 or 2627)
+        {
+            // Otra cuenta se ha llevado el usuario (el índice único de sujeto_externo).
+            throw new DomainValidationException("ACCOUNT_SUBJECT_TAKEN");
+        }
+
+        transaction.Commit();
+    }
+
     public async Task<int> DesignateEmergencyContactAsync(
         AdministrativeResidentTarget target, IReadOnlyList<Guid> linkIds, int expectedDesignations, string? noContactReason = null,
         CancellationToken ct = default)
@@ -413,6 +460,8 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
     private sealed record MemberRow(Guid FamilyId, string DisplayName, string Relationship, string Phone, string? Email, bool IsReferent, bool IsLegalGuardian);
 
     private sealed record AuthorizationRow(int Number, string StatusCode, DateTime? ValidUntil);
+
+    private sealed record PortalFamilyRow(Guid FamilyId, string DisplayName, Guid? AccountId);
 
     private sealed record DesignationRow(int Number, string Action, Guid? LinkId);
 

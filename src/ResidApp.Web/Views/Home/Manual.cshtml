@@ -68,6 +68,7 @@
             <a class="list-group-item list-group-item-action" href="#historial">Historial y línea temporal del residente (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#correccion">Corregir o rectificar una valoración (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
+            <a class="list-group-item list-group-item-action" href="#portal-familiar">Portal Familiar (primera entrega)</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
         </div>
@@ -349,7 +350,7 @@
         <strong>Caducada</strong> sin que nadie la toque, y se puede renovar activándola otra vez. Una autorización activa
         se puede <strong>suspender</strong> (con motivo; se levanta activándola) o <strong>revocar</strong> (con motivo;
         es definitivo). Todos los cambios quedan en el historial de la pantalla y en la auditoría. Solo una autorización
-        Activa dará acceso al Portal Familiar cuando exista; hoy el estado se registra, pero no da acceso a nada.
+        Activa da acceso al Portal Familiar, y solo si el familiar tiene cuenta (ver «Portal Familiar»); si no, el estado se registra, pero no da acceso a nada.
     </p>
     <p class="mb-0">
         Los <strong>contactos urgentes</strong> son familiares del residente (puede haber varios) a quienes se avisa en una urgencia (no
@@ -868,8 +869,8 @@
         La comunicación preparada <strong>queda aprobada al guardarla</strong> y aparece en la tarjeta <strong>Comunicaciones</strong> del
         inicio de Enfermería, con la hora a la que se publica: la que tiene fijada el centro (por defecto, <strong>19:00</strong> con <strong>1 hora de margen</strong>; si
         al guardarla no queda ese margen, sale al día siguiente). Administración y Dirección Clínica pueden publicarla antes. La familia la verá firmada
-        siempre como "Equipo asistencial del centro", nunca con tu nombre. Todavía no existe el Portal Familiar: "publicada" significa que ya
-        podrá verla, no que la haya visto. Si la información es urgente este no es el canal: avisa también por otros medios.
+        siempre como "Equipo asistencial del centro", nunca con tu nombre. Una familia con acceso al Portal Familiar la ve en cuanto está publicada: "publicada" significa que ya
+        puede verla, no que la haya visto. Si la información es urgente este no es el canal: avisa también por otros medios.
     </p>
     <p class="mb-0">
         <strong>Corregir un comunicado.</strong> Hasta que se publique, en <strong>Comunicaciones</strong> del inicio de Enfermería, el botón
@@ -1285,12 +1286,39 @@
     </div>
 </section>
 
+<section id="portal-familiar" class="mb-4">
+    <h2 class="h5">Portal Familiar (primera entrega)</h2>
+    <p>
+        El Portal Familiar es la parte de la aplicación para las familias. Todavía no tiene credenciales reales (en desarrollo se entra
+        con el usuario que escribe Administración); sirve para ver cómo será. Su dirección es <code>/Familia</code>.
+    </p>
+    <p>
+        <strong>Cómo se da el acceso (Administración).</strong> En la ficha del residente, junto a su familiar, pulsa
+        <strong>Autorización</strong>. Debajo del estado aparece <strong>Acceso al Portal Familiar</strong>: escribe el usuario con el
+        que entrará la persona y pulsa <strong>Dar acceso al portal</strong>. Eso crea su cuenta, pero no le da acceso a nada todavía:
+        hay que <strong>abrir</strong> y <strong>activar</strong> la autorización. Mientras la autorización no esté Activa y sin caducar, la
+        persona no ve a ningún residente. Suspender o revocar la autorización le corta el acceso en la petición siguiente. Las cuentas de
+        familias no aparecen en «Usuarios».
+    </p>
+    <p>
+        <strong>Qué ve la familia.</strong> Elige a su residente (si solo tiene uno, entra directamente) y lee las <strong>novedades
+        publicadas</strong>: los comunicados que el equipo preparó al cerrar un evento, ya publicados (a su hora o antes, si Administración o
+        Dirección Clínica los adelantaron). Cada uno muestra su tipo, cuándo se publicó y el texto vigente, firmado siempre como «Equipo
+        asistencial del centro». Una novedad ordinaria se ve 30 días y una relevante, 6 meses. Si no hay novedades, el portal lo dice y avisa de que
+        eso no significa que todo vaya bien. El portal nunca es un canal urgente.
+    </p>
+    <p class="mb-0">
+        <strong>Qué no ve nunca.</strong> Observaciones, valoraciones, constantes, basal, indicaciones, derivaciones, historial, nombres de
+        profesionales ni datos de otros familiares. Cada vez que un familiar abre las novedades de un residente o un comunicado queda registrado
+        quién y cuándo (sin guardar el contenido). Quedan pendientes las citas, las publicaciones correctoras y la entrada con credenciales reales.
+    </p>
+</section>
+
 <section id="proximamente" class="mb-4">
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Que la familia lea los comunicados (Portal Familiar).</li>
-        <li>Portal Familiar (consulta de publicaciones y citas).</li>
+        <li>Portal Familiar: citas, publicaciones correctoras y la entrada con credenciales reales (hoy se entra con el usuario de desarrollo).</li>
         <li>Más gestión administrativa: organigrama y cargos (aplazado), citas y un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>

@@ -74,6 +74,7 @@ public static class AuditActionDisplay
         ["FAMILY_MEMBER_CREATE"] = "Familiar añadido",
         ["FAMILY_MEMBER_UPDATE"] = "Datos del familiar cambiados",
         ["FAMILY_MEMBER_LINK"] = "Familiar vinculado a otro residente",
+        ["FAMILY_PORTAL_ACCESS_GRANT"] = "Acceso al Portal Familiar dado a un familiar",
         ["FAMILY_MEMBER_UNLINK"] = "Familiar desvinculado del residente",
         ["FAMILY_COMMUNICATION_PUBLISH_NOW"] = "Comunicado a la familia publicado antes de su hora",
         ["FAMILY_SCHEDULE_UPDATE"] = "Horario de los comunicados a la familia cambiado",

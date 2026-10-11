@@ -18,6 +18,12 @@ public class HomeController(ListActiveScopePermissions listPermissions) : Contro
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Index)) });
         }
 
+        // El familiar tiene su propio portal, con su propio aspecto y sin nada del personal.
+        if (activeScope?.Profile == SystemProfile.Familiar)
+        {
+            return RedirectToAction("Index", "PortalFamiliar");
+        }
+
         // Las fichas que dependen de un permiso solo se enseñan si el ámbito activo lo tiene (0024). Solo orienta: cada
         // pantalla vuelve a autorizar.
         IReadOnlyList<string> permissions = activeScope is null

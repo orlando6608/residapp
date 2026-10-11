@@ -32,7 +32,10 @@ public static class ProfessionalAccount
         SystemProfile.DireccionClinica,
     ];
 
-    public static ProfessionalAccountData Validate(string? subject, string? displayName)
+    public static ProfessionalAccountData Validate(string? subject, string? displayName) =>
+        new(ValidateSubject(subject), ValidateDisplayName(displayName));
+
+    public static string ValidateSubject(string? subject)
     {
         var subjectText = subject?.Trim();
         if (string.IsNullOrEmpty(subjectText) || subjectText.Length is < MinSubjectLength or > MaxSubjectLength
@@ -41,7 +44,7 @@ public static class ProfessionalAccount
             throw new DomainValidationException(InvalidCode);
         }
 
-        return new ProfessionalAccountData(subjectText, ValidateDisplayName(displayName));
+        return subjectText;
     }
 
     public static string ValidateDisplayName(string? displayName)
