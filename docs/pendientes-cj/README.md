@@ -53,7 +53,7 @@ Cuando el documento está contestado y lo que pedía está implementado:
 
 1. `git mv` del `.html` y del `.respuestas.json` a `archivados/`.
 2. En el `.html`, bajo el «eyebrow» de la cabecera, la línea «Archivado el AAAA-MM-DD: lo que respondiste ya está implementado…» (como en los dos ya archivados) y «Archivado» en lugar de «Pendiente de CJ». Arriba de la cabecera, el bloque `<nav class="back">` con «← Documentos para CJ» (`../index.html`) y «Volver a ResidApp» (`/`), con su CSS y su regla de impresión; cópialo de uno ya archivado.
-3. Quitarlo de `preguntas.html` y añadirlo a `archivo.html` (con una frase de qué se hizo y dónde sigue lo pendiente), y moverlo en la tabla de abajo.
+3. Quitarlo de `preguntas.html` y añadirlo a `archivo.html` (con una frase de qué se hizo y dónde sigue lo pendiente), y moverlo en la tabla de abajo. Si `preguntas.html` se queda sin documentos, la ficha «Preguntas» de `index.html` lleva la clase `sin-pendientes` y el texto «Nada pendiente por ahora»; al añadir un documento de Preguntas, quítalos (ficha normal).
 4. Actualizar las rutas que lo citan en `docs/` (`pendientes-*.md`, `docs/prompts-ia/continuar-construccion.md`).
 5. Tras el despliegue, borrar en Azure la copia antigua de la raíz (`site/wwwroot/pendientes-cj/<documento>.html`): el despliegue añade ficheros pero no borra los de antes, y esa copia seguiría abierta (con clave) y sin respuestas. Kudu tiene desactivado el acceso básico: se borra con la API `vfs` y un token de Entra ID (`az account get-access-token --resource https://management.azure.com`, `DELETE` con `If-Match: *`).
 
@@ -87,7 +87,7 @@ Cada `<documento>.respuestas.json` se entiende sin abrir el HTML:
 Copia uno existente y cambia el `<title>`, `data-doc` (el nombre del fichero, sin `.html`), `data-version` y el
 contenido de `<div class="page">`. El estilo y el script del final son iguales en todos y no hace falta tocarlos. Cada
 pregunta es un elemento con `data-q` (clave única en el JSON); sus campos llevan `data-field`, y las opciones son
-`input type="radio"` dentro de `label.choice`. Para agrupar el avance por temas, cada tema es una `section.tema` con `id`. Añade también su entrada a `preguntas.html` (o a `pruebas.html`: listas estáticas de la web) y a la tabla de abajo.
+`input type="radio"` dentro de `label.choice`. Para agrupar el avance por temas, cada tema es una `section.tema` con `id`. Añade también su entrada a `preguntas.html` (o a `pruebas.html`: listas estáticas de la web) y a la tabla de abajo. Si es un documento de Preguntas y la ficha de `index.html` estaba como «sin pendientes», vuelve a dejarla normal (quita la clase `sin-pendientes` y repón su texto).
 
 El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **prueba** con pasos y «qué debería ocurrir», y las opciones son A funciona · B con problema · C no funciona · D no probada. Usa el mismo estilo y script; solo cambian los textos del script («Sin probar»/«Probada» y «completadas», y «Pendiente»/«Respondida» en las preguntas con `class="abierta"`). Está generado a partir de una lista de pruebas; si cambia una pantalla descrita en un paso, edita el HTML y sube `data-version`.
 

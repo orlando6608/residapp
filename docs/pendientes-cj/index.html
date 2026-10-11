@@ -58,6 +58,9 @@
   a.card h2 { font-size: 1.35rem; color: var(--accent); }
   a.card p { color: var(--muted); font-size: 0.98rem; }
   a.card .go { margin-top: auto; padding-top: 6px; color: var(--accent); font-weight: 600; }
+  a.card.sin-pendientes { border-style: dashed; }
+  a.card.sin-pendientes h2 { color: var(--muted); }
+  a.card.sin-pendientes .go { color: var(--muted); }
 </style>
 </head>
 <body>
@@ -73,10 +76,10 @@
   </header>
 
   <nav class="cards" aria-label="Secciones">
-    <a class="card" href="preguntas.html">
+    <a class="card sin-pendientes" href="preguntas.html">
       <h2>Preguntas</h2>
-      <p>Decisiones y valores clínicos que ingeniería no puede inventar. Respóndelos en la propia página y envía el fichero a Orlando.</p>
-      <span class="go">Ver las preguntas →</span>
+      <p>Ahora mismo no hay ninguna pregunta pendiente de contestar. Cuando ingeniería necesite algo de ti, aparecerá aquí.</p>
+      <span class="go">Nada pendiente por ahora →</span>
     </a>
     <a class="card" href="pruebas.html">
       <h2>Pruebas</h2>
