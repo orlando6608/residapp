@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews(options =>
 {
+    options.Filters.Add<InvalidIdentifierFilter>();
     // Mensajes de enlace del modelo en español (p. ej., un identificador mal escrito); por defecto salen en inglés.
     var messages = options.ModelBindingMessageProvider;
     messages.SetAttemptedValueIsInvalidAccessor((value, field) => $"«{value}» no es un valor válido para {field}.");

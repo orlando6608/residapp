@@ -2,6 +2,11 @@ using System.Text.Json.Serialization;
 
 namespace ResidApp.Shared;
 
+/// <summary>Un identificador vacío (Guid.Empty): lo que llega cuando una dirección o un formulario no trae el identificador. Es un
+/// ArgumentException, como antes, pero con tipo propio para que la capa web lo trate como una petición mal formada y no como un fallo.</summary>
+public sealed class InvalidIdentifierException(string paramName)
+    : ArgumentException("El identificador no puede ser Guid.Empty.", paramName);
+
 /// <summary>
 /// Traduce lib/domain/shared/identifiers.ts: allí los IDs son strings UUID v4 con marca de tipo
 /// (branded types) validados en runtime por isOpaqueEntityId. Aquí son structs de solo lectura sobre
@@ -14,7 +19,7 @@ internal static class OpaqueId
     {
         if (value == Guid.Empty)
         {
-            throw new ArgumentException("El identificador no puede ser Guid.Empty.", paramName);
+            throw new InvalidIdentifierException(paramName);
         }
         return value;
     }
