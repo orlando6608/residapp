@@ -65,8 +65,8 @@ public class CorreccionComunicadosTests
         var view = await NursingViewAsync(enfermera, communicationId);
         var detail = (await EnfermeriaApplicationServiceTests.BuildService(enfermera.ExternalSubject).FindPendingChangeDetailAsync(
             new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
-        var asAdmin = (await new AdministrationFamilyCommunicationApplicationService(
-            new AdministrationAccessResolver(new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedCorreccionSessionIdentityProvider(admin.ExternalSubject)),
+        var asAdmin = (await new FamilyCommunicationPublicationApplicationService(
+            new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedCorreccionSessionIdentityProvider(admin.ExternalSubject),
             new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory), new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory))
             .ListAsync(admin.ProfileScopeId, admin.CenterId)).Value!.Single();
 
@@ -129,14 +129,15 @@ public class CorreccionComunicadosTests
     }
 
     [Fact]
-    public async Task NoSeCorrigeTrasLaPublicacionAnticipada_NiPasadoElMargen()
+    public async Task NoSeCorrigeTrasLaPublicacionAnticipada_NiLlegadaSuHoraDePublicacion()
     {
         var (enfermera, eventId, communicationId) = await SeedAsync();
         var admin = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, enfermera.CenterId, enfermera.UnitId);
         var publisher = new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory);
-        await publisher.PublishNowAsync(new AccountAdministrationAccess(admin.ProfileScopeId, admin.AccountId, admin.CenterId), communicationId);
+        await publisher.PublishNowAsync(
+            new FamilyCommunicationAccess(admin.ProfileScopeId, admin.AccountId, admin.CenterId, SystemProfile.Administracion), communicationId);
 
-        // La tabla es de solo inserción: un segundo comunicado preparado hace dos horas entra ya con el margen pasado.
+        // La tabla es de solo inserción: un segundo comunicado preparado hace tres horas entra ya con su hora de publicación pasada.
         Guid residentId;
         using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
         {
@@ -149,18 +150,54 @@ public class CorreccionComunicadosTests
         using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
         {
             await connection.ExecuteAsync("""
-                INSERT INTO dbo.comunicaciones_familiares (id, evento_id, residente_id, centro_id, tipo_codigo, texto, preparado_por_cuenta_id, preparado_en)
-                SELECT @Id, ea.id, ea.residente_id, ea.centro_id, 'ORDINARIA', 'Comunicado de hace dos horas.', @AccountId, DATEADD(HOUR, -2, SYSUTCDATETIME())
+                INSERT INTO dbo.comunicaciones_familiares
+                    (id, evento_id, residente_id, centro_id, tipo_codigo, texto, preparado_por_cuenta_id, preparado_en, publicacion_programada_en)
+                SELECT @Id, ea.id, ea.residente_id, ea.centro_id, 'ORDINARIA', 'Comunicado de hace tres horas.', @AccountId,
+                       DATEADD(HOUR, -3, SYSUTCDATETIME()), DATEADD(HOUR, -1, SYSUTCDATETIME())
                   FROM dbo.eventos_asistenciales ea WHERE ea.id = @EventId
                 """, new { Id = oldId, AccountId = enfermera.AccountId.Value, EventId = registered.Value!.EventId });
         }
 
         var afterPublication = await Build(enfermera.ExternalSubject).ExecuteAsync(Command(enfermera, communicationId, 0, "Tarde para corregir."));
-        var afterMargin = await Build(enfermera.ExternalSubject).ExecuteAsync(Command(enfermera, oldId, 0, "Pasado el margen."));
+        var afterItsTime = await Build(enfermera.ExternalSubject).ExecuteAsync(Command(enfermera, oldId, 0, "Llegada su hora."));
 
         Assert.Equal(ApplicationFailureCode.Conflict, afterPublication.Error!.Code);
-        Assert.Equal(ApplicationFailureCode.Conflict, afterMargin.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, afterItsTime.Error!.Code);
         Assert.Equal(0, await CountAsync("SELECT COUNT(*) FROM dbo.comunicaciones_familiares_correcciones WHERE comunicacion_id IN (@a, @b)", new { a = communicationId, b = oldId }));
+    }
+
+    /// <summary>CJ, 2026-10-10 (5.2): se corrige hasta que se publica, no solo durante la primera hora.</summary>
+    [Fact]
+    public async Task SeCorrigeMasAllaDeLaPrimeraHora_MientrasNoLleguePublicacion()
+    {
+        var (enfermera, eventId, _) = await SeedAsync();
+        Guid residentId;
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            residentId = await connection.ExecuteScalarAsync<Guid>("SELECT residente_id FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+        }
+        var registered = await EnfermeriaApplicationServiceTests.BuildService(enfermera.ExternalSubject).RegisterClinicalEventAsync(
+            new RegisterClinicalEventCommand(enfermera.ProfileScopeId, enfermera.CenterId, ResidentId.From(residentId),
+                "Segundo evento de la prueba.", DailyChangeClassification.Ordinario, null, Guid.NewGuid()));
+        var laterId = Guid.NewGuid();
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            // Preparado hace tres horas, se publica dentro de cuatro: sigue abierto a correcciones.
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.comunicaciones_familiares
+                    (id, evento_id, residente_id, centro_id, tipo_codigo, texto, preparado_por_cuenta_id, preparado_en, publicacion_programada_en)
+                SELECT @Id, ea.id, ea.residente_id, ea.centro_id, 'ORDINARIA', 'Comunicado de hace tres horas.', @AccountId,
+                       DATEADD(HOUR, -3, SYSUTCDATETIME()), DATEADD(HOUR, 4, SYSUTCDATETIME())
+                  FROM dbo.eventos_asistenciales ea WHERE ea.id = @EventId
+                """, new { Id = laterId, AccountId = enfermera.AccountId.Value, EventId = registered.Value!.EventId });
+        }
+
+        var corrected = await Build(enfermera.ExternalSubject).ExecuteAsync(Command(enfermera, laterId, 0, "Corregido pasada la primera hora."));
+        var view = await NursingViewAsync(enfermera, laterId);
+
+        Assert.True(corrected.Ok, corrected.Error?.Message);
+        Assert.Equal("Corregido pasada la primera hora.", view.Communication.Text);
+        Assert.True(FamilyCommunicationSchedule.CanCorrect(view.ScheduledAt, view.PublishedEarlyAt, DateTimeOffset.UtcNow));
     }
 
     [Fact]

@@ -9,9 +9,10 @@ public sealed record CorrectFamilyCommunicationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid ComunicadoId, int VersionEsperada, FamilyCommunicationType? Tipo, string? Texto);
 
 /// <summary>
-/// Corregir el texto y el tipo de un comunicado a la familia durante su margen de 1 hora (CJ, 2026-10-07; script 0049). Lo hace Enfermería
-/// del ámbito del evento, sea quien sea la persona que lo preparó (no hay propiedad permanente, como en los seguimientos). Pasado el
-/// margen o publicado antes por Administración, ya no se puede corregir. Cada corrección queda en el historial con su autoría real.
+/// Corregir el texto y el tipo de un comunicado a la familia hasta que se publique (CJ, 2026-10-07 y 2026-10-10; script 0049). Lo hace Enfermería
+/// o Medicina del ámbito del evento, sea quien sea la persona que lo preparó (no hay propiedad permanente, como en los seguimientos). Llegada
+/// su hora de publicación, o publicado antes por Administración o Dirección, ya no se puede corregir. Cada corrección queda en el historial
+/// con su autoría real.
 /// </summary>
 public sealed class CorrectFamilyCommunication(
     IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, IFamilyCommunicationCorrector corrector)
@@ -24,13 +25,14 @@ public sealed class CorrectFamilyCommunication(
             var identity = await session.GetVerifiedIdentityAsync(ct) ?? throw new AccessDeniedException();
             var activeScopes = await scopes.ListActiveAsync(identity.ExternalSubject, ct);
             var scope = activeScopes.FirstOrDefault(s => s.ProfileScopeId == command.AmbitoPerfilId && s.CenterId == command.CentroId);
-            if (scope is null || scope.Profile != SystemProfile.Enfermeria)
+            if (scope is null || scope.Profile is not (SystemProfile.Enfermeria or SystemProfile.Medicina))
             {
                 throw new AccessDeniedException();
             }
 
             await corrector.CorrectAsync(new FamilyCommunicationCorrectionInput(
-                scope.AccountId, scope.ProfileScopeId, scope.CenterId, command.ComunicadoId, command.VersionEsperada, content.Type!.Value, content.Text!), ct);
+                scope.AccountId, scope.ProfileScopeId, scope.CenterId, scope.Profile, command.ComunicadoId, command.VersionEsperada,
+                content.Type!.Value, content.Text!), ct);
             return true;
         });
 }

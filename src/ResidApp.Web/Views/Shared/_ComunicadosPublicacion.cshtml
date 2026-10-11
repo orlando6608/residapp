@@ -1,0 +1,57 @@
+@using ResidApp.Application.UseCases
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model IReadOnlyList<FamilyCommunicationStatusView>
+@* Lista de comunicados a la familia con «Publicar ahora», de Administración y de Dirección Clínica (CJ, 2026-10-10). Las acciones
+   (PublicarComunicado) son las del controlador actual. *@
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="estado-vacio">No hay comunicados a la familia en los últimos @FamilyCommunicationPublicationApplicationService.WindowDays días.</p>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        var communication = item.Communication;
+        <div class="card mb-3 border-start border-4 @(item.Published ? "border-success" : "border-info")">
+            <div class="card-body">
+                <h2 class="h5 card-title">@communication.ResidentName</h2>
+                <p class="text-muted mb-2">
+                    @(communication.UnitName ?? "Sin unidad") ·
+                    <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(communication.Type)</span>
+                    · Preparado el @communication.PreparedAt.ToLocalTime().ToString("g") ·
+                    @if (communication.PublishedEarlyAt is { } early)
+                    {
+                        <span class="badge text-bg-success">Publicado antes de su hora, el @early.ToLocalTime().ToString("g")</span>
+                    }
+                    else if (item.Published)
+                    {
+                        <span class="badge text-bg-success">Publicado el @item.ScheduledAt.ToLocalTime().ToString("g")</span>
+                    }
+                    else
+                    {
+                        <span class="badge text-bg-info">Se publica el @item.ScheduledAt.ToLocalTime().ToString("g")</span>
+                    }
+                </p>
+                <p class="mb-2" style="white-space: pre-line">@communication.Text</p>
+                @if (!item.Published)
+                {
+                    <form asp-action="PublicarComunicado" method="post">
+                        <input type="hidden" name="comunicadoId" value="@communication.Id" />
+                        <button type="submit" class="btn btn-outline-primary">Publicar ahora</button>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+}

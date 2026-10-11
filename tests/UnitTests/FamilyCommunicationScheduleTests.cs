@@ -1,4 +1,5 @@
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Shared;
 
 namespace ResidApp.UnitTests;
 
@@ -47,24 +48,58 @@ public class FamilyCommunicationScheduleTests
     }
 
     [Fact]
-    public void CanCorrect_SoloDuranteElMargen_YSinPublicacionAnticipada()
+    public void ScheduledAt_ConElHorarioDelCentro_UsaSuHoraYSuMargen()
     {
-        var prepared = Local(10, 8, 9, 30);
+        // Un centro que prefiere las 20:30, después de la cena, y 2 horas de margen para corregir.
+        var evening = new FamilyCommunicationScheduleSettings(new TimeOnly(20, 30), TimeSpan.FromHours(2));
 
-        Assert.True(FamilyCommunicationSchedule.CanCorrect(prepared, null, prepared));
-        Assert.True(FamilyCommunicationSchedule.CanCorrect(prepared, null, prepared.AddMinutes(59)));
-        Assert.False(FamilyCommunicationSchedule.CanCorrect(prepared, null, prepared.AddHours(1)));
-        Assert.False(FamilyCommunicationSchedule.CanCorrect(prepared, prepared.AddMinutes(10), prepared.AddMinutes(20)));
+        Assert.Equal(Local(10, 8, 20, 30), FamilyCommunicationSchedule.ScheduledAt(Local(10, 8, 9, 30), evening, Madrid));
+        Assert.Equal(Local(10, 8, 20, 30), FamilyCommunicationSchedule.ScheduledAt(Local(10, 8, 18, 30), evening, Madrid));
+        Assert.Equal(Local(10, 9, 20, 30), FamilyCommunicationSchedule.ScheduledAt(Local(10, 8, 18, 31), evening, Madrid));
+        // Sin margen y a las 00:00: sale a la medianoche siguiente, nunca en el pasado.
+        var midnight = new FamilyCommunicationScheduleSettings(new TimeOnly(0, 0), TimeSpan.Zero);
+        Assert.Equal(Local(10, 9, 0, 0), FamilyCommunicationSchedule.ScheduledAt(Local(10, 8, 9, 30), midnight, Madrid));
+        Assert.Equal(FamilyCommunicationScheduleSettings.Default, new FamilyCommunicationScheduleSettings(FamilyCommunicationSchedule.PublicationTime, FamilyCommunicationSchedule.Margin));
     }
 
     [Fact]
-    public void IsPublished_CuandoLlegaSuHoraOAdministracionLaPublicoAntes()
+    public void Settings_Validate_AceptaHoraYMargenDeUnDia_YRechazaElResto()
+    {
+        var valid = FamilyCommunicationScheduleSettings.Validate(new TimeOnly(20, 30, 45), 120);
+
+        Assert.Equal(new FamilyCommunicationScheduleSettings(new TimeOnly(20, 30), TimeSpan.FromHours(2)), valid);
+        Assert.Equal(0, FamilyCommunicationScheduleSettings.Validate(new TimeOnly(0, 0), 0).MarginMinutes);
+        Assert.Equal(1440, FamilyCommunicationScheduleSettings.Validate(new TimeOnly(23, 59), 1440).MarginMinutes);
+        foreach (var (time, margin) in new (TimeOnly?, int?)[] { (null, 60), (new TimeOnly(19, 0), null), (new TimeOnly(19, 0), -1), (new TimeOnly(19, 0), 1441) })
+        {
+            Assert.Equal(FamilyCommunicationScheduleSettings.InvalidCode,
+                Assert.Throws<DomainValidationException>(() => FamilyCommunicationScheduleSettings.Validate(time, margin)).Message);
+        }
+    }
+
+    /// <summary>CJ, 2026-10-10 (5.2): se corrige hasta que se publica, no solo durante la primera hora.</summary>
+    [Fact]
+    public void CanCorrect_HastaQueSePublica_YNoDespuesDeLaPublicacionAnticipada()
+    {
+        var prepared = Local(10, 8, 16, 10);
+        var scheduled = FamilyCommunicationSchedule.ScheduledAt(prepared, Madrid);
+
+        Assert.Equal(Local(10, 8, 19, 0), scheduled);
+        Assert.True(FamilyCommunicationSchedule.CanCorrect(scheduled, null, prepared));
+        Assert.True(FamilyCommunicationSchedule.CanCorrect(scheduled, null, prepared.AddHours(2)));
+        Assert.True(FamilyCommunicationSchedule.CanCorrect(scheduled, null, scheduled.AddMinutes(-1)));
+        Assert.False(FamilyCommunicationSchedule.CanCorrect(scheduled, null, scheduled));
+        Assert.False(FamilyCommunicationSchedule.CanCorrect(scheduled, prepared.AddMinutes(10), prepared.AddMinutes(20)));
+    }
+
+    [Fact]
+    public void IsPublished_CuandoLlegaSuHoraOSePublicoAntes()
     {
         var prepared = Local(10, 8, 9, 30);
         var scheduled = FamilyCommunicationSchedule.ScheduledAt(prepared, Madrid);
 
-        Assert.False(FamilyCommunicationSchedule.IsPublished(prepared, null, scheduled.AddMinutes(-1), Madrid));
-        Assert.True(FamilyCommunicationSchedule.IsPublished(prepared, null, scheduled, Madrid));
-        Assert.True(FamilyCommunicationSchedule.IsPublished(prepared, scheduled.AddHours(-5), prepared.AddMinutes(1), Madrid));
+        Assert.False(FamilyCommunicationSchedule.IsPublished(scheduled, null, scheduled.AddMinutes(-1)));
+        Assert.True(FamilyCommunicationSchedule.IsPublished(scheduled, null, scheduled));
+        Assert.True(FamilyCommunicationSchedule.IsPublished(scheduled, scheduled.AddHours(-5), prepared.AddMinutes(1)));
     }
 }

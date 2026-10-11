@@ -15,7 +15,7 @@
 <h1 class="h3">Inicio de Dirección Clínica</h1>
 <p class="text-muted">
     Supervisión operativa del proceso asistencial por unidad, sin contenido clínico. Cada cifra cuenta episodios abiertos;
-    los cerrados no aparecen. No hay ninguna acción asistencial en este perfil.
+    los cerrados no aparecen. No hay ninguna acción asistencial en este perfil; solo puedes publicar un comunicado a la familia antes de su hora.
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
 
@@ -56,6 +56,14 @@
             <div class="card-body">
                 <h2 class="h5 card-title">Calidad de proceso</h2>
                 <p class="card-text mb-0">Plazos de cada hito del proceso por unidad y periodo, con los episodios fuera de plazo o a punto de vencer.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
+        <a asp-action="Comunicados" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Comunicados a la familia</h2>
+                <p class="card-text mb-0">Los comunicados de tu ámbito, la hora a la que se publican y cuándo publicar uno antes.</p>
             </div>
         </a>
     </div>

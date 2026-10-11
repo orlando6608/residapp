@@ -51,7 +51,7 @@ public sealed class EnfermeriaController(
             ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
-            comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.Communication.PreparedAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow, TimeZoneInfo.Local)) : 0,
+            comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.ScheduledAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow)) : 0,
             indicaciones.Ok ? indicaciones.Value!.Count : 0,
             indicaciones.Ok ? indicaciones.Value!.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) : 0,
             protocolos.Ok ? protocolos.Value!.Count : 0,
@@ -204,13 +204,13 @@ public sealed class EnfermeriaController(
         return View(result.Value);
     }
 
-    /// <summary>Corregir un comunicado a la familia durante su margen de 1 hora (CJ, 2026-10-07; script 0049).</summary>
+    /// <summary>Corregir un comunicado a la familia hasta que se publique (CJ, 2026-10-07 y 2026-10-10; script 0049).</summary>
     public async Task<IActionResult> CorregirComunicacion(Guid comunicadoId, CancellationToken ct)
     {
         var item = await FindCommunicationAsync(comunicadoId, ct);
         if (item is null || !CanCorrect(item))
         {
-            TempData["Error"] = "Ese comunicado ya no se puede corregir: pasó su hora de margen o ya está publicado.";
+            TempData["Error"] = "Ese comunicado ya no se puede corregir: ya llegó su hora de publicación o ya está publicado.";
             return RedirectToAction(nameof(Comunicaciones));
         }
 
@@ -246,7 +246,7 @@ public sealed class EnfermeriaController(
         ModelState.AddModelError(string.Empty, result.Error!.Code switch
         {
             ApplicationFailureCode.Conflict =>
-                "No se ha guardado: alguien lo corrigió antes o ya pasó el margen de 1 hora. Vuelve a la lista para ver el estado actual. Lo que has escrito sigue aquí para que puedas copiarlo.",
+                "No se ha guardado: alguien lo corrigió antes o ya llegó su hora de publicación. Vuelve a la lista para ver el estado actual. Lo que has escrito sigue aquí para que puedas copiarlo.",
             ApplicationFailureCode.InvalidInput => "Revisa los datos: cambia el texto o el tipo, y escribe un texto de hasta 2000 caracteres.",
             _ => result.Error.Message,
         });
@@ -267,7 +267,7 @@ public sealed class EnfermeriaController(
     }
 
     private static bool CanCorrect(PendingFamilyCommunicationSummary item) =>
-        FamilyCommunicationSchedule.CanCorrect(item.Communication.PreparedAt, item.PublishedEarlyAt, DateTimeOffset.UtcNow);
+        FamilyCommunicationSchedule.CanCorrect(item.ScheduledAt, item.PublishedEarlyAt, DateTimeOffset.UtcNow);
 
     /// <summary>ENF-02: bandeja de cambios ordinarios (AUX-11A) y eventos propios ordinarios (ENF-16).</summary>
     public async Task<IActionResult> Ordinarios(PendingChangeFilter filtro, CancellationToken ct)

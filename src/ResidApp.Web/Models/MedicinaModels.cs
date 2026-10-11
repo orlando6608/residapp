@@ -6,11 +6,11 @@ using ResidApp.Domain.Medicina;
 namespace ResidApp.Web.Models;
 
 /// <summary>MED-01: contadores de escalados recibidos, de indicaciones emitidas (con cuántas siguen sin leer
-/// o tienen incidencia) y de seguimientos médicos abiertos (con cuántos están vencidos). Comunicaciones e
-/// Historial de Medicina llegarán con el resto del vertical. Protocolos: protocolos urgentes activos.</summary>
+/// o tienen incidencia) y de seguimientos médicos abiertos (con cuántos están vencidos). Protocolos: protocolos urgentes activos.
+/// Comunicaciones: las familiares de sus eventos que todavía no se han publicado (CJ, 2026-10-10).</summary>
 public sealed record MedicinaInicioViewModel(
     int Escalados, int Indicaciones, int IndicacionesSinLeer, int IndicacionesConIncidencia, int Seguimientos, int SeguimientosVencidos,
-    int Protocolos, IReadOnlyList<MilestoneEntry>? Avisos = null);
+    int Protocolos, IReadOnlyList<MilestoneEntry>? Avisos = null, int Comunicaciones = 0);
 
 /// <summary>MED-03: detalle del escalado con su información reunida (solo lectura), el basal vigente del
 /// residente (null si no tiene) y la parte médica (valoración e indicaciones). CorrectionWindow decide si se

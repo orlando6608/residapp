@@ -1,0 +1,17 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model IReadOnlyList<PendingFamilyCommunicationSummary>
+@{
+    ViewData["Title"] = "Comunicaciones familiares";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Comunicaciones familiares</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Comunicaciones familiares</h1>
+<partial name="_ComunicacionesFamiliares" model="Model" view-data="@(new ViewDataDictionary(ViewData) { ["EventoAccion"] = "Escalado" })" />

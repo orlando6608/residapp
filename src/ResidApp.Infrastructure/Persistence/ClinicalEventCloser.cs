@@ -147,10 +147,13 @@ internal static class ClinicalEventCloser
             if (communication.Decision == FamilyCommunicationDecision.Preparar)
             {
                 var communicationId = Guid.NewGuid();
+                // La hora de publicación se fija ahora con el horario que tenga el centro (script 0051): cambiarlo después no mueve este comunicado.
+                var scheduledAt = FamilyCommunicationSchedule.ScheduledAt(
+                    occurredAt, await SqlFamilyCommunicationScheduleRepository.ReadEffectiveAsync(connection, transaction, input.CenterId, ct), TimeZoneInfo.Local);
                 await connection.ExecuteAsync(new CommandDefinition("""
                     INSERT INTO dbo.comunicaciones_familiares
-                        (id, evento_id, residente_id, centro_id, tipo_codigo, texto, preparado_por_cuenta_id, preparado_en)
-                    SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @TypeCode, @Text, @AccountId, @OccurredAt
+                        (id, evento_id, residente_id, centro_id, tipo_codigo, texto, preparado_por_cuenta_id, preparado_en, publicacion_programada_en)
+                    SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @TypeCode, @Text, @AccountId, @OccurredAt, @ScheduledAt
                       FROM dbo.eventos_asistenciales ea
                      WHERE ea.id = @EventId;
 
@@ -163,7 +166,7 @@ internal static class ClinicalEventCloser
                     """, new
                 {
                     Id = communicationId, AuditId = Guid.NewGuid(), TypeCode = communication.Type!.Value.ToCode(), communication.Text,
-                    AccountId = input.AccountId.Value, rule.ProfileCode, OccurredAt = occurredAt, input.EventId,
+                    AccountId = input.AccountId.Value, rule.ProfileCode, OccurredAt = occurredAt, input.EventId, ScheduledAt = scheduledAt.UtcDateTime,
                 }, transaction, cancellationToken: ct));
             }
 

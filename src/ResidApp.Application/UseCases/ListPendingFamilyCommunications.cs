@@ -7,7 +7,8 @@ namespace ResidApp.Application.UseCases;
 public sealed record ListPendingFamilyCommunicationsCommand(Guid AmbitoPerfilId, CenterId CentroId);
 
 /// <summary>Comunicaciones familiares preparadas al cerrar un evento en los últimos 30 días, con su estado de publicación,
-/// dentro del mismo ámbito que las bandejas (tarjeta "Comunicaciones" de ENF-01).</summary>
+/// dentro del mismo ámbito que las bandejas (tarjeta "Comunicaciones" de ENF-01). También las ve Medicina, las de los eventos de su ámbito
+/// (CJ, 2026-10-10).</summary>
 public sealed class ListPendingFamilyCommunications(
     IProfileScopeDirectoryProvider scopes, IChangeInboxDirectory directory, ISessionIdentityProvider session)
 {
@@ -23,7 +24,7 @@ public sealed class ListPendingFamilyCommunications(
 
             var activeScopes = await scopes.ListActiveAsync(identity.ExternalSubject, ct);
             var scope = activeScopes.FirstOrDefault(s => s.ProfileScopeId == command.AmbitoPerfilId && s.CenterId == command.CentroId);
-            if (scope is null || scope.Profile != SystemProfile.Enfermeria)
+            if (scope is null || scope.Profile is not (SystemProfile.Enfermeria or SystemProfile.Medicina))
             {
                 throw new AccessDeniedException();
             }

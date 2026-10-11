@@ -1,0 +1,17 @@
+@using ResidApp.Web.Models
+@model CorregirComunicacionViewModel
+@{
+    ViewData["Title"] = "Corregir comunicado a la familia";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Medicina</a></li>
+        <li class="breadcrumb-item"><a asp-action="Comunicaciones">Comunicaciones familiares</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Corregir</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Corregir comunicado a la familia</h1>
+<partial name="_CorregirComunicacion" model="Model" />

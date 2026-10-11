@@ -571,6 +571,51 @@ public class MedicinaApplicationServiceTests
         Assert.Equal(ClinicalEventStatus.Cerrado, (await FindAsync(medica, eventId))!.Status);
     }
 
+    /// <summary>CJ, 2026-10-10 (5.4): Medicina ve los comunicados de los eventos de su ámbito y los corrige hasta que se publiquen, con su perfil
+    /// en la auditoría; fuera de su centro o ya publicado, no.</summary>
+    [Fact]
+    public async Task Comunicados_MedicinaLosVeYLosCorrige_HastaQueSePublican_ConSuPerfilEnLaAuditoria()
+    {
+        var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
+        var revision = await StartAndSaveMedicalAsync(medica, eventId);
+        Assert.True((await BuildMedicina(medica.ExternalSubject).CloseMedicalEventAsync(Close(
+            medica, eventId, revision, decision: FamilyCommunicationDecision.Preparar, type: FamilyCommunicationType.Ordinaria,
+            text: "Ha tenido algo de fiebre; la estamos vigilando."))).Ok);
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Medicina);
+        var admin = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, medica.CenterId, medica.UnitId);
+        var scopes = new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory);
+        ListPendingFamilyCommunications List(string subject) =>
+            new(scopes, new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory), new FixedMedicinaSessionIdentityProvider(subject));
+        CorrectFamilyCommunication Correct(string subject) =>
+            new(scopes, new FixedMedicinaSessionIdentityProvider(subject), new SqlFamilyCommunicationCorrection(TestDatabase.ConnectionFactory));
+
+        var seen = Assert.Single((await List(medica.ExternalSubject).ExecuteAsync(new ListPendingFamilyCommunicationsCommand(medica.ProfileScopeId, medica.CenterId))).Value!);
+        var seenByOutsider = (await List(outsider.ExternalSubject).ExecuteAsync(new ListPendingFamilyCommunicationsCommand(outsider.ProfileScopeId, outsider.CenterId))).Value!;
+        var byOutsider = await Correct(outsider.ExternalSubject).ExecuteAsync(new CorrectFamilyCommunicationCommand(
+            outsider.ProfileScopeId, outsider.CenterId, seen.CommunicationId, 0, FamilyCommunicationType.Ordinaria, "Ajeno."));
+        var corrected = await Correct(medica.ExternalSubject).ExecuteAsync(new CorrectFamilyCommunicationCommand(
+            medica.ProfileScopeId, medica.CenterId, seen.CommunicationId, 0, FamilyCommunicationType.Relevante, "Ha tenido fiebre; el equipo la vigila."));
+        var nursing = Assert.Single((await BuildService(enfermera.ExternalSubject).ListPendingFamilyCommunicationsAsync(
+            new ListPendingFamilyCommunicationsCommand(enfermera.ProfileScopeId, enfermera.CenterId))).Value!);
+        var publication = new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory);
+        await publication.PublishNowAsync(
+            new FamilyCommunicationAccess(admin.ProfileScopeId, admin.AccountId, admin.CenterId, SystemProfile.Administracion), seen.CommunicationId);
+        var afterPublication = await Correct(medica.ExternalSubject).ExecuteAsync(new CorrectFamilyCommunicationCommand(
+            medica.ProfileScopeId, medica.CenterId, seen.CommunicationId, 1, FamilyCommunicationType.Relevante, "Tarde."));
+
+        Assert.Equal(eventId, seen.EventId);
+        Assert.Empty(seenByOutsider);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, byOutsider.Error!.Code);
+        Assert.True(corrected.Ok, corrected.Error?.Message);
+        Assert.Equal("Ha tenido fiebre; el equipo la vigila.", nursing.Communication.Text);
+        Assert.Equal(1, nursing.Version);
+        Assert.Equal(ApplicationFailureCode.Conflict, afterPublication.Error!.Code);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal("MEDICINA", await connection.ExecuteScalarAsync<string>(
+            "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_CORRECT' AND recurso_id = @c",
+            new { a = medica.AccountId.Value, c = seen.CommunicationId }));
+    }
+
     private static async Task<IReadOnlyList<ReadyToCloseEvent>> ReadyToCloseAsync(SeededProfile enfermera)
     {
         var result = await new ListEventsReadyToClose(

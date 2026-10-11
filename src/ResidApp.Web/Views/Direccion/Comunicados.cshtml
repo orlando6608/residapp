@@ -1,0 +1,24 @@
+@using ResidApp.Application.UseCases
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model IReadOnlyList<FamilyCommunicationStatusView>
+@{
+    ViewData["Title"] = "Comunicados a la familia";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Dirección Clínica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Comunicados a la familia</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Comunicados a la familia</h1>
+<p class="text-muted">
+    Los comunicados de los residentes de tu ámbito de supervisión de los últimos @FamilyCommunicationPublicationApplicationService.WindowDays días. Quien
+    lo prepara lo aprueba al guardarlo y puede corregirlo hasta que se publique. Cada comunicado se publica a la hora que tenía fijada el centro al
+    guardarlo; tú puedes publicar uno antes de su hora. Si la información es urgente este no es el canal: avisa también por otros medios. La familia lo
+    verá firmado como «@FamilyCommunicationChoice.VisibleAuthor».
+</p>
+<partial name="_ComunicadosPublicacion" model="Model" />

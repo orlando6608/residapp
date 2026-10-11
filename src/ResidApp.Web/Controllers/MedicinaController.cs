@@ -21,7 +21,8 @@ namespace ResidApp.Web.Controllers;
 /// </summary>
 public sealed class MedicinaController(
     MedicinaApplicationService service, ResidentBaselineApplicationService baselineService, FindEmergencyContact findEmergencyContact,
-    ListMilestoneWarnings milestoneWarnings) : Controller
+    ListMilestoneWarnings milestoneWarnings, ListPendingFamilyCommunications listFamilyCommunications,
+    CorrectFamilyCommunication correctFamilyCommunication) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -37,6 +38,7 @@ public sealed class MedicinaController(
         var seguimientos = await service.ListMedicalFollowUpsAsync(new ListMedicalFollowUpsCommand(activeScope.ProfileScopeId, centroId), ct);
         var protocolos = await service.ListUrgentProtocolsAsync(new ListUrgentProtocolsCommand(activeScope.ProfileScopeId, centroId), ct);
         var avisos = await milestoneWarnings.ExecuteAsync(new ListMilestoneWarningsCommand(activeScope.ProfileScopeId, centroId), ct);
+        var comunicaciones = await listFamilyCommunications.ExecuteAsync(new ListPendingFamilyCommunicationsCommand(activeScope.ProfileScopeId, centroId), ct);
         if (!escalados.Ok)
         {
             ModelState.AddModelError(string.Empty, escalados.Error!.Message);
@@ -48,7 +50,91 @@ public sealed class MedicinaController(
             lista.Count(i => i.Indication.Status == MedicalIndicationStatus.NoRealizada),
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
-            protocolos.Ok ? protocolos.Value!.Count : 0, avisos.Ok ? avisos.Value : null));
+            protocolos.Ok ? protocolos.Value!.Count : 0, avisos.Ok ? avisos.Value : null,
+            comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.ScheduledAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow)) : 0));
+    }
+
+    /// <summary>Comunicaciones familiares de los eventos del ámbito de Medicina (los que le escalaron o ella observó), con la hora a la que se
+    /// publican (CJ, 2026-10-10). Puede corregir su texto hasta que se publiquen, igual que Enfermería.</summary>
+    public async Task<IActionResult> Comunicaciones(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Comunicaciones)) });
+        }
+
+        var result = await listFamilyCommunications.ExecuteAsync(
+            new ListPendingFamilyCommunicationsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+            return View(Array.Empty<PendingFamilyCommunicationSummary>());
+        }
+
+        return View(result.Value);
+    }
+
+    /// <summary>Corregir un comunicado a la familia hasta que se publique (CJ, 2026-10-10; script 0049).</summary>
+    public async Task<IActionResult> CorregirComunicacion(Guid comunicadoId, CancellationToken ct)
+    {
+        var item = await FindCommunicationAsync(comunicadoId, ct);
+        if (item is null || !FamilyCommunicationSchedule.CanCorrect(item.ScheduledAt, item.PublishedEarlyAt, DateTimeOffset.UtcNow))
+        {
+            TempData["Error"] = "Ese comunicado ya no se puede corregir: ya llegó su hora de publicación o ya está publicado.";
+            return RedirectToAction(nameof(Comunicaciones));
+        }
+
+        return View(new CorregirComunicacionViewModel(item, new CorregirComunicacionFormModel
+        {
+            ComunicadoId = item.CommunicationId, Version = item.Version, Tipo = item.Communication.Type, Texto = item.Communication.Text,
+        }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CorregirComunicacion([Bind(Prefix = "Form")] CorregirComunicacionFormModel form, CancellationToken ct)
+    {
+        var item = await FindCommunicationAsync(form.ComunicadoId, ct);
+        if (item is null)
+        {
+            return RedirectToAction(nameof(Comunicaciones));
+        }
+        if (!ModelState.IsValid)
+        {
+            return View(new CorregirComunicacionViewModel(item, form));
+        }
+
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await correctFamilyCommunication.ExecuteAsync(new CorrectFamilyCommunicationCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.ComunicadoId, form.Version, form.Tipo, form.Texto), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Comunicado corregido. La familia verá el texto corregido.";
+            return RedirectToAction(nameof(Comunicaciones));
+        }
+
+        ModelState.AddModelError(string.Empty, result.Error!.Code switch
+        {
+            ApplicationFailureCode.Conflict =>
+                "No se ha guardado: alguien lo corrigió antes o ya llegó su hora de publicación. Vuelve a la lista para ver el estado actual. Lo que has escrito sigue aquí para que puedas copiarlo.",
+            ApplicationFailureCode.InvalidInput => "Revisa los datos: cambia el texto o el tipo, y escribe un texto de hasta 2000 caracteres.",
+            _ => result.Error.Message,
+        });
+        return View(new CorregirComunicacionViewModel(item, form));
+    }
+
+    private async Task<PendingFamilyCommunicationSummary?> FindCommunicationAsync(Guid communicationId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return null;
+        }
+
+        var result = await listFamilyCommunications.ExecuteAsync(
+            new ListPendingFamilyCommunicationsCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        return result.Ok ? result.Value!.FirstOrDefault(c => c.CommunicationId == communicationId) : null;
     }
 
     /// <summary>MED-02: bandeja de escalados (pendientes y en valoración médica), del más antiguo al más reciente.</summary>

@@ -834,7 +834,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         var rows = await connection.QueryAsync<FamilyCommunicationRow>(new CommandDefinition($"""
             SELECT family.id AS CommunicationId, ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
                    unit.nombre_visible AS UnitName, {FamilyCommunicationSql.CurrentType} AS TypeCode, {FamilyCommunicationSql.CurrentText} AS Text, family.preparado_en AS PreparedAt,
-                   {FamilyCommunicationSql.Version} AS Version,
+                   {FamilyCommunicationSql.Version} AS Version, family.publicacion_programada_en AS ScheduledAt,
                    (SELECT early.publicada_en FROM dbo.comunicaciones_familiares_publicacion_anticipada early
                      WHERE early.comunicacion_id = family.id) AS PublishedEarlyAt
             {ScopedEventsFrom}
@@ -846,12 +846,13 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             r.CommunicationId, r.EventId, ResidentId.From(r.ResidentId), r.ResidentDisplayName, r.UnitName,
             new PreparedFamilyCommunication(
                 EnumCode.ParseCode<FamilyCommunicationType>(r.TypeCode), r.Text, new DateTimeOffset(r.PreparedAt, TimeSpan.Zero)),
-            r.Version, r.PublishedEarlyAt is { } early ? new DateTimeOffset(early, TimeSpan.Zero) : null)).ToList();
+            r.Version, r.PublishedEarlyAt is { } early ? new DateTimeOffset(early, TimeSpan.Zero) : null,
+            FamilyCommunicationSql.ScheduledAt(r.PreparedAt, r.ScheduledAt))).ToList();
     }
 
     private sealed record FamilyCommunicationRow(
         Guid CommunicationId, Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string TypeCode, string Text, DateTime PreparedAt, int Version,
-        DateTime? PublishedEarlyAt);
+        DateTime? ScheduledAt, DateTime? PublishedEarlyAt);
 
     private sealed record RangeRow(string Code, decimal? Min, decimal? Max);
 

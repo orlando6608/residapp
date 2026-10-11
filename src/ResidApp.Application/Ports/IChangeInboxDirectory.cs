@@ -51,7 +51,7 @@ public sealed record ClinicalEventClosure(
 /// ENF-01), con el evento del que procede. Aprobada al guardarla; Version es el número de correcciones (0 es el original) y PublishedEarlyAt cuando Administración la publicó antes de su hora.</summary>
 public sealed record PendingFamilyCommunicationSummary(
     Guid CommunicationId, Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, PreparedFamilyCommunication Communication,
-    int Version, DateTimeOffset? PublishedEarlyAt);
+    int Version, DateTimeOffset? PublishedEarlyAt, DateTimeOffset ScheduledAt);
 
 /// <summary>ENF-08/ENF-09: una acción sobre un seguimiento, con su autoría (solo si fue la cuenta del ámbito
 /// que consulta). Según el tipo trae el texto, el plan reprogramado, el equipo entrante o la transferencia

@@ -1,0 +1,70 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model IReadOnlyList<PendingFamilyCommunicationSummary>
+@* Comunicaciones familiares de Enfermería y de Medicina (CJ, 2026-10-10: Medicina tiene su propia pantalla). Se usa con
+   <partial name="_ComunicacionesFamiliares" model="Model" view-data="..." />; ViewData["EventoAccion"] es la acción que abre el evento en el
+   controlador actual (DetalleCambio en Enfermería, Escalado en Medicina). *@
+@{
+    var now = DateTimeOffset.UtcNow;
+    var eventoAccion = ViewData["EventoAccion"] as string ?? "DetalleCambio";
+}
+
+<p class="text-muted">
+    Las preparadas al cerrar un evento en los últimos 30 días. Quien la prepara la aprueba al guardarla. Puedes corregir su texto hasta que se publique;
+    cada comunicado muestra la hora a la que se publica, según el horario de tu centro. Administración y Dirección Clínica pueden publicarla antes. La
+    familia las verá firmadas como «@FamilyCommunicationChoice.VisibleAuthor». Si la información es urgente este no es el canal: avisa también por otros medios.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Count == 0)
+{
+    <p class="estado-vacio">No hay comunicaciones familiares en los últimos 30 días.</p>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        var published = FamilyCommunicationSchedule.IsPublished(item.ScheduledAt, item.PublishedEarlyAt, now);
+        <div class="card mb-3 border-start border-4 @(published ? "border-success" : "border-info")">
+            <div class="card-body">
+                <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
+                <p class="text-muted mb-2">
+                    @(item.UnitName ?? "Sin unidad") ·
+                    <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(item.Communication.Type)</span>
+                    · Preparada el @item.Communication.PreparedAt.ToLocalTime().ToString("g") ·
+                    @if (item.PublishedEarlyAt is { } early)
+                    {
+                        <span class="badge text-bg-success">Publicada antes de su hora, el @early.ToLocalTime().ToString("g")</span>
+                    }
+                    else if (published)
+                    {
+                        <span class="badge text-bg-success">Publicada el @item.ScheduledAt.ToLocalTime().ToString("g")</span>
+                    }
+                    else
+                    {
+                        <span class="badge text-bg-info">Se publica el @item.ScheduledAt.ToLocalTime().ToString("g")</span>
+                    }
+                </p>
+                <p class="mb-2" style="white-space: pre-line">@item.Communication.Text</p>
+                @if (item.Version > 0)
+                {
+                    <p class="small text-body-secondary mb-2">Corregido @(item.Version == 1 ? "una vez" : $"{item.Version} veces"): se muestra el texto vigente.</p>
+                }
+                @if (FamilyCommunicationSchedule.CanCorrect(item.ScheduledAt, item.PublishedEarlyAt, now))
+                {
+                    <a asp-action="CorregirComunicacion" asp-route-comunicadoId="@item.CommunicationId" class="btn btn-outline-primary me-2">Corregir</a>
+                }
+                <a asp-action="@eventoAccion" asp-route-eventoId="@item.EventId">Ver el evento</a>
+            </div>
+        </div>
+    }
+}

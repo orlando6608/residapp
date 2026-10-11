@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Shared;
@@ -10,12 +11,61 @@ namespace ResidApp.Web.Controllers;
 /// <summary>
 /// Vertical Dirección/Coordinación Clínica, bloque 1: DIR-01/DIR-02 (inicio con los contadores por unidad), DIR-03
 /// (pendientes filtrables por tipo y unidad), DIR-04 (detalle operativo de un episodio, sin contenido clínico) y DIR-17
-/// (mi ámbito de supervisión). Solo lectura: ninguna acción escribe. Traduce a DireccionApplicationService; la
-/// autorización no vive aquí. Un acceso denegado y un fallo técnico salen con mensajes distintos (DIR-18), los del
-/// resultado de la aplicación.
+/// (mi ámbito de supervisión). Supervisión en solo lectura, salvo publicar un comunicado a la familia antes de su hora (CJ, 2026-10-10). Traduce a
+/// DireccionApplicationService; la autorización no vive aquí. Un acceso denegado y un fallo técnico salen con mensajes distintos (DIR-18), los
+/// del resultado de la aplicación.
 /// </summary>
-public sealed class DireccionController(DireccionApplicationService service) : Controller
+public sealed class DireccionController(
+    DireccionApplicationService service, FamilyCommunicationPublicationApplicationService familyCommunications) : Controller
 {
+    /// <summary>Comunicados a la familia de los residentes del ámbito de Dirección, con su hora de publicación; Dirección Clínica puede publicar uno
+    /// antes de su hora (CJ, 2026-10-10; 5.3). Se audita con su perfil.</summary>
+    public async Task<IActionResult> Comunicados(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Comunicados)) });
+        }
+
+        var result = await familyCommunications.ListAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+        }
+
+        return View(result.Value ?? []);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PublicarComunicado(Guid comunicadoId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await familyCommunications.PublishNowAsync(
+            new PublishFamilyCommunicationCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), comunicadoId), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Comunicado publicado antes de su hora. Queda en la auditoría.";
+        }
+        else
+        {
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.AccessDenied => "No se puede acceder a ese comunicado.",
+                ApplicationFailureCode.Conflict => "Ese comunicado ya estaba publicado.",
+                _ => result.Error.Message,
+            };
+        }
+
+        return RedirectToAction(nameof(Comunicados));
+    }
+
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);

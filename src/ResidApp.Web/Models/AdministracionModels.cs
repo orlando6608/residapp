@@ -3,6 +3,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
 using ResidApp.Domain.Structure;
@@ -382,3 +383,28 @@ public sealed record UnlinkFamilyViewModel(
 
 /// <summary>CJ, 2026-10-07: las unidades del centro vistas por una Administración y si esta es la principal.</summary>
 public sealed record AdministrationScopeViewModel(ResidApp.Application.UseCases.AdministrationScopeView View);
+
+/// <summary>Hora de publicación y margen de los comunicados a la familia del centro (script 0051; CJ, 2026-10-10). Version es la leída: si otra
+/// persona cambió el horario entretanto, el guardado se rechaza.</summary>
+public sealed class HorarioComunicadosFormModel
+{
+    public int Version { get; set; }
+
+    [Required(ErrorMessage = "Indica la hora de publicación.")]
+    [Display(Name = "Hora de publicación")]
+    public TimeOnly? HoraPublicacion { get; set; }
+
+    [Required(ErrorMessage = "Indica el margen en minutos.")]
+    [Range(0, FamilyCommunicationScheduleSettings.MaxMarginMinutes, ErrorMessage = "El margen va de 0 a {2} minutos.")]
+    [Display(Name = "Margen (minutos)")]
+    public int? MargenMinutos { get; set; }
+
+    public static HorarioComunicadosFormModel From(FamilyCommunicationScheduleSettings settings, int version) => new()
+    {
+        Version = version, HoraPublicacion = settings.PublicationTime, MargenMinutos = settings.MarginMinutes,
+    };
+}
+
+/// <summary>View es null si no se pudo leer (perfil sin acceso); RestoredDefaults, que el formulario trae el horario de CJ sin guardarlo.</summary>
+public sealed record HorarioComunicadosViewModel(
+    FamilyCommunicationScheduleView? View, HorarioComunicadosFormModel Form, bool RestoredDefaults = false);

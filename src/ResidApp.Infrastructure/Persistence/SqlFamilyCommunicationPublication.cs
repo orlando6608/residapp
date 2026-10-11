@@ -9,57 +9,83 @@ using ResidApp.Shared;
 namespace ResidApp.Infrastructure.Persistence;
 
 /// <summary>
-/// Publicación de los comunicados a la familia por Administración (script 0048; CJ, 2026-10-07). Lee los comunicados de las unidades del
-/// ámbito y publica uno antes de su hora dentro de una transacción que bloquea el comunicado, comprueba el ámbito y que no esté ya
-/// publicado, y lo audita sin datos (FAMILY_COMMUNICATION_PUBLISH_NOW). La hora de publicación se calcula con la zona del servidor.
+/// Publicación de los comunicados a la familia por Administración y por Dirección Clínica (script 0048; CJ, 2026-10-07 y 2026-10-10). Lee los
+/// comunicados del ámbito y publica uno antes de su hora dentro de una transacción que bloquea el comunicado, comprueba el ámbito y que no esté
+/// ya publicado, y lo audita sin datos (FAMILY_COMMUNICATION_PUBLISH_NOW, con el perfil que lo hizo). El ámbito de Administración son las
+/// unidades de su ámbito; el de Dirección, el mismo de sus lecturas (unidades y, si los restringe, residentes).
 /// </summary>
 public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory connections) : IFamilyCommunicationDirectory, IFamilyCommunicationPublisher
 {
+    private const string Columns = """
+        family.id AS Id, family.evento_id AS EventId, family.residente_id AS ResidentId, resident.nombre_visible AS ResidentName,
+        unit.nombre_visible AS UnitName, {0} AS TypeCode, {1} AS Text, family.preparado_en AS PreparedAt, family.publicacion_programada_en AS ScheduledAt,
+        (SELECT early.publicada_en FROM dbo.comunicaciones_familiares_publicacion_anticipada early WHERE early.comunicacion_id = family.id) AS PublishedEarlyAt
+        """;
+
+    /// <summary>Los comunicados del ámbito, con los alias family, ea, unit y resident. Administración: los de las unidades de su ámbito;
+    /// Dirección: los eventos de sus unidades y residentes (la misma regla que sus lecturas), y que el ámbito sea de la cuenta.</summary>
+    private const string AdministrationCommunications = """
+        FROM dbo.comunicaciones_familiares family
+        JOIN dbo.eventos_asistenciales ea ON ea.id = family.evento_id AND ea.centro_id = family.centro_id
+        JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = @ProfileScopeId AND unit_scope.centro_id = family.centro_id
+             AND unit_scope.unidad_id = ea.unidad_id AND unit_scope.revocado_en IS NULL
+        JOIN dbo.unidades unit ON unit.id = ea.unidad_id AND unit.centro_id = family.centro_id
+        JOIN dbo.residentes resident ON resident.id = family.residente_id AND resident.centro_id = family.centro_id
+         WHERE family.centro_id = @CenterId
+        """;
+
+    private static string ScopedCommunications(FamilyCommunicationAccess access) => access.Profile == SystemProfile.Administracion
+        ? AdministrationCommunications
+        : SqlChangeInboxDirectory.DirectionScopedEventsFrom + " AND profile.cuenta_id = @AccountId AND family.id IS NOT NULL";
+
     public async Task<IReadOnlyList<AdministrationFamilyCommunication>> ListAsync(
-        AccountAdministrationAccess access, DateTimeOffset since, CancellationToken ct = default)
+        FamilyCommunicationAccess access, DateTimeOffset since, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         var rows = await connection.QueryAsync<CommunicationRow>(new CommandDefinition($"""
-            SELECT family.id AS Id, family.evento_id AS EventId, family.residente_id AS ResidentId, resident.nombre_visible AS ResidentName,
-                   unit.nombre_visible AS UnitName, {FamilyCommunicationSql.CurrentType} AS TypeCode, {FamilyCommunicationSql.CurrentText} AS Text, family.preparado_en AS PreparedAt,
-                   early.publicada_en AS PublishedEarlyAt
-              FROM dbo.comunicaciones_familiares family
-              JOIN dbo.eventos_asistenciales ea ON ea.id = family.evento_id AND ea.centro_id = family.centro_id
-              JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = @ProfileScopeId AND unit_scope.centro_id = family.centro_id
-                   AND unit_scope.unidad_id = ea.unidad_id AND unit_scope.revocado_en IS NULL
-              JOIN dbo.unidades unit ON unit.id = ea.unidad_id AND unit.centro_id = family.centro_id
-              JOIN dbo.residentes resident ON resident.id = family.residente_id AND resident.centro_id = family.centro_id
-              LEFT JOIN dbo.comunicaciones_familiares_publicacion_anticipada early ON early.comunicacion_id = family.id
-             WHERE family.centro_id = @CenterId AND family.preparado_en >= @Since
+            SELECT {string.Format(Columns, FamilyCommunicationSql.CurrentType, FamilyCommunicationSql.CurrentText)}
+            {ScopedCommunications(access)}
+               AND family.preparado_en >= @Since
              ORDER BY family.preparado_en DESC
-            """, new { access.ProfileScopeId, CenterId = access.CenterId.Value, Since = since.UtcDateTime }, cancellationToken: ct));
+            """, new { access.ProfileScopeId, CenterId = access.CenterId.Value, AccountId = access.AccountId.Value, Since = since.UtcDateTime },
+            cancellationToken: ct));
         return rows.Select(row => new AdministrationFamilyCommunication(
             row.Id, row.EventId, ResidentId.From(row.ResidentId), row.ResidentName, row.UnitName,
             EnumCode.ParseCode<FamilyCommunicationType>(row.TypeCode), row.Text, Utc(row.PreparedAt),
-            row.PublishedEarlyAt is { } early ? Utc(early) : null)).ToList();
+            row.PublishedEarlyAt is { } early ? Utc(early) : null, FamilyCommunicationSql.ScheduledAt(row.PreparedAt, row.ScheduledAt))).ToList();
     }
 
-    public async Task PublishNowAsync(AccountAdministrationAccess access, Guid communicationId, CancellationToken ct = default)
+    public async Task PublishNowAsync(FamilyCommunicationAccess access, Guid communicationId, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
-        await SqlProfessionalAccountRepository.EnsureAdministratorAsync(connection, transaction, access, ct);
+        if (access.Profile == SystemProfile.Administracion)
+        {
+            await SqlProfessionalAccountRepository.EnsureAdministratorAsync(
+                connection, transaction, new AccountAdministrationAccess(access.ProfileScopeId, access.AccountId, access.CenterId), ct);
+        }
+
+        var parameters = new
+        {
+            access.ProfileScopeId, CenterId = access.CenterId.Value, AccountId = access.AccountId.Value, CommunicationId = communicationId,
+        };
         // El bloqueo ordena dos publicaciones simultáneas del mismo comunicado: la segunda ya lo ve publicado.
-        var communication = await connection.QuerySingleOrDefaultAsync<PublishRow>(new CommandDefinition("""
-            SELECT family.preparado_en AS PreparedAt, ea.unidad_id AS UnitId, family.residente_id AS ResidentId,
+        await connection.ExecuteAsync(new CommandDefinition(
+            "SELECT id FROM dbo.comunicaciones_familiares WITH (UPDLOCK, ROWLOCK) WHERE id = @CommunicationId AND centro_id = @CenterId",
+            parameters, transaction, cancellationToken: ct));
+        var communication = await connection.QuerySingleOrDefaultAsync<PublishRow>(new CommandDefinition($"""
+            SELECT family.preparado_en AS PreparedAt, family.publicacion_programada_en AS ScheduledAt, ea.unidad_id AS UnitId,
+                   family.residente_id AS ResidentId,
                    CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.comunicaciones_familiares_publicacion_anticipada early
                                            WHERE early.comunicacion_id = family.id) THEN 1 ELSE 0 END AS BIT) AS PublishedEarly
-              FROM dbo.comunicaciones_familiares family WITH (UPDLOCK, ROWLOCK)
-              JOIN dbo.eventos_asistenciales ea ON ea.id = family.evento_id AND ea.centro_id = family.centro_id
-              JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = @ProfileScopeId AND unit_scope.centro_id = family.centro_id
-                   AND unit_scope.unidad_id = ea.unidad_id AND unit_scope.revocado_en IS NULL
-             WHERE family.id = @CommunicationId AND family.centro_id = @CenterId
-            """, new { access.ProfileScopeId, CenterId = access.CenterId.Value, CommunicationId = communicationId },
-            transaction, cancellationToken: ct)) ?? throw new AccessDeniedException();
+            {ScopedCommunications(access)}
+               AND family.id = @CommunicationId
+            """, parameters, transaction, cancellationToken: ct)) ?? throw new AccessDeniedException();
 
         var occurredAt = DateTimeOffset.UtcNow;
         if (FamilyCommunicationSchedule.IsPublished(
-                Utc(communication.PreparedAt), communication.PublishedEarly ? occurredAt : null, occurredAt, TimeZoneInfo.Local))
+                FamilyCommunicationSql.ScheduledAt(communication.PreparedAt, communication.ScheduledAt),
+                communication.PublishedEarly ? occurredAt : null, occurredAt))
         {
             throw new DomainValidationException("FAMILY_COMMUNICATION_ALREADY_PUBLISHED");
         }
@@ -70,12 +96,12 @@ public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory conne
 
             INSERT INTO dbo.eventos_auditoria
                 (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
-            VALUES (NEWID(), @AccountId, 'ADMINISTRACION', @CenterId, @UnitId, @ResidentId, 'FAMILY_COMMUNICATION', @CommunicationId,
+            VALUES (NEWID(), @AccountId, @Profile, @CenterId, @UnitId, @ResidentId, 'FAMILY_COMMUNICATION', @CommunicationId,
                     'FAMILY_COMMUNICATION_PUBLISH_NOW', @OccurredAt);
             """, new
         {
-            CommunicationId = communicationId, CenterId = access.CenterId.Value, AccountId = access.AccountId.Value, communication.UnitId,
-            communication.ResidentId, OccurredAt = occurredAt,
+            CommunicationId = communicationId, CenterId = access.CenterId.Value, AccountId = access.AccountId.Value, Profile = access.Profile.ToCode(),
+            communication.UnitId, communication.ResidentId, OccurredAt = occurredAt,
         }, transaction, cancellationToken: ct));
         transaction.Commit();
     }
@@ -84,7 +110,7 @@ public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory conne
 
     private sealed record CommunicationRow(
         Guid Id, Guid EventId, Guid ResidentId, string ResidentName, string? UnitName, string TypeCode, string Text, DateTime PreparedAt,
-        DateTime? PublishedEarlyAt);
+        DateTime? ScheduledAt, DateTime? PublishedEarlyAt);
 
-    private sealed record PublishRow(DateTime PreparedAt, Guid UnitId, Guid ResidentId, bool PublishedEarly);
+    private sealed record PublishRow(DateTime PreparedAt, DateTime? ScheduledAt, Guid UnitId, Guid ResidentId, bool PublishedEarly);
 }
