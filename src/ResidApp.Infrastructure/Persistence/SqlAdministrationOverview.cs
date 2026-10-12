@@ -12,6 +12,21 @@ namespace ResidApp.Infrastructure.Persistence;
 /// </summary>
 public sealed class SqlAdministrationOverview(SqlConnectionFactory connections) : IAdministrationOverviewReader
 {
+    /// <summary>Los residentes del ámbito (<c>scoped</c>) y la autorización vigente de cada uno de sus vínculos (<c>latest</c>): el último cambio, o ninguno si
+    /// no se ha abierto. La usan el inicio y los filtros «requiere atención» de la lista de residentes, para que cuenten lo mismo.</summary>
+    internal const string ScopedAuthorizationsCtes = $"""
+        WITH scoped AS ({SqlAdministracionResidentDirectory.ScopedResidentsSelect}),
+        latest AS (
+            SELECT scoped.ResidentId AS ResidentId, link.id AS LinkId, authorization_change.estado_codigo AS StatusCode, authorization_change.valida_hasta AS ValidUntil
+              FROM scoped
+              JOIN dbo.residentes_familiares link ON link.residente_id = scoped.ResidentId AND link.centro_id = @CenterId
+                   AND link.desvinculado_en IS NULL
+              LEFT JOIN dbo.familiares_autorizaciones_cambios authorization_change ON authorization_change.vinculo_id = link.id
+                   AND authorization_change.centro_id = link.centro_id
+                   AND authorization_change.numero = (SELECT MAX(previous.numero) FROM dbo.familiares_autorizaciones_cambios previous
+                                                       WHERE previous.vinculo_id = link.id AND previous.centro_id = link.centro_id))
+        """;
+
     public async Task<AdministrationOverview> ReadAsync(
         AccountAdministrationAccess access, AdministrationOverviewPeriod period, CancellationToken ct = default)
     {
@@ -19,16 +34,7 @@ public sealed class SqlAdministrationOverview(SqlConnectionFactory connections) 
         await SqlProfessionalAccountRepository.EnsureAdministratorAsync(connection, null, access, ct);
         var today = period.Today.ToDateTime(TimeOnly.MinValue);
         return await connection.QuerySingleAsync<AdministrationOverview>(new CommandDefinition($"""
-            WITH scoped AS ({SqlAdministracionResidentDirectory.ScopedResidentsSelect}),
-            latest AS (
-                SELECT link.id AS LinkId, authorization_change.estado_codigo AS StatusCode, authorization_change.valida_hasta AS ValidUntil
-                  FROM scoped
-                  JOIN dbo.residentes_familiares link ON link.residente_id = scoped.ResidentId AND link.centro_id = @CenterId
-                       AND link.desvinculado_en IS NULL
-                  LEFT JOIN dbo.familiares_autorizaciones_cambios authorization_change ON authorization_change.vinculo_id = link.id
-                       AND authorization_change.centro_id = link.centro_id
-                       AND authorization_change.numero = (SELECT MAX(previous.numero) FROM dbo.familiares_autorizaciones_cambios previous
-                                                           WHERE previous.vinculo_id = link.id AND previous.centro_id = link.centro_id))
+            {ScopedAuthorizationsCtes}
             SELECT
                 (SELECT COUNT(*) FROM scoped
                    JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = scoped.ResidentId AND location.centro_id = @CenterId

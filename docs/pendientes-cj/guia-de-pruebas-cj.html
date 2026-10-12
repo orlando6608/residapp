@@ -270,7 +270,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="guia-de-pruebas-cj" data-version="2026-10-16">
+<body data-doc="guia-de-pruebas-cj" data-version="2026-10-17">
 
 <div class="page">
   <header>
@@ -1741,10 +1741,10 @@
         <div class="q-head"><span class="n">6.32</span><h3 class="q-title" id="t-6-32">El inicio de Administración dice qué hay que atender</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
           <li>Entra con <code>dev-integrado-administracion</code> y abre el inicio de Administración. Mira el bloque «Requiere atención» y las dos líneas pequeñas de debajo (citas y comunicados).</li>
-          <li>Pulsa cada línea del bloque y comprueba que te lleva a la pantalla donde se resuelve: las solicitudes y propuestas de cita, a «Solicitudes de cita»; las autorizaciones y los residentes sin habitación, a la lista de residentes (donde tendrás que abrir la ficha para verlos).</li>
+          <li>Pulsa cada línea del bloque y comprueba que te lleva a la pantalla donde se resuelve: las solicitudes y propuestas de cita, a «Solicitudes de cita»; las autorizaciones y los residentes sin habitación, a la lista de residentes ya filtrada por ese motivo (abajo, en «Requiere atención», puedes cambiar el filtro o quitarlo).</li>
           <li>Entra con <code>dev-integrado-enfermeria</code> e intenta abrir <code>/Administracion</code>.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>El bloque solo tiene cifras (ningún nombre de residente ni texto de una solicitud o de un comunicado) y solo salen las líneas con algo que atender; si no hay nada, dice «No hay nada pendiente». Las cifras cuadran con lo que ves en cada pantalla: las solicitudes por gestionar, con la bandeja; las citas de hoy y de los próximos 7 días, con la agenda. Enfermería no entra.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El bloque solo tiene cifras (ningún nombre de residente ni texto de una solicitud o de un comunicado) y solo salen las líneas con algo que atender; si no hay nada, dice «No hay nada pendiente». Las cifras cuadran con lo que ves en cada pantalla: las solicitudes por gestionar, con la bandeja; los residentes sin habitación, con la lista filtrada; las citas de hoy y de los próximos 7 días, con la agenda. Enfermería no entra.</div>
         <fieldset class="choices" aria-labelledby="t-6-32">
           <label class="choice"><input type="radio" name="r-6.32" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6.32" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>

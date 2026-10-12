@@ -585,6 +585,9 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
             ["Form.Motivo"] = "Resultados", ["Form.Comentario"] = "Texto de la familia que el inicio no debe enseñar.", ["Form.ParteDelDia"] = "Indiferente",
         });
         var afterRequest = await BodyAsync(await admin.GetAsync("/Administracion"));
+        var noRoomList = await BodyAsync(await admin.GetAsync("/Administracion/Residentes?atencion=SinHabitacion"));
+        var expiredList = await BodyAsync(await admin.GetAsync("/Administracion/Residentes?atencion=AutorizacionCaducada"));
+        var pendingList = await BodyAsync(await admin.GetAsync("/Administracion/Residentes?atencion=AutorizacionPendiente"));
         var nurseHome = await nurse.GetAsync("/Administracion");
 
         Assert.Contains("Requiere atención", emptyHome);
@@ -594,6 +597,11 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.DoesNotContain("No hay nada pendiente.", beforeAuthorization);
         Assert.DoesNotContain("solicitud de cita por gestionar", beforeAuthorization);
         Assert.Contains("1 residente sin habitación asignada", afterRequest);
+        Assert.Contains("atencion=SinHabitacion", WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion")));
+        Assert.Contains("Residente Inicio Funcional", noRoomList);
+        Assert.Contains("Sin habitación asignada", noRoomList);
+        Assert.Contains("Ningún residente coincide", expiredList);
+        Assert.Contains("Ningún residente coincide", pendingList);
         Assert.DoesNotContain("pendiente de activar", afterRequest);
         Assert.Contains("1 solicitud de cita por gestionar", afterRequest);
         Assert.Contains("Citas confirmadas: 0 hoy y 0 en los próximos 7 días", afterRequest);
