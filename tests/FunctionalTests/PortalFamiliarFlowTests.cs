@@ -190,7 +190,7 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.Equal(HttpStatusCode.Forbidden, detailAfterRevocation.StatusCode);
         // Entrar (que ya lleva a su único residente), la portada, el historial y el detalle: cuatro lecturas; las denegadas no dejan rastro.
         Assert.Equal(4, await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @residentId AND perfil_activo = 'FAMILIAR' AND accion_codigo = 'FAMILY_PORTAL_READ'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @residentId AND perfil_activo = 'FAMILIAR' AND accion_codigo = 'FAMILY_PORTAL_READ'",
             new { residentId = Guid.Parse(residentId) }));
     }
 

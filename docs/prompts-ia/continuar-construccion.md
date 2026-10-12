@@ -1220,15 +1220,24 @@ usuario cuando encajen:
   - **Opciones:** (mínima, recomendada) mantener `TimeZoneInfo.Local`, fijar `WEBSITE_TIME_ZONE` en el despliegue (`az webapp config appsettings set`
     en el CI/CD) y comprobar al arrancar que la zona es Madrid, avisando en el registro o fallando; (completa) un ajuste `ResidApp:TimeZone` con un
     servicio de hora que sustituya `DateTime.Today` y `.ToLocalTime()`; (por centro) solo si CJ confirma centros fuera de la península.
-- **Tests de integración intermitentes en CI (2026-10-12).** Han fallado, siempre con otro test y en verde al relanzar: `Indicaciones_MedicinaNoCierra…`
-  (PR #25), `CorreccionComunicadosTests.SeedAsync` (`main` tras #28) y `ProtocoloUrgenteMedico_DesdeIndicacionPendiente…` (PR #30). La aplicación convierte
-  cualquier excepción en «No disponible» (`ApplicationResultRunner.Normalize`) y el motivo real no queda en el log de CI. En local, con un registro
-  temporal de excepciones (no commiteado), 5 pasadas completas de la suite de integración dieron tiempos de espera de SQL (la lentitud conocida de la
-  BD local) y **un interbloqueo real**: bloqueos de página en `dbo.eventos_auditoria` (y `dbo.basales_version_areas`) entre una lectura (`SELECT` de la
-  bandeja o del detalle, S en una página) y un `INSERT` de auditoría en transacción (IX en otra), a nivel `READ COMMITTED`. Es la causa más probable de
-  los fallos de CI, no demostrada allí. Pendiente de decidir: índice para la lectura que recorre `eventos_auditoria`, desactivar el paralelismo de
-  los tests de integración (no hay `DisableTestParallelization` ni colecciones) o reintentar la víctima de un interbloqueo (error 1205) en el repositorio.
-  El grafo sale de la sesión `system_health` de SQL Server (`sys.fn_xe_file_target_read_file` sobre `system_health*.xel`, evento `xml_deadlock_report`).
+- **Tests de integración intermitentes en CI: interbloqueos de SQL Server (resuelto el 2026-10-12, script `0055`; el siguiente libre es `0056`).**
+  Habían fallado, siempre con otro test y en verde al relanzar: `Indicaciones_MedicinaNoCierra…` (PR #25), `CorreccionComunicadosTests.SeedAsync`
+  (`main` tras #28) y `ProtocoloUrgenteMedico_DesdeIndicacionPendiente…` (PR #30). La aplicación convierte cualquier excepción en «No disponible»
+  (`ApplicationResultRunner.Normalize`) y el motivo no queda en el log de CI, así que se buscó en la BD local: la sesión `system_health` de SQL Server
+  guarda los grafos de interbloqueo (`sys.fn_xe_file_target_read_file` sobre `system_health*.xel`, evento `xml_deadlock_report`) y tenía 19 de
+  `eventos_auditoria` y `basales_version_areas` entre el 01/10 y el 12/10. Siempre lo mismo: una lectura que recorre la tabla entera con bloqueos de
+  página compartidos (`READ COMMITTED`) contra un `INSERT` de auditoría en transacción, que toma bloqueos de intención en otra página.
+  - **Producción:** `SqlChangeInboxDirectory.ClosedByProfileSql` busca en `eventos_auditoria` por `recurso_id` y `accion_codigo` en una subconsulta por
+    cada evento de la bandeja y del detalle, y la tabla solo tenía el índice `(centro, unidad, residente, fecha)`: cada evento recorría las 140.000
+    filas de la BD local. El script `0055` añade `IX_audit_recurso_accion (recurso_id, accion_codigo) INCLUDE (perfil_activo)` (la consulta pasa a
+    3 lecturas lógicas) y `IX_bva_residente (residente_id)` en `basales_version_areas`.
+  - **Tests:** 40 lecturas de `eventos_auditoria` de los tests (entre ellas las de B2, Portal Familiar y citas, escritas sin tener en cuenta la lección «Los tests
+    nuevos que consulten esa tabla deben hacer lo mismo», más abajo) no llevaban `WITH (NOLOCK)`; ahora sí. Sin ese cambio, con solo el índice, quedaban
+    2 interbloqueos en 4 pasadas por recuentos por `cuenta_id` y `accion_codigo` (sin índice).
+  - **Resultado en local:** suite de integración de 2 a 4 minutos (con tiempos de espera y fallos) a unos 20 s; 6 pasadas de integración (433) y 2 de
+    funcionales (164) seguidas en verde, sin ningún interbloqueo nuevo en `system_health`. En CI, no demostrado hasta que pase varias veces.
+  - **Sigue abierto, sin cambiar:** la aplicación no reintenta ante el error 1205 (`ApplicationResultRunner` lo devuelve como «No disponible»); si
+    algún día reaparece un interbloqueo en producción, la opción es reintentar la transacción víctima en el repositorio.
 
 ## Reglas de trabajo propias de este repositorio
 

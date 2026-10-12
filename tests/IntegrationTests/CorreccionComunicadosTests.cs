@@ -84,7 +84,7 @@ public class CorreccionComunicadosTests
             return await connection.ExecuteScalarAsync<string>("SELECT texto FROM dbo.comunicaciones_familiares WHERE id = @communicationId", new { communicationId });
         })());
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_CORRECT' AND recurso_id = @c",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_CORRECT' AND recurso_id = @c",
             new { a = companera.AccountId.Value, c = communicationId }));
         Assert.Equal(2, await CountAsync(
             "SELECT COUNT(*) FROM dbo.comunicaciones_familiares_correcciones WHERE comunicacion_id = @c AND numero IN (1, 2)", new { c = communicationId }));

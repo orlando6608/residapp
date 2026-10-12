@@ -80,7 +80,7 @@ public class TrasladoResidenteTests
             "SELECT unidad_id FROM dbo.intervalos_ubicacion_residente WHERE residente_id = @id AND vigente_hasta IS NULL", new { id = resident.Value }));
         Assert.Equal(2, await QueryAsync<int>("SELECT COUNT(*) FROM dbo.intervalos_ubicacion_residente WHERE residente_id = @id", new { id = resident.Value }));
         Assert.Equal(1, await QueryAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @id AND accion_codigo = 'RESIDENT_TRANSFER' AND unidad_id = @unit",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @id AND accion_codigo = 'RESIDENT_TRANSFER' AND unidad_id = @unit",
             new { id = resident.Value, unit = destination.Value }));
     }
 

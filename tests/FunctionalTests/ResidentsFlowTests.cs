@@ -751,7 +751,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.traslados_residente WHERE residente_id = @residentId", new { residentId }));
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @residentId AND accion_codigo = 'RESIDENT_TRANSFER'", new { residentId }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @residentId AND accion_codigo = 'RESIDENT_TRANSFER'", new { residentId }));
     }
 
     [Fact]
@@ -1033,9 +1033,9 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.DoesNotContain("CorregirComunicacion?comunicadoId", afterPublication);
         Assert.Contains("ya no se puede corregir", closedForm);
         Assert.Equal("DIRECCION_CLINICA", await connection.ExecuteScalarAsync<string>(
-            "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE accion_codigo = 'FAMILY_COMMUNICATION_PUBLISH_NOW' AND recurso_id = @communicationId", new { communicationId }));
+            "SELECT perfil_activo FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'FAMILY_COMMUNICATION_PUBLISH_NOW' AND recurso_id = @communicationId", new { communicationId }));
         Assert.Equal("MEDICINA", await connection.ExecuteScalarAsync<string>(
-            "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE accion_codigo = 'FAMILY_COMMUNICATION_CORRECT' AND recurso_id = @communicationId", new { communicationId }));
+            "SELECT perfil_activo FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'FAMILY_COMMUNICATION_CORRECT' AND recurso_id = @communicationId", new { communicationId }));
     }
 
     [Fact]

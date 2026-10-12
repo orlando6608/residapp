@@ -63,7 +63,7 @@ public class EstadoResidenteTests
             "SELECT COUNT(*) FROM dbo.episodios_residente_centro WHERE residente_id = @id AND vigente_hasta IS NULL", new { id = resident.Value }));
         Assert.Equal(1, await QueryAsync<int>("SELECT COUNT(*) FROM dbo.bajas_residente WHERE residente_id = @id", new { id = resident.Value }));
         Assert.Equal(1, await QueryAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @id AND accion_codigo = 'RESIDENT_DISCHARGE'", new { id = resident.Value }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @id AND accion_codigo = 'RESIDENT_DISCHARGE'", new { id = resident.Value }));
 
         var discharged = Assert.Single((await service.ListDischargedAsync(admin.ProfileScopeId, admin.CenterId)).Value!);
         Assert.Equal(resident, discharged.ResidentId);
@@ -115,7 +115,7 @@ public class EstadoResidenteTests
         Assert.Equal(1, await QueryAsync<int>(
             "SELECT COUNT(*) FROM dbo.bajas_residente WHERE residente_id = @id AND reactivada_en IS NOT NULL", new { id = resident.Value }));
         Assert.Equal(1, await QueryAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @id AND accion_codigo = 'RESIDENT_REACTIVATE'", new { id = resident.Value }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @id AND accion_codigo = 'RESIDENT_REACTIVATE'", new { id = resident.Value }));
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public class EstadoResidenteTests
         Assert.Equal(ApplicationFailureCode.Conflict, start.Error!.Code);
         Assert.NotNull((await service.FindSuspensionAsync(admin.ProfileScopeId, admin.CenterId, resident)).Value);
         Assert.Equal(1, await QueryAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @id AND accion_codigo = 'RESIDENT_SUSPEND'", new { id = resident.Value }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @id AND accion_codigo = 'RESIDENT_SUSPEND'", new { id = resident.Value }));
 
         Assert.True((await service.ResumeAsync(admin.ProfileScopeId, admin.CenterId, resident)).Ok);
         var resumed = await nursing.RegisterClinicalEventAsync(new RegisterClinicalEventCommand(

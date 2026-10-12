@@ -617,7 +617,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("Unidad añadida a tu ámbito.", added);
         Assert.DoesNotContain("Fuera de tu ámbito", added);
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @accountId AND accion_codigo = 'ADMIN_SCOPE_UNIT_ADD'", new { accountId = admin.AccountId }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @accountId AND accion_codigo = 'ADMIN_SCOPE_UNIT_ADD'", new { accountId = admin.AccountId }));
     }
 
     [Fact]

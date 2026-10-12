@@ -612,7 +612,7 @@ public class MedicinaApplicationServiceTests
         Assert.Equal(ApplicationFailureCode.Conflict, afterPublication.Error!.Code);
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         Assert.Equal("MEDICINA", await connection.ExecuteScalarAsync<string>(
-            "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_CORRECT' AND recurso_id = @c",
+            "SELECT perfil_activo FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_CORRECT' AND recurso_id = @c",
             new { a = medica.AccountId.Value, c = seen.CommunicationId }));
     }
 

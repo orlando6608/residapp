@@ -253,7 +253,7 @@ public class HistorialTests
         {
             using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
             return await Dapper.SqlMapper.ExecuteScalarAsync<int>(connection,
-                "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ' AND tipo_recurso = @type",
+                "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ' AND tipo_recurso = @type",
                 new { Id = residentId.Value, type });
         }
 
@@ -318,7 +318,7 @@ public class HistorialTests
         {
             using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
             return await Dapper.SqlMapper.ExecuteScalarAsync<int>(connection,
-                "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ' AND tipo_recurso = 'ASSESSMENT_AMENDMENTS'",
+                "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ' AND tipo_recurso = 'ASSESSMENT_AMENDMENTS'",
                 new { Id = residentId.Value });
         }
 
@@ -448,7 +448,7 @@ public class HistorialTests
         {
             using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
             return await Dapper.SqlMapper.ExecuteScalarAsync<int>(connection,
-                "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ' AND tipo_recurso = @type",
+                "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @Id AND accion_codigo = 'CLINICAL_DETAIL_READ' AND tipo_recurso = @type",
                 new { Id = residentId.Value, type });
         }
 
@@ -476,7 +476,7 @@ public class HistorialTests
         using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
         {
             var audited = await Dapper.SqlMapper.QueryFirstAsync<(string Purpose, string Justification)>(connection,
-                "SELECT TOP 1 proposito_codigo AS Purpose, justificacion AS Justification FROM dbo.eventos_auditoria WHERE residente_id = @Id AND tipo_recurso = 'REFERRAL_REPORT' AND accion_codigo = 'CLINICAL_DETAIL_READ'",
+                "SELECT TOP 1 proposito_codigo AS Purpose, justificacion AS Justification FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @Id AND tipo_recurso = 'REFERRAL_REPORT' AND accion_codigo = 'CLINICAL_DETAIL_READ'",
                 new { Id = residentId.Value });
             Assert.Equal(("INCIDENCIA_RECLAMACION", "Reclamación familiar (prueba)."), audited);
         }

@@ -310,15 +310,15 @@ public class PortalFamiliarTests
         Assert.False(denied.Ok);
         var parameters = new { residentId = setup.ResidentId.Value, communicationId };
         Assert.Equal(1, await CountAsync("""
-            SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @residentId AND perfil_activo = 'FAMILIAR'
+            SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @residentId AND perfil_activo = 'FAMILIAR'
                AND accion_codigo = 'FAMILY_PORTAL_READ' AND tipo_recurso = 'RESIDENT' AND recurso_id = @residentId
             """, parameters));
         Assert.Equal(1, await CountAsync("""
-            SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @residentId AND perfil_activo = 'FAMILIAR'
+            SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @residentId AND perfil_activo = 'FAMILIAR'
                AND accion_codigo = 'FAMILY_PORTAL_READ' AND tipo_recurso = 'FAMILY_COMMUNICATION' AND recurso_id = @communicationId
             """, parameters));
         // Una lectura denegada no deja rastro de lectura (no se entregó nada).
-        Assert.Equal(2, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @residentId AND accion_codigo = 'FAMILY_PORTAL_READ'", parameters));
+        Assert.Equal(2, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @residentId AND accion_codigo = 'FAMILY_PORTAL_READ'", parameters));
     }
 
     [Fact]
@@ -347,7 +347,7 @@ public class PortalFamiliarTests
         Assert.DoesNotContain(users, u => u.Subject == subject);
         Assert.Contains(users, u => u.Subject == admin.ExternalSubject);
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @id AND accion_codigo = 'FAMILY_PORTAL_ACCESS_GRANT' AND perfil_activo = 'ADMINISTRACION'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @id AND accion_codigo = 'FAMILY_PORTAL_ACCESS_GRANT' AND perfil_activo = 'ADMINISTRACION'",
             new { id = residentId.Value }));
         // Sin unidades: el acceso a cada residente sale del vínculo y la autorización, no de las unidades del ámbito.
         Assert.Equal(0, await CountAsync("""

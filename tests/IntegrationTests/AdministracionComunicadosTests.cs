@@ -74,7 +74,7 @@ public class AdministracionComunicadosTests
         Assert.NotNull(after.Communication.PublishedEarlyAt);
         Assert.Equal(after.Communication.PublishedEarlyAt, nursing.PublishedEarlyAt);
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_PUBLISH_NOW' AND recurso_id = @c",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_PUBLISH_NOW' AND recurso_id = @c",
             new { a = admin.AccountId.Value, c = item.Communication.Id }));
         Assert.Equal(1, await CountAsync(
             "SELECT COUNT(*) FROM dbo.comunicaciones_familiares_publicacion_anticipada WHERE comunicacion_id = @c AND publicada_por_cuenta_id = @a",
@@ -108,7 +108,7 @@ public class AdministracionComunicadosTests
         Assert.Equal(ApplicationFailureCode.Conflict, again.Error!.Code);
         Assert.True(asAdmin.Published);
         Assert.Equal("DIRECCION_CLINICA", (await CountAsyncString(
-            "SELECT perfil_activo FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_PUBLISH_NOW' AND recurso_id = @c",
+            "SELECT perfil_activo FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_PUBLISH_NOW' AND recurso_id = @c",
             new { a = direccion.AccountId.Value, c = item.Communication.Id })));
     }
 

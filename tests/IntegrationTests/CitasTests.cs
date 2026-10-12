@@ -141,9 +141,9 @@ public class CitasTests
         Assert.Equal(14, view.Windows.Count);
         Assert.Equal(1, view.Version);
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'APPOINTMENT_SERVICE_UPDATE'", new { a = setup.Admin.AccountId.Value }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'APPOINTMENT_SERVICE_UPDATE'", new { a = setup.Admin.AccountId.Value }));
         Assert.Equal(14, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'APPOINTMENT_WINDOW_ADD'", new { a = setup.Admin.AccountId.Value }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'APPOINTMENT_WINDOW_ADD'", new { a = setup.Admin.AccountId.Value }));
     }
 
     [Fact]
@@ -232,7 +232,7 @@ public class CitasTests
         Assert.Equal(ApplicationFailureCode.Conflict, secondSameTeam.Error!.Code);
         Assert.True(otherTeam.Ok, otherTeam.Error?.Message);
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = 'APPOINTMENT_BOOK' AND recurso_id = @id AND perfil_activo = 'FAMILIAR'", new { id = appointment.Id }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'APPOINTMENT_BOOK' AND recurso_id = @id AND perfil_activo = 'FAMILIAR'", new { id = appointment.Id }));
         Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.citas_cambios WHERE cita_id = @id AND accion_codigo = 'CREADA'", new { id = appointment.Id }));
     }
 
@@ -314,8 +314,8 @@ public class CitasTests
         Assert.False(detail.CanCancel);
         Assert.Equal(new[] { AppointmentChangeAction.Creada, AppointmentChangeAction.Reprogramada, AppointmentChangeAction.Cancelada }, detail.Changes.Select(c => c.Action));
         Assert.All(detail.Changes, c => Assert.False(c.ByCenter));
-        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = 'APPOINTMENT_RESCHEDULE' AND recurso_id = @id", new { id = appointment.Id }));
-        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = 'APPOINTMENT_CANCEL' AND recurso_id = @id", new { id = appointment.Id }));
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'APPOINTMENT_RESCHEDULE' AND recurso_id = @id", new { id = appointment.Id }));
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'APPOINTMENT_CANCEL' AND recurso_id = @id", new { id = appointment.Id }));
     }
 
     [Fact]
@@ -460,9 +460,9 @@ public class CitasTests
         Assert.True(familyMoved.Changes.Last().ByCenter);
         Assert.Equal(AppointmentStatus.Cancelada, familyView.Appointments.Single(a => a.Id == second.Id).Status);
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = 'APPOINTMENT_RESCHEDULE_ADMIN' AND recurso_id = @id AND perfil_activo = 'ADMINISTRACION'", new { id = first.Id }));
-        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = 'APPOINTMENT_CANCEL_ADMIN' AND recurso_id = @id", new { id = second.Id }));
-        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = 'APPOINTMENT_FINISH' AND recurso_id = @id", new { id = past }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'APPOINTMENT_RESCHEDULE_ADMIN' AND recurso_id = @id AND perfil_activo = 'ADMINISTRACION'", new { id = first.Id }));
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'APPOINTMENT_CANCEL_ADMIN' AND recurso_id = @id", new { id = second.Id }));
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'APPOINTMENT_FINISH' AND recurso_id = @id", new { id = past }));
     }
 
     [Fact]

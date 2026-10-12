@@ -88,10 +88,10 @@ public class CorrectorasYRetiradasTests
         Assert.Equal("Corrección: fue febrícula, no fiebre.", Assert.Single(staff.Communication.Correctives).Text);
         Assert.True(staff.CanAmend);
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_CORRECTIVE' AND recurso_id = @c AND perfil_activo = 'ADMINISTRACION'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_CORRECTIVE' AND recurso_id = @c AND perfil_activo = 'ADMINISTRACION'",
             new { a = setup.Admin.AccountId.Value, c = original }));
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = 'FAMILY_PORTAL_READ' AND recurso_id = @c", new { c = correctiveId }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'FAMILY_PORTAL_READ' AND recurso_id = @c", new { c = correctiveId }));
         Assert.Equal("Ha tenido fiebre.", await TextAsync(original));
     }
 
@@ -109,10 +109,10 @@ public class CorrectorasYRetiradasTests
         Assert.True(corrected.Ok, corrected.Error?.Message);
         Assert.True(withdrawn.Ok, withdrawn.Error?.Message);
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_CORRECTIVE' AND perfil_activo = 'DIRECCION_CLINICA'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_CORRECTIVE' AND perfil_activo = 'DIRECCION_CLINICA'",
             new { a = direction.AccountId.Value }));
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_WITHDRAW' AND recurso_id = @c AND perfil_activo = 'DIRECCION_CLINICA'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_WITHDRAW' AND recurso_id = @c AND perfil_activo = 'DIRECCION_CLINICA'",
             new { a = direction.AccountId.Value, c = second }));
     }
 

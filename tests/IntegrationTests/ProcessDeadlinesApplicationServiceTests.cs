@@ -65,7 +65,7 @@ public class ProcessDeadlinesApplicationServiceTests
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.plazos_hitos_centro WHERE centro_id = @c", new { c = direccion.CenterId.Value }));
         Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @c AND accion_codigo = 'PROCESS_DEADLINES_UPDATE'", new { c = direccion.CenterId.Value }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE centro_id = @c AND accion_codigo = 'PROCESS_DEADLINES_UPDATE'", new { c = direccion.CenterId.Value }));
         Assert.Equal(new MilestoneDeadline(TimeSpan.FromHours(12), TimeSpan.FromMinutes(30)), latest.Previous);
     }
 

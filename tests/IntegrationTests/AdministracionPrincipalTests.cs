@@ -68,7 +68,7 @@ public class AdministracionPrincipalTests
         Assert.Equal(ApplicationFailureCode.InvalidInput, foreign.Error!.Code);
         Assert.All(after.Value!.Units, u => Assert.True(u.InScope));
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE cuenta_id = @a AND accion_codigo = 'ADMIN_SCOPE_UNIT_ADD' AND unidad_id = @u",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'ADMIN_SCOPE_UNIT_ADD' AND unidad_id = @u",
             new { a = principal.AccountId.Value, u = second.Value }));
         Assert.Equal(1, await CountAsync(
             "SELECT COUNT(*) FROM dbo.ambitos_perfil_unidad WHERE ambito_perfil_id = @s AND unidad_id = @u AND concedido_por_cuenta_id = @a AND revocado_en IS NULL",
@@ -103,7 +103,7 @@ public class AdministracionPrincipalTests
         Assert.Equal(ApplicationFailureCode.InvalidInput, lastOne.Error!.Code);
         Assert.Equal(ApplicationFailureCode.AccessDenied, firstIsNoLongerPrincipal.Error!.Code);
         Assert.Equal(2, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @c AND accion_codigo = 'ADMIN_PRINCIPAL_SET'", new { c = first.CenterId.Value }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE centro_id = @c AND accion_codigo = 'ADMIN_PRINCIPAL_SET'", new { c = first.CenterId.Value }));
     }
 
     [Fact]
@@ -206,7 +206,7 @@ public class AdministracionPrincipalTests
         Assert.Equal(3, await CountAsync(
             "SELECT COUNT(*) FROM dbo.administraciones_principales_cambios WHERE centro_id = @c AND cambiado_por_perfil = 'PLATAFORMA'", new { c = centerId }));
         Assert.Equal(1, await CountAsync(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @c AND perfil_activo = 'PLATAFORMA' AND accion_codigo = 'ADMIN_SCOPE_UNIT_ADD'", new { c = centerId }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE centro_id = @c AND perfil_activo = 'PLATAFORMA' AND accion_codigo = 'ADMIN_SCOPE_UNIT_ADD'", new { c = centerId }));
     }
 
     [Fact]

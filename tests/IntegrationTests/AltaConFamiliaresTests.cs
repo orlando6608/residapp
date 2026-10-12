@@ -61,7 +61,7 @@ public class AltaConFamiliaresTests
              WHERE d.residente_id = @residentId
             """, new { residentId }));
         Assert.Equal(2, await QueryAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE residente_id = @residentId AND accion_codigo = 'FAMILY_MEMBER_CREATE'", new { residentId }));
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @residentId AND accion_codigo = 'FAMILY_MEMBER_CREATE'", new { residentId }));
         Assert.Equal(0, await QueryAsync<int>(
             "SELECT COUNT(*) FROM dbo.familiares_autorizaciones_cambios c JOIN dbo.residentes_familiares l ON l.id = c.vinculo_id WHERE l.residente_id = @residentId",
             new { residentId }));
