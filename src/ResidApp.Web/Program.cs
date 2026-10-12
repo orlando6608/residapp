@@ -215,6 +215,9 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 
 var app = builder.Build();
 
+// Las horas se calculan con la zona del servidor: si no es Europe/Madrid, en producción no arranca y en desarrollo avisa.
+ServerTimeZone.Verify(app.Environment, app.Logger);
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

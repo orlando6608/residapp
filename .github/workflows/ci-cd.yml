@@ -151,6 +151,15 @@ jobs:
           echo "::add-mask::$SQL_PASSWORD"
           APLICAR_SEED=1 bash database/aplicar-scripts.sh
 
+      # La aplicación calcula todas las horas con la zona del servidor y en producción no arranca si no es Europe/Madrid (ServerTimeZone).
+      # Se fija aquí para que una Web App nueva o recreada no dependa de un ajuste manual. Solo se escribe si difiere: cambiar un ajuste reinicia la app.
+      - name: Fijar la zona horaria de la Web App
+        run: |
+          actual="$(az webapp config appsettings list --name app-residapp-dev --resource-group rg-residapp-dev --query "[?name=='WEBSITE_TIME_ZONE'].value | [0]" -o tsv)"
+          if [ "$actual" != "Europe/Madrid" ]; then
+            az webapp config appsettings set --name app-residapp-dev --resource-group rg-residapp-dev --settings WEBSITE_TIME_ZONE=Europe/Madrid > /dev/null
+          fi
+
       # clean: sin él, el despliegue añade ficheros pero no borra los de antes: un documento movido o borrado del repo seguía
       # sirviéndose desde el servidor. Deja un corte de segundos con wwwroot a medias, aceptable en desarrollo con datos ficticios;
       # con usuarios reales, repensar el despliegue (WEBSITE_RUN_FROM_PACKAGE o slots de staging en un plan Standard).

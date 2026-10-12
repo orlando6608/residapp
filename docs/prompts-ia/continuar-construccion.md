@@ -1202,7 +1202,7 @@ usuario cuando encajen:
     `ubuntu-26.04` y «Instalar sqlcmd» usa el repositorio de Microsoft de Ubuntu 26.04 (`.../config/ubuntu/26.04/prod.list`).
     El CI de `main` pasó entero, incluido el despliegue. Si falla «Instalar sqlcmd», mira primero ese repositorio.
 - **Hora y zona horaria: pendientes (2026-10-12).** Hoy funciona porque `app-residapp-dev` tiene `WEBSITE_TIME_ZONE=Europe/Madrid` (ver
-  «Zona horaria (hecho)» más arriba), pero hay límites que no estaban anotados. No se ha cambiado nada; se resuelven más adelante:
+  «Zona horaria (hecho)» más arriba), pero hay límites que no estaban anotados. **Primer punto resuelto el 2026-10-12** (rama `zona-horaria-en-despliegue`): el despliegue (`ci-cd.yml`, paso «Fijar la zona horaria de la Web App») pone `WEBSITE_TIME_ZONE=Europe/Madrid` si no lo está (no escribe, y no reinicia la app, si ya lo está; la lectura se comprobó contra `app-residapp-dev`, la escritura no se ha ejercitado porque el valor ya era el correcto), y `ServerTimeZone.Verify` (en `Program.cs`) comprueba al arrancar que el servidor da en invierno y en verano el mismo desfase que Europe/Madrid: en producción no arranca y en desarrollo y pruebas avisa en el registro (`ServerTimeZoneTests`, 4 pruebas; fallan con la comprobación anulada). El resto sigue sin cambiar:
   - **La zona solo está puesta a mano en Azure.** `WEBSITE_TIME_ZONE` no está en `.github/workflows/ci-cd.yml` ni en ningún otro fichero del
     repositorio. Un entorno nuevo, otra región o una Web App recreada arrancaría en UTC sin que nada avise, y las horas saldrían 1 o 2 horas
     desplazadas.
