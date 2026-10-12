@@ -270,7 +270,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="guia-de-pruebas-cj" data-version="2026-10-14">
+<body data-doc="guia-de-pruebas-cj" data-version="2026-10-15">
 
 <div class="page">
   <header>
@@ -280,13 +280,13 @@
     <p class="lead prose">
       Ya están construidos los circuitos del Auxiliar, Enfermería, Medicina, Dirección Clínica y Administración, el basal con
       Barthel y la protección de los datos por centro. Los tests automáticos no pueden decir si las pantallas hacen lo que tú
-      esperas como clínica. Esta guía te propone 76 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
+      esperas como clínica. Esta guía te propone 80 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
       si coincide y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>76 pruebas en 7 temas, más 3 preguntas finales. 28 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>80 pruebas en 7 temas, más 3 preguntas finales. 30 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Las imprescindibles, hora y media aproximadamente; todas, entre tres y cuatro horas. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -1664,6 +1664,75 @@
           <label class="choice"><input type="radio" name="r-6.27" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-6.27" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-6.27" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.28">
+        <div class="q-head"><span class="n">6.28</span><h3 class="q-title" id="t-6-28">Pasar el centro a solicitud previa y solicitar una cita</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>dev-integrado-administracion</code>, abre «Citas con la familia», cambia el «Modo del servicio» a «Solicitud previa» y pulsa «Guardar». Comprueba que las franjas siguen ahí.</li>
+          <li>Entra con <code>dev-integrado-familiar</code>, abre las citas de su residente y pulsa «Solicitar una cita». Elige equipo, modalidad, motivo, escribe un comentario breve, marca uno o dos días y la parte del día, y pulsa «Enviar la solicitud». Prueba también a enviarla sin elegir el motivo.</li>
+          <li>Mira «Mis solicitudes». Intenta enviar una segunda solicitud con el mismo equipo.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>En modo solicitud previa la familia ve «Solicitar una cita» y no «Reservar una cita». Sin motivo no se envía. La solicitud queda «Pendiente de gestión», con lo que pidió y sin ninguna cita confirmada. Una segunda solicitud con el mismo equipo se rechaza con un mensaje claro. No hay chat y en ningún sitio aparece un profesional.</div>
+        <fieldset class="choices" aria-labelledby="t-6-28">
+          <label class="choice"><input type="radio" name="r-6.28" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.28" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.28" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.28" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.29">
+        <div class="q-head"><span class="n">6.29</span><h3 class="q-title" id="t-6-29">Administración propone un horario y la familia lo acepta</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Con <code>dev-integrado-administracion</code>, en «Citas con la familia» pulsa «Ver las solicitudes de cita». Verás la solicitud de la prueba anterior con lo que pidió la familia. Pulsa «Proponer un horario».</li>
+          <li>Elige un hueco (los que encajan con la disponibilidad de la familia llevan una marca), escribe un nombre en «Profesional» y pulsa «Enviar la propuesta». Prueba también a enviarla sin elegir hueco.</li>
+          <li>Con <code>dev-integrado-familiar</code>, abre la solicitud: verás «El centro te propone». Pulsa «Aceptar y confirmar la cita». Después mira «Mis citas» y, con administración, la agenda de esa semana.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin hueco no se envía la propuesta. Mientras la propuesta esté viva, ese hueco no se ofrece a otra solicitud. La familia ve el día y la hora propuestos pero no el profesional. Solo al aceptar nace una cita «Confirmada», que sale en «Mis citas» y en la agenda de Administración; la solicitud pasa a «Aceptada» y enlaza a la cita. Pulsar «Aceptar» dos veces seguidas no crea dos citas.</div>
+        <fieldset class="choices" aria-labelledby="t-6-29">
+          <label class="choice"><input type="radio" name="r-6.29" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.29" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.29" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.29" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.30">
+        <div class="q-head"><span class="n">6.30</span><h3 class="q-title" id="t-6-30">La familia pide otro horario o cancela la solicitud</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Con <code>dev-integrado-familiar</code>, cancela la cita de la prueba anterior (o envía una solicitud para el otro equipo). Con administración, propón un horario a esa solicitud.</li>
+          <li>Con la familia, abre la solicitud y pulsa «Pedir otro horario». Mira el estado y el historial. Con administración, vuelve a proponer, y con la familia pulsa «Cancelar la solicitud» y confirma.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>«Pedir otro horario» devuelve la solicitud a «Pendiente de gestión», sin propuesta, y el hueco queda libre para proponerlo a otra solicitud. Cancelar pide confirmación y deja la solicitud «Cancelada»; el hueco propuesto se libera y la familia puede enviar otra. En el historial constan «Solicitada», «Horario propuesto por el centro», «Otro horario pedido» y «Cancelada».</div>
+        <fieldset class="choices" aria-labelledby="t-6-30">
+          <label class="choice"><input type="radio" name="r-6.30" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.30" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.30" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.30" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.31">
+        <div class="q-head"><span class="n">6.31</span><h3 class="q-title" id="t-6-31">Administración cierra una solicitud y cambia de modo</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Con <code>dev-integrado-familiar</code>, envía una solicitud. Con administración, ábrela en «Solicitudes de cita», pulsa «Cerrar la solicitud», prueba a guardar sin motivo y después con motivo.</li>
+          <li>Con la familia, abre la solicitud cerrada. Envía otra solicitud, haz que administración le proponga un horario y, con administración, cambia el «Modo del servicio» a «Reserva directa» sin tocar nada más.</li>
+          <li>Con la familia, abre esa solicitud con propuesta e intenta aceptarla. Al terminar, deja el centro en «Reserva directa» para que las pruebas 6.25 a 6.27 sigan valiendo.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin motivo no se cierra. La familia ve «Cerrada por el centro» pero no el motivo, que queda en la auditoría de Administración. Al cambiar de modo, la solicitud con propuesta sigue abierta: la familia puede aceptarla y nace la cita, aunque ya no se puedan enviar solicitudes nuevas.</div>
+        <fieldset class="choices" aria-labelledby="t-6-31">
+          <label class="choice"><input type="radio" name="r-6.31" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.31" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.31" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.31" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
