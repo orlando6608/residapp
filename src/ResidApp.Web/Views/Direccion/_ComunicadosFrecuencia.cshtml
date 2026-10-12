@@ -1,0 +1,60 @@
+@using ResidApp.Application.UseCases
+@model IReadOnlyList<UnitCommunicationFrequency>
+@if (Model.Count > 0)
+{
+    var total = UnitCommunicationFrequency.Sum(Model);
+    <section class="mb-4" aria-labelledby="frecuencia">
+        <h2 class="h5" id="frecuencia">Frecuencia y estado por unidad</h2>
+        <p class="text-body-secondary small">
+            De los últimos @FamilyCommunicationPublicationApplicationService.WindowDays días. «Programados» son los que todavía no han salido; «con correctora» y
+            «retirados» son de los ya publicados. Solo cifras: ni el texto ni los residentes.
+        </p>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <caption class="visually-hidden">Comunicados a la familia por unidad: total, por semana, programados, publicados, con correctora, retirados y preparados en la última semana</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Unidad</th>
+                        <th scope="col" class="text-end">Comunicados</th>
+                        <th scope="col" class="text-end">Por semana</th>
+                        <th scope="col" class="text-end">Programados</th>
+                        <th scope="col" class="text-end">Publicados</th>
+                        <th scope="col" class="text-end">Con correctora</th>
+                        <th scope="col" class="text-end">Retirados</th>
+                        <th scope="col" class="text-end">Última semana</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var unit in Model)
+                    {
+                        <tr>
+                            <th scope="row">@unit.UnitName</th>
+                            <td class="text-end">@unit.Total</td>
+                            <td class="text-end">@unit.PerWeek.ToString("0.0", System.Globalization.CultureInfo.GetCultureInfo("es-ES"))</td>
+                            <td class="text-end">@unit.Scheduled</td>
+                            <td class="text-end">@unit.Published</td>
+                            <td class="text-end">@unit.WithCorrective</td>
+                            <td class="text-end">@unit.Withdrawn</td>
+                            <td class="text-end">@unit.PreparedLastWeek</td>
+                        </tr>
+                    }
+                </tbody>
+                @if (Model.Count > 1)
+                {
+                    <tfoot>
+                        <tr>
+                            <th scope="row">@total.UnitName</th>
+                            <td class="text-end">@total.Total</td>
+                            <td class="text-end">@total.PerWeek.ToString("0.0", System.Globalization.CultureInfo.GetCultureInfo("es-ES"))</td>
+                            <td class="text-end">@total.Scheduled</td>
+                            <td class="text-end">@total.Published</td>
+                            <td class="text-end">@total.WithCorrective</td>
+                            <td class="text-end">@total.Withdrawn</td>
+                            <td class="text-end">@total.PreparedLastWeek</td>
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+    </section>
+}

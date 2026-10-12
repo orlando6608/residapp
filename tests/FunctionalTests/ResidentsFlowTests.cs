@@ -1027,6 +1027,13 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Comunicado corregido.", corrected);
         Assert.Contains("Ha tenido fiebre; el equipo la vigila.", corrected);
         Assert.Contains("Publicar ahora", directionPage);
+        // La frecuencia por unidad: una fila con un comunicado programado; solo cifras (ni el texto ni el residente salen en esa tabla).
+        var frequency = Regex.Match(directionPage, "id=\"frecuencia\".*?</section>", RegexOptions.Singleline).Value;
+        Assert.Contains("Frecuencia y estado por unidad", frequency);
+        Assert.Matches("<td class=\"text-end\">1</td>", frequency);
+        Assert.DoesNotContain("fiebre", frequency);
+        Assert.DoesNotContain("Residente", frequency);
+        Assert.Contains("Frecuencia y estado por unidad", published);
         Assert.Contains("Comunicado publicado antes de su hora.", published);
         Assert.Contains("Publicado antes de su hora", published);
         Assert.Contains("Publicada antes de su hora", afterPublication);

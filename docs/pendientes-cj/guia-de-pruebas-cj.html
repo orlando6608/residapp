@@ -280,13 +280,13 @@
     <p class="lead prose">
       Ya están construidos los circuitos del Auxiliar, Enfermería, Medicina, Dirección Clínica y Administración, el basal con
       Barthel y la protección de los datos por centro. Los tests automáticos no pueden decir si las pantallas hacen lo que tú
-      esperas como clínica. Esta guía te propone 81 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
+      esperas como clínica. Esta guía te propone 82 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
       si coincide y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>81 pruebas en 7 temas, más 3 preguntas finales. 30 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>82 pruebas en 7 temas, más 3 preguntas finales. 30 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Las imprescindibles, hora y media aproximadamente; todas, entre tres y cuatro horas. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -1198,6 +1198,22 @@
           <label class="choice"><input type="radio" name="r-5.9" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-5.9" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-5.9" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="5.10">
+        <div class="q-head"><span class="n">5.10</span><h3 class="q-title" id="t-5-10">Dirección: frecuencia y estado de los comunicados por unidad</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Entra como Dirección y abre «Comunicados a la familia» desde Inicio.</li>
+          <li>Mira la tabla «Frecuencia y estado por unidad», encima de la lista, y compárala con los comunicados de la lista de debajo (los programados, los publicados, los que tienen corrección y los retirados).</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Hay una fila por unidad de tu ámbito con comunicados en los últimos 30 días (y una de totales si son varias), con cuántos hay, cuántos por semana de media, cuántos están programados, publicados, con corrección y retirados, y cuántos se prepararon en la última semana. Solo hay cifras: ni el texto ni los residentes salen en la tabla. Un comunicado retirado cuenta como retirado, no como publicado. No hay un estado «con error» porque la aplicación no tiene errores de publicación: si lo esperabas, dilo en el comentario.</div>
+        <fieldset class="choices" aria-labelledby="t-5-10">
+          <label class="choice"><input type="radio" name="r-5.10" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5.10" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5.10" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5.10" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
