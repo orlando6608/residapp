@@ -75,7 +75,7 @@ public sealed class SqlResidentTransferRepository(SqlConnectionFactory connectio
 
             var eventIds = changesUnit
                 ? (await connection.QueryAsync<Guid>(new CommandDefinition("""
-                    SELECT id FROM dbo.eventos_asistenciales WITH (UPDLOCK, HOLDLOCK)
+                    SELECT id FROM dbo.eventos_asistenciales WITH (UPDLOCK, HOLDLOCK, FORCESEEK)
                      WHERE residente_id = @ResidentId AND centro_id = @CenterId AND estado_codigo <> 'CERRADO'
                     """, parameters, transaction, cancellationToken: ct))).ToList()
                 : [];
@@ -119,8 +119,9 @@ public sealed class SqlResidentTransferRepository(SqlConnectionFactory connectio
             if (eventIds.Count > 0)
             {
                 var moved = await connection.ExecuteAsync(new CommandDefinition("""
-                    UPDATE dbo.eventos_asistenciales SET unidad_id = @DestinationUnitId, revision = revision + 1
-                     WHERE residente_id = @ResidentId AND centro_id = @CenterId AND estado_codigo <> 'CERRADO'
+                    UPDATE ea SET unidad_id = @DestinationUnitId, revision = revision + 1
+                     FROM dbo.eventos_asistenciales ea WITH (FORCESEEK)
+                     WHERE ea.residente_id = @ResidentId AND ea.centro_id = @CenterId AND ea.estado_codigo <> 'CERRADO'
                     """, write, transaction, cancellationToken: ct));
                 if (moved != eventIds.Count)
                 {
