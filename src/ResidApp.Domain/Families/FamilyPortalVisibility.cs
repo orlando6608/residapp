@@ -23,4 +23,8 @@ public static class FamilyPortalVisibility
     public static bool IsVisible(FamilyCommunicationType type, DateTimeOffset scheduledAt, DateTimeOffset? publishedEarlyAt, DateTimeOffset now) =>
         FamilyCommunicationSchedule.IsPublished(scheduledAt, publishedEarlyAt, now)
         && now < VisibleUntil(type, PublishedAt(scheduledAt, publishedEarlyAt));
+
+    /// <summary>Una publicación que sale en el momento de guardarla (una correctora): se ve desde entonces y durante la ventana de su tipo.</summary>
+    public static bool IsVisible(FamilyCommunicationType type, DateTimeOffset publishedAt, DateTimeOffset now) =>
+        now >= publishedAt && now < VisibleUntil(type, publishedAt);
 }

@@ -20,7 +20,7 @@ public class AdministracionComunicadosTests
         var publication = new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory);
         return new FamilyCommunicationPublicationApplicationService(
             new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedComunicadosSessionIdentityProvider(externalSubject),
-            publication, publication);
+            publication, publication, publication);
     }
 
     /// <summary>Un evento cerrado por Enfermería con un comunicado preparado, y una Administración de su unidad.</summary>

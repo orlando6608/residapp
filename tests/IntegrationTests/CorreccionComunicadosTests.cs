@@ -67,7 +67,8 @@ public class CorreccionComunicadosTests
             new FindPendingChangeDetailCommand(enfermera.ProfileScopeId, enfermera.CenterId, eventId))).Value!;
         var asAdmin = (await new FamilyCommunicationPublicationApplicationService(
             new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedCorreccionSessionIdentityProvider(admin.ExternalSubject),
-            new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory), new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory))
+            new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory), new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory),
+            new SqlFamilyCommunicationPublication(TestDatabase.ConnectionFactory))
             .ListAsync(admin.ProfileScopeId, admin.CenterId)).Value!.Single();
 
         Assert.True(first.Ok, first.Error?.Message);

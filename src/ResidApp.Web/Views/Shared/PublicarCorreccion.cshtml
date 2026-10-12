@@ -1,0 +1,56 @@
+@using ResidApp.Domain.Enfermeria
+@using ResidApp.Web.Models
+@model PublicarCorreccionViewModel
+@* Publicar una corrección de un comunicado ya publicado, de Administración y de Dirección Clínica (script 0053). Las acciones
+   (PublicarCorreccion, Comunicados) son las del controlador actual. *@
+@{
+    ViewData["Title"] = "Publicar una corrección";
+    var communication = Model.Item.Communication;
+    var area = ViewContext.RouteData.Values["controller"]?.ToString() == "Direccion" ? "Dirección Clínica" : "Administración";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">@area</a></li>
+        <li class="breadcrumb-item"><a asp-action="Comunicados">Comunicados a la familia</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Publicar una corrección</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Publicar una corrección</h1>
+<p class="text-muted">
+    @communication.ResidentName · @(communication.UnitName ?? "Sin unidad"). Este comunicado ya está publicado y no se puede cambiar: la corrección
+    es una publicación nueva que la familia ve junto al original, firmada como «@FamilyCommunicationChoice.VisibleAuthor». Sale en cuanto la guardes y
+    queda en la auditoría. Si lo que quieres es que la familia deje de verlo, usa «Retirar».
+</p>
+<div class="card mb-3">
+    <div class="card-body">
+        <p class="small text-muted mb-1">Comunicado publicado</p>
+        <p class="mb-0" style="white-space: pre-line">@communication.Text</p>
+    </div>
+</div>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="PublicarCorreccion" method="post">
+    <input type="hidden" name="Form.ComunicadoId" value="@Model.Form.ComunicadoId" />
+    <div class="mb-3">
+        <label asp-for="Form.Tipo" class="form-label"></label>
+        <select asp-for="Form.Tipo" class="form-select form-select-lg">
+            <option value="">Elige el tipo</option>
+            @foreach (var tipo in Enum.GetValues<FamilyCommunicationType>())
+            {
+                <option value="@tipo" selected="@(Model.Form.Tipo == tipo)">@FamilyCommunicationDisplay.Label(tipo)</option>
+            }
+        </select>
+        <span asp-validation-for="Form.Tipo" class="text-danger"></span>
+        <div class="form-text">La relevancia la decides tú: una ordinaria se ve 30 días y una relevante 6 meses.</div>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Form.Texto" class="form-label"></label>
+        <textarea asp-for="Form.Texto" class="form-control" rows="5"></textarea>
+        <span asp-validation-for="Form.Texto" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary btn-lg">Publicar la corrección</button>
+    <a asp-action="Comunicados" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+</form>

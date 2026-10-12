@@ -1,14 +1,23 @@
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Families;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-/// <summary>Un comunicado con la hora en que se publica solo y si ya está publicado.</summary>
-public sealed record FamilyCommunicationStatusView(AdministrationFamilyCommunication Communication, DateTimeOffset ScheduledAt, bool Published);
+/// <summary>Un comunicado con la hora en que se publica solo y si ya está publicado. CanAmend: ya está publicado y no está retirado, así que se
+/// puede publicar una correctora o retirarlo (script 0053).</summary>
+public sealed record FamilyCommunicationStatusView(
+    AdministrationFamilyCommunication Communication, DateTimeOffset ScheduledAt, bool Published, bool CanAmend);
+
 
 public sealed record PublishFamilyCommunicationCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid ComunicadoId);
+
+public sealed record PublishFamilyCommunicationCorrectiveCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, Guid ComunicadoId, FamilyCommunicationType? Tipo, string? Texto);
+
+public sealed record WithdrawFamilyCommunicationCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid ComunicadoId, string? Motivo);
 
 /// <summary>
 /// Comunicados a la familia en Administración y en Dirección Clínica (CJ, 2026-10-07 y 2026-10-10; script 0048): los de las unidades de su ámbito
@@ -17,7 +26,7 @@ public sealed record PublishFamilyCommunicationCommand(Guid AmbitoPerfilId, Cent
 /// </summary>
 public sealed class FamilyCommunicationPublicationApplicationService(
     IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, IFamilyCommunicationDirectory directory,
-    IFamilyCommunicationPublisher publisher)
+    IFamilyCommunicationPublisher publisher, IFamilyCommunicationAmender amender)
 {
     public const int WindowDays = 30;
 
@@ -28,9 +37,11 @@ public sealed class FamilyCommunicationPublicationApplicationService(
             var access = await ResolveAsync(profileScopeId, centerId, ct);
             var now = DateTimeOffset.UtcNow;
             var communications = await directory.ListAsync(access, now.AddDays(-WindowDays), ct);
-            return communications.Select(communication => new FamilyCommunicationStatusView(
-                communication, communication.ScheduledAt,
-                FamilyCommunicationSchedule.IsPublished(communication.ScheduledAt, communication.PublishedEarlyAt, now))).ToList();
+            return communications.Select(communication =>
+            {
+                var published = FamilyCommunicationSchedule.IsPublished(communication.ScheduledAt, communication.PublishedEarlyAt, now);
+                return new FamilyCommunicationStatusView(communication, communication.ScheduledAt, published, published && communication.Withdrawal is null);
+            }).ToList();
         });
 
     public Task<ApplicationResult<bool>> PublishNowAsync(PublishFamilyCommunicationCommand command, CancellationToken ct = default) =>
@@ -38,6 +49,27 @@ public sealed class FamilyCommunicationPublicationApplicationService(
         {
             var access = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
             await publisher.PublishNowAsync(access, command.ComunicadoId, ct);
+            return true;
+        });
+
+    /// <summary>Una publicación correctora vinculada al comunicado ya publicado (historia 3): sale en el acto, con el tipo y el texto que elija quien
+    /// la publica (las mismas reglas que al preparar un comunicado) y sin cambiar el original.</summary>
+    public Task<ApplicationResult<bool>> PublishCorrectiveAsync(PublishFamilyCommunicationCorrectiveCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var content = new FamilyCommunicationChoice(FamilyCommunicationDecision.Preparar, command.Tipo, command.Texto);
+            var access = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await amender.PublishCorrectiveAsync(access, command.ComunicadoId, content.Type!.Value, content.Text!, ct);
+            return true;
+        });
+
+    /// <summary>La retirada excepcional de un comunicado publicado, con un motivo interno: la familia solo ve que ya no está disponible.</summary>
+    public Task<ApplicationResult<bool>> WithdrawAsync(WithdrawFamilyCommunicationCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var reason = FamilyCommunicationWithdrawal.NormalizeReason(command.Motivo);
+            var access = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await amender.WithdrawAsync(access, command.ComunicadoId, reason, ct);
             return true;
         });
 

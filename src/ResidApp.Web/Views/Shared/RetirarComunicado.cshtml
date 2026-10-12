@@ -1,0 +1,43 @@
+@using ResidApp.Web.Models
+@model RetirarComunicadoViewModel
+@* Retirada excepcional de un comunicado ya publicado, de Administración y de Dirección Clínica (script 0053). Las acciones
+   (RetirarComunicado, Comunicados) son las del controlador actual. *@
+@{
+    ViewData["Title"] = "Retirar un comunicado";
+    var communication = Model.Item.Communication;
+    var area = ViewContext.RouteData.Values["controller"]?.ToString() == "Direccion" ? "Dirección Clínica" : "Administración";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">@area</a></li>
+        <li class="breadcrumb-item"><a asp-action="Comunicados">Comunicados a la familia</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Retirar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Retirar un comunicado</h1>
+<p class="text-muted">
+    @communication.ResidentName · @(communication.UnitName ?? "Sin unidad"). Es una medida excepcional. La familia dejará de ver el texto y verá que
+    esa novedad ya no está disponible (también dejarán de verse sus correcciones). El comunicado se conserva y la retirada queda en la
+    auditoría con tu motivo, que la familia no ve. No se puede deshacer; si solo hay un error, es mejor publicar una corrección.
+</p>
+<div class="card mb-3">
+    <div class="card-body">
+        <p class="small text-muted mb-1">Comunicado que se retira</p>
+        <p class="mb-0" style="white-space: pre-line">@communication.Text</p>
+    </div>
+</div>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="RetirarComunicado" method="post">
+    <input type="hidden" name="Form.ComunicadoId" value="@Model.Form.ComunicadoId" />
+    <div class="mb-3">
+        <label asp-for="Form.Motivo" class="form-label"></label>
+        <textarea asp-for="Form.Motivo" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-danger btn-lg">Retirar el comunicado</button>
+    <a asp-action="Comunicados" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+</form>

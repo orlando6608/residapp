@@ -177,6 +177,7 @@ builder.Services.AddScoped<AdministrationScopeApplicationService>();
 builder.Services.AddScoped<SqlFamilyCommunicationPublication>();
 builder.Services.AddScoped<IFamilyCommunicationDirectory>(sp => sp.GetRequiredService<SqlFamilyCommunicationPublication>());
 builder.Services.AddScoped<IFamilyCommunicationPublisher>(sp => sp.GetRequiredService<SqlFamilyCommunicationPublication>());
+builder.Services.AddScoped<IFamilyCommunicationAmender>(sp => sp.GetRequiredService<SqlFamilyCommunicationPublication>());
 builder.Services.AddScoped<FamilyCommunicationPublicationApplicationService>();
 builder.Services.AddScoped<IFamilyCommunicationScheduleRepository, SqlFamilyCommunicationScheduleRepository>();
 builder.Services.AddScoped<FamilyCommunicationScheduleApplicationService>();

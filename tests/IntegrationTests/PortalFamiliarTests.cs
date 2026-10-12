@@ -19,9 +19,9 @@ public class PortalFamiliarTests
 {
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
 
-    private sealed record Setup(SeededProfile Admin, SeededProfile Nurse, ResidentId ResidentId, Guid LinkId, string Subject);
+    internal sealed record Setup(SeededProfile Admin, SeededProfile Nurse, ResidentId ResidentId, Guid LinkId, string Subject);
 
-    private static FamilyPortalApplicationService Portal(string subject) => new(
+    internal static FamilyPortalApplicationService Portal(string subject) => new(
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedPortalSessionIdentityProvider(subject),
         new SqlFamilyPortalReader(TestDatabase.ConnectionFactory));
 
@@ -35,17 +35,17 @@ public class PortalFamiliarTests
         return (row.Id, CenterId.From(row.CenterId));
     }
 
-    private static async Task<FamilyPortalQuery> QueryAsync(string subject)
+    internal static async Task<FamilyPortalQuery> QueryAsync(string subject)
     {
         var (scopeId, centerId) = await ScopeAsync(subject);
         return new FamilyPortalQuery(scopeId, centerId);
     }
 
-    private static async Task<Guid> AddFamilyAsync(SeededProfile admin, ResidentId residentId, string name = "Lucía Pérez") =>
+    internal static async Task<Guid> AddFamilyAsync(SeededProfile admin, ResidentId residentId, string name = "Lucía Pérez") =>
         (await Build(admin.ExternalSubject).AddFamilyMemberAsync(new AddFamilyMemberCommand(
             admin.ProfileScopeId, admin.CenterId, residentId, Guid.NewGuid(), name, "Hija", "600123456", null))).Value;
 
-    private static async Task ChangeAsync(
+    internal static async Task ChangeAsync(
         SeededProfile admin, ResidentId residentId, Guid linkId, FamilyAuthorizationChange change, int expected, string? reason = null)
     {
         var result = await Build(admin.ExternalSubject).ChangeFamilyAuthorizationAsync(new ChangeFamilyAuthorizationCommand(
@@ -54,7 +54,7 @@ public class PortalFamiliarTests
     }
 
     /// <summary>Un residente con una familiar con acceso al portal y la autorización Activa.</summary>
-    private static async Task<Setup> SetupAsync(string residentName = "Residente Portal")
+    internal static async Task<Setup> SetupAsync(string residentName = "Residente Portal")
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
@@ -71,7 +71,7 @@ public class PortalFamiliarTests
 
     /// <summary>Un comunicado de un evento nuevo del residente, insertado con las horas que se quieran (los guardados antes de 0051 no tienen
     /// hora programada: aquí se fija siempre). preparedAt y scheduledAt son momentos UTC.</summary>
-    private static async Task<Guid> AddCommunicationAsync(
+    internal static async Task<Guid> AddCommunicationAsync(
         Setup setup, string text, FamilyCommunicationType type, DateTime preparedAt, DateTime scheduledAt, DateTime? publishedEarlyAt = null,
         string? correctedText = null, ResidentId? residentId = null)
     {
@@ -113,14 +113,14 @@ public class PortalFamiliarTests
         return id;
     }
 
-    private static async Task<IReadOnlyList<FamilyPortalCommunication>> ListAsync(Setup setup)
+    internal static async Task<IReadOnlyList<FamilyPortalCommunication>> ListAsync(Setup setup)
     {
         var result = await Portal(setup.Subject).ReadResidentAsync(await QueryAsync(setup.Subject), setup.LinkId);
         Assert.True(result.Ok, result.Error?.Message);
         return result.Value!.Communications;
     }
 
-    private static async Task<int> CountAsync(string sql, object parameters)
+    internal static async Task<int> CountAsync(string sql, object parameters)
     {
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         return await connection.ExecuteScalarAsync<int>(sql, parameters);

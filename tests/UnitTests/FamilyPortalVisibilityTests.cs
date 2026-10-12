@@ -51,4 +51,33 @@ public class FamilyPortalVisibilityTests
         Assert.True(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Relevante, Scheduled, null, lastMoment));
         Assert.False(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Relevante, Scheduled, null, Scheduled.AddMonths(6)));
     }
+
+    [Fact]
+    public void UnaCorrectoraSale_EnElActo_YTieneLaVentanaDeSuTipo()
+    {
+        var published = Scheduled;
+
+        Assert.False(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Relevante, published, published.AddTicks(-1)));
+        Assert.True(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Ordinaria, published, published));
+        Assert.True(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Ordinaria, published, published.AddDays(30).AddTicks(-1)));
+        Assert.False(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Ordinaria, published, published.AddDays(30)));
+        Assert.True(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Relevante, published, published.AddDays(31)));
+        Assert.False(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Relevante, published, published.AddMonths(6)));
+    }
+}
+
+/// <summary>Retirada excepcional de un comunicado publicado (portal-familiar.md, historia 3): hace falta un motivo, de hasta 500 caracteres.</summary>
+public class FamilyCommunicationWithdrawalTests
+{
+    [Fact]
+    public void ElMotivo_SeRecorta_YDebeTenerTexto()
+    {
+        Assert.Equal("Era de otro residente.", FamilyCommunicationWithdrawal.NormalizeReason("  Era de otro residente.  "));
+        Assert.Equal(new string('x', 500), FamilyCommunicationWithdrawal.NormalizeReason(new string('x', 500)));
+        foreach (var invalid in new string?[] { null, "", "   ", new string('x', 501) })
+        {
+            var error = Assert.Throws<ResidApp.Shared.DomainValidationException>(() => FamilyCommunicationWithdrawal.NormalizeReason(invalid));
+            Assert.Equal("FAMILY_COMMUNICATION_WITHDRAWAL_INVALID", error.Message);
+        }
+    }
 }
