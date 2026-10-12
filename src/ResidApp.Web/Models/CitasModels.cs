@@ -27,7 +27,7 @@ public static class AppointmentDisplay
     {
         AppointmentServiceMode.Desactivado => "Servicio desactivado",
         AppointmentServiceMode.ReservaDirecta => "Reserva directa",
-        AppointmentServiceMode.SolicitudPrevia => "Solicitud previa (todavía no disponible)",
+        AppointmentServiceMode.SolicitudPrevia => "Solicitud previa",
         _ => mode.ToString(),
     };
 
@@ -206,7 +206,7 @@ public sealed record ReprogramarCitaViewModel(
     AdministrationAppointment Appointment, IReadOnlyList<AppointmentSlot> Slots, ReprogramarCitaFormModel Form);
 
 /// <summary>Las pantallas de citas de la familia.</summary>
-public sealed record PortalFamiliarCitasViewModel(FamilyAppointmentsHome Home);
+public sealed record PortalFamiliarCitasViewModel(FamilyAppointmentsHome Home, IReadOnlyList<FamilyAppointmentRequest>? Requests = null);
 
 /// <summary>Elegir equipo y modalidad y ver los huecos libres. Slots es null mientras no se hayan elegido.</summary>
 public sealed record PortalFamiliarNuevaCitaViewModel(

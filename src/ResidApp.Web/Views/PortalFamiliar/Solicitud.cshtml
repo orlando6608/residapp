@@ -1,0 +1,111 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Web.Models
+@model PortalFamiliarSolicitudViewModel
+@{
+    var resident = Model.Resident;
+    var request = Model.Request;
+    ViewData["Title"] = "Solicitud de cita de " + resident.ResidentName;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-linkId="@resident.LinkId">@resident.ResidentName</a></li>
+        <li class="breadcrumb-item"><a asp-action="Citas" asp-route-linkId="@resident.LinkId">Citas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Solicitud</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Solicitud de cita</h1>
+<div class="alert alert-warning" role="note">Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</div>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Residente</dt><dd class="col-sm-9">@resident.ResidentName</dd>
+            <dt class="col-sm-3">Con quién</dt><dd class="col-sm-9">@AppointmentDisplay.Label(request.Team)</dd>
+            <dt class="col-sm-3">Cómo</dt><dd class="col-sm-9">@AppointmentDisplay.Label(request.Modality)</dd>
+            <dt class="col-sm-3">Motivo</dt><dd class="col-sm-9">@AppointmentRequestDisplay.Label(request.Reason)</dd>
+            @if (!string.IsNullOrWhiteSpace(request.Comment))
+            {
+                <dt class="col-sm-3">Comentario</dt><dd class="col-sm-9" style="white-space: pre-line">@request.Comment</dd>
+            }
+            <dt class="col-sm-3">Disponibilidad</dt><dd class="col-sm-9">@AppointmentRequestDisplay.Describe(request.Availability)</dd>
+            <dt class="col-sm-3">Estado</dt>
+            <dd class="col-sm-9"><span class="badge @AppointmentRequestDisplay.Badge(request.Status, request.ProposalExpired)">@AppointmentRequestDisplay.Label(request.Status, request.ProposalExpired)</span></dd>
+        </dl>
+    </div>
+</div>
+
+@if (request.Status == AppointmentRequestStatus.Pendiente)
+{
+    <div class="alert alert-secondary" role="status">
+        El centro todavía no te ha propuesto un día y una hora. Hasta que lo haga y tú aceptes, no hay ninguna cita confirmada.
+    </div>
+}
+
+@if (request.Status == AppointmentRequestStatus.Propuesta && request.ProposedStartsAt is { } proposed)
+{
+    <div class="card border-primary mb-3">
+        <div class="card-body">
+            <h2 class="h5">El centro te propone</h2>
+            <p class="fs-5 mb-1">@AppointmentDisplay.When(proposed) – @AppointmentDisplay.Time(request.ProposedEndsAt!.Value)</p>
+            @if (request.ProposalExpired)
+            {
+                <p class="text-danger mb-2">Esta propuesta ha caducado porque la hora ya empezó. Pide otro horario y el centro te propondrá uno nuevo.</p>
+            }
+            else
+            {
+                <p class="text-muted mb-2">La cita solo queda confirmada si la aceptas. El hueco está reservado para ti hasta que respondas o la hora empiece.</p>
+            }
+            <div class="d-flex flex-wrap gap-2">
+                @if (request.CanAccept)
+                {
+                    <form asp-action="AceptarSolicitud" asp-route-linkId="@resident.LinkId" asp-route-solicitudId="@request.Id" method="post">
+                        <button type="submit" class="btn btn-success btn-lg">Aceptar y confirmar la cita</button>
+                    </form>
+                }
+                @if (request.CanRequestAnotherTime)
+                {
+                    <form asp-action="PedirOtroHorario" asp-route-linkId="@resident.LinkId" asp-route-solicitudId="@request.Id" method="post">
+                        <button type="submit" class="btn btn-outline-primary btn-lg">Pedir otro horario</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@if (request.Status == AppointmentRequestStatus.Aceptada && request.AppointmentId is { } appointmentId)
+{
+    <div class="alert alert-success" role="status">
+        Aceptaste la propuesta: la cita está confirmada.
+        <a asp-action="Cita" asp-route-linkId="@resident.LinkId" asp-route-citaId="@appointmentId">Ver la cita</a>
+    </div>
+}
+
+@if (request.Status == AppointmentRequestStatus.Cerrada)
+{
+    <div class="alert alert-secondary" role="status">El centro ha cerrado esta solicitud. Si sigues necesitando una cita, llama por teléfono al centro o envía una solicitud nueva.</div>
+}
+
+<h2 class="h6">Historial</h2>
+<ul class="list-unstyled small text-body-secondary mb-3">
+    @foreach (var change in request.Changes)
+    {
+        <li>@AppointmentRequestDisplay.Label(change.Action) el @change.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm")@(change.ByCenter ? " por el centro" : "")</li>
+    }
+</ul>
+
+@if (request.CanCancel)
+{
+    <a class="btn btn-outline-danger" asp-action="ConfirmarCancelarSolicitud" asp-route-linkId="@resident.LinkId" asp-route-solicitudId="@request.Id">Cancelar la solicitud</a>
+}
+<a class="btn btn-outline-secondary" asp-action="Citas" asp-route-linkId="@resident.LinkId">Volver a mis citas</a>

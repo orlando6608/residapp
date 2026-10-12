@@ -18,8 +18,7 @@ public enum AppointmentModality
     [Code("VIDEOCONFERENCIA")] [Display(Name = "Videoconferencia")] Videoconferencia,
 }
 
-/// <summary>El servicio de citas del centro (CIT-01): desactivado o con una única modalidad vigente. La solicitud previa existe en el modelo, pero
-/// todavía no se puede elegir.</summary>
+/// <summary>El servicio de citas del centro (CIT-01): desactivado o con una única modalidad vigente. Desde el script 0057 se puede elegir también la solicitud previa.</summary>
 public enum AppointmentServiceMode
 {
     [Code("DESACTIVADO")] [Display(Name = "Desactivado")] Desactivado,
@@ -45,7 +44,7 @@ public enum AppointmentChangeAction
 
 /// <summary>
 /// La configuración general del servicio de citas de un centro (CIT-01, CIT-C01; suposición a confirmar con CJ: 24 horas de antelación y 30 días de
-/// horizonte de partida). Sin configuración el servicio está desactivado. La solicitud previa todavía no se admite.
+/// horizonte de partida). Sin configuración el servicio está desactivado.
 /// </summary>
 public sealed record AppointmentServiceSettings(AppointmentServiceMode Mode, int MinimumNoticeHours, int MaximumHorizonDays)
 {
@@ -57,9 +56,12 @@ public sealed record AppointmentServiceSettings(AppointmentServiceMode Mode, int
 
     public bool BookingEnabled => Mode == AppointmentServiceMode.ReservaDirecta;
 
-    /// <summary>La configuración con sus límites; si falta un valor, se sale de rango o se pide la solicitud previa (todavía sin flujo), APPOINTMENT_SERVICE_INVALID.</summary>
+    /// <summary>La familia solo envía solicitudes nuevas con la solicitud previa vigente; las abiertas se siguen gestionando en cualquier modo.</summary>
+    public bool RequestsEnabled => Mode == AppointmentServiceMode.SolicitudPrevia;
+
+    /// <summary>La configuración con sus límites; si falta un valor o se sale de rango, APPOINTMENT_SERVICE_INVALID.</summary>
     public static AppointmentServiceSettings Validate(AppointmentServiceMode? mode, int? minimumNoticeHours, int? maximumHorizonDays) =>
-        mode is AppointmentServiceMode.Desactivado or AppointmentServiceMode.ReservaDirecta
+        mode is not null
         && minimumNoticeHours is >= 0 and <= MaxNoticeHours
         && maximumHorizonDays is >= 1 and <= MaxHorizonDays
             ? new AppointmentServiceSettings(mode.Value, minimumNoticeHours.Value, maximumHorizonDays.Value)

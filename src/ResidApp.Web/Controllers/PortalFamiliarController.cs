@@ -16,7 +16,8 @@ namespace ResidApp.Web.Controllers;
 /// Los textos que no cuentan nada del residente: un vínculo ajeno, suspendido o inexistente da el mismo «sin acceso».
 /// </summary>
 [Route("Familia")]
-public sealed class PortalFamiliarController(FamilyPortalApplicationService service, FamilyAppointmentsApplicationService appointments) : Controller
+public sealed partial class PortalFamiliarController(
+    FamilyPortalApplicationService service, FamilyAppointmentsApplicationService appointments, FamilyAppointmentRequestsApplicationService requests) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(bool elegir, CancellationToken ct)
@@ -92,7 +93,13 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
         }
 
         var result = await appointments.ReadHomeAsync(Query(scope), linkId, ct);
-        return result.Ok ? View(new PortalFamiliarCitasViewModel(result.Value!)) : Failure(result.Error!);
+        if (!result.Ok)
+        {
+            return Failure(result.Error!);
+        }
+
+        var solicitudes = await requests.ListAsync(Query(scope), linkId, ct);
+        return solicitudes.Ok ? View(new PortalFamiliarCitasViewModel(result.Value!, solicitudes.Value)) : Failure(solicitudes.Error!);
     }
 
     /// <summary>Elegir equipo y modalidad y ver los huecos libres; con <paramref name="reprogramar"/>, mover una cita propia (mismo equipo y modalidad).</summary>

@@ -159,8 +159,8 @@ public class CitasTests
             scope.ProfileScopeId, scope.CenterId, 0, AppointmentServiceMode.Desactivado, 24, 30, []));
         var unchanged = await admin.SaveSettingsAsync(new SaveAppointmentServiceCommand(
             scope.ProfileScopeId, scope.CenterId, view.Version, AppointmentServiceMode.ReservaDirecta, 1, 30, AllModalities));
-        var requestOnly = await admin.SaveSettingsAsync(new SaveAppointmentServiceCommand(
-            scope.ProfileScopeId, scope.CenterId, view.Version, AppointmentServiceMode.SolicitudPrevia, 24, 30, []));
+        var requestOutOfRange = await admin.SaveSettingsAsync(new SaveAppointmentServiceCommand(
+            scope.ProfileScopeId, scope.CenterId, view.Version, AppointmentServiceMode.SolicitudPrevia, 721, 30, []));
         var overlap = await admin.AddWindowAsync(new AddAppointmentWindowCommand(
             scope.ProfileScopeId, scope.CenterId, AppointmentTeam.Medico, 1, new TimeOnly(19, 0), new TimeOnly(21, 0), 30));
         var invalid = await admin.AddWindowAsync(new AddAppointmentWindowCommand(
@@ -188,7 +188,7 @@ public class CitasTests
 
         Assert.Equal(ApplicationFailureCode.Conflict, stale.Error!.Code);
         Assert.Equal(view.Version, unchanged.Value);
-        Assert.Equal(ApplicationFailureCode.InvalidInput, requestOnly.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, requestOutOfRange.Error!.Code);
         Assert.Equal(ApplicationFailureCode.Conflict, overlap.Error!.Code);
         Assert.Equal(ApplicationFailureCode.InvalidInput, invalid.Error!.Code);
         Assert.True(blocked.Ok, blocked.Error?.Message);

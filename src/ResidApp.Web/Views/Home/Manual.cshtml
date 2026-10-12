@@ -391,8 +391,8 @@
         <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
     </h2>
     <p>
-        Desde <strong>Citas con la familia</strong> configuras el servicio de citas de tu centro. El modo es <strong>desactivado</strong> o <strong>reserva directa</strong>
-        (la solicitud previa todavía no está disponible); solo hay uno vigente por centro, y cambiarlo no toca las citas ya confirmadas. Con reserva directa, la familia
+        Desde <strong>Citas con la familia</strong> configuras el servicio de citas de tu centro. El modo es <strong>desactivado</strong>, <strong>reserva directa</strong>
+        o <strong>solicitud previa</strong>; solo hay uno vigente por centro, y cambiarlo no toca las citas ya confirmadas ni las solicitudes abiertas. Con reserva directa, la familia
         ve los huecos libres de cada equipo (médico o de Enfermería) y modalidad (presencial, telefónica o videoconferencia) y reserva uno sin que nadie tenga que
         confirmárselo. La familia nunca elige un profesional concreto, y las citas no son un canal urgente.
     </p>
@@ -410,6 +410,15 @@
         del mismo equipo (sin antelación mínima) o <strong>cancelarla</strong>, siempre con un motivo obligatorio que la familia no ve: la familia ve que el centro la cambió y,
         si fue un cambio, la hora nueva. Avísala también por teléfono: de momento no hay avisos ni recordatorios. Una cita confirmada cuya hora ya pasó se puede
         <strong>finalizar</strong>. Cada paso queda en la auditoría, en la categoría «Citas».
+    </p>
+    <p>
+        <strong>Solicitudes de cita (solicitud previa).</strong> Con este modo, la familia no elige un hueco: envía una solicitud (equipo, modalidad, motivo, un comentario breve y
+        cuándo podría) y tú le propones un día y una hora. «Ver las solicitudes de cita» muestra la bandeja, con las abiertas por defecto, lo que pidió la familia y su historial.
+        <strong>Proponer un horario</strong> te deja elegir uno de los huecos libres del equipo (sin antelación mínima; los que encajan con la disponibilidad de la familia llevan
+        una marca) y, si quieres, apuntar un profesional: es solo para el centro y la familia no lo ve nunca. Mientras la propuesta esté viva, ese hueco queda reservado y no
+        se ofrece a otra solicitud; si la hora empieza sin respuesta, la propuesta caduca y el hueco se libera. La cita solo se confirma cuando la familia <strong>acepta</strong>; también
+        puede pedir otro horario (la solicitud vuelve a pendiente) o cancelarla. Puedes <strong>cerrar</strong> una solicitud abierta con un motivo obligatorio que la familia no ve:
+        verá que el centro la cerró. No hay chat: si hace falta hablar, llámala por teléfono. Cada paso queda en la auditoría, en la categoría «Citas».
     </p>
 </section>
 
@@ -1356,10 +1365,17 @@
         del centro; después, por teléfono. Solo ve las citas que reservó ella misma. Todas las pantallas recuerdan que las citas no son un canal urgente. Si el centro
         desactiva el servicio, no se ofrece reservar, pero las citas ya confirmadas se siguen viendo y se pueden cancelar.
     </p>
+    <p>
+        <strong>Solicitar una cita.</strong> Si el centro tiene la solicitud previa activa, en lugar de «Reservar una cita» aparece «Solicitar una cita»: elige el equipo y la modalidad,
+        el motivo, un comentario breve opcional y los días y la parte del día en que podría, y envía la solicitud. Queda «Pendiente de gestión»; no hay ninguna cita hasta que el centro
+        le proponga un día y una hora y ella lo acepte. Con cada equipo solo puede tener una solicitud abierta, y ninguna si ya tiene una cita próxima con ese equipo. Cuando hay
+        una propuesta puede <strong>aceptarla</strong> (nace la cita confirmada), <strong>pedir otro horario</strong> o <strong>cancelar</strong> la solicitud (con confirmación). Nunca ve
+        un profesional. Si el centro cambia de modo, lo que ya estaba abierto se puede seguir respondiendo, pero no se aceptan solicitudes nuevas.
+    </p>
     <p class="mb-0">
         <strong>Qué no ve nunca.</strong> Observaciones, valoraciones, constantes, basal, indicaciones, derivaciones, historial, nombres de
         profesionales ni datos de otros familiares. Cada vez que un familiar abre las novedades de un residente o un comunicado queda registrado
-        quién y cuándo (sin guardar el contenido). Quedan pendientes la solicitud previa de citas y la entrada con credenciales reales.
+        quién y cuándo (sin guardar el contenido). Queda pendiente la entrada con credenciales reales.
     </p>
 </section>
 
@@ -1367,8 +1383,8 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Portal Familiar: la solicitud previa de citas, el resumen periódico por residente y la entrada con credenciales reales (hoy se entra con el usuario de desarrollo).</li>
-        <li>Más gestión administrativa: organigrama y cargos (aplazado), la solicitud previa de citas y un panel completo.</li>
+        <li>Portal Familiar: el resumen periódico por residente y la entrada con credenciales reales (hoy se entra con el usuario de desarrollo).</li>
+        <li>Más gestión administrativa: organigrama y cargos (aplazado) y un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
         <li>De Dirección Clínica: el estado de la comunicación familiar (frecuencia, pendientes y errores) y la finalidad «revisión de calidad asistencial» (pendiente de decidir cómo distinguir la Coordinación Clínica de Dirección). La declaración de finalidad y la justificación ya están construidas, y con ellas ya puedes ver el contenido del basal vigente, el historial de versiones, la línea temporal, los eventos cerrados, las correcciones y rectificaciones, la trazabilidad clínica y los informes de derivación firmados.</li>

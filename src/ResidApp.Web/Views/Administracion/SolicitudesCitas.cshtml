@@ -1,0 +1,95 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Web.Models
+@model SolicitudesCitasViewModel
+@{
+    ViewData["Title"] = "Solicitudes de cita";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Citas">Citas con la familia</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Solicitudes</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Solicitudes de cita</h1>
+<p class="text-muted">
+    Con la solicitud previa, la familia pide una cita y tú le propones un hueco libre. El hueco queda reservado mientras la propuesta esté viva; la cita solo
+    se confirma si la familia la acepta. No hay chat: si hace falta hablar, llámala por teléfono. Las horas son las del centro.
+</p>
+<ul class="nav nav-pills mb-3" aria-label="Filtrar solicitudes">
+    <li class="nav-item"><a class="nav-link @(Model.OnlyOpen ? "active" : "")" aria-current="@(Model.OnlyOpen ? "page" : null)" asp-action="SolicitudesCitas">Abiertas</a></li>
+    <li class="nav-item"><a class="nav-link @(Model.OnlyOpen ? "" : "active")" aria-current="@(Model.OnlyOpen ? null : "page")" asp-action="SolicitudesCitas" asp-route-todas="true">Todas</a></li>
+</ul>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Requests.Count == 0)
+{
+    <p class="estado-vacio">@(Model.OnlyOpen ? "No hay solicitudes abiertas." : "No hay solicitudes.")</p>
+}
+else
+{
+    foreach (var request in Model.Requests)
+    {
+        <div class="card mb-3 border-start border-4 @(request.Status == AppointmentRequestStatus.Pendiente ? "border-warning" : request.Status == AppointmentRequestStatus.Propuesta ? "border-primary" : "border-secondary")">
+            <div class="card-body">
+                <p class="mb-1">
+                    <span class="badge @AppointmentRequestDisplay.Badge(request.Status, request.ProposalExpired)">@AppointmentRequestDisplay.Label(request.Status, request.ProposalExpired)</span>
+                    <strong>@request.ResidentName</strong> · @AppointmentDisplay.Label(request.Team) · @AppointmentDisplay.Label(request.Modality)
+                </p>
+                <p class="mb-1 text-muted">
+                    Solicitada por @request.FamilyName (@request.Relationship) el @AppointmentDisplay.When(request.CreatedAt) ·
+                    @AppointmentRequestDisplay.Label(request.Reason)
+                </p>
+                <p class="mb-1"><span class="fw-semibold">Disponibilidad:</span> @AppointmentRequestDisplay.Describe(request.Availability)</p>
+                @if (!string.IsNullOrWhiteSpace(request.Comment))
+                {
+                    <p class="mb-1" style="white-space: pre-line"><span class="fw-semibold">Comentario:</span> @request.Comment</p>
+                }
+                @if (request.ProposedStartsAt is { } proposed)
+                {
+                    <p class="mb-1">
+                        <span class="fw-semibold">@(request.Status == AppointmentRequestStatus.Aceptada ? "Cita aceptada:" : "Propuesta:")</span>
+                        @AppointmentDisplay.When(proposed) – @AppointmentDisplay.Time(request.ProposedEndsAt!.Value)
+                        @if (!string.IsNullOrWhiteSpace(request.InternalProfessional))
+                        {
+                            <span class="text-muted">· profesional (interno): @request.InternalProfessional</span>
+                        }
+                        @if (request.ProposalExpired)
+                        {
+                            <span class="badge text-bg-secondary">Ha caducado: ya empezó</span>
+                        }
+                    </p>
+                }
+                <ul class="list-unstyled small text-body-secondary mb-2">
+                    @foreach (var change in request.Changes)
+                    {
+                        <li>
+                            @AppointmentRequestDisplay.Label(change.Action) el @AppointmentDisplay.When(change.At) ·
+                            @(change.ActorProfile == ResidApp.Shared.SystemProfile.Familiar ? "familia" : "centro")@(change.Detail is { Length: > 0 } detail ? " · " + detail : "")
+                        </li>
+                    }
+                </ul>
+                @if (request.Status == AppointmentRequestStatus.Pendiente)
+                {
+                    <a asp-action="ProponerCita" asp-route-solicitudId="@request.Id" class="btn btn-primary">Proponer un horario</a>
+                }
+                @if (request.Status is AppointmentRequestStatus.Pendiente or AppointmentRequestStatus.Propuesta)
+                {
+                    <a asp-action="CerrarSolicitudCita" asp-route-solicitudId="@request.Id" class="btn btn-outline-danger">Cerrar la solicitud</a>
+                }
+            </div>
+        </div>
+    }
+}

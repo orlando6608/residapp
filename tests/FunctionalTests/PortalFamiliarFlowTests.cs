@@ -402,6 +402,151 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
     }
 
     [Fact]
+    public async Task Solicitudes_LaFamiliaSolicita_AdministracionPropone_LaFamiliaPideOtroHorarioYAcepta_ConLaAppEntera()
+    {
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.Admin);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Solicitud Funcional", "Madre Solicitud Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var linkId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+        var authorizationUrl = $"/Administracion/AutorizacionFamiliar?residenteId={residentId}&vinculoId={linkId}";
+        var subject = $"familia-{Guid.NewGuid():N}"[..20];
+        await PostAsync(admin, "/Administracion/AccesoPortalFamiliar", authorizationUrl, new() { ["residenteId"] = residentId, ["vinculoId"] = linkId.ToString(), ["usuario"] = subject });
+        foreach (var (change, expected) in new[] { ("Abrir", 0), ("Activar", 1) })
+        {
+            await PostAsync(admin, "/Administracion/AutorizacionFamiliar", authorizationUrl, new()
+            {
+                ["Form.ResidenteId"] = residentId, ["Form.VinculoId"] = linkId.ToString(), ["Form.CambiosEsperados"] = expected.ToString(), ["Form.Cambio"] = change,
+            });
+        }
+
+        var family = await LoginAsync(subject);
+        var citasUrl = $"/Familia/Residente/{linkId}/Citas";
+        var requestsUrl = $"/Familia/Residente/{linkId}/Solicitudes";
+
+        // En reserva directa o sin configurar, la familia no ve «Solicitar una cita» y el formulario no se abre.
+        var directMode = await PostAsync(admin, "/Administracion/Citas", "/Administracion/Citas", new()
+        {
+            ["Servicio.Version"] = "0", ["Servicio.Modo"] = "ReservaDirecta", ["Servicio.AntelacionHoras"] = "1", ["Servicio.HorizonteDias"] = "30",
+            ["Servicio.Modalidades"] = "MEDICO:PRESENCIAL",
+        });
+        var homeInDirect = await BodyAsync(await family.GetAsync(citasUrl));
+        var formInDirect = await BodyAsync(await family.GetAsync($"{requestsUrl}/Nueva"));
+
+        // Administración pasa a solicitud previa: ahora sí, y el modo se ve en su pantalla.
+        var requestMode = await PostAsync(admin, "/Administracion/Citas", "/Administracion/Citas", new()
+        {
+            ["Servicio.Version"] = "1", ["Servicio.Modo"] = "SolicitudPrevia", ["Servicio.AntelacionHoras"] = "1", ["Servicio.HorizonteDias"] = "30",
+            ["Servicio.Modalidades"] = "MEDICO:PRESENCIAL",
+        });
+        for (var day = 1; day <= 7; day++)
+        {
+            Assert.Contains("Franja añadida.", await PostAsync(admin, "/Administracion/CitasFranja", "/Administracion/Citas", new()
+            {
+                ["Franja.Equipo"] = "Medico", ["Franja.DiaSemana"] = day.ToString(), ["Franja.Inicio"] = "08:00", ["Franja.Fin"] = "20:00", ["Franja.DuracionMinutos"] = "30",
+            }));
+        }
+
+        var configuration = await BodyAsync(await admin.GetAsync("/Administracion/Citas"));
+        var homeInRequests = await BodyAsync(await family.GetAsync(citasUrl));
+        var form = await BodyAsync(await family.GetAsync($"{requestsUrl}/Nueva"));
+        var fields = new Dictionary<string, string>
+        {
+            ["Form.OperacionId"] = ExtractValue(form, "Form.OperacionId"), ["Form.Equipo"] = "Medico", ["Form.Modalidad"] = "Presencial",
+            ["Form.Motivo"] = "Resultados", ["Form.Comentario"] = "Quiero hablar de los análisis (ficticio).", ["Form.Dias"] = "2", ["Form.ParteDelDia"] = "Tarde",
+        };
+
+        // Un envío sin motivo no se guarda; el mismo envío dos veces (doble pulsación) crea una sola solicitud.
+        var withoutReason = await PostAsync(family, requestsUrl, $"{requestsUrl}/Nueva", new Dictionary<string, string>(fields) { ["Form.Motivo"] = "" });
+        var created = await PostAsync(family, requestsUrl, $"{requestsUrl}/Nueva", new Dictionary<string, string>(fields));
+        var createdAgain = await PostAsync(family, requestsUrl, $"{requestsUrl}/Nueva", new Dictionary<string, string>(fields));
+        var requestId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.citas_solicitudes WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+        var secondOpen = await PostAsync(family, requestsUrl, $"{requestsUrl}/Nueva", new Dictionary<string, string>(fields) { ["Form.OperacionId"] = Guid.NewGuid().ToString() });
+
+        // Administración la ve en la bandeja con lo que pidió la familia y propone el primer hueco libre, con un profesional interno.
+        var inbox = await BodyAsync(await admin.GetAsync("/Administracion/SolicitudesCitas"));
+        var proposePageUrl = $"/Administracion/ProponerCita?solicitudId={requestId}";
+        var proposePage = await BodyAsync(await admin.GetAsync(proposePageUrl));
+        var firstSlot = Regex.Match(proposePage, "name=\"Form\\.Inicio\"[^>]*value=\"([^\"]+)\"").Groups[1].Value;
+        var proposedWithoutSlot = await PostAsync(admin, "/Administracion/ProponerCita", proposePageUrl, new() { ["Form.SolicitudId"] = requestId.ToString(), ["Form.Inicio"] = "" });
+        var proposed = await PostAsync(admin, "/Administracion/ProponerCita", proposePageUrl, new()
+        {
+            ["Form.SolicitudId"] = requestId.ToString(), ["Form.Inicio"] = firstSlot, ["Form.Profesional"] = "Dra. Ficticia Interna",
+        });
+        var requestUrl = $"{requestsUrl}/{requestId}";
+        var proposalPage = await BodyAsync(await family.GetAsync(requestUrl));
+        var inboxProposed = await BodyAsync(await admin.GetAsync("/Administracion/SolicitudesCitas"));
+
+        // La familia pide otro horario: vuelve a estar pendiente, sin propuesta; Administración la cierra con motivo y la familia lo ve cerrado sin el motivo.
+        var anotherTime = await PostAsync(family, $"{requestUrl}/OtroHorario", requestUrl, new());
+        var closePageUrl = $"/Administracion/CerrarSolicitudCita?solicitudId={requestId}";
+        var closeWithoutReason = await PostAsync(admin, "/Administracion/CerrarSolicitudCita", closePageUrl, new() { ["Form.SolicitudId"] = requestId.ToString(), ["Form.Motivo"] = "" });
+        var closed = await PostAsync(admin, "/Administracion/CerrarSolicitudCita", closePageUrl, new()
+        {
+            ["Form.SolicitudId"] = requestId.ToString(), ["Form.Motivo"] = "Motivo interno del cierre.",
+        });
+        var closedFamily = await BodyAsync(await family.GetAsync(requestUrl));
+
+        // Una solicitud nueva: Administración propone, la familia acepta (dos veces seguidas) y nace una sola cita.
+        var secondForm = await BodyAsync(await family.GetAsync($"{requestsUrl}/Nueva"));
+        await PostAsync(family, requestsUrl, $"{requestsUrl}/Nueva", new Dictionary<string, string>(fields) { ["Form.OperacionId"] = ExtractValue(secondForm, "Form.OperacionId") });
+        var secondId = await connection.ExecuteScalarAsync<Guid>(
+            "SELECT id FROM dbo.citas_solicitudes WHERE residente_id = @residentId AND estado_codigo = 'PENDIENTE'", new { residentId = Guid.Parse(residentId) });
+        var secondProposePage = $"/Administracion/ProponerCita?solicitudId={secondId}";
+        var secondSlot = Regex.Match(await BodyAsync(await admin.GetAsync(secondProposePage)), "name=\"Form\\.Inicio\"[^>]*value=\"([^\"]+)\"").Groups[1].Value;
+        await PostAsync(admin, "/Administracion/ProponerCita", secondProposePage, new() { ["Form.SolicitudId"] = secondId.ToString(), ["Form.Inicio"] = secondSlot });
+        var secondUrl = $"{requestsUrl}/{secondId}";
+        var secondProposal = await BodyAsync(await family.GetAsync(secondUrl));
+        var accepted = await PostAsync(family, $"{secondUrl}/Aceptar", secondUrl, new());
+        var acceptedAgain = await PostAsync(family, $"{secondUrl}/Aceptar", secondUrl, new());
+        var appointmentId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.citas WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+        var start = DateTimeOffset.Parse(secondSlot);
+        var agenda = await BodyAsync(await admin.GetAsync($"/Administracion/AgendaCitas?semana={start.ToLocalTime():yyyy-MM-dd}"));
+        var requestAfter = await BodyAsync(await family.GetAsync(secondUrl));
+
+        Assert.DoesNotContain("Solicitar una cita", homeInDirect);
+        Assert.Contains("Ahora mismo el centro no admite solicitudes", formInDirect);
+        Assert.Contains("Solicitud previa", configuration);
+        Assert.Contains("Solicitar una cita", homeInRequests);
+        Assert.DoesNotContain("Reservar una cita", homeInRequests);
+        Assert.Contains("Elige el motivo de la cita.", withoutReason);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.citas_solicitudes WHERE motivo_codigo = 'OTRO' AND residente_id = @residentId", new { residentId = Guid.Parse(residentId) }));
+        Assert.Contains("Solicitud enviada.", created);
+        Assert.Contains("Pendiente de gestión", created);
+        Assert.Contains("Solicitud enviada.", createdAgain);
+        Assert.Contains("ya tengas una solicitud abierta", secondOpen);
+        Assert.Contains("Madre Solicitud Funcional", inbox);
+        Assert.Contains("Residente Solicitud Funcional", inbox);
+        Assert.Contains("Proponer un horario", inbox);
+        Assert.Contains("Quiero hablar de los análisis (ficticio).", inbox);
+        Assert.Contains("Martes · por la tarde", inbox);
+        Assert.Contains("Elige el hueco que propones.", proposedWithoutSlot);
+        Assert.Contains("Propuesta enviada.", proposed);
+        Assert.Contains("profesional (interno): Dra. Ficticia Interna", inboxProposed);
+        Assert.Contains("El centro te propone", proposalPage);
+        Assert.Contains("Aceptar y confirmar la cita", proposalPage);
+        Assert.Contains("Pedir otro horario", proposalPage);
+        Assert.DoesNotContain("Dra. Ficticia Interna", proposalPage);
+        Assert.Contains("Hemos avisado al centro de que necesitas otro horario", anotherTime);
+        Assert.Contains("Pendiente de gestión", anotherTime);
+        Assert.DoesNotContain("Aceptar y confirmar la cita", anotherTime);
+        Assert.Contains("Escribe el motivo del cierre.", closeWithoutReason);
+        Assert.Contains("Solicitud cerrada.", closed);
+        Assert.Contains("Cerrada por el centro", closedFamily);
+        Assert.Contains("El centro ha cerrado esta solicitud", closedFamily);
+        Assert.DoesNotContain("Motivo interno del cierre.", closedFamily);
+        Assert.Contains("El centro te propone", secondProposal);
+        Assert.Contains("Cita confirmada.", accepted);
+        Assert.Contains("Cita confirmada.", acceptedAgain);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.citas WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) }));
+        Assert.Contains("Madre Solicitud Funcional", agenda);
+        Assert.Contains(appointmentId.ToString(), agenda);
+        Assert.Contains("Aceptaste la propuesta: la cita está confirmada.", requestAfter);
+        Assert.DoesNotContain("Aceptar y confirmar la cita", requestAfter);
+        Assert.DoesNotContain("Pedir otro horario", requestAfter);
+    }
+
+    [Fact]
     public async Task PortalFamiliar_ConUnPerfilProfesional_NoEntraEnBucleDeRedirecciones_ConLaAppEntera()
     {
         // Un perfil que no es familiar y tiene un solo ámbito: ProfileScope/Select lo vuelve a seleccionar y lo devolvía a la misma ruta de /Familia, en bucle.

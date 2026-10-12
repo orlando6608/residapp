@@ -19,10 +19,14 @@
 <h1 class="h3">Citas con la familia</h1>
 <p class="text-muted">
     Cuando el servicio está en <strong>reserva directa</strong>, la familia ve los huecos libres de cada equipo y modalidad y reserva uno sin que nadie tenga que
-    confirmárselo. Aquí configuras el servicio, las franjas en las que se atiende y los bloqueos puntuales. Los huecos salen de las franjas en el momento de
+    confirmárselo. Con la <strong>solicitud previa</strong>, la familia envía una solicitud y tú le propones un hueco. Aquí configuras el servicio, las franjas
+    en las que se atiende y los bloqueos puntuales. Los huecos salen de las franjas en el momento de
     consultarlos; no se elige nunca un profesional concreto. Las citas no son un canal urgente. Las horas son las del centro.
 </p>
-<p><a asp-action="AgendaCitas" class="btn btn-outline-primary">Ver la agenda de citas</a></p>
+<p>
+    <a asp-action="AgendaCitas" class="btn btn-outline-primary">Ver la agenda de citas</a>
+    <a asp-action="SolicitudesCitas" class="btn btn-outline-primary">Ver las solicitudes de cita</a>
+</p>
 
 @if (TempData["Mensaje"] is string mensaje)
 {
@@ -50,10 +54,13 @@ else
                     <select asp-for="Servicio.Modo" class="form-select form-select-lg">
                         <option value="@AppointmentServiceMode.Desactivado" selected="@(Model.Servicio.Modo == AppointmentServiceMode.Desactivado)">@AppointmentDisplay.Label(AppointmentServiceMode.Desactivado)</option>
                         <option value="@AppointmentServiceMode.ReservaDirecta" selected="@(Model.Servicio.Modo == AppointmentServiceMode.ReservaDirecta)">@AppointmentDisplay.Label(AppointmentServiceMode.ReservaDirecta)</option>
-                        <option value="@AppointmentServiceMode.SolicitudPrevia" disabled>@AppointmentDisplay.Label(AppointmentServiceMode.SolicitudPrevia)</option>
+                        <option value="@AppointmentServiceMode.SolicitudPrevia" selected="@(Model.Servicio.Modo == AppointmentServiceMode.SolicitudPrevia)">@AppointmentDisplay.Label(AppointmentServiceMode.SolicitudPrevia)</option>
                     </select>
                     <span asp-validation-for="Servicio.Modo" class="text-danger"></span>
-                    <div class="form-text">Solo hay una modalidad vigente por centro. Cambiarla no toca las citas ya confirmadas.</div>
+                    <div class="form-text">
+                        Solo hay una modalidad vigente por centro. Cambiarla no toca las citas ya confirmadas ni las solicitudes abiertas. Con la solicitud previa,
+                        la familia pide una cita, tú propones un hueco libre y solo la cita que ella acepta queda confirmada.
+                    </div>
                 </div>
                 <div class="col-12 col-md-4">
                     <label asp-for="Servicio.AntelacionHoras" class="form-label"></label>

@@ -99,6 +99,12 @@ public static class AdministrativeAudit
         ("APPOINTMENT_RESCHEDULE_ADMIN", AuditCategory.Citas),
         ("APPOINTMENT_CANCEL_ADMIN", AuditCategory.Citas),
         ("APPOINTMENT_FINISH", AuditCategory.Citas),
+        ("APPOINTMENT_REQUEST_CREATE", AuditCategory.Citas),
+        ("APPOINTMENT_REQUEST_PROPOSE", AuditCategory.Citas),
+        ("APPOINTMENT_REQUEST_OTHER_TIME", AuditCategory.Citas),
+        ("APPOINTMENT_REQUEST_ACCEPT", AuditCategory.Citas),
+        ("APPOINTMENT_REQUEST_CANCEL", AuditCategory.Citas),
+        ("APPOINTMENT_REQUEST_CLOSE", AuditCategory.Citas),
     ];
 
     public static bool IsAdministrative(string? code) => code is not null && Actions.Any(a => a.Code == code);
