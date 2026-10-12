@@ -69,6 +69,8 @@ public static class AdministrativeAudit
         ("FAMILY_PORTAL_ACCESS_GRANT", AuditCategory.ResidentesYFamilias),
         ("FAMILY_MEMBER_UNLINK", AuditCategory.ResidentesYFamilias),
         ("FAMILY_COMMUNICATION_PUBLISH_NOW", AuditCategory.ResidentesYFamilias),
+        ("FAMILY_COMMUNICATION_CORRECTIVE", AuditCategory.ResidentesYFamilias),
+        ("FAMILY_COMMUNICATION_WITHDRAW", AuditCategory.ResidentesYFamilias),
         ("FAMILY_SCHEDULE_UPDATE", AuditCategory.ResidentesYFamilias),
         ("FAMILY_AUTHORIZATION_CHANGE", AuditCategory.ResidentesYFamilias),
         ("EMERGENCY_CONTACT_DESIGNATE", AuditCategory.ResidentesYFamilias),

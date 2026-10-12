@@ -270,7 +270,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="guia-de-pruebas-cj" data-version="2026-10-12">
+<body data-doc="guia-de-pruebas-cj" data-version="2026-10-13">
 
 <div class="page">
   <header>
@@ -280,13 +280,13 @@
     <p class="lead prose">
       Ya están construidos los circuitos del Auxiliar, Enfermería, Medicina, Dirección Clínica y Administración, el basal con
       Barthel y la protección de los datos por centro. Los tests automáticos no pueden decir si las pantallas hacen lo que tú
-      esperas como clínica. Esta guía te propone 70 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
+      esperas como clínica. Esta guía te propone 72 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
       si coincide y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>70 pruebas en 7 temas, más 3 preguntas finales. 25 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>72 pruebas en 7 temas, más 3 preguntas finales. 26 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Las imprescindibles, hora y media aproximadamente; todas, entre tres y cuatro horas. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -374,7 +374,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (25 de 70).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (26 de 72).</p>
 
     <h3>Qué NO se prueba, porque todavía no existe</h3>
     <ul class="lista prose">
@@ -1560,6 +1560,41 @@
           <label class="choice"><input type="radio" name="r-6.21" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-6.21" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-6.21" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.22">
+        <div class="q-head"><span class="n">6.22</span><h3 class="q-title" id="t-6-22">Publicar una corrección de un comunicado ya publicado</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Parte de un comunicado de «Residente Portal Familiar (ficticio)» ya publicado (el de la prueba 6.19). Entra con <code>dev-integrado-administracion</code> y abre «Comunicados a la familia».</li>
+          <li>En ese comunicado pulsa «Publicar una corrección», elige el tipo, escribe el texto de la corrección y pulsa «Publicar la corrección». Haz lo mismo con <code>dev-integrado-direccion</code> en su pantalla de comunicados, sobre otro comunicado, si quieres.</li>
+          <li>Entra con <code>dev-integrado-familiar</code> y mira el historial y el detalle del comunicado original.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La corrección sale en el acto. En el personal se ve bajo el comunicado, que no cambia. La familia ve la corrección con la etiqueta «Corrección» y «Corrige la novedad publicada el…», y el original sigue ahí con el aviso «Tiene una corrección» (y, al abrirlo, «Esta novedad tiene una corrección»). Un comunicado que aún no se ha publicado no ofrece estos botones: ahí lo corrige Enfermería o Medicina como siempre. En «Auditoría» consta «Corrección publicada de un comunicado a la familia».</div>
+        <fieldset class="choices" aria-labelledby="t-6-22">
+          <label class="choice"><input type="radio" name="r-6.22" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.22" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.22" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.22" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.23">
+        <div class="q-head"><span class="n">6.23</span><h3 class="q-title" id="t-6-23">Retirar un comunicado ya publicado</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Con <code>dev-integrado-administracion</code> (o <code>dev-integrado-direccion</code>), en «Comunicados a la familia», pulsa «Retirar» en un comunicado ya publicado. Prueba primero a guardar sin motivo; después escribe un motivo y pulsa «Retirar el comunicado».</li>
+          <li>Entra con <code>dev-integrado-familiar</code> y mira el historial y, si el comunicado tenía una corrección, también esa.</li>
+          <li>Vuelve a «Comunicados a la familia» con Administración e intenta retirarlo o corregirlo otra vez.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin motivo no se retira. Retirado, la familia ve «Esta novedad ya no está disponible» en lugar del texto, sin el motivo, y las correcciones de ese comunicado dejan de verse. El personal sigue viendo el comunicado, la marca «Retirado» y el motivo, y ya no ofrece retirarlo ni corregirlo. No se puede deshacer. En «Auditoría» consta «Comunicado a la familia retirado».</div>
+        <fieldset class="choices" aria-labelledby="t-6-23">
+          <label class="choice"><input type="radio" name="r-6.23" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.23" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.23" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.23" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

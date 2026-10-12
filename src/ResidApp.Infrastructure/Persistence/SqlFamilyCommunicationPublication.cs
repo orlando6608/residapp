@@ -14,7 +14,8 @@ namespace ResidApp.Infrastructure.Persistence;
 /// ya publicado, y lo audita sin datos (FAMILY_COMMUNICATION_PUBLISH_NOW, con el perfil que lo hizo). El ámbito de Administración son las
 /// unidades de su ámbito; el de Dirección, el mismo de sus lecturas (unidades y, si los restringe, residentes).
 /// </summary>
-public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory connections) : IFamilyCommunicationDirectory, IFamilyCommunicationPublisher
+public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory connections)
+    : IFamilyCommunicationDirectory, IFamilyCommunicationPublisher, IFamilyCommunicationAmender
 {
     private const string Columns = """
         family.id AS Id, family.evento_id AS EventId, family.residente_id AS ResidentId, resident.nombre_visible AS ResidentName,
@@ -49,16 +50,94 @@ public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory conne
              ORDER BY family.preparado_en DESC
             """, new { access.ProfileScopeId, CenterId = access.CenterId.Value, AccountId = access.AccountId.Value, Since = since.UtcDateTime },
             cancellationToken: ct));
+        var ids = rows.Select(row => row.Id).ToList();
+        var correctives = (await connection.QueryAsync<CorrectiveRow>(new CommandDefinition("""
+            SELECT comunicacion_id AS CommunicationId, id AS Id, tipo_codigo AS TypeCode, texto AS Text, publicada_en AS PublishedAt
+              FROM dbo.comunicaciones_familiares_correctoras WHERE centro_id = @CenterId AND comunicacion_id IN @Ids ORDER BY publicada_en
+            """, new { CenterId = access.CenterId.Value, Ids = ids }, cancellationToken: ct))).ToLookup(row => row.CommunicationId);
+        var withdrawals = (await connection.QueryAsync<WithdrawalRow>(new CommandDefinition("""
+            SELECT comunicacion_id AS CommunicationId, motivo AS Reason, retirada_en AS WithdrawnAt
+              FROM dbo.comunicaciones_familiares_retiradas WHERE centro_id = @CenterId AND comunicacion_id IN @Ids
+            """, new { CenterId = access.CenterId.Value, Ids = ids }, cancellationToken: ct))).ToDictionary(row => row.CommunicationId);
         return rows.Select(row => new AdministrationFamilyCommunication(
             row.Id, row.EventId, ResidentId.From(row.ResidentId), row.ResidentName, row.UnitName,
             EnumCode.ParseCode<FamilyCommunicationType>(row.TypeCode), row.Text, Utc(row.PreparedAt),
-            row.PublishedEarlyAt is { } early ? Utc(early) : null, FamilyCommunicationSql.ScheduledAt(row.PreparedAt, row.ScheduledAt))).ToList();
+            row.PublishedEarlyAt is { } early ? Utc(early) : null, FamilyCommunicationSql.ScheduledAt(row.PreparedAt, row.ScheduledAt),
+            correctives[row.Id].Select(c => new FamilyCommunicationCorrective(c.Id, EnumCode.ParseCode<FamilyCommunicationType>(c.TypeCode), c.Text, Utc(c.PublishedAt))).ToList(),
+            withdrawals.TryGetValue(row.Id, out var withdrawal) ? new FamilyCommunicationWithdrawalNote(withdrawal.Reason, Utc(withdrawal.WithdrawnAt)) : null)).ToList();
     }
 
     public async Task PublishNowAsync(FamilyCommunicationAccess access, Guid communicationId, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var communication = await LockAndReadAsync(connection, transaction, access, communicationId, ct);
+
+        var occurredAt = DateTimeOffset.UtcNow;
+        if (IsPublished(communication, occurredAt))
+        {
+            throw new DomainValidationException("FAMILY_COMMUNICATION_ALREADY_PUBLISHED");
+        }
+
+        await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.comunicaciones_familiares_publicacion_anticipada (id, comunicacion_id, centro_id, publicada_por_cuenta_id, publicada_en)
+            VALUES (NEWID(), @CommunicationId, @CenterId, @AccountId, @OccurredAt);
+            """, new
+        {
+            CommunicationId = communicationId, CenterId = access.CenterId.Value, AccountId = access.AccountId.Value, OccurredAt = occurredAt,
+        }, transaction, cancellationToken: ct));
+        await AuditAsync(connection, transaction, access, communicationId, communication, "FAMILY_COMMUNICATION_PUBLISH_NOW", occurredAt, ct);
+        transaction.Commit();
+    }
+
+    public async Task PublishCorrectiveAsync(
+        FamilyCommunicationAccess access, Guid communicationId, FamilyCommunicationType type, string text, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var communication = await LockAndReadAsync(connection, transaction, access, communicationId, ct);
+        var occurredAt = DateTimeOffset.UtcNow;
+        EnsureCanAmend(communication, occurredAt);
+
+        await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.comunicaciones_familiares_correctoras
+                (id, comunicacion_id, centro_id, residente_id, tipo_codigo, texto, publicada_por_cuenta_id, publicada_en)
+            VALUES (NEWID(), @CommunicationId, @CenterId, @ResidentId, @Type, @Text, @AccountId, @OccurredAt);
+            """, new
+        {
+            CommunicationId = communicationId, CenterId = access.CenterId.Value, communication.ResidentId, Type = type.ToCode(), Text = text,
+            AccountId = access.AccountId.Value, OccurredAt = occurredAt,
+        }, transaction, cancellationToken: ct));
+        await AuditAsync(connection, transaction, access, communicationId, communication, "FAMILY_COMMUNICATION_CORRECTIVE", occurredAt, ct);
+        transaction.Commit();
+    }
+
+    public async Task WithdrawAsync(FamilyCommunicationAccess access, Guid communicationId, string reason, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var communication = await LockAndReadAsync(connection, transaction, access, communicationId, ct);
+        var occurredAt = DateTimeOffset.UtcNow;
+        EnsureCanAmend(communication, occurredAt);
+
+        await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.comunicaciones_familiares_retiradas
+                (id, comunicacion_id, centro_id, residente_id, motivo, retirada_por_cuenta_id, retirada_en)
+            VALUES (NEWID(), @CommunicationId, @CenterId, @ResidentId, @Reason, @AccountId, @OccurredAt);
+            """, new
+        {
+            CommunicationId = communicationId, CenterId = access.CenterId.Value, communication.ResidentId, Reason = reason,
+            AccountId = access.AccountId.Value, OccurredAt = occurredAt,
+        }, transaction, cancellationToken: ct));
+        await AuditAsync(connection, transaction, access, communicationId, communication, "FAMILY_COMMUNICATION_WITHDRAW", occurredAt, ct);
+        transaction.Commit();
+    }
+
+    /// <summary>Comprueba que quien actúa es el administrador (si es Administración), bloquea el comunicado para ordenar dos operaciones
+    /// simultáneas sobre él (la segunda ya ve el resultado de la primera) y lo lee dentro del ámbito; si no es de ese ámbito, AccessDenied.</summary>
+    private static async Task<PublishRow> LockAndReadAsync(
+        SqlConnection connection, SqlTransaction transaction, FamilyCommunicationAccess access, Guid communicationId, CancellationToken ct)
+    {
         if (access.Profile == SystemProfile.Administracion)
         {
             await SqlProfessionalAccountRepository.EnsureAdministratorAsync(
@@ -69,42 +148,50 @@ public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory conne
         {
             access.ProfileScopeId, CenterId = access.CenterId.Value, AccountId = access.AccountId.Value, CommunicationId = communicationId,
         };
-        // El bloqueo ordena dos publicaciones simultáneas del mismo comunicado: la segunda ya lo ve publicado.
         await connection.ExecuteAsync(new CommandDefinition(
             "SELECT id FROM dbo.comunicaciones_familiares WITH (UPDLOCK, ROWLOCK) WHERE id = @CommunicationId AND centro_id = @CenterId",
             parameters, transaction, cancellationToken: ct));
-        var communication = await connection.QuerySingleOrDefaultAsync<PublishRow>(new CommandDefinition($"""
+        return await connection.QuerySingleOrDefaultAsync<PublishRow>(new CommandDefinition($"""
             SELECT family.preparado_en AS PreparedAt, family.publicacion_programada_en AS ScheduledAt, ea.unidad_id AS UnitId,
                    family.residente_id AS ResidentId,
                    CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.comunicaciones_familiares_publicacion_anticipada early
-                                           WHERE early.comunicacion_id = family.id) THEN 1 ELSE 0 END AS BIT) AS PublishedEarly
+                                           WHERE early.comunicacion_id = family.id) THEN 1 ELSE 0 END AS BIT) AS PublishedEarly,
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.comunicaciones_familiares_retiradas withdrawal
+                                           WHERE withdrawal.comunicacion_id = family.id) THEN 1 ELSE 0 END AS BIT) AS Withdrawn
             {ScopedCommunications(access)}
                AND family.id = @CommunicationId
             """, parameters, transaction, cancellationToken: ct)) ?? throw new AccessDeniedException();
+    }
 
-        var occurredAt = DateTimeOffset.UtcNow;
-        if (FamilyCommunicationSchedule.IsPublished(
-                FamilyCommunicationSql.ScheduledAt(communication.PreparedAt, communication.ScheduledAt),
-                communication.PublishedEarly ? occurredAt : null, occurredAt))
+    private static bool IsPublished(PublishRow communication, DateTimeOffset now) => FamilyCommunicationSchedule.IsPublished(
+        FamilyCommunicationSql.ScheduledAt(communication.PreparedAt, communication.ScheduledAt), communication.PublishedEarly ? now : null, now);
+
+    /// <summary>Una correctora o una retirada solo caben sobre un comunicado ya publicado (antes se corrige) y todavía no retirado.</summary>
+    private static void EnsureCanAmend(PublishRow communication, DateTimeOffset now)
+    {
+        if (communication.Withdrawn)
         {
-            throw new DomainValidationException("FAMILY_COMMUNICATION_ALREADY_PUBLISHED");
+            throw new DomainValidationException("FAMILY_COMMUNICATION_WITHDRAWN");
         }
 
-        await connection.ExecuteAsync(new CommandDefinition("""
-            INSERT INTO dbo.comunicaciones_familiares_publicacion_anticipada (id, comunicacion_id, centro_id, publicada_por_cuenta_id, publicada_en)
-            VALUES (NEWID(), @CommunicationId, @CenterId, @AccountId, @OccurredAt);
+        if (!IsPublished(communication, now))
+        {
+            throw new DomainValidationException("FAMILY_COMMUNICATION_NOT_PUBLISHED");
+        }
+    }
 
+    private static Task AuditAsync(
+        SqlConnection connection, SqlTransaction transaction, FamilyCommunicationAccess access, Guid communicationId, PublishRow communication,
+        string action, DateTimeOffset occurredAt, CancellationToken ct) =>
+        connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.eventos_auditoria
                 (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
-            VALUES (NEWID(), @AccountId, @Profile, @CenterId, @UnitId, @ResidentId, 'FAMILY_COMMUNICATION', @CommunicationId,
-                    'FAMILY_COMMUNICATION_PUBLISH_NOW', @OccurredAt);
+            VALUES (NEWID(), @AccountId, @Profile, @CenterId, @UnitId, @ResidentId, 'FAMILY_COMMUNICATION', @CommunicationId, @Action, @OccurredAt)
             """, new
         {
             CommunicationId = communicationId, CenterId = access.CenterId.Value, AccountId = access.AccountId.Value, Profile = access.Profile.ToCode(),
-            communication.UnitId, communication.ResidentId, OccurredAt = occurredAt,
+            communication.UnitId, communication.ResidentId, Action = action, OccurredAt = occurredAt,
         }, transaction, cancellationToken: ct));
-        transaction.Commit();
-    }
 
     private static DateTimeOffset Utc(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
 
@@ -112,5 +199,9 @@ public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory conne
         Guid Id, Guid EventId, Guid ResidentId, string ResidentName, string? UnitName, string TypeCode, string Text, DateTime PreparedAt,
         DateTime? ScheduledAt, DateTime? PublishedEarlyAt);
 
-    private sealed record PublishRow(DateTime PreparedAt, DateTime? ScheduledAt, Guid UnitId, Guid ResidentId, bool PublishedEarly);
+    private sealed record PublishRow(DateTime PreparedAt, DateTime? ScheduledAt, Guid UnitId, Guid ResidentId, bool PublishedEarly, bool Withdrawn);
+
+    private sealed record CorrectiveRow(Guid CommunicationId, Guid Id, string TypeCode, string Text, DateTime PublishedAt);
+
+    private sealed record WithdrawalRow(Guid CommunicationId, string Reason, DateTime WithdrawnAt);
 }

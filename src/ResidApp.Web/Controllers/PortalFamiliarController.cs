@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ResidApp.Application.Errors;
+using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Shared;
@@ -61,7 +62,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
             _ => null,
         };
         var home = result.Value!;
-        var communications = type is null ? home.Communications : home.Communications.Where(c => c.Type == type).ToList();
+        var communications = type is null ? home.Communications : home.Communications.Where(c => c.Type == type && c.Kind != FamilyPortalCommunicationKind.Withdrawn).ToList();
         return View(new PortalFamiliarResidenteViewModel(home, type, communications));
     }
 
@@ -75,7 +76,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
 
         var result = await service.ReadCommunicationAsync(Query(scope), linkId, comunicadoId, ct);
         return result.Ok
-            ? View(new PortalFamiliarComunicadoViewModel(result.Value!.Resident, result.Value.Communication))
+            ? View(new PortalFamiliarComunicadoViewModel(result.Value!.Resident, result.Value.Communication, result.Value.Corrections))
             : Failure(result.Error!);
     }
 

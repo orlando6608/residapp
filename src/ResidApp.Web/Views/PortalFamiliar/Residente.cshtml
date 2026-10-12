@@ -1,9 +1,11 @@
+@using ResidApp.Application.Ports
 @using ResidApp.Domain.Enfermeria
 @using ResidApp.Web.Models
 @model PortalFamiliarResidenteViewModel
 @{
     var resident = Model.Home.Resident;
     ViewData["Title"] = resident.ResidentName;
+    var corrected = Model.Home.Communications.Where(c => c.Corrects is not null).Select(c => c.Corrects!.OriginalId).ToHashSet();
     string Active(FamilyCommunicationType? type) => Model.Tipo == type ? "active" : "";
     string? Current(FamilyCommunicationType? type) => Model.Tipo == type ? "page" : null;
 }
@@ -33,13 +35,36 @@ else
 {
     foreach (var item in Model.Comunicados)
     {
+        if (item.Kind == FamilyPortalCommunicationKind.Withdrawn)
+        {
+            <div class="card mb-3 border-start border-4 border-secondary bg-body-tertiary">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Novedad publicada el @item.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                    <p class="card-text mb-0">Esta novedad ya no está disponible. Si tienes dudas, llama por teléfono al centro.</p>
+                </div>
+            </div>
+            continue;
+        }
+
         <a asp-action="Comunicado" asp-route-linkId="@resident.LinkId" asp-route-comunicadoId="@item.Id"
            class="card text-decoration-none mb-3 border-start border-4 @(item.Type == FamilyCommunicationType.Relevante ? "border-warning" : "border-secondary")">
             <div class="card-body">
                 <p class="text-muted mb-1">
+                    @if (item.Kind == FamilyPortalCommunicationKind.Corrective)
+                    {
+                        <span class="badge text-bg-dark">Corrección</span>
+                    }
                     <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(item.Type)</span>
                     · @item.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @FamilyCommunicationChoice.VisibleAuthor
                 </p>
+                @if (corrected.Contains(item.Id))
+                {
+                    <p class="small mb-1"><span class="badge text-bg-warning">Tiene una corrección</span></p>
+                }
+                @if (item.Corrects is { } corrects)
+                {
+                    <p class="small text-body-secondary mb-1">Corrige la novedad publicada el @corrects.OriginalPublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm").</p>
+                }
                 <p class="card-text mb-0" style="white-space: pre-line">@item.Text</p>
             </div>
         </a>

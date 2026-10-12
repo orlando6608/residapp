@@ -9,9 +9,16 @@ public sealed record FamilyCommunicationAccess(Guid ProfileScopeId, AccountId Ac
 
 /// <summary>Un comunicado a la familia de una unidad del ámbito, con su estado de publicación (script 0048). ScheduledAt es la hora a la que
 /// se publica solo (fijada al guardarlo, script 0051); PublishedEarlyAt es el momento en que se publicó antes de su hora; null si no se hizo.</summary>
+/// <summary>Una publicación correctora de un comunicado ya publicado (script 0053): sale en el momento de guardarla.</summary>
+public sealed record FamilyCommunicationCorrective(Guid Id, FamilyCommunicationType Type, string Text, DateTimeOffset PublishedAt);
+
+/// <summary>La retirada de un comunicado publicado (script 0053). El motivo es interno: la familia no lo ve.</summary>
+public sealed record FamilyCommunicationWithdrawalNote(string Reason, DateTimeOffset WithdrawnAt);
+
 public sealed record AdministrationFamilyCommunication(
     Guid Id, Guid EventId, ResidentId ResidentId, string ResidentName, string? UnitName, FamilyCommunicationType Type, string Text,
-    DateTimeOffset PreparedAt, DateTimeOffset? PublishedEarlyAt, DateTimeOffset ScheduledAt);
+    DateTimeOffset PreparedAt, DateTimeOffset? PublishedEarlyAt, DateTimeOffset ScheduledAt,
+    IReadOnlyList<FamilyCommunicationCorrective> Correctives, FamilyCommunicationWithdrawalNote? Withdrawal);
 
 public interface IFamilyCommunicationDirectory
 {
@@ -42,4 +49,16 @@ public sealed record FamilyCommunicationCorrectionInput(
 public interface IFamilyCommunicationCorrector
 {
     Task CorrectAsync(FamilyCommunicationCorrectionInput input, CancellationToken ct = default);
+}
+
+/// <summary>Publicación correctora o retirada de un comunicado ya publicado, por Administración o Dirección Clínica (script 0053; portal-familiar.md,
+/// historia 3). Cada operación, en una transacción que bloquea el comunicado y comprueba de nuevo el ámbito, que esté publicado y que no esté
+/// retirado, y deja su auditoría sin datos (FAMILY_COMMUNICATION_CORRECTIVE o FAMILY_COMMUNICATION_WITHDRAW, con el perfil que la hizo).
+/// Fuera de ámbito o inexistente, AccessDenied; sin publicar, FAMILY_COMMUNICATION_NOT_PUBLISHED; retirado, FAMILY_COMMUNICATION_WITHDRAWN.</summary>
+public interface IFamilyCommunicationAmender
+{
+    Task PublishCorrectiveAsync(
+        FamilyCommunicationAccess access, Guid communicationId, FamilyCommunicationType type, string text, CancellationToken ct = default);
+
+    Task WithdrawAsync(FamilyCommunicationAccess access, Guid communicationId, string reason, CancellationToken ct = default);
 }

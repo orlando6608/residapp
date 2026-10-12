@@ -195,6 +195,87 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
     }
 
     [Fact]
+    public async Task Correctora_YRetirada_LaFamiliaVeLaCorreccionJuntoAlOriginal_YDespuesQueYaNoEstaDisponible_ConLaAppEntera()
+    {
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.Admin);
+        var nurse = await LoginAsync(seed.Nurse);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Correctora Funcional", "Madre Correctora Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var linkId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+        var now = DateTime.UtcNow;
+        var published = await AddCommunicationAsync(nurse, seed.Nurse, residentId, "Ha tenido fiebre esta tarde.", now.AddHours(-30), now.AddHours(-5));
+        var authorizationUrl = $"/Administracion/AutorizacionFamiliar?residenteId={residentId}&vinculoId={linkId}";
+        var subject = $"familia-{Guid.NewGuid():N}"[..20];
+        await PostAsync(admin, "/Administracion/AccesoPortalFamiliar", authorizationUrl, new() { ["residenteId"] = residentId, ["vinculoId"] = linkId.ToString(), ["usuario"] = subject });
+        foreach (var (change, expected) in new[] { ("Abrir", 0), ("Activar", 1) })
+        {
+            await PostAsync(admin, "/Administracion/AutorizacionFamiliar", authorizationUrl, new()
+            {
+                ["Form.ResidenteId"] = residentId, ["Form.VinculoId"] = linkId.ToString(), ["Form.CambiosEsperados"] = expected.ToString(), ["Form.Cambio"] = change,
+            });
+        }
+
+        var family = await LoginAsync(subject);
+        var staffList = await BodyAsync(await admin.GetAsync("/Administracion/Comunicados"));
+        var nurseForm = await nurse.GetAsync($"/Administracion/PublicarCorreccion?comunicadoId={published}");
+        var invalid = await PostAsync(admin, "/Administracion/PublicarCorreccion", $"/Administracion/PublicarCorreccion?comunicadoId={published}", new()
+        {
+            ["Form.ComunicadoId"] = published.ToString(), ["Form.Tipo"] = "Relevante", ["Form.Texto"] = "   ",
+        });
+        var corrected = await PostAsync(admin, "/Administracion/PublicarCorreccion", $"/Administracion/PublicarCorreccion?comunicadoId={published}", new()
+        {
+            ["Form.ComunicadoId"] = published.ToString(), ["Form.Tipo"] = "Relevante", ["Form.Texto"] = "Corrección: fue febrícula, no fiebre.",
+        });
+        var correctedList = await BodyAsync(await family.GetAsync($"/Familia/Residente/{linkId}"));
+        var originalDetail = await BodyAsync(await family.GetAsync($"/Familia/Residente/{linkId}/Comunicado/{published}"));
+        var correctiveId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.comunicaciones_familiares_correctoras WHERE comunicacion_id = @published", new { published });
+        var correctiveDetail = await BodyAsync(await family.GetAsync($"/Familia/Residente/{linkId}/Comunicado/{correctiveId}"));
+        var staffAfterCorrection = await BodyAsync(await admin.GetAsync("/Administracion/Comunicados"));
+        var withoutReason = await PostAsync(admin, "/Administracion/RetirarComunicado", $"/Administracion/RetirarComunicado?comunicadoId={published}", new()
+        {
+            ["Form.ComunicadoId"] = published.ToString(), ["Form.Motivo"] = "",
+        });
+        var withdrawn = await PostAsync(admin, "/Administracion/RetirarComunicado", $"/Administracion/RetirarComunicado?comunicadoId={published}", new()
+        {
+            ["Form.ComunicadoId"] = published.ToString(), ["Form.Motivo"] = "Motivo interno de la retirada.",
+        });
+        var withdrawnList = await BodyAsync(await family.GetAsync($"/Familia/Residente/{linkId}"));
+        var withdrawnDetail = await BodyAsync(await family.GetAsync($"/Familia/Residente/{linkId}/Comunicado/{published}"));
+        var correctiveAfterWithdrawal = await family.GetAsync($"/Familia/Residente/{linkId}/Comunicado/{correctiveId}");
+        var staffAfterWithdrawal = await BodyAsync(await admin.GetAsync("/Administracion/Comunicados"));
+        var formAfterWithdrawal = await BodyAsync(await admin.GetAsync($"/Administracion/RetirarComunicado?comunicadoId={published}"));
+
+        Assert.Contains("Publicar una corrección", staffList);
+        Assert.Contains("Retirar", staffList);
+        Assert.Contains("No se puede acceder", WebUtility.HtmlDecode(await nurseForm.Content.ReadAsStringAsync()) + nurseForm.StatusCode);
+        Assert.Contains("Escribe el texto de la corrección.", invalid);
+        Assert.Contains("Corrección publicada.", corrected);
+        Assert.Contains("Corrección publicada", staffAfterCorrection);
+        Assert.Contains("Corrección: fue febrícula, no fiebre.", correctedList);
+        Assert.Contains("Ha tenido fiebre esta tarde.", correctedList);
+        Assert.Contains("Tiene una corrección", correctedList);
+        Assert.Contains("Corrige la novedad publicada el", correctedList);
+        Assert.Contains("Esta novedad tiene una corrección", originalDetail);
+        Assert.Contains("Ver la novedad original", correctiveDetail);
+        Assert.Contains("Escribe el motivo de la retirada.", withoutReason);
+        Assert.Contains("Comunicado retirado.", withdrawn);
+        Assert.Contains("Esta novedad ya no está disponible", withdrawnList);
+        Assert.Contains("Esta novedad ya no está disponible", withdrawnDetail);
+        foreach (var page in new[] { withdrawnList, withdrawnDetail })
+        {
+            Assert.DoesNotContain("Ha tenido fiebre esta tarde.", page);
+            Assert.DoesNotContain("Corrección: fue febrícula, no fiebre.", page);
+            Assert.DoesNotContain("Motivo interno de la retirada.", page);
+        }
+
+        Assert.Equal(HttpStatusCode.Forbidden, correctiveAfterWithdrawal.StatusCode);
+        Assert.Contains("Motivo interno de la retirada.", staffAfterWithdrawal);
+        Assert.DoesNotContain("Publicar una corrección", staffAfterWithdrawal);
+        Assert.Contains("Ese comunicado no se puede retirar", formAfterWithdrawal);
+    }
+
+    [Fact]
     public async Task Familia_NoAlcanzaNingunaPantallaDelPersonal_ConLaAppEntera()
     {
         // Barrido: con la sesión de una familiar (con acceso a su residente), ninguna ruta GET de los demás controladores devuelve el residente

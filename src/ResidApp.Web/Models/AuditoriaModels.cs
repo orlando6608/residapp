@@ -77,6 +77,8 @@ public static class AuditActionDisplay
         ["FAMILY_PORTAL_ACCESS_GRANT"] = "Acceso al Portal Familiar dado a un familiar",
         ["FAMILY_MEMBER_UNLINK"] = "Familiar desvinculado del residente",
         ["FAMILY_COMMUNICATION_PUBLISH_NOW"] = "Comunicado a la familia publicado antes de su hora",
+        ["FAMILY_COMMUNICATION_CORRECTIVE"] = "Corrección publicada de un comunicado a la familia",
+        ["FAMILY_COMMUNICATION_WITHDRAW"] = "Comunicado a la familia retirado",
         ["FAMILY_SCHEDULE_UPDATE"] = "Horario de los comunicados a la familia cambiado",
         ["FAMILY_AUTHORIZATION_CHANGE"] = "Autorización del familiar cambiada",
         ["EMERGENCY_CONTACT_DESIGNATE"] = "Contacto urgente designado",

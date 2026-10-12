@@ -10,12 +10,29 @@ public sealed record FamilyPortalAccess(Guid ProfileScopeId, AccountId AccountId
 /// direcciones del portal; no dice nada del residente.</summary>
 public sealed record FamilyPortalResident(Guid LinkId, string ResidentName, string Relationship);
 
-/// <summary>Un comunicado publicado, tal como lo ve la familia: tipo, texto vigente y cuándo se publicó. Nada del evento del que sale ni de quien
-/// lo escribió (se firma siempre como FamilyCommunicationChoice.VisibleAuthor).</summary>
-public sealed record FamilyPortalCommunication(Guid Id, FamilyCommunicationType Type, string Text, DateTimeOffset PublishedAt);
+/// <summary>Lo que es una novedad para la familia (portal-familiar.md, historia 3): un comunicado publicado, una publicación correctora vinculada a
+/// otro, o un comunicado retirado, del que solo se sabe que ya no está disponible.</summary>
+public enum FamilyPortalCommunicationKind
+{
+    Original,
+    Corrective,
+    Withdrawn,
+}
 
-/// <summary>Un comunicado con el residente al que pertenece (para el título de la pantalla).</summary>
-public sealed record FamilyPortalCommunicationDetail(FamilyPortalResident Resident, FamilyPortalCommunication Communication);
+/// <summary>El comunicado que corrige una publicación correctora: su identificador, cuándo se publicó y si la familia todavía puede abrirlo.</summary>
+public sealed record FamilyPortalCorrection(Guid OriginalId, DateTimeOffset OriginalPublishedAt, bool OriginalVisible);
+
+/// <summary>Una novedad publicada, tal como la ve la familia: tipo, texto vigente y cuándo se publicó. Nada del evento del que sale ni de quien
+/// lo escribió (se firma siempre como FamilyCommunicationChoice.VisibleAuthor). Una retirada llega sin texto y sin tipo que mostrar: el tipo
+/// solo decide cuánto tiempo sigue en la lista.</summary>
+public sealed record FamilyPortalCommunication(
+    Guid Id, FamilyCommunicationType Type, string Text, DateTimeOffset PublishedAt,
+    FamilyPortalCommunicationKind Kind = FamilyPortalCommunicationKind.Original, FamilyPortalCorrection? Corrects = null);
+
+/// <summary>Un comunicado con el residente al que pertenece (para el título de la pantalla) y, si es un original, las publicaciones correctoras
+/// que la familia todavía puede ver, de la más antigua a la más reciente.</summary>
+public sealed record FamilyPortalCommunicationDetail(
+    FamilyPortalResident Resident, FamilyPortalCommunication Communication, IReadOnlyList<FamilyPortalCommunication> Corrections);
 
 public sealed record FamilyPortalResidentHome(FamilyPortalResident Resident, IReadOnlyList<FamilyPortalCommunication> Communications);
 

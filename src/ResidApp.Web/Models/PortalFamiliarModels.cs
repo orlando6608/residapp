@@ -11,4 +11,5 @@ public sealed record PortalFamiliarEstadoViewModel(string Titulo, string Mensaje
 public sealed record PortalFamiliarResidenteViewModel(
     FamilyPortalResidentHome Home, FamilyCommunicationType? Tipo, IReadOnlyList<FamilyPortalCommunication> Comunicados);
 
-public sealed record PortalFamiliarComunicadoViewModel(FamilyPortalResident Resident, FamilyPortalCommunication Comunicado);
+public sealed record PortalFamiliarComunicadoViewModel(
+    FamilyPortalResident Resident, FamilyPortalCommunication Comunicado, IReadOnlyList<FamilyPortalCommunication> Correcciones);

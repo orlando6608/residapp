@@ -68,7 +68,7 @@
             <a class="list-group-item list-group-item-action" href="#historial">Historial y línea temporal del residente (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#correccion">Corregir o rectificar una valoración (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
-            <a class="list-group-item list-group-item-action" href="#portal-familiar">Portal Familiar (primera entrega)</a>
+            <a class="list-group-item list-group-item-action" href="#portal-familiar">Portal Familiar</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
         </div>
@@ -369,6 +369,14 @@
         <strong>Publicar ahora</strong> lo publicas antes de su hora; solo se puede una vez y queda en la auditoría. También puede publicarlo antes la Dirección Clínica.
     </p>
     <p>
+        <strong>Corregir o retirar lo ya publicado.</strong> Un comunicado publicado no se cambia nunca. Si tiene un error, pulsa <strong>Publicar una corrección</strong>:
+        eliges el tipo, escribes el texto y sale en el acto como una publicación nueva que la familia ve junto a la original (con la etiqueta «Corrección»); el
+        original sigue como estaba y se le añade el aviso «Tiene una corrección». En casos excepcionales, <strong>Retirar</strong> oculta el comunicado: la familia ve
+        «Esta novedad ya no está disponible», sin el texto y sin el motivo, y sus correcciones dejan también de verse. El motivo es obligatorio, lo ves tú y queda en la
+        auditoría; retirar no se puede deshacer. Ninguna de las dos acciones está disponible mientras el comunicado no se haya publicado (antes de eso lo corrige
+        Enfermería o Medicina). También las puede hacer la Dirección Clínica.
+    </p>
+    <p>
         <strong>Horario de los comunicados.</strong> Desde <strong>Comunicados a la familia</strong> → <strong>Cambiar la hora de publicación y el margen del centro</strong>
         eliges la <strong>hora de publicación</strong> (por ejemplo, las 20:30, después de la cena) y el <strong>margen</strong> en minutos (de 0 a 1440). El cambio solo
         vale para los comunicados que se guarden a partir de entonces: los ya guardados conservan su hora. «Ver el horario de CJ» propone 19:00 y 60 minutos sin guardarlos.
@@ -648,7 +656,9 @@
     </p>
     <p>
         En <strong>Comunicados a la familia</strong> ves los comunicados de los residentes de tu ámbito de los últimos 30 días, con la hora a la que se publican, y puedes
-        <strong>Publicar ahora</strong> uno antes de su hora (solo se puede una vez). Es la única acción de este perfil: queda en la auditoría con tu perfil, y no ves el nombre de quien lo preparó.
+        <strong>Publicar ahora</strong> uno antes de su hora (solo se puede una vez). Sobre uno ya publicado puedes <strong>Publicar una corrección</strong> (una publicación nueva que la
+        familia ve junto a la original) o, en casos excepcionales, <strong>Retirarlo</strong> (la familia ve que ya no está disponible; el motivo es obligatorio y solo lo ve el personal; no se
+        puede deshacer). Son las únicas acciones de este perfil sobre los comunicados: quedan en la auditoría con tu perfil, y no ves el nombre de quien lo preparó.
     </p>
     <p class="mb-0">
         En <strong>Mi ámbito de supervisión</strong> consultas el centro, las unidades y los permisos vigentes de tu perfil
@@ -870,7 +880,7 @@
         inicio de Enfermería, con la hora a la que se publica: la que tiene fijada el centro (por defecto, <strong>19:00</strong> con <strong>1 hora de margen</strong>; si
         al guardarla no queda ese margen, sale al día siguiente). Administración y Dirección Clínica pueden publicarla antes. La familia la verá firmada
         siempre como "Equipo asistencial del centro", nunca con tu nombre. Una familia con acceso al Portal Familiar la ve en cuanto está publicada: "publicada" significa que ya
-        puede verla, no que la haya visto. Si la información es urgente este no es el canal: avisa también por otros medios.
+        puede verla, no que la haya visto. Una vez publicada ya no se puede cambiar: Administración o Dirección Clínica pueden publicar una corrección o retirarla. Si la información es urgente este no es el canal: avisa también por otros medios.
     </p>
     <p class="mb-0">
         <strong>Corregir un comunicado.</strong> Hasta que se publique, en <strong>Comunicaciones</strong> del inicio de Enfermería, el botón
@@ -1287,7 +1297,7 @@
 </section>
 
 <section id="portal-familiar" class="mb-4">
-    <h2 class="h5">Portal Familiar (primera entrega)</h2>
+    <h2 class="h5">Portal Familiar</h2>
     <p>
         El Portal Familiar es la parte de la aplicación para las familias. Todavía no tiene credenciales reales (en desarrollo se entra
         con el usuario que escribe Administración); sirve para ver cómo será. Su dirección es <code>/Familia</code>.
@@ -1304,13 +1314,15 @@
         <strong>Qué ve la familia.</strong> Elige a su residente (si solo tiene uno, entra directamente) y lee las <strong>novedades
         publicadas</strong>: los comunicados que el equipo preparó al cerrar un evento, ya publicados (a su hora o antes, si Administración o
         Dirección Clínica los adelantaron). Cada uno muestra su tipo, cuándo se publicó y el texto vigente, firmado siempre como «Equipo
-        asistencial del centro». Una novedad ordinaria se ve 30 días y una relevante, 6 meses. Si no hay novedades, el portal lo dice y avisa de que
+        asistencial del centro». Una novedad ordinaria se ve 30 días y una relevante, 6 meses. Si Administración o Dirección Clínica publican una
+        <strong>corrección</strong>, aparece como una novedad más con la etiqueta «Corrección» y «Corrige la novedad publicada el…», y la original muestra «Tiene una corrección»; si retiran
+        una novedad, la familia ve «Esta novedad ya no está disponible» en su lugar, sin el texto. Si no hay novedades, el portal lo dice y avisa de que
         eso no significa que todo vaya bien. El portal nunca es un canal urgente.
     </p>
     <p class="mb-0">
         <strong>Qué no ve nunca.</strong> Observaciones, valoraciones, constantes, basal, indicaciones, derivaciones, historial, nombres de
         profesionales ni datos de otros familiares. Cada vez que un familiar abre las novedades de un residente o un comunicado queda registrado
-        quién y cuándo (sin guardar el contenido). Quedan pendientes las citas, las publicaciones correctoras y la entrada con credenciales reales.
+        quién y cuándo (sin guardar el contenido). Quedan pendientes las citas y la entrada con credenciales reales.
     </p>
 </section>
 
@@ -1318,7 +1330,7 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Portal Familiar: citas, publicaciones correctoras y la entrada con credenciales reales (hoy se entra con el usuario de desarrollo).</li>
+        <li>Portal Familiar: citas, el resumen periódico por residente y la entrada con credenciales reales (hoy se entra con el usuario de desarrollo).</li>
         <li>Más gestión administrativa: organigrama y cargos (aplazado), citas y un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
