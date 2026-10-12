@@ -402,6 +402,27 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
     }
 
     [Fact]
+    public async Task PortalFamiliar_ConUnPerfilProfesional_NoEntraEnBucleDeRedirecciones_ConLaAppEntera()
+    {
+        // Un perfil que no es familiar y tiene un solo ámbito: ProfileScope/Select lo vuelve a seleccionar y lo devolvía a la misma ruta de /Familia, en bucle.
+        var seed = await SeedAsync();
+        var linkId = Guid.NewGuid();
+        foreach (var subject in new[] { seed.Nurse, seed.Admin })
+        {
+            var professional = await LoginAsync(subject);
+            foreach (var url in new[] { "/Familia", $"/Familia/Residente/{linkId}", $"/Familia/Residente/{linkId}/Citas", $"/Familia/Residente/{linkId}/Citas/Nueva" })
+            {
+                var response = await professional.GetAsync(url);
+                var body = await BodyAsync(response);
+                Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+                Assert.Contains("Esta sección es del Portal Familiar", body);
+                Assert.Contains("Cambiar de ámbito", body);
+                Assert.DoesNotContain("Volver a mis residentes", body);
+            }
+        }
+    }
+
+    [Fact]
     public async Task Familia_NoAlcanzaNingunaPantallaDelPersonal_ConLaAppEntera()
     {
         // Barrido: con la sesión de una familiar (con acceso a su residente), ninguna ruta GET de los demás controladores devuelve el residente

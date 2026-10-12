@@ -6,10 +6,18 @@
 <h1 class="h3">@Model.Titulo</h1>
 <div class="alert alert-secondary" role="status">@Model.Mensaje</div>
 <p>
-    @if (Model.PuedeReintentar)
+    @if (Model.OtroPerfil)
     {
-        <a class="btn btn-primary" href="javascript:location.reload()">Reintentar</a>
+        <a class="btn btn-primary" asp-controller="ProfileScope" asp-action="Select">Cambiar de ámbito</a>
+        <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Ir al inicio</a>
     }
-    <a class="btn btn-outline-secondary" asp-action="Index" asp-route-elegir="true">Volver a mis residentes</a>
+    else
+    {
+        if (Model.PuedeReintentar)
+        {
+            <a class="btn btn-primary" href="javascript:location.reload()">Reintentar</a>
+        }
+        <a class="btn btn-outline-secondary" asp-action="Index" asp-route-elegir="true">Volver a mis residentes</a>
+    }
 </p>
 <p class="small text-body-secondary">Este portal no es un canal urgente. Si necesitas información urgente, llama por teléfono al centro.</p>
