@@ -1200,6 +1200,34 @@ usuario cuando encajen:
   - `ubuntu-latest` pasa a Ubuntu 26 el 19 de octubre de 2026. Hecho el 2026-10-07 (PR #14): los dos jobs están fijados a
     `ubuntu-26.04` y «Instalar sqlcmd» usa el repositorio de Microsoft de Ubuntu 26.04 (`.../config/ubuntu/26.04/prod.list`).
     El CI de `main` pasó entero, incluido el despliegue. Si falla «Instalar sqlcmd», mira primero ese repositorio.
+- **Hora y zona horaria: pendientes (2026-10-12).** Hoy funciona porque `app-residapp-dev` tiene `WEBSITE_TIME_ZONE=Europe/Madrid` (ver
+  «Zona horaria (hecho)» más arriba), pero hay límites que no estaban anotados. No se ha cambiado nada; se resuelven más adelante:
+  - **La zona solo está puesta a mano en Azure.** `WEBSITE_TIME_ZONE` no está en `.github/workflows/ci-cd.yml` ni en ningún otro fichero del
+    repositorio. Un entorno nuevo, otra región o una Web App recreada arrancaría en UTC sin que nada avise, y las horas saldrían 1 o 2 horas
+    desplazadas.
+  - **Toda la app depende de `TimeZoneInfo.Local`.** `DateTime.Today` aparece en al menos 20 sitios de Application y Web (turnos, planificación,
+    portal familiar, citas, Dirección) y `.ToLocalTime()` en 57 ficheros de vistas y código. Solo el horario de los comunicados, los indicadores
+    de Dirección y las citas pasan una zona explícita (`FamilyCommunicationSchedule`, `SupervisionIndicatorRules`, `AppointmentSlots`).
+  - **Los tests no cubren la zona de producción.** Las pruebas unitarias de esos tres usan Europe/Madrid explícito, pero `HorarioComunicadosTests` y
+    el resto usan `Local`; el runner de CI (`ubuntu-26.04`) probablemente está en UTC (no comprobado). Un `DateTime.Today` o un `.ToLocalTime()`
+    mal usado no fallaría en CI.
+  - **Una sola zona para toda la aplicación.** No hay zona por centro. Vale mientras todos los centros estén en Madrid; Canarias
+    (Atlantic/Canary) tendría otra hora. No consta que CJ lo haya confirmado.
+  - **Las franjas de citas se guardan como hora local sin zona** (`citas_franjas.hora_inicio`, `TIME(0)`) y las citas en UTC: si cambiara la zona del
+    servidor, las franjas se moverían y las citas ya reservadas no.
+  - Lo que está bien: la base de datos no usa hora local (ningún `GETDATE()` ni `SYSDATETIME()`); todo se guarda en UTC.
+  - **Opciones:** (mínima, recomendada) mantener `TimeZoneInfo.Local`, fijar `WEBSITE_TIME_ZONE` en el despliegue (`az webapp config appsettings set`
+    en el CI/CD) y comprobar al arrancar que la zona es Madrid, avisando en el registro o fallando; (completa) un ajuste `ResidApp:TimeZone` con un
+    servicio de hora que sustituya `DateTime.Today` y `.ToLocalTime()`; (por centro) solo si CJ confirma centros fuera de la península.
+- **Tests de integración intermitentes en CI (2026-10-12).** Han fallado, siempre con otro test y en verde al relanzar: `Indicaciones_MedicinaNoCierra…`
+  (PR #25), `CorreccionComunicadosTests.SeedAsync` (`main` tras #28) y `ProtocoloUrgenteMedico_DesdeIndicacionPendiente…` (PR #30). La aplicación convierte
+  cualquier excepción en «No disponible» (`ApplicationResultRunner.Normalize`) y el motivo real no queda en el log de CI. En local, con un registro
+  temporal de excepciones (no commiteado), 5 pasadas completas de la suite de integración dieron tiempos de espera de SQL (la lentitud conocida de la
+  BD local) y **un interbloqueo real**: bloqueos de página en `dbo.eventos_auditoria` (y `dbo.basales_version_areas`) entre una lectura (`SELECT` de la
+  bandeja o del detalle, S en una página) y un `INSERT` de auditoría en transacción (IX en otra), a nivel `READ COMMITTED`. Es la causa más probable de
+  los fallos de CI, no demostrada allí. Pendiente de decidir: índice para la lectura que recorre `eventos_auditoria`, desactivar el paralelismo de
+  los tests de integración (no hay `DisableTestParallelization` ni colecciones) o reintentar la víctima de un interbloqueo (error 1205) en el repositorio.
+  El grafo sale de la sesión `system_health` de SQL Server (`sys.fn_xe_file_target_read_file` sobre `system_health*.xel`, evento `xml_deadlock_report`).
 
 ## Reglas de trabajo propias de este repositorio
 
