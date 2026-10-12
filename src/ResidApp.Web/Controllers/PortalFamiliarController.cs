@@ -23,7 +23,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
     {
         if (Scope() is not { } scope)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Index)) });
+            return ScopeRedirect(Url.Action(nameof(Index)));
         }
 
         var result = await service.ListResidentsAsync(Query(scope), ct);
@@ -47,7 +47,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
     {
         if (Scope() is not { } scope)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Residente), new { linkId }) });
+            return ScopeRedirect(Url.Action(nameof(Residente), new { linkId }));
         }
 
         var result = await service.ReadResidentAsync(Query(scope), linkId, ct);
@@ -72,7 +72,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
     {
         if (Scope() is not { } scope)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Comunicado), new { linkId, comunicadoId }) });
+            return ScopeRedirect(Url.Action(nameof(Comunicado), new { linkId, comunicadoId }));
         }
 
         var result = await service.ReadCommunicationAsync(Query(scope), linkId, comunicadoId, ct);
@@ -88,7 +88,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
     {
         if (Scope() is not { } scope)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Citas), new { linkId }) });
+            return ScopeRedirect(Url.Action(nameof(Citas), new { linkId }));
         }
 
         var result = await appointments.ReadHomeAsync(Query(scope), linkId, ct);
@@ -102,7 +102,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
     {
         if (Scope() is not { } scope)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(NuevaCita), new { linkId }) });
+            return ScopeRedirect(Url.Action(nameof(NuevaCita), new { linkId }));
         }
 
         var home = await appointments.ReadHomeAsync(Query(scope), linkId, ct);
@@ -147,7 +147,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
     {
         if (Scope() is not { } scope)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Citas), new { linkId }) });
+            return ScopeRedirect(Url.Action(nameof(Citas), new { linkId }));
         }
 
         var listed = equipo is null || modalidad is null || inicio is null
@@ -181,7 +181,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
     {
         if (Scope() is not { } scope)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Citas), new { linkId }) });
+            return ScopeRedirect(Url.Action(nameof(Citas), new { linkId }));
         }
 
         ApplicationResult<FamilyAppointment> result = reprogramar is { } appointmentId
@@ -211,7 +211,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
     {
         if (Scope() is not { } scope)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Cita), new { linkId, citaId }) });
+            return ScopeRedirect(Url.Action(nameof(Cita), new { linkId, citaId }));
         }
 
         var appointment = await appointments.ReadAppointmentAsync(Query(scope), linkId, citaId, ct);
@@ -226,7 +226,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
     {
         if (Scope() is not { } scope)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Cita), new { linkId, citaId }) });
+            return ScopeRedirect(Url.Action(nameof(Cita), new { linkId, citaId }));
         }
 
         var appointment = await appointments.ReadAppointmentAsync(Query(scope), linkId, citaId, ct);
@@ -251,7 +251,7 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
     {
         if (Scope() is not { } scope)
         {
-            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Cita), new { linkId, citaId }) });
+            return ScopeRedirect(Url.Action(nameof(Cita), new { linkId, citaId }));
         }
 
         var result = await appointments.CancelAsync(Query(scope), linkId, citaId, ct);
@@ -272,6 +272,21 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
 
     private ActiveProfileScopeCookieValue? Scope() =>
         ActiveProfileScopeCookie.Read(Request) is { Profile: SystemProfile.Familiar } scope ? scope : null;
+
+    /// <summary>Sin ámbito activo, a elegir uno. Con un ámbito que no es familiar no se redirige: ProfileScope/Select lo volvería a seleccionar y a devolver aquí, en bucle.</summary>
+    private IActionResult ScopeRedirect(string? returnUrl)
+    {
+        if (ActiveProfileScopeCookie.Read(Request) is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl });
+        }
+
+        Response.StatusCode = StatusCodes.Status403Forbidden;
+        return View("Estado", new PortalFamiliarEstadoViewModel(
+            "Esta sección es del Portal Familiar",
+            "Has entrado con un perfil profesional y el Portal Familiar solo es para las cuentas de familiares. Si eres familiar, cambia de ámbito para entrar con tu cuenta.",
+            OtroPerfil: true));
+    }
 
     private static FamilyPortalQuery Query(ActiveProfileScopeCookieValue scope) => new(scope.ProfileScopeId, CenterId.From(scope.CenterId));
 
