@@ -1,0 +1,62 @@
+@using ResidApp.Web.Models
+@model ReprogramarCitaViewModel
+@{
+    ViewData["Title"] = "Reprogramar una cita";
+    var appointment = Model.Appointment;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="AgendaCitas">Agenda de citas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Reprogramar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Reprogramar una cita</h1>
+<p class="text-muted">
+    @AppointmentDisplay.When(appointment.StartsAt) · @AppointmentDisplay.Label(appointment.Team) · @AppointmentDisplay.Label(appointment.Modality) ·
+    @appointment.ResidentName (reservada por @appointment.FamilyName). Elige uno de los huecos libres del mismo equipo; Administración no tiene antelación mínima.
+    La familia verá la hora nueva y que la cambió el centro, sin el motivo, que queda en la auditoría. Avísala también por teléfono.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Slots.Count == 0)
+{
+    <div class="alert alert-warning" role="status">No hay huecos libres de este equipo dentro del horizonte del servicio. Revisa las franjas y los bloqueos.</div>
+}
+else
+{
+    <form asp-action="ReprogramarCita" method="post">
+        <input type="hidden" name="Form.CitaId" value="@Model.Form.CitaId" />
+        <fieldset class="mb-3">
+            <legend class="h6">Nuevo hueco</legend>
+            <span asp-validation-for="Form.NuevoInicio" class="text-danger"></span>
+            @foreach (var day in Model.Slots.GroupBy(s => TimeZoneInfo.ConvertTime(s.StartsAt, TimeZoneInfo.Local).Date))
+            {
+                <div class="mb-2">
+                    <div class="fw-semibold">@AppointmentDisplay.DayHeading(day.First().StartsAt)</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var slot in day)
+                        {
+                            var id = "hueco-" + slot.StartsAt.UtcDateTime.Ticks;
+                            <div>
+                                <input class="btn-check" type="radio" name="Form.NuevoInicio" id="@id" value="@slot.StartsAt.ToString("o")"
+                                       checked="@(Model.Form.NuevoInicio?.UtcDateTime == slot.StartsAt.UtcDateTime)" />
+                                <label class="btn btn-outline-primary" for="@id">@AppointmentDisplay.Time(slot.StartsAt)</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </fieldset>
+        <div class="mb-3">
+            <label asp-for="Form.Motivo" class="form-label"></label>
+            <textarea asp-for="Form.Motivo" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">Reprogramar la cita</button>
+        <a asp-action="AgendaCitas" class="btn btn-outline-secondary btn-lg">Volver a la agenda</a>
+    </form>
+}

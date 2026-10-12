@@ -1,0 +1,257 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Web.Models
+@model CitasViewModel
+@{
+    ViewData["Title"] = "Citas con la familia";
+    var teams = Enum.GetValues<AppointmentTeam>();
+    var modalities = Enum.GetValues<AppointmentModality>();
+    var windows = Model.View?.Windows ?? [];
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Citas con la familia</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Citas con la familia</h1>
+<p class="text-muted">
+    Cuando el servicio está en <strong>reserva directa</strong>, la familia ve los huecos libres de cada equipo y modalidad y reserva uno sin que nadie tenga que
+    confirmárselo. Aquí configuras el servicio, las franjas en las que se atiende y los bloqueos puntuales. Los huecos salen de las franjas en el momento de
+    consultarlos; no se elige nunca un profesional concreto. Las citas no son un canal urgente. Las horas son las del centro.
+</p>
+<p><a asp-action="AgendaCitas" class="btn btn-outline-primary">Ver la agenda de citas</a></p>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.View is null)
+{
+    <div class="alert alert-warning" role="status">No se puede mostrar la configuración.</div>
+}
+else
+{
+    <section aria-labelledby="servicio" class="mb-5">
+        <h2 class="h5" id="servicio">Servicio</h2>
+        <form asp-action="Citas" method="post">
+            <input type="hidden" name="Servicio.Version" value="@Model.Servicio.Version" />
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-4">
+                    <label asp-for="Servicio.Modo" class="form-label"></label>
+                    <select asp-for="Servicio.Modo" class="form-select form-select-lg">
+                        <option value="@AppointmentServiceMode.Desactivado" selected="@(Model.Servicio.Modo == AppointmentServiceMode.Desactivado)">@AppointmentDisplay.Label(AppointmentServiceMode.Desactivado)</option>
+                        <option value="@AppointmentServiceMode.ReservaDirecta" selected="@(Model.Servicio.Modo == AppointmentServiceMode.ReservaDirecta)">@AppointmentDisplay.Label(AppointmentServiceMode.ReservaDirecta)</option>
+                        <option value="@AppointmentServiceMode.SolicitudPrevia" disabled>@AppointmentDisplay.Label(AppointmentServiceMode.SolicitudPrevia)</option>
+                    </select>
+                    <span asp-validation-for="Servicio.Modo" class="text-danger"></span>
+                    <div class="form-text">Solo hay una modalidad vigente por centro. Cambiarla no toca las citas ya confirmadas.</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label asp-for="Servicio.AntelacionHoras" class="form-label"></label>
+                    <input asp-for="Servicio.AntelacionHoras" type="number" min="0" max="@AppointmentServiceSettings.MaxNoticeHours" inputmode="numeric" class="form-control form-control-lg" />
+                    <span asp-validation-for="Servicio.AntelacionHoras" class="text-danger"></span>
+                    <div class="form-text">La familia no reserva, reprograma ni cancela con menos antelación que esta; después tiene que llamar. Administración sí puede.</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label asp-for="Servicio.HorizonteDias" class="form-label"></label>
+                    <input asp-for="Servicio.HorizonteDias" type="number" min="1" max="@AppointmentServiceSettings.MaxHorizonDays" inputmode="numeric" class="form-control form-control-lg" />
+                    <span asp-validation-for="Servicio.HorizonteDias" class="text-danger"></span>
+                    <div class="form-text">Hasta cuántos días por delante se ofrecen huecos.</div>
+                </div>
+            </div>
+            <fieldset class="mb-3">
+                <legend class="h6">Modalidades que admite cada equipo</legend>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th scope="col">Equipo</th>
+                                @foreach (var modality in modalities)
+                                {
+                                    <th scope="col">@AppointmentDisplay.Label(modality)</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var team in teams)
+                            {
+                                <tr>
+                                    <th scope="row">@AppointmentDisplay.Label(team)</th>
+                                    @foreach (var modality in modalities)
+                                    {
+                                        var key = AppointmentDisplay.Key(team, modality);
+                                        <td>
+                                            <input class="form-check-input" type="checkbox" name="Servicio.Modalidades" value="@key" id="mod-@key.Replace(":", "-")"
+                                                   checked="@Model.Servicio.Modalidades.Contains(key)"
+                                                   aria-label="@AppointmentDisplay.Label(team): @AppointmentDisplay.Label(modality)" />
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </fieldset>
+            <button type="submit" class="btn btn-primary btn-lg">Guardar el servicio</button>
+        </form>
+    </section>
+
+    <section aria-labelledby="franjas" class="mb-5">
+        <h2 class="h5" id="franjas">Franjas de atención</h2>
+        <p class="text-muted">
+            Cada franja se repite todas las semanas, el día elegido, de la hora de inicio a la de fin, en citas de la duración indicada. Un equipo atiende una cita a la
+            vez. Una franja retirada deja de ofrecer huecos; las citas ya confirmadas se conservan.
+        </p>
+        @if (windows.Count == 0)
+        {
+            <p class="estado-vacio">No hay franjas. Sin franjas, la familia no ve ningún hueco.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr><th scope="col">Equipo</th><th scope="col">Día</th><th scope="col">Horario</th><th scope="col">Duración</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var window in windows.OrderBy(w => w.Team).ThenBy(w => w.IsoDayOfWeek).ThenBy(w => w.Start))
+                        {
+                            <tr>
+                                <td>@AppointmentDisplay.Label(window.Team)</td>
+                                <td>@AppointmentDisplay.Day(window.IsoDayOfWeek)</td>
+                                <td>@window.Start.ToString("HH:mm") – @window.End.ToString("HH:mm")</td>
+                                <td>@window.DurationMinutes min</td>
+                                <td>
+                                    <form asp-action="CitasFranjaRetirar" method="post">
+                                        <input type="hidden" name="id" value="@window.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Retirar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <form asp-action="CitasFranja" method="post" class="card card-body">
+            <h3 class="h6">Añadir una franja</h3>
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-3">
+                    <label asp-for="Franja.Equipo" class="form-label"></label>
+                    <select asp-for="Franja.Equipo" class="form-select">
+                        <option value="">Elige el equipo</option>
+                        @foreach (var team in teams)
+                        {
+                            <option value="@team">@AppointmentDisplay.Label(team)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label asp-for="Franja.DiaSemana" class="form-label"></label>
+                    <select asp-for="Franja.DiaSemana" class="form-select">
+                        <option value="">Elige el día</option>
+                        @for (var day = 1; day <= 7; day++)
+                        {
+                            <option value="@day">@AppointmentDisplay.Day(day)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label asp-for="Franja.Inicio" class="form-label"></label>
+                    <input asp-for="Franja.Inicio" type="time" class="form-control" />
+                </div>
+                <div class="col-6 col-md-2">
+                    <label asp-for="Franja.Fin" class="form-label"></label>
+                    <input asp-for="Franja.Fin" type="time" class="form-control" />
+                </div>
+                <div class="col-12 col-md-2">
+                    <label asp-for="Franja.DuracionMinutos" class="form-label"></label>
+                    <input asp-for="Franja.DuracionMinutos" type="number" min="5" max="240" inputmode="numeric" class="form-control" />
+                </div>
+            </div>
+            <div><button type="submit" class="btn btn-outline-primary">Añadir la franja</button></div>
+        </form>
+    </section>
+
+    <section aria-labelledby="bloqueos" class="mb-5">
+        <h2 class="h5" id="bloqueos">Bloqueos</h2>
+        <p class="text-muted">
+            Un bloqueo quita los huecos de un equipo (de todas sus modalidades o de una) durante un rato: una sesión clínica, unas vacaciones. No cancela las citas ya
+            confirmadas: esas se gestionan en la agenda.
+        </p>
+        @if (Model.View.Blocks.Count == 0)
+        {
+            <p class="estado-vacio">No hay bloqueos vigentes.</p>
+        }
+        else
+        {
+            <ul class="list-group mb-3">
+                @foreach (var block in Model.View.Blocks)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <div>
+                                @AppointmentDisplay.Label(block.Team) · @(block.Modality is { } modality ? AppointmentDisplay.Label(modality) : "todas las modalidades")
+                            </div>
+                            <div>@AppointmentDisplay.When(block.StartsAt) → @AppointmentDisplay.When(block.EndsAt)</div>
+                            <div class="small text-body-secondary">@block.Reason</div>
+                        </div>
+                        <form asp-action="CitasBloqueoRetirar" method="post">
+                            <input type="hidden" name="id" value="@block.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Retirar</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+
+        <form asp-action="CitasBloqueo" method="post" class="card card-body">
+            <h3 class="h6">Añadir un bloqueo</h3>
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-3">
+                    <label asp-for="Bloqueo.Equipo" class="form-label"></label>
+                    <select asp-for="Bloqueo.Equipo" class="form-select">
+                        <option value="">Elige el equipo</option>
+                        @foreach (var team in teams)
+                        {
+                            <option value="@team">@AppointmentDisplay.Label(team)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label asp-for="Bloqueo.Modalidad" class="form-label"></label>
+                    <select asp-for="Bloqueo.Modalidad" class="form-select">
+                        <option value="">Todas las modalidades</option>
+                        @foreach (var modality in modalities)
+                        {
+                            <option value="@modality">@AppointmentDisplay.Label(modality)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label asp-for="Bloqueo.Desde" class="form-label"></label>
+                    <input asp-for="Bloqueo.Desde" type="datetime-local" class="form-control" />
+                </div>
+                <div class="col-6 col-md-3">
+                    <label asp-for="Bloqueo.Hasta" class="form-label"></label>
+                    <input asp-for="Bloqueo.Hasta" type="datetime-local" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="Bloqueo.Motivo" class="form-label"></label>
+                    <input asp-for="Bloqueo.Motivo" class="form-control" maxlength="200" />
+                </div>
+            </div>
+            <div><button type="submit" class="btn btn-outline-primary">Añadir el bloqueo</button></div>
+        </form>
+    </section>
+}

@@ -19,7 +19,7 @@ public sealed class SqlFamilyPortalReader(SqlConnectionFactory connections) : IF
 {
     /// <summary>Los vínculos a los que la cuenta (@AccountId, en el centro @CenterId) tiene acceso hoy (@Today), con los alias link, fam y
     /// resident. Para pedir uno: <c>AND link.id = @LinkId</c>.</summary>
-    private const string AccessibleLinks = """
+    internal const string AccessibleLinks = """
         FROM dbo.residentes_familiares link
         JOIN dbo.familiares fam ON fam.id = link.familiar_id AND fam.centro_id = link.centro_id
         JOIN dbo.residentes resident ON resident.id = link.residente_id AND resident.centro_id = link.centro_id

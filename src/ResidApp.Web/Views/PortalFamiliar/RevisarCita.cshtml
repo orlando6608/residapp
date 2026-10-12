@@ -1,0 +1,48 @@
+@using ResidApp.Web.Models
+@model PortalFamiliarConfirmarCitaViewModel
+@{
+    var resident = Model.Resident;
+    var moving = Model.Rescheduling;
+    ViewData["Title"] = "Revisar la cita de " + resident.ResidentName;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-linkId="@resident.LinkId">@resident.ResidentName</a></li>
+        <li class="breadcrumb-item"><a asp-action="Citas" asp-route-linkId="@resident.LinkId">Citas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Revisar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@(moving is null ? "Revisa tu reserva" : "Revisa el cambio")</h1>
+<div class="alert alert-warning" role="note">Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Residente</dt><dd class="col-sm-9">@resident.ResidentName</dd>
+            <dt class="col-sm-3">Con quién</dt><dd class="col-sm-9">@AppointmentDisplay.Label(Model.Team)</dd>
+            <dt class="col-sm-3">Cómo</dt><dd class="col-sm-9">@AppointmentDisplay.Label(Model.Modality)</dd>
+            <dt class="col-sm-3">@(moving is null ? "Cuándo" : "Hueco nuevo")</dt>
+            <dd class="col-sm-9">@AppointmentDisplay.When(Model.Slot.StartsAt) – @AppointmentDisplay.Time(Model.Slot.EndsAt)</dd>
+            @if (moving is not null)
+            {
+                <dt class="col-sm-3">Hueco actual</dt><dd class="col-sm-9">@AppointmentDisplay.When(moving.StartsAt) (se libera al confirmar)</dd>
+            }
+        </dl>
+    </div>
+</div>
+
+<form asp-action="ReservarCita" asp-route-linkId="@resident.LinkId" method="post">
+    <input type="hidden" name="equipo" value="@Model.Team" />
+    <input type="hidden" name="modalidad" value="@Model.Modality" />
+    <input type="hidden" name="inicio" value="@Model.Slot.StartsAt.ToString("o")" />
+    <input type="hidden" name="operacionId" value="@Model.OperationId" />
+    @if (moving is not null)
+    {
+        <input type="hidden" name="reprogramar" value="@moving.Id" />
+    }
+    <button type="submit" class="btn btn-primary btn-lg">@(moving is null ? "Confirmar la reserva" : "Confirmar el cambio")</button>
+    <a class="btn btn-outline-secondary btn-lg" asp-action="NuevaCita" asp-route-linkId="@resident.LinkId" asp-route-equipo="@Model.Team"
+       asp-route-modalidad="@Model.Modality" asp-route-reprogramar="@moving?.Id">Elegir otro hueco</a>
+</form>

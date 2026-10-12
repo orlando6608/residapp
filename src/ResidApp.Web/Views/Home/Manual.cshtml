@@ -68,6 +68,7 @@
             <a class="list-group-item list-group-item-action" href="#historial">Historial y línea temporal del residente (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#correccion">Corregir o rectificar una valoración (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
+            <a class="list-group-item list-group-item-action" href="#citas-administracion">Citas con la familia (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#portal-familiar">Portal Familiar</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -381,6 +382,34 @@
         eliges la <strong>hora de publicación</strong> (por ejemplo, las 20:30, después de la cena) y el <strong>margen</strong> en minutos (de 0 a 1440). El cambio solo
         vale para los comunicados que se guarden a partir de entonces: los ya guardados conservan su hora. «Ver el horario de CJ» propone 19:00 y 60 minutos sin guardarlos.
         Si otra persona cambia el horario mientras lo editas, no se pisa su cambio. Cada cambio queda en el historial de la pantalla y en la auditoría.
+    </p>
+</section>
+
+<section id="citas-administracion" class="mb-4">
+    <h2 class="h5">
+        Citas con la familia
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+    </h2>
+    <p>
+        Desde <strong>Citas con la familia</strong> configuras el servicio de citas de tu centro. El modo es <strong>desactivado</strong> o <strong>reserva directa</strong>
+        (la solicitud previa todavía no está disponible); solo hay uno vigente por centro, y cambiarlo no toca las citas ya confirmadas. Con reserva directa, la familia
+        ve los huecos libres de cada equipo (médico o de Enfermería) y modalidad (presencial, telefónica o videoconferencia) y reserva uno sin que nadie tenga que
+        confirmárselo. La familia nunca elige un profesional concreto, y las citas no son un canal urgente.
+    </p>
+    <p>
+        <strong>Qué configuras.</strong> La <strong>antelación mínima</strong> (en horas: la familia no reserva, reprograma ni cancela con menos) y el <strong>horizonte máximo</strong>
+        (hasta cuántos días por delante se ofrecen huecos); las <strong>modalidades</strong> que admite cada equipo; las <strong>franjas</strong> semanales (equipo, día, hora de inicio
+        y fin, y duración de cada cita; dos franjas del mismo equipo y día no se solapan; retirar una franja no toca las citas ya confirmadas); y los <strong>bloqueos</strong>
+        puntuales de un equipo, de todas sus modalidades o de una, con un motivo (una sesión clínica, unas vacaciones). Los huecos no se guardan: salen de las franjas cada
+        vez que la familia los consulta. Un equipo atiende una cita a la vez. Las horas son las del centro. Si otra persona cambia la configuración mientras la editas, no se
+        pisa su cambio.
+    </p>
+    <p>
+        <strong>Agenda.</strong> «Ver la agenda de citas» muestra, semana a semana, las citas de todo el centro con la hora, el equipo, la modalidad, el residente, la persona de la
+        familia que la reservó y el historial de cambios (quién, cuándo y, para el personal, el motivo). Puedes <strong>reprogramar</strong> una cita confirmada a otro hueco libre
+        del mismo equipo (sin antelación mínima) o <strong>cancelarla</strong>, siempre con un motivo obligatorio que la familia no ve: la familia ve que el centro la cambió y,
+        si fue un cambio, la hora nueva. Avísala también por teléfono: de momento no hay avisos ni recordatorios. Una cita confirmada cuya hora ya pasó se puede
+        <strong>finalizar</strong>. Cada paso queda en la auditoría, en la categoría «Citas».
     </p>
 </section>
 
@@ -1319,10 +1348,18 @@
         una novedad, la familia ve «Esta novedad ya no está disponible» en su lugar, sin el texto. Si no hay novedades, el portal lo dice y avisa de que
         eso no significa que todo vaya bien. El portal nunca es un canal urgente.
     </p>
+    <p>
+        <strong>Citas.</strong> En la pantalla de su residente, «Citas con el equipo asistencial» muestra sus citas y, si el centro tiene la reserva directa activa, «Reservar
+        una cita»: elige el equipo (médico o de Enfermería) y la modalidad que el centro admite, ve los huecos libres, elige uno, revisa los datos y confirma; la cita queda
+        confirmada al momento. Si el hueco se ocupa justo antes de confirmar, no se crea la cita y se le ofrecen los que quedan. Pulsar dos veces el botón no duplica la cita.
+        Con el mismo equipo solo puede tener una cita próxima. Puede <strong>reprogramar</strong> o <strong>cancelar</strong> sus citas (con confirmación) hasta la antelación mínima
+        del centro; después, por teléfono. Solo ve las citas que reservó ella misma. Todas las pantallas recuerdan que las citas no son un canal urgente. Si el centro
+        desactiva el servicio, no se ofrece reservar, pero las citas ya confirmadas se siguen viendo y se pueden cancelar.
+    </p>
     <p class="mb-0">
         <strong>Qué no ve nunca.</strong> Observaciones, valoraciones, constantes, basal, indicaciones, derivaciones, historial, nombres de
         profesionales ni datos de otros familiares. Cada vez que un familiar abre las novedades de un residente o un comunicado queda registrado
-        quién y cuándo (sin guardar el contenido). Quedan pendientes las citas y la entrada con credenciales reales.
+        quién y cuándo (sin guardar el contenido). Quedan pendientes la solicitud previa de citas y la entrada con credenciales reales.
     </p>
 </section>
 
@@ -1330,8 +1367,8 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Portal Familiar: citas, el resumen periódico por residente y la entrada con credenciales reales (hoy se entra con el usuario de desarrollo).</li>
-        <li>Más gestión administrativa: organigrama y cargos (aplazado), citas y un panel completo.</li>
+        <li>Portal Familiar: la solicitud previa de citas, el resumen periódico por residente y la entrada con credenciales reales (hoy se entra con el usuario de desarrollo).</li>
+        <li>Más gestión administrativa: organigrama y cargos (aplazado), la solicitud previa de citas y un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
         <li>De Dirección Clínica: el estado de la comunicación familiar (frecuencia, pendientes y errores) y la finalidad «revisión de calidad asistencial» (pendiente de decidir cómo distinguir la Coordinación Clínica de Dirección). La declaración de finalidad y la justificación ya están construidas, y con ellas ya puedes ver el contenido del basal vigente, el historial de versiones, la línea temporal, los eventos cerrados, las correcciones y rectificaciones, la trazabilidad clínica y los informes de derivación firmados.</li>

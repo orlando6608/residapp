@@ -97,13 +97,13 @@ El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **p
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
-| [portal-familiar-confirmaciones-cj.html](portal-familiar-confirmaciones-cj.html) | `portal-familiar-confirmaciones-cj.respuestas.json` | Lo que ingeniería tuvo que suponer al construir el Portal Familiar: qué ve la familia, derivaciones a Urgencias, privacidad, cómo debe identificarse un familiar y qué pasa al corregir o retirar un comunicado ya publicado (11 respuestas) | Pendiente de CJ |
+| [portal-familiar-confirmaciones-cj.html](portal-familiar-confirmaciones-cj.html) | `portal-familiar-confirmaciones-cj.respuestas.json` | Lo que ingeniería tuvo que suponer al construir el Portal Familiar: qué ve la familia, derivaciones a Urgencias, privacidad, cómo debe identificarse un familiar, qué pasa al corregir o retirar un comunicado ya publicado y cómo funcionan las citas con reserva directa (19 respuestas) | Pendiente de CJ |
 
 ### Pruebas
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
-| [guia-de-pruebas-cj.html](guia-de-pruebas-cj.html) | `guia-de-pruebas-cj.respuestas.json` | Guía de pruebas en el entorno de desarrollo: 72 pruebas paso a paso (A funciona, B con problema, C no funciona, D no probada) más 3 preguntas finales; 26 imprescindibles | Pendiente |
+| [guia-de-pruebas-cj.html](guia-de-pruebas-cj.html) | `guia-de-pruebas-cj.respuestas.json` | Guía de pruebas en el entorno de desarrollo: 76 pruebas paso a paso (A funciona, B con problema, C no funciona, D no probada) más 3 preguntas finales; 28 imprescindibles | Pendiente |
 
 ### Archivo (contestados e implementados)
 

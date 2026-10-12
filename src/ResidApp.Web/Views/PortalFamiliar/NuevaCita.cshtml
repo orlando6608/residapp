@@ -1,0 +1,91 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Appointments
+@using ResidApp.Web.Models
+@model PortalFamiliarNuevaCitaViewModel
+@{
+    var resident = Model.Resident;
+    var moving = Model.Rescheduling;
+    ViewData["Title"] = (moving is null ? "Reservar una cita" : "Reprogramar la cita") + " de " + resident.ResidentName;
+    var combinations = Model.Home.Modalities.OrderBy(m => m.Team).ThenBy(m => m.Modality).ToList();
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-linkId="@resident.LinkId">@resident.ResidentName</a></li>
+        <li class="breadcrumb-item"><a asp-action="Citas" asp-route-linkId="@resident.LinkId">Citas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@(moving is null ? "Reservar" : "Reprogramar")</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@(moving is null ? "Reservar una cita" : "Reprogramar la cita")</h1>
+<div class="alert alert-warning" role="note">Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</div>
+@if (!string.IsNullOrEmpty(Model.Warning))
+{
+    <div class="alert alert-danger" role="alert">@Model.Warning</div>
+}
+
+@if (!Model.Home.Settings.BookingEnabled)
+{
+    <div class="alert alert-secondary" role="status">Ahora mismo el centro no ofrece reservar citas desde el portal. Llama por teléfono al centro.</div>
+}
+else
+{
+    if (moving is null)
+    {
+        <h2 class="h5">¿Con quién y cómo?</h2>
+        @if (combinations.Count == 0)
+        {
+            <p class="estado-vacio">El centro todavía no ha habilitado ninguna modalidad de cita. Llama por teléfono al centro.</p>
+        }
+        else
+        {
+            <div class="mb-4">
+                @foreach (var team in combinations.Select(c => c.Team).Distinct())
+                {
+                    <p class="mb-1 fw-semibold">@AppointmentDisplay.Label(team)</p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        @foreach (var option in combinations.Where(c => c.Team == team))
+                        {
+                            var selected = Model.Team == option.Team && Model.Modality == option.Modality;
+                            <a class="btn @(selected ? "btn-primary" : "btn-outline-primary")" aria-current="@(selected ? "true" : null)"
+                               asp-action="NuevaCita" asp-route-linkId="@resident.LinkId" asp-route-equipo="@option.Team" asp-route-modalidad="@option.Modality">@AppointmentDisplay.Label(option.Modality)</a>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">
+            Cita actual: @AppointmentDisplay.When(moving.StartsAt) · @AppointmentDisplay.Label(moving.Team) · @AppointmentDisplay.Label(moving.Modality).
+            Elige el hueco nuevo; la cita actual no cambia hasta que confirmes.
+        </p>
+    }
+
+    @if (Model.Slots is { } slots)
+    {
+        <h2 class="h5">Huecos libres: @AppointmentDisplay.Label(Model.Team!.Value) · @AppointmentDisplay.Label(Model.Modality!.Value)</h2>
+        @if (slots.Count == 0)
+        {
+            <p class="estado-vacio">Ahora mismo no hay huecos libres. Prueba otro día o llama por teléfono al centro.</p>
+        }
+        else
+        {
+            foreach (var day in slots.GroupBy(s => TimeZoneInfo.ConvertTime(s.StartsAt, TimeZoneInfo.Local).Date))
+            {
+                <div class="mb-3">
+                    <p class="mb-1 fw-semibold">@AppointmentDisplay.DayHeading(day.First().StartsAt)</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var slot in day)
+                        {
+                            <a class="btn btn-outline-primary" asp-action="RevisarCita" asp-route-linkId="@resident.LinkId" asp-route-equipo="@Model.Team"
+                               asp-route-modalidad="@Model.Modality" asp-route-inicio="@slot.StartsAt.ToString("o")" asp-route-reprogramar="@moving?.Id">@AppointmentDisplay.Time(slot.StartsAt)</a>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    }
+}
+<a class="btn btn-outline-secondary" asp-action="Citas" asp-route-linkId="@resident.LinkId">Volver a mis citas</a>

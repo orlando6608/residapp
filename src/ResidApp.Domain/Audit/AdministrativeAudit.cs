@@ -8,6 +8,7 @@ public enum AuditCategory
     Estructura,
     ResidentesYFamilias,
     TurnosYEquipos,
+    Citas,
 }
 
 /// <summary>
@@ -87,6 +88,17 @@ public static class AdministrativeAudit
         ("SCHEDULE_CREATE", AuditCategory.TurnosYEquipos),
         ("SCHEDULE_RETIRE", AuditCategory.TurnosYEquipos),
         ("SCHEDULE_SERIES_RETIRE", AuditCategory.TurnosYEquipos),
+        ("APPOINTMENT_SERVICE_UPDATE", AuditCategory.Citas),
+        ("APPOINTMENT_WINDOW_ADD", AuditCategory.Citas),
+        ("APPOINTMENT_WINDOW_RETIRE", AuditCategory.Citas),
+        ("APPOINTMENT_BLOCK_ADD", AuditCategory.Citas),
+        ("APPOINTMENT_BLOCK_RETIRE", AuditCategory.Citas),
+        ("APPOINTMENT_BOOK", AuditCategory.Citas),
+        ("APPOINTMENT_RESCHEDULE", AuditCategory.Citas),
+        ("APPOINTMENT_CANCEL", AuditCategory.Citas),
+        ("APPOINTMENT_RESCHEDULE_ADMIN", AuditCategory.Citas),
+        ("APPOINTMENT_CANCEL_ADMIN", AuditCategory.Citas),
+        ("APPOINTMENT_FINISH", AuditCategory.Citas),
     ];
 
     public static bool IsAdministrative(string? code) => code is not null && Actions.Any(a => a.Code == code);

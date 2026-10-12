@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
+using ResidApp.Domain.Appointments;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
@@ -15,7 +16,7 @@ namespace ResidApp.Web.Controllers;
 /// Los textos que no cuentan nada del residente: un vínculo ajeno, suspendido o inexistente da el mismo «sin acceso».
 /// </summary>
 [Route("Familia")]
-public sealed class PortalFamiliarController(FamilyPortalApplicationService service) : Controller
+public sealed class PortalFamiliarController(FamilyPortalApplicationService service, FamilyAppointmentsApplicationService appointments) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(bool elegir, CancellationToken ct)
@@ -78,6 +79,195 @@ public sealed class PortalFamiliarController(FamilyPortalApplicationService serv
         return result.Ok
             ? View(new PortalFamiliarComunicadoViewModel(result.Value!.Resident, result.Value.Communication, result.Value.Corrections))
             : Failure(result.Error!);
+    }
+
+    // ---- Citas (script 0054): reserva directa. ----
+
+    [HttpGet("Residente/{linkId:guid}/Citas")]
+    public async Task<IActionResult> Citas(Guid linkId, CancellationToken ct)
+    {
+        if (Scope() is not { } scope)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Citas), new { linkId }) });
+        }
+
+        var result = await appointments.ReadHomeAsync(Query(scope), linkId, ct);
+        return result.Ok ? View(new PortalFamiliarCitasViewModel(result.Value!)) : Failure(result.Error!);
+    }
+
+    /// <summary>Elegir equipo y modalidad y ver los huecos libres; con <paramref name="reprogramar"/>, mover una cita propia (mismo equipo y modalidad).</summary>
+    [HttpGet("Residente/{linkId:guid}/Citas/Nueva")]
+    public async Task<IActionResult> NuevaCita(
+        Guid linkId, AppointmentTeam? equipo, AppointmentModality? modalidad, Guid? reprogramar, string? aviso, CancellationToken ct)
+    {
+        if (Scope() is not { } scope)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(NuevaCita), new { linkId }) });
+        }
+
+        var home = await appointments.ReadHomeAsync(Query(scope), linkId, ct);
+        if (!home.Ok)
+        {
+            return Failure(home.Error!);
+        }
+
+        var moving = reprogramar is { } id ? home.Value!.Appointments.FirstOrDefault(a => a.Id == id && a.CanReschedule) : null;
+        if (reprogramar is not null && moving is null)
+        {
+            TempData["Error"] = "Esa cita ya no se puede reprogramar.";
+            return RedirectToAction(nameof(Citas), new { linkId });
+        }
+
+        if (moving is not null)
+        {
+            equipo = moving.Team;
+            modalidad = moving.Modality;
+        }
+
+        IReadOnlyList<AppointmentSlot>? slots = null;
+        if (equipo is not null && modalidad is not null)
+        {
+            var listed = await appointments.ListSlotsAsync(Query(scope), linkId, equipo, modalidad, moving?.Id, ct);
+            if (!listed.Ok)
+            {
+                return Failure(listed.Error!);
+            }
+
+            slots = listed.Value;
+        }
+
+        return View(new PortalFamiliarNuevaCitaViewModel(home.Value!.Resident, home.Value, equipo, modalidad, slots, moving, aviso));
+    }
+
+    /// <summary>Revisar el hueco elegido antes de confirmar (CIT-D02). Cada visita trae una operación nueva: la doble pulsación del botón de confirmar es
+    /// la que se repite, y no duplica la cita.</summary>
+    [HttpGet("Residente/{linkId:guid}/Citas/Revisar")]
+    public async Task<IActionResult> RevisarCita(
+        Guid linkId, AppointmentTeam? equipo, AppointmentModality? modalidad, DateTimeOffset? inicio, Guid? reprogramar, CancellationToken ct)
+    {
+        if (Scope() is not { } scope)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Citas), new { linkId }) });
+        }
+
+        var listed = equipo is null || modalidad is null || inicio is null
+            ? null
+            : await appointments.ListSlotsAsync(Query(scope), linkId, equipo, modalidad, reprogramar, ct);
+        if (listed is { Ok: false })
+        {
+            return Failure(listed.Error!);
+        }
+
+        var slot = listed?.Value!.FirstOrDefault(s => s.StartsAt.UtcDateTime == inicio!.Value.UtcDateTime);
+        var home = await appointments.ReadHomeAsync(Query(scope), linkId, ct);
+        if (!home.Ok)
+        {
+            return Failure(home.Error!);
+        }
+
+        if (slot is null)
+        {
+            return RedirectToAction(nameof(NuevaCita), new { linkId, equipo, modalidad, reprogramar, aviso = "Ese hueco ya no está libre. Elige otro." });
+        }
+
+        var moving = reprogramar is { } id ? home.Value!.Appointments.FirstOrDefault(a => a.Id == id) : null;
+        return View(new PortalFamiliarConfirmarCitaViewModel(home.Value!.Resident, equipo!.Value, modalidad!.Value, slot, Guid.NewGuid(), moving));
+    }
+
+    [HttpPost("Residente/{linkId:guid}/Citas/Reservar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReservarCita(
+        Guid linkId, AppointmentTeam? equipo, AppointmentModality? modalidad, DateTimeOffset? inicio, Guid operacionId, Guid? reprogramar, CancellationToken ct)
+    {
+        if (Scope() is not { } scope)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Citas), new { linkId }) });
+        }
+
+        ApplicationResult<FamilyAppointment> result = reprogramar is { } appointmentId
+            ? await appointments.RescheduleAsync(new RescheduleFamilyAppointmentCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), linkId, appointmentId, inicio), ct)
+            : await appointments.BookAsync(new BookFamilyAppointmentCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), linkId, equipo, modalidad, inicio, operacionId), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = reprogramar is null ? "Cita confirmada." : "Cita reprogramada.";
+            return RedirectToAction(nameof(Cita), new { linkId, citaId = result.Value!.Id });
+        }
+
+        if (result.Error!.Code is ApplicationFailureCode.Conflict or ApplicationFailureCode.InvalidInput)
+        {
+            // Si el hueco se ocupó justo antes de confirmar, no se crea la cita y se ofrecen los que quedan libres (CIT-D04).
+            return RedirectToAction(nameof(NuevaCita), new
+            {
+                linkId, equipo, modalidad, reprogramar,
+                aviso = "No se ha podido confirmar: el hueco ya no está libre, ya tienes una cita próxima con ese equipo o ya no se puede cambiar. Elige otro hueco o revisa tus citas.",
+            });
+        }
+
+        return Failure(result.Error!);
+    }
+
+    [HttpGet("Residente/{linkId:guid}/Citas/{citaId:guid}")]
+    public async Task<IActionResult> Cita(Guid linkId, Guid citaId, CancellationToken ct)
+    {
+        if (Scope() is not { } scope)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Cita), new { linkId, citaId }) });
+        }
+
+        var appointment = await appointments.ReadAppointmentAsync(Query(scope), linkId, citaId, ct);
+        var home = appointment.Ok ? await appointments.ReadHomeAsync(Query(scope), linkId, ct) : null;
+        return appointment.Ok && home is { Ok: true }
+            ? View(new PortalFamiliarCitaViewModel(home.Value!.Resident, appointment.Value!))
+            : Failure((home is { Ok: false } ? home.Error : appointment.Error)!);
+    }
+
+    [HttpGet("Residente/{linkId:guid}/Citas/{citaId:guid}/Cancelar")]
+    public async Task<IActionResult> ConfirmarCancelarCita(Guid linkId, Guid citaId, CancellationToken ct)
+    {
+        if (Scope() is not { } scope)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Cita), new { linkId, citaId }) });
+        }
+
+        var appointment = await appointments.ReadAppointmentAsync(Query(scope), linkId, citaId, ct);
+        var home = appointment.Ok ? await appointments.ReadHomeAsync(Query(scope), linkId, ct) : null;
+        if (!appointment.Ok || home is not { Ok: true })
+        {
+            return Failure((home is { Ok: false } ? home.Error : appointment.Error)!);
+        }
+
+        if (!appointment.Value!.CanCancel)
+        {
+            TempData["Error"] = "Esta cita ya no se puede cancelar desde el portal. Llama por teléfono al centro.";
+            return RedirectToAction(nameof(Cita), new { linkId, citaId });
+        }
+
+        return View(new PortalFamiliarCitaViewModel(home.Value!.Resident, appointment.Value));
+    }
+
+    [HttpPost("Residente/{linkId:guid}/Citas/{citaId:guid}/Cancelar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelarCita(Guid linkId, Guid citaId, CancellationToken ct)
+    {
+        if (Scope() is not { } scope)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Cita), new { linkId, citaId }) });
+        }
+
+        var result = await appointments.CancelAsync(Query(scope), linkId, citaId, ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Cita cancelada. El hueco queda libre.";
+            return RedirectToAction(nameof(Cita), new { linkId, citaId });
+        }
+
+        if (result.Error!.Code is ApplicationFailureCode.Conflict or ApplicationFailureCode.InvalidInput)
+        {
+            TempData["Error"] = "Esta cita ya no se puede cancelar desde el portal: ya no está confirmada o falta poco para su hora. Llama por teléfono al centro.";
+            return RedirectToAction(nameof(Cita), new { linkId, citaId });
+        }
+
+        return Failure(result.Error);
     }
 
     private ActiveProfileScopeCookieValue? Scope() =>

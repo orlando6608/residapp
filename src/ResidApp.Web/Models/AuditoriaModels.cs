@@ -95,6 +95,17 @@ public static class AuditActionDisplay
         ["SCHEDULE_CREATE"] = "Turno planificado",
         ["SCHEDULE_RETIRE"] = "Planificación retirada",
         ["SCHEDULE_SERIES_RETIRE"] = "Serie de turnos retirada",
+        ["APPOINTMENT_SERVICE_UPDATE"] = "Servicio de citas configurado",
+        ["APPOINTMENT_WINDOW_ADD"] = "Franja de citas añadida",
+        ["APPOINTMENT_WINDOW_RETIRE"] = "Franja de citas retirada",
+        ["APPOINTMENT_BLOCK_ADD"] = "Bloqueo de citas añadido",
+        ["APPOINTMENT_BLOCK_RETIRE"] = "Bloqueo de citas retirado",
+        ["APPOINTMENT_BOOK"] = "Cita reservada por la familia",
+        ["APPOINTMENT_RESCHEDULE"] = "Cita reprogramada por la familia",
+        ["APPOINTMENT_CANCEL"] = "Cita cancelada por la familia",
+        ["APPOINTMENT_RESCHEDULE_ADMIN"] = "Cita reprogramada por Administración",
+        ["APPOINTMENT_CANCEL_ADMIN"] = "Cita cancelada por Administración",
+        ["APPOINTMENT_FINISH"] = "Cita finalizada",
     };
 
     public static string Label(string code) => Labels.TryGetValue(code, out var label) ? label : "Acción administrativa";
@@ -106,6 +117,7 @@ public static class AuditActionDisplay
         AuditCategory.Estructura => "Estructura del centro",
         AuditCategory.ResidentesYFamilias => "Residentes y familias",
         AuditCategory.TurnosYEquipos => "Turnos y equipos",
+        AuditCategory.Citas => "Citas",
         _ => category.ToString(),
     };
 
