@@ -1237,7 +1237,7 @@ usuario cuando encajen:
   - **Resultado en local:** suite de integración de 2 a 4 minutos (con tiempos de espera y fallos) a unos 20 s; 6 pasadas de integración (433) y 2 de
     funcionales (164) seguidas en verde, sin ningún interbloqueo nuevo en `system_health`. En CI, no demostrado hasta que pase varias veces.
   - **Sigue abierto, sin cambiar:** la aplicación no reintenta ante el error 1205 (`ApplicationResultRunner` lo devuelve como «No disponible»); si
-    algún día reaparece un interbloqueo en producción, la opción es reintentar la transacción víctima en el repositorio.
+    algún día reaparece un interbloqueo en producción, la opción es reintentar la transacción víctima en el repositorio. **Decidido el 2026-10-12 no hacerlo todavía:** un reintento general en `ApplicationResultRunner.RunAsync` no es seguro, porque varios casos de uso encadenan llamadas a repositorios que son transacciones distintas (por ejemplo `ReadDirectionBaseline` audita y después lee, "auditoría o nada"), y repetir todo si el interbloqueo cae en el segundo paso duplicaría la fila de auditoría. Solo valdría un reintento dentro del repositorio, sobre una transacción única, y no hay ningún interbloqueo observado en producción que lo justifique; si aparece uno, el paso de diagnóstico de CI (`database/diagnostico/interbloqueos_recientes.sql`) dirá qué sentencias chocan y se reintenta solo ahí.
 
 ## Reglas de trabajo propias de este repositorio
 
