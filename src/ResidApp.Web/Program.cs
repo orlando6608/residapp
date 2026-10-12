@@ -185,6 +185,10 @@ builder.Services.AddScoped<IFamilyCommunicationCorrector, SqlFamilyCommunication
 builder.Services.AddScoped<CorrectFamilyCommunication>();
 builder.Services.AddScoped<IFamilyPortalReader, SqlFamilyPortalReader>();
 builder.Services.AddScoped<FamilyPortalApplicationService>();
+builder.Services.AddScoped<IFamilyAppointments, SqlFamilyAppointments>();
+builder.Services.AddScoped<FamilyAppointmentsApplicationService>();
+builder.Services.AddScoped<IAppointmentServiceRepository, SqlAppointmentServiceRepository>();
+builder.Services.AddScoped<AppointmentServiceApplicationService>();
 builder.Services.AddScoped<ICenterLayoutDirectory, SqlCenterLayoutDirectory>();
 builder.Services.AddScoped<ICenterLayoutRepository, SqlCenterLayoutRepository>();
 builder.Services.AddScoped<AdministracionEstructuraApplicationService>();
