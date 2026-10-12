@@ -293,11 +293,12 @@ public sealed class SqlFamilyAppointmentRequests(SqlConnectionFactory connection
     private static async Task<IReadOnlyList<FamilyAppointmentRequest>> ReadAsync(
         IDbConnection connection, IDbTransaction? transaction, FamilyPortalAccess access, Guid residentId, Guid? requestId, DateTimeOffset now, CancellationToken ct)
     {
+        // Una solicitud se busca por su clave y la lista por centro y residente, las dos con FORCESEEK: con un OR sobre @requestId el plan recorría la tabla
+        // entera y, dentro de una transacción, pedía bloqueos sobre filas de otras familias (interbloqueos en una BD recién creada; lección de 0055 y 0056).
+        var filter = requestId is null ? "(r.creada_en >= @since OR r.estado_codigo IN ('PENDIENTE', 'PROPUESTA'))" : "r.id = @requestId";
         var rows = (await connection.QueryAsync<RequestRow>(new CommandDefinition($"""
-            SELECT {Columns} FROM dbo.citas_solicitudes r
-             WHERE r.centro_id = @center AND r.residente_id = @residentId AND r.cuenta_id = @account
-               AND ((@requestId IS NOT NULL AND r.id = @requestId)
-                    OR (@requestId IS NULL AND (r.creada_en >= @since OR r.estado_codigo IN ('PENDIENTE', 'PROPUESTA'))))
+            SELECT {Columns} FROM dbo.citas_solicitudes r WITH (FORCESEEK)
+             WHERE r.centro_id = @center AND r.residente_id = @residentId AND r.cuenta_id = @account AND {filter}
             """, new
         {
             center = access.CenterId.Value, residentId, account = access.AccountId.Value, requestId, since = (now - History).UtcDateTime,

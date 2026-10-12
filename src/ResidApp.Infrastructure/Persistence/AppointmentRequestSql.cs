@@ -48,12 +48,20 @@ internal static class AppointmentRequestSql
     internal sealed record ChangeRow(Guid RequestId, string Action, string Profile, DateTime At, DateTime? ProposedStart, string? Detail);
 
     /// <summary>El historial de las solicitudes indicadas, por orden.</summary>
-    internal static async Task<ILookup<Guid, ChangeRow>> ReadChangesAsync(
+    internal static Task<ILookup<Guid, ChangeRow>> ReadChangesAsync(
+        IDbConnection connection, IDbTransaction? transaction, Guid centerId, IReadOnlyCollection<Guid> requestIds, CancellationToken ct) =>
+        // FORCESEEK por solicitud (índice único solicitud_id, numero), como en 0055 y 0056: sin él, dentro de una transacción el plan recorría el historial de todas
+        // las solicitudes del centro. Con una lista vacía no hay nada que buscar (y FORCESEEK no admite el IN vacío de Dapper).
+        requestIds.Count == 0
+            ? Task.FromResult(Enumerable.Empty<ChangeRow>().ToLookup(c => c.RequestId))
+            : ReadChangeRowsAsync(connection, transaction, centerId, requestIds, ct);
+
+    private static async Task<ILookup<Guid, ChangeRow>> ReadChangeRowsAsync(
         IDbConnection connection, IDbTransaction? transaction, Guid centerId, IReadOnlyCollection<Guid> requestIds, CancellationToken ct) =>
         (await connection.QueryAsync<ChangeRow>(new CommandDefinition("""
             SELECT solicitud_id AS RequestId, accion_codigo AS Action, actor_perfil_codigo AS Profile, ocurrido_en AS At,
                    inicio_propuesto_en AS ProposedStart, detalle AS Detail
-              FROM dbo.citas_solicitudes_cambios WHERE centro_id = @centerId AND solicitud_id IN @requestIds ORDER BY numero
+              FROM dbo.citas_solicitudes_cambios WITH (FORCESEEK) WHERE centro_id = @centerId AND solicitud_id IN @requestIds ORDER BY numero
             """, new { centerId, requestIds }, transaction, cancellationToken: ct))).ToLookup(c => c.RequestId);
 
     /// <summary>Una solicitud del centro con su fila bloqueada para escribir, buscada por clave primaria. Null si no existe en este centro.</summary>
