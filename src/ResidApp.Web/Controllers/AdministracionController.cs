@@ -23,7 +23,8 @@ public sealed partial class AdministracionController(
     ListActiveScopeLocations listLocations, AdministracionEstructuraApplicationService estructura,
     AdministracionTurnosApplicationService turnos, AdministrationScopeApplicationService scopeAdmin,
     FamilyCommunicationPublicationApplicationService familyCommunications, FamilyCommunicationScheduleApplicationService communicationSchedule,
-    AppointmentServiceApplicationService appointmentService, AppointmentRequestsApplicationService appointmentRequests) : Controller
+    AppointmentServiceApplicationService appointmentService, AppointmentRequestsApplicationService appointmentRequests,
+    AdministrationOverviewApplicationService overview) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -40,7 +41,12 @@ public sealed partial class AdministracionController(
         }
 
         var accounts = await service.ListAccountsAsync(Query(activeScope), ct);
-        return View(new AdministracionInicioViewModel(result.Value?.Count ?? 0, accounts.Value?.Count ?? 0));
+        // El bloque «Requiere atención» es un añadido: si alguna de sus lecturas falla, el inicio sigue funcionando sin él.
+        var attention = await overview.ReadAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
+        var communications = await familyCommunications.ListAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
+        return View(new AdministracionInicioViewModel(
+            result.Value?.Count ?? 0, accounts.Value?.Count ?? 0, attention.Value,
+            communications.Ok ? AdministrationCommunicationsSummary.From(communications.Value!, DateTimeOffset.UtcNow) : null));
     }
 
     public async Task<IActionResult> Residentes(AdministrativeResidentFilter filtro, CancellationToken ct)

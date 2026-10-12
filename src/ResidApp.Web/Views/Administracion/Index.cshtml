@@ -1,3 +1,5 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Application.UseCases
 @using ResidApp.Web.Models
 @model AdministracionInicioViewModel
 @{
@@ -16,6 +18,62 @@
     Gestión administrativa de los residentes de tu ámbito. Administración no ve el basal ni ningún contenido clínico.
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
+
+@{
+    string Plural(int count, string one, string many) => count == 1 ? $"{count} {one}" : $"{count} {many}";
+    var attention = Model.Attention;
+    var communications = Model.Communications;
+}
+@if (attention is not null)
+{
+    <section class="mb-4" aria-labelledby="atencion">
+        <h2 class="h5" id="atencion">Requiere atención</h2>
+        @if (attention.NothingPending)
+        {
+            <p class="mb-2">No hay nada pendiente.</p>
+        }
+        else
+        {
+            <ul class="list-group mb-2">
+                @if (attention.AppointmentRequestsPending > 0)
+                {
+                    <li class="list-group-item"><a asp-action="SolicitudesCitas">@Plural(attention.AppointmentRequestsPending, "solicitud de cita por gestionar", "solicitudes de cita por gestionar")</a></li>
+                }
+                @if (attention.AppointmentRequestsAwaitingFamily > 0)
+                {
+                    <li class="list-group-item"><a asp-action="SolicitudesCitas">@Plural(attention.AppointmentRequestsAwaitingFamily, "propuesta de cita esperando respuesta de la familia", "propuestas de cita esperando respuesta de la familia")</a></li>
+                }
+                @if (attention.AuthorizationsPending > 0)
+                {
+                    <li class="list-group-item"><a asp-action="Residentes">@Plural(attention.AuthorizationsPending, "autorización de familiar pendiente de activar", "autorizaciones de familiares pendientes de activar")</a></li>
+                }
+                @if (attention.AuthorizationsExpired > 0)
+                {
+                    <li class="list-group-item"><a asp-action="Residentes">@Plural(attention.AuthorizationsExpired, "autorización de familiar caducada", "autorizaciones de familiares caducadas")</a></li>
+                }
+                @if (attention.AuthorizationsExpiringSoon > 0)
+                {
+                    <li class="list-group-item"><a asp-action="Residentes">@Plural(attention.AuthorizationsExpiringSoon, "autorización de familiar caduca", "autorizaciones de familiares caducan") en @AdministrationOverviewRules.ExpiringSoonDays días o menos</a></li>
+                }
+                @if (attention.ResidentsWithoutRoom > 0)
+                {
+                    <li class="list-group-item"><a asp-action="Residentes">@Plural(attention.ResidentsWithoutRoom, "residente sin habitación asignada", "residentes sin habitación asignada")</a></li>
+                }
+            </ul>
+        }
+        <p class="text-body-secondary small mb-0">
+            <a asp-action="AgendaCitas">Citas confirmadas: @attention.AppointmentsToday hoy y @attention.AppointmentsComing en los próximos @AdministrationOverviewRules.ComingAppointmentDays días</a>.
+            @if (communications is not null)
+            {
+                <span> <a asp-action="Comunicados">Comunicados a la familia: @communications.Scheduled programados y @communications.PublishedRecently publicados en los últimos @AdministrationCommunicationsSummary.RecentDays días</a>.</span>
+            }
+        </p>
+    </section>
+}
+else
+{
+    <p class="text-body-secondary small">Ahora mismo no se pueden mostrar las cifras de lo que requiere atención. El resto del inicio funciona con normalidad.</p>
+}
 
 <div class="row g-3">
     <div class="col-12 col-md-6">
