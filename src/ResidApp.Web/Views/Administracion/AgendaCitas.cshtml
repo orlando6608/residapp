@@ -1,0 +1,92 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Web.Models
+@model AgendaCitasViewModel
+@{
+    ViewData["Title"] = "Agenda de citas";
+    var last = Model.Monday.AddDays(6);
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Citas">Citas con la familia</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Agenda</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Agenda de citas</h1>
+<p class="text-muted">
+    Las citas del centro de la semana del @Model.Monday.ToString("dd/MM/yyyy") al @last.ToString("dd/MM/yyyy"), con la persona de la familia que las reservó.
+    Puedes reprogramarlas o cancelarlas con un motivo, que la familia no ve, y finalizar las que ya han pasado. Cada cambio queda con quién y cuándo.
+</p>
+
+<nav class="d-flex flex-wrap gap-2 mb-3" aria-label="Cambiar de semana">
+    <a class="btn btn-outline-secondary" asp-action="AgendaCitas" asp-route-semana="@Model.Monday.AddDays(-7).ToString("yyyy-MM-dd")">← Semana anterior</a>
+    <a class="btn btn-outline-secondary" asp-action="AgendaCitas">Esta semana</a>
+    <a class="btn btn-outline-secondary" asp-action="AgendaCitas" asp-route-semana="@Model.Monday.AddDays(7).ToString("yyyy-MM-dd")">Semana siguiente →</a>
+</nav>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Appointments.Count == 0)
+{
+    <p class="estado-vacio">No hay citas esta semana.</p>
+}
+else
+{
+    foreach (var appointment in Model.Appointments)
+    {
+        var cancelled = appointment.Status == AppointmentStatus.Cancelada;
+        <div class="card mb-3 border-start border-4 @(appointment.Status switch { AppointmentStatus.Confirmada => "border-success", AppointmentStatus.Finalizada => "border-secondary", _ => "border-danger" })">
+            <div class="card-body">
+                <h2 class="h5 card-title">@AppointmentDisplay.When(appointment.StartsAt) · @AppointmentDisplay.Label(appointment.Team)</h2>
+                <p class="mb-1">
+                    <span class="badge text-bg-light border">@AppointmentDisplay.Label(appointment.Modality)</span>
+                    <span class="badge @(appointment.Status == AppointmentStatus.Confirmada ? "text-bg-success" : appointment.Status == AppointmentStatus.Finalizada ? "text-bg-secondary" : "text-bg-danger")">@AppointmentDisplay.Label(appointment.Status)</span>
+                </p>
+                <p class="mb-2">@appointment.ResidentName · reservada por @appointment.FamilyName (@appointment.Relationship)</p>
+                <ul class="list-unstyled small text-body-secondary mb-2">
+                    @foreach (var change in appointment.Changes)
+                    {
+                        <li>
+                            @AppointmentDisplay.Label(change.Action) el @change.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            · @(change.ActorProfile == ResidApp.Shared.SystemProfile.Familiar ? "familia" : "Administración")
+                            @if (change.PreviousStartsAt is { } previous && change.NewStartsAt is { } next)
+                            {
+                                <text> · de @AppointmentDisplay.When(previous) a @AppointmentDisplay.When(next)</text>
+                            }
+                            @if (!string.IsNullOrEmpty(change.Reason))
+                            {
+                                <text> · motivo (solo personal): @change.Reason</text>
+                            }
+                        </li>
+                    }
+                </ul>
+                @if (appointment.Status == AppointmentStatus.Confirmada)
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-outline-secondary" asp-action="ReprogramarCita" asp-route-citaId="@appointment.Id">Reprogramar</a>
+                        <a class="btn btn-outline-danger" asp-action="CancelarCita" asp-route-citaId="@appointment.Id">Cancelar</a>
+                        @if (appointment.StartsAt <= Model.Now)
+                        {
+                            <form asp-action="FinalizarCita" method="post">
+                                <input type="hidden" name="citaId" value="@appointment.Id" />
+                                <input type="hidden" name="semana" value="@Model.Monday.ToString("yyyy-MM-dd")" />
+                                <button type="submit" class="btn btn-outline-primary">Finalizar</button>
+                            </form>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}

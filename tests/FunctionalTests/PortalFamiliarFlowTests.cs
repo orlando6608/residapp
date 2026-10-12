@@ -276,6 +276,132 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
     }
 
     [Fact]
+    public async Task Citas_AdministracionConfigura_LaFamiliaReservaSinDuplicar_AdministracionCancela_ConLaAppEntera()
+    {
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.Admin);
+        var nurse = await LoginAsync(seed.Nurse);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Citas Funcional", "Madre Citas Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var linkId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+        var authorizationUrl = $"/Administracion/AutorizacionFamiliar?residenteId={residentId}&vinculoId={linkId}";
+        var subject = $"familia-{Guid.NewGuid():N}"[..20];
+        await PostAsync(admin, "/Administracion/AccesoPortalFamiliar", authorizationUrl, new() { ["residenteId"] = residentId, ["vinculoId"] = linkId.ToString(), ["usuario"] = subject });
+        foreach (var (change, expected) in new[] { ("Abrir", 0), ("Activar", 1) })
+        {
+            await PostAsync(admin, "/Administracion/AutorizacionFamiliar", authorizationUrl, new()
+            {
+                ["Form.ResidenteId"] = residentId, ["Form.VinculoId"] = linkId.ToString(), ["Form.CambiosEsperados"] = expected.ToString(), ["Form.Cambio"] = change,
+            });
+        }
+
+        var family = await LoginAsync(subject);
+        var citasUrl = $"/Familia/Residente/{linkId}/Citas";
+
+        // Con el servicio sin configurar, la familia no ve formularios.
+        var beforeConfiguration = await BodyAsync(await family.GetAsync(citasUrl));
+        var newBefore = await BodyAsync(await family.GetAsync($"{citasUrl}/Nueva"));
+
+        // Administración configura: reserva directa, solo Presencial para el equipo médico, y una franja todos los días.
+        var saved = await PostAsync(admin, "/Administracion/Citas", "/Administracion/Citas", new()
+        {
+            ["Servicio.Version"] = "0", ["Servicio.Modo"] = "ReservaDirecta", ["Servicio.AntelacionHoras"] = "1", ["Servicio.HorizonteDias"] = "30",
+            ["Servicio.Modalidades"] = "MEDICO:PRESENCIAL",
+        });
+        for (var day = 1; day <= 7; day++)
+        {
+            Assert.Contains("Franja añadida.", await PostAsync(admin, "/Administracion/CitasFranja", "/Administracion/Citas", new()
+            {
+                ["Franja.Equipo"] = "Medico", ["Franja.DiaSemana"] = day.ToString(), ["Franja.Inicio"] = "08:00", ["Franja.Fin"] = "20:00", ["Franja.DuracionMinutos"] = "30",
+            }));
+        }
+
+        var invalidWindow = await PostAsync(admin, "/Administracion/CitasFranja", "/Administracion/Citas", new()
+        {
+            ["Franja.Equipo"] = "Medico", ["Franja.DiaSemana"] = "1", ["Franja.Inicio"] = "10:00", ["Franja.Fin"] = "11:00", ["Franja.DuracionMinutos"] = "30",
+        });
+        var configuration = await BodyAsync(await admin.GetAsync("/Administracion/Citas"));
+        var nurseConfiguration = await BodyAsync(await nurse.GetAsync("/Administracion/Citas"));
+
+        var home = await BodyAsync(await family.GetAsync(citasUrl));
+        var chooser = await BodyAsync(await family.GetAsync($"{citasUrl}/Nueva"));
+        var slotsPage = await BodyAsync(await family.GetAsync($"{citasUrl}/Nueva?equipo=Medico&modalidad=Presencial"));
+        var review = Regex.Match(slotsPage, "href=\"(/Familia/Residente/[^\"]+/Citas/Revisar[^\"]*)\"").Groups[1].Value;
+        var reviewPage = await BodyAsync(await family.GetAsync(review));
+        var fields = new Dictionary<string, string>
+        {
+            ["equipo"] = ExtractValue(reviewPage, "equipo"), ["modalidad"] = ExtractValue(reviewPage, "modalidad"), ["inicio"] = ExtractValue(reviewPage, "inicio"),
+            ["operacionId"] = ExtractValue(reviewPage, "operacionId"),
+        };
+
+        // Doble pulsación: la misma operación dos veces no duplica la cita.
+        var booked = await PostAsync(family, $"{citasUrl}/Reservar", review, new Dictionary<string, string>(fields));
+        var bookedAgain = await PostAsync(family, $"{citasUrl}/Reservar", review, new Dictionary<string, string>(fields));
+        var appointmentId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.citas WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+        var homeAfter = await BodyAsync(await family.GetAsync(citasUrl));
+        var otherSlots = await BodyAsync(await family.GetAsync($"{citasUrl}/Nueva?equipo=Medico&modalidad=Presencial"));
+        var start = DateTimeOffset.Parse(fields["inicio"]);
+
+        var agenda = await BodyAsync(await admin.GetAsync($"/Administracion/AgendaCitas?semana={start.ToLocalTime():yyyy-MM-dd}"));
+        var cancelWithoutReason = await PostAsync(admin, "/Administracion/CancelarCita", $"/Administracion/CancelarCita?citaId={appointmentId}", new()
+        {
+            ["Form.CitaId"] = appointmentId.ToString(), ["Form.Motivo"] = "",
+        });
+        var cancelled = await PostAsync(admin, "/Administracion/CancelarCita", $"/Administracion/CancelarCita?citaId={appointmentId}", new()
+        {
+            ["Form.CitaId"] = appointmentId.ToString(), ["Form.Motivo"] = "Motivo interno de la cancelación.",
+        });
+        var cancelledFamily = await BodyAsync(await family.GetAsync($"{citasUrl}/{appointmentId}"));
+        var freeAgain = await BodyAsync(await family.GetAsync($"{citasUrl}/Nueva?equipo=Medico&modalidad=Presencial"));
+
+        // Desactivar el servicio: la familia ya no ve formularios de reserva.
+        var disabled = await PostAsync(admin, "/Administracion/Citas", "/Administracion/Citas", new()
+        {
+            ["Servicio.Version"] = "1", ["Servicio.Modo"] = "Desactivado", ["Servicio.AntelacionHoras"] = "1", ["Servicio.HorizonteDias"] = "30",
+            ["Servicio.Modalidades"] = "MEDICO:PRESENCIAL",
+        });
+        var homeDisabled = await BodyAsync(await family.GetAsync(citasUrl));
+        var slotsDisabled = await BodyAsync(await family.GetAsync($"{citasUrl}/Nueva?equipo=Medico&modalidad=Presencial"));
+        var foreignAppointment = await family.GetAsync($"/Familia/Residente/{Guid.NewGuid()}/Citas/{appointmentId}");
+
+        Assert.Contains("no ofrece reservar citas", beforeConfiguration);
+        Assert.DoesNotContain("Reservar una cita", beforeConfiguration);
+        Assert.Contains("no ofrece reservar citas", newBefore);
+        Assert.Contains("Configuración del servicio de citas guardada", saved);
+        Assert.Contains("se solapa con otra", invalidWindow);
+        Assert.Contains("Equipo médico", configuration);
+        Assert.Contains("Lunes", configuration);
+        Assert.DoesNotContain("Guardar el servicio", nurseConfiguration);
+        Assert.Contains("Reservar una cita", home);
+        Assert.Contains("Las citas no son un canal urgente", home);
+        Assert.Contains("No tienes citas.", home);
+        Assert.Contains("Equipo médico", chooser);
+        Assert.DoesNotContain("Equipo de Enfermería", chooser);
+        Assert.DoesNotContain("Telefónica", chooser);
+        Assert.Contains("Huecos libres", slotsPage);
+        Assert.Contains("Confirmar la reserva", reviewPage);
+        Assert.Contains("Cita confirmada.", booked);
+        Assert.Contains("Cita confirmada.", bookedAgain);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.citas WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) }));
+        Assert.Contains("Confirmada", homeAfter);
+        Assert.DoesNotContain($"inicio={fields["inicio"]}", Uri.UnescapeDataString(otherSlots)); // el hueco reservado ya no se ofrece
+        Assert.Contains("Residente Citas Funcional", agenda);
+        Assert.Contains("Madre Citas Funcional", agenda);
+        Assert.Contains("Cancelar", agenda);
+        Assert.Contains("Escribe el motivo de la cancelación.", cancelWithoutReason);
+        Assert.Contains("Cita cancelada.", cancelled);
+        Assert.Contains("Cancelada", cancelledFamily);
+        Assert.Contains("por el centro", cancelledFamily);
+        Assert.DoesNotContain("Motivo interno de la cancelación.", cancelledFamily);
+        Assert.Contains($"inicio={fields["inicio"]}", Uri.UnescapeDataString(freeAgain)); // cancelada, el hueco vuelve a ofrecerse
+        Assert.Contains("Configuración del servicio de citas guardada", disabled);
+        Assert.Contains("no ofrece reservar citas", homeDisabled);
+        Assert.DoesNotContain("Reservar una cita", homeDisabled);
+        Assert.DoesNotContain("Revisar", slotsDisabled);
+        Assert.Equal(HttpStatusCode.Forbidden, foreignAppointment.StatusCode);
+    }
+
+    [Fact]
     public async Task Familia_NoAlcanzaNingunaPantallaDelPersonal_ConLaAppEntera()
     {
         // Barrido: con la sesión de una familiar (con acceso a su residente), ninguna ruta GET de los demás controladores devuelve el residente

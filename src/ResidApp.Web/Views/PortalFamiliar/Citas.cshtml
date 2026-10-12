@@ -1,0 +1,68 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Appointments
+@using ResidApp.Web.Models
+@model PortalFamiliarCitasViewModel
+@{
+    var home = Model.Home;
+    var resident = home.Resident;
+    ViewData["Title"] = "Citas de " + resident.ResidentName;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-linkId="@resident.LinkId">@resident.ResidentName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Citas</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Citas con el equipo asistencial</h1>
+<p class="text-muted">@resident.ResidentName · @resident.Relationship</p>
+<div class="alert alert-warning" role="note">Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</div>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+@if (home.Settings.BookingEnabled)
+{
+    <p>
+        <a class="btn btn-primary btn-lg" asp-action="NuevaCita" asp-route-linkId="@resident.LinkId">Reservar una cita</a>
+    </p>
+    <p class="small text-body-secondary">
+        Eliges el equipo (médico o de Enfermería) y cómo quieres la cita; nunca un profesional concreto. Puedes cambiar o cancelar una cita hasta
+        @home.Settings.MinimumNoticeHours horas antes; después, llama por teléfono al centro.
+    </p>
+}
+else
+{
+    <div class="alert alert-secondary" role="status">
+        Ahora mismo el centro no ofrece reservar citas desde el portal. Para pedir una cita, llama por teléfono al centro.
+    </div>
+}
+
+<h2 class="h5">Mis citas</h2>
+@if (home.Appointments.Count == 0)
+{
+    <p class="estado-vacio">No tienes citas.</p>
+}
+else
+{
+    foreach (var appointment in home.Appointments)
+    {
+        <a asp-action="Cita" asp-route-linkId="@resident.LinkId" asp-route-citaId="@appointment.Id"
+           class="card text-decoration-none mb-3 border-start border-4 @(appointment.Status switch { AppointmentStatus.Confirmada => "border-success", AppointmentStatus.Finalizada => "border-secondary", _ => "border-danger" })">
+            <div class="card-body">
+                <p class="mb-1 fw-semibold">@AppointmentDisplay.When(appointment.StartsAt)</p>
+                <p class="mb-0 text-muted">
+                    @AppointmentDisplay.Label(appointment.Team) · @AppointmentDisplay.Label(appointment.Modality) ·
+                    <span class="badge @(appointment.Status == AppointmentStatus.Confirmada ? "text-bg-success" : appointment.Status == AppointmentStatus.Finalizada ? "text-bg-secondary" : "text-bg-danger")">@AppointmentDisplay.Label(appointment.Status)</span>
+                </p>
+            </div>
+        </a>
+    }
+}

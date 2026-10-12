@@ -1,0 +1,25 @@
+@using ResidApp.Web.Models
+@model PortalFamiliarCitaViewModel
+@{
+    var resident = Model.Resident;
+    var appointment = Model.Appointment;
+    ViewData["Title"] = "Cancelar la cita de " + resident.ResidentName;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-linkId="@resident.LinkId">@resident.ResidentName</a></li>
+        <li class="breadcrumb-item"><a asp-action="Citas" asp-route-linkId="@resident.LinkId">Citas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cancelar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">¿Cancelar esta cita?</h1>
+<p>
+    @AppointmentDisplay.When(appointment.StartsAt) · @AppointmentDisplay.Label(appointment.Team) · @AppointmentDisplay.Label(appointment.Modality).
+    El hueco quedará libre para otras familias. Si luego quieres otra cita, tendrás que reservarla de nuevo.
+</p>
+<form asp-action="CancelarCita" asp-route-linkId="@resident.LinkId" asp-route-citaId="@appointment.Id" method="post">
+    <button type="submit" class="btn btn-danger btn-lg">Sí, cancelar la cita</button>
+    <a class="btn btn-outline-secondary btn-lg" asp-action="Cita" asp-route-linkId="@resident.LinkId" asp-route-citaId="@appointment.Id">No, mantenerla</a>
+</form>

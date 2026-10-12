@@ -1,0 +1,34 @@
+@using ResidApp.Web.Models
+@model CancelarCitaViewModel
+@{
+    ViewData["Title"] = "Cancelar una cita";
+    var appointment = Model.Appointment;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="AgendaCitas">Agenda de citas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cancelar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Cancelar una cita</h1>
+<p class="text-muted">
+    @AppointmentDisplay.When(appointment.StartsAt) · @AppointmentDisplay.Label(appointment.Team) · @AppointmentDisplay.Label(appointment.Modality) ·
+    @appointment.ResidentName (reservada por @appointment.FamilyName). La familia verá que el centro la ha cancelado y el hueco queda libre. El motivo es
+    obligatorio, lo ve el personal y queda en la auditoría; la familia no lo ve. Avísala también por teléfono.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="CancelarCita" method="post">
+    <input type="hidden" name="Form.CitaId" value="@Model.Form.CitaId" />
+    <div class="mb-3">
+        <label asp-for="Form.Motivo" class="form-label"></label>
+        <textarea asp-for="Form.Motivo" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-danger btn-lg">Cancelar la cita</button>
+    <a asp-action="AgendaCitas" class="btn btn-outline-secondary btn-lg">Volver a la agenda</a>
+</form>
