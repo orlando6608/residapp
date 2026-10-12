@@ -70,9 +70,30 @@ jobs:
       - name: Test
         env:
           RESIDAPP_TEST_CONNECTION_STRING: "Server=localhost,1433;Database=ResidAppTest;User Id=sa;Password=${{ secrets.CI_SQL_SA_PASSWORD }};TrustServerCertificate=True;MultipleActiveResultSets=true;"
+          RESIDAPP_TEST_SQL_ERRORS_LOG: ${{ runner.temp }}/sql-errors.log
         run: |
           export RESIDAPP_TEST_APP_CONNECTION_STRING="Server=localhost,1433;Database=ResidAppTest;User Id=residapp_app;Password=$APP_SQL_PASSWORD;TrustServerCertificate=True;MultipleActiveResultSets=true;"
           dotnet test src/ResidApp.sln --no-build --configuration Release
+
+      # Si un test falla con «No disponible», el log no dice por qué: aquí quedan las SqlException (número, mensaje y llamadas) que lo provocaron.
+      - name: Excepciones de SQL durante las pruebas
+        if: failure()
+        env:
+          SA_PASSWORD: ${{ secrets.CI_SQL_SA_PASSWORD }}
+        run: |
+          log="${{ runner.temp }}/sql-errors.log"
+          if [ -s "$log" ]; then
+            echo "Por número de error:"
+            sed -E "s/^[0-9:.]+ SQL #(-?[0-9]+):.*/\1/" "$log" | sort | uniq -c | sort -rn
+            echo "--- Interbloqueos (1205), tiempos de espera (-2) y fallos de conexión:"
+            grep -E "SQL #(1205|-2|0|53|-1|10054|40613):" "$log" | head -50 || true
+            echo "--- Las demás, sin las esperadas por las pruebas (547, 2601, 2627, 33504; las 150 primeras):"
+            grep -vE "SQL #(547|2601|2627|33504):" "$log" | head -150 || true
+          else
+            echo "Sin SqlException registradas."
+          fi
+          echo "--- Interbloqueos guardados por SQL Server (sesión system_health), el más reciente primero:"
+          sqlcmd -C -S localhost -d master -U sa -P "$SA_PASSWORD" -I -W -s "|" -i database/diagnostico/interbloqueos_recientes.sql || true
 
       # Tras las pruebas las tablas tienen datos de varios centros: el usuario limitado, con un ámbito de cada centro, solo debe ver los suyos.
       - name: Comprobar el aislamiento por centro con los datos de las pruebas
