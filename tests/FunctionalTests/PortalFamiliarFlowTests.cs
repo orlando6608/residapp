@@ -547,6 +547,64 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
     }
 
     [Fact]
+    public async Task InicioDeAdministracion_MuestraLoQueRequiereAtencion_SoloCifras_ConLaAppEntera()
+    {
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.Admin);
+        var nurse = await LoginAsync(seed.Nurse);
+        var emptyHome = await BodyAsync(await admin.GetAsync("/Administracion"));
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Inicio Funcional", "Madre Inicio Funcional");
+
+        // Un residente sin habitación y un familiar vinculado sin autorización abierta: dos cosas pendientes.
+        var beforeAuthorization = await BodyAsync(await admin.GetAsync("/Administracion"));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var linkId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+        var authorizationUrl = $"/Administracion/AutorizacionFamiliar?residenteId={residentId}&vinculoId={linkId}";
+        var subject = $"familia-{Guid.NewGuid():N}"[..20];
+        await PostAsync(admin, "/Administracion/AccesoPortalFamiliar", authorizationUrl, new() { ["residenteId"] = residentId, ["vinculoId"] = linkId.ToString(), ["usuario"] = subject });
+        foreach (var (change, expected) in new[] { ("Abrir", 0), ("Activar", 1) })
+        {
+            await PostAsync(admin, "/Administracion/AutorizacionFamiliar", authorizationUrl, new()
+            {
+                ["Form.ResidenteId"] = residentId, ["Form.VinculoId"] = linkId.ToString(), ["Form.CambiosEsperados"] = expected.ToString(), ["Form.Cambio"] = change,
+            });
+        }
+
+        // En solicitud previa, la familia envía una solicitud: pasa a ser una solicitud de cita por gestionar.
+        await PostAsync(admin, "/Administracion/Citas", "/Administracion/Citas", new()
+        {
+            ["Servicio.Version"] = "0", ["Servicio.Modo"] = "SolicitudPrevia", ["Servicio.AntelacionHoras"] = "1", ["Servicio.HorizonteDias"] = "30",
+            ["Servicio.Modalidades"] = "MEDICO:PRESENCIAL",
+        });
+        var family = await LoginAsync(subject);
+        var requestsUrl = $"/Familia/Residente/{linkId}/Solicitudes";
+        var form = await BodyAsync(await family.GetAsync($"{requestsUrl}/Nueva"));
+        await PostAsync(family, requestsUrl, $"{requestsUrl}/Nueva", new()
+        {
+            ["Form.OperacionId"] = ExtractValue(form, "Form.OperacionId"), ["Form.Equipo"] = "Medico", ["Form.Modalidad"] = "Presencial",
+            ["Form.Motivo"] = "Resultados", ["Form.Comentario"] = "Texto de la familia que el inicio no debe enseñar.", ["Form.ParteDelDia"] = "Indiferente",
+        });
+        var afterRequest = await BodyAsync(await admin.GetAsync("/Administracion"));
+        var nurseHome = await nurse.GetAsync("/Administracion");
+
+        Assert.Contains("Requiere atención", emptyHome);
+        Assert.Contains("No hay nada pendiente.", emptyHome);
+        Assert.Contains("1 residente sin habitación asignada", beforeAuthorization);
+        Assert.Contains("1 autorización de familiar pendiente de activar", beforeAuthorization);
+        Assert.DoesNotContain("No hay nada pendiente.", beforeAuthorization);
+        Assert.DoesNotContain("solicitud de cita por gestionar", beforeAuthorization);
+        Assert.Contains("1 residente sin habitación asignada", afterRequest);
+        Assert.DoesNotContain("pendiente de activar", afterRequest);
+        Assert.Contains("1 solicitud de cita por gestionar", afterRequest);
+        Assert.Contains("Citas confirmadas: 0 hoy y 0 en los próximos 7 días", afterRequest);
+        // Solo cifras: ni el nombre del residente ni lo que escribió la familia salen en el inicio.
+        Assert.DoesNotContain("Residente Inicio Funcional", afterRequest);
+        Assert.DoesNotContain("Texto de la familia", afterRequest);
+        Assert.Contains("No se puede acceder", await BodyAsync(nurseHome) + nurseHome.StatusCode);
+        Assert.DoesNotContain("Requiere atención", await BodyAsync(nurseHome));
+    }
+
+    [Fact]
     public async Task PortalFamiliar_ConUnPerfilProfesional_NoEntraEnBucleDeRedirecciones_ConLaAppEntera()
     {
         // Un perfil que no es familiar y tiene un solo ámbito: ProfileScope/Select lo vuelve a seleccionar y lo devolvía a la misma ruta de /Familia, en bucle.

@@ -270,7 +270,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="guia-de-pruebas-cj" data-version="2026-10-15">
+<body data-doc="guia-de-pruebas-cj" data-version="2026-10-16">
 
 <div class="page">
   <header>
@@ -280,13 +280,13 @@
     <p class="lead prose">
       Ya están construidos los circuitos del Auxiliar, Enfermería, Medicina, Dirección Clínica y Administración, el basal con
       Barthel y la protección de los datos por centro. Los tests automáticos no pueden decir si las pantallas hacen lo que tú
-      esperas como clínica. Esta guía te propone 80 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
+      esperas como clínica. Esta guía te propone 81 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
       si coincide y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>80 pruebas en 7 temas, más 3 preguntas finales. 30 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>81 pruebas en 7 temas, más 3 preguntas finales. 30 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Las imprescindibles, hora y media aproximadamente; todas, entre tres y cuatro horas. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -1733,6 +1733,23 @@
           <label class="choice"><input type="radio" name="r-6.31" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-6.31" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-6.31" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.32">
+        <div class="q-head"><span class="n">6.32</span><h3 class="q-title" id="t-6-32">El inicio de Administración dice qué hay que atender</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>dev-integrado-administracion</code> y abre el inicio de Administración. Mira el bloque «Requiere atención» y las dos líneas pequeñas de debajo (citas y comunicados).</li>
+          <li>Pulsa cada línea del bloque y comprueba que te lleva a la pantalla donde se resuelve: las solicitudes y propuestas de cita, a «Solicitudes de cita»; las autorizaciones y los residentes sin habitación, a la lista de residentes (donde tendrás que abrir la ficha para verlos).</li>
+          <li>Entra con <code>dev-integrado-enfermeria</code> e intenta abrir <code>/Administracion</code>.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El bloque solo tiene cifras (ningún nombre de residente ni texto de una solicitud o de un comunicado) y solo salen las líneas con algo que atender; si no hay nada, dice «No hay nada pendiente». Las cifras cuadran con lo que ves en cada pantalla: las solicitudes por gestionar, con la bandeja; las citas de hoy y de los próximos 7 días, con la agenda. Enfermería no entra.</div>
+        <fieldset class="choices" aria-labelledby="t-6-32">
+          <label class="choice"><input type="radio" name="r-6.32" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.32" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.32" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.32" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

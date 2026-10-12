@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ResidApp.Application.Ports;
+using ResidApp.Application.UseCases;
 using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Families;
@@ -13,7 +14,8 @@ namespace ResidApp.Web.Models;
 
 /// <summary>ADM-01: el inicio de Administración, con el número de residentes activos del ámbito y el de cuentas con
 /// algún perfil en el centro.</summary>
-public sealed record AdministracionInicioViewModel(int Residents, int Accounts);
+public sealed record AdministracionInicioViewModel(
+    int Residents, int Accounts, AdministrationOverview? Attention = null, AdministrationCommunicationsSummary? Communications = null);
 
 /// <summary>ADM-02: buscar y filtrar la lista de residentes. Llega por GET (?q=&amp;unidad=); los campos vacíos no
 /// filtran.</summary>
