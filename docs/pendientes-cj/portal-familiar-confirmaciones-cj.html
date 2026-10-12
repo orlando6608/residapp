@@ -256,7 +256,7 @@
     .q { break-inside: avoid; }
   }
 </style>
-<body data-doc="portal-familiar-confirmaciones-cj" data-version="2026-10-12">
+<body data-doc="portal-familiar-confirmaciones-cj" data-version="2026-10-14">
 
 <div class="page">
   <header>
@@ -269,7 +269,7 @@
     <p class="meta">Estado a 12/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       Ya se puede probar el Portal Familiar con la cuenta <code>dev-integrado-familiar</code>: una familiar entra,
-      elige a su residente y lee los comunicados que el centro ha publicado, con sus correcciones y retiradas. Para construirlo, ingeniería tuvo que suponer algunas
+      elige a su residente y lee los comunicados que el centro ha publicado, con sus correcciones y retiradas, y reserva citas con el equipo asistencial. Para construirlo, ingeniería tuvo que suponer algunas
       cosas que ningún documento concreta. Este documento las recoge para que las confirmes o las cambies. Nada de esto bloquea: la
       aplicación ya funciona como se explica en cada pregunta, y lo que cambies se ajusta después.
     </p>
@@ -277,8 +277,8 @@
 
   <div class="keyfacts" role="list">
     <div role="listitem"><span class="k">Qué bloquea</span><span>Nada: todo está construido con la suposición que se explica.</span></div>
-    <div role="listitem"><span class="k">Qué no incluye</span><span>Citas, el resumen periódico por residente y la entrada con credenciales reales: llegarán en los siguientes bloques.</span></div>
-    <div role="listitem"><span class="k">Qué falta</span><span>11 respuestas, repartidas en 4 temas.</span></div>
+    <div role="listitem"><span class="k">Qué no incluye</span><span>La solicitud previa de citas, el resumen periódico por residente y la entrada con credenciales reales: llegarán en los siguientes bloques.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>19 respuestas, repartidas en 5 temas.</span></div>
   </div>
 
   <section class="howto" aria-labelledby="como">
@@ -414,6 +414,7 @@
           <label class="choice"><input type="radio" name="r-4-1" value="A"><span class="letter">A</span><span class="txt">Administración y Dirección Clínica, como al publicar antes de hora.</span></label>
           <label class="choice"><input type="radio" name="r-4-1" value="B"><span class="letter">B</span><span class="txt">Solo Dirección Clínica.</span></label>
           <label class="choice"><input type="radio" name="r-4-1" value="C"><span class="letter">C</span><span class="txt">Además, Enfermería y Medicina deben poder publicar una corrección de lo que ellos mismos prepararon (explica los límites en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="D"><span class="letter">D</span><span class="txt">Solo quien tenga un permiso específico para ello (la historia 6 de Administración lo pide así para retirar; hoy no existe ese permiso).</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
@@ -450,6 +451,97 @@
         <fieldset class="choices" aria-labelledby="t-4-5">
           <label class="choice"><input type="radio" name="r-4-5" value="A"><span class="letter">A</span><span class="txt">No se puede deshacer: se corrige con una publicación nueva (como está ahora).</span></label>
           <label class="choice"><input type="radio" name="r-4-5" value="B"><span class="letter">B</span><span class="txt">Sí: quien retiró puede deshacerlo (indica en el comentario durante cuánto tiempo y si queda constancia).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-5">
+    <h2>Tema 5 · Citas con la familia (reserva directa)</h2>
+    <div class="stack prose">
+      <p>
+        Administración configura el servicio de citas de su centro (desactivado o reserva directa), qué modalidades admite cada equipo (médico o de
+        Enfermería: presencial, telefónica, videoconferencia), las franjas semanales con la duración de cada cita, la antelación mínima, el horizonte y
+        los bloqueos puntuales. La familia elige equipo y modalidad (nunca un profesional), ve los huecos libres y reserva uno; la cita queda confirmada
+        al momento. Puede cambiarla o cancelarla, y Administración puede reprogramarla, cancelarla (con un motivo) y darla por finalizada. La solicitud
+        previa (el otro modo) todavía no está construida. Hoy no hay avisos a la familia ni recordatorios: si el centro cambia una cita, Administración
+        la avisa por teléfono. Estas son las suposiciones con las que se ha construido.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="5.1">
+        <div class="q-head"><span class="n">5.1</span><h3 class="q-title" id="t-5-1">¿Cuántas citas puede atender un equipo a la vez?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy un equipo atiende una sola cita a la vez, aunque el centro tenga varios profesionales en ese equipo. Con la opción B se podrían ofrecer varios huecos a la misma hora.</p>
+        <fieldset class="choices" aria-labelledby="t-5-1">
+          <label class="choice"><input type="radio" name="r-5-1" value="A"><span class="letter">A</span><span class="txt">Una a la vez por equipo (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="B"><span class="letter">B</span><span class="txt">Varias a la vez, según los profesionales de cada franja (indica en el comentario cómo se decide cuántas).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5.2">
+        <div class="q-head"><span class="n">5.2</span><h3 class="q-title" id="t-5-2">¿Cuántas citas próximas puede tener un residente con el mismo equipo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy solo una cita futura confirmada por residente y equipo, para que unos pocos no copen los huecos. Hasta que pase o se cancele, no se puede reservar otra con ese equipo.</p>
+        <fieldset class="choices" aria-labelledby="t-5-2">
+          <label class="choice"><input type="radio" name="r-5-2" value="A"><span class="letter">A</span><span class="txt">Una (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="B"><span class="letter">B</span><span class="txt">Sin límite.</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="C"><span class="letter">C</span><span class="txt">Otro número (indícalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5.3">
+        <div class="q-head"><span class="n">5.3</span><h3 class="q-title" id="t-5-3">¿Quién de la familia ve y cambia una cita?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy solo la persona que la reservó. Otro familiar del mismo residente no la ve (sí ve que ese hueco ya está ocupado). Administración las ve todas.</p>
+        <fieldset class="choices" aria-labelledby="t-5-3">
+          <label class="choice"><input type="radio" name="r-5-3" value="A"><span class="letter">A</span><span class="txt">Solo quien la reservó (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-5-3" value="B"><span class="letter">B</span><span class="txt">Todos los familiares con la autorización activa de ese residente.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5.4">
+        <div class="q-head"><span class="n">5.4</span><h3 class="q-title" id="t-5-4">¿Hasta cuándo puede la familia reprogramar o cancelar?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy hasta la antelación mínima del centro (24 horas por defecto); después tiene que llamar por teléfono. Administración puede cambiarla siempre.</p>
+        <fieldset class="choices" aria-labelledby="t-5-4">
+          <label class="choice"><input type="radio" name="r-5-4" value="A"><span class="letter">A</span><span class="txt">Hasta la antelación mínima del centro (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-5-4" value="B"><span class="letter">B</span><span class="txt">Hasta el mismo día de la cita.</span></label>
+          <label class="choice"><input type="radio" name="r-5-4" value="C"><span class="letter">C</span><span class="txt">Hasta que empiece la cita.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5.5">
+        <div class="q-head"><span class="n">5.5</span><h3 class="q-title" id="t-5-5">¿Son buenos los valores de partida de antelación y horizonte?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Cada centro los puede cambiar. De partida, la familia reserva con al menos 24 horas de antelación y hasta 30 días por delante. Las franjas no traen valores por defecto: las define cada centro.</p>
+        <fieldset class="choices" aria-labelledby="t-5-5">
+          <label class="choice"><input type="radio" name="r-5-5" value="A"><span class="letter">A</span><span class="txt">Sí: 24 horas y 30 días.</span></label>
+          <label class="choice"><input type="radio" name="r-5-5" value="B"><span class="letter">B</span><span class="txt">Otros valores (indícalos en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5.6">
+        <div class="q-head"><span class="n">5.6</span><h3 class="q-title" id="t-5-6">Cuando el centro cancela o cambia una cita, ¿qué ve la familia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy ve que la cancelación o el cambio los hizo el centro, con la hora nueva si es un cambio, pero no el motivo (que Administración escribe y queda en la auditoría).</p>
+        <fieldset class="choices" aria-labelledby="t-5-6">
+          <label class="choice"><input type="radio" name="r-5-6" value="A"><span class="letter">A</span><span class="txt">Que lo hizo el centro, sin el motivo (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-5-6" value="B"><span class="letter">B</span><span class="txt">También un motivo breve pensado para la familia (indica en el comentario cómo se escribe).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5.7">
+        <div class="q-head"><span class="n">5.7</span><h3 class="q-title" id="t-5-7">¿Quién gestiona y quién ve la agenda de citas?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy solo Administración del centro, que ve las citas de todo el centro (el servicio es del centro, no de una unidad). Dirección Clínica, Enfermería y Medicina no la ven todavía.</p>
+        <fieldset class="choices" aria-labelledby="t-5-7">
+          <label class="choice"><input type="radio" name="r-5-7" value="A"><span class="letter">A</span><span class="txt">Solo Administración, de todo el centro (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-5-7" value="B"><span class="letter">B</span><span class="txt">Solo Administración, pero únicamente de los residentes de sus unidades.</span></label>
+          <label class="choice"><input type="radio" name="r-5-7" value="C"><span class="letter">C</span><span class="txt">Además, cada equipo debe ver sus propias citas (indica quién y qué en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5.8">
+        <div class="q-head"><span class="n">5.8</span><h3 class="q-title" id="t-5-8">¿Cuándo se da una cita por finalizada?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy la marca Administración a mano, una vez ha pasado su hora. Mientras no lo haga, la cita sigue «Confirmada» aunque haya pasado.</p>
+        <fieldset class="choices" aria-labelledby="t-5-8">
+          <label class="choice"><input type="radio" name="r-5-8" value="A"><span class="letter">A</span><span class="txt">La marca Administración a mano (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-5-8" value="B"><span class="letter">B</span><span class="txt">Se da por finalizada sola cuando pasa su hora.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

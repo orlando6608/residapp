@@ -270,7 +270,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="guia-de-pruebas-cj" data-version="2026-10-13">
+<body data-doc="guia-de-pruebas-cj" data-version="2026-10-14">
 
 <div class="page">
   <header>
@@ -280,13 +280,13 @@
     <p class="lead prose">
       Ya están construidos los circuitos del Auxiliar, Enfermería, Medicina, Dirección Clínica y Administración, el basal con
       Barthel y la protección de los datos por centro. Los tests automáticos no pueden decir si las pantallas hacen lo que tú
-      esperas como clínica. Esta guía te propone 72 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
+      esperas como clínica. Esta guía te propone 76 pruebas, paso a paso, con lo que debería ocurrir en cada una; tú marcas
       si coincide y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>72 pruebas en 7 temas, más 3 preguntas finales. 26 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>76 pruebas en 7 temas, más 3 preguntas finales. 28 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Las imprescindibles, hora y media aproximadamente; todas, entre tres y cuatro horas. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -374,7 +374,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (26 de 72).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (28 de 76).</p>
 
     <h3>Qué NO se prueba, porque todavía no existe</h3>
     <ul class="lista prose">
@@ -1595,6 +1595,75 @@
           <label class="choice"><input type="radio" name="r-6.23" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-6.23" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-6.23" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.24">
+        <div class="q-head"><span class="n">6.24</span><h3 class="q-title" id="t-6-24">Configurar el servicio de citas</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>dev-integrado-administracion</code> y abre «Citas con la familia». Verás el servicio en reserva directa, las modalidades de cada equipo y las franjas de lunes a viernes que ya están preparadas.</li>
+          <li>Prueba a cambiar la antelación mínima y el horizonte y a marcar o desmarcar alguna modalidad; pulsa «Guardar el servicio». Añade una franja nueva (por ejemplo, los sábados de 10:00 a 12:00 en citas de 20 minutos) y prueba también a añadir una que se solape con otra del mismo equipo y día.</li>
+          <li>Añade un bloqueo (un equipo, una modalidad o todas, de una hora a otra, con un motivo) y retíralo después.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La configuración se guarda y avisa de que se aplica a las reservas nuevas. Una franja que se solapa se rechaza. Los bloqueos y las franjas retiradas dejan de ofrecer huecos, pero no tocan las citas ya confirmadas. «Solicitud previa» aparece como no disponible todavía. En «Auditoría» constan los cambios.</div>
+        <fieldset class="choices" aria-labelledby="t-6-24">
+          <label class="choice"><input type="radio" name="r-6.24" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.24" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.24" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.24" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.25">
+        <div class="q-head"><span class="n">6.25</span><h3 class="q-title" id="t-6-25">La familia reserva una cita</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>dev-integrado-familiar</code>, elige a «Residente Portal Familiar (ficticio)» y pulsa «Citas con el equipo asistencial» y después «Reservar una cita».</li>
+          <li>Elige un equipo y una modalidad, mira los huecos libres, elige uno, revisa los datos y pulsa «Confirmar la reserva». Pulsa dos veces seguidas el botón de confirmar, si puedes.</li>
+          <li>Abre la cita y prueba a reservar otra con el mismo equipo.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La familia solo ve equipos y modalidades, nunca un profesional, y el aviso «Las citas no son un canal urgente» en todas las pantallas. La cita queda confirmada al momento y el hueco deja de ofrecerse; una doble pulsación no duplica la cita. Con el mismo equipo no deja reservar otra mientras tenga una próxima (suposición 5.2). Si desactivas el servicio desde Administración, la familia ya no ve formularios de reserva.</div>
+        <fieldset class="choices" aria-labelledby="t-6-25">
+          <label class="choice"><input type="radio" name="r-6.25" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.25" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.25" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.25" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.26">
+        <div class="q-head"><span class="n">6.26</span><h3 class="q-title" id="t-6-26">La familia reprograma y cancela su cita</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Con <code>dev-integrado-familiar</code>, abre una cita confirmada y pulsa «Reprogramar»: elige otro hueco y confirma. Después pulsa «Cancelar la cita» y confirma.</li>
+          <li>Mira que el hueco antiguo vuelve a ofrecerse. Si quieres, entra como <code>dev-integrado-administracion</code> y cambia la antelación mínima a un valor alto (por ejemplo, 720 horas) para ver que la familia ya no puede cambiar una cita próxima.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Reprogramar y cancelar piden confirmación. Los huecos se liberan. En el historial de la cita constan «Reservada», «Reprogramada» y «Cancelada». Si falta menos que la antelación mínima para la cita, el portal dice que hay que llamar por teléfono al centro. Una cita cancelada no se puede reabrir.</div>
+        <fieldset class="choices" aria-labelledby="t-6-26">
+          <label class="choice"><input type="radio" name="r-6.26" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.26" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.26" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.26" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6.27">
+        <div class="q-head"><span class="n">6.27</span><h3 class="q-title" id="t-6-27">Administración gestiona la agenda de citas</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Con <code>dev-integrado-familiar</code>, reserva una cita (prueba 6.25). Con <code>dev-integrado-administracion</code>, abre «Citas con la familia» → «Ver la agenda de citas» y busca la semana de esa cita.</li>
+          <li>Pulsa «Reprogramar», elige otro hueco y escribe un motivo; después «Cancelar» sobre otra cita y escribe otro motivo. Prueba a guardar sin motivo.</li>
+          <li>Vuelve con la familia y mira las citas. Si hay una cita ya pasada, prueba «Finalizar».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La agenda muestra la hora, el equipo, la modalidad, el residente y la persona de la familia que reservó, y el historial con el motivo. Sin motivo no se reprograma ni se cancela. La familia ve que el centro cambió o canceló la cita (y la hora nueva), pero no el motivo. Solo se puede finalizar una cita confirmada cuya hora ya pasó. Ningún otro perfil (Enfermería, Medicina, Dirección) ve esta agenda.</div>
+        <fieldset class="choices" aria-labelledby="t-6-27">
+          <label class="choice"><input type="radio" name="r-6.27" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6.27" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6.27" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6.27" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
