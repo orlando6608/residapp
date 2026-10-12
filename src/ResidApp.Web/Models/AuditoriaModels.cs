@@ -106,6 +106,12 @@ public static class AuditActionDisplay
         ["APPOINTMENT_RESCHEDULE_ADMIN"] = "Cita reprogramada por Administración",
         ["APPOINTMENT_CANCEL_ADMIN"] = "Cita cancelada por Administración",
         ["APPOINTMENT_FINISH"] = "Cita finalizada",
+        ["APPOINTMENT_REQUEST_CREATE"] = "Solicitud de cita enviada",
+        ["APPOINTMENT_REQUEST_PROPOSE"] = "Horario propuesto a una solicitud de cita",
+        ["APPOINTMENT_REQUEST_OTHER_TIME"] = "Otro horario pedido para una solicitud de cita",
+        ["APPOINTMENT_REQUEST_ACCEPT"] = "Propuesta de cita aceptada",
+        ["APPOINTMENT_REQUEST_CANCEL"] = "Solicitud de cita cancelada por la familia",
+        ["APPOINTMENT_REQUEST_CLOSE"] = "Solicitud de cita cerrada por el centro",
     };
 
     public static string Label(string code) => Labels.TryGetValue(code, out var label) ? label : "Acción administrativa";

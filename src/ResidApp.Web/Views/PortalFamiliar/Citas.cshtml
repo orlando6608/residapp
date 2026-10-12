@@ -38,11 +38,42 @@
         @home.Settings.MinimumNoticeHours horas antes; después, llama por teléfono al centro.
     </p>
 }
+else if (home.Settings.RequestsEnabled)
+{
+    <p>
+        <a class="btn btn-primary btn-lg" asp-action="NuevaSolicitud" asp-route-linkId="@resident.LinkId">Solicitar una cita</a>
+    </p>
+    <p class="small text-body-secondary">
+        Eliges el equipo (médico o de Enfermería), cómo quieres la cita y cuándo podrías. El centro te propondrá un día y una hora, y la cita solo queda
+        confirmada si tú la aceptas. No hay chat: si necesitas algo más, llama por teléfono al centro.
+    </p>
+}
 else
 {
     <div class="alert alert-secondary" role="status">
         Ahora mismo el centro no ofrece reservar citas desde el portal. Para pedir una cita, llama por teléfono al centro.
     </div>
+}
+
+@if (Model.Requests is { Count: > 0 })
+{
+    <h2 class="h5">Mis solicitudes</h2>
+    foreach (var request in Model.Requests)
+    {
+        <a asp-action="Solicitud" asp-route-linkId="@resident.LinkId" asp-route-solicitudId="@request.Id"
+           class="card text-decoration-none mb-3 border-start border-4 @(request.Status == AppointmentRequestStatus.Pendiente ? "border-warning" : request.Status == AppointmentRequestStatus.Propuesta ? "border-primary" : request.Status == AppointmentRequestStatus.Aceptada ? "border-success" : "border-secondary")">
+            <div class="card-body">
+                <p class="mb-1 fw-semibold">@AppointmentDisplay.Label(request.Team) · @AppointmentDisplay.Label(request.Modality)</p>
+                <p class="mb-0 text-muted">
+                    <span class="badge @AppointmentRequestDisplay.Badge(request.Status, request.ProposalExpired)">@AppointmentRequestDisplay.Label(request.Status, request.ProposalExpired)</span>
+                    @if (request.CanAccept)
+                    {
+                        <span>· Propuesta: @AppointmentDisplay.When(request.ProposedStartsAt!.Value)</span>
+                    }
+                </p>
+            </div>
+        </a>
+    }
 }
 
 <h2 class="h5">Mis citas</h2>

@@ -69,14 +69,20 @@ internal static class AppointmentSql
             Utc(row.StartsAt), Utc(row.EndsAt), row.Reason))
         .ToList();
 
-    /// <summary>Las citas del equipo que ocupan hueco y no han terminado (no canceladas), salvo <paramref name="exceptId"/>.</summary>
+    /// <summary>Lo que ocupa hueco en el equipo y no ha terminado: las citas no canceladas (salvo <paramref name="exceptId"/>) y las propuestas vivas de las
+    /// solicitudes (salvo <paramref name="exceptRequestId"/>), que reservan su hueco (script 0057).</summary>
     internal static async Task<IReadOnlyList<AppointmentSlot>> ReadTakenAsync(
-        IDbConnection connection, IDbTransaction? transaction, Guid centerId, AppointmentTeam team, DateTimeOffset now, Guid? exceptId, CancellationToken ct) =>
+        IDbConnection connection, IDbTransaction? transaction, Guid centerId, AppointmentTeam team, DateTimeOffset now, Guid? exceptId, CancellationToken ct,
+        Guid? exceptRequestId = null) =>
         (await connection.QueryAsync<TakenRow>(new CommandDefinition("""
             SELECT inicio_en AS StartsAt, fin_en AS EndsAt FROM dbo.citas
              WHERE centro_id = @centerId AND equipo_codigo = @team AND estado_codigo <> 'CANCELADA' AND fin_en > @now
                AND (@exceptId IS NULL OR id <> @exceptId)
-            """, new { centerId, team = team.ToCode(), now = now.UtcDateTime, exceptId }, transaction, cancellationToken: ct)))
+            UNION ALL
+            SELECT propuesta_inicio_en, propuesta_fin_en FROM dbo.citas_solicitudes WITH (FORCESEEK)
+             WHERE centro_id = @centerId AND equipo_codigo = @team AND estado_codigo = 'PROPUESTA' AND propuesta_fin_en > @now
+               AND (@exceptRequestId IS NULL OR id <> @exceptRequestId)
+            """, new { centerId, team = team.ToCode(), now = now.UtcDateTime, exceptId, exceptRequestId }, transaction, cancellationToken: ct)))
         .Select(row => new AppointmentSlot(Utc(row.StartsAt), Utc(row.EndsAt)))
         .ToList();
 
@@ -110,10 +116,11 @@ internal static class AppointmentSql
         connection.ExecuteScalarAsync<int>(new CommandDefinition(
             "SELECT ISNULL(MAX(numero), 0) + 1 FROM dbo.citas_cambios WHERE cita_id = @appointmentId", new { appointmentId }, transaction, cancellationToken: ct));
 
-    /// <summary>Anota el paso en el historial de la cita (CIT-C03) y lo audita (recurso APPOINTMENT) en la misma transacción.</summary>
+    /// <summary>Anota el paso en el historial de la cita (CIT-C03) y lo audita (recurso APPOINTMENT) en la misma transacción; sin <c>auditAction</c> no
+    /// audita (lo audita quien lo llama sobre otro recurso, como la aceptación de una solicitud).</summary>
     internal static async Task RecordChangeAsync(
         IDbConnection connection, IDbTransaction transaction, Guid centerId, Guid appointmentId, Guid residentId, Guid accountId, SystemProfile profile,
-        AppointmentChangeAction action, string auditAction, DateTimeOffset? previousStartsAt, DateTimeOffset? newStartsAt, string? reason,
+        AppointmentChangeAction action, string? auditAction, DateTimeOffset? previousStartsAt, DateTimeOffset? newStartsAt, string? reason,
         DateTimeOffset occurredAt, CancellationToken ct)
     {
         var number = await NextChangeNumberAsync(connection, transaction, appointmentId, ct);
@@ -122,6 +129,7 @@ internal static class AppointmentSql
                 (id, centro_id, cita_id, numero, accion_codigo, actor_cuenta_id, actor_perfil_codigo, inicio_anterior_en, inicio_nuevo_en, motivo, ocurrido_en)
             VALUES (NEWID(), @centerId, @appointmentId, @number, @action, @accountId, @profile, @previous, @new, @reason, @occurredAt);
 
+            IF @auditAction IS NOT NULL
             INSERT INTO dbo.eventos_auditoria
                 (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
             VALUES (NEWID(), @accountId, @profile, @centerId, NULL, @residentId, 'APPOINTMENT', @appointmentId, @auditAction, @occurredAt);

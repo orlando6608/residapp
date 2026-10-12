@@ -1,0 +1,69 @@
+@using ResidApp.Web.Models
+@model ProponerCitaViewModel
+@{
+    ViewData["Title"] = "Proponer un horario";
+    var request = Model.Request;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="SolicitudesCitas">Solicitudes de cita</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Proponer</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Proponer un horario</h1>
+<p class="text-muted">
+    @request.ResidentName · @AppointmentDisplay.Label(request.Team) · @AppointmentDisplay.Label(request.Modality) · solicitada por @request.FamilyName
+    (@request.Relationship). Motivo: @AppointmentRequestDisplay.Label(request.Reason).
+    <br />Disponibilidad de la familia: <strong>@AppointmentRequestDisplay.Describe(request.Availability)</strong>. Los huecos que encajan con ella llevan una marca.
+</p>
+@if (!string.IsNullOrWhiteSpace(request.Comment))
+{
+    <p style="white-space: pre-line"><span class="fw-semibold">Comentario de la familia:</span> @request.Comment</p>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Slots.Count == 0)
+{
+    <div class="alert alert-warning" role="status">No hay huecos libres de este equipo dentro del horizonte del servicio. Revisa las franjas y los bloqueos.</div>
+}
+else
+{
+    <form asp-action="ProponerCita" method="post">
+        <input type="hidden" name="Form.SolicitudId" value="@Model.Form.SolicitudId" />
+        <fieldset class="mb-3">
+            <legend class="h6">Hueco que propones</legend>
+            <span asp-validation-for="Form.Inicio" class="text-danger"></span>
+            @foreach (var day in Model.Slots.GroupBy(s => TimeZoneInfo.ConvertTime(s.StartsAt, TimeZoneInfo.Local).Date))
+            {
+                <div class="mb-2">
+                    <div class="fw-semibold">@AppointmentDisplay.DayHeading(day.First().StartsAt)</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var slot in day)
+                        {
+                            var id = "hueco-" + slot.StartsAt.UtcDateTime.Ticks;
+                            var local = TimeZoneInfo.ConvertTime(slot.StartsAt, TimeZoneInfo.Local);
+                            var fits = request.Availability.Matches(DateOnly.FromDateTime(local.DateTime), TimeOnly.FromDateTime(local.DateTime));
+                            <div>
+                                <input class="btn-check" type="radio" name="Form.Inicio" id="@id" value="@slot.StartsAt.ToString("o")"
+                                       checked="@(Model.Form.Inicio?.UtcDateTime == slot.StartsAt.UtcDateTime)" />
+                                <label class="btn @(fits ? "btn-outline-success" : "btn-outline-secondary")" for="@id">@AppointmentDisplay.Time(slot.StartsAt)@(fits ? " ✓" : "")</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </fieldset>
+        <div class="mb-3">
+            <label asp-for="Form.Profesional" class="form-label"></label>
+            <input asp-for="Form.Profesional" class="form-control" maxlength="100" />
+            <span asp-validation-for="Form.Profesional" class="text-danger"></span>
+            <div class="form-text">Es solo para el centro: la familia no lo ve nunca. El hueco queda reservado hasta que la familia responda o la hora empiece.</div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">Enviar la propuesta</button>
+        <a asp-action="SolicitudesCitas" class="btn btn-outline-secondary btn-lg">Volver a las solicitudes</a>
+    </form>
+}

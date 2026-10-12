@@ -260,7 +260,7 @@ public sealed class SqlFamilyAppointments(SqlConnectionFactory connections) : IF
         }
     }
 
-    private static Task<LinkRow?> FindLinkAsync(
+    internal static Task<LinkRow?> FindLinkAsync(
         IDbConnection connection, IDbTransaction? transaction, FamilyPortalAccess access, Guid linkId, DateOnly today, CancellationToken ct) =>
         connection.QuerySingleOrDefaultAsync<LinkRow>(new CommandDefinition(
             $"SELECT {LinkColumns} {SqlFamilyPortalReader.AccessibleLinks} AND link.id = @LinkId",
@@ -319,7 +319,7 @@ public sealed class SqlFamilyAppointments(SqlConnectionFactory connections) : IF
         return upcoming.Concat(rest).ToList();
     }
 
-    private sealed record LinkRow(Guid LinkId, Guid ResidentId, string ResidentName, string Relationship);
+    internal sealed record LinkRow(Guid LinkId, Guid ResidentId, string ResidentName, string Relationship);
 
     private sealed record PreviousRow(Guid Id, Guid LinkId, string Team, string Modality, DateTime StartsAt);
 

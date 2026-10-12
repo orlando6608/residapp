@@ -1,0 +1,107 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Appointments
+@using ResidApp.Web.Models
+@model PortalFamiliarNuevaSolicitudViewModel
+@{
+    var resident = Model.Resident;
+    var form = Model.Form;
+    ViewData["Title"] = "Solicitar una cita para " + resident.ResidentName;
+    var modalities = Model.Home.Modalities;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-linkId="@resident.LinkId">@resident.ResidentName</a></li>
+        <li class="breadcrumb-item"><a asp-action="Citas" asp-route-linkId="@resident.LinkId">Citas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Solicitar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Solicitar una cita</h1>
+<div class="alert alert-warning" role="note">Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</div>
+<p class="text-muted">
+    Cuéntanos qué necesitas y cuándo podrías. El centro te propondrá un día y una hora, y la cita solo queda confirmada si tú la aceptas. Nunca eliges un
+    profesional concreto, y no hay chat.
+</p>
+@if (Model.Warning is { } warning)
+{
+    <div class="alert alert-danger" role="alert">@warning</div>
+}
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<form asp-action="EnviarSolicitud" asp-route-linkId="@resident.LinkId" method="post">
+    <input type="hidden" name="Form.OperacionId" value="@form.OperacionId" />
+
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-md-6">
+            <label asp-for="Form.Equipo" class="form-label"></label>
+            <select asp-for="Form.Equipo" class="form-select form-select-lg">
+                <option value="">Elige…</option>
+                @foreach (var team in modalities.Select(m => m.Team).Distinct())
+                {
+                    <option value="@team" selected="@(form.Equipo == team)">@AppointmentDisplay.Label(team)</option>
+                }
+            </select>
+            <span asp-validation-for="Form.Equipo" class="text-danger"></span>
+        </div>
+        <div class="col-12 col-md-6">
+            <label asp-for="Form.Modalidad" class="form-label"></label>
+            <select asp-for="Form.Modalidad" class="form-select form-select-lg">
+                <option value="">Elige…</option>
+                @foreach (var modality in modalities.Select(m => m.Modality).Distinct())
+                {
+                    <option value="@modality" selected="@(form.Modalidad == modality)">@AppointmentDisplay.Label(modality)</option>
+                }
+            </select>
+            <span asp-validation-for="Form.Modalidad" class="text-danger"></span>
+            <div class="form-text">No todas las modalidades están disponibles con los dos equipos; si no cuadra, el centro te lo dirá al enviarla.</div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Form.Motivo" class="form-label"></label>
+        <select asp-for="Form.Motivo" class="form-select form-select-lg">
+            <option value="">Elige…</option>
+            @foreach (var reason in Enum.GetValues<AppointmentRequestReason>())
+            {
+                <option value="@reason" selected="@(form.Motivo == reason)">@AppointmentRequestDisplay.Label(reason)</option>
+            }
+        </select>
+        <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Form.Comentario" class="form-label"></label>
+        <textarea asp-for="Form.Comentario" class="form-control" rows="3" maxlength="@AppointmentRequestInput.MaxCommentLength"></textarea>
+        <span asp-validation-for="Form.Comentario" class="text-danger"></span>
+        <div class="form-text">Breve: hasta @AppointmentRequestInput.MaxCommentLength caracteres. No escribas datos clínicos que no sean necesarios.</div>
+    </div>
+
+    <fieldset class="mb-3">
+        <legend class="h6">¿Qué días podrías?</legend>
+        <div class="d-flex flex-wrap gap-3">
+            @for (var day = 1; day <= 7; day++)
+            {
+                var id = "dia-" + day;
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="Form.Dias" value="@day" id="@id" checked="@form.Dias.Contains(day)" />
+                    <label class="form-check-label" for="@id">@AppointmentDisplay.Day(day)</label>
+                </div>
+            }
+        </div>
+        <div class="form-text">Si no marcas ninguno, cualquier día.</div>
+    </fieldset>
+
+    <div class="mb-3">
+        <label asp-for="Form.ParteDelDia" class="form-label"></label>
+        <select asp-for="Form.ParteDelDia" class="form-select form-select-lg">
+            @foreach (var part in Enum.GetValues<AppointmentDayPart>())
+            {
+                <option value="@part" selected="@(form.ParteDelDia == part)">@AppointmentRequestDisplay.Label(part)</option>
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg">Enviar la solicitud</button>
+    <a class="btn btn-outline-secondary btn-lg" asp-action="Citas" asp-route-linkId="@resident.LinkId">Volver a las citas</a>
+</form>

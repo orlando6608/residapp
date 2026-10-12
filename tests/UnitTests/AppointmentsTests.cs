@@ -26,15 +26,20 @@ public class AppointmentsTests
         AppointmentSlots.Generate(windows, blocks ?? [], taken ?? [], team, modality, settings ?? Reservation, now, Madrid);
 
     [Fact]
-    public void LaConfiguracion_AdmiteDesactivadoYReservaDirecta_ConSusLimites_YNoLaSolicitudPrevia()
+    public void LaConfiguracion_AdmiteLosTresModos_ConSusLimites_YSoloUnoDaReservaOSolicitudes()
     {
         Assert.Equal(new AppointmentServiceSettings(AppointmentServiceMode.ReservaDirecta, 0, 1),
             AppointmentServiceSettings.Validate(AppointmentServiceMode.ReservaDirecta, 0, 1));
         Assert.True(AppointmentServiceSettings.Validate(AppointmentServiceMode.ReservaDirecta, 720, 180).BookingEnabled);
         Assert.False(AppointmentServiceSettings.Validate(AppointmentServiceMode.Desactivado, 24, 30).BookingEnabled);
+        var requests = AppointmentServiceSettings.Validate(AppointmentServiceMode.SolicitudPrevia, 24, 30);
+        Assert.True(requests.RequestsEnabled);
+        Assert.False(requests.BookingEnabled);
+        Assert.False(AppointmentServiceSettings.Validate(AppointmentServiceMode.ReservaDirecta, 24, 30).RequestsEnabled);
+        Assert.False(AppointmentServiceSettings.Validate(AppointmentServiceMode.Desactivado, 24, 30).RequestsEnabled);
         foreach (var (mode, notice, horizon) in new (AppointmentServiceMode?, int?, int?)[]
                  {
-                     (null, 24, 30), (AppointmentServiceMode.SolicitudPrevia, 24, 30), (AppointmentServiceMode.ReservaDirecta, -1, 30),
+                     (null, 24, 30), (AppointmentServiceMode.SolicitudPrevia, 721, 30), (AppointmentServiceMode.ReservaDirecta, -1, 30),
                      (AppointmentServiceMode.ReservaDirecta, 721, 30), (AppointmentServiceMode.ReservaDirecta, 24, 0),
                      (AppointmentServiceMode.ReservaDirecta, 24, 181), (AppointmentServiceMode.ReservaDirecta, null, 30),
                      (AppointmentServiceMode.ReservaDirecta, 24, null),

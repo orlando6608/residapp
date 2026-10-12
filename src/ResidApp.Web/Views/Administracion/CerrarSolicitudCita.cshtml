@@ -1,0 +1,33 @@
+@using ResidApp.Web.Models
+@model CerrarSolicitudViewModel
+@{
+    ViewData["Title"] = "Cerrar una solicitud de cita";
+    var request = Model.Request;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="SolicitudesCitas">Solicitudes de cita</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cerrar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Cerrar una solicitud de cita</h1>
+<p class="text-muted">
+    @request.ResidentName · @AppointmentDisplay.Label(request.Team) · @AppointmentDisplay.Label(request.Modality) · solicitada por @request.FamilyName
+    (@request.Relationship). La familia verá que el centro ha cerrado la solicitud, sin el motivo, que queda en la auditoría. Avísala también por teléfono.
+    Si había una propuesta, el hueco queda libre.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+<form asp-action="CerrarSolicitudCita" method="post">
+    <input type="hidden" name="Form.SolicitudId" value="@Model.Form.SolicitudId" />
+    <div class="mb-3">
+        <label asp-for="Form.Motivo" class="form-label"></label>
+        <textarea asp-for="Form.Motivo" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-danger btn-lg">Cerrar la solicitud</button>
+    <a asp-action="SolicitudesCitas" class="btn btn-outline-secondary btn-lg">Volver a las solicitudes</a>
+</form>
