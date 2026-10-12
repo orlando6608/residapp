@@ -12,7 +12,7 @@ La hoja de ruta original del prototipo legado (consolidación documental → lí
 | Auxiliar | Completado (historias 1-6), pendiente de validación por CJ |
 | Enfermería | En curso — ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md` |
 | Medicina | En curso — ver `docs/tareas/alta-prioridad/pendientes-medicina.md` |
-| Familia / Portal Familiar | En curso: primera entrega hecha (cuenta del familiar, elegir residente y leer comunicados publicados; script `0052`). Faltan correctoras y retiradas, citas, resumen periódico por residente y el proveedor de identidad real (ADR 0007) |
+| Familia / Portal Familiar | En curso: primera entrega hecha (cuenta del familiar, elegir residente y leer comunicados publicados; script `0052`) y segunda (publicación correctora vinculada y retirada de lo ya publicado; script `0053`). Faltan citas, resumen periódico por residente y el proveedor de identidad real (ADR 0007) |
 | Administración | En curso — ver `docs/tareas/alta-prioridad/pendientes-administracion.md` |
 | Dirección / Coordinación Clínica | En curso — ver `docs/tareas/alta-prioridad/pendientes-direccion.md` |
 

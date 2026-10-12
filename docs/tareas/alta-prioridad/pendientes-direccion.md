@@ -8,7 +8,7 @@ Flujo: [`supervision-clinica-direccion.md`](../../flujos-clinicos/supervision-cl
 
 - **Publicar comunicados a la familia antes de hora (CJ 5.3 de las confirmaciones de la segunda tanda, 2026-10-10; sin script)** — Dirección Clínica
   puede publicar un comunicado antes de su hora (`Direccion/Comunicados` + `PublicarComunicado`, `FamilyCommunicationPublicationApplicationService`),
-  además de Administración. Es la **única acción de escritura** de este perfil (el resto sigue en solo lectura). Alcance: los eventos de sus unidades y
+  además de Administración. Es, con publicar una corrección o retirar un comunicado ya publicado (script `0053`, `FAMILY_COMMUNICATION_CORRECTIVE` y `FAMILY_COMMUNICATION_WITHDRAW`), la **única acción de escritura** de este perfil (el resto sigue en solo lectura). Alcance: los eventos de sus unidades y
   residentes (`DirectionScopedEventsFrom`, con la restricción por residente si la tiene); no hace falta permiso ni declaración de acceso clínico porque no
   se lee contenido clínico, solo el texto aprobado del comunicado, sin el nombre de quien lo preparó. Auditoría `FAMILY_COMMUNICATION_PUBLISH_NOW` con
   el perfil `DIRECCION_CLINICA`. Con un residente sin contacto urgente, el hito «llamada a la familia» de la calidad de proceso no se mide (CJ 2.1).
