@@ -67,7 +67,21 @@ public sealed partial class AdministracionController(
             return View(AdministrativeResidentListViewModel.From([], filtro, today));
         }
 
-        return View(AdministrativeResidentListViewModel.From(result.Value!, filtro, today));
+        // Los motivos de atención solo se leen si se filtra por uno.
+        IReadOnlyList<ResidentAttention>? attention = null;
+        if (filtro.Atencion is not null)
+        {
+            var flagged = await service.ListResidentAttentionAsync(Query(activeScope), today, ct);
+            if (!flagged.Ok)
+            {
+                ModelState.AddModelError(string.Empty, flagged.Error!.Message);
+                return View(AdministrativeResidentListViewModel.From(result.Value!, filtro, today));
+            }
+
+            attention = flagged.Value;
+        }
+
+        return View(AdministrativeResidentListViewModel.From(result.Value!, filtro, today, attention));
     }
 
     /// <summary>ADM-03: si el residente no existe o no está en el ámbito, se vuelve a la lista sin distinguir el motivo.</summary>

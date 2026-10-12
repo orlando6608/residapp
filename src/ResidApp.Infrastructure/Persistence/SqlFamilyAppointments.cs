@@ -86,7 +86,7 @@ public sealed class SqlFamilyAppointments(SqlConnectionFactory connections) : IF
         // La misma operación de la misma cuenta es la doble pulsación: devuelve la cita ya creada, si es la misma petición.
         var previous = await connection.QuerySingleOrDefaultAsync<PreviousRow>(new CommandDefinition("""
             SELECT id AS Id, vinculo_id AS LinkId, equipo_codigo AS Team, modalidad_codigo AS Modality, inicio_en AS StartsAt
-              FROM dbo.citas WHERE cuenta_id = @account AND operacion_id = @operationId
+              FROM dbo.citas WITH (FORCESEEK) WHERE cuenta_id = @account AND operacion_id = @operationId
             """, new { account = access.AccountId.Value, operationId }, transaction, cancellationToken: ct));
         if (previous is not null)
         {
@@ -113,7 +113,7 @@ public sealed class SqlFamilyAppointments(SqlConnectionFactory connections) : IF
             .FirstOrDefault(s => s.StartsAt.UtcDateTime == startsAt.UtcDateTime)
             ?? throw new DomainValidationException("APPOINTMENT_SLOT_UNAVAILABLE");
         var openForTeam = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
-            SELECT COUNT(*) FROM dbo.citas
+            SELECT COUNT(*) FROM dbo.citas WITH (FORCESEEK)
              WHERE centro_id = @center AND residente_id = @resident AND equipo_codigo = @team AND estado_codigo = 'CONFIRMADA' AND inicio_en > @now
             """, new { center, resident = link.ResidentId, team = team.ToCode(), now = now.UtcDateTime }, transaction, cancellationToken: ct));
         if (openForTeam > 0)
@@ -275,7 +275,7 @@ public sealed class SqlFamilyAppointments(SqlConnectionFactory connections) : IF
     {
         var row = await connection.QuerySingleOrDefaultAsync<OwnRow>(new CommandDefinition($"""
             SELECT id AS Id, equipo_codigo AS Team, modalidad_codigo AS Modality, inicio_en AS StartsAt, estado_codigo AS Status
-              FROM dbo.citas {(forUpdate ? "WITH (UPDLOCK, ROWLOCK)" : "")}
+              FROM dbo.citas {(forUpdate ? "WITH (UPDLOCK, ROWLOCK, FORCESEEK)" : "WITH (FORCESEEK)")}
              WHERE id = @appointmentId AND centro_id = @center AND residente_id = @residentId AND cuenta_id = @account
             """, new { appointmentId, center = access.CenterId.Value, residentId, account = access.AccountId.Value }, transaction, cancellationToken: ct));
         return row is null
@@ -290,19 +290,24 @@ public sealed class SqlFamilyAppointments(SqlConnectionFactory connections) : IF
         IDbConnection connection, IDbTransaction? transaction, FamilyPortalAccess access, Guid residentId, AppointmentServiceSettings settings, DateTimeOffset now,
         Guid? appointmentId, CancellationToken ct)
     {
-        var rows = (await connection.QueryAsync<AppointmentRow>(new CommandDefinition("""
+        // Una cita se busca por su clave y la lista por centro y residente, las dos con FORCESEEK (lección de 0055 y 0056: con un OR sobre @appointmentId el plan
+        // recorría la tabla entera y, dentro de una transacción, pedía bloqueos sobre filas de otras familias).
+        var filter = appointmentId is null ? "inicio_en >= @since" : "id = @appointmentId";
+        var rows = (await connection.QueryAsync<AppointmentRow>(new CommandDefinition($"""
             SELECT id AS Id, equipo_codigo AS Team, modalidad_codigo AS Modality, inicio_en AS StartsAt, fin_en AS EndsAt, estado_codigo AS Status
-              FROM dbo.citas
-             WHERE centro_id = @center AND residente_id = @residentId AND cuenta_id = @account
-               AND ((@appointmentId IS NOT NULL AND id = @appointmentId) OR (@appointmentId IS NULL AND inicio_en >= @since))
+              FROM dbo.citas WITH (FORCESEEK)
+             WHERE centro_id = @center AND residente_id = @residentId AND cuenta_id = @account AND {filter}
             """, new
         {
             center = access.CenterId.Value, residentId, account = access.AccountId.Value, appointmentId, since = (now - History).UtcDateTime,
         }, transaction, cancellationToken: ct))).ToList();
-        var changes = (await connection.QueryAsync<ChangeRow>(new CommandDefinition("""
-            SELECT cita_id AS AppointmentId, accion_codigo AS Action, actor_perfil_codigo AS Profile, ocurrido_en AS At
-              FROM dbo.citas_cambios WHERE centro_id = @center AND cita_id IN @ids ORDER BY numero
-            """, new { center = access.CenterId.Value, ids = rows.Select(r => r.Id).ToList() }, transaction, cancellationToken: ct))).ToLookup(c => c.AppointmentId);
+        // Con FORCESEEK por cita (índice único cita_id, numero); con una lista vacía no hay nada que buscar (y FORCESEEK no admite el IN vacío de Dapper).
+        var changes = rows.Count == 0
+            ? Enumerable.Empty<ChangeRow>().ToLookup(c => c.AppointmentId)
+            : (await connection.QueryAsync<ChangeRow>(new CommandDefinition("""
+                SELECT cita_id AS AppointmentId, accion_codigo AS Action, actor_perfil_codigo AS Profile, ocurrido_en AS At
+                  FROM dbo.citas_cambios WITH (FORCESEEK) WHERE centro_id = @center AND cita_id IN @ids ORDER BY numero
+                """, new { center = access.CenterId.Value, ids = rows.Select(r => r.Id).ToList() }, transaction, cancellationToken: ct))).ToLookup(c => c.AppointmentId);
         var appointments = rows.Select(row =>
         {
             var status = EnumCode.ParseCode<AppointmentStatus>(row.Status);

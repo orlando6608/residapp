@@ -272,7 +272,7 @@ public sealed class SqlFamilyAppointmentRequests(SqlConnectionFactory connection
         IDbConnection connection, IDbTransaction transaction, Guid center, Guid residentId, AppointmentTeam team, DateTimeOffset now, CancellationToken ct)
     {
         var openForTeam = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
-            SELECT COUNT(*) FROM dbo.citas
+            SELECT COUNT(*) FROM dbo.citas WITH (FORCESEEK)
              WHERE centro_id = @center AND residente_id = @resident AND equipo_codigo = @team AND estado_codigo = 'CONFIRMADA' AND inicio_en > @now
             """, new { center, resident = residentId, team = team.ToCode(), now = now.UtcDateTime }, transaction, cancellationToken: ct));
         if (openForTeam > 0)

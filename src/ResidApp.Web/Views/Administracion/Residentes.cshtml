@@ -1,3 +1,4 @@
+@using ResidApp.Application.Ports
 @using ResidApp.Web.Models
 @model AdministrativeResidentListViewModel
 @{
@@ -37,6 +38,16 @@
                     </select>
                 </div>
             }
+            <div class="col-12 col-md-6">
+                <label for="filtro-atencion" class="form-label">Requiere atención</label>
+                <select id="filtro-atencion" name="atencion" class="form-select form-select-lg">
+                    <option value="">Todos</option>
+                    @foreach (var kind in Enum.GetValues<ResidentAttentionKind>())
+                    {
+                        <option value="@kind" selected="@(filtro.Atencion == kind)">@AdministrativeResidentDisplay.Label(kind)</option>
+                    }
+                </select>
+            </div>
             <div class="col-12 col-md-auto d-grid d-md-flex gap-2">
                 <button type="submit" class="btn btn-primary btn-lg">Buscar</button>
                 @if (!filtro.IsEmpty)

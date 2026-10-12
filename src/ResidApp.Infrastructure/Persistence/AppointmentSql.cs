@@ -75,7 +75,7 @@ internal static class AppointmentSql
         IDbConnection connection, IDbTransaction? transaction, Guid centerId, AppointmentTeam team, DateTimeOffset now, Guid? exceptId, CancellationToken ct,
         Guid? exceptRequestId = null) =>
         (await connection.QueryAsync<TakenRow>(new CommandDefinition("""
-            SELECT inicio_en AS StartsAt, fin_en AS EndsAt FROM dbo.citas
+            SELECT inicio_en AS StartsAt, fin_en AS EndsAt FROM dbo.citas WITH (FORCESEEK)
              WHERE centro_id = @centerId AND equipo_codigo = @team AND estado_codigo <> 'CANCELADA' AND fin_en > @now
                AND (@exceptId IS NULL OR id <> @exceptId)
             UNION ALL
@@ -114,7 +114,7 @@ internal static class AppointmentSql
 
     internal static Task<int> NextChangeNumberAsync(IDbConnection connection, IDbTransaction transaction, Guid appointmentId, CancellationToken ct) =>
         connection.ExecuteScalarAsync<int>(new CommandDefinition(
-            "SELECT ISNULL(MAX(numero), 0) + 1 FROM dbo.citas_cambios WHERE cita_id = @appointmentId", new { appointmentId }, transaction, cancellationToken: ct));
+            "SELECT ISNULL(MAX(numero), 0) + 1 FROM dbo.citas_cambios WITH (FORCESEEK) WHERE cita_id = @appointmentId", new { appointmentId }, transaction, cancellationToken: ct));
 
     /// <summary>Anota el paso en el historial de la cita (CIT-C03) y lo audita (recurso APPOINTMENT) en la misma transacción; sin <c>auditAction</c> no
     /// audita (lo audita quien lo llama sobre otro recurso, como la aceptación de una solicitud).</summary>

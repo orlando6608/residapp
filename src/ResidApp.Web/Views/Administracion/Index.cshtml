@@ -45,19 +45,19 @@
                 }
                 @if (attention.AuthorizationsPending > 0)
                 {
-                    <li class="list-group-item"><a asp-action="Residentes">@Plural(attention.AuthorizationsPending, "autorización de familiar pendiente de activar", "autorizaciones de familiares pendientes de activar")</a></li>
+                    <li class="list-group-item"><a asp-action="Residentes" asp-route-atencion="AutorizacionPendiente">@Plural(attention.AuthorizationsPending, "autorización de familiar pendiente de activar", "autorizaciones de familiares pendientes de activar")</a></li>
                 }
                 @if (attention.AuthorizationsExpired > 0)
                 {
-                    <li class="list-group-item"><a asp-action="Residentes">@Plural(attention.AuthorizationsExpired, "autorización de familiar caducada", "autorizaciones de familiares caducadas")</a></li>
+                    <li class="list-group-item"><a asp-action="Residentes" asp-route-atencion="AutorizacionCaducada">@Plural(attention.AuthorizationsExpired, "autorización de familiar caducada", "autorizaciones de familiares caducadas")</a></li>
                 }
                 @if (attention.AuthorizationsExpiringSoon > 0)
                 {
-                    <li class="list-group-item"><a asp-action="Residentes">@Plural(attention.AuthorizationsExpiringSoon, "autorización de familiar caduca", "autorizaciones de familiares caducan") en @AdministrationOverviewRules.ExpiringSoonDays días o menos</a></li>
+                    <li class="list-group-item"><a asp-action="Residentes" asp-route-atencion="AutorizacionPorCaducar">@Plural(attention.AuthorizationsExpiringSoon, "autorización de familiar caduca", "autorizaciones de familiares caducan") en @AdministrationOverviewRules.ExpiringSoonDays días o menos</a></li>
                 }
                 @if (attention.ResidentsWithoutRoom > 0)
                 {
-                    <li class="list-group-item"><a asp-action="Residentes">@Plural(attention.ResidentsWithoutRoom, "residente sin habitación asignada", "residentes sin habitación asignada")</a></li>
+                    <li class="list-group-item"><a asp-action="Residentes" asp-route-atencion="SinHabitacion">@Plural(attention.ResidentsWithoutRoom, "residente sin habitación asignada", "residentes sin habitación asignada")</a></li>
                 }
             </ul>
         }

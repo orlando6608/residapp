@@ -88,12 +88,39 @@ public sealed record AdministrativeResidentDetail(
     public string? NoContactReason => EmergencyContacts is [.., { Action: EmergencyContactSet.NoContact } last] ? last.Reason : null;
 }
 
+/// <summary>Por qué un residente del ámbito requiere atención (inicio de Administración, ADM-01): las mismas cuatro cosas que cuenta el inicio, ahora por residente.</summary>
+public enum ResidentAttentionKind
+{
+    SinHabitacion,
+    AutorizacionPendiente,
+    AutorizacionCaducada,
+    AutorizacionPorCaducar,
+}
+
+/// <summary>Los motivos de atención de un residente: sin habitación, o algún familiar con la autorización pendiente, caducada o que caduca en <see cref="AdministrationOverviewRules.ExpiringSoonDays"/> días.</summary>
+public sealed record ResidentAttention(
+    ResidentId ResidentId, bool WithoutRoom, bool AuthorizationPending, bool AuthorizationExpired, bool AuthorizationExpiringSoon)
+{
+    public bool Matches(ResidentAttentionKind kind) => kind switch
+    {
+        ResidentAttentionKind.SinHabitacion => WithoutRoom,
+        ResidentAttentionKind.AutorizacionPendiente => AuthorizationPending,
+        ResidentAttentionKind.AutorizacionCaducada => AuthorizationExpired,
+        ResidentAttentionKind.AutorizacionPorCaducar => AuthorizationExpiringSoon,
+        _ => false,
+    };
+}
+
 /// <summary>ADM-02/ADM-03: lectura de Administración. Aplica en la propia consulta la regla de ámbito de
 /// SqlEnfermeriaResidentDirectory (ámbito activo de ADMINISTRACION, sus unidades y, si los restringe, sus residentes),
 /// así que un residente ajeno devuelve null, sin distinguir si existe.</summary>
 public interface IAdministracionResidentDirectory
 {
     Task<IReadOnlyList<AdministrativeResidentSummary>> ListAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>Qué residentes del ámbito requieren atención (sin habitación, autorización pendiente, caducada o a punto de caducar), con la misma regla que las cifras
+    /// del inicio de Administración. <paramref name="today"/> es el día natural del centro.</summary>
+    Task<IReadOnlyList<ResidentAttention>> ListAttentionAsync(Guid profileScopeId, CenterId centerId, DateOnly today, CancellationToken ct = default);
 
     Task<AdministrativeResidentDetail?> FindAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);

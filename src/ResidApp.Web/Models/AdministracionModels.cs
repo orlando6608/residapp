@@ -27,7 +27,11 @@ public sealed class AdministrativeResidentFilter
     [Display(Name = "Unidad")]
     public Guid? Unidad { get; set; }
 
-    public bool IsEmpty => string.IsNullOrWhiteSpace(Q) && Unidad is null;
+    /// <summary>«Requiere atención» (?atencion=SinHabitacion, AutorizacionPendiente, AutorizacionCaducada o AutorizacionPorCaducar): los enlaces del inicio de Administración.</summary>
+    [Display(Name = "Requiere atención")]
+    public ResidentAttentionKind? Atencion { get; set; }
+
+    public bool IsEmpty => string.IsNullOrWhiteSpace(Q) && Unidad is null && Atencion is null;
 }
 
 /// <summary>ADM-02: la lista del ámbito (ya autorizada) filtrada en memoria, como la de Enfermería: el nombre se busca
@@ -37,10 +41,15 @@ public sealed record AdministrativeResidentListViewModel(
     IReadOnlyList<(Guid Id, string Name)> Units, DateOnly Today)
 {
     public static AdministrativeResidentListViewModel From(
-        IReadOnlyList<AdministrativeResidentSummary> all, AdministrativeResidentFilter filter, DateOnly today)
+        IReadOnlyList<AdministrativeResidentSummary> all, AdministrativeResidentFilter filter, DateOnly today,
+        IReadOnlyList<ResidentAttention>? attention = null)
     {
         var name = filter.Q?.Trim();
+        var flagged = filter.Atencion is { } kind
+            ? (attention ?? []).Where(a => a.Matches(kind)).Select(a => a.ResidentId).ToHashSet()
+            : null;
         var shown = all
+            .Where(r => flagged is null || flagged.Contains(r.ResidentId))
             .Where(r => string.IsNullOrEmpty(name) || CultureInfo.InvariantCulture.CompareInfo.IndexOf(
                 r.DisplayName, name, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0)
             .Where(r => filter.Unidad is null || r.UnitId.Value == filter.Unidad)
@@ -212,6 +221,16 @@ public sealed record EmergencyContactViewModel(AdministrativeResidentDetail Deta
 
 public static class AdministrativeResidentDisplay
 {
+    /// <summary>El texto de cada filtro «requiere atención» de la lista de residentes.</summary>
+    public static string Label(ResidentAttentionKind kind) => kind switch
+    {
+        ResidentAttentionKind.SinHabitacion => "Sin habitación asignada",
+        ResidentAttentionKind.AutorizacionPendiente => "Con una autorización de familiar pendiente de activar",
+        ResidentAttentionKind.AutorizacionCaducada => "Con una autorización de familiar caducada",
+        ResidentAttentionKind.AutorizacionPorCaducar => $"Con una autorización de familiar que caduca en {AdministrationOverviewRules.ExpiringSoonDays} días o menos",
+        _ => kind.ToString(),
+    };
+
     /// <summary>ADM-08: la autorización tal como cuenta hoy, p. ej. «Activa hasta el 31/10/2026» o «Sin autorización».</summary>
     public static string Authorization(ResidentFamilyMember member, DateOnly today)
     {

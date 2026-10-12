@@ -295,7 +295,7 @@ public sealed class SqlAppointmentServiceRepository(SqlConnectionFactory connect
     {
         var row = await connection.QuerySingleOrDefaultAsync<RawAppointmentRow>(new CommandDefinition($"""
             SELECT id AS Id, residente_id AS ResidentId, equipo_codigo AS Team, modalidad_codigo AS Modality, inicio_en AS StartsAt, estado_codigo AS Status
-              FROM dbo.citas {(forUpdate ? "WITH (UPDLOCK, ROWLOCK)" : "")} WHERE id = @appointmentId AND centro_id = @centerId
+              FROM dbo.citas {(forUpdate ? "WITH (UPDLOCK, ROWLOCK, FORCESEEK)" : "WITH (FORCESEEK)")} WHERE id = @appointmentId AND centro_id = @centerId
             """, new { appointmentId, centerId }, transaction, cancellationToken: ct));
         return row is null
             ? null

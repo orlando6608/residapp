@@ -85,6 +85,34 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
         return rows.Select(ToSummary).ToList();
     }
 
+    public async Task<IReadOnlyList<ResidentAttention>> ListAttentionAsync(
+        Guid profileScopeId, CenterId centerId, DateOnly today, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var todayDate = today.ToDateTime(TimeOnly.MinValue);
+        var rows = await connection.QueryAsync<AttentionRow>(new CommandDefinition($"""
+            {SqlAdministrationOverview.ScopedAuthorizationsCtes}
+            SELECT scoped.ResidentId,
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.intervalos_ubicacion_residente location
+                                           WHERE location.residente_id = scoped.ResidentId AND location.centro_id = @CenterId
+                                             AND location.vigente_hasta IS NULL AND location.habitacion_id IS NULL) THEN 1 ELSE 0 END AS bit) AS WithoutRoom,
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM latest WHERE latest.ResidentId = scoped.ResidentId
+                                             AND (latest.StatusCode IS NULL OR latest.StatusCode = 'PENDIENTE')) THEN 1 ELSE 0 END AS bit) AS AuthorizationPending,
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM latest WHERE latest.ResidentId = scoped.ResidentId
+                                             AND latest.StatusCode = 'ACTIVA' AND latest.ValidUntil < @Today) THEN 1 ELSE 0 END AS bit) AS AuthorizationExpired,
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM latest WHERE latest.ResidentId = scoped.ResidentId
+                                             AND latest.StatusCode = 'ACTIVA' AND latest.ValidUntil >= @Today AND latest.ValidUntil <= @SoonLimit) THEN 1 ELSE 0 END AS bit) AS AuthorizationExpiringSoon
+              FROM scoped
+            """,
+            new
+            {
+                ProfileScopeId = profileScopeId, CenterId = centerId.Value, Today = todayDate,
+                SoonLimit = todayDate.AddDays(AdministrationOverviewRules.ExpiringSoonDays),
+            }, cancellationToken: ct));
+        return rows.Select(r => new ResidentAttention(
+            ResidentId.From(r.ResidentId), r.WithoutRoom, r.AuthorizationPending, r.AuthorizationExpired, r.AuthorizationExpiringSoon)).ToList();
+    }
+
     public async Task<AdministrativeResidentDetail?> FindAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default)
     {
@@ -181,6 +209,9 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
         UnitId.From(r.UnitId), r.UnitName, Utc(r.AdmittedAt));
 
     private static DateTimeOffset Utc(DateTime value) => new(value, TimeSpan.Zero);
+
+    private sealed record AttentionRow(
+        Guid ResidentId, bool WithoutRoom, bool AuthorizationPending, bool AuthorizationExpired, bool AuthorizationExpiringSoon);
 
     private sealed record ResidentRow(
         Guid ResidentId, string DisplayName, DateTime BirthDate, string SexCode, Guid UnitId, string UnitName, DateTime AdmittedAt);

@@ -133,6 +133,71 @@ public class AdministracionInicioTests
         Assert.Equal(0, (await OverviewAsync(admin)).AuthorizationsPending);
     }
 
+    private static async Task<IReadOnlyList<ResidentAttention>> AttentionAsync(SeededProfile admin) =>
+        await new SqlAdministracionResidentDirectory(TestDatabase.ConnectionFactory).ListAttentionAsync(admin.ProfileScopeId, admin.CenterId, Today);
+
+    [Fact]
+    public async Task ListaDeResidentes_FiltraPorMotivoDeAtencion_ConLaMismaReglaQueElInicio_SoloEnElAmbito()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var otherUnit = await AddUnitAsync(admin.CenterId);
+        var otherUnitAdmin = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, admin.CenterId, otherUnit);
+        var room = (await BuildEstructura(admin.ExternalSubject).CreateRoomAsync(
+            new CreateRoomCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), admin.UnitId, "Habitación atención"))).Value;
+        async Task<ResidentId> WithRoomAsync(string name) => (await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(
+            new CreateResidentInput(admin.AccountId, SystemProfile.Administracion, admin.CenterId, admin.UnitId, name, new DateOnly(1940, 5, 20),
+                DocumentedSexCode.NoConsta, null, null, null, room, null, Guid.NewGuid()))).ResidentId;
+        var noRoomPending = await CreateResidentAsync(admin, "Sin habitación y pendiente");
+        await AddFamilyAsync(admin, noRoomPending, "Familiar pendiente");
+        var soon = await WithRoomAsync("Caduca pronto");
+        var soonLink = await AddFamilyAsync(admin, soon, "Familiar que caduca");
+        await ChangeAsync(admin, soon, soonLink, FamilyAuthorizationChange.Abrir, 0);
+        await ActivateAsync(admin, soon, soonLink, 1, Today.AddDays(5));
+        var endsToday = await WithRoomAsync("Caduca hoy");
+        var endsTodayLink = await AddFamilyAsync(admin, endsToday, "Familiar que caduca hoy");
+        await ChangeAsync(admin, endsToday, endsTodayLink, FamilyAuthorizationChange.Abrir, 0);
+        await ActivateAsync(admin, endsToday, endsTodayLink, 1, Today);
+        var expired = await WithRoomAsync("Caducada");
+        var expiredLink = await AddFamilyAsync(admin, expired, "Familiar caducada");
+        await ChangeAsync(admin, expired, expiredLink, FamilyAuthorizationChange.Abrir, 0);
+        await InsertExpiredAsync(admin, expiredLink, 2);
+        var fine = await WithRoomAsync("Todo en orden");
+        var fineLink = await AddFamilyAsync(admin, fine, "Familiar al día");
+        await ChangeAsync(admin, fine, fineLink, FamilyAuthorizationChange.Abrir, 0);
+        await ActivateAsync(admin, fine, fineLink, 1, null);
+        var noFamily = await WithRoomAsync("Sin familiares");
+        var outsider = await CreateResidentAsync(admin, "De otra unidad", otherUnit);
+        await AddFamilyAsync(otherUnitAdmin, outsider, "Familiar ajeno");
+
+        var attention = await AttentionAsync(admin);
+        var mine = attention.ToDictionary(a => a.ResidentId);
+        var elsewhere = await AttentionAsync(otherUnitAdmin);
+
+        Assert.Equal(6, attention.Count);
+        // El día de «válida hasta» la autorización aún vale: está a punto de caducar, no caducada.
+        Assert.Equal((false, false, false, true), (mine[endsToday].WithoutRoom, mine[endsToday].AuthorizationPending, mine[endsToday].AuthorizationExpired, mine[endsToday].AuthorizationExpiringSoon));
+        Assert.False(mine.ContainsKey(outsider));
+        Assert.Equal((true, true, false, false), (mine[noRoomPending].WithoutRoom, mine[noRoomPending].AuthorizationPending, mine[noRoomPending].AuthorizationExpired, mine[noRoomPending].AuthorizationExpiringSoon));
+        Assert.Equal((false, false, false, true), (mine[soon].WithoutRoom, mine[soon].AuthorizationPending, mine[soon].AuthorizationExpired, mine[soon].AuthorizationExpiringSoon));
+        Assert.Equal((false, false, true, false), (mine[expired].WithoutRoom, mine[expired].AuthorizationPending, mine[expired].AuthorizationExpired, mine[expired].AuthorizationExpiringSoon));
+        Assert.Equal((false, false, false, false), (mine[fine].WithoutRoom, mine[fine].AuthorizationPending, mine[fine].AuthorizationExpired, mine[fine].AuthorizationExpiringSoon));
+        Assert.Equal((false, false, false, false), (mine[noFamily].WithoutRoom, mine[noFamily].AuthorizationPending, mine[noFamily].AuthorizationExpired, mine[noFamily].AuthorizationExpiringSoon));
+        Assert.Equal([noRoomPending], attention.Where(a => a.Matches(ResidentAttentionKind.SinHabitacion)).Select(a => a.ResidentId));
+        Assert.Equal([noRoomPending], attention.Where(a => a.Matches(ResidentAttentionKind.AutorizacionPendiente)).Select(a => a.ResidentId));
+        Assert.Equal([expired], attention.Where(a => a.Matches(ResidentAttentionKind.AutorizacionCaducada)).Select(a => a.ResidentId));
+        Assert.Equal(new[] { soon, endsToday }.OrderBy(id => id.Value), attention.Where(a => a.Matches(ResidentAttentionKind.AutorizacionPorCaducar)).Select(a => a.ResidentId).OrderBy(id => id.Value));
+        // La lista y el inicio cuentan lo mismo: cada residente señalado suma al menos una unidad del contador correspondiente.
+        var overview = await OverviewAsync(admin);
+        Assert.Equal(1, overview.ResidentsWithoutRoom);
+        Assert.Equal(1, overview.AuthorizationsPending);
+        Assert.Equal(1, overview.AuthorizationsExpired);
+        Assert.Equal(2, overview.AuthorizationsExpiringSoon);
+        Assert.Equal((true, true), (Assert.Single(elsewhere).WithoutRoom, elsewhere[0].AuthorizationPending));
+        var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
+        var denied = await Build(nurse.ExternalSubject).ListResidentAttentionAsync(new AdministracionQuery(nurse.ProfileScopeId, nurse.CenterId), Today);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, denied.Error!.Code);
+    }
+
     private static async Task ConfigureAsync(Setup setup)
     {
         var settings = new AppointmentServiceApplicationService(Resolver(setup.Admin.ExternalSubject), new SqlAppointmentServiceRepository(TestDatabase.ConnectionFactory));

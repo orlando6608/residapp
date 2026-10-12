@@ -32,6 +32,26 @@ public class AdministrativeResidentListTests
     }
 
     [Fact]
+    public void RequiereAtencion_FiltraPorElMotivo_SeCombinaConElNombre_YSinLosDatosNoMuestraNada()
+    {
+        var flags = All.Select(r => new ResidentAttention(r.ResidentId, WithoutRoom: r.DisplayName != "María Pérez", false, false, false)).ToList();
+        flags[2] = flags[2] with { AuthorizationPending = true };
+
+        var noRoom = AdministrativeResidentListViewModel.From(All, new AdministrativeResidentFilter { Atencion = ResidentAttentionKind.SinHabitacion }, Today, flags);
+        var pending = AdministrativeResidentListViewModel.From(All, new AdministrativeResidentFilter { Atencion = ResidentAttentionKind.AutorizacionPendiente }, Today, flags);
+        var combined = AdministrativeResidentListViewModel.From(
+            All, new AdministrativeResidentFilter { Atencion = ResidentAttentionKind.SinHabitacion, Q = "josefa" }, Today, flags);
+        var withoutData = AdministrativeResidentListViewModel.From(All, new AdministrativeResidentFilter { Atencion = ResidentAttentionKind.AutorizacionCaducada }, Today);
+
+        Assert.Equal(["José Álvarez", "Josefa Núñez"], noRoom.Residents.Select(r => r.DisplayName));
+        Assert.Equal(["María Pérez"], pending.Residents.Select(r => r.DisplayName));
+        Assert.Equal(["Josefa Núñez"], combined.Residents.Select(r => r.DisplayName));
+        Assert.Empty(withoutData.Residents);
+        Assert.False(new AdministrativeResidentFilter { Atencion = ResidentAttentionKind.SinHabitacion }.IsEmpty);
+        Assert.Equal(3, noRoom.TotalCount);
+    }
+
+    [Fact]
     public void Nombre_SinMayusculasNiAcentos_YUnidad()
     {
         var byName = AdministrativeResidentListViewModel.From(All, new AdministrativeResidentFilter { Q = "JOSE" }, Today);

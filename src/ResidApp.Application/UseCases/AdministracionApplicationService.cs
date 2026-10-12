@@ -114,6 +114,15 @@ public sealed class AdministracionApplicationService(
             return await directory.ListAsync(query.AmbitoPerfilId, query.CentroId, ct);
         });
 
+    /// <summary>Los residentes del ámbito que requieren atención, para filtrar la lista (el día natural es el del centro).</summary>
+    public Task<ApplicationResult<IReadOnlyList<ResidentAttention>>> ListResidentAttentionAsync(
+        AdministracionQuery query, DateOnly today, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            await EnsureAdministrationScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await directory.ListAttentionAsync(query.AmbitoPerfilId, query.CentroId, today, ct);
+        });
+
     public Task<ApplicationResult<AdministrativeResidentDetail>> FindResidentAsync(
         FindAdministrativeResidentQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
