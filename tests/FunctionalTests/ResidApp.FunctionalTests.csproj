@@ -20,6 +20,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Diagnostico de CI: las SqlException que se lanzan durante las pruebas (ver SqlErrorLog en IntegrationTests). -->
+    <Compile Include="../IntegrationTests/TestSupport/SqlErrorLog.cs" Link="TestSupport/SqlErrorLog.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\ResidApp.Web\ResidApp.Web.csproj" />
   </ItemGroup>
 
