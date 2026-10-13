@@ -43,7 +43,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [
         "index", "preguntas", "pruebas", "archivo",
 
-        "guia-de-pruebas-cj", "portal-familiar-confirmaciones-cj",
+        "guia-de-pruebas-cj", "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj",
         "archivados/rangos-referencia-constantes", "archivados/decisiones-direccion-basal-derivacion",
         "archivados/aclaraciones-respuestas-cj", "archivados/traslado-y-baja-residente",
         "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
