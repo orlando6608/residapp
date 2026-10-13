@@ -97,6 +97,7 @@ El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **p
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
+| [organigrama-y-cargos-cj.html](organigrama-y-cargos-cj.html) | `organigrama-y-cargos-cj.respuestas.json` | Ocho detalles para construir el organigrama (ADM-07), aplazado el 2026-10-07: quién ocupa un cargo, cargos fijos o por centro, personas por cargo, coordinación funcional, unidades y equipos, historial y quién lo ve (8 respuestas) | Pendiente (bloquea el organigrama) |
 | [portal-familiar-confirmaciones-cj.html](portal-familiar-confirmaciones-cj.html) | `portal-familiar-confirmaciones-cj.respuestas.json` | Lo que ingeniería tuvo que suponer al construir el Portal Familiar: qué ve la familia, derivaciones a Urgencias, privacidad, cómo debe identificarse un familiar, qué pasa al corregir o retirar un comunicado ya publicado y cómo funcionan las citas con reserva directa y con solicitud previa (28 respuestas) | Pendiente de CJ |
 | [confirmaciones-tercera-tanda-cj.html](confirmaciones-tercera-tanda-cj.html) | `confirmaciones-tercera-tanda-cj.respuestas.json` | Lo que falta por decidir (2026-10-13): el resumen periódico para la familia y la finalidad de calidad asistencial de Dirección (bloquean), y confirmaciones de Dirección (registro, nombres, comunicados, frecuencia), del inicio de Administración, de los episodios y traslados y de los avisos a la familia; 19 preguntas en 6 temas | Pendiente |
 
