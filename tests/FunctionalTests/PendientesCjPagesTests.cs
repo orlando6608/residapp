@@ -43,7 +43,9 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [
         "index", "preguntas", "pruebas", "archivo",
 
-        "guia-de-pruebas-cj", "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj",
+        "pruebas-1-auxiliar-enfermeria", "pruebas-2-medicina-indicaciones", "pruebas-3-basal-barthel", "pruebas-4-direccion",
+        "pruebas-5-administracion", "pruebas-6-comunicados-portal", "pruebas-7-citas", "pruebas-8-aislamiento",
+        "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj",
         "archivados/rangos-referencia-constantes", "archivados/decisiones-direccion-basal-derivacion",
         "archivados/aclaraciones-respuestas-cj", "archivados/traslado-y-baja-residente",
         "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
@@ -263,6 +265,28 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     }
 
     [Theory]
+    [InlineData("pruebas-1-auxiliar-enfermeria")]
+    [InlineData("pruebas-2-medicina-indicaciones")]
+    [InlineData("pruebas-3-basal-barthel")]
+    [InlineData("pruebas-4-direccion")]
+    [InlineData("pruebas-5-administracion")]
+    [InlineData("pruebas-6-comunicados-portal")]
+    [InlineData("pruebas-7-citas")]
+    [InlineData("pruebas-8-aislamiento")]
+    public async Task LasGuiasDePruebas_LlevanArribaLosEnlacesAPruebasYALaAplicacion(string document)
+    {
+        var page = await (await LoggedInAsync()).GetStringAsync($"/pendientes-cj/{document}.html");
+
+        var nav = Regex.Match(page, "<nav class=\"back\"[^>]*>(.*?)</nav>", RegexOptions.Singleline);
+        Assert.True(nav.Success, "Falta el bloque de enlaces.");
+        Assert.Contains("<a href=\"pruebas.html\">← Pruebas</a>", nav.Groups[1].Value);
+        Assert.Contains("<a href=\"/\">Volver a ResidApp</a>", nav.Groups[1].Value);
+        Assert.True(nav.Index < page.IndexOf("<h1>", StringComparison.Ordinal), "Los enlaces van arriba, antes del título.");
+        Assert.Contains($"data-doc=\"{document}\"", page);
+    }
+
+    [Theory]
+    [InlineData("/pendientes-cj/guia-de-pruebas-cj.html")]
     [InlineData("/pendientes-cj/rangos-referencia-constantes.html")]
     [InlineData("/pendientes-cj/decisiones-direccion-basal-derivacion.html")]
     [InlineData("/pendientes-cj/aclaraciones-respuestas-cj.html")]
