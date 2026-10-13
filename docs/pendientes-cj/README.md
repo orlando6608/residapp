@@ -10,7 +10,7 @@ La web (`/pendientes-cj/index.html`) tiene tres secciones, cada una con su pági
 | Sección | Página | Qué hay |
 | --- | --- | --- |
 | **Preguntas** | `preguntas.html` | Documentos con decisiones y valores que CJ tiene que responder, o ya respondidos pero todavía no implementados del todo |
-| **Pruebas** | `pruebas.html` | Guías paso a paso para probar la aplicación (hoy, `guia-de-pruebas-cj.html`) |
+| **Pruebas** | `pruebas.html` | Guías paso a paso para probar la aplicación (hoy, las 8 guías `pruebas-N-….html`), con el glosario y lo que todavía no se prueba |
 | **Archivo** | `archivo.html` | Documentos **contestados y ya implementados**, en `archivados/`, que se abren con sus respuestas cargadas |
 
 **Regla de archivo:** un documento se archiva cuando CJ lo ha contestado **y** lo que pedía ya está implementado. Lo que quede sin hacer
@@ -55,7 +55,7 @@ Cuando el documento está contestado y lo que pedía está implementado:
 2. En el `.html`, bajo el «eyebrow» de la cabecera, la línea «Archivado el AAAA-MM-DD: lo que respondiste ya está implementado…» (como en los dos ya archivados) y «Archivado» en lugar de «Pendiente de CJ». Arriba de la cabecera, el bloque `<nav class="back">` con «← Documentos para CJ» (`../index.html`) y «Volver a ResidApp» (`/`), con su CSS y su regla de impresión; cópialo de uno ya archivado.
 3. Quitarlo de `preguntas.html` y añadirlo a `archivo.html` (con una frase de qué se hizo y dónde sigue lo pendiente), y moverlo en la tabla de abajo. Si `preguntas.html` se queda sin documentos, la ficha «Preguntas» de `index.html` lleva la clase `sin-pendientes` y el texto «Nada pendiente por ahora»; mientras haya documentos de Preguntas, la ficha es la normal.
 4. Actualizar las rutas que lo citan en `docs/` (`pendientes-*.md`, `docs/prompts-ia/continuar-construccion.md`).
-5. Tras el despliegue, borrar en Azure la copia antigua de la raíz (`site/wwwroot/pendientes-cj/<documento>.html`): el despliegue añade ficheros pero no borra los de antes, y esa copia seguiría abierta (con clave) y sin respuestas. Kudu tiene desactivado el acceso básico: se borra con la API `vfs` y un token de Entra ID (`az account get-access-token --resource https://management.azure.com`, `DELETE` con `If-Match: *`).
+5. Tras el despliegue, comprobar que la ruta antigua (`/pendientes-cj/<documento>.html`) da 404. No hay que borrar nada a mano en Azure: el despliegue usa `clean: true` (`.github/workflows/ci-cd.yml`) y quita del servidor los ficheros que ya no están en el repositorio.
 
 ## Cómo leer las respuestas (ingeniería)
 
@@ -89,7 +89,7 @@ contenido de `<div class="page">`. El estilo y el script del final son iguales e
 pregunta es un elemento con `data-q` (clave única en el JSON); sus campos llevan `data-field`, y las opciones son
 `input type="radio"` dentro de `label.choice`. Para agrupar el avance por temas, cada tema es una `section.tema` con `id`. Añade también su entrada a `preguntas.html` (o a `pruebas.html`: listas estáticas de la web) y a la tabla de abajo. Si es un documento de Preguntas y la ficha de `index.html` estaba como «sin pendientes», vuelve a dejarla normal (quita la clase `sin-pendientes` y repón su texto).
 
-El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **prueba** con pasos y «qué debería ocurrir», y las opciones son A funciona · B con problema · C no funciona · D no probada. Usa el mismo estilo y script; solo cambian los textos del script («Sin probar»/«Probada» y «completadas», y «Pendiente»/«Respondida» en las preguntas con `class="abierta"`). Está generado a partir de una lista de pruebas; si cambia una pantalla descrita en un paso, edita el HTML y sube `data-version`.
+Las guías de pruebas (`pruebas-1-auxiliar-enfermeria.html` a `pruebas-8-aislamiento.html`) son una variante: cada pregunta es una **prueba** con pasos y «qué debería ocurrir», y las opciones son A funciona · B con problema · C no funciona · D no probada. Usan el mismo estilo y script; solo cambian los textos del script («Sin probar»/«Probada» y «completadas», y «Pendiente»/«Respondida» en las preguntas con `class="abierta"`). Se dividió la guía única de 82 pruebas (2026-10-13) agrupando por **dependencias**, no solo por tema: las pruebas que usan lo que deja otra van en la misma guía y en el orden en que se hacen, numeradas 1, 2, 3… en cada guía. Cada guía es autónoma: lleva arriba el `<nav class="back">` («← Pruebas», «Documentos para CJ», «Volver a ResidApp»), su «Antes de empezar» con solo las cuentas y residentes que usa, lo que necesita de otra guía y el orden, y en el pie el enlace a la siguiente; lo común a todas (glosario y lo que todavía no se prueba) está en `pruebas.html`. Si cambia una pantalla descrita en un paso, edita la guía, sube su `data-version` y revisa las referencias «guía N, prueba M» de las demás. Si una prueba nueva cambia la numeración de una guía, revisa también esas referencias.
 
 ## Documentos
 
@@ -105,7 +105,14 @@ El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **p
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
-| [guia-de-pruebas-cj.html](guia-de-pruebas-cj.html) | `guia-de-pruebas-cj.respuestas.json` | Guía de pruebas en el entorno de desarrollo: 82 pruebas paso a paso (A funciona, B con problema, C no funciona, D no probada) más 3 preguntas finales; 30 imprescindibles | Pendiente |
+| [pruebas-1-auxiliar-enfermeria.html](pruebas-1-auxiliar-enfermeria.html) | `pruebas-1-auxiliar-enfermeria.respuestas.json` | Guía 1: Auxiliar y Enfermería (12 pruebas, 4 imprescindibles) | Pendiente |
+| [pruebas-2-medicina-indicaciones.html](pruebas-2-medicina-indicaciones.html) | `pruebas-2-medicina-indicaciones.respuestas.json` | Guía 2: escalado a Medicina, indicaciones y cierre del episodio (13 pruebas, 6 imprescindibles) | Pendiente |
+| [pruebas-3-basal-barthel.html](pruebas-3-basal-barthel.html) | `pruebas-3-basal-barthel.respuestas.json` | Guía 3: basal y Barthel (7 pruebas, 3 imprescindibles) | Pendiente |
+| [pruebas-4-direccion.html](pruebas-4-direccion.html) | `pruebas-4-direccion.respuestas.json` | Guía 4: Dirección Clínica, con la consulta auditada del expediente (9 pruebas, 3 imprescindibles) | Pendiente |
+| [pruebas-5-administracion.html](pruebas-5-administracion.html) | `pruebas-5-administracion.respuestas.json` | Guía 5: Administración del centro (15 pruebas, 3 imprescindibles) | Pendiente |
+| [pruebas-6-comunicados-portal.html](pruebas-6-comunicados-portal.html) | `pruebas-6-comunicados-portal.respuestas.json` | Guía 6: comunicados a la familia y Portal Familiar (13 pruebas, 5 imprescindibles) | Pendiente |
+| [pruebas-7-citas.html](pruebas-7-citas.html) | `pruebas-7-citas.respuestas.json` | Guía 7: citas con la familia e inicio de Administración (9 pruebas, 4 imprescindibles) | Pendiente |
+| [pruebas-8-aislamiento.html](pruebas-8-aislamiento.html) | `pruebas-8-aislamiento.respuestas.json` | Guía 8: aislamiento entre centros (5 pruebas, 2 imprescindibles) y 3 preguntas finales | Pendiente |
 
 ### Archivo (contestados e implementados)
 

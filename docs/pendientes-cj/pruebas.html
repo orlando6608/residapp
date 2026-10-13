@@ -68,18 +68,75 @@
     <h1>Pruebas</h1>
     <p class="lead">
       Guías paso a paso para probar la aplicación de desarrollo con datos ficticios. En cada prueba se explica qué hacer y qué debería
-      ocurrir, y tú marcas si funciona, si funciona con algún problema, si no funciona o si no la has podido probar. Pulsa
-      «Guardar respuestas» y envía el fichero descargado a Orlando.
+      ocurrir, y tú marcas si funciona, si funciona con algún problema, si no funciona o si no la has podido probar. Son 83 pruebas
+      (30 imprescindibles) repartidas en 8 guías cortas: cada una tiene su propio fichero de respuestas. Al terminar una guía, pulsa
+      «Guardar respuestas» y envía a Orlando el fichero descargado.
     </p>
   </header>
 
   <section aria-labelledby="documentos">
-    <h2 id="documentos">Documentos</h2>
+    <h2 id="documentos">Guías</h2>
+    <p class="lead">
+      Hazlas en este orden. Cada guía explica al principio qué cuentas y residentes usa y si necesita algo de otra; dentro de una
+      guía, las pruebas van en el orden en que hay que hacerlas, porque algunas usan lo que deja la anterior.
+    </p>
     <ul class="docs">
       <li>
-        <a href="guia-de-pruebas-cj.html">Guía de pruebas para CJ</a>
-        <p>82 pruebas paso a paso en la aplicación de desarrollo (Auxiliar, Enfermería, Medicina, basal, Dirección, Administración, Portal Familiar y aislamiento entre centros), con lo que debería ocurrir en cada una; 30 son imprescindibles.</p>
+        <a href="pruebas-1-auxiliar-enfermeria.html">Guía 1 · Auxiliar y Enfermería</a>
+        <p>12 pruebas, 4 imprescindibles · unos 30 minutos. El Auxiliar cierra el turno y Enfermería valora, cierra, hace un seguimiento, activa el protocolo urgente y deriva a Urgencias. No necesita ninguna otra guía.</p>
       </li>
+      <li>
+        <a href="pruebas-2-medicina-indicaciones.html">Guía 2 · Medicina e indicaciones</a>
+        <p>13 pruebas, 6 imprescindibles · unos 40 minutos. Escalado a Medicina, valoración médica, indicaciones que Enfermería lee y realiza, y cierre del episodio. No necesita ninguna otra guía, pero conviene haber hecho la 1.</p>
+      </li>
+      <li>
+        <a href="pruebas-3-basal-barthel.html">Guía 3 · Basal y Barthel</a>
+        <p>7 pruebas, 3 imprescindibles · unos 25 minutos. Crear, firmar y reevaluar el basal, y sus versiones. No necesita ninguna otra guía.</p>
+      </li>
+      <li>
+        <a href="pruebas-4-direccion.html">Guía 4 · Dirección Clínica</a>
+        <p>9 pruebas, 3 imprescindibles · unos 30 minutos. Supervisión, derivaciones, indicadores, consulta auditada del basal y del resto del expediente, rangos, calidad de proceso y plazos. Mejor después de la 1 y la 2.</p>
+      </li>
+      <li>
+        <a href="pruebas-5-administracion.html">Guía 5 · Administración del centro</a>
+        <p>15 pruebas, 3 imprescindibles · unos 40 minutos. Altas, familiares y contactos urgentes, usuarios, estructura, traslados, bajas, turnos y auditoría. No necesita ninguna otra guía.</p>
+      </li>
+      <li>
+        <a href="pruebas-6-comunicados-portal.html">Guía 6 · Comunicados y Portal Familiar</a>
+        <p>13 pruebas, 5 imprescindibles · unos 35 minutos. Del comunicado que se prepara al cerrar un evento a lo que lee la familia en el Portal Familiar. Necesita un comunicado sin publicar (lo deja la guía 1 o la 2, o se prepara al empezar).</p>
+      </li>
+      <li>
+        <a href="pruebas-7-citas.html">Guía 7 · Citas con la familia</a>
+        <p>9 pruebas, 4 imprescindibles · unos 30 minutos. Reserva directa, solicitud previa y el inicio de Administración. Necesita la autorización de la familia activa (la guía 6 la deja así).</p>
+      </li>
+      <li>
+        <a href="pruebas-8-aislamiento.html">Guía 8 · Aislamiento entre centros y preguntas finales</a>
+        <p>5 pruebas, 2 imprescindibles, y 3 preguntas abiertas sobre todas las guías · unos 15 minutos. No necesita ninguna otra guía.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="palabras">
+    <h2 id="palabras">Palabras que verás</h2>
+    <ul class="steps">
+      <li><strong>Evento.</strong> Algo que se registra sobre un residente y que hay que valorar. Por ejemplo: «tos productiva desde la mañana».</li>
+      <li><strong>Basal.</strong> Cómo es el residente habitualmente (nueve áreas más la escala de Barthel). Sirve para notar cuándo algo ha cambiado.</li>
+      <li><strong>Hito.</strong> Un paso del proceso que tiene un plazo. Por ejemplo: la valoración de Enfermería, en 8 horas desde el cambio.</li>
+      <li><strong>Ámbito.</strong> Las unidades y el centro que una cuenta puede ver. Por ejemplo: una cuenta con la Unidad 1 no ve la Unidad 2.</li>
+      <li><strong>Administración principal.</strong> La Administración que ve todas las unidades del centro y puede ampliar el ámbito de las demás.</li>
+      <li><strong>Contacto urgente.</strong> El familiar al que se avisa primero en una urgencia.</li>
+      <li><strong>Comunicado publicado.</strong> Ya puede leerlo la familia en el Portal Familiar.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="no-se-prueba">
+    <h2 id="no-se-prueba">Qué NO se prueba, porque todavía no existe</h2>
+    <ul class="steps">
+      <li>El traslado de un residente a otro centro (solo es posible entre unidades del mismo centro) y que Enfermería traslade con un permiso específico.</li>
+      <li>Que un segundo profesional aporte a un borrador de basal ajeno (lo descartaste en las aclaraciones).</li>
+      <li>Rangos de referencia por residente.</li>
+      <li>El organigrama del personal y el calendario de turnos con bandejas personales (aplazados).</li>
+      <li>El resumen periódico para la familia y la finalidad de calidad asistencial de Dirección: están pendientes de tu decisión en <a href="confirmaciones-tercera-tanda-cj.html">«Lo que falta por decidir»</a>.</li>
     </ul>
   </section>
 
