@@ -31,6 +31,15 @@ Tres piezas, en este orden:
 3. La PWA recibe el objeto, rellena los inputs y marca los campos rellenados por voz. El auxiliar confirma en pantalla y el POST va
    por el endpoint normal, con su validación de siempre.
 
+Presentación en pantalla (la guía visual vigente sigue mandando):
+
+- Los campos rellenados por voz se distinguen con un **color neutro de información, no verde** (en la guía, el verde significa
+  «estable o resuelto» y aquí invitaría a dar por bueno lo que nadie ha validado), un **icono y la etiqueta «Sugerido por voz»**,
+  para que no dependan solo del color (WCAG 1.4.1).
+- La marca de un campo desaparece cuando el auxiliar lo toca, lo edita o lo confirma.
+- **Modo estricto en valores clínicos:** cada valor clínico rellenado por voz exige revisión individual y el botón de guardar
+  permanece desactivado hasta que todos estén revisados. Los campos no clínicos solo llevan la marca.
+
 Reglas:
 
 - Un esquema por tipo de reporte, con todos los campos opcionales: lo que no se dijo llega vacío; el modelo no inventa valores. Los
