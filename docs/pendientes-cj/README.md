@@ -98,6 +98,7 @@ El documento `guia-de-pruebas-cj.html` es una variante: cada pregunta es una **p
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
 | [portal-familiar-confirmaciones-cj.html](portal-familiar-confirmaciones-cj.html) | `portal-familiar-confirmaciones-cj.respuestas.json` | Lo que ingeniería tuvo que suponer al construir el Portal Familiar: qué ve la familia, derivaciones a Urgencias, privacidad, cómo debe identificarse un familiar, qué pasa al corregir o retirar un comunicado ya publicado y cómo funcionan las citas con reserva directa y con solicitud previa (28 respuestas) | Pendiente de CJ |
+| [confirmaciones-tercera-tanda-cj.html](confirmaciones-tercera-tanda-cj.html) | `confirmaciones-tercera-tanda-cj.respuestas.json` | Lo que falta por decidir (2026-10-13): el resumen periódico para la familia y la finalidad de calidad asistencial de Dirección (bloquean), y confirmaciones de Dirección (registro, nombres, comunicados, frecuencia), del inicio de Administración, de los episodios y traslados y de los avisos a la familia; 19 preguntas en 6 temas | Pendiente |
 
 ### Pruebas
 

@@ -1,0 +1,782 @@
+<!doctype html>
+<!--
+  Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan en «confirmaciones-tercera-tanda-cj.respuestas.json», en esta misma carpeta;
+  ingeniería las lee de ese fichero. Cómo funciona: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lo que falta por decidir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .bar, .howto, .toc, .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+</style>
+<body data-doc="confirmaciones-tercera-tanda-cj" data-version="2026-10-19">
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="index.html">← Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Producto · Pendiente de CJ</p>
+    <h1>Lo que falta por decidir</h1>
+    <p class="meta">Estado a 13/10/2026 · Para CJ, responsable de producto</p>
+    <p class="lead prose">
+      Con las citas, el inicio de Administración y la supervisión de Dirección ya construidos, esto es lo que queda por decidir. Hay dos cosas que
+      <strong>bloquean</strong> la construcción (el resumen periódico para la familia y la finalidad de calidad asistencial de Dirección) y el resto son
+      <strong>confirmaciones</strong> de decisiones pequeñas que ingeniería tuvo que tomar y que ya funcionan como se explica. En cada pregunta, «como está ahora»
+      indica la opción con la que está construido. Las preguntas sobre el Portal Familiar (citas, correcciones, privacidad) siguen en su propio documento.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué bloquea</span><span>Solo los temas 1 y 2: el resumen periódico y la calidad asistencial de Dirección.</span></div>
+    <div role="listitem"><span class="k">Qué no incluye</span><span>La entrada con credenciales reales y el segundo factor: dependen del proveedor de identidad.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>19 respuestas, repartidas en 6 temas.</span></div>
+  </div>
+
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Responde aquí</strong>
+        <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se queda en este navegador: puedes cerrar y seguir otro día.</span></li>
+      <li><span class="step-n">2</span><strong>Guarda</strong>
+        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>confirmaciones-tercera-tanda-cj.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
+      <li><span class="step-n">3</span><strong>Envíaselo a Orlando</strong>
+        <span>Mándale el fichero descargado por correo o por WhatsApp. Si lo cambias y lo vuelves a guardar, envía el nuevo.</span></li>
+    </ol>
+    <p class="prose meta">
+      ¿Desde otro ordenador? Abre este documento y pulsa «Abrir respuestas guardadas» con tu fichero para seguir donde lo dejaste.
+    </p>
+  </section>
+
+  <nav class="toc" id="indice" aria-label="Temas del documento"></nav>
+
+  <section class="tema" id="tema-1">
+    <h2>Tema 1 · Resumen periódico para la familia</h2>
+    <div class="stack prose">
+      <p>
+        Hoy la familia recibe un comunicado por cada evento que Enfermería o Medicina decide comunicar, y sale a la hora que fija el centro
+        (19:00 por defecto, con una hora de margen para corregirlo). La historia del portal también prevé un <strong>resumen periódico</strong>
+        (diario, semanal o «solo relevantes») con aprobación humana, pero nadie ha dicho qué es exactamente, y por eso no se ha construido.
+        <strong>Esta parte sí bloquea la construcción.</strong>
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Qué es un resumen periódico?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hay dos formas muy distintas de hacerlo y cada una lleva un trabajo diferente a los profesionales.</p>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Un texto nuevo que escribe un profesional del equipo para cada residente (cada día o cada semana) contando cómo ha estado.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Una recopilación automática de los comunicados ya publicados en el periodo, que la familia ve juntos; sin texto nuevo.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">No hace falta: con los comunicados por evento, como ahora, basta.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Quién fija la frecuencia del resumen?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">La historia 3 del portal dice que la modalidad (diaria, semanal o solo relevantes) la configura el centro; la historia 5 de Administración dice que se configura por residente. No pueden ser las dos cosas.</p>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">El centro: una frecuencia para todos sus residentes.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Cada residente tiene la suya y la fija Administración.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">Cada residente tiene la suya y la elige su familia.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.3">
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">¿Quién redacta y quién aprueba el resumen?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Los comunicados de hoy los aprueba quien los prepara, al guardarlos (tu respuesta 5.1 de la segunda tanda). Si el resumen es un texto nuevo, o si hay que aprobar la recopilación, hay que decidir si pasa lo mismo.</p>
+        <fieldset class="choices" aria-labelledby="t-1-3">
+          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">Lo prepara y lo aprueba Enfermería, al guardarlo (como los comunicados).</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">Lo prepara y lo aprueba quien esté de turno, de Enfermería o de Medicina.</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="C"><span class="letter">C</span><span class="txt">Lo prepara Enfermería y lo aprueba Medicina antes de que se publique.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.4">
+        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">Si en el periodo no ha pasado nada (o, en «solo relevantes», no hay ningún comunicado relevante), ¿qué ve la familia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Un resumen vacío puede tranquilizar a la familia o generar dudas sobre si el centro ha olvidado enviarlo.</p>
+        <fieldset class="choices" aria-labelledby="t-1-4">
+          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">Nada: no se publica ningún resumen.</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">Un resumen que dice «Sin novedades en este periodo».</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="C"><span class="letter">C</span><span class="txt">Depende del centro.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.5">
+        <div class="q-head"><span class="n">1.5</span><h3 class="q-title" id="t-1-5">Con un resumen semanal, ¿siguen saliendo los comunicados sueltos?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy cada comunicado sale por separado, a la hora que fija el centro. El resumen podría sumarse a ellos o sustituirlos.</p>
+        <fieldset class="choices" aria-labelledby="t-1-5">
+          <label class="choice"><input type="radio" name="r-1-5" value="A"><span class="letter">A</span><span class="txt">Sí: el resumen se suma a los comunicados sueltos.</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="B"><span class="letter">B</span><span class="txt">Solo salen sueltos los relevantes; los ordinarios van en el resumen.</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="C"><span class="letter">C</span><span class="txt">No sale ninguno suelto: todo va en el resumen del periodo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2">
+    <h2>Tema 2 · Calidad asistencial (Dirección)</h2>
+    <div class="stack prose">
+      <p>
+        Respondiste (2026-10-07) que la finalidad «revisión de calidad asistencial» queda detrás de un <strong>permiso específico</strong> que da
+        Administración según la designación del centro, no por el cargo de director. El permiso y esa cuarta finalidad no están construidos porque falta
+        decir <strong>qué se puede ver con ella</strong>. Hoy Dirección tiene tres finalidades para abrir el detalle clínico de un residente (continuidad
+        asistencial, incidencia o reclamación, trazabilidad documental), siempre con una declaración y una justificación, y todo queda en la auditoría.
+        <strong>Esta parte sí bloquea la construcción.</strong>
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="2.1">
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">¿Qué puede ver quien tenga ese permiso con la finalidad de calidad asistencial?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Revisar la calidad puede hacerse mirando casos concretos o mirando cifras; el riesgo para la intimidad es muy distinto.</p>
+        <fieldset class="choices" aria-labelledby="t-2-1">
+          <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">Lo mismo que con las otras tres finalidades: el detalle clínico de un residente (basal, línea temporal, historial, informes), con declaración, justificación y auditoría.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">Solo datos agregados por unidad y periodo (cumplimiento de hitos, indicadores), sin abrir la historia de ningún residente.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="C"><span class="letter">C</span><span class="txt">Los datos agregados y, de forma excepcional, el detalle de un residente concreto para revisar un caso (con declaración y auditoría).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Dirección: lo que ya ve y cómo queda registrado</h2>
+    <div class="stack prose">
+      <p>
+        Al construir la supervisión de Dirección se tomaron varias decisiones pequeñas que nadie había confirmado. Todas funcionan ya como se indica
+        en cada pregunta (la opción A es siempre «como está ahora»); lo que cambies se ajusta después. <strong>Nada de esto bloquea.</strong>
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">Cuando Dirección abre la línea temporal o el historial de eventos cerrados de un residente, ¿cómo debe quedar anotado?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Esa anotación es la que luego puede revisar el centro o una reclamación. Más detalle da más trazabilidad, pero llena mucho más la auditoría.</p>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Una anotación por cada consulta del residente, con la finalidad y la justificación (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Una anotación por cada evento concreto que Dirección abre.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">En la trazabilidad de un residente, ¿Dirección ve también quién consultó su expediente?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy la lista incluye los hitos asistenciales y las consultas que hizo Dirección (quién miró el expediente, cuándo y con qué finalidad), nunca la justificación escrita.</p>
+        <fieldset class="choices" aria-labelledby="t-3-2">
+          <label class="choice"><input type="radio" name="r-3-2" value="A"><span class="letter">A</span><span class="txt">Sí: también las consultas de Dirección (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="B"><span class="letter">B</span><span class="txt">No: solo los hitos asistenciales.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.3">
+        <div class="q-head"><span class="n">3.3</span><h3 class="q-title" id="t-3-3">¿Debe Dirección ver el nombre de quien firma un informe de derivación o de quien corrige un registro?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy se ve el nombre (o «cuenta sin nombre registrado»). La supervisión es por unidad y nunca hay rankings por persona; el nombre solo aparece al abrir un caso concreto.</p>
+        <fieldset class="choices" aria-labelledby="t-3-3">
+          <label class="choice"><input type="radio" name="r-3-3" value="A"><span class="letter">A</span><span class="txt">Sí, el nombre y el perfil (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-3-3" value="B"><span class="letter">B</span><span class="txt">Solo el perfil (Enfermería, Medicina), no la persona.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.4">
+        <div class="q-head"><span class="n">3.4</span><h3 class="q-title" id="t-3-4">Dirección ve el texto de los comunicados a la familia de su ámbito. ¿Debe declarar una finalidad para verlo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy no hace falta, porque el comunicado ya está aprobado para la familia y no es detalle clínico. Para abrir el basal o el historial sí hace falta declarar.</p>
+        <fieldset class="choices" aria-labelledby="t-3-4">
+          <label class="choice"><input type="radio" name="r-3-4" value="A"><span class="letter">A</span><span class="txt">No: lo ve sin declarar finalidad (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-3-4" value="B"><span class="letter">B</span><span class="txt">Sí: debe declarar una finalidad, como con el detalle clínico.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.5">
+        <div class="q-head"><span class="n">3.5</span><h3 class="q-title" id="t-3-5">La tabla de frecuencia de comunicados por unidad, ¿qué más necesita?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Dirección tiene ahora una tabla por unidad con los comunicados de 30 días: cuántos, cuántos por semana, programados, publicados, con corrección, retirados y los de la última semana. El boceto pedía también «pendientes y errores», pero la publicación no tiene errores propios (cada comunicado sale solo a su hora). Si piensas en un error concreto, dilo en el comentario.</p>
+        <fieldset class="choices" aria-labelledby="t-3-5">
+          <label class="choice"><input type="radio" name="r-3-5" value="A"><span class="letter">A</span><span class="txt">Está bien como está.</span></label>
+          <label class="choice"><input type="radio" name="r-3-5" value="B"><span class="letter">B</span><span class="txt">Añadir cuántos se publicaron antes de su hora.</span></label>
+          <label class="choice"><input type="radio" name="r-3-5" value="C"><span class="letter">C</span><span class="txt">Añadir el tiempo medio entre que se prepara un comunicado y se publica.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-4">
+    <h2>Tema 4 · Inicio de Administración</h2>
+    <div class="stack prose">
+      <p>
+        El inicio de Administración tiene ahora un bloque «Requiere atención» con cifras y enlaces: solicitudes de cita por gestionar, propuestas que esperan a la
+        familia, autorizaciones de familiares pendientes, caducadas o a punto de caducar, y residentes sin habitación. Para decidir qué contar se supusieron
+        cuatro cosas. <strong>Nada de esto bloquea.</strong>
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="4.1">
+        <div class="q-head"><span class="n">4.1</span><h3 class="q-title" id="t-4-1">¿Qué debe señalar el inicio como «ubicación pendiente» de un residente?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Al dar de alta a un residente la unidad es obligatoria, pero la habitación y la plaza son opcionales.</p>
+        <fieldset class="choices" aria-labelledby="t-4-1">
+          <label class="choice"><input type="radio" name="r-4-1" value="A"><span class="letter">A</span><span class="txt">Los residentes sin habitación asignada (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="B"><span class="letter">B</span><span class="txt">Los residentes sin habitación o sin plaza.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="C"><span class="letter">C</span><span class="txt">Ninguno: la habitación es opcional y no hay que insistir.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.2">
+        <div class="q-head"><span class="n">4.2</span><h3 class="q-title" id="t-4-2">¿Con cuánta antelación debe avisar el inicio de una autorización de familiar que va a caducar?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Las autorizaciones pueden tener una fecha «válida hasta». Hoy se avisa cuando faltan 30 días o menos, y aparece como caducada al pasar la fecha.</p>
+        <fieldset class="choices" aria-labelledby="t-4-2">
+          <label class="choice"><input type="radio" name="r-4-2" value="A"><span class="letter">A</span><span class="txt">30 días (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="B"><span class="letter">B</span><span class="txt">15 días.</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="C"><span class="letter">C</span><span class="txt">60 días.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.3">
+        <div class="q-head"><span class="n">4.3</span><h3 class="q-title" id="t-4-3">Un familiar vinculado a un residente cuya autorización todavía no se ha abierto, ¿cuenta como pendiente?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Un vínculo recién creado no tiene ninguna autorización hasta que Administración la abre (queda «Pendiente») y la activa.</p>
+        <fieldset class="choices" aria-labelledby="t-4-3">
+          <label class="choice"><input type="radio" name="r-4-3" value="A"><span class="letter">A</span><span class="txt">Sí: cuenta como pendiente de activar desde que se vincula (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-4-3" value="B"><span class="letter">B</span><span class="txt">No: solo cuenta cuando Administración ya la ha abierto y está en «Pendiente».</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.4">
+        <div class="q-head"><span class="n">4.4</span><h3 class="q-title" id="t-4-4">¿Qué otra cosa debe ver Administración nada más entrar?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Si quieres más de una, elige la principal y cita las demás en el comentario. No se ha incluido un aviso de conflictos de turnos porque la planificación ya los impide al guardar.</p>
+        <fieldset class="choices" aria-labelledby="t-4-4">
+          <label class="choice"><input type="radio" name="r-4-4" value="A"><span class="letter">A</span><span class="txt">Nada más: así está bien.</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="B"><span class="letter">B</span><span class="txt">Los residentes sin contacto urgente designado y sin motivo indicado.</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="C"><span class="letter">C</span><span class="txt">Las cuentas profesionales suspendidas o sin ámbito.</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="D"><span class="letter">D</span><span class="txt">Los familiares con la autorización activa que todavía no tienen cuenta para el portal.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-5">
+    <h2>Tema 5 · Episodios abiertos y traslados</h2>
+    <div class="stack prose">
+      <p>
+        Dos huecos que se dejaron al construir los episodios y los traslados y que se anotaron como «por consultar». <strong>Nada de esto bloquea.</strong>
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="5.1">
+        <div class="q-head"><span class="n">5.1</span><h3 class="q-title" id="t-5-1">Si un episodio tiene indicaciones médicas que nadie va a cumplir, ¿quién puede cerrarlo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Medicina no puede cerrar un episodio con indicaciones sin cumplir, y lo cierra Enfermería cuando las cumple (tu respuesta 4.2). Pero si la unidad no tiene Enfermería, o el residente causa baja por un motivo distinto del fallecimiento, el episodio se queda abierto para siempre.</p>
+        <fieldset class="choices" aria-labelledby="t-5-1">
+          <label class="choice"><input type="radio" name="r-5-1" value="A"><span class="letter">A</span><span class="txt">Dirección o Administración pueden cerrarlo indicando un motivo, que queda en la auditoría.</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="B"><span class="letter">B</span><span class="txt">Solo Dirección, indicando un motivo.</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="C"><span class="letter">C</span><span class="txt">Solo Administración, indicando un motivo.</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="D"><span class="letter">D</span><span class="txt">Nadie: hay que resolver el problema de fondo (incorporar a Enfermería o cumplir la indicación).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5.2">
+        <div class="q-head"><span class="n">5.2</span><h3 class="q-title" id="t-5-2">Tras un traslado entre unidades, ¿qué ve la unidad de destino de los episodios ya cerrados del residente?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Los episodios abiertos pasan a la unidad de destino (tu respuesta 1.2 del traslado). Los ya cerrados se quedan en la unidad de origen, así que la de destino no ve el historial anterior del residente.</p>
+        <fieldset class="choices" aria-labelledby="t-5-2">
+          <label class="choice"><input type="radio" name="r-5-2" value="A"><span class="letter">A</span><span class="txt">Solo la unidad donde ocurrió (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="B"><span class="letter">B</span><span class="txt">También la unidad de destino, para que tenga el historial desde el primer día.</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="C"><span class="letter">C</span><span class="txt">La unidad de destino solo si lo pide, indicando un motivo que queda en la auditoría.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-6">
+    <h2>Tema 6 · Avisos a la familia</h2>
+    <div class="stack prose">
+      <p>
+        Hoy el portal no avisa de nada: la familia tiene que entrar para ver un comunicado nuevo o una propuesta de cita, y Administración llama por teléfono cuando
+        propone una cita. En el alcance del producto no entran el contenido sanitario por correo, SMS o WhatsApp ni las notificaciones push en el piloto. Lo que falta decidir es si
+        un aviso <strong>sin ningún contenido</strong> («Tienes una novedad en ResidApp. Entra para verla») sería aceptable. <strong>Nada de esto bloquea.</strong>
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="6.1">
+        <div class="q-head"><span class="n">6.1</span><h3 class="q-title" id="t-6-1">Cuando se publica un comunicado o el centro propone una cita, ¿debe llegar a la familia un aviso genérico por correo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Ese aviso no diría nada del residente ni de la salud: solo que hay una novedad. Haría falta un proveedor de correo y que cada familia tenga un correo registrado.</p>
+        <fieldset class="choices" aria-labelledby="t-6-1">
+          <label class="choice"><input type="radio" name="r-6-1" value="A"><span class="letter">A</span><span class="txt">No: en el piloto la familia entra a mirar y Administración llama por teléfono (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-6-1" value="B"><span class="letter">B</span><span class="txt">Sí, para los comunicados y para las propuestas de cita.</span></label>
+          <label class="choice"><input type="radio" name="r-6-1" value="C"><span class="letter">C</span><span class="txt">Sí, pero solo para las propuestas de cita, que son las que esperan una respuesta.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="6.2">
+        <div class="q-head"><span class="n">6.2</span><h3 class="q-title" id="t-6-2">¿Debe recibir la familia un recordatorio de una cita confirmada?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Mismo tipo de aviso genérico («Tienes una cita mañana en ResidApp»), sin decir con quién ni para qué.</p>
+        <fieldset class="choices" aria-labelledby="t-6-2">
+          <label class="choice"><input type="radio" name="r-6-2" value="A"><span class="letter">A</span><span class="txt">No (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-6-2" value="B"><span class="letter">B</span><span class="txt">Sí, el día antes.</span></label>
+          <label class="choice"><input type="radio" name="r-6-2" value="C"><span class="letter">C</span><span class="txt">Sí, el día antes y otra vez unas horas antes.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. Ingeniería no ha elegido ninguna opción: todas las decisiones son
+    de CJ. Cuando subas tus respuestas, ingeniería las revisa, te consulta lo que no quede claro y lo incorpora a la
+    aplicación. La aplicación no lee este fichero ni sus respuestas.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Guardar respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+    <div class="actions">
+      <button type="button" class="btn" id="btn-abrir">Abrir respuestas guardadas</button>
+      <button type="button" class="btn primary" id="btn-guardar">Guardar respuestas</button>
+      <input type="file" id="fichero" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var FILE = DOC + ".respuestas.json";
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;
+  var savedAt = null;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (dirty) say("", "Tienes cambios que aún no están en el fichero. Pulsa «Guardar respuestas» cuando quieras.");
+    else if (savedAt) say("ok", "Fichero al día (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda en este navegador.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? "Respondida" : "Pendiente";
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  function loaded(data, origin) {
+    apply(data);
+    dirty = false;
+    savedAt = data.guardado || null;
+    store(refresh());
+    var msg = "Respuestas cargadas " + origin + " (guardadas el " + when(data.guardado) + ").";
+    if (data.cuestionario !== VERSION) {
+      say("error", msg + " Son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+    } else {
+      say("ok", msg);
+    }
+  }
+
+  function download(json) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  async function save() {
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    try {
+      if (!window.showSaveFilePicker) throw new Error("sin selector");
+      var handle = await window.showSaveFilePicker({ suggestedName: FILE,
+        types: [{ description: "Respuestas (JSON)", accept: { "application/json": [".json"] } }] });
+      var w = await handle.createWritable();
+      await w.write(json);
+      await w.close();
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      download(json);
+    }
+    dirty = false;
+    savedAt = data.guardado;
+    store(data);
+    say("ok", "Guardado como «" + FILE + "». Ahora envíaselo a Orlando por correo o por WhatsApp.");
+  }
+
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    store(refresh());
+    status();
+  }
+
+  document.getElementById("btn-guardar").addEventListener("click", save);
+  document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
+  document.getElementById("fichero").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    file.text().then(function (t) {
+      var data = JSON.parse(t);
+      if (data.documento !== DOC) {
+        say("error", "Ese fichero es de otro documento («" + data.documento + "»). Elige «" + FILE + "».");
+        return;
+      }
+      loaded(data, "del fichero");
+    }).catch(function () {
+      say("error", "No se ha podido leer ese fichero. Elige «" + FILE + "».");
+    }).finally(function () { e.target.value = ""; });
+  });
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+
+  // Si la página se sirve por http (no desde disco), carga las respuestas ya subidas al repositorio.
+  if (location.protocol.indexOf("http") === 0) {
+    fetch(FILE, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.documento !== DOC) return;
+        if (dirty) {
+          say("", "Hay respuestas en el repositorio (guardadas el " + when(data.guardado) +
+            "), pero mantienes los cambios de este navegador, que aún no están en el fichero.");
+          return;
+        }
+        loaded(data, "del repositorio");
+      })
+      .catch(function () { /* sin fichero de respuestas */ });
+  }
+})();
+</script>
+</body>
+</html>
