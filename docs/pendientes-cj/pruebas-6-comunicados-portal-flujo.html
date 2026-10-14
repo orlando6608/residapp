@@ -1,0 +1,461 @@
+<!doctype html>
+<!--
+  Ayuda de la guía 6 de pruebas (pruebas-6-comunicados-portal.html): diagrama de carriles con qué perfil hace cada prueba y qué
+  información pasa de un perfil a otro. No es un cuestionario: no lleva script de respuestas. Si cambia la guía, revisa este flujo.
+  Cómo funciona la carpeta: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flujo de la guía 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --arrow: #55686c;
+    --danger: #b3261e;
+    --lane-aux: #6b4fa0;
+    --lane-aux-bg: #f1edf8;
+    --lane-enf: #1b5f6b;
+    --lane-enf-bg: #e6f1f2;
+    --lane-med: #2457a6;
+    --lane-med-bg: #e8eff9;
+    --lane-dir: #9b2c4a;
+    --lane-dir-bg: #f8e9ee;
+    --lane-adm: #2e6b2f;
+    --lane-adm-bg: #eaf4ea;
+    --lane-fam: #8a5a12;
+    --lane-fam-bg: #f8f0e3;
+    --lane-plat: #4a5560;
+    --lane-plat-bg: #eef0f2;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+      --arrow: #9aafb2;
+      --danger: #f2b8b5;
+      --lane-aux: #b9a2e6;
+      --lane-aux-bg: #1f1a2b;
+      --lane-enf: #72c0cb;
+      --lane-enf-bg: #142427;
+      --lane-med: #8fb3ec;
+      --lane-med-bg: #172030;
+      --lane-dir: #f0a3b8;
+      --lane-dir-bg: #2a1820;
+      --lane-adm: #95d095;
+      --lane-adm-bg: #172617;
+      --lane-fam: #e2b56a;
+      --lane-fam-bg: #2a2114;
+      --lane-plat: #b6c0ca;
+      --lane-plat-bg: #1d2226;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-soft: #1b2e32;
+    --arrow: #9aafb2;
+    --danger: #f2b8b5;
+    --lane-aux: #b9a2e6;
+    --lane-aux-bg: #1f1a2b;
+    --lane-enf: #72c0cb;
+    --lane-enf-bg: #142427;
+    --lane-med: #8fb3ec;
+    --lane-med-bg: #172030;
+    --lane-dir: #f0a3b8;
+    --lane-dir-bg: #2a1820;
+    --lane-adm: #95d095;
+    --lane-adm-bg: #172617;
+    --lane-fam: #e2b56a;
+    --lane-fam-bg: #2a2114;
+    --lane-plat: #b6c0ca;
+    --lane-plat-bg: #1d2226;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-block: 48px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .prose { max-width: 70ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  /* Leyenda */
+  .leyenda { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 0.93rem; list-style: none; padding: 0; }
+  .leyenda li { display: flex; align-items: center; gap: 8px; }
+  .muestra { width: 18px; height: 18px; border-radius: 4px; border: 2px solid; flex: none; }
+  .muestra.ext { border-style: dashed; border-color: var(--muted); background: var(--surface); }
+  .linea { width: 34px; height: 0; border-top: 2px solid var(--arrow); flex: none; }
+  .linea.info { border-top: 3px solid var(--accent); }
+  .linea.rel { border-top: 2px dashed var(--arrow); }
+  .linea.bloq { border-top: 2px dashed var(--danger); }
+  .estrella { color: var(--accent); font-weight: 600; }
+
+  /* Diagrama: se desplaza dentro de su caja en pantallas estrechas; la página no. */
+  .diagrama { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px; }
+  .diagrama svg { display: block; width: 100%; height: auto; font-family: var(--sans); }
+  .pista { color: var(--muted); font-size: 0.88rem; }
+  svg .lane-label { font-size: 15px; font-weight: 600; }
+  svg .sep { stroke: var(--surface); stroke-width: 3; }
+  svg .lane-cuenta { font-size: 11.5px; fill: var(--muted); font-family: var(--mono); }
+  svg .box { fill: var(--surface); stroke-width: 1.5; }
+  svg .box.imp { stroke-width: 3.5; }
+  svg .box.ext { stroke: var(--muted); stroke-dasharray: 6 4; }
+  svg .bt { font-size: 13px; fill: var(--ink); }
+  svg .bt .n { font-weight: 600; }
+  svg .flecha { stroke: var(--arrow); stroke-width: 1.8; fill: none; }
+  svg .flecha.info { stroke: var(--accent); stroke-width: 2.6; }
+  svg .flecha.rel { stroke-dasharray: 5 4; }
+  svg .flecha.bloq { stroke: var(--danger); stroke-dasharray: 5 4; }
+  svg .et { font-size: 12px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+  svg .et.info { fill: var(--accent); font-weight: 600; }
+  svg .et.bloq { fill: var(--danger); font-weight: 600; }
+  svg .et.nota { fill: var(--muted); font-style: italic; }
+  svg .punta { fill: var(--arrow); }
+  svg .punta.info { fill: var(--accent); }
+  svg .punta.bloq { fill: var(--danger); }
+  .m-aux { border-color: var(--lane-aux); background: var(--lane-aux-bg); }
+  svg .lane-aux { fill: var(--lane-aux-bg); }
+  svg .lane-label.aux { fill: var(--lane-aux); }
+  svg .box.aux { stroke: var(--lane-aux); }
+  ol.pasos > li.aux { border-left-color: var(--lane-aux); }
+  .perfil.aux { color: var(--lane-aux); }
+  .m-enf { border-color: var(--lane-enf); background: var(--lane-enf-bg); }
+  svg .lane-enf { fill: var(--lane-enf-bg); }
+  svg .lane-label.enf { fill: var(--lane-enf); }
+  svg .box.enf { stroke: var(--lane-enf); }
+  ol.pasos > li.enf { border-left-color: var(--lane-enf); }
+  .perfil.enf { color: var(--lane-enf); }
+  .m-med { border-color: var(--lane-med); background: var(--lane-med-bg); }
+  svg .lane-med { fill: var(--lane-med-bg); }
+  svg .lane-label.med { fill: var(--lane-med); }
+  svg .box.med { stroke: var(--lane-med); }
+  ol.pasos > li.med { border-left-color: var(--lane-med); }
+  .perfil.med { color: var(--lane-med); }
+  .m-dir { border-color: var(--lane-dir); background: var(--lane-dir-bg); }
+  svg .lane-dir { fill: var(--lane-dir-bg); }
+  svg .lane-label.dir { fill: var(--lane-dir); }
+  svg .box.dir { stroke: var(--lane-dir); }
+  ol.pasos > li.dir { border-left-color: var(--lane-dir); }
+  .perfil.dir { color: var(--lane-dir); }
+  .m-adm { border-color: var(--lane-adm); background: var(--lane-adm-bg); }
+  svg .lane-adm { fill: var(--lane-adm-bg); }
+  svg .lane-label.adm { fill: var(--lane-adm); }
+  svg .box.adm { stroke: var(--lane-adm); }
+  ol.pasos > li.adm { border-left-color: var(--lane-adm); }
+  .perfil.adm { color: var(--lane-adm); }
+  .m-fam { border-color: var(--lane-fam); background: var(--lane-fam-bg); }
+  svg .lane-fam { fill: var(--lane-fam-bg); }
+  svg .lane-label.fam { fill: var(--lane-fam); }
+  svg .box.fam { stroke: var(--lane-fam); }
+  ol.pasos > li.fam { border-left-color: var(--lane-fam); }
+  .perfil.fam { color: var(--lane-fam); }
+  .m-plat { border-color: var(--lane-plat); background: var(--lane-plat-bg); }
+  svg .lane-plat { fill: var(--lane-plat-bg); }
+  svg .lane-label.plat { fill: var(--lane-plat); }
+  svg .box.plat { stroke: var(--lane-plat); }
+  ol.pasos > li.plat { border-left-color: var(--lane-plat); }
+  .perfil.plat { color: var(--lane-plat); }
+
+  /* Paso a paso */
+  ol.pasos { padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  ol.pasos > li { background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--rule); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .paso-cab { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .paso-cab .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .perfil { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .pasa { color: var(--muted); font-size: 0.95rem; }
+  .pasa strong { color: var(--ink); }
+  ol.pasos > li.cambio { background: none; border: 0; border-left: 3px dashed var(--rule); border-radius: 0; padding: 4px 0 4px 12px; color: var(--muted); font-size: 0.95rem; }
+  h3.grupo { margin-top: 8px; }
+  ul.lista { padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; }
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .diagrama { overflow: visible; }
+    .diagrama svg { min-width: 0 !important; }
+    ol.pasos > li { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="pruebas-6-comunicados-portal.html">← Guía 6</a>
+      <a href="pruebas.html">← Pruebas</a>
+      <a href="index.html">Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Ayuda de la guía 6 de pruebas</p>
+    <h1>Cómo fluye la guía 6 · Comunicados y Portal Familiar</h1>
+    <p class="meta">Estado a 14/10/2026 · Para quien hace las pruebas</p>
+    <p class="lead prose">
+      Un comunicado nace al cerrar un evento (Enfermería o Medicina), lo publican Administración o Dirección (o se publica solo a su hora) y lo lee la familia en el Portal Familiar. Las respuestas se marcan en la <a href="pruebas-6-comunicados-portal.html">guía 6</a>; esta página solo orienta.
+    </p>
+  </header>
+
+  <section aria-labelledby="leer">
+    <h2 id="leer">Cómo leer el diagrama</h2>
+    <p class="prose">Cada franja es un perfil, con la cuenta con la que entras. Cada caja es una prueba de la guía, con su número. Se lee de izquierda a derecha y de arriba abajo.</p>
+    <ul class="leyenda">
+      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · <code>dev-integrado-enfermeria</code></span></li>
+      <li><span class="muestra m-med" aria-hidden="true"></span><span>Medicina · <code>dev-integrado-medicina</code></span></li>
+      <li><span class="muestra m-adm" aria-hidden="true"></span><span>Administración · <code>dev-integrado-administracion</code></span></li>
+      <li><span class="muestra m-dir" aria-hidden="true"></span><span>Dirección Clínica · <code>dev-integrado-direccion</code></span></li>
+      <li><span class="muestra m-fam" aria-hidden="true"></span><span>Familia · <code>dev-integrado-familiar</code></span></li>
+      <li><span class="muestra ext" aria-hidden="true"></span>Viene de otras guías</li>
+      <li><span class="estrella">★</span>&nbsp;Imprescindible (borde grueso)</li>
+      <li><span class="linea" aria-hidden="true"></span>Lo siguiente que haces</li>
+      <li><span class="linea info" aria-hidden="true"></span>Lo que pasa a otro perfil, y dónde lo ve</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="diagrama">
+    <h2 id="diagrama">El flujo</h2>
+    <div class="diagrama">
+      <svg viewBox="0 0 1150 600" style="min-width: 1000px" role="img" aria-labelledby="svg-t1 svg-d1">
+        <title id="svg-t1">Flujo de la guía 6: del comunicado que se prepara al que lee la familia</title>
+        <desc id="svg-d1">Cinco franjas. Enfermería ve el comunicado preparado al cerrar un evento en su bandeja (1) y lo corrige mientras no se publica (2); Medicina hace lo mismo (3). Administración cambia el horario (4), publica antes de su hora (5), da acceso al portal a un familiar (7), publica una corrección (10), retira un comunicado (11) y suspende el acceso (12). Dirección mira la frecuencia por unidad (13) y también publica antes de su hora (6). La familia lee las novedades publicadas (8), no ve nada más (9) y ve el efecto de las pruebas 10, 11 y 12.</desc>
+        <defs>
+          <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="pi1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="pb1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+
+        <!-- Franjas -->
+        <rect class="lane-enf" x="0" y="0" width="1150" height="120"/>
+        <rect class="lane-med" x="0" y="120" width="1150" height="120"/>
+        <rect class="lane-adm" x="0" y="240" width="1150" height="120"/>
+        <rect class="lane-dir" x="0" y="360" width="1150" height="120"/>
+        <rect class="lane-fam" x="0" y="480" width="1150" height="120"/>
+        <line class="sep" x1="0" y1="120" x2="1150" y2="120"/>
+        <line class="sep" x1="0" y1="240" x2="1150" y2="240"/>
+        <line class="sep" x1="0" y1="360" x2="1150" y2="360"/>
+        <line class="sep" x1="0" y1="480" x2="1150" y2="480"/>
+        <text class="lane-label enf" x="14" y="26">Enfermería</text>
+        <text class="lane-cuenta" x="14" y="44">dev-integrado-enfermeria</text>
+        <text class="lane-label med" x="14" y="146">Medicina</text>
+        <text class="lane-cuenta" x="14" y="164">dev-integrado-medicina</text>
+        <text class="lane-label adm" x="14" y="266">Administración</text>
+        <text class="lane-cuenta" x="14" y="284">dev-integrado-administracion</text>
+        <text class="lane-label dir" x="14" y="386">Dirección Clínica</text>
+        <text class="lane-cuenta" x="14" y="404">dev-integrado-direccion</text>
+        <text class="lane-label fam" x="14" y="506">Familia</text>
+        <text class="lane-cuenta" x="14" y="524">dev-integrado-familiar</text>
+
+        <!-- Flechas -->
+        <path class="flecha" d="M280,82 L298,82" marker-end="url(#p1)"/>
+        <path class="flecha" d="M450,82 L468,82" marker-end="url(#p1)"/>
+        <path class="flecha info" d="M450,322 H460 V562 H468" marker-end="url(#pi1)"/>
+        <path class="flecha info" d="M450,442 H460"/>
+        <path class="flecha info" d="M545,350 L545,532" marker-end="url(#pi1)"/>
+        <path class="flecha" d="M620,562 L638,562" marker-end="url(#p1)"/>
+        <path class="flecha info" d="M715,350 C715,443.07975075170754 860,438.92024924829246 860,532" marker-end="url(#pi1)"/>
+        <path class="flecha info" d="M885,350 C885,426.6540279437421 945,455.3459720562579 945,532" marker-end="url(#pi1)"/>
+        <path class="flecha info" d="M1055,350 L1055,532" marker-end="url(#pi1)"/>
+
+        <!-- Pruebas -->
+        <rect class="box ext" x="130" y="54" width="150" height="56" rx="8"/>
+        <text class="bt" x="205" y="78" text-anchor="middle">Preparado al cerrar</text>
+        <text class="bt" x="205" y="96" text-anchor="middle">(guías 1 y 2)</text>
+        <rect class="box enf" x="300" y="54" width="150" height="56" rx="8"/>
+        <text class="bt" x="375" y="78" text-anchor="middle"><tspan class="n">1</tspan> · Bandeja</text>
+        <text class="bt" x="375" y="96" text-anchor="middle">Comunicaciones</text>
+        <rect class="box enf" x="470" y="54" width="150" height="56" rx="8"/>
+        <text class="bt" x="545" y="78" text-anchor="middle"><tspan class="n">2</tspan> · Corregir hasta</text>
+        <text class="bt" x="545" y="96" text-anchor="middle">publicarse</text>
+        <rect class="box med" x="300" y="174" width="150" height="56" rx="8"/>
+        <text class="bt" x="375" y="198" text-anchor="middle"><tspan class="n">3</tspan> · Comunicaciones</text>
+        <text class="bt" x="375" y="216" text-anchor="middle">de Medicina</text>
+        <rect class="box adm" x="130" y="294" width="150" height="56" rx="8"/>
+        <text class="bt" x="205" y="318" text-anchor="middle"><tspan class="n">4</tspan> · Horario de</text>
+        <text class="bt" x="205" y="336" text-anchor="middle">publicación</text>
+        <rect class="box adm imp" x="300" y="294" width="150" height="56" rx="8"/>
+        <text class="bt" x="375" y="318" text-anchor="middle"><tspan class="n">5</tspan> · Publicar ★</text>
+        <text class="bt" x="375" y="336" text-anchor="middle">ahora</text>
+        <rect class="box adm imp" x="470" y="294" width="150" height="56" rx="8"/>
+        <text class="bt" x="545" y="318" text-anchor="middle"><tspan class="n">7</tspan> · Dar acceso ★</text>
+        <text class="bt" x="545" y="336" text-anchor="middle">al portal</text>
+        <rect class="box adm imp" x="640" y="294" width="150" height="56" rx="8"/>
+        <text class="bt" x="715" y="318" text-anchor="middle"><tspan class="n">10</tspan> · Publicar una ★</text>
+        <text class="bt" x="715" y="336" text-anchor="middle">corrección</text>
+        <rect class="box adm" x="810" y="294" width="150" height="56" rx="8"/>
+        <text class="bt" x="885" y="318" text-anchor="middle"><tspan class="n">11</tspan> · Retirar un</text>
+        <text class="bt" x="885" y="336" text-anchor="middle">comunicado</text>
+        <rect class="box adm" x="980" y="294" width="150" height="56" rx="8"/>
+        <text class="bt" x="1055" y="318" text-anchor="middle"><tspan class="n">12</tspan> · Suspender</text>
+        <text class="bt" x="1055" y="336" text-anchor="middle">el acceso</text>
+        <rect class="box dir" x="130" y="414" width="150" height="56" rx="8"/>
+        <text class="bt" x="205" y="438" text-anchor="middle"><tspan class="n">13</tspan> · Frecuencia</text>
+        <text class="bt" x="205" y="456" text-anchor="middle">y estado</text>
+        <rect class="box dir" x="300" y="414" width="150" height="56" rx="8"/>
+        <text class="bt" x="375" y="438" text-anchor="middle"><tspan class="n">6</tspan> · Publicar</text>
+        <text class="bt" x="375" y="456" text-anchor="middle">ahora</text>
+        <rect class="box fam imp" x="470" y="534" width="150" height="56" rx="8"/>
+        <text class="bt" x="545" y="558" text-anchor="middle"><tspan class="n">8</tspan> · Lee las ★</text>
+        <text class="bt" x="545" y="576" text-anchor="middle">novedades</text>
+        <rect class="box fam imp" x="640" y="534" width="150" height="56" rx="8"/>
+        <text class="bt" x="715" y="558" text-anchor="middle"><tspan class="n">9</tspan> · No ve nada ★</text>
+        <text class="bt" x="715" y="576" text-anchor="middle">más</text>
+        <rect class="box fam" x="810" y="534" width="320" height="56" rx="8"/>
+        <text class="bt" x="970" y="558" text-anchor="middle">Lo que ve tras 10, 11 y 12:</text>
+        <text class="bt" x="970" y="576" text-anchor="middle">corrección, retirada, sin acceso</text>
+
+        <!-- Etiquetas -->
+        <text class="et info" x="553" y="470">acceso al portal</text>
+        <text class="et info" x="770" y="455" text-anchor="end">corrección</text>
+        <text class="et info" x="905" y="455" text-anchor="end">retirada</text>
+        <text class="et info" x="1063" y="455">suspendido</text>
+        <text class="et nota" x="452" y="525" text-anchor="end">publicado: ya lo lee la familia</text>
+      </svg>
+    </div>
+    <p class="pista">En el móvil, desliza el diagrama hacia los lados. Las flechas hacia la familia son lo que cambia lo que ve: la publicación (pruebas 5 o 6), el acceso (7) y la corrección, la retirada o la suspensión (10, 11 y 12).</p>
+  </section>
+
+  <section aria-labelledby="paso">
+    <h2 id="paso">Paso a paso</h2>
+    <ol class="pasos">
+      <li class="enf">
+        <div class="paso-cab"><span class="n">1</span><strong>Bandeja de comunicaciones</strong><span class="perfil enf">Enfermería</span></div>
+        <span>En Inicio de Enfermería, tarjeta «Comunicaciones»: busca la que preparaste al cerrar un evento (guía 1, prueba 12, o guía 2, prueba 10) y mira «Se publica el …».</span>
+        <span class="pasa">Se publica sola a la hora del centro (por defecto, tras 1 hora de margen, a las 19:00). Publicada, la lee la familia (prueba 8).</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">2</span><strong>Corregir un comunicado hasta que se publique</strong><span class="perfil enf">Enfermería</span></div>
+        <span>Cierra un evento con «Preparar comunicación» y, antes de que se publique, pulsa «Corregir» en «Comunicaciones»: cambia el texto y «Guardar la corrección».</span>
+        <span class="pasa">La familia solo verá el texto vigente. Una vez publicado, ya no hay «Corregir».</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-medicina</code>.</li>
+      <li class="med">
+        <div class="paso-cab"><span class="n">3</span><strong>Comunicaciones de Medicina</strong><span class="perfil med">Medicina</span></div>
+        <span>Cierra un evento con «Preparar comunicación» (guía 2, prueba 10) y corrígelo en la tarjeta «Comunicaciones» de Medicina. Márcala después de las pruebas 5 y 6.</span>
+        <span class="pasa">Publicado, desaparece «Corregir».</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-administracion</code>.</li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">4</span><strong>Horario de los comunicados del centro</strong><span class="perfil adm">Administración</span></div>
+        <span>«Comunicados a la familia», «Cambiar la hora de publicación y el margen del centro»: prueba las 20:30 y 120 minutos; después «Ver el horario de CJ».</span>
+        <span class="pasa">Solo afecta a los comunicados que se guarden después.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">5</span><strong>Publicar antes de su hora</strong> <span class="estrella">★</span><span class="perfil adm">Administración</span></div>
+        <span>En «Comunicados a la familia», busca uno sin publicar y pulsa «Publicar ahora». Búscalo después en «Auditoría».</span>
+        <span class="pasa">Le llega a la <strong>familia</strong>: ya lo puede leer en el Portal Familiar (prueba 8).</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-direccion</code>.</li>
+      <li class="dir">
+        <div class="paso-cab"><span class="n">6</span><strong>Dirección publica antes de su hora</strong><span class="perfil dir">Dirección Clínica</span></div>
+        <span>«Comunicados a la familia» desde Inicio: busca otro comunicado sin publicar y pulsa «Publicar ahora».</span>
+        <span class="pasa">Le llega a la <strong>familia</strong>, como en la 5. Queda en la auditoría con el perfil Dirección Clínica.</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-administracion</code>.</li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">7</span><strong>Dar acceso al Portal Familiar</strong> <span class="estrella">★</span><span class="perfil adm">Administración</span></div>
+        <span>En la ficha de un residente con familiar, «Autorización» del familiar: escribe un usuario y «Dar acceso al portal». Después «Abrir autorización» y «Activar».</span>
+        <span class="pasa">El familiar entra con ese usuario, pero solo ve algo con la autorización activa. No aparece en «Usuarios».</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-familiar</code>.</li>
+      <li class="fam">
+        <div class="paso-cab"><span class="n">8</span><strong>La familia lee las novedades</strong> <span class="estrella">★</span><span class="perfil fam">Familia</span></div>
+        <span>Entras directamente a las novedades de «Residente Portal Familiar (ficticio)». Si no hay ninguna, haz que Enfermería prepare un comunicado al cerrar un evento y que Administración o Dirección lo publiquen antes (pruebas 5 o 6). Prueba los filtros.</span>
+        <span class="pasa">Ves el tipo, la fecha, el texto vigente y la firma «Equipo asistencial del centro», nunca nombres de profesionales.</span>
+      </li>
+      <li class="fam">
+        <div class="paso-cab"><span class="n">9</span><strong>La familia no ve nada más</strong> <span class="estrella">★</span><span class="perfil fam">Familia</span></div>
+        <span>Recorre el menú y el detalle. Intenta abrir a mano /Enfermeria/Residentes o la dirección de otro residente.</span>
+        <span class="pasa">«No tienes acceso a esto».</span>
+      </li>
+      <li class="cambio">Cambia de cuenta y entra con <code>dev-integrado-administracion</code> (las pruebas 10 y 11 también se pueden hacer con <code>dev-integrado-direccion</code>).</li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">10</span><strong>Publicar una corrección</strong> <span class="estrella">★</span><span class="perfil adm">Administración</span></div>
+        <span>En «Comunicados a la familia», sobre el comunicado ya publicado de la prueba 8, «Publicar una corrección».</span>
+        <span class="pasa">Le llega a la <strong>familia</strong> al momento, con la etiqueta «Corrección»; el original sigue, con «Tiene una corrección».</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">11</span><strong>Retirar un comunicado publicado</strong><span class="perfil adm">Administración</span></div>
+        <span>«Retirar», con motivo, sobre un comunicado publicado.</span>
+        <span class="pasa">La <strong>familia</strong> ve «Esta novedad ya no está disponible», sin el motivo. No se puede deshacer.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">12</span><strong>Suspender el acceso de la familia</strong><span class="perfil adm">Administración</span></div>
+        <span>En la autorización del familiar de «Residente Portal Familiar», «Suspender» con motivo. Mira el portal como familia y después <strong>vuelve a activarla</strong>: la necesitan la prueba 13 y la guía 7.</span>
+        <span class="pasa">La <strong>familia</strong> deja de ver a su residente en el acto: «No tienes ninguna autorización activa».</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-direccion</code>.</li>
+      <li class="dir">
+        <div class="paso-cab"><span class="n">13</span><strong>Frecuencia y estado por unidad</strong><span class="perfil dir">Dirección Clínica</span></div>
+        <span>Al final, «Comunicados a la familia»: compara la tabla «Frecuencia y estado por unidad» con la lista de debajo.</span>
+        <span class="pasa">Solo cifras: programados, publicados, con corrección y retirados.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="mirar">
+    <h2 id="mirar">Dónde mirar si no encuentras algo</h2>
+    <ul class="lista prose">
+      <li><strong>Sin publicar o ya publicado.</strong> Uno sin publicar lo corrigen Enfermería y Medicina en su tarjeta «Comunicaciones». Uno publicado ya no se corrige: Administración o Dirección publican una corrección o lo retiran.</li>
+      <li><strong>Si la familia no ve nada</strong>, el comunicado aún no está publicado: publícalo antes de su hora (prueba 5 o 6).</li>
+      <li><strong>Si la familia ve «No tienes ninguna autorización activa»</strong>, la autorización está suspendida o sin activar: actívala como Administración.</li>
+      <li><strong>Los comunicados se publican solos a su hora</strong> (19:00 por defecto): haz la prueba 2 antes de esa hora.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>ResidApp · Ayuda para las pruebas. Las respuestas se marcan en la <a href="pruebas-6-comunicados-portal.html">guía 6</a>.</p>
+  </footer>
+</div>
+
+</body>
+</html>

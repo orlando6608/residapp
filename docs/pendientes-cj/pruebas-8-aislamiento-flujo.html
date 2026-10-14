@@ -1,0 +1,397 @@
+<!doctype html>
+<!--
+  Ayuda de la guía 8 de pruebas (pruebas-8-aislamiento.html): diagrama de carriles con qué perfil hace cada prueba y qué
+  información pasa de un perfil a otro. No es un cuestionario: no lleva script de respuestas. Si cambia la guía, revisa este flujo.
+  Cómo funciona la carpeta: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flujo de la guía 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --arrow: #55686c;
+    --danger: #b3261e;
+    --lane-aux: #6b4fa0;
+    --lane-aux-bg: #f1edf8;
+    --lane-enf: #1b5f6b;
+    --lane-enf-bg: #e6f1f2;
+    --lane-med: #2457a6;
+    --lane-med-bg: #e8eff9;
+    --lane-dir: #9b2c4a;
+    --lane-dir-bg: #f8e9ee;
+    --lane-adm: #2e6b2f;
+    --lane-adm-bg: #eaf4ea;
+    --lane-fam: #8a5a12;
+    --lane-fam-bg: #f8f0e3;
+    --lane-plat: #4a5560;
+    --lane-plat-bg: #eef0f2;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+      --arrow: #9aafb2;
+      --danger: #f2b8b5;
+      --lane-aux: #b9a2e6;
+      --lane-aux-bg: #1f1a2b;
+      --lane-enf: #72c0cb;
+      --lane-enf-bg: #142427;
+      --lane-med: #8fb3ec;
+      --lane-med-bg: #172030;
+      --lane-dir: #f0a3b8;
+      --lane-dir-bg: #2a1820;
+      --lane-adm: #95d095;
+      --lane-adm-bg: #172617;
+      --lane-fam: #e2b56a;
+      --lane-fam-bg: #2a2114;
+      --lane-plat: #b6c0ca;
+      --lane-plat-bg: #1d2226;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-soft: #1b2e32;
+    --arrow: #9aafb2;
+    --danger: #f2b8b5;
+    --lane-aux: #b9a2e6;
+    --lane-aux-bg: #1f1a2b;
+    --lane-enf: #72c0cb;
+    --lane-enf-bg: #142427;
+    --lane-med: #8fb3ec;
+    --lane-med-bg: #172030;
+    --lane-dir: #f0a3b8;
+    --lane-dir-bg: #2a1820;
+    --lane-adm: #95d095;
+    --lane-adm-bg: #172617;
+    --lane-fam: #e2b56a;
+    --lane-fam-bg: #2a2114;
+    --lane-plat: #b6c0ca;
+    --lane-plat-bg: #1d2226;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-block: 48px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .prose { max-width: 70ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  /* Leyenda */
+  .leyenda { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 0.93rem; list-style: none; padding: 0; }
+  .leyenda li { display: flex; align-items: center; gap: 8px; }
+  .muestra { width: 18px; height: 18px; border-radius: 4px; border: 2px solid; flex: none; }
+  .muestra.ext { border-style: dashed; border-color: var(--muted); background: var(--surface); }
+  .linea { width: 34px; height: 0; border-top: 2px solid var(--arrow); flex: none; }
+  .linea.info { border-top: 3px solid var(--accent); }
+  .linea.rel { border-top: 2px dashed var(--arrow); }
+  .linea.bloq { border-top: 2px dashed var(--danger); }
+  .estrella { color: var(--accent); font-weight: 600; }
+
+  /* Diagrama: se desplaza dentro de su caja en pantallas estrechas; la página no. */
+  .diagrama { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px; }
+  .diagrama svg { display: block; width: 100%; height: auto; font-family: var(--sans); }
+  .pista { color: var(--muted); font-size: 0.88rem; }
+  svg .lane-label { font-size: 15px; font-weight: 600; }
+  svg .sep { stroke: var(--surface); stroke-width: 3; }
+  svg .lane-cuenta { font-size: 11.5px; fill: var(--muted); font-family: var(--mono); }
+  svg .box { fill: var(--surface); stroke-width: 1.5; }
+  svg .box.imp { stroke-width: 3.5; }
+  svg .box.ext { stroke: var(--muted); stroke-dasharray: 6 4; }
+  svg .bt { font-size: 13px; fill: var(--ink); }
+  svg .bt .n { font-weight: 600; }
+  svg .flecha { stroke: var(--arrow); stroke-width: 1.8; fill: none; }
+  svg .flecha.info { stroke: var(--accent); stroke-width: 2.6; }
+  svg .flecha.rel { stroke-dasharray: 5 4; }
+  svg .flecha.bloq { stroke: var(--danger); stroke-dasharray: 5 4; }
+  svg .et { font-size: 12px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+  svg .et.info { fill: var(--accent); font-weight: 600; }
+  svg .et.bloq { fill: var(--danger); font-weight: 600; }
+  svg .et.nota { fill: var(--muted); font-style: italic; }
+  svg .punta { fill: var(--arrow); }
+  svg .punta.info { fill: var(--accent); }
+  svg .punta.bloq { fill: var(--danger); }
+  .m-aux { border-color: var(--lane-aux); background: var(--lane-aux-bg); }
+  svg .lane-aux { fill: var(--lane-aux-bg); }
+  svg .lane-label.aux { fill: var(--lane-aux); }
+  svg .box.aux { stroke: var(--lane-aux); }
+  ol.pasos > li.aux { border-left-color: var(--lane-aux); }
+  .perfil.aux { color: var(--lane-aux); }
+  .m-enf { border-color: var(--lane-enf); background: var(--lane-enf-bg); }
+  svg .lane-enf { fill: var(--lane-enf-bg); }
+  svg .lane-label.enf { fill: var(--lane-enf); }
+  svg .box.enf { stroke: var(--lane-enf); }
+  ol.pasos > li.enf { border-left-color: var(--lane-enf); }
+  .perfil.enf { color: var(--lane-enf); }
+  .m-med { border-color: var(--lane-med); background: var(--lane-med-bg); }
+  svg .lane-med { fill: var(--lane-med-bg); }
+  svg .lane-label.med { fill: var(--lane-med); }
+  svg .box.med { stroke: var(--lane-med); }
+  ol.pasos > li.med { border-left-color: var(--lane-med); }
+  .perfil.med { color: var(--lane-med); }
+  .m-dir { border-color: var(--lane-dir); background: var(--lane-dir-bg); }
+  svg .lane-dir { fill: var(--lane-dir-bg); }
+  svg .lane-label.dir { fill: var(--lane-dir); }
+  svg .box.dir { stroke: var(--lane-dir); }
+  ol.pasos > li.dir { border-left-color: var(--lane-dir); }
+  .perfil.dir { color: var(--lane-dir); }
+  .m-adm { border-color: var(--lane-adm); background: var(--lane-adm-bg); }
+  svg .lane-adm { fill: var(--lane-adm-bg); }
+  svg .lane-label.adm { fill: var(--lane-adm); }
+  svg .box.adm { stroke: var(--lane-adm); }
+  ol.pasos > li.adm { border-left-color: var(--lane-adm); }
+  .perfil.adm { color: var(--lane-adm); }
+  .m-fam { border-color: var(--lane-fam); background: var(--lane-fam-bg); }
+  svg .lane-fam { fill: var(--lane-fam-bg); }
+  svg .lane-label.fam { fill: var(--lane-fam); }
+  svg .box.fam { stroke: var(--lane-fam); }
+  ol.pasos > li.fam { border-left-color: var(--lane-fam); }
+  .perfil.fam { color: var(--lane-fam); }
+  .m-plat { border-color: var(--lane-plat); background: var(--lane-plat-bg); }
+  svg .lane-plat { fill: var(--lane-plat-bg); }
+  svg .lane-label.plat { fill: var(--lane-plat); }
+  svg .box.plat { stroke: var(--lane-plat); }
+  ol.pasos > li.plat { border-left-color: var(--lane-plat); }
+  .perfil.plat { color: var(--lane-plat); }
+
+  /* Paso a paso */
+  ol.pasos { padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  ol.pasos > li { background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--rule); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .paso-cab { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .paso-cab .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .perfil { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .pasa { color: var(--muted); font-size: 0.95rem; }
+  .pasa strong { color: var(--ink); }
+  ol.pasos > li.cambio { background: none; border: 0; border-left: 3px dashed var(--rule); border-radius: 0; padding: 4px 0 4px 12px; color: var(--muted); font-size: 0.95rem; }
+  h3.grupo { margin-top: 8px; }
+  ul.lista { padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; }
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .diagrama { overflow: visible; }
+    .diagrama svg { min-width: 0 !important; }
+    ol.pasos > li { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="pruebas-8-aislamiento.html">← Guía 8</a>
+      <a href="pruebas.html">← Pruebas</a>
+      <a href="index.html">Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Ayuda de la guía 8 de pruebas</p>
+    <h1>Cómo fluye la guía 8 · Aislamiento entre centros</h1>
+    <p class="meta">Estado a 14/10/2026 · Para quien hace las pruebas</p>
+    <p class="lead prose">
+      Aquí cada franja es una cuenta, y lo que se prueba es lo que no se debe ver: los residentes de otro centro o los que no tienes asignados. Las respuestas se marcan en la <a href="pruebas-8-aislamiento.html">guía 8</a>; esta página solo orienta.
+    </p>
+  </header>
+
+  <section aria-labelledby="leer">
+    <h2 id="leer">Cómo leer el diagrama</h2>
+    <p class="prose">Cada franja es una cuenta de prueba. Cada caja es una prueba de la guía, con su número. Las flechas rojas son intentos que la aplicación tiene que bloquear.</p>
+    <ul class="leyenda">
+      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · otro centro · <code>dev-enfermeria</code></span></li>
+      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · <code>dev-integrado-enfermeria</code></span></li>
+      <li><span class="muestra m-aux" aria-hidden="true"></span><span>Auxiliar · <code>dev-integrado-auxiliar</code></span></li>
+      <li><span class="muestra m-plat" aria-hidden="true"></span><span>Cuatro ámbitos · <code>dev-multi</code></span></li>
+      <li><span class="muestra m-plat" aria-hidden="true"></span><span>Plataforma · <code>dev-plataforma</code></span></li>
+      <li><span class="estrella">★</span>&nbsp;Imprescindible (borde grueso)</li>
+      <li><span class="linea" aria-hidden="true"></span>Lo siguiente que haces</li>
+      <li><span class="linea bloq" aria-hidden="true"></span>Lo que la aplicación no deja abrir</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="diagrama">
+    <h2 id="diagrama">El flujo</h2>
+    <div class="diagrama">
+      <svg viewBox="0 0 850 550" style="min-width: 760px" role="img" aria-labelledby="svg-t1 svg-d1">
+        <title id="svg-t1">Flujo de la guía 8: cada cuenta ve solo lo suyo</title>
+        <desc id="svg-d1">Cinco franjas, una por cuenta. dev-enfermeria (otro centro) ve solo sus dos residentes (1). dev-integrado-enfermeria ve solo los del escenario integrado (1) y no puede abrir a mano un residente del otro centro (2). dev-integrado-auxiliar ve solo sus cuatro asignados y no abre uno no asignado (4). dev-multi elige y cambia entre cuatro ámbitos de dos centros (3). dev-plataforma ve las Administraciones y unidades de un centro, nunca residentes (5).</desc>
+        <defs>
+          <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="pi1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="pb1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+
+        <!-- Franjas -->
+        <rect class="lane-enf" x="0" y="0" width="850" height="110"/>
+        <rect class="lane-enf" x="0" y="110" width="850" height="110"/>
+        <rect class="lane-aux" x="0" y="220" width="850" height="110"/>
+        <rect class="lane-plat" x="0" y="330" width="850" height="110"/>
+        <rect class="lane-plat" x="0" y="440" width="850" height="110"/>
+        <line class="sep" x1="0" y1="110" x2="850" y2="110"/>
+        <line class="sep" x1="0" y1="220" x2="850" y2="220"/>
+        <line class="sep" x1="0" y1="330" x2="850" y2="330"/>
+        <line class="sep" x1="0" y1="440" x2="850" y2="440"/>
+        <text class="lane-label enf" x="14" y="26">Enfermería · otro centro</text>
+        <text class="lane-cuenta" x="14" y="44">dev-enfermeria</text>
+        <text class="lane-label enf" x="14" y="136">Enfermería</text>
+        <text class="lane-cuenta" x="14" y="154">dev-integrado-enfermeria</text>
+        <text class="lane-label aux" x="14" y="246">Auxiliar</text>
+        <text class="lane-cuenta" x="14" y="264">dev-integrado-auxiliar</text>
+        <text class="lane-label plat" x="14" y="356">Cuatro ámbitos</text>
+        <text class="lane-cuenta" x="14" y="374">dev-multi</text>
+        <text class="lane-label plat" x="14" y="466">Plataforma</text>
+        <text class="lane-cuenta" x="14" y="484">dev-plataforma</text>
+
+        <!-- Flechas -->
+        <path class="flecha bloq" d="M705,160 C705,38.296754357165966 533.7032456428341,78 412,78" marker-end="url(#pb1)"/>
+        <path class="flecha bloq" d="M620,298 L412,298" marker-end="url(#pb1)"/>
+        <path class="flecha" d="M410,408 L428,408" marker-end="url(#p1)"/>
+        <path class="flecha" d="M600,408 L618,408" marker-end="url(#p1)"/>
+
+        <!-- Pruebas -->
+        <rect class="box enf imp" x="240" y="50" width="170" height="56" rx="8"/>
+        <text class="bt" x="325" y="74" text-anchor="middle"><tspan class="n">1</tspan> · Ve solo sus dos ★</text>
+        <text class="bt" x="325" y="92" text-anchor="middle">residentes</text>
+        <rect class="box enf imp" x="240" y="160" width="170" height="56" rx="8"/>
+        <text class="bt" x="325" y="184" text-anchor="middle"><tspan class="n">1</tspan> · Ve solo los del ★</text>
+        <text class="bt" x="325" y="202" text-anchor="middle">escenario integrado</text>
+        <rect class="box enf imp" x="620" y="160" width="170" height="56" rx="8"/>
+        <text class="bt" x="705" y="184" text-anchor="middle"><tspan class="n">2</tspan> · Abre a mano un ★</text>
+        <text class="bt" x="705" y="202" text-anchor="middle">residente ajeno</text>
+        <rect class="box aux" x="240" y="270" width="170" height="56" rx="8"/>
+        <text class="bt" x="325" y="294" text-anchor="middle"><tspan class="n">4</tspan> · Ve solo sus</text>
+        <text class="bt" x="325" y="312" text-anchor="middle">cuatro asignados</text>
+        <rect class="box aux" x="620" y="270" width="170" height="56" rx="8"/>
+        <text class="bt" x="705" y="294" text-anchor="middle"><tspan class="n">4</tspan> · Abre a mano uno</text>
+        <text class="bt" x="705" y="312" text-anchor="middle">no asignado</text>
+        <rect class="box plat" x="240" y="380" width="170" height="56" rx="8"/>
+        <text class="bt" x="325" y="404" text-anchor="middle"><tspan class="n">3</tspan> · Elegir y cambiar</text>
+        <text class="bt" x="325" y="422" text-anchor="middle">de ámbito</text>
+        <rect class="box plat" x="430" y="380" width="170" height="56" rx="8"/>
+        <text class="bt" x="515" y="404" text-anchor="middle">Centro A</text>
+        <text class="bt" x="515" y="422" text-anchor="middle">Enfermería · Medicina</text>
+        <rect class="box plat" x="620" y="380" width="170" height="56" rx="8"/>
+        <text class="bt" x="705" y="404" text-anchor="middle">Centro B</text>
+        <text class="bt" x="705" y="422" text-anchor="middle">Dirección · Familiar</text>
+        <rect class="box plat" x="240" y="490" width="170" height="56" rx="8"/>
+        <text class="bt" x="325" y="514" text-anchor="middle"><tspan class="n">5</tspan> · Administraciones</text>
+        <text class="bt" x="325" y="532" text-anchor="middle">y unidades</text>
+
+        <!-- Etiquetas -->
+        <text class="et bloq" x="720" y="100">✕ no se abre</text>
+        <text class="et bloq" x="515" y="288" text-anchor="middle">✕ vuelve a «Mis residentes»</text>
+        <text class="et" x="610" y="372" text-anchor="middle">«Cambiar ámbito»</text>
+        <text class="et nota" x="430" y="523">nunca ve residentes ni contenido clínico</text>
+      </svg>
+    </div>
+    <p class="pista">En el móvil, desliza el diagrama hacia los lados. Que no se abra es lo correcto: en esta guía el fallo sería ver algo.</p>
+  </section>
+
+  <section aria-labelledby="paso">
+    <h2 id="paso">Paso a paso</h2>
+    <ol class="pasos">
+      <li class="enf">
+        <div class="paso-cab"><span class="n">1</span><strong>Cada centro ve solo sus residentes</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería · otro centro</span></div>
+        <span>Entra con <code>dev-enfermeria</code> y abre «Residentes». Apunta los nombres.</span>
+        <span class="pasa">Solo «Residente Enfermería Uno» y «Residente Enfermería Dos».</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-enfermeria</code>.</li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">1</span><strong>Compara con el otro centro</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
+        <span>Abre «Residentes» y compara con lo que apuntaste.</span>
+        <span class="pasa">Los del escenario integrado, y ninguno de los otros dos.</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">2</span><strong>Abrir a mano un residente de otro centro</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
+        <span>Escribe en la barra de direcciones /Enfermeria/Residente?residenteId=443194d9-dfe4-4edc-b9a1-c3cf70d161b1 y después /Enfermeria/RegistrarEvento?residenteId=443194d9-dfe4-4edc-b9a1-c3cf70d161b1.</span>
+        <span class="pasa">No se abre: vuelves a tu lista. Si ves su nombre, su ficha o un formulario, es un fallo grave: avísanos cuanto antes.</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-multi</code>.</li>
+      <li class="plat">
+        <div class="paso-cab"><span class="n">3</span><strong>Cambiar de ámbito con una cuenta de varios centros</strong><span class="perfil plat">Cuatro ámbitos</span></div>
+        <span>En «Seleccionar ámbito» elige uno de los cuatro, mira qué pantallas ofrece y cambia con «Cambiar ámbito» (menú del perfil).</span>
+        <span class="pasa">Cada ámbito ve solo las pantallas de su perfil y los datos de su centro. El Familiar dice «No tienes ninguna autorización activa».</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-auxiliar</code>.</li>
+      <li class="aux">
+        <div class="paso-cab"><span class="n">4</span><strong>Un Auxiliar solo ve a sus asignados</strong><span class="perfil aux">Auxiliar</span></div>
+        <span>Comprueba que ves tus cuatro residentes e intenta abrir /Auxiliar/Registro?residenteId=fcb9e800-af32-4e43-8aca-84144ef684a8, uno de tu centro que no te han asignado.</span>
+        <span class="pasa">Vuelves a «Mis residentes» sin ver nada de él.</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-plataforma</code>.</li>
+      <li class="plat">
+        <div class="paso-cab"><span class="n">5</span><strong>Administraciones y unidades de un centro</strong><span class="perfil plat">Plataforma</span></div>
+        <span>«Centros» y, en uno, «Administraciones y unidades»: marca una Administración como principal y después quita la marca.</span>
+        <span class="pasa">No ve residentes ni contenido clínico. Cada cambio queda en la auditoría.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="mirar">
+    <h2 id="mirar">Dónde mirar si no encuentras algo</h2>
+    <ul class="lista prose">
+      <li><strong>Para cambiar de cuenta</strong>, «Cambiar de identidad» en el menú de tu perfil. Para cambiar de ámbito con <code>dev-multi</code>, «Cambiar ámbito».</li>
+      <li><strong>En las pruebas 2 y 4</strong> la dirección se escribe a mano en la barra del navegador, detrás del nombre del sitio.</li>
+      <li><strong>Las preguntas 6, 7 y 8</strong> de la guía no son pruebas: contéstalas al final, pensando en todas las guías.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>ResidApp · Ayuda para las pruebas. Las respuestas se marcan en la <a href="pruebas-8-aislamiento.html">guía 8</a>.</p>
+  </footer>
+</div>
+
+</body>
+</html>
