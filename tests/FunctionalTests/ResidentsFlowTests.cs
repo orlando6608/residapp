@@ -587,6 +587,13 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains(communications, signed);
         Assert.Equal(communications, await connection.ExecuteScalarAsync<string>(
             "SELECT comunicaciones FROM dbo.informes_derivacion WHERE evento_id = @eventId", new { eventId }));
+
+        // Guía de pruebas 1, prueba 12: tras derivar no hay nada que decidir; «Preparar comunicación» no es un botón que parezca no hacer nada.
+        var closePage = await nurse.GetStringAsync($"/Enfermeria/Cerrar?eventoId={eventId}");
+        var decisionInput = System.Text.RegularExpressions.Regex.Match(closePage, "<input[^>]*name=\"Form.Comunicacion\"[^>]*>").Value;
+        Assert.Contains("type=\"hidden\"", decisionInput);
+        Assert.Contains("value=\"Preparar\"", decisionInput);
+        Assert.DoesNotContain("type=\"radio\"", closePage);
     }
 
     [Fact]

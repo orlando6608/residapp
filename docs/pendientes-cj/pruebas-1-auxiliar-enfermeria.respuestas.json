@@ -1,0 +1,93 @@
+{
+  "documento": "pruebas-1-auxiliar-enfermeria",
+  "cuestionario": "2026-10-13",
+  "guardado": "2026-10-14T07:54:24.610Z",
+  "respondidas": 12,
+  "total": 12,
+  "respuestas": {
+    "1": {
+      "pregunta": "Ver mis residentes",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "2": {
+      "pregunta": "«Sin cambios»",
+      "opcion": "B",
+      "textoOpcion": "Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).",
+      "texto": "Cuando cambié de identidad y entré como dev-integrado-enfermeria e intenté entrar en la ficha de residentes ya en Enfermería se demoró mucho en mostrar en mostrar las fichas de Inicio de Enfermería",
+      "respondida": true
+    },
+    "3": {
+      "pregunta": "Registrar un cambio ordinario",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "4": {
+      "pregunta": "Registrar un cambio prioritario",
+      "opcion": "C",
+      "textoOpcion": "No funciona.",
+      "texto": "Al Confirmar cambio, poniendo el texto del aviso y pulsando 'Confirmar y Enviar' regresa a Mis Residentes pero esta pantalla está encabezada por un aviso en rojo: 'No se ha podido completar la operación.'",
+      "respondida": true
+    },
+    "5": {
+      "pregunta": "«No valorable»",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "6": {
+      "pregunta": "Las bandejas reciben lo del Auxiliar",
+      "opcion": "C",
+      "textoOpcion": "No funciona.",
+      "texto": "No aparece nada en la Bandeja Prioritaria porque no se grabó antes\nEn la Ordinaria todo bien",
+      "respondida": true
+    },
+    "7": {
+      "pregunta": "Registrar un evento propio",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "8": {
+      "pregunta": "Valorar un evento, con las constantes",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "9": {
+      "pregunta": "Cerrar un evento sin comunicar a la familia",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "10": {
+      "pregunta": "Seguimiento y transferencia al equipo entrante",
+      "opcion": "C",
+      "textoOpcion": "No funciona.",
+      "texto": "Después de Registrar el Evento no encontré «Iniciar seguimiento»",
+      "respondida": true
+    },
+    "11": {
+      "pregunta": "Protocolo urgente",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "12": {
+      "pregunta": "Derivar a Urgencias, llamar a la familia y cerrar",
+      "opcion": "B",
+      "textoOpcion": "Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).",
+      "texto": "El botón 'Preparar comunicación' no hace nada aparentemente",
+      "respondida": true
+    }
+  }
+}
