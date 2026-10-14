@@ -6,9 +6,7 @@
    actualización relevante es entonces obligatoria y hace falta al menos un intento de llamada (DER-06). *@
 @{
     var derivacion = ViewData["Derivacion"] as ResidApp.Application.Ports.ReferralDetail;
-    var decisiones = derivacion is null
-        ? new[] { FamilyCommunicationDecision.NoComunicar, FamilyCommunicationDecision.Preparar }
-        : new[] { FamilyCommunicationDecision.Preparar };
+    var decisiones = new[] { FamilyCommunicationDecision.NoComunicar, FamilyCommunicationDecision.Preparar };
     var tipos = derivacion is null
         ? new[] { FamilyCommunicationType.Ordinaria, FamilyCommunicationType.Relevante }
         : new[] { FamilyCommunicationType.Relevante };
@@ -36,18 +34,27 @@
     <div class="card-body">
         <fieldset class="mb-3">
             <legend class="h5">¿Se comunica a la familia?</legend>
-            <p class="text-muted">Es obligatorio decidirlo de forma explícita.</p>
-            <div class="d-grid d-md-flex gap-2">
-                @foreach (var decision in decisiones)
-                {
-                    var inputId = $"comunicacion-{decision}";
-                    <span class="chip-par">
-                        <input type="radio" class="btn-check" asp-for="Comunicacion" value="@decision" id="@inputId" autocomplete="off" />
-                        <label class="btn btn-outline-primary btn-lg" for="@inputId">@FamilyCommunicationDisplay.Label(decision)</label>
-                    </span>
-                }
-            </div>
-            <span asp-validation-for="Comunicacion" class="text-danger"></span>
+            @if (derivacion is not null)
+            {
+                @* Con derivación no hay nada que elegir: un botón de una sola opción, ya marcado, parecía no hacer nada (guía 1, prueba 12). *@
+                <p class="mb-0"><strong>Sí: @FamilyCommunicationDisplay.Label(FamilyCommunicationDecision.Preparar).</strong> No se puede omitir tras una derivación a Urgencias.</p>
+                <input type="hidden" asp-for="Comunicacion" value="@FamilyCommunicationDecision.Preparar" />
+            }
+            else
+            {
+                <p class="text-muted">Es obligatorio decidirlo de forma explícita.</p>
+                <div class="d-grid d-md-flex gap-2">
+                    @foreach (var decision in decisiones)
+                    {
+                        var inputId = $"comunicacion-{decision}";
+                        <span class="chip-par">
+                            <input type="radio" class="btn-check" asp-for="Comunicacion" value="@decision" id="@inputId" autocomplete="off" />
+                            <label class="btn btn-outline-primary btn-lg" for="@inputId">@FamilyCommunicationDisplay.Label(decision)</label>
+                        </span>
+                    }
+                </div>
+                <span asp-validation-for="Comunicacion" class="text-danger"></span>
+            }
         </fieldset>
 
         <fieldset>

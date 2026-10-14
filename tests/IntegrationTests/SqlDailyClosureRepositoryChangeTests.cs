@@ -115,6 +115,33 @@ public class SqlDailyClosureRepositoryChangeTests
         Assert.Equal(2, areaCount);
     }
 
+    // Lección de la guía de pruebas 1 (prueba 4): el código del primer motivo mide 36 caracteres y la columna era de 32;
+    // los demás tests solo usaban motivos cortos. Se recorren todos los del catálogo.
+    [Theory]
+    [MemberData(nameof(TodosLosMotivosPrioritarios))]
+    public async Task RegisterChangeAsync_Prioritario_AceptaCadaMotivoDelCatalogo(DailyChangePriorityReason motivo)
+    {
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            seed.AccountId, SystemProfile.Administracion, seed.CenterId, seed.UnitId,
+            "Residente Cambio Cada Motivo", new DateOnly(1951, 2, 12), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+
+        var input = new RegisterDailyChangeInput(
+            seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
+            [new DailyChangeAreaInput(DailyChangeAreaCode.EstadoConciencia, [], "Observación de prueba")],
+            null, DailyChangeClassification.Prioritario, motivo, "Avisado el enfermero de guardia", Guid.NewGuid());
+
+        var result = await _repository.RegisterChangeAsync(input);
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var guardado = await connection.QuerySingleAsync<string>(
+            "SELECT motivo_prioritario_codigo FROM dbo.cierres_cotidianos_residente WHERE id = @Id", new { Id = result.ClosureId });
+        Assert.Equal(motivo.ToCode(), guardado);
+    }
+
+    public static TheoryData<DailyChangePriorityReason> TodosLosMotivosPrioritarios() =>
+        new(Enum.GetValues<DailyChangePriorityReason>());
+
     [Fact]
     public async Task RegisterChangeAsync_SameOperationIdTwice_DoesNotDuplicate()
     {
