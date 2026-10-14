@@ -272,12 +272,13 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="pruebas-2-medicina-indicaciones" data-version="2026-10-13">
+<body data-doc="pruebas-2-medicina-indicaciones" data-version="2026-10-14">
 
 <div class="page">
   <header>
     <nav class="back" aria-label="Navegación">
       <a href="pruebas.html">← Pruebas</a>
+      <a href="pruebas-2-medicina-indicaciones-flujo.html">Ver el flujo de esta guía</a>
       <a href="index.html">Documentos para CJ</a>
       <a href="/">Volver a ResidApp</a>
     </nav>
@@ -325,6 +326,7 @@
         pulsas «Entrar». Para cambiar de cuenta, usa «Cambiar de identidad» en el menú de tu perfil (arriba a la derecha) o vuelve a
         <code>/DevAuth/Login</code>. Si una cuenta tiene varios ámbitos, la aplicación te deja elegir cuál usar.</p>
       <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
+      <p><strong>Si te pierdes</strong>, el <a href="pruebas-2-medicina-indicaciones-flujo.html">flujo de la guía 2</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
     </div>
 
     <h3>Cuentas de prueba de esta guía</h3>
@@ -470,7 +472,7 @@
           <li>Escribe el texto (por ejemplo, «Control de temperatura cada 4 horas; avisar si pasa de 37,8»), una fecha prevista o un criterio (o ambos) e información adicional si hace falta. Guarda.</li>
           <li>Añade dos indicaciones más al mismo evento: las tres se usan en las pruebas 6, 7 y 8.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>No hay prioridad automática. El evento pasa a «Con indicación pendiente» y sale de la bandeja de escalados. Enfermería la verá en «Indicaciones» (prueba 7). Puedes añadir más indicaciones o cerrar el evento.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>No hay prioridad automática. Arriba, junto al nombre del residente, la etiqueta del evento pasa a «Con indicación pendiente» y el evento sale de la bandeja de escalados. Cada indicación lleva además su propia etiqueta en la lista («Pendiente de lectura» hasta que Enfermería la lee). Enfermería la verá en «Indicaciones» (prueba 7). Puedes añadir más indicaciones o cerrar el evento.</div>
         <fieldset class="choices" aria-labelledby="t-5">
           <label class="choice"><input type="radio" name="r-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>

@@ -1,0 +1,399 @@
+<!doctype html>
+<!--
+  Ayuda de la guía 2 de pruebas (pruebas-2-medicina-indicaciones.html): diagrama de carriles con qué perfil hace cada prueba y qué
+  información pasa de un perfil a otro. No es un cuestionario: no lleva script de respuestas. Si cambia la guía, revisa este flujo.
+  Cómo funciona la carpeta: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flujo de la guía 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --lane-med: #2457a6;
+    --lane-med-bg: #e8eff9;
+    --lane-enf: #1b5f6b;
+    --lane-enf-bg: #e6f1f2;
+    --lane-fam: #8a5a12;
+    --lane-fam-bg: #f8f0e3;
+    --arrow: #55686c;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+      --lane-med: #8fb3ec;
+      --lane-med-bg: #172030;
+      --lane-enf: #72c0cb;
+      --lane-enf-bg: #142427;
+      --lane-fam: #e2b56a;
+      --lane-fam-bg: #2a2114;
+      --arrow: #9aafb2;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-soft: #1b2e32;
+    --lane-med: #8fb3ec;
+    --lane-med-bg: #172030;
+    --lane-enf: #72c0cb;
+    --lane-enf-bg: #142427;
+    --lane-fam: #e2b56a;
+    --lane-fam-bg: #2a2114;
+    --arrow: #9aafb2;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-block: 48px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .prose { max-width: 70ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  /* Leyenda */
+  .leyenda { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 0.93rem; list-style: none; padding: 0; }
+  .leyenda li { display: flex; align-items: center; gap: 8px; }
+  .muestra { width: 18px; height: 18px; border-radius: 4px; border: 2px solid; flex: none; }
+  .m-med { border-color: var(--lane-med); background: var(--lane-med-bg); }
+  .m-enf { border-color: var(--lane-enf); background: var(--lane-enf-bg); }
+  .m-fam { border-color: var(--lane-fam); background: var(--lane-fam-bg); border-style: dashed; }
+  .linea { width: 34px; height: 0; border-top: 2px solid var(--arrow); flex: none; }
+  .linea.info { border-top: 3px solid var(--accent); }
+  .linea.rel { border-top: 2px dashed var(--arrow); }
+  .estrella { color: var(--accent); font-weight: 600; }
+
+  /* Diagrama: se desplaza dentro de su caja en pantallas estrechas; la página no. */
+  .diagrama { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px; }
+  .diagrama svg { display: block; width: 100%; min-width: 960px; height: auto; font-family: var(--sans); }
+  .pista { color: var(--muted); font-size: 0.88rem; }
+  svg .lane-med { fill: var(--lane-med-bg); }
+  svg .lane-enf { fill: var(--lane-enf-bg); }
+  svg .lane-fam { fill: var(--lane-fam-bg); }
+  svg .lane-label { font-size: 15px; font-weight: 600; }
+  svg .lane-label.med { fill: var(--lane-med); }
+  svg .lane-label.enf { fill: var(--lane-enf); }
+  svg .lane-label.fam { fill: var(--lane-fam); }
+  svg .lane-cuenta { font-size: 11.5px; fill: var(--muted); font-family: var(--mono); }
+  svg .box { fill: var(--surface); stroke-width: 1.5; }
+  svg .box.med { stroke: var(--lane-med); }
+  svg .box.enf { stroke: var(--lane-enf); }
+  svg .box.fam { stroke: var(--lane-fam); stroke-dasharray: 6 4; }
+  svg .box.imp { stroke-width: 3.5; }
+  svg .bt { font-size: 13px; fill: var(--ink); }
+  svg .bt .n { font-weight: 600; }
+  svg .flecha { stroke: var(--arrow); stroke-width: 1.8; fill: none; }
+  svg .flecha.info { stroke: var(--accent); stroke-width: 2.6; }
+  svg .flecha.rel { stroke-dasharray: 5 4; }
+  svg .et { font-size: 12px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+  svg .et.info { fill: var(--accent); font-weight: 600; }
+  svg .punta { fill: var(--arrow); }
+  svg .punta.info { fill: var(--accent); }
+
+  /* Paso a paso */
+  ol.pasos { padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  ol.pasos > li { background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--rule); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+  ol.pasos > li.med { border-left-color: var(--lane-med); }
+  ol.pasos > li.enf { border-left-color: var(--lane-enf); }
+  .paso-cab { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .paso-cab .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .perfil { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .perfil.med { color: var(--lane-med); }
+  .perfil.enf { color: var(--lane-enf); }
+  .pasa { color: var(--muted); font-size: 0.95rem; }
+  .pasa strong { color: var(--ink); }
+  .cambio { color: var(--muted); font-size: 0.95rem; padding: 4px 0 4px 12px; border-left: 3px dashed var(--rule); }
+  ul.lista { padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; }
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .diagrama { overflow: visible; }
+    .diagrama svg { min-width: 0; }
+    ol.pasos > li { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="pruebas-2-medicina-indicaciones.html">← Guía 2</a>
+      <a href="pruebas.html">← Pruebas</a>
+      <a href="index.html">Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Ayuda de la guía 2 de pruebas</p>
+    <h1>Cómo fluye la guía 2 · Medicina e indicaciones</h1>
+    <p class="meta">Estado a 14/10/2026 · Para quien hace las pruebas</p>
+    <p class="lead prose">
+      En esta guía vas y vienes entre Enfermería y Medicina. Mira aquí qué perfil hace cada prueba y qué le llega al otro. Las
+      respuestas se marcan en la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a>; esta página solo orienta.
+    </p>
+  </header>
+
+  <section aria-labelledby="leer">
+    <h2 id="leer">Cómo leer el diagrama</h2>
+    <p class="prose">Cada franja es un perfil, con la cuenta con la que entras. Cada caja es una prueba de la guía, con su número. Se lee de izquierda a derecha y de arriba abajo.</p>
+    <ul class="leyenda">
+      <li><span class="muestra m-enf" aria-hidden="true"></span>Enfermería · <code>dev-integrado-enfermeria</code></li>
+      <li><span class="muestra m-med" aria-hidden="true"></span>Medicina · <code>dev-integrado-medicina</code></li>
+      <li><span class="muestra m-fam" aria-hidden="true"></span>Familia (no se prueba aquí: guía 6)</li>
+      <li><span class="estrella">★</span>&nbsp;Imprescindible (borde grueso)</li>
+      <li><span class="linea" aria-hidden="true"></span>Lo siguiente que haces</li>
+      <li><span class="linea info" aria-hidden="true"></span>Lo que pasa a otro perfil, y dónde lo ve</li>
+      <li><span class="linea rel" aria-hidden="true"></span>El mismo evento, otro evento parecido o una comprobación</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="diagrama">
+    <h2 id="diagrama">El flujo</h2>
+    <div class="diagrama">
+      <svg viewBox="0 0 1150 570" role="img" aria-labelledby="svg-t svg-d">
+        <title id="svg-t">Flujo de la guía 2: Enfermería escala, Medicina valora e indica, Enfermería cumple y cierra</title>
+        <desc id="svg-d">Tres franjas. Enfermería escala un evento (prueba 1), que llega a la bandeja de escalados de Medicina (prueba 3); la prueba 2 corrige la valoración de ese mismo evento. Medicina valora (4) y registra tres indicaciones (5), que llegan a la tarjeta Indicaciones de Enfermería (7); Enfermería las lee y realiza y cierra el episodio (8). La prueba 6 comprueba como Medicina que no se puede cerrar con indicaciones sin cumplir, antes y después de la 8. Con otro escalado, Medicina hace un seguimiento médico (9) y cierra con comunicación a la familia (10). Un evento propio de Medicina (11) sigue en protocolo urgente y derivación (12). Las pruebas 10 y 12 dejan un comunicado para la familia, que se ve en la guía 6. La prueba 13 mira los avisos de plazos en el inicio de los dos perfiles.</desc>
+        <defs>
+          <marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+
+        <!-- Franjas -->
+        <rect class="lane-enf" x="0" y="0" width="1150" height="160"/>
+        <rect class="lane-med" x="0" y="160" width="1150" height="290"/>
+        <rect class="lane-fam" x="0" y="450" width="1150" height="120"/>
+        <text class="lane-label enf" x="14" y="26">Enfermería</text>
+        <text class="lane-cuenta" x="14" y="44">dev-integrado-enfermeria</text>
+        <text class="lane-label med" x="14" y="186">Medicina</text>
+        <text class="lane-cuenta" x="14" y="204">dev-integrado-medicina</text>
+        <text class="lane-label fam" x="14" y="476">Familia</text>
+        <text class="lane-cuenta" x="14" y="494">guía 6</text>
+
+        <!-- Enfermería: 1, 2, 7, 8, 13 -->
+        <rect class="box enf imp" x="130" y="62" width="150" height="56" rx="8"/>
+        <text class="bt" x="205" y="86" text-anchor="middle"><tspan class="n">1</tspan> · Escalar a ★</text>
+        <text class="bt" x="205" y="104" text-anchor="middle">Medicina · CJ Uno</text>
+
+        <rect class="box enf" x="300" y="62" width="150" height="56" rx="8"/>
+        <text class="bt" x="375" y="86" text-anchor="middle"><tspan class="n">2</tspan> · Corregir la</text>
+        <text class="bt" x="375" y="104" text-anchor="middle">valoración</text>
+        <path class="flecha rel" d="M280,90 H298" marker-end="url(#p)"/>
+
+        <rect class="box enf" x="640" y="62" width="150" height="56" rx="8"/>
+        <text class="bt" x="715" y="86" text-anchor="middle"><tspan class="n">7</tspan> · Leer y</text>
+        <text class="bt" x="715" y="104" text-anchor="middle">realizar</text>
+
+        <rect class="box enf imp" x="810" y="62" width="150" height="56" rx="8"/>
+        <text class="bt" x="885" y="86" text-anchor="middle"><tspan class="n">8</tspan> · Cerrar el ★</text>
+        <text class="bt" x="885" y="104" text-anchor="middle">episodio</text>
+        <path class="flecha" d="M790,90 H808" marker-end="url(#p)"/>
+
+        <rect class="box enf" x="985" y="62" width="150" height="56" rx="8"/>
+        <text class="bt" x="1060" y="86" text-anchor="middle"><tspan class="n">13</tspan> · Avisos de</text>
+        <text class="bt" x="1060" y="104" text-anchor="middle">plazos (Inicio)</text>
+
+        <!-- Medicina, primera fila: 3, 4, 5, 6, 13 -->
+        <rect class="box med" x="130" y="222" width="150" height="56" rx="8"/>
+        <text class="bt" x="205" y="246" text-anchor="middle"><tspan class="n">3</tspan> · Bandeja de</text>
+        <text class="bt" x="205" y="264" text-anchor="middle">escalados</text>
+        <path class="flecha info" d="M205,118 V220" marker-end="url(#pi)"/>
+        <text class="et info" x="214" y="150">escalado con motivo</text>
+
+        <rect class="box med imp" x="300" y="222" width="150" height="56" rx="8"/>
+        <text class="bt" x="375" y="246" text-anchor="middle"><tspan class="n">4</tspan> · Valoración ★</text>
+        <text class="bt" x="375" y="264" text-anchor="middle">médica</text>
+        <path class="flecha" d="M280,250 H298" marker-end="url(#p)"/>
+
+        <rect class="box med imp" x="470" y="222" width="150" height="56" rx="8"/>
+        <text class="bt" x="545" y="246" text-anchor="middle"><tspan class="n">5</tspan> · Tres ★</text>
+        <text class="bt" x="545" y="264" text-anchor="middle">indicaciones</text>
+        <path class="flecha" d="M450,250 H468" marker-end="url(#p)"/>
+        <text class="et" x="459" y="214" text-anchor="middle">conducta</text>
+
+        <path class="flecha info" d="M545,222 C545,170 700,170 710,120" marker-end="url(#pi)"/>
+        <text class="et info" x="560" y="176">tarjeta «Indicaciones»</text>
+
+        <rect class="box med imp" x="810" y="222" width="150" height="56" rx="8"/>
+        <text class="bt" x="885" y="246" text-anchor="middle"><tspan class="n">6</tspan> · No se cierra ★</text>
+        <text class="bt" x="885" y="264" text-anchor="middle">sin cumplirlas</text>
+        <path class="flecha" d="M620,250 H808" marker-end="url(#p)"/>
+        <path class="flecha rel" d="M885,220 V120" marker-start="url(#p)" marker-end="url(#p)"/>
+        <text class="et" x="875" y="150" text-anchor="end">antes y después de la 8</text>
+
+        <rect class="box med" x="985" y="222" width="150" height="56" rx="8"/>
+        <text class="bt" x="1060" y="246" text-anchor="middle"><tspan class="n">13</tspan> · Avisos de</text>
+        <text class="bt" x="1060" y="264" text-anchor="middle">plazos (Inicio)</text>
+        <path class="flecha rel" d="M1060,120 V220"/>
+
+        <!-- Medicina, segunda fila: 9, 10, 11, 12 -->
+        <rect class="box med" x="300" y="352" width="150" height="56" rx="8"/>
+        <text class="bt" x="375" y="376" text-anchor="middle"><tspan class="n">9</tspan> · Seguimiento</text>
+        <text class="bt" x="375" y="394" text-anchor="middle">médico</text>
+        <path class="flecha rel" d="M375,278 V350" marker-end="url(#p)"/>
+        <text class="et" x="365" y="320" text-anchor="end">otro escalado</text>
+
+        <rect class="box med imp" x="470" y="352" width="150" height="56" rx="8"/>
+        <text class="bt" x="545" y="376" text-anchor="middle"><tspan class="n">10</tspan> · Cerrar con ★</text>
+        <text class="bt" x="545" y="394" text-anchor="middle">comunicación</text>
+        <path class="flecha" d="M450,380 H468" marker-end="url(#p)"/>
+        <text class="et" x="459" y="344" text-anchor="middle">resolver</text>
+
+        <rect class="box med" x="640" y="352" width="150" height="56" rx="8"/>
+        <text class="bt" x="715" y="376" text-anchor="middle"><tspan class="n">11</tspan> · Evento propio</text>
+        <text class="bt" x="715" y="394" text-anchor="middle">CJ Dos</text>
+
+        <rect class="box med" x="810" y="352" width="150" height="56" rx="8"/>
+        <text class="bt" x="885" y="376" text-anchor="middle"><tspan class="n">12</tspan> · Protocolo y</text>
+        <text class="bt" x="885" y="394" text-anchor="middle">derivación</text>
+        <path class="flecha" d="M790,380 H808" marker-end="url(#p)"/>
+
+        <!-- Familia -->
+        <rect class="box fam" x="470" y="490" width="490" height="56" rx="8"/>
+        <text class="bt" x="715" y="514" text-anchor="middle">Comunicado aprobado, se publica más tarde</text>
+        <text class="bt" x="715" y="532" text-anchor="middle">(lo verás en «Comunicaciones», guía 6)</text>
+        <path class="flecha info" d="M545,408 V488" marker-end="url(#pi)"/>
+        <path class="flecha info" d="M885,408 V488" marker-end="url(#pi)"/>
+        <text class="et info" x="555" y="446">«Preparar comunicación»</text>
+        <text class="et info" x="875" y="446" text-anchor="end">comunicación obligatoria</text>
+      </svg>
+    </div>
+    <p class="pista">En el móvil, desliza el diagrama hacia los lados. La prueba 6 se hace dos veces: justo después de la 5 y, otra vez, al terminar Enfermería la 8 (antes de cerrar el episodio).</p>
+  </section>
+
+  <section aria-labelledby="paso">
+    <h2 id="paso">Paso a paso</h2>
+    <ol class="pasos">
+      <li class="enf">
+        <div class="paso-cab"><span class="n">1</span><strong>Escalar a Medicina</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
+        <span>Registra y valora un evento en Prueba CJ Uno, como en las pruebas 7 y 8 de la <a href="pruebas-1-auxiliar-enfermeria-flujo.html">guía 1</a>. «Pasar a decisión asistencial», tarjeta «Escalar a Medicina», escribe el motivo y escala.</span>
+        <span class="pasa">Le llega a <strong>Medicina</strong>, en «Escalados y eventos propios» (prueba 3). En tu Inicio, el evento pasa a la tarjeta «Escalados a Medicina».</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">2</span><strong>Corregir y rectificar la valoración</strong><span class="perfil enf">Enfermería</span></div>
+        <span>En el detalle del mismo evento escalado, «Corregir valoración» (solo la ve quien guardó la valoración la última vez, durante 6 horas), con su motivo. Pasado ese plazo, solo «Añadir rectificación».</span>
+      </li>
+      <li class="cambio">Cambia de cuenta y entra con <code>dev-integrado-medicina</code>.</li>
+      <li class="med">
+        <div class="paso-cab"><span class="n">3</span><strong>Bandeja de escalados</strong><span class="perfil med">Medicina</span></div>
+        <span>En Inicio de Medicina, «Escalados y eventos propios». Abre el escalado de la prueba 1: verás el motivo, las constantes y la valoración de Enfermería, de solo lectura.</span>
+      </li>
+      <li class="med">
+        <div class="paso-cab"><span class="n">4</span><strong>Valoración médica</strong> <span class="estrella">★</span><span class="perfil med">Medicina</span></div>
+        <span>«Iniciar valoración médica», escribe y «Guardar borrador». Solo después de guardar aparece «Pasar a conducta médica», la pantalla con las cuatro salidas.</span>
+      </li>
+      <li class="med">
+        <div class="paso-cab"><span class="n">5</span><strong>Tres indicaciones a Enfermería</strong> <span class="estrella">★</span><span class="perfil med">Medicina</span></div>
+        <span>En la conducta médica, «Registrar indicaciones a Enfermería», con fecha prevista o criterio. Repítelo hasta tener tres indicaciones.</span>
+        <span class="pasa">Le llegan a <strong>Enfermería</strong>, en la tarjeta «Indicaciones» de su Inicio (prueba 7). En el detalle del evento, arriba y junto al nombre del residente, el evento pasa a «Con indicación pendiente».</span>
+      </li>
+      <li class="med">
+        <div class="paso-cab"><span class="n">6</span><strong>Medicina no cierra con indicaciones sin cumplir</strong> <span class="estrella">★</span><span class="perfil med">Medicina</span></div>
+        <span>Abre «Cerrar el evento»: el botón está desactivado y un aviso lo explica. No marques todavía esta prueba: vuelve aquí durante la 8.</span>
+      </li>
+      <li class="cambio">Cambia de cuenta y entra con <code>dev-integrado-enfermeria</code>.</li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">7</span><strong>Leer y realizar las indicaciones</strong><span class="perfil enf">Enfermería</span></div>
+        <span>Tarjeta «Indicaciones»: «Confirmar lectura» y, después, «Registrar como realizada» o, con la incidencia escrita, «Registrar como no realizada». Deja una sin cumplir para la 8.</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">8</span><strong>Cerrar el episodio</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
+        <span>Registra la última indicación: la app te lleva al detalle del evento, y el episodio aparece en la tarjeta «Para cerrar». <strong>Antes de cerrarlo</strong>, entra como Medicina y vuelve a «Cerrar el evento» (prueba 6). Después, como Enfermería, «Cerrar episodio» con la decisión sobre la comunicación a la familia.</span>
+      </li>
+      <li class="cambio">Cambia de cuenta y entra con <code>dev-integrado-medicina</code>.</li>
+      <li class="med">
+        <div class="paso-cab"><span class="n">9</span><strong>Seguimiento médico</strong><span class="perfil med">Medicina</span></div>
+        <span>Con otro escalado (prueba 1 como Enfermería y prueba 4 como Medicina), en la conducta, «Iniciar seguimiento médico», con objetivo y fecha o criterio. Registra una revisión, prueba «Transferir» y «Conservar» y pulsa «Resolver».</span>
+        <span class="pasa">Mientras dura, el evento está en la tarjeta «Seguimientos» de Medicina. «Resolver» te devuelve a la conducta.</span>
+      </li>
+      <li class="med">
+        <div class="paso-cab"><span class="n">10</span><strong>Cerrar con comunicación a la familia</strong> <span class="estrella">★</span><span class="perfil med">Medicina</span></div>
+        <span>En la conducta, «Cerrar el evento», «Preparar comunicación», tipo y texto para la familia. Solo se puede si no queda ninguna indicación sin cumplir.</span>
+        <span class="pasa">Le llega a la <strong>familia</strong> un comunicado aprobado que se publicará a la hora del centro (<a href="pruebas-6-comunicados-portal.html">guía 6</a>). Enfermería no tiene que volver a cerrarlo.</span>
+      </li>
+      <li class="med">
+        <div class="paso-cab"><span class="n">11</span><strong>Evento propio de Medicina</strong><span class="perfil med">Medicina</span></div>
+        <span>«Residentes», Prueba CJ Dos, «Registrar evento». Queda directamente en valoración médica.</span>
+        <span class="pasa">No entra en las bandejas de Enfermería.</span>
+      </li>
+      <li class="med">
+        <div class="paso-cab"><span class="n">12</span><strong>Protocolo urgente y derivación</strong><span class="perfil med">Medicina</span></div>
+        <span>Con el evento propio valorado, en la conducta, «Activar protocolo urgente». Actuación, «Derivar a Urgencias», firma, intento de llamada y cierre, como en las pruebas 11 y 12 de la guía 1.</span>
+        <span class="pasa"><strong>Enfermería</strong> ve el protocolo en solo lectura; a la <strong>familia</strong> le llega el comunicado obligatorio.</span>
+      </li>
+      <li class="med">
+        <div class="paso-cab"><span class="n">13</span><strong>Avisos de plazos</strong><span class="perfil med">Enfermería y Medicina</span></div>
+        <span>En Inicio de cada perfil, arriba: la lista de hitos a punto de vencer o vencidos (lo vencido, primero y en rojo).</span>
+      </li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="mirar">
+    <h2 id="mirar">Dónde mirar si no encuentras algo</h2>
+    <ul class="lista prose">
+      <li><strong>Estado del evento y estado de cada indicación.</strong> El del evento («Con indicación pendiente») es la etiqueta de arriba, junto al nombre del residente. Cada indicación de la lista lleva la suya («Pendiente de lectura», «Leída, pendiente de realizar», «Realizada»…).</li>
+      <li><strong>Las cuatro salidas de Medicina</strong> (indicar, seguimiento médico, cerrar y protocolo urgente) están en «Conducta médica». A esa pantalla se llega con «Pasar a conducta médica», que aparece en el detalle del escalado después de guardar la valoración médica.</li>
+      <li><strong>La prueba 6 va y vuelve:</strong> se mira justo después de la 5 y otra vez durante la 8. Márcala al terminar la 8.</li>
+      <li><strong>Lo escalado no está en las bandejas de Enfermería:</strong> está en la tarjeta «Escalados a Medicina» de su Inicio.</li>
+      <li><strong>«Corregir valoración»</strong> solo la ve quien guardó la valoración la última vez, y solo durante 6 horas.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>ResidApp · Ayuda para las pruebas. Las respuestas se marcan en la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a>.</p>
+  </footer>
+</div>
+
+</body>
+</html>

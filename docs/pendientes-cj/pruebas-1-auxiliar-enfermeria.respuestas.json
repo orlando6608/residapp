@@ -1,7 +1,7 @@
 {
   "documento": "pruebas-1-auxiliar-enfermeria",
-  "cuestionario": "2026-10-13",
-  "guardado": "2026-10-14T07:54:24.610Z",
+  "cuestionario": "2026-10-14",
+  "guardado": "2026-10-14T09:00:33.095Z",
   "respondidas": 12,
   "total": 12,
   "respuestas": {
@@ -16,7 +16,7 @@
       "pregunta": "«Sin cambios»",
       "opcion": "B",
       "textoOpcion": "Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).",
-      "texto": "Cuando cambié de identidad y entré como dev-integrado-enfermeria e intenté entrar en la ficha de residentes ya en Enfermería se demoró mucho en mostrar en mostrar las fichas de Inicio de Enfermería",
+      "texto": "",
       "respondida": true
     },
     "3": {
@@ -28,9 +28,9 @@
     },
     "4": {
       "pregunta": "Registrar un cambio prioritario",
-      "opcion": "C",
-      "textoOpcion": "No funciona.",
-      "texto": "Al Confirmar cambio, poniendo el texto del aviso y pulsando 'Confirmar y Enviar' regresa a Mis Residentes pero esta pantalla está encabezada por un aviso en rojo: 'No se ha podido completar la operación.'",
+      "opcion": "B",
+      "textoOpcion": "Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).",
+      "texto": "Al Confirmar cambio, sin poner el texto del aviso me pone 'This field is required'. Debería ser en español",
       "respondida": true
     },
     "5": {
@@ -42,9 +42,9 @@
     },
     "6": {
       "pregunta": "Las bandejas reciben lo del Auxiliar",
-      "opcion": "C",
-      "textoOpcion": "No funciona.",
-      "texto": "No aparece nada en la Bandeja Prioritaria porque no se grabó antes\nEn la Ordinaria todo bien",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
       "respondida": true
     },
     "7": {
@@ -70,9 +70,9 @@
     },
     "10": {
       "pregunta": "Seguimiento y transferencia al equipo entrante",
-      "opcion": "C",
-      "textoOpcion": "No funciona.",
-      "texto": "Después de Registrar el Evento no encontré «Iniciar seguimiento»",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "En el formulario de Iniciar seguimiento en la fecha prevista no se puede poner la hora",
       "respondida": true
     },
     "11": {
@@ -84,9 +84,9 @@
     },
     "12": {
       "pregunta": "Derivar a Urgencias, llamar a la familia y cerrar",
-      "opcion": "B",
-      "textoOpcion": "Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).",
-      "texto": "El botón 'Preparar comunicación' no hace nada aparentemente",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
       "respondida": true
     }
   }

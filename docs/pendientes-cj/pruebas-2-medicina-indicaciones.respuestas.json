@@ -1,0 +1,100 @@
+{
+  "documento": "pruebas-2-medicina-indicaciones",
+  "cuestionario": "2026-10-13",
+  "guardado": "2026-10-14T09:29:59.983Z",
+  "respondidas": 6,
+  "total": 13,
+  "respuestas": {
+    "1": {
+      "pregunta": "Escalar a Medicina",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "2": {
+      "pregunta": "Corregir y rectificar una valoración",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "3": {
+      "pregunta": "Bandeja de escalados",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "4": {
+      "pregunta": "Valoración médica",
+      "opcion": "B",
+      "textoOpcion": "Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).",
+      "texto": "Muestra la 4 salidas pero hay poca información de a qué valoración médica que se refiere",
+      "respondida": true
+    },
+    "5": {
+      "pregunta": "Indicación a Enfermería",
+      "opcion": "B",
+      "textoOpcion": "Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).",
+      "texto": "No veo que ponga 'Con indicación pendiente' sino 'Pendiente de lectura'",
+      "respondida": true
+    },
+    "6": {
+      "pregunta": "Medicina no cierra con indicaciones sin cumplir",
+      "opcion": "A",
+      "textoOpcion": "Funciona como esperaba.",
+      "texto": "",
+      "respondida": true
+    },
+    "7": {
+      "pregunta": "Indicaciones de Medicina: leer y realizar",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "",
+      "respondida": false
+    },
+    "8": {
+      "pregunta": "Cerrar un episodio cuando Medicina ha indicado algo",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "",
+      "respondida": false
+    },
+    "9": {
+      "pregunta": "Seguimiento médico y fin de turno",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "",
+      "respondida": false
+    },
+    "10": {
+      "pregunta": "Cerrar con comunicación a la familia",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "",
+      "respondida": false
+    },
+    "11": {
+      "pregunta": "Evento propio de Medicina",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "",
+      "respondida": false
+    },
+    "12": {
+      "pregunta": "Protocolo urgente y derivación iniciados por Medicina",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "",
+      "respondida": false
+    },
+    "13": {
+      "pregunta": "Aviso de hitos a punto de vencer o vencidos",
+      "opcion": "",
+      "textoOpcion": "",
+      "texto": "",
+      "respondida": false
+    }
+  }
+}

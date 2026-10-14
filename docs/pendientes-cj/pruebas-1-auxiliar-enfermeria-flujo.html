@@ -1,0 +1,383 @@
+<!doctype html>
+<!--
+  Ayuda de la guía 1 de pruebas (pruebas-1-auxiliar-enfermeria.html): diagrama de carriles con qué perfil hace cada prueba y qué
+  información pasa de un perfil a otro. No es un cuestionario: no lleva script de respuestas. Si cambia la guía, revisa este flujo.
+  Cómo funciona la carpeta: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flujo de la guía 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --lane-aux: #6b4fa0;
+    --lane-aux-bg: #f1edf8;
+    --lane-enf: #1b5f6b;
+    --lane-enf-bg: #e6f1f2;
+    --lane-fam: #8a5a12;
+    --lane-fam-bg: #f8f0e3;
+    --arrow: #55686c;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+      --lane-aux: #b9a2e6;
+      --lane-aux-bg: #1f1a2b;
+      --lane-enf: #72c0cb;
+      --lane-enf-bg: #142427;
+      --lane-fam: #e2b56a;
+      --lane-fam-bg: #2a2114;
+      --arrow: #9aafb2;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-soft: #1b2e32;
+    --lane-aux: #b9a2e6;
+    --lane-aux-bg: #1f1a2b;
+    --lane-enf: #72c0cb;
+    --lane-enf-bg: #142427;
+    --lane-fam: #e2b56a;
+    --lane-fam-bg: #2a2114;
+    --arrow: #9aafb2;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-block: 48px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .prose { max-width: 70ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  /* Leyenda */
+  .leyenda { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 0.93rem; list-style: none; padding: 0; }
+  .leyenda li { display: flex; align-items: center; gap: 8px; }
+  .muestra { width: 18px; height: 18px; border-radius: 4px; border: 2px solid; flex: none; }
+  .m-aux { border-color: var(--lane-aux); background: var(--lane-aux-bg); }
+  .m-enf { border-color: var(--lane-enf); background: var(--lane-enf-bg); }
+  .m-fam { border-color: var(--lane-fam); background: var(--lane-fam-bg); border-style: dashed; }
+  .linea { width: 34px; height: 0; border-top: 2px solid var(--arrow); flex: none; }
+  .linea.info { border-top: 3px solid var(--accent); }
+  .linea.rel { border-top: 2px dashed var(--arrow); }
+  .estrella { color: var(--accent); font-weight: 600; }
+
+  /* Diagrama: se desplaza dentro de su caja en pantallas estrechas; la página no. */
+  .diagrama { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px; }
+  .diagrama svg { display: block; width: 100%; min-width: 860px; height: auto; font-family: var(--sans); }
+  .pista { color: var(--muted); font-size: 0.88rem; }
+  svg .lane-aux { fill: var(--lane-aux-bg); }
+  svg .lane-enf { fill: var(--lane-enf-bg); }
+  svg .lane-fam { fill: var(--lane-fam-bg); }
+  svg .lane-label { font-size: 15px; font-weight: 600; }
+  svg .lane-label.aux { fill: var(--lane-aux); }
+  svg .lane-label.enf { fill: var(--lane-enf); }
+  svg .lane-label.fam { fill: var(--lane-fam); }
+  svg .lane-cuenta { font-size: 11.5px; fill: var(--muted); font-family: var(--mono); }
+  svg .box { fill: var(--surface); stroke-width: 1.5; }
+  svg .box.aux { stroke: var(--lane-aux); }
+  svg .box.enf { stroke: var(--lane-enf); }
+  svg .box.fam { stroke: var(--lane-fam); stroke-dasharray: 6 4; }
+  svg .box.imp { stroke-width: 3.5; }
+  svg .bt { font-size: 13px; fill: var(--ink); }
+  svg .bt .n { font-weight: 600; }
+  svg .flecha { stroke: var(--arrow); stroke-width: 1.8; fill: none; }
+  svg .flecha.info { stroke: var(--accent); stroke-width: 2.6; }
+  svg .flecha.rel { stroke-dasharray: 5 4; }
+  svg .et { font-size: 12px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+  svg .et.info { fill: var(--accent); font-weight: 600; }
+  svg .punta { fill: var(--arrow); }
+  svg .punta.info { fill: var(--accent); }
+
+  /* Paso a paso */
+  ol.pasos { padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  ol.pasos > li { background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--rule); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+  ol.pasos > li.aux { border-left-color: var(--lane-aux); }
+  ol.pasos > li.enf { border-left-color: var(--lane-enf); }
+  .paso-cab { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .paso-cab .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .perfil { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .perfil.aux { color: var(--lane-aux); }
+  .perfil.enf { color: var(--lane-enf); }
+  .pasa { color: var(--muted); font-size: 0.95rem; }
+  .pasa strong { color: var(--ink); }
+  .cambio { color: var(--muted); font-size: 0.95rem; padding: 4px 0 4px 12px; border-left: 3px dashed var(--rule); }
+  ul.lista { padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; }
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .diagrama { overflow: visible; }
+    .diagrama svg { min-width: 0; }
+    ol.pasos > li { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="pruebas-1-auxiliar-enfermeria.html">← Guía 1</a>
+      <a href="pruebas.html">← Pruebas</a>
+      <a href="index.html">Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Ayuda de la guía 1 de pruebas</p>
+    <h1>Cómo fluye la guía 1 · Auxiliar y Enfermería</h1>
+    <p class="meta">Estado a 14/10/2026 · Para quien hace las pruebas</p>
+    <p class="lead prose">
+      Antes de empezar, o cuando te pierdas, mira aquí qué perfil hace cada prueba y qué le llega al siguiente. Las respuestas se
+      marcan en la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>; esta página solo orienta.
+    </p>
+  </header>
+
+  <section aria-labelledby="leer">
+    <h2 id="leer">Cómo leer el diagrama</h2>
+    <p class="prose">Cada franja es un perfil, con la cuenta con la que entras. Cada caja es una prueba de la guía, con su número. Se lee de izquierda a derecha y de arriba abajo.</p>
+    <ul class="leyenda">
+      <li><span class="muestra m-aux" aria-hidden="true"></span>Auxiliar · <code>dev-integrado-auxiliar</code></li>
+      <li><span class="muestra m-enf" aria-hidden="true"></span>Enfermería · <code>dev-integrado-enfermeria</code></li>
+      <li><span class="muestra m-fam" aria-hidden="true"></span>Familia (no se prueba aquí: guía 6)</li>
+      <li><span class="estrella">★</span>&nbsp;Imprescindible (borde grueso)</li>
+      <li><span class="linea" aria-hidden="true"></span>Lo siguiente que haces</li>
+      <li><span class="linea info" aria-hidden="true"></span>Lo que pasa a otro perfil, y dónde lo ve</li>
+      <li><span class="linea rel" aria-hidden="true"></span>Otro evento con el mismo camino</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="diagrama">
+    <h2 id="diagrama">El flujo</h2>
+    <div class="diagrama">
+      <svg viewBox="0 0 980 560" role="img" aria-labelledby="svg-t svg-d">
+        <title id="svg-t">Flujo de la guía 1: el Auxiliar registra y Enfermería valora y decide</title>
+        <desc id="svg-d">Tres franjas. Auxiliar: pruebas 1 a 5; los cambios de las pruebas 3 (ordinario) y 4 (prioritario) llegan a las bandejas de Enfermería, que se revisan en la prueba 6. Enfermería: la prueba 7 registra un evento, la 8 lo valora y desde la decisión asistencial salen la 9 (cerrar), la 10 (seguimiento) y la 11 (protocolo urgente), que sigue en la 12 (derivar a Urgencias). La 12 deja un comunicado para la familia, que se ve en la guía 6.</desc>
+        <defs>
+          <marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+
+        <!-- Franjas -->
+        <rect class="lane-aux" x="0" y="0" width="980" height="150"/>
+        <rect class="lane-enf" x="0" y="150" width="980" height="300"/>
+        <rect class="lane-fam" x="0" y="450" width="980" height="110"/>
+        <text class="lane-label aux" x="14" y="26">Auxiliar</text>
+        <text class="lane-cuenta" x="14" y="44">dev-integrado-auxiliar</text>
+        <text class="lane-label enf" x="14" y="176">Enfermería</text>
+        <text class="lane-cuenta" x="14" y="194">dev-integrado-enfermeria</text>
+        <text class="lane-label fam" x="14" y="476">Familia</text>
+        <text class="lane-cuenta" x="14" y="494">guía 6</text>
+
+        <!-- Auxiliar: 1 a 5 -->
+        <rect class="box aux" x="130" y="62" width="150" height="56" rx="8"/>
+        <text class="bt" x="205" y="86" text-anchor="middle"><tspan class="n">1</tspan> · Ver mis</text>
+        <text class="bt" x="205" y="104" text-anchor="middle">residentes</text>
+
+        <rect class="box aux" x="300" y="62" width="150" height="56" rx="8"/>
+        <text class="bt" x="375" y="86" text-anchor="middle"><tspan class="n">2</tspan> · «Sin cambios»</text>
+        <text class="bt" x="375" y="104" text-anchor="middle">CJ Dos</text>
+
+        <rect class="box aux" x="470" y="62" width="150" height="56" rx="8"/>
+        <text class="bt" x="545" y="86" text-anchor="middle"><tspan class="n">3</tspan> · Cambio</text>
+        <text class="bt" x="545" y="104" text-anchor="middle">ordinario · CJ Dos</text>
+
+        <rect class="box aux imp" x="640" y="62" width="150" height="56" rx="8"/>
+        <text class="bt" x="715" y="86" text-anchor="middle"><tspan class="n">4</tspan> · Cambio ★</text>
+        <text class="bt" x="715" y="104" text-anchor="middle">prioritario · CJ Uno</text>
+
+        <rect class="box aux" x="810" y="62" width="150" height="56" rx="8"/>
+        <text class="bt" x="885" y="86" text-anchor="middle"><tspan class="n">5</tspan> · «No</text>
+        <text class="bt" x="885" y="104" text-anchor="middle">valorable» · CJ Dos</text>
+
+        <path class="flecha" d="M280,90 H298" marker-end="url(#p)"/>
+        <path class="flecha" d="M450,90 H468" marker-end="url(#p)"/>
+        <path class="flecha" d="M620,90 H638" marker-end="url(#p)"/>
+        <path class="flecha" d="M790,90 H808" marker-end="url(#p)"/>
+
+        <!-- 3 y 4 llegan a las bandejas (6) -->
+        <rect class="box enf imp" x="790" y="212" width="170" height="56" rx="8"/>
+        <text class="bt" x="875" y="236" text-anchor="middle"><tspan class="n">6</tspan> · Revisar las ★</text>
+        <text class="bt" x="875" y="254" text-anchor="middle">bandejas</text>
+        <path class="flecha info" d="M545,118 C545,170 820,160 830,210" marker-end="url(#pi)"/>
+        <path class="flecha info" d="M715,118 C715,160 900,160 905,210" marker-end="url(#pi)"/>
+        <text class="et info" x="538" y="166" text-anchor="end">«Cambios ordinarios»</text>
+        <text class="et info" x="760" y="146">«Bandeja prioritaria»</text>
+
+        <!-- Enfermería: 7, 8 y la decisión asistencial -->
+        <rect class="box enf" x="130" y="300" width="150" height="56" rx="8"/>
+        <text class="bt" x="205" y="324" text-anchor="middle"><tspan class="n">7</tspan> · Registrar</text>
+        <text class="bt" x="205" y="342" text-anchor="middle">evento · CJ Uno</text>
+
+        <rect class="box enf imp" x="300" y="300" width="150" height="56" rx="8"/>
+        <text class="bt" x="375" y="324" text-anchor="middle"><tspan class="n">8</tspan> · Valorar ★</text>
+        <text class="bt" x="375" y="342" text-anchor="middle">con constantes</text>
+        <path class="flecha" d="M280,328 H298" marker-end="url(#p)"/>
+
+        <text class="et" x="496" y="376" text-anchor="end">Decisión asistencial</text>
+
+        <rect class="box enf" x="560" y="212" width="170" height="56" rx="8"/>
+        <text class="bt" x="645" y="236" text-anchor="middle"><tspan class="n">9</tspan> · Cerrar sin</text>
+        <text class="bt" x="645" y="254" text-anchor="middle">comunicar</text>
+
+        <rect class="box enf" x="560" y="300" width="170" height="56" rx="8"/>
+        <text class="bt" x="645" y="324" text-anchor="middle"><tspan class="n">10</tspan> · Seguimiento</text>
+        <text class="bt" x="645" y="342" text-anchor="middle">y transferencia</text>
+
+        <rect class="box enf" x="560" y="380" width="170" height="56" rx="8"/>
+        <text class="bt" x="645" y="404" text-anchor="middle"><tspan class="n">11</tspan> · Protocolo</text>
+        <text class="bt" x="645" y="422" text-anchor="middle">urgente</text>
+
+        <path class="flecha" d="M450,328 H500 C530,328 520,240 558,240" marker-end="url(#p)"/>
+        <path class="flecha rel" d="M500,328 H558" marker-end="url(#p)"/>
+        <path class="flecha rel" d="M500,328 C530,328 520,408 558,408" marker-end="url(#p)"/>
+
+        <rect class="box enf imp" x="790" y="380" width="170" height="56" rx="8"/>
+        <text class="bt" x="875" y="404" text-anchor="middle"><tspan class="n">12</tspan> · Derivar a ★</text>
+        <text class="bt" x="875" y="422" text-anchor="middle">Urgencias y cerrar</text>
+        <path class="flecha" d="M730,408 H788" marker-end="url(#p)"/>
+
+        <!-- Familia -->
+        <rect class="box fam" x="760" y="484" width="200" height="56" rx="8"/>
+        <text class="bt" x="860" y="508" text-anchor="middle">Comunicado aprobado,</text>
+        <text class="bt" x="860" y="526" text-anchor="middle">se publica más tarde</text>
+        <path class="flecha info" d="M875,436 V482" marker-end="url(#pi)"/>
+        <text class="et info" x="866" y="468" text-anchor="end">comunicación obligatoria</text>
+      </svg>
+    </div>
+    <p class="pista">En el móvil, desliza el diagrama hacia los lados. Las líneas discontinuas de la decisión asistencial son eventos nuevos (el de la prueba 10 y el prioritario de la 11) que siguen el mismo camino de la 7 y la 8.</p>
+  </section>
+
+  <section aria-labelledby="paso">
+    <h2 id="paso">Paso a paso</h2>
+    <ol class="pasos">
+      <li class="aux">
+        <div class="paso-cab"><span class="n">1</span><strong>Ver mis residentes</strong><span class="perfil aux">Auxiliar</span></div>
+        <span>En Inicio, «Mis residentes (Auxiliar)»: solo ves los cuatro residentes que te ha asignado Administración.</span>
+        <span class="pasa">No pasa nada a otro perfil.</span>
+      </li>
+      <li class="aux">
+        <div class="paso-cab"><span class="n">2</span><strong>«Sin cambios»</strong><span class="perfil aux">Auxiliar</span></div>
+        <span>En el registro de Prueba CJ Dos, «Confirmar sin cambios»: el turno queda «Cerrado hoy».</span>
+        <span class="pasa">No llega nada a Enfermería.</span>
+      </li>
+      <li class="aux">
+        <div class="paso-cab"><span class="n">3</span><strong>Cambio ordinario</strong><span class="perfil aux">Auxiliar</span></div>
+        <span>«Registrar cambio» en Prueba CJ Dos, con áreas observadas y la clasificación «Ordinario».</span>
+        <span class="pasa">Le llega a <strong>Enfermería</strong>, en «Cambios ordinarios» (prueba 6).</span>
+      </li>
+      <li class="aux">
+        <div class="paso-cab"><span class="n">4</span><strong>Cambio prioritario</strong> <span class="estrella">★</span><span class="perfil aux">Auxiliar</span></div>
+        <span>«Registrar cambio» en Prueba CJ Uno con «Prioritario»: hace falta un motivo de la lista y, en el resumen, el aviso directo (a quién avisaste y qué dijo).</span>
+        <span class="pasa">Le llega a <strong>Enfermería</strong>, en la «Bandeja prioritaria», con el motivo y el aviso (prueba 6).</span>
+      </li>
+      <li class="aux">
+        <div class="paso-cab"><span class="n">5</span><strong>«No valorable»</strong><span class="perfil aux">Auxiliar</span></div>
+        <span>En Prueba CJ Dos, escribe un motivo y pulsa «Marcar no valorable».</span>
+        <span class="pasa">No genera tarea para Enfermería.</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-enfermeria</code>.</li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">6</span><strong>Revisar las bandejas</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
+        <span>En Inicio de Enfermería, «Bandeja prioritaria» y «Cambios ordinarios»: ahí están los cambios de las pruebas 4 y 3. Ábrelos con «Ver detalle».</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">7</span><strong>Registrar un evento propio</strong><span class="perfil enf">Enfermería</span></div>
+        <span>En «Residentes», abre Prueba CJ Uno, «Registrar evento», escribe la observación y «Guardar evento». Pasas al detalle del evento.</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">8</span><strong>Valorar el evento</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
+        <span>En el detalle, «Empezar valoración», escribe al menos un dato y «Guardar borrador». Solo entonces aparece en el detalle el botón «Pasar a decisión asistencial».</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">9</span><strong>Cerrar sin comunicar a la familia</strong><span class="perfil enf">Enfermería</span></div>
+        <span>«Pasar a decisión asistencial», tarjeta «Cerrar el evento», «No comunicar» y «Cerrar evento».</span>
+        <span class="pasa">No llega nada a la familia.</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">10</span><strong>Seguimiento y transferencia</strong><span class="perfil enf">Enfermería</span></div>
+        <span>Otro evento: regístralo (como en la 7) y valóralo (como en la 8). En la decisión asistencial, tarjeta «Iniciar seguimiento», con fecha prevista (solo el día) o criterio. Después, actuación, reprogramar y «Transferir» al equipo entrante.</span>
+        <span class="pasa">Le llega a <strong>Enfermería de la unidad</strong>: en «Seguimientos» queda «pendiente de recepción» hasta que alguien pulse «Confirmar recepción».</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">11</span><strong>Protocolo urgente</strong><span class="perfil enf">Enfermería</span></div>
+        <span>Un evento prioritario en Prueba CJ Uno, registrado y valorado. En la decisión asistencial, «Activar protocolo urgente». Registra una actuación, una evolución y un contacto con un servicio.</span>
+        <span class="pasa">El evento aparece en la tarjeta «Protocolos urgentes».</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">12</span><strong>Derivar a Urgencias y cerrar</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
+        <span>Desde el protocolo, «Derivar a Urgencias», vista previa, «Firmar y generar PDF». Registra un intento de llamada a la familia y cierra el evento con el texto para la familia.</span>
+        <span class="pasa">Le llega a la <strong>familia</strong> un comunicado aprobado que se publicará a la hora del centro. Lo verás en «Comunicaciones» en la <a href="pruebas-6-comunicados-portal.html">guía 6</a>.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="mirar">
+    <h2 id="mirar">Dónde mirar si no encuentras algo</h2>
+    <ul class="lista prose">
+      <li><strong>«Iniciar seguimiento», «Cerrar el evento», «Escalar a Medicina» y «Activar protocolo urgente»</strong> son tarjetas de la pantalla «Decisión asistencial». A esa pantalla se llega con «Pasar a decisión asistencial», en el detalle del evento, y ese botón solo aparece después de guardar la valoración.</li>
+      <li><strong>Para cambiar de perfil</strong> no hace falta cerrar la sesión: «Cambiar de identidad», en el menú de tu perfil (arriba a la derecha), o <code>/DevAuth/Login</code>.</li>
+      <li><strong>Lo que registras como Auxiliar</strong> no lo ves tú en ninguna bandeja: lo ve Enfermería, en su Inicio.</li>
+      <li><strong>La fecha prevista de un seguimiento</strong> es solo un día, sin hora.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>ResidApp · Ayuda para las pruebas. Las respuestas se marcan en la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>.</p>
+  </footer>
+</div>
+
+</body>
+</html>

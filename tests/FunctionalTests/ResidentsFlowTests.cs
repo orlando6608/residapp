@@ -463,6 +463,9 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["Form.Criterio"] = "Si baja de 90 %, avisar.",
         });
         Assert.Equal("CON_INDICACION_PENDIENTE", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+        // Guía de pruebas 2, prueba 5: junto al residente consta el estado del evento, aparte del de cada indicación («Pendiente de lectura»).
+        var afterIndication = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}"));
+        Assert.Contains("Con indicación pendiente</span>", afterIndication);
 
         // Medicina ve el bloqueo y, si fuerza el envío, el mensaje.
         var blockedPage = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Cerrar?eventoId={eventId}"));
@@ -833,6 +836,20 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             KeyValuePair.Create("AreaTexto[ESTADO_CONCIENCIA]", "Más somnoliento de lo habitual (prueba funcional)."),
             KeyValuePair.Create("Clasificacion", "Ordinario"),
         }))).Content.ReadAsStringAsync());
+
+        // Guía de pruebas 1, prueba 4: un prioritario sin el aviso directo vuelve a la confirmación, y el campo obligatorio avisa en español
+        // (jQuery Validate lo hacía en inglés: «This field is required.»).
+        var withoutNotice = WebUtility.HtmlDecode(await (await auxiliar.PostAsync("/Auxiliar/ConfirmarCambio", new FormUrlEncodedContent(new[]
+        {
+            KeyValuePair.Create("__RequestVerificationToken", ExtractValue(changePage, "__RequestVerificationToken")),
+            KeyValuePair.Create("ResidenteId", changedResident),
+            KeyValuePair.Create("OperacionId", Guid.NewGuid().ToString()),
+            KeyValuePair.Create("AreaOpciones", "ALIMENTACION_HIDRATACION:NULA_INGESTA"),
+            KeyValuePair.Create("Clasificacion", "Prioritario"),
+            KeyValuePair.Create("MotivoPrioritario", "AlteracionConcienciaEstadoGeneral"),
+        }))).Content.ReadAsStringAsync());
+        Assert.Contains("Documenta el aviso directo antes de confirmar", withoutNotice);
+        Assert.Contains("Este campo es obligatorio.", withoutNotice);
 
         Assert.Contains("Cierre registrado: sin cambios.", quiet);
         Assert.Contains("Cambio registrado", changed);
