@@ -1,0 +1,1843 @@
+<!doctype html>
+<!--
+  Flujo de trabajo ilustrado de ResidApp: el ciclo de vida de un residente, con todos los perfiles y un ejemplo ficticio.
+  Página estática y pública, como el Manual, enlazada desde el pie de Views/Shared/_Layout.cshtml. Sigue el estilo de las páginas
+  de flujo de las guías de pruebas (docs/pendientes-cj/pruebas-N-…-flujo.html). Se generó con un script de un solo uso que no
+  está en el repositorio: para cambiarla, edita este HTML. Revísala cuando cambie el circuito o un perfil que aparezca en ella;
+  el detalle de cada pantalla está en el Manual (Views/Home/Manual.cshtml).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flujo de trabajo - ResidApp</title>
+<meta name="description" content="Cómo funciona ResidApp: la vida de un residente en el centro, con todos los perfiles, en diagramas.">
+<link rel="icon" href="/images/logo.svg">
+<script>
+  // Respeta el tema elegido en ResidApp (menú «Tema», que wwwroot/js/tema.js guarda en este navegador). Sin elección, sigue al dispositivo.
+  try {
+    var tema = localStorage.getItem("residapp-tema");
+    if (tema === "claro") document.documentElement.setAttribute("data-theme", "light");
+    if (tema === "oscuro") document.documentElement.setAttribute("data-theme", "dark");
+  } catch (e) {
+    // Sin almacenamiento (modo privado o bloqueado): sigue al dispositivo.
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --arrow: #55686c;
+    --danger: #b3261e;
+    --danger-bg: #fbeceb;
+    --ok: #22703a;
+    --ok-bg: #e7f4ea;
+    --lane-aux: #6b4fa0;
+    --lane-aux-bg: #f1edf8;
+    --lane-enf: #1b5f6b;
+    --lane-enf-bg: #e6f1f2;
+    --lane-med: #2457a6;
+    --lane-med-bg: #e8eff9;
+    --lane-dir: #9b2c4a;
+    --lane-dir-bg: #f8e9ee;
+    --lane-adm: #2e6b2f;
+    --lane-adm-bg: #eaf4ea;
+    --lane-fam: #8a5a12;
+    --lane-fam-bg: #f8f0e3;
+    --lane-plat: #4a5560;
+    --lane-plat-bg: #eef0f2;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+      --arrow: #9aafb2;
+      --danger: #f2b8b5;
+      --danger-bg: #2c1716;
+      --ok: #8fd3a2;
+      --ok-bg: #15261a;
+      --lane-aux: #b9a2e6;
+      --lane-aux-bg: #1f1a2b;
+      --lane-enf: #72c0cb;
+      --lane-enf-bg: #142427;
+      --lane-med: #8fb3ec;
+      --lane-med-bg: #172030;
+      --lane-dir: #f0a3b8;
+      --lane-dir-bg: #2a1820;
+      --lane-adm: #95d095;
+      --lane-adm-bg: #172617;
+      --lane-fam: #e2b56a;
+      --lane-fam-bg: #2a2114;
+      --lane-plat: #b6c0ca;
+      --lane-plat-bg: #1d2226;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-soft: #1b2e32;
+    --arrow: #9aafb2;
+    --danger: #f2b8b5;
+    --danger-bg: #2c1716;
+    --ok: #8fd3a2;
+    --ok-bg: #15261a;
+    --lane-aux: #b9a2e6;
+    --lane-aux-bg: #1f1a2b;
+    --lane-enf: #72c0cb;
+    --lane-enf-bg: #142427;
+    --lane-med: #8fb3ec;
+    --lane-med-bg: #172030;
+    --lane-dir: #f0a3b8;
+    --lane-dir-bg: #2a1820;
+    --lane-adm: #95d095;
+    --lane-adm-bg: #172617;
+    --lane-fam: #e2b56a;
+    --lane-fam-bg: #2a2114;
+    --lane-plat: #b6c0ca;
+    --lane-plat-bg: #1d2226;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-block: 32px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 72ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.12rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  header { display: flex; flex-direction: column; gap: 14px; }
+  .marca { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 0.95rem; }
+  .marca img { width: 40px; height: 40px; flex: none; }
+  .marca strong { color: var(--ink); }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+  .indice { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; }
+  .indice a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); text-decoration: none; font-size: 0.93rem; }
+  .indice a:hover { border-color: var(--accent); }
+  .ejemplo { background: var(--surface); border: 1px dashed var(--muted); border-radius: 8px; padding: 10px 14px; max-width: 80ch; }
+  .ejemplo .ej { display: block; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--muted); }
+  h3.sub { margin-top: 8px; }
+
+  /* Quién interviene */
+  .perfiles { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 12px; }
+  .perfiles > li { background: var(--surface); border: 1px solid var(--rule); border-top: 5px solid var(--rule); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .perfiles h3 { font-size: 1.08rem; font-weight: 600; }
+  .perfiles .nunca { color: var(--muted); font-size: 0.93rem; }
+
+  /* Leyenda */
+  .leyenda { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 0.93rem; list-style: none; padding: 0; }
+  .leyenda li { display: flex; align-items: center; gap: 8px; }
+  .muestra { width: 18px; height: 18px; border-radius: 4px; border: 2px solid; flex: none; }
+  .muestra.ext { border-style: dashed; border-color: var(--muted); background: var(--surface); }
+  .linea { width: 34px; height: 0; border-top: 2px solid var(--arrow); flex: none; }
+  .linea.info { border-top: 3px solid var(--accent); }
+  .linea.rel { border-top: 2px dashed var(--arrow); }
+  .linea.urg { border-top: 2px dashed var(--danger); }
+  .estrella { color: var(--accent); font-weight: 600; }
+
+  /* Diagramas: se desplazan dentro de su caja en pantallas estrechas; la página no. */
+  .diagrama { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px; }
+  .diagrama svg { display: block; width: 100%; height: auto; font-family: var(--sans); }
+  .pista { color: var(--muted); font-size: 0.9rem; max-width: 80ch; }
+  svg .lane-label { font-size: 15px; font-weight: 600; }
+  svg .lane-sub { font-size: 12px; fill: var(--muted); }
+  svg .sep { stroke: var(--surface); stroke-width: 3; }
+  svg .divisor { stroke: var(--rule); stroke-width: 1.5; }
+  svg .divisor-fuerte { stroke: var(--surface); stroke-width: 5; }
+  svg .col-tit { font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; fill: var(--muted); }
+  svg .box { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+  svg .bt { font-size: 13px; fill: var(--ink); }
+  svg .bt.tit { font-size: 13.5px; font-weight: 600; }
+  svg .bt.det { font-size: 12.5px; fill: var(--muted); }
+  svg .bt.per { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; }
+  svg .bt .n { font-weight: 700; }
+  svg .grupo { fill: none; stroke-width: 1.5; stroke-dasharray: 7 5; }
+  svg .grupo-et { font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; }
+  svg .flecha { stroke: var(--arrow); stroke-width: 1.8; fill: none; }
+  svg .flecha.info { stroke: var(--accent); stroke-width: 2.6; }
+  svg .flecha.rel { stroke-dasharray: 5 4; }
+  svg .flecha.urg { stroke: var(--danger); stroke-width: 2.2; stroke-dasharray: 6 4; }
+  svg .rama { stroke: var(--arrow); stroke-width: 1.6; fill: none; }
+  svg .rama.rel { stroke-dasharray: 5 4; }
+  svg .et { font-size: 12px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+  svg .et.info { fill: var(--accent); font-weight: 600; }
+  svg .et.urg { fill: var(--danger); font-weight: 600; }
+  svg .et.nota { fill: var(--muted); font-style: italic; }
+  svg .et.hora { font-family: var(--mono); font-size: 11.5px; fill: var(--muted); }
+  svg .et.bucle { font-size: 13.5px; font-style: italic; fill: var(--muted); }
+  svg .punta { fill: var(--arrow); }
+  svg .punta.info { fill: var(--accent); }
+  svg .punta.bloq { fill: var(--danger); }
+  .m-aux { border-color: var(--lane-aux); background: var(--lane-aux-bg); }
+  svg .lane-aux { fill: var(--lane-aux-bg); }
+  svg .lane-label.aux, svg .c-aux { fill: var(--lane-aux); }
+  svg .box.aux, svg .grupo.aux { stroke: var(--lane-aux); }
+  svg .box.tinte.aux { fill: var(--lane-aux-bg); }
+  ol.pasos > li.aux, .tarjetas > li.aux { border-left-color: var(--lane-aux); }
+  .perfil.aux, .perfiles > li.aux h3 { color: var(--lane-aux); }
+  .perfiles > li.aux { border-top-color: var(--lane-aux); }
+  .vida > li.aux > .num { border-color: var(--lane-aux); color: var(--lane-aux); }
+  .m-enf { border-color: var(--lane-enf); background: var(--lane-enf-bg); }
+  svg .lane-enf { fill: var(--lane-enf-bg); }
+  svg .lane-label.enf, svg .c-enf { fill: var(--lane-enf); }
+  svg .box.enf, svg .grupo.enf { stroke: var(--lane-enf); }
+  svg .box.tinte.enf { fill: var(--lane-enf-bg); }
+  ol.pasos > li.enf, .tarjetas > li.enf { border-left-color: var(--lane-enf); }
+  .perfil.enf, .perfiles > li.enf h3 { color: var(--lane-enf); }
+  .perfiles > li.enf { border-top-color: var(--lane-enf); }
+  .vida > li.enf > .num { border-color: var(--lane-enf); color: var(--lane-enf); }
+  .m-med { border-color: var(--lane-med); background: var(--lane-med-bg); }
+  svg .lane-med { fill: var(--lane-med-bg); }
+  svg .lane-label.med, svg .c-med { fill: var(--lane-med); }
+  svg .box.med, svg .grupo.med { stroke: var(--lane-med); }
+  svg .box.tinte.med { fill: var(--lane-med-bg); }
+  ol.pasos > li.med, .tarjetas > li.med { border-left-color: var(--lane-med); }
+  .perfil.med, .perfiles > li.med h3 { color: var(--lane-med); }
+  .perfiles > li.med { border-top-color: var(--lane-med); }
+  .vida > li.med > .num { border-color: var(--lane-med); color: var(--lane-med); }
+  .m-dir { border-color: var(--lane-dir); background: var(--lane-dir-bg); }
+  svg .lane-dir { fill: var(--lane-dir-bg); }
+  svg .lane-label.dir, svg .c-dir { fill: var(--lane-dir); }
+  svg .box.dir, svg .grupo.dir { stroke: var(--lane-dir); }
+  svg .box.tinte.dir { fill: var(--lane-dir-bg); }
+  ol.pasos > li.dir, .tarjetas > li.dir { border-left-color: var(--lane-dir); }
+  .perfil.dir, .perfiles > li.dir h3 { color: var(--lane-dir); }
+  .perfiles > li.dir { border-top-color: var(--lane-dir); }
+  .vida > li.dir > .num { border-color: var(--lane-dir); color: var(--lane-dir); }
+  .m-adm { border-color: var(--lane-adm); background: var(--lane-adm-bg); }
+  svg .lane-adm { fill: var(--lane-adm-bg); }
+  svg .lane-label.adm, svg .c-adm { fill: var(--lane-adm); }
+  svg .box.adm, svg .grupo.adm { stroke: var(--lane-adm); }
+  svg .box.tinte.adm { fill: var(--lane-adm-bg); }
+  ol.pasos > li.adm, .tarjetas > li.adm { border-left-color: var(--lane-adm); }
+  .perfil.adm, .perfiles > li.adm h3 { color: var(--lane-adm); }
+  .perfiles > li.adm { border-top-color: var(--lane-adm); }
+  .vida > li.adm > .num { border-color: var(--lane-adm); color: var(--lane-adm); }
+  .m-fam { border-color: var(--lane-fam); background: var(--lane-fam-bg); }
+  svg .lane-fam { fill: var(--lane-fam-bg); }
+  svg .lane-label.fam, svg .c-fam { fill: var(--lane-fam); }
+  svg .box.fam, svg .grupo.fam { stroke: var(--lane-fam); }
+  svg .box.tinte.fam { fill: var(--lane-fam-bg); }
+  ol.pasos > li.fam, .tarjetas > li.fam { border-left-color: var(--lane-fam); }
+  .perfil.fam, .perfiles > li.fam h3 { color: var(--lane-fam); }
+  .perfiles > li.fam { border-top-color: var(--lane-fam); }
+  .vida > li.fam > .num { border-color: var(--lane-fam); color: var(--lane-fam); }
+  .m-plat { border-color: var(--lane-plat); background: var(--lane-plat-bg); }
+  svg .lane-plat { fill: var(--lane-plat-bg); }
+  svg .lane-label.plat, svg .c-plat { fill: var(--lane-plat); }
+  svg .box.plat, svg .grupo.plat { stroke: var(--lane-plat); }
+  svg .box.tinte.plat { fill: var(--lane-plat-bg); }
+  ol.pasos > li.plat, .tarjetas > li.plat { border-left-color: var(--lane-plat); }
+  .perfil.plat, .perfiles > li.plat h3 { color: var(--lane-plat); }
+  .perfiles > li.plat { border-top-color: var(--lane-plat); }
+  .vida > li.plat > .num { border-color: var(--lane-plat); color: var(--lane-plat); }
+  svg .box.imp { stroke-width: 3.5; }
+  svg .box.rel { stroke-dasharray: 6 4; }
+  svg .box.ext { stroke: var(--muted); stroke-dasharray: 6 4; }
+  svg .box.neutro { stroke: var(--muted); }
+  svg .box.nota { stroke: var(--muted); stroke-dasharray: 4 4; fill: var(--bg); }
+  svg .box.urg { stroke: var(--danger); stroke-width: 2.5; }
+  svg .box.pend { stroke: var(--danger); stroke-width: 2; }
+  svg .box.ok { stroke: var(--ok); fill: var(--ok-bg); stroke-width: 2.5; }
+  svg .box.residente { stroke: var(--ink); stroke-width: 2; fill: var(--bg); }
+  svg a { cursor: pointer; }
+  svg a:hover .box, svg a:focus-visible .box { stroke-width: 3.5; }
+  svg a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* Paso a paso */
+  ol.pasos { padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  ol.pasos > li { background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--rule); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .paso-cab { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .paso-cab .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .perfil { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .pasa { color: var(--muted); font-size: 0.95rem; }
+  .pasa strong { color: var(--ink); }
+  ul.lista { padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; }
+
+  /* La vida de Rosa */
+  .fase { font-family: var(--sans); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 8px 0 -4px; }
+  .vida { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; position: relative; max-width: 920px; }
+  .vida::before { content: ""; position: absolute; left: 17px; top: 18px; bottom: 18px; border-left: 2px solid var(--rule); }
+  .vida > li { position: relative; padding-left: 52px; }
+  .vida > li > .num { position: absolute; left: 0; top: 8px; width: 36px; height: 36px; box-sizing: border-box; border-radius: 50%; border: 3px solid var(--rule); background: var(--surface); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-weight: 600; font-size: 0.95rem; }
+  .vida .hito { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .vida .hito-cab { display: flex; flex-wrap: wrap; gap: 2px 12px; align-items: baseline; }
+  .vida .cuando { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+  .vida .ir { font-size: 0.9rem; }
+
+  /* Estados en fila (basal, lectura clínica) */
+  .estados { list-style: none; padding: 0; display: flex; flex-wrap: wrap; align-items: stretch; row-gap: 10px; }
+  .estados > li { display: flex; align-items: stretch; }
+  .estados > li + li::before { content: "→"; display: flex; align-items: center; justify-content: center; width: 34px; color: var(--arrow); font-size: 1.3rem; }
+  .estados .pildora { background: var(--surface); border: 2px solid var(--rule); border-radius: 14px; padding: 8px 14px; width: 200px; display: flex; flex-direction: column; gap: 2px; }
+  .estados .pildora span { color: var(--muted); font-size: 0.9rem; line-height: 1.45; }
+  .estados .pildora.pend { border-color: var(--danger); }
+  .estados .pildora.ok { border-color: var(--ok); background: var(--ok-bg); }
+  .estados .pildora.hist { border-style: dashed; border-color: var(--muted); }
+  .estados .pildora.dir { border-color: var(--lane-dir); }
+
+  /* Chips */
+  .chips { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips > li { border: 1.5px solid var(--lane-aux); background: var(--lane-aux-bg); border-radius: 999px; padding: 3px 12px; font-size: 0.93rem; }
+  .chips.prio > li { border-color: var(--danger); background: var(--danger-bg); }
+
+  /* Tarjetas */
+  .tarjetas { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .tarjetas > li { background: var(--surface); border: 1px solid var(--rule); border-left: 5px solid var(--rule); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .tarjetas h3 { font-size: 1.05rem; font-weight: 600; }
+
+  /* Tabla de hitos */
+  .tabla { overflow-x: auto; }
+  table.hitos { border-collapse: collapse; width: 100%; min-width: 640px; background: var(--surface); font-size: 0.95rem; }
+  table.hitos th, table.hitos td { text-align: left; padding: 8px 12px; border: 1px solid var(--rule); vertical-align: top; }
+  table.hitos thead th { background: var(--accent-soft); font-weight: 600; }
+  table.hitos td.cifra { white-space: nowrap; font-family: var(--mono); font-size: 0.9rem; }
+
+  .todavia { background: var(--surface); border: 1px dashed var(--muted); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  footer { color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 1.75rem; }
+    .estados { flex-direction: column; }
+    .estados > li { flex-direction: column; }
+    .estados > li + li::before { content: "↓"; width: auto; height: 30px; }
+    .estados .pildora { width: auto; }
+  }
+
+  /* Al imprimir o guardar como PDF, siempre en claro y con los diagramas enteros. */
+  @media print {
+    :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+      color-scheme: light;
+      --bg: #f5f7f7;
+      --surface: #ffffff;
+      --ink: #1a2427;
+      --muted: #55686c;
+      --rule: #d3dcdd;
+      --accent: #1b5f6b;
+      --accent-soft: #e3eff0;
+      --arrow: #55686c;
+      --danger: #b3261e;
+      --danger-bg: #fbeceb;
+      --ok: #22703a;
+      --ok-bg: #e7f4ea;
+      --lane-aux: #6b4fa0;
+      --lane-aux-bg: #f1edf8;
+      --lane-enf: #1b5f6b;
+      --lane-enf-bg: #e6f1f2;
+      --lane-med: #2457a6;
+      --lane-med-bg: #e8eff9;
+      --lane-dir: #9b2c4a;
+      --lane-dir-bg: #f8e9ee;
+      --lane-adm: #2e6b2f;
+      --lane-adm-bg: #eaf4ea;
+      --lane-fam: #8a5a12;
+      --lane-fam-bg: #f8f0e3;
+      --lane-plat: #4a5560;
+      --lane-plat-bg: #eef0f2;
+    }
+    body { padding: 0; }
+    .back, .indice { display: none; }
+    .page { padding-block: 0 24px; gap: 28px; max-width: none; }
+    .diagrama { overflow: visible; break-inside: avoid; }
+    .diagrama svg { min-width: 0 !important; }
+    .tabla { overflow: visible; }
+    table.hitos { min-width: 0; }
+    ol.pasos > li, .vida > li, .perfiles > li, .tarjetas > li, .estados > li, table.hitos tr { break-inside: avoid; }
+    h2, h3, .fase { break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <div class="marca">
+      <img src="/images/logo.svg" alt="" width="40" height="40">
+      <span><strong>ResidApp</strong> · Plataforma Asistencial Geriátrica</span>
+    </div>
+    <nav class="back" aria-label="Navegación">
+      <a href="/">← Volver a ResidApp</a>
+      <a href="/Home/Manual">Manual de usuario</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Flujo de trabajo</p>
+    <h1>Cómo funciona ResidApp: la vida de un residente en el centro</h1>
+    <p class="meta">Estado a 16/10/2026 · Para el equipo del centro y para quien prueba la aplicación</p>
+    <p class="lead prose">
+      ResidApp es el registro diario y trazable de cada residente: quién observó qué, quién lo valoró, qué se decidió y qué se contó a
+      la familia. Esta página lo cuenta con diagramas, siguiendo a una residente ficticia, Rosa, desde que su residencia empieza a usar
+      la aplicación hasta que ella deja el centro. ResidApp no diagnostica ni sustituye los protocolos del centro: ordena el trabajo y
+      deja constancia.
+    </p>
+    <nav aria-label="En esta página">
+      <ul class="indice">
+        <li><a href="#perfiles">Quién interviene</a></li>
+        <li><a href="#vistazo">El recorrido</a></li>
+        <li><a href="#ejemplo">La vida de Rosa</a></li>
+        <li><a href="#centro">Un centro nuevo</a></li>
+        <li><a href="#llegada">Llega un residente</a></li>
+        <li><a href="#dia">Cada turno</a></li>
+        <li><a href="#episodio">El episodio</a></li>
+        <li><a href="#urgencia">Urgencias</a></li>
+        <li><a href="#familia">La familia</a></li>
+        <li><a href="#direccion">Dirección Clínica</a></li>
+        <li><a href="#estancia">Traslado, ingreso y baja</a></li>
+        <li><a href="#registro">Lo que queda registrado</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section id="perfiles" aria-labelledby="perfiles-t">
+    <h2 id="perfiles-t">Quién interviene</h2>
+    <p class="prose">Cada persona entra con un perfil, en un centro y con unas unidades. Lo que ve y lo que puede hacer depende de ese perfil. El color de cada perfil es el mismo en todos los diagramas.</p>
+    <ul class="perfiles">
+      <li class="plat"><h3>Plataforma</h3><p>Quien opera ResidApp, no el personal del centro. Da de alta los centros nuevos con su primera unidad y su primer administrador, y da soporte a sus Administraciones.</p><p class="nunca"><strong>Nunca</strong> ve residentes ni nada clínico.</p></li>
+      <li class="adm"><h3>Administración</h3><p>Monta el centro: lugares, personal, turnos y equipos. Da de alta a los residentes, gestiona a sus familias, las citas y los comunicados ya publicados, y revisa la auditoría.</p><p class="nunca"><strong>Nunca</strong> ve observaciones, valoraciones ni el basal.</p></li>
+      <li class="aux"><h3>Auxiliar</h3><p>Atiende a los residentes que tiene asignados y cierra cada turno: sin cambios, no valorable o registrar un cambio, ordinario o prioritario.</p><p class="nunca"><strong>Nunca</strong> valora ni escala; del basal solo ve el resumen.</p></li>
+      <li class="enf"><h3>Enfermería</h3><p>Firma el basal, valora los cambios y decide: cerrar, seguir, escalar a Medicina o activar la urgencia. Cumple las indicaciones médicas, deriva a Urgencias y prepara los comunicados.</p><p class="nunca"><strong>Nunca</strong> edita lo que observó otro ni firma un basal que no creó.</p></li>
+      <li class="med"><h3>Medicina</h3><p>Valora lo que le escalan y lo que observa, da indicaciones a Enfermería, hace seguimiento médico, deriva y cierra. Con permiso, también firma el basal.</p><p class="nunca"><strong>Nunca</strong> cambia la observación ni la valoración de Enfermería.</p></li>
+      <li class="dir"><h3>Dirección Clínica</h3><p>Supervisa por unidad con cifras: pendientes, plazos, indicadores y derivaciones. Puede adelantar, corregir o retirar comunicados. Con permiso, fija los rangos de referencia y los plazos.</p><p class="nunca"><strong>Nunca</strong> valora, indica ni cierra nada; lo clínico solo lo lee declarando para qué, y queda auditado.</p></li>
+      <li class="fam"><h3>Familia</h3><p>Lee en el Portal Familiar las novedades que el equipo publica de su residente, y reserva o solicita citas con el equipo asistencial.</p><p class="nunca"><strong>Nunca</strong> ve observaciones, valoraciones, constantes, el basal ni nombres de profesionales.</p></li>
+    </ul>
+  </section>
+
+  <section id="leer" aria-labelledby="leer-t">
+    <h2 id="leer-t">Cómo leer los diagramas</h2>
+    <p class="prose">Cada franja o caja de color es un perfil. Se leen de izquierda a derecha y de arriba abajo. En el móvil, desliza cada diagrama hacia los lados.</p>
+    <ul class="leyenda">
+      <li><span class="muestra m-plat" aria-hidden="true"></span>Plataforma</li>
+      <li><span class="muestra m-adm" aria-hidden="true"></span>Administración</li>
+      <li><span class="muestra m-aux" aria-hidden="true"></span>Auxiliar</li>
+      <li><span class="muestra m-enf" aria-hidden="true"></span>Enfermería</li>
+      <li><span class="muestra m-med" aria-hidden="true"></span>Medicina</li>
+      <li><span class="muestra m-dir" aria-hidden="true"></span>Dirección Clínica</li>
+      <li><span class="muestra m-fam" aria-hidden="true"></span>Familia</li>
+    </ul>
+    <ul class="leyenda">
+      <li><span class="estrella">★</span>&nbsp;Paso clave (borde grueso)</li>
+      <li><span class="linea" aria-hidden="true"></span>Lo siguiente que pasa</li>
+      <li><span class="linea info" aria-hidden="true"></span>Lo que llega a otro perfil</li>
+      <li><span class="linea urg" aria-hidden="true"></span>Urgencia</li>
+      <li><span class="linea rel" aria-hidden="true"></span>Relación o paso opcional</li>
+      <li><span class="muestra ext" aria-hidden="true"></span>Fuera de la aplicación o nota</li>
+    </ul>
+  </section>
+
+  <section id="vistazo" aria-labelledby="vistazo-t">
+    <h2 id="vistazo-t">El recorrido de un vistazo</h2>
+    <p class="prose">Primero se prepara el centro y llega el residente: es la columna de la izquierda. Después, cada turno se repite el mismo ciclo. El Auxiliar cierra el turno; si hay un cambio, Enfermería lo valora y decide; si lo escala, interviene Medicina; y el episodio se cierra decidiendo si se informa a la familia. Dirección Clínica lo mira todo desde arriba, con cifras, y todo queda registrado.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 652" style="min-width: 980px" aria-labelledby="d-mapa-t d-mapa-d">
+        <title id="d-mapa-t">El recorrido de un residente en ResidApp, de un vistazo</title>
+        <desc id="d-mapa-d">A la izquierda, de arriba abajo: Plataforma crea el centro; Administración lo monta, da de alta al residente y abre el acceso de la familia; Enfermería o Medicina firman su basal. En el centro, el ciclo de cada turno: el Auxiliar cierra el turno; si hay un cambio, Enfermería lo valora y decide; si lo escala, Medicina valora y da indicaciones; el episodio se cierra decidiendo si se informa a la familia, y se vuelve al día a día. Desde Enfermería o Medicina puede activarse la urgencia, que acaba en un comunicado relevante. Los comunicados publicados llegan al Portal Familiar. Arriba, Dirección Clínica supervisa con cifras; abajo, Administración gestiona los cambios de estancia y todo queda registrado. Cada caja enlaza a su sección.</desc>
+        <defs>
+          <marker id="d-mapa-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-mapa-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-mapa-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <text class="col-tit" x="16" y="24">ANTES Y AL LLEGAR</text>
+        <path class="flecha" d="M116,114 V128" marker-end="url(#d-mapa-p)"/>
+        <path class="flecha" d="M116,204 V218" marker-end="url(#d-mapa-p)"/>
+        <path class="flecha" d="M116,294 V308" marker-end="url(#d-mapa-p)"/>
+        <path class="flecha" d="M116,384 V398" marker-end="url(#d-mapa-p)"/>
+        <path class="flecha" d="M216,437 H238 V302 H258" marker-end="url(#d-mapa-p)"/>
+        <path class="flecha" d="M360,262 V210 H478" marker-end="url(#d-mapa-p)"/>
+        <text class="et" x="372" y="202">un cambio</text>
+        <path class="flecha" d="M680,228 H800 V260" marker-end="url(#d-mapa-p)"/>
+        <text class="et" x="692" y="246">si se escala</text>
+        <path class="flecha" d="M800,342 V372 H682" marker-end="url(#d-mapa-p)"/>
+        <text class="et" x="692" y="390">indicaciones cumplidas</text>
+        <path class="flecha" d="M580,250 V352" marker-end="url(#d-mapa-p)"/>
+        <text class="et" x="588" y="296"><tspan x="588" dy="0">si basta</tspan><tspan x="588" dy="15">Enfermería</tspan></text>
+        <path class="flecha" d="M480,394 H360 V344" marker-end="url(#d-mapa-p)"/>
+        <text class="et" x="372" y="378">siguiente turno</text>
+        <path class="flecha info" d="M680,410 H918" marker-end="url(#d-mapa-pi)"/>
+        <text class="et info" x="700" y="428">comunicado publicado</text>
+        <path class="flecha urg" d="M680,190 H918" marker-end="url(#d-mapa-pb)"/>
+        <text class="et urg" x="800" y="182" text-anchor="middle">urgencia</text>
+        <path class="flecha urg" d="M900,282 H960 V252" marker-end="url(#d-mapa-pb)"/>
+        <text class="et urg" x="968" y="276">urgencia</text>
+        <path class="flecha info" d="M1060,250 V352" marker-end="url(#d-mapa-pi)"/>
+        <text class="et info" x="1052" y="296" text-anchor="end"><tspan x="1052" dy="0">comunicado</tspan><tspan x="1052" dy="15">relevante</tspan></text>
+        <path class="flecha rel" d="M580,112 V168" marker-end="url(#d-mapa-p)"/>
+        <text class="et nota" x="590" y="146">cifras y plazos</text>
+        <path class="flecha rel" d="M1012,112 V168" marker-end="url(#d-mapa-p)"/>
+        <text class="et nota" x="1004" y="146" text-anchor="end">derivaciones</text>
+        <text class="et bucle" x="520" y="296" text-anchor="middle"><tspan x="520" dy="0">↻ cada turno,</tspan><tspan x="520" dy="15">cada día</tspan></text>
+        <a href="#centro" aria-label="Ir a «Antes del primer residente»">
+          <rect class="box plat tinte" x="16" y="40" width="200" height="74" rx="8"/>
+          <text class="bt tit" x="116" y="66.2" text-anchor="middle"><tspan class="n">1</tspan> · Centro nuevo</text>
+          <text class="bt det" x="116" y="82.9" text-anchor="middle">con su primera unidad</text>
+          <text class="bt per c-plat" x="116" y="97.9" text-anchor="middle">PLATAFORMA</text>
+        </a>
+        <a href="#centro" aria-label="Ir a «Antes del primer residente»">
+          <rect class="box adm tinte" x="16" y="130" width="200" height="74" rx="8"/>
+          <text class="bt tit" x="116" y="156.2" text-anchor="middle"><tspan class="n">2</tspan> · Montar el centro</text>
+          <text class="bt det" x="116" y="172.9" text-anchor="middle">lugares, personal y turnos</text>
+          <text class="bt per c-adm" x="116" y="187.9" text-anchor="middle">ADMINISTRACIÓN</text>
+        </a>
+        <a href="#llegada" aria-label="Ir a «Llega un residente»">
+          <rect class="box adm tinte" x="16" y="220" width="200" height="74" rx="8"/>
+          <text class="bt tit" x="116" y="246.2" text-anchor="middle"><tspan class="n">3</tspan> · Alta del residente</text>
+          <text class="bt det" x="116" y="262.9" text-anchor="middle">unidad, plaza y contacto</text>
+          <text class="bt per c-adm" x="116" y="277.9" text-anchor="middle">ADMINISTRACIÓN</text>
+        </a>
+        <a href="#llegada" aria-label="Ir a «Llega un residente»">
+          <rect class="box adm tinte" x="16" y="310" width="200" height="74" rx="8"/>
+          <text class="bt tit" x="116" y="336.2" text-anchor="middle"><tspan class="n">4</tspan> · Familia y accesos</text>
+          <text class="bt det" x="116" y="352.9" text-anchor="middle">autorización y portal</text>
+          <text class="bt per c-adm" x="116" y="367.9" text-anchor="middle">ADMINISTRACIÓN</text>
+        </a>
+        <a href="#llegada" aria-label="Ir a «Llega un residente»">
+          <rect class="box enf tinte" x="16" y="400" width="200" height="74" rx="8"/>
+          <text class="bt tit" x="116" y="426.2" text-anchor="middle"><tspan class="n">5</tspan> · Basal firmado</text>
+          <text class="bt det" x="116" y="442.9" text-anchor="middle">nueve áreas y Barthel</text>
+          <text class="bt per c-enf" x="116" y="457.9" text-anchor="middle">ENFERMERÍA O MEDICINA</text>
+        </a>
+        <a href="#direccion" aria-label="Ir a «Dirección Clínica mira el conjunto»">
+          <rect class="box dir tinte rel" x="250" y="40" width="854" height="72" rx="8"/>
+          <text class="bt tit" x="677" y="65.2" text-anchor="middle">Dirección Clínica supervisa</text>
+          <text class="bt det" x="677" y="81.9" text-anchor="middle">cifras por unidad, plazos de los hitos, derivaciones y lectura clínica auditada</text>
+          <text class="bt per c-dir" x="677" y="96.9" text-anchor="middle">DIRECCIÓN CLÍNICA</text>
+        </a>
+        <a href="#dia" aria-label="Ir a «Un día cualquiera»">
+          <rect class="box aux tinte" x="260" y="262" width="200" height="80" rx="8"/>
+          <text class="bt tit" x="360" y="291.2" text-anchor="middle"><tspan class="n">6</tspan> · Cierre de turno</text>
+          <text class="bt det" x="360" y="307.9" text-anchor="middle">sin cambios o con cambio</text>
+          <text class="bt per c-aux" x="360" y="322.9" text-anchor="middle">AUXILIAR</text>
+        </a>
+        <a href="#episodio" aria-label="Ir a «Cuando algo cambia»">
+          <rect class="box enf tinte" x="480" y="170" width="200" height="80" rx="8"/>
+          <text class="bt tit" x="580" y="199.2" text-anchor="middle"><tspan class="n">7</tspan> · Valorar y decidir</text>
+          <text class="bt det" x="580" y="215.9" text-anchor="middle">cierra, sigue o escala</text>
+          <text class="bt per c-enf" x="580" y="230.9" text-anchor="middle">ENFERMERÍA</text>
+        </a>
+        <a href="#episodio" aria-label="Ir a «Cuando algo cambia»">
+          <rect class="box med tinte" x="700" y="262" width="200" height="80" rx="8"/>
+          <text class="bt tit" x="800" y="291.2" text-anchor="middle"><tspan class="n">8</tspan> · Valoración médica</text>
+          <text class="bt det" x="800" y="307.9" text-anchor="middle">indicaciones a Enfermería</text>
+          <text class="bt per c-med" x="800" y="322.9" text-anchor="middle">MEDICINA</text>
+        </a>
+        <a href="#familia" aria-label="Ir a «La familia, informada»">
+          <rect class="box enf tinte" x="480" y="354" width="200" height="80" rx="8"/>
+          <text class="bt tit" x="580" y="383.2" text-anchor="middle"><tspan class="n">9</tspan> · Cierre y comunicado</text>
+          <text class="bt det" x="580" y="399.9" text-anchor="middle">¿se informa a la familia?</text>
+          <text class="bt per c-enf" x="580" y="414.9" text-anchor="middle">ENFERMERÍA O MEDICINA</text>
+        </a>
+        <a href="#urgencia" aria-label="Ir a «Si es urgente»">
+          <rect class="box enf tinte urg" x="920" y="170" width="184" height="80" rx="8"/>
+          <text class="bt tit" x="1012" y="199.2" text-anchor="middle"><tspan class="n">10</tspan> · Urgencia</text>
+          <text class="bt det" x="1012" y="215.9" text-anchor="middle">protocolo y derivación</text>
+          <text class="bt per c-enf" x="1012" y="230.9" text-anchor="middle">ENFERMERÍA O MEDICINA</text>
+        </a>
+        <a href="#familia" aria-label="Ir a «La familia, informada»">
+          <rect class="box fam tinte" x="920" y="354" width="184" height="80" rx="8"/>
+          <text class="bt tit" x="1012" y="383.2" text-anchor="middle"><tspan class="n">11</tspan> · Portal Familiar</text>
+          <text class="bt det" x="1012" y="399.9" text-anchor="middle">novedades y citas</text>
+          <text class="bt per c-fam" x="1012" y="414.9" text-anchor="middle">FAMILIA</text>
+        </a>
+        <a href="#estancia" aria-label="Ir a «La estancia cambia»">
+          <rect class="box adm tinte" x="250" y="484" width="660" height="64" rx="8"/>
+          <text class="bt tit" x="580" y="505.2" text-anchor="middle"><tspan class="n">12</tspan> · La estancia cambia</text>
+          <text class="bt det" x="580" y="521.9" text-anchor="middle">en cualquier momento: traslado, ingreso hospitalario, baja y reactivación</text>
+          <text class="bt per c-adm" x="580" y="536.9" text-anchor="middle">ADMINISTRACIÓN</text>
+        </a>
+        <a href="#registro" aria-label="Ir a «Todo queda registrado»">
+          <rect class="box nota" x="16" y="576" width="1088" height="60" rx="8"/>
+          <text class="bt tit" x="560" y="602.7" text-anchor="middle">Todo queda registrado</text>
+          <text class="bt det" x="560" y="619.4" text-anchor="middle">quién hizo qué y cuándo: auditoría administrativa, trazabilidad clínica, línea temporal y lecturas del portal</text>
+        </a>
+      </svg>
+    </div>
+    <p class="pista">Pulsa una caja para ir a su sección. Los números siguen el orden de la vida del residente.</p>
+  </section>
+
+  <section id="ejemplo" aria-labelledby="ejemplo-t">
+    <h2 id="ejemplo-t">La vida de Rosa, de principio a fin</h2>
+    <p class="prose">Un ejemplo inventado, con horas inventadas, para ver quién hace cada cosa y a quién le llega. Rosa, su hija Elena y la Residencia Los Almendros son ficticias, y a los profesionales se les nombra por su perfil.</p>
+    
+    <h3 class="fase">Antes de que llegue Rosa</h3>
+    <ol class="vida">
+      <li class="plat">
+        <span class="num">1</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Semanas antes</span><span class="perfil plat">Plataforma</span></div>
+          <p><strong>Nace el centro.</strong> Plataforma da de alta la «Residencia Los Almendros» con su primera unidad, «Planta 1», y su primer administrador. Se crea todo a la vez o nada.</p>
+          <p class="pasa">Le llega a <strong>Administración</strong>: su cuenta ya puede entrar y es la Administración principal del centro.</p>
+          <p class="ir"><a href="#centro">Más en «Antes del primer residente»</a></p>
+        </div>
+      </li>
+      <li class="adm">
+        <span class="num">2</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Los días siguientes</span><span class="perfil adm">Administración</span></div>
+          <p><strong>Se monta el centro.</strong> Administración crea la «Planta 2», las habitaciones y las plazas, las cuentas del personal con su perfil y sus unidades, los turnos y los equipos con su planificación. Deja los comunicados a la familia a las 19:00 y activa las citas con reserva directa.</p>
+          <p class="pasa">Cada persona entra con su perfil y ve solo sus unidades.</p>
+          <p class="ir"><a href="#centro">Más en «Antes del primer residente»</a></p>
+        </div>
+      </li>
+      <li class="dir">
+        <span class="num">3</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Los días siguientes</span><span class="perfil dir">Dirección Clínica</span></div>
+          <p><strong>Las referencias del centro.</strong> Con el permiso que le concede Administración, Dirección Clínica guarda los rangos de referencia de las constantes y revisa los plazos de los hitos del proceso.</p>
+          <p class="pasa">Le llega a <strong>Enfermería y Medicina</strong>: verán el rango bajo cada constante al valorar.</p>
+          <p class="ir"><a href="#centro">Más en «Antes del primer residente»</a></p>
+        </div>
+      </li>
+    </ol>
+    <h3 class="fase">Llega Rosa</h3>
+    <ol class="vida">
+      <li class="adm">
+        <span class="num">4</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Día 1 · 10:00</span><span class="perfil adm">Administración</span></div>
+          <p><strong>Alta de Rosa.</strong> Administración la da de alta en la Planta 1, habitación 104, plaza B, con su fecha de nacimiento y su sexo documentado, y registra a su hija Elena como contacto prioritario.</p>
+          <p class="pasa">Le llega a <strong>Enfermería y Medicina</strong>: Rosa aparece en sus listas con el basal pendiente, en rojo.</p>
+          <p class="ir"><a href="#llegada">Más en «Llega un residente»</a></p>
+        </div>
+      </li>
+      <li class="adm">
+        <span class="num">5</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Día 1 · 10:20</span><span class="perfil adm">Administración</span></div>
+          <p><strong>Los accesos.</strong> Administración abre y activa la autorización de Elena y le da acceso al Portal Familiar con un usuario. Después asigna a Rosa a las cuentas de Auxiliar de la planta.</p>
+          <p class="pasa">Le llega al <strong>Auxiliar</strong>, que la ve en «Mis residentes», y a <strong>Elena</strong>, que ya puede entrar en el portal.</p>
+          <p class="ir"><a href="#llegada">Más en «Llega un residente»</a></p>
+        </div>
+      </li>
+      <li class="enf">
+        <span class="num">6</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Día 1 · 13:00</span><span class="perfil enf">Enfermería</span></div>
+          <p><strong>Basal firmado.</strong> Enfermería crea el borrador del basal con el motivo «Alta», completa las nueve áreas y el Barthel (65 sobre 100) y lo firma.</p>
+          <p class="pasa">Rosa pasa a tener basal vigente, en verde. El <strong>Auxiliar</strong> ve su resumen.</p>
+          <p class="ir"><a href="#llegada">Más en «Llega un residente»</a></p>
+        </div>
+      </li>
+    </ol>
+    <h3 class="fase">Cada día</h3>
+    <ol class="vida">
+      <li class="aux">
+        <span class="num">7</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Cada turno</span><span class="perfil aux">Auxiliar</span></div>
+          <p><strong>Cierre de turno.</strong> En cada turno, el Auxiliar cierra el registro de Rosa: casi siempre «Sin cambios». Una tarde que salió con su familia, «No valorable», con ese motivo.</p>
+          <p class="pasa">«Sin cambios» no genera tareas. «No valorable» nunca se toma como que está estable.</p>
+          <p class="ir"><a href="#dia">Más en «Un día cualquiera»</a></p>
+        </div>
+      </li>
+    </ol>
+    <h3 class="fase">Un episodio</h3>
+    <ol class="vida">
+      <li class="aux">
+        <span class="num">8</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Día 10 · 17:30</span><span class="perfil aux">Auxiliar</span></div>
+          <p><strong>Un cambio prioritario.</strong> Rosa está más adormilada y tiene 38,2 °C. El Auxiliar registra el cambio en «Estado de conciencia» con la temperatura, lo marca como prioritario con el motivo «Fiebre o sospecha de infección» y anota el aviso directo a Enfermería.</p>
+          <p class="pasa">Le llega a <strong>Enfermería</strong>, en la bandeja prioritaria.</p>
+          <p class="ir"><a href="#episodio">Más en «Cuando algo cambia»</a></p>
+        </div>
+      </li>
+      <li class="enf">
+        <span class="num">9</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Día 10 · 17:45</span><span class="perfil enf">Enfermería</span></div>
+          <p><strong>Valoración de Enfermería.</strong> Enfermería empieza la valoración a los 15 minutos, dentro del plazo de 30 de un prioritario, y anota las constantes. La temperatura sale con un aviso amarillo de fuera de rango, que solo informa. Elige «Escalar a Medicina» y escribe el motivo.</p>
+          <p class="pasa">Le llega a <strong>Medicina</strong>, en «Escalados y eventos propios», con todo lo registrado.</p>
+          <p class="ir"><a href="#episodio">Más en «Cuando algo cambia»</a></p>
+        </div>
+      </li>
+      <li class="med">
+        <span class="num">10</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Día 10 · 18:15</span><span class="perfil med">Medicina</span></div>
+          <p><strong>Valoración médica.</strong> Medicina empieza su valoración, la guarda y, en la conducta médica, registra a las 18:40 una indicación a Enfermería con su fecha prevista.</p>
+          <p class="pasa">Le llega a <strong>Enfermería</strong>, en la tarjeta «Indicaciones». El episodio queda «Con indicación pendiente».</p>
+          <p class="ir"><a href="#episodio">Más en «Cuando algo cambia»</a></p>
+        </div>
+      </li>
+      <li class="enf">
+        <span class="num">11</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Día 10 · 18:50</span><span class="perfil enf">Enfermería</span></div>
+          <p><strong>La indicación se cumple.</strong> Enfermería confirma la lectura y, a las 19:05, la registra como realizada.</p>
+          <p class="pasa">El episodio aparece en «Para cerrar».</p>
+          <p class="ir"><a href="#episodio">Más en «Cuando algo cambia»</a></p>
+        </div>
+      </li>
+      <li class="enf">
+        <span class="num">12</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Día 11 · 10:00</span><span class="perfil enf">Enfermería</span></div>
+          <p><strong>Cierre y comunicado.</strong> Enfermería cierra el episodio y elige «Preparar comunicación», ordinaria, con un texto sencillo para Elena, sin datos internos. Queda aprobada al guardarla.</p>
+          <p class="pasa">Se publicará a las 19:00, firmada por el «Equipo asistencial del centro».</p>
+          <p class="ir"><a href="#familia">Más en «La familia, informada»</a></p>
+        </div>
+      </li>
+      <li class="fam">
+        <span class="num">13</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Día 11 · 19:00</span><span class="perfil fam">Familia</span></div>
+          <p><strong>Elena se entera.</strong> Elena lee la novedad en el Portal Familiar. Al día siguiente reserva una cita telefónica con el equipo médico, en un hueco libre.</p>
+          <p class="pasa">Le llega a <strong>Administración</strong>, que la ve en la agenda de citas.</p>
+          <p class="ir"><a href="#familia">Más en «La familia, informada»</a></p>
+        </div>
+      </li>
+      <li class="dir">
+        <span class="num">14</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Día 15</span><span class="perfil dir">Dirección Clínica</span></div>
+          <p><strong>Dirección mira el proceso.</strong> En «Calidad de proceso», los hitos del episodio de Rosa cuentan en plazo. Dirección ve cifras por unidad, nunca por profesional, y sin texto clínico.</p>
+          <p class="ir"><a href="#direccion">Más en «Dirección Clínica mira el conjunto»</a></p>
+        </div>
+      </li>
+    </ol>
+    <h3 class="fase">Una urgencia</h3>
+    <ol class="vida">
+      <li class="aux">
+        <span class="num">15</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Mes 3 · 03:00</span><span class="perfil aux">Auxiliar</span></div>
+          <p><strong>De madrugada.</strong> El Auxiliar registra un cambio prioritario con el motivo «Dificultad respiratoria» y avisa a Enfermería.</p>
+          <p class="pasa">Le llega a <strong>Enfermería</strong>, en la bandeja prioritaria.</p>
+          <p class="ir"><a href="#urgencia">Más en «Si es urgente»</a></p>
+        </div>
+      </li>
+      <li class="enf">
+        <span class="num">16</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Mes 3 · 03:10</span><span class="perfil enf">Enfermería</span></div>
+          <p><strong>Protocolo urgente.</strong> Enfermería guarda una valoración breve y activa el protocolo urgente, que es un solo paso. Anota la llamada al 112 y lo que va haciendo.</p>
+          <p class="pasa"><strong>Dirección Clínica</strong> lo verá en «Derivaciones a Urgencias».</p>
+          <p class="ir"><a href="#urgencia">Más en «Si es urgente»</a></p>
+        </div>
+      </li>
+      <li class="enf">
+        <span class="num">17</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Mes 3 · 03:30</span><span class="perfil enf">Enfermería</span></div>
+          <p><strong>Derivación a Urgencias.</strong> Escribe el motivo de la derivación, revisa la vista previa del informe, lo firma y se genera el PDF. A las 03:35 registra la llamada a Elena: contactada.</p>
+          <p class="pasa">Rosa sale hacia el hospital con su informe.</p>
+          <p class="ir"><a href="#urgencia">Más en «Si es urgente»</a></p>
+        </div>
+      </li>
+      <li class="enf">
+        <span class="num">18</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Mes 3 · 08:00</span><span class="perfil enf">Enfermería</span></div>
+          <p><strong>Cierre con comunicado relevante.</strong> Tras una derivación, el comunicado a la familia es obligatorio y relevante.</p>
+          <p class="pasa">Elena lo verá en el portal durante 6 meses.</p>
+          <p class="ir"><a href="#urgencia">Más en «Si es urgente»</a></p>
+        </div>
+      </li>
+    </ol>
+    <h3 class="fase">La estancia cambia</h3>
+    <ol class="vida">
+      <li class="adm">
+        <span class="num">19</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Mes 3 · 09:00</span><span class="perfil adm">Administración</span></div>
+          <p><strong>Ingreso hospitalario.</strong> Rosa queda ingresada. Administración pulsa «Suspender (ingreso hospitalario)»: mientras dure, nadie puede registrar nada sobre ella.</p>
+          <p class="ir"><a href="#estancia">Más en «La estancia cambia»</a></p>
+        </div>
+      </li>
+      <li class="adm">
+        <span class="num">20</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">12 días después</span><span class="perfil adm">Administración</span></div>
+          <p><strong>De vuelta.</strong> Rosa vuelve a la residencia y Administración pulsa «Reanudar atención».</p>
+          <p class="pasa">Todo el equipo puede volver a registrar.</p>
+          <p class="ir"><a href="#estancia">Más en «La estancia cambia»</a></p>
+        </div>
+      </li>
+      <li class="enf">
+        <span class="num">21</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Ese mismo día</span><span class="perfil enf">Enfermería</span></div>
+          <p><strong>Nuevo basal.</strong> Rosa ha perdido autonomía. Enfermería inicia una reevaluación con el motivo «Cambio funcional consolidado» (Barthel 45 sobre 100) y la firma.</p>
+          <p class="pasa">La versión nueva pasa a vigente y la anterior a histórica: no se pierde.</p>
+          <p class="ir"><a href="#llegada">Más en «Llega un residente»</a></p>
+        </div>
+      </li>
+      <li class="adm">
+        <span class="num">22</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Mes 5</span><span class="perfil adm">Administración</span></div>
+          <p><strong>Traslado.</strong> Administración traslada a Rosa a la Planta 2, habitación 210, plaza A. Si tuviera episodios abiertos, pasarían con ella a la Planta 2.</p>
+          <p class="pasa">Le llega a <strong>Enfermería de la Planta 2</strong>, que la ve en su lista.</p>
+          <p class="ir"><a href="#estancia">Más en «La estancia cambia»</a></p>
+        </div>
+      </li>
+      <li class="adm">
+        <span class="num">23</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">Año 2</span><span class="perfil adm">Administración</span></div>
+          <p><strong>Baja.</strong> La familia lleva a Rosa a una residencia más cerca de casa. Administración la da de baja con el motivo «Traslado a otro centro».</p>
+          <p class="pasa">Nada se borra: sus datos se conservan 5 años y, si volviera, se reactivaría con una estancia nueva.</p>
+          <p class="ir"><a href="#estancia">Más en «La estancia cambia»</a></p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section id="centro" aria-labelledby="centro-t">
+    <h2 id="centro-t">Antes del primer residente: un centro nuevo</h2>
+    <p class="ejemplo"><span class="ej">En el ejemplo</span>Plataforma da de alta la Residencia Los Almendros, y su Administración la prepara para recibir a Rosa.</p>
+    <p class="prose">Un centro nace en un solo paso y desde ahí lo monta su Administración. Cada centro es un espacio aislado: nadie ve los datos de otro.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 390" style="min-width: 960px" role="img" aria-labelledby="d-centro-t d-centro-d">
+        <title id="d-centro-t">Puesta en marcha de un centro nuevo</title>
+        <desc id="d-centro-d">Tres franjas. Plataforma crea el centro con su primera unidad y su primer administrador (1); más tarde, si hace falta, da soporte. La cuenta del administrador nace activa y es la Administración principal (2), que monta la estructura (3), los usuarios con sus perfiles, unidades y permisos (4), los turnos, equipos y planificación (5), el horario de los comunicados (6) y las citas (7). Con el permiso que concede Administración, Dirección Clínica fija los rangos de referencia (8) y los plazos de los hitos (9).</desc>
+        <defs>
+          <marker id="d-centro-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-centro-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-centro-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <rect class="lane-plat" x="0" y="0" width="1120" height="120"/>
+        <text class="lane-label plat" x="14" y="26">Plataforma</text>
+        <text class="lane-sub" x="14" y="44">quien opera ResidApp</text>
+        <rect class="lane-adm" x="0" y="120" width="1120" height="140"/>
+        <text class="lane-label adm" x="14" y="146">Administración</text>
+        <text class="lane-sub" x="14" y="164">la principal del centro</text>
+        <rect class="lane-dir" x="0" y="260" width="1120" height="130"/>
+        <text class="lane-label dir" x="14" y="286">Dirección Clínica</text>
+        <text class="lane-sub" x="14" y="304">con permiso</text>
+        <line class="sep" x1="0" y1="120" x2="1120" y2="120"/>
+        <line class="sep" x1="0" y1="260" x2="1120" y2="260"/>
+        <path class="flecha info" d="M204,116 V170" marker-end="url(#d-centro-pi)"/>
+        <text class="et info" x="212" y="148">cuenta activa y principal</text>
+        <path class="flecha" d="M278,204 H294" marker-end="url(#d-centro-p)"/>
+        <path class="flecha" d="M444,204 H460" marker-end="url(#d-centro-p)"/>
+        <path class="flecha" d="M610,204 H626" marker-end="url(#d-centro-p)"/>
+        <path class="flecha" d="M776,204 H792" marker-end="url(#d-centro-p)"/>
+        <path class="flecha" d="M942,204 H958" marker-end="url(#d-centro-p)"/>
+        <path class="flecha info" d="M536,236 V310" marker-end="url(#d-centro-pi)"/>
+        <text class="et info" x="544" y="278">con permiso</text>
+        <path class="flecha" d="M610,344 H626" marker-end="url(#d-centro-p)"/>
+        <text class="et nota" x="296" y="78">No ve residentes ni nada clínico.</text>
+        <text class="et nota" x="296" y="96">Cada centro está aislado de los demás.</text>
+        <text class="et nota" x="1034" y="42" text-anchor="middle">después, si hace falta</text>
+        <text class="et nota" x="794" y="340"><tspan x="794" dy="0">Administración concede el permiso</tspan><tspan x="794" dy="15">en «Usuarios».</tspan></text>
+        <rect class="box plat imp" x="130" y="52" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="204" y="72.7" text-anchor="middle"><tspan class="n">1</tspan> · Nuevo centro ★</text>
+          <text class="bt det" x="204" y="89.4" text-anchor="middle">centro, primera unidad</text>
+          <text class="bt det" x="204" y="105.4" text-anchor="middle">y administrador</text>
+        <rect class="box plat rel" x="960" y="52" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="1034" y="72.7" text-anchor="middle">Soporte</text>
+          <text class="bt det" x="1034" y="89.4" text-anchor="middle">marca la principal</text>
+          <text class="bt det" x="1034" y="105.4" text-anchor="middle">y recupera unidades</text>
+        <rect class="box adm" x="130" y="172" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="204" y="192.7" text-anchor="middle"><tspan class="n">2</tspan> · Primera entrada</text>
+          <text class="bt det" x="204" y="209.4" text-anchor="middle">Administración</text>
+          <text class="bt det" x="204" y="225.4" text-anchor="middle">principal del centro</text>
+        <rect class="box adm" x="296" y="172" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="370" y="192.7" text-anchor="middle"><tspan class="n">3</tspan> · Estructura</text>
+          <text class="bt det" x="370" y="209.4" text-anchor="middle">unidades, edificios,</text>
+          <text class="bt det" x="370" y="225.4" text-anchor="middle">habitaciones y plazas</text>
+        <rect class="box adm imp" x="462" y="172" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="536" y="192.7" text-anchor="middle"><tspan class="n">4</tspan> · Usuarios ★</text>
+          <text class="bt det" x="536" y="209.4" text-anchor="middle">perfil, unidades</text>
+          <text class="bt det" x="536" y="225.4" text-anchor="middle">y permisos</text>
+        <rect class="box adm" x="628" y="172" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="702" y="192.7" text-anchor="middle"><tspan class="n">5</tspan> · Turnos</text>
+          <text class="bt det" x="702" y="209.4" text-anchor="middle">equipos y</text>
+          <text class="bt det" x="702" y="225.4" text-anchor="middle">planificación</text>
+        <rect class="box adm" x="794" y="172" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="868" y="192.7" text-anchor="middle"><tspan class="n">6</tspan> · Comunicados</text>
+          <text class="bt det" x="868" y="209.4" text-anchor="middle">hora y margen</text>
+          <text class="bt det" x="868" y="225.4" text-anchor="middle">del centro</text>
+        <rect class="box adm" x="960" y="172" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="1034" y="192.7" text-anchor="middle"><tspan class="n">7</tspan> · Citas</text>
+          <text class="bt det" x="1034" y="209.4" text-anchor="middle">modo, franjas</text>
+          <text class="bt det" x="1034" y="225.4" text-anchor="middle">y bloqueos</text>
+        <rect class="box dir" x="462" y="312" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="536" y="332.7" text-anchor="middle"><tspan class="n">8</tspan> · Rangos</text>
+          <text class="bt det" x="536" y="349.4" text-anchor="middle">de referencia de</text>
+          <text class="bt det" x="536" y="365.4" text-anchor="middle">las constantes</text>
+        <rect class="box dir" x="628" y="312" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="702" y="332.7" text-anchor="middle"><tspan class="n">9</tspan> · Plazos</text>
+          <text class="bt det" x="702" y="349.4" text-anchor="middle">de los hitos</text>
+          <text class="bt det" x="702" y="365.4" text-anchor="middle">del proceso</text>
+      </svg>
+    </div>
+    <p class="pista">Plataforma no ve residentes ni nada clínico. Los permisos los concede Administración a cada perfil.</p>
+    <h3 class="sub">Cómo se organiza un centro</h3>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 480" style="min-width: 960px" role="img" aria-labelledby="d-estructura-t d-estructura-d">
+        <title id="d-estructura-t">Cómo se organiza un centro: lugares y personas</title>
+        <desc id="d-estructura-d">A la izquierda, los lugares: el centro tiene unidades (Planta 1 y Planta 2), que pueden agruparse en edificios y plantas; cada unidad tiene habitaciones (104 y 105) y cada habitación, plazas (A y B); Rosa ocupa la plaza B de la habitación 104. A la derecha, las personas: una cuenta tiene un perfil en el centro, con sus permisos; el perfil tiene unidades concedidas y, si es Auxiliar, residentes asignados. Una cuenta puede ser miembro de equipos de una unidad, que tienen turnos planificados.</desc>
+        <defs>
+          <marker id="d-estructura-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-estructura-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-estructura-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <text class="col-tit" x="16" y="22">LOS LUGARES</text>
+        <text class="col-tit" x="650" y="22">LAS PERSONAS</text>
+        <path class="divisor" d="M625,10 V470"/>
+        <path class="rama" d="M310,100 V125 H500 V150"/>
+        <path class="rama" d="M310,125 H290 V150"/>
+        <path class="rama rel" d="M310,125 H96 V150"/>
+        <path class="rama rel" d="M176,180 H200"/>
+        <text class="et nota" x="188" y="226" text-anchor="middle">agrupa</text>
+        <path class="rama" d="M290,210 V235 H220 V260"/>
+        <path class="rama" d="M290,235 H380 V260"/>
+        <path class="rama" d="M220,310 V335 H155 V360"/>
+        <path class="rama" d="M220,335 H260 V360"/>
+        <path class="rama" d="M260,404 V430"/>
+        <rect class="box adm tinte" x="190" y="40" width="240" height="60" rx="8"/>
+          <text class="bt tit" x="310" y="66.7" text-anchor="middle">Centro</text>
+          <text class="bt det" x="310" y="83.4" text-anchor="middle">Residencia Los Almendros</text>
+        <rect class="box adm rel" x="16" y="150" width="160" height="60" rx="8"/>
+          <text class="bt tit" x="96" y="176.7" text-anchor="middle">Edificio y planta</text>
+          <text class="bt det" x="96" y="193.4" text-anchor="middle">opcionales</text>
+        <rect class="box adm tinte" x="200" y="150" width="180" height="60" rx="8"/>
+          <text class="bt tit" x="290" y="176.7" text-anchor="middle">Unidad</text>
+          <text class="bt det" x="290" y="193.4" text-anchor="middle">Planta 1</text>
+        <rect class="box adm tinte" x="410" y="150" width="180" height="60" rx="8"/>
+          <text class="bt tit" x="500" y="176.7" text-anchor="middle">Unidad</text>
+          <text class="bt det" x="500" y="193.4" text-anchor="middle">Planta 2</text>
+        <rect class="box adm" x="150" y="260" width="140" height="50" rx="8"/>
+          <text class="bt tit" x="220" y="289.7" text-anchor="middle">Habitación 104</text>
+        <rect class="box adm" x="310" y="260" width="140" height="50" rx="8"/>
+          <text class="bt tit" x="380" y="289.7" text-anchor="middle">Habitación 105</text>
+        <rect class="box adm" x="110" y="360" width="90" height="44" rx="8"/>
+          <text class="bt tit" x="155" y="386.7" text-anchor="middle">Plaza A</text>
+        <rect class="box adm" x="215" y="360" width="90" height="44" rx="8"/>
+          <text class="bt tit" x="260" y="386.7" text-anchor="middle">Plaza B</text>
+        <rect class="box residente" x="195" y="430" width="130" height="40" rx="8"/>
+          <text class="bt tit" x="260" y="454.7" text-anchor="middle">Rosa</text>
+        <text class="et nota" x="470" y="268"><tspan x="470" dy="0">Nada se borra:</tspan><tspan x="470" dy="15">se inactiva.</tspan></text>
+        <text class="et nota" x="320" y="378"><tspan x="320" dy="0">Una plaza, un residente</tspan><tspan x="320" dy="15">a la vez.</tspan></text>
+        <text class="et nota" x="340" y="446"><tspan x="340" dy="0">Habitación y plaza</tspan><tspan x="340" dy="15">son opcionales.</tspan></text>
+        <path class="rama" d="M750,100 V150"/>
+        <path class="rama" d="M750,210 V260"/>
+        <path class="rama" d="M750,310 V360"/>
+        <path class="rama rel" d="M850,70 H1002 V150"/>
+        <text class="et nota" x="862" y="62">es miembro de</text>
+        <path class="rama" d="M1002,210 V260"/>
+        <rect class="box neutro" x="650" y="40" width="200" height="60" rx="8"/>
+          <text class="bt tit" x="750" y="66.7" text-anchor="middle">Cuenta</text>
+          <text class="bt det" x="750" y="83.4" text-anchor="middle">una persona, un acceso</text>
+        <rect class="box neutro" x="650" y="150" width="200" height="60" rx="8"/>
+          <text class="bt tit" x="750" y="176.7" text-anchor="middle">Perfil en el centro</text>
+          <text class="bt det" x="750" y="193.4" text-anchor="middle">con sus permisos</text>
+        <rect class="box neutro" x="650" y="260" width="200" height="50" rx="8"/>
+          <text class="bt tit" x="750" y="289.7" text-anchor="middle">Unidades concedidas</text>
+        <rect class="box aux" x="650" y="360" width="200" height="60" rx="8"/>
+          <text class="bt tit" x="750" y="386.7" text-anchor="middle">Residentes asignados</text>
+          <text class="bt det" x="750" y="403.4" text-anchor="middle">solo en el perfil Auxiliar</text>
+        <rect class="box neutro" x="900" y="150" width="204" height="60" rx="8"/>
+          <text class="bt tit" x="1002" y="176.7" text-anchor="middle">Equipo</text>
+          <text class="bt det" x="1002" y="193.4" text-anchor="middle">de una unidad, con miembros</text>
+        <rect class="box neutro" x="900" y="260" width="204" height="60" rx="8"/>
+          <text class="bt tit" x="1002" y="286.7" text-anchor="middle">Turno planificado</text>
+          <text class="bt det" x="1002" y="303.4" text-anchor="middle">equipo + turno + fechas</text>
+        <text class="et nota" x="900" y="352"><tspan x="900" dy="0">Estar en un equipo</tspan><tspan x="900" dy="15">no da acceso a nada.</tspan></text>
+        <text class="et nota" x="650" y="446"><tspan x="650" dy="0">Con varios perfiles, se elige uno al entrar:</tspan><tspan x="650" dy="15">sus permisos nunca se suman.</tspan></text>
+      </svg>
+    </div>
+    <p class="pista">El acceso va por unidades: cada perfil ve lo que pasa en las unidades que tiene concedidas, y el Auxiliar, solo a los residentes que tiene asignados.</p>
+    <h3 class="sub">Paso a paso</h3>
+    <ol class="pasos">
+      <li class="plat">
+        <div class="paso-cab"><span class="n">1</span><strong>Nuevo centro</strong> <span class="estrella">★</span><span class="perfil plat">Plataforma</span></div>
+        <span>En «Centros», «Nuevo centro»: el código y el nombre del centro, su primera unidad y su primer administrador. Se crea todo a la vez o nada.</span>
+        <span class="pasa">Le llega a <strong>Administración</strong>: la cuenta nace activa, con la unidad concedida, y es la Administración principal.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">2</span><strong>Primera entrada</strong><span class="perfil adm">Administración</span></div>
+        <span>Como Administración principal, desde «Unidades del centro» puede añadir a su ámbito cualquier unidad del centro. El centro conserva siempre al menos una principal.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">3</span><strong>Estructura del centro</strong><span class="perfil adm">Administración</span></div>
+        <span>«Estructura del centro»: unidades con su código y su nombre y, si se quiere, edificios y plantas para agruparlas. En cada unidad, «Habitaciones y plazas». Nada se borra: se inactiva.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">4</span><strong>Usuarios, perfiles y permisos</strong> <span class="estrella">★</span><span class="perfil adm">Administración</span></div>
+        <span>«Usuarios», «Alta de usuario»: identificador de acceso, nombre, un perfil y sus unidades. En «Gestionar», las unidades, los permisos del perfil y, en un Auxiliar, los residentes que verá.</span>
+        <span class="pasa">Le llega a <strong>cada persona</strong>: entra con su perfil y solo ve sus unidades. Con varios perfiles se elige uno al entrar, y sus permisos nunca se suman.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">5</span><strong>Turnos, equipos y planificación</strong><span class="perfil adm">Administración</span></div>
+        <span>«Turnos» con sus horas, «Equipos» de cada unidad con sus miembros y «Planificación de turnos» para un rango de fechas.</span>
+        <span class="pasa">Los seguimientos se transfieren a estos equipos. Estar en un equipo no da acceso a nada.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">6</span><strong>Hora de los comunicados</strong><span class="perfil adm">Administración</span></div>
+        <span>En «Comunicados a la familia», la hora de publicación del centro y el margen: por defecto, las 19:00 y 60 minutos.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">7</span><strong>Citas con la familia</strong><span class="perfil adm">Administración</span></div>
+        <span>«Citas con la familia»: desactivadas, reserva directa o solicitud previa, con la antelación mínima, las franjas de cada equipo y los bloqueos.</span>
+      </li>
+      <li class="dir">
+        <div class="paso-cab"><span class="n">8</span><strong>Rangos de referencia</strong><span class="perfil dir">Dirección Clínica</span></div>
+        <span>Con su permiso, «Rangos de referencia de constantes»: mínimo y máximo de cada constante para todo el centro. «Cargar valores sugeridos» rellena los propuestos, sin guardarlos.</span>
+        <span class="pasa">Le llega a <strong>Enfermería y Medicina</strong>: el rango bajo cada constante y un aviso amarillo, que solo informa, si un valor sale de él.</span>
+      </li>
+      <li class="dir">
+        <div class="paso-cab"><span class="n">9</span><strong>Plazos de los hitos</strong><span class="perfil dir">Dirección Clínica</span></div>
+        <span>Con su permiso, «Plazos de los hitos del proceso»: el plazo normal y el prioritario de cada hito, en minutos. «Ver los plazos de CJ» trae los de partida.</span>
+        <span class="pasa">Se usan en «Calidad de proceso» y en los avisos del Inicio de Enfermería y de Medicina.</span>
+      </li>
+      <li class="plat">
+        <div class="paso-cab"><span class="n">10</span><strong>Soporte, si hace falta</strong><span class="perfil plat">Plataforma</span></div>
+        <span>En «Administraciones y unidades», marcar o quitar la Administración principal, o añadir una unidad al ámbito de una Administración, por ejemplo para recuperar una unidad que se quedó sin nadie.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section id="llegada" aria-labelledby="llegada-t">
+    <h2 id="llegada-t">Llega un residente: alta, familia y basal</h2>
+    <p class="ejemplo"><span class="ej">En el ejemplo</span>Rosa llega el día 1. A media mañana ya tiene ficha, contacto, acceso para su hija y su Auxiliar; a mediodía, el basal firmado.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 500" style="min-width: 960px" role="img" aria-labelledby="d-alta-t d-alta-d">
+        <title id="d-alta-t">Llega un residente: alta, familia, asignación y basal</title>
+        <desc id="d-alta-d">Cuatro franjas. Administración da de alta al residente (1), registra al familiar y abre y activa su autorización (2), le da acceso al Portal Familiar (3) y asigna el residente a las cuentas de Auxiliar (4). La familia ya puede entrar en el portal. El Auxiliar lo ve en «Mis residentes». Enfermería o Medicina lo ven con el basal pendiente; crean el borrador (5), completan las nueve áreas (6) y el Barthel (7) y lo firman (8): el basal queda vigente y el Auxiliar ve su resumen.</desc>
+        <defs>
+          <marker id="d-alta-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-alta-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-alta-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <rect class="lane-adm" x="0" y="0" width="1120" height="130"/>
+        <text class="lane-label adm" x="14" y="26">Administración</text>
+        <rect class="lane-fam" x="0" y="130" width="1120" height="100"/>
+        <text class="lane-label fam" x="14" y="156">Familia</text>
+        <rect class="lane-aux" x="0" y="230" width="1120" height="100"/>
+        <text class="lane-label aux" x="14" y="256">Auxiliar</text>
+        <rect class="lane-enf" x="0" y="330" width="1120" height="170"/>
+        <text class="lane-label enf" x="14" y="356">Enfermería o Medicina</text>
+        <text class="lane-sub" x="14" y="374">con permiso de basal</text>
+        <line class="sep" x1="0" y1="130" x2="1120" y2="130"/>
+        <line class="sep" x1="0" y1="230" x2="1120" y2="230"/>
+        <line class="sep" x1="0" y1="330" x2="1120" y2="330"/>
+        <path class="flecha" d="M278,77 H294" marker-end="url(#d-alta-p)"/>
+        <path class="flecha" d="M444,77 H460" marker-end="url(#d-alta-p)"/>
+        <path class="flecha" d="M610,77 H626" marker-end="url(#d-alta-p)"/>
+        <path class="flecha info" d="M536,109 V150" marker-end="url(#d-alta-pi)"/>
+        <text class="et info" x="544" y="140">autorización activa</text>
+        <path class="flecha info" d="M702,109 V250" marker-end="url(#d-alta-pi)"/>
+        <text class="et info" x="710" y="192">asignación</text>
+        <path class="flecha info" d="M204,109 V384" marker-end="url(#d-alta-pi)"/>
+        <text class="et info" x="212" y="192">aparece en sus listas</text>
+        <path class="flecha" d="M278,418 H294" marker-end="url(#d-alta-p)"/>
+        <path class="flecha" d="M444,418 H460" marker-end="url(#d-alta-p)"/>
+        <path class="flecha" d="M610,418 H626" marker-end="url(#d-alta-p)"/>
+        <path class="flecha" d="M776,418 H792" marker-end="url(#d-alta-p)"/>
+        <path class="flecha" d="M942,418 H958" marker-end="url(#d-alta-p)"/>
+        <path class="flecha info" d="M1034,386 V280 H778" marker-end="url(#d-alta-pi)"/>
+        <text class="et info" x="790" y="272">resumen del basal vigente</text>
+        <text class="et nota" x="130" y="478">Un solo borrador a la vez. Firma quien lo creó, con el mismo perfil.</text>
+        <rect class="box adm imp" x="130" y="45" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="204" y="65.7" text-anchor="middle"><tspan class="n">1</tspan> · Alta ★</text>
+          <text class="bt det" x="204" y="82.4" text-anchor="middle">unidad, plaza y</text>
+          <text class="bt det" x="204" y="98.4" text-anchor="middle">contacto prioritario</text>
+        <rect class="box adm" x="296" y="45" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="370" y="65.7" text-anchor="middle"><tspan class="n">2</tspan> · Familiar</text>
+          <text class="bt det" x="370" y="82.4" text-anchor="middle">autorización:</text>
+          <text class="bt det" x="370" y="98.4" text-anchor="middle">abrir y activar</text>
+        <rect class="box adm" x="462" y="45" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="536" y="65.7" text-anchor="middle"><tspan class="n">3</tspan> · Portal</text>
+          <text class="bt det" x="536" y="82.4" text-anchor="middle">acceso con</text>
+          <text class="bt det" x="536" y="98.4" text-anchor="middle">su usuario</text>
+        <rect class="box adm" x="628" y="45" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="702" y="65.7" text-anchor="middle"><tspan class="n">4</tspan> · Asignar</text>
+          <text class="bt det" x="702" y="82.4" text-anchor="middle">a las cuentas</text>
+          <text class="bt det" x="702" y="98.4" text-anchor="middle">de Auxiliar</text>
+        <rect class="box fam" x="462" y="152" width="148" height="56" rx="8"/>
+          <text class="bt tit" x="536" y="176.7" text-anchor="middle">Puede entrar</text>
+          <text class="bt det" x="536" y="193.4" text-anchor="middle">aún sin novedades</text>
+        <rect class="box aux" x="628" y="252" width="148" height="56" rx="8"/>
+          <text class="bt tit" x="702" y="276.7" text-anchor="middle">Mis residentes</text>
+          <text class="bt det" x="702" y="293.4" text-anchor="middle">resumen del basal</text>
+        <rect class="box enf pend" x="130" y="386" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="204" y="406.7" text-anchor="middle">Basal pendiente</text>
+          <text class="bt det" x="204" y="423.4" text-anchor="middle">franja roja</text>
+          <text class="bt det" x="204" y="439.4" text-anchor="middle">en las listas</text>
+        <rect class="box enf" x="296" y="386" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="370" y="406.7" text-anchor="middle"><tspan class="n">5</tspan> · Borrador</text>
+          <text class="bt det" x="370" y="423.4" text-anchor="middle">motivo, fuente</text>
+          <text class="bt det" x="370" y="439.4" text-anchor="middle">y fecha</text>
+        <rect class="box enf" x="462" y="386" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="536" y="414.7" text-anchor="middle"><tspan class="n">6</tspan> · Nueve áreas</text>
+          <text class="bt det" x="536" y="431.4" text-anchor="middle">una a una</text>
+        <rect class="box enf" x="628" y="386" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="702" y="406.7" text-anchor="middle"><tspan class="n">7</tspan> · Barthel</text>
+          <text class="bt det" x="702" y="423.4" text-anchor="middle">10 ítems,</text>
+          <text class="bt det" x="702" y="439.4" text-anchor="middle">total sobre 100</text>
+        <rect class="box enf imp" x="794" y="386" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="868" y="406.7" text-anchor="middle"><tspan class="n">8</tspan> · Firmar ★</text>
+          <text class="bt det" x="868" y="423.4" text-anchor="middle">quien creó</text>
+          <text class="bt det" x="868" y="439.4" text-anchor="middle">el borrador</text>
+        <rect class="box ok" x="960" y="386" width="148" height="64" rx="8"/>
+          <text class="bt tit" x="1034" y="414.7" text-anchor="middle">Basal vigente</text>
+          <text class="bt det" x="1034" y="431.4" text-anchor="middle">franja verde</text>
+      </svg>
+    </div>
+    <p class="pista">Administración nunca ve el basal ni nada clínico: solo identidad, ubicación y familia. Enfermería también puede dar de alta si tiene ese permiso.</p>
+    <h3 class="sub">Paso a paso</h3>
+    <ol class="pasos">
+      <li class="adm">
+        <div class="paso-cab"><span class="n">1</span><strong>Alta del residente</strong> <span class="estrella">★</span><span class="perfil adm">Administración</span></div>
+        <span>En el inicio, «Alta de residente»: unidad, habitación o plaza libre si la hay, nombre, fecha de nacimiento y sexo documentado, y hasta tres familiares con sus marcas: «Contacto prioritario», «Familiar referente» y «Tutor legal». Hace falta al menos un contacto prioritario o, si no hay nadie a quien avisar, el motivo.</span>
+        <span class="pasa">Le llega a <strong>Enfermería y Medicina</strong>: el residente aparece en sus listas con el basal pendiente, con franja roja.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">2</span><strong>Familiar y autorización</strong><span class="perfil adm">Administración</span></div>
+        <span>En la ficha, «Familiares»; en cada familiar, «Autorización»: primero se abre y queda pendiente, y después se activa, con una fecha «válida hasta» opcional.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">3</span><strong>Acceso al Portal Familiar</strong><span class="perfil adm">Administración</span></div>
+        <span>En la misma pantalla, «Acceso al Portal Familiar»: el usuario con el que entrará y «Dar acceso al portal».</span>
+        <span class="pasa">Le llega a <strong>la familia</strong>: con la autorización activa y su usuario puede entrar. Sin autorización activa no ve a nadie.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">4</span><strong>Asignar al Auxiliar</strong><span class="perfil adm">Administración</span></div>
+        <span>En «Usuarios», «Gestionar» el perfil de cada Auxiliar y asignarle el residente.</span>
+        <span class="pasa">Le llega al <strong>Auxiliar</strong>: el residente aparece en «Mis residentes». Sin asignación no ve a nadie.</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">5</span><strong>Borrador del basal</strong><span class="perfil enf">Enfermería o Medicina</span></div>
+        <span>En la ficha del residente, «Crear borrador de basal»: el motivo, la fuente de la información y su fecha. Hace falta el permiso de basal, que concede Administración.</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">6</span><strong>Nueve áreas</strong><span class="perfil enf">Enfermería o Medicina</span></div>
+        <span>Movilidad, alimentación, continencia, aseo e higiene, cognición, comunicación, conducta, sueño y ayudas habituales, una a una.</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">7</span><strong>Barthel</strong><span class="perfil enf">Enfermería o Medicina</span></div>
+        <span>Diez ítems; el total sobre 100 se calcula solo.</span>
+      </li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">8</span><strong>Confirmar y firmar</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería o Medicina</span></div>
+        <span>Un resumen completo y la firma. Solo firma quien creó el borrador, con el mismo perfil.</span>
+        <span class="pasa">Le llega a <strong>todo el equipo clínico</strong>: basal vigente, con franja verde. El <strong>Auxiliar</strong> ve su resumen con el total de Barthel.</span>
+      </li>
+    </ol>
+    <h3 class="sub">Los estados del basal</h3>
+    <ol class="estados">
+      <li><div class="pildora pend"><strong>Pendiente</strong><span>Recién dado de alta. Franja roja en las listas.</span></div></li>
+      <li><div class="pildora"><strong>Borrador</strong><span>Uno a la vez. Se puede cancelar con un motivo.</span></div></li>
+      <li><div class="pildora ok"><strong>Vigente</strong><span>Firmado: la referencia de todo lo que se observa. Franja verde.</span></div></li>
+      <li><div class="pildora hist"><strong>Histórico</strong><span>Al firmar una reevaluación, el anterior pasa aquí. No se borra.</span></div></li>
+    </ol>
+    <p class="pista">Un basal firmado no se edita: para cambiarlo se hace una reevaluación, que se firma como versión nueva. Cada versión lleva su motivo: «Alta», «Revisión programada» o «Cambio funcional consolidado».</p>
+    <h3 class="sub">La autorización de un familiar</h3>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 290" style="min-width: 900px" role="img" aria-labelledby="d-autorizacion-t d-autorizacion-d">
+        <title id="d-autorizacion-t">Estados de la autorización de un familiar</title>
+        <desc id="d-autorizacion-d">Sin autorización, se abre y queda Pendiente; al activarla queda Activa, la única que da acceso al portal. Una autorización Activa se puede suspender con motivo (se levanta activándola otra vez), revocar con motivo (es definitiva) o caducar al pasar su fecha «válida hasta» (se renueva activándola otra vez).</desc>
+        <defs>
+          <marker id="d-autorizacion-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-autorizacion-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-autorizacion-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <path class="flecha" d="M186,145 H268" marker-end="url(#d-autorizacion-p)"/>
+        <text class="et" x="227" y="137" text-anchor="middle">Abrir</text>
+        <path class="flecha" d="M440,145 H518" marker-end="url(#d-autorizacion-p)"/>
+        <text class="et" x="479" y="137" text-anchor="middle">Activar</text>
+        <path class="flecha" d="M710,126 C760,126 774,56 828,56" marker-end="url(#d-autorizacion-p)"/>
+        <text class="et" x="752" y="82" text-anchor="end">Suspender</text>
+        <path class="flecha" d="M840,28 C760,4 650,10 626,111" marker-end="url(#d-autorizacion-p)"/>
+        <text class="et" x="700" y="18" text-anchor="middle">Activar</text>
+        <path class="flecha" d="M710,145 H828" marker-end="url(#d-autorizacion-p)"/>
+        <text class="et" x="769" y="137" text-anchor="middle">Revocar</text>
+        <path class="flecha" d="M710,164 C760,164 774,234 828,234" marker-end="url(#d-autorizacion-p)"/>
+        <text class="et" x="752" y="214" text-anchor="end">pasa la fecha</text>
+        <path class="flecha" d="M840,262 C760,286 650,280 626,179" marker-end="url(#d-autorizacion-p)"/>
+        <text class="et" x="700" y="284" text-anchor="middle">Activar otra vez</text>
+        <rect class="box nota" x="16" y="121" width="170" height="48" rx="24"/>
+          <text class="bt tit" x="101" y="149.7" text-anchor="middle">Sin autorización</text>
+        <rect class="box neutro" x="270" y="121" width="170" height="48" rx="24"/>
+          <text class="bt tit" x="355" y="149.7" text-anchor="middle">Pendiente</text>
+        <rect class="box ok imp" x="520" y="113" width="190" height="64" rx="24"/>
+          <text class="bt tit" x="615" y="141.7" text-anchor="middle">Activa ★</text>
+          <text class="bt det" x="615" y="158.4" text-anchor="middle">da acceso al portal</text>
+        <rect class="box neutro" x="830" y="28" width="260" height="56" rx="24"/>
+          <text class="bt tit" x="960" y="52.7" text-anchor="middle">Suspendida</text>
+          <text class="bt det" x="960" y="69.4" text-anchor="middle">con motivo; se levanta activándola</text>
+        <rect class="box urg" x="830" y="117" width="260" height="56" rx="24"/>
+          <text class="bt tit" x="960" y="141.7" text-anchor="middle">Revocada</text>
+          <text class="bt det" x="960" y="158.4" text-anchor="middle">con motivo; es definitiva</text>
+        <rect class="box nota" x="830" y="206" width="260" height="56" rx="24"/>
+          <text class="bt tit" x="960" y="230.7" text-anchor="middle">Caducada</text>
+          <text class="bt det" x="960" y="247.4" text-anchor="middle">pasó su fecha «válida hasta»</text>
+      </svg>
+    </div>
+    <p class="pista">Solo una autorización activa da acceso al Portal Familiar, y solo si el familiar tiene usuario. Suspenderla o revocarla le corta el acceso al momento.</p>
+  </section>
+
+  <section id="dia" aria-labelledby="dia-t">
+    <h2 id="dia-t">Un día cualquiera: el cierre de cada turno</h2>
+    <p class="ejemplo"><span class="ej">En el ejemplo</span>Casi todos los turnos, el Auxiliar marca «Sin cambios»; una tarde que Rosa salió con su familia, «No valorable».</p>
+    <p class="prose">En cada turno, el Auxiliar elige para cada residente asignado una sola de tres opciones. Solo «Registrar cambio» crea trabajo para Enfermería.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 440" style="min-width: 960px" role="img" aria-labelledby="d-turno-t d-turno-d">
+        <title id="d-turno-t">El cierre de cada turno del Auxiliar</title>
+        <desc id="d-turno-d">En cada turno, para cada residente asignado, el Auxiliar elige una de tres opciones. Sin cambios: lo habitual se mantiene y no genera tarea. No valorable: con motivo obligatorio; nunca significa que esté estable. Registrar cambio: áreas y temperatura; si es ordinario, va a la bandeja de cambios ordinarios de Enfermería; si es prioritario, con un motivo de la lista y el aviso directo, va a la bandeja prioritaria.</desc>
+        <defs>
+          <marker id="d-turno-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-turno-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-turno-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <path class="rama" d="M216,210 H250"/>
+        <path class="rama" d="M250,68 V348"/>
+        <path class="flecha" d="M250,68 H288" marker-end="url(#d-turno-p)"/>
+        <path class="flecha" d="M250,210 H288" marker-end="url(#d-turno-p)"/>
+        <path class="flecha" d="M250,348 H288" marker-end="url(#d-turno-p)"/>
+        <path class="flecha" d="M480,68 H558" marker-end="url(#d-turno-p)"/>
+        <path class="flecha" d="M480,210 H558" marker-end="url(#d-turno-p)"/>
+        <path class="rama" d="M480,348 H520"/>
+        <path class="rama" d="M520,318 V398"/>
+        <path class="flecha" d="M520,318 H558" marker-end="url(#d-turno-p)"/>
+        <path class="flecha" d="M520,398 H558" marker-end="url(#d-turno-p)"/>
+        <path class="flecha info" d="M760,318 H848" marker-end="url(#d-turno-pi)"/>
+        <text class="et info" x="804" y="310" text-anchor="middle">al confirmar</text>
+        <path class="flecha info" d="M760,398 H848" marker-end="url(#d-turno-pi)"/>
+        <text class="et info" x="804" y="390" text-anchor="middle">al confirmar</text>
+        <text class="et nota" x="290" y="404">La fecha y la hora las pone la aplicación.</text>
+        <rect class="box aux tinte" x="16" y="170" width="200" height="80" rx="8"/>
+          <text class="bt tit" x="116" y="199.2" text-anchor="middle">Cierre del turno</text>
+          <text class="bt det" x="116" y="215.9" text-anchor="middle">de cada residente asignado</text>
+          <text class="bt per c-aux" x="116" y="230.9" text-anchor="middle">AUXILIAR</text>
+        <rect class="box aux tinte" x="290" y="40" width="190" height="56" rx="8"/>
+          <text class="bt tit" x="385" y="64.7" text-anchor="middle">Sin cambios</text>
+          <text class="bt det" x="385" y="81.4" text-anchor="middle">lo habitual se mantiene</text>
+        <rect class="box aux tinte" x="290" y="182" width="190" height="56" rx="8"/>
+          <text class="bt tit" x="385" y="206.7" text-anchor="middle">No valorable</text>
+          <text class="bt det" x="385" y="223.4" text-anchor="middle">con motivo obligatorio</text>
+        <rect class="box aux tinte imp" x="290" y="320" width="190" height="56" rx="8"/>
+          <text class="bt tit" x="385" y="344.7" text-anchor="middle">Registrar cambio ★</text>
+          <text class="bt det" x="385" y="361.4" text-anchor="middle">áreas y temperatura</text>
+        <rect class="box nota" x="560" y="40" width="240" height="56" rx="8"/>
+          <text class="bt tit" x="680" y="72.7" text-anchor="middle">No genera ninguna tarea</text>
+        <rect class="box nota" x="560" y="182" width="240" height="56" rx="8"/>
+          <text class="bt tit" x="680" y="206.7" text-anchor="middle">Nunca significa</text>
+          <text class="bt det" x="680" y="223.4" text-anchor="middle">que esté estable</text>
+        <rect class="box aux" x="560" y="290" width="200" height="56" rx="8"/>
+          <text class="bt tit" x="660" y="314.7" text-anchor="middle">Ordinario</text>
+          <text class="bt det" x="660" y="331.4" text-anchor="middle">resumen y confirmar</text>
+        <rect class="box aux urg" x="560" y="370" width="200" height="56" rx="8"/>
+          <text class="bt tit" x="660" y="394.7" text-anchor="middle">Prioritario</text>
+          <text class="bt det" x="660" y="411.4" text-anchor="middle">motivo y aviso directo</text>
+        <rect class="box enf tinte" x="850" y="290" width="254" height="56" rx="8"/>
+          <text class="bt tit" x="977" y="315.2" text-anchor="middle">Bandeja de cambios ordinarios</text>
+          <text class="bt per c-enf" x="977" y="330.9" text-anchor="middle">ENFERMERÍA</text>
+        <rect class="box enf tinte urg" x="850" y="370" width="254" height="56" rx="8"/>
+          <text class="bt tit" x="977" y="395.2" text-anchor="middle">Bandeja prioritaria</text>
+          <text class="bt per c-enf" x="977" y="410.9" text-anchor="middle">ENFERMERÍA</text>
+      </svg>
+    </div>
+    <p class="pista">Antes de enviar un cambio siempre se ve un resumen, y «Volver a editar» no borra nada.</p>
+    <h3 class="sub">Las diez áreas de un cambio</h3>
+    <ul class="chips">
+      <li>Alimentación / hidratación</li><li>Movilidad / funcionalidad</li><li>Ánimo / conducta</li><li>Dolor / malestar</li><li>Heces / diuresis</li>
+      <li>Sueño</li><li>Lesiones en piel</li><li>Participación / relación social</li><li>Incidencias / caídas</li><li>Estado de conciencia</li>
+    </ul>
+    <p class="pista">Siete áreas tienen opciones rápidas que se marcan con un toque; las otras tres son de texto libre. La temperatura es opcional.</p>
+    <h3 class="sub">Los seis motivos de un cambio prioritario</h3>
+    <ul class="chips prio">
+      <li>Alteración de conciencia o del estado general</li><li>Caída, lesión o traumatismo</li><li>Fiebre o sospecha de infección</li>
+      <li>Dolor nuevo o intenso</li><li>Dificultad respiratoria</li><li>Déficit neurológico nuevo</li>
+    </ul>
+    <p class="pista">La clasificación ordena la bandeja de Enfermería: no es un diagnóstico ni sustituye el protocolo urgente del centro. Enfermería y Medicina también registran lo que observan directamente con «Registrar evento», y el evento conserva su autoría.</p>
+  </section>
+
+  <section id="episodio" aria-labelledby="episodio-t">
+    <h2 id="episodio-t">Cuando algo cambia: el episodio</h2>
+    <p class="ejemplo"><span class="ej">En el ejemplo</span>El día 10, Rosa tiene fiebre y está más adormilada. En unas horas intervienen el Auxiliar, Enfermería y Medicina, y al día siguiente Elena recibe la novedad.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 590" style="min-width: 1000px" role="img" aria-labelledby="d-episodio-t d-episodio-d">
+        <title id="d-episodio-t">El episodio de Rosa del día 10, perfil a perfil</title>
+        <desc id="d-episodio-d">Cuatro franjas con las horas del ejemplo. 17:30, el Auxiliar registra un cambio prioritario (1), que entra en la bandeja prioritaria de Enfermería (2). 17:45, Enfermería empieza la valoración (3); 17:55, la guarda con constantes (4), con un aviso amarillo si una sale del rango; 18:00, en la decisión asistencial (5) escala a Medicina con un motivo. Medicina recibe el escalado (6), valora a las 18:15 (7) y a las 18:40 da una indicación a Enfermería (8). Enfermería la lee y la realiza (9) y al día siguiente, a las 10:00, cierra el episodio con un comunicado (10), que la familia ve en el portal a las 19:00 (11).</desc>
+        <defs>
+          <marker id="d-episodio-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-episodio-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-episodio-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <rect class="lane-aux" x="0" y="0" width="1120" height="110"/>
+        <text class="lane-label aux" x="14" y="26">Auxiliar</text>
+        <rect class="lane-enf" x="0" y="110" width="1120" height="230"/>
+        <text class="lane-label enf" x="14" y="136">Enfermería</text>
+        <rect class="lane-med" x="0" y="340" width="1120" height="130"/>
+        <text class="lane-label med" x="14" y="366">Medicina</text>
+        <rect class="lane-fam" x="0" y="470" width="1120" height="120"/>
+        <text class="lane-label fam" x="14" y="496">Familia</text>
+        <text class="lane-sub" x="14" y="514">Elena</text>
+        <line class="sep" x1="0" y1="110" x2="1120" y2="110"/>
+        <line class="sep" x1="0" y1="340" x2="1120" y2="340"/>
+        <line class="sep" x1="0" y1="470" x2="1120" y2="470"/>
+        <path class="flecha info" d="M193,100 V148" marker-end="url(#d-episodio-pi)"/>
+        <text class="et info" x="201" y="130">al instante</text>
+        <path class="flecha" d="M256,178 H268" marker-end="url(#d-episodio-p)"/>
+        <path class="flecha" d="M396,178 H408" marker-end="url(#d-episodio-p)"/>
+        <path class="flecha" d="M536,178 H548" marker-end="url(#d-episodio-p)"/>
+        <path class="flecha info" d="M613,206 V378" marker-end="url(#d-episodio-pi)"/>
+        <text class="et info" x="621" y="294"><tspan x="621" dy="0">escalado</tspan><tspan x="621" dy="15">con motivo</tspan></text>
+        <path class="flecha" d="M676,408 H688" marker-end="url(#d-episodio-p)"/>
+        <path class="flecha" d="M816,408 H828" marker-end="url(#d-episodio-p)"/>
+        <path class="flecha info" d="M893,380 V320" marker-end="url(#d-episodio-pi)"/>
+        <text class="et info" x="901" y="356">tarjeta «Indicaciones»</text>
+        <path class="flecha" d="M956,290 H968" marker-end="url(#d-episodio-p)"/>
+        <path class="flecha info" d="M1033,318 V502" marker-end="url(#d-episodio-pi)"/>
+        <text class="et info" x="1025" y="450" text-anchor="end"><tspan x="1025" dy="0">publicado</tspan><tspan x="1025" dy="15">a las 19:00</tspan></text>
+        <text class="et nota" x="473" y="226" text-anchor="middle"><tspan x="473" dy="0">aviso amarillo si una constante</tspan><tspan x="473" dy="15">sale del rango: solo informa</tspan></text>
+        <rect class="box aux imp" x="130" y="44" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="193" y="68.7" text-anchor="middle"><tspan class="n">1</tspan> · Cambio ★</text>
+          <text class="bt det" x="193" y="85.4" text-anchor="middle">prioritario</text>
+          <text class="et hora" x="193" y="37" text-anchor="middle">Día 10 · 17:30</text>
+        <rect class="box enf" x="130" y="150" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="193" y="174.7" text-anchor="middle"><tspan class="n">2</tspan> · Bandeja</text>
+          <text class="bt det" x="193" y="191.4" text-anchor="middle">prioritaria</text>
+        <rect class="box enf" x="270" y="150" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="333" y="174.7" text-anchor="middle"><tspan class="n">3</tspan> · Empieza la</text>
+          <text class="bt det" x="333" y="191.4" text-anchor="middle">valoración</text>
+          <text class="et hora" x="333" y="143" text-anchor="middle">17:45</text>
+        <rect class="box enf" x="410" y="150" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="473" y="174.7" text-anchor="middle"><tspan class="n">4</tspan> · Valoración</text>
+          <text class="bt det" x="473" y="191.4" text-anchor="middle">y constantes</text>
+          <text class="et hora" x="473" y="143" text-anchor="middle">17:55</text>
+        <rect class="box enf imp" x="550" y="150" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="613" y="174.7" text-anchor="middle"><tspan class="n">5</tspan> · Decisión ★</text>
+          <text class="bt det" x="613" y="191.4" text-anchor="middle">asistencial</text>
+          <text class="et hora" x="613" y="143" text-anchor="middle">18:00</text>
+        <rect class="box enf" x="830" y="262" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="893" y="286.7" text-anchor="middle"><tspan class="n">9</tspan> · Lee y</text>
+          <text class="bt det" x="893" y="303.4" text-anchor="middle">realiza</text>
+          <text class="et hora" x="893" y="255" text-anchor="middle">18:50 y 19:05</text>
+        <rect class="box enf imp" x="970" y="262" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="1033" y="286.7" text-anchor="middle"><tspan class="n">10</tspan> · Cierra ★</text>
+          <text class="bt det" x="1033" y="303.4" text-anchor="middle">con comunicado</text>
+          <text class="et hora" x="1033" y="255" text-anchor="middle">Día 11 · 10:00</text>
+        <rect class="box med" x="550" y="380" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="613" y="404.7" text-anchor="middle"><tspan class="n">6</tspan> · Escalado</text>
+          <text class="bt det" x="613" y="421.4" text-anchor="middle">recibido</text>
+          <text class="et hora" x="552" y="373">18:00</text>
+        <rect class="box med" x="690" y="380" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="753" y="404.7" text-anchor="middle"><tspan class="n">7</tspan> · Valoración</text>
+          <text class="bt det" x="753" y="421.4" text-anchor="middle">médica</text>
+          <text class="et hora" x="753" y="373" text-anchor="middle">18:15</text>
+        <rect class="box med" x="830" y="380" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="893" y="404.7" text-anchor="middle"><tspan class="n">8</tspan> · Indicación</text>
+          <text class="bt det" x="893" y="421.4" text-anchor="middle">a Enfermería</text>
+          <text class="et hora" x="832" y="373">18:40</text>
+        <rect class="box fam" x="970" y="504" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="1033" y="528.7" text-anchor="middle"><tspan class="n">11</tspan> · Novedad</text>
+          <text class="bt det" x="1033" y="545.4" text-anchor="middle">en el portal</text>
+          <text class="et hora" x="1033" y="576" text-anchor="middle">Día 11 · 19:00</text>
+      </svg>
+    </div>
+    <p class="pista">Las horas son las del ejemplo. Medicina nunca cambia la observación ni la valoración de Enfermería, y Enfermería ve en solo lectura lo que hace Medicina.</p>
+    <h3 class="sub">Las salidas de cada decisión</h3>
+    <p class="prose">Con la valoración guardada, Enfermería pasa a la decisión asistencial y Medicina, a la conducta médica. Cada una tiene cuatro salidas.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 350" style="min-width: 1000px" role="img" aria-labelledby="d-salidas-t d-salidas-d">
+        <title id="d-salidas-t">Las cuatro salidas de Enfermería y de Medicina</title>
+        <desc id="d-salidas-d">A la izquierda, la decisión asistencial de Enfermería, con la valoración guardada: cerrar el evento decidiendo si se informa a la familia; iniciar un seguimiento con fecha o criterio y relevo, que con «Resolver» vuelve a la decisión; escalar a Medicina con motivo obligatorio y sin resumen automático; o activar el protocolo urgente en un solo paso. El escalado llega a la conducta médica de Medicina, tras su valoración, con otras cuatro salidas: indicaciones a Enfermería, que Enfermería lee y realiza; seguimiento médico con objetivo, que al acabar el turno se transfiere o se conserva; cerrar el evento solo con las indicaciones cumplidas (o lo cierra Enfermería); o activar el protocolo urgente.</desc>
+        <defs>
+          <marker id="d-salidas-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-salidas-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-salidas-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <path class="rama" d="M196,174 H222"/>
+        <path class="rama" d="M222,48 V300"/>
+        <path class="flecha" d="M222,48 H248" marker-end="url(#d-salidas-p)"/>
+        <path class="flecha" d="M222,132 H248" marker-end="url(#d-salidas-p)"/>
+        <path class="flecha" d="M222,216 H248" marker-end="url(#d-salidas-p)"/>
+        <path class="flecha" d="M222,300 H248" marker-end="url(#d-salidas-p)"/>
+        <path class="flecha" d="M490,216 H558" marker-end="url(#d-salidas-p)"/>
+        <path class="rama" d="M740,216 H800"/>
+        <path class="rama" d="M800,48 V300"/>
+        <path class="flecha" d="M800,48 H848" marker-end="url(#d-salidas-p)"/>
+        <path class="flecha" d="M800,132 H848" marker-end="url(#d-salidas-p)"/>
+        <path class="flecha" d="M800,216 H848" marker-end="url(#d-salidas-p)"/>
+        <path class="flecha" d="M800,300 H848" marker-end="url(#d-salidas-p)"/>
+        <rect class="box enf tinte imp" x="16" y="134" width="180" height="80" rx="8"/>
+          <text class="bt tit" x="106" y="163.2" text-anchor="middle">Decisión asistencial ★</text>
+          <text class="bt det" x="106" y="179.9" text-anchor="middle">con la valoración guardada</text>
+          <text class="bt per c-enf" x="106" y="194.9" text-anchor="middle">ENFERMERÍA</text>
+        <rect class="box enf" x="250" y="16" width="240" height="64" rx="8"/>
+          <text class="bt tit" x="370" y="44.7" text-anchor="middle">Cerrar el evento</text>
+          <text class="bt det" x="370" y="61.4" text-anchor="middle">decide si se informa a la familia</text>
+        <rect class="box enf" x="250" y="100" width="240" height="64" rx="8"/>
+          <text class="bt tit" x="370" y="120.7" text-anchor="middle">Iniciar seguimiento</text>
+          <text class="bt det" x="370" y="137.4" text-anchor="middle">fecha o criterio, y relevo</text>
+          <text class="bt det" x="370" y="153.4" text-anchor="middle">«Resolver» vuelve a decidir</text>
+        <rect class="box enf" x="250" y="184" width="240" height="64" rx="8"/>
+          <text class="bt tit" x="370" y="204.7" text-anchor="middle">Escalar a Medicina</text>
+          <text class="bt det" x="370" y="221.4" text-anchor="middle">motivo obligatorio,</text>
+          <text class="bt det" x="370" y="237.4" text-anchor="middle">sin resumen automático</text>
+        <rect class="box enf urg" x="250" y="268" width="240" height="64" rx="8"/>
+          <text class="bt tit" x="370" y="296.7" text-anchor="middle">Activar protocolo urgente</text>
+          <text class="bt det" x="370" y="313.4" text-anchor="middle">un solo paso</text>
+        <rect class="box med tinte imp" x="560" y="176" width="180" height="80" rx="8"/>
+          <text class="bt tit" x="650" y="205.2" text-anchor="middle">Conducta médica ★</text>
+          <text class="bt det" x="650" y="221.9" text-anchor="middle">tras su valoración</text>
+          <text class="bt per c-med" x="650" y="236.9" text-anchor="middle">MEDICINA</text>
+        <rect class="box med" x="850" y="16" width="254" height="64" rx="8"/>
+          <text class="bt tit" x="977" y="36.7" text-anchor="middle">Indicaciones a Enfermería</text>
+          <text class="bt det" x="977" y="53.4" text-anchor="middle">texto y fecha o criterio;</text>
+          <text class="bt det" x="977" y="69.4" text-anchor="middle">Enfermería las lee y realiza</text>
+        <rect class="box med" x="850" y="100" width="254" height="64" rx="8"/>
+          <text class="bt tit" x="977" y="120.7" text-anchor="middle">Seguimiento médico</text>
+          <text class="bt det" x="977" y="137.4" text-anchor="middle">con objetivo y fecha o criterio</text>
+          <text class="bt det" x="977" y="153.4" text-anchor="middle">transferir o conservar al relevo</text>
+        <rect class="box med" x="850" y="184" width="254" height="64" rx="8"/>
+          <text class="bt tit" x="977" y="204.7" text-anchor="middle">Cerrar el evento</text>
+          <text class="bt det" x="977" y="221.4" text-anchor="middle">solo con las indicaciones</text>
+          <text class="bt det" x="977" y="237.4" text-anchor="middle">cumplidas (o cierra Enfermería)</text>
+        <rect class="box med urg" x="850" y="268" width="254" height="64" rx="8"/>
+          <text class="bt tit" x="977" y="296.7" text-anchor="middle">Activar protocolo urgente</text>
+          <text class="bt det" x="977" y="313.4" text-anchor="middle">un solo paso</text>
+      </svg>
+    </div>
+    <p class="pista">Un seguimiento nunca se cierra ni se oculta solo: si pasa su fecha, aparece como «Pendiente». La bandeja de seguimientos es común a la unidad.</p>
+    <h3 class="sub">Los estados de un episodio</h3>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 420" style="min-width: 1000px" role="img" aria-labelledby="d-estados-t d-estados-d">
+        <title id="d-estados-t">Los estados de un episodio</title>
+        <desc id="d-estados-d">Un cambio del Auxiliar o un evento de Enfermería empieza Pendiente; al empezar la valoración pasa a En valoración y puede pasar a En seguimiento. Desde esos dos estados de Enfermería se escala (Escalado a Medicina), se activa la urgencia (Protocolo urgente activo) o se cierra. El escalado pasa a En valoración médica, donde también empieza un evento propio de Medicina; de ahí a Con indicación pendiente o En seguimiento médico, que se alternan. Desde esos tres estados de Medicina se activa la urgencia de Medicina o se cierra. Los dos protocolos urgentes terminan en Cerrado.</desc>
+        <defs>
+          <marker id="d-estados-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-estados-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-estados-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <text class="et nota" x="91" y="18" text-anchor="middle"><tspan x="91" dy="0">cambio del Auxiliar o</tspan><tspan x="91" dy="15">evento de Enfermería</tspan></text>
+        <path class="flecha" d="M91,40 V58" marker-end="url(#d-estados-p)"/>
+        <path class="flecha" d="M166,97 H245" marker-end="url(#d-estados-p)"/>
+        <text class="et nota" x="199" y="128" text-anchor="middle"><tspan x="199" dy="0">Empezar</tspan><tspan x="199" dy="15">valoración</tspan></text>
+        <rect class="grupo enf" x="232" y="40" width="210" height="270" rx="12"/>
+        <text class="grupo-et c-enf" x="244" y="60">ENFERMERÍA</text>
+        <path class="flecha" d="M337,122 V238" marker-end="url(#d-estados-p)"/>
+        <text class="et nota" x="345" y="176"><tspan x="345" dy="0">Iniciar</tspan><tspan x="345" dy="15">seguimiento</tspan></text>
+        <path class="flecha" d="M442,97 H478" marker-end="url(#d-estados-p)"/>
+        <path class="flecha" d="M442,265 H478" marker-end="url(#d-estados-p)"/>
+        <path class="flecha" d="M660,97 H720" marker-end="url(#d-estados-p)"/>
+        <rect class="grupo med" x="692" y="40" width="240" height="270" rx="12"/>
+        <text class="grupo-et c-med" x="704" y="60">MEDICINA</text>
+        <text class="et nota" x="1004" y="22" text-anchor="middle"><tspan x="1004" dy="0">evento propio</tspan><tspan x="1004" dy="15">de Medicina</tspan></text>
+        <path class="flecha" d="M1004,44 V82 H914" marker-end="url(#d-estados-p)"/>
+        <path class="flecha" d="M817,122 V154" marker-end="url(#d-estados-p)"/>
+        <path class="flecha" d="M817,206 V238" marker-start="url(#d-estados-p)" marker-end="url(#d-estados-p)"/>
+        <path class="flecha" d="M722,105 C702,105 702,265 720,265" marker-end="url(#d-estados-p)"/>
+        <path class="flecha" d="M932,181 H966" marker-end="url(#d-estados-p)"/>
+        <path class="flecha" d="M337,310 V354" marker-end="url(#d-estados-p)"/>
+        <text class="et nota" x="345" y="338">cerrar</text>
+        <path class="flecha" d="M570,290 V354" marker-end="url(#d-estados-p)"/>
+        <text class="et nota" x="578" y="330">cerrar</text>
+        <path class="flecha" d="M812,310 V354" marker-end="url(#d-estados-p)"/>
+        <text class="et nota" x="820" y="338">cerrar</text>
+        <path class="flecha" d="M1036,212 V354" marker-end="url(#d-estados-p)"/>
+        <text class="et nota" x="1044" y="290">cerrar</text>
+        <rect class="box enf" x="16" y="72" width="150" height="50" rx="8"/>
+          <text class="bt tit" x="91" y="101.7" text-anchor="middle">Pendiente</text>
+        <rect class="box enf" x="247" y="72" width="180" height="50" rx="8"/>
+          <text class="bt tit" x="337" y="101.7" text-anchor="middle">En valoración</text>
+        <rect class="box enf" x="247" y="240" width="180" height="50" rx="8"/>
+          <text class="bt tit" x="337" y="269.7" text-anchor="middle">En seguimiento</text>
+        <rect class="box med rel" x="480" y="72" width="180" height="50" rx="8"/>
+          <text class="bt tit" x="570" y="93.7" text-anchor="middle">Escalado</text>
+          <text class="bt det" x="570" y="110.4" text-anchor="middle">a Medicina</text>
+        <rect class="box enf urg" x="480" y="240" width="180" height="50" rx="8"/>
+          <text class="bt tit" x="570" y="261.7" text-anchor="middle">Protocolo urgente</text>
+          <text class="bt det" x="570" y="278.4" text-anchor="middle">activo</text>
+        <rect class="box med" x="722" y="72" width="190" height="50" rx="8"/>
+          <text class="bt tit" x="817" y="101.7" text-anchor="middle">En valoración médica</text>
+        <rect class="box med" x="722" y="156" width="190" height="50" rx="8"/>
+          <text class="bt tit" x="817" y="177.7" text-anchor="middle">Con indicación</text>
+          <text class="bt det" x="817" y="194.4" text-anchor="middle">pendiente</text>
+        <rect class="box med" x="722" y="240" width="190" height="50" rx="8"/>
+          <text class="bt tit" x="817" y="261.7" text-anchor="middle">En seguimiento</text>
+          <text class="bt det" x="817" y="278.4" text-anchor="middle">médico</text>
+        <rect class="box med urg" x="968" y="150" width="136" height="62" rx="8"/>
+          <text class="bt tit" x="1036" y="169.7" text-anchor="middle">Protocolo</text>
+          <text class="bt det" x="1036" y="186.4" text-anchor="middle">urgente activo</text>
+          <text class="bt det" x="1036" y="202.4" text-anchor="middle">(Medicina)</text>
+        <rect class="box ok" x="16" y="356" width="1088" height="48" rx="8"/>
+          <text class="bt tit" x="560" y="376.7" text-anchor="middle">Cerrado</text>
+          <text class="bt det" x="560" y="393.4" text-anchor="middle">sale de las bandejas y pasa al historial, con la decisión sobre el comunicado a la familia</text>
+      </svg>
+    </div>
+    <p class="pista">Desde los estados de cada recuadro se puede cerrar el episodio. Si un residente fallece y se le da de baja, sus episodios abiertos se cierran solos, con una anotación.</p>
+    <h3 class="sub">Reglas que conviene saber</h3>
+    <ul class="lista prose">
+      <li><strong>Nadie es dueño del episodio.</strong> Queda registrado quién empieza cada valoración, pero cualquier profesional del mismo perfil y unidad puede continuarla.</li>
+      <li><strong>Medicina no cierra con indicaciones sin cumplir.</strong> El botón está desactivado hasta que Enfermería las lea y registre si se hicieron. Cumplidas, cierra Enfermería desde «Para cerrar» o Medicina. Tras una derivación a Urgencias, Medicina sí puede cerrar.</li>
+      <li><strong>La valoración se corrige o se rectifica.</strong> Quien la guardó por última vez puede «Corregir valoración» durante 6 horas, con motivo; después, «Añadir rectificación». La original nunca se pierde.</li>
+      <li><strong>Relevo de turno.</strong> Un seguimiento se transfiere a un equipo entrante con una nota, y cualquiera de Enfermería de la unidad pulsa «Confirmar recepción». En Medicina, al acabar el turno se elige transferir o conservar.</li>
+    </ul>
+  </section>
+
+  <section id="urgencia" aria-labelledby="urgencia-t">
+    <h2 id="urgencia-t">Si es urgente: protocolo y derivación</h2>
+    <p class="ejemplo"><span class="ej">En el ejemplo</span>Tres meses después, de madrugada, Rosa respira con dificultad. Enfermería activa el protocolo urgente, la deriva a Urgencias con su informe y llama a Elena.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 400" style="min-width: 1000px" role="img" aria-labelledby="d-urgencia-t d-urgencia-d">
+        <title id="d-urgencia-t">Protocolo urgente y derivación a Urgencias</title>
+        <desc id="d-urgencia-d">Tres franjas con las horas del ejemplo. Quien activa, Enfermería o Medicina: activa el protocolo en un solo paso (1, a las 03:10), documenta actuaciones, evolución y la llamada al 112 (2), deriva a Urgencias escribiendo el motivo (3), revisa la vista previa con su huella (4), firma y se genera el PDF (5, 03:30), registra el intento de llamada a la familia (6, 03:35) y cierra con un comunicado relevante (7, 08:00). La familia recibe la llamada fuera de la aplicación y, a las 19:00, la novedad relevante, visible 6 meses. Dirección Clínica ve en «Derivaciones a Urgencias» cuándo se activó, si el informe está firmado y cuántas llamadas constan, sin el contenido.</desc>
+        <defs>
+          <marker id="d-urgencia-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-urgencia-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-urgencia-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <rect class="lane-enf" x="0" y="0" width="1120" height="150"/>
+        <text class="lane-label enf" x="14" y="26">Enfermería o Medicina</text>
+        <rect class="lane-fam" x="0" y="150" width="1120" height="120"/>
+        <text class="lane-label fam" x="14" y="176">Familia</text>
+        <rect class="lane-dir" x="0" y="270" width="1120" height="130"/>
+        <text class="lane-label dir" x="14" y="296">Dirección Clínica</text>
+        <line class="sep" x1="0" y1="150" x2="1120" y2="150"/>
+        <line class="sep" x1="0" y1="270" x2="1120" y2="270"/>
+        <path class="flecha" d="M256,86 H268" marker-end="url(#d-urgencia-p)"/>
+        <path class="flecha" d="M396,86 H408" marker-end="url(#d-urgencia-p)"/>
+        <path class="flecha" d="M536,86 H548" marker-end="url(#d-urgencia-p)"/>
+        <path class="flecha" d="M676,86 H688" marker-end="url(#d-urgencia-p)"/>
+        <path class="flecha" d="M816,86 H828" marker-end="url(#d-urgencia-p)"/>
+        <path class="flecha" d="M956,86 H968" marker-end="url(#d-urgencia-p)"/>
+        <path class="flecha info" d="M893,118 V174" marker-end="url(#d-urgencia-pi)"/>
+        <text class="et info" x="885" y="150" text-anchor="end">por teléfono</text>
+        <path class="flecha info" d="M1033,118 V174" marker-end="url(#d-urgencia-pi)"/>
+        <text class="et info" x="1041" y="150">19:00</text>
+        <path class="flecha info" d="M193,118 V298" marker-end="url(#d-urgencia-pi)"/>
+        <text class="et info" x="201" y="168">activado</text>
+        <path class="flecha info" d="M753,118 V298" marker-end="url(#d-urgencia-pi)"/>
+        <text class="et info" x="761" y="168">firmado</text>
+        <text class="et nota" x="270" y="140">El 112 y los demás contactos quedan en la trazabilidad, no en el informe.</text>
+        <text class="et nota" x="130" y="384">Dirección no genera ni firma informes: lee el PDF firmado en la consulta auditada.</text>
+        <rect class="box enf imp" x="130" y="54" width="126" height="64" rx="8"/>
+          <text class="bt tit" x="193" y="74.7" text-anchor="middle"><tspan class="n">1</tspan> · Activa ★</text>
+          <text class="bt det" x="193" y="91.4" text-anchor="middle">el protocolo</text>
+          <text class="bt det" x="193" y="107.4" text-anchor="middle">urgente</text>
+          <text class="et hora" x="193" y="47" text-anchor="middle">03:10</text>
+        <rect class="box enf" x="270" y="54" width="126" height="64" rx="8"/>
+          <text class="bt tit" x="333" y="74.7" text-anchor="middle"><tspan class="n">2</tspan> · Documenta</text>
+          <text class="bt det" x="333" y="91.4" text-anchor="middle">actuaciones,</text>
+          <text class="bt det" x="333" y="107.4" text-anchor="middle">evolución, 112</text>
+        <rect class="box enf" x="410" y="54" width="126" height="64" rx="8"/>
+          <text class="bt tit" x="473" y="74.7" text-anchor="middle"><tspan class="n">3</tspan> · Deriva</text>
+          <text class="bt det" x="473" y="91.4" text-anchor="middle">a Urgencias</text>
+          <text class="bt det" x="473" y="107.4" text-anchor="middle">con su motivo</text>
+        <rect class="box enf" x="550" y="54" width="126" height="64" rx="8"/>
+          <text class="bt tit" x="613" y="82.7" text-anchor="middle"><tspan class="n">4</tspan> · Vista previa</text>
+          <text class="bt det" x="613" y="99.4" text-anchor="middle">con su huella</text>
+        <rect class="box enf imp" x="690" y="54" width="126" height="64" rx="8"/>
+          <text class="bt tit" x="753" y="74.7" text-anchor="middle"><tspan class="n">5</tspan> · Firma ★</text>
+          <text class="bt det" x="753" y="91.4" text-anchor="middle">y se genera</text>
+          <text class="bt det" x="753" y="107.4" text-anchor="middle">el PDF</text>
+          <text class="et hora" x="753" y="47" text-anchor="middle">03:30</text>
+        <rect class="box enf imp" x="830" y="54" width="126" height="64" rx="8"/>
+          <text class="bt tit" x="893" y="74.7" text-anchor="middle"><tspan class="n">6</tspan> · Llama ★</text>
+          <text class="bt det" x="893" y="91.4" text-anchor="middle">a la familia</text>
+          <text class="bt det" x="893" y="107.4" text-anchor="middle">(intento)</text>
+          <text class="et hora" x="893" y="47" text-anchor="middle">03:35</text>
+        <rect class="box enf imp" x="970" y="54" width="126" height="64" rx="8"/>
+          <text class="bt tit" x="1033" y="74.7" text-anchor="middle"><tspan class="n">7</tspan> · Cierra ★</text>
+          <text class="bt det" x="1033" y="91.4" text-anchor="middle">con comunicado</text>
+          <text class="bt det" x="1033" y="107.4" text-anchor="middle">relevante</text>
+          <text class="et hora" x="1033" y="47" text-anchor="middle">08:00</text>
+        <rect class="box ext" x="830" y="176" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="893" y="200.7" text-anchor="middle">Recibe</text>
+          <text class="bt det" x="893" y="217.4" text-anchor="middle">la llamada</text>
+        <rect class="box fam" x="970" y="176" width="126" height="56" rx="8"/>
+          <text class="bt tit" x="1033" y="200.7" text-anchor="middle">Novedad</text>
+          <text class="bt det" x="1033" y="217.4" text-anchor="middle">relevante: 6 meses</text>
+        <rect class="box dir" x="130" y="300" width="686" height="60" rx="8"/>
+          <text class="bt tit" x="473" y="326.7" text-anchor="middle">«Derivaciones a Urgencias»</text>
+          <text class="bt det" x="473" y="343.4" text-anchor="middle">quién activó y cuándo, si el informe está firmado y cuántas llamadas constan; sin el contenido</text>
+      </svg>
+    </div>
+    <p class="pista">El protocolo lo lleva el perfil que lo activa, Enfermería o Medicina; el otro lo ve en solo lectura.</p>
+    <ul class="lista prose">
+      <li><strong>Activar es un solo paso</strong>, con una nota opcional, para no retrasar la atención. Después se documentan las actuaciones, la evolución y los contactos con servicios, con su hora.</li>
+      <li><strong>El informe se rellena solo</strong> con la identificación, el basal vigente, la observación, las valoraciones, las constantes, las actuaciones y la evolución. Se escribe el motivo y, si se quiere, información adicional y «Comunicaciones».</li>
+      <li><strong>La vista previa es obligatoria</strong> y lleva una huella que identifica ese contenido. La firma es electrónica simple: cuenta, fecha, hora y huella. El PDF firmado ya no cambia.</li>
+      <li><strong>Para cerrar</strong> hace falta al menos un intento de llamada a la familia, salvo que el residente no tenga contacto urgente, y el comunicado relevante.</li>
+    </ul>
+  </section>
+
+  <section id="familia" aria-labelledby="familia-t">
+    <h2 id="familia-t">La familia, informada</h2>
+    <p class="ejemplo"><span class="ej">En el ejemplo</span>Elena lee a las 19:00 el comunicado que Enfermería preparó por la mañana y, al día siguiente, reserva una cita telefónica.</p>
+    <h3 class="sub">El camino de un comunicado</h3>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 340" style="min-width: 960px" role="img" aria-labelledby="d-comunicado-t d-comunicado-d">
+        <title id="d-comunicado-t">El camino de un comunicado a la familia</title>
+        <desc id="d-comunicado-d">Enfermería o Medicina lo preparan al cerrar el episodio (1); queda aprobado al guardarlo (2) y programado a la hora del centro, por defecto las 19:00 con 1 hora de margen (3). Hasta que se publica, Enfermería o Medicina pueden corregirlo, y Administración o Dirección pueden publicarlo antes. Publicado (4), ya no se cambia: la familia lo ve en el portal, la ordinaria 30 días y la relevante 6 meses (5), firmado por el «Equipo asistencial del centro». Administración o Dirección pueden publicar una corrección, que se ve junto a la original, o retirarlo.</desc>
+        <defs>
+          <marker id="d-comunicado-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-comunicado-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-comunicado-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <path class="flecha" d="M216,150 H235" marker-end="url(#d-comunicado-p)"/>
+        <path class="flecha" d="M437,150 H456" marker-end="url(#d-comunicado-p)"/>
+        <path class="flecha" d="M658,150 H677" marker-end="url(#d-comunicado-p)"/>
+        <path class="flecha" d="M879,150 H898" marker-end="url(#d-comunicado-p)"/>
+        <path class="flecha rel" d="M558,76 V116" marker-end="url(#d-comunicado-p)"/>
+        <path class="flecha rel" d="M779,76 V116" marker-end="url(#d-comunicado-p)"/>
+        <path class="flecha rel" d="M779,182 V238" marker-end="url(#d-comunicado-p)"/>
+        <path class="flecha rel" d="M779,210 H1000 V238" marker-end="url(#d-comunicado-p)"/>
+        <text class="et nota" x="16" y="206"><tspan x="16" dy="0">Al cerrar se elige ordinaria o relevante;</tspan><tspan x="16" dy="15">tras una derivación es obligatoria y relevante.</tspan></text>
+        <text class="et nota" x="1000" y="92" text-anchor="middle"><tspan x="1000" dy="0">firmado por el «Equipo</tspan><tspan x="1000" dy="15">asistencial del centro»</tspan></text>
+        <text class="et nota" x="458" y="316"><tspan x="458" dy="0">Corrección y retirada: solo Administración o Dirección.</tspan><tspan x="458" dy="15">Retirar pide un motivo, que la familia no ve, y no se deshace.</tspan></text>
+        <rect class="box enf tinte" x="16" y="118" width="200" height="64" rx="8"/>
+          <text class="bt tit" x="116" y="139.2" text-anchor="middle"><tspan class="n">1</tspan> · Preparar</text>
+          <text class="bt det" x="116" y="155.9" text-anchor="middle">al cerrar el episodio</text>
+          <text class="bt per c-enf" x="116" y="170.9" text-anchor="middle">ENFERMERÍA O MEDICINA</text>
+        <rect class="box enf tinte" x="237" y="118" width="200" height="64" rx="8"/>
+          <text class="bt tit" x="337" y="146.7" text-anchor="middle"><tspan class="n">2</tspan> · Aprobado</text>
+          <text class="bt det" x="337" y="163.4" text-anchor="middle">al guardarlo, sin más pasos</text>
+        <rect class="box neutro" x="458" y="118" width="200" height="64" rx="8"/>
+          <text class="bt tit" x="558" y="138.7" text-anchor="middle"><tspan class="n">3</tspan> · Programado</text>
+          <text class="bt det" x="558" y="155.4" text-anchor="middle">a la hora del centro (19:00)</text>
+          <text class="bt det" x="558" y="171.4" text-anchor="middle">con 1 h de margen</text>
+        <rect class="box neutro imp" x="679" y="118" width="200" height="64" rx="8"/>
+          <text class="bt tit" x="779" y="138.7" text-anchor="middle"><tspan class="n">4</tspan> · Publicado ★</text>
+          <text class="bt det" x="779" y="155.4" text-anchor="middle">la familia ya puede verlo</text>
+          <text class="bt det" x="779" y="171.4" text-anchor="middle">y no se cambia nunca</text>
+        <rect class="box fam tinte" x="900" y="118" width="200" height="64" rx="8"/>
+          <text class="bt tit" x="1000" y="138.7" text-anchor="middle"><tspan class="n">5</tspan> · En el portal</text>
+          <text class="bt det" x="1000" y="155.4" text-anchor="middle">ordinario: 30 días</text>
+          <text class="bt det" x="1000" y="171.4" text-anchor="middle">relevante: 6 meses</text>
+        <rect class="box nota" x="458" y="20" width="200" height="56" rx="8"/>
+          <text class="bt tit" x="558" y="37.2" text-anchor="middle">«Corregir»</text>
+          <text class="bt det" x="558" y="53.9" text-anchor="middle">hasta que se publica</text>
+          <text class="bt per" x="558" y="68.9" text-anchor="middle">ENFERMERÍA O MEDICINA</text>
+        <rect class="box nota" x="679" y="20" width="200" height="56" rx="8"/>
+          <text class="bt tit" x="779" y="37.2" text-anchor="middle">«Publicar ahora»</text>
+          <text class="bt det" x="779" y="53.9" text-anchor="middle">antes de su hora, una vez</text>
+          <text class="bt per" x="779" y="68.9" text-anchor="middle">ADMINISTRACIÓN O DIRECCIÓN</text>
+        <rect class="box nota" x="679" y="240" width="200" height="56" rx="8"/>
+          <text class="bt tit" x="779" y="264.7" text-anchor="middle">«Publicar una corrección»</text>
+          <text class="bt det" x="779" y="281.4" text-anchor="middle">se ve junto a la original</text>
+        <rect class="box nota" x="900" y="240" width="200" height="56" rx="8"/>
+          <text class="bt tit" x="1000" y="264.7" text-anchor="middle">«Retirar»</text>
+          <text class="bt det" x="1000" y="281.4" text-anchor="middle">«ya no está disponible»</text>
+      </svg>
+    </div>
+    <p class="pista">«Publicado» quiere decir que la familia ya puede verlo, no que lo haya visto. El portal nunca es un canal urgente: lo urgente se avisa también por teléfono.</p>
+    <h3 class="sub">Citas con el equipo</h3>
+    <p class="prose">Cada centro elige un modo: desactivadas, reserva directa o solicitud previa. La familia nunca elige un profesional, y las citas no son un canal urgente.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 330" style="min-width: 960px" role="img" aria-labelledby="d-citas-t d-citas-d">
+        <title id="d-citas-t">Citas con el equipo: reserva directa y solicitud previa</title>
+        <desc id="d-citas-d">Dos bloques con las franjas Familia y Administración. Reserva directa: Administración configura el modo, las franjas y los bloqueos, de los que salen los huecos; la familia elige equipo y modalidad, ve los huecos libres y confirma, y la cita queda confirmada y aparece en la agenda, donde Administración puede reprogramarla o cancelarla con motivo. Solicitud previa: la familia solicita equipo, motivo y cuándo podría; la solicitud llega a la bandeja de Administración, que propone día y hora y deja el hueco reservado; la familia acepta y nace la cita confirmada, o pide otro horario.</desc>
+        <defs>
+          <marker id="d-citas-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-citas-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-citas-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <rect class="lane-fam" x="0" y="0" width="1120" height="165"/>
+        <text class="lane-label fam" x="14" y="26">Familia</text>
+        <rect class="lane-adm" x="0" y="165" width="1120" height="165"/>
+        <text class="lane-label adm" x="14" y="191">Administración</text>
+        <line class="sep" x1="0" y1="165" x2="1120" y2="165"/>
+        <path class="divisor-fuerte" d="M575,6 V324"/>
+        <text class="col-tit" x="130" y="26">RESERVA DIRECTA</text>
+        <text class="col-tit" x="600" y="26">SOLICITUD PREVIA</text>
+        <path class="flecha" d="M260,88 H276" marker-end="url(#d-citas-p)"/>
+        <path class="flecha" d="M408,88 H424" marker-end="url(#d-citas-p)"/>
+        <path class="flecha rel" d="M260,244 H343 V122" marker-end="url(#d-citas-p)"/>
+        <text class="et nota" x="351" y="146"><tspan x="351" dy="0">los huecos salen</tspan><tspan x="351" dy="15">de las franjas</tspan></text>
+        <path class="flecha info" d="M491,120 V210" marker-end="url(#d-citas-pi)"/>
+        <text class="et info" x="483" y="200" text-anchor="end">en la agenda</text>
+        <text class="et nota" x="130" y="314">Cambiar o cancelar: hasta la antelación mínima.</text>
+        <path class="flecha info" d="M675,120 V244 H766" marker-end="url(#d-citas-pi)"/>
+        <text class="et info" x="683" y="170"><tspan x="683" dy="0">a la bandeja de</tspan><tspan x="683" dy="15">solicitudes</tspan></text>
+        <path class="flecha info" d="M918,244 H1011 V122" marker-end="url(#d-citas-pi)"/>
+        <text class="et info" x="1019" y="196">propuesta</text>
+        <path class="flecha rel" d="M936,96 H843 V210" marker-end="url(#d-citas-p)"/>
+        <text class="et nota" x="851" y="128"><tspan x="851" dy="0">pide otro</tspan><tspan x="851" dy="15">horario</tspan></text>
+        <text class="et nota" x="600" y="314">La familia también puede cancelar. Nunca ve al profesional ni el motivo interno.</text>
+        <rect class="box fam" x="130" y="56" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="195" y="76.7" text-anchor="middle">Elige</text>
+          <text class="bt det" x="195" y="93.4" text-anchor="middle">equipo y</text>
+          <text class="bt det" x="195" y="109.4" text-anchor="middle">modalidad</text>
+        <rect class="box fam" x="278" y="56" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="343" y="84.7" text-anchor="middle">Ve los huecos</text>
+          <text class="bt det" x="343" y="101.4" text-anchor="middle">libres</text>
+        <rect class="box fam imp" x="426" y="56" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="491" y="76.7" text-anchor="middle">Confirma ★</text>
+          <text class="bt det" x="491" y="93.4" text-anchor="middle">y la cita queda</text>
+          <text class="bt det" x="491" y="109.4" text-anchor="middle">confirmada</text>
+        <rect class="box adm" x="130" y="212" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="195" y="232.7" text-anchor="middle">Configura</text>
+          <text class="bt det" x="195" y="249.4" text-anchor="middle">modo, franjas</text>
+          <text class="bt det" x="195" y="265.4" text-anchor="middle">y bloqueos</text>
+        <rect class="box adm" x="426" y="212" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="491" y="232.7" text-anchor="middle">Agenda</text>
+          <text class="bt det" x="491" y="249.4" text-anchor="middle">reprogramar o</text>
+          <text class="bt det" x="491" y="265.4" text-anchor="middle">cancelar con motivo</text>
+        <rect class="box fam" x="600" y="56" width="150" height="64" rx="8"/>
+          <text class="bt tit" x="675" y="76.7" text-anchor="middle">Solicita</text>
+          <text class="bt det" x="675" y="93.4" text-anchor="middle">equipo, motivo y</text>
+          <text class="bt det" x="675" y="109.4" text-anchor="middle">cuándo podría</text>
+        <rect class="box adm" x="768" y="212" width="150" height="64" rx="8"/>
+          <text class="bt tit" x="843" y="232.7" text-anchor="middle">Propone</text>
+          <text class="bt det" x="843" y="249.4" text-anchor="middle">día y hora: el hueco</text>
+          <text class="bt det" x="843" y="265.4" text-anchor="middle">queda reservado</text>
+        <rect class="box fam imp" x="936" y="56" width="150" height="64" rx="8"/>
+          <text class="bt tit" x="1011" y="76.7" text-anchor="middle">Acepta ★</text>
+          <text class="bt det" x="1011" y="93.4" text-anchor="middle">y nace la cita</text>
+          <text class="bt det" x="1011" y="109.4" text-anchor="middle">confirmada</text>
+      </svg>
+    </div>
+    <p class="pista">Todavía no hay avisos ni recordatorios de citas: si el centro cambia una cita, avisa a la familia por teléfono.</p>
+    <h3 class="sub">Lo que la familia no ve nunca</h3>
+    <p class="prose">Observaciones, valoraciones, constantes, basal, indicaciones, derivaciones, historial, nombres de profesionales ni datos de otros familiares. Cada vez que abre las novedades queda registrado quién y cuándo.</p>
+  </section>
+
+  <section id="direccion" aria-labelledby="direccion-t">
+    <h2 id="direccion-t">Dirección Clínica mira el conjunto</h2>
+    <p class="ejemplo"><span class="ej">En el ejemplo</span>El día 15, Dirección comprueba en «Calidad de proceso» que los hitos de la Planta 1 se cumplen, sin ver nombres de profesionales.</p>
+    <ul class="tarjetas">
+      <li class="dir"><h3>Supervisión por unidad</h3><p>Cuántos episodios siguen abiertos y en qué punto: sin valorar, en valoración, escalados, en seguimiento, con protocolo urgente, e indicaciones pendientes. Sin observaciones ni valoraciones, y sin ninguna acción asistencial.</p></li>
+      <li class="dir"><h3>Derivaciones y comunicados</h3><p>En qué punto está cada derivación a Urgencias, sin su contenido. Los comunicados de cada unidad, con su frecuencia; puede adelantar uno, corregirlo o retirarlo.</p></li>
+      <li class="dir"><h3>Indicadores e informe</h3><p>Por periodo y unidad, cada cifra como «n de m»: actividad, escalados y urgencias, indicaciones y continuidad entre turnos. Se imprime como informe de actividad.</p></li>
+      <li class="dir"><h3>Calidad de proceso</h3><p>Si se cumplen los plazos de siete hitos, por unidad y periodo: cuántos fuera de plazo y cuántos a punto de vencer. Nunca por profesional.</p></li>
+    </ul>
+    <h3 class="sub">Leer lo clínico: con finalidad y auditado</h3>
+    <ol class="estados">
+      <li><div class="pildora dir"><strong>1 · Elige</strong><span>el residente y lo que quiere ver.</span></div></li>
+      <li><div class="pildora dir"><strong>2 · Declara</strong><span>la finalidad y escribe una justificación.</span></div></li>
+      <li><div class="pildora dir"><strong>3 · Se audita</strong><span>antes de enseñarle nada.</span></div></li>
+      <li><div class="pildora dir"><strong>4 · Lo lee</strong><span>en solo lectura; la declaración vale 1 hora.</span></div></li>
+    </ol>
+    <p class="pista">Las finalidades son revisión de continuidad asistencial, revisión de una incidencia o reclamación asistencial y verificación de trazabilidad documental. Puede leer el basal y su historial, la línea temporal, los eventos cerrados, las correcciones, la trazabilidad clínica y los informes de derivación firmados.</p>
+    <h3 class="sub">Los siete hitos y sus plazos de partida</h3>
+    <div class="tabla">
+      <table class="hitos">
+        <thead>
+          <tr><th scope="col">Hito</th><th scope="col">Empieza cuando</th><th scope="col">Termina cuando</th><th scope="col">Normal</th><th scope="col">Prioritario</th><th scope="col">Avisa en su Inicio a</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Valoración de Enfermería</th><td>el Auxiliar registra un cambio</td><td>Enfermería empieza la valoración</td><td class="cifra">8 h</td><td class="cifra">30 min</td><td>Enfermería</td></tr>
+          <tr><th scope="row">Valoración médica</th><td>Enfermería escala a Medicina</td><td>Medicina empieza su valoración</td><td class="cifra">24 h</td><td class="cifra">30 min</td><td>Medicina</td></tr>
+          <tr><th scope="row">Recepción de una transferencia</th><td>Enfermería transfiere un seguimiento</td><td>alguien confirma la recepción</td><td class="cifra">8 h</td><td class="cifra">30 min</td><td>Enfermería</td></tr>
+          <tr><th scope="row">Informe de derivación</th><td>se activa el protocolo urgente</td><td>se firma el informe</td><td class="cifra">30 min</td><td class="cifra">30 min</td><td>Quien activó el protocolo</td></tr>
+          <tr><th scope="row">Llamada a la familia</th><td>se activa el protocolo urgente</td><td>primer intento de llamada</td><td class="cifra">1 h</td><td class="cifra">30 min</td><td>Quien activó el protocolo</td></tr>
+          <tr><th scope="row">Lectura de una indicación</th><td>Medicina da la indicación</td><td>Enfermería confirma la lectura</td><td class="cifra">8 h</td><td class="cifra">30 min</td><td>Enfermería</td></tr>
+          <tr><th scope="row">Realización de una indicación</th><td>Medicina da la indicación</td><td>consta realizada o no realizada</td><td class="cifra">8 h</td><td class="cifra">30 min</td><td>Enfermería</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="pista">Son los plazos que fijó CJ; cada centro puede cambiarlos. Un hito está «a punto de vencer» en el último cuarto de su plazo, y entonces sale arriba en el Inicio del perfil que tiene que hacerlo.</p>
+  </section>
+
+  <section id="estancia" aria-labelledby="estancia-t">
+    <h2 id="estancia-t">La estancia cambia: traslado, ingreso y baja</h2>
+    <p class="ejemplo"><span class="ej">En el ejemplo</span>Rosa ingresa en el hospital en el mes 3 y vuelve; en el mes 5 se traslada a la Planta 2, y en el año 2 deja el centro.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 340" style="min-width: 900px" role="img" aria-labelledby="d-estancia-t d-estancia-d">
+        <title id="d-estancia-t">La estancia del residente: activo, suspendido, trasladado o dado de baja</title>
+        <desc id="d-estancia-d">Tras el alta, el residente está activo en su unidad. Trasladarlo lo cambia de unidad, habitación o plaza y sigue activo. Suspenderlo por un ingreso hospitalario impide registrar nada hasta que se reanuda la atención. Darlo de baja, con motivo, conserva sus datos 5 años; reactivarlo lo devuelve con una estancia nueva.</desc>
+        <defs>
+          <marker id="d-estancia-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-estancia-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-estancia-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <path class="flecha" d="M186,158 H288" marker-end="url(#d-estancia-p)"/>
+        <path class="flecha" d="M370,118 C370,52 460,52 460,116" marker-end="url(#d-estancia-p)"/>
+        <text class="et" x="415" y="38" text-anchor="middle">Trasladar</text>
+        <text class="et nota" x="415" y="56" text-anchor="middle">otra unidad, habitación o plaza</text>
+        <path class="flecha" d="M540,134 L718,62" marker-end="url(#d-estancia-p)"/>
+        <text class="et" x="616" y="82" text-anchor="middle">Suspender</text>
+        <path class="flecha" d="M720,80 L542,152" marker-end="url(#d-estancia-p)"/>
+        <text class="et" x="650" y="138" text-anchor="middle">Reanudar atención</text>
+        <path class="flecha" d="M540,182 L718,246" marker-end="url(#d-estancia-p)"/>
+        <text class="et" x="600" y="232" text-anchor="middle">Dar de baja (motivo)</text>
+        <path class="flecha" d="M720,292 C600,334 430,318 418,200" marker-end="url(#d-estancia-p)"/>
+        <text class="et" x="560" y="334" text-anchor="middle">Reactivar: estancia nueva</text>
+        <rect class="box adm tinte" x="16" y="128" width="170" height="60" rx="8"/>
+          <text class="bt tit" x="101" y="154.7" text-anchor="middle">Alta</text>
+          <text class="bt det" x="101" y="171.4" text-anchor="middle">Administración</text>
+        <rect class="box adm tinte imp" x="290" y="118" width="250" height="80" rx="8"/>
+          <text class="bt tit" x="415" y="154.7" text-anchor="middle">Activo en su unidad ★</text>
+          <text class="bt det" x="415" y="171.4" text-anchor="middle">se atiende y se registra</text>
+        <rect class="box neutro" x="720" y="30" width="330" height="64" rx="8"/>
+          <text class="bt tit" x="885" y="58.7" text-anchor="middle">Suspendido</text>
+          <text class="bt det" x="885" y="75.4" text-anchor="middle">ingreso hospitalario: no se registra nada</text>
+        <rect class="box nota" x="720" y="236" width="330" height="64" rx="8"/>
+          <text class="bt tit" x="885" y="264.7" text-anchor="middle">Dado de baja</text>
+          <text class="bt det" x="885" y="281.4" text-anchor="middle">sale de las listas; datos conservados 5 años</text>
+      </svg>
+    </div>
+    <ul class="lista prose">
+      <li><strong>Trasladar</strong>, desde la ficha: a otra unidad, habitación o plaza. Los episodios abiertos pasan a la unidad nueva; los cerrados no cambian. Si cambia de unidad con un borrador de basal a medias, el borrador se cancela y se rehace allí.</li>
+      <li><strong>Suspender (ingreso hospitalario)</strong>: sigue activo, pero nadie puede registrar nada sobre él (cambios, eventos, constantes, basales ni comunicados) hasta «Reanudar atención». No es una baja.</li>
+      <li><strong>Dar de baja</strong>, con motivo: fallecimiento, alta voluntaria, traslado a otro centro u otro. Sale de las listas y pasa a «Residentes dados de baja». Nada se borra: sus datos se conservan 5 años. Si es por fallecimiento, sus episodios abiertos se cierran solos.</li>
+      <li><strong>Reactivar</strong> lo devuelve a la unidad que se elija, con una estancia nueva; su historial anterior se conserva.</li>
+    </ul>
+  </section>
+
+  <section id="registro" aria-labelledby="registro-t">
+    <h2 id="registro-t">Todo queda registrado</h2>
+    <p class="prose">ResidApp no borra: corrige, rectifica o añade versiones, y guarda quién hizo qué y cuándo.</p>
+    <ul class="tarjetas">
+      <li class="adm"><h3>Auditoría administrativa</h3><p>Cuentas, permisos, estructura, residentes, familias, turnos y equipos: cuándo, qué, quién y con qué perfil. No se modifica, no lleva texto clínico y no sirve para comparar a trabajadores.</p></li>
+      <li class="enf"><h3>Historial y línea temporal</h3><p>Cada paso de cada episodio, las versiones del basal y los cambios de ubicación. Cada evento cerrado conserva el basal y la unidad que tenía cuando se registró.</p></li>
+      <li class="dir"><h3>Trazabilidad clínica</h3><p>En la consulta auditada de Dirección, quién hizo qué sobre el residente: persona, perfil, unidad, acción y hora, y las lecturas de Dirección con su finalidad.</p></li>
+      <li class="fam"><h3>Lecturas del portal</h3><p>Cada vez que un familiar abre las novedades o un comunicado queda registrado quién y cuándo, sin guardar el contenido.</p></li>
+    </ul>
+    <div class="todavia" id="todavia">
+      <h3>Lo que todavía no está</h3>
+      <ul class="lista">
+        <li>Entrar con usuario y contraseña definitivos, también en el Portal Familiar: hoy el acceso es de desarrollo.</li>
+        <li>El resumen periódico para la familia.</li>
+        <li>Avisos y recordatorios de citas a la familia.</li>
+        <li>El organigrama y los cargos, y un calendario de turnos con las personas de cada turno.</li>
+        <li>Rangos de referencia propios de cada residente: hoy son del centro.</li>
+        <li>En Dirección Clínica, la finalidad «revisión de calidad asistencial».</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <p>ResidApp · Flujo de trabajo. Resume lo que hace hoy la aplicación con un ejemplo inventado; el detalle de cada pantalla está en el <a href="/Home/Manual">Manual de usuario</a>.</p>
+  </footer>
+</div>
+
+</body>
+</html>
