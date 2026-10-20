@@ -249,6 +249,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   `manifest.json` con `orientation: any`; `sw.js` (`residapp-shell-v2`) en red primero y, sin red, el shell ignorando `?v=`: la página sin
   conexión sale con el tema (comprobado parando el servidor). Para probar Barthel se creó y se canceló un borrador en la BD local
   («Prueba Enfermería nueva (ficticia)»).
+- **Indicador de envío (2026-10-20):** `wwwroot/js/site.js` pone un spinner en el botón de todo `submit` válido, anuncia «Enviando…»
+  (`role="status"`) y descarta el segundo envío; `data-sin-carga` lo excluye. No usa `disabled` (el `Accion=Firmar` del botón debe viajar).
+  `sw.js` sube a `residapp-shell-v3`. Pendiente (fase 2, solo si CJ lo pide): indicador para navegación GET lenta (Indicadores, Calidad)
+  excluyendo los enlaces de descarga de PDF. Sin pruebas JS en el repo: verificado a mano.
 - **Rediseño visual, primera tanda (2026-10-03, sin script):** revisión crítica de `docs/bocetos-pantallas/residapp-recomendaciones-diseno.md`
   (documento del usuario, sin versionar: se adoptó una parte, se adaptó otra y se descartó el resto con motivo; ver los commits). Cambios:
   - **Guía vinculante actualizada** (`guia-diseno-sistema-visual.md`): neutros y enlaces que cumplen AA (enlaces `#0A58CA`, secundario `#5B6676`

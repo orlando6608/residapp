@@ -17,7 +17,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Pdf\Fonts\LiberationSans-Regular.ttf" LogicalName="ResidApp.Fonts.LiberationSans-Regular.ttf" />
     <EmbeddedResource Include="Pdf\Fonts\LiberationSans-Bold.ttf" LogicalName="ResidApp.Fonts.LiberationSans-Bold.ttf" />
-    <!-- Icono del encabezado: PDFsharp no importa SVG, así que es wwwroot\images\logo.svg rasterizado a PNG. -->
+    <!-- Icono del encabezado: PDFsharp no importa SVG, así que es wwwroot\images\logo.svg rasterizado a PNG, aplanado sobre blanco y sin alfa (con alfa deja un halo oscuro en las esquinas). -->
     <EmbeddedResource Include="Pdf\Images\logo.png" LogicalName="ResidApp.Images.logo.png" />
   </ItemGroup>
 

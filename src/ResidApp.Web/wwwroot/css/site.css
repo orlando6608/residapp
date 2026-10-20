@@ -11,9 +11,19 @@
   text-align: start;
 }
 
+/* Indicador de envío (site.js): el botón no usa `disabled`, así que se atenúa aquí; el cursor indica que está en curso. */
+.btn[data-enviando] {
+  cursor: progress;
+  opacity: 0.65;
+}
+
 /* Identidad de marca al imprimir (guia-diseno-sistema-visual.md, sección 4): el contenedor se imprime como una tabla y el
    encabezado de marca como su cabecera, que el navegador repite arriba de cada página reservando el mismo hueco. */
 @media print {
+  .spinner-border {
+    display: none !important;
+  }
+
   .impresion-pagina {
     display: table;
     table-layout: fixed;

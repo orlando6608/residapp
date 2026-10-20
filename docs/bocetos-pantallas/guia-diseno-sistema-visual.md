@@ -101,6 +101,12 @@ Al tratar con perfiles que van desde auxiliares con turnos nocturnos hasta **Fam
 4. **Contraste de bordes:** campos, casillas y selectores llevan un borde de al menos 3:1 (`--color-border-control`, WCAG 1.4.11).
 5. **Foco no tapado (WCAG 2.4.11):** en una pantalla con `.barra-accion` fija, el tema reserva espacio abajo (`scroll-padding-bottom`) para que el campo con el foco nunca quede debajo de la barra.
 
+### Indicador de envío
+`site.js` marca todo formulario válido al enviarse: el botón que lo envía muestra un `spinner-border spinner-border-sm` (hereda `currentColor`, vale en claro y oscuro; Bootstrap ya lo ralentiza con `prefers-reduced-motion`), una región `role="status"` anuncia «Enviando…» y un segundo envío se descarta. Reglas al maquetar:
+* **No deshabilites el botón de envío con `disabled`:** su `name`/`value` (p. ej. `Accion=Firmar`) no viajaría en el POST. El estado se marca con `data-enviando` y `aria-disabled`.
+* Un formulario que no navega (descarga de archivo) lleva `data-sin-carga`. Los enlaces `<a>` de descarga de PDF no pasan por este indicador (es solo de `submit`).
+* Nada de `<script>` ni `style=""` en línea para esto: va en `site.js` y `site.css` (CSP futura). El spinner no se imprime.
+
 ---
 
 ## 🖨️ 4. Identidad de marca en PDF e impresión (obligatorio)

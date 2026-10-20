@@ -9,7 +9,9 @@ namespace ResidApp.Infrastructure.Pdf;
 /// </summary>
 internal static class PdfBranding
 {
-    /// <summary>wwwroot\images\logo.svg rasterizado a PNG (PDFsharp no importa SVG), en memoria con el prefijo base64: de MigraDoc.</summary>
+    /// <summary>wwwroot\images\logo.svg rasterizado a PNG (PDFsharp no importa SVG), en memoria con el prefijo base64: de MigraDoc.
+    /// El PNG va aplanado sobre blanco y sin canal alfa: con esquinas transparentes (RGB negro), al reducirlo los visores
+    /// mezclan ese negro con el borde y dejan un halo oscuro en el arco.</summary>
     private static readonly string Logo = "base64:" + Convert.ToBase64String(EmbeddedResource("ResidApp.Images.logo.png"));
 
     /// <summary>Deja la sección en A4 con márgenes laterales de 2 cm (el ancho del encabezado cuenta con ellos), le hace
