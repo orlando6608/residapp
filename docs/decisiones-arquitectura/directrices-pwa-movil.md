@@ -37,8 +37,11 @@ viewport.
 - `src/ResidApp.Web/wwwroot/manifest.json` y `src/ResidApp.Web/wwwroot/sw.js` son los únicos archivos de
   identidad PWA de la aplicación. Cualquier cambio de nombre, iconos, `start_url` o `scope` pasa por
   este documento.
-- `Views/Shared/_Layout.cshtml` debe enlazar el manifest (`<link rel="manifest" href="~/manifest.json">`)
-  y registrar el service worker (`navigator.serviceWorker.register('/sw.js')`).
+- `Views/Shared/_Layout.cshtml` y `Views/Shared/_LayoutFamilia.cshtml` (Portal Familiar) deben enlazar el manifest
+  (`<link rel="manifest" href="~/manifest.json">`) y registrar el service worker (`navigator.serviceWorker.register('/sw.js')`).
+- `/Home/Offline` se guarda en la caché al instalarse el service worker, con las cookies de quien esté entonces en la app, y
+  después la ve cualquiera que use el dispositivo sin red. Por eso usa `_LayoutOffline.cshtml`, que no lee cookies ni muestra
+  identidad, perfil, centro ni enlaces a paneles. Todo lo que el service worker precachea se renderiza como si no hubiera sesión.
 - El service worker cachea el shell de la aplicación (assets estáticos) y sirve `/Home/Offline` como
   fallback de navegación cuando no hay red. **No** cachea ni reintenta envíos de formularios clínicos —
   eso es responsabilidad de la idempotencia del punto 4, no del service worker.

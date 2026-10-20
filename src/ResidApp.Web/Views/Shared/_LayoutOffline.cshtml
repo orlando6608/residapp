@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0A58CA" />
+    <title>@ViewData["Title"] - ResidApp</title>
+    <link rel="manifest" href="~/manifest.json" />
+    <link rel="icon" href="~/images/logo.svg" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/residapp-theme.css" asp-append-version="true" />
+    <script src="~/js/tema.js" asp-append-version="true"></script>
+</head>
+<body>
+    @* Solo para la página «Sin conexión»: el service worker la guarda al instalarse (wwwroot/sw.js) con las cookies de quien
+       esté en ese momento, y después la ve cualquiera que use el dispositivo sin red. Por eso este layout no lee cookies ni
+       muestra identidad, perfil, centro ni enlaces a paneles (directrices-pwa-movil.md, §3). *@
+    <header>
+        <nav class="navbar navbar-dark navbar-residapp border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <span class="navbar-brand d-flex align-items-center gap-2 mb-0">
+                    <img src="~/images/logo.svg" alt="" width="28" height="28" />
+                    ResidApp
+                </span>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            <span>&copy; 2026 ResidApp</span>
+        </div>
+    </footer>
+</body>
+</html>

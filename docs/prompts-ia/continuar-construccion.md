@@ -253,6 +253,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   (`role="status"`) y descarta el segundo envío; `data-sin-carga` lo excluye. No usa `disabled` (el `Accion=Firmar` del botón debe viajar).
   `sw.js` sube a `residapp-shell-v3`. Pendiente (fase 2, solo si CJ lo pide): indicador para navegación GET lenta (Indicadores, Calidad)
   excluyendo los enlaces de descarga de PDF. Sin pruebas JS en el repo: verificado a mano.
+- **Service worker y Portal Familiar (2026-10-20):** `_LayoutFamilia` registra ahora `/sw.js` como `_Layout`. `/Home/Offline` usaba `_Layout`
+  y el service worker la guarda al instalarse con las cookies del momento (perfil, centro e «Identidad» de quien estuviera dentro); ahora usa
+  `_LayoutOffline`, sin cookies (`PaginaSinConexionTests`). Lección: todo lo que precachea el service worker se renderiza sin sesión.
+  `residapp-shell-v3` (aún sin desplegar) fuerza la reinstalación que recoge la página neutra.
 - **Rediseño visual, primera tanda (2026-10-03, sin script):** revisión crítica de `docs/bocetos-pantallas/residapp-recomendaciones-diseno.md`
   (documento del usuario, sin versionar: se adoptó una parte, se adaptó otra y se descartó el resto con motivo; ver los commits). Cambios:
   - **Guía vinculante actualizada** (`guia-diseno-sistema-visual.md`): neutros y enlaces que cumplen AA (enlaces `#0A58CA`, secundario `#5B6676`
