@@ -39,3 +39,15 @@
     display: table-row-group;
   }
 }
+/* Foto de identificación del residente (_FotoResidente): redonda y de tamaño fijo, con las iniciales si no tiene. */
+.foto-residente {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+}
+
+.foto-residente-grande {
+  width: 5rem;
+  height: 5rem;
+  font-size: 1.5rem;
+}

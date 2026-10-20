@@ -80,13 +80,15 @@ else
         {
             <div class="card mb-3">
                 <div class="card-body d-flex align-items-center gap-3">
+                    <partial name="_FotoResidente" model="new ResidentPhotoViewModel(resident.ResidentId.Value, resident.DisplayName, resident.PhotoUpdatedAt)" />
                     <div class="flex-grow-1">
                         <h2 class="h6 card-title mb-1">
                             <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="stretched-link text-body text-decoration-none">@resident.DisplayName</a>
                         </h2>
                         <p class="text-body-secondary mb-0">
-                            @AdministrativeResidentDisplay.Age(resident.BirthDate, Model.Today) años · @EnumDisplay.Label(resident.DocumentedSex) · @resident.UnitName
+                            @AdministrativeResidentDisplay.Age(resident.BirthDate, Model.Today) años · @EnumDisplay.Label(resident.DocumentedSex)
                         </p>
+                        <p class="text-body-secondary mb-0">@resident.LocationLabel</p>
                         <p class="text-body-secondary small mb-0">Alta el @resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy")</p>
                     </div>
                     <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
@@ -102,7 +104,7 @@ else
                     <th scope="col">Nombre</th>
                     <th scope="col" class="text-end">Edad</th>
                     <th scope="col">Sexo documentado</th>
-                    <th scope="col">Unidad</th>
+                    <th scope="col">Ubicación</th>
                     <th scope="col">Fecha de alta</th>
                 </tr>
             </thead>
@@ -110,10 +112,15 @@ else
                 @foreach (var resident in Model.Residents)
                 {
                     <tr>
-                        <th scope="row"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></th>
+                        <th scope="row">
+                            <div class="d-flex align-items-center gap-2">
+                                <partial name="_FotoResidente" model="new ResidentPhotoViewModel(resident.ResidentId.Value, resident.DisplayName, resident.PhotoUpdatedAt)" />
+                                <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a>
+                            </div>
+                        </th>
                         <td class="text-end">@AdministrativeResidentDisplay.Age(resident.BirthDate, Model.Today)</td>
                         <td>@EnumDisplay.Label(resident.DocumentedSex)</td>
-                        <td>@resident.UnitName</td>
+                        <td>@resident.LocationLabel</td>
                         <td>@resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
                     </tr>
                 }

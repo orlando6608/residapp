@@ -13,6 +13,26 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Foto y habitación en la lista de residentes (2026-10-20, estudio de mercado R2 en parte; script `0059`, el siguiente libre es `0060`; suite 361 unitarios,
+  460 de integración y 219 funcionales en verde; sin commit ni despliegue todavía):** al revisar el código se vio que la habitación y la plaza ya salían en Auxiliar,
+  Enfermería y Medicina desde el 2026-10-02. El estudio no las vio porque ningún residente de Azure tiene habitación (11 de 11 «SinHabitacion»), así que se corrigió
+  su debilidad 3. Lo hecho:
+  - `ResidentLocationLabel` dice «Sin habitación asignada» en vez de callarlo, y Administración muestra la ubicación en su lista (columna «Ubicación») y en la ficha
+    («Ubicación actual»);
+  - **foto de identificación**: tabla `fotos_residente` (una por residente, se sobrescribe y se borra, seguridad por filas), `ResidentPhoto.Normalize` (solo
+    JPEG ≤ 1 MB, quita EXIF/XMP/comentarios y lo que va tras el fin de la imagen), `ResidentPhotoApplicationService`, `SqlResidentPhotoRepository` (auditoría
+    `RESIDENT_PHOTO_SET`/`REMOVE`) y `FotoResidenteController` (`Ver` responde 404 sin distinguir el motivo, `Guardar` y `Quitar`), con los parciales
+    `_FotoResidente` (miniatura o iniciales) y `_FotoResidenteEditar` (fichas de Administración y Enfermería) y el reductor en `site.js` (480 px, JPEG 0,85);
+  - la ven Auxiliar (solo asignados), Enfermería, Medicina y Administración, nunca la familia ni Dirección; la ponen Administración y Enfermería con la casilla de
+    consentimiento. Todo son **suposiciones** en `docs/pendientes-cj/foto-residente-confirmaciones-cj.html` (8 preguntas), junto con la cama obligatoria en el alta,
+    que **no** se ha cambiado (decisión del usuario: preguntar a CJ, con la propuesta «obligatoria si la unidad tiene camas, con "Pendiente de asignar"»);
+  - Manual actualizado (Administración, Estructura, Auditoría, Mis residentes, Residentes de Enfermería y Medicina).
+  - Comprobado en local con Chrome sin interfaz: una foto de 900×1200 sale del navegador como JPEG de 360×480 y 6 KB; listas y fichas de los cuatro perfiles en
+    escritorio y a 375 px (y en oscuro), sin desplazamiento lateral; el Portal Familiar no la enseña y el familiar recibe 404 al pedirla.
+  - Queda en la base local la foto de «Residente Integrado Dos (ficticio)».
+  **Siguiente:** commit y push. En Azure, tras el despliegue (la CI aplica el `0059`; los seeds no se repiten), crear habitaciones y camas en la unidad del escenario
+  integrado, trasladar a ellas a algún residente que no sea Residente Integrado Uno, poner una foto y anotar aquí lo que quede creado. El resto de R2 (buscador en la
+  lista de la Auxiliar y orden por pendiente de cierre) sigue pendiente.
 - **Flujo de trabajo ilustrado (2026-10-16, sin script; suite funcional 215 en verde):** `src/ResidApp.Web/wwwroot/flujo-de-trabajo.html`, página estática y **pública** como el Manual (no va tras la clave de CJ), enlazada desde el pie de `_Layout.cshtml` como «Flujo de trabajo», entre el Manual y los Documentos de CJ. Cuenta la vida de una residente ficticia (Rosa, en la «Residencia Los Almendros») con todos los perfiles: quién interviene (siete tarjetas), un mapa general con cada caja enlazada a su sección, una línea temporal de 23 pasos y 13 diagramas SVG en línea (puesta en marcha de un centro, lugares y personas, alta y basal, autorización del familiar, cierre de turno, episodio con horas, salidas de Enfermería y Medicina, estados del episodio según `TR_ea_transition_guard`, urgencia, comunicado, citas y estancia), la tabla de los siete hitos con los plazos de `ProcessMilestoneRules.Defaults` y «Lo que todavía no está» (tomado de «Próximamente» del Manual). Mismo estilo que las páginas de flujo de las guías (tokens, IBM Plex, un color por perfil), más el encabezado de marca (§4 de la guía visual), la impresión siempre en claro y el tema elegido en la app (`residapp-tema` de `localStorage`). Se generó con un script de un solo uso fuera del repositorio: **para cambiarla, edita el HTML**. Comprobada con capturas de Chrome sin interfaz (claro, oscuro, tema «Oscuro» de la app, 375 px sin desplazamiento lateral e impresión), sin anclas, identificadores ni marcadores rotos, y con cada etiqueta entre «» presente en una vista. Test `FlujoDeTrabajoPageTests` (enlace del pie y página servida sin clave). **Siguiente:** que CJ diga si le sirve.
 - **Páginas de flujo de las guías 3 a 8 (2026-10-14, sin script; suite funcional 213 en verde):** `docs/pendientes-cj/pruebas-3-…-flujo.html` a `pruebas-8-…-flujo.html`, con el mismo estilo que las de la 1 y la 2 (carriles por perfil en SVG, «Paso a paso» con los cambios de cuenta y «Dónde mirar»), más una franja por perfil para Dirección (granate), Administración (verde) y Plataforma (gris), una línea blanca entre franjas y, en la guía 8, flechas rojas discontinuas para lo que la aplicación tiene que bloquear. La guía 7 lleva dos diagramas (reserva directa y solicitud previa). Se generaron con un script de un solo uso fuera del repositorio: **para cambiarlas, edita el HTML**. Enlazadas desde la cabecera y el «Antes de empezar» de cada guía (sin subir `data-version`: no cambia ninguna pregunta) y desde `pruebas.html`; añadidas a `PendientesCjPagesTests.Pages`; README actualizado. Comprobadas con capturas (claro, oscuro y 375 px) y sin enlaces rotos. El contenido sale solo de los pasos de cada guía. **Siguiente:** que CJ diga si le sirven.
 - **Páginas de flujo de las guías de pruebas 1 y 2 y la prueba 2.5 aclarada (2026-10-14, sin script; suite funcional 201 en verde):** `docs/pendientes-cj/pruebas-1-auxiliar-enfermeria-flujo.html` y `pruebas-2-medicina-indicaciones-flujo.html`, HTML estático como las guías (mismo estilo y tokens, claro y oscuro, sin script de respuestas): diagrama de carriles por perfil en SVG en línea (cada prueba numerada en el carril de quien la hace, Imprescindibles con borde grueso, flechas de lo que pasa a otro perfil con dónde lo ve), el mismo recorrido en texto («Paso a paso», con los cambios de cuenta) y «Dónde mirar». En el móvil el diagrama se desliza dentro de su caja; la página no. Enlazadas desde la cabecera y el «Antes de empezar» de cada guía y desde `pruebas.html`; añadidas a `PendientesCjPagesTests.Pages`; regla en el README: si cambia una guía con flujo, revisar su flujo. Comprobadas con capturas de Chrome headless (claro, oscuro y 375 px dentro de un iframe, porque headless no baja de unos 500 px de ventana). **Guía 2, prueba 5:** «Qué debería ocurrir» dice ahora dónde mirar (etiqueta del evento junto al nombre del residente; cada indicación con la suya); `data-version` a `2026-10-14`, así que CJ verá el aviso de respuestas de otra versión en sus 6 respuestas. **Siguiente:** enseñar las dos páginas a CJ y, si le sirven, hacer las de las guías 3 a 8 con el mismo patrón.
@@ -1333,6 +1353,19 @@ Repite estos pasos antes de dar un bloque por cerrado:
    pipeline termina en verde, con `build-and-test` y `deploy`.
 
 ## Lecciones técnicas que conviene no redescubrir
+
+- **Ficheros subidos (foto del residente, el primer formulario `multipart/form-data`):**
+  - el servidor no tiene librería de imágenes: el navegador reduce y recodifica la foto (`site.js`, `createImageBitmap` con `imageOrientation: "from-image"`, y
+    `DataTransfer` para cambiar el fichero del `<input>`);
+  - el servidor solo acepta un JPEG y lo limpia recorriendo sus bloques (`ResidentPhoto.Normalize`): sin el reductor, una foto del móvil llevaría la posición GPS;
+  - `RequestSizeLimit` alto (20 MB) y comprobación de 1 MB antes de leer el fichero, para dar un mensaje en vez de un 413;
+  - la imagen se sirve con `nosniff`, `Cross-Origin-Resource-Policy: same-origin` y `Cache-Control: private`, y su dirección lleva `?v=` con la fecha de la foto;
+  - una acción que responde a un `<img>` devuelve 404, nunca una redirección: `ResidentId.From(Guid.Empty)` lanzaría y `InvalidIdentifierFilter` respondería con un
+    302 a una página HTML. Por eso se comprueba `Guid.Empty` antes.
+- **Autorizar algo que no es del basal sobre un residente:** `ResidentPhotoApplicationService` llama directamente a
+  `IAuthorizationEvidenceProvider.LoadEvidenceAsync(..., new AuthorizationTarget.Read(id))` (la misma regla de ámbito que las listas) y añade su propia lista de
+  perfiles. `RequestAuthorizationContextResolver` rechaza `Read` salvo para Dirección y el basal.
+- **Una foto en la cabecera no va con `loading="lazy"`:** las capturas (y el primer pintado) la enseñaban vacía. Solo las miniaturas de las listas cargan en diferido.
 
 - **`border-start border-4 border-<color>` en una `.card` dibuja un marco**, no una franja: `.border-4` fija el ancho de los
   cuatro lados y `.border-<color>` los colorea todos. `residapp-theme.css` devuelve los otros tres lados al borde neutro;

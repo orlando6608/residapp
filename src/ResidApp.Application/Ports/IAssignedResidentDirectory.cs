@@ -8,7 +8,7 @@ namespace ResidApp.Application.Ports;
 /// "Pendiente" del grupo A1, ahora que existe la tabla de cierres cotidianos.</summary>
 public sealed record AssignedResidentSummary(
     ResidentId ResidentId, string DisplayName, UnitId UnitId, string? UnitName, bool TieneBasalVigente, bool CerradoHoy,
-    string? RoomName = null, string? PlaceName = null)
+    string? RoomName = null, string? PlaceName = null, DateTimeOffset? PhotoUpdatedAt = null)
 {
     /// <summary>La unidad con la habitación y la plaza actuales, si las tiene (script 0029).</summary>
     public string LocationLabel => ResidentLocationLabel.Format(UnitName, RoomName, PlaceName);

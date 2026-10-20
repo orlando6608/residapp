@@ -1,0 +1,14 @@
+@model ResidApp.Web.Models.ResidentPhotoViewModel
+@* La foto acompaña siempre al nombre, que ya está al lado: es decorativa para el lector de pantalla (alt vacío). En las listas se carga al
+   acercarse a ella; la grande va en la cabecera de la ficha, a la vista desde el principio. *@
+@if (Model.UpdatedAt is { } updatedAt)
+{
+    <img src="@Url.Action("Ver", "FotoResidente", new { residenteId = Model.ResidentId, v = updatedAt.UtcTicks })" alt=""
+         loading="@(Model.Large ? "eager" : "lazy")" decoding="async" width="@(Model.Large ? 80 : 48)" height="@(Model.Large ? 80 : 48)"
+         class="foto-residente @(Model.Large ? "foto-residente-grande" : "") rounded-circle object-fit-cover" />
+}
+else
+{
+    <span class="foto-residente @(Model.Large ? "foto-residente-grande" : "") rounded-circle bg-secondary-subtle text-secondary-emphasis fw-semibold d-inline-flex align-items-center justify-content-center"
+          aria-hidden="true">@Model.Initials</span>
+}

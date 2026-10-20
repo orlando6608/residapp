@@ -277,14 +277,25 @@
         son cifras: no salen nombres ni texto de ningún comunicado ni de ninguna solicitud. Si no hay nada que atender, dice
         «No hay nada pendiente». El inicio de Administración tiene estas tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
         ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»). En el alta, la unidad se elige en una lista con las unidades de tu
-        ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves el nombre, la edad (calculada a partir
-        de la fecha de nacimiento), el sexo documentado, la unidad y la fecha de alta. Puedes buscar por nombre, sin
+        ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves la foto (o sus iniciales, si no tiene), el nombre, la edad (calculada a partir
+        de la fecha de nacimiento), el sexo documentado, la ubicación (unidad, habitación y plaza; si no tiene habitación, pone
+        «Sin habitación asignada») y la fecha de alta. Puedes buscar por nombre, sin
         importar mayúsculas ni acentos, y filtrar por unidad si tu ámbito tiene más de una.
     </p>
     <p>
-        La <strong>ficha administrativa</strong> muestra la identidad, la unidad actual, la fecha de alta, el historial
+        La <strong>ficha administrativa</strong> muestra la foto, la identidad, la ubicación actual, la fecha de alta, el historial
         de ubicación (cada intervalo con su unidad, desde, hasta y el perfil que lo registró) y las correcciones de
         identidad. No muestra el basal ni ningún contenido clínico.
+    </p>
+    <p>
+        <strong>Foto de identificación</strong> (en la ficha administrativa y en la ficha de Enfermería): sirve para reconocer al
+        residente en las listas y en su ficha. Elige una foto o hazla con la cámara del móvil, marca la casilla que confirma que
+        consta el consentimiento del residente o de su representante y pulsa <strong>Guardar foto</strong>. La app la reduce antes de
+        enviarla y le quita los datos de la cámara (como el lugar donde se hizo). Una foto nueva sustituye a la anterior, que no se
+        conserva, y <strong>Quitar foto</strong> la borra. Ponerla, cambiarla y quitarla queda en la auditoría. La ven Auxiliar (solo de
+        sus residentes asignados), Enfermería, Medicina y Administración; <strong>nunca se muestra a las familias</strong> ni a
+        Dirección Clínica. Si la app no puede reducirla (por ejemplo, en un navegador antiguo), solo acepta una foto JPEG de 1 MB como
+        máximo.
     </p>
     <p class="mb-0">
         <strong>Corregir identidad</strong> sirve para arreglar un error en el nombre, la fecha de nacimiento o el sexo
@@ -518,7 +529,7 @@
         una, plazas; puedes cambiarles el nombre, inactivarlas y reactivarlas (no se borran). Se ve qué plazas están ocupadas. No se puede
         inactivar una habitación o una plaza con un residente ubicado en ella, ni reactivar una plaza de una habitación inactiva. Al dar de
         alta a un residente puedes elegir, de forma opcional, una habitación o una plaza libre de su unidad; una plaza solo la ocupa un
-        residente a la vez. La ficha administrativa del residente muestra su habitación y su plaza en el historial de ubicación, y Enfermería, Medicina y Auxiliar las ven junto a la unidad en sus listas de residentes y en la ficha o el registro del residente. Cambiar después de
+        residente a la vez. La ficha administrativa del residente muestra su habitación y su plaza en la ubicación actual y en el historial de ubicación, y Administración, Enfermería, Medicina y Auxiliar las ven junto a la unidad en sus listas de residentes y en la ficha o el registro del residente («Sin habitación asignada» si no la tiene). Cambiar después de
         habitación o plaza es un traslado (ficha del residente → <strong>Trasladar</strong>).
     </p>
 </section>
@@ -530,7 +541,7 @@
     </h2>
     <p>
         <strong>Auditoría</strong> lista, del más reciente al más antiguo, lo que se ha hecho en tu ámbito con cuentas, perfiles y
-        permisos, estructura (centro, unidades, edificios, plantas, habitaciones y plazas), residentes (alta, corrección de identidad, traslado, baja, reactivación, suspensión y reanudación),
+        permisos, estructura (centro, unidades, edificios, plantas, habitaciones y plazas), residentes (alta, corrección de identidad, foto puesta o quitada, traslado, baja, reactivación, suspensión y reanudación),
         familias (familiares, autorizaciones, contactos urgentes y comunicados publicados antes de su hora) y turnos y equipos (turnos, equipos y sus miembros, y planificación). Cada fila dice cuándo, qué acción, quién la hizo y con qué perfil, y cuando consta, la cuenta afectada, la
         unidad y el residente. Los eventos de una unidad solo salen si la unidad está concedida a tu ámbito.
     </p>
@@ -788,10 +799,11 @@
         <span class="badge text-bg-secondary align-middle">Perfil: Auxiliar</span>
     </h2>
     <p>
-        Muestra únicamente los residentes con asignación vigente para tu ámbito de trabajo. Cada tarjeta
+        Muestra únicamente los residentes con asignación vigente para tu ámbito de trabajo. Cada tarjeta lleva la foto
+        del residente (o sus iniciales, si no tiene) y su ubicación: unidad, habitación y plaza, o «Sin habitación asignada». También
         indica, con una franja a la izquierda y una etiqueta, si el residente ya tiene un estado basal vigente (verde)
         o sigue pendiente (rojo). Pulsa en cualquier punto de la tarjeta para abrir el registro cotidiano del
-        residente: identidad mínima y un resumen del basal vigente con el total de Barthel (nunca versiones históricas,
+        residente: la foto, la identidad mínima y un resumen del basal vigente con el total de Barthel (nunca versiones históricas,
         borradores, respuestas detalladas de Barthel, firma ni corrección), con acceso a la consulta completa de las
         nueve áreas.
     </p>
@@ -824,7 +836,8 @@
     </h2>
     <p>
         Muestra los residentes de tu ámbito: por defecto, todos los que están en tus unidades concedidas;
-        si tu ámbito tiene restringido el acceso a residentes concretos, solo esos. Cada tarjeta indica, con una
+        si tu ámbito tiene restringido el acceso a residentes concretos, solo esos. Cada tarjeta lleva la foto del residente
+        (o sus iniciales) y su ubicación (unidad, habitación y plaza, o «Sin habitación asignada»), e indica, con una
         franja a la izquierda y una etiqueta, si el residente ya tiene un estado basal vigente (verde) o sigue pendiente
         (rojo). Pulsa en cualquier punto de la tarjeta para abrir la ficha del residente.
     </p>
@@ -843,6 +856,11 @@
         abiertos</strong>, del más reciente al más antiguo, con su estado (incluidos los escalados a Medicina) y
         <strong>Ver detalle</strong>; los cerrados están en el Historial. Todavía no está disponible desde
         aquí que un segundo profesional aporte a un borrador ajeno.
+    </p>
+    <p class="mb-0">
+        En la ficha también puedes poner, cambiar o quitar la <strong>foto de identificación</strong> del residente, con el
+        consentimiento marcado (ver «Residentes y ficha administrativa» en Administración: funciona igual). Medicina y Auxiliar
+        la ven pero no la cambian.
     </p>
 </section>
 
@@ -1026,7 +1044,7 @@
     <p>
         La tarjeta <strong>Residentes</strong> del inicio de Medicina muestra los residentes de tu ámbito, con
         el mismo criterio que en Enfermería y si tienen un basal vigente, con el mismo buscador por nombre,
-        estado basal y unidad (ver "Residentes (Enfermería)"). Al abrir uno ves su unidad y el
+        estado basal y unidad (ver "Residentes (Enfermería)"), su foto y su ubicación. Al abrir uno ves su foto, su ubicación y el
         resumen del basal vigente y el acceso para <strong>registrar un evento</strong> que observas
         directamente. Si tu ámbito tiene permiso de basal, también ves <strong>Crear borrador de basal</strong>
         o <strong>Iniciar reevaluación</strong> (ver "Crear, completar y firmar el estado basal"). La cuenta de

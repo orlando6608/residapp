@@ -27,6 +27,8 @@ public class AdministrativeAuditTests
     [InlineData("ACCOUNT_CREATE")]
     [InlineData("UNIT_DEACTIVATE")]
     [InlineData("EMERGENCY_CONTACT_DESIGNATE")]
+    [InlineData("RESIDENT_PHOTO_SET")]
+    [InlineData("RESIDENT_PHOTO_REMOVE")]
     public void LasAccionesAdministrativas_Lo_Son(string code) =>
         Assert.True(AdministrativeAudit.IsAdministrative(code));
 }

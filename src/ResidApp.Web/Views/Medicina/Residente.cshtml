@@ -13,8 +13,13 @@
     </ol>
 </nav>
 
-<h1 class="h3">@Model.Resident.DisplayName</h1>
-<p class="text-muted">@Model.Resident.LocationLabel</p>
+<div class="d-flex align-items-center gap-3 mb-3">
+    <partial name="_FotoResidente" model="new ResidentPhotoViewModel(Model.Resident.ResidentId.Value, Model.Resident.DisplayName, Model.Resident.PhotoUpdatedAt, Large: true)" />
+    <div>
+        <h1 class="h3 mb-1">@Model.Resident.DisplayName</h1>
+        <p class="text-muted mb-0">@Model.Resident.LocationLabel</p>
+    </div>
+</div>
 
 @if (TempData["Mensaje"] is string mensaje)
 {

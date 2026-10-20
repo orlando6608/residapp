@@ -32,6 +32,7 @@ else
                 @* La tarjeta entera abre la ficha: el enlace del nombre se estira sobre ella (guía, 2.B). *@
                 <div class="card h-100 border-start border-4 @(resident.TieneBasalVigente ? "border-success" : "border-danger")">
                     <div class="card-body d-flex align-items-center gap-3">
+                        <partial name="_FotoResidente" model="new ResidentPhotoViewModel(resident.ResidentId.Value, resident.DisplayName, resident.PhotoUpdatedAt)" />
                         <div class="flex-grow-1">
                             <h2 class="h5 card-title mb-1">
                                 <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="stretched-link text-body text-decoration-none">@resident.DisplayName</a>

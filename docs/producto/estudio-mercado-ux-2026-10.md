@@ -46,6 +46,7 @@ ResidApp no es un ERP: cubre la continuidad asistencial y la comunicación con f
 1. **Doble registro.** Los centros ya tienen un ERP y la primera versión no prevé integraciones. Si la auxiliar registra en el ERP y además en ResidApp, el proyecto fracasa: es el principal obstáculo de adopción.
 2. **Sin captura offline ni notificaciones push** (excluidos a propósito en `alcance.md`; hoy solo existe la página *Sin conexión*). Con mala cobertura en habitaciones, un registro perdido o un prioritario que nadie ve serán las primeras quejas del piloto.
 3. **Identificación del residente.** La lista no muestra foto, habitación ni cama, y no tiene buscador ni orden por pendientes. Con 25 residentes por auxiliar es un problema, y la foto es una medida básica de seguridad del paciente.
+   - *Corrección (2026-10-20):* Auxiliar, Enfermería y Medicina ya mostraban la habitación y la cama desde el 2026-10-02. En la prueba no salían porque ningún residente de Azure tenía habitación asignada. Solo faltaban en Administración. Enfermería, Medicina y Administración ya tenían buscador. Ver el estado de R2 más abajo.
 4. **Textos densos y jerga interna** ("Cierre cotidiano", "Basal vigente", "ámbito", "hitos"). Las descripciones de las tarjetas son largas para el perfil auxiliar.
 5. **Un clic de más.** El inicio del auxiliar solo tiene la tarjeta "Mis residentes"; debería entrar directamente a la lista.
 6. **Acceso en dispositivos compartidos sin decidir.** En una tablet de planta compartida hace falta entrar rápido (PIN o tarjeta NFC); usuario y contraseña largos en cada turno no van a funcionar. Relacionado con ADR 0007.
@@ -79,7 +80,7 @@ Todas en estado **propuesta**. Encajan con el rediseño de interfaz previsto par
 | Id | Recomendación | Choca con el alcance vigente | Estado |
 | --- | --- | --- | --- |
 | R1 | **Integración mínima con el ERP:** importar residentes y ubicaciones (CSV o API) y exportar los registros, para eliminar el doble registro. | Sí ("Integraciones con historias clínicas externas en la primera versión") | Propuesta |
-| R2 | **Lista de residentes:** foto, habitación/cama, buscador y orden por "pendiente de cierre". | No | Propuesta |
+| R2 | **Lista de residentes:** foto, habitación/cama, buscador y orden por "pendiente de cierre". | No | En curso (2026-10-20). Hecho: foto y ubicación (unidad, habitación y cama, o «Sin habitación asignada») en las listas y fichas de Auxiliar, Enfermería, Medicina y Administración; supuestos de la foto y cama obligatoria en el alta, a confirmar en [`foto-residente-confirmaciones-cj.html`](../pendientes-cj/foto-residente-confirmaciones-cj.html). Falta: buscador en la lista de la Auxiliar y orden por pendiente de cierre. |
 | R3 | **Textos para auxiliares:** frases cortas, iconos y prueba con 5 auxiliares reales, midiendo el tiempo por registro. | No | Propuesta |
 | R4 | **Revisar antes del piloto la exclusión de offline y push:** al menos una cola local para el registro y un aviso para los prioritarios. | Sí ("Notificaciones push en el piloto", "Modo clínico offline") | Propuesta |
 | R5 | **Acceso rápido en tablet compartida** (PIN o NFC), a decidir junto con el proveedor de identidad (ADR 0007). | No | Propuesta |

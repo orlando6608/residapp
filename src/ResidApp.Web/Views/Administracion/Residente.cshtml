@@ -14,8 +14,13 @@
     </ol>
 </nav>
 
-<h1 class="h3">@resident.DisplayName</h1>
-<p class="text-muted">Ficha administrativa. No incluye el basal ni ningún contenido clínico.</p>
+<div class="d-flex align-items-center gap-3 mb-3">
+    <partial name="_FotoResidente" model="new ResidentPhotoViewModel(resident.ResidentId.Value, resident.DisplayName, resident.PhotoUpdatedAt, Large: true)" />
+    <div>
+        <h1 class="h3 mb-1">@resident.DisplayName</h1>
+        <p class="text-muted mb-0">Ficha administrativa. No incluye el basal ni ningún contenido clínico.</p>
+    </div>
+</div>
 @if (TempData["Mensaje"] is string mensaje)
 {
     <div class="alert alert-success" role="status">@mensaje</div>
@@ -41,8 +46,8 @@
             <dd class="col-sm-8">@resident.BirthDate.ToString("dd/MM/yyyy") (@AdministrativeResidentDisplay.Age(resident.BirthDate, Model.Today) años)</dd>
             <dt class="col-sm-4">Sexo documentado</dt>
             <dd class="col-sm-8">@EnumDisplay.Label(resident.DocumentedSex)</dd>
-            <dt class="col-sm-4">Unidad actual</dt>
-            <dd class="col-sm-8">@resident.UnitName</dd>
+            <dt class="col-sm-4">Ubicación actual</dt>
+            <dd class="col-sm-8">@resident.LocationLabel</dd>
             <dt class="col-sm-4">Fecha de alta</dt>
             <dd class="col-sm-8">@resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
         </dl>
@@ -55,6 +60,8 @@
         <a asp-action="DarDeBaja" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-danger btn-lg">Dar de baja</a>
     </div>
 </section>
+
+<partial name="_FotoResidenteEditar" model="new ResidentPhotoEditorViewModel(resident.ResidentId.Value, resident.PhotoUpdatedAt)" />
 
 <section class="mb-4">
     <h2 class="h5">Familiares</h2>

@@ -66,6 +66,8 @@ public static class AuditActionDisplay
         ["PLACE_DEACTIVATE"] = "Plaza inactivada",
         ["RESIDENT_CREATE"] = "Residente dado de alta",
         ["RESIDENT_IDENTITY_CORRECT"] = "Identidad del residente corregida",
+        ["RESIDENT_PHOTO_SET"] = "Foto del residente puesta o cambiada",
+        ["RESIDENT_PHOTO_REMOVE"] = "Foto del residente quitada",
         ["RESIDENT_TRANSFER"] = "Residente trasladado",
         ["RESIDENT_DISCHARGE"] = "Residente dado de baja",
         ["RESIDENT_REACTIVATE"] = "Residente reactivado",

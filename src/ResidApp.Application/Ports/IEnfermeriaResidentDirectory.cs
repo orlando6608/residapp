@@ -9,18 +9,22 @@ namespace ResidApp.Application.Ports;
 /// si existe al menos una restricción, solo esos residentes lo son.</summary>
 public sealed record ScopeResidentSummary(
     ResidentId ResidentId, string DisplayName, UnitId UnitId, string? UnitName, bool TieneBasalVigente,
-    string? RoomName = null, string? PlaceName = null)
+    string? RoomName = null, string? PlaceName = null, DateTimeOffset? PhotoUpdatedAt = null)
 {
     /// <summary>La unidad con la habitación y la plaza actuales, si las tiene (script 0029).</summary>
     public string LocationLabel => ResidentLocationLabel.Format(UnitName, RoomName, PlaceName);
 }
 
-/// <summary>Texto de ubicación actual de un residente para las pantallas de Enfermería, Medicina y Auxiliar: «Unidad · Habitación · Plaza»,
-/// omitiendo lo que no consta.</summary>
+/// <summary>Texto de ubicación actual de un residente para las pantallas de Enfermería, Medicina, Auxiliar y Administración: «Unidad ·
+/// Habitación · Plaza». Sin habitación lo dice («Sin habitación asignada», estudio de mercado R2), para que el hueco no pase desapercibido;
+/// la plaza se omite si no consta.</summary>
 public static class ResidentLocationLabel
 {
+    public const string WithoutRoom = "Sin habitación asignada";
+
     public static string Format(string? unitName, string? roomName, string? placeName) =>
-        string.Join(" · ", new[] { unitName ?? "Sin unidad", roomName, placeName }.Where(part => !string.IsNullOrEmpty(part)));
+        string.Join(" · ", new[] { unitName ?? "Sin unidad", string.IsNullOrEmpty(roomName) ? WithoutRoom : roomName, placeName }
+            .Where(part => !string.IsNullOrEmpty(part)));
 }
 
 /// <summary>

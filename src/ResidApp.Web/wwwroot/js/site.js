@@ -55,3 +55,48 @@
     }
   });
 })();
+
+// Foto de identificación del residente (_FotoResidenteEditar): al elegir una foto, el navegador la reduce a 480 px de lado mayor y la
+// vuelve a codificar en JPEG antes de enviarla. Así pesa poco, sale derecha (al dibujarla se aplica la orientación de la cámara) y no
+// lleva los metadatos de la cámara, posición GPS incluida. Es mejora progresiva: sin JavaScript, o si el navegador no sabe leer la
+// imagen, se envía el fichero tal cual y el servidor solo acepta un JPEG de 1 MB como máximo (ResidentPhoto).
+(() => {
+  const ladoMaximo = 480;
+
+  document.addEventListener("change", async (evento) => {
+    const campo = evento.target;
+    if (!(campo instanceof HTMLInputElement) || !campo.hasAttribute("data-foto-residente") || campo.files?.length !== 1) {
+      return;
+    }
+
+    try {
+      const imagen = await createImageBitmap(campo.files[0], { imageOrientation: "from-image" });
+      const escala = Math.min(1, ladoMaximo / Math.max(imagen.width, imagen.height));
+      const lienzo = document.createElement("canvas");
+      lienzo.width = Math.round(imagen.width * escala);
+      lienzo.height = Math.round(imagen.height * escala);
+      lienzo.getContext("2d").drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+      imagen.close();
+      const foto = await new Promise((resolver) => lienzo.toBlob(resolver, "image/jpeg", 0.85));
+      if (!foto) {
+        return;
+      }
+
+      // Cambiar files no vuelve a lanzar «change».
+      const ficheros = new DataTransfer();
+      ficheros.items.add(new File([foto], "foto.jpg", { type: "image/jpeg" }));
+      campo.files = ficheros.files;
+
+      const vista = document.getElementById(campo.dataset.fotoVista ?? "");
+      if (vista instanceof HTMLImageElement) {
+        if (vista.src.startsWith("blob:")) {
+          URL.revokeObjectURL(vista.src);
+        }
+        vista.src = URL.createObjectURL(foto);
+        vista.hidden = false;
+      }
+    } catch {
+      // Se envía la foto original y responde el servidor.
+    }
+  });
+})();

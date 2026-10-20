@@ -923,6 +923,65 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             new { nurseScope }));
     }
 
+    [Fact]
+    public async Task FotoDelResidente_AdministracionLaPone_EnfermeriaLaVeYLaQuita_ConLaAppEntera()
+    {
+        // Estudio de mercado R2 (script 0059): el primer formulario con fichero de la app. La foto llega sin EXIF a la lista de Enfermería, la
+        // imagen se sirve como JPEG sin que el navegador la reinterprete, y una Auxiliar sin el residente asignado recibe un 404.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Foto Funcional");
+        var otherResident = await CreateResidentAsync(admin, seed, "Residente Sin Foto Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, otherResident));
+        static byte[] Segment(byte marker, byte[] payload) => [0xFF, marker, 0, (byte)(payload.Length + 2), .. payload];
+        byte[] image = [.. Segment(0xDA, [1, 1, 0, 0, 63, 0]), 0x12, 0x34, 0xFF, 0xD9];
+
+        async Task<string> SaveAsync(bool consent)
+        {
+            var record = await admin.GetStringAsync($"/Administracion/Residente?residenteId={residentId}");
+            using var form = new MultipartFormDataContent
+            {
+                { new StringContent(ExtractValue(record, "__RequestVerificationToken")), "__RequestVerificationToken" },
+                { new StringContent(residentId), "Form.ResidenteId" },
+            };
+            if (consent)
+            {
+                form.Add(new StringContent("true"), "Form.Consentimiento");
+            }
+            var file = new ByteArrayContent([0xFF, 0xD8, .. Segment(0xE1, [.. "Exif\0\0GPS 40.4168 N"u8]), .. image]);
+            file.Headers.ContentType = new("image/jpeg");
+            form.Add(file, "Form.Foto", "foto.jpg");
+            return WebUtility.HtmlDecode(await (await admin.PostAsync("/FotoResidente/Guardar", form)).Content.ReadAsStringAsync());
+        }
+
+        var withoutConsent = await SaveAsync(consent: false);
+        var saved = await SaveAsync(consent: true);
+        var list = WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/Residentes"));
+        var photoUrl = Regex.Match(list, $"/FotoResidente/Ver\\?residenteId={residentId}&v=\\d+").Value;
+        var photo = await nurse.GetAsync(photoUrl);
+        var byOutsider = await auxiliar.GetAsync(photoUrl);
+        var nurseRecord = await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}");
+        var removed = WebUtility.HtmlDecode(await (await nurse.PostAsync($"/FotoResidente/Quitar?residenteId={residentId}", new FormUrlEncodedContent(
+            new Dictionary<string, string> { ["__RequestVerificationToken"] = ExtractValue(nurseRecord, "__RequestVerificationToken") })))
+            .Content.ReadAsStringAsync());
+
+        Assert.Contains("Marca la casilla del consentimiento para guardar la foto.", withoutConsent);
+        Assert.Contains("Foto guardada.", saved);
+        Assert.Contains("Ubicación actual", saved);
+        Assert.Contains("Sin habitación asignada", saved);
+        Assert.NotEmpty(photoUrl);
+        Assert.Equal(HttpStatusCode.OK, photo.StatusCode);
+        Assert.Equal("image/jpeg", photo.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("nosniff", Assert.Single(photo.Headers.GetValues("X-Content-Type-Options")));
+        Assert.True(photo.Headers.CacheControl?.Private);
+        Assert.Equal([0xFF, 0xD8, .. image], await photo.Content.ReadAsByteArrayAsync());
+        Assert.Equal(HttpStatusCode.NotFound, byOutsider.StatusCode);
+        Assert.Contains("Foto de identificación", nurseRecord);
+        Assert.Contains("Foto quitada.", removed);
+        Assert.Equal(HttpStatusCode.NotFound, (await nurse.GetAsync(photoUrl)).StatusCode);
+    }
+
     private async Task<string> CreateResidentAsync(
         HttpClient admin, (string ExternalSubject, Guid ProfileScopeId, Guid CenterId, Guid UnitId) seed, string name)
     {

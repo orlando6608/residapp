@@ -9,7 +9,7 @@ namespace ResidApp.Infrastructure.Persistence;
 /// <summary>
 /// ADM-02/ADM-03: residentes del ámbito de Administración. La regla de ámbito es la de SqlEnfermeriaResidentDirectory
 /// (unidades concedidas y, si el ámbito los restringe, sus residentes) para un ámbito activo de ADMINISTRACION, así que
-/// «sale en la lista» y «se abre su ficha» son lo mismo. Solo lee identidad, ubicación, episodio, correcciones de
+/// «sale en la lista» y «se abre su ficha» son lo mismo. Solo lee identidad, ubicación (con habitación y plaza), fecha de la foto, episodio, correcciones de
 /// identidad y, en la ficha, familiares, autorizaciones y contacto urgente (0022): nunca basal ni contenido clínico. Las fechas se guardan en UTC.
 /// </summary>
 public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory connections) : IAdministracionResidentDirectory
@@ -17,7 +17,8 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
     internal const string ScopedResidentsSelect = """
         SELECT resident.id AS ResidentId, resident.nombre_visible AS DisplayName, resident.fecha_nacimiento AS BirthDate,
                resident.sexo_documentado_codigo AS SexCode, unit.id AS UnitId, unit.nombre_visible AS UnitName,
-               episode.vigente_desde AS AdmittedAt
+               episode.vigente_desde AS AdmittedAt, room.nombre_visible AS RoomName, place.nombre_visible AS PlaceName,
+               photo.actualizada_en AS PhotoUpdatedAt
           FROM dbo.ambitos_perfil profile
           JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
                AND unit_scope.centro_id = profile.centro_id AND unit_scope.revocado_en IS NULL
@@ -27,6 +28,9 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                AND location.centro_id = profile.centro_id AND location.unidad_id = unit.id AND location.vigente_hasta IS NULL
           JOIN dbo.episodios_residente_centro episode ON episode.id = location.episodio_id
                AND episode.residente_id = resident.id AND episode.centro_id = profile.centro_id
+          LEFT JOIN dbo.habitaciones room ON room.id = location.habitacion_id AND room.centro_id = location.centro_id
+          LEFT JOIN dbo.plazas place ON place.id = location.plaza_id AND place.centro_id = location.centro_id
+          LEFT JOIN dbo.fotos_residente photo ON photo.residente_id = resident.id AND photo.centro_id = profile.centro_id
           LEFT JOIN dbo.ambitos_perfil_residente resident_scope ON resident_scope.ambito_perfil_id = profile.id
                AND resident_scope.centro_id = profile.centro_id AND resident_scope.residente_id = resident.id
                AND resident_scope.revocado_en IS NULL
@@ -206,7 +210,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
 
     private static AdministrativeResidentSummary ToSummary(ResidentRow r) => new(
         ResidentId.From(r.ResidentId), r.DisplayName, DateOnly.FromDateTime(r.BirthDate), EnumCode.ParseCode<DocumentedSexCode>(r.SexCode),
-        UnitId.From(r.UnitId), r.UnitName, Utc(r.AdmittedAt));
+        UnitId.From(r.UnitId), r.UnitName, Utc(r.AdmittedAt), r.RoomName, r.PlaceName, r.PhotoUpdatedAt is { } photo ? Utc(photo) : null);
 
     private static DateTimeOffset Utc(DateTime value) => new(value, TimeSpan.Zero);
 
@@ -214,7 +218,8 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
         Guid ResidentId, bool WithoutRoom, bool AuthorizationPending, bool AuthorizationExpired, bool AuthorizationExpiringSoon);
 
     private sealed record ResidentRow(
-        Guid ResidentId, string DisplayName, DateTime BirthDate, string SexCode, Guid UnitId, string UnitName, DateTime AdmittedAt);
+        Guid ResidentId, string DisplayName, DateTime BirthDate, string SexCode, Guid UnitId, string UnitName, DateTime AdmittedAt,
+        string? RoomName, string? PlaceName, DateTime? PhotoUpdatedAt);
 
     private sealed record LocationRow(string UnitName, DateTime StartedAt, DateTime? EndedAt, string ProfileCode, string? RoomName, string? PlaceName);
 

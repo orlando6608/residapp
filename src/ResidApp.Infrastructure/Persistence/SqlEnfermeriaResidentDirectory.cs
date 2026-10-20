@@ -25,7 +25,7 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
         var rows = await connection.QueryAsync<Row>(new CommandDefinition("""
             SELECT resident.id AS ResidentId, resident.nombre_visible AS DisplayName, unit.id AS UnitId, unit.nombre_visible AS UnitName,
                    CAST(CASE WHEN current_baseline.residente_id IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS TieneBasalVigente,
-                   room.nombre_visible AS RoomName, place.nombre_visible AS PlaceName
+                   room.nombre_visible AS RoomName, place.nombre_visible AS PlaceName, photo.actualizada_en AS PhotoUpdatedAt
               FROM dbo.ambitos_perfil profile
               JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
                    AND unit_scope.centro_id = profile.centro_id AND unit_scope.revocado_en IS NULL
@@ -35,6 +35,7 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
                    AND location.centro_id = profile.centro_id AND location.unidad_id = unit.id AND location.vigente_hasta IS NULL
               LEFT JOIN dbo.habitaciones room ON room.id = location.habitacion_id AND room.centro_id = location.centro_id
               LEFT JOIN dbo.plazas place ON place.id = location.plaza_id AND place.centro_id = location.centro_id
+              LEFT JOIN dbo.fotos_residente photo ON photo.residente_id = resident.id AND photo.centro_id = profile.centro_id
               LEFT JOIN dbo.ambitos_perfil_residente resident_scope ON resident_scope.ambito_perfil_id = profile.id
                    AND resident_scope.centro_id = profile.centro_id AND resident_scope.residente_id = resident.id
                    AND resident_scope.revocado_en IS NULL
@@ -50,7 +51,8 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
 
         return rows
             .Select(row => new ScopeResidentSummary(
-                ResidentId.From(row.ResidentId), row.DisplayName, UnitId.From(row.UnitId), row.UnitName, row.TieneBasalVigente, row.RoomName, row.PlaceName))
+                ResidentId.From(row.ResidentId), row.DisplayName, UnitId.From(row.UnitId), row.UnitName, row.TieneBasalVigente, row.RoomName, row.PlaceName,
+                Utc(row.PhotoUpdatedAt)))
             .ToList();
     }
 
@@ -62,5 +64,8 @@ public sealed class SqlEnfermeriaResidentDirectory(SqlConnectionFactory connecti
     }
 
     private sealed record Row(
-        Guid ResidentId, string DisplayName, Guid UnitId, string? UnitName, bool TieneBasalVigente, string? RoomName, string? PlaceName);
+        Guid ResidentId, string DisplayName, Guid UnitId, string? UnitName, bool TieneBasalVigente, string? RoomName, string? PlaceName,
+        DateTime? PhotoUpdatedAt);
+
+    private static DateTimeOffset? Utc(DateTime? value) => value is { } at ? new(at, TimeSpan.Zero) : null;
 }

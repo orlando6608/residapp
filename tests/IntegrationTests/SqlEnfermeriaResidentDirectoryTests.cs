@@ -73,7 +73,7 @@ public class SqlEnfermeriaResidentDirectoryTests
     }
 
     [Fact]
-    public async Task ListAsync_IncluyeLaHabitacionYLaPlazaActuales_YSinElloSoloLaUnidad()
+    public async Task ListAsync_IncluyeLaHabitacionYLaPlazaActuales_YSinHabitacionLoDice()
     {
         var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var enfermeriaSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, adminSeed.CenterId, adminSeed.UnitId);
@@ -96,7 +96,7 @@ public class SqlEnfermeriaResidentDirectoryTests
         Assert.Equal(("Habitación 12", "Cama A"), (withPlace.RoomName, withPlace.PlaceName));
         Assert.EndsWith(" · Habitación 12 · Cama A", withPlace.LocationLabel);
         Assert.Equal((null, null), (withoutPlace.RoomName, withoutPlace.PlaceName));
-        Assert.DoesNotContain(" · ", withoutPlace.LocationLabel);
+        Assert.EndsWith(" · Sin habitación asignada", withoutPlace.LocationLabel);
     }
 
     private static async Task<UnitId> CreateUnitAsync(CenterId centerId)
