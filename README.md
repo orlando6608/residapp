@@ -278,6 +278,7 @@ La documentación funcional viva está en [`docs/producto/`](docs/producto/):
 - [`objetivos.md`](docs/producto/objetivos.md) — métricas del piloto y principios invariantes.
 - [`alcance.md`](docs/producto/alcance.md) — módulos, roles y límites de alcance.
 - [`roadmap.md`](docs/producto/roadmap.md) — estado real de la migración por vertical.
+- [`estudio-mercado-ux-2026-10.md`](docs/producto/estudio-mercado-ux-2026-10.md) — estudio de referencia (no vinculante): mercado español, UX comparada y recomendaciones propuestas.
 
 Las decisiones técnicas de la migración a .NET están en [`docs/decisiones-arquitectura/`](docs/decisiones-arquitectura/), y el backlog priorizado en [`docs/tareas/`](docs/tareas/).
 
