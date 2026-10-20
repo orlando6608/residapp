@@ -257,6 +257,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   y el service worker la guarda al instalarse con las cookies del momento (perfil, centro e «Identidad» de quien estuviera dentro); ahora usa
   `_LayoutOffline`, sin cookies (`PaginaSinConexionTests`). Lección: todo lo que precachea el service worker se renderiza sin sesión.
   `residapp-shell-v3` (aún sin desplegar) fuerza la reinstalación que recoge la página neutra.
+- **Dependencias vulnerables (2026-10-20):** `ResidApp.Infrastructure.csproj` fija `System.Security.Cryptography.Pkcs` 10.0.13 (SqlClient y PDFsharp
+  piden 9.0.13, con GHSA-846f-f764-76mx y GHSA-2fmv-rv2c-59x7; subir esos paquetes no lo corrige). GitHub no ve las dependencias NuGet
+  transitivas: se comprueban con `dotnet list package --vulnerable --include-transitive`. Las 7 alertas de Dependabot eran de `next` en
+  `docs/legado-cloudflare` (congelado, sin compilar ni desplegar) y se descartaron en GitHub como «no se usa»; si salen otras, igual.
 - **Rediseño visual, primera tanda (2026-10-03, sin script):** revisión crítica de `docs/bocetos-pantallas/residapp-recomendaciones-diseno.md`
   (documento del usuario, sin versionar: se adoptó una parte, se adaptó otra y se descartó el resto con motivo; ver los commits). Cambios:
   - **Guía vinculante actualizada** (`guia-diseno-sistema-visual.md`): neutros y enlaces que cumplen AA (enlaces `#0A58CA`, secundario `#5B6676`
