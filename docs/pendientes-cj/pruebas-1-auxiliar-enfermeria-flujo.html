@@ -178,7 +178,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Ayuda de la guía 1 de pruebas</p>
     <h1>Cómo fluye la guía 1 · Auxiliar y Enfermería</h1>
-    <p class="meta">Estado a 14/10/2026 · Para quien hace las pruebas</p>
+    <p class="meta">Estado a 20/10/2026 · Para quien hace las pruebas</p>
     <p class="lead prose">
       Antes de empezar, o cuando te pierdas, mira aquí qué perfil hace cada prueba y qué le llega al siguiente. Las respuestas se
       marcan en la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>; esta página solo orienta.
@@ -191,7 +191,7 @@
     <ul class="leyenda">
       <li><span class="muestra m-aux" aria-hidden="true"></span>Auxiliar · <code>dev-integrado-auxiliar</code></li>
       <li><span class="muestra m-enf" aria-hidden="true"></span>Enfermería · <code>dev-integrado-enfermeria</code></li>
-      <li><span class="muestra m-fam" aria-hidden="true"></span>Familia (no se prueba aquí: guía 6)</li>
+      <li><span class="muestra m-fam" aria-hidden="true"></span>Familia (el Portal Familiar se prueba en la guía 6; aquí solo que no enseña la foto)</li>
       <li><span class="estrella">★</span>&nbsp;Imprescindible (borde grueso)</li>
       <li><span class="linea" aria-hidden="true"></span>Lo siguiente que haces</li>
       <li><span class="linea info" aria-hidden="true"></span>Lo que pasa a otro perfil, y dónde lo ve</li>
@@ -204,7 +204,7 @@
     <div class="diagrama">
       <svg viewBox="0 0 980 560" role="img" aria-labelledby="svg-t svg-d">
         <title id="svg-t">Flujo de la guía 1: el Auxiliar registra y Enfermería valora y decide</title>
-        <desc id="svg-d">Tres franjas. Auxiliar: pruebas 1 a 5; los cambios de las pruebas 3 (ordinario) y 4 (prioritario) llegan a las bandejas de Enfermería, que se revisan en la prueba 6. Enfermería: la prueba 7 registra un evento, la 8 lo valora y desde la decisión asistencial salen la 9 (cerrar), la 10 (seguimiento) y la 11 (protocolo urgente), que sigue en la 12 (derivar a Urgencias). La 12 deja un comunicado para la familia, que se ve en la guía 6.</desc>
+        <desc id="svg-d">Tres franjas. Auxiliar: pruebas 1 a 5; los cambios de las pruebas 3 (ordinario) y 4 (prioritario) llegan a las bandejas de Enfermería, que se revisan en la prueba 6. Enfermería: la prueba 7 registra un evento, la 8 lo valora y desde la decisión asistencial salen la 9 (cerrar), la 10 (seguimiento) y la 11 (protocolo urgente), que sigue en la 12 (derivar a Urgencias). La 12 deja un comunicado para la familia, que se ve en la guía 6. La 13 mira la foto y la cama del residente como Auxiliar, Enfermería y Medicina, pone una foto como Enfermería y comprueba que el Portal Familiar no la enseña.</desc>
         <defs>
           <marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
           <marker id="pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -289,6 +289,13 @@
         <text class="bt" x="875" y="422" text-anchor="middle">Urgencias y cerrar</text>
         <path class="flecha" d="M730,408 H788" marker-end="url(#p)"/>
 
+        <!-- 13: foto y cama, también con Auxiliar, Medicina y Familia -->
+        <rect class="box enf" x="130" y="380" width="150" height="56" rx="8"/>
+        <text class="bt" x="205" y="404" text-anchor="middle"><tspan class="n">13</tspan> · Foto y cama</text>
+        <text class="bt" x="205" y="422" text-anchor="middle">(y Auxiliar, Medicina)</text>
+        <path class="flecha info" d="M205,436 V482" marker-end="url(#pi)"/>
+        <text class="et info" x="215" y="516">13 · El Portal Familiar no enseña la foto</text>
+
         <!-- Familia -->
         <rect class="box fam" x="760" y="484" width="200" height="56" rx="8"/>
         <text class="bt" x="860" y="508" text-anchor="middle">Comunicado aprobado,</text>
@@ -360,6 +367,12 @@
         <div class="paso-cab"><span class="n">12</span><strong>Derivar a Urgencias y cerrar</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
         <span>Desde el protocolo, «Derivar a Urgencias», vista previa, «Firmar y generar PDF». Registra un intento de llamada a la familia y cierra el evento con el texto para la familia.</span>
         <span class="pasa">Le llega a la <strong>familia</strong> un comunicado aprobado que se publicará a la hora del centro. Lo verás en «Comunicaciones» en la <a href="pruebas-6-comunicados-portal.html">guía 6</a>.</span>
+      </li>
+      <li class="cambio">La prueba 13 no depende de las anteriores: puedes hacerla cuando quieras. Usa cuatro cuentas, una detrás de otra.</li>
+      <li class="enf">
+        <div class="paso-cab"><span class="n">13</span><strong>Foto y cama del residente</strong><span class="perfil enf">Enfermería</span></div>
+        <span>Con <code>dev-integrado-auxiliar</code>, «Mis residentes»: Integrado Dos tiene foto y «Habitación 101 (prueba) · Cama A». Con <code>dev-integrado-enfermeria</code>, en la ficha de «Residente Portal Familiar», pon una foto (prueba antes sin la casilla del consentimiento). Con <code>dev-integrado-medicina</code>, mira esa ficha.</span>
+        <span class="pasa">Con <code>dev-integrado-familiar</code>, en el <strong>Portal Familiar</strong> no aparece ninguna foto: la familia nunca la ve.</span>
       </li>
     </ol>
   </section>

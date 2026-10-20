@@ -15,7 +15,7 @@
                 <label class="form-label" for="foto-residente-fichero">@(Model.UpdatedAt is null ? "Elige o haz una foto" : "Elige o haz una foto nueva")</label>
                 <input class="form-control form-control-lg" type="file" accept="image/*" name="Form.Foto" id="foto-residente-fichero" required
                        data-foto-residente data-foto-vista="foto-residente-vista" />
-                <img id="foto-residente-vista" alt="Vista previa de la foto elegida" class="foto-residente foto-residente-grande rounded-circle object-fit-cover mt-2" hidden />
+                <img id="foto-residente-vista" alt="Vista previa de la foto elegida" class="foto-residente foto-residente-grande rounded-3 object-fit-cover mt-2" hidden />
             </div>
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" name="Form.Consentimiento" value="true" id="foto-residente-consentimiento" required />

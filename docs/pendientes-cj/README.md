@@ -108,11 +108,11 @@ Cada guía tiene además una **página de flujo** (`pruebas-N-…-flujo.html`): 
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
-| [pruebas-1-auxiliar-enfermeria.html](pruebas-1-auxiliar-enfermeria.html) | `pruebas-1-auxiliar-enfermeria.respuestas.json` | Guía 1: Auxiliar y Enfermería (12 pruebas, 4 imprescindibles) | Pendiente |
+| [pruebas-1-auxiliar-enfermeria.html](pruebas-1-auxiliar-enfermeria.html) | `pruebas-1-auxiliar-enfermeria.respuestas.json` | Guía 1: Auxiliar y Enfermería (13 pruebas, 4 imprescindibles) | Pendiente |
 | [pruebas-2-medicina-indicaciones.html](pruebas-2-medicina-indicaciones.html) | `pruebas-2-medicina-indicaciones.respuestas.json` | Guía 2: escalado a Medicina, indicaciones y cierre del episodio (13 pruebas, 6 imprescindibles) | Pendiente |
 | [pruebas-3-basal-barthel.html](pruebas-3-basal-barthel.html) | `pruebas-3-basal-barthel.respuestas.json` | Guía 3: basal y Barthel (7 pruebas, 3 imprescindibles) | Pendiente |
 | [pruebas-4-direccion.html](pruebas-4-direccion.html) | `pruebas-4-direccion.respuestas.json` | Guía 4: Dirección Clínica, con la consulta auditada del expediente (9 pruebas, 3 imprescindibles) | Pendiente |
-| [pruebas-5-administracion.html](pruebas-5-administracion.html) | `pruebas-5-administracion.respuestas.json` | Guía 5: Administración del centro (15 pruebas, 3 imprescindibles) | Pendiente |
+| [pruebas-5-administracion.html](pruebas-5-administracion.html) | `pruebas-5-administracion.respuestas.json` | Guía 5: Administración del centro (16 pruebas, 3 imprescindibles) | Pendiente |
 | [pruebas-6-comunicados-portal.html](pruebas-6-comunicados-portal.html) | `pruebas-6-comunicados-portal.respuestas.json` | Guía 6: comunicados a la familia y Portal Familiar (13 pruebas, 5 imprescindibles) | Pendiente |
 | [pruebas-7-citas.html](pruebas-7-citas.html) | `pruebas-7-citas.respuestas.json` | Guía 7: citas con la familia e inicio de Administración (9 pruebas, 4 imprescindibles) | Pendiente |
 | [pruebas-8-aislamiento.html](pruebas-8-aislamiento.html) | `pruebas-8-aislamiento.respuestas.json` | Guía 8: aislamiento entre centros (5 pruebas, 2 imprescindibles) y 3 preguntas finales | Pendiente |

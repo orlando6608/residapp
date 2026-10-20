@@ -240,9 +240,9 @@
     </nav>
     <p class="eyebrow">ResidApp · Ayuda de la guía 5 de pruebas</p>
     <h1>Cómo fluye la guía 5 · Administración del centro</h1>
-    <p class="meta">Estado a 14/10/2026 · Para quien hace las pruebas</p>
+    <p class="meta">Estado a 20/10/2026 · Para quien hace las pruebas</p>
     <p class="lead prose">
-      Casi todo lo hace Administración, pero varias pruebas cambian lo que ven otros perfiles: el Auxiliar (prueba 8) y Enfermería y Medicina (pruebas 4, 6 y 12). Las respuestas se marcan en la <a href="pruebas-5-administracion.html">guía 5</a>; esta página solo orienta.
+      Casi todo lo hace Administración, pero varias pruebas cambian lo que ven otros perfiles: el Auxiliar (pruebas 8 y 16) y Enfermería y Medicina (pruebas 4, 6, 12 y 16). Las respuestas se marcan en la <a href="pruebas-5-administracion.html">guía 5</a>; esta página solo orienta.
     </p>
   </header>
 
@@ -262,9 +262,9 @@
   <section aria-labelledby="diagrama">
     <h2 id="diagrama">El flujo</h2>
     <div class="diagrama">
-      <svg viewBox="0 0 1150 680" style="min-width: 1000px" role="img" aria-labelledby="svg-t1 svg-d1">
+      <svg viewBox="0 0 1150 775" style="min-width: 1000px" role="img" aria-labelledby="svg-t1 svg-d1">
         <title id="svg-t1">Flujo de la guía 5: lo que hace Administración y lo que cambia para los demás perfiles</title>
-        <desc id="svg-d1">Tres franjas. Administración tiene cuatro filas: residentes y familiares (pruebas 1 a 6), usuarios y asignaciones (7 y 8), estructura, traslados y bajas (9 a 12) y turnos, Administración principal y auditoría (13 a 15). La asignación de la prueba 8 cambia lo que ve el Auxiliar. Los contactos urgentes (4), el residente sin contacto urgente (6) y la suspensión por ingreso (12) se ven en la ficha de Enfermería y Medicina.</desc>
+        <desc id="svg-d1">Tres franjas. Administración tiene cinco filas: residentes y familiares (pruebas 1 a 6), usuarios y asignaciones (7 y 8), estructura, traslados y bajas (9 a 12), turnos, Administración principal y auditoría (13 a 15) y la foto del residente (16), que Auxiliar, Enfermería y Medicina ven en la guía 1, prueba 13. La asignación de la prueba 8 cambia lo que ve el Auxiliar. Los contactos urgentes (4), el residente sin contacto urgente (6) y la suspensión por ingreso (12) se ven en la ficha de Enfermería y Medicina.</desc>
         <defs>
           <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
           <marker id="pi1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -273,16 +273,16 @@
 
         <!-- Franjas -->
         <rect class="lane-aux" x="0" y="0" width="1150" height="120"/>
-        <rect class="lane-adm" x="0" y="120" width="1150" height="440"/>
-        <rect class="lane-enf" x="0" y="560" width="1150" height="120"/>
+        <rect class="lane-adm" x="0" y="120" width="1150" height="535"/>
+        <rect class="lane-enf" x="0" y="655" width="1150" height="120"/>
         <line class="sep" x1="0" y1="120" x2="1150" y2="120"/>
-        <line class="sep" x1="0" y1="560" x2="1150" y2="560"/>
+        <line class="sep" x1="0" y1="655" x2="1150" y2="655"/>
         <text class="lane-label aux" x="14" y="26">Auxiliar</text>
         <text class="lane-cuenta" x="14" y="44">dev-integrado-auxiliar</text>
         <text class="lane-label adm" x="14" y="146">Administración</text>
         <text class="lane-cuenta" x="14" y="164">dev-integrado-administracion</text>
-        <text class="lane-label enf" x="14" y="586">Enfermería y Medicina</text>
-        <text class="lane-cuenta" x="14" y="604">dev-integrado-enfermeria</text>
+        <text class="lane-label enf" x="14" y="681">Enfermería y Medicina</text>
+        <text class="lane-cuenta" x="14" y="699">dev-integrado-enfermeria</text>
 
         <!-- Flechas -->
         <path class="flecha" d="M280,203 L298,203" marker-end="url(#p1)"/>
@@ -297,9 +297,9 @@
         <path class="flecha" d="M280,488 L298,488" marker-end="url(#p1)"/>
         <path class="flecha" d="M450,488 L468,488" marker-end="url(#p1)"/>
         <path class="flecha info" d="M375,270 V250 H460 V103" marker-end="url(#pi1)"/>
-        <path class="flecha info" d="M715,231 V250 H885 V598" marker-end="url(#pi1)"/>
-        <path class="flecha info" d="M1055,231 V598" marker-end="url(#pi1)"/>
-        <path class="flecha info" d="M715,421 V598" marker-end="url(#pi1)"/>
+        <path class="flecha info" d="M715,231 V250 H885 V693" marker-end="url(#pi1)"/>
+        <path class="flecha info" d="M1055,231 V693" marker-end="url(#pi1)"/>
+        <path class="flecha info" d="M715,421 V693" marker-end="url(#pi1)"/>
 
         <!-- Pruebas -->
         <rect class="box aux" x="385" y="45" width="150" height="56" rx="8"/>
@@ -349,15 +349,18 @@
         <text class="bt" x="375" y="502" text-anchor="middle">principal</text>
         <rect class="box adm imp" x="470" y="460" width="150" height="56" rx="8"/>
         <text class="bt" x="545" y="493" text-anchor="middle"><tspan class="n">15</tspan> · Auditoría ★</text>
-        <rect class="box enf" x="640" y="600" width="150" height="56" rx="8"/>
-        <text class="bt" x="715" y="624" text-anchor="middle"><tspan class="n">12</tspan> · No deja registrar</text>
-        <text class="bt" x="715" y="642" text-anchor="middle">(suspendido)</text>
-        <rect class="box enf" x="810" y="600" width="150" height="56" rx="8"/>
-        <text class="bt" x="885" y="624" text-anchor="middle"><tspan class="n">4</tspan> · Ficha: contactos</text>
-        <text class="bt" x="885" y="642" text-anchor="middle">con teléfono</text>
-        <rect class="box enf" x="980" y="600" width="150" height="56" rx="8"/>
-        <text class="bt" x="1055" y="624" text-anchor="middle"><tspan class="n">6</tspan> · Ficha: «Sin</text>
-        <text class="bt" x="1055" y="642" text-anchor="middle">contacto urgente»</text>
+        <rect class="box adm" x="130" y="555" width="150" height="56" rx="8"/>
+        <text class="bt" x="205" y="579" text-anchor="middle"><tspan class="n">16</tspan> · Foto del</text>
+        <text class="bt" x="205" y="597" text-anchor="middle">residente</text>
+        <rect class="box enf" x="640" y="695" width="150" height="56" rx="8"/>
+        <text class="bt" x="715" y="719" text-anchor="middle"><tspan class="n">12</tspan> · No deja registrar</text>
+        <text class="bt" x="715" y="737" text-anchor="middle">(suspendido)</text>
+        <rect class="box enf" x="810" y="695" width="150" height="56" rx="8"/>
+        <text class="bt" x="885" y="719" text-anchor="middle"><tspan class="n">4</tspan> · Ficha: contactos</text>
+        <text class="bt" x="885" y="737" text-anchor="middle">con teléfono</text>
+        <rect class="box enf" x="980" y="695" width="150" height="56" rx="8"/>
+        <text class="bt" x="1055" y="719" text-anchor="middle"><tspan class="n">6</tspan> · Ficha: «Sin</text>
+        <text class="bt" x="1055" y="737" text-anchor="middle">contacto urgente»</text>
 
         <!-- Etiquetas -->
         <text class="et info" x="468" y="150">asignación</text>
@@ -365,9 +368,10 @@
         <text class="et info" x="1047" y="440" text-anchor="end">sin contacto, con motivo</text>
         <text class="et info" x="723" y="540">suspendido</text>
         <text class="et nota" x="545" y="534" text-anchor="middle">recoge lo que hiciste en la guía</text>
+        <text class="et nota" x="296" y="588">Auxiliar, Enfermería y Medicina la ven: guía 1, prueba 13</text>
       </svg>
     </div>
-    <p class="pista">En el móvil, desliza el diagrama hacia los lados. Cada fila de Administración es un tema de la guía. El residente «CJ …» que das de alta en la 1 es el de las pruebas 10, 11 y 12.</p>
+    <p class="pista">En el móvil, desliza el diagrama hacia los lados. Cada fila de Administración es un tema de la guía. El residente «CJ …» que das de alta en la 1 es el de las pruebas 10, 11, 12 y 16.</p>
   </section>
 
   <section aria-labelledby="paso">
@@ -449,6 +453,11 @@
         <span>Al final, «Auditoría»: filtra por periodo, tipo de acción y cuenta, y busca lo que has hecho.</span>
         <span class="pasa">Quién hizo qué y cuándo, sin texto clínico; como máximo 500 eventos.</span>
       </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">16</span><strong>Poner, cambiar y quitar la foto de un residente</strong><span class="perfil adm">Administración</span></div>
+        <span>En «Residentes», mira la foto y la columna «Ubicación» («Residente Integrado Dos» tiene foto y cama). En la ficha del residente «CJ …», «Foto de identificación»: prueba a guardar sin la casilla del consentimiento, después con ella; pon otra y quítala. Mira la auditoría.</span>
+        <span class="pasa">Le llega a <strong>Auxiliar, Enfermería y Medicina</strong>: la ven en sus listas y fichas (guía 1, prueba 13). La familia nunca la ve.</span>
+      </li>
     </ol>
   </section>
 
@@ -456,7 +465,7 @@
     <h2 id="mirar">Dónde mirar si no encuentras algo</h2>
     <ul class="lista prose">
       <li><strong>Administración nunca ve observaciones ni valoraciones</strong>, solo datos administrativos. Lo clínico se comprueba entrando como Enfermería.</li>
-      <li><strong>La ficha del residente</strong> se abre desde «Residentes»: ahí están «Familiares», «Contactos urgentes», «Corregir identidad», «Trasladar», «Dar de baja» y «Suspender (ingreso hospitalario)».</li>
+      <li><strong>La ficha del residente</strong> se abre desde «Residentes»: ahí están «Familiares», «Contactos urgentes», «Corregir identidad», «Trasladar», «Dar de baja», «Suspender (ingreso hospitalario)» y «Foto de identificación».</li>
       <li><strong>Deja todo como estaba:</strong> «Residente Prueba CJ Dos» asignado al Auxiliar y el residente «CJ …» en su unidad.</li>
     </ul>
   </section>

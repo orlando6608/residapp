@@ -272,7 +272,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="pruebas-1-auxiliar-enfermeria" data-version="2026-10-14">
+<body data-doc="pruebas-1-auxiliar-enfermeria" data-version="2026-10-20">
 
 <div class="page">
   <header>
@@ -284,14 +284,14 @@
     </nav>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 1 de 8</p>
     <h1>Guía 1 · Auxiliar y Enfermería</h1>
-    <p class="meta">Estado a 13/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 20/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       El circuito diario: el Auxiliar cierra el turno de sus residentes y Enfermería recibe lo que registra, lo valora y lo cierra, hace un seguimiento, activa el protocolo urgente y deriva a Urgencias. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>12 pruebas. 4 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>13 pruebas. 4 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Unos 30 minutos; las imprescindibles, menos. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -334,7 +334,9 @@
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
         <tr><td><code>dev-integrado-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (4).</td></tr>
-        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
+        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación) y poner la foto de identificación.</td></tr>
+        <tr><td><code>dev-integrado-medicina</code></td><td>Medicina</td><td>Solo en la prueba 13: ve la foto, pero no la cambia.</td></tr>
+        <tr><td><code>dev-integrado-familiar</code></td><td>Familia</td><td>Solo en la prueba 13: el Portal Familiar de «Residente Portal Familiar».</td></tr>
       </tbody>
     </table></div>
 
@@ -345,7 +347,8 @@
         <tr><td>Residente Prueba CJ Uno (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
         <tr><td>Residente Prueba CJ Dos (ficticio)</td><td>Asignado al Auxiliar; al empezar no tiene basal (lo crea la guía 3). Úsalo para los cierres del Auxiliar y para crear un basal desde cero.</td></tr>
         <tr><td>Residente Integrado Uno (ficticio)</td><td>NO LO TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
-        <tr><td>Residente Integrado Dos (ficticio)</td><td>Se puede usar si te falta un residente. Ya tiene un escalado y un seguimiento de pruebas anteriores.</td></tr>
+        <tr><td>Residente Integrado Dos (ficticio)</td><td>Se puede usar si te falta un residente. Ya tiene un escalado y un seguimiento de pruebas anteriores, foto y cama (Habitación 101 (prueba) · Cama A).</td></tr>
+        <tr><td>Residente Portal Familiar (ficticio)</td><td>Solo en la prueba 13: le pones una foto y compruebas que su familia no la ve.</td></tr>
       </tbody>
     </table></div>
     <div class="stack prose">
@@ -363,7 +366,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (4 de 12).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (4 de 13).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">No necesitas ninguna otra guía. Es la primera: deja datos (eventos y un comunicado) que usan otras.</p>
@@ -374,6 +377,7 @@
       <li>Las pruebas 7, 8 y 9 son el mismo evento: lo registras, lo valoras y lo cierras. La 11 y la 12 también: activas el protocolo urgente y derivas a Urgencias.</li>
       <li>El aviso de rango de la prueba 8 solo sale si Dirección ya fijó un rango (<a href="pruebas-4-direccion.html">guía 4</a>, prueba 7).</li>
       <li>La prueba 12 deja un comunicado a la familia preparado, que puedes usar en la <a href="pruebas-6-comunicados-portal.html">guía 6</a>.</li>
+      <li>La prueba 13 (foto y ubicación) no depende de ninguna otra: puedes hacerla cuando quieras. La que pone y quita la foto como Administración es la <a href="pruebas-5-administracion.html">guía 5</a>, prueba 16.</li>
     </ul>
     <p class="why">Si te saltas una prueba, marca D en la que dependa de ella.</p>
   </section>
@@ -603,6 +607,33 @@
           <label class="choice"><input type="radio" name="r-12" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-12" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-12" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Foto y ubicación del residente</h2>
+    <div class="stack prose">
+      <p>La foto de identificación y la habitación y la cama ayudan a reconocer a cada residente. Las pone Administración (<a href="pruebas-5-administracion.html">guía 5</a>, prueba 16) y Enfermería; Auxiliar y Medicina solo las ven. La familia nunca ve la foto.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="13">
+        <div class="q-head"><span class="n">13</span><h3 class="q-title" id="t-13">Ver la foto y la cama, y poner una foto como Enfermería</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residentes: <strong>Residente Integrado Dos</strong> y <strong>Residente Portal Familiar</strong></span></div>
+        <ol class="pasos">
+          <li>Con <code>dev-integrado-auxiliar</code>, abre «Mis residentes». Integrado Dos tiene foto y «Habitación 101 (prueba) · Cama A»; los demás, sus iniciales y «Sin habitación asignada». Abre su registro cotidiano: la foto sale también arriba, junto al nombre.</li>
+          <li>Con <code>dev-integrado-enfermeria</code>, abre «Residentes» y luego la ficha de «Residente Portal Familiar». En «Foto de identificación», elige o haz una foto (de un objeto, nunca de una persona real) y pulsa «Guardar foto» sin marcar la casilla del consentimiento. Después márcala y guarda.</li>
+          <li>Con <code>dev-integrado-medicina</code>, abre «Residentes» y la ficha de ese residente.</li>
+          <li>Con <code>dev-integrado-familiar</code>, entra en el Portal Familiar.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>En las listas la foto es redonda y en la cabecera de la ficha, cuadrada con las esquinas redondeadas. Sin la casilla del consentimiento la foto no se guarda. Al elegirla se ve una vista previa y, guardada, sale en la lista y en la ficha de Enfermería, Medicina y Administración. Auxiliar y Medicina la ven, pero no tienen el recuadro para cambiarla. En el Portal Familiar no aparece ninguna foto.</div>
+        <fieldset class="choices" aria-labelledby="t-13">
+          <label class="choice"><input type="radio" name="r-13" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-13" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-13" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-13" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
