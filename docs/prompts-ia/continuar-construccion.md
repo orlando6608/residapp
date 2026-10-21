@@ -1426,8 +1426,9 @@ Repite estos pasos antes de dar un bloque por cerrado:
     éxito va en la dirección (`?plantillaGuardada=`).
   - **«change» de un campo de texto:** salta al pulsar el botón siguiente (al perder el foco). Si el manejador borra el bloque donde está el botón, el clic no
     llega: solo los desplegables borran la vista previa.
-  - **Pruebas en navegador real:** los dos fallos solo salieron al probar con un navegador real; las pruebas por HTTP no los ven. Se probó con
-    `playwright-core` de la caché de npx (`%LOCALAPPDATA%\npm-cache\_npx\*\node_modules\playwright-core`) y `chromium.launch({ channel: "chrome" })`.
+  - **Pruebas en navegador real:** los dos fallos solo salieron al probar con un navegador real; las pruebas por HTTP no los ven. Cómo arrancar la app,
+    sembrar una cuenta de cualquier perfil y recorrer pantallas en Chrome sin interfaz: skill `.claude/skills/probar-en-navegador/` (con el recorrido de
+    Importar y Exportar como ejemplo).
 
 - **`border-start border-4 border-<color>` en una `.card` dibuja un marco**, no una franja: `.border-4` fija el ancho de los
   cuatro lados y `.border-<color>` los colorea todos. `residapp-theme.css` devuelve los otros tres lados al borde neutro;
