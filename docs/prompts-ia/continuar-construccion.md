@@ -43,12 +43,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Comprobado en Azure dev tras `2325f47` (CI en verde):** `httpsOnly=true` y `http://` da 301 a `https://`; el login pide la clave; una clave
     incorrecta da el mensaje neutro; la cookie fabricada `residapp_dev_subject` lleva al login (C1 comprobado); las seis cuentas `almendros-*` y
     `dev-integrado-enfermeria` entran con la clave, con la cookie `secure; samesite=lax; httponly`.
-  - **Fallo encontrado y corregido después (sin desplegar todavía):** no llegaba HSTS y el login redirigía a `http://`. El balanceador de App Service
+  - **Fallo encontrado y corregido después (`455a0ec`, desplegado y comprobado: llega HSTS y el login redirige a `https://`; C1 y A2 cerrados en
+    Azure dev):** no llegaba HSTS y el login redirigía a `http://`. El balanceador de App Service
     Linux llega desde `::ffff:169.254.130.1` (enlace local), que no estaba en `KnownIPNetworks`, así que la app ignoraba `X-Forwarded-Proto` (y el
     límite de intentos contaba a todos como una IP). `Program.cs` añade `169.254.0.0/16` y su equivalente `::ffff:`; prueba
-    `SeFiaDelBalanceadorDeAppService_YDeNadieMas` (balanceador sí, IP pública no). **Tras desplegarlo, comprobar** que `https://…/` trae
-    `Strict-Transport-Security` y que `/Administracion` sin sesión redirige a `https://…/DevAuth/Login`; entonces marcar A2 como comprobado en
-    `docs/seguridad/hallazgos.md` (local).
+    `SeFiaDelBalanceadorDeAppService_YDeNadieMas` (balanceador sí, IP pública no). En Azure, `https://…/` trae
+    `Strict-Transport-Security: max-age=2592000` y `/Administracion` sin sesión redirige a `https://…/DevAuth/Login`.
   - **Página `wwwroot/acceso-y-sesion.html`** (pública, estilo del Flujo de trabajo, enlazada en el pie y en el Manual): cómo se pide el acceso y
     quién lo da, qué hace Plataforma o soporte caso por caso, las comprobaciones de cada pantalla, entrar, cuánto dura la sesión, las cuentas de
     Los Almendros, qué protege, lo que falta (I1–I5) y dónde vive cada pieza. Revísala con cada incremento del ADR 0007.
@@ -1313,8 +1313,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **Cerrar el incremento I0 del ADR 0007** (ver «Dónde estamos»): desplegar la corrección de las cabeceras reenviadas y comprobar HSTS en
-   Azure (lo demás ya está comprobado y los ajustes `DevAuth__*` puestos). Después, Orlando elige entre **I1 (ASP.NET Core Identity: contraseña, TOTP y bloqueo)**, que es lo que desbloquea los datos reales, el
+0. **El incremento I0 del ADR 0007 está cerrado** y comprobado en Azure dev (ver «Dónde estamos»). Orlando elige entre **I1 (ASP.NET Core Identity: contraseña, TOTP y bloqueo)**, que es lo que desbloquea los datos reales, el
    Portal Familiar real y «Mi cuenta», y el **dictado por voz del ADR 0009**. Cada uno con su propio plan.
 1. **Revisar las respuestas de CJ** que lleguen:
    - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
