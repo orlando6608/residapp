@@ -9,7 +9,8 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
 
 - **Foto de identificación del residente (2026-10-20, script `0059`; estudio de mercado, R2)**: la foto (o las iniciales) sale en las listas y fichas de
   Enfermería, Medicina y Auxiliar (también en el registro cotidiano), junto a la ubicación, que ahora dice «Sin habitación asignada» si no la tiene. Enfermería la
-  pone, cambia o quita desde la ficha del residente, con el consentimiento marcado; Medicina y Auxiliar solo la ven. Detalle en `pendientes-administracion.md`;
+  pone, cambia o quita desde la ficha del residente, con el consentimiento marcado, y desde el 2026-10-21 la encuadra (mover y acercar) antes de guardarla;
+  Medicina y Auxiliar solo la ven. Detalle en `pendientes-administracion.md`;
   suposiciones a confirmar en `foto-residente-confirmaciones-cj.html`.
 - **Historia 1 (bandejas)**: bandeja prioritaria y bandeja de ordinarios
   (`EnfermeriaController/Prioritarios`, `/Ordinarios`) con los cambios que registra Auxiliar y los eventos

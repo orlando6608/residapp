@@ -1,6 +1,7 @@
 @model ResidApp.Web.Models.ResidentPhotoEditorViewModel
-@* Foto de identificación (script 0059): la ponen, cambian y quitan Administración y Enfermería. site.js reduce la foto en el navegador antes de
-   enviarla; sin JavaScript el servidor solo acepta un JPEG de 1 MB como máximo. *@
+@* Foto de identificación (script 0059): la ponen, cambian y quitan Administración y Enfermería. site.js muestra el encuadre al elegirla (mover y
+   acercar) y envía el recorte cuadrado que se ve en él; sin JavaScript el encuadre no aparece y el servidor solo acepta un JPEG de 1 MB como máximo.
+   Los botones de flecha son la alternativa al arrastre (WCAG 2.5.7). *@
 <section class="card mb-3" aria-labelledby="foto-residente-titulo">
     <div class="card-body">
         <h2 class="h5 card-title" id="foto-residente-titulo">Foto de identificación</h2>
@@ -14,8 +15,21 @@
             <div class="mb-3">
                 <label class="form-label" for="foto-residente-fichero">@(Model.UpdatedAt is null ? "Elige o haz una foto" : "Elige o haz una foto nueva")</label>
                 <input class="form-control form-control-lg" type="file" accept="image/*" name="Form.Foto" id="foto-residente-fichero" required
-                       data-foto-residente data-foto-vista="foto-residente-vista" />
-                <img id="foto-residente-vista" alt="Vista previa de la foto elegida" class="foto-residente foto-residente-grande rounded-3 object-fit-cover mt-2" hidden />
+                       data-foto-residente data-foto-encuadre="foto-residente-encuadre" />
+            </div>
+            <div id="foto-residente-encuadre" class="mb-3" hidden>
+                <p class="form-text mt-0" id="foto-residente-encuadre-ayuda">Arrastra la foto para centrar la cara. Lo que se ve en el recuadro es lo que se guarda.</p>
+                <canvas width="480" height="480" class="foto-encuadre rounded-3 d-block" tabindex="0" role="img"
+                        aria-label="Encuadre de la foto: arrástrala o usa las flechas para centrar la cara" aria-describedby="foto-residente-encuadre-ayuda"
+                        data-foto-lienzo></canvas>
+                <div class="d-flex flex-wrap gap-2 mt-2" role="group" aria-label="Mover la foto">
+                    <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="-1,0" aria-label="Mover la foto a la izquierda">←</button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="0,-1" aria-label="Mover la foto arriba">↑</button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="0,1" aria-label="Mover la foto abajo">↓</button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="1,0" aria-label="Mover la foto a la derecha">→</button>
+                </div>
+                <label class="form-label d-block mt-2" for="foto-residente-acercar">Acercar</label>
+                <input class="form-range foto-encuadre-acercar" type="range" min="1" max="3" step="0.05" value="1" id="foto-residente-acercar" data-foto-acercar />
             </div>
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" name="Form.Consentimiento" value="true" id="foto-residente-consentimiento" required />

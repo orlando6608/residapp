@@ -53,3 +53,18 @@
   height: 5rem;
   font-size: 1.5rem;
 }
+
+/* Encuadre de la foto (_FotoResidenteEditar): el lienzo de 480 px se muestra más pequeño; arrastrar en el móvil mueve la foto, no la
+   página. */
+.foto-encuadre {
+  width: 100%;
+  max-width: 15rem;
+  aspect-ratio: 1;
+  border: 1px solid var(--bs-border-color);
+  touch-action: none;
+  cursor: grab;
+}
+
+.foto-encuadre-acercar {
+  max-width: 15rem;
+}

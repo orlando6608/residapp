@@ -56,47 +56,141 @@
   });
 })();
 
-// Foto de identificación del residente (_FotoResidenteEditar): al elegir una foto, el navegador la reduce a 480 px de lado mayor y la
-// vuelve a codificar en JPEG antes de enviarla. Así pesa poco, sale derecha (al dibujarla se aplica la orientación de la cámara) y no
-// lleva los metadatos de la cámara, posición GPS incluida. Es mejora progresiva: sin JavaScript, o si el navegador no sabe leer la
-// imagen, se envía el fichero tal cual y el servidor solo acepta un JPEG de 1 MB como máximo (ResidentPhoto).
+// Foto de identificación del residente (_FotoResidenteEditar): al elegir una foto, se muestra el encuadre (un lienzo cuadrado de
+// 480 px), donde se mueve arrastrándola, con los botones de flecha o con las flechas del teclado, y se acerca con «Acercar». Lo que
+// se ve en el lienzo es lo que se envía: un JPEG cuadrado de 480 px, que pesa poco, sale derecho (al dibujarla se aplica la
+// orientación de la cámara) y no lleva los metadatos de la cámara, posición GPS incluida. La foto cubre siempre todo el cuadrado.
+// Es mejora progresiva: sin JavaScript, o si el navegador no sabe leer la imagen, se envía el fichero tal cual y el servidor solo
+// acepta un JPEG de 1 MB como máximo (ResidentPhoto).
 (() => {
-  const ladoMaximo = 480;
+  const lado = 480;
+  const paso = 16;
+  let foto = null;
+  let arrastre = null;
+
+  // El desplazamiento (x, y) es el del centro de la foto respecto al centro del cuadrado, en píxeles del lienzo; se limita para
+  // que no queden bordes vacíos.
+  const dibujar = () => {
+    const escala = Math.max(lado / foto.imagen.width, lado / foto.imagen.height) * foto.zoom;
+    const ancho = foto.imagen.width * escala;
+    const alto = foto.imagen.height * escala;
+    foto.x = Math.max(-(ancho - lado) / 2, Math.min((ancho - lado) / 2, foto.x));
+    foto.y = Math.max(-(alto - lado) / 2, Math.min((alto - lado) / 2, foto.y));
+    foto.lienzo.getContext("2d").drawImage(foto.imagen, (lado - ancho) / 2 + foto.x, (lado - alto) / 2 + foto.y, ancho, alto);
+  };
+
+  // Síncrono (toDataURL, no toBlob): al pulsar «Guardar foto» justo después de mover, el fichero ya es el del último encuadre.
+  // Cambiar files no vuelve a lanzar «change».
+  const actualizarFichero = () => {
+    const datos = atob(foto.lienzo.toDataURL("image/jpeg", 0.85).split(",")[1]);
+    const bytes = Uint8Array.from(datos, (caracter) => caracter.charCodeAt(0));
+    const ficheros = new DataTransfer();
+    ficheros.items.add(new File([bytes], "foto.jpg", { type: "image/jpeg" }));
+    foto.campo.files = ficheros.files;
+  };
+
+  const ajustar = (cambio) => {
+    if (!foto) {
+      return;
+    }
+    cambio();
+    dibujar();
+    actualizarFichero();
+  };
 
   document.addEventListener("change", async (evento) => {
     const campo = evento.target;
-    if (!(campo instanceof HTMLInputElement) || !campo.hasAttribute("data-foto-residente") || campo.files?.length !== 1) {
+    if (!(campo instanceof HTMLInputElement) || !campo.hasAttribute("data-foto-residente")) {
+      return;
+    }
+
+    // El encuadre de una foto anterior no puede quedar a la vista con otro fichero en el campo.
+    const encuadre = document.getElementById(campo.dataset.fotoEncuadre ?? "");
+    const lienzo = encuadre?.querySelector("[data-foto-lienzo]");
+    const acercar = encuadre?.querySelector("[data-foto-acercar]");
+    foto?.imagen.close();
+    foto = null;
+    arrastre = null;
+    if (encuadre) {
+      encuadre.hidden = true;
+    }
+    if (campo.files?.length !== 1 || !(lienzo instanceof HTMLCanvasElement) || !(acercar instanceof HTMLInputElement)) {
       return;
     }
 
     try {
-      const imagen = await createImageBitmap(campo.files[0], { imageOrientation: "from-image" });
-      const escala = Math.min(1, ladoMaximo / Math.max(imagen.width, imagen.height));
-      const lienzo = document.createElement("canvas");
-      lienzo.width = Math.round(imagen.width * escala);
-      lienzo.height = Math.round(imagen.height * escala);
-      lienzo.getContext("2d").drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
-      imagen.close();
-      const foto = await new Promise((resolver) => lienzo.toBlob(resolver, "image/jpeg", 0.85));
-      if (!foto) {
+      const archivo = campo.files[0];
+      const imagen = await createImageBitmap(archivo, { imageOrientation: "from-image" });
+      if (campo.files?.[0] !== archivo) {
+        // Mientras se leía se eligió otra foto.
+        imagen.close();
         return;
       }
-
-      // Cambiar files no vuelve a lanzar «change».
-      const ficheros = new DataTransfer();
-      ficheros.items.add(new File([foto], "foto.jpg", { type: "image/jpeg" }));
-      campo.files = ficheros.files;
-
-      const vista = document.getElementById(campo.dataset.fotoVista ?? "");
-      if (vista instanceof HTMLImageElement) {
-        if (vista.src.startsWith("blob:")) {
-          URL.revokeObjectURL(vista.src);
-        }
-        vista.src = URL.createObjectURL(foto);
-        vista.hidden = false;
-      }
+      foto = { campo, lienzo, acercar, imagen, zoom: 1, x: 0, y: 0 };
+      acercar.value = "1";
+      encuadre.hidden = false;
+      dibujar();
+      actualizarFichero();
     } catch {
       // Se envía la foto original y responde el servidor.
     }
   });
+
+  document.addEventListener("input", (evento) => {
+    if (evento.target === foto?.acercar) {
+      ajustar(() => { foto.zoom = Number(foto.acercar.value); });
+    }
+  });
+
+  document.addEventListener("click", (evento) => {
+    const boton = evento.target instanceof Element ? evento.target.closest("[data-foto-mover]") : null;
+    if (boton) {
+      const [dx, dy] = boton.dataset.fotoMover.split(",").map(Number);
+      ajustar(() => { foto.x += dx * paso; foto.y += dy * paso; });
+    }
+  });
+
+  document.addEventListener("keydown", (evento) => {
+    if (evento.target !== foto?.lienzo) {
+      return;
+    }
+    const movimientos = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (evento.key in movimientos) {
+      const [dx, dy] = movimientos[evento.key];
+      ajustar(() => { foto.x += dx * paso; foto.y += dy * paso; });
+    } else if (evento.key === "+" || evento.key === "-") {
+      ajustar(() => {
+        foto.acercar.value = String(Number(foto.acercar.value) + (evento.key === "+" ? 0.1 : -0.1));
+        foto.zoom = Number(foto.acercar.value);
+      });
+    } else {
+      return;
+    }
+    evento.preventDefault();
+  });
+
+  // Arrastre con el dedo o el ratón: el movimiento en pantalla se pasa a píxeles del lienzo, que se muestra más pequeño.
+  document.addEventListener("pointerdown", (evento) => {
+    if (evento.target === foto?.lienzo) {
+      foto.lienzo.setPointerCapture(evento.pointerId);
+      arrastre = { x: evento.clientX, y: evento.clientY };
+    }
+  });
+  document.addEventListener("pointermove", (evento) => {
+    if (arrastre && evento.target === foto?.lienzo) {
+      const proporcion = lado / foto.lienzo.clientWidth;
+      foto.x += (evento.clientX - arrastre.x) * proporcion;
+      foto.y += (evento.clientY - arrastre.y) * proporcion;
+      arrastre = { x: evento.clientX, y: evento.clientY };
+      dibujar();
+    }
+  });
+  const soltar = (evento) => {
+    if (arrastre && evento.target === foto?.lienzo) {
+      arrastre = null;
+      actualizarFichero();
+    }
+  };
+  document.addEventListener("pointerup", soltar);
+  document.addEventListener("pointercancel", soltar);
 })();
