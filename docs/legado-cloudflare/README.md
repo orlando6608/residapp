@@ -1,5 +1,10 @@
 # Plataforma asistencial y de comunicación con familias
 
+> **Congelado y ya no ejecutable (2026-10-21).** Este prototipo solo se conserva como referencia de las reglas de negocio de ResidApp
+> (.NET 10). Se quitaron `package.json`, `pnpm-lock.yaml` y `pnpm-workspace.yaml`: sus dependencias de desarrollo (Vite) daban 6 alertas
+> de seguridad de Dependabot y nadie lo ejecuta. Las instrucciones de instalación de abajo ya no funcionan; si hiciera falta, los
+> manifiestos están en el historial de git (`git show d8c8196:docs/legado-cloudflare/package.json`).
+
 Plataforma web para residencias geriátricas que estructura el registro cotidiano de los residentes, la detección y seguimiento de cambios, la continuidad entre turnos y la comunicación de información aprobada a familiares autorizados.
 
 > Nombre descriptivo provisional. La marca comercial definitiva aún no está decidida.

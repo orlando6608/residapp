@@ -14,7 +14,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Dónde estamos
 - **ADR 0007, incremento I0: capa común de sesión (cierra C1 y A2) y centro de prueba «Residencia Los Almendros» (2026-10-21; script `0061`, el
-  siguiente libre es `0062`; suite 410 unitarios, 476 de integración y 241 funcionales en verde, proyecto a proyecto; sin commit ni despliegue todavía).**
+  siguiente libre es `0062`; suite 410 unitarios, 476 de integración y 245 funcionales en verde, proyecto a proyecto; commits `2325f47`, `455a0ec`
+  y `b5522c0` en `main`, desplegados en Azure dev con el CI en verde y comprobados allí).**
+  - **Pendiente detectado, sin tocar:**
+    - si la sesión caduca con un formulario a medias, al guardar se pasa por el login y el `ReturnUrl` apunta a una acción solo POST:
+      probablemente acabe en un error 405 (no comprobado). Arreglo posible: devolver al GET de la pantalla o al Inicio.
+    - la maqueta «Solicitar acceso» (`DevAuth/Register`) pide correo y contraseña para crearse una cuenta, lo contrario del ADR 0007 (las
+      cuentas las da Administración o Plataforma); sustituirla por «pide el acceso a la Administración de tu centro», como mucho en I2.
+  - **Dependabot (2026-10-21):** las 6 alertas abiertas (Vite y `launch-editor`, 1 alta) eran todas de `docs/legado-cloudflare/package.json`.
+    Se quitaron del legado `package.json`, `pnpm-lock.yaml` y `pnpm-workspace.yaml` (nadie lo ejecuta; su README lo explica y dice cómo
+    recuperarlos de git). El resto del legado se conserva: lo citan 31 veces el `CLAUDE.md`, ADRs, migraciones, el dominio y los bocetos como
+    fuente de las reglas de negocio. Tras el push, comprobar que GitHub cierra las alertas solo.
   - **Decisión:** el ADR 0007 pasa a **ASP.NET Core Identity propio** (no Entra External ID: sin TOTP, passkeys con Front Door fuera del EU Data
     Boundary, sin invitaciones). Orlando hace de Seguridad; las puertas del DPO esperan a la residencia piloto. Incrementos I1–I5 en el ADR.
   - **Sesión:** cookie de ASP.NET Core `residapp_sesion` (sujeto, id de sesión y nombre visible; cifrada por Data Protection) validada en cada petición
@@ -1314,7 +1324,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 ## Siguiente tarea
 
 0. **El incremento I0 del ADR 0007 está cerrado** y comprobado en Azure dev (ver «Dónde estamos»). Orlando elige entre **I1 (ASP.NET Core Identity: contraseña, TOTP y bloqueo)**, que es lo que desbloquea los datos reales, el
-   Portal Familiar real y «Mi cuenta», y el **dictado por voz del ADR 0009**. Cada uno con su propio plan.
+   Portal Familiar real y «Mi cuenta», y el **dictado por voz del ADR 0009**. Cada uno con su propio plan. Sueltos: probar Importar y
+   Exportar (ADR 0010) en Azure dev, que sigue sin hacerse; los dos pendientes de I0 de «Dónde estamos» (formulario tras caducar la sesión y la
+   maqueta «Solicitar acceso»); y las dos preguntas a CJ de la guía 2 (hora en la fecha prevista, prueba 2.4 de «Conducta médica»).
+   Para entrar en Azure dev hace falta la clave de desarrollo: está solo en el ajuste `DevAuth__Clave` de la Web App
+   (`az webapp config appsettings list -g rg-residapp-dev -n app-residapp-dev --query "[?name=='DevAuth__Clave'].value" -o tsv`); no la copies a
+   ningún fichero del repositorio.
 1. **Revisar las respuestas de CJ** que lleguen:
    - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
      finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).
