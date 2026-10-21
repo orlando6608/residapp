@@ -40,7 +40,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   El resto de R2 (buscador en la lista de la Auxiliar y orden por pendiente de cierre) sigue pendiente.
 
   **Después (2026-10-20, a petición del usuario):**
-  - en la cabecera de las fichas (y en la vista previa), la foto es un cuadrado con esquinas redondeadas (`rounded-3`); en las listas sigue redonda;
+  - la foto es un cuadrado con esquinas redondeadas (`rounded-3`): primero en la cabecera de las fichas y la vista previa (2026-10-20) y, desde el 2026-10-21,
+    también en las listas (las guías 1 y 5 pasan a la versión 2026-10-21);
   - guías de pruebas: guía 1, prueba 13 nueva (foto y cama como Auxiliar, Enfermería y Medicina, foto puesta por Enfermería en «Residente Portal Familiar» y Portal
     Familiar sin foto); guía 5, prueba 16 nueva (poner, cambiar y quitar la foto, ubicación en la lista, auditoría). Se añadieron al final para no renumerar;
   - ambas guías van con `data-version` 2026-10-20 (las respuestas de la guía 1 son de la versión anterior: el documento avisa); 85 pruebas en total;

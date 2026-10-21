@@ -40,7 +40,7 @@
   }
 }
 
-/* Foto de identificación del residente (_FotoResidente): de tamaño fijo, redonda en las listas y cuadrada con esquinas redondeadas en la ficha;
+/* Foto de identificación del residente (_FotoResidente): de tamaño fijo y cuadrada con las esquinas redondeadas, en las listas y en la ficha;
    con las iniciales si no tiene. */
 .foto-residente {
   width: 3rem;

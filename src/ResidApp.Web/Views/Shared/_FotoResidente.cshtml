@@ -1,17 +1,17 @@
 @model ResidApp.Web.Models.ResidentPhotoViewModel
-@* La foto acompaña siempre al nombre, que ya está al lado: es decorativa para el lector de pantalla (alt vacío). En las listas, redonda y
-   cargada al acercarse a ella; la grande va en la cabecera de la ficha, cuadrada con las esquinas redondeadas y a la vista desde el principio. *@
+@* La foto acompaña siempre al nombre, que ya está al lado: es decorativa para el lector de pantalla (alt vacío). Cuadrada con las esquinas
+   redondeadas; en las listas se carga al acercarse a ella, y la grande va en la cabecera de la ficha, a la vista desde el principio. *@
 @{
-    var shape = Model.Large ? "foto-residente-grande rounded-3" : "rounded-circle";
+    var size = Model.Large ? "foto-residente-grande" : "";
 }
 @if (Model.UpdatedAt is { } updatedAt)
 {
     <img src="@Url.Action("Ver", "FotoResidente", new { residenteId = Model.ResidentId, v = updatedAt.UtcTicks })" alt=""
          loading="@(Model.Large ? "eager" : "lazy")" decoding="async" width="@(Model.Large ? 80 : 48)" height="@(Model.Large ? 80 : 48)"
-         class="foto-residente @shape object-fit-cover" />
+         class="foto-residente @size rounded-3 object-fit-cover" />
 }
 else
 {
-    <span class="foto-residente @shape bg-secondary-subtle text-secondary-emphasis fw-semibold d-inline-flex align-items-center justify-content-center"
+    <span class="foto-residente @size rounded-3 bg-secondary-subtle text-secondary-emphasis fw-semibold d-inline-flex align-items-center justify-content-center"
           aria-hidden="true">@Model.Initials</span>
 }
