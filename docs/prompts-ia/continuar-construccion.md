@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-16. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-21. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -13,6 +13,38 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Importar y exportar datos por ficheros (2026-10-21, estudio de mercado R1, solo la parte administrativa; ADR 0010; script `0060`, el siguiente libre es
+  `0061`; suite 405 unitarios, 473 de integración y 222 funcionales en verde; sin commit ni despliegue todavía).**
+  - **Cómo se llegó:** el usuario pidió analizar funciones con IA (Mistral) y, tras descartar las que chocaban con las reglas, eligió atacar el doble registro
+    con un módulo de importación. Decidió hacerlo **sin IA**: el emparejamiento de columnas es determinista (plantilla del centro, sinónimos, formato de los
+    datos y, si no, a mano). La IA se reserva para el dictado del ADR 0009, que es el **siguiente bloque** y necesita su propio plan.
+  - **Lo hecho (detalle en `pendientes-administracion.md`):**
+    - `/Administracion/Importar` (estructura y residentes desde CSV, XLS o XLSX, con vista previa fila a fila, reimportación sin duplicados y plantillas por
+      centro);
+    - `/Administracion/Exportar` (estructura y censo en CSV, auditado antes de entregarlo, también con las columnas de otra aplicación);
+    - auditoría `IMPORT_RUN`, `EXPORT_RUN` y `EXCHANGE_TEMPLATE_SAVE`;
+    - dependencia nueva: ExcelDataReader 3.9.0 (MIT);
+    - el fichero no se guarda en el servidor: `intercambio.js` lo reenvía en cada paso.
+  - **Supuestos para CJ:** `docs/pendientes-cj/importacion-exportacion-confirmaciones-cj.html` (8 preguntas, no bloquea): fecha de alta del importado, criterio
+    de duplicado, nombre y apellidos, sexo que falta, familiares, censo exportado, quién importa y exporta, y si se estudia exportar los registros
+    asistenciales.
+  - **Probado en local con Chrome sin interfaz** (Playwright; ver «Lecciones técnicas»):
+    - recorrido completo con ficheros ficticios: estructura de 5 filas (4 nuevas, 1 con error), residentes con un valor de sexo sin reconocer (re-análisis y
+      foco de vuelta al desplegable), plantilla aplicada sola al mismo fichero, plantilla de exportación y las tres descargas;
+    - en claro, oscuro y a 375 px, sin desplazamiento lateral ni errores en la consola;
+    - encontró y se corrigieron dos fallos: el nombre de la plantilla borraba la vista previa al pulsar «Importar», y el mensaje «Plantilla guardada» se
+      perdía;
+    - quedan en la base local los centros «Residencia de prueba (intercambio …)» con sus cuentas `prueba-intercambio-adm*`.
+  - **Sin hacer:**
+    - no se ha probado con exportaciones reales de ResiPlus, Gerosalus u otro programa;
+    - no se ha desplegado en Azure dev. Al desplegar, el CI aplica el `0060`; conviene probar allí con un fichero ficticio, sin tocar «Residente Integrado
+      Uno»;
+    - **Aviso (fuera de este bloque):** `dotnet test src/ResidApp.sln` lanza a la vez los proyectos de integración y funcionales contra la misma BD
+      local. Ese día falló de forma intermitente: 3 de 6 pasadas, con decenas de tiempos de espera de SQL (ejecución y también inicio de sesión) en
+      pruebas de todo tipo.
+      - Con el código de `HEAD`, sin este bloque, falló igual (219 de integración), así que no lo causa este bloque.
+      - Uno a uno (`dotnet test` de cada proyecto) todo sale en verde en 32 s y 13 s.
+      - Si vuelve a pasar, ejecuta los proyectos por separado. Arreglarlo (por ejemplo, que no corran en paralelo) es otra tarea.
 - **Foto y habitación en la lista de residentes (2026-10-20, estudio de mercado R2 en parte; script `0059`, el siguiente libre es `0060`; suite 361 unitarios,
   460 de integración y 219 funcionales en verde; sin commit ni despliegue todavía):** al revisar el código se vio que la habitación y la plaza ya salían en Auxiliar,
   Enfermería y Medicina desde el 2026-10-02. El estudio no las vio porque ningún residente de Azure tiene habitación (11 de 11 «SinHabitacion»), así que se corrigió
@@ -1389,6 +1421,13 @@ Repite estos pasos antes de dar un bloque por cerrado:
   `IAuthorizationEvidenceProvider.LoadEvidenceAsync(..., new AuthorizationTarget.Read(id))` (la misma regla de ámbito que las listas) y añade su propia lista de
   perfiles. `RequestAuthorizationContextResolver` rechaza `Read` salvo para Dirección y el basal.
 - **Una foto en la cabecera no va con `loading="lazy"`:** las capturas (y el primer pintado) la enseñaban vacía. Solo las miniaturas de las listas cargan en diferido.
+- **Formularios por `fetch` (importar y exportar, `intercambio.js`):**
+  - **Redirección:** `fetch` sigue el 302 él solo y consume el TempData de la página de destino antes de que el JavaScript navegue a ella. El mensaje de
+    éxito va en la dirección (`?plantillaGuardada=`).
+  - **«change» de un campo de texto:** salta al pulsar el botón siguiente (al perder el foco). Si el manejador borra el bloque donde está el botón, el clic no
+    llega: solo los desplegables borran la vista previa.
+  - **Pruebas en navegador real:** los dos fallos solo salieron al probar con un navegador real; las pruebas por HTTP no los ven. Se probó con
+    `playwright-core` de la caché de npx (`%LOCALAPPDATA%\npm-cache\_npx\*\node_modules\playwright-core`) y `chromium.launch({ channel: "chrome" })`.
 
 - **`border-start border-4 border-<color>` en una `.card` dibuja un marco**, no una franja: `.border-4` fija el ancho de los
   cuatro lados y `.border-<color>` los colorea todos. `residapp-theme.css` devuelve los otros tres lados al borde neutro;

@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.79" />
+    <!-- Lectura de los ficheros de importación (CSV, XLS y XLSX; ADR 0010). Licencia MIT. -->
+    <PackageReference Include="ExcelDataReader" Version="3.9.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.3" />
     <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
     <!-- Dependencia transitiva de SqlClient y PDFsharp fijada en una versión corregida (GHSA-846f-f764-76mx y GHSA-2fmv-rv2c-59x7:

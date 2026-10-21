@@ -9,6 +9,7 @@ public enum AuditCategory
     ResidentesYFamilias,
     TurnosYEquipos,
     Citas,
+    ImportacionYExportacion,
 }
 
 /// <summary>
@@ -107,6 +108,9 @@ public static class AdministrativeAudit
         ("APPOINTMENT_REQUEST_ACCEPT", AuditCategory.Citas),
         ("APPOINTMENT_REQUEST_CANCEL", AuditCategory.Citas),
         ("APPOINTMENT_REQUEST_CLOSE", AuditCategory.Citas),
+        ("IMPORT_RUN", AuditCategory.ImportacionYExportacion),
+        ("EXPORT_RUN", AuditCategory.ImportacionYExportacion),
+        ("EXCHANGE_TEMPLATE_SAVE", AuditCategory.ImportacionYExportacion),
     ];
 
     public static bool IsAdministrative(string? code) => code is not null && Actions.Any(a => a.Code == code);

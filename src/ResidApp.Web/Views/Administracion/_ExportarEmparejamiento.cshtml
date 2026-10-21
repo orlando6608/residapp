@@ -1,0 +1,62 @@
+@using ResidApp.Application.Intercambio
+@using ResidApp.Shared
+@model ResidApp.Application.UseCases.ExportTemplateAnalysis
+@*
+    ADR 0010: las columnas de un fichero de ejemplo de otra aplicación y qué dato de ResidApp va en cada una al exportar. Se pinta dentro del
+    formulario de la nueva plantilla, así que sus campos viajan junto al fichero al guardar. Una columna sin dato sale vacía.
+*@
+<section class="mt-3" aria-labelledby="exportar-emparejamiento-titulo">
+    <h3 class="h6" id="exportar-emparejamiento-titulo" tabindex="-1">Columnas del fichero de ejemplo</h3>
+    @if (Model.TemplateName is not null)
+    {
+        <p class="small">Ya hay una plantilla para este formato de fichero: «@Model.TemplateName». Si guardas con otro nombre, tendrás las dos.</p>
+    }
+    <input type="hidden" name="ConEmparejamiento" value="true" />
+    @foreach (var column in Model.Columns)
+    {
+        <div class="row g-2 align-items-center py-2 border-bottom">
+            <div class="col-12 col-md-5">
+                <label for="exportar-campo-@column.Index" class="form-label fw-semibold mb-0">@column.Header</label>
+            </div>
+            <div class="col-12 col-md-7">
+                <select id="exportar-campo-@column.Index" name="Campos[@column.Index]" class="form-select">
+                    <option value="" selected="@(column.Field is null)">Vacía</option>
+                    @foreach (var field in ExchangeCatalog.ExportFields(Model.Entity))
+                    {
+                        <option value="@field.ToCode()" selected="@(column.Field == field)">@EnumDisplay.Label(field)</option>
+                    }
+                </select>
+                @if (column.Origin is { } origin)
+                {
+                    <div class="small mt-1">
+                        <span class="badge text-bg-info">Emparejado automáticamente</span>
+                        <span class="text-body-secondary">@EnumDisplay.Label(origin)</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    @if (Model.Entity == ExchangeEntity.Residentes)
+    {
+        <div class="mt-3">
+            <label for="exportar-formato-fecha" class="form-label fw-semibold">Formato de las fechas</label>
+            <select id="exportar-formato-fecha" name="FormatoFecha" class="form-select">
+                @foreach (var format in Enum.GetValues<ExchangeDateFormat>())
+                {
+                    <option value="@format.ToCode()" selected="@(format == Model.DateFormat)">@EnumDisplay.Label(format)</option>
+                }
+            </select>
+        </div>
+    }
+    <div class="mt-3">
+        <label for="exportar-nombre-plantilla" class="form-label">Nombre de la plantilla</label>
+        <input type="text" id="exportar-nombre-plantilla" name="NombrePlantilla" class="form-control" maxlength="@ExchangeLimits.MaxTemplateNameLength"
+               autocomplete="off" required aria-describedby="ayuda-exportar-nombre" value="@Model.TemplateName" />
+        <div id="ayuda-exportar-nombre" class="form-text">Por ejemplo, el nombre de la otra aplicación. Con un nombre que ya existe, la sustituye.</div>
+    </div>
+    <div class="d-grid d-md-flex justify-content-md-end mt-3">
+        <button type="submit" class="btn btn-primary btn-lg" formaction="@Url.Action("ExportarPlantillaGuardar")" data-destino="informe">
+            Guardar la plantilla
+        </button>
+    </div>
+</section>

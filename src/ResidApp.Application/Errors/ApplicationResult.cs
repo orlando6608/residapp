@@ -100,6 +100,25 @@ public static class ApplicationResultRunner
                 "El residente está suspendido por un ingreso hospitalario: no se puede actuar sobre él hasta que Administración reanude su atención.");
         }
 
+        if (message.StartsWith("EXCHANGE_", StringComparison.Ordinal))
+        {
+            // ADR 0010: el fichero de la importación (o el de ejemplo de una exportación) o lo elegido en la pantalla no se puede usar; se
+            // dice por qué.
+            var exchangeText = message switch
+            {
+                "EXCHANGE_FILE_INVALID" => "No se puede leer el fichero: tiene que ser CSV, XLS o XLSX, con los nombres de las columnas en la primera fila.",
+                "EXCHANGE_FILE_TOO_LARGE" => "El fichero es demasiado grande: como mucho 5 MB, 2.000 filas y 60 columnas.",
+                "EXCHANGE_MAPPING_INVALID" => "Lo elegido en la pantalla no corresponde al fichero: vuelve a pulsar «Analizar el fichero».",
+                "EXCHANGE_TEMPLATE_NAME_INVALID" => "Escribe un nombre para la plantilla (hasta 100 caracteres).",
+                "EXCHANGE_EXPORT_EMPTY" => "Elige al menos una columna que se rellene con datos de ResidApp.",
+                _ => null,
+            };
+            if (exchangeText is not null)
+            {
+                return new ApplicationFailure(ApplicationFailureCode.InvalidInput, exchangeText);
+            }
+        }
+
         if (error is AccessDeniedException || AccessDeniedPattern.IsMatch(message))
         {
             code = ApplicationFailureCode.AccessDenied;

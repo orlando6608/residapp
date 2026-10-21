@@ -347,6 +347,47 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
     - **tests:** `AdministracionHabitacionesTests` (integración: crear, rechazos, renombrar y estado, alta con plaza, alta rechazada, 6 altas simultáneas, inactivar
       con residentes, opciones del alta por perfil, triggers e índice) y `Habitaciones_…` en `ProfessionalAccountScreensTests` (funcional).
 
+- **Importar y exportar datos por ficheros (estudio de mercado R1; ADR 0010; script `0060`)** — 2026-10-21. **Hecho.**
+  - **Decisiones del usuario (2026-10-21):**
+    - solo la parte administrativa de R1 y **sin IA**: el emparejamiento de columnas es determinista (plantilla del centro, sinónimos, formato de
+      los datos y, si no, a mano). La IA se reserva para el dictado del ADR 0009;
+    - R1 lo decide Orlando y CJ confirma después los supuestos;
+    - la exportación (estructura y censo) entra en esta entrega.
+  - **Qué hace:**
+    - `/Administracion/Importar`: estructura o residentes desde CSV, XLS o XLSX (5 MB, 2.000 filas, 60 columnas, primera hoja). Pasos: analizar,
+      ajustar el emparejamiento, vista previa fila a fila (se importará / ya existe / error con su motivo) e importar. Opcionalmente se guarda
+      el emparejamiento como plantilla, que se aplica sola a un fichero con las mismas cabeceras. Descarga de la plantilla vacía de ResidApp
+      (`PlantillaImportacion`).
+    - `/Administracion/Exportar`: estructura y censo de residentes activos del ámbito en CSV (UTF-8 con BOM, «;», protección contra fórmulas),
+      con las columnas de ResidApp o con una plantilla de exportación creada a partir de un fichero de ejemplo de otra aplicación.
+    - Fichas «Importar datos» y «Exportar datos» en el inicio.
+  - **Reglas:**
+    - se importa fila a fila con los casos de uso de siempre (`AdministracionEstructuraApplicationService`, `CreateResident`), así que valen las
+      mismas validaciones, disparadores, seguridad por filas y auditoría que a mano;
+    - lo que existe no se duplica: estructura por nombre normalizado, residente por referencia interna o por nombre y fecha de nacimiento entre los
+      activos del ámbito, y un `OperacionId` del alta derivado de la fila;
+    - una unidad existente no se cambia de edificio ni de planta y lo inactivo no se usa;
+    - los residentes no crean estructura;
+    - el sexo nunca se deduce, y vacío es «No consta»;
+    - el fichero no se guarda (lo reenvía `wwwroot/js/intercambio.js` en cada paso) y el análisis no enseña sus valores;
+    - no se importan usuarios (`sujeto_externo` es inmutable y espera al ADR 0007), familiares ni nada clínico.
+  - **Auditoría:** `IMPORT_RUN`, `EXPORT_RUN` (antes de entregar el fichero) y `EXCHANGE_TEMPLATE_SAVE`, sin datos, en la categoría «Importación y
+    exportación».
+  - **Implementación:**
+    - script `0060` (`plantillas_intercambio`, bajo `seg.pol_centro`);
+    - `Application/Intercambio/` (`ExchangeCatalog`, `ColumnMatcher`, `ExchangeValues`, `ImportPlanning` con `StructureImport` y
+      `ResidentImportPlanner`, `CsvExport`);
+    - `Ports/IExchange.cs` y `AdministracionIntercambioApplicationService`;
+    - `Infrastructure/Intercambio/ExcelTableFileReader.cs` (ExcelDataReader 3.9.0, MIT), `SqlExchangeDirectory` y `SqlExchangeRepository`;
+    - `AdministracionController.Intercambio.cs`, las vistas `Importar`, `Exportar`, `_ImportarEmparejamiento`, `_ImportarInforme`,
+      `_ExportarEmparejamiento` y `_IntercambioAviso`, y `intercambio.js`.
+  - **Tests:**
+    - unitarios: `IntercambioTests`;
+    - integración: `IntercambioTests` (estructura, residentes, reimportar, plantillas aisladas por centro, exportación auditada, Enfermería sin
+      acceso) y `ExcelTableFileReaderTests`;
+    - funcionales: `IntercambioScreensTests`.
+  - **Supuestos a confirmar con CJ (no bloquea):** `docs/pendientes-cj/importacion-exportacion-confirmaciones-cj.html`.
+
 ## Pendiente
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):

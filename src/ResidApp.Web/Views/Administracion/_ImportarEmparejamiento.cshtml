@@ -1,0 +1,146 @@
+@using ResidApp.Application.Intercambio
+@using ResidApp.Domain.Residents
+@using ResidApp.Shared
+@model ResidApp.Application.UseCases.ImportAnalysis
+@*
+    ADR 0010: el emparejamiento de las columnas de un fichero que se va a importar. Se pinta dentro del formulario de Importar, así que sus
+    campos viajan junto al fichero en el paso siguiente. Cambiar una columna o un valor de sexo lo vuelve a analizar (intercambio.js).
+    No enseña los valores del fichero: solo qué parecen contener y cuántos distintos hay (minimización).
+*@
+<section class="card mb-3" aria-labelledby="emparejamiento-titulo">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="emparejamiento-titulo" tabindex="-1">Columnas del fichero</h2>
+        <p class="mb-3">
+            @(Model.Rows == 1 ? "1 fila con datos" : $"{Model.Rows} filas con datos") ·
+            @EnumDisplay.Label(Model.Entity)
+            @if (Model.TemplateName is not null)
+            {
+                <span> · Se ha aplicado la plantilla «@Model.TemplateName», guardada para este mismo formato de fichero.</span>
+            }
+        </p>
+        <p class="text-body-secondary small">
+            Elige a qué dato de ResidApp va cada columna, o «No se usa». Lo marcado como «Emparejado automáticamente» lo ha propuesto ResidApp:
+            revísalo.
+        </p>
+        <input type="hidden" name="ConEmparejamiento" value="true" />
+
+        @foreach (var column in Model.Columns)
+        {
+            <div class="row g-2 align-items-center py-2 border-bottom">
+                <div class="col-12 col-md-5">
+                    <label for="campo-@column.Index" class="form-label fw-semibold mb-0">@column.Header</label>
+                    <div class="small text-body-secondary">
+                        @EnumDisplay.Label(column.Kind)@(column.Kind == ColumnKind.Vacia ? "" : column.DistinctValues == 1 ? " · 1 valor distinto" : $" · {column.DistinctValues} valores distintos")
+                    </div>
+                </div>
+                <div class="col-12 col-md-7">
+                    <select id="campo-@column.Index" name="Campos[@column.Index]" class="form-select" data-reanaliza>
+                        <option value="" selected="@(column.Field is null)">No se usa</option>
+                        @foreach (var spec in ExchangeCatalog.Fields(Model.Entity))
+                        {
+                            <option value="@spec.Field.ToCode()" selected="@(column.Field == spec.Field)">@EnumDisplay.Label(spec.Field)@(spec.Required ? " (obligatorio)" : "")</option>
+                        }
+                    </select>
+                    @if (column.Origin is { } origin)
+                    {
+                        <div class="small mt-1">
+                            <span class="badge text-bg-info">Emparejado automáticamente</span>
+                            <span class="text-body-secondary">@EnumDisplay.Label(origin)</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (Model.UsesDates)
+        {
+            <div class="mt-3">
+                <label for="formato-fecha" class="form-label fw-semibold">Formato de las fechas de nacimiento</label>
+                <select id="formato-fecha" name="FormatoFecha" class="form-select" aria-describedby="ayuda-formato-fecha">
+                    @foreach (var format in Enum.GetValues<ExchangeDateFormat>())
+                    {
+                        <option value="@format.ToCode()" selected="@(format == Model.DateFormat)">@EnumDisplay.Label(format)</option>
+                    }
+                </select>
+                <div id="ayuda-formato-fecha" class="form-text">
+                    @(Model.DateFormats.Count == Enum.GetValues<ExchangeDateFormat>().Length || Model.DateFormats.Count == 0
+                        ? "Comprueba las fechas en la vista previa."
+                        : $"Todas las fechas del fichero se leen con: {string.Join("; ", Model.DateFormats.Select(f => EnumDisplay.Label(f)))}.")
+                </div>
+            </div>
+        }
+        else
+        {
+            <input type="hidden" name="FormatoFecha" value="@Model.DateFormat.ToCode()" />
+        }
+
+        @if (Model.SexValues.Count > 0)
+        {
+            <fieldset class="mt-3">
+                <legend class="form-label fs-6 fw-semibold">Qué significa cada valor de la columna de sexo</legend>
+                <p class="form-text mt-0">El sexo documentado no se deduce de otros datos: asigna los valores que ResidApp no reconoce. Una celda vacía es «No consta».</p>
+                @for (var i = 0; i < Model.SexValues.Count; i++)
+                {
+                    var value = Model.SexValues[i];
+                    <div class="row g-2 align-items-center mb-2">
+                        <div class="col-12 col-md-5">
+                            <label for="sexo-@i" class="form-label mb-0">«@value.Value»</label>
+                            <input type="hidden" name="SexoClaves[@i]" value="@value.Key" />
+                        </div>
+                        <div class="col-12 col-md-7">
+                            <select id="sexo-@i" name="SexoCodigos[@i]" class="form-select" data-reanaliza>
+                                <option value="" selected="@(value.Code is null)">Elige…</option>
+                                @foreach (var sex in Enum.GetValues<DocumentedSexCode>())
+                                {
+                                    <option value="@sex.ToCode()" selected="@(value.Code == sex)">@EnumDisplay.Label(sex)</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                }
+            </fieldset>
+        }
+
+        @if (Model.Notices.Count > 0)
+        {
+            <div class="alert alert-info mt-3 mb-0" role="note">
+                <ul class="mb-0">
+                    @foreach (var notice in Model.Notices)
+                    {
+                        <li>@notice</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (!Model.Ready)
+        {
+            <div class="alert alert-warning mt-3 mb-0">
+                <p class="fw-semibold mb-1">Antes de ver la vista previa:</p>
+                <ul class="mb-0">
+                    @foreach (var problem in Model.Problems)
+                    {
+                        <li>@problem</li>
+                    }
+                </ul>
+            </div>
+        }
+        else
+        {
+            <div class="mt-3">
+                <label for="nombre-plantilla" class="form-label">Guardar este emparejamiento como plantilla (opcional)</label>
+                <input type="text" id="nombre-plantilla" name="NombrePlantilla" class="form-control" maxlength="@ExchangeLimits.MaxTemplateNameLength"
+                       autocomplete="off" aria-describedby="ayuda-nombre-plantilla" />
+                <div id="ayuda-nombre-plantilla" class="form-text">
+                    Por ejemplo, el nombre de la aplicación de la que viene el fichero. La próxima vez que subas un fichero con las mismas columnas,
+                    se aplicará solo. Se guarda al importar; con un nombre que ya existe, la sustituye.
+                </div>
+            </div>
+            <div class="d-grid d-md-flex justify-content-md-end mt-3">
+                <button type="submit" class="btn btn-primary btn-lg" formaction="@Url.Action("ImportarVistaPrevia")" data-destino="informe">
+                    Ver la vista previa
+                </button>
+            </div>
+        }
+    </div>
+</section>

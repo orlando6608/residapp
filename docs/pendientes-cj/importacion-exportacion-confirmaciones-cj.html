@@ -1,0 +1,634 @@
+<!doctype html>
+<!--
+  Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan en «importacion-exportacion-confirmaciones-cj.respuestas.json», en esta misma carpeta;
+  ingeniería las lee de ese fichero. Cómo funciona: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Importar y exportar datos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .bar, .howto, .toc, .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+</style>
+<body data-doc="importacion-exportacion-confirmaciones-cj" data-version="2026-10-21">
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="index.html">← Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Producto · Pendiente de CJ</p>
+    <h1>Importar y exportar datos</h1>
+    <p class="meta">Estado a 21/10/2026 · Para CJ, responsable de producto</p>
+    <p class="lead prose">
+      El estudio de mercado (recomendación R1) señaló como primer punto débil el <strong>doble registro</strong>: las residencias ya tienen un programa
+      de gestión y no quieren apuntar lo mismo dos veces. Orlando decidió empezar por la parte administrativa: Administración ya puede
+      <strong>importar</strong> la estructura del centro y los residentes desde un fichero CSV o Excel de otra aplicación, y <strong>exportar</strong> la
+      estructura y el censo. Está construido con decisiones prudentes que nadie ha confirmado; revísalas. En cada pregunta, la opción A es siempre
+      «como está ahora»; lo que cambies se ajusta después. <strong>Nada de esto bloquea.</strong>
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué está hecho</span><span>Importar estructura (unidades, edificios, plantas, habitaciones y camas) y residentes, con vista previa fila a fila; exportar la estructura y el censo en CSV, también con las columnas de otra aplicación.</span></div>
+    <div role="listitem"><span class="k">Qué no incluye</span><span>Usuarios, familiares y cualquier dato clínico. Sin inteligencia artificial: las columnas se emparejan por su nombre y se revisan.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>8 respuestas, repartidas en 3 temas.</span></div>
+  </div>
+
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Responde aquí</strong>
+        <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se queda en este navegador: puedes cerrar y seguir otro día.</span></li>
+      <li><span class="step-n">2</span><strong>Guarda</strong>
+        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>importacion-exportacion-confirmaciones-cj.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
+      <li><span class="step-n">3</span><strong>Envíaselo a Orlando</strong>
+        <span>Mándale el fichero descargado por correo o por WhatsApp. Si lo cambias y lo vuelves a guardar, envía el nuevo.</span></li>
+    </ol>
+    <p class="prose meta">
+      ¿Desde otro ordenador? Abre este documento y pulsa «Abrir respuestas guardadas» con tu fichero para seguir donde lo dejaste.
+    </p>
+  </section>
+
+  <nav class="toc" id="indice" aria-label="Temas del documento"></nav>
+
+  <section class="tema" id="tema-1">
+    <h2>Tema 1 · Importar residentes</h2>
+    <div class="stack prose">
+      <p>
+        Hoy, al importar residentes, cada fila del fichero se da de alta igual que a mano, en su unidad, habitación y cama. Lo que ya está en
+        ResidApp no se vuelve a dar de alta, así que se puede corregir el fichero e importarlo otra vez. Se importan el nombre, la fecha de nacimiento,
+        el sexo documentado, la ubicación y la referencia interna del programa de origen (el número de expediente, por ejemplo). Las columnas que no
+        se usan (DNI, diagnósticos…) se descartan al leer el fichero, que no se guarda.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Con qué fecha queda dado de alta un residente importado?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Un residente que lleva años en la residencia aparece en ResidApp como dado de alta el día de la importación; su historia anterior sigue en el otro programa.</p>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">La fecha de la importación (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">La fecha de ingreso que traiga el fichero, si la trae.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Cuándo un residente del fichero «ya existe» en ResidApp?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Se compara con los residentes activos de las unidades de quien importa. Dos personas distintas con el mismo nombre y la misma fecha de nacimiento son muy raras, pero posibles.</p>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Si coincide la referencia interna, o el nombre y la fecha de nacimiento (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Solo si coincide la referencia interna; si coinciden nombre y fecha, que avise y deje elegir.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.3">
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">Si el fichero trae el nombre y los apellidos en columnas separadas, ¿cómo se guardan?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">ResidApp guarda el nombre completo en un solo campo, como en el alta a mano.</p>
+        <fieldset class="choices" aria-labelledby="t-1-3">
+          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">Se unen: «Ana María Pérez López» (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">Se unen con los apellidos delante: «Pérez López, Ana María».</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="C"><span class="letter">C</span><span class="txt">ResidApp debería guardar nombre y apellidos por separado en todas partes (cambia el alta y todas las listas).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.4">
+        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">Si el fichero no dice el sexo de un residente, ¿qué se guarda?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">El sexo documentado nunca se deduce de otro dato. Los valores habituales (H/M, V/M, M/F, Hombre, Mujer…) se reconocen solos y los demás los asigna quien importa.</p>
+        <fieldset class="choices" aria-labelledby="t-1-4">
+          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">«No consta», y se corrige después desde la ficha (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">La fila no se importa hasta que el fichero traiga el sexo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.5">
+        <div class="q-head"><span class="n">1.5</span><h3 class="q-title" id="t-1-5">¿Hay que importar también los familiares?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy los familiares y el contacto urgente se añaden a mano desde la ficha de cada residente, con sus autorizaciones.</p>
+        <fieldset class="choices" aria-labelledby="t-1-5">
+          <label class="choice"><input type="radio" name="r-1-5" value="A"><span class="letter">A</span><span class="txt">No por ahora: se añaden a mano (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="B"><span class="letter">B</span><span class="txt">Sí, el contacto principal de cada residente (nombre, relación y teléfono).</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="C"><span class="letter">C</span><span class="txt">Sí, todos los familiares que traiga el fichero.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2">
+    <h2>Tema 2 · Exportar</h2>
+    <div class="stack prose">
+      <p>
+        Hoy <strong>Administración</strong> descarga en CSV (se abre con Excel) la estructura del centro o el censo de los residentes activos de sus
+        unidades: nombre, fecha de nacimiento, sexo, unidad, habitación, cama y referencia interna. Nunca el basal ni nada clínico. Puede usar las
+        columnas de ResidApp o las de otra aplicación (con una plantilla). Cada exportación queda en la auditoría; no se envía por correo ni por enlace.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="2.1">
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">¿Qué datos lleva el censo exportado?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Cada dato de más que sale de ResidApp es un dato personal más fuera de su control.</p>
+        <fieldset class="choices" aria-labelledby="t-2-1">
+          <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">Nombre, fecha de nacimiento, sexo, unidad, habitación, cama y referencia interna (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">Lo mismo y, además, la fecha de alta en el centro.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="C"><span class="letter">C</span><span class="txt">Menos datos (dime cuáles quitar en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.2">
+        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">¿Quién puede importar y exportar?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Dirección Clínica no gestiona la estructura ni las altas; ve indicadores y, con justificación, el expediente.</p>
+        <fieldset class="choices" aria-labelledby="t-2-2">
+          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">Solo Administración (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">Administración, y Dirección Clínica solo exportar.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Lo que queda fuera</h2>
+    <div class="stack prose">
+      <p>
+        La otra mitad de la R1 es <strong>exportar los registros asistenciales</strong> (cierres de turno, cambios, valoraciones) hacia el programa de gestión
+        del centro, para que la auxiliar no tenga que apuntarlos dos veces. Es contenido clínico, y el alcance actual deja fuera las integraciones con historias
+        clínicas externas en la primera versión.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">¿Hay que estudiar la exportación de los registros asistenciales?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Habría que decidir qué registros, en qué formato y con qué garantías (contrato con el centro, auditoría, quién lo hace), y cambiar el alcance.</p>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">No por ahora: sigue fuera del alcance (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Sí: estudiarlo como siguiente paso, antes del piloto.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">Sí, pero después del piloto, cuando se sepa qué programa usa el centro.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. Ingeniería no ha elegido ninguna opción: todas las decisiones son
+    de CJ. Cuando subas tus respuestas, ingeniería las revisa, te consulta lo que no quede claro y lo incorpora a la
+    aplicación. La aplicación no lee este fichero ni sus respuestas.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Guardar respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+    <div class="actions">
+      <button type="button" class="btn" id="btn-abrir">Abrir respuestas guardadas</button>
+      <button type="button" class="btn primary" id="btn-guardar">Guardar respuestas</button>
+      <input type="file" id="fichero" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var FILE = DOC + ".respuestas.json";
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;
+  var savedAt = null;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (dirty) say("", "Tienes cambios que aún no están en el fichero. Pulsa «Guardar respuestas» cuando quieras.");
+    else if (savedAt) say("ok", "Fichero al día (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda en este navegador.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? "Respondida" : "Pendiente";
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  function loaded(data, origin) {
+    apply(data);
+    dirty = false;
+    savedAt = data.guardado || null;
+    store(refresh());
+    var msg = "Respuestas cargadas " + origin + " (guardadas el " + when(data.guardado) + ").";
+    if (data.cuestionario !== VERSION) {
+      say("error", msg + " Son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+    } else {
+      say("ok", msg);
+    }
+  }
+
+  function download(json) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  async function save() {
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    try {
+      if (!window.showSaveFilePicker) throw new Error("sin selector");
+      var handle = await window.showSaveFilePicker({ suggestedName: FILE,
+        types: [{ description: "Respuestas (JSON)", accept: { "application/json": [".json"] } }] });
+      var w = await handle.createWritable();
+      await w.write(json);
+      await w.close();
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      download(json);
+    }
+    dirty = false;
+    savedAt = data.guardado;
+    store(data);
+    say("ok", "Guardado como «" + FILE + "». Ahora envíaselo a Orlando por correo o por WhatsApp.");
+  }
+
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    store(refresh());
+    status();
+  }
+
+  document.getElementById("btn-guardar").addEventListener("click", save);
+  document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
+  document.getElementById("fichero").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    file.text().then(function (t) {
+      var data = JSON.parse(t);
+      if (data.documento !== DOC) {
+        say("error", "Ese fichero es de otro documento («" + data.documento + "»). Elige «" + FILE + "».");
+        return;
+      }
+      loaded(data, "del fichero");
+    }).catch(function () {
+      say("error", "No se ha podido leer ese fichero. Elige «" + FILE + "».");
+    }).finally(function () { e.target.value = ""; });
+  });
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+
+  // Si la página se sirve por http (no desde disco), carga las respuestas ya subidas al repositorio.
+  if (location.protocol.indexOf("http") === 0) {
+    fetch(FILE, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.documento !== DOC) return;
+        if (dirty) {
+          say("", "Hay respuestas en el repositorio (guardadas el " + when(data.guardado) +
+            "), pero mantienes los cambios de este navegador, que aún no están en el fichero.");
+          return;
+        }
+        loaded(data, "del repositorio");
+      })
+      .catch(function () { /* sin fichero de respuestas */ });
+  }
+})();
+</script>
+</body>
+</html>

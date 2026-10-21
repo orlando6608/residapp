@@ -1,0 +1,64 @@
+@using ResidApp.Application.Intercambio
+@{
+    ViewData["Title"] = "Importar datos";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Importar datos</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Importar datos</h1>
+<p class="text-muted">
+    Trae la estructura del centro y la lista de residentes desde otra aplicación (por ejemplo, el programa de gestión del centro):
+    exporta de ella un fichero CSV o Excel y súbelo aquí. Importa primero la estructura y después los residentes; puede ser con el
+    mismo fichero. ResidApp empareja las columnas por su nombre, te enseña qué va a hacer con cada fila y no importa nada hasta que lo
+    confirmas. El fichero no se guarda, y las columnas que no se usan se descartan al leerlo.
+</p>
+<p class="text-muted small">
+    ¿No tienes un fichero de otra aplicación? Descarga una plantilla vacía, rellénala y súbela:
+    <a asp-action="PlantillaImportacion" asp-route-entidad="@ExchangeEntity.Estructura">plantilla de estructura (CSV)</a> ·
+    <a asp-action="PlantillaImportacion" asp-route-entidad="@ExchangeEntity.Residentes">plantilla de residentes (CSV)</a>.
+    No se importan usuarios ni familiares, ni ningún dato clínico.
+</p>
+
+<form asp-action="ImportarAnalizar" method="post" enctype="multipart/form-data" data-intercambio>
+    <div class="card mb-3">
+        <div class="card-body">
+            <fieldset class="mb-3">
+                <legend class="form-label fs-6">Qué importas</legend>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var entity in Enum.GetValues<ExchangeEntity>())
+                    {
+                        <span class="chip-par">
+                            <input class="btn-check" type="radio" name="Entidad" id="entidad-@entity" autocomplete="off" value="@entity"
+                                   checked="@(entity == ExchangeEntity.Estructura)" data-intercambio-reinicio />
+                            <label class="btn btn-outline-secondary chip" for="entidad-@entity">@EnumDisplay.Label(entity)</label>
+                        </span>
+                    }
+                </div>
+            </fieldset>
+            <div class="mb-3">
+                <label for="fichero" class="form-label">Fichero</label>
+                <input type="file" id="fichero" name="Fichero" class="form-control form-control-lg" accept=".csv,.txt,.xls,.xlsx" required
+                       aria-describedby="ayuda-fichero" data-intercambio-reinicio />
+                <div id="ayuda-fichero" class="form-text">
+                    CSV, XLS o XLSX de hasta 5 MB, con los nombres de las columnas en la primera fila. Se lee la primera hoja.
+                </div>
+            </div>
+            <div class="d-grid d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary btn-lg">Analizar el fichero</button>
+            </div>
+        </div>
+    </div>
+    <p class="text-body-secondary" role="status" data-intercambio-estado></p>
+    <div data-intercambio-emparejamiento></div>
+    <div data-intercambio-informe></div>
+</form>
+
+@section Scripts {
+    <script src="~/js/intercambio.js" asp-append-version="true"></script>
+}

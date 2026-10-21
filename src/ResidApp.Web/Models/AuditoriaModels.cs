@@ -114,6 +114,9 @@ public static class AuditActionDisplay
         ["APPOINTMENT_REQUEST_ACCEPT"] = "Propuesta de cita aceptada",
         ["APPOINTMENT_REQUEST_CANCEL"] = "Solicitud de cita cancelada por la familia",
         ["APPOINTMENT_REQUEST_CLOSE"] = "Solicitud de cita cerrada por el centro",
+        ["IMPORT_RUN"] = "Datos importados desde un fichero",
+        ["EXPORT_RUN"] = "Datos exportados a un fichero",
+        ["EXCHANGE_TEMPLATE_SAVE"] = "Plantilla de importación o exportación guardada",
     };
 
     public static string Label(string code) => Labels.TryGetValue(code, out var label) ? label : "Acción administrativa";
@@ -126,6 +129,7 @@ public static class AuditActionDisplay
         AuditCategory.ResidentesYFamilias => "Residentes y familias",
         AuditCategory.TurnosYEquipos => "Turnos y equipos",
         AuditCategory.Citas => "Citas",
+        AuditCategory.ImportacionYExportacion => "Importación y exportación",
         _ => category.ToString(),
     };
 

@@ -4,6 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Infrastructure.Authorization;
+using ResidApp.Infrastructure.Intercambio;
 using ResidApp.Infrastructure.Pdf;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.Web.Security;
@@ -200,6 +201,11 @@ builder.Services.AddScoped<AdministrationOverviewApplicationService>();
 builder.Services.AddScoped<ICenterLayoutDirectory, SqlCenterLayoutDirectory>();
 builder.Services.AddScoped<ICenterLayoutRepository, SqlCenterLayoutRepository>();
 builder.Services.AddScoped<AdministracionEstructuraApplicationService>();
+// Importación y exportación por ficheros (ADR 0010).
+builder.Services.AddSingleton<ITableFileReader, ExcelTableFileReader>();
+builder.Services.AddScoped<IExchangeDirectory, SqlExchangeDirectory>();
+builder.Services.AddScoped<IExchangeRepository, SqlExchangeRepository>();
+builder.Services.AddScoped<AdministracionIntercambioApplicationService>();
 builder.Services.AddScoped<AdministracionTurnosApplicationService>();
 builder.Services.AddScoped<PlatformApplicationService>();
 

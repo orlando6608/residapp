@@ -24,7 +24,7 @@ public sealed partial class AdministracionController(
     AdministracionTurnosApplicationService turnos, AdministrationScopeApplicationService scopeAdmin,
     FamilyCommunicationPublicationApplicationService familyCommunications, FamilyCommunicationScheduleApplicationService communicationSchedule,
     AppointmentServiceApplicationService appointmentService, AppointmentRequestsApplicationService appointmentRequests,
-    AdministrationOverviewApplicationService overview) : Controller
+    AdministrationOverviewApplicationService overview, AdministracionIntercambioApplicationService intercambio) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {

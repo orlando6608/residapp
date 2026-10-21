@@ -1,0 +1,109 @@
+@using ResidApp.Application.Intercambio
+@model ResidApp.Application.UseCases.ImportReport
+@*
+    ADR 0010: la vista previa (Executed = false) o el resultado de una importación, fila a fila. «Fila» es la fila del fichero, para
+    encontrarla en Excel. Desde la vista previa se importa; las filas con error o que ya existen no se importan.
+*@
+@{
+    var created = Model.Count(ImportOutcome.Nueva);
+    var existing = Model.Count(ImportOutcome.YaExiste);
+    var errors = Model.Count(ImportOutcome.Error);
+    string Plural(int count, string one, string many) => count == 1 ? $"{count} {one}" : $"{count} {many}";
+    string Outcome(ImportOutcome outcome) => outcome switch
+    {
+        ImportOutcome.Nueva => Model.Executed ? "Importada" : "Se importará",
+        ImportOutcome.YaExiste => "Ya existe",
+        _ => "Error",
+    };
+    string Badge(ImportOutcome outcome) => outcome switch
+    {
+        ImportOutcome.Nueva => "text-bg-primary",
+        ImportOutcome.YaExiste => "text-bg-secondary",
+        _ => "text-bg-danger",
+    };
+}
+<section class="card mb-3" aria-labelledby="informe-titulo">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="informe-titulo" tabindex="-1">@(Model.Executed ? "Resultado de la importación" : "Vista previa")</h2>
+        @if (Model.Executed)
+        {
+            <div class="alert @(errors == 0 ? "alert-success" : "alert-warning")" role="status">
+                Importación terminada: @Plural(created, "fila importada", "filas importadas"), @Plural(existing, "ya existía", "ya existían")
+                y @Plural(errors, "con error", "con error").
+                @if (errors > 0)
+                {
+                    <span>Corrige las filas con error en el fichero y vuelve a importarlo: lo ya importado no se repite.</span>
+                }
+            </div>
+            <p>
+                <a asp-action="@(Model.Entity == ExchangeEntity.Estructura ? "Estructura" : "Residentes")">
+                    @(Model.Entity == ExchangeEntity.Estructura ? "Ver la estructura del centro" : "Ver los residentes")
+                </a>
+            </p>
+        }
+        else
+        {
+            <p>
+                @Plural(created, "fila se importará", "filas se importarán"), @Plural(existing, "ya existe", "ya existen")
+                y @Plural(errors, "tiene error", "tienen error"). Nada se ha guardado todavía.
+            </p>
+            @if (created > 0)
+            {
+                <p class="text-body-secondary small">
+                    Las filas que ya existen o tienen error no se importan. Puedes importar ahora las demás y, después, corregir el fichero y
+                    volver a importarlo: lo ya importado no se repite.
+                </p>
+                <div class="d-grid d-md-flex justify-content-md-end mb-3">
+                    <button type="submit" class="btn btn-primary btn-lg" formaction="@Url.Action("ImportarEjecutar")" data-destino="informe">
+                        @(created == 1 ? "Importar 1 fila" : $"Importar {created} filas")
+                    </button>
+                </div>
+            }
+            else
+            {
+                <p class="estado-vacio">No hay ninguna fila que importar.</p>
+            }
+        }
+
+        @if (Model.Rows.Count > 0)
+        {
+            <ul class="list-group d-md-none">
+                @foreach (var row in Model.Rows)
+                {
+                    <li class="list-group-item py-3">
+                        <div class="fw-semibold">
+                            Fila @row.Number
+                            <span class="badge @Badge(row.Outcome) align-middle">@Outcome(row.Outcome)</span>
+                        </div>
+                        <div>@row.Label</div>
+                        <div class="text-body-secondary small">@row.Detail</div>
+                    </li>
+                }
+            </ul>
+            <div class="table-responsive d-none d-md-block">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Filas del fichero</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Fila</th>
+                            <th scope="col">Datos</th>
+                            <th scope="col">Resultado</th>
+                            <th scope="col">Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Rows)
+                        {
+                            <tr>
+                                <th scope="row">@row.Number</th>
+                                <td>@row.Label</td>
+                                <td><span class="badge @Badge(row.Outcome)">@Outcome(row.Outcome)</span></td>
+                                <td>@row.Detail</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>

@@ -1,0 +1,120 @@
+@using ResidApp.Application.Intercambio
+@model ExportViewModel
+@{
+    ViewData["Title"] = "Exportar datos";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Exportar datos</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Exportar datos</h1>
+<p class="text-muted">
+    Descarga la estructura del centro o el censo de los residentes activos de tu ámbito en CSV (se abre con Excel), para llevarlos a otra
+    aplicación. Solo datos administrativos: nombre, fecha de nacimiento, sexo, ubicación y referencia interna; nunca el basal ni ningún
+    contenido clínico. Cada exportación queda en la auditoría. Guarda el fichero en un sitio seguro y bórralo cuando ya no lo necesites.
+</p>
+@if (Model.SavedTemplate is not null)
+{
+    <div class="alert alert-success" role="status">Plantilla «@Model.SavedTemplate» guardada.</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<section class="card mb-3" aria-labelledby="formato-residapp">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="formato-residapp">Con las columnas de ResidApp</h2>
+        <p class="text-body-secondary small">Las mismas columnas que la importación: sirve también para pasar datos de un centro a otro.</p>
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var entity in Enum.GetValues<ExchangeEntity>())
+            {
+                <form asp-action="Exportar" method="post" data-sin-carga>
+                    <input type="hidden" name="entidad" value="@entity" />
+                    <button type="submit" class="btn btn-outline-primary btn-lg">
+                        @(entity == ExchangeEntity.Estructura ? "Descargar la estructura" : "Descargar el censo de residentes")
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="card mb-3" aria-labelledby="formato-otra">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="formato-otra">Con las columnas de otra aplicación</h2>
+        @if (Model.Templates.Count == 0)
+        {
+            <p class="text-muted mb-0">Aún no hay plantillas de exportación. Crea una abajo con un fichero de ejemplo de la otra aplicación.</p>
+        }
+        else
+        {
+            <ul class="list-group">
+                @foreach (var template in Model.Templates)
+                {
+                    <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2 py-3">
+                        <div>
+                            <div class="fw-semibold">@template.Name</div>
+                            <div class="text-body-secondary small">
+                                @EnumDisplay.Label(template.Entity) · @template.Headers.Count @(template.Headers.Count == 1 ? "columna" : "columnas")
+                            </div>
+                        </div>
+                        <form asp-action="Exportar" method="post" data-sin-carga>
+                            <input type="hidden" name="entidad" value="@template.Entity" />
+                            <input type="hidden" name="plantillaId" value="@template.TemplateId" />
+                            <button type="submit" class="btn btn-outline-primary">Descargar</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</section>
+
+<section class="card mb-3" aria-labelledby="nueva-plantilla">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="nueva-plantilla">Nueva plantilla de exportación</h2>
+        <p class="text-body-secondary small">
+            Sube un fichero de ejemplo de la otra aplicación (por ejemplo, la plantilla que usa para importar): solo se leen los nombres de
+            sus columnas. Después elige qué dato de ResidApp va en cada una y guarda la plantilla.
+        </p>
+        <form asp-action="ExportarPlantillaAnalizar" method="post" enctype="multipart/form-data" data-intercambio>
+            <fieldset class="mb-3">
+                <legend class="form-label fs-6">Qué exporta</legend>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var entity in Enum.GetValues<ExchangeEntity>())
+                    {
+                        <span class="chip-par">
+                            <input class="btn-check" type="radio" name="Entidad" id="exportar-entidad-@entity" autocomplete="off" value="@entity"
+                                   checked="@(entity == ExchangeEntity.Residentes)" data-intercambio-reinicio />
+                            <label class="btn btn-outline-secondary chip" for="exportar-entidad-@entity">@EnumDisplay.Label(entity)</label>
+                        </span>
+                    }
+                </div>
+            </fieldset>
+            <div class="mb-3">
+                <label for="fichero-ejemplo" class="form-label">Fichero de ejemplo</label>
+                <input type="file" id="fichero-ejemplo" name="Fichero" class="form-control form-control-lg" accept=".csv,.txt,.xls,.xlsx" required
+                       aria-describedby="ayuda-fichero-ejemplo" data-intercambio-reinicio />
+                <div id="ayuda-fichero-ejemplo" class="form-text">CSV, XLS o XLSX con los nombres de las columnas en la primera fila.</div>
+            </div>
+            <div class="d-grid d-md-flex justify-content-md-end">
+                @* Sin validar en el navegador: el nombre de la plantilla, obligatorio al guardar, todavía puede estar vacío. *@
+                <button type="submit" class="btn btn-primary btn-lg" formnovalidate>Analizar el fichero</button>
+            </div>
+            <p class="text-body-secondary mt-2" role="status" data-intercambio-estado></p>
+            <div data-intercambio-emparejamiento></div>
+            <div data-intercambio-informe></div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/intercambio.js" asp-append-version="true"></script>
+}
