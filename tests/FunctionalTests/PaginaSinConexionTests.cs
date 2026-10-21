@@ -13,15 +13,15 @@ public class PaginaSinConexionTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [Fact]
     public async Task Offline_ConSesionAbierta_NoMuestraIdentidadNiEnlacesDePanel()
     {
-        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
-        client.DefaultRequestHeaders.Add("Cookie", "residapp_dev_subject=dev-cualquiera");
+        var (subject, _) = await SesionTests.SeedAccountAsync();
+        var client = await SesionTests.LoginAsync(_factory, subject);
 
         var html = await client.GetStringAsync("/Home/Offline");
 
         Assert.Contains("Sin conexión", html);
-        Assert.DoesNotContain("dev-cualquiera", html);
-        Assert.DoesNotContain("Identidad", html);
+        Assert.DoesNotContain(subject, html);
+        Assert.DoesNotContain("Sesión de", html);
         Assert.DoesNotContain("Mi panel", html);
-        Assert.DoesNotContain("Cambiar de identidad", html);
+        Assert.DoesNotContain("Entrar con otra cuenta", html);
     }
 }

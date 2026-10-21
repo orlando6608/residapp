@@ -160,6 +160,15 @@ jobs:
             az webapp config appsettings set --name app-residapp-dev --resource-group rg-residapp-dev --settings WEBSITE_TIME_ZONE=Europe/Madrid > /dev/null
           fi
 
+      # Hallazgo A2: App Service redirige HTTP a HTTPS (la app no lo hace, para no entrar en bucle detrás del balanceador; sí manda HSTS).
+      # Solo se escribe si hace falta, como la zona horaria.
+      - name: Exigir HTTPS en la Web App
+        run: |
+          actual="$(az webapp show --name app-residapp-dev --resource-group rg-residapp-dev --query httpsOnly -o tsv)"
+          if [ "$actual" != "true" ]; then
+            az webapp update --name app-residapp-dev --resource-group rg-residapp-dev --https-only true > /dev/null
+          fi
+
       # clean: sin él, el despliegue añade ficheros pero no borra los de antes: un documento movido o borrado del repo seguía
       # sirviéndose desde el servidor. Deja un corte de segundos con wwwroot a medias, aceptable en desarrollo con datos ficticios;
       # con usuarios reales, repensar el despliegue (WEBSITE_RUN_FROM_PACKAGE o slots de staging en un plan Standard).

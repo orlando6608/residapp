@@ -13,8 +13,40 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **ADR 0007, incremento I0: capa común de sesión (cierra C1 y A2) y centro de prueba «Residencia Los Almendros» (2026-10-21; script `0061`, el
+  siguiente libre es `0062`; suite 410 unitarios, 476 de integración y 241 funcionales en verde, proyecto a proyecto; sin commit ni despliegue todavía).**
+  - **Decisión:** el ADR 0007 pasa a **ASP.NET Core Identity propio** (no Entra External ID: sin TOTP, passkeys con Front Door fuera del EU Data
+    Boundary, sin invitaciones). Orlando hace de Seguridad; las puertas del DPO esperan a la residencia piloto. Incrementos I1–I5 en el ADR.
+  - **Sesión:** cookie de ASP.NET Core `residapp_sesion` (sujeto, id de sesión y nombre visible; cifrada por Data Protection) validada en cada petición
+    contra `dbo.sesiones` por `Web/Security/SessionCookieEvents.cs` con `SessionPolicy` (Application/Sessions): inactividad 30 min y caducidad absoluta
+    12 h (`Sesion:*` en `appsettings.json`), que fallan cerradas; la renovación no amplía la absoluta. `CookieSessionIdentityProvider` sustituye a
+    `DevSessionIdentityProvider` (borrado); el puerto no cambia. La hora sale de `TimeProvider` (las pruebas la adelantan).
+  - **Política global** `FallbackPolicy = RequireAuthenticatedUser`: solo son anónimos `Home`, `DevAuth`, `AccesoCj` y los estáticos
+    (`MapStaticAssets().Add(AllowAnonymous)`, sin lo cual el CSS y la PWA pedirían sesión). Una ruta inexistente sin sesión ya no da 404, sino el login;
+    salvo `/pendientes-cj/*`, que tiene un `MapFallback` con 404.
+  - **Acceso de desarrollo** (`DevAuthOptions`): solo si `DevAuth:Habilitado` (true en `appsettings.Development.json`); fuera de Development pide
+    `DevAuth:Clave` (16+ caracteres, ajuste de la Web App) y sin ella la app no arranca; mensaje neutro con clave (B1); límite de intentos por IP
+    (`DevAuth:IntentosPorMinuto`, alto en Development por las pruebas); cambiar de cuenta termina las declaraciones clínicas y cierra la sesión anterior.
+  - **A2:** `UseForwardedHeaders` (redes privadas del balanceador de App Service), HSTS fuera de Development, `UseCookiePolicy` con `Secure` siempre fuera
+    de Development; el CI pone `httpsOnly=true` (paso «Exigir HTTPS en la Web App»).
+  - **Seed `database/seed/dev_seed_los_almendros.sql`:** el centro del Flujo de trabajo con las cuentas `almendros-*` (una por perfil y Elena), Planta 1 y
+    Planta 2, turnos, equipos, rangos, citas y Rosa en Planta 1 · 104 · B con Elena autorizada. Probado dos veces sobre una BD nueva con todos los seeds.
+  - **Pruebas nuevas:** `SesionTests` (barrido de todas las acciones sin sesión, cookie antigua y sesión inventada, cierre, suspensión, cambio de
+    cuenta, inactividad, caducidad sin ampliar) y `SesionFueraDeDesarrolloTests` (entorno Staging: clave, mensaje neutro, cookies `Secure`, 429, 404
+    deshabilitado, no arranca sin clave), `SqlSessionStoreTests` y `SessionPolicyTests`. `CoberturaRlsTests` lleva `sesiones` como excepción de diseño.
+  - **Probado en local con Chrome:** cada cuenta `almendros-*` entra y llega a su inicio; Rosa sale en las listas del Auxiliar y de Enfermería
+    como Planta 1 · 104 · B con el basal pendiente; Elena la ve en el portal; sin sesión, `/Administracion` lleva al login y lo público carga.
+  - **Ajustes de la Web App (puestos el 2026-10-21, antes del push):** `DevAuth__Habilitado=true` y `DevAuth__Clave` (23 caracteres) en
+    `app-residapp-dev` (`az webapp config appsettings set -g rg-residapp-dev -n app-residapp-dev --settings ...`). Sin ellos nadie entra en Azure dev;
+    con `Habilitado` y sin clave, la app no arranca. El CI solo añade `WEBSITE_TIME_ZONE`, así que los despliegues no los borran. La clave la tiene
+    Orlando y se pasa a CJ en privado: nunca en el repositorio ni en los documentos.
+  - **Después del despliegue, comprobar en Azure:** `http://` redirige a `https://`; la cabecera HSTS (prueba de que `IsHttps` funciona detrás del
+    balanceador); el login pide la clave; la cookie lleva `Secure`; la prueba de C1 (GET con `residapp_dev_subject` fabricada) lleva al login; cada
+    cuenta de Los Almendros entra. Entonces marcar C1 y A2 como comprobados en `docs/seguridad/hallazgos.md` (local).
+  - **Lección:** un seed con tildes aplicado a mano con `sqlcmd` sin `-f 65001` guarda los nombres mal (`aplicar-scripts.sh` ya lo pasa). En la BD
+    local se corrigieron así los de Los Almendros; el de Rosa, con una corrección de identidad desde la app.
 - **Importar y exportar datos por ficheros (2026-10-21, estudio de mercado R1, solo la parte administrativa; ADR 0010; script `0060`, el siguiente libre es
-  `0061`; suite 405 unitarios, 473 de integración y 222 funcionales en verde; sin commit ni despliegue todavía).**
+  `0061`; suite 405 unitarios, 473 de integración y 222 funcionales en verde; commit `b5e6536` en `main`, desplegado en Azure dev con el CI en verde).**
   - **Cómo se llegó:** el usuario pidió analizar funciones con IA (Mistral) y, tras descartar las que chocaban con las reglas, eligió atacar el doble registro
     con un módulo de importación. Decidió hacerlo **sin IA**: el emparejamiento de columnas es determinista (plantilla del centro, sinónimos, formato de los
     datos y, si no, a mano). La IA se reserva para el dictado del ADR 0009, que es el **siguiente bloque** y necesita su propio plan.
@@ -37,8 +69,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     - quedan en la base local los centros «Residencia de prueba (intercambio …)» con sus cuentas `prueba-intercambio-adm*`.
   - **Sin hacer:**
     - no se ha probado con exportaciones reales de ResiPlus, Gerosalus u otro programa;
-    - no se ha desplegado en Azure dev. Al desplegar, el CI aplica el `0060`; conviene probar allí con un fichero ficticio, sin tocar «Residente Integrado
-      Uno»;
+    - no se ha probado en Azure dev (el despliegue del 2026-10-21 aplicó el `0060`): conviene hacerlo con un fichero ficticio, sin tocar «Residente
+      Integrado Uno»;
     - **Aviso (fuera de este bloque):** `dotnet test src/ResidApp.sln` lanza a la vez los proyectos de integración y funcionales contra la misma BD
       local. Ese día falló de forma intermitente: 3 de 6 pasadas, con decenas de tiempos de espera de SQL (ejecución y también inicio de sesión) en
       pruebas de todo tipo.
@@ -1267,6 +1299,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
+0. **Cerrar el incremento I0 del ADR 0007** (ver «Dónde estamos»): la comprobación en Azure tras el despliegue (los ajustes `DevAuth__*` ya
+   están puestos). Después, Orlando elige entre **I1 (ASP.NET Core Identity: contraseña, TOTP y bloqueo)**, que es lo que desbloquea los datos reales, el
+   Portal Familiar real y «Mi cuenta», y el **dictado por voz del ADR 0009**. Cada uno con su propio plan.
 1. **Revisar las respuestas de CJ** que lleguen:
    - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
      finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).

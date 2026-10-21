@@ -17,8 +17,10 @@
 </head>
 <body>
     @{
-        var devSubjectLayout = Context.Request.Cookies[ResidApp.Web.Security.DevSessionIdentityProvider.CookieName];
-        var activeScopeLayout = ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request);
+        var sessionSubjectLayout = ResidApp.Web.Security.SessionAuthentication.Subject(User);
+        var devAuthLayout = Context.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<ResidApp.Web.Security.DevAuthOptions>>().Value.Habilitado;
+        // Sin sesión (por ejemplo, caducada) no cuenta la cookie de ámbito que haya quedado.
+        var activeScopeLayout = sessionSubjectLayout is null ? null : ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request);
         var profileLabelLayout = activeScopeLayout is null ? null : ResidApp.Web.Models.SystemProfileDisplay.Label(activeScopeLayout.Profile);
         // «Mi panel»: inicio del perfil activo.
         var panelLayout = activeScopeLayout?.Profile switch
@@ -79,18 +81,18 @@
                                 </li>
                             </ul>
                         </li>
-                        @if (!string.IsNullOrWhiteSpace(devSubjectLayout))
+                        @if (sessionSubjectLayout is not null)
                         {
                             <li class="nav-item dropdown">
                                 <button class="nav-link dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    @(profileLabelLayout ?? devSubjectLayout)
+                                    @(profileLabelLayout ?? User.Identity!.Name)
                                     @if (activeScopeLayout is not null)
                                     {
                                         <span class="d-none d-lg-inline-block text-truncate opacity-75 centro-activo">· @activeScopeLayout.CenterName</span>
                                     }
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><span class="dropdown-item-text small">Identidad: <code>@devSubjectLayout</code></span></li>
+                                    <li><span class="dropdown-item-text small">Sesión de @User.Identity!.Name</span></li>
                                     @if (activeScopeLayout is not null)
                                     {
                                         <li><span class="dropdown-item-text small">Ámbito: @profileLabelLayout · @activeScopeLayout.CenterName</span></li>
@@ -100,7 +102,10 @@
                                     {
                                         <li><a class="dropdown-item" asp-area="" asp-controller="ProfileScope" asp-action="Select">Cambiar ámbito</a></li>
                                     }
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="DevAuth" asp-action="Login">Cambiar de identidad</a></li>
+                                    @if (devAuthLayout)
+                                    {
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="DevAuth" asp-action="Login">Entrar con otra cuenta</a></li>
+                                    }
                                     <li><hr class="dropdown-divider" /></li>
                                     <li>
                                         <form asp-area="" asp-controller="DevAuth" asp-action="Logout" method="post">
@@ -110,7 +115,7 @@
                                 </ul>
                             </li>
                         }
-                        else
+                        else if (devAuthLayout)
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="DevAuth" asp-action="Login">Iniciar sesión</a>

@@ -27,6 +27,10 @@ redirigen a `/AccesoCj` y los `.respuestas.json` dan 401. Se pide una vez por se
 `.respuestas.json` (decisiones de producto y valores clínicos, sin datos de residentes) también lo son. Antes de usar la aplicación con
 datos reales hará falta autenticación de verdad (ver el ADR 0007 de proveedor de identidad).
 
+**No es la clave de la aplicación.** Desde el 2026-10-21, para entrar en la aplicación de Azure dev con una cuenta de prueba
+(`/DevAuth/Login`) hace falta otra clave, la de desarrollo (`DevAuth__Clave`, un ajuste de la Web App que no está en el repositorio; ADR
+0007, incremento I0). Orlando se la pasa a CJ en privado. `pruebas.html` se lo explica a CJ sin cambiar la versión de las guías.
+
 ## Cómo responderlos (CJ)
 
 1. Abre la web de ResidApp, pulsa «Documentos de CJ» en el pie de página (o entra en `/pendientes-cj/index.html`), escribe la clave y abre

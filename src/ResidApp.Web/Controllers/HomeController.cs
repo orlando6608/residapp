@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ResidApp.Application.UseCases;
 using ResidApp.Shared;
@@ -7,13 +8,16 @@ using ResidApp.Web.Security;
 
 namespace ResidApp.Web.Controllers;
 
+// Inicio, Privacidad, Manual, la página sin conexión de la PWA y la de error se ven sin sesión.
+[AllowAnonymous]
 public class HomeController(ListActiveScopePermissions listPermissions) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
-        var devSubject = Request.Cookies[DevSessionIdentityProvider.CookieName];
-        var activeScope = ActiveProfileScopeCookie.Read(Request);
-        if (!string.IsNullOrWhiteSpace(devSubject) && activeScope is null)
+        // Sin sesión (por ejemplo, caducada) no cuenta la cookie de ámbito que haya quedado.
+        var signedIn = User.Identity?.IsAuthenticated == true;
+        var activeScope = signedIn ? ActiveProfileScopeCookie.Read(Request) : null;
+        if (signedIn && activeScope is null)
         {
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Index)) });
         }

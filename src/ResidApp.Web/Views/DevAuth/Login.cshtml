@@ -1,4 +1,4 @@
-@model string?
+@model ResidApp.Web.Models.DevAuthLoginViewModel
 @{
     ViewData["Title"] = "Iniciar sesión";
 }
@@ -13,18 +13,27 @@
 
                 <h1 class="h4 text-center mb-3">Iniciar sesión</h1>
                 <p class="text-muted small">
-                    Esto no es autenticación real: escribe el sujeto externo de una cuenta ya sembrada en
-                    la base de datos (por ejemplo, <code>dev-admin</code>) para ejercitar el motor de
-                    autorización. El proveedor de autenticación productivo todavía no está decidido.
+                    Acceso de desarrollo, no autenticación real: escribe el usuario de una cuenta de prueba (por ejemplo,
+                    <code>almendros-enfermeria</code>)@(Model.RequiresKey ? " y la clave de desarrollo" : "").
+                    El inicio de sesión con contraseña llegará con el proveedor de identidad.
                 </p>
 
                 <div asp-validation-summary="All" class="text-danger"></div>
 
                 <form asp-controller="DevAuth" asp-action="Login" method="post">
+                    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
                     <div class="mb-3">
                         <label for="externalSubject" class="form-label">Usuario</label>
-                        <input type="text" class="form-control form-control-lg" id="externalSubject" name="externalSubject" value="@Model" placeholder="dev-admin" />
+                        <input type="text" class="form-control form-control-lg" id="externalSubject" name="externalSubject" value="@Model.CurrentSubject"
+                               placeholder="almendros-enfermeria" autocomplete="username" />
                     </div>
+                    @if (Model.RequiresKey)
+                    {
+                        <div class="mb-3">
+                            <label for="clave" class="form-label">Clave de desarrollo</label>
+                            <input type="password" class="form-control form-control-lg" id="clave" name="clave" autocomplete="current-password" />
+                        </div>
+                    }
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
                     </div>
@@ -34,10 +43,10 @@
                     ¿No tienes cuenta? <a asp-controller="DevAuth" asp-action="Register">Solicita acceso</a>
                 </p>
 
-                @if (!string.IsNullOrWhiteSpace(Model))
+                @if (!string.IsNullOrWhiteSpace(Model.CurrentSubject))
                 {
                     <form asp-controller="DevAuth" asp-action="Logout" method="post" class="mt-3">
-                        <button type="submit" class="btn btn-outline-secondary btn-sm">Salir (@Model)</button>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Salir (@Model.CurrentSubject)</button>
                     </form>
                 }
             </div>

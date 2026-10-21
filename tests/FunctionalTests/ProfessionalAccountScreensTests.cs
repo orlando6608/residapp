@@ -801,7 +801,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Equal(!canCreate, page.Contains("Tu ámbito activo no tiene permiso para dar de alta residentes."));
     }
 
-    private const string DevSubjectCookie = "residapp_dev_subject";
+    private const string SessionCookie = "residapp_sesion";
 
     private async Task<HttpResponseMessage> PostLoginAsync(HttpClient client, string externalSubject)
     {
@@ -824,8 +824,8 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("No existe ninguna cuenta con ese usuario", page);
-        Assert.DoesNotContain(response.Headers.TryGetValues("Set-Cookie", out var cookies) ? cookies : [], c => c.Contains(DevSubjectCookie));
-        Assert.Contains("No hay ninguna identidad de desarrollo activa", home);
+        Assert.DoesNotContain(response.Headers.TryGetValues("Set-Cookie", out var cookies) ? cookies : [], c => c.Contains(SessionCookie));
+        Assert.Contains("No has iniciado sesión", home);
     }
 
     [Fact]
@@ -841,9 +841,9 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
 
         Assert.Contains("No existe ninguna cuenta con ese usuario", rejected);
         Assert.Contains($"Salir ({account.ExternalSubject})", rejected);
-        Assert.Contains("Escribe el sujeto externo", empty);
+        Assert.Contains("Escribe el usuario de una cuenta de prueba", empty);
         Assert.Contains($"Salir ({account.ExternalSubject})", empty);
-        Assert.Contains($"<code>{account.ExternalSubject}</code>", home);
+        Assert.Contains($"Sesión de <strong>{account.ExternalSubject}</strong>", home);
     }
 
     [Fact]
@@ -872,10 +872,15 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     [Fact]
     public async Task SeleccionDeAmbito_SiNoSePuedenCargarLosAmbitos_MuestraElErrorYNoDiceQueNoTiene()
     {
+        // La sesión se abre en la aplicación normal (con el directorio que falla no se podría entrar) y se usa en la que falla.
+        var account = await SeedAdministratorAsync();
+        var cookie = SesionTests.SessionCookie(await PostLoginAsync(
+            _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { AllowAutoRedirect = false }),
+            account.ExternalSubject));
         var failing = _factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.AddScoped<IProfileScopeDirectoryProvider, UnavailableProfileScopeDirectory>()));
         var client = failing.CreateClient();
-        client.DefaultRequestHeaders.Add("Cookie", $"{DevSubjectCookie}=dev-cualquiera");
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
 
         var page = WebUtility.HtmlDecode(await client.GetStringAsync("/ProfileScope/Select"));
 

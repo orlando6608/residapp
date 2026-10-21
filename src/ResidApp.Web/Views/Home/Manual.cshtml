@@ -93,7 +93,7 @@
         momento. Si el usuario que escribes al entrar no existe o su cuenta no tiene ningún ámbito activo, el
         acceso lo rechaza con un aviso y sigues en la pantalla de acceso (si ya tenías una sesión abierta, se
         mantiene). Si una cuenta pierde todos sus ámbitos con la sesión ya abierta, la pantalla de selección te lo
-        indica y puedes pulsar <strong>«Cambiar de identidad»</strong> o <strong>«Salir»</strong>; debes contactar con
+        indica y puedes pulsar <strong>«Entrar con otra cuenta»</strong> o <strong>«Salir»</strong>; debes contactar con
         Administración para que te devuelvan un ámbito. Si esa pantalla no puede cargar tus ámbitos (por ejemplo,
         un fallo de conexión), te muestra el error con un botón <strong>«Reintentar»</strong> en lugar de decir que
         no tienes ámbitos.
@@ -107,10 +107,16 @@
     </p>
     <p class="mb-0">
         La cabecera está en todas las pantallas. <strong>«Mi panel»</strong> te lleva al inicio de tu perfil (por
-        ejemplo, el inicio de Enfermería). El menú con el nombre de tu perfil muestra tu identidad y tu ámbito activo, y
-        desde él puedes pulsar <strong>«Cambiar ámbito»</strong> para volver a elegir con qué perfil o centro trabajas,
-        <strong>«Cambiar de identidad»</strong> o <strong>«Salir»</strong>. En el móvil, todo esto está tras el botón de
+        ejemplo, el inicio de Enfermería). El menú con el nombre de tu perfil muestra con qué cuenta has entrado y tu ámbito
+        activo, y desde él puedes pulsar <strong>«Cambiar ámbito»</strong> para volver a elegir con qué perfil o centro trabajas,
+        <strong>«Entrar con otra cuenta»</strong> o <strong>«Salir»</strong>. En el móvil, todo esto está tras el botón de
         menú de la esquina superior derecha.
+    </p>
+    <p class="mb-0 mt-3">
+        Toda pantalla, salvo el Inicio, este manual, el Flujo de trabajo y la página sin conexión, necesita una sesión abierta: sin ella, la app
+        te lleva a la pantalla de acceso y, al entrar, te devuelve a donde ibas. La sesión se cierra sola tras <strong>30 minutos sin
+        usarla</strong> y, en cualquier caso, a las <strong>12 horas</strong> de abrirla; también al pulsar «Salir» o al entrar con otra
+        cuenta. Si Administración suspende tu cuenta, la sesión deja de valer en ese momento.
     </p>
 </section>
 
@@ -141,14 +147,44 @@
 <section id="cuentas-prueba" class="mb-4">
     <h2 class="h5">Cuentas de prueba y cómo cambiar de usuario</h2>
     <p>
-        El acceso actual es de desarrollo: en <a asp-controller="DevAuth" asp-action="Login">/DevAuth/Login</a>
-        escribes el nombre de una cuenta ya sembrada (por ejemplo <code>dev-admin</code>) y entras
-        directamente con ella, sin contraseña. Para <strong>cambiar de usuario</strong> no hace falta cerrar
-        sesión antes: vuelve a <code>/DevAuth/Login</code> y escribe el nombre de otra cuenta — el propio
-        login sustituye tu identidad y limpia el ámbito activo, así que la app te pedirá elegirlo de nuevo
-        si esa cuenta tiene más de uno. Si escribes un nombre que no existe (por ejemplo <code>dev-kk</code>), el
-        acceso no inicia sesión: te avisa y conservas la identidad que tuvieras activa.
+        El acceso actual es de desarrollo, sin contraseña: en <a asp-controller="DevAuth" asp-action="Login">/DevAuth/Login</a>
+        escribes el nombre de una cuenta de prueba (por ejemplo <code>almendros-enfermeria</code>) y entras con ella. En el entorno de
+        pruebas publicado hace falta además la <strong>clave de desarrollo</strong>, que Orlando da en privado. Para <strong>cambiar de
+        usuario</strong> no hace falta cerrar sesión antes: pulsa «Entrar con otra cuenta» y escribe el nombre de otra — se cierra la
+        sesión anterior y se limpia el ámbito activo, así que la app te pedirá elegirlo de nuevo si esa cuenta tiene más de uno. Si el
+        nombre no existe (o, en el entorno de pruebas, la clave no es correcta), no se inicia sesión: te avisa y conservas la sesión que
+        tuvieras. Cuando llegue el inicio de sesión con contraseña (ADR 0007), este acceso solo quedará para desarrollo.
     </p>
+
+    <h3 class="h6 mt-4">Residencia Los Almendros</h3>
+    <p>
+        Es el centro del ejemplo del <a href="~/flujo-de-trabajo.html">Flujo de trabajo</a>, ya montado: «Edificio principal» con
+        Planta 1 y Planta 2 (habitaciones 101–104 y 201–204, plazas A y B), turnos de mañana, tarde y noche, un equipo de Enfermería por
+        planta, rangos de referencia, comunicados a las 19:00 y citas con reserva directa. Rosa Sánchez (ficticia) ya está dada de alta en
+        Planta 1 · 104 · B, con el basal pendiente, y su hija Elena tiene la autorización activa y acceso al Portal Familiar. A partir de ahí,
+        la historia de Rosa se sigue en vivo: basal, cierre de turno, un cambio prioritario, valoraciones, comunicado y cita.
+    </p>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Cuenta</th>
+                    <th scope="col">Perfil</th>
+                    <th scope="col">Qué tiene</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Administración principal de las dos plantas.</td></tr>
+                <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Las dos plantas, con lectura clínica auditada, rangos de referencia y plazos de los hitos.</td></tr>
+                <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Las dos plantas, con permiso de basal.</td></tr>
+                <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Las dos plantas, con permiso de basal; miembro de los equipos de las dos plantas.</td></tr>
+                <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Planta 1, con Rosa en «Mis residentes».</td></tr>
+                <tr><td><code>almendros-elena</code></td><td>Familiar</td><td>Elena, hija de Rosa, en el Portal Familiar.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="h6 mt-4">Otras cuentas de prueba</h3>
 
     <div class="table-responsive">
         <table class="table table-sm align-middle">

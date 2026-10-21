@@ -1,15 +1,16 @@
 @using ResidApp.Shared
 @{
     ViewData["Title"] = "ResidApp";
-    var devSubject = Context.Request.Cookies[ResidApp.Web.Security.DevSessionIdentityProvider.CookieName];
+    var sesion = ResidApp.Web.Security.SessionAuthentication.Subject(User);
+    var accesoDesarrollo = Context.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<ResidApp.Web.Security.DevAuthOptions>>().Value.Habilitado;
     // Solo decide qué fichas se enseñan: cada caso de uso sigue autorizando en el servidor.
-    var perfil = ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request)?.Profile;
+    var perfil = sesion is null ? null : ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request)?.Profile;
     var permisos = ViewBag.Permisos as IReadOnlyList<string> ?? [];
 }
 
 <h1 class="h3 mb-3">Inicio</h1>
 
-@if (string.IsNullOrWhiteSpace(devSubject))
+@if (sesion is null)
 {
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
@@ -17,10 +18,17 @@
                 <div class="card-body p-4 text-center">
                     <img src="~/images/logo.svg" alt="" width="96" height="96" class="mb-3" />
                     <p class="lead mb-2">Sistema integrado de comunicación familiar y registro del estado basal para residencias geriátricas.</p>
-                    <p class="text-muted">No hay ninguna identidad de desarrollo activa.</p>
-                    <div class="d-grid">
-                        <a asp-controller="DevAuth" asp-action="Login" class="btn btn-primary btn-lg">Iniciar sesión</a>
-                    </div>
+                    @if (accesoDesarrollo)
+                    {
+                        <p class="text-muted">No has iniciado sesión.</p>
+                        <div class="d-grid">
+                            <a asp-controller="DevAuth" asp-action="Login" class="btn btn-primary btn-lg">Iniciar sesión</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">El inicio de sesión todavía no está disponible en este entorno.</p>
+                    }
                 </div>
             </div>
         </div>
@@ -29,8 +37,11 @@
 else
 {
     <p class="text-muted">
-        Identidad de desarrollo activa: <code>@devSubject</code> —
-        <a asp-controller="DevAuth" asp-action="Login">cambiar</a>
+        Sesión de <strong>@User.Identity!.Name</strong>
+        @if (accesoDesarrollo)
+        {
+            <span>— <a asp-controller="DevAuth" asp-action="Login">entrar con otra cuenta</a></span>
+        }
     </p>
 }
 

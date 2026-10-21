@@ -1,7 +1,13 @@
 using System.Globalization;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 using ResidApp.Application.Ports;
+using ResidApp.Application.Sessions;
 using ResidApp.Application.UseCases;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Intercambio;
@@ -82,7 +88,60 @@ builder.Services.AddScoped<CorrectNursingAssessment>();
 builder.Services.AddScoped<CorrectMedicalAssessment>();
 builder.Services.AddScoped<RectifyAssessment>();
 builder.Services.AddSingleton<IReferralReportPdfRenderer, ReferralReportPdfRenderer>();
-builder.Services.AddScoped<ISessionIdentityProvider, DevSessionIdentityProvider>();
+// ADR 0007, incremento I0: sesión con cookie cifrada por Data Protection y validada contra dbo.sesiones en cada petición
+// (SessionCookieEvents). Por ahora solo la abre el acceso de desarrollo (DevAuthOptions); después la abrirá el proveedor de identidad.
+var sessionPolicy = new SessionPolicy(
+    TimeSpan.FromMinutes(builder.Configuration.GetValue<int?>("Sesion:InactividadMinutos")
+        ?? throw new InvalidOperationException("Falta Sesion:InactividadMinutos en appsettings.json.")),
+    TimeSpan.FromHours(builder.Configuration.GetValue<int?>("Sesion:MaximoHoras")
+        ?? throw new InvalidOperationException("Falta Sesion:MaximoHoras en appsettings.json.")));
+builder.Services.AddSingleton(sessionPolicy);
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<ISessionStore, SqlSessionStore>();
+builder.Services.AddScoped<SessionCookieEvents>();
+builder.Services.AddScoped<ISessionIdentityProvider, CookieSessionIdentityProvider>();
+builder.Services.Configure<DevAuthOptions>(builder.Configuration.GetSection(DevAuthOptions.Section));
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = SessionAuthentication.CookieName;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.ExpireTimeSpan = sessionPolicy.IdleTimeout;
+        options.SlidingExpiration = true;
+        options.EventsType = typeof(SessionCookieEvents);
+    });
+// Sin acceso de desarrollo no hay ningún inicio de sesión todavía: quien no tiene sesión vuelve al Inicio.
+builder.Services.AddOptions<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme)
+    .Configure<IOptions<DevAuthOptions>>((cookie, devAuth) => cookie.LoginPath = devAuth.Value.Habilitado ? "/DevAuth/Login" : "/");
+// Toda pantalla exige sesión salvo las marcadas con [AllowAnonymous] (Inicio, Manual, acceso de desarrollo, clave de CJ) y los estáticos.
+builder.Services.AddAuthorization(options =>
+    options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(DevAuthOptions.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = context.RequestServices.GetRequiredService<IOptions<DevAuthOptions>>().Value.IntentosPorMinuto,
+            Window = TimeSpan.FromMinutes(1),
+        }));
+});
+// Hallazgo A2: fuera de Development todas las cookies llevan Secure (sesión, ámbito, acceso clínico, antiforgery, TempData, clave de CJ).
+// En Development se mantiene según la petición, para el perfil local http y el TestServer de las pruebas funcionales.
+builder.Services.AddOptions<CookiePolicyOptions>().Configure<IWebHostEnvironment>((options, environment) =>
+    options.Secure = environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always);
+// App Service termina el TLS en su balanceador, que llega desde redes privadas: sin esto la app no sabría que la petición era HTTPS
+// (documentación de App Service, «Detect HTTPS session»).
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    foreach (var network in new[] { "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "::ffff:10.0.0.0/104", "::ffff:172.16.0.0/108", "::ffff:192.168.0.0/112" })
+    {
+        options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+    }
+});
 // La clave de los documentos de CJ (/pendientes-cj): un freno para el desarrollo, ver PendientesCjAccess.
 builder.Services.AddSingleton<PendientesCjAccess>();
 
@@ -231,12 +290,18 @@ var app = builder.Build();
 
 // Las horas se calculan con la zona del servidor: si no es Europe/Madrid, en producción no arranca y en desarrollo avisa.
 ServerTimeZone.Verify(app.Environment, app.Logger);
+// El acceso de desarrollo habilitado fuera de Development sin clave no arranca (hallazgo C1).
+DevAuthOptions.Validate(app.Services.GetRequiredService<IOptions<DevAuthOptions>>().Value, app.Environment);
 
 // Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
+    // La redirección de HTTP a HTTPS la hace App Service (httpsOnly, que fija el CI); aquí solo se pide al navegador que no vuelva a HTTP.
+    app.UseHsts();
 }
+app.UseCookiePolicy();
 app.UseRequestLocalization();
 // Los documentos de CJ (y sus respuestas) piden la clave: sin ella, las páginas redirigen al formulario y los .json dan 401 (el script de
 // cada documento lo ignora en silencio). Va antes de servir los estáticos.
@@ -261,10 +326,15 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/pendientes-cj"
 });
 app.UseRouting();
+app.UseRateLimiter();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
+// Con la política global, los estáticos (CSS, JS, manifest.json, sw.js, flujo-de-trabajo.html) también pedirían sesión.
+app.MapStaticAssets().Add(endpoint => endpoint.Metadata.Add(new AllowAnonymousAttribute()));
+// Un documento de CJ que ya no existe da 404, no el inicio de sesión de la app: esa carpeta tiene su propia clave.
+app.MapFallback("/pendientes-cj/{**path}", () => Results.NotFound()).AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",

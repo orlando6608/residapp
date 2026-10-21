@@ -1,101 +1,97 @@
 # ADR 0007 — Proveedor de identidad productivo
 
-Estado: **propuesta** (2026-10-04). Pendiente de validación de CJ, Seguridad y el responsable de protección de datos. No se ha
-creado ningún tenant, cuenta ni recurso de Azure, ni se ha añadido ninguna dependencia.
+Estado: **aceptada en lo técnico** el 2026-10-21 (decisión de Orlando, que hace de responsable de Seguridad). Las puertas del responsable de
+protección de datos (DPO) quedan abiertas hasta tener residencia piloto: la residencia es la responsable del tratamiento y ResidApp, la
+encargada. Sustituye a la propuesta del 2026-10-04, que elegía Microsoft Entra External ID.
 
 ## Contexto
 
-La sesión actual es `DevSessionIdentityProvider`: una cookie con el `sujeto_externo` que se escribe en `/DevAuth/Login`, sin
-contraseña. No es autenticación. Bloquea el Portal Familiar, «Mi cuenta» (ADM-30), las invitaciones de cuentas que ya existen en
-otro centro y cualquier uso con datos reales (AUTH-04).
+Hasta el 2026-10-21 la sesión era `DevSessionIdentityProvider`: una cookie con el `sujeto_externo` en claro que se escribía en
+`/DevAuth/Login`, sin contraseña. No era autenticación, y en Azure dev cualquiera podía fabricar esa cookie y entrar como cualquier cuenta,
+incluida Plataforma (hallazgo C1 de `docs/seguridad/hallazgos.md`). Bloquea el Portal Familiar real, «Mi cuenta» (ADM-30), las invitaciones,
+la importación de usuarios (ADR 0010), una API de integración y cualquier uso con datos reales (AUTH-04).
 
-El legado eligió provisionalmente Auth0 con tenant en la UE, con WorkOS AuthKit como respaldo
-(`docs/legado-cloudflare/docs/architecture/0005-seleccion-proveedor-autenticacion.md` y el spike del 2026-09-10). Esa evaluación
-pesaba la compatibilidad con Next.js/vinext en Cloudflare Workers. La pila actual es otra (ASP.NET Core .NET 10 MVC, App Service y
-Azure SQL), así que se reabre la elección. Se conservan los requisitos de ese ADR (apartado 3), que no dependen de la pila.
+Lo que fija la aplicación:
 
-Lo que fija la aplicación actual:
+- **El puerto ya existe:** `ISessionIdentityProvider` solo devuelve `VerifiedIdentity(ExternalSubject)`. Las cuentas, los perfiles, el
+  centro, la unidad, el residente y los permisos los resuelve siempre SQL. El proveedor no recibe roles, ámbitos ni datos clínicos.
+- `dbo.cuentas.sujeto_externo` es único y no se puede modificar (trigger de `0023`). Administración da de alta la cuenta (ADM-13) antes del
+  primer acceso.
+- Dos poblaciones: profesionales en tablets de planta compartidas y familiares en su móvil. PWA sin modo offline. Plataforma necesita
+  autenticación reforzada (ADR 0006).
+- Datos de salud bajo el RGPD, preferencia por tratarlos en la UE, un solo desarrollador sin equipo de operación, y un piloto de 100 a
+  2.500 usuarios activos al mes.
+- Se conservan los requisitos del ADR legado (`docs/legado-cloudflare/docs/architecture/0005-seleccion-proveedor-autenticacion.md`,
+  apartado 3), entre ellos: TOTP y passkeys evaluables, y el correo o el SMS no se consideran equivalentes a un factor resistente al phishing.
 
-- **El puerto ya existe:** `ISessionIdentityProvider` solo devuelve `VerifiedIdentity(ExternalSubject)`. Las cuentas, los perfiles,
-  el centro, la unidad, el residente y los permisos los resuelve siempre SQL (`SqlAuthorizationEvidenceProvider`). El proveedor no
-  recibe roles, ámbitos ni datos clínicos, y sus claims no autorizan nada.
-- `dbo.cuentas.sujeto_externo` es único y no se puede modificar (trigger de `0023`). Administración da de alta la cuenta (ADM-13)
-  antes de que la persona entre por primera vez.
-- Hay dos poblaciones: profesionales en tablets de planta compartidas y familiares en su móvil. Es una PWA sin modo offline.
-- Las cuentas de Plataforma son las más sensibles y necesitan una autenticación reforzada (ADR 0006).
-- Los datos son de salud y están sujetos al RGPD, con preferencia por tratarlos en la UE. Hay un solo desarrollador, sin equipo de
-  operación, y el piloto tiene entre 100 y 2.500 usuarios activos al mes.
+## Lo que cambió al revisarlo (2026-10-21, fuentes oficiales)
 
-## Propuesta
+- **Microsoft Entra External ID** (tenant externo):
+  - sigue **sin TOTP**: los segundos factores son código por correo, SMS (de pago) y passkey
+    ([MFA en tenants externos](https://learn.microsoft.com/en-us/entra/external-id/customers/concept-multifactor-authentication-customers),
+    actualizado el 2026-06-17);
+  - las passkeys exigen un **dominio propio servido por Azure Front Door** (unos 35 $ al mes), y Front Door está **excluido del EU Data
+    Boundary** ([servicios excluidos](https://learn.microsoft.com/en-us/privacy/eudb/eu-data-boundary-excluded-services)). Además, la
+    pantalla para registrarlas la construye la aplicación con permisos altos de Graph, y Conditional Access **no puede exigirlas** (no hay
+    *authentication strengths* en tenants externos)
+    ([passkeys](https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-sign-in-with-passkey), 2026-10-06);
+  - **no hay invitaciones para usuarios**: la aplicación crea la cuenta con Graph y una contraseña temporal que alguien tiene que entregar
+    ([funcionalidades de los tenants externos](https://learn.microsoft.com/en-us/entra/external-id/customers/concept-supported-features-customers));
+  - ninguna página oficial confirma que el EU Data Boundary cubra los tenants externos
+    ([residencia de datos en la UE](https://learn.microsoft.com/en-us/entra/fundamentals/data-storage-eu) habla de Entra ID en general);
+  - todo el mundo necesitaría correo para entrar y para el código.
+- **Auth0 con tenant en la UE:** el TOTP pide el plan Essentials (unos 175 $ al mes con 2.500 usuarios; el reparto de factores por plan
+  solo lo confirma un foro) y la revocación de sesiones es solo de Enterprise ([precios](https://auth0.com/pricing)).
+- **ASP.NET Core Identity (.NET 10)** trae de serie TOTP, códigos de recuperación, bloqueo por intentos y passkeys (en MVC, las passkeys se
+  montan a mano y cuentan como primer factor)
+  ([passkeys en ASP.NET Core Identity](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/passkeys), 2026-10-13).
+- La pulsera NFC con PIN del ADR 0009 obliga, con cualquier proveedor, a que ResidApp custodie los PIN y verifique la pulsera.
 
-**Microsoft Entra External ID, con un tenant externo creado con ubicación en un país de la UE.**
+## Decisión
 
-1. **Integración nativa:** OIDC con `Microsoft.Identity.Web` y la autenticación por cookie de ASP.NET Core, sin SDK de terceros. El
-   inicio de sesión lo aloja Microsoft, que custodia contraseñas y factores y se encarga del bloqueo y el antiabuso.
-2. **Mismo proveedor y contrato que el resto del despliegue:** un solo DPA de Microsoft para App Service, Azure SQL y la identidad. Si
-   el tenant se crea con ubicación en la UE, Entra almacena y trata la mayoría de los datos dentro de la EU Data Boundary, con
-   excepciones documentadas: IP y teléfonos fraudulentos publicados globalmente y parte de la telemetría de seguridad.
-3. **Coste:** gratis hasta 50.000 usuarios activos al mes. Los SMS y el dominio personalizado se pagan aparte.
-4. **Alta sin vinculación posterior:** al dar de alta una cuenta (ADM-13 y Plataforma), la app crea el usuario en el tenant externo
-   con Microsoft Graph y recibe su identificador inmutable en ese momento. `sujeto_externo` guarda emisor e identificador
-   (`<tenant>|<oid>`, dentro de los 200 caracteres actuales). No hay autorregistro abierto ni vinculación por correo, y no cambia el
-   esquema de `cuentas`.
-5. **Revocación:** una cuenta `SUSPENDED` ya se deniega en SQL en cada petición, con independencia de la sesión. Cerrar la sesión de
-   un dispositivo concreto exige un almacén de sesiones en Azure SQL (`ITicketStore` o tabla propia), que es un incremento aparte.
+**ASP.NET Core Identity propio, sobre nuestra Azure SQL.**
 
-### Segundo factor
+- TOTP, códigos de recuperación, bloqueo por intentos y passkeys sin coste ni tercero nuevo; los datos de identidad quedan en la misma base
+  (UE) que el resto.
+- Alta por **invitación de un solo uso** que entrega Administración (enlace o QR), sin depender de que cada auxiliar tenga correo.
+  Recuperación por Administración, que no rebaja el segundo factor.
+- Sesiones revocables en SQL, que ya existen (incremento I0).
+- **A cambio**, ResidApp custodia las credenciales: hashes de contraseña (los de Identity), secretos TOTP y claves de passkeys. Exige
+  configurar bien el bloqueo, el límite de intentos y los registros de seguridad (hallazgo A4), y está entre lo que revisará el DPO.
+- `sujeto_externo` sigue siendo la clave de la identidad; cómo se relaciona con el usuario de Identity se decide en I1.
 
-Según Microsoft Learn (actualizado el 2026-05-21), los tenants externos admiten como segundo factor el **código por correo**, el
-**SMS** (de pago) y la **passkey FIDO2**, impuestos con Conditional Access. **No admiten TOTP** (apps autenticadoras). La passkey
-exige un dominio personalizado (Azure Front Door) y solo vale para cuentas de correo o usuario con contraseña.
+## Incrementos
 
-| Población | Propuesta |
-| --- | --- |
-| Profesionales | Contraseña y código por correo. Passkey opcional en el móvil personal, nunca en la tablet compartida. |
-| Familiares | Contraseña y código por correo. SMS como alternativa si CJ lo considera necesario. |
-| Plataforma | Passkey obligatoria. |
+| Incremento | Entrega | Estado |
+| --- | --- | --- |
+| **I0** | **Capa común, independiente del proveedor**: sesión con cookie cifrada por Data Protection y validada contra `dbo.sesiones` (script `0061`) en cada petición, con inactividad (30 min) y caducidad absoluta (12 h) que fallan cerradas; cierre de sesión que la invalida en el servidor; política global que exige sesión salvo en las pantallas públicas; acceso de desarrollo solo si se habilita y, fuera de Development, con una clave que no está en el repositorio; límite de intentos; HTTPS obligatorio, HSTS y cookies `Secure`. | Hecho el 2026-10-21 |
+| I1 | ASP.NET Core Identity: inicio de sesión con contraseña y TOTP, bloqueo y límite de intentos, registros de seguridad. El acceso de desarrollo queda solo para desarrollo. | Pendiente |
+| I2 | Alta por invitación de un solo uso (enlace o QR que entrega Administración), recuperación por Administración, y credenciales de las cuentas de demostración (`almendros-*`). Después, vincular cuentas que ya existen en otro centro. | Pendiente |
+| I3 | «Mi cuenta» (ADM-30 y FAM-16): contraseña, segundo factor y sesiones abiertas propias. | Pendiente |
+| I4 | Passkeys; obligatorias para Plataforma. | Pendiente |
+| I5 | Pulsera NFC con PIN (ADR 0009) como entrada rápida en tablet compartida. | Pendiente |
 
-El código por correo no resiste el phishing. Si Seguridad o el DPO no lo aceptan como segundo factor para AUTH-04, la propuesta pasa
-al respaldo.
-
-## Alternativas
-
-| Opción | Valoración |
-| --- | --- |
-| **Auth0 con tenant en la UE (respaldo)** | Ofrece TOTP, WebAuthn y push, y tiene SDK para ASP.NET Core. Pierde por coste: la API de sesiones y la revocación global son de Enterprise, sin precio público. Además añade un contrato y una cadena de subencargados ajenos a Azure. Pasa a ser la opción principal si se exige TOTP o se rechaza el código por correo. |
-| ASP.NET Core Identity (.NET 10, con passkeys y TOTP) | Los datos quedan en nuestra Azure SQL, pero nosotros custodiaríamos credenciales y operaríamos correo, recuperación y antiabuso. Es la objeción que el legado hizo a Better Auth: no hay equipo de operación. |
-| Keycloak, Duende IdentityServer | Exigen operar otro servidor o pagar otra licencia. Es demasiada carga para el piloto. |
-| Azure AD B2C | Ya no se vende a clientes nuevos; External ID es su sucesor. |
-| WorkOS AuthKit, Clerk | Tratan la identidad en EE. UU. y su encaje con .NET es peor. |
-
-## Puertas antes de aceptar
-
-1. Confirmación por escrito de que los **tenants externos** (no solo Entra ID en general) quedan dentro de la EU Data Boundary, y el
-   mapa de excepciones por categoría de datos.
-2. Aceptación del segundo factor por población (tabla anterior) por parte de CJ, Seguridad y el DPO.
-3. Decidir si se usan passkeys en el piloto (coste de Front Door y dominio propio, que debe fijarse antes de que nadie registre una
-   passkey, porque cambiarlo después las invalida).
-4. Recuperación de cuenta que no rebaje el segundo factor, y cierre por inactividad en las tablets compartidas.
-5. EIPD: el proveedor solo recibe correo verificado, credenciales, factores y datos técnicos mínimos. Nunca recibe perfil, centro,
-   residente, vínculo familiar ni texto clínico, tampoco en claims, URLs, logs ni correos.
-
-## Incrementos (cada uno con su encargo)
-
-| Incremento | Entrega |
-| --- | --- |
-| I1 | Tenant externo de pruebas con datos sintéticos: login, callback, logout, cookie (HttpOnly, Secure, SameSite Lax) y denegación de una cuenta suspendida. |
-| I2 | `EntraSessionIdentityProvider` sustituye entero a `DevSessionIdentityProvider` (el registro está en `Program.cs`). `DevAuth` queda solo en Development. |
-| I3 | Alta de cuentas con Graph desde ADM-13 y Plataforma, e invitación por correo. Solo después se pueden vincular cuentas que ya existen en otro centro. |
-| I4 | Conditional Access: segundo factor para todos y passkey para Plataforma. |
-| I5 | Sesiones revocables en Azure SQL y «Mi cuenta» (ADM-30). |
-
-Criterios de aceptación de I1–I5: los casos AUTH-SPIKE-T02 a T06 del spike legado, reescritos contra el almacenamiento real. La
-identidad entra solo por el puerto; un rol o centro inyectado en una cookie no afecta a SQL; una sesión revocada se deniega en la
-petición siguiente; la rotación no amplía la expiración absoluta; la inactividad y el cierre global fallan cerrados; y una cuenta
+Criterios de aceptación: los casos AUTH-SPIKE-T02 a T06 del spike legado contra el almacenamiento real. Desde I0 los cubre
+`tests/FunctionalTests/SesionTests.cs`: la identidad entra solo por el puerto (una cookie fabricada no da acceso); una sesión cerrada se
+deniega en la petición siguiente; la renovación no amplía la caducidad absoluta; la inactividad y la caducidad fallan cerradas; y una cuenta
 suspendida se deniega aunque la sesión sea válida.
 
-## Fuentes
+## Puertas abiertas
 
-- [MFA en tenants externos](https://learn.microsoft.com/en-us/entra/external-id/customers/concept-multifactor-authentication-customers) (consultado el 2026-10-04).
-- [Almacenamiento y tratamiento de datos de clientes europeos en Entra ID](https://learn.microsoft.com/en-us/entra/fundamentals/data-storage-eu) (consultado el 2026-10-04).
-- [Precios de Microsoft Entra External ID](https://azure.microsoft.com/pricing/details/microsoft-entra-external-id/) (consultado el 2026-10-04).
+1. **DPO de la residencia piloto:** EIPD; qué datos de identidad se guardan y cuánto tiempo; aceptación del segundo factor por población.
+2. **Segundo factor por población** (lo propone Seguridad y lo valida el DPO): TOTP o passkey para el personal; para familiares, a decidir
+   con CJ (pregunta 3.2 de `docs/pendientes-cj/portal-familiar-confirmaciones-cj.html`); passkey obligatoria para Plataforma.
+3. **Tablets compartidas:** tiempo de inactividad definitivo y entrada rápida (I5).
+4. **Contradicciones que resolver antes de I2:** el correo de los familiares es opcional en el alta; FAM-10 dice «sin correo ni SMS en el
+   piloto»; el ADR legado pide una auditoría de autenticación separada de la clínica (hoy `dbo.sesiones` registra entradas y salidas, pero
+   no los intentos fallidos más que en el registro técnico).
+
+## Alternativas descartadas
+
+| Opción | Por qué no |
+| --- | --- |
+| Microsoft Entra External ID | La propuesta anterior. Sin TOTP, passkeys caras y fuera del EU Data Boundary por Front Door, sin invitaciones y sin confirmación por escrito de la residencia UE de los tenants externos. Sería la opción si se prefiriera no custodiar credenciales y se aceptara el código por correo. |
+| Auth0 con tenant en la UE | Coste (175–545 $ al mes para TOTP o WebAuthn), revocación de sesiones solo en Enterprise y otra cadena de subencargados fuera de Azure. |
+| Keycloak, Duende IdentityServer | Otro servidor que operar u otra licencia. |
+| Azure AD B2C | Ya no se vende a clientes nuevos. |
+| WorkOS AuthKit, Clerk | Tratan la identidad en EE. UU. y encajan peor con .NET. |

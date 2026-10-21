@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
@@ -8,6 +9,7 @@ namespace ResidApp.Web.Controllers;
 /// Formulario de la clave de los documentos de CJ (/pendientes-cj): sin ella, el middleware de Program.cs redirige aquí. Anónimo.
 /// Ver PendientesCjAccess: es un freno para el desarrollo, no autenticación real.
 /// </summary>
+[AllowAnonymous]
 public sealed class AccesoCjController(PendientesCjAccess access) : Controller
 {
     [HttpGet]

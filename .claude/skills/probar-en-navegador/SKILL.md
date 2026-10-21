@@ -50,6 +50,12 @@ Desde la raíz del repositorio, en Bash:
    El centro no tiene residentes. Si la pantalla los necesita, créalos en el propio recorrido como lo haría el perfil, o importa
    `datos/residentes-erp.csv` con una cuenta de Administración del mismo centro.
 
+   Para mirar sin sembrar nada, también están las cuentas de la «Residencia Los Almendros» (`almendros-administracion`,
+   `almendros-direccion`, `almendros-medicina`, `almendros-enfermeria`, `almendros-auxiliar` y `almendros-elena`), con Rosa ya dada de alta.
+   Las crea `database/seed/dev_seed_los_almendros.sql` al aplicar los seeds (`APLICAR_SEED=1 bash database/aplicar-scripts.sh`, que pasa
+   `-f 65001` a `sqlcmd`: un seed con tildes aplicado a mano sin esa opción guarda los nombres mal). Es un centro compartido: lo que hagas
+   en él se queda.
+
 4. **Recorrer.** `SALIDA` es la carpeta de las capturas y descargas: usa el scratchpad, nunca el repositorio.
 
    ```bash
@@ -78,6 +84,8 @@ Lecciones de los recorridos anteriores:
 - `change` de un campo de texto salta al pulsar el botón siguiente. Prueba siempre rellenar un campo de texto y pulsar el botón a
   continuación, como haría una persona.
 - Con un solo perfil, `/DevAuth/Login` lleva directamente a Inicio. Con varios, hay que pasar por `/ProfileScope/Select`.
+- En local (Development) el acceso de desarrollo no pide clave. Sin sesión, toda pantalla salvo las públicas redirige al login, y la
+  sesión caduca a los 30 minutos sin uso: un recorrido largo con pausas tiene que volver a entrar.
 - Comprueba el foco tras cada paso (`document.activeElement?.id`): la accesibilidad (WCAG 2.2 AA) lo exige.
 
 ## Lo que queda en la BD local
