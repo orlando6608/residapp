@@ -133,11 +133,13 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddOptions<CookiePolicyOptions>().Configure<IWebHostEnvironment>((options, environment) =>
     options.Secure = environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always);
 // App Service termina el TLS en su balanceador, que llega desde redes privadas: sin esto la app no sabría que la petición era HTTPS
-// (documentación de App Service, «Detect HTTPS session»).
+// (documentación de App Service, «Detect HTTPS session»), no enviaría HSTS y el límite de intentos contaría a todos como una sola IP.
+// En Linux llega además desde la red de enlace local (medido en Azure dev el 2026-10-21: ::ffff:169.254.130.1), que la documentación no cita.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    foreach (var network in new[] { "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "::ffff:10.0.0.0/104", "::ffff:172.16.0.0/108", "::ffff:192.168.0.0/112" })
+    foreach (var network in new[] { "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16",
+                 "::ffff:10.0.0.0/104", "::ffff:172.16.0.0/108", "::ffff:192.168.0.0/112", "::ffff:169.254.0.0/112" })
     {
         options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
     }

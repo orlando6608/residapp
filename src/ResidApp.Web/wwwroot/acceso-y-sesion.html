@@ -1,0 +1,1018 @@
+<!doctype html>
+<!--
+  Acceso y sesión de ResidApp: cómo se pide el acceso, qué hacen Plataforma y soporte, cómo se entra, cuánto dura la sesión, las
+  cuentas de prueba y qué protege (ADR 0006 y ADR 0007).
+  Página estática y pública, como el Flujo de trabajo (flujo-de-trabajo.html), cuyo estilo sigue; enlazada desde el pie de
+  Views/Shared/_Layout.cshtml y desde el Manual. Revísala con cada incremento del ADR 0007, si cambia quién da de alta las cuentas
+  (Plataforma, Usuarios, acceso al portal) o los tiempos de la sesión (Sesion:InactividadMinutos, Sesion:MaximoHoras).
+  Nunca pongas aquí la clave de desarrollo ni la de los documentos de CJ.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acceso y sesión - ResidApp</title>
+<meta name="description" content="Cómo se entra en ResidApp, cuánto dura la sesión, las cuentas de prueba y qué protege el acceso.">
+<link rel="icon" href="/images/logo.svg">
+<script>
+  // Respeta el tema elegido en ResidApp (menú «Tema», que wwwroot/js/tema.js guarda en este navegador). Sin elección, sigue al dispositivo.
+  try {
+    var tema = localStorage.getItem("residapp-tema");
+    if (tema === "claro") document.documentElement.setAttribute("data-theme", "light");
+    if (tema === "oscuro") document.documentElement.setAttribute("data-theme", "dark");
+  } catch (e) {
+    // Sin almacenamiento (modo privado o bloqueado): sigue al dispositivo.
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --arrow: #55686c;
+    --danger: #b3261e;
+    --danger-bg: #fbeceb;
+    --ok: #22703a;
+    --ok-bg: #e7f4ea;
+    --lane-aux: #6b4fa0;
+    --lane-enf: #1b5f6b;
+    --lane-med: #2457a6;
+    --lane-dir: #9b2c4a;
+    --lane-adm: #2e6b2f;
+    --lane-adm-bg: #eaf4ea;
+    --lane-fam: #8a5a12;
+    --lane-fam-bg: #f8f0e3;
+    --lane-plat: #4a5560;
+    --lane-plat-bg: #eef0f2;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+      --arrow: #9aafb2;
+      --danger: #f2b8b5;
+      --danger-bg: #2c1716;
+      --ok: #8fd3a2;
+      --ok-bg: #15261a;
+      --lane-aux: #b9a2e6;
+      --lane-enf: #72c0cb;
+      --lane-med: #8fb3ec;
+      --lane-dir: #f0a3b8;
+      --lane-adm: #95d095;
+      --lane-adm-bg: #172617;
+      --lane-fam: #e2b56a;
+      --lane-fam-bg: #2a2114;
+      --lane-plat: #b6c0ca;
+      --lane-plat-bg: #1d2226;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-soft: #1b2e32;
+    --arrow: #9aafb2;
+    --danger: #f2b8b5;
+    --danger-bg: #2c1716;
+    --ok: #8fd3a2;
+    --ok-bg: #15261a;
+    --lane-aux: #b9a2e6;
+    --lane-enf: #72c0cb;
+    --lane-med: #8fb3ec;
+    --lane-dir: #f0a3b8;
+    --lane-adm: #95d095;
+    --lane-adm-bg: #172617;
+    --lane-fam: #e2b56a;
+    --lane-fam-bg: #2a2114;
+    --lane-plat: #b6c0ca;
+    --lane-plat-bg: #1d2226;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-block: 32px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 72ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.12rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  code { font-family: var(--mono); font-size: 0.86em; overflow-wrap: anywhere; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  header { display: flex; flex-direction: column; gap: 14px; }
+  .marca { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 0.95rem; }
+  .marca img { width: 40px; height: 40px; flex: none; }
+  .marca strong { color: var(--ink); }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+  .indice { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; }
+  .indice a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); text-decoration: none; font-size: 0.93rem; }
+  .indice a:hover { border-color: var(--accent); }
+  ul.lista { padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; }
+
+  /* Tarjetas */
+  .tarjetas { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .tarjetas > li { background: var(--surface); border: 1px solid var(--rule); border-left: 5px solid var(--accent); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .tarjetas > li.aviso { border-left-color: var(--danger); }
+  .tarjetas > li.bien { border-left-color: var(--ok); }
+  .tarjetas h3 { font-size: 1.05rem; font-weight: 600; }
+
+  /* Cuentas de prueba, con el color de cada perfil del Flujo de trabajo */
+  .perfiles { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .perfiles > li { background: var(--surface); border: 1px solid var(--rule); border-top: 5px solid var(--rule); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .perfiles h3 { font-size: 1.08rem; font-weight: 600; }
+  .perfiles .usuario { font-family: var(--mono); font-size: 0.95rem; }
+  .perfiles .nunca { color: var(--muted); font-size: 0.93rem; }
+  .perfiles > li.plat { border-top-color: var(--lane-plat); } .perfiles > li.plat h3 { color: var(--lane-plat); }
+  .perfiles > li.adm { border-top-color: var(--lane-adm); } .perfiles > li.adm h3 { color: var(--lane-adm); }
+  .perfiles > li.aux { border-top-color: var(--lane-aux); } .perfiles > li.aux h3 { color: var(--lane-aux); }
+  .perfiles > li.enf { border-top-color: var(--lane-enf); } .perfiles > li.enf h3 { color: var(--lane-enf); }
+  .perfiles > li.med { border-top-color: var(--lane-med); } .perfiles > li.med h3 { color: var(--lane-med); }
+  .perfiles > li.dir { border-top-color: var(--lane-dir); } .perfiles > li.dir h3 { color: var(--lane-dir); }
+  .perfiles > li.fam { border-top-color: var(--lane-fam); } .perfiles > li.fam h3 { color: var(--lane-fam); }
+
+  /* Diagramas: se desplazan dentro de su caja en pantallas estrechas; la página no. */
+  .diagrama { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px; }
+  .diagrama svg { display: block; width: 100%; height: auto; font-family: var(--sans); }
+  .pista { color: var(--muted); font-size: 0.9rem; max-width: 80ch; }
+  svg .box { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+  svg .box.paso { stroke: var(--accent); fill: var(--accent-soft); stroke-width: 2; }
+  svg .box.rel { stroke-dasharray: 6 4; }
+  svg .box.nota { stroke: var(--muted); stroke-dasharray: 4 4; fill: var(--bg); }
+  svg .box.pend { stroke: var(--danger); stroke-width: 2; fill: var(--danger-bg); }
+  svg .box.ok { stroke: var(--ok); fill: var(--ok-bg); stroke-width: 2.5; }
+  svg .bt { font-size: 13px; fill: var(--ink); }
+  svg .bt.tit { font-size: 13.5px; font-weight: 600; }
+  svg .bt.det { font-size: 12.5px; fill: var(--muted); }
+  svg .bt .n { font-weight: 700; fill: var(--accent); }
+  svg .box.ext { stroke: var(--muted); stroke-dasharray: 6 4; fill: var(--bg); }
+  svg .box.plat { stroke: var(--lane-plat); fill: var(--lane-plat-bg); }
+  svg .box.adm { stroke: var(--lane-adm); fill: var(--lane-adm-bg); }
+  svg .box.fam { stroke: var(--lane-fam); fill: var(--lane-fam-bg); }
+  svg .bt.per { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; fill: var(--muted); }
+  svg .bt.per.c-plat { fill: var(--lane-plat); }
+  svg .bt.per.c-adm { fill: var(--lane-adm); }
+  svg .bt.per.c-fam { fill: var(--lane-fam); }
+  svg .flecha { stroke: var(--arrow); stroke-width: 1.8; fill: none; }
+  svg .flecha.rel { stroke-dasharray: 5 4; }
+  svg .et { font-size: 12px; fill: var(--ink); font-weight: 600; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+  svg .et.nota { fill: var(--muted); font-weight: 400; font-style: italic; }
+  svg .punta { fill: var(--arrow); }
+
+  /* Paso a paso, con el color de quien lo hace */
+  ol.pasos { padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; max-width: 920px; }
+  ol.pasos > li { background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--rule); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+  ol.pasos > li.adm { border-left-color: var(--lane-adm); }
+  ol.pasos > li.fam { border-left-color: var(--lane-fam); }
+  ol.pasos > li.plat { border-left-color: var(--lane-plat); }
+  ol.pasos > li.persona { border-left-color: var(--accent); }
+  .paso-cab { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .paso-cab .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .previsto { align-self: flex-start; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); border: 1.5px dashed var(--muted); border-radius: 999px; padding: 2px 10px; }
+  .tarjetas ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 4px; }
+
+  /* Un día con la sesión */
+  .vida { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; position: relative; max-width: 920px; }
+  .vida::before { content: ""; position: absolute; left: 17px; top: 18px; bottom: 18px; border-left: 2px solid var(--rule); }
+  .vida > li { position: relative; padding-left: 52px; }
+  .vida > li > .num { position: absolute; left: 0; top: 8px; width: 36px; height: 36px; box-sizing: border-box; border-radius: 50%; border: 3px solid var(--lane-enf); color: var(--lane-enf); background: var(--surface); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-weight: 600; font-size: 0.95rem; }
+  .vida > li.aux > .num { border-color: var(--lane-aux); color: var(--lane-aux); }
+  .vida > li.corte > .num { border-color: var(--danger); color: var(--danger); }
+  .vida .hito { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .vida .hito-cab { display: flex; flex-wrap: wrap; gap: 2px 12px; align-items: baseline; }
+  .vida .cuando { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+  .perfil { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--lane-enf); }
+  .perfil.aux { color: var(--lane-aux); }
+  .pasa { color: var(--muted); font-size: 0.95rem; }
+  .pasa strong { color: var(--ink); }
+
+  /* Incrementos */
+  .estados { list-style: none; padding: 0; display: flex; flex-wrap: wrap; align-items: stretch; row-gap: 10px; }
+  .estados > li { display: flex; align-items: stretch; }
+  .estados > li + li::before { content: "→"; display: flex; align-items: center; justify-content: center; width: 34px; color: var(--arrow); font-size: 1.3rem; }
+  .estados .pildora { background: var(--surface); border: 2px solid var(--rule); border-radius: 14px; padding: 8px 14px; width: 200px; display: flex; flex-direction: column; gap: 2px; }
+  .estados .pildora span { color: var(--muted); font-size: 0.9rem; line-height: 1.45; }
+  .estados .pildora.ok { border-color: var(--ok); background: var(--ok-bg); }
+  .estados .pildora.pend { border-style: dashed; border-color: var(--muted); }
+
+  /* Tablas */
+  .tabla { overflow-x: auto; }
+  table.datos { border-collapse: collapse; width: 100%; min-width: 640px; background: var(--surface); font-size: 0.95rem; }
+  table.datos th, table.datos td { text-align: left; padding: 8px 12px; border: 1px solid var(--rule); vertical-align: top; }
+  table.datos thead th { background: var(--accent-soft); font-weight: 600; }
+  table.datos td.motivo { white-space: nowrap; }
+
+  .todavia { background: var(--surface); border: 1px dashed var(--muted); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  footer { color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 1.75rem; }
+    .estados { flex-direction: column; }
+    .estados > li { flex-direction: column; }
+    .estados > li + li::before { content: "↓"; width: auto; height: 30px; }
+    .estados .pildora { width: auto; }
+  }
+
+  /* Al imprimir o guardar como PDF, siempre en claro y con los diagramas enteros. */
+  @media print {
+    :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+      color-scheme: light;
+      --bg: #f5f7f7;
+      --surface: #ffffff;
+      --ink: #1a2427;
+      --muted: #55686c;
+      --rule: #d3dcdd;
+      --accent: #1b5f6b;
+      --accent-soft: #e3eff0;
+      --arrow: #55686c;
+      --danger: #b3261e;
+      --danger-bg: #fbeceb;
+      --ok: #22703a;
+      --ok-bg: #e7f4ea;
+      --lane-aux: #6b4fa0;
+      --lane-enf: #1b5f6b;
+      --lane-med: #2457a6;
+      --lane-dir: #9b2c4a;
+      --lane-adm: #2e6b2f;
+      --lane-adm-bg: #eaf4ea;
+      --lane-fam: #8a5a12;
+      --lane-fam-bg: #f8f0e3;
+      --lane-plat: #4a5560;
+      --lane-plat-bg: #eef0f2;
+    }
+    body { padding: 0; }
+    .back, .indice { display: none; }
+    .page { padding-block: 0 24px; gap: 28px; max-width: none; }
+    .diagrama { overflow: visible; break-inside: avoid; }
+    .diagrama svg { min-width: 0 !important; }
+    .tabla { overflow: visible; }
+    table.datos { min-width: 0; }
+    .vida > li, .perfiles > li, .tarjetas > li, .estados > li, table.datos tr { break-inside: avoid; }
+    h2, h3 { break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <div class="marca">
+      <img src="/images/logo.svg" alt="" width="40" height="40">
+      <span><strong>ResidApp</strong> · Plataforma Asistencial Geriátrica</span>
+    </div>
+    <nav class="back" aria-label="Navegación">
+      <a href="/">← Volver a ResidApp</a>
+      <a href="/Home/Manual">Manual de usuario</a>
+      <a href="/flujo-de-trabajo.html">Flujo de trabajo</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Acceso y sesión</p>
+    <h1>Cómo se entra en ResidApp: el acceso y la sesión</h1>
+    <p class="meta">Estado a 21/10/2026 · Para quien usa o prueba la aplicación, para Plataforma y soporte, y para quien responde de su seguridad</p>
+    <p class="lead prose">
+      Nadie se crea su propia cuenta en ResidApp: el acceso lo da quien responde de cada persona. Después, cada vez que abres una
+      pantalla, la aplicación comprueba <strong>quién eres</strong>, con tu sesión, y <strong>qué puedes hacer</strong>, con el perfil,
+      el centro y las unidades de tu cuenta. Hoy se entra con un acceso de desarrollo: tu identificador y, en el entorno publicado, una
+      clave común. La contraseña personal con segundo factor llega en los próximos bloques. Hasta entonces, ResidApp solo se usa con
+      datos ficticios.
+    </p>
+    <nav aria-label="En esta página">
+      <ul class="indice">
+        <li><a href="#esencial">Lo esencial</a></li>
+        <li><a href="#pedir">Pedir el acceso</a></li>
+        <li><a href="#soporte">Plataforma y soporte</a></li>
+        <li><a href="#pantalla">Cada pantalla</a></li>
+        <li><a href="#entrar">Entrar</a></li>
+        <li><a href="#duracion">Cuánto dura</a></li>
+        <li><a href="#cuentas">Cuentas de prueba</a></li>
+        <li><a href="#protege">Qué protege</a></li>
+        <li><a href="#falta">Lo que falta</a></li>
+        <li><a href="#mantener">Para quien la mantiene</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section id="esencial" aria-labelledby="esencial-t">
+    <h2 id="esencial-t">Lo esencial</h2>
+    <ul class="tarjetas">
+      <li>
+        <h3>Quién te da el acceso</h3>
+        <p>Al personal y a las familias, la <strong>Administración de su centro</strong>. A la primera Administración de un centro
+          nuevo, <strong>Plataforma</strong>. El enlace «Solicita acceso» de la pantalla de acceso todavía no hace nada.</p>
+      </li>
+      <li>
+        <h3>Para entrar</h3>
+        <p>Tu identificador de acceso, por ejemplo <code>almendros-enfermeria</code>. En el entorno publicado, además, la
+          <strong>clave de desarrollo</strong>, que soporte da en privado. En local no se pide clave.</p>
+      </li>
+      <li>
+        <h3>Tu ámbito</h3>
+        <p>Si tu cuenta tiene más de un perfil o más de un centro, eliges con cuál trabajas. Lo que ves y lo que puedes hacer
+          depende de esa elección.</p>
+      </li>
+      <li class="aviso">
+        <h3>30 minutos y 12 horas</h3>
+        <p>La sesión se cierra tras <strong>30 minutos sin usarla</strong> y, en todo caso, a las <strong>12 horas</strong> de entrar.
+          Guarda lo que estés escribiendo antes de dejar la tablet.</p>
+      </li>
+      <li class="aviso">
+        <h3>Salir de verdad</h3>
+        <p>En una tablet compartida, pulsa siempre <strong>«Salir»</strong> o <strong>«Entrar con otra cuenta»</strong>. Cerrar el
+          navegador no siempre basta: algunos recuperan la sesión al volver a abrirse.</p>
+      </li>
+      <li class="bien">
+        <h3>Sin sesión</h3>
+        <p>El Inicio, el Manual, el Flujo de trabajo, esta página y la página sin conexión. Todo lo demás te lleva a la pantalla de
+          acceso.</p>
+      </li>
+      <li>
+        <h3>Dos claves distintas</h3>
+        <p>La clave de desarrollo abre la aplicación. La de los documentos de CJ solo abre <code>/pendientes-cj</code>. Ninguna sirve
+          para lo de la otra.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section id="pedir" aria-labelledby="pedir-t">
+    <h2 id="pedir-t">Cómo se pide el acceso</h2>
+    <p class="prose">Cada cuenta la da de alta quien responde de esa persona, y nadie más. Se pide fuera de la aplicación (en persona, por
+      teléfono o por el canal de cada centro) y no hay formulario de solicitud: el enlace «¿No tienes cuenta? Solicita acceso» de la
+      pantalla de acceso es una maqueta que no envía nada.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 340" style="min-width: 900px" aria-labelledby="d-alta-t d-alta-d">
+        <title id="d-alta-t">Quién da el acceso a quién</title>
+        <desc id="d-alta-d">Quien administra la base de datos crea, una sola vez y por SQL, la cuenta de Plataforma. Plataforma crea cada
+          centro nuevo con su primera Administración y después le da soporte: marca la Administración principal y añade unidades a su
+          ámbito. La Administración del centro da de alta al personal (Auxiliar, Enfermería, Medicina, Dirección Clínica y otras
+          Administraciones) y da a las familias el acceso al Portal Familiar, que solo vale con la autorización activa.</desc>
+        <defs>
+          <marker id="d-alta-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <path class="flecha" d="M196,173 H273" marker-end="url(#d-alta-p)"/>
+        <text class="et" x="236" y="163" text-anchor="middle">crea</text>
+        <path class="flecha" d="M466,173 H543" marker-end="url(#d-alta-p)"/>
+        <text class="et" x="506" y="163" text-anchor="middle">crea</text>
+        <path class="flecha" d="M746,173 H786 V75 H843" marker-end="url(#d-alta-p)"/>
+        <text class="et" x="794" y="66">alta</text>
+        <path class="flecha" d="M746,173 H786 V281 H843" marker-end="url(#d-alta-p)"/>
+        <text class="et" x="794" y="272">acceso</text>
+        <path class="flecha rel" d="M371,218 V252 H646 V221" marker-end="url(#d-alta-p)"/>
+        <text class="et nota" x="508" y="272" text-anchor="middle">soporte: principal y unidades</text>
+
+        <rect class="box ext" x="16" y="128" width="180" height="90" rx="8"/>
+        <text class="bt tit" x="106" y="154" text-anchor="middle">Base de datos</text>
+        <text class="bt det" x="106" y="172" text-anchor="middle">quien la administra,</text>
+        <text class="bt det" x="106" y="188" text-anchor="middle">una vez y por SQL</text>
+        <text class="bt per" x="106" y="205" text-anchor="middle">RAÍZ DE CONFIANZA</text>
+
+        <rect class="box plat" x="276" y="128" width="190" height="90" rx="8"/>
+        <text class="bt tit" x="371" y="154" text-anchor="middle">Plataforma</text>
+        <text class="bt det" x="371" y="172" text-anchor="middle">crea el centro y su</text>
+        <text class="bt det" x="371" y="188" text-anchor="middle">primera Administración</text>
+        <text class="bt per c-plat" x="371" y="205" text-anchor="middle">PLATAFORMA · SOPORTE</text>
+
+        <rect class="box adm" x="546" y="128" width="200" height="90" rx="8"/>
+        <text class="bt tit" x="646" y="154" text-anchor="middle">Administración</text>
+        <text class="bt det" x="646" y="172" text-anchor="middle">da de alta al personal y</text>
+        <text class="bt det" x="646" y="188" text-anchor="middle">el acceso de la familia</text>
+        <text class="bt per c-adm" x="646" y="205" text-anchor="middle">ADMINISTRACIÓN</text>
+
+        <rect class="box" x="846" y="30" width="258" height="90" rx="8"/>
+        <text class="bt tit" x="975" y="56" text-anchor="middle">Personal del centro</text>
+        <text class="bt det" x="975" y="74" text-anchor="middle">Auxiliar, Enfermería, Medicina,</text>
+        <text class="bt det" x="975" y="90" text-anchor="middle">Dirección Clínica, Administración</text>
+        <text class="bt per" x="975" y="107" text-anchor="middle">«ALTA DE USUARIO»</text>
+
+        <rect class="box fam" x="846" y="236" width="258" height="90" rx="8"/>
+        <text class="bt tit" x="975" y="262" text-anchor="middle">Familia</text>
+        <text class="bt det" x="975" y="280" text-anchor="middle">«Dar acceso al portal» y</text>
+        <text class="bt det" x="975" y="296" text-anchor="middle">la autorización activa</text>
+        <text class="bt per c-fam" x="975" y="313" text-anchor="middle">FAMILIA</text>
+      </svg>
+    </div>
+    <h3>Hoy, en el entorno de pruebas</h3>
+    <div class="tabla">
+      <table class="datos">
+        <thead>
+          <tr><th scope="col">Si eres…</th><th scope="col">Lo pides a…</th><th scope="col">Qué hace quien te lo da</th><th scope="col">Con qué entras</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Personal de un centro: Auxiliar, Enfermería, Medicina, Dirección Clínica u otra Administración</td>
+            <td>La Administración de tu centro</td>
+            <td>En «Usuarios», <strong>Alta de usuario</strong>: tu identificador de acceso, tu nombre, tu perfil y tus unidades. La cuenta
+              nace activa y te comunica tu identificador.</td>
+            <td>Tu identificador y la clave de desarrollo</td>
+          </tr>
+          <tr>
+            <td>Familiar de un residente</td>
+            <td>La Administración del centro</td>
+            <td>En la ficha del residente, «Autorización» → <strong>Dar acceso al portal</strong> con tu usuario. Después abre y activa la
+              autorización: sin ella activa, no ves a nadie.</td>
+            <td>Tu usuario y la clave de desarrollo</td>
+          </tr>
+          <tr>
+            <td>La primera Administración de un centro nuevo</td>
+            <td>Plataforma, el soporte de ResidApp</td>
+            <td><strong>Nuevo centro</strong>: el centro, su primera unidad y tu cuenta de Administración, todo a la vez.</td>
+            <td>Tu identificador y la clave de desarrollo</td>
+          </tr>
+          <tr>
+            <td>Operador de Plataforma</td>
+            <td>Quien administra la base de datos</td>
+            <td>Crea la cuenta y su ámbito por SQL, una sola vez. No hay pantalla, a propósito: es la cuenta más sensible.</td>
+            <td>Tu identificador y la clave de desarrollo</td>
+          </tr>
+          <tr>
+            <td>Quien prueba la aplicación (CJ)</td>
+            <td>Orlando</td>
+            <td>Nada que crear: las cuentas de prueba ya existen. Solo te da la clave de desarrollo, en privado.</td>
+            <td>Las <a href="#cuentas">cuentas de prueba</a> y la clave</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="lista prose">
+      <li><strong>La clave de desarrollo no es personal:</strong> es la misma para todos y solo existe mientras no haya contraseña.
+        Quien la tiene puede entrar con cualquier cuenta; por eso se da en privado y solo a quien prueba.</li>
+      <li><strong>El identificador de acceso no se puede cambiar</strong> después del alta; el nombre visible, sí. Es único en todo
+        ResidApp: una persona que ya tiene cuenta en otro centro necesita hoy otro identificador (usar la misma cuenta en dos centros
+        llegará después).</li>
+      <li><strong>Un perfil más</strong> (por ejemplo, Medicina a quien ya es Enfermería) no es una cuenta nueva: Administración se lo
+        concede en la ficha de la cuenta, y la persona elige con cuál trabaja al entrar.</li>
+    </ul>
+
+    <h3>Cuando llegue la contraseña (incrementos I1 e I2)</h3>
+    <p class="prose">Así lo prevé el ADR 0007. <strong>Todavía no está construido</strong> y los detalles se cierran al hacerlo:</p>
+    <ol class="pasos">
+      <li class="adm">
+        <div class="paso-cab"><span class="n">1</span><span class="perfil" style="color: var(--lane-adm)">Administración o Plataforma</span><span class="previsto">Previsto</span></div>
+        <p><strong>Da de alta la cuenta</strong> como hoy: Administración al personal y a las familias, Plataforma a la primera
+          Administración de un centro nuevo.</p>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">2</span><span class="perfil" style="color: var(--lane-adm)">Administración o Plataforma</span><span class="previsto">Previsto</span></div>
+        <p><strong>Entrega una invitación de un solo uso</strong>, un enlace o un código QR, en mano o impresa. No hace falta que la
+          persona tenga correo.</p>
+      </li>
+      <li class="persona">
+        <div class="paso-cab"><span class="n">3</span><span class="perfil" style="color: var(--accent)">La persona</span><span class="previsto">Previsto</span></div>
+        <p><strong>Abre la invitación</strong>, elige su contraseña y activa el segundo factor: una app de códigos en el móvil (TOTP).
+          La invitación deja de valer.</p>
+        <p class="pasa">Desde entonces entra con su identificador, su contraseña y el código del móvil. La clave de desarrollo desaparece.</p>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">4</span><span class="perfil" style="color: var(--lane-adm)">Administración</span><span class="previsto">Previsto</span></div>
+        <p><strong>Si olvida la contraseña o pierde el móvil</strong>, la persona lo pide a su Administración, que le entrega una
+          invitación de recuperación. Vuelve a elegir contraseña y a activar el segundo factor: recuperar el acceso nunca deja la cuenta
+          con menos protección.</p>
+      </li>
+      <li class="persona">
+        <div class="paso-cab"><span class="n">5</span><span class="perfil" style="color: var(--accent)">La persona</span><span class="previsto">Previsto</span></div>
+        <p><strong>En «Mi cuenta»</strong> (I3) cambia su contraseña y su segundo factor, y ve y cierra sus sesiones abiertas.</p>
+      </li>
+    </ol>
+    <p class="pista">Las cuentas de Plataforma tendrán passkey obligatoria (I4). El segundo factor de las familias está por decidir con CJ.</p>
+  </section>
+
+  <section id="soporte" aria-labelledby="soporte-t">
+    <h2 id="soporte-t">Qué hace Plataforma o soporte</h2>
+    <p class="prose">Plataforma es el perfil de quien opera ResidApp; hoy, el soporte lo da Orlando. Crea centros y ayuda a sus
+      Administraciones, pero <strong>no ve residentes ni nada clínico</strong> y <strong>no da de alta al personal de un centro</strong>:
+      eso es siempre de su Administración. Todo lo que hace queda en la auditoría.</p>
+    <ul class="tarjetas">
+      <li>
+        <h3>Un centro nuevo quiere empezar</h3>
+        <ol>
+          <li>Entra con su cuenta de Plataforma: «Centros» → <strong>Nuevo centro</strong>.</li>
+          <li>Escribe el código y el nombre del centro, su primera unidad y su primer administrador (identificador de acceso y nombre).
+            Se crea todo a la vez o nada.</li>
+          <li>Comunica el identificador a esa persona en privado y, en el entorno de pruebas, la clave de desarrollo por otro canal.</li>
+        </ol>
+        <p class="pasa">Desde ahí, la Administración monta el centro y da el resto de accesos.</p>
+      </li>
+      <li>
+        <h3>Una Administración sin unidades o sin principal</h3>
+        <ol>
+          <li>«Centros» → <strong>Administraciones y unidades</strong> del centro.</li>
+          <li>Marca o quita la Administración principal, o añade una unidad al ámbito de una Administración.</li>
+        </ol>
+        <p class="pasa">Es la forma de recuperar una unidad que se quedó sin nadie que la gestione.</p>
+      </li>
+      <li>
+        <h3>Alguien del personal no puede entrar</h3>
+        <ol>
+          <li>Si ve «Usuario o clave incorrectos.», comprueba que escribe bien su identificador y, en pruebas, la clave vigente.</li>
+          <li>Si ve un error 429, que espere un minuto: son demasiados intentos seguidos.</li>
+          <li>Si no es eso, lo resuelve su Administración en «Usuarios»: la cuenta puede estar suspendida o sin ningún perfil vigente.</li>
+        </ol>
+        <p class="pasa">Soporte no crea ni reactiva cuentas de personal desde la aplicación.</p>
+      </li>
+      <li>
+        <h3>Una familia no puede entrar</h3>
+        <ol>
+          <li>Remítela a la Administración del centro.</li>
+          <li>Allí, en la ficha del residente, «Autorización»: tiene que estar Activa y sin caducar, y el familiar tener acceso al
+            Portal Familiar.</li>
+        </ol>
+      </li>
+      <li class="aviso">
+        <h3>Hay que cortar un acceso ya</h3>
+        <ol>
+          <li>Personal: su Administración <strong>suspende la cuenta</strong>. Deja de valer en la siguiente pantalla que abra.</li>
+          <li>Familia: su Administración suspende o revoca la autorización. Deja de ver al residente en la siguiente pantalla.</li>
+          <li>Plataforma: por SQL, quien administra la base de datos.</li>
+        </ol>
+        <p class="pasa">Cambiar la clave de desarrollo no echa a nadie que ya esté dentro.</p>
+      </li>
+      <li class="aviso">
+        <h3>La clave de desarrollo</h3>
+        <ol>
+          <li>Se da en privado y solo a quien prueba. Nunca en documentos, en el repositorio, en capturas ni junto al identificador.</li>
+          <li>Si se filtra o alguien deja de probar, se cambia en la Web App (ajuste <code>DevAuth__Clave</code>, 16 caracteres o más) y
+            se da la nueva a quien sigue.</li>
+        </ol>
+        <p class="pasa">Al cambiarla, la aplicación se reinicia; las sesiones abiertas siguen hasta que se cierran solas.</p>
+      </li>
+      <li>
+        <h3>Un centro sin ninguna Administración que pueda entrar</h3>
+        <p>La aplicación todavía no permite a Plataforma reactivar una cuenta ni crear otra Administración en un centro que ya existe. Lo
+          resuelve por SQL quien administra la base de datos.</p>
+      </li>
+      <li>
+        <h3>Una cuenta de Plataforma nueva o que se retira</h3>
+        <p>Solo por SQL, quien administra la base de datos (ADR 0006). Nunca desde la aplicación.</p>
+      </li>
+    </ul>
+    <div class="todavia prose">
+      <h3>Lo que soporte no hace nunca</h3>
+      <ul class="lista">
+        <li>Pedir ni apuntar contraseñas o códigos de nadie, tampoco cuando existan.</li>
+        <li>Dar de alta al personal de un centro en lugar de su Administración, ni entrar con la cuenta de otra persona para «probar».</li>
+        <li>Mirar datos de residentes: Plataforma no puede, y nadie le pasa capturas con ellos.</li>
+      </ul>
+      <p class="pasa">Previsto con las invitaciones (I2): Plataforma entregará la de la primera Administración de cada centro nuevo, y la
+        Administración de cada centro, las del resto de cuentas y las recuperaciones.</p>
+    </div>
+  </section>
+
+  <section id="pantalla" aria-labelledby="pantalla-t">
+    <h2 id="pantalla-t">Cada vez que abres una pantalla</h2>
+    <p class="prose">Las comprobaciones van en este orden y en todas las pantallas, también al guardar. Si una falla, la pantalla no se
+      muestra. La sesión se comprueba contra la base de datos en cada paso: si se cerró en otro sitio, se nota en ese mismo momento.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 412" style="min-width: 900px" aria-labelledby="d-pet-t d-pet-d">
+        <title id="d-pet-t">Las cuatro comprobaciones de cada pantalla</title>
+        <desc id="d-pet-d">Abres una pantalla. Primera comprobación: si es pública, se muestra sin pedir sesión. Si no lo es, segunda: si no
+          traes una sesión válida (abierta, en uso y sin caducar), vas a la pantalla de acceso y, al entrar, vuelves. Con sesión, tercera:
+          si no has elegido ámbito, lo eliges cuando tienes más de uno. Con ámbito, cuarta: si tu perfil puede hacerlo, se muestra la
+          pantalla con los datos de tu centro; si no, se deniega con un aviso.</desc>
+        <defs>
+          <marker id="d-pet-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <path class="flecha" d="M176,210 H213" marker-end="url(#d-pet-p)"/>
+        <path class="flecha" d="M406,210 H443" marker-end="url(#d-pet-p)"/>
+        <text class="et" x="424" y="200" text-anchor="middle">no</text>
+        <path class="flecha" d="M646,210 H683" marker-end="url(#d-pet-p)"/>
+        <text class="et" x="664" y="200" text-anchor="middle">sí</text>
+        <path class="flecha" d="M876,210 H913" marker-end="url(#d-pet-p)"/>
+        <text class="et" x="894" y="200" text-anchor="middle">sí</text>
+        <path class="flecha" d="M311,170 V107" marker-end="url(#d-pet-p)"/>
+        <text class="et" x="319" y="143">sí</text>
+        <path class="flecha" d="M1010,170 V107" marker-end="url(#d-pet-p)"/>
+        <text class="et" x="1018" y="143">sí</text>
+        <path class="flecha" d="M546,250 V313" marker-end="url(#d-pet-p)"/>
+        <text class="et" x="554" y="287">no</text>
+        <path class="flecha" d="M781,250 V313" marker-end="url(#d-pet-p)"/>
+        <text class="et" x="789" y="287">no</text>
+        <path class="flecha" d="M1010,250 V313" marker-end="url(#d-pet-p)"/>
+        <text class="et" x="1018" y="287">no</text>
+        <path class="flecha rel" d="M446,376 H426 V236 H443" marker-end="url(#d-pet-p)"/>
+        <text class="et nota" x="418" y="310" text-anchor="end">al entrar</text>
+
+        <rect class="box" x="16" y="170" width="160" height="80" rx="8"/>
+        <text class="bt tit" x="96" y="204" text-anchor="middle">Abres una pantalla</text>
+        <text class="bt det" x="96" y="222" text-anchor="middle">o guardas algo</text>
+
+        <rect class="box paso" x="216" y="170" width="190" height="80" rx="8"/>
+        <text class="bt tit" x="311" y="204" text-anchor="middle"><tspan class="n">1</tspan> · ¿Es pública?</text>
+        <text class="bt det" x="311" y="222" text-anchor="middle">Inicio, Manual, Flujo…</text>
+
+        <rect class="box paso" x="446" y="170" width="200" height="80" rx="8"/>
+        <text class="bt tit" x="546" y="204" text-anchor="middle"><tspan class="n">2</tspan> · ¿Sesión válida?</text>
+        <text class="bt det" x="546" y="222" text-anchor="middle">abierta, en uso, sin caducar</text>
+
+        <rect class="box paso" x="686" y="170" width="190" height="80" rx="8"/>
+        <text class="bt tit" x="781" y="204" text-anchor="middle"><tspan class="n">3</tspan> · ¿Ámbito elegido?</text>
+        <text class="bt det" x="781" y="222" text-anchor="middle">perfil, centro y unidades</text>
+
+        <rect class="box paso" x="916" y="170" width="188" height="80" rx="8"/>
+        <text class="bt tit" x="1010" y="204" text-anchor="middle"><tspan class="n">4</tspan> · ¿Tu perfil puede?</text>
+        <text class="bt det" x="1010" y="222" text-anchor="middle">permisos y datos del centro</text>
+
+        <rect class="box ok" x="216" y="40" width="190" height="64" rx="8"/>
+        <text class="bt tit" x="311" y="67" text-anchor="middle">Se muestra</text>
+        <text class="bt det" x="311" y="85" text-anchor="middle">sin pedir sesión</text>
+
+        <rect class="box ok" x="916" y="40" width="188" height="64" rx="8"/>
+        <text class="bt tit" x="1010" y="67" text-anchor="middle">Se muestra</text>
+        <text class="bt det" x="1010" y="85" text-anchor="middle">solo con tu centro</text>
+
+        <rect class="box pend" x="446" y="316" width="200" height="80" rx="8"/>
+        <text class="bt tit" x="546" y="350" text-anchor="middle">Pantalla de acceso</text>
+        <text class="bt det" x="546" y="368" text-anchor="middle">usuario y clave</text>
+
+        <rect class="box" x="686" y="316" width="190" height="80" rx="8"/>
+        <text class="bt tit" x="781" y="350" text-anchor="middle">Eliges ámbito</text>
+        <text class="bt det" x="781" y="368" text-anchor="middle">si tienes más de uno</text>
+
+        <rect class="box pend" x="916" y="316" width="188" height="80" rx="8"/>
+        <text class="bt tit" x="1010" y="350" text-anchor="middle">Se deniega</text>
+        <text class="bt det" x="1010" y="368" text-anchor="middle">con un aviso</text>
+      </svg>
+    </div>
+    <p class="pista">En el móvil, desliza el diagrama hacia los lados. Una sesión válida está abierta, se ha usado en los últimos 30
+      minutos, no han pasado 12 horas desde que entraste y la cuenta sigue activa.</p>
+  </section>
+
+  <section id="entrar" aria-labelledby="entrar-t">
+    <h2 id="entrar-t">Entrar</h2>
+    <p class="prose">En la pantalla de acceso escribes el usuario y, en el entorno publicado, la clave de desarrollo, y pulsas
+      «Entrar». Llegas a ella al abrir una pantalla sin sesión, con «Iniciar sesión» en la cabecera o con «Entrar con otra cuenta» en el
+      menú de tu perfil.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 412" style="min-width: 900px" aria-labelledby="d-ent-t d-ent-d">
+        <title id="d-ent-t">Qué pasa al pulsar «Entrar»</title>
+        <desc id="d-ent-d">Escribes el usuario y la clave. Si la clave no es correcta o la cuenta no existe, está suspendida o no tiene
+          ningún ámbito activo, no entras y sigues como estabas. Si son correctos, se cierra la sesión que tuvieras abierta, se abre una
+          nueva y, si la cuenta tiene un solo ámbito, llegas a tu inicio o a la pantalla a la que ibas; si tiene varios, eliges antes con
+          cuál trabajas. Hay un límite de 10 intentos por minuto desde la misma conexión.</desc>
+        <defs>
+          <marker id="d-ent-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <path class="flecha" d="M196,210 H233" marker-end="url(#d-ent-p)"/>
+        <path class="flecha" d="M426,210 H463" marker-end="url(#d-ent-p)"/>
+        <text class="et" x="444" y="200" text-anchor="middle">sí</text>
+        <path class="flecha" d="M656,210 H693" marker-end="url(#d-ent-p)"/>
+        <path class="flecha" d="M886,210 H923" marker-end="url(#d-ent-p)"/>
+        <path class="flecha" d="M331,250 V313" marker-end="url(#d-ent-p)"/>
+        <text class="et" x="339" y="287">no</text>
+        <path class="flecha" d="M1015,170 V107" marker-end="url(#d-ent-p)"/>
+        <text class="et" x="1023" y="143">uno</text>
+        <path class="flecha" d="M1015,250 V313" marker-end="url(#d-ent-p)"/>
+        <text class="et" x="1023" y="287">varios</text>
+
+        <rect class="box" x="16" y="170" width="180" height="80" rx="8"/>
+        <text class="bt tit" x="106" y="204" text-anchor="middle">Usuario y clave</text>
+        <text class="bt det" x="106" y="222" text-anchor="middle">en la pantalla de acceso</text>
+
+        <rect class="box paso" x="236" y="170" width="190" height="80" rx="8"/>
+        <text class="bt tit" x="331" y="204" text-anchor="middle">¿Son correctos?</text>
+        <text class="bt det" x="331" y="222" text-anchor="middle">clave y cuenta con ámbito</text>
+
+        <rect class="box rel" x="466" y="170" width="190" height="80" rx="8"/>
+        <text class="bt tit" x="561" y="204" text-anchor="middle">Cierra la anterior</text>
+        <text class="bt det" x="561" y="222" text-anchor="middle">si tenías otra sesión</text>
+
+        <rect class="box paso" x="696" y="170" width="190" height="80" rx="8"/>
+        <text class="bt tit" x="791" y="204" text-anchor="middle">Abre la sesión</text>
+        <text class="bt det" x="791" y="222" text-anchor="middle">30 min sin uso · 12 h</text>
+
+        <rect class="box paso" x="926" y="170" width="178" height="80" rx="8"/>
+        <text class="bt tit" x="1015" y="204" text-anchor="middle">¿Cuántos ámbitos?</text>
+        <text class="bt det" x="1015" y="222" text-anchor="middle">perfil y centro</text>
+
+        <rect class="box ok" x="926" y="40" width="178" height="64" rx="8"/>
+        <text class="bt tit" x="1015" y="67" text-anchor="middle">Tu inicio</text>
+        <text class="bt det" x="1015" y="85" text-anchor="middle">o adonde ibas</text>
+
+        <rect class="box" x="926" y="316" width="178" height="80" rx="8"/>
+        <text class="bt tit" x="1015" y="350" text-anchor="middle">Eliges ámbito</text>
+        <text class="bt det" x="1015" y="368" text-anchor="middle">y después, tu inicio</text>
+
+        <rect class="box pend" x="236" y="316" width="190" height="80" rx="8"/>
+        <text class="bt tit" x="331" y="350" text-anchor="middle">No entras</text>
+        <text class="bt det" x="331" y="368" text-anchor="middle">sigues como estabas</text>
+
+        <rect class="box nota" x="16" y="316" width="180" height="80" rx="8"/>
+        <text class="bt tit" x="106" y="350" text-anchor="middle">Límite de intentos</text>
+        <text class="bt det" x="106" y="368" text-anchor="middle">10 por minuto</text>
+      </svg>
+    </div>
+    <ul class="lista prose">
+      <li><strong>Si algo no cuadra</strong>, el aviso es siempre «Usuario o clave incorrectos.», sin decir cuál de los dos falla: así no
+        se puede averiguar qué cuentas existen. En local, sin clave, el aviso dice que la cuenta no existe o no tiene ámbito.</li>
+      <li><strong>Más de 10 intentos en un minuto</strong> desde la misma conexión: el navegador muestra un error (429). Espera un minuto.</li>
+      <li><strong>Entrar con otra cuenta</strong> no exige salir antes. La sesión anterior se cierra solo si la nueva entra; si te
+        equivocas, conservas la que tenías.</li>
+      <li><strong>Familia:</strong> la cuenta de un familiar va directamente al Portal Familiar, con su propio aspecto y sin nada del
+        personal.</li>
+      <li><strong>Al entrar o salir</strong> se olvida el ámbito elegido y termina cualquier lectura clínica declarada por Dirección Clínica.</li>
+    </ul>
+  </section>
+
+  <section id="duracion" aria-labelledby="duracion-t">
+    <h2 id="duracion-t">Cuánto dura la sesión</h2>
+    <p class="prose">Cada pantalla que abres y cada dato que guardas cuentan como uso. Leer una pantalla abierta sin tocar nada no cuenta.
+      Un ejemplo inventado, en la Residencia Los Almendros:</p>
+    <ol class="vida">
+      <li>
+        <span class="num">1</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">08:00</span><span class="perfil">Enfermería</span></div>
+          <p><strong>Entra</strong> con <code>almendros-enfermeria</code> y la clave. Se abre su sesión, que durará como mucho hasta las 20:00.</p>
+        </div>
+      </li>
+      <li>
+        <span class="num">2</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">08:00 – 10:10</span><span class="perfil">Enfermería</span></div>
+          <p><strong>Trabaja.</strong> Cada pantalla que abre aplaza los 30 minutos de inactividad.</p>
+        </div>
+      </li>
+      <li class="corte">
+        <span class="num">3</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">10:10 – 10:45</span><span class="perfil">Enfermería</span></div>
+          <p><strong>Deja la tablet</strong> con el basal de Rosa a medias, sin guardar. A las 10:45 pulsa «Guardar»: han pasado 35 minutos
+            sin uso y la app la lleva a la pantalla de acceso, sin más aviso.</p>
+          <p class="pasa">Lo que no había guardado <strong>se pierde</strong>. Entra otra vez: es una sesión nueva, que durará como mucho
+            hasta las 22:45.</p>
+        </div>
+      </li>
+      <li class="aux">
+        <span class="num">4</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">15:00</span><span class="perfil aux">Auxiliar</span></div>
+          <p><strong>Cambio de turno en la misma tablet.</strong> El Auxiliar pulsa «Entrar con otra cuenta» y entra con
+            <code>almendros-auxiliar</code>.</p>
+          <p class="pasa">La sesión de Enfermería <strong>se cierra</strong> en ese momento: aunque alguien hubiera copiado su cookie, ya no vale.</p>
+        </div>
+      </li>
+      <li class="aux">
+        <span class="num">5</span>
+        <div class="hito">
+          <div class="hito-cab"><span class="cuando">22:00</span><span class="perfil aux">Auxiliar</span></div>
+          <p><strong>Pulsa «Salir»</strong> al acabar. La sesión queda cerrada y la tablet vuelve al Inicio, sin datos de nadie.</p>
+        </div>
+      </li>
+    </ol>
+    <h3>Por qué se cierra una sesión</h3>
+    <div class="tabla">
+      <table class="datos">
+        <thead>
+          <tr><th scope="col">Qué pasa</th><th scope="col">Cuándo se nota</th><th scope="col">Queda registrado como</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pulsas «Salir»</td><td>En ese momento</td><td class="motivo">Salida (<code>LOGOUT</code>)</td></tr>
+          <tr><td>Entras con otra cuenta</td><td>Al entrar con la nueva</td><td class="motivo">Cambio de cuenta (<code>CAMBIO_IDENTIDAD</code>)</td></tr>
+          <tr><td>30 minutos sin usarla</td><td>En la siguiente pantalla que abras</td><td class="motivo">Inactividad (<code>INACTIVIDAD</code>)</td></tr>
+          <tr><td>12 horas desde que entraste, aunque la uses</td><td>En la siguiente pantalla que abras</td><td class="motivo">Caducidad (<code>CADUCIDAD</code>)</td></tr>
+          <tr><td>Administración suspende tu cuenta</td><td>En la siguiente pantalla que abras</td><td>La sesión deja de valer y no se puede volver a entrar con esa cuenta.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="cuentas" aria-labelledby="cuentas-t">
+    <h2 id="cuentas-t">Las cuentas de prueba: Residencia Los Almendros</h2>
+    <p class="prose">Es el centro del <a href="/flujo-de-trabajo.html">Flujo de trabajo</a>, ya montado, con una cuenta por perfil. Los
+      pasos 1 a 5 de la vida de Rosa están hechos: el centro con sus dos plantas, sus turnos y sus equipos, Rosa dada de alta en Planta 1
+      · 104 · B y Elena con acceso al portal. Su historia sigue en vivo desde el paso 6, el basal. Rosa y Elena son ficticias.</p>
+    <ul class="perfiles">
+      <li class="adm">
+        <h3>Administración</h3>
+        <p class="usuario">almendros-administracion</p>
+        <p>Administración principal de las dos plantas: residentes, familias, usuarios, estructura, turnos, citas y auditoría.</p>
+        <p class="nunca">No ve nada clínico.</p>
+      </li>
+      <li class="dir">
+        <h3>Dirección Clínica</h3>
+        <p class="usuario">almendros-direccion</p>
+        <p>Las dos plantas. Puede leer lo clínico declarando para qué (queda auditado), fijar los rangos de referencia y los plazos de
+          los hitos.</p>
+        <p class="nunca">La lectura declarada termina al salir o al entrar con otra cuenta.</p>
+      </li>
+      <li class="med">
+        <h3>Medicina</h3>
+        <p class="usuario">almendros-medicina</p>
+        <p>Las dos plantas, con permiso para firmar y reevaluar el basal.</p>
+      </li>
+      <li class="enf">
+        <h3>Enfermería</h3>
+        <p class="usuario">almendros-enfermeria</p>
+        <p>Las dos plantas, con permiso de basal, y en el equipo de Enfermería de cada planta. Empieza por firmar el basal de Rosa.</p>
+      </li>
+      <li class="aux">
+        <h3>Auxiliar</h3>
+        <p class="usuario">almendros-auxiliar</p>
+        <p>Solo Planta 1. Tiene a Rosa en «Mis residentes».</p>
+        <p class="nunca">No ve la Planta 2.</p>
+      </li>
+      <li class="fam">
+        <h3>Familia</h3>
+        <p class="usuario">almendros-elena</p>
+        <p>Elena, hija de Rosa y su contacto prioritario, con la autorización activa. Entra directamente en el Portal Familiar.</p>
+      </li>
+      <li class="plat">
+        <h3>Plataforma</h3>
+        <p class="usuario">dev-plataforma</p>
+        <p>No es del centro: es global. Da de alta centros nuevos y atiende a sus Administraciones.</p>
+        <p class="nunca">Nunca ve residentes.</p>
+      </li>
+    </ul>
+    <ul class="lista prose">
+      <li><strong>Es un centro compartido.</strong> Lo que hagas en él se queda, y lo ve cualquiera que entre con esas cuentas. No se puede
+        reiniciar, porque la auditoría no se borra.</li>
+      <li><strong>Las guías de pruebas de CJ</strong> siguen usando sus propias cuentas (<code>dev-integrado-…</code>), en otro centro. No
+        las mezcles con Los Almendros.</li>
+      <li><strong>Para ver la elección de ámbito</strong>, entra con <code>dev-multi</code>, que tiene varios perfiles. El resto de
+        cuentas de prueba están en el <a href="/Home/Manual#cuentas-prueba">Manual</a>.</li>
+      <li>Las mismas cuentas existen en local y en el entorno publicado. En local se entra sin clave.</li>
+    </ul>
+  </section>
+
+  <section id="protege" aria-labelledby="protege-t">
+    <h2 id="protege-t">Qué protege y qué no</h2>
+    <ul class="tarjetas">
+      <li class="bien">
+        <h3>Nadie se hace pasar por otro</h3>
+        <p>La sesión viaja en una cookie que el servidor cifra y firma. La cookie antigua, con el usuario escrito tal cual, ya no da
+          acceso: era el fallo más grave del entorno publicado y está cerrado.</p>
+      </li>
+      <li class="bien">
+        <h3>Se puede revocar</h3>
+        <p>Cada sesión es una fila en la base de datos y se comprueba en cada pantalla. Al salir, una copia de la cookie deja de valer al
+          instante.</p>
+      </li>
+      <li class="bien">
+        <h3>Ante la duda, fuera</h3>
+        <p>Inactividad, caducidad o cuenta suspendida llevan a la pantalla de acceso. Seguir usando la sesión nunca alarga las 12 horas.</p>
+      </li>
+      <li class="bien">
+        <h3>Solo por HTTPS</h3>
+        <p>Una dirección <code>http://</code> pasa a <code>https://</code> y el navegador recuerda no volver a usar <code>http</code>.
+          Las cookies solo viajan cifradas y las páginas no pueden leerlas.</p>
+      </li>
+      <li class="bien">
+        <h3>El acceso de desarrollo, cerrado por defecto</h3>
+        <p>Solo existe si se activa a propósito. Fuera del equipo de desarrollo exige una clave de 16 caracteres o más que no está en el
+          código; sin ella, la aplicación no arranca.</p>
+      </li>
+      <li class="bien">
+        <h3>Nada queda abierto por descuido</h3>
+        <p>Toda pantalla exige sesión salvo una lista cerrada. Una prueba automática recorre las más de 150 acciones de la aplicación y
+          falla si alguna queda abierta sin querer.</p>
+      </li>
+      <li class="aviso">
+        <h3>Lo que todavía no protege</h3>
+        <p>No hay contraseña personal ni segundo factor: <strong>quien tenga la clave de desarrollo puede entrar con cualquier cuenta de
+          prueba</strong>. Por eso solo se usan datos ficticios y la clave se da en privado.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section id="falta" aria-labelledby="falta-t">
+    <h2 id="falta-t">Lo que falta: el acceso definitivo</h2>
+    <p class="prose">ResidApp tendrá su propio inicio de sesión (ASP.NET Core Identity), con los datos de acceso en la misma base de datos
+      de la UE que el resto. Se hará por partes; la primera, la de esta página, ya está hecha (ADR 0007).</p>
+    <ul class="estados">
+      <li><div class="pildora ok"><strong>I0 · Sesión segura</strong><span>Sesión cifrada y revocable, todo con sesión, HTTPS. Hecho el 21/10/2026.</span></div></li>
+      <li><div class="pildora pend"><strong>I1 · Contraseña</strong><span>Contraseña y segundo factor con app de códigos (TOTP), bloqueo por intentos.</span></div></li>
+      <li><div class="pildora pend"><strong>I2 · Invitaciones</strong><span>Alta con un enlace o QR de un solo uso que entrega Administración, que también recupera el acceso.</span></div></li>
+      <li><div class="pildora pend"><strong>I3 · Mi cuenta</strong><span>Cambiar la contraseña y el segundo factor, y ver y cerrar tus sesiones.</span></div></li>
+      <li><div class="pildora pend"><strong>I4 · Passkeys</strong><span>Entrar con el móvil o una llave, sin contraseña. Obligatorias para Plataforma.</span></div></li>
+      <li><div class="pildora pend"><strong>I5 · Pulsera</strong><span>Pulsera NFC con PIN para entrar rápido en la tablet compartida.</span></div></li>
+    </ul>
+    <div class="todavia prose">
+      <h3>Antes, alguien tiene que decidir</h3>
+      <ul class="lista">
+        <li>El responsable de protección de datos de la residencia piloto: la evaluación de impacto, qué datos de acceso se guardan y
+          cuánto tiempo, y qué segundo factor acepta para cada grupo de personas.</li>
+        <li>CJ: el segundo factor de los familiares, y si se les puede pedir correo (hoy es opcional en el alta).</li>
+        <li>El tiempo de inactividad definitivo en las tablets compartidas: hoy son 30 minutos y se puede cambiar sin tocar el código.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="mantener" aria-labelledby="mantener-t">
+    <h2 id="mantener-t">Para quien mantiene la aplicación</h2>
+    <p class="prose">Dónde vive cada pieza. El detalle y las fuentes de la decisión están en
+      <code>docs/decisiones-arquitectura/0007-proveedor-identidad.md</code>.</p>
+    <div class="tabla">
+      <table class="datos">
+        <thead>
+          <tr><th scope="col">Pieza</th><th scope="col">Dónde</th><th scope="col">Qué hay que saber</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Altas de cuentas</td>
+            <td><code>/Plataforma</code> (Nuevo centro), <code>/Administracion/NuevoUsuario</code> y el acceso al portal en la
+              autorización del familiar</td>
+            <td>El perfil Plataforma no se concede desde Usuarios: su primera cuenta es un <code>INSERT</code> (ADR 0006).
+              <code>cuentas.sujeto_externo</code> es único y no se puede modificar (trigger de <code>0023</code>).</td>
+          </tr>
+          <tr>
+            <td>Tiempos de la sesión</td>
+            <td><code>SessionPolicy</code> (Application)</td>
+            <td><code>Sesion:InactividadMinutos</code> (30) y <code>Sesion:MaximoHoras</code> (12). La actividad se apunta como mucho una
+              vez por minuto y nunca mueve la caducidad.</td>
+          </tr>
+          <tr>
+            <td>Comprobación en cada petición</td>
+            <td><code>SessionCookieEvents</code> (Web)</td>
+            <td>Cookie <code>residapp_sesion</code>, cifrada con Data Protection, <code>HttpOnly</code>, <code>SameSite=Lax</code> y
+              <code>Secure</code> fuera de Development. Si la sesión no vale, la cierra con su motivo y rechaza la petición.</td>
+          </tr>
+          <tr>
+            <td>Sesiones guardadas</td>
+            <td><code>dbo.sesiones</code> (script <code>0061</code>), <code>SqlSessionStore</code></td>
+            <td>Sin seguridad por filas: se lee antes de haber ámbito. No se borra, una sesión cerrada no se reabre y la caducidad no
+              cambia (errores 50535 y 50536). Una sesión abandonada queda abierta en la tabla, pero su siguiente uso la cierra.</td>
+          </tr>
+          <tr>
+            <td>Identidad para el resto de la app</td>
+            <td><code>ISessionIdentityProvider</code> → <code>CookieSessionIdentityProvider</code></td>
+            <td>Solo da el sujeto de la cuenta. Ámbitos, permisos y la seguridad por filas de SQL siguen igual: cambiar de proveedor en I1
+              no los toca.</td>
+          </tr>
+          <tr>
+            <td>Acceso de desarrollo</td>
+            <td><code>DevAuthController</code>, <code>DevAuthOptions</code></td>
+            <td><code>DevAuth:Habilitado</code> (apagado en <code>appsettings.json</code>, encendido en Development),
+              <code>DevAuth:Clave</code> y <code>DevAuth:IntentosPorMinuto</code> (10). Clave comparada en tiempo constante.</td>
+          </tr>
+          <tr>
+            <td>Lo público</td>
+            <td><code>[AllowAnonymous]</code> en Home, DevAuth y AccesoCj, y los ficheros estáticos</td>
+            <td>Política global de usuario autenticado. <code>/pendientes-cj</code> va aparte, con su propia clave. Cualquier pantalla
+              pública nueva hay que añadirla a propósito, y <code>SesionTests</code> lo vigila.</td>
+          </tr>
+          <tr>
+            <td>HTTPS</td>
+            <td><code>Program.cs</code> y el CI</td>
+            <td>Cabeceras reenviadas del balanceador de App Service, HSTS y política de cookies. La redirección a HTTPS la hace App
+              Service (<code>httpsOnly</code>, que el CI fija en «Exigir HTTPS en la Web App»).</td>
+          </tr>
+          <tr>
+            <td>Entorno publicado</td>
+            <td>Ajustes de la Web App <code>DevAuth__Habilitado</code> y <code>DevAuth__Clave</code></td>
+            <td>Nunca en el repositorio. Cambiar la clave reinicia la app y no cierra las sesiones abiertas: la clave solo se pide al
+              entrar. Con <code>DevAuth__Habilitado=false</code> nadie puede entrar, porque todavía no hay otro inicio de sesión.</td>
+          </tr>
+          <tr>
+            <td>Pruebas</td>
+            <td><code>SesionTests</code>, <code>SesionFueraDeDesarrolloTests</code>, <code>SqlSessionStoreTests</code>,
+              <code>SessionPolicyTests</code></td>
+            <td>Cubren los casos AUTH-SPIKE-T02 a T06: cookie fabricada, sesión cerrada, renovación sin ampliar la caducidad,
+              inactividad y cuenta suspendida.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Acceso y sesión · Estado a 21/10/2026. El detalle de cada pantalla está en el <a href="/Home/Manual">Manual de usuario</a>.
+  </footer>
+</div>
+
+</body>
+</html>

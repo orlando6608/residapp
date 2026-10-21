@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
@@ -130,6 +131,7 @@ public class SesionTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixtu
     [InlineData("/manifest.json")]
     [InlineData("/sw.js")]
     [InlineData("/flujo-de-trabajo.html")]
+    [InlineData("/acceso-y-sesion.html")]
     [InlineData("/Home/Offline")]
     [InlineData("/Home/Manual")]
     [InlineData("/")]
@@ -258,7 +260,7 @@ public class SesionTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixtu
 
 /// <summary>
 /// El acceso de desarrollo fuera de Development, como en Azure dev: pide la clave, no dice si el usuario existe, limita los intentos,
-/// todas las cookies llevan Secure y, sin clave, la aplicación no arranca. Deshabilitado, no existe.
+/// todas las cookies llevan Secure, solo se fía del balanceador de App Service y, sin clave, la aplicación no arranca. Deshabilitado, no existe.
 /// </summary>
 public class SesionFueraDeDesarrolloTests(SesionFueraDeDesarrolloTests.StagingFactory factory) : IClassFixture<SesionFueraDeDesarrolloTests.StagingFactory>
 {
@@ -313,6 +315,31 @@ public class SesionFueraDeDesarrolloTests(SesionFueraDeDesarrolloTests.StagingFa
         }
 
         Assert.Equal([HttpStatusCode.OK, HttpStatusCode.OK, HttpStatusCode.TooManyRequests], statuses);
+    }
+
+    // App Service termina el TLS y llega con X-Forwarded-Proto; en Linux, desde la red de enlace local (medido en Azure dev). Solo se le
+    // cree a su balanceador: desde una IP pública la cabecera se ignora.
+    [Theory]
+    [InlineData("::ffff:169.254.130.1", true)]
+    [InlineData("::ffff:10.0.0.5", true)]
+    [InlineData("203.0.113.9", false)]
+    public async Task SeFiaDelBalanceadorDeAppService_YDeNadieMas(string remoteIp, bool trusted)
+    {
+        Task<HttpContext> Send(string path) => factory.Server.SendAsync(context =>
+        {
+            context.Connection.RemoteIpAddress = IPAddress.Parse(remoteIp);
+            context.Request.Method = HttpMethods.Get;
+            context.Request.Host = new HostString("app-residapp-dev.azurewebsites.net");
+            context.Request.Path = path;
+            context.Request.Headers["X-Forwarded-Proto"] = "https";
+            context.Request.Headers["X-Forwarded-For"] = "198.51.100.7";
+        });
+
+        var publicPage = await Send("/Home/Manual");
+        var protectedPage = await Send("/Administracion");
+
+        Assert.Equal(trusted, publicPage.Response.Headers.ContainsKey("Strict-Transport-Security"));
+        Assert.Equal(trusted ? "https" : "http", new Uri(protectedPage.Response.Headers.Location!).Scheme);
     }
 
     [Fact]

@@ -40,9 +40,23 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     `app-residapp-dev` (`az webapp config appsettings set -g rg-residapp-dev -n app-residapp-dev --settings ...`). Sin ellos nadie entra en Azure dev;
     con `Habilitado` y sin clave, la app no arranca. El CI solo añade `WEBSITE_TIME_ZONE`, así que los despliegues no los borran. La clave la tiene
     Orlando y se pasa a CJ en privado: nunca en el repositorio ni en los documentos.
-  - **Después del despliegue, comprobar en Azure:** `http://` redirige a `https://`; la cabecera HSTS (prueba de que `IsHttps` funciona detrás del
-    balanceador); el login pide la clave; la cookie lleva `Secure`; la prueba de C1 (GET con `residapp_dev_subject` fabricada) lleva al login; cada
-    cuenta de Los Almendros entra. Entonces marcar C1 y A2 como comprobados en `docs/seguridad/hallazgos.md` (local).
+  - **Comprobado en Azure dev tras `2325f47` (CI en verde):** `httpsOnly=true` y `http://` da 301 a `https://`; el login pide la clave; una clave
+    incorrecta da el mensaje neutro; la cookie fabricada `residapp_dev_subject` lleva al login (C1 comprobado); las seis cuentas `almendros-*` y
+    `dev-integrado-enfermeria` entran con la clave, con la cookie `secure; samesite=lax; httponly`.
+  - **Fallo encontrado y corregido después (sin desplegar todavía):** no llegaba HSTS y el login redirigía a `http://`. El balanceador de App Service
+    Linux llega desde `::ffff:169.254.130.1` (enlace local), que no estaba en `KnownIPNetworks`, así que la app ignoraba `X-Forwarded-Proto` (y el
+    límite de intentos contaba a todos como una IP). `Program.cs` añade `169.254.0.0/16` y su equivalente `::ffff:`; prueba
+    `SeFiaDelBalanceadorDeAppService_YDeNadieMas` (balanceador sí, IP pública no). **Tras desplegarlo, comprobar** que `https://…/` trae
+    `Strict-Transport-Security` y que `/Administracion` sin sesión redirige a `https://…/DevAuth/Login`; entonces marcar A2 como comprobado en
+    `docs/seguridad/hallazgos.md` (local).
+  - **Página `wwwroot/acceso-y-sesion.html`** (pública, estilo del Flujo de trabajo, enlazada en el pie y en el Manual): cómo se pide el acceso y
+    quién lo da, qué hace Plataforma o soporte caso por caso, las comprobaciones de cada pantalla, entrar, cuánto dura la sesión, las cuentas de
+    Los Almendros, qué protege, lo que falta (I1–I5) y dónde vive cada pieza. Revísala con cada incremento del ADR 0007.
+  - **Lecciones de Azure (Linux):** para ver por qué no se aplican las cabeceras reenviadas, el registro de depuración de
+    `ForwardedHeadersMiddleware` dice «Unknown proxy: …». En App Service Linux los puntos del nombre de un ajuste se cambian por `_`, así que
+    `Logging__LogLevel__Microsoft.AspNetCore.HttpOverrides` no llega; sirve `Logging__Console__LogLevel__Default=Debug` (temporal, con
+    `az webapp log config --docker-container-logging filesystem` y `az webapp log download`). Ese `log config` añade el ajuste
+    `WEBSITE_HTTPLOGGING_RETENTION_DAYS`: quítalo al terminar, con el de depuración, y deja el registro del contenedor en `off`.
   - **Lección:** un seed con tildes aplicado a mano con `sqlcmd` sin `-f 65001` guarda los nombres mal (`aplicar-scripts.sh` ya lo pasa). En la BD
     local se corrigieron así los de Los Almendros; el de Rosa, con una corrección de identidad desde la app.
 - **Importar y exportar datos por ficheros (2026-10-21, estudio de mercado R1, solo la parte administrativa; ADR 0010; script `0060`, el siguiente libre es
@@ -1299,8 +1313,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **Cerrar el incremento I0 del ADR 0007** (ver «Dónde estamos»): la comprobación en Azure tras el despliegue (los ajustes `DevAuth__*` ya
-   están puestos). Después, Orlando elige entre **I1 (ASP.NET Core Identity: contraseña, TOTP y bloqueo)**, que es lo que desbloquea los datos reales, el
+0. **Cerrar el incremento I0 del ADR 0007** (ver «Dónde estamos»): desplegar la corrección de las cabeceras reenviadas y comprobar HSTS en
+   Azure (lo demás ya está comprobado y los ajustes `DevAuth__*` puestos). Después, Orlando elige entre **I1 (ASP.NET Core Identity: contraseña, TOTP y bloqueo)**, que es lo que desbloquea los datos reales, el
    Portal Familiar real y «Mi cuenta», y el **dictado por voz del ADR 0009**. Cada uno con su propio plan.
 1. **Revisar las respuestas de CJ** que lleguen:
    - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
