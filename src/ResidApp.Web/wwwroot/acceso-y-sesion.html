@@ -512,8 +512,9 @@
           recuperar el acceso nunca deja la cuenta con menos protección. Hasta que la usa, su contraseña de siempre sigue valiendo.</p>
       </li>
       <li class="persona">
-        <div class="paso-cab"><span class="n">5</span><span class="perfil" style="color: var(--accent)">La persona</span><span class="previsto">Previsto</span></div>
-        <p><strong>En «Mi cuenta»</strong> (I3) cambia su contraseña y su segundo factor, y ve y cierra sus sesiones abiertas.</p>
+        <div class="paso-cab"><span class="n">5</span><span class="perfil" style="color: var(--accent)">La persona</span></div>
+        <p><strong>En «Mi cuenta»</strong> cambia su contraseña, genera códigos de recuperación nuevos y ve y cierra sus sesiones abiertas.
+          Para cambiar de móvil necesita una invitación de recuperación (paso 4).</p>
       </li>
     </ol>
     <p class="pista">Las cuentas de Plataforma tendrán passkey obligatoria (I4). El segundo factor de las familias está por decidir con CJ.</p>
@@ -760,6 +761,10 @@
       <li><strong>Más de 20 accesos fallidos en 15 minutos</strong> desde la misma conexión (la de toda una residencia cuenta como una),
         sea cual sea la cuenta: se rechazan los intentos siguientes con un error (429) hasta que pasa la ventana. Los accesos correctos no
         cuentan, así que varias personas pueden entrar a la vez. Además hay un techo de 120 peticiones por minuto contra inundaciones.</li>
+      <li><strong>«Mi cuenta»</strong>, en el menú con tu nombre, te deja cambiar tu contraseña (se cierran tus demás sesiones), generar 10
+        códigos de recuperación nuevos (con tu contraseña y el código del móvil; los anteriores dejan de valer) y ver y cerrar tus sesiones
+        abiertas, con los últimos accesos a tu cuenta. El código del móvil no se cambia ahí: para otro móvil hace falta una invitación de
+        recuperación de tu Administración.</li>
       <li><strong>Entrar con otra cuenta</strong> no exige salir antes. La sesión anterior se cierra solo si la nueva entra; si te
         equivocas, conservas la que tenías.</li>
       <li><strong>Familia:</strong> la cuenta de un familiar entra, por ahora, solo con la contraseña (su segundo factor está por
@@ -825,6 +830,7 @@
         <tbody>
           <tr><td>Pulsas «Salir»</td><td>En ese momento</td><td class="motivo">Salida (<code>LOGOUT</code>)</td></tr>
           <tr><td>Entras con otra cuenta</td><td>Al entrar con la nueva</td><td class="motivo">Cambio de cuenta (<code>CAMBIO_IDENTIDAD</code>)</td></tr>
+          <tr><td>Cierras otra sesión desde «Mi cuenta», o cambias la contraseña</td><td>En la siguiente pantalla que abra esa sesión</td><td class="motivo">Cierre propio (<code>CIERRE_PROPIO</code>)</td></tr>
           <tr><td>30 minutos sin usarla</td><td>En la siguiente pantalla que abras</td><td class="motivo">Inactividad (<code>INACTIVIDAD</code>)</td></tr>
           <tr><td>12 horas desde que entraste, aunque la uses</td><td>En la siguiente pantalla que abras</td><td class="motivo">Caducidad (<code>CADUCIDAD</code>)</td></tr>
           <tr><td>Administración suspende tu cuenta</td><td>En la siguiente pantalla que abras</td><td>La sesión deja de valer y no se puede volver a entrar con esa cuenta.</td></tr>
@@ -939,13 +945,13 @@
   <section id="falta" aria-labelledby="falta-t">
     <h2 id="falta-t">Lo que falta: el acceso definitivo</h2>
     <p class="prose">ResidApp tendrá su propio inicio de sesión (ASP.NET Core Identity), con los datos de acceso en la misma base de datos
-      de la UE que el resto. Se hace por partes; las tres primeras ya están hechas (ADR 0007). Falta además retirar el acceso de
+      de la UE que el resto. Se hace por partes; las cuatro primeras ya están hechas (ADR 0007). Falta además retirar el acceso de
       desarrollo antes de usar datos reales, y poder usar en otro centro una cuenta que ya existe.</p>
     <ul class="estados">
       <li><div class="pildora ok"><strong>I0 · Sesión segura</strong><span>Sesión cifrada y revocable, todo con sesión, HTTPS. Hecho el 21/10/2026.</span></div></li>
       <li><div class="pildora ok"><strong>I1 · Contraseña</strong><span>Contraseña y segundo factor con app de códigos (TOTP), bloqueo por intentos y registro de accesos. Hecho el 22/10/2026.</span></div></li>
       <li><div class="pildora ok"><strong>I2 · Invitaciones</strong><span>Alta con un enlace o QR de un solo uso que entrega Administración, que también recupera el acceso. Hecho el 22/10/2026.</span></div></li>
-      <li><div class="pildora pend"><strong>I3 · Mi cuenta</strong><span>Cambiar la contraseña y el segundo factor, y ver y cerrar tus sesiones.</span></div></li>
+      <li><div class="pildora ok"><strong>I3 · Mi cuenta</strong><span>Cambiar la contraseña, generar códigos de recuperación nuevos y ver y cerrar tus sesiones. Hecho el 22/10/2026.</span></div></li>
       <li><div class="pildora pend"><strong>I4 · Passkeys</strong><span>Entrar con el móvil o una llave, sin contraseña. Obligatorias para Plataforma.</span></div></li>
       <li><div class="pildora pend"><strong>I5 · Pulsera</strong><span>Pulsera NFC con PIN para entrar rápido en la tablet compartida.</span></div></li>
     </ul>

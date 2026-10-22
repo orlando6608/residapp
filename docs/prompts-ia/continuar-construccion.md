@@ -13,6 +13,25 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **ADR 0007, incremento I3: «Mi cuenta» (2026-10-22, rama `adr0007-i3-mi-cuenta`; script `0064`, el siguiente libre es `0065`).**
+  - **Qué hay:** `/Cuenta` (`CuentaController`, `[Authorize]`, enlace «Mi cuenta» en el menú de usuario del `_Layout`, para todos los perfiles,
+    también Familiar): resumen de la cuenta; cambiar la contraseña (pide la actual, cierra las demás sesiones con motivo `CIERRE_PROPIO`);
+    generar 10 códigos de recuperación nuevos (pide contraseña y TOTP vigente; se enseñan en `Acceso/CodigosRecuperacion.cshtml`, que ahora lleva
+    `Titulo`); sesiones abiertas propias (inicio, actividad, IP de la entrada) con «Cerrar» y «Cerrar todas las demás»; últimos 10 eventos de acceso.
+  - **Decisiones mías (Orlando aprobó el plan):** el TOTP **no** se da de alta, quita ni cambia desde aquí (solo desde una invitación); los «datos
+    propios» de FAM-16 quedan fuera; una contraseña actual incorrecta cuenta para el bloqueo de la cuenta y para `AccessFailureThrottle`; no se
+    guarda navegador (dato nuevo, lo decide el DPO).
+  - **Modelo:** `0064` amplía `CK_eventos_acceso_tipo` (`CONTRASENA_CAMBIADA`, `CODIGOS_REGENERADOS`, `SESION_CERRADA`) y `CK_sesiones_cierre`
+    (`CIERRE_PROPIO`). `ISessionStore` gana `ListOpenAsync`, `CloseOwnedAsync` (filtra por cuenta) y `CloseOthersAsync`; `IAccessEventLog`, `ListRecentAsync`.
+    `ListOpenAsync` puede devolver sesiones paradas por inactividad: el controlador las filtra con `SessionPolicy.IdleTimeout`.
+  - **Pruebas:** `AccesoTests.Cuenta.cs` (8, funcionales) y una nueva en `SqlSessionStoreTests`. Mutaciones comprobadas: no cerrar las demás sesiones
+    al cambiar la contraseña, `CloseOwnedAsync` sin filtrar por cuenta y regenerar códigos sin comprobar la contraseña hacen fallar alguna.
+  - **Probado en local con Chrome sin interfaz** (claro, oscuro y 375 px, sin desplazamiento lateral ni errores de consola): contraseña incorrecta,
+    cambio correcto (la otra sesión pasa al login), cierre de una sesión concreta y código TOTP falso al pedir códigos. Un recorrido de móvil
+    mostró que una tabla de sesiones con columna de acción quedaba recortada: ahora es una lista. **Queda en la BD local:** la cuenta
+    `prueba-navegador-enfermeria-20261022200457` con las credenciales copiadas de otra de pruebas (contraseña actual
+    «otra contraseña de prueba larga»).
+  - **Documentado:** ADR 0007, Manual (sección «Mi cuenta»), `acceso-y-sesion.html` y `pendientes-administracion.md`.
 - **Límite de intentos de `/Acceso` corregido (2026-10-22, sin script; el siguiente libre sigue siendo `0064`).** Cierra el hallazgo de I2.
   - **Fase 1:** `Acceso:IntentosPorMinuto` pasa de 10 a 120 (techo contra inundaciones; un acceso con TOTP gasta 2 peticiones y una invitación, 4).
   - **Fase 2:** `AccessFailureThrottle` (singleton en memoria, `Security/`) cuenta los fallos por IP en 15 minutos y `AccesoController` responde
