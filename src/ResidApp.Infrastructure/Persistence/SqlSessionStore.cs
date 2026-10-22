@@ -51,5 +51,14 @@ public sealed class SqlSessionStore(SqlConnectionFactory connections) : ISession
             """, new { Id = sessionId, Now = now, Reason = reason.ToCode() }, cancellationToken: ct));
     }
 
+    public async Task CloseAllAsync(AccountId accountId, SessionCloseReason reason, DateTime now, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.sesiones SET cerrada_en = @Now, motivo_cierre = @Reason
+             WHERE cuenta_id = @AccountId AND cerrada_en IS NULL
+            """, new { AccountId = accountId.Value, Now = now, Reason = reason.ToCode() }, cancellationToken: ct));
+    }
+
     private sealed record Row(Guid Id, string ExternalSubject, string AccountStatus, DateTime ExpiresAt, DateTime LastActivityAt, DateTime? ClosedAt);
 }

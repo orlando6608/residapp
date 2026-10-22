@@ -385,7 +385,8 @@ public sealed partial class AdministracionController(
     }
 
     /// <summary>ADM-10/ADM-11 (0022): la autorización de acceso de un familiar, con su historial y los cambios posibles.</summary>
-    public async Task<IActionResult> AutorizacionFamiliar(Guid residenteId, Guid vinculoId, CancellationToken ct)
+    public async Task<IActionResult> AutorizacionFamiliar(
+        Guid residenteId, Guid vinculoId, [FromServices] AccessInvitationsApplicationService invitations, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
@@ -400,6 +401,11 @@ public sealed partial class AdministracionController(
             return detail is null ? RedirectToAction(nameof(Residentes)) : RedirectToAction(nameof(Residente), new { residenteId });
         }
 
+        if (member.PortalAccount is { } portalAccount)
+        {
+            ViewData["EstadoInvitacion"] = await InvitationStatusAsync(
+                activeScope, portalAccount, Url.Action(nameof(AutorizacionFamiliar), new { residenteId, vinculoId })!, invitations, ct);
+        }
         return View(new FamilyAuthorizationViewModel(detail!.Resident, member, DateOnly.FromDateTime(DateTime.Today),
             new FamilyAuthorizationFormModel
             {
@@ -475,7 +481,7 @@ public sealed partial class AdministracionController(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), vinculoId, usuario), ct);
         if (result.Ok)
         {
-            TempData["Mensaje"] = "Acceso al Portal Familiar creado. Para que pueda ver la información, su autorización tiene que estar Activa.";
+            TempData["Mensaje"] = "Acceso al Portal Familiar creado. Para que pueda entrar, entrégale su invitación de acceso (abajo); para que vea la información, su autorización tiene que estar Activa.";
         }
         else
         {
@@ -572,7 +578,8 @@ public sealed partial class AdministracionController(
     }
 
     /// <summary>ADM-13: si la cuenta no tiene perfiles en el centro, se vuelve a la lista sin distinguir el motivo.</summary>
-    public async Task<IActionResult> Usuario(Guid cuentaId, CancellationToken ct)
+    public async Task<IActionResult> Usuario(
+        Guid cuentaId, [FromServices] AccessInvitationsApplicationService invitations, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
@@ -581,7 +588,17 @@ public sealed partial class AdministracionController(
         }
 
         var detail = await FindAccountAsync(activeScope, cuentaId, ct);
-        return detail is null ? RedirectToAction(nameof(Usuarios)) : View(detail);
+        if (detail is null)
+        {
+            return RedirectToAction(nameof(Usuarios));
+        }
+
+        if (!detail.IsOwnAccount)
+        {
+            ViewData["EstadoInvitacion"] = await InvitationStatusAsync(
+                activeScope, detail.Account.Subject, Url.Action(nameof(Usuario), new { cuentaId })!, invitations, ct);
+        }
+        return View(detail);
     }
 
     public async Task<IActionResult> NuevoUsuario(CancellationToken ct)
@@ -622,7 +639,7 @@ public sealed partial class AdministracionController(
                 form.Perfil!.Value, form.Unidades), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = "Usuario dado de alta. Ya puede entrar con su identificador de acceso.";
+                TempData["Mensaje"] = "Usuario dado de alta. Para que pueda entrar, entrégale su invitación de acceso (abajo).";
                 return RedirectToAction(nameof(Usuario), new { cuentaId = result.Value.Value });
             }
 

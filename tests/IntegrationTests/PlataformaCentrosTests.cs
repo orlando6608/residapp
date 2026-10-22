@@ -38,7 +38,8 @@ public class PlataformaCentrosTests
 
     private static PlatformApplicationService BuildPlatform(string subject) => new(
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedPlatformSessionIdentityProvider(subject),
-        new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory));
+        new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory),
+        new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), TimeProvider.System);
 
     private static string NewCode() => $"cen-{Guid.NewGuid():N}"[..20];
 

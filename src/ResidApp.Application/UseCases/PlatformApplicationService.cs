@@ -1,5 +1,6 @@
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
@@ -13,6 +14,9 @@ public sealed record PlatformCenterQuery(Guid AmbitoPerfilId, CenterId CentroId,
 
 public sealed record SetPlatformAdministrationPrincipalCommand(
     Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, Guid AmbitoDestinoId, bool Principal);
+
+/// <summary>AmbitoDestinoId es el ámbito de Administración (del centro destino) de la cuenta a la que se entrega la invitación.</summary>
+public sealed record PlatformAdministrationCommand(Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, Guid AmbitoDestinoId);
 
 public sealed record AddUnitToAdministrationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, Guid AmbitoDestinoId, UnitId UnidadId);
@@ -28,8 +32,20 @@ public sealed record CreateCenterCommand(
 /// </summary>
 public sealed class PlatformApplicationService(
     IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, IPlatformCenterDirectory directory,
-    IPlatformCenterRepository centers)
+    IPlatformCenterRepository centers, IAccessInvitationRepository invitations, TimeProvider clock)
 {
+    /// <summary>ADR 0007, I2: el soporte de la plataforma entrega la invitación de acceso (o de recuperación) de una cuenta de
+    /// Administración del centro: la del primer administrador, o la de uno que no tiene otra Administración que se la dé.</summary>
+    public Task<ApplicationResult<IssuedInvitation>> IssueAdministratorInvitationAsync(
+        PlatformAdministrationCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var access = await AccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            var token = AccessInvitation.NewToken();
+            return new IssuedInvitation(token, await invitations.IssueForAdministratorAsync(
+                access, command.CentroDestinoId, command.AmbitoDestinoId, AccessInvitation.Hash(token), clock.GetUtcNow().UtcDateTime, ct));
+        });
+
     public Task<ApplicationResult<IReadOnlyList<PlatformCenterSummary>>> ListCentersAsync(PlatformQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () => await directory.ListAsync(await AccessAsync(query.AmbitoPerfilId, query.CentroId, ct), ct));
 

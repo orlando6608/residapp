@@ -1,0 +1,37 @@
+@model ResidApp.Web.Models.EstadoInvitacionViewModel
+@* El acceso de una cuenta (ADR 0007, I2): crear o anular su invitación. Lo usan la ficha del usuario y la autorización del familiar. *@
+<section class="card mb-4" aria-labelledby="invitacion-acceso">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="invitacion-acceso">Entrar en ResidApp</h2>
+        @if (Model.TieneContrasena)
+        {
+            <p class="mb-2">Ya tiene contraseña. Si la ha olvidado o ha perdido el móvil, entrégale una <strong>invitación de recuperación</strong>:
+                al usarla elige otra contraseña, vuelve a preparar el código del móvil y se cierran sus sesiones abiertas.</p>
+        }
+        else
+        {
+            <p class="mb-2">Todavía no tiene contraseña. Para que pueda entrar, entrégale una <strong>invitación de acceso</strong>, impresa o en
+                pantalla: con ella elige su contraseña.</p>
+        }
+        @if (Model.CaducaEnUtc is { } caduca)
+        {
+            <p class="mb-2">Tiene una invitación sin usar que vale hasta el <strong>@caduca.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>.
+                Crear otra la anula.</p>
+        }
+        <div class="d-flex flex-wrap gap-2">
+            <form asp-controller="Administracion" asp-action="Invitacion" method="post">
+                <input type="hidden" name="usuario" value="@Model.Usuario" />
+                <input type="hidden" name="volver" value="@Model.Volver" />
+                <button type="submit" class="btn btn-primary">@(Model.TieneContrasena ? "Crear invitación de recuperación" : "Crear invitación de acceso")</button>
+            </form>
+            @if (Model.CaducaEnUtc is not null)
+            {
+                <form asp-controller="Administracion" asp-action="AnularInvitacion" method="post">
+                    <input type="hidden" name="usuario" value="@Model.Usuario" />
+                    <input type="hidden" name="volver" value="@Model.Volver" />
+                    <button type="submit" class="btn btn-outline-secondary">Anular la invitación</button>
+                </form>
+            }
+        </div>
+    </div>
+</section>

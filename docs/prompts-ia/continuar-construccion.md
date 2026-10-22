@@ -13,6 +13,33 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **ADR 0007, incremento I2: invitaciones de un solo uso y recuperación por Administración (2026-10-22, rama `adr0007-i2-invitaciones`;
+  script `0063`, el siguiente libre es `0064`; suite 410 unitarios, 490 de integración y 260 funcionales en verde, proyecto a proyecto; sin
+  commit todavía).**
+  - **Decisiones de Orlando:** la invitación vale 72 h y una nueva anula la anterior; el TOTP del personal **solo** se da de alta desde una
+    invitación (cierra el hueco de I1); el acceso de desarrollo se mantiene en Azure dev hasta los datos reales; vincular cuentas de otro
+    centro queda para I2b. **Supuestos míos:** emite Administración para cuentas con perfiles solo en su centro (personal o familiar) y
+    nunca la propia; Plataforma, para cuentas de Administración; una recuperación no cambia nada hasta que se usa; las cuentas `almendros-*`
+    reciben su invitación desde la app (ningún secreto en los seeds).
+  - **Modelo:** `dbo.invitaciones_acceso` (solo el resumen SHA-256 del token, `tipo` ALTA/RECUPERACION según si la cuenta ya tiene
+    contraseña, a lo sumo una viva por cuenta con índice único filtrado, triggers 50539/50540, emisor ADMINISTRACION/PLATAFORMA/DESARROLLO);
+    `eventos_acceso` admite `INVITACION_USADA`, `RECUPERACION_USADA` e `INVITACION_NO_VALIDA`; `sesiones`, el motivo `RECUPERACION`.
+    `SqlAccessInvitationRepository` reutiliza `EnsureAdministratorAsync`, `AuditAsync`, `EnsureOperatorAsync` y `EnsureAdministrationScopeAsync`.
+    **Lección:** `FORCESEEK` no se admite en la tabla destino de un `UPDATE … WITH (FORCESEEK)`: va en `UPDATE alias … FROM tabla alias WITH (FORCESEEK)`.
+  - **Web:** parcial `_EstadoInvitacion` en la ficha del usuario y en la autorización del familiar (`AdministracionController.Invitaciones.cs`,
+    con `[FromServices]`); `PlataformaController.Invitacion` en el centro; hoja `Views/Shared/HojaInvitacion.cshtml` (QR con qrcodejs,
+    «Imprimir», `no-store`); `AccesoController.Invitacion` (GET con token → cookie `residapp_invitacion` y redirección sin token, `Referrer-Policy:
+    no-referrer`; POST con la contraseña; 410 con un único mensaje si no vale); `PendingAccess.CanEnroll`; `DevAuth/Credenciales` crea una
+    invitación para la cuenta de la sesión (ya no pone contraseñas ni quita el segundo factor).
+  - **Pruebas nuevas:** `InvitacionesAccesoTests` (8, integración) y `AccesoTests.Invitaciones.cs` (5, funcionales; `AccesoTests` pasa a
+    `partial`). Mutaciones comprobadas: consumir sin `usada_en IS NULL`, entrar sin exigir la invitación al personal sin TOTP y recuperar sin
+    cerrar sesiones hacen fallar alguna prueba.
+  - **Probado en local con Chrome sin interfaz** (claro, oscuro y 375 px, sin desplazamiento lateral; en consola solo los 410 esperados de la
+    invitación usada): ficha, hoja (y vista de impresión), alta con contraseña, TOTP y 10 códigos, recuperación que cierra la sesión abierta en
+    otro navegador, invitación usada, `almendros-elena` desde su autorización (de recuperación, porque ya tenía contraseña) y Plataforma.
+    **Queda en la BD local:** las cuentas `prueba-navegador-*` e `invitada-*` del día y `almendros-elena` con una contraseña de prueba.
+  - **Visto de paso, sin tocar:** al imprimir, la barra de navegación sale en todas las páginas (el `_Layout` no la oculta con
+    `d-print-none`); la pregunta 3.2 de `portal-familiar-confirmaciones-cj.html` sigue describiendo Entra (código por correo).
 - **ADR 0007, incremento I1: ASP.NET Core Identity, y los dos pendientes de I0 (2026-10-22, PR #50 mergeado en `main` como `d88e63d`; script
   `0062`, el siguiente libre es `0063`; suite 410 unitarios, 482 de integración y 255 funcionales en verde, proyecto a proyecto; CI del PR y
   CI/CD de `main` en verde, con el `0062` aplicado en Azure SQL).**
@@ -1356,8 +1383,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **I1 del ADR 0007 está cerrado**, en `main` y comprobado en Azure dev (ver «Dónde estamos»). Orlando elige entre **I2 (invitaciones y recuperación por Administración, que retira el acceso de desarrollo)** y el **dictado
-   por voz del ADR 0009**. Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
+0. **I2 del ADR 0007 está hecho en la rama `adr0007-i2-invitaciones`** (ver «Dónde estamos»): falta commit, PR (lleva el script `0063`),
+   CI en verde, merge con confirmación de Orlando y comprobarlo en Azure dev (emitir una invitación para una cuenta de prueba desde
+   Administración o `DevAuth/Credenciales` y usarla, sin tocar Residente Integrado Uno). Después, Orlando elige entre **I3 («Mi cuenta»)**,
+   **I2b (vincular cuentas de otro centro)** y el **dictado por voz del ADR 0009**; antes de datos reales, retirar el acceso de desarrollo.
+   Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
    fecha prevista, prueba 2.4 de «Conducta médica»).
    Para entrar en Azure dev hace falta la clave de desarrollo: está solo en el ajuste `DevAuth__Clave` de la Web App
    (`az webapp config appsettings list -g rg-residapp-dev -n app-residapp-dev --query "[?name=='DevAuth__Clave'].value" -o tsv`); no la copies a

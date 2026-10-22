@@ -21,4 +21,7 @@ public interface ISessionStore
 
     /// <summary>Cierra una sesión abierta; no hace nada si ya estaba cerrada.</summary>
     Task CloseAsync(Guid sessionId, SessionCloseReason reason, DateTime now, CancellationToken ct = default);
+
+    /// <summary>Cierra todas las sesiones abiertas de la cuenta (al recuperarla).</summary>
+    Task CloseAllAsync(AccountId accountId, SessionCloseReason reason, DateTime now, CancellationToken ct = default);
 }

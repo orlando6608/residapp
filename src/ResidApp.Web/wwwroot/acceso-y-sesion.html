@@ -310,9 +310,9 @@
       Nadie se crea su propia cuenta en ResidApp: el acceso lo da quien responde de cada persona. Después, cada vez que abres una
       pantalla, la aplicación comprueba <strong>quién eres</strong>, con tu sesión, y <strong>qué puedes hacer</strong>, con el perfil,
       el centro y las unidades de tu cuenta. Se entra con tu identificador y tu contraseña y, si eres del personal, con un código de
-      tu móvil (segundo factor). Las contraseñas todavía no se entregan con una invitación, así que en el entorno de pruebas se sigue
-      entrando con un acceso de desarrollo: tu identificador y una clave común. Hasta tener las invitaciones, ResidApp solo se usa con
-      datos ficticios.
+      tu móvil (segundo factor). La contraseña la eliges tú con la <strong>invitación</strong> de un solo uso que te entrega tu
+      Administración. En el entorno de pruebas sigue además un acceso de desarrollo (tu identificador y una clave común), y por eso
+      ResidApp solo se usa con datos ficticios hasta que se retire.
     </p>
     <nav aria-label="En esta página">
       <ul class="indice">
@@ -341,9 +341,9 @@
       <li>
         <h3>Para entrar</h3>
         <p>Tu identificador de acceso y tu <strong>contraseña</strong>; el personal, además, el <strong>código de 6 cifras</strong>
-          de su aplicación de autenticación. Mientras no haya invitaciones, en el entorno de pruebas se entra por el <strong>acceso de
-          desarrollo</strong> con el identificador (por ejemplo, <code>almendros-enfermeria</code>) y la clave de desarrollo, que
-          soporte da en privado. En local no se pide clave.</p>
+          de su aplicación de autenticación. La primera vez, la <strong>invitación</strong> de tu Administración. En el entorno de
+          pruebas también se entra por el <strong>acceso de desarrollo</strong> con el identificador (por ejemplo,
+          <code>almendros-enfermeria</code>) y la clave de desarrollo, que soporte da en privado. En local no se pide clave.</p>
       </li>
       <li>
         <h3>Tu ámbito</h3>
@@ -430,7 +430,7 @@
         <text class="bt per c-fam" x="975" y="313" text-anchor="middle">FAMILIA</text>
       </svg>
     </div>
-    <h3>Hoy, en el entorno de pruebas</h3>
+    <h3>Quién da de alta y entrega la invitación</h3>
     <div class="tabla">
       <table class="datos">
         <thead>
@@ -440,22 +440,23 @@
           <tr>
             <td>Personal de un centro: Auxiliar, Enfermería, Medicina, Dirección Clínica u otra Administración</td>
             <td>La Administración de tu centro</td>
-            <td>En «Usuarios», <strong>Alta de usuario</strong>: tu identificador de acceso, tu nombre, tu perfil y tus unidades. La cuenta
-              nace activa y te comunica tu identificador.</td>
-            <td>Tu identificador y la clave de desarrollo</td>
+            <td>En «Usuarios», <strong>Alta de usuario</strong>: tu identificador de acceso, tu nombre, tu perfil y tus unidades. Después,
+              en tu ficha, <strong>Crear invitación de acceso</strong>, y te entrega la hoja.</td>
+            <td>Tu identificador, tu contraseña y el código del móvil</td>
           </tr>
           <tr>
             <td>Familiar de un residente</td>
             <td>La Administración del centro</td>
-            <td>En la ficha del residente, «Autorización» → <strong>Dar acceso al portal</strong> con tu usuario. Después abre y activa la
-              autorización: sin ella activa, no ves a nadie.</td>
-            <td>Tu usuario y la clave de desarrollo</td>
+            <td>En la ficha del residente, «Autorización» → <strong>Dar acceso al portal</strong> con tu usuario y, debajo, <strong>Crear
+              invitación de acceso</strong>. Después abre y activa la autorización: sin ella activa, no ves a nadie.</td>
+            <td>Tu usuario y tu contraseña</td>
           </tr>
           <tr>
             <td>La primera Administración de un centro nuevo</td>
             <td>Plataforma, el soporte de ResidApp</td>
-            <td><strong>Nuevo centro</strong>: el centro, su primera unidad y tu cuenta de Administración, todo a la vez.</td>
-            <td>Tu identificador y la clave de desarrollo</td>
+            <td><strong>Nuevo centro</strong>: el centro, su primera unidad y tu cuenta de Administración, todo a la vez. Después, en el
+              centro, <strong>Crear invitación de acceso o de recuperación</strong>.</td>
+            <td>Tu identificador, tu contraseña y el código del móvil</td>
           </tr>
           <tr>
             <td>Operador de Plataforma</td>
@@ -473,9 +474,10 @@
       </table>
     </div>
     <ul class="lista prose">
-      <li><strong>La clave de desarrollo no es personal:</strong> es la misma para todos y solo existe mientras no haya invitaciones.
-        Quien la tiene puede entrar con cualquier cuenta; por eso se da en privado y solo a quien prueba. Desde el acceso de desarrollo,
-        «Credenciales de prueba» pone una contraseña a la cuenta de la sesión para probar el inicio de sesión real.</li>
+      <li><strong>La clave de desarrollo no es personal:</strong> es la misma para todos y solo existe en el entorno de pruebas, hasta
+        que se use con datos reales. Quien la tiene puede entrar con cualquier cuenta; por eso se da en privado y solo a quien prueba.
+        Desde el acceso de desarrollo, «Credenciales de prueba» crea una invitación para la cuenta de la sesión, para probar el camino
+        real con las cuentas de prueba.</li>
       <li><strong>El identificador de acceso no se puede cambiar</strong> después del alta; el nombre visible, sí. Es único en todo
         ResidApp: una persona que ya tiene cuenta en otro centro necesita hoy otro identificador (usar la misma cuenta en dos centros
         llegará después).</li>
@@ -483,32 +485,31 @@
         concede en la ficha de la cuenta, y la persona elige con cuál trabaja al entrar.</li>
     </ul>
 
-    <h3>Cuando lleguen las invitaciones (incremento I2)</h3>
-    <p class="prose">La contraseña, el segundo factor y el bloqueo ya funcionan (I1, ver <a href="#entrar">Entrar</a>); lo que falta es
-      cómo recibe cada persona su contraseña. Así lo prevé el ADR 0007. <strong>Todavía no está construido</strong> y los detalles se
-      cierran al hacerlo:</p>
+    <h3>La invitación y la recuperación (incremento I2)</h3>
+    <p class="prose">Así recibe cada persona su contraseña (ADR 0007, hecho el 22/10/2026):</p>
     <ol class="pasos">
       <li class="adm">
-        <div class="paso-cab"><span class="n">1</span><span class="perfil" style="color: var(--lane-adm)">Administración o Plataforma</span><span class="previsto">Previsto</span></div>
-        <p><strong>Da de alta la cuenta</strong> como hoy: Administración al personal y a las familias, Plataforma a la primera
-          Administración de un centro nuevo.</p>
+        <div class="paso-cab"><span class="n">1</span><span class="perfil" style="color: var(--lane-adm)">Administración o Plataforma</span></div>
+        <p><strong>Da de alta la cuenta</strong>: Administración al personal y a las familias, Plataforma a la primera Administración de
+          un centro nuevo. La cuenta nace sin contraseña.</p>
       </li>
       <li class="adm">
-        <div class="paso-cab"><span class="n">2</span><span class="perfil" style="color: var(--lane-adm)">Administración o Plataforma</span><span class="previsto">Previsto</span></div>
-        <p><strong>Entrega una invitación de un solo uso</strong>, un enlace o un código QR, en mano o impresa. No hace falta que la
-          persona tenga correo.</p>
+        <div class="paso-cab"><span class="n">2</span><span class="perfil" style="color: var(--lane-adm)">Administración o Plataforma</span></div>
+        <p><strong>Entrega una invitación de un solo uso</strong>: una hoja con un código QR y su dirección, en mano o en su pantalla.
+          Vale 72 horas; solo se ve al crearla, y crear otra anula la anterior. No hace falta que la persona tenga correo.</p>
       </li>
       <li class="persona">
-        <div class="paso-cab"><span class="n">3</span><span class="perfil" style="color: var(--accent)">La persona</span><span class="previsto">Previsto</span></div>
-        <p><strong>Abre la invitación</strong> y elige su contraseña. La invitación deja de valer. Si es del personal, al entrar por
-          primera vez activa el segundo factor: una app de códigos en el móvil (TOTP).</p>
-        <p class="pasa">Desde entonces entra con su identificador, su contraseña y el código del móvil. La clave de desarrollo desaparece.</p>
+        <div class="paso-cab"><span class="n">3</span><span class="perfil" style="color: var(--accent)">La persona</span></div>
+        <p><strong>Abre la invitación</strong> y elige su contraseña; la invitación deja de valer. Si es del personal, ahí mismo prepara
+          el segundo factor (una app de códigos en el móvil, TOTP) y guarda sus 10 códigos de recuperación. Es el único sitio donde se
+          prepara: saber la contraseña de alguien no basta para registrar otro móvil.</p>
+        <p class="pasa">Desde entonces entra con su identificador, su contraseña y el código del móvil.</p>
       </li>
       <li class="adm">
-        <div class="paso-cab"><span class="n">4</span><span class="perfil" style="color: var(--lane-adm)">Administración</span><span class="previsto">Previsto</span></div>
+        <div class="paso-cab"><span class="n">4</span><span class="perfil" style="color: var(--lane-adm)">Administración</span></div>
         <p><strong>Si olvida la contraseña o pierde el móvil</strong>, la persona lo pide a su Administración, que le entrega una
-          invitación de recuperación. Vuelve a elegir contraseña y a activar el segundo factor: recuperar el acceso nunca deja la cuenta
-          con menos protección.</p>
+          invitación de recuperación. Al usarla elige otra contraseña, prepara de nuevo el segundo factor y se cierran todas sus sesiones:
+          recuperar el acceso nunca deja la cuenta con menos protección. Hasta que la usa, su contraseña de siempre sigue valiendo.</p>
       </li>
       <li class="persona">
         <div class="paso-cab"><span class="n">5</span><span class="perfil" style="color: var(--accent)">La persona</span><span class="previsto">Previsto</span></div>
@@ -594,8 +595,9 @@
         <li>Dar de alta al personal de un centro en lugar de su Administración, ni entrar con la cuenta de otra persona para «probar».</li>
         <li>Mirar datos de residentes: Plataforma no puede, y nadie le pasa capturas con ellos.</li>
       </ul>
-      <p class="pasa">Previsto con las invitaciones (I2): Plataforma entregará la de la primera Administración de cada centro nuevo, y la
-        Administración de cada centro, las del resto de cuentas y las recuperaciones.</p>
+      <p class="pasa">Las invitaciones: Plataforma entrega la de la primera Administración de cada centro nuevo (y la recuperación de una
+        Administración que no tiene otra que se la dé); la Administración de cada centro, las del resto de cuentas y sus recuperaciones.
+        Nadie se entrega una invitación a sí mismo.</p>
     </div>
   </section>
 
@@ -682,9 +684,9 @@
     <h2 id="entrar-t">Entrar</h2>
     <p class="prose">En «Iniciar sesión» escribes tu usuario y tu contraseña y pulsas «Entrar». Llegas a ella al abrir una pantalla sin
       sesión, con «Iniciar sesión» en la cabecera o con «Entrar con otra cuenta» en la pantalla de elegir ámbito. Si eres del personal
-      (cualquier perfil salvo el de familiar), después te pide el <strong>código de 6 cifras</strong> de tu aplicación de autenticación;
-      la primera vez, en su lugar, te guía para prepararla con un código QR y te da 10 códigos de recuperación, que solo se enseñan
-      entonces. El acceso de desarrollo (usuario y clave común, sin contraseña) sigue como alternativa mientras no haya invitaciones.</p>
+      (cualquier perfil salvo el de familiar), después te pide el <strong>código de 6 cifras</strong> de tu aplicación de autenticación,
+      que preparaste al usar tu invitación. Si no lo llegaste a preparar, la pantalla te pide una invitación nueva. En el entorno de
+      pruebas sigue además el acceso de desarrollo (usuario y clave común, sin contraseña).</p>
     <div class="diagrama">
       <svg viewBox="0 0 1120 412" style="min-width: 900px" aria-labelledby="d-ent-t d-ent-d">
         <title id="d-ent-t">Qué pasa al pulsar «Entrar»</title>
@@ -926,9 +928,8 @@
       </li>
       <li class="aviso">
         <h3>Lo que todavía no protege</h3>
-        <p>Mientras siga el acceso de desarrollo, <strong>quien tenga su clave puede entrar con cualquier cuenta de prueba</strong>, y el
-          primer acceso de una cuenta prepara su segundo factor con solo la contraseña. Por eso solo se usan datos ficticios y la clave
-          se da en privado; las invitaciones (I2) lo cierran.</p>
+        <p>Mientras siga el acceso de desarrollo, <strong>quien tenga su clave puede entrar con cualquier cuenta de prueba</strong>. Por
+          eso solo se usan datos ficticios y la clave se da en privado; se retira antes de usar datos reales.</p>
       </li>
     </ul>
   </section>
@@ -936,11 +937,12 @@
   <section id="falta" aria-labelledby="falta-t">
     <h2 id="falta-t">Lo que falta: el acceso definitivo</h2>
     <p class="prose">ResidApp tendrá su propio inicio de sesión (ASP.NET Core Identity), con los datos de acceso en la misma base de datos
-      de la UE que el resto. Se hace por partes; las dos primeras ya están hechas (ADR 0007).</p>
+      de la UE que el resto. Se hace por partes; las tres primeras ya están hechas (ADR 0007). Falta además retirar el acceso de
+      desarrollo antes de usar datos reales, y poder usar en otro centro una cuenta que ya existe.</p>
     <ul class="estados">
       <li><div class="pildora ok"><strong>I0 · Sesión segura</strong><span>Sesión cifrada y revocable, todo con sesión, HTTPS. Hecho el 21/10/2026.</span></div></li>
       <li><div class="pildora ok"><strong>I1 · Contraseña</strong><span>Contraseña y segundo factor con app de códigos (TOTP), bloqueo por intentos y registro de accesos. Hecho el 22/10/2026.</span></div></li>
-      <li><div class="pildora pend"><strong>I2 · Invitaciones</strong><span>Alta con un enlace o QR de un solo uso que entrega Administración, que también recupera el acceso.</span></div></li>
+      <li><div class="pildora ok"><strong>I2 · Invitaciones</strong><span>Alta con un enlace o QR de un solo uso que entrega Administración, que también recupera el acceso. Hecho el 22/10/2026.</span></div></li>
       <li><div class="pildora pend"><strong>I3 · Mi cuenta</strong><span>Cambiar la contraseña y el segundo factor, y ver y cerrar tus sesiones.</span></div></li>
       <li><div class="pildora pend"><strong>I4 · Passkeys</strong><span>Entrar con el móvil o una llave, sin contraseña. Obligatorias para Plataforma.</span></div></li>
       <li><div class="pildora pend"><strong>I5 · Pulsera</strong><span>Pulsera NFC con PIN para entrar rápido en la tablet compartida.</span></div></li>
@@ -1018,7 +1020,18 @@
             <td><code>DevAuthController</code>, <code>DevAuthOptions</code></td>
             <td><code>DevAuth:Habilitado</code> (apagado en <code>appsettings.json</code>, encendido en Development),
               <code>DevAuth:Clave</code> y <code>DevAuth:IntentosPorMinuto</code> (10). Clave comparada en tiempo constante.
-              <code>DevAuth/Credenciales</code> pone la contraseña a la cuenta de la sesión hasta que haya invitaciones.</td>
+              <code>DevAuth/Credenciales</code> crea una invitación para la cuenta de la sesión (emisor <code>DESARROLLO</code>).</td>
+          </tr>
+          <tr>
+            <td>Invitaciones</td>
+            <td><code>dbo.invitaciones_acceso</code> (script <code>0063</code>), <code>SqlAccessInvitationRepository</code>,
+              <code>AccessInvitationsApplicationService</code>; <code>AccesoController.Invitacion</code> e <code>InvitationCookie</code></td>
+            <td>Solo se guarda el resumen SHA-256 del token; 72 h; a lo sumo una viva por cuenta (índice único filtrado); se usa una vez
+              (<code>UPDATE</code> condicionado) y no se borra ni se reabre (errores 50539 y 50540). El tipo (alta o recuperación) lo decide
+              si la cuenta ya tiene contraseña. Al abrir el enlace, el token pasa a la cookie <code>residapp_invitacion</code> y se quita
+              de la dirección. Auditoría <code>ACCOUNT_INVITATION_ISSUE</code>, <code>ACCOUNT_RECOVERY_ISSUE</code> y
+              <code>ACCOUNT_INVITATION_CANCEL</code>; registro de accesos <code>INVITACION_USADA</code>, <code>RECUPERACION_USADA</code> e
+              <code>INVITACION_NO_VALIDA</code>; la recuperación cierra las sesiones con el motivo <code>RECUPERACION</code>.</td>
           </tr>
           <tr>
             <td>Lo público</td>
@@ -1036,8 +1049,8 @@
             <td>Entorno publicado</td>
             <td>Ajustes de la Web App <code>DevAuth__Habilitado</code> y <code>DevAuth__Clave</code></td>
             <td>Nunca en el repositorio. Cambiar la clave reinicia la app y no cierra las sesiones abiertas: la clave solo se pide al
-              entrar. Con <code>DevAuth__Habilitado=false</code> solo entra quien ya tenga contraseña, y hasta las invitaciones (I2)
-              solo se la puede poner el propio acceso de desarrollo.</td>
+              entrar. Con <code>DevAuth__Habilitado=false</code> solo se entra con contraseña: las cuentas de prueba necesitan antes su
+              invitación (desde Administración, Plataforma o, mientras siga habilitado, «Credenciales de prueba»).</td>
           </tr>
           <tr>
             <td>Pruebas</td>

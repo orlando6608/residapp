@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Invitación no válida";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-7 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-3">Esta invitación ya no vale</h1>
+                <p>@ResidApp.Web.Controllers.AccesoController.InvalidInvitationMessage</p>
+                <p class="mb-0">
+                    <a asp-controller="Acceso" asp-action="Entrar" class="btn btn-primary btn-lg">Ir a iniciar sesión</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

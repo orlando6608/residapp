@@ -49,6 +49,15 @@ else
                     }
                 </h2>
                 <p class="small text-body-secondary">Identificador de acceso: <code>@scope.AccountSubject</code></p>
+                @if (scope.Active)
+                {
+                    @* ADR 0007, I2: la del primer administrador, o la recuperación de uno que no tiene otra Administración que se la dé. *@
+                    <form asp-action="Invitacion" method="post" class="mb-2">
+                        <input type="hidden" name="centroId" value="@Model.CenterId.Value" />
+                        <input type="hidden" name="ambitoId" value="@scope.ProfileScopeId" />
+                        <button type="submit" class="btn btn-outline-primary">Crear invitación de acceso o de recuperación</button>
+                    </form>
+                }
                 <form asp-action="MarcarPrincipal" method="post" class="mb-3">
                     <input type="hidden" name="centroId" value="@Model.CenterId.Value" />
                     <input type="hidden" name="ambitoId" value="@scope.ProfileScopeId" />
