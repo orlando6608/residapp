@@ -13,7 +13,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **ADR 0007, incremento I3: «Mi cuenta» (2026-10-22, rama `adr0007-i3-mi-cuenta`; script `0064`, el siguiente libre es `0065`).**
+- **ADR 0007, incremento I3: «Mi cuenta» (2026-10-22, PR #52 mergeado en `main` como `40196f3`; script `0064`, el siguiente libre es `0065`; suite 410
+  unitarios, 491 de integración y 272 funcionales en verde, proyecto a proyecto; CI del PR y CI/CD de `main` en verde, con el `0064` aplicado en Azure SQL).**
+  - **Comprobado en Azure dev tras el despliegue** (Chrome sin interfaz, clave de desarrollo leída del ajuste de la Web App): `almendros-enfermeria`
+    abre `/Cuenta`, que lista su sesión («Esta sesión») y sus últimos accesos. **Solo lectura:** no se probó allí cambiar la contraseña ni cerrar sesiones
+    (las cuentas `almendros-*` son compartidas y podrían cerrar la sesión de otra persona); eso lo cubren las pruebas locales.
   - **Qué hay:** `/Cuenta` (`CuentaController`, `[Authorize]`, enlace «Mi cuenta» en el menú de usuario del `_Layout`, para todos los perfiles,
     también Familiar): resumen de la cuenta; cambiar la contraseña (pide la actual, cierra las demás sesiones con motivo `CIERRE_PROPIO`);
     generar 10 códigos de recuperación nuevos (pide contraseña y TOTP vigente; se enseñan en `Acceso/CodigosRecuperacion.cshtml`, que ahora lleva
