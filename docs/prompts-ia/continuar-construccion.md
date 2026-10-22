@@ -13,8 +13,14 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **ADR 0007, incremento I1: ASP.NET Core Identity, y los dos pendientes de I0 (2026-10-22, rama `adr0007-i1-identity`; script `0062`, el
-  siguiente libre es `0063`; suite 410 unitarios, 482 de integración y 255 funcionales en verde, proyecto a proyecto; sin commit todavía).**
+- **ADR 0007, incremento I1: ASP.NET Core Identity, y los dos pendientes de I0 (2026-10-22, PR #50 mergeado en `main` como `d88e63d`; script
+  `0062`, el siguiente libre es `0063`; suite 410 unitarios, 482 de integración y 255 funcionales en verde, proyecto a proyecto; CI del PR y
+  CI/CD de `main` en verde, con el `0062` aplicado en Azure SQL).**
+  - **Comprobado en Azure dev tras el despliegue** (Chrome sin interfaz, clave de desarrollo leída del ajuste de la Web App): sin sesión,
+    `/Administracion` lleva a `https://…/Acceso/Entrar`; `almendros-elena` con contraseña mala da el mensaje neutro y con la buena llega a su
+    residente; `almendros-enfermeria` pasa por el alta del TOTP (QR, 10 códigos), después entra con contraseña y código; al terminar se le
+    quitó el segundo factor desde `DevAuth/Credenciales`. **Quedan en Azure:** esas dos cuentas con una contraseña aleatoria que nadie
+    conoce (no afecta al acceso de desarrollo, que sigue igual) y sus filas en `eventos_acceso`.
   - **Decisiones de Orlando:** contraseña inicial solo desde el acceso de desarrollo hasta I2 (`DevAuth/Credenciales`); TOTP obligatorio
     para el personal y Plataforma (alta forzada en el primer acceso), familiares solo con contraseña hasta la 3.2 de CJ; DevAuth sigue con
     clave en Azure dev hasta I2; registro de seguridad en tabla propia más `ILogger`.
@@ -1350,10 +1356,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **I1 del ADR 0007 está hecho en la rama `adr0007-i1-identity`** (ver «Dónde estamos»): falta commit, PR (lleva el script `0062`), CI en
-   verde, merge con confirmación de Orlando y comprobarlo en Azure dev (que `0062` se aplicó, que DevAuth con clave sigue funcionando y que
-   `Acceso/Entrar` funciona con una cuenta a la que se pone contraseña desde `DevAuth/Credenciales`, sin tocar Residente Integrado Uno).
-   Después, Orlando elige entre **I2 (invitaciones y recuperación por Administración, que retira el acceso de desarrollo)** y el **dictado
+0. **I1 del ADR 0007 está cerrado**, en `main` y comprobado en Azure dev (ver «Dónde estamos»). Orlando elige entre **I2 (invitaciones y recuperación por Administración, que retira el acceso de desarrollo)** y el **dictado
    por voz del ADR 0009**. Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
    fecha prevista, prueba 2.4 de «Conducta médica»).
    Para entrar en Azure dev hace falta la clave de desarrollo: está solo en el ajuste `DevAuth__Clave` de la Web App
