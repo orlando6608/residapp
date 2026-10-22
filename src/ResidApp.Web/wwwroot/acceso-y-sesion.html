@@ -694,7 +694,7 @@
           código no son correctos, o la cuenta no existe, está suspendida, bloqueada o no tiene ningún ámbito activo, no entras y sigues
           como estabas. Si son correctos, se cierra la sesión que tuvieras abierta, se abre una nueva y, si la cuenta tiene un solo
           ámbito, llegas a tu inicio o a la pantalla a la que ibas; si tiene varios, eliges antes con cuál trabajas. Cinco fallos
-          seguidos bloquean la cuenta 15 minutos, y hay un límite de 10 intentos por minuto desde la misma conexión.</desc>
+          seguidos bloquean la cuenta 15 minutos, y desde una misma conexión se frenan los fallos repetidos en muchas cuentas.</desc>
         <defs>
           <marker id="d-ent-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
         </defs>
@@ -757,7 +757,9 @@
         Si no te quedan, pide ayuda a tu Administración.</li>
       <li><strong>Entre la contraseña y el código</strong> hay 10 minutos; si se pasan, o si entretanto cambia la contraseña de la cuenta,
         vuelves a empezar. Ese paso intermedio no abre ninguna pantalla.</li>
-      <li><strong>Más de 10 intentos en un minuto</strong> desde la misma conexión: el navegador muestra un error (429). Espera un minuto.</li>
+      <li><strong>Más de 20 accesos fallidos en 15 minutos</strong> desde la misma conexión (la de toda una residencia cuenta como una),
+        sea cual sea la cuenta: se rechazan los intentos siguientes con un error (429) hasta que pasa la ventana. Los accesos correctos no
+        cuentan, así que varias personas pueden entrar a la vez. Además hay un techo de 120 peticiones por minuto contra inundaciones.</li>
       <li><strong>Entrar con otra cuenta</strong> no exige salir antes. La sesión anterior se cierra solo si la nueva entra; si te
         equivocas, conservas la que tenías.</li>
       <li><strong>Familia:</strong> la cuenta de un familiar entra, por ahora, solo con la contraseña (su segundo factor está por

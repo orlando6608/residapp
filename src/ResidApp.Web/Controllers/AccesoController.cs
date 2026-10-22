@@ -25,7 +25,8 @@ namespace ResidApp.Web.Controllers;
 public sealed class AccesoController(
     UserManager<CredentialAccount> users, IProfileScopeDirectoryProvider directory, SessionSignIn signIn, PendingAccessCookie pendingCookie,
     IAccessInvitationRepository invitations, InvitationCookie invitationCookie, ISessionStore sessions,
-    IAccessEventLog accessLog, TimeProvider clock, IOptions<DevAuthOptions> devAuth, ILogger<AccesoController> logger) : Controller
+    IAccessEventLog accessLog, TimeProvider clock, AccessFailureThrottle throttle, IOptions<DevAuthOptions> devAuth,
+    ILogger<AccesoController> logger) : Controller
 {
     public const string FailedMessage =
         "Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.";
@@ -55,6 +56,11 @@ public sealed class AccesoController(
     [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
     public async Task<IActionResult> Entrar(string? usuario, string? contrasena, string? returnUrl, CancellationToken ct)
     {
+        if (TooManyFailures())
+        {
+            return TooManyFailuresResult();
+        }
+
         var subject = usuario?.Trim();
         if (string.IsNullOrEmpty(subject) || string.IsNullOrEmpty(contrasena))
         {
@@ -74,6 +80,7 @@ public sealed class AccesoController(
         var scopes = account.Active ? await directory.ListActiveAsync(account.UserName, ct) : [];
         if (scopes.Count == 0)
         {
+            throttle.RecordFailure(SessionSignIn.Ip(HttpContext));
             await accessLog.RecordAsync(AccessEventType.ContrasenaFallida, AccountId.From(account.Id), null, SessionSignIn.Ip(HttpContext), Now, ct);
             logger.LogWarning("Inicio de sesión rechazado: cuenta no activa o sin ámbito activo.");
             ModelState.AddModelError(string.Empty, FailedMessage);
@@ -110,10 +117,16 @@ public sealed class AccesoController(
                 : InvalidInvitation();
         }
 
+        if (TooManyFailures())
+        {
+            return TooManyFailuresResult();
+        }
+
         var tokenHash = AccessInvitation.Hash(id);
         Response.Headers["Referrer-Policy"] = "no-referrer";
         if (await invitations.FindLiveAsync(tokenHash, Now, ct) is null)
         {
+            throttle.RecordFailure(SessionSignIn.Ip(HttpContext));
             await accessLog.RecordAsync(AccessEventType.InvitacionNoValida, null, null, SessionSignIn.Ip(HttpContext), Now, ct);
             logger.LogWarning("Invitación no válida.");
             return InvalidInvitation();
@@ -197,6 +210,11 @@ public sealed class AccesoController(
     [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
     public async Task<IActionResult> SegundoFactor(string? codigo, CancellationToken ct)
     {
+        if (TooManyFailures())
+        {
+            return TooManyFailuresResult();
+        }
+
         if (await ResolvePendingAsync(ct) is not { } pending || !pending.Account.TwoFactorEnabled)
         {
             return PendingExpired();
@@ -219,6 +237,11 @@ public sealed class AccesoController(
     [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
     public async Task<IActionResult> CodigoRecuperacion(string? codigo, CancellationToken ct)
     {
+        if (TooManyFailures())
+        {
+            return TooManyFailuresResult();
+        }
+
         if (await ResolvePendingAsync(ct) is not { } pending || !pending.Account.TwoFactorEnabled)
         {
             return PendingExpired();
@@ -261,6 +284,11 @@ public sealed class AccesoController(
     [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
     public async Task<IActionResult> ActivarSegundoFactor(string? codigo, CancellationToken ct)
     {
+        if (TooManyFailures())
+        {
+            return TooManyFailuresResult();
+        }
+
         if (await ResolvePendingAsync(ct) is not { State.CanEnroll: true } pending || pending.Account.TwoFactorEnabled
             || pending.Account.AuthenticatorKey is null)
         {
@@ -302,6 +330,11 @@ public sealed class AccesoController(
 
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
 
+    private bool TooManyFailures() => throttle.IsBlocked(SessionSignIn.Ip(HttpContext));
+
+    private ObjectResult TooManyFailuresResult() => StatusCode(StatusCodes.Status429TooManyRequests,
+        "Demasiados accesos fallidos desde esta red. Espera unos minutos y vuelve a intentarlo.");
+
     private AccesoEntrarViewModel EntrarModel(string? usuario, string? returnUrl, bool sesionCaducada) =>
         new(usuario, Url.IsLocalUrl(returnUrl) ? returnUrl : null, sesionCaducada, devAuth.Value.Habilitado);
 
@@ -325,6 +358,7 @@ public sealed class AccesoController(
 
         var accountId = account is null ? (AccountId?)null : AccountId.From(account.Id);
         var ip = SessionSignIn.Ip(HttpContext);
+        throttle.RecordFailure(ip);
         await accessLog.RecordAsync(type, accountId, null, ip, Now, ct);
         logger.LogWarning("Inicio de sesión fallido ({Tipo}).", type.ToCode());
         if (account?.PasswordHash is null || await users.IsLockedOutAsync(account))

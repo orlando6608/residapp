@@ -13,6 +13,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Límite de intentos de `/Acceso` corregido (2026-10-22, sin script; el siguiente libre sigue siendo `0064`).** Cierra el hallazgo de I2.
+  - **Fase 1:** `Acceso:IntentosPorMinuto` pasa de 10 a 120 (techo contra inundaciones; un acceso con TOTP gasta 2 peticiones y una invitación, 4).
+  - **Fase 2:** `AccessFailureThrottle` (singleton en memoria, `Security/`) cuenta los fallos por IP en 15 minutos y `AccesoController` responde
+    429 (texto plano) al llegar a `Acceso:FallosPorIp` = 20; se comprueba al empezar `Entrar`, `Invitacion` (con token), `SegundoFactor`,
+    `CodigoRecuperacion` y `ActivarSegundoFactor`, y se suma en `FailAsync`, en «sin ámbito» y en invitación no válida. Los éxitos no cuentan.
+    Limitaciones: se reinicia con cada despliegue y con varias instancias se multiplica; el POST de `Invitacion` no lo comprueba.
+  - **Pruebas:** `AccesoLimitesTests` (4, funcionales, entorno Staging con los valores reales). Mutaciones comprobadas: techo en 10 y sin
+    `RecordFailure` en `FailAsync` hacen fallar alguna. `appsettings.Development.json` lleva `FallosPorIp` alto (las pruebas comparten la IP «sin-ip»).
+    Si se cambian los valores en Azure: `Acceso__IntentosPorMinuto` y `Acceso__FallosPorIp`.
 - **ADR 0007, incremento I2: invitaciones de un solo uso y recuperación por Administración (2026-10-22, PR #51 mergeado en `main` como
   `d2195ec`; script `0063`, el siguiente libre es `0064`; suite 410 unitarios, 490 de integración y 260 funcionales en verde, proyecto a
   proyecto; CI del PR y CI/CD de `main` en verde, con el `0063` aplicado en Azure SQL).**
@@ -23,7 +32,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     neutro; anular una invitación pendiente y suspender la cuenta funcionan. **Queda en Azure:** esa cuenta, suspendida, con una contraseña
     que nadie conoce, y sus filas en `invitaciones_acceso`, `eventos_acceso` y la auditoría. No se tocó Residente Integrado Uno ni se creó
     ninguna invitación para las cuentas `almendros-*` existentes (esas siguen entrando por el acceso de desarrollo).
-  - **Hallazgo, sin tocar:** el límite de intentos de `/Acceso` es de 10 por minuto **por dirección IP y para todos los usuarios a la vez**
+  - **Hallazgo (corregido después, ver el primer punto de «Dónde estamos»):** el límite de intentos de `/Acceso` es de 10 por minuto **por dirección IP y para todos los usuarios a la vez**
     (`Acceso:IntentosPorMinuto`, la misma política en `Entrar`, `SegundoFactor`, `CodigoRecuperacion`, `ActivarSegundoFactor` e
     `Invitacion`). Usar una invitación gasta 4 y entrar con TOTP, 2: en la prueba de Azure dio un 429 al undécimo intento. Con el personal
     de una residencia detrás de una sola IP pública (cambio de turno, varias tabletas), 5 personas entrando en el mismo minuto bastarían
@@ -1401,8 +1410,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 ## Siguiente tarea
 
 0. **I2 del ADR 0007 está cerrado**, en `main` y comprobado en Azure dev (ver «Dónde estamos»). Orlando elige entre **I3 («Mi cuenta»)**,
-   **I2b (vincular cuentas de otro centro)** y el **dictado por voz del ADR 0009**; antes de datos reales, retirar el acceso de desarrollo y
-   revisar el límite de intentos por IP (ver el hallazgo de I2). Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
+   **I2b (vincular cuentas de otro centro)** y el **dictado por voz del ADR 0009**; antes de datos reales, retirar el acceso de desarrollo
+   (el límite de intentos por IP ya está corregido). Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
    fecha prevista, prueba 2.4 de «Conducta médica»).
    Para entrar en Azure dev hace falta la clave de desarrollo: está solo en el ajuste `DevAuth__Clave` de la Web App
    (`az webapp config appsettings list -g rg-residapp-dev -n app-residapp-dev --query "[?name=='DevAuth__Clave'].value" -o tsv`); no la copies a

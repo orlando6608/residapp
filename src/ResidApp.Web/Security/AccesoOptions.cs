@@ -17,6 +17,12 @@ public sealed class AccesoOptions
     /// <summary>Longitud mínima, sin reglas de composición (NIST SP 800-63B).</summary>
     public const int LongitudMinimaContrasena = 12;
 
-    /// <summary>Intentos por minuto y dirección IP en las pantallas de acceso.</summary>
-    public int IntentosPorMinuto { get; set; } = 10;
+    public static readonly TimeSpan VentanaFallos = TimeSpan.FromMinutes(15);
+
+    /// <summary>Peticiones por minuto y dirección IP en las pantallas de acceso, acierten o fallen: solo un techo contra inundaciones.
+    /// Una residencia sale por una sola IP, y un inicio de sesión correcto con segundo factor gasta 2 y usar una invitación, 4.</summary>
+    public int IntentosPorMinuto { get; set; } = 120;
+
+    /// <summary>Accesos fallidos (contraseña, segundo factor o invitación no válida) que se admiten por dirección IP en <see cref="VentanaFallos"/>.</summary>
+    public int FallosPorIp { get; set; } = 20;
 }

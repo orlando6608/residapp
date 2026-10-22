@@ -106,6 +106,7 @@ builder.Services.AddScoped<SessionSignIn>();
 builder.Services.AddScoped<IAccessEventLog, SqlAccessEventLog>();
 builder.Services.AddSingleton<PendingAccessCookie>();
 builder.Services.AddSingleton<InvitationCookie>();
+builder.Services.AddSingleton<AccessFailureThrottle>();
 // ADR 0007, incremento I2: invitaciones de acceso de un solo uso que entregan Administración y Plataforma.
 builder.Services.AddScoped<IAccessInvitationRepository, SqlAccessInvitationRepository>();
 builder.Services.AddScoped<AccessInvitationsApplicationService>();
