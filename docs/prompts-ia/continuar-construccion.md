@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-21. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-22. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -13,10 +13,37 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **ADR 0007, incremento I1: ASP.NET Core Identity, y los dos pendientes de I0 (2026-10-22, rama `adr0007-i1-identity`; script `0062`, el
+  siguiente libre es `0063`; suite 410 unitarios, 482 de integración y 255 funcionales en verde, proyecto a proyecto; sin commit todavía).**
+  - **Decisiones de Orlando:** contraseña inicial solo desde el acceso de desarrollo hasta I2 (`DevAuth/Credenciales`); TOTP obligatorio
+    para el personal y Plataforma (alta forzada en el primer acceso), familiares solo con contraseña hasta la 3.2 de CJ; DevAuth sigue con
+    clave en Azure dev hasta I2; registro de seguridad en tabla propia más `ILogger`.
+  - **Modelo:** el usuario de Identity es la cuenta (`Id = cuentas.id`, `UserName = sujeto_externo`). Solo `UserManager`, sin
+    `SignInManager`: la sesión sigue siendo la de I0. `Microsoft.AspNetCore.App` como `FrameworkReference` en Infrastructure (sin paquete
+    nuevo). `SqlCredentialStore` (Dapper) sobre `dbo.credenciales`: los intentos fallidos se suman y ponen a cero en SQL (dos a la vez no se
+    pisan), los códigos de recuperación se guardan como resúmenes SHA-256 y `SubjectLookupNormalizer` busca el sujeto tal cual.
+    `dbo.eventos_acceso` + `SqlAccessEventLog` (inmutable, errores 50537/50538, sin lo tecleado si el usuario no existe).
+  - **Web:** `AccesoController` (`Entrar`, `SegundoFactor`, `CodigoRecuperacion`, `ActivarSegundoFactor`, `Salir`, `Solicitar`);
+    `SessionSignIn` (abrir y cerrar sesión, compartido con DevAuth); `PendingAccessCookie` (`residapp_acceso_pendiente`, 10 min, solo
+    `/Acceso`, con el sello de seguridad); `AccesoOptions` (5 fallos / 15 min, 12 caracteres, `Acceso:IntentosPorMinuto`); `LoginPath`
+    siempre `/Acceso/Entrar`. QR con qrcodejs 1.0.0 (MIT) en `wwwroot/lib/qrcodejs`, revisado (sin red ni `eval`). `DevAuth/Logout` pasa a
+    `Acceso/Salir` (con DevAuth deshabilitado daba 404).
+  - **Pendientes de I0 cerrados:** (1) `SessionCookieEvents.RedirectToLogin`: un POST sin sesión vuelve al `Referer` de la misma app (o al
+    Inicio) con `sesionCaducada=true`, y el login avisa de que no se guardó; ya no hay `ReturnUrl` a una acción solo POST. (2) La maqueta
+    `DevAuth/Register` se quita; «Cómo pedir el acceso» (`Acceso/Solicitar`) lo explica sin formulario.
+  - **Pruebas nuevas:** `AccesoTests` (10) y `SqlCredentialStoreTests` (6); mutaciones comprobadas: sin `AccessFailedAsync`, sin exigir el
+    TOTP al personal y sin comprobar el sello del paso pendiente falla alguna. `CoberturaRlsTests` lleva `credenciales` y `eventos_acceso`.
+  - **Probado en local con Chrome sin interfaz** (claro, oscuro y 375 px, sin errores ni desplazamiento lateral): credenciales de prueba,
+    entrar con contraseña, alta del TOTP con el QR y un código calculado, código malo, 10 códigos, entrar con TOTP y con un código de
+    recuperación, `Acceso/Solicitar`, aviso de sesión caducada y `almendros-elena` (familiar) solo con contraseña hasta su residente.
+    **Queda en la BD local:** `almendros-elena` con contraseña (la de prueba del recorrido) y las cuentas `prueba-navegador-*` de ese día.
+  - **Documentado:** ADR 0007 (I1 hecho y lo que deja para después: clave TOTP en claro, alta del TOTP solo con contraseña hasta I2,
+    reutilización del código en su ventana, conservación de la IP), Manual, `acceso-y-sesion.html` y `flujo-de-trabajo.html`.
+  - **Una pasada de integración tardó 3 min 51 s** (todo en verde, con 7.702 filas de auditoría); la siguiente, 39 s. Sin causa clara.
 - **ADR 0007, incremento I0: capa común de sesión (cierra C1 y A2) y centro de prueba «Residencia Los Almendros» (2026-10-21; script `0061`, el
   siguiente libre es `0062`; suite 410 unitarios, 476 de integración y 245 funcionales en verde, proyecto a proyecto; commits `2325f47`, `455a0ec`
   y `b5522c0` en `main`, desplegados en Azure dev con el CI en verde y comprobados allí).**
-  - **Pendiente detectado, sin tocar:**
+  - **Pendiente detectado (los dos, cerrados en I1 el 2026-10-22):**
     - si la sesión caduca con un formulario a medias, al guardar se pasa por el login y el `ReturnUrl` apunta a una acción solo POST:
       probablemente acabe en un error 405 (no comprobado). Arreglo posible: devolver al GET de la pantalla o al Inicio.
     - la maqueta «Solicitar acceso» (`DevAuth/Register`) pide correo y contraseña para crearse una cuenta, lo contrario del ADR 0007 (las
@@ -1323,10 +1350,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **El incremento I0 del ADR 0007 está cerrado** y comprobado en Azure dev (ver «Dónde estamos»). Orlando elige entre **I1 (ASP.NET Core Identity: contraseña, TOTP y bloqueo)**, que es lo que desbloquea los datos reales, el
-   Portal Familiar real y «Mi cuenta», y el **dictado por voz del ADR 0009**. Cada uno con su propio plan. Sueltos: probar Importar y
-   Exportar (ADR 0010) en Azure dev, que sigue sin hacerse; los dos pendientes de I0 de «Dónde estamos» (formulario tras caducar la sesión y la
-   maqueta «Solicitar acceso»); y las dos preguntas a CJ de la guía 2 (hora en la fecha prevista, prueba 2.4 de «Conducta médica»).
+0. **I1 del ADR 0007 está hecho en la rama `adr0007-i1-identity`** (ver «Dónde estamos»): falta commit, PR (lleva el script `0062`), CI en
+   verde, merge con confirmación de Orlando y comprobarlo en Azure dev (que `0062` se aplicó, que DevAuth con clave sigue funcionando y que
+   `Acceso/Entrar` funciona con una cuenta a la que se pone contraseña desde `DevAuth/Credenciales`, sin tocar Residente Integrado Uno).
+   Después, Orlando elige entre **I2 (invitaciones y recuperación por Administración, que retira el acceso de desarrollo)** y el **dictado
+   por voz del ADR 0009**. Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
+   fecha prevista, prueba 2.4 de «Conducta médica»).
    Para entrar en Azure dev hace falta la clave de desarrollo: está solo en el ajuste `DevAuth__Clave` de la Web App
    (`az webapp config appsettings list -g rg-residapp-dev -n app-residapp-dev --query "[?name=='DevAuth__Clave'].value" -o tsv`); no la copies a
    ningún fichero del repositorio.

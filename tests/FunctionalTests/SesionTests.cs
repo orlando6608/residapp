@@ -23,7 +23,7 @@ namespace ResidApp.FunctionalTests;
 /// </summary>
 public class SesionTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixture<ResidentsFlowTests.WebAppFactory>
 {
-    private static readonly string[] AnonymousControllers = ["AccesoCj", "DevAuth", "Home"];
+    private static readonly string[] AnonymousControllers = ["Acceso", "AccesoCj", "DevAuth", "Home"];
 
     internal static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
@@ -78,7 +78,7 @@ public class SesionTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixtu
     internal static string SessionCookie(HttpResponseMessage response) =>
         response.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("residapp_sesion=", StringComparison.Ordinal)).Split(';')[0];
 
-    private static bool RedirectsToLogin(HttpResponseMessage response, string loginPath = "/DevAuth/Login") =>
+    internal static bool RedirectsToLogin(HttpResponseMessage response, string loginPath = "/Acceso/Entrar") =>
         response.StatusCode == HttpStatusCode.Redirect && response.Headers.Location is { } location
         && (location.IsAbsoluteUri ? location.AbsolutePath : location.OriginalString.Split('?')[0]) == loginPath;
 
@@ -166,7 +166,7 @@ public class SesionTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixtu
         var before = await reused.GetAsync("/ProfileScope/Select");
 
         var home = await client.GetStringAsync("/DevAuth/Login");
-        await client.PostAsync("/DevAuth/Logout", new FormUrlEncodedContent(new Dictionary<string, string>
+        await client.PostAsync("/Acceso/Salir", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = ExtractValue(home, "__RequestVerificationToken"),
         }));
@@ -343,18 +343,21 @@ public class SesionFueraDeDesarrolloTests(SesionFueraDeDesarrolloTests.StagingFa
     }
 
     [Fact]
-    public async Task Deshabilitado_NoExiste_YSinSesionSeVuelveAlInicio()
+    public async Task Deshabilitado_NoExiste_YSinSesionSeVaAlInicioDeSesionConContrasena()
     {
         var client = With("DevAuth:Habilitado", "false").CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = Https });
 
         var login = await client.GetAsync("/DevAuth/Login");
+        var credentials = await client.GetAsync("/DevAuth/Credenciales");
         var protectedPage = await client.GetAsync("/Administracion");
-        var home = WebUtility.HtmlDecode(await client.GetStringAsync("/"));
+        var entrar = WebUtility.HtmlDecode(await client.GetStringAsync("/Acceso/Entrar"));
 
         Assert.Equal(HttpStatusCode.NotFound, login.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, credentials.StatusCode);
         Assert.Equal(HttpStatusCode.Redirect, protectedPage.StatusCode);
-        Assert.Equal("/", protectedPage.Headers.Location!.AbsolutePath);
-        Assert.Contains("El inicio de sesión todavía no está disponible", home);
+        Assert.Equal("/Acceso/Entrar", protectedPage.Headers.Location!.AbsolutePath);
+        Assert.Contains("Contraseña", entrar);
+        Assert.DoesNotContain("Acceso de desarrollo", entrar);
     }
 
     [Fact]

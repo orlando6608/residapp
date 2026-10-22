@@ -269,7 +269,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var openAfterOther = await OpenDeclarationsAsync();
         var backToOne = await QueryAsync(residentOne, null, null);
 
-        (await direccion.PostAsync("/DevAuth/Logout", new FormUrlEncodedContent(new Dictionary<string, string>
+        (await direccion.PostAsync("/Acceso/Salir", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
         }))).EnsureSuccessStatusCode();

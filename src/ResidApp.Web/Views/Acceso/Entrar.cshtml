@@ -1,0 +1,54 @@
+@model ResidApp.Web.Models.AccesoEntrarViewModel
+@{
+    ViewData["Title"] = "Iniciar sesión";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <img src="~/images/logo.svg" alt="ResidApp" style="max-width: 120px; width: 100%;" />
+                </div>
+
+                <h1 class="h4 text-center mb-3">Iniciar sesión</h1>
+
+                @if (Model.SesionCaducada)
+                {
+                    <div class="alert alert-warning" role="alert">
+                        Tu sesión había terminado: lo que estabas guardando <strong>no se ha guardado</strong>. Entra de nuevo y vuelve a escribirlo.
+                    </div>
+                }
+
+                <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+
+                <form asp-controller="Acceso" asp-action="Entrar" method="post">
+                    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                    <div class="mb-3">
+                        <label for="usuario" class="form-label">Usuario</label>
+                        <input type="text" class="form-control form-control-lg" id="usuario" name="usuario" value="@Model.Usuario"
+                               autocomplete="username" autocapitalize="none" spellcheck="false" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="contrasena" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control form-control-lg" id="contrasena" name="contrasena" autocomplete="current-password" required />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+                    </div>
+                </form>
+
+                <p class="text-center small mt-3 mb-0">
+                    ¿No tienes cuenta o no puedes entrar? <a asp-controller="Acceso" asp-action="Solicitar">Cómo pedir el acceso</a>
+                </p>
+
+                @if (Model.AccesoDesarrollo)
+                {
+                    <p class="text-center small mt-2 mb-0">
+                        <a asp-controller="DevAuth" asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl">Acceso de desarrollo (cuentas de prueba)</a>
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

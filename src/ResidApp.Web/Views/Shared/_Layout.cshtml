@@ -108,17 +108,17 @@
                                     }
                                     <li><hr class="dropdown-divider" /></li>
                                     <li>
-                                        <form asp-area="" asp-controller="DevAuth" asp-action="Logout" method="post">
+                                        <form asp-area="" asp-controller="Acceso" asp-action="Salir" method="post">
                                             <button type="submit" class="dropdown-item">Salir</button>
                                         </form>
                                     </li>
                                 </ul>
                             </li>
                         }
-                        else if (devAuthLayout)
+                        else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="DevAuth" asp-action="Login">Iniciar sesión</a>
+                                <a class="nav-link" asp-area="" asp-controller="Acceso" asp-action="Entrar">Iniciar sesión</a>
                             </li>
                         }
                     </ul>

@@ -1,0 +1,61 @@
+@model ResidApp.Web.Models.ActivarSegundoFactorViewModel
+@{
+    ViewData["Title"] = "Activar el segundo factor";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-3">Activar el segundo factor</h1>
+                <p>
+                    Para proteger los datos de los residentes, el personal entra con su contraseña y, además, con un código que cambia cada
+                    30 segundos. Hay que prepararlo una sola vez:
+                </p>
+                <ol>
+                    <li class="mb-2">
+                        Instala en tu móvil una aplicación de autenticación (por ejemplo, Microsoft Authenticator, Google Authenticator o la
+                        que ya uses).
+                    </li>
+                    <li class="mb-2">
+                        En la aplicación, añade una cuenta y escanea este código QR:
+                        @* Fondo blanco también en oscuro: un QR sobre fondo oscuro no lo leen todas las aplicaciones. *@
+                        <div id="qr-autenticador" class="my-3 p-3 bg-white d-inline-block rounded" data-direccion="@Model.DireccionAutenticador"
+                             role="img" aria-label="Código QR para añadir ResidApp a la aplicación de autenticación"></div>
+                        <p class="mb-1">Si no puedes escanearlo, escribe a mano esta clave (los espacios no importan):</p>
+                        <p class="font-monospace fs-5 text-break mb-1" id="clave-autenticador">@Model.ClaveAgrupada</p>
+                        <p class="small text-muted mb-0">Cuenta: <strong>ResidApp</strong> · <span class="text-break">@Model.Usuario</span></p>
+                    </li>
+                    <li>Escribe aquí el código de 6 cifras que te muestra la aplicación.</li>
+                </ol>
+
+                <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+
+                <form asp-controller="Acceso" asp-action="ActivarSegundoFactor" method="post">
+                    <div class="mb-3">
+                        <label for="codigo" class="form-label">Código</label>
+                        <input type="text" class="form-control form-control-lg" id="codigo" name="codigo" inputmode="numeric" pattern="[0-9 ]*"
+                               maxlength="7" autocomplete="one-time-code" required />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Activar y entrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/qrcodejs/qrcode.min.js" asp-append-version="true"></script>
+    <script>
+        (function () {
+            var caja = document.getElementById('qr-autenticador');
+            if (caja && window.QRCode) {
+                new QRCode(caja, { text: caja.dataset.direccion, width: 192, height: 192, correctLevel: QRCode.CorrectLevel.M });
+            } else if (caja) {
+                caja.hidden = true;
+            }
+        })();
+    </script>
+}

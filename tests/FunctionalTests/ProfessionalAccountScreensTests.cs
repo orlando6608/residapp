@@ -864,8 +864,8 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
 
         Assert.Contains("Tu cuenta no tiene ningún ámbito activo", page);
         Assert.DoesNotContain("varios ámbitos", page);
-        Assert.Contains("href=\"/DevAuth/Login\"", page);
-        Assert.Contains("action=\"/DevAuth/Logout\"", page);
+        Assert.Contains("href=\"/Acceso/Entrar\"", page);
+        Assert.Contains("action=\"/Acceso/Salir\"", page);
         Assert.DoesNotContain("Reintentar", page);
     }
 
@@ -887,7 +887,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("No se ha podido completar la operación.", page);
         Assert.DoesNotContain("no tiene ningún ámbito activo", page);
         Assert.Contains("Reintentar", page);
-        Assert.Contains("href=\"/DevAuth/Login\"", page);
+        Assert.Contains("href=\"/Acceso/Entrar\"", page);
     }
 
     private sealed class UnavailableProfileScopeDirectory : IProfileScopeDirectoryProvider

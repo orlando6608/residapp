@@ -1,13 +1,12 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using ResidApp.Application.Ports;
-using ResidApp.Application.Sessions;
-using ResidApp.Application.UseCases;
+using ResidApp.Infrastructure.Identity;
+using ResidApp.Shared;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
 
@@ -17,11 +16,12 @@ namespace ResidApp.Web.Controllers;
 /// Acceso de desarrollo: elegir una cuenta ya sembrada en dbo.cuentas (por ejemplo, «dev-admin» de
 /// database/seed/dev_seed_residente_basal.sql) sin contraseña. No es autenticación real: solo existe si DevAuth está habilitado y,
 /// fuera de Development, pide además la clave de desarrollo (<see cref="DevAuthOptions"/>). Abre una sesión de verdad (dbo.sesiones y
-/// cookie cifrada), así que el resto de la aplicación ya funciona como funcionará con el proveedor de identidad (ADR 0007).
+/// cookie cifrada), como el inicio de sesión con contraseña (AccesoController). Mientras no haya invitaciones (ADR 0007, I2), también
+/// sirve para poner una contraseña a la cuenta de la sesión y probar con ella el inicio de sesión real.
 /// </summary>
 [AllowAnonymous]
 public sealed class DevAuthController(
-    IProfileScopeDirectoryProvider directory, ClinicalAccessDeclarations declarations, ISessionStore sessions, SessionPolicy policy,
+    IProfileScopeDirectoryProvider directory, SessionSignIn signIn, UserManager<CredentialAccount> users, IAccessEventLog accessLog,
     TimeProvider clock, IOptions<DevAuthOptions> options, ILogger<DevAuthController> logger) : Controller
 {
     private DevAuthOptions Settings => options.Value;
@@ -64,45 +64,84 @@ public sealed class DevAuthController(
             return View(LoginModel(returnUrl));
         }
 
-        await EndCurrentSessionAsync(SessionCloseReason.CambioIdentidad, ct);
-        var now = clock.GetUtcNow().UtcDateTime;
-        var sessionId = Guid.NewGuid();
-        await sessions.OpenAsync(sessionId, scopes[0].AccountId, now, now + policy.MaxDuration, ct);
-        // El sujeto de la cookie es el de la cuenta tal como está guardado, no como se escribió.
-        var stored = await sessions.FindAsync(sessionId, ct);
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-            SessionAuthentication.Principal(stored!.ExternalSubject, sessionId, scopes[0].AccountDisplayName));
-        ActiveProfileScopeCookie.Clear(Response);
-        ClinicalAccessDeclarationCookie.Clear(Response);
+        await signIn.OpenAsync(HttpContext, scopes[0], AccessEventType.EntradaDesarrollo, ct);
         return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home");
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Logout(CancellationToken ct)
+    [HttpGet]
+    public async Task<IActionResult> Credenciales()
     {
-        await EndCurrentSessionAsync(SessionCloseReason.Logout, ct);
-        ActiveProfileScopeCookie.Clear(Response);
-        ClinicalAccessDeclarationCookie.Clear(Response);
-        return RedirectToAction("Index", "Home");
+        if (await SessionAccountAsync() is not { } account)
+        {
+            return RedirectToAction(nameof(Login), new { returnUrl = Url.Action(nameof(Credenciales)) });
+        }
+        return View(CredencialesModel(account, null));
     }
 
-    /// <summary>Maqueta visual, no funcional: el alta de cuentas llegará con el proveedor de identidad (ADR 0007).</summary>
-    public IActionResult Register() => View();
+    /// <summary>Pone o cambia la contraseña de la cuenta de la sesión, y la desbloquea.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Credenciales(string? contrasena, string? confirmacion, CancellationToken ct)
+    {
+        if (await SessionAccountAsync() is not { } account)
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
+        if ((contrasena?.Length ?? 0) < AccesoOptions.LongitudMinimaContrasena)
+        {
+            ModelState.AddModelError(string.Empty, $"La contraseña tiene que tener al menos {AccesoOptions.LongitudMinimaContrasena} caracteres.");
+            return View(CredencialesModel(account, null));
+        }
+        if (!string.Equals(contrasena, confirmacion, StringComparison.Ordinal))
+        {
+            ModelState.AddModelError(string.Empty, "Las dos contraseñas no coinciden.");
+            return View(CredencialesModel(account, null));
+        }
+
+        if (account.PasswordHash is not null)
+        {
+            await users.RemovePasswordAsync(account);
+        }
+        var result = await users.AddPasswordAsync(account, contrasena!);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError(string.Empty, "No se ha podido guardar la contraseña.");
+            return View(CredencialesModel(account, null));
+        }
+        await users.SetLockoutEndDateAsync(account, null);
+        await users.ResetAccessFailedCountAsync(account);
+        await RecordAsync(account, ct);
+        return View(CredencialesModel(account, "Contraseña guardada. Ya puedes entrar con ella en «Iniciar sesión»."));
+    }
+
+    /// <summary>Quita el segundo factor (y cambia su clave), para volver a probar el alta en el siguiente inicio de sesión.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> QuitarSegundoFactor(CancellationToken ct)
+    {
+        if (await SessionAccountAsync() is not { } account)
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
+        await users.SetTwoFactorEnabledAsync(account, false);
+        await users.ResetAuthenticatorKeyAsync(account);
+        await RecordAsync(account, ct);
+        return View(nameof(Credenciales), CredencialesModel(account,
+            "Segundo factor quitado. Al entrar con la contraseña se pedirá darlo de alta otra vez, con una clave nueva."));
+    }
 
     private DevAuthLoginViewModel LoginModel(string? returnUrl) =>
         new(SessionAuthentication.Subject(User), Settings.RequiresKey, returnUrl);
 
-    private async Task EndCurrentSessionAsync(SessionCloseReason reason, CancellationToken ct)
-    {
-        if (SessionAuthentication.SessionId(User) is not { } sessionId)
-        {
-            return;
-        }
+    private async Task<CredentialAccount?> SessionAccountAsync() =>
+        SessionAuthentication.Subject(User) is { } subject ? await users.FindByNameAsync(subject) : null;
 
-        // Cerrar sesión termina las declaraciones de acceso clínico (CJ, 2026-10-06), mientras la identidad y el ámbito aún están.
-        await declarations.EndAllAsync(ct);
-        await sessions.CloseAsync(sessionId, reason, clock.GetUtcNow().UtcDateTime, ct);
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-    }
+    private static DevAuthCredencialesViewModel CredencialesModel(CredentialAccount account, string? aviso) =>
+        new(account.UserName, account.PasswordHash is not null, account.TwoFactorEnabled, aviso);
+
+    private Task RecordAsync(CredentialAccount account, CancellationToken ct) =>
+        accessLog.RecordAsync(AccessEventType.CredencialesDesarrollo, AccountId.From(account.Id), SessionAuthentication.SessionId(User),
+            SessionSignIn.Ip(HttpContext), clock.GetUtcNow().UtcDateTime, ct);
 }
