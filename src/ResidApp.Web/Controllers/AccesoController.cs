@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using ResidApp.Application.Ports;
 using ResidApp.Application.Sessions;
+using ResidApp.Domain.Accounts;
 using ResidApp.Infrastructure.Identity;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
@@ -14,18 +15,24 @@ using ResidApp.Web.Security;
 namespace ResidApp.Web.Controllers;
 
 /// <summary>
-/// Inicio de sesión con contraseña (ADR 0007, incremento I1). El personal (cualquier ámbito activo que no sea de familiar) necesita
-/// además un segundo factor TOTP: si aún no lo tiene, lo da de alta aquí mismo, en su primer acceso. Los familiares entran solo con la
-/// contraseña hasta que CJ decida su segundo factor (pregunta 3.2 del Portal Familiar). Cualquier fallo con la contraseña da el mismo
-/// mensaje, exista o no la cuenta; los fallos de contraseña y de segundo factor cuentan para el bloqueo y quedan en dbo.eventos_acceso.
+/// Inicio de sesión con contraseña (ADR 0007, incremento I1) y uso de las invitaciones (I2). El personal (cualquier ámbito activo que no
+/// sea de familiar) necesita además un segundo factor TOTP, que solo se da de alta al usar una invitación (decisión de Orlando del
+/// 2026-10-22): así, saber la contraseña de una cuenta no basta para registrar otro móvil. Los familiares entran solo con la contraseña
+/// hasta que CJ decida su segundo factor (pregunta 3.2 del Portal Familiar). Cualquier fallo con la contraseña da el mismo mensaje, exista
+/// o no la cuenta; los fallos de contraseña y de segundo factor cuentan para el bloqueo y quedan en dbo.eventos_acceso.
 /// </summary>
 [AllowAnonymous]
 public sealed class AccesoController(
     UserManager<CredentialAccount> users, IProfileScopeDirectoryProvider directory, SessionSignIn signIn, PendingAccessCookie pendingCookie,
+    IAccessInvitationRepository invitations, InvitationCookie invitationCookie, ISessionStore sessions,
     IAccessEventLog accessLog, TimeProvider clock, IOptions<DevAuthOptions> devAuth, ILogger<AccesoController> logger) : Controller
 {
     public const string FailedMessage =
         "Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.";
+    public const string NeedsInvitationMessage =
+        "Tu cuenta necesita preparar el código del móvil, y eso solo se hace con una invitación: pídela a la Administración de tu centro.";
+    public const string InvalidInvitationMessage =
+        "Esta invitación ya no vale: se ha usado, se ha anulado o ha caducado. Pide otra a la Administración de tu centro.";
     private const string AvisoKey = "AccesoAviso";
     private const string Issuer = "ResidApp";
 
@@ -79,8 +86,100 @@ public sealed class AccesoController(
             return await OpenSessionAsync(scopes[0], returnUrl, ct);
         }
 
+        if (!account.TwoFactorEnabled)
+        {
+            // Personal sin segundo factor (dejó a medias la invitación): solo otra invitación se lo deja preparar.
+            logger.LogWarning("Inicio de sesión del personal sin segundo factor: necesita una invitación.");
+            ModelState.AddModelError(string.Empty, NeedsInvitationMessage);
+            return View(EntrarModel(subject, returnUrl, false));
+        }
+
         pendingCookie.Write(Response, account.Id, account.SecurityStamp ?? string.Empty, Url.IsLocalUrl(returnUrl) ? returnUrl : null);
-        return RedirectToAction(account.TwoFactorEnabled ? nameof(SegundoFactor) : nameof(ActivarSegundoFactor));
+        return RedirectToAction(nameof(SegundoFactor));
+    }
+
+    /// <summary>Con el token (el enlace o el QR de la hoja): si la invitación vale, pasa a una cookie y se quita de la dirección.</summary>
+    [HttpGet]
+    [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
+    public async Task<IActionResult> Invitacion(string? id, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            return await ResolveInvitationAsync(ct) is { } current
+                ? View(await InvitationModelAsync(current))
+                : InvalidInvitation();
+        }
+
+        var tokenHash = AccessInvitation.Hash(id);
+        Response.Headers["Referrer-Policy"] = "no-referrer";
+        if (await invitations.FindLiveAsync(tokenHash, Now, ct) is null)
+        {
+            await accessLog.RecordAsync(AccessEventType.InvitacionNoValida, null, null, SessionSignIn.Ip(HttpContext), Now, ct);
+            logger.LogWarning("Invitación no válida.");
+            return InvalidInvitation();
+        }
+
+        invitationCookie.Write(Response, tokenHash);
+        return RedirectToAction(nameof(Invitacion), new { id = (string?)null });
+    }
+
+    /// <summary>Usa la invitación: elige la contraseña, que sustituye a la anterior junto con el segundo factor, y desbloquea la cuenta. En
+    /// una recuperación, además, se cierran todas sus sesiones. Después el personal activa el segundo factor y el familiar entra.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
+    public async Task<IActionResult> Invitacion(string? contrasena, string? confirmacion, CancellationToken ct)
+    {
+        if (await ResolveInvitationAsync(ct) is not { } invitation)
+        {
+            return InvalidInvitation();
+        }
+
+        if ((contrasena?.Length ?? 0) < AccesoOptions.LongitudMinimaContrasena || !string.Equals(contrasena, confirmacion, StringComparison.Ordinal))
+        {
+            ModelState.AddModelError(string.Empty, (contrasena?.Length ?? 0) < AccesoOptions.LongitudMinimaContrasena
+                ? $"La contraseña tiene que tener al menos {AccesoOptions.LongitudMinimaContrasena} caracteres."
+                : "Las dos contraseñas no coinciden.");
+            return View(await InvitationModelAsync(invitation));
+        }
+
+        if (!await invitations.ConsumeAsync(invitation.Id, Now, ct)
+            || await users.FindByIdAsync(invitation.AccountId.Value.ToString("D")) is not { Active: true } account)
+        {
+            return InvalidInvitation();
+        }
+
+        if (account.PasswordHash is not null)
+        {
+            await users.RemovePasswordAsync(account);
+        }
+        await users.AddPasswordAsync(account, contrasena!);
+        await users.SetTwoFactorEnabledAsync(account, false);
+        await users.ResetAuthenticatorKeyAsync(account);
+        await users.SetLockoutEndDateAsync(account, null);
+        await users.ResetAccessFailedCountAsync(account);
+        var recovery = invitation.Kind == AccessInvitationKind.Recuperacion;
+        if (recovery)
+        {
+            await sessions.CloseAllAsync(invitation.AccountId, SessionCloseReason.Recuperacion, Now, ct);
+        }
+        await accessLog.RecordAsync(recovery ? AccessEventType.RecuperacionUsada : AccessEventType.InvitacionUsada,
+            invitation.AccountId, null, SessionSignIn.Ip(HttpContext), Now, ct);
+        InvitationCookie.Clear(Response);
+
+        var scopes = await directory.ListActiveAsync(account.UserName, ct);
+        if (scopes.Count == 0)
+        {
+            TempData[AvisoKey] = "Tu contraseña está guardada, pero tu cuenta no tiene ningún perfil activo. Pregunta a la Administración de tu centro.";
+            return RedirectToAction(nameof(Entrar));
+        }
+        if (scopes.All(scope => scope.Profile == SystemProfile.Familiar))
+        {
+            return await OpenSessionAsync(scopes[0], null, ct);
+        }
+
+        pendingCookie.Write(Response, account.Id, account.SecurityStamp ?? string.Empty, null, canEnroll: true);
+        return RedirectToAction(nameof(ActivarSegundoFactor));
     }
 
     [HttpGet]
@@ -138,7 +237,7 @@ public sealed class AccesoController(
     [HttpGet]
     public async Task<IActionResult> ActivarSegundoFactor(CancellationToken ct)
     {
-        if (await ResolvePendingAsync(ct) is not { } pending)
+        if (await ResolvePendingAsync(ct) is not { State.CanEnroll: true } pending)
         {
             return PendingExpired();
         }
@@ -152,7 +251,7 @@ public sealed class AccesoController(
         if (pending.Account.AuthenticatorKey is null)
         {
             await users.ResetAuthenticatorKeyAsync(pending.Account);
-            pendingCookie.Write(Response, pending.Account.Id, pending.Account.SecurityStamp ?? string.Empty, pending.State.ReturnUrl);
+            pendingCookie.Write(Response, pending.Account.Id, pending.Account.SecurityStamp ?? string.Empty, pending.State.ReturnUrl, canEnroll: true);
         }
         return View(EnrollModel(pending.Account));
     }
@@ -162,7 +261,8 @@ public sealed class AccesoController(
     [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
     public async Task<IActionResult> ActivarSegundoFactor(string? codigo, CancellationToken ct)
     {
-        if (await ResolvePendingAsync(ct) is not { } pending || pending.Account.TwoFactorEnabled || pending.Account.AuthenticatorKey is null)
+        if (await ResolvePendingAsync(ct) is not { State.CanEnroll: true } pending || pending.Account.TwoFactorEnabled
+            || pending.Account.AuthenticatorKey is null)
         {
             return PendingExpired();
         }
@@ -293,6 +393,23 @@ public sealed class AccesoController(
         PendingAccessCookie.Clear(Response);
         TempData[AvisoKey] = "Ha pasado demasiado tiempo o algo ha cambiado en la cuenta. Vuelve a escribir tu usuario y tu contraseña.";
         return RedirectToAction(nameof(Entrar));
+    }
+
+    /// <summary>La invitación de la cookie, si sigue viva en la base.</summary>
+    private async Task<LiveAccessInvitation?> ResolveInvitationAsync(CancellationToken ct) =>
+        invitationCookie.Read(Request) is { } tokenHash ? await invitations.FindLiveAsync(tokenHash, Now, ct) : null;
+
+    private async Task<UsarInvitacionViewModel> InvitationModelAsync(LiveAccessInvitation invitation)
+    {
+        var account = await users.FindByIdAsync(invitation.AccountId.Value.ToString("D"));
+        return new UsarInvitacionViewModel(account?.UserName ?? string.Empty, invitation.Kind == AccessInvitationKind.Recuperacion);
+    }
+
+    private ViewResult InvalidInvitation()
+    {
+        InvitationCookie.Clear(Response);
+        Response.StatusCode = StatusCodes.Status410Gone;
+        return View("InvitacionNoValida");
     }
 
     private static string CleanCode(string? code) => (code ?? string.Empty).Replace(" ", string.Empty).Replace("-", string.Empty);

@@ -1,0 +1,47 @@
+@model ResidApp.Web.Models.UsarInvitacionViewModel
+@{
+    ViewData["Title"] = Model.Recuperacion ? "Recuperar el acceso" : "Elige tu contraseña";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-7 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-3">@ViewData["Title"]</h1>
+                <p>Cuenta: <code class="text-break">@Model.Usuario</code>. Con este usuario entrarás a partir de ahora.</p>
+                @if (Model.Recuperacion)
+                {
+                    <p>La contraseña nueva sustituye a la anterior y se cierran las sesiones que tuvieras abiertas. Si trabajas en el centro,
+                        después prepararás de nuevo el código del móvil.</p>
+                }
+                else
+                {
+                    <p>Elige una contraseña que no uses en otro sitio. Si trabajas en el centro, después prepararás el código del móvil.</p>
+                }
+
+                <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+
+                <form asp-controller="Acceso" asp-action="Invitacion" method="post">
+                    @* El usuario, oculto, para que el navegador o el gestor de contraseñas sepa de qué cuenta es la contraseña. *@
+                    <input type="text" name="usuario" value="@Model.Usuario" autocomplete="username" hidden />
+                    <div class="mb-3">
+                        <label for="contrasena" class="form-label">Contraseña nueva</label>
+                        <input type="password" class="form-control form-control-lg" id="contrasena" name="contrasena" autocomplete="new-password"
+                               minlength="@ResidApp.Web.Security.AccesoOptions.LongitudMinimaContrasena" aria-describedby="contrasena-ayuda" required autofocus />
+                        <div id="contrasena-ayuda" class="form-text">
+                            Al menos @ResidApp.Web.Security.AccesoOptions.LongitudMinimaContrasena caracteres. Una frase de varias palabras es fácil
+                            de recordar y difícil de adivinar.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmacion" class="form-label">Repite la contraseña</label>
+                        <input type="password" class="form-control form-control-lg" id="confirmacion" name="confirmacion" autocomplete="new-password" required />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Guardar y continuar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -43,7 +43,7 @@
                 {
                     <p class="small mt-3 mb-0">
                         Sesión de <code>@Model.CurrentSubject</code>:
-                        <a asp-controller="DevAuth" asp-action="Credenciales">poner una contraseña a esta cuenta</a> para probar el inicio de sesión real.
+                        <a asp-controller="DevAuth" asp-action="Credenciales">crear una invitación para esta cuenta</a> y probar con ella el inicio de sesión real.
                     </p>
                     <form asp-controller="Acceso" asp-action="Salir" method="post" class="mt-3">
                         <button type="submit" class="btn btn-outline-secondary btn-sm">Salir (@Model.CurrentSubject)</button>

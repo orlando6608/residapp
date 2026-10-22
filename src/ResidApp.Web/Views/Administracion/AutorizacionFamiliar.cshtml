@@ -67,6 +67,11 @@
     </div>
 </section>
 
+@if (ViewData["EstadoInvitacion"] is EstadoInvitacionViewModel estadoInvitacion)
+{
+    <partial name="_EstadoInvitacion" model="estadoInvitacion" />
+}
+
 @if (Model.Allowed.Count == 0)
 {
     <p class="text-muted">La autorización está revocada: no admite más cambios.</p>

@@ -18,7 +18,7 @@ namespace ResidApp.FunctionalTests;
 /// familiares; el paso entre la contraseña y el segundo factor no abre la aplicación; el registro de accesos; y, de I0, que guardar un
 /// formulario con la sesión terminada vuelve a la pantalla del formulario en vez de a una acción solo POST.
 /// </summary>
-public class AccesoTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixture<ResidentsFlowTests.WebAppFactory>
+public partial class AccesoTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixture<ResidentsFlowTests.WebAppFactory>
 {
     private const string Password = "contraseña de prueba larga";
 
@@ -140,37 +140,22 @@ public class AccesoTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixtu
         Assert.Equal(6, await EventsAsync(accountId, "CONTRASENA_FALLIDA"));
     }
 
+    /// <summary>ADR 0007, I2: el segundo factor solo se da de alta desde una invitación; saber la contraseña no basta.</summary>
     [Fact]
-    public async Task Personal_SinSegundoFactor_TieneQueDarloDeAlta_YRecibeDiezCodigos()
+    public async Task Personal_SinSegundoFactor_NoLoPuedeActivarAlEntrar()
     {
         var (subject, accountId) = await SeedWithPasswordAsync("ENFERMERIA");
         var client = Client();
 
-        var afterPassword = await EnterAsync(client, subject, Password, "/ProfileScope/Select");
-        var blocked = await client.GetAsync("/ProfileScope/Select");
-        var enroll = await TextAsync(await client.GetAsync("/Acceso/ActivarSegundoFactor"));
-        var key = await KeyAsync(accountId);
-        var badCode = await PostAsync(client, "/Acceso/ActivarSegundoFactor",
-            new() { ["codigo"] = Totp.Code(key, DateTimeOffset.UtcNow.AddMinutes(-10)) }, "/Acceso/ActivarSegundoFactor");
-        var goodCode = await PostAsync(client, "/Acceso/ActivarSegundoFactor", new() { ["codigo"] = Totp.Code(key) }, "/Acceso/ActivarSegundoFactor");
-        var page = await TextAsync(goodCode);
+        var afterPassword = await EnterAsync(client, subject, Password);
+        var enroll = await client.GetAsync("/Acceso/ActivarSegundoFactor");
 
-        Assert.Equal("/Acceso/ActivarSegundoFactor", afterPassword.Headers.Location!.OriginalString);
+        Assert.Equal(HttpStatusCode.OK, afterPassword.StatusCode);
+        Assert.Contains(AccesoController.NeedsInvitationMessage, await TextAsync(afterPassword));
         Assert.False(OpensSession(afterPassword));
-        Assert.True(SesionTests.RedirectsToLogin(blocked));
-        Assert.Contains("otpauth://totp/ResidApp%3A" + subject, enroll);
-        Assert.Contains("El código no es correcto", await TextAsync(badCode));
-        Assert.False(OpensSession(badCode));
-        Assert.Equal(HttpStatusCode.OK, goodCode.StatusCode);
-        Assert.True(OpensSession(goodCode));
-        Assert.Contains("no-store", goodCode.Headers.CacheControl!.ToString());
-        Assert.Contains("no se volverán a mostrar", page);
-        Assert.Contains("href=\"/ProfileScope/Select\"", page);
-        Assert.Equal(10, (await ScalarAsync<string>(
-            "SELECT codigos_recuperacion FROM dbo.credenciales WHERE cuenta_id = @accountId", new { accountId })).Split(';').Length);
-        Assert.False(SesionTests.RedirectsToLogin(await client.GetAsync("/ProfileScope/Select")));
-        Assert.Equal(1, await EventsAsync(accountId, "SEGUNDO_FACTOR_ALTA"));
-        Assert.Equal(1, await EventsAsync(accountId, "SEGUNDO_FACTOR_FALLIDO"));
+        Assert.Equal("/Acceso/Entrar", enroll.Headers.Location!.OriginalString);
+        Assert.Null(await ScalarAsync<string?>("SELECT clave_autenticador FROM dbo.credenciales WHERE cuenta_id = @accountId AND segundo_factor_activo = 1",
+            new { accountId }));
     }
 
     [Fact]
@@ -272,20 +257,20 @@ public class AccesoTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixtu
     }
 
     [Fact]
-    public async Task AccesoDeDesarrollo_PoneLaContrasena_YConEllaSeEntra()
+    public async Task AccesoDeDesarrollo_CreaUnaInvitacion_YConEllaSeEntra()
     {
         var (subject, accountId) = await SesionTests.SeedAccountAsync("ADMINISTRACION");
         var dev = await SesionTests.LoginAsync(factory, subject);
 
-        var tooShort = await PostAsync(dev, "/DevAuth/Credenciales", new() { ["contrasena"] = "corta", ["confirmacion"] = "corta" });
-        var saved = await PostAsync(dev, "/DevAuth/Credenciales", new() { ["contrasena"] = Password, ["confirmacion"] = Password });
-        var entered = await EnterAsync(Client(), subject, Password);
+        var sheet = await PostAsync(dev, "/DevAuth/Credenciales", new());
+        var client = Client();
+        var codes = await UseInvitationAsync(client, InvitationUrl(await TextAsync(sheet)), accountId);
 
-        Assert.Contains("al menos 12 caracteres", await TextAsync(tooShort));
-        Assert.Contains("Contraseña guardada", await TextAsync(saved));
-        Assert.Equal("/Acceso/ActivarSegundoFactor", entered.Headers.Location!.OriginalString);
+        Assert.Contains("no-store", sheet.Headers.CacheControl!.ToString());
+        Assert.Equal(10, codes.Count);
+        Assert.False(SesionTests.RedirectsToLogin(await client.GetAsync("/ProfileScope/Select")));
         Assert.Equal(1, await EventsAsync(accountId, "CREDENCIALES_DESARROLLO"));
-        Assert.Equal(1, await EventsAsync(accountId, "ENTRADA_DESARROLLO"));
+        Assert.Equal(1, await EventsAsync(accountId, "INVITACION_USADA"));
     }
 
     [Fact]

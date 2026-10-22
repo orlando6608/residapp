@@ -57,7 +57,7 @@ public sealed class PlataformaController(PlatformApplicationService service) : C
                 form.CodigoUnidad, form.NombreUnidad, form.IdentificadorAdministrador, form.NombreAdministrador), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = "Centro creado. Su administrador ya puede entrar con su identificador de acceso.";
+                TempData["Mensaje"] = "Centro creado. Para que su administrador pueda entrar, entra en el centro y crea su invitación de acceso.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -105,6 +105,38 @@ public sealed class PlataformaController(PlatformApplicationService service) : C
             ? (principal ? "Marcada como Administración principal." : "Ya no es Administración principal.")
             : (result.Error!.Code == ApplicationFailureCode.Conflict ? "Ese perfil ya estaba así. Revisa el centro." : result.Error.Message);
         return RedirectToAction(nameof(Centro), new { centroId });
+    }
+
+    /// <summary>ADR 0007, I2: la invitación de acceso (o de recuperación, si ya tiene contraseña) de una cuenta de Administración del
+    /// centro. La hoja con el token se enseña en la respuesta, una sola vez.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Invitacion(Guid centroId, Guid ambitoId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await service.IssueAdministratorInvitationAsync(new PlatformAdministrationCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(centroId), ambitoId), ct);
+        if (!result.Ok)
+        {
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.InvalidInput => "Esa cuenta tiene perfiles vigentes en otros centros: no se le entrega desde aquí.",
+                ApplicationFailureCode.Conflict => "La cuenta está suspendida.",
+                _ => result.Error.Message,
+            };
+            return RedirectToAction(nameof(Centro), new { centroId });
+        }
+
+        Response.Headers.CacheControl = "no-store";
+        var issued = result.Value!;
+        return View("HojaInvitacion", new HojaInvitacionViewModel(
+            issued.Details.Kind, issued.Details.Subject, issued.Details.DisplayName, issued.Details.CenterName, issued.Details.ExpiresAt,
+            Url.Action("Invitacion", "Acceso", new { id = issued.Token }, Request.Scheme)!, Url.Action(nameof(Centro), new { centroId })!));
     }
 
     [HttpPost]

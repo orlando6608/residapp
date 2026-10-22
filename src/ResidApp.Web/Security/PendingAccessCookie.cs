@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.DataProtection;
 namespace ResidApp.Web.Security;
 
 /// <summary>Quién ha superado la contraseña y le falta el segundo factor. Lleva el sello de seguridad de ese momento: si cambia (otra
-/// contraseña, otro segundo factor), el paso pendiente deja de valer.</summary>
-public sealed record PendingAccess(Guid AccountId, string SecurityStamp, string? ReturnUrl, DateTimeOffset ExpiresAt);
+/// contraseña, otro segundo factor), el paso pendiente deja de valer. CanEnroll: viene de usar una invitación, la única vía para dar de
+/// alta el segundo factor (ADR 0007, I2).</summary>
+public sealed record PendingAccess(Guid AccountId, string SecurityStamp, string? ReturnUrl, DateTimeOffset ExpiresAt, bool CanEnroll = false);
 
 /// <summary>
 /// El paso entre la contraseña y el segundo factor (ADR 0007, incremento I1): una cookie cifrada por Data Protection, de 10 minutos y
@@ -19,9 +20,10 @@ public sealed class PendingAccessCookie(IDataProtectionProvider dataProtection, 
 
     private readonly IDataProtector protector = dataProtection.CreateProtector("ResidApp.Web.Security.PendingAccess");
 
-    public void Write(HttpResponse response, Guid accountId, string securityStamp, string? returnUrl) =>
+    public void Write(HttpResponse response, Guid accountId, string securityStamp, string? returnUrl, bool canEnroll = false) =>
         response.Cookies.Append(CookieName,
-            protector.Protect(JsonSerializer.Serialize(new PendingAccess(accountId, securityStamp, returnUrl, clock.GetUtcNow() + Lifetime))),
+            protector.Protect(JsonSerializer.Serialize(
+                new PendingAccess(accountId, securityStamp, returnUrl, clock.GetUtcNow() + Lifetime, canEnroll))),
             new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Strict, Path = "/Acceso", IsEssential = true, MaxAge = Lifetime });
 
     /// <summary>El paso pendiente, o null si no hay, está manipulado o ha caducado.</summary>

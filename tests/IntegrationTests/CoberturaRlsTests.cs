@@ -19,6 +19,7 @@ public sealed class CoberturaRlsTests
         ["sesiones"] = Diseno,
         ["credenciales"] = Diseno,
         ["eventos_acceso"] = Diseno,
+        ["invitaciones_acceso"] = Diseno,
         ["ambitos_perfil"] = Diseno,
         ["scripts_aplicados"] = Diseno,
         ["sysdiagrams"] = Diseno,

@@ -423,8 +423,9 @@ Huecos de lo ya construido:
   (y liberar una plaza al dar de baja) se hace desde la ficha con «Trasladar» (script `0040`); dar de baja libera la plaza (script `0041`). Desde el 2026-10-02 Enfermería,
   Medicina y Auxiliar ven la habitación y la plaza junto a la unidad (listas, ficha y registro del residente; `ResidentLocationLabel`, sin script). Una unidad o una habitación que se inactive justo mientras llega un
   alta a ella no se bloquea (carrera muy estrecha, como la de las unidades).
-- **Usuarios:** no se vincula una cuenta que ya existe en otro centro (llegará con las invitaciones del proveedor de identidad);
-  no se restringe por residente a Enfermería, Medicina o Dirección; no hay «Mi cuenta» (ADM-30: credenciales, segundo factor y sesión dependen del proveedor de identidad; el cambio de perfil ya es «Cambiar ámbito»). Fuera de estas pantallas, el
+- **Usuarios:** desde el 2026-10-22 (ADR 0007, I2) la ficha de la cuenta y la autorización del familiar entregan la invitación de acceso
+  o de recuperación (hoja con QR, 72 horas, un solo uso); no se vincula una cuenta que ya existe en otro centro (ADR 0007, I2b);
+  no se restringe por residente a Enfermería, Medicina o Dirección; no hay «Mi cuenta» (ADM-30: contraseña, segundo factor y sesiones propias, ADR 0007 I3; el cambio de perfil ya es «Cambiar ámbito»). Fuera de estas pantallas, el
   nombre de la cuenta solo se usa en la firma del PDF de derivación (2026-10-01). Los permisos no se eligen en el alta ni
   en «Conceder perfil», sino después en la pantalla del perfil.
 - **Familiares:** desde el 2026-10-02 un familiar se vincula a un segundo residente (`VincularFamiliar`, sin script; auditoría `FAMILY_MEMBER_LINK`;

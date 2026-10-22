@@ -13,6 +13,9 @@ public enum AccessEventType
     [Code("SEGUNDO_FACTOR_ALTA")] SegundoFactorAlta,
     [Code("CODIGO_RECUPERACION_USADO")] CodigoRecuperacionUsado,
     [Code("CREDENCIALES_DESARROLLO")] CredencialesDesarrollo,
+    [Code("INVITACION_USADA")] InvitacionUsada,
+    [Code("RECUPERACION_USADA")] RecuperacionUsada,
+    [Code("INVITACION_NO_VALIDA")] InvitacionNoValida,
 }
 
 /// <summary>Registro de seguridad de la autenticación (ADR 0007, incremento I1), separado de la auditoría clínica. Sin cuenta cuando el

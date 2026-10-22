@@ -24,8 +24,8 @@
         <li><strong>Plataforma:</strong> alta de centros nuevos y Administración principal de cada centro.</li>
     </ul>
     Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, el personal, además
-    con un código de su móvil. Las contraseñas todavía no se entregan con una invitación: mientras tanto, en el entorno de pruebas se
-    entra con el acceso de desarrollo (ver "Cuentas de prueba").
+    con un código de su móvil. La contraseña la elige cada persona con la <strong>invitación</strong> que le entrega Administración. En
+    el entorno de pruebas sigue además el acceso de desarrollo (ver "Cuentas de prueba").
     <p class="mt-2 mb-0">
         <strong>Al guardar o enviar:</strong> el botón muestra un círculo giratorio mientras el servidor responde. Una vez enviado,
         no hace falta volver a pulsarlo; un segundo toque se ignora.
@@ -95,14 +95,26 @@
         acceso» explica que la da la Administración de tu centro, que es también a quien hay que acudir si no puedes entrar.
     </p>
     <p>
+        <strong>La primera vez entras con una invitación.</strong> Administración te entrega una hoja (impresa o en su pantalla) con un
+        código QR y una dirección. Escanéala con la cámara del móvil o escribe la dirección, y elige tu contraseña (al menos 12
+        caracteres). La invitación vale <strong>72 horas</strong> y una sola vez; si se pierde, pide otra: la nueva anula la anterior.
+        Si la invitación ya no vale (usada, anulada o caducada), la app te lo dice y te manda a pedir otra.
+    </p>
+    <p>
         El <strong>personal</strong> (todos los perfiles salvo el de familiar) necesita además un <strong>segundo factor</strong>: un
         código de 6 cifras que cambia cada 30 segundos en una aplicación de autenticación del móvil (Microsoft Authenticator, Google
-        Authenticator u otra). La primera vez, tras la contraseña, la app te pide prepararlo: escaneas el código QR (o escribes la clave
-        a mano), escribes el código que te muestra la aplicación y entras. En ese momento la app te enseña <strong>10 códigos de
-        recuperación</strong>, una sola vez: apúntalos en papel. Si un día no tienes el móvil, «Usa un código de recuperación» te deja
-        entrar con uno de ellos; cada uno sirve una vez. Los códigos de 6 cifras equivocados también cuentan para el bloqueo. Si pasan
-        más de 10 minutos entre la contraseña y el código, hay que volver a escribir la contraseña. Los familiares entran, por ahora,
-        solo con la contraseña.
+        Authenticator u otra). Se prepara justo después de elegir la contraseña con la invitación, y <strong>solo ahí</strong>: escaneas
+        el código QR (o escribes la clave a mano), escribes el código que te muestra la aplicación y entras. En ese momento la app te enseña
+        <strong>10 códigos de recuperación</strong>, una sola vez: apúntalos en papel. Si dejas el código a medias, al entrar con la
+        contraseña la app te pedirá otra invitación. A partir de ahí, cada vez que entres te pide el código del móvil; si un día no lo
+        tienes, «Usa un código de recuperación» te deja entrar con uno de ellos, y cada uno sirve una vez. Los códigos de 6 cifras
+        equivocados también cuentan para el bloqueo. Si pasan más de 10 minutos entre la contraseña y el código, hay que volver a
+        escribir la contraseña. Los familiares entran, por ahora, solo con la contraseña.
+    </p>
+    <p>
+        <strong>Si olvidas la contraseña o pierdes el móvil</strong>, pide a la Administración de tu centro una <strong>invitación de
+        recuperación</strong>. Al usarla eliges otra contraseña, preparas de nuevo el código del móvil (el anterior deja de valer) y se
+        cierran las sesiones que tuvieras abiertas en cualquier dispositivo.
     </p>
     <p>
         Al entrar en la app, si tu cuenta puede actuar con un único perfil (por ejemplo, Enfermería) en un
@@ -168,8 +180,8 @@
 <section id="cuentas-prueba" class="mb-4">
     <h2 class="h5">Cuentas de prueba y cómo cambiar de usuario</h2>
     <p>
-        Mientras las contraseñas no lleguen con una invitación, en el entorno de pruebas se entra con el <strong>acceso de
-        desarrollo</strong>, sin contraseña: en <a asp-controller="DevAuth" asp-action="Login">/DevAuth/Login</a> (enlazado desde
+        En el entorno de pruebas, además de las invitaciones, sigue el <strong>acceso de desarrollo</strong>, sin contraseña, hasta que
+        se use la app con datos reales: en <a asp-controller="DevAuth" asp-action="Login">/DevAuth/Login</a> (enlazado desde
         «Iniciar sesión») escribes el nombre de una cuenta de prueba (por ejemplo <code>almendros-enfermeria</code>) y entras con ella. En el entorno de
         pruebas publicado hace falta además la <strong>clave de desarrollo</strong>, que Orlando da en privado. Para <strong>cambiar de
         usuario</strong> no hace falta cerrar sesión antes: pulsa «Entrar con otra cuenta» y escribe el nombre de otra — se cierra la
@@ -178,11 +190,11 @@
         tuvieras.
     </p>
     <p>
-        Para probar el inicio de sesión de verdad, entra con el acceso de desarrollo y pulsa <strong>«poner una contraseña a esta
-        cuenta»</strong> (pantalla «Credenciales de prueba»): pide al menos 12 caracteres, desbloquea la cuenta y queda anotado. Después,
-        sal y entra en «Iniciar sesión» con esa contraseña. Desde la misma pantalla, <strong>«Quitar el segundo factor»</strong> obliga a
-        prepararlo de nuevo, con una clave nueva, en el siguiente inicio de sesión. Este acceso desaparecerá cuando las cuentas reciban su
-        contraseña con una invitación.
+        Para probar el inicio de sesión de verdad con una cuenta de prueba (por ejemplo las de Los Almendros), entra con el acceso de
+        desarrollo y pulsa <strong>«crear una invitación para esta cuenta»</strong> (pantalla «Credenciales de prueba»): sale la misma
+        hoja que entrega Administración, de acceso si la cuenta aún no tiene contraseña o de recuperación si ya la tiene, y queda anotado.
+        Ábrela (mejor en otra ventana privada), elige la contraseña y, si es del personal, prepara el código del móvil. Después ya puedes
+        entrar en «Iniciar sesión». Este acceso desaparecerá cuando la app se use con datos reales.
     </p>
 
     <h3 class="h6 mt-4">Residencia Los Almendros</h3>
@@ -525,8 +537,14 @@
         <strong>Alta de usuario</strong> pide el identificador de acceso (el usuario con el que la persona entra en «Iniciar
         sesión»), el nombre, un perfil (Auxiliar, Enfermería, Medicina, Administración o
         Dirección Clínica) y al menos una de las unidades de tu ámbito. Si el identificador ya existe, te lo indica. La cuenta
-        nace activa, pero todavía sin contraseña: hasta que llegue la invitación, solo entra con el acceso de desarrollo del entorno de
-        pruebas.
+        nace activa, pero sin contraseña: para que pueda entrar, en su ficha pulsa <strong>«Crear invitación de acceso»</strong> y
+        entrégale la hoja que sale (imprímela con «Imprimir» o enséñale la pantalla para que escanee el QR). La hoja solo se ve en ese
+        momento; si se pierde, crea otra, que anula la anterior. La ficha dice hasta cuándo vale la invitación pendiente, y «Anular la
+        invitación» la deja sin valor. Cuando la cuenta ya tiene contraseña, el botón pasa a ser <strong>«Crear invitación de
+        recuperación»</strong>, para quien la ha olvidado o ha perdido el móvil: al usarla elige otra contraseña, prepara de nuevo el
+        código del móvil y se le cierran todas las sesiones abiertas. Hasta que la use, su contraseña de siempre sigue valiendo; si temes
+        que alguien la conozca, suspende la cuenta. No se entrega invitación a tu propia cuenta (otra Administración, o Plataforma, puede
+        hacerlo) ni a una cuenta con perfiles vigentes en otros centros. Cada invitación entregada o anulada queda en la auditoría.
     </p>
     <p>
         En la <strong>ficha de la cuenta</strong> puedes cambiar el nombre, <strong>suspender</strong> la cuenta (no podrá
@@ -714,8 +732,9 @@
         <strong>Nuevo centro</strong>. El formulario pide el centro (código y nombre), su primera unidad (código y nombre) y su primer
         administrador (identificador de acceso y nombre). Los códigos llevan de 2 a 64 caracteres: letras sin acentos, dígitos, «-» o
         «_». Se crea todo a la vez o nada: el centro, la unidad y la cuenta del administrador, que nace activa con el perfil
-        Administración y la unidad concedida, y que desde ese momento puede entrar y gestionar su estructura, sus usuarios y sus
-        residentes.
+        Administración y la unidad concedida. Para que pueda entrar, abre el centro (<strong>Administraciones y unidades</strong>) y pulsa
+        <strong>«Crear invitación de acceso o de recuperación»</strong> en su Administración: sale la hoja que hay que entregarle. Lo mismo
+        sirve para recuperar el acceso de una Administración que no tiene otra en su centro que se lo dé.
     </p>
     <p>
         Si el código del centro ya existe o el identificador de acceso ya es de otra cuenta, te lo indica y no crea nada. Este perfil no
@@ -1478,13 +1497,15 @@
 <section id="portal-familiar" class="mb-4">
     <h2 class="h5">Portal Familiar</h2>
     <p>
-        El Portal Familiar es la parte de la aplicación para las familias. Todavía no tiene credenciales reales (en desarrollo se entra
-        con el usuario que escribe Administración); sirve para ver cómo será. Su dirección es <code>/Familia</code>.
+        El Portal Familiar es la parte de la aplicación para las familias. Su dirección es <code>/Familia</code>; se entra con el usuario
+        que escribe Administración y la contraseña que la persona elige con su invitación.
     </p>
     <p>
         <strong>Cómo se da el acceso (Administración).</strong> En la ficha del residente, junto a su familiar, pulsa
         <strong>Autorización</strong>. Debajo del estado aparece <strong>Acceso al Portal Familiar</strong>: escribe el usuario con el
-        que entrará la persona y pulsa <strong>Dar acceso al portal</strong>. Eso crea su cuenta, pero no le da acceso a nada todavía:
+        que entrará la persona y pulsa <strong>Dar acceso al portal</strong>. Eso crea su cuenta, sin contraseña: debajo aparece
+        <strong>«Crear invitación de acceso»</strong>, que da la hoja con la que elegirá su contraseña (como la del personal, pero sin
+        código del móvil), y después la de recuperación si la olvida. La cuenta no le da acceso a nada todavía:
         hay que <strong>abrir</strong> y <strong>activar</strong> la autorización. Mientras la autorización no esté Activa y sin caducar, la
         persona no ve a ningún residente. Suspender o revocar la autorización le corta el acceso en la petición siguiente. Las cuentas de
         familias no aparecen en «Usuarios».
@@ -1516,7 +1537,7 @@
     <p class="mb-0">
         <strong>Qué no ve nunca.</strong> Observaciones, valoraciones, constantes, basal, indicaciones, derivaciones, historial, nombres de
         profesionales ni datos de otros familiares. Cada vez que un familiar abre las novedades de un residente o un comunicado queda registrado
-        quién y cuándo (sin guardar el contenido). Queda pendiente la entrada con credenciales reales.
+        quién y cuándo (sin guardar el contenido). Por ahora el familiar entra solo con su contraseña: su segundo factor está por decidir.
     </p>
 </section>
 
@@ -1525,9 +1546,8 @@
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
         <li>Portal Familiar: el resumen periódico por residente.</li>
-        <li>Acceso: la invitación de un solo uso con la que Administración entrega la cuenta y la contraseña, la recuperación por
-            Administración, «Mi cuenta» (cambiar la contraseña, el segundo factor y ver las sesiones abiertas) y las llaves de acceso
-            (passkeys).</li>
+        <li>Acceso: «Mi cuenta» (cambiar la contraseña, el segundo factor y ver las sesiones abiertas), las llaves de acceso (passkeys) y
+            usar en otro centro una cuenta que ya existe.</li>
         <li>Más gestión administrativa: organigrama y cargos (aplazado) y un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>

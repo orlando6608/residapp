@@ -68,7 +68,8 @@ Lo que fija la aplicación:
 | --- | --- | --- |
 | **I0** | **Capa común, independiente del proveedor**: sesión con cookie cifrada por Data Protection y validada contra `dbo.sesiones` (script `0061`) en cada petición, con inactividad (30 min) y caducidad absoluta (12 h) que fallan cerradas; cierre de sesión que la invalida en el servidor; política global que exige sesión salvo en las pantallas públicas; acceso de desarrollo solo si se habilita y, fuera de Development, con una clave que no está en el repositorio; límite de intentos; HTTPS obligatorio, HSTS y cookies `Secure`. | Hecho el 2026-10-21 |
 | **I1** | **ASP.NET Core Identity** (script `0062`): `/Acceso/Entrar` con contraseña (12 caracteres o más, sin reglas de composición); TOTP obligatorio para el personal y Plataforma, con alta en el primer acceso (QR) y 10 códigos de recuperación de un solo uso guardados como resúmenes SHA-256; familiares solo con contraseña hasta que CJ responda la 3.2; bloqueo tras 5 fallos (contraseña o código) durante 15 minutos, contados en SQL; mismo mensaje para todo fallo; límite de intentos por IP; registro de accesos `dbo.eventos_acceso`, inmutable y separado de la auditoría clínica, más avisos en el registro técnico. El acceso de desarrollo sigue (con clave en Azure dev) hasta I2 y pone la contraseña de prueba (`DevAuth/Credenciales`). | Hecho el 2026-10-22 |
-| I2 | Alta por invitación de un solo uso (enlace o QR que entrega Administración), recuperación por Administración, y credenciales de las cuentas de demostración (`almendros-*`). Después, vincular cuentas que ya existen en otro centro. | Pendiente |
+| **I2** | **Invitaciones de un solo uso** (script `0063`): Administración entrega desde la ficha de la cuenta o la autorización del familiar una hoja con QR y enlace (`/Acceso/Invitacion/{token}`), y Plataforma, la de una cuenta de Administración; solo se guarda el resumen SHA-256 del token, vale 72 horas, una nueva anula la anterior y se usa una vez. Con ella la persona elige su contraseña y, si es del personal, activa el TOTP, **que ya solo se da de alta desde una invitación**. Si la cuenta ya tenía contraseña es de **recuperación**: sustituye contraseña y segundo factor y cierra todas sus sesiones (motivo `RECUPERACION`). Las mismas reglas que suspender: no la propia cuenta ni cuentas con perfiles en otros centros. Auditoría administrativa y registro de accesos. Las cuentas de demostración reciben su invitación desde la app (sin secretos en los seeds); `DevAuth/Credenciales` crea una para la cuenta de la sesión. El acceso de desarrollo se mantiene en Azure dev hasta los datos reales (decisión de Orlando). | Hecho el 2026-10-22 |
+| I2b | Vincular cuentas que ya existen en otro centro (con verificación explícita, ADR legado). | Pendiente |
 | I3 | «Mi cuenta» (ADM-30 y FAM-16): contraseña, segundo factor y sesiones abiertas propias. | Pendiente |
 | I4 | Passkeys; obligatorias para Plataforma. | Pendiente |
 | I5 | Pulsera NFC con PIN (ADR 0009) como entrada rápida en tablet compartida. | Pendiente |
@@ -78,16 +79,20 @@ Criterios de aceptación: los casos AUTH-SPIKE-T02 a T06 del spike legado contra
 deniega en la petición siguiente; la renovación no amplía la caducidad absoluta; la inactividad y la caducidad fallan cerradas; y una cuenta
 suspendida se deniega aunque la sesión sea válida.
 
-Desde I1 los cubren además `tests/FunctionalTests/AccesoTests.cs` y `tests/IntegrationTests/SqlCredentialStoreTests.cs`.
+Desde I1 los cubren además `tests/FunctionalTests/AccesoTests.cs` y `tests/IntegrationTests/SqlCredentialStoreTests.cs`; desde I2,
+`tests/FunctionalTests/AccesoTests.Invitaciones.cs` y `tests/IntegrationTests/InvitacionesAccesoTests.cs`.
 
-**Lo que I1 deja conscientemente para después (revisar con el DPO o en I2):**
+**Lo que I1 e I2 dejan conscientemente para después (revisar con el DPO):**
 
 - La clave TOTP se guarda en claro en `dbo.credenciales`, como en el almacén por defecto de Identity: quien lea la base puede calcular
   códigos. Cifrarla con Data Protection obligaría a no perder nunca sus claves.
-- Mientras no haya invitaciones, quien conozca la contraseña de una cuenta del personal sin TOTP puede dar de alta su propio segundo
-  factor en el primer acceso. Con I2, el alta del segundo factor irá dentro de la invitación.
+- ~~Quien conozca la contraseña de una cuenta del personal sin TOTP puede dar de alta su propio segundo factor.~~ Cerrado en I2: el
+  segundo factor solo se da de alta desde una invitación.
+- Quien tenga la hoja de una invitación sin usar entra en esa cuenta: es el secreto que se entrega en mano, por eso vale 72 horas, una
+  vez, y se puede anular. Una recuperación no cambia nada hasta que se usa (si hay sospecha, se suspende la cuenta).
 - Un mismo código TOTP vale durante su ventana (unos 90 segundos a cada lado); Identity no impide reutilizarlo.
 - `eventos_acceso` guarda la IP del intento: el plazo de conservación lo decide el DPO.
+- Las cuentas de Plataforma no se recuperan desde la app: por SQL, como su alta (ADR 0006).
 
 ## Puertas abiertas
 
@@ -95,7 +100,7 @@ Desde I1 los cubren además `tests/FunctionalTests/AccesoTests.cs` y `tests/Inte
 2. **Segundo factor por población** (lo propone Seguridad y lo valida el DPO): TOTP o passkey para el personal; para familiares, a decidir
    con CJ (pregunta 3.2 de `docs/pendientes-cj/portal-familiar-confirmaciones-cj.html`); passkey obligatoria para Plataforma.
 3. **Tablets compartidas:** tiempo de inactividad definitivo y entrada rápida (I5).
-4. **Contradicciones que resolver antes de I2:** el correo de los familiares es opcional en el alta; FAM-10 dice «sin correo ni SMS en el
+4. **Contradicciones (I2 no las necesita: la invitación se entrega en mano, sin correo):** el correo de los familiares es opcional en el alta; FAM-10 dice «sin correo ni SMS en el
    piloto». La auditoría de autenticación separada de la clínica que pide el ADR legado existe desde I1 (`dbo.eventos_acceso`;
    antes solo había entradas y salidas en `dbo.sesiones`).
 

@@ -75,6 +75,12 @@
     </div>
 </section>
 
+@if (canChange && !Model.HasActiveProfilesElsewhere && account.Status == AccountStatus.Active
+     && ViewData["EstadoInvitacion"] is EstadoInvitacionViewModel estadoInvitacion)
+{
+    <partial name="_EstadoInvitacion" model="estadoInvitacion" />
+}
+
 <section class="mb-4">
     <h2 class="h5">Perfiles en este centro</h2>
     <p class="text-muted">Cada perfil vale solo en sus unidades. Los revocados se conservan como historial.</p>

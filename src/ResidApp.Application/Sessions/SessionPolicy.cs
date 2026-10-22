@@ -10,6 +10,8 @@ public enum SessionCloseReason
     [Code("INACTIVIDAD")] Inactividad,
     [Code("CADUCIDAD")] Caducidad,
     [Code("CAMBIO_IDENTIDAD")] CambioIdentidad,
+    /// <summary>Se usó una invitación de recuperación de la cuenta (script 0063): se cierran todas sus sesiones.</summary>
+    [Code("RECUPERACION")] Recuperacion,
 }
 
 /// <summary>Resultado de comprobar una sesión en una petición.</summary>
