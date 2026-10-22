@@ -13,9 +13,26 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **ADR 0007, incremento I2: invitaciones de un solo uso y recuperación por Administración (2026-10-22, rama `adr0007-i2-invitaciones`;
-  script `0063`, el siguiente libre es `0064`; suite 410 unitarios, 490 de integración y 260 funcionales en verde, proyecto a proyecto; sin
-  commit todavía).**
+- **ADR 0007, incremento I2: invitaciones de un solo uso y recuperación por Administración (2026-10-22, PR #51 mergeado en `main` como
+  `d2195ec`; script `0063`, el siguiente libre es `0064`; suite 410 unitarios, 490 de integración y 260 funcionales en verde, proyecto a
+  proyecto; CI del PR y CI/CD de `main` en verde, con el `0063` aplicado en Azure SQL).**
+  - **Comprobado en Azure dev tras el despliegue** (Chrome sin interfaz, clave de desarrollo leída del ajuste de la Web App): la
+    Administración de Los Almendros da de alta «prueba-invitacion-20261022-f20c» (ficticia, Enfermería) y le crea la invitación de acceso
+    (la hoja da un enlace `https://app-residapp-dev…`); la persona la usa (contraseña, TOTP, 10 códigos) y entra; el mismo enlace da 410;
+    una invitación de recuperación cambia la clave del móvil y cierra la sesión que tenía abierta; la contraseña incorrecta da el mensaje
+    neutro; anular una invitación pendiente y suspender la cuenta funcionan. **Queda en Azure:** esa cuenta, suspendida, con una contraseña
+    que nadie conoce, y sus filas en `invitaciones_acceso`, `eventos_acceso` y la auditoría. No se tocó Residente Integrado Uno ni se creó
+    ninguna invitación para las cuentas `almendros-*` existentes (esas siguen entrando por el acceso de desarrollo).
+  - **Hallazgo, sin tocar:** el límite de intentos de `/Acceso` es de 10 por minuto **por dirección IP y para todos los usuarios a la vez**
+    (`Acceso:IntentosPorMinuto`, la misma política en `Entrar`, `SegundoFactor`, `CodigoRecuperacion`, `ActivarSegundoFactor` e
+    `Invitacion`). Usar una invitación gasta 4 y entrar con TOTP, 2: en la prueba de Azure dio un 429 al undécimo intento. Con el personal
+    de una residencia detrás de una sola IP pública (cambio de turno, varias tabletas), 5 personas entrando en el mismo minuto bastarían
+    para bloquear a las demás. Antes de datos reales conviene subir el límite o repartirlo por IP y usuario.
+  - **CodeQL del PR #51 (4 alertas nuevas, abiertas a propósito por decisión de Orlando):** 130 (cookie `residapp_invitacion` sin `Secure`
+    explícito: la política de cookies lo pone fuera de Development, como en la 129) y 131 a 133 («acción sin comprobación de autorización»
+    en `Invitacion`, `AnularInvitacion` y `Usuario`: todas exigen sesión por la política global y el servicio comprueba el ámbito de
+    Administración, igual que las 9 de Importar/Exportar). Si se quiere apagarlas, la opción es `[Authorize]` en `AdministracionController` y
+    `PlataformaController` (no cambia el comportamiento) o descartarlas en GitHub como falsos positivos.
   - **Decisiones de Orlando:** la invitación vale 72 h y una nueva anula la anterior; el TOTP del personal **solo** se da de alta desde una
     invitación (cierra el hueco de I1); el acceso de desarrollo se mantiene en Azure dev hasta los datos reales; vincular cuentas de otro
     centro queda para I2b. **Supuestos míos:** emite Administración para cuentas con perfiles solo en su centro (personal o familiar) y
@@ -1383,11 +1400,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **I2 del ADR 0007 está hecho en la rama `adr0007-i2-invitaciones`** (ver «Dónde estamos»): falta commit, PR (lleva el script `0063`),
-   CI en verde, merge con confirmación de Orlando y comprobarlo en Azure dev (emitir una invitación para una cuenta de prueba desde
-   Administración o `DevAuth/Credenciales` y usarla, sin tocar Residente Integrado Uno). Después, Orlando elige entre **I3 («Mi cuenta»)**,
-   **I2b (vincular cuentas de otro centro)** y el **dictado por voz del ADR 0009**; antes de datos reales, retirar el acceso de desarrollo.
-   Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
+0. **I2 del ADR 0007 está cerrado**, en `main` y comprobado en Azure dev (ver «Dónde estamos»). Orlando elige entre **I3 («Mi cuenta»)**,
+   **I2b (vincular cuentas de otro centro)** y el **dictado por voz del ADR 0009**; antes de datos reales, retirar el acceso de desarrollo y
+   revisar el límite de intentos por IP (ver el hallazgo de I2). Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
    fecha prevista, prueba 2.4 de «Conducta médica»).
    Para entrar en Azure dev hace falta la clave de desarrollo: está solo en el ajuste `DevAuth__Clave` de la Web App
    (`az webapp config appsettings list -g rg-residapp-dev -n app-residapp-dev --query "[?name=='DevAuth__Clave'].value" -o tsv`); no la copies a
