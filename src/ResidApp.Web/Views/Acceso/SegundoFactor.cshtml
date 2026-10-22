@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Código de verificación";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 text-center mb-3">Código de verificación</h1>
+                <p>Abre la aplicación de autenticación de tu móvil y escribe el código de 6 cifras que muestra para <strong>ResidApp</strong>.</p>
+
+                <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+
+                <form asp-controller="Acceso" asp-action="SegundoFactor" method="post">
+                    <div class="mb-3">
+                        <label for="codigo" class="form-label">Código</label>
+                        <input type="text" class="form-control form-control-lg" id="codigo" name="codigo" inputmode="numeric" pattern="[0-9 ]*"
+                               maxlength="7" autocomplete="one-time-code" autofocus required />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Comprobar</button>
+                    </div>
+                </form>
+
+                <p class="text-center small mt-3 mb-0">
+                    ¿No tienes el móvil? <a asp-controller="Acceso" asp-action="CodigoRecuperacion">Usa un código de recuperación</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,34 @@
+@{
+    ViewData["Title"] = "Código de recuperación";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 text-center mb-3">Código de recuperación</h1>
+                <p>
+                    Escribe uno de los códigos de recuperación que guardaste al dar de alta el segundo factor. Cada código sirve una sola vez.
+                    Si ya no te quedan, pide ayuda a la Administración de tu centro.
+                </p>
+
+                <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+
+                <form asp-controller="Acceso" asp-action="CodigoRecuperacion" method="post">
+                    <div class="mb-3">
+                        <label for="codigo" class="form-label">Código de recuperación</label>
+                        <input type="text" class="form-control form-control-lg" id="codigo" name="codigo" autocomplete="off" autocapitalize="characters"
+                               spellcheck="false" autofocus required />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Comprobar</button>
+                    </div>
+                </form>
+
+                <p class="text-center small mt-3 mb-0">
+                    <a asp-controller="Acceso" asp-action="SegundoFactor">Volver al código de la aplicación</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

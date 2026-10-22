@@ -36,8 +36,8 @@
                 {
                     <a asp-controller="ProfileScope" asp-action="Select" asp-route-returnUrl="@Model.ReturnUrl" class="btn btn-primary">Reintentar</a>
                 }
-                <a asp-controller="DevAuth" asp-action="Login" class="btn @(ViewData.ModelState.IsValid ? "btn-primary" : "btn-outline-secondary")">Entrar con otra cuenta</a>
-                <form asp-controller="DevAuth" asp-action="Logout" method="post">
+                <a asp-controller="Acceso" asp-action="Entrar" class="btn @(ViewData.ModelState.IsValid ? "btn-primary" : "btn-outline-secondary")">Entrar con otra cuenta</a>
+                <form asp-controller="Acceso" asp-action="Salir" method="post">
                     <button type="submit" class="btn btn-outline-secondary">Salir</button>
                 </form>
             </div>

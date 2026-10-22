@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -10,6 +11,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Application.Sessions;
 using ResidApp.Application.UseCases;
 using ResidApp.Infrastructure.Authorization;
+using ResidApp.Infrastructure.Identity;
 using ResidApp.Infrastructure.Intercambio;
 using ResidApp.Infrastructure.Pdf;
 using ResidApp.Infrastructure.Persistence;
@@ -89,7 +91,7 @@ builder.Services.AddScoped<CorrectMedicalAssessment>();
 builder.Services.AddScoped<RectifyAssessment>();
 builder.Services.AddSingleton<IReferralReportPdfRenderer, ReferralReportPdfRenderer>();
 // ADR 0007, incremento I0: sesión con cookie cifrada por Data Protection y validada contra dbo.sesiones en cada petición
-// (SessionCookieEvents). Por ahora solo la abre el acceso de desarrollo (DevAuthOptions); después la abrirá el proveedor de identidad.
+// (SessionCookieEvents). La abren el inicio de sesión con contraseña (AccesoController) y, si se habilita, el acceso de desarrollo.
 var sessionPolicy = new SessionPolicy(
     TimeSpan.FromMinutes(builder.Configuration.GetValue<int?>("Sesion:InactividadMinutos")
         ?? throw new InvalidOperationException("Falta Sesion:InactividadMinutos en appsettings.json.")),
@@ -100,7 +102,30 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ISessionStore, SqlSessionStore>();
 builder.Services.AddScoped<SessionCookieEvents>();
 builder.Services.AddScoped<ISessionIdentityProvider, CookieSessionIdentityProvider>();
+builder.Services.AddScoped<SessionSignIn>();
+builder.Services.AddScoped<IAccessEventLog, SqlAccessEventLog>();
+builder.Services.AddSingleton<PendingAccessCookie>();
 builder.Services.Configure<DevAuthOptions>(builder.Configuration.GetSection(DevAuthOptions.Section));
+builder.Services.Configure<AccesoOptions>(builder.Configuration.GetSection(AccesoOptions.Section));
+// ADR 0007, incremento I1: ASP.NET Core Identity solo para las credenciales (contraseña, bloqueo, TOTP y códigos de recuperación) sobre
+// dbo.credenciales; el usuario es la cuenta y su nombre, sujeto_externo. No se usa SignInManager ni su cookie: la sesión es la de I0.
+builder.Services.AddIdentityCore<CredentialAccount>(options =>
+    {
+        options.Password.RequiredLength = AccesoOptions.LongitudMinimaContrasena;
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredUniqueChars = 1;
+        options.Lockout.MaxFailedAccessAttempts = AccesoOptions.IntentosAntesDeBloquear;
+        options.Lockout.DefaultLockoutTimeSpan = AccesoOptions.DuracionBloqueo;
+        options.Lockout.AllowedForNewUsers = true;
+        // sujeto_externo lo valida Administración al crear la cuenta (0023); aquí no se restringe.
+        options.User.AllowedUserNameCharacters = string.Empty;
+    })
+    .AddUserStore<SqlCredentialStore>()
+    .AddTokenProvider<AuthenticatorTokenProvider<CredentialAccount>>(TokenOptions.DefaultAuthenticatorProvider);
+builder.Services.AddScoped<ILookupNormalizer, SubjectLookupNormalizer>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -109,12 +134,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.ExpireTimeSpan = sessionPolicy.IdleTimeout;
         options.SlidingExpiration = true;
+        options.LoginPath = "/Acceso/Entrar";
         options.EventsType = typeof(SessionCookieEvents);
     });
-// Sin acceso de desarrollo no hay ningún inicio de sesión todavía: quien no tiene sesión vuelve al Inicio.
-builder.Services.AddOptions<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme)
-    .Configure<IOptions<DevAuthOptions>>((cookie, devAuth) => cookie.LoginPath = devAuth.Value.Habilitado ? "/DevAuth/Login" : "/");
-// Toda pantalla exige sesión salvo las marcadas con [AllowAnonymous] (Inicio, Manual, acceso de desarrollo, clave de CJ) y los estáticos.
+// Toda pantalla exige sesión salvo las marcadas con [AllowAnonymous] (Inicio, Manual, inicio de sesión, acceso de desarrollo, clave de CJ)
+// y los estáticos.
 builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 builder.Services.AddRateLimiter(options =>
@@ -125,6 +149,13 @@ builder.Services.AddRateLimiter(options =>
         _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = context.RequestServices.GetRequiredService<IOptions<DevAuthOptions>>().Value.IntentosPorMinuto,
+            Window = TimeSpan.FromMinutes(1),
+        }));
+    options.AddPolicy(AccesoOptions.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = context.RequestServices.GetRequiredService<IOptions<AccesoOptions>>().Value.IntentosPorMinuto,
             Window = TimeSpan.FromMinutes(1),
         }));
 });

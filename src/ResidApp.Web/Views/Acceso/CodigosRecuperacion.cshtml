@@ -1,0 +1,27 @@
+@model ResidApp.Web.Models.CodigosRecuperacionViewModel
+@{
+    ViewData["Title"] = "Códigos de recuperación";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-3">Segundo factor activado</h1>
+                <div class="alert alert-warning" role="alert">
+                    <strong>Guarda estos códigos ahora: no se volverán a mostrar.</strong> Si pierdes o cambias el móvil, cada uno te deja
+                    entrar una vez sin la aplicación. Apúntalos en papel y guárdalos en un sitio seguro, no en el móvil.
+                </div>
+                <ul class="list-unstyled row row-cols-2 g-2 font-monospace fs-5 mb-4" aria-label="Códigos de recuperación">
+                    @foreach (var codigo in Model.Codigos)
+                    {
+                        <li class="col">@codigo</li>
+                    }
+                </ul>
+                <div class="d-grid">
+                    <a href="@Model.Continuar" class="btn btn-primary btn-lg">Ya los he guardado, continuar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

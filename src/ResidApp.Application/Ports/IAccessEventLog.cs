@@ -1,0 +1,24 @@
+using ResidApp.Shared;
+
+namespace ResidApp.Application.Ports;
+
+/// <summary>Tipo de un evento del registro de accesos (dbo.eventos_acceso.tipo, script 0062).</summary>
+public enum AccessEventType
+{
+    [Code("ENTRADA")] Entrada,
+    [Code("ENTRADA_DESARROLLO")] EntradaDesarrollo,
+    [Code("CONTRASENA_FALLIDA")] ContrasenaFallida,
+    [Code("BLOQUEO")] Bloqueo,
+    [Code("SEGUNDO_FACTOR_FALLIDO")] SegundoFactorFallido,
+    [Code("SEGUNDO_FACTOR_ALTA")] SegundoFactorAlta,
+    [Code("CODIGO_RECUPERACION_USADO")] CodigoRecuperacionUsado,
+    [Code("CREDENCIALES_DESARROLLO")] CredencialesDesarrollo,
+}
+
+/// <summary>Registro de seguridad de la autenticación (ADR 0007, incremento I1), separado de la auditoría clínica. Sin cuenta cuando el
+/// usuario escrito no existe: nunca se guarda lo tecleado. Las fechas son UTC.</summary>
+public interface IAccessEventLog
+{
+    Task RecordAsync(
+        AccessEventType type, AccountId? accountId, Guid? sessionId, string? ip, DateTime now, CancellationToken ct = default);
+}

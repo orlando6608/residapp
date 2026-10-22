@@ -6,6 +6,11 @@
     <ProjectReference Include="..\ResidApp.Shared\ResidApp.Shared.csproj" />
   </ItemGroup>
 
+  <!-- ASP.NET Core Identity (ADR 0007, I1): UserManager y las interfaces de almacén vienen en el framework compartido, sin paquete. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.79" />
     <!-- Lectura de los ficheros de importación (CSV, XLS y XLSX; ADR 0010). Licencia MIT. -->

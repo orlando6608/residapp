@@ -18,17 +18,10 @@
                 <div class="card-body p-4 text-center">
                     <img src="~/images/logo.svg" alt="" width="96" height="96" class="mb-3" />
                     <p class="lead mb-2">Sistema integrado de comunicación familiar y registro del estado basal para residencias geriátricas.</p>
-                    @if (accesoDesarrollo)
-                    {
-                        <p class="text-muted">No has iniciado sesión.</p>
-                        <div class="d-grid">
-                            <a asp-controller="DevAuth" asp-action="Login" class="btn btn-primary btn-lg">Iniciar sesión</a>
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted mb-0">El inicio de sesión todavía no está disponible en este entorno.</p>
-                    }
+                    <p class="text-muted">No has iniciado sesión.</p>
+                    <div class="d-grid">
+                        <a asp-controller="Acceso" asp-action="Entrar" class="btn btn-primary btn-lg">Iniciar sesión</a>
+                    </div>
                 </div>
             </div>
         </div>

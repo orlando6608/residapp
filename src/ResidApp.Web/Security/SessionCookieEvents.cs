@@ -36,4 +36,25 @@ public sealed class SessionCookieEvents(ISessionStore sessions, SessionPolicy po
         context.RejectPrincipal();
         await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }
+
+    /// <summary>
+    /// Al guardar un formulario con la sesión ya terminada, volver después del inicio de sesión a esa acción, que solo admite POST, daría
+    /// un 405. Se vuelve a la pantalla desde la que se envió (el Referer, si es de esta misma aplicación) o al Inicio, y el inicio de
+    /// sesión avisa de que lo enviado no se ha guardado.
+    /// </summary>
+    public override Task RedirectToLogin(RedirectContext<CookieAuthenticationOptions> context)
+    {
+        var request = context.Request;
+        if (!HttpMethods.IsGet(request.Method) && !HttpMethods.IsHead(request.Method))
+        {
+            var referer = request.GetTypedHeaders().Referer;
+            var returnUrl = referer is { IsAbsoluteUri: true }
+                && string.Equals(referer.Authority, request.Host.Value, StringComparison.OrdinalIgnoreCase)
+                ? referer.PathAndQuery
+                : null;
+            context.RedirectUri = request.PathBase + context.Options.LoginPath + "?sesionCaducada=true"
+                + (returnUrl is null ? string.Empty : "&" + context.Options.ReturnUrlParameter + "=" + Uri.EscapeDataString(returnUrl));
+        }
+        return base.RedirectToLogin(context);
+    }
 }

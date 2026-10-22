@@ -23,8 +23,9 @@
             auditada del basal.</li>
         <li><strong>Plataforma:</strong> alta de centros nuevos y Administración principal de cada centro.</li>
     </ul>
-    Lo que falta aparece al final, en "Próximamente". El acceso actual es en <strong>modo de desarrollo</strong>: todavía
-    no hay un inicio de sesión definitivo con usuario y contraseña.
+    Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, el personal, además
+    con un código de su móvil. Las contraseñas todavía no se entregan con una invitación: mientras tanto, en el entorno de pruebas se
+    entra con el acceso de desarrollo (ver "Cuentas de prueba").
     <p class="mt-2 mb-0">
         <strong>Al guardar o enviar:</strong> el botón muestra un círculo giratorio mientras el servidor responde. Una vez enviado,
         no hace falta volver a pulsarlo; un segundo toque se ignora.
@@ -87,6 +88,23 @@
 <section id="entrar-ambito" class="mb-4">
     <h2 class="h5">Entrar y elegir tu ámbito de trabajo</h2>
     <p>
+        En <strong>«Iniciar sesión»</strong> escribe tu usuario (el identificador de acceso que te dio Administración) y tu
+        contraseña. Si algo no cuadra (usuario o contraseña incorrectos, cuenta suspendida o sin perfiles), el aviso es siempre el mismo,
+        para no dar pistas a quien intente adivinar cuentas. Tras <strong>5 intentos fallidos seguidos</strong> la cuenta se bloquea
+        <strong>15 minutos</strong>, aunque después se escriba bien la contraseña. Nadie se crea su propia cuenta: «Cómo pedir el
+        acceso» explica que la da la Administración de tu centro, que es también a quien hay que acudir si no puedes entrar.
+    </p>
+    <p>
+        El <strong>personal</strong> (todos los perfiles salvo el de familiar) necesita además un <strong>segundo factor</strong>: un
+        código de 6 cifras que cambia cada 30 segundos en una aplicación de autenticación del móvil (Microsoft Authenticator, Google
+        Authenticator u otra). La primera vez, tras la contraseña, la app te pide prepararlo: escaneas el código QR (o escribes la clave
+        a mano), escribes el código que te muestra la aplicación y entras. En ese momento la app te enseña <strong>10 códigos de
+        recuperación</strong>, una sola vez: apúntalos en papel. Si un día no tienes el móvil, «Usa un código de recuperación» te deja
+        entrar con uno de ellos; cada uno sirve una vez. Los códigos de 6 cifras equivocados también cuentan para el bloqueo. Si pasan
+        más de 10 minutos entre la contraseña y el código, hay que volver a escribir la contraseña. Los familiares entran, por ahora,
+        solo con la contraseña.
+    </p>
+    <p>
         Al entrar en la app, si tu cuenta puede actuar con un único perfil (por ejemplo, Enfermería) en un
         único centro, ese ámbito se selecciona automáticamente. Si tu cuenta tiene varias combinaciones
         posibles de centro y perfil, se te muestra una pantalla para elegir con cuál vas a trabajar en ese
@@ -116,7 +134,9 @@
         Toda pantalla, salvo el Inicio, este manual, el Flujo de trabajo y la página sin conexión, necesita una sesión abierta: sin ella, la app
         te lleva a la pantalla de acceso y, al entrar, te devuelve a donde ibas. La sesión se cierra sola tras <strong>30 minutos sin
         usarla</strong> y, en cualquier caso, a las <strong>12 horas</strong> de abrirla; también al pulsar «Salir» o al entrar con otra
-        cuenta. Si Administración suspende tu cuenta, la sesión deja de valer en ese momento. Todo el acceso, con diagramas, está en
+        cuenta. Si Administración suspende tu cuenta, la sesión deja de valer en ese momento. Si la sesión ya había terminado cuando
+        pulsas «Guardar» en un formulario, lo escrito <strong>no se guarda</strong>: la app te pide entrar de nuevo, te lo avisa y te
+        devuelve a esa misma pantalla para que lo vuelvas a escribir. Todo el acceso, con diagramas, está en
         <a href="~/acceso-y-sesion.html">Acceso y sesión</a>.
     </p>
 </section>
@@ -148,13 +168,21 @@
 <section id="cuentas-prueba" class="mb-4">
     <h2 class="h5">Cuentas de prueba y cómo cambiar de usuario</h2>
     <p>
-        El acceso actual es de desarrollo, sin contraseña: en <a asp-controller="DevAuth" asp-action="Login">/DevAuth/Login</a>
-        escribes el nombre de una cuenta de prueba (por ejemplo <code>almendros-enfermeria</code>) y entras con ella. En el entorno de
+        Mientras las contraseñas no lleguen con una invitación, en el entorno de pruebas se entra con el <strong>acceso de
+        desarrollo</strong>, sin contraseña: en <a asp-controller="DevAuth" asp-action="Login">/DevAuth/Login</a> (enlazado desde
+        «Iniciar sesión») escribes el nombre de una cuenta de prueba (por ejemplo <code>almendros-enfermeria</code>) y entras con ella. En el entorno de
         pruebas publicado hace falta además la <strong>clave de desarrollo</strong>, que Orlando da en privado. Para <strong>cambiar de
         usuario</strong> no hace falta cerrar sesión antes: pulsa «Entrar con otra cuenta» y escribe el nombre de otra — se cierra la
         sesión anterior y se limpia el ámbito activo, así que la app te pedirá elegirlo de nuevo si esa cuenta tiene más de uno. Si el
         nombre no existe (o, en el entorno de pruebas, la clave no es correcta), no se inicia sesión: te avisa y conservas la sesión que
-        tuvieras. Cuando llegue el inicio de sesión con contraseña (ADR 0007), este acceso solo quedará para desarrollo.
+        tuvieras.
+    </p>
+    <p>
+        Para probar el inicio de sesión de verdad, entra con el acceso de desarrollo y pulsa <strong>«poner una contraseña a esta
+        cuenta»</strong> (pantalla «Credenciales de prueba»): pide al menos 12 caracteres, desbloquea la cuenta y queda anotado. Después,
+        sal y entra en «Iniciar sesión» con esa contraseña. Desde la misma pantalla, <strong>«Quitar el segundo factor»</strong> obliga a
+        prepararlo de nuevo, con una clave nueva, en el siguiente inicio de sesión. Este acceso desaparecerá cuando las cuentas reciban su
+        contraseña con una invitación.
     </p>
 
     <h3 class="h6 mt-4">Residencia Los Almendros</h3>
@@ -494,10 +522,11 @@
         nombre y aparecen por su identificador hasta que se lo pongas.
     </p>
     <p>
-        <strong>Alta de usuario</strong> pide el identificador de acceso (con el que la persona entra; hoy, el nombre de
-        cuenta de <code>/DevAuth/Login</code>), el nombre, un perfil (Auxiliar, Enfermería, Medicina, Administración o
+        <strong>Alta de usuario</strong> pide el identificador de acceso (el usuario con el que la persona entra en «Iniciar
+        sesión»), el nombre, un perfil (Auxiliar, Enfermería, Medicina, Administración o
         Dirección Clínica) y al menos una de las unidades de tu ámbito. Si el identificador ya existe, te lo indica. La cuenta
-        nace activa y puede entrar en ese momento.
+        nace activa, pero todavía sin contraseña: hasta que llegue la invitación, solo entra con el acceso de desarrollo del entorno de
+        pruebas.
     </p>
     <p>
         En la <strong>ficha de la cuenta</strong> puedes cambiar el nombre, <strong>suspender</strong> la cuenta (no podrá
@@ -1495,7 +1524,10 @@
     <h2 class="h5">Próximamente</h2>
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
-        <li>Portal Familiar: el resumen periódico por residente y la entrada con credenciales reales (hoy se entra con el usuario de desarrollo).</li>
+        <li>Portal Familiar: el resumen periódico por residente.</li>
+        <li>Acceso: la invitación de un solo uso con la que Administración entrega la cuenta y la contraseña, la recuperación por
+            Administración, «Mi cuenta» (cambiar la contraseña, el segundo factor y ver las sesiones abiertas) y las llaves de acceso
+            (passkeys).</li>
         <li>Más gestión administrativa: organigrama y cargos (aplazado) y un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>

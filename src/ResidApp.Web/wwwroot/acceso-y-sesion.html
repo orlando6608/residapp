@@ -305,12 +305,13 @@
     </nav>
     <p class="eyebrow">ResidApp · Acceso y sesión</p>
     <h1>Cómo se entra en ResidApp: el acceso y la sesión</h1>
-    <p class="meta">Estado a 21/10/2026 · Para quien usa o prueba la aplicación, para Plataforma y soporte, y para quien responde de su seguridad</p>
+    <p class="meta">Estado a 22/10/2026 · Para quien usa o prueba la aplicación, para Plataforma y soporte, y para quien responde de su seguridad</p>
     <p class="lead prose">
       Nadie se crea su propia cuenta en ResidApp: el acceso lo da quien responde de cada persona. Después, cada vez que abres una
       pantalla, la aplicación comprueba <strong>quién eres</strong>, con tu sesión, y <strong>qué puedes hacer</strong>, con el perfil,
-      el centro y las unidades de tu cuenta. Hoy se entra con un acceso de desarrollo: tu identificador y, en el entorno publicado, una
-      clave común. La contraseña personal con segundo factor llega en los próximos bloques. Hasta entonces, ResidApp solo se usa con
+      el centro y las unidades de tu cuenta. Se entra con tu identificador y tu contraseña y, si eres del personal, con un código de
+      tu móvil (segundo factor). Las contraseñas todavía no se entregan con una invitación, así que en el entorno de pruebas se sigue
+      entrando con un acceso de desarrollo: tu identificador y una clave común. Hasta tener las invitaciones, ResidApp solo se usa con
       datos ficticios.
     </p>
     <nav aria-label="En esta página">
@@ -335,12 +336,14 @@
       <li>
         <h3>Quién te da el acceso</h3>
         <p>Al personal y a las familias, la <strong>Administración de su centro</strong>. A la primera Administración de un centro
-          nuevo, <strong>Plataforma</strong>. El enlace «Solicita acceso» de la pantalla de acceso todavía no hace nada.</p>
+          nuevo, <strong>Plataforma</strong>. «Cómo pedir el acceso», en la pantalla de acceso, lo explica.</p>
       </li>
       <li>
         <h3>Para entrar</h3>
-        <p>Tu identificador de acceso, por ejemplo <code>almendros-enfermeria</code>. En el entorno publicado, además, la
-          <strong>clave de desarrollo</strong>, que soporte da en privado. En local no se pide clave.</p>
+        <p>Tu identificador de acceso y tu <strong>contraseña</strong>; el personal, además, el <strong>código de 6 cifras</strong>
+          de su aplicación de autenticación. Mientras no haya invitaciones, en el entorno de pruebas se entra por el <strong>acceso de
+          desarrollo</strong> con el identificador (por ejemplo, <code>almendros-enfermeria</code>) y la clave de desarrollo, que
+          soporte da en privado. En local no se pide clave.</p>
       </li>
       <li>
         <h3>Tu ámbito</h3>
@@ -373,8 +376,8 @@
   <section id="pedir" aria-labelledby="pedir-t">
     <h2 id="pedir-t">Cómo se pide el acceso</h2>
     <p class="prose">Cada cuenta la da de alta quien responde de esa persona, y nadie más. Se pide fuera de la aplicación (en persona, por
-      teléfono o por el canal de cada centro) y no hay formulario de solicitud: el enlace «¿No tienes cuenta? Solicita acceso» de la
-      pantalla de acceso es una maqueta que no envía nada.</p>
+      teléfono o por el canal de cada centro) y no hay formulario de solicitud: el enlace «Cómo pedir el acceso» de la pantalla de
+      acceso solo lo explica.</p>
     <div class="diagrama">
       <svg viewBox="0 0 1120 340" style="min-width: 900px" aria-labelledby="d-alta-t d-alta-d">
         <title id="d-alta-t">Quién da el acceso a quién</title>
@@ -470,8 +473,9 @@
       </table>
     </div>
     <ul class="lista prose">
-      <li><strong>La clave de desarrollo no es personal:</strong> es la misma para todos y solo existe mientras no haya contraseña.
-        Quien la tiene puede entrar con cualquier cuenta; por eso se da en privado y solo a quien prueba.</li>
+      <li><strong>La clave de desarrollo no es personal:</strong> es la misma para todos y solo existe mientras no haya invitaciones.
+        Quien la tiene puede entrar con cualquier cuenta; por eso se da en privado y solo a quien prueba. Desde el acceso de desarrollo,
+        «Credenciales de prueba» pone una contraseña a la cuenta de la sesión para probar el inicio de sesión real.</li>
       <li><strong>El identificador de acceso no se puede cambiar</strong> después del alta; el nombre visible, sí. Es único en todo
         ResidApp: una persona que ya tiene cuenta en otro centro necesita hoy otro identificador (usar la misma cuenta en dos centros
         llegará después).</li>
@@ -479,8 +483,10 @@
         concede en la ficha de la cuenta, y la persona elige con cuál trabaja al entrar.</li>
     </ul>
 
-    <h3>Cuando llegue la contraseña (incrementos I1 e I2)</h3>
-    <p class="prose">Así lo prevé el ADR 0007. <strong>Todavía no está construido</strong> y los detalles se cierran al hacerlo:</p>
+    <h3>Cuando lleguen las invitaciones (incremento I2)</h3>
+    <p class="prose">La contraseña, el segundo factor y el bloqueo ya funcionan (I1, ver <a href="#entrar">Entrar</a>); lo que falta es
+      cómo recibe cada persona su contraseña. Así lo prevé el ADR 0007. <strong>Todavía no está construido</strong> y los detalles se
+      cierran al hacerlo:</p>
     <ol class="pasos">
       <li class="adm">
         <div class="paso-cab"><span class="n">1</span><span class="perfil" style="color: var(--lane-adm)">Administración o Plataforma</span><span class="previsto">Previsto</span></div>
@@ -494,8 +500,8 @@
       </li>
       <li class="persona">
         <div class="paso-cab"><span class="n">3</span><span class="perfil" style="color: var(--accent)">La persona</span><span class="previsto">Previsto</span></div>
-        <p><strong>Abre la invitación</strong>, elige su contraseña y activa el segundo factor: una app de códigos en el móvil (TOTP).
-          La invitación deja de valer.</p>
+        <p><strong>Abre la invitación</strong> y elige su contraseña. La invitación deja de valer. Si es del personal, al entrar por
+          primera vez activa el segundo factor: una app de códigos en el móvil (TOTP).</p>
         <p class="pasa">Desde entonces entra con su identificador, su contraseña y el código del móvil. La clave de desarrollo desaparece.</p>
       </li>
       <li class="adm">
@@ -674,16 +680,19 @@
 
   <section id="entrar" aria-labelledby="entrar-t">
     <h2 id="entrar-t">Entrar</h2>
-    <p class="prose">En la pantalla de acceso escribes el usuario y, en el entorno publicado, la clave de desarrollo, y pulsas
-      «Entrar». Llegas a ella al abrir una pantalla sin sesión, con «Iniciar sesión» en la cabecera o con «Entrar con otra cuenta» en el
-      menú de tu perfil.</p>
+    <p class="prose">En «Iniciar sesión» escribes tu usuario y tu contraseña y pulsas «Entrar». Llegas a ella al abrir una pantalla sin
+      sesión, con «Iniciar sesión» en la cabecera o con «Entrar con otra cuenta» en la pantalla de elegir ámbito. Si eres del personal
+      (cualquier perfil salvo el de familiar), después te pide el <strong>código de 6 cifras</strong> de tu aplicación de autenticación;
+      la primera vez, en su lugar, te guía para prepararla con un código QR y te da 10 códigos de recuperación, que solo se enseñan
+      entonces. El acceso de desarrollo (usuario y clave común, sin contraseña) sigue como alternativa mientras no haya invitaciones.</p>
     <div class="diagrama">
       <svg viewBox="0 0 1120 412" style="min-width: 900px" aria-labelledby="d-ent-t d-ent-d">
         <title id="d-ent-t">Qué pasa al pulsar «Entrar»</title>
-        <desc id="d-ent-d">Escribes el usuario y la clave. Si la clave no es correcta o la cuenta no existe, está suspendida o no tiene
-          ningún ámbito activo, no entras y sigues como estabas. Si son correctos, se cierra la sesión que tuvieras abierta, se abre una
-          nueva y, si la cuenta tiene un solo ámbito, llegas a tu inicio o a la pantalla a la que ibas; si tiene varios, eliges antes con
-          cuál trabajas. Hay un límite de 10 intentos por minuto desde la misma conexión.</desc>
+        <desc id="d-ent-d">Escribes el usuario y la contraseña y, si eres del personal, el código de tu móvil. Si la contraseña o el
+          código no son correctos, o la cuenta no existe, está suspendida, bloqueada o no tiene ningún ámbito activo, no entras y sigues
+          como estabas. Si son correctos, se cierra la sesión que tuvieras abierta, se abre una nueva y, si la cuenta tiene un solo
+          ámbito, llegas a tu inicio o a la pantalla a la que ibas; si tiene varios, eliges antes con cuál trabajas. Cinco fallos
+          seguidos bloquean la cuenta 15 minutos, y hay un límite de 10 intentos por minuto desde la misma conexión.</desc>
         <defs>
           <marker id="d-ent-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
         </defs>
@@ -700,12 +709,12 @@
         <text class="et" x="1023" y="287">varios</text>
 
         <rect class="box" x="16" y="170" width="180" height="80" rx="8"/>
-        <text class="bt tit" x="106" y="204" text-anchor="middle">Usuario y clave</text>
-        <text class="bt det" x="106" y="222" text-anchor="middle">en la pantalla de acceso</text>
+        <text class="bt tit" x="106" y="204" text-anchor="middle">Usuario y contraseña</text>
+        <text class="bt det" x="106" y="222" text-anchor="middle">el personal, y su código</text>
 
         <rect class="box paso" x="236" y="170" width="190" height="80" rx="8"/>
         <text class="bt tit" x="331" y="204" text-anchor="middle">¿Son correctos?</text>
-        <text class="bt det" x="331" y="222" text-anchor="middle">clave y cuenta con ámbito</text>
+        <text class="bt det" x="331" y="222" text-anchor="middle">y cuenta con ámbito</text>
 
         <rect class="box rel" x="466" y="170" width="190" height="80" rx="8"/>
         <text class="bt tit" x="561" y="204" text-anchor="middle">Cierra la anterior</text>
@@ -733,17 +742,26 @@
 
         <rect class="box nota" x="16" y="316" width="180" height="80" rx="8"/>
         <text class="bt tit" x="106" y="350" text-anchor="middle">Límite de intentos</text>
-        <text class="bt det" x="106" y="368" text-anchor="middle">10 por minuto</text>
+        <text class="bt det" x="106" y="368" text-anchor="middle">5 fallos: 15 min</text>
       </svg>
     </div>
     <ul class="lista prose">
-      <li><strong>Si algo no cuadra</strong>, el aviso es siempre «Usuario o clave incorrectos.», sin decir cuál de los dos falla: así no
-        se puede averiguar qué cuentas existen. En local, sin clave, el aviso dice que la cuenta no existe o no tiene ámbito.</li>
+      <li><strong>Si algo no cuadra</strong>, el aviso es siempre «Usuario o contraseña incorrectos.», sin decir qué falla: así no
+        se puede averiguar qué cuentas existen. En el acceso de desarrollo es «Usuario o clave incorrectos.» y, en local, sin clave, dice
+        que la cuenta no existe o no tiene ámbito.</li>
+      <li><strong>Cinco fallos seguidos</strong> (contraseña o código del móvil) <strong>bloquean la cuenta 15 minutos</strong>, aunque
+        después se escriba bien. Cada fallo, cada bloqueo y cada entrada quedan en el registro de accesos.</li>
+      <li><strong>Sin el móvil</strong>, «Usa un código de recuperación» deja entrar con uno de los 10 códigos; cada uno vale una vez.
+        Si no te quedan, pide ayuda a tu Administración.</li>
+      <li><strong>Entre la contraseña y el código</strong> hay 10 minutos; si se pasan, o si entretanto cambia la contraseña de la cuenta,
+        vuelves a empezar. Ese paso intermedio no abre ninguna pantalla.</li>
       <li><strong>Más de 10 intentos en un minuto</strong> desde la misma conexión: el navegador muestra un error (429). Espera un minuto.</li>
       <li><strong>Entrar con otra cuenta</strong> no exige salir antes. La sesión anterior se cierra solo si la nueva entra; si te
         equivocas, conservas la que tenías.</li>
-      <li><strong>Familia:</strong> la cuenta de un familiar va directamente al Portal Familiar, con su propio aspecto y sin nada del
-        personal.</li>
+      <li><strong>Familia:</strong> la cuenta de un familiar entra, por ahora, solo con la contraseña (su segundo factor está por
+        decidir con CJ) y va directamente al Portal Familiar, con su propio aspecto y sin nada del personal.</li>
+      <li><strong>Si la sesión había terminado al pulsar «Guardar»</strong>, lo escrito no se guarda: tras entrar de nuevo, la pantalla
+        de acceso te lo avisa y te devuelve a la pantalla del formulario.</li>
       <li><strong>Al entrar o salir</strong> se olvida el ámbito elegido y termina cualquier lectura clínica declarada por Dirección Clínica.</li>
     </ul>
   </section>
@@ -901,10 +919,16 @@
         <p>Toda pantalla exige sesión salvo una lista cerrada. Una prueba automática recorre las más de 150 acciones de la aplicación y
           falla si alguna queda abierta sin querer.</p>
       </li>
+      <li class="bien">
+        <h3>Contraseña y segundo factor</h3>
+        <p>La contraseña se guarda como un resumen que no se puede revertir; el personal necesita además el código de su móvil. Cinco
+          fallos bloquean la cuenta y todo queda en un registro de accesos separado de la auditoría clínica.</p>
+      </li>
       <li class="aviso">
         <h3>Lo que todavía no protege</h3>
-        <p>No hay contraseña personal ni segundo factor: <strong>quien tenga la clave de desarrollo puede entrar con cualquier cuenta de
-          prueba</strong>. Por eso solo se usan datos ficticios y la clave se da en privado.</p>
+        <p>Mientras siga el acceso de desarrollo, <strong>quien tenga su clave puede entrar con cualquier cuenta de prueba</strong>, y el
+          primer acceso de una cuenta prepara su segundo factor con solo la contraseña. Por eso solo se usan datos ficticios y la clave
+          se da en privado; las invitaciones (I2) lo cierran.</p>
       </li>
     </ul>
   </section>
@@ -912,10 +936,10 @@
   <section id="falta" aria-labelledby="falta-t">
     <h2 id="falta-t">Lo que falta: el acceso definitivo</h2>
     <p class="prose">ResidApp tendrá su propio inicio de sesión (ASP.NET Core Identity), con los datos de acceso en la misma base de datos
-      de la UE que el resto. Se hará por partes; la primera, la de esta página, ya está hecha (ADR 0007).</p>
+      de la UE que el resto. Se hace por partes; las dos primeras ya están hechas (ADR 0007).</p>
     <ul class="estados">
       <li><div class="pildora ok"><strong>I0 · Sesión segura</strong><span>Sesión cifrada y revocable, todo con sesión, HTTPS. Hecho el 21/10/2026.</span></div></li>
-      <li><div class="pildora pend"><strong>I1 · Contraseña</strong><span>Contraseña y segundo factor con app de códigos (TOTP), bloqueo por intentos.</span></div></li>
+      <li><div class="pildora ok"><strong>I1 · Contraseña</strong><span>Contraseña y segundo factor con app de códigos (TOTP), bloqueo por intentos y registro de accesos. Hecho el 22/10/2026.</span></div></li>
       <li><div class="pildora pend"><strong>I2 · Invitaciones</strong><span>Alta con un enlace o QR de un solo uso que entrega Administración, que también recupera el acceso.</span></div></li>
       <li><div class="pildora pend"><strong>I3 · Mi cuenta</strong><span>Cambiar la contraseña y el segundo factor, y ver y cerrar tus sesiones.</span></div></li>
       <li><div class="pildora pend"><strong>I4 · Passkeys</strong><span>Entrar con el móvil o una llave, sin contraseña. Obligatorias para Plataforma.</span></div></li>
@@ -974,14 +998,31 @@
               no los toca.</td>
           </tr>
           <tr>
+            <td>Inicio de sesión con contraseña</td>
+            <td><code>AccesoController</code>, <code>SessionSignIn</code>, <code>PendingAccessCookie</code> (Web);
+              <code>SqlCredentialStore</code> (Infrastructure)</td>
+            <td>ASP.NET Core Identity solo para las credenciales (<code>UserManager</code>, sin <code>SignInManager</code>): el usuario
+              es la cuenta y su nombre, <code>sujeto_externo</code>. Contraseña de 12 caracteres o más, bloqueo 5 / 15 min
+              (<code>AccesoOptions</code>), <code>Acceso:IntentosPorMinuto</code> (10). El paso hasta el segundo factor es la cookie
+              <code>residapp_acceso_pendiente</code> (10 min, solo <code>/Acceso</code>, con el sello de seguridad).</td>
+          </tr>
+          <tr>
+            <td>Credenciales y registro de accesos</td>
+            <td><code>dbo.credenciales</code> y <code>dbo.eventos_acceso</code> (script <code>0062</code>), <code>SqlAccessEventLog</code></td>
+            <td>Sin seguridad por filas. Códigos de recuperación guardados como resúmenes SHA-256; la clave TOTP, en claro, como en el
+              almacén por defecto de Identity. Los intentos fallidos se suman en SQL. <code>eventos_acceso</code> no se modifica ni se
+              borra (errores 50537 y 50538) y nunca guarda lo tecleado.</td>
+          </tr>
+          <tr>
             <td>Acceso de desarrollo</td>
             <td><code>DevAuthController</code>, <code>DevAuthOptions</code></td>
             <td><code>DevAuth:Habilitado</code> (apagado en <code>appsettings.json</code>, encendido en Development),
-              <code>DevAuth:Clave</code> y <code>DevAuth:IntentosPorMinuto</code> (10). Clave comparada en tiempo constante.</td>
+              <code>DevAuth:Clave</code> y <code>DevAuth:IntentosPorMinuto</code> (10). Clave comparada en tiempo constante.
+              <code>DevAuth/Credenciales</code> pone la contraseña a la cuenta de la sesión hasta que haya invitaciones.</td>
           </tr>
           <tr>
             <td>Lo público</td>
-            <td><code>[AllowAnonymous]</code> en Home, DevAuth y AccesoCj, y los ficheros estáticos</td>
+            <td><code>[AllowAnonymous]</code> en Home, Acceso, DevAuth y AccesoCj, y los ficheros estáticos</td>
             <td>Política global de usuario autenticado. <code>/pendientes-cj</code> va aparte, con su propia clave. Cualquier pantalla
               pública nueva hay que añadirla a propósito, y <code>SesionTests</code> lo vigila.</td>
           </tr>
@@ -995,14 +1036,16 @@
             <td>Entorno publicado</td>
             <td>Ajustes de la Web App <code>DevAuth__Habilitado</code> y <code>DevAuth__Clave</code></td>
             <td>Nunca en el repositorio. Cambiar la clave reinicia la app y no cierra las sesiones abiertas: la clave solo se pide al
-              entrar. Con <code>DevAuth__Habilitado=false</code> nadie puede entrar, porque todavía no hay otro inicio de sesión.</td>
+              entrar. Con <code>DevAuth__Habilitado=false</code> solo entra quien ya tenga contraseña, y hasta las invitaciones (I2)
+              solo se la puede poner el propio acceso de desarrollo.</td>
           </tr>
           <tr>
             <td>Pruebas</td>
             <td><code>SesionTests</code>, <code>SesionFueraDeDesarrolloTests</code>, <code>SqlSessionStoreTests</code>,
-              <code>SessionPolicyTests</code></td>
+              <code>SessionPolicyTests</code>, <code>AccesoTests</code>, <code>SqlCredentialStoreTests</code></td>
             <td>Cubren los casos AUTH-SPIKE-T02 a T06: cookie fabricada, sesión cerrada, renovación sin ampliar la caducidad,
-              inactividad y cuenta suspendida.</td>
+              inactividad y cuenta suspendida. Y de I1: mismo mensaje para todo fallo, bloqueo, segundo factor obligatorio al personal,
+              códigos de recuperación de un solo uso y el paso pendiente que caduca o deja de valer si cambia la contraseña.</td>
           </tr>
         </tbody>
       </table>
