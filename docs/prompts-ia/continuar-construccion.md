@@ -22,6 +22,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Pruebas:** `AccesoLimitesTests` (4, funcionales, entorno Staging con los valores reales). Mutaciones comprobadas: techo en 10 y sin
     `RecordFailure` en `FailAsync` hacen fallar alguna. `appsettings.Development.json` lleva `FallosPorIp` alto (las pruebas comparten la IP «sin-ip»).
     Si se cambian los valores en Azure: `Acceso__IntentosPorMinuto` y `Acceso__FallosPorIp`.
+  - **En `main` como `f237ad2`, con el CI/CD en verde y comprobado en Azure dev:** 21 contraseñas incorrectas seguidas desde la misma IP
+    dieron 200 y la siguiente, 429 con el texto explicativo; `GET /Acceso/Entrar` sigue en 200. (Se esperaba el corte tras 20 y llegó tras 21:
+    sin explicar, sin importancia funcional.) Justo después del despliegue la app dio 500 en todas las rutas durante unos 45 s (el reinicio
+    del contenedor; el registro no muestra ninguna excepción) y luego respondió con normalidad. **Queda en Azure:** 21 filas
+    `CONTRASENA_FALLIDA` de la IP de Orlando en `eventos_acceso` (usuario inexistente) y esa IP bloqueada 15 minutos.
 - **ADR 0007, incremento I2: invitaciones de un solo uso y recuperación por Administración (2026-10-22, PR #51 mergeado en `main` como
   `d2195ec`; script `0063`, el siguiente libre es `0064`; suite 410 unitarios, 490 de integración y 260 funcionales en verde, proyecto a
   proyecto; CI del PR y CI/CD de `main` en verde, con el `0063` aplicado en Azure SQL).**
