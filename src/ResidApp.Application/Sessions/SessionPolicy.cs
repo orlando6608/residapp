@@ -12,6 +12,8 @@ public enum SessionCloseReason
     [Code("CAMBIO_IDENTIDAD")] CambioIdentidad,
     /// <summary>Se usó una invitación de recuperación de la cuenta (script 0063): se cierran todas sus sesiones.</summary>
     [Code("RECUPERACION")] Recuperacion,
+    /// <summary>La propia persona cierra sus otras sesiones o las cierra al cambiar la contraseña (script 0064).</summary>
+    [Code("CIERRE_PROPIO")] CierrePropio,
 }
 
 /// <summary>Resultado de comprobar una sesión en una petición.</summary>

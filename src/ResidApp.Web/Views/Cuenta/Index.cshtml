@@ -1,0 +1,198 @@
+@model ResidApp.Web.Models.CuentaViewModel
+@{
+    ViewData["Title"] = "Mi cuenta";
+    var formato = "dd/MM/yyyy HH:mm";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9 col-xl-8">
+        <h1 class="h3 mb-3">Mi cuenta</h1>
+
+        @if (Model.Aviso is not null)
+        {
+            <div class="alert alert-success" role="status">@Model.Aviso</div>
+        }
+
+        <section class="card mb-4" aria-labelledby="cuenta-resumen">
+            <div class="card-body">
+                <h2 class="h5 card-title" id="cuenta-resumen">Tu cuenta</h2>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Usuario</dt>
+                    <dd class="col-sm-8">@Model.Usuario</dd>
+                    <dt class="col-sm-4">Nombre</dt>
+                    <dd class="col-sm-8">@Model.Nombre</dd>
+                    <dt class="col-sm-4">Perfiles</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Ambitos.Count == 0)
+                        {
+                            <span>Ninguno activo</span>
+                        }
+                        else
+                        {
+                            <ul class="list-unstyled mb-0">
+                                @foreach (var ambito in Model.Ambitos)
+                                {
+                                    <li>@ambito</li>
+                                }
+                            </ul>
+                        }
+                    </dd>
+                    <dt class="col-sm-4">Código del móvil</dt>
+                    <dd class="col-sm-8 mb-0">
+                        @if (Model.SegundoFactorActivo)
+                        {
+                            <span>Preparado. Te quedan <strong>@Model.CodigosRestantes</strong> códigos de recuperación sin usar.</span>
+                        }
+                        else
+                        {
+                            <span>No lo usas.</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </section>
+
+        <section class="card mb-4" aria-labelledby="cuenta-contrasena">
+            <div class="card-body">
+                <h2 class="h5 card-title" id="cuenta-contrasena">Cambiar la contraseña</h2>
+                @if (!Model.TieneContrasena)
+                {
+                    <p class="mb-0">Tu cuenta todavía no tiene contraseña. Pídele una invitación a la Administración de tu centro.</p>
+                }
+                else
+                {
+                    <p>Al cambiarla se cierran tus demás sesiones abiertas; esta se mantiene.</p>
+                    @if (Model.ErrorContrasena is not null)
+                    {
+                        <div class="alert alert-danger" role="alert">@Model.ErrorContrasena</div>
+                    }
+                    <form asp-controller="Cuenta" asp-action="CambiarContrasena" method="post">
+                        <div class="mb-3">
+                            <label for="actual" class="form-label">Contraseña actual</label>
+                            <input type="password" class="form-control form-control-lg" id="actual" name="actual" autocomplete="current-password" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="nueva" class="form-label">Contraseña nueva</label>
+                            <input type="password" class="form-control form-control-lg" id="nueva" name="nueva" autocomplete="new-password"
+                                   minlength="12" aria-describedby="nueva-ayuda" required />
+                            <div id="nueva-ayuda" class="form-text">Al menos 12 caracteres, sin más reglas: una frase larga vale.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmacion" class="form-label">Repite la contraseña nueva</label>
+                            <input type="password" class="form-control form-control-lg" id="confirmacion" name="confirmacion" autocomplete="new-password" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">Cambiar la contraseña</button>
+                    </form>
+                }
+            </div>
+        </section>
+
+        <section class="card mb-4" aria-labelledby="cuenta-codigos">
+            <div class="card-body">
+                <h2 class="h5 card-title" id="cuenta-codigos">Códigos de recuperación</h2>
+                @if (!Model.SegundoFactorActivo)
+                {
+                    <p class="mb-0">Tu perfil entra solo con la contraseña, así que no tiene códigos de recuperación.</p>
+                }
+                else
+                {
+                    <p>Si te quedan pocos, o crees que alguien ha visto los que tenías, genera otros 10: <strong>los anteriores dejan de valer</strong>.
+                        Hace falta tu contraseña y el código que da ahora tu móvil. Para cambiar de móvil, pide a la Administración de tu centro una
+                        invitación de recuperación.</p>
+                    @if (Model.ErrorCodigos is not null)
+                    {
+                        <div class="alert alert-danger" role="alert">@Model.ErrorCodigos</div>
+                    }
+                    <form asp-controller="Cuenta" asp-action="RegenerarCodigos" method="post">
+                        <div class="mb-3">
+                            <label for="contrasena-codigos" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control form-control-lg" id="contrasena-codigos" name="contrasena" autocomplete="current-password" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="codigo-codigos" class="form-label">Código del móvil</label>
+                            <input type="text" class="form-control form-control-lg" id="codigo-codigos" name="codigo" inputmode="numeric"
+                                   autocomplete="one-time-code" maxlength="12" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">Generar códigos nuevos</button>
+                    </form>
+                }
+            </div>
+        </section>
+
+        <section class="card mb-4" aria-labelledby="cuenta-sesiones">
+            <div class="card-body">
+                <h2 class="h5 card-title" id="cuenta-sesiones">Sesiones abiertas</h2>
+                <p>Si alguna no es tuya, ciérrala y cambia la contraseña.</p>
+                <ul class="list-group list-group-flush mb-3" aria-label="Sesiones abiertas de tu cuenta">
+                    @foreach (var sesion in Model.Sesiones)
+                    {
+                        <li class="list-group-item px-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div>
+                                <div>Empezó el <strong>@sesion.CreadaUtc.ToLocalTime().ToString(formato)</strong></div>
+                                <div class="small text-body-secondary">
+                                    Última actividad @sesion.UltimaActividadUtc.ToLocalTime().ToString(formato) · IP @(sesion.Ip ?? "—")
+                                </div>
+                            </div>
+                            @if (sesion.EsActual)
+                            {
+                                <span class="badge text-bg-secondary">Esta sesión</span>
+                            }
+                            else
+                            {
+                                <form asp-controller="Cuenta" asp-action="CerrarSesion" method="post">
+                                    <input type="hidden" name="id" value="@sesion.Id" />
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Cerrar</button>
+                                </form>
+                            }
+                        </li>
+                    }
+                </ul>
+                @if (Model.Sesiones.Any(s => !s.EsActual))
+                {
+                    <form asp-controller="Cuenta" asp-action="CerrarOtrasSesiones" method="post">
+                        <button type="submit" class="btn btn-outline-danger">Cerrar todas las demás</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="mb-0 text-body-secondary">No tienes más sesiones abiertas.</p>
+                }
+            </div>
+        </section>
+
+        <section class="card mb-4" aria-labelledby="cuenta-accesos">
+            <div class="card-body">
+                <h2 class="h5 card-title" id="cuenta-accesos">Últimos accesos a tu cuenta</h2>
+                <p>Los fallos aparecen marcados. Si ves uno que no reconoces, cambia la contraseña y avisa a la Administración de tu centro.</p>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <caption class="visually-hidden">Últimos accesos a tu cuenta</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Cuándo</th>
+                                <th scope="col">Qué pasó</th>
+                                <th scope="col">Dirección IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var acceso in Model.Accesos)
+                            {
+                                <tr>
+                                    <td>@acceso.OcurridoUtc.ToLocalTime().ToString(formato)</td>
+                                    <td>
+                                        @acceso.Descripcion
+                                        @if (acceso.EsFallo)
+                                        {
+                                            <span class="badge text-bg-warning ms-1">Fallo</span>
+                                        }
+                                    </td>
+                                    <td>@(acceso.Ip ?? "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

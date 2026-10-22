@@ -16,7 +16,13 @@ public enum AccessEventType
     [Code("INVITACION_USADA")] InvitacionUsada,
     [Code("RECUPERACION_USADA")] RecuperacionUsada,
     [Code("INVITACION_NO_VALIDA")] InvitacionNoValida,
+    [Code("CONTRASENA_CAMBIADA")] ContrasenaCambiada,
+    [Code("CODIGOS_REGENERADOS")] CodigosRegenerados,
+    [Code("SESION_CERRADA")] SesionCerrada,
 }
+
+/// <summary>Un evento del registro de accesos de una cuenta, tal como se le enseña a ella en «Mi cuenta». Fecha UTC.</summary>
+public sealed record AccessEventEntry(DateTime OccurredAt, AccessEventType Type, string? Ip);
 
 /// <summary>Registro de seguridad de la autenticación (ADR 0007, incremento I1), separado de la auditoría clínica. Sin cuenta cuando el
 /// usuario escrito no existe: nunca se guarda lo tecleado. Las fechas son UTC.</summary>
@@ -24,4 +30,7 @@ public interface IAccessEventLog
 {
     Task RecordAsync(
         AccessEventType type, AccountId? accountId, Guid? sessionId, string? ip, DateTime now, CancellationToken ct = default);
+
+    /// <summary>Los últimos eventos de la cuenta, del más reciente al más antiguo.</summary>
+    Task<IReadOnlyList<AccessEventEntry>> ListRecentAsync(AccountId accountId, int take, CancellationToken ct = default);
 }

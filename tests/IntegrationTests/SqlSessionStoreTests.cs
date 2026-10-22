@@ -1,5 +1,6 @@
 using Dapper;
 using Microsoft.Data.SqlClient;
+using ResidApp.Application.Ports;
 using ResidApp.Application.Sessions;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
@@ -90,5 +91,43 @@ public class SqlSessionStoreTests
         Assert.Contains("SESSION_UPDATE_INVALID", extend.Message);
         Assert.Contains("SESSION_UPDATE_INVALID", reopen.Message);
         Assert.Contains("SESSION_DELETE_FORBIDDEN", delete.Message);
+    }
+
+    /// <summary>ADR 0007, I3 (script 0064): «Mi cuenta» lista las sesiones sin cerrar ni caducar con la IP de su entrada, y solo cierra las suyas.</summary>
+    [Fact]
+    public async Task MiCuenta_ListaLasAbiertas_ConLaIpDeLaEntrada_YSoloCierraLasPropias()
+    {
+        var (accountId, _) = await SeedAccountAsync();
+        var (otherId, _) = await SeedAccountAsync();
+        var store = new SqlSessionStore(TestDatabase.ConnectionFactory);
+        var log = new SqlAccessEventLog(TestDatabase.ConnectionFactory);
+        var account = AccountId.From(accountId);
+        Guid first = Guid.NewGuid(), second = Guid.NewGuid(), closed = Guid.NewGuid(), expired = Guid.NewGuid(), foreign = Guid.NewGuid();
+        await store.OpenAsync(first, account, T0, T0.AddHours(12));
+        await store.OpenAsync(second, account, T0.AddMinutes(1), T0.AddHours(12));
+        await store.OpenAsync(closed, account, T0, T0.AddHours(12));
+        await store.OpenAsync(expired, account, T0, T0.AddHours(1));
+        await store.OpenAsync(foreign, AccountId.From(otherId), T0, T0.AddHours(12));
+        await store.CloseAsync(closed, SessionCloseReason.Logout, T0.AddMinutes(2));
+        await log.RecordAsync(AccessEventType.Entrada, account, first, "203.0.113.7", T0);
+        await store.TouchAsync(second, T0.AddMinutes(30));
+
+        var open = await store.ListOpenAsync(account, T0.AddHours(2));
+        var foreignClosedByOther = await store.CloseOwnedAsync(account, foreign, SessionCloseReason.CierrePropio, T0.AddHours(2));
+        var ownClosed = await store.CloseOwnedAsync(account, first, SessionCloseReason.CierrePropio, T0.AddHours(2));
+        var ownClosedAgain = await store.CloseOwnedAsync(account, first, SessionCloseReason.CierrePropio, T0.AddHours(2));
+        await store.OpenAsync(Guid.NewGuid(), account, T0.AddHours(2), T0.AddHours(14));
+        await store.CloseOthersAsync(account, second, SessionCloseReason.CierrePropio, T0.AddHours(3));
+        var afterOthers = await store.ListOpenAsync(account, T0.AddHours(3));
+
+        Assert.Equal([second, first], open.Select(s => s.Id));
+        Assert.Equal("203.0.113.7", open.Single(s => s.Id == first).Ip);
+        Assert.Null(open.Single(s => s.Id == second).Ip);
+        Assert.Equal(T0.AddMinutes(30), open.First().LastActivityAt);
+        Assert.False(foreignClosedByOther);
+        Assert.True(ownClosed);
+        Assert.False(ownClosedAgain);
+        Assert.Null((await store.FindAsync(foreign))!.ClosedAt);
+        Assert.Equal([second], afterOthers.Select(s => s.Id));
     }
 }

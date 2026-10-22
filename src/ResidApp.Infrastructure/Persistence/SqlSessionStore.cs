@@ -60,5 +60,40 @@ public sealed class SqlSessionStore(SqlConnectionFactory connections) : ISession
             """, new { AccountId = accountId.Value, Now = now, Reason = reason.ToCode() }, cancellationToken: ct));
     }
 
+    public async Task<IReadOnlyList<OpenSession>> ListOpenAsync(AccountId accountId, DateTime now, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return (await connection.QueryAsync<OpenSession>(new CommandDefinition("""
+            SELECT session.id AS Id, session.creada_en AS CreatedAt, session.ultima_actividad_en AS LastActivityAt,
+                   session.caduca_en AS ExpiresAt, entry.ip AS Ip
+              FROM dbo.sesiones session
+              OUTER APPLY (SELECT TOP 1 ip FROM dbo.eventos_acceso WITH (NOLOCK)
+                            WHERE sesion_id = session.id AND tipo IN ('ENTRADA', 'ENTRADA_DESARROLLO')
+                            ORDER BY ocurrido_en) entry
+             WHERE session.cuenta_id = @AccountId AND session.cerrada_en IS NULL AND session.caduca_en > @Now
+             ORDER BY session.ultima_actividad_en DESC
+            """, new { AccountId = accountId.Value, Now = now }, cancellationToken: ct))).ToList();
+    }
+
+    public async Task<bool> CloseOwnedAsync(
+        AccountId accountId, Guid sessionId, SessionCloseReason reason, DateTime now, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.sesiones SET cerrada_en = @Now, motivo_cierre = @Reason
+             WHERE id = @Id AND cuenta_id = @AccountId AND cerrada_en IS NULL
+            """, new { Id = sessionId, AccountId = accountId.Value, Now = now, Reason = reason.ToCode() }, cancellationToken: ct)) > 0;
+    }
+
+    public async Task CloseOthersAsync(
+        AccountId accountId, Guid keepSessionId, SessionCloseReason reason, DateTime now, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.sesiones SET cerrada_en = @Now, motivo_cierre = @Reason
+             WHERE cuenta_id = @AccountId AND id <> @KeepId AND cerrada_en IS NULL
+            """, new { AccountId = accountId.Value, KeepId = keepSessionId, Now = now, Reason = reason.ToCode() }, cancellationToken: ct));
+    }
+
     private sealed record Row(Guid Id, string ExternalSubject, string AccountStatus, DateTime ExpiresAt, DateTime LastActivityAt, DateTime? ClosedAt);
 }
