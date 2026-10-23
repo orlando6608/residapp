@@ -21,18 +21,18 @@ namespace ResidApp.Infrastructure.Persistence;
 /// </summary>
 public sealed class SqlProfessionalAccountRepository(SqlConnectionFactory connections) : IProfessionalAccountRepository
 {
-    private const string InsertAudit = """
+    internal const string InsertAudit = """
         INSERT INTO dbo.eventos_auditoria
             (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
         VALUES (NEWID(), @ActorId, 'ADMINISTRACION', @CenterId, @UnitId, @ResidentId, @ResourceType, @ResourceId, @Action, @OccurredAt);
         """;
 
-    private const string InsertProfile = """
+    internal const string InsertProfile = """
         INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
         VALUES (@ProfileScopeId, @AccountId, @CenterId, @ProfileCode, 'ACTIVE', @OccurredAt, @ActorId);
         """;
 
-    private const string InsertUnit = """
+    internal const string InsertUnit = """
         INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
         VALUES (NEWID(), @ProfileScopeId, @CenterId, @UnitId, @OccurredAt, @ActorId);
         """;
@@ -95,6 +95,14 @@ public sealed class SqlProfessionalAccountRepository(SqlConnectionFactory connec
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
         await EnsureAdministratorAsync(connection, transaction, access, ct);
         var account = await LockAccountAsync(connection, transaction, access, accountId, ct);
+        if (await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+                SELECT COUNT(*) FROM dbo.ambitos_perfil WHERE cuenta_id = @AccountId AND centro_id <> @CenterId AND estado = 'ACTIVE'
+                """, new { AccountId = accountId.Value, CenterId = access.CenterId.Value }, transaction, cancellationToken: ct)) > 0)
+        {
+            // I2b: el nombre es de la persona en todos sus centros, no de uno solo.
+            throw new DomainValidationException("ACCOUNT_OTHER_CENTERS");
+        }
+
         if (string.Equals(account.DisplayName, displayName, StringComparison.Ordinal))
         {
             throw new DomainValidationException(ProfessionalAccount.InvalidCode);
@@ -473,7 +481,7 @@ public sealed class SqlProfessionalAccountRepository(SqlConnectionFactory connec
     }
 
     /// <summary>Todas las unidades están concedidas, sin revocar, al ámbito de quien gestiona, y activas.</summary>
-    private static async Task EnsureAdministratorUnitsAsync(
+    internal static async Task EnsureAdministratorUnitsAsync(
         SqlConnection connection, SqlTransaction transaction, AccountAdministrationAccess access, IReadOnlyList<UnitId> units,
         CancellationToken ct)
     {
@@ -498,7 +506,7 @@ public sealed class SqlProfessionalAccountRepository(SqlConnectionFactory connec
              WHERE ambito_perfil_id = @ProfileScopeId AND centro_id = @CenterId AND revocado_en IS NULL
             """, new { ProfileScopeId = profileScopeId, CenterId = access.CenterId.Value }, transaction, cancellationToken: ct))).ToList();
 
-    private static async Task InsertUnitsAsync(
+    internal static async Task InsertUnitsAsync(
         SqlConnection connection, SqlTransaction transaction, AccountAdministrationAccess access, Guid profileScopeId,
         IReadOnlyList<UnitId> units, DateTimeOffset occurredAt, CancellationToken ct)
     {

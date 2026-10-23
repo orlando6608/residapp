@@ -324,6 +324,7 @@
         <li><a href="#duracion">Cuánto dura</a></li>
         <li><a href="#cuentas">Cuentas de prueba</a></li>
         <li><a href="#protege">Qué protege</a></li>
+        <li><a href="#otro-centro">Otro centro</a></li>
         <li><a href="#falta">Lo que falta</a></li>
         <li><a href="#mantener">Para quien la mantiene</a></li>
       </ul>
@@ -479,8 +480,8 @@
         Desde el acceso de desarrollo, «Credenciales de prueba» crea una invitación para la cuenta de la sesión, para probar el camino
         real con las cuentas de prueba.</li>
       <li><strong>El identificador de acceso no se puede cambiar</strong> después del alta; el nombre visible, sí. Es único en todo
-        ResidApp: una persona que ya tiene cuenta en otro centro necesita hoy otro identificador (usar la misma cuenta en dos centros
-        llegará después).</li>
+        ResidApp: una persona con cuenta en un centro no necesita otro identificador para trabajar en otro, y sigue con su contraseña y su
+        código del móvil (mira «Trabajar en otro centro» más abajo).</li>
       <li><strong>Un perfil más</strong> (por ejemplo, Medicina a quien ya es Enfermería) no es una cuenta nueva: Administración se lo
         concede en la ficha de la cuenta, y la persona elige con cuál trabaja al entrar.</li>
     </ul>
@@ -942,16 +943,36 @@
     </ul>
   </section>
 
+  <section id="otro-centro" aria-labelledby="otro-centro-t">
+    <h2 id="otro-centro-t">Trabajar en otro centro con la misma cuenta</h2>
+    <p class="prose">Quien ya tiene cuenta en un centro y empieza a trabajar también en otro no necesita otra cuenta. Se hace en tres pasos,
+      sin que la Administración del segundo centro llegue a conocer la cuenta de la persona hasta que ella misma la acepta:</p>
+    <ol class="lista prose">
+      <li><strong>La Administración del centro nuevo prepara una hoja</strong> con el perfil (de personal) y las unidades, <strong>sin decir a
+        quién</strong>, y se la entrega en mano. Lleva un código y un QR, vale 72 horas y se usa una sola vez.</li>
+      <li><strong>La persona la acepta en «Mi cuenta»</strong>, ya con su contraseña y su código del móvil: ve el centro, el perfil y las unidades
+        que se le ofrecen y acepta. El segundo factor es lo que demuestra que es quien dice ser; por eso es solo para el personal. Aceptar
+        no concede nada.</li>
+      <li><strong>La Administración confirma.</strong> Ve el nombre y el usuario de quien aceptó y, si es la persona que tenía delante, confirma: entonces
+        se crea el perfil con sus unidades. Si no la reconoce, rechaza y no se concede nada.</li>
+    </ol>
+    <p class="prose">Después, al entrar, la persona elige con qué centro trabaja, y cada centro solo ve lo suyo. Como la cuenta es de la persona y
+      no de un centro, <strong>ninguna Administración puede suspenderla, cambiarle el nombre ni entregarle una invitación</strong>: lo hace la
+      plataforma («Cuentas de varios centros»). Cada Administración puede retirar su propio perfil, y eso no suspende la cuenta. Todo queda en la
+      auditoría del centro y en el registro de accesos de la persona.</p>
+  </section>
+
   <section id="falta" aria-labelledby="falta-t">
     <h2 id="falta-t">Lo que falta: el acceso definitivo</h2>
     <p class="prose">ResidApp tendrá su propio inicio de sesión (ASP.NET Core Identity), con los datos de acceso en la misma base de datos
-      de la UE que el resto. Se hace por partes; las cuatro primeras ya están hechas (ADR 0007). Falta además retirar el acceso de
-      desarrollo antes de usar datos reales, y poder usar en otro centro una cuenta que ya existe.</p>
+      de la UE que el resto. Se hace por partes; las cuatro primeras y la vinculación de cuentas entre centros ya están hechas (ADR 0007). Falta además retirar el acceso de
+      desarrollo antes de usar datos reales.</p>
     <ul class="estados">
       <li><div class="pildora ok"><strong>I0 · Sesión segura</strong><span>Sesión cifrada y revocable, todo con sesión, HTTPS. Hecho el 21/10/2026.</span></div></li>
       <li><div class="pildora ok"><strong>I1 · Contraseña</strong><span>Contraseña y segundo factor con app de códigos (TOTP), bloqueo por intentos y registro de accesos. Hecho el 22/10/2026.</span></div></li>
       <li><div class="pildora ok"><strong>I2 · Invitaciones</strong><span>Alta con un enlace o QR de un solo uso que entrega Administración, que también recupera el acceso. Hecho el 22/10/2026.</span></div></li>
       <li><div class="pildora ok"><strong>I3 · Mi cuenta</strong><span>Cambiar la contraseña, generar códigos de recuperación nuevos y ver y cerrar tus sesiones. Hecho el 22/10/2026.</span></div></li>
+      <li><div class="pildora ok"><strong>I2b · Otro centro</strong><span>La misma cuenta en dos centros: la Administración da una hoja, la persona la acepta con su segundo factor y la Administración confirma. Hecho el 23/10/2026.</span></div></li>
       <li><div class="pildora pend"><strong>I4 · Passkeys</strong><span>Entrar con el móvil o una llave, sin contraseña. Obligatorias para Plataforma.</span></div></li>
       <li><div class="pildora pend"><strong>I5 · Pulsera</strong><span>Pulsera NFC con PIN para entrar rápido en la tablet compartida.</span></div></li>
     </ul>

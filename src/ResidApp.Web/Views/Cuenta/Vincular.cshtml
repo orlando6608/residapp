@@ -1,0 +1,31 @@
+@model ResidApp.Web.Models.AceptarVinculacionViewModel
+@{
+    ViewData["Title"] = "Acceso a otro centro";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-9 col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-3">Acceso a @Model.Vinculacion.CenterName</h1>
+                <p>La Administración de <strong>@Model.Vinculacion.CenterName</strong> te ofrece trabajar en ese centro con esta misma cuenta:</p>
+                <dl class="row mb-3">
+                    <dt class="col-sm-4">Perfil</dt>
+                    <dd class="col-sm-8">@ResidApp.Web.Models.SystemProfileDisplay.Label(Model.Vinculacion.Profile)</dd>
+                    <dt class="col-sm-4">Unidades</dt>
+                    <dd class="col-sm-8">@string.Join(", ", Model.Vinculacion.UnitNames)</dd>
+                </dl>
+                <div class="alert alert-info" role="note">
+                    Aceptar no te da acceso todavía: la Administración de ese centro tiene que confirmar que eres tú. Después podrás elegir el
+                    centro al entrar. Tu contraseña y tu código del móvil siguen siendo los mismos, y cada centro solo ve lo suyo.
+                    Si no esperabas esta hoja, no aceptes.
+                </div>
+                <form asp-controller="Cuenta" asp-action="AceptarVinculacion" method="post" class="d-grid d-md-flex justify-content-md-end gap-2">
+                    <input type="hidden" name="token" value="@Model.Token" />
+                    <a asp-controller="Cuenta" asp-action="Index" class="btn btn-outline-secondary btn-lg">No aceptar</a>
+                    <button type="submit" class="btn btn-primary btn-lg">Aceptar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

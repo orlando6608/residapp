@@ -21,7 +21,7 @@
             centro (unidades, edificios, habitaciones y plazas), turnos, equipos y planificación, comunicados a la familia y auditoría.</li>
         <li><strong>Dirección Clínica:</strong> supervisión operativa por unidad, calidad de proceso y sus plazos, indicadores e informe de actividad, y la consulta
             auditada del basal.</li>
-        <li><strong>Plataforma:</strong> alta de centros nuevos y Administración principal de cada centro.</li>
+        <li><strong>Plataforma:</strong> alta de centros nuevos, Administración principal de cada centro y cuentas que trabajan en varios centros.</li>
     </ul>
     Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, el personal, además
     con un código de su móvil. La contraseña la elige cada persona con la <strong>invitación</strong> que le entrega Administración. En
@@ -166,6 +166,10 @@
         <li><strong>Sesiones abiertas</strong>: las que tienes ahora, con su inicio, su última actividad y la dirección IP desde la que se abrió.
             Puedes cerrar una cualquiera con <strong>«Cerrar»</strong>, o todas las demás con <strong>«Cerrar todas las demás»</strong>. Para cerrar
             la tuya, «Salir».</li>
+        <li><strong>Acceso a otro centro</strong> (solo personal): si vas a trabajar también en otro centro, su Administración te da una hoja con un
+            código o un QR. Escribe el código aquí (o escanea el QR), comprueba el centro, el perfil y las unidades y acepta. No hace falta otra
+            cuenta. Aceptar no te da acceso: la Administración de ese centro tiene que confirmar que eres tú. Después, al entrar, eliges con qué
+            centro trabajas, y cada centro solo ve lo suyo.</li>
         <li><strong>Últimos accesos a tu cuenta</strong>: las entradas, los fallos y los cambios recientes, con los fallos marcados. Si ves uno
             que no reconoces, cambia la contraseña y avisa a la Administración de tu centro.</li>
     </ul>
@@ -562,12 +566,23 @@
         recuperación»</strong>, para quien la ha olvidado o ha perdido el móvil: al usarla elige otra contraseña, prepara de nuevo el
         código del móvil y se le cierran todas las sesiones abiertas. Hasta que la use, su contraseña de siempre sigue valiendo; si temes
         que alguien la conozca, suspende la cuenta. No se entrega invitación a tu propia cuenta (otra Administración, o Plataforma, puede
-        hacerlo) ni a una cuenta con perfiles vigentes en otros centros. Cada invitación entregada o anulada queda en la auditoría.
+        hacerlo) ni a una cuenta con perfiles vigentes en otros centros (esas las gestiona Plataforma). Cada invitación entregada o anulada queda en la auditoría.
+    </p>
+    <p>
+        <strong>Acceso de alguien de otro centro</strong> (junto a «Alta de usuario») es para dar un perfil de tu centro a una persona que <strong>ya
+        tiene cuenta en otro</strong>: no se crea otra, y ella sigue con su contraseña y su código del móvil. Eliges el perfil (de personal) y las
+        unidades de tu ámbito y <strong>«Crear la hoja»</strong>, <strong>sin decir a quién</strong>; sale una hoja con un código y un QR, que se ve una sola
+        vez, vale 72 horas y se usa una sola vez. Entrégasela en mano. La persona la usa desde «Mi cuenta», comprueba lo que se le ofrece y acepta;
+        tiene que tener el código del móvil preparado. Entonces aparece en <strong>«Pendientes de confirmar»</strong>, con su nombre y su usuario:
+        comprueba que es quien tenías delante y pulsa <strong>«Confirmar»</strong> (se crea el perfil con sus unidades y podrá elegir tu centro al
+        entrar) o <strong>«Rechazar»</strong> (no se concede nada). Una hoja que nadie ha usado se puede <strong>anular</strong>. Cada emisión,
+        anulación y resolución queda en la auditoría. Una cuenta que trabaja en varios centros no se suspende, ni se le cambia el nombre, ni se le
+        entregan invitaciones desde ningún centro: lo hace Plataforma. Tú solo puedes revocar el perfil de tu centro, y eso no la suspende.
     </p>
     <p>
         En la <strong>ficha de la cuenta</strong> puedes cambiar el nombre, <strong>suspender</strong> la cuenta (no podrá
         entrar con ningún perfil aunque los conserve) y <strong>reactivarla</strong>. Si la cuenta tiene perfiles vigentes
-        en otro centro, no se suspende desde aquí: revoca sus perfiles de tu centro. Con <strong>Conceder perfil</strong> le
+        en otro centro, no se suspende desde aquí ni se le cambia el nombre: revoca sus perfiles de tu centro, o pide a Plataforma que la suspenda. Con <strong>Conceder perfil</strong> le
         das un perfil más, con sus unidades; para usarlo tendrá que elegirlo al entrar, porque los permisos de perfiles
         distintos nunca se suman.
     </p>
@@ -757,6 +772,12 @@
     <p>
         Si el código del centro ya existe o el identificador de acceso ya es de otra cuenta, te lo indica y no crea nada. Este perfil no
         ve residentes ni contenido clínico, y solo cambia de un centro después de crearlo lo que se dice a continuación. Todo queda en la auditoría.
+    </p>
+    <p>
+        <strong>Cuentas de varios centros</strong> (botón junto a «Nuevo centro») lista a las personas que trabajan en más de un centro con la misma
+        cuenta, con sus perfiles en cada uno. Ninguna Administración puede suspenderlas, cambiarles el nombre ni entregarles una invitación, porque
+        afectaría a los demás centros: lo hace Plataforma, con <strong>«Invitación de recuperación»</strong> (o de acceso) y
+        <strong>«Suspender»</strong> o <strong>«Reactivar»</strong>, que valen para todos sus centros y quedan en la auditoría de cada uno.
     </p>
     <p>
         En la lista de centros, <strong>Administraciones y unidades</strong> abre un centro con sus unidades y las Administraciones vigentes. Desde ahí el
@@ -1564,8 +1585,7 @@
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
         <li>Portal Familiar: el resumen periódico por residente.</li>
-        <li>Acceso: las llaves de acceso (passkeys) y
-            usar en otro centro una cuenta que ya existe.</li>
+        <li>Acceso: las llaves de acceso (passkeys).</li>
         <li>Más gestión administrativa: organigrama y cargos (aplazado) y un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>

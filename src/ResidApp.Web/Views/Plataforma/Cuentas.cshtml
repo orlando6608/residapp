@@ -1,0 +1,79 @@
+@using ResidApp.Web.Models
+@model PlatformMultiCenterAccountsViewModel
+@{
+    ViewData["Title"] = "Cuentas de varios centros";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Centros</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cuentas de varios centros</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Cuentas de varios centros</h1>
+<p class="text-muted">
+    Personas que trabajan en más de un centro con la misma cuenta. Ninguna Administración puede suspenderlas, cambiarles el nombre ni
+    entregarles una invitación de recuperación, porque afectaría a los demás centros: lo hace la plataforma. Cada Administración solo
+    retira su propio perfil. Este perfil no ve residentes ni contenido clínico.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (ViewData.ModelState.IsValid && Model.Accounts.Count == 0)
+{
+    <p class="estado-vacio">Ninguna cuenta tiene perfiles en varios centros.</p>
+}
+else
+{
+    <ul class="list-group mb-4">
+        @foreach (var account in Model.Accounts)
+        {
+            <li class="list-group-item">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                    <div>
+                        <div class="fw-semibold">@(string.IsNullOrWhiteSpace(account.DisplayName) ? account.Subject : account.DisplayName)
+                            <span class="text-body-secondary fw-normal">· <code>@account.Subject</code></span>
+                            @if (!account.Active)
+                            {
+                                <span class="badge text-bg-warning ms-1">Suspendida</span>
+                            }
+                        </div>
+                        <ul class="small text-body-secondary mb-1">
+                            @foreach (var scope in account.Scopes)
+                            {
+                                <li>@scope.CenterName · @SystemProfileDisplay.Label(scope.Profile)</li>
+                            }
+                        </ul>
+                        @if (account.LiveInvitationExpiresAt is { } expires)
+                        {
+                            <div class="small">Tiene una invitación sin usar hasta el @expires.ToLocalTime().ToString("dd/MM/yyyy HH:mm").</div>
+                        }
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (account.Active)
+                        {
+                            <form asp-action="InvitacionCuenta" method="post">
+                                <input type="hidden" name="cuentaId" value="@account.AccountId.Value" />
+                                <button type="submit" class="btn btn-outline-primary btn-sm">@(account.HasPassword ? "Invitación de recuperación" : "Invitación de acceso")</button>
+                            </form>
+                        }
+                        <form asp-action="EstadoCuenta" method="post">
+                            <input type="hidden" name="cuentaId" value="@account.AccountId.Value" />
+                            <input type="hidden" name="estado" value="@(account.Active ? "Suspended" : "Active")" />
+                            <button type="submit" class="btn @(account.Active ? "btn-outline-danger" : "btn-outline-secondary") btn-sm">@(account.Active ? "Suspender" : "Reactivar")</button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+        }
+    </ul>
+}

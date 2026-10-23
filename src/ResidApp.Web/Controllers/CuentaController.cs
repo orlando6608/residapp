@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ResidApp.Application.Ports;
+using ResidApp.Application.Errors;
 using ResidApp.Application.Sessions;
+using ResidApp.Application.UseCases;
 using ResidApp.Infrastructure.Identity;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
@@ -21,11 +23,14 @@ namespace ResidApp.Web.Controllers;
 [Authorize]
 public sealed class CuentaController(
     UserManager<CredentialAccount> users, IProfileScopeDirectoryProvider directory, ISessionStore sessions, IAccessEventLog accessLog,
-    AccessFailureThrottle throttle, SessionPolicy policy, TimeProvider clock, ILogger<CuentaController> logger) : Controller
+    AccessFailureThrottle throttle, SessionPolicy policy, AccountLinksApplicationService links, TimeProvider clock,
+    ILogger<CuentaController> logger) : Controller
 {
     private const string AvisoKey = "CuentaAviso";
     private const int RecentEvents = 10;
     private const string WrongPasswordMessage = "La contraseña actual no es correcta. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.";
+    private const string InvalidLinkMessage = "Ese código no vale: no existe, ya se ha usado, se ha anulado o ha caducado. Pide otra hoja a la Administración del centro.";
+    private const string NeedsSecondFactorMessage = "El acceso a otro centro es para el personal: tu cuenta no tiene el código del móvil preparado.";
     private const string LockedMessage = "La cuenta está bloqueada unos minutos por demasiados intentos fallidos. Vuelve a intentarlo más tarde.";
 
     [HttpGet]
@@ -181,6 +186,92 @@ public sealed class CuentaController(
         return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>La hoja de la Administración de otro centro (ADR 0007, I2b), por su enlace o su código: se enseña lo que ofrece y la
+    /// persona acepta o no. El token llega por la dirección solo si escanea el QR; lo escrito a mano va por POST.</summary>
+    [HttpGet]
+    public async Task<IActionResult> Vincular(string? id, CancellationToken ct) => await ShowLinkAsync(id, ct);
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
+    [ActionName(nameof(Vincular))]
+    public async Task<IActionResult> VincularCodigo(string? codigo, CancellationToken ct) => await ShowLinkAsync(codigo, ct);
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
+    public async Task<IActionResult> AceptarVinculacion(string? token, CancellationToken ct)
+    {
+        if (await CurrentAccountAsync() is not { } account)
+        {
+            return Challenge();
+        }
+        if (throttle.IsBlocked(SessionSignIn.Ip(HttpContext)))
+        {
+            return TooManyFailures();
+        }
+
+        var link = (await links.FindAsync(LinkToken(token), ct)).Value;
+        if (link is null)
+        {
+            throttle.RecordFailure(SessionSignIn.Ip(HttpContext));
+            return View("Index", await ModelAsync(account, ct, errorVinculacion: InvalidLinkMessage));
+        }
+        if (!account.TwoFactorEnabled)
+        {
+            return View("Index", await ModelAsync(account, ct, errorVinculacion: NeedsSecondFactorMessage));
+        }
+
+        var accountId = AccountId.From(account.Id);
+        var result = await links.RedeemAsync(accountId, link.Id, ct);
+        if (!result.Ok)
+        {
+            return View("Index", await ModelAsync(account, ct, errorVinculacion: result.Error!.Code == ApplicationFailureCode.Conflict
+                ? $"Ya tienes el perfil {SystemProfileDisplay.Label(link.Profile)} en {link.CenterName}."
+                : InvalidLinkMessage));
+        }
+
+        await accessLog.RecordAsync(AccessEventType.VinculacionAceptada, accountId, SessionAuthentication.SessionId(User),
+            SessionSignIn.Ip(HttpContext), Now, ct);
+        TempData[AvisoKey] = $"Has aceptado el acceso a {link.CenterName}. Su Administración tiene que confirmar que eres tú; hasta entonces no verás ese centro.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<IActionResult> ShowLinkAsync(string? input, CancellationToken ct)
+    {
+        if (await CurrentAccountAsync() is not { } account)
+        {
+            return Challenge();
+        }
+        if (throttle.IsBlocked(SessionSignIn.Ip(HttpContext)))
+        {
+            return TooManyFailures();
+        }
+
+        var token = LinkToken(input);
+        var link = (await links.FindAsync(token, ct)).Value;
+        if (link is null)
+        {
+            throttle.RecordFailure(SessionSignIn.Ip(HttpContext));
+            return View("Index", await ModelAsync(account, ct, errorVinculacion: InvalidLinkMessage));
+        }
+        if (!account.TwoFactorEnabled)
+        {
+            return View("Index", await ModelAsync(account, ct, errorVinculacion: NeedsSecondFactorMessage));
+        }
+
+        Response.Headers["Referrer-Policy"] = "no-referrer";
+        Response.Headers.CacheControl = "no-store";
+        return View("Vincular", new AceptarVinculacionViewModel(link, token!));
+    }
+
+    /// <summary>Acepta el código suelto o la dirección completa de la hoja: se queda con lo que va tras la última barra.</summary>
+    private static string? LinkToken(string? input)
+    {
+        var text = input?.Trim().Split('?')[0].TrimEnd('/');
+        return string.IsNullOrEmpty(text) ? null : text[(text.LastIndexOf('/') + 1)..];
+    }
+
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
 
     private async Task<CredentialAccount?> CurrentAccountAsync() =>
@@ -225,7 +316,7 @@ public sealed class CuentaController(
     }
 
     private async Task<CuentaViewModel> ModelAsync(
-        CredentialAccount account, CancellationToken ct, string? errorContrasena = null, string? errorCodigos = null)
+        CredentialAccount account, CancellationToken ct, string? errorContrasena = null, string? errorCodigos = null, string? errorVinculacion = null)
     {
         var accountId = AccountId.From(account.Id);
         var scopes = await directory.ListActiveAsync(account.UserName, ct);
@@ -247,6 +338,7 @@ public sealed class CuentaController(
             Aviso = TempData[AvisoKey] as string,
             ErrorContrasena = errorContrasena,
             ErrorCodigos = errorCodigos,
+            ErrorVinculacion = errorVinculacion,
         };
     }
 }
