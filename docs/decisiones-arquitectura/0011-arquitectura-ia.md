@@ -1,6 +1,9 @@
 # ADR 0011 — Arquitectura de la IA: independiente del proveedor, con un solo caso de uso aprobado
 
-Estado: aceptada el 2026-10-23 (decisión del usuario). Sin implementar en `src/`: se aplica en la Fase B del dictado (ADR 0009).
+Estado: aceptada el 2026-10-23 (decisión del usuario). Implementada ese mismo día en el tramo 1 de la Fase B del dictado (ADR 0009): los dos puertos
+(`Application/Ports/IVoiceDictation.cs`), el adaptador de Mistral (`Infrastructure/IA/MistralClient.cs`, con un reintento y registro sin contenido), la
+lista de proveedores autorizados (`IaOptions.Validate`, que impide arrancar con otro), el prompt incrustado y el esquema generado desde el dominio
+(`DailyChangeDictationSchema`). El uso se audita antes de enviar el audio (`VOICE_DICTATION_USED`) y, sin `IA:Mistral:ApiKey`, el dictado queda desactivado.
 
 ## Contexto
 

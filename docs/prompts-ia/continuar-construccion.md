@@ -14,6 +14,40 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Dictado por voz, Fase B, tramo 1: el servidor está hecho (2026-10-23, rama `dictado-fase-b-tramo-1`, sin push; sin script SQL, el siguiente libre sigue siendo `0067`).**
+  Falta la pantalla (tramo 2). Suite en verde proyecto a proyecto: 425 unitarias, 514 de integración y 303 funcionales (2 pasadas de 3 completas; ver el aviso al final).
+  - **En lenguaje llano:** *puerto* es una interfaz que dice qué se necesita sin decir quién lo hace; *proveedor autorizado* es una lista corta de empresas de IA
+    permitidas, y la aplicación no arranca con otra; *saneado* es quitar de lo que contesta el modelo lo que el formulario no admitiría.
+  - **Qué hay:**
+    - `Application/Ports/IVoiceDictation.cs`: `ISpeechTranscriber`, `IStructuredGenerator` (firmas del ADR 0011) e `IVoiceDictationAudit`.
+    - `Application/UseCases/DailyChangeDictationSchema.cs` (esquema estricto generado desde los enums y el catálogo del dominio, **sin temperatura**) y
+      `SuggestDailyChangeFromVoice.cs`: valida el audio (hasta 5 MB; webm, ogg, mp4, mpeg o wav), comprueba ámbito Auxiliar y residente asignado como
+      `RegisterDailyChange`, **audita antes de enviar nada**, transcribe, estructura y sanea (área desconocida, opción que no es del área, áreas repetidas
+      unidas, áreas vacías fuera, texto a 1000 caracteres). Devuelve la transcripción (no se guarda) y las áreas sugeridas.
+    - `Infrastructure/IA/`: `MistralClient` (HttpClient tipado, un reintento ante 429, 5xx, red o tiempo agotado; registra modelo, bytes, duración y tokens, nunca
+      el contenido ni el cuerpo de un error), `IaOptions` (sección `IA`; `Validate` impide arrancar con un proveedor que no sea Mistral; la dirección de Mistral es
+      fija) y `Prompts/registrar-cambio.md` incrustado (el v2 de la Fase A sin la regla de temperatura). `Persistence/SqlVoiceDictationAudit.cs` escribe
+      `VOICE_DICTATION_USED` (`tipo_recurso = VOICE_DICTATION`) en `eventos_auditoria`; está en la trazabilidad de Dirección con su etiqueta en español.
+    - `Web`: `AuxiliarController.Dictado.cs` (`POST /Auxiliar/DictarCambio`, multipart, antiforgery por cabecera `RequestVerificationToken`, límite de tasa **por cuenta**,
+      404 sin clave, 403/400/409/503 sin filtrar detalles) y el registro en `Program.cs`. **Se movió `UseRateLimiter` después de `UseAuthentication`**: antes de
+      autenticar, la política por cuenta caía a la IP; las de acceso (por IP) no cambian.
+  - **Cómo se activa en local:** `dotnet user-secrets --project src/ResidApp.Web set IA:Mistral:ApiKey <clave>` (o la variable `IA__Mistral__ApiKey`). **No está puesta en Azure dev**:
+    no hay contrato de encargado ni EIPD, solo valen audios y textos ficticios en local.
+  - **Pruebas:** unitarias (esquema, saneado y caso de uso con falsos, incluido el orden «auditar antes de transcribir»), de integración (`MistralClientTests` con un
+    manejador HTTP falso; `DictadoCambioAuditoriaTests` con SQL real y la fila de auditoría) y funcionales (`DictadoCambioTests`, con los puertos falsos por
+    `ConfigureTestServices` y `UseSetting`). **Mutaciones: 8 de 8 mueren** (sin filtro de opciones por área, auditar después, sin antiforgery, sin comprobar residente
+    asignado, límite sin partición por cuenta, limitador antes de autenticar y perfil Enfermería válido; el control sin cambios da 0 fallos). La del perfil solo la
+    caza un test unitario porque en SQL la comprobación de residente asignado ya lo deniega: es una defensa redundante a propósito.
+  - **No se probó con Mistral de verdad en esta sesión:** la suite nunca llama a internet y no hice la comprobación manual con un audio sintético (siguiente paso
+    natural, en local y con la clave de Orlando).
+  - **Tramo 2 (pendiente, plan):** `wwwroot/js/dictado.js` externo (IIFE en español, `MediaRecorder`, `data-url-*`, token por cabecera como `passkeys.js`); botón y estado en
+    `RegistrarCambio.cshtml` respetando «Volver a editar»; marca «Sugerido por voz» (`badge text-bg-info` con icono y texto, nunca verde ni solo color) que se quita al tocar;
+    **modo estricto** (guardar con `aria-disabled` y bloqueo por JS hasta revisar cada sugerencia, la guía visual prohíbe `disabled`); aviso fijo «No digas nombres»;
+    `Permissions-Policy: microphone=(self)`; subir la versión de caché de `sw.js`; `Manual.cshtml`; y `probar-en-navegador` con micrófono falso de Chrome en claro, oscuro y
+    375 px. El audio de `MediaRecorder` en iPhone es `audio/mp4`; el tamaño máximo y los tipos admitidos se ajustan con audios reales. **La temperatura sigue sin sugerirse**
+    hasta que CJ fije el rango (tema 3 del documento de dictado).
+  - **Aviso de la suite:** al compilar y ejecutar `tests/FunctionalTests` hubo tres pasadas con `SqlException` por tiempo de espera en tests distintos y sin relación con el
+    dictado (1,7 GB libres de 15,7); las limpias dan 303. Si ocurre, apaga los servidores de compilación (`dotnet build-server shutdown`: dejan unos 1,2 GB) y repite.
 - **Importar y Exportar probado en Azure dev, avisos a la familia preguntados a CJ y diagnóstico de la suite (2026-10-23, rama `tests-en-serie-y-avisos-cj`, sin push; sin cambios en `src/`).**
   - **En lenguaje llano:** *push* es el aviso que aparece en la pantalla del móvil, como el de cualquier aplicación instalada; *serializar los tests* es que no
     corran dos proyectos de prueba a la vez.
@@ -81,7 +115,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     rango de temperatura, bloquea la Fase B.** Hoy «Registrar cambio» no valida la temperatura: solo la limita la columna `DECIMAL(4,1)`.
   - **Siguiente:** (1) CJ responde el documento y Orlando guarda el `.respuestas.json`; al recibirlo, corregir los esperados de `casos/jerga-es.json`, repetir la
     prueba y anotar el resultado; (2) grabar unos 10 audios reales ficticios (ruido y acentos reales, sin datos de residentes); (3) si convence, **Fase B**.
-  - **Plan de la Fase B (no empezada; el plan vive solo aquí):**
+  - **Plan de la Fase B (el tramo 1, servidor, está hecho: ver la primera entrada; el tramo 2 es la pantalla):**
     - Puertos en `src/ResidApp.Application/Ports` y adaptador de Mistral en `src/ResidApp.Infrastructure/IA/` (como `Pdf/` e `Intercambio/`), con `HttpClient`
       tipado (el primero del proyecto), opciones `IA` registradas en `Program.cs` como `DevAuthOptions`/`AccesoOptions`, lista de proveedores autorizados validada
       al arrancar y prompts como `EmbeddedResource`. **Sin clave, el dictado queda desactivado** (botón oculto y endpoint 404), como `Acceso:PasskeyDominio`. Clave
@@ -1597,9 +1631,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **En curso: dictado por voz (ADR 0009) con la arquitectura del ADR 0011.** La Fase A (prueba de precisión, `tools/PruebaDictado`) está hecha y mergeada;
-   **espera la respuesta de CJ** a `docs/pendientes-cj/dictado-por-voz-confirmaciones-cj.html` (lo que bloquea es el rango de temperatura, tema 3). Mientras
-   tanto, grabar unos 10 audios reales ficticios o elegir otra tarea de esta lista. Ver la primera entrada de «Dónde estamos», que lleva también el plan de la Fase B.
+0. **En curso: dictado por voz (ADR 0009) con la arquitectura del ADR 0011.** La Fase A (prueba de precisión, `tools/PruebaDictado`) está mergeada y el **servidor de la
+   Fase B (tramo 1) está hecho** en la rama `dictado-fase-b-tramo-1`. Siguiente: la comprobación manual con Mistral y un audio sintético, y el **tramo 2 (la pantalla)**, cuyo plan está en
+   la primera entrada de «Dónde estamos». **Espera la respuesta de CJ** a `docs/pendientes-cj/dictado-por-voz-confirmaciones-cj.html` (el rango de temperatura, tema 3, bloquea
+   solo la temperatura). Mientras tanto, grabar unos 10 audios reales ficticios o elegir otra tarea de esta lista.
    **I0 a I4 e I2b del ADR 0007 están hechos** (I4 mergeado y comprobado en Azure dev; el manual y las páginas de acceso están al día). Quedan **I5 (pulsera NFC)** y la
    retirada del acceso de desarrollo; antes de datos reales, retirar el acceso de desarrollo y llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: (Importar y Exportar ya probado en Azure dev el 2026-10-23), y las dos preguntas a CJ de la guía 2 (hora en la
