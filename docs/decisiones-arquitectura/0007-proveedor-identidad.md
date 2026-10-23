@@ -101,7 +101,8 @@ Desde I1 los cubren además `tests/FunctionalTests/AccesoTests.cs` y `tests/Inte
   vez, y se puede anular. Una recuperación no cambia nada hasta que se usa (si hay sospecha, se suspende la cuenta).
 - Un mismo código TOTP vale durante su ventana (unos 90 segundos a cada lado); Identity no impide reutilizarlo.
 - `eventos_acceso` guarda la IP del intento: el plazo de conservación lo decide el DPO.
-- Las cuentas de Plataforma no se recuperan desde la app: por SQL, como su alta (ADR 0006).
+- Las cuentas de Plataforma no se recuperan desde la app: por SQL, como su alta (ADR 0006). Desde I4, si una pierde todas sus passkeys, se
+  borran sus filas de `dbo.passkeys` y vuelve a entrar con contraseña y código del móvil, que la llevan a «Mi cuenta» a registrar otra.
 
 ## Puertas abiertas
 

@@ -238,7 +238,7 @@ El estado detallado vive en [`docs/producto/roadmap.md`](docs/producto/roadmap.m
 
 | Decisión | Estado |
 | --- | --- |
-| Autenticación y segundo factor productivos | Propuesta (2026-10-04): Microsoft Entra External ID con tenant en la UE y Auth0 UE como respaldo. Ver [ADR 0007](docs/decisiones-arquitectura/0007-proveedor-identidad.md). Pendiente de validación de CJ, Seguridad y DPO; nada implementado. |
+| Autenticación y segundo factor productivos | Decidido el 2026-10-21: ASP.NET Core Identity propio (el sistema de cuentas que trae la plataforma de la aplicación) sobre Azure SQL en la UE; ver [ADR 0007](docs/decisiones-arquitectura/0007-proveedor-identidad.md). Hechos I0 a I4 e I2b (sesión, contraseña y código del móvil, invitaciones, «Mi cuenta», cuentas en varios centros y passkeys o «llaves de acceso»). Falta la pulsera con PIN para tablets (I5), retirar el acceso de desarrollo y la validación del DPO de la residencia piloto. |
 | SLA, RPO, RTO y copias de seguridad | Pendiente de definir antes de producción. |
 | EIPD, contratos y seguridad | Pendiente de formalizar antes de tratar datos reales. |
 | Configuración real de citas, equipos y tiempos | Pendiente de definir junto con cada centro piloto. |

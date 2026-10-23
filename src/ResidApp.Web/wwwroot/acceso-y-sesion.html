@@ -445,7 +445,7 @@
             <td>La Administración de tu centro</td>
             <td>En «Usuarios», <strong>Alta de usuario</strong>: tu identificador de acceso, tu nombre, tu perfil y tus unidades. Después,
               en tu ficha, <strong>Crear invitación de acceso</strong>, y te entrega la hoja.</td>
-            <td>Tu identificador, tu contraseña y el código del móvil</td>
+            <td>Tu identificador, tu contraseña y el código del móvil, o tu passkey</td>
           </tr>
           <tr>
             <td>Familiar de un residente</td>
@@ -459,13 +459,14 @@
             <td>Plataforma, el soporte de ResidApp</td>
             <td><strong>Nuevo centro</strong>: el centro, su primera unidad y tu cuenta de Administración, todo a la vez. Después, en el
               centro, <strong>Crear invitación de acceso o de recuperación</strong>.</td>
-            <td>Tu identificador, tu contraseña y el código del móvil</td>
+            <td>Tu identificador, tu contraseña y el código del móvil, o tu passkey</td>
           </tr>
           <tr>
             <td>Operador de Plataforma</td>
             <td>Quien administra la base de datos</td>
             <td>Crea la cuenta y su ámbito por SQL, una sola vez. No hay pantalla, a propósito: es la cuenta más sensible.</td>
-            <td>Tu identificador y la clave de desarrollo</td>
+            <td>Tu passkey: en cuanto tienes una, es la única forma de entrar. Hasta entonces, tu contraseña y el código del móvil (en
+              pruebas, también tu identificador y la clave de desarrollo)</td>
           </tr>
           <tr>
             <td>Quien prueba la aplicación (CJ)</td>
@@ -552,7 +553,9 @@
         <ol>
           <li>Si ve «Usuario o clave incorrectos.», comprueba que escribe bien su identificador y, en pruebas, la clave vigente.</li>
           <li>Si ve un error 429, que espere un minuto: son demasiados intentos seguidos.</li>
-          <li>Si no es eso, lo resuelve su Administración en «Usuarios»: la cuenta puede estar suspendida o sin ningún perfil vigente.</li>
+          <li>Si usaba una passkey y no tiene a mano ese dispositivo, puede entrar con su contraseña y el código del móvil.</li>
+          <li>Si no es eso, lo resuelve su Administración en «Usuarios»: la cuenta puede estar suspendida o sin ningún perfil vigente. Si ha
+            perdido el móvil, una invitación de recuperación, que además borra sus passkeys.</li>
         </ol>
         <p class="pasa">Soporte no crea ni reactiva cuentas de personal desde la aplicación.</p>
       </li>
@@ -589,7 +592,8 @@
       </li>
       <li>
         <h3>Una cuenta de Plataforma nueva o que se retira</h3>
-        <p>Solo por SQL, quien administra la base de datos (ADR 0006). Nunca desde la aplicación.</p>
+        <p>Solo por SQL, quien administra la base de datos (ADR 0006). Nunca desde la aplicación. Lo mismo si pierde todas sus passkeys:
+          se borran sus filas de la tabla <code>passkeys</code> y vuelve a entrar con su contraseña y su código del móvil para registrar otra.</p>
       </li>
     </ul>
     <div class="todavia prose">
@@ -976,8 +980,8 @@
 
   <section id="falta" aria-labelledby="falta-t">
     <h2 id="falta-t">Lo que falta: el acceso definitivo</h2>
-    <p class="prose">ResidApp tendrá su propio inicio de sesión (ASP.NET Core Identity), con los datos de acceso en la misma base de datos
-      de la UE que el resto. Se hace por partes; las cuatro primeras y la vinculación de cuentas entre centros ya están hechas (ADR 0007). Falta además retirar el acceso de
+    <p class="prose">ResidApp tendrá su propio inicio de sesión (con ASP.NET Core Identity, el sistema de cuentas que trae la propia plataforma de la aplicación), con los datos de acceso en la misma base de datos
+      de la UE que el resto. Se hace por partes; las cinco primeras (hasta las passkeys) y la vinculación de cuentas entre centros ya están hechas (ADR 0007). Falta además retirar el acceso de
       desarrollo antes de usar datos reales.</p>
     <ul class="estados">
       <li><div class="pildora ok"><strong>I0 · Sesión segura</strong><span>Sesión cifrada y revocable, todo con sesión, HTTPS. Hecho el 21/10/2026.</span></div></li>

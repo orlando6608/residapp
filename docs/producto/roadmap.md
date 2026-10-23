@@ -44,7 +44,7 @@ Sin pendiente crítico propio. Detalle en `docs/tareas/alta-prioridad/pendientes
 
 | Decisión | Estado |
 | --- | --- |
-| Autenticación y segundo factor productivos | En el legado, Auth0 era la recomendación principal y WorkOS AuthKit el respaldo, sin llegar a aceptarse. Para la pila .NET/Azure hay una propuesta (2026-10-04): Microsoft Entra External ID con tenant en la UE y Auth0 UE como respaldo. Ver `docs/decisiones-arquitectura/0007-proveedor-identidad.md`. Pendiente de validación de CJ, Seguridad y DPO; nada implementado. |
+| Autenticación y segundo factor productivos | Decidido el 2026-10-21: ASP.NET Core Identity propio (el sistema de cuentas que trae la plataforma de la aplicación) sobre Azure SQL en la UE; ver `docs/decisiones-arquitectura/0007-proveedor-identidad.md`. Hechos I0 a I4 e I2b (sesión, contraseña y código del móvil, invitaciones, «Mi cuenta», cuentas en varios centros y passkeys o «llaves de acceso»). Falta la pulsera con PIN para tablets (I5), retirar el acceso de desarrollo y la validación del DPO de la residencia piloto. |
 | SLA, RPO, RTO y copias de seguridad | Pendiente de definir antes de producción. |
 | EIPD, contratos y seguridad | Pendiente de formalizar antes de tratar datos reales. |
 | Configuración real de citas, equipos y tiempos | Pendiente de definir junto con cada centro piloto. |

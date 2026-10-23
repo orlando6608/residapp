@@ -47,6 +47,8 @@ Ya no es la plantilla en blanco. Hecho:
 - Identidad de sesión de desarrollo: `DevSessionIdentityProvider` + `DevAuthController`
   (`/DevAuth/Login`), basada en cookie propia — **no es autenticación real**, la decisión de proveedor
   productivo sigue completamente abierta (ver `README.md`, "Decisiones pendientes").
+  **Superado desde el 2026-10-21:** `DevSessionIdentityProvider` ya no existe; el acceso es ASP.NET Core Identity propio (el sistema de
+  cuentas que trae la plataforma de la aplicación), con I0 a I4 e I2b hechos (ver ADR 0007).
 - `ResidentsController`/`Create`: alta de residente de extremo a extremo, verificada manualmente (curl)
   y con test funcional automatizado (`ResidentsFlowTests`).
 - `BaselineController`/`Sign` y `/Direction`: cableados contra `SignBaseline` y `ReadDirectionBaseline`,

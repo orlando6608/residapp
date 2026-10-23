@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-22. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-23. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar

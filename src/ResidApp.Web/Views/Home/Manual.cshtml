@@ -24,7 +24,8 @@
         <li><strong>Plataforma:</strong> alta de centros nuevos, Administración principal de cada centro y cuentas que trabajan en varios centros.</li>
     </ul>
     Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, el personal, además
-    con un código de su móvil. La contraseña la elige cada persona con la <strong>invitación</strong> que le entrega Administración. En
+    con un código de su móvil, o con una <strong>passkey</strong> («llave de acceso» guardada en tu móvil o portátil, que se desbloquea con la
+    huella, la cara o el PIN). La contraseña la elige cada persona con la <strong>invitación</strong> que le entrega Administración. En
     el entorno de pruebas sigue además el acceso de desarrollo (ver "Cuentas de prueba").
     <p class="mt-2 mb-0">
         <strong>Al guardar o enviar:</strong> el botón muestra un círculo giratorio mientras el servidor responde. Una vez enviado,
@@ -115,7 +116,7 @@
         Si has registrado una <strong>passkey</strong> («llave de acceso»: una credencial guardada en tu móvil o portátil que se desbloquea con
         tu huella, tu cara o tu PIN) en «Mi cuenta» (más abajo), puedes entrar pulsando <strong>«Entrar con passkey»</strong>, sin escribir
         usuario, contraseña ni código: el dispositivo te pide la huella, la cara o el PIN y listo. Si no tienes a mano el dispositivo donde la
-        registraste, puedes seguir entrando con contraseña y código del móvil. Las cuentas de Plataforma, en cambio, entran solo con passkey.
+        registraste, puedes seguir entrando con contraseña y código del móvil. Las cuentas de Plataforma, en cambio, en cuanto tienen una passkey entran solo con ella.
     </p>
     <p>
         <strong>Si olvidas la contraseña o pierdes el móvil</strong>, pide a la Administración de tu centro una <strong>invitación de
@@ -169,7 +170,7 @@
         <li><strong>Códigos de recuperación</strong> (solo personal): <strong>«Generar códigos nuevos»</strong> pide tu contraseña y el código que
             da ahora tu móvil, crea 10 nuevos y los anteriores dejan de valer. Se enseñan una sola vez: apúntalos en papel. Para cambiar de móvil
             no vale esta pantalla: pide a la Administración de tu centro una invitación de recuperación.</li>
-        <li><strong>Passkeys</strong> (solo personal, si el centro las tiene activas): una passkey te deja entrar con la huella, la cara o el PIN de tu
+        <li><strong>Passkeys</strong> (solo personal, si están activadas en la aplicación; en el entorno de pruebas lo están): una passkey te deja entrar con la huella, la cara o el PIN de tu
             móvil o portátil, sin escribir contraseña ni código. Para añadir una escribes un nombre que la reconozca, tu contraseña y el código que da
             ahora tu móvil, y el dispositivo te pide verificarte. Después, en el inicio de sesión, <strong>«Entrar con passkey»</strong>. Puedes tener
             hasta 10 y quitar cualquiera con <strong>«Quitar»</strong>. Las cuentas de Plataforma entran <strong>solo con passkey</strong> en cuanto
@@ -784,6 +785,12 @@
     <p>
         Si el código del centro ya existe o el identificador de acceso ya es de otra cuenta, te lo indica y no crea nada. Este perfil no
         ve residentes ni contenido clínico, y solo cambia de un centro después de crearlo lo que se dice a continuación. Todo queda en la auditoría.
+    </p>
+    <p>
+        <strong>Tu propio acceso:</strong> como cuenta más sensible, Plataforma tiene que entrar con <strong>passkey</strong> («llave de acceso» de tu
+        móvil o portátil). Si aún no tienes ninguna, al entrar con contraseña y código del móvil la app te lleva a «Mi cuenta» para que añadas la
+        primera; en cuanto la tienes, la contraseña y el código ya no sirven para entrar, y no puedes quitar la última. Si las pierdes todas, solo
+        quien administra la base de datos puede borrarlas para que vuelvas a entrar con contraseña y código y registres otra.
     </p>
     <p>
         <strong>Cuentas de varios centros</strong> (botón junto a «Nuevo centro») lista a las personas que trabajan en más de un centro con la misma
@@ -1597,7 +1604,7 @@
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
         <li>Portal Familiar: el resumen periódico por residente.</li>
-        <li>Acceso: las llaves de acceso (passkeys).</li>
+        <li>Acceso: la pulsera con chip (NFC) y PIN para entrar rápido en una tablet que comparten varias personas.</li>
         <li>Más gestión administrativa: organigrama y cargos (aplazado) y un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
