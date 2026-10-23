@@ -15,6 +15,7 @@ public static class ClinicalTraceabilityDisplay
         ["DAILY_CLOSURE_CHANGE_REPORTED"] = "Cambio registrado por Auxiliar",
         ["DAILY_CLOSURE_NO_CHANGE"] = "Cierre del día sin cambios (Auxiliar)",
         ["DAILY_CLOSURE_NOT_ASSESSABLE"] = "Cierre del día: no se pudo valorar (Auxiliar)",
+        ["VOICE_DICTATION_USED"] = "Dictado por voz usado (Auxiliar)",
         ["NURSING_ASSESSMENT_START"] = "Valoración de Enfermería iniciada",
         ["NURSING_ASSESSMENT_SAVE"] = "Valoración de Enfermería guardada",
         ["NURSING_ASSESSMENT_CORRECT"] = "Valoración de Enfermería corregida",
@@ -55,6 +56,7 @@ public static class ClinicalTraceabilityDisplay
     {
         ["CLINICAL_EVENT"] = "Evento asistencial",
         ["DAILY_CLOSURE"] = "Cierre del día",
+        ["VOICE_DICTATION"] = "Dictado por voz",
         ["MEDICAL_INDICATION"] = "Indicación médica",
         ["REFERRAL_REPORT"] = "Informe de derivación",
         ["FAMILY_CALL_ATTEMPT"] = "Llamada a la familia",

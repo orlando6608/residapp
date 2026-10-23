@@ -11,6 +11,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Application.Sessions;
 using ResidApp.Application.UseCases;
 using ResidApp.Infrastructure.Authorization;
+using ResidApp.Infrastructure.IA;
 using ResidApp.Infrastructure.Identity;
 using ResidApp.Infrastructure.Intercambio;
 using ResidApp.Infrastructure.Pdf;
@@ -179,6 +180,14 @@ builder.Services.AddRateLimiter(options =>
             PermitLimit = context.RequestServices.GetRequiredService<IOptions<AccesoOptions>>().Value.IntentosPorMinuto,
             Window = TimeSpan.FromMinutes(1),
         }));
+    // El dictado cuesta dinero y envía audio fuera: se limita por cuenta (la sesión), no por IP, que en una residencia es la misma para todas.
+    options.AddPolicy(IaOptions.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+        context.User.FindFirst(SessionAuthentication.SubjectClaim)?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "sin-cuenta",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = context.RequestServices.GetRequiredService<IOptions<IaOptions>>().Value.PeticionesPorMinuto,
+            Window = TimeSpan.FromMinutes(1),
+        }));
 });
 // Hallazgo A2: fuera de Development todas las cookies llevan Secure (sesión, ámbito, acceso clínico, antiforgery, TempData, clave de CJ).
 // En Development se mantiene según la petición, para el perfil local http y el TestServer de las pruebas funcionales.
@@ -225,7 +234,24 @@ builder.Services.AddScoped<FindAssignedResident>();
 builder.Services.AddScoped<ReadCurrentBaseline>();
 builder.Services.AddScoped<RegisterDailyClosure>();
 builder.Services.AddScoped<RegisterDailyChange>();
+builder.Services.AddScoped<SuggestDailyChangeFromVoice>();
 builder.Services.AddScoped<AuxiliarApplicationService>();
+
+// IA (ADR 0011): un solo proveedor autorizado (Mistral) detrás de dos puertos. Sin IA:Mistral:ApiKey el dictado está desactivado.
+builder.Services.Configure<IaOptions>(builder.Configuration.GetSection(IaOptions.Section));
+builder.Services.AddHttpClient<MistralClient>((services, client) =>
+{
+    var options = services.GetRequiredService<IOptions<IaOptions>>().Value;
+    client.BaseAddress = new Uri(MistralOptions.BaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(options.Mistral.TiempoEsperaSegundos);
+    if (!string.IsNullOrWhiteSpace(options.Mistral.ApiKey))
+    {
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", options.Mistral.ApiKey);
+    }
+});
+builder.Services.AddTransient<ISpeechTranscriber>(services => services.GetRequiredService<MistralClient>());
+builder.Services.AddTransient<IStructuredGenerator>(services => services.GetRequiredService<MistralClient>());
+builder.Services.AddScoped<IVoiceDictationAudit, SqlVoiceDictationAudit>();
 
 builder.Services.AddScoped<ListScopeResidents>();
 builder.Services.AddScoped<FindScopeResident>();
@@ -346,6 +372,8 @@ var app = builder.Build();
 ServerTimeZone.Verify(app.Environment, app.Logger);
 // El acceso de desarrollo habilitado fuera de Development sin clave no arranca (hallazgo C1).
 DevAuthOptions.Validate(app.Services.GetRequiredService<IOptions<DevAuthOptions>>().Value, app.Environment);
+// Un proveedor de IA que no esté en la lista autorizada (ADR 0011) impide arrancar.
+IaOptions.Validate(app.Services.GetRequiredService<IOptions<IaOptions>>().Value);
 
 // Configure the HTTP request pipeline.
 app.UseForwardedHeaders();
@@ -380,9 +408,10 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/pendientes-cj"
 });
 app.UseRouting();
-app.UseRateLimiter();
 
 app.UseAuthentication();
+// Después de autenticar: la política del dictado limita por cuenta y necesita saber quién es (las de acceso, por IP, no).
+app.UseRateLimiter();
 app.UseAuthorization();
 
 // Con la política global, los estáticos (CSS, JS, manifest.json, sw.js, flujo-de-trabajo.html) también pedirían sesión.

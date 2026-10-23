@@ -10,7 +10,8 @@ namespace ResidApp.Application.UseCases;
 /// </summary>
 public sealed class AuxiliarApplicationService(
     ListAssignedResidents listAssignedResidents, FindAssignedResident findAssignedResident,
-    ReadCurrentBaseline readCurrentBaseline, RegisterDailyClosure registerDailyClosure, RegisterDailyChange registerDailyChange)
+    ReadCurrentBaseline readCurrentBaseline, RegisterDailyClosure registerDailyClosure, RegisterDailyChange registerDailyChange,
+    SuggestDailyChangeFromVoice suggestDailyChangeFromVoice)
 {
     public Task<ApplicationResult<IReadOnlyList<AssignedResidentSummary>>> ListAssignedResidentsAsync(
         ListAssignedResidentsCommand command, CancellationToken ct = default) =>
@@ -31,4 +32,8 @@ public sealed class AuxiliarApplicationService(
     public Task<ApplicationResult<DailyClosureResult>> RegisterDailyChangeAsync(
         RegisterDailyChangeCommand command, CancellationToken ct = default) =>
         registerDailyChange.ExecuteAsync(command, ct);
+
+    public Task<ApplicationResult<VoiceSuggestion>> SuggestDailyChangeFromVoiceAsync(
+        SuggestDailyChangeFromVoiceCommand command, CancellationToken ct = default) =>
+        suggestDailyChangeFromVoice.ExecuteAsync(command, ct);
 }
