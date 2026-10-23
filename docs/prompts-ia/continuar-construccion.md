@@ -9,68 +9,81 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > (`docs/prompts-ia/continuar-construccion.md`), `docs/tareas/alta-prioridad/pendientes-enfermeria.md` y
 > `docs/tareas/alta-prioridad/pendientes-medicina.md`, `docs/tareas/alta-prioridad/pendientes-direccion.md` y
 > `docs/tareas/alta-prioridad/pendientes-administracion.md`.
-> Mira si hay respuestas de CJ en `docs/pendientes-cj/` (ficheros `*.respuestas.json`, ver su `README.md`; las recibe Orlando por correo o WhatsApp y las guarda ahí). Después
+> Mira si hay respuestas de CJ en `docs/pendientes-cj/` (ficheros `*.respuestas.json`, ver su `README.md`; las recibe Orlando por correo o WhatsApp y las guarda ahí;
+> la más esperada es `dictado-por-voz-confirmaciones-cj.respuestas.json`, que desbloquea el dictado por voz). Después
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Dictado por voz (ADR 0009) y arquitectura de IA (ADR 0011), 2026-10-23, sin commit.** Orlando eligió el dictado como siguiente bloque.
-  Decisiones: primer formulario «Registrar cambio» del Auxiliar; **antes de tocar la app, una prueba de precisión aislada**; Orlando tiene
-  clave de Mistral, pero **no hay contrato de encargado ni EIPD**, así que solo se usan audios y textos ficticios.
-  - **Fase A hecha en código, sin ejecutar:** `tools/PruebaDictado` es una consola fuera de la solución que referencia `ResidApp.Domain`.
-    Transcribe con `voxtral-mini-latest` (`POST v1/audio/transcriptions`, `language=es`) y estructura con `mistral-small-latest`
-    (`response_format` `json_schema` estricto). El esquema sale de `DailyChangeAreaCode`, `DailyChangeAreaOptionCode` y la temperatura.
-    Mide aciertos y sugerencias inválidas contra `DailyChangeAreaOptionsCatalog`. El prompt está en `Prompts/registrar-cambio.md`. Clave en
-    user-secrets (`Mistral:ApiKey`). Reintenta con espera ante un 429.
-  - **Primera ejecución (2026-10-23, 2 casos de texto de `casos/ejemplo.json`):**
-    - La cuenta de Orlando tiene **cuota 0** (`x-ratelimit-limit-req-minute: 0`) en `mistral-small-*` y `magistral-small`, y 403 en
-      `mistral-large`.
-    - Funcionan `ministral-8b` y `ministral-14b` (en texto) y `voxtral-mini-latest` y `voxtral-mini-transcribe-3` (en transcripción). El
-      endpoint de transcripción se comprobó con un WAV de silencio.
-    - **El esquema estricto funciona:** las respuestas lo cumplen.
-    - Resultados: con 8b, áreas 2/2 y opciones 1/2; con 14b, áreas 2/2 y opciones 0/2, con una área repetida que el evaluador detecta.
-    - Los resultados esperados de los ejemplos los redacté yo y son discutibles: «ha rechazado el agua» ¿es `RECHAZA_INGESTA`? Los de verdad
-      tienen que fijarlos Orlando o CJ.
-    - **Mistral Small ya funciona** (Orlando activó la cuota, misma sesión): áreas 2/2, opciones 1/2, temperatura correcta, sin
-      sugerencias inválidas, con el esquema estricto cumplido. El fallo de opciones es el mismo caso discutible de «ha rechazado el
-      agua». El modelo se puede cambiar con `Mistral__ModeloTexto`.
-  - **ADR 0011:** adapta `docs/RESIDAPP_AI_SPEC_FINAL.md` (de Orlando). Adopta puertos independientes del proveedor (`ISpeechTranscriber`,
-    `IStructuredGenerator`), una pasarela con resiliencia y registro sin contenido, prompts incrustados, salida estructurada, auditoría y
-    minimización. Pone una **lista de proveedores autorizados** (solo Mistral). Descarta el resumen clínico, el RAG sobre el historial, la
-    detección de riesgos y el tool calling sobre el residente, porque chocan con `alcance.md` y `vision-general.md`; solo CJ puede
-    reabrirlos. Aplaza otros proveedores, embeddings y RAG no clínico, MCP y agentes.
-  - **Audios sintéticos (2026-10-23):** `casos/jerga-es.json` (31 casos de habla de planta con jerga; esperados **provisionales, CJ debe
-    validarlos**), `PruebaDictado generar` (Voxtral TTS, modelo `voxtral-mini-tts-3`, única voz española: Elena) y `variantes.sh` (ffmpeg:
-    rápido ×1,3, ruido rosa −10 dB, planta = rápido + ruido + opus 24 kbps). `audios/` está en `.gitignore`. El alias `voxtral-mini-tts-latest`
-    no sirve (sin voces predefinidas). Resultados con Mistral Small + prompt v1, 31 casos (22 sin dudosos): texto escrito, áreas 25 y
-    opciones 19; voz limpia 24/18; rápida 26/21; con ruido 24/16; planta 24/18. **La voz casi no empeora** (el audio sintético es limpio:
-    optimista). Voxtral falla pocas palabras (6,6 %): «decul» sale «de culo»/«cule» y «decúbito» sale «de cúbito».
-  - **Hallazgos para la Fase B (con texto limpio, no son de la voz):** (1) el modelo **inventa opciones** donde no hay nada: «pásame los
-    guantes» → herida/UPP/hematoma; «sin heridas» → hematoma; (2) pone opciones en el área equivocada (hematoma en caídas): el esquema
-    debe ser **por área** y el servidor descarta lo inválido; (3) **copia el nombre** dicho en voz alta en el texto libre; (4) mapeos
-    dudosos (somnolencia: ¿sueño o conciencia?, «comido poco», «decul»). El prompt v1 es mínimo; antes de la Fase B hay que probar un
-    prompt v2 (con ejemplos y «si no se menciona, devuelve vacío»), el esquema por área y la instrucción de no usar nombres.
-  - **Prompt v2 y esquema por área (probados, ya por defecto en la herramienta):** el esquema estricto admite `anyOf` con una alternativa por
-    área (`area` fijada y solo sus opciones; `maxItems: 0` en las tres áreas sin checklist). Texto escrito, 31 casos (22 sin dudosos):
+- **Dictado por voz (ADR 0009) con la arquitectura del ADR 0011: Fase A (prueba de precisión) cerrada, a la espera de CJ (2026-10-23; PR #55 en `main` como `c81dc19`, CI/CD en verde; sin cambios en `src/`).**
+  Decisiones de Orlando: primer formulario «Registrar cambio» del Auxiliar; antes de tocar la app, una prueba de precisión aislada; solo la voz sintética
+  Elena y variar ritmo y ruido; los resultados esperados los propone ingeniería y CJ los valida. Orlando tiene clave de Mistral, pero **no hay contrato de
+  encargado ni EIPD**: solo se usan audios y textos ficticios, sin datos de residentes.
+  - **En lenguaje llano:** *transcribir* es pasar la voz a texto; *esquema estricto* es una plantilla que obliga al modelo a contestar solo con los campos y
+    valores permitidos; *TTS* es una voz sintética que lee un texto; *user-secrets* es el almacén de claves de tu usuario de Windows, fuera del repositorio.
+  - **Qué hay (`tools/PruebaDictado`, consola fuera de la solución que referencia `ResidApp.Domain`; ver su `README.md`):**
+    - `casos/jerga-es.json` (31 casos de habla de planta con jerga: UPP, Mepentol, túrmix, absorbente, decul…; incluye negativos, una autocorrección y un nombre
+      que no debe salir) y `casos/ejemplo.json` (2). Los **resultados esperados son provisionales**; 9 casos van marcados `dudoso`.
+    - `dotnet run --project tools/PruebaDictado -- generar <casos> <carpeta>` genera los audios con Voxtral TTS (`voxtral-mini-tts-3`, voz Elena `01a0f318-…`,
+      la única en español; el alias `-latest` no sirve: «voice is not supported for speech v1»). `variantes.sh` (ffmpeg) crea `rapido` (×1,3), `ruido` (ruido
+      rosa 10 dB por debajo) y `planta` (las dos cosas + opus 24 kbps). `audios/` está en `.gitignore`.
+    - Evaluar: `… -- <casos> [salida.json] [--voz <carpeta>]`. Transcribe con `voxtral-mini-latest` y estructura con `mistral-small-latest` (esquema
+      estricto). Mide áreas, opciones, temperatura, sugerencias inválidas (tras unir áreas repetidas y descartar opciones que no son del área, como haría el
+      servidor), fugas de nombre, palabras distintas del original y jerga perdida; resume con y sin dudosos. Reintenta con espera ante un 429.
+    - Prompts en `Prompts/`: v1 (`registrar-cambio`) y **v2** (`registrar-cambio-v2`, por defecto) con reglas y ejemplos que no están en la batería. Variantes por
+      configuración: `Mistral__Prompt`, `Mistral__EsquemaPorArea` (por defecto `true`), `Mistral__ModeloTexto`, `Mistral__ModeloVoz`, `Mistral__ModeloTts`.
+    - Clave: `dotnet user-secrets --project tools/PruebaDictado set Mistral:ApiKey <clave>` (ya guardada en el equipo de Orlando; nunca en el repositorio).
+  - **Cuenta de Mistral de Orlando:** la cuota es **por modelo** (`x-ratelimit-limit-req-minute`). Al empezar, `mistral-small-*` y `magistral-small` tenían 0
+    (429 «Rate limit exceeded») y `mistral-large` daba 403; Orlando activó Small la misma sesión. `ministral-8b/14b` y `voxtral-mini` siempre funcionaron.
+  - **Resultados (Mistral Small, 31 casos, 22 sin dudosos).** Texto escrito: áreas y opciones acertadas por variante:
 
     | Variante | Áreas | Opciones | Inválidas | Fugas de nombre |
     | --- | --- | --- | --- | --- |
     | v1 (prompt mínimo) | 24 | 19 | 4 | 1 |
     | v1 + esquema por área | 24 | 21 | 0 | 1 |
     | v2 | 26 | 24 | 1 | 0 |
-    | v2 + esquema por área | 27 | 24 | 0 | 0 |
+    | **v2 + esquema por área** | **27** | **24** | **0** | **0** |
 
-    Con voz, v2 + área: ruido 27/24 y planta 28/25 (sin dudosos, 19/19), sin inválidas ni fugas. Los negativos («pásame los guantes») ya
-    salen vacíos. **Lo que queda mal** (sutil, y es lo que el auxiliar tendrá que revisar en pantalla): marca de más («orina oscura» añade
-    disminución de diuresis y una área vacía de conciencia; «no quiere que la toquen» añade «no quiere levantarse»), y «sacro enrojecido»
-    sale como **UPP**, que es clínicamente delicado (otra razón para que cada sugerencia se confirme individualmente, como dice el ADR 0009).
-    No se ha seguido afinando el prompt para no ajustarlo a esta batería.
-  - **Documento para CJ creado:** `docs/pendientes-cj/dictado-por-voz-confirmaciones-cj.html` (15 preguntas en 5 temas, con la tabla de los 31
-    ejemplos; registrado en `preguntas.html` y en el README de la carpeta; el generador se escribió una vez a partir de otro documento y no
-    está en el repositorio). Sus respuestas llegarán como `dictado-por-voz-confirmaciones-cj.respuestas.json`. **Solo el tema 3, el rango de
-    temperatura, bloquea la Fase B.** Cuando CJ responda, actualizar los esperados de `casos/jerga-es.json` y repetir la prueba.
-  - **Siguiente:** que CJ responda ese documento (valida los esperados y fija el rango de temperatura de «Registrar cambio», que hoy solo
-    limita la columna `DECIMAL(4,1)`); grabar unos 10 audios reales ficticios (ruido y acentos reales).
-    Según los resultados, Fase B (con el ADR 0011; el esquema por área se generará desde el dominio en el servidor), ajuste o descartar.
+    Con voz sintética y v2 + área: limpia (con prompt v1: 24/18), con ruido 27/24 y planta 28/25 (19/19 sin dudosos); sin inválidas ni fugas. Voxtral cambia el
+    6,6 % de las palabras y falla pocas jergas: «decul» sale «de culo» o «cule» y «decúbito» sale «de cúbito» (el «estadio 2» por «estadio dos» no es un fallo).
+    **El audio sintético es limpio: la prueba es optimista y no sustituye a audios reales de planta** (ADR 0009).
+  - **Lo que sigue mal y es delicado:** marca de más («orina oscura» añade disminución de diuresis y un área vacía de conciencia; «no quiere que la toquen» añade
+    «no quiere levantarse») y **«sacro enrojecido» sale como UPP** sin que nadie lo diga. Por eso cada sugerencia debe confirmarse individualmente. No se ha
+    afinado más el prompt para no ajustarlo a esta batería.
+  - **ADR 0011** (`docs/decisiones-arquitectura/0011-arquitectura-ia.md`): adapta un documento de propuesta de arquitectura que Orlando hizo en algún momento
+    (se eliminó del repositorio; sigue en el historial, commit `42dc740`). **Adopta:** puertos independientes del proveedor (`ISpeechTranscriber` e
+    `IStructuredGenerator`), una pasarela con resiliencia y registro sin contenido, prompts incrustados, salida estructurada, auditoría y minimización, con una
+    **lista de proveedores autorizados** (solo Mistral). **Descarta** (decisión de producto, solo CJ puede reabrirlo): resumen clínico, RAG sobre el historial,
+    detección de riesgos y tool calling sobre el residente, porque chocan con `alcance.md` y `vision-general.md`. **Aplaza:** otros proveedores, embeddings y RAG
+    no clínico, MCP y agentes. Toda función de IA nueva se contrasta con ese ADR (también `CLAUDE.md`).
+  - **Documento para CJ:** `docs/pendientes-cj/dictado-por-voz-confirmaciones-cj.html` (15 preguntas en 5 temas y la tabla de los 31 ejemplos; en `preguntas.html` y
+    en el README de la carpeta). Sus respuestas llegarán como `dictado-por-voz-confirmaciones-cj.respuestas.json`. El generador del HTML era un script de una sola
+    vez y no está en el repositorio (si hay que cambiarlo, edita el HTML, que sigue el patrón de los demás documentos; sube `data-version`). **Solo el tema 3, el
+    rango de temperatura, bloquea la Fase B.** Hoy «Registrar cambio» no valida la temperatura: solo la limita la columna `DECIMAL(4,1)`.
+  - **Siguiente:** (1) CJ responde el documento y Orlando guarda el `.respuestas.json`; al recibirlo, corregir los esperados de `casos/jerga-es.json`, repetir la
+    prueba y anotar el resultado; (2) grabar unos 10 audios reales ficticios (ruido y acentos reales, sin datos de residentes); (3) si convence, **Fase B**.
+  - **Plan de la Fase B (no empezada; el plan vive solo aquí):**
+    - Puertos en `src/ResidApp.Application/Ports` y adaptador de Mistral en `src/ResidApp.Infrastructure/IA/` (como `Pdf/` e `Intercambio/`), con `HttpClient`
+      tipado (el primero del proyecto), opciones `IA` registradas en `Program.cs` como `DevAuthOptions`/`AccesoOptions`, lista de proveedores autorizados validada
+      al arrancar y prompts como `EmbeddedResource`. **Sin clave, el dictado queda desactivado** (botón oculto y endpoint 404), como `Acceso:PasskeyDominio`. Clave
+      en user-secrets o en el ajuste de la Web App (`IA__Mistral__ApiKey` o similar), nunca en `appsettings.json`.
+    - El **esquema por área se genera desde el dominio** (`DailyChangeAreaCode`, `DailyChangeAreaOptionsCatalog`); el servidor valida la sugerencia y descarta lo
+      inválido. Caso de uso en `Application/UseCases` con la comprobación de ámbito Auxiliar y de residente asignado, como `RegisterDailyChange.cs:70-85`; código de
+      error nuevo en la regex de `ApplicationResult.cs`.
+    - **Auditoría sin datos:** evento `VOICE_DICTATION_USED` (cabe en `accion_codigo` de 32), insertado en `eventos_auditoria` desde un repositorio SQL en transacción
+      (como `SqlDailyClosureRepository`) y añadido a `ClinicalTraceability.cs`; hay que inventar un `recurso_id` (por ejemplo el identificador de operación). No se
+      guarda el audio ni la transcripción. El siguiente script libre es `0067`.
+    - **Endpoint** en `AuxiliarController` con CSRF por cabecera `RequestVerificationToken` (modelo `PasskeyController`/`passkeys.js`), `[RequestSizeLimit]` y
+      `[RequestFormLimits]`, y límite de tasa por cuenta (modelo: `AddRateLimiter` en `Program.cs`). Validar el rango de temperatura según la respuesta de CJ.
+    - **Front:** `wwwroot/js/dictado.js` externo (IIFE en español, sin `<script>` en línea), `MediaRecorder`, `data-url-*`; en `RegistrarCambio.cshtml` respetando
+      «Volver a editar» desde `ConfirmarCambio`. Marca «Sugerido por voz»: `badge text-bg-info` + icono SVG propio + texto (nunca verde ni solo color), que se quita
+      al tocar el campo. **Modo estricto:** guardar con `aria-disabled` y bloqueo del envío por JS hasta revisar lo que CJ decida (la guía visual prohíbe `disabled`).
+      Subir la versión de caché de `sw.js` si se añade al shell. Aviso fijo «No digas nombres» junto al micrófono (según la respuesta de CJ).
+    - **Documentación:** `Manual.cshtml`, ADR 0009 (estado y modelos fijados), este fichero, `pendientes-*.md`. Si se añade `Permissions-Policy`, que sea
+      `microphone=(self)` (hoy no hay ninguna: hallazgo M3 de `docs/seguridad/hallazgos.md`).
+    - **Pruebas:** unitarias del caso de uso (opción fuera de catálogo, opción de otra área, temperatura fuera de rango, residente no asignado); funcionales con un
+      fake de los puertos vía `ConfigureTestServices` (patrón de `AccesoTests`) para éxito, fallo del servicio, sin clave (404) y CSRF; mutaciones; y `probar-en-navegador`
+      con micrófono falso de Chrome (claro, oscuro y 375 px).
+    - **Antes de producción:** contrato de encargado con Mistral, región de procesamiento, sin retención de audio, EIPD y revisión del DPO.
 - **Cierre de la sesión del 2026-10-23 (última en `main`: `4cd5c6e`, desplegada y comprobada en Azure dev).** I4 está hecho en código, pruebas y documentación, y
   la documentación del acceso se ha **auditado contra el código**: Manual, `acceso-y-sesion.html`, `flujo-de-trabajo.html`, ADR 0007, README, roadmap, backlog y
   `pendientes-*.md` dicen lo mismo que la app. **Normas de documentación que salieron de la sesión:** (1) todo término técnico se explica en lenguaje llano
@@ -1565,8 +1578,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **En curso: dictado por voz (ADR 0009) con la arquitectura del ADR 0011.** Ver la primera entrada de «Dónde estamos»: falta ejecutar la
-   prueba de precisión (`tools/PruebaDictado`) con la clave de Orlando y audios ficticios antes de decidir la Fase B.
+0. **En curso: dictado por voz (ADR 0009) con la arquitectura del ADR 0011.** La Fase A (prueba de precisión, `tools/PruebaDictado`) está hecha y mergeada;
+   **espera la respuesta de CJ** a `docs/pendientes-cj/dictado-por-voz-confirmaciones-cj.html` (lo que bloquea es el rango de temperatura, tema 3). Mientras
+   tanto, grabar unos 10 audios reales ficticios o elegir otra tarea de esta lista. Ver la primera entrada de «Dónde estamos», que lleva también el plan de la Fase B.
    **I0 a I4 e I2b del ADR 0007 están hechos** (I4 mergeado y comprobado en Azure dev; el manual y las páginas de acceso están al día). Quedan **I5 (pulsera NFC)** y la
    retirada del acceso de desarrollo; antes de datos reales, retirar el acceso de desarrollo y llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
@@ -1599,6 +1613,13 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 - Dapper no admite `uint` como parámetro: pasa los contadores de 32 bits como `long`.
 - Una passkey solo se prueba de verdad con un navegador: el recorrido de Chrome sin interfaz con autenticador virtual (CDP `WebAuthn.addVirtualAuthenticator`) está
   descrito en la entrada de I4; las pruebas HTTP usan `tests/FunctionalTests/SoftwareAuthenticator.cs`.
+- **Bash y los heredocs largos:** en este equipo, un `cat <<'EOF'` largo con tildes, comillas o apóstrofos falla con «unexpected EOF» y no crea nada (curl con
+  tildes en `-d` también rompe el cuerpo por la codificación). Crea los ficheros con la herramienta Write; para llamadas a APIs con acentos, usa un script de Node.
+  `sleep` largo en el shell lo bloquea el entorno: para esperar, usa `run_in_background` (se avisa al terminar).
+- ffmpeg está instalado (WinGet, en el `PATH`) y Chrome también: `chrome.exe --headless=new --screenshot` sirve para ver una página local; con `#ancla` en la URL
+  la captura sale en blanco (haz una captura alta y recórtala con `ffmpeg -vf crop`).
+- La clave de Mistral se lee del almacén con `dotnet user-secrets --project tools/PruebaDictado list`; para sondear un modelo, mira las cabeceras
+  `x-ratelimit-limit-req-minute` (0 = sin cuota en ese modelo).
 - Las mutaciones que sobreviven suelen indicar una defensa redundante (como la comprobación de cuenta del estado de la passkey, cubierta por la de sesión): decide si
   se quita el código o se añade la prueba que la aísla.
 

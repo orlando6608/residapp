@@ -4,7 +4,9 @@ Estado: aceptada el 2026-10-23 (decisión del usuario). Sin implementar en `src/
 
 ## Contexto
 
-Orlando redactó `docs/RESIDAPP_AI_SPEC_FINAL.md`, una especificación de arquitectura de IA. Propone:
+Orlando hizo en algún momento un documento de propuesta de arquitectura de IA, antes de que se decidiera nada sobre ella en el proyecto. Este
+ADR recoge lo aprovechable y se eliminó el documento; sigue en el historial de git (se añadió en el commit `42dc740`, como
+`docs/RESIDAPP_AI_SPEC_FINAL.md`). La propuesta planteaba:
 
 - que el código de la aplicación no dependa de ningún proveedor de modelos de lenguaje (en lenguaje llano, *proveedor* es la empresa que
   ofrece el modelo por internet, como Mistral u OpenAI);
@@ -15,8 +17,7 @@ Orlando redactó `docs/RESIDAPP_AI_SPEC_FINAL.md`, una especificación de arquit
 
 Al contrastarla con lo construido y lo decidido, la parte de **estructura** encaja y mejora el plan del dictado. La parte de **producto**
 (los casos de uso y el roadmap de proveedores) choca con el alcance que fija CJ y con los ADR 0009 y 0010. Este ADR adopta lo primero y deja
-lo segundo descartado o aplazado, con su motivo. La especificación se conserva como documento de referencia: **lo que no recoja este ADR no
-está aprobado**.
+lo segundo descartado o aplazado, con su motivo. **Lo que no recoja este ADR no está aprobado.**
 
 ## Decisión
 
@@ -33,7 +34,7 @@ está aprobado**.
 | Minimización de datos | Al proveedor no va nada que identifique al residente. Ni el audio ni la transcripción se guardan. |
 | Caso de uso «extracción estructurada de texto libre» | Es el dictado del ADR 0009 y **el único caso de uso aprobado**. |
 
-**Contratos.** Las firmas de la especificación se ajustan al proyecto: identificadores `Guid`, tipos que admiten nulo marcados como tales y
+**Contratos.** Las firmas de la propuesta se ajustan al proyecto: identificadores `Guid`, tipos que admiten nulo marcados como tales y
 un esquema obligatorio.
 
 ```csharp
@@ -94,4 +95,4 @@ decisiones clínicas; el contrato y la EIPD del proveedor; y un ADR nuevo.
 - El dictado (ADR 0009, Fase B) se construye con `ISpeechTranscriber` e `IStructuredGenerator`, el adaptador de Mistral en
   `Infrastructure/IA/`, prompts incrustados, la lista de proveedores autorizados y una pasarela con resiliencia y registro sin contenido.
 - La prueba de precisión (`tools/PruebaDictado`) sigue siendo válida. Lee el prompt de un fichero en lugar de tenerlo en el código.
-- El roadmap de la especificación (Fase 1 con Claude Sonnet y embeddings de OpenAI) no se sigue: el proveedor es Mistral.
+- El roadmap de la propuesta (Fase 1 con Claude Sonnet y embeddings de OpenAI) no se sigue: el proveedor es Mistral.
