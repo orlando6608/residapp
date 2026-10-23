@@ -13,8 +13,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **ADR 0007, incremento I2b: vincular cuentas que ya existen en otro centro (2026-10-23, rama `adr0007-i2b-vincular-cuentas`; script `0065`, el siguiente
-  libre es `0066`).** Decisiones de Orlando (2026-10-23): la Administración del centro nuevo **confirma** tras el canje; las cuentas de varios centros las
+- **ADR 0007, incremento I2b: vincular cuentas que ya existen en otro centro (2026-10-23, PR #53 mergeado en `main` como `da5f677`; script `0065`, el siguiente
+  libre es `0066`; CI del PR y CI/CD de `main` en verde, con el `0065` aplicado en Azure SQL).** Decisiones de Orlando (2026-10-23): la Administración del centro nuevo **confirma** tras el canje; las cuentas de varios centros las
   **gestiona Plataforma**; solo **personal** (los familiares quedan fuera).
   - **Flujo:** `Administracion/Vinculaciones` (botón en «Usuarios»): emite una hoja con el perfil y las unidades **sin decir a quién** (`HojaVinculacion`, QR,
     72 h, un solo uso, solo el resumen SHA-256); la persona la canjea en `Cuenta/Vincular` (código escrito en «Mi cuenta» o enlace/QR; solo cuentas activas con
@@ -33,6 +33,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Probado en local con Chrome sin interfaz** (claro, oscuro y 375 px, sin desplazamiento lateral): hoja con QR, código malo, oferta, aceptar, pendiente,
     confirmar, selector con los dos centros y Plataforma. **Queda en la BD local:** centros «Residencia de prueba (navegador …)» y cuentas
     `prueba-navegador-*` y `prueba-plataforma-*`.
+  - **Comprobado en Azure dev tras el despliegue** (Chrome sin interfaz, clave de desarrollo leída del ajuste de la Web App): con `dev-integrado-administracion`,
+    `/Administracion/Vinculaciones` carga, crea una hoja (código y QR) y la anula; con `dev-plataforma`, `/Plataforma/Cuentas` carga sin desplazamiento lateral.
+    **No se probó allí** el canje ni la confirmación (la persona necesita el segundo factor activo; lo cubren las pruebas locales). **Queda en Azure:** una
+    vinculación anulada del «Centro de desarrollo — escenario integrado». Las dos primeras peticiones a `/Acceso` justo tras el despliegue dieron 500 y luego 200
+    (arranque en frío; no se miró el registro de la Web App). **CodeQL:** 4 alertas `missing-function-level-access-control` abiertas en `main` sobre las acciones
+    de `AdministracionController.Vinculaciones.cs`, del mismo tipo que las ~20 ya abiertas en ese controlador (la autorización es la política por defecto más el servicio).
   - **Lección (entorno):** la primera pasada de pruebas **justo después de compilar** da con frecuencia cientos de timeouts de SQL (CPU saturada: 74 y 84
     fallos, 2 a 5 min) y, sin recompilar, la repetición da todo en verde en 20-30 s. La BD local tiene ya **123.000 cuentas** de pruebas (SQL Express, 1 GB de
     memoria): una consulta global sobre `ambitos_perfil` (el listado de Plataforma) tardó 26 s mientras corría la suite, pero 0,2 s en calma. El listado ya se
