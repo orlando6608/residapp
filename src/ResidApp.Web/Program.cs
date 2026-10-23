@@ -133,6 +133,20 @@ builder.Services.AddIdentityCore<CredentialAccount>(options =>
     .AddUserStore<SqlCredentialStore>()
     .AddTokenProvider<AuthenticatorTokenProvider<CredentialAccount>>(TokenOptions.DefaultAuthenticatorProvider);
 builder.Services.AddScoped<ILookupNormalizer, SubjectLookupNormalizer>();
+// ADR 0007, incremento I4: passkeys (WebAuthn). Sin SignInManager (AddIdentityCore no registra el manejador): el estado de cada ceremonia
+// lo guarda PasskeyStateCookie. El dominio va explícito por entorno (Acceso:PasskeyDominio); vacío, las passkeys están desactivadas.
+builder.Services.AddScoped<IPasskeyHandler<CredentialAccount>, PasskeyHandler<CredentialAccount>>();
+builder.Services.Configure<IdentityPasskeyOptions>(options =>
+{
+    var passkeyDomain = builder.Configuration[$"{AccesoOptions.Section}:{nameof(AccesoOptions.PasskeyDominio)}"]?.Trim();
+    options.ServerDomain = passkeyDomain;
+    options.UserVerificationRequirement = "required";
+    options.ResidentKeyRequirement = "required";
+    options.ValidateOrigin = context => ValueTask.FromResult(
+        !context.CrossOrigin && !string.IsNullOrEmpty(passkeyDomain)
+        && PasskeyOrigin.IsAllowed(context.Origin, passkeyDomain, builder.Environment.IsDevelopment()));
+});
+builder.Services.AddSingleton<PasskeyStateCookie>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {

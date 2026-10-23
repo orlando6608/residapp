@@ -23,7 +23,7 @@ namespace ResidApp.FunctionalTests;
 /// </summary>
 public class SesionTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixture<ResidentsFlowTests.WebAppFactory>
 {
-    private static readonly string[] AnonymousControllers = ["Acceso", "AccesoCj", "DevAuth", "Home"];
+    private static readonly string[] AnonymousControllers = ["Acceso", "AccesoCj", "DevAuth", "Home", "Passkey"];
 
     internal static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;

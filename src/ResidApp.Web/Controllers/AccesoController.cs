@@ -26,8 +26,10 @@ public sealed class AccesoController(
     UserManager<CredentialAccount> users, IProfileScopeDirectoryProvider directory, SessionSignIn signIn, PendingAccessCookie pendingCookie,
     IAccessInvitationRepository invitations, InvitationCookie invitationCookie, ISessionStore sessions,
     IAccessEventLog accessLog, TimeProvider clock, AccessFailureThrottle throttle, IOptions<DevAuthOptions> devAuth,
-    ILogger<AccesoController> logger) : Controller
+    IOptions<AccesoOptions> acceso, ILogger<AccesoController> logger) : Controller
 {
+    public const string PlatformUsesPasskeyMessage =
+        "Las cuentas de Plataforma entran solo con passkey. Usa «Entrar con passkey».";
     public const string FailedMessage =
         "Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.";
     public const string NeedsInvitationMessage =
@@ -87,10 +89,17 @@ public sealed class AccesoController(
             return View(EntrarModel(subject, returnUrl, false));
         }
 
+        // Plataforma con alguna passkey ya no entra con contraseña y código (ADR 0007, I4): sería rebajar lo que la passkey exige.
+        if (await MustUsePasskeyAsync(account, scopes))
+        {
+            ModelState.AddModelError(string.Empty, PlatformUsesPasskeyMessage);
+            return View(EntrarModel(subject, returnUrl, false));
+        }
+
         if (!account.TwoFactorEnabled && scopes.All(scope => scope.Profile == SystemProfile.Familiar))
         {
             await users.ResetAccessFailedCountAsync(account);
-            return await OpenSessionAsync(scopes[0], returnUrl, ct);
+            return await OpenSessionAsync(account, scopes[0], returnUrl, ct);
         }
 
         if (!account.TwoFactorEnabled)
@@ -171,6 +180,11 @@ public sealed class AccesoController(
         await users.ResetAuthenticatorKeyAsync(account);
         await users.SetLockoutEndDateAsync(account, null);
         await users.ResetAccessFailedCountAsync(account);
+        // La recuperación sustituye también las passkeys: el dispositivo perdido o robado no puede seguir entrando (ADR 0007, I4).
+        foreach (var passkey in await users.GetPasskeysAsync(account))
+        {
+            await users.RemovePasskeyAsync(account, passkey.CredentialId);
+        }
         var recovery = invitation.Kind == AccessInvitationKind.Recuperacion;
         if (recovery)
         {
@@ -188,7 +202,7 @@ public sealed class AccesoController(
         }
         if (scopes.All(scope => scope.Profile == SystemProfile.Familiar))
         {
-            return await OpenSessionAsync(scopes[0], null, ct);
+            return await OpenSessionAsync(account, scopes[0], null, ct);
         }
 
         pendingCookie.Write(Response, account.Id, account.SecurityStamp ?? string.Empty, null, canEnroll: true);
@@ -310,7 +324,7 @@ public sealed class AccesoController(
 
         // Los códigos solo se enseñan en esta respuesta: sin redirección y sin que el navegador la guarde.
         Response.Headers.CacheControl = "no-store";
-        return View("CodigosRecuperacion", new CodigosRecuperacionViewModel(codes, ContinueUrl(pending.State.ReturnUrl)));
+        return View("CodigosRecuperacion", new CodigosRecuperacionViewModel(codes, await AfterSignInUrlAsync(pending.Account, pending.Scopes[0], pending.State.ReturnUrl)));
     }
 
     [HttpPost]
@@ -336,7 +350,18 @@ public sealed class AccesoController(
         "Demasiados accesos fallidos desde esta red. Espera unos minutos y vuelve a intentarlo.");
 
     private AccesoEntrarViewModel EntrarModel(string? usuario, string? returnUrl, bool sesionCaducada) =>
-        new(usuario, Url.IsLocalUrl(returnUrl) ? returnUrl : null, sesionCaducada, devAuth.Value.Habilitado);
+        new(usuario, Url.IsLocalUrl(returnUrl) ? returnUrl : null, sesionCaducada, devAuth.Value.Habilitado, acceso.Value.PasskeysActivas);
+
+    private async Task<bool> MustUsePasskeyAsync(CredentialAccount account, IReadOnlyList<ActiveProfileScope> scopes) =>
+        acceso.Value.PasskeysActivas && scopes.Any(scope => scope.Profile == SystemProfile.Plataforma)
+        && (await users.GetPasskeysAsync(account)).Count > 0;
+
+    /// <summary>Adónde sigue quien acaba de entrar con contraseña: una cuenta de Plataforma sin ninguna passkey va a «Mi cuenta» a crear la
+    /// primera, que es obligatoria (ADR 0007, I4).</summary>
+    private async Task<string> AfterSignInUrlAsync(CredentialAccount account, ActiveProfileScope scope, string? returnUrl) =>
+        acceso.Value.PasskeysActivas && scope.Profile == SystemProfile.Plataforma && (await users.GetPasskeysAsync(account)).Count == 0
+            ? Url.Action("Index", "Cuenta")!
+            : ContinueUrl(returnUrl);
 
     private async Task<bool> PasswordMatchesAsync(CredentialAccount account, string password)
     {
@@ -393,13 +418,13 @@ public sealed class AccesoController(
     {
         await users.ResetAccessFailedCountAsync(pending.Account);
         PendingAccessCookie.Clear(Response);
-        return await OpenSessionAsync(pending.Scopes[0], pending.State.ReturnUrl, ct);
+        return await OpenSessionAsync(pending.Account, pending.Scopes[0], pending.State.ReturnUrl, ct);
     }
 
-    private async Task<IActionResult> OpenSessionAsync(ActiveProfileScope scope, string? returnUrl, CancellationToken ct)
+    private async Task<IActionResult> OpenSessionAsync(CredentialAccount account, ActiveProfileScope scope, string? returnUrl, CancellationToken ct)
     {
         await signIn.OpenAsync(HttpContext, scope, AccessEventType.Entrada, ct);
-        return LocalRedirect(ContinueUrl(returnUrl));
+        return LocalRedirect(await AfterSignInUrlAsync(account, scope, returnUrl));
     }
 
     private string ContinueUrl(string? returnUrl) => Url.IsLocalUrl(returnUrl) ? returnUrl : Url.Action("Index", "Home")!;

@@ -20,6 +20,10 @@ public enum AccessEventType
     [Code("CODIGOS_REGENERADOS")] CodigosRegenerados,
     [Code("SESION_CERRADA")] SesionCerrada,
     [Code("VINCULACION_ACEPTADA")] VinculacionAceptada,
+    [Code("ENTRADA_PASSKEY")] EntradaPasskey,
+    [Code("PASSKEY_ALTA")] PasskeyAlta,
+    [Code("PASSKEY_BAJA")] PasskeyBaja,
+    [Code("PASSKEY_FALLIDA")] PasskeyFallida,
 }
 
 /// <summary>Un evento del registro de accesos de una cuenta, tal como se le enseña a ella en «Mi cuenta». Fecha UTC.</summary>

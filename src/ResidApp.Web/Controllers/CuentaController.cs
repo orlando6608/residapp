@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using ResidApp.Application.Ports;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Sessions;
@@ -24,8 +25,11 @@ namespace ResidApp.Web.Controllers;
 public sealed class CuentaController(
     UserManager<CredentialAccount> users, IProfileScopeDirectoryProvider directory, ISessionStore sessions, IAccessEventLog accessLog,
     AccessFailureThrottle throttle, SessionPolicy policy, AccountLinksApplicationService links, TimeProvider clock,
+    IPasskeyHandler<CredentialAccount> passkeyHandler, PasskeyStateCookie passkeyState, IOptions<AccesoOptions> acceso,
     ILogger<CuentaController> logger) : Controller
 {
+    /// <summary>Tope de passkeys por cuenta: un móvil, un portátil, una llave y alguna de reserva.</summary>
+    public const int MaxPasskeys = 10;
     private const string AvisoKey = "CuentaAviso";
     private const int RecentEvents = 10;
     private const string WrongPasswordMessage = "La contraseña actual no es correcta. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.";
@@ -142,6 +146,160 @@ public sealed class CuentaController(
         return View("~/Views/Acceso/CodigosRecuperacion.cshtml", new CodigosRecuperacionViewModel(
             codes, Url.Action(nameof(Index))!, "Códigos de recuperación nuevos"));
     }
+
+    /// <summary>Primer paso del alta de una passkey (ADR 0007, I4): como generar códigos de recuperación, pide la contraseña y el código del
+    /// móvil vigente. Si valen, devuelve las opciones de WebAuthn y deja el estado en una cookie ligada a esta cuenta y a esta sesión.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
+    public async Task<IActionResult> PasskeyOpciones(string? contrasena, string? codigo, CancellationToken ct)
+    {
+        if (!acceso.Value.PasskeysActivas)
+        {
+            return NotFound();
+        }
+        if (await CurrentAccountAsync() is not { } account || SessionAuthentication.SessionId(User) is not { } sessionId)
+        {
+            return Challenge();
+        }
+        if (throttle.IsBlocked(SessionSignIn.Ip(HttpContext)))
+        {
+            return TooManyFailures();
+        }
+        if (!account.TwoFactorEnabled)
+        {
+            return PasskeyError("Tu perfil entra solo con la contraseña: las passkeys son para el personal.");
+        }
+        if (string.IsNullOrEmpty(contrasena) || string.IsNullOrWhiteSpace(codigo))
+        {
+            return PasskeyError("Escribe tu contraseña y el código de tu móvil.");
+        }
+        if (await VerifyPasswordAsync(account, contrasena, AccessEventType.ContrasenaFallida, ct) is { } passwordError)
+        {
+            return PasskeyError(passwordError);
+        }
+        if (!await users.VerifyTwoFactorTokenAsync(account, users.Options.Tokens.AuthenticatorTokenProvider, CleanCode(codigo)))
+        {
+            await FailAsync(account, AccessEventType.SegundoFactorFallido, ct);
+            return PasskeyError("El código del móvil no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya.");
+        }
+        if ((await users.GetPasskeysAsync(account)).Count >= MaxPasskeys)
+        {
+            return PasskeyError($"Ya tienes {MaxPasskeys} passkeys, que es el máximo. Quita alguna antes de añadir otra.");
+        }
+
+        await users.ResetAccessFailedCountAsync(account);
+        var name = await DisplayNameAsync(account, ct);
+        var options = await passkeyHandler.MakeCreationOptionsAsync(
+            new PasskeyUserEntity { Id = account.Id.ToString("D"), Name = account.UserName, DisplayName = name }, HttpContext);
+        passkeyState.Write(Response, PasskeyCeremony.Alta,
+            options.AttestationState ?? throw new InvalidOperationException("Sin estado de la passkey."), sessionId);
+        return Content(options.CreationOptionsJson, "application/json");
+    }
+
+    /// <summary>Segundo paso: valida la credencial que ha creado el dispositivo y la guarda en esta cuenta. El estado debe ser el que se
+    /// pidió desde esta misma sesión y la passkey, de esta misma cuenta.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting(AccesoOptions.RateLimitPolicy)]
+    public async Task<IActionResult> PasskeyAlta([FromBody] PasskeyAltaRequest request, CancellationToken ct)
+    {
+        if (!acceso.Value.PasskeysActivas)
+        {
+            return NotFound();
+        }
+        if (await CurrentAccountAsync() is not { } account || SessionAuthentication.SessionId(User) is not { } sessionId)
+        {
+            return Challenge();
+        }
+
+        var state = passkeyState.Take(Request, Response, PasskeyCeremony.Alta);
+        if (state is null || state.SessionId != sessionId || string.IsNullOrEmpty(request.CredentialJson))
+        {
+            return PasskeyError("El registro ha caducado o no es el que pediste. Vuelve a empezar.");
+        }
+
+        var attestation = await passkeyHandler.PerformAttestationAsync(new()
+        {
+            HttpContext = HttpContext, CredentialJson = request.CredentialJson, AttestationState = state.State,
+        });
+        if (!attestation.Succeeded || !string.Equals(attestation.UserEntity.Id, account.Id.ToString("D"), StringComparison.Ordinal))
+        {
+            logger.LogWarning("Alta de passkey rechazada: {Motivo}", attestation.Failure?.Message);
+            await accessLog.RecordAsync(AccessEventType.PasskeyFallida, AccountId.From(account.Id), sessionId, SessionSignIn.Ip(HttpContext), Now, ct);
+            return PasskeyError("No se ha podido registrar la passkey. Vuelve a intentarlo.");
+        }
+
+        var passkey = attestation.Passkey;
+        passkey.Name = PasskeyName(request.Nombre);
+        try
+        {
+            await users.AddOrUpdatePasskeyAsync(account, passkey);
+        }
+        catch (Microsoft.Data.SqlClient.SqlException)
+        {
+            return PasskeyError("Esa passkey ya está registrada.");
+        }
+
+        await accessLog.RecordAsync(AccessEventType.PasskeyAlta, AccountId.From(account.Id), sessionId, SessionSignIn.Ip(HttpContext), Now, ct);
+        TempData[AvisoKey] = $"Passkey «{passkey.Name}» añadida. Ya puedes entrar con ella desde «Entrar con passkey».";
+        return Json(new { ok = true });
+    }
+
+    /// <summary>Quita una passkey de esta cuenta. Una cuenta de Plataforma no puede quedarse sin ninguna: entraría con contraseña y código,
+    /// que es justo lo que la passkey obligatoria sustituye.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> QuitarPasskey(string? id, CancellationToken ct)
+    {
+        if (await CurrentAccountAsync() is not { } account)
+        {
+            return Challenge();
+        }
+
+        var passkeys = await users.GetPasskeysAsync(account);
+        var passkey = passkeys.FirstOrDefault(p => PasskeyId(p) == id);
+        if (passkey is null)
+        {
+            TempData[AvisoKey] = "Esa passkey ya no estaba.";
+        }
+        else if (passkeys.Count == 1 && await IsPlatformAsync(account, ct))
+        {
+            TempData[AvisoKey] = "Tu cuenta de Plataforma necesita al menos una passkey: añade otra antes de quitar ésta.";
+        }
+        else
+        {
+            await users.RemovePasskeyAsync(account, passkey.CredentialId);
+            await accessLog.RecordAsync(AccessEventType.PasskeyBaja, AccountId.From(account.Id), SessionAuthentication.SessionId(User),
+                SessionSignIn.Ip(HttpContext), Now, ct);
+            TempData[AvisoKey] = $"Passkey «{passkey.Name}» quitada.";
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    private JsonResult PasskeyError(string message)
+    {
+        var result = Json(new { error = message });
+        result.StatusCode = StatusCodes.Status400BadRequest;
+        return result;
+    }
+
+    /// <summary>El nombre con que se reconoce la passkey en la lista; sin nombre, la fecha de alta.</summary>
+    private string PasskeyName(string? requested)
+    {
+        var name = requested?.Trim();
+        return string.IsNullOrEmpty(name) ? $"Passkey del {Now:dd/MM/yyyy}" : name.Length > 100 ? name[..100] : name;
+    }
+
+    private async Task<string> DisplayNameAsync(CredentialAccount account, CancellationToken ct) =>
+        (await directory.ListActiveAsync(account.UserName, ct)).Select(s => s.AccountDisplayName)
+            .FirstOrDefault(n => !string.IsNullOrWhiteSpace(n)) ?? account.UserName;
+
+    private async Task<bool> IsPlatformAsync(CredentialAccount account, CancellationToken ct) =>
+        (await directory.ListActiveAsync(account.UserName, ct)).Any(s => s.Profile == SystemProfile.Plataforma);
+
+    /// <summary>El identificador de la passkey en formularios y direcciones.</summary>
+    private static string PasskeyId(UserPasskeyInfo passkey) => Microsoft.AspNetCore.WebUtilities.Base64UrlTextEncoder.Encode(passkey.CredentialId);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -335,6 +493,10 @@ public sealed class CuentaController(
             Sesiones = open.Select(s => new SesionAbiertaViewModel(s.Id, s.CreatedAt, s.LastActivityAt, s.ExpiresAt, s.Ip, s.Id == current)).ToList(),
             Accesos = events.Select(e => new AccesoRecienteViewModel(
                 e.OccurredAt, AccesoRecienteDisplay.Descripcion(e.Type), AccesoRecienteDisplay.EsFallo(e.Type), e.Ip)).ToList(),
+            Passkeys = (await users.GetPasskeysAsync(account)).Select(p => new PasskeyViewModel(
+                PasskeyId(p), p.Name ?? "Passkey", p.CreatedAt.UtcDateTime, p.IsBackedUp)).ToList(),
+            PasskeysActivas = acceso.Value.PasskeysActivas,
+            PasskeyObligatoria = acceso.Value.PasskeysActivas && scopes.Any(s => s.Profile == SystemProfile.Plataforma),
             Aviso = TempData[AvisoKey] as string,
             ErrorContrasena = errorContrasena,
             ErrorCodigos = errorCodigos,

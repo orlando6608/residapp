@@ -139,6 +139,66 @@ public class SqlCredentialStoreTests
         Assert.Equal(9, await Users().CountRecoveryCodesAsync((await Users().FindByNameAsync(subject))!));
     }
 
+    /// <summary>Quien registra una passkey ya tiene credenciales (sello de seguridad): Identity lo exige al guardar.</summary>
+    private static async Task<CredentialAccount> AccountWithPasswordAsync(string subject)
+    {
+        var users = Users();
+        await users.AddPasswordAsync((await users.FindByNameAsync(subject))!, "una contraseña larga");
+        return (await Users().FindByNameAsync(subject))!;
+    }
+
+    private static UserPasskeyInfo Passkey(byte[] id, string? name = null, uint signCount = 0) =>
+        new(id, [1, 2, 3, 4], DateTimeOffset.UtcNow, signCount, ["internal", "hybrid"], true, true, false, [], []) { Name = name };
+
+    [Fact]
+    public async Task Passkeys_SeGuardan_SeActualizan_SeEncuentranPorSuId_YSeQuitan()
+    {
+        var (_, subject) = await SeedAccountAsync();
+        var id = Guid.NewGuid().ToByteArray();
+        var account = await AccountWithPasswordAsync(subject);
+
+        await Users().AddOrUpdatePasskeyAsync(account, Passkey(id, "Móvil de Ana"));
+        var stored = (await Users().GetPasskeysAsync(account)).Single();
+        var nameAtCreation = stored.Name;
+        stored.SignCount = 7;
+        stored.Name = "Portátil";
+        stored.IsBackedUp = true;
+        await Users().AddOrUpdatePasskeyAsync(account, stored);
+        var updated = (await Users().GetPasskeyAsync(account, id))!;
+        var owner = await Users().FindByPasskeyIdAsync(id);
+        await Users().RemovePasskeyAsync(account, id);
+
+        Assert.Equal(id, stored.CredentialId);
+        Assert.Equal("Móvil de Ana", nameAtCreation);
+        Assert.Equal(["internal", "hybrid"], stored.Transports!);
+        Assert.Equal(7u, updated.SignCount);
+        Assert.Equal("Portátil", updated.Name);
+        Assert.True(updated.IsBackedUp);
+        Assert.True(updated.IsBackupEligible);
+        Assert.Equal(account.Id, owner!.Id);
+        Assert.Empty(await Users().GetPasskeysAsync(account));
+        Assert.Null(await Users().FindByPasskeyIdAsync(id));
+    }
+
+    [Fact]
+    public async Task Passkey_NuncaPasaAOtraCuenta_NiSeLeeOQuitaDesdeOtra()
+    {
+        var (_, subjectA) = await SeedAccountAsync();
+        var (_, subjectB) = await SeedAccountAsync();
+        var id = Guid.NewGuid().ToByteArray();
+        var accountA = await AccountWithPasswordAsync(subjectA);
+        var accountB = await AccountWithPasswordAsync(subjectB);
+        await Users().AddOrUpdatePasskeyAsync(accountA, Passkey(id));
+
+        await Assert.ThrowsAsync<SqlException>(() => Users().AddOrUpdatePasskeyAsync(accountB, Passkey(id)));
+        var readByB = await Users().GetPasskeyAsync(accountB, id);
+        await Users().RemovePasskeyAsync(accountB, id);
+
+        Assert.Null(readByB);
+        Assert.Equal(accountA.Id, (await Users().FindByPasskeyIdAsync(id))!.Id);
+        Assert.Empty(await Users().GetPasskeysAsync(accountB));
+    }
+
     [Fact]
     public async Task SegundoFactorActivo_SinClave_LoRechazaLaBase()
     {
