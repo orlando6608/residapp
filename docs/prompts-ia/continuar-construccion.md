@@ -17,7 +17,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 - **Dossier para el DPO sobre el dictado (2026-10-23, rama `dossier-dpo-dictado`, solo documentación):** `docs/seguridad/dictado-por-voz-dossier-dpo.md`, escrito para la persona
   responsable de protección de datos (no para ingeniería). Responde a «¿se puede evitar el contrato de encargado y la EIPD?»: **no**, porque la voz y lo que se dice del residente
   son datos personales y de salud aunque no lleven nombre; lo que sí se puede es aligerar el trabajo. Lo comprobado en páginas públicas de Mistral (resumen, **sin leer el contrato
-  original**): su DPA se incorpora por referencia a los términos comerciales (no hay firma aparte); Mistral puede entrenar salvo que se desactive; la retención cero cubre
+  original**): su DPA se incorpora por referencia a los términos comerciales (no hay firma aparte); sobre el entrenamiento, los términos comerciales (4.2) dicen que no entrena salvo casos listados y el resumen del DPA (2.3) que puede salvo que se desactive: hay que pedir aclaración; la retención cero cubre
   transcripción y chat pero solo en pago por uso y con aprobación discrecional; UE por defecto; y **el anexo del DPA dice «categorías especiales: ninguna» y no menciona datos de
   salud**, así que hay que pedir a Mistral una confirmación o ampliación por escrito. Lleva 10 preguntas numeradas para el DPO, las medidas de la aplicación con la prueba que
   cada una cubre, los riesgos sin resolver y la alternativa de un modelo propio en la UE (sin estudiar). **Pendiente:** que Orlando se lo lleve al DPO; si pide la EIPD, el siguiente

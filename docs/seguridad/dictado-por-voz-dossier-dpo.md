@@ -54,8 +54,11 @@ puede escribirse, el audio no sale. El registro técnico de la aplicación anota
 - Se incorpora **«por referencia»** a los términos comerciales: forma parte del contrato desde que el cliente acepta esos términos o desde que Mistral empieza a
   tratar datos personales por su cuenta, lo que ocurra antes. El texto no describe una firma aparte, aunque en un apartado habla de «aceptar» el DPA.
 - Reparto de papeles: el cliente es el **responsable** del tratamiento y Mistral es el **encargado** (el que trata los datos siguiendo las instrucciones del responsable).
-- **Entrenamiento de modelos:** Mistral puede usar datos para entrenar sus modelos, según su política de privacidad, **salvo que el cliente lo desactive**. Hay que
-  desactivarlo y comprobar que queda desactivado.
+- **Entrenamiento de modelos: los dos textos no dicen lo mismo.** Los términos comerciales (apartado 4.2) dicen que Mistral **no** usa los datos del cliente para entrenar,
+  salvo en casos listados: ciertos ajustes de aceptar o rechazar, los comentarios («me gusta / no me gusta») que envíe un usuario, lo que prevea un pedido concreto y el uso de
+  modelos en pruebas (*Labs* o *Preview*). En cambio, el resumen del DPA (apartado 2.3) dice que Mistral puede entrenar, según su política de privacidad, **salvo que el cliente
+  lo haya desactivado**. Hay que pedir a Mistral que aclare cuál manda, desactivar el entrenamiento en la cuenta y comprobarlo, y confirmar que los dos modelos que usa
+  ResidApp (transcripción y salida estructurada, ambos con nombre «latest», que puede apuntar a versiones nuevas) **no son** modelos de prueba (Labs o Preview).
 - **Vigilancia de abusos:** hay moderación automática en la API. Con la retención cero (siguiente punto) no se aplica.
 - **Retención:** el anexo del DPA dice que los datos se conservan «durante el contrato». La **retención cero** (*Zero Data Retention*, ZDR) es un modo en el que Mistral no
   conserva el contenido de las peticiones. Cubre los dos servicios que usamos, pero solo en la modalidad de pago por uso y **con la aprobación de Mistral, que puede
@@ -71,7 +74,7 @@ lo amplíe.
 **Qué habría que pedir o comprobar antes de datos reales:**
 
 1. Confirmación escrita de que el DPA vigente cubre datos de salud.
-2. Entrenamiento desactivado en la cuenta, y comprobado.
+2. Aclaración escrita sobre el entrenamiento (apartado anterior), entrenamiento desactivado en la cuenta y comprobado, y los dos modelos fuera de Labs y Preview.
 3. Retención cero aprobada para los dos servicios.
 4. Uso exclusivo del punto de acceso de la UE y confirmación de que los dos servicios no mueven datos fuera de la UE.
 5. Lista actual de subencargados y su ubicación.
