@@ -17,6 +17,13 @@
   opacity: 0.65;
 }
 
+/* «Continuar» de Registrar cambio mientras queden sugerencias del dictado sin revisar (dictado.js): sigue enfocable (no usa `disabled`,
+   que además lo sacaría del orden de tabulación), se atenúa y el cursor indica que no se puede. */
+.btn[data-bloqueado-dictado] {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 /* Identidad de marca al imprimir (guia-diseno-sistema-visual.md, sección 4): el contenedor se imprime como una tabla y el
    encabezado de marca como su cabecera, que el navegador repite arriba de cada página reservando el mismo hueco. */
 @media print {

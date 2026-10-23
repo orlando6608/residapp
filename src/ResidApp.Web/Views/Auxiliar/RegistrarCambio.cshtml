@@ -2,6 +2,7 @@
 @using ResidApp.Shared
 @using ResidApp.Web.Models
 @model RegistrarCambioFormModel
+@inject Microsoft.Extensions.Options.IOptions<ResidApp.Infrastructure.IA.IaOptions> Ia
 @{
     ViewData["Title"] = "Registrar cambio";
     var resident = (ResidApp.Application.Ports.AssignedResidentSummary)ViewBag.Resident;
@@ -29,6 +30,63 @@
     <input type="hidden" asp-for="OperacionId" />
     @* El aviso directo se escribe en la confirmación; viaja aquí para no perderlo al «Volver a editar». *@
     <input type="hidden" asp-for="AvisoDirecto" />
+
+    @if (Ia.Value.Activa)
+    {
+        @* Dictado por voz (ADR 0009 y 0011). Oculto hasta que dictado.js comprueba que el navegador puede grabar: sin micrófono o sin
+           JavaScript, el formulario se rellena a mano como siempre. Lo dictado es una sugerencia que se revisa una a una antes de continuar. *@
+        <section class="card mb-3" id="dictado" hidden aria-labelledby="dictado-titulo"
+                 data-url="@Url.Action("DictarCambio")" data-residente="@Model.ResidenteId" data-max-segundos="120">
+            <div class="card-body">
+                <h2 class="h5 card-title" id="dictado-titulo">Dictar el cambio</h2>
+                <p class="text-muted mb-2">
+                    Pulsa <strong>Grabar</strong>, cuenta lo que ha pasado y pulsa <strong>Parar</strong>. Lo que se entienda aparecerá en el formulario como una
+                    <strong>sugerencia</strong>: tienes que revisarla una a una antes de continuar.
+                </p>
+                <p class="fw-semibold mb-3">No digas nombres de personas.</p>
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <button type="button" class="btn btn-outline-primary btn-lg" id="dictado-boton" aria-pressed="false">
+                        <span data-texto>Grabar</span>
+                    </button>
+                    <span class="text-muted" id="dictado-tiempo" aria-hidden="true"></span>
+                </div>
+                <p class="mt-3 mb-0" id="dictado-estado" role="status" aria-live="polite"></p>
+                <div class="mt-3" id="dictado-entendido" hidden>
+                    <h3 class="h6">Lo que se ha entendido</h3>
+                    <p class="mb-0 fst-italic" id="dictado-transcripcion"></p>
+                </div>
+                <div class="mt-3" id="dictado-revision" hidden>
+                    <h3 class="h6" id="dictado-revision-titulo" tabindex="-1">Revisa cada sugerencia</h3>
+                    <ul class="list-group" id="dictado-revision-lista"></ul>
+                </div>
+            </div>
+        </section>
+        <template id="dictado-marca">
+            <span class="badge text-bg-info d-inline-flex align-items-center gap-1 ms-2 align-middle" data-marca-voz>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+                    <path d="M8 1.5a2 2 0 0 0-2 2V8a2 2 0 0 0 4 0V3.5a2 2 0 0 0-2-2Z" />
+                    <path d="M3.5 7.5V8a4.5 4.5 0 0 0 9 0v-.5M8 12.5v2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+                </svg>
+                <span>Sugerido por voz</span>
+            </span>
+        </template>
+        <template id="dictado-revision-fila">
+            <li class="list-group-item d-flex flex-wrap align-items-center gap-2" data-revision>
+                <span class="badge text-bg-info d-inline-flex align-items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+                        <path d="M8 1.5a2 2 0 0 0-2 2V8a2 2 0 0 0 4 0V3.5a2 2 0 0 0-2-2Z" />
+                        <path d="M3.5 7.5V8a4.5 4.5 0 0 0 9 0v-.5M8 12.5v2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+                    </svg>
+                    <span>Sugerido por voz</span>
+                </span>
+                <span><span class="fw-semibold" data-opcion></span> <span class="text-muted" data-area></span></span>
+                <span class="ms-md-auto d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success btn-sm" data-accion="confirmar">Está bien</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" data-accion="quitar">Quitar</button>
+                </span>
+            </li>
+        </template>
+    }
 
     <div class="card mb-3">
         <div class="card-body">
@@ -120,12 +178,20 @@
 
     @* Barra fija abajo: el formulario es largo y «Continuar» tiene que estar siempre a mano. *@
     <div class="barra-accion">
-        <div class="d-grid d-md-flex justify-content-md-end">
-            <button type="submit" class="btn btn-primary btn-lg">Continuar</button>
+        <div class="d-grid d-md-flex align-items-md-center justify-content-md-end gap-md-3">
+            @if (Ia.Value.Activa)
+            {
+                <span class="text-body-secondary small mb-2 mb-md-0" id="dictado-bloqueo" hidden>Revisa lo sugerido por voz para poder continuar.</span>
+            }
+            <button type="submit" class="btn btn-primary btn-lg" id="registrar-continuar">Continuar</button>
         </div>
     </div>
 </form>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @if (Ia.Value.Activa)
+    {
+        <script src="~/js/dictado.js" asp-append-version="true"></script>
+    }
 }

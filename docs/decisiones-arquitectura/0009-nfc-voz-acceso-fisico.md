@@ -1,7 +1,7 @@
 # ADR 0009 — NFC para identificar camas y auxiliares, y dictado de reportes con voz
 
-Estado: aceptada el 2026-10-13 (decisión del usuario). **Dictado:** prueba de precisión (Fase A) hecha; el servidor (Fase B, tramo 1, 2026-10-23) está
-construido y probado con proveedores falsos, sin temperatura hasta que CJ fije su rango; falta la pantalla (tramo 2). **NFC:** sin implementar. Modelos
+Estado: aceptada el 2026-10-13 (decisión del usuario). **Dictado:** prueba de precisión (Fase A) hecha; el servidor (Fase B, tramo 1) y la pantalla de «Registrar cambio» (tramo 2) están hechos
+(2026-10-23), probados con proveedores falsos y en un Chrome real con micrófono falso, sin temperatura hasta que CJ fije su rango y con el modo estricto de revisión pendiente de su confirmación. **NFC:** sin implementar. Modelos
 fijados: `voxtral-mini-latest` (transcripción) y `mistral-small-latest` (salida estructurada, esquema estricto).
 
 ## Contexto
