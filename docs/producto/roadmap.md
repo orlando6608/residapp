@@ -46,7 +46,7 @@ Sin pendiente crítico propio. Detalle en `docs/tareas/alta-prioridad/pendientes
 | --- | --- |
 | Autenticación y segundo factor productivos | Decidido el 2026-10-21: ASP.NET Core Identity propio (el sistema de cuentas que trae la plataforma de la aplicación) sobre Azure SQL en la UE; ver `docs/decisiones-arquitectura/0007-proveedor-identidad.md`. Hechos I0 a I4 e I2b (sesión, contraseña y código del móvil, invitaciones, «Mi cuenta», cuentas en varios centros y passkeys o «llaves de acceso»). Falta la pulsera con PIN para tablets (I5), retirar el acceso de desarrollo y la validación del DPO de la residencia piloto. |
 | SLA, RPO, RTO y copias de seguridad | Pendiente de definir antes de producción. |
-| EIPD, contratos y seguridad | Pendiente de formalizar antes de tratar datos reales. |
+| EIPD, contratos y seguridad | Pendiente de formalizar antes de tratar datos reales. Para el dictado por voz hay un dossier para el DPO: `docs/seguridad/dictado-por-voz-dossier-dpo.md` (2026-10-23). |
 | Configuración real de citas, equipos y tiempos | Pendiente de definir junto con cada centro piloto. |
 | Criterios de actualización familiar relevante | Pendiente de acordar entre dirección clínica y centro. |
 | Política de corrección de notas clínicas y su conservación | Pendiente de acordar entre centro y responsable de protección de datos. Mientras tanto, la app aplica una política provisional (2026-09-30): el autor corrige solo las valoraciones de Enfermería y médica durante 6 h y después añade rectificaciones; todo se conserva (ver `docs/tareas/alta-prioridad/pendientes-enfermeria.md`, historia 11, bloque 3). |

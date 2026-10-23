@@ -14,7 +14,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Dictado por voz, Fase B, tramo 2: la pantalla está hecha (2026-10-23, rama `dictado-fase-b-tramo-2`, sin push; sin script SQL, el siguiente libre sigue siendo `0067`).**
+- **Dossier para el DPO sobre el dictado (2026-10-23, rama `dossier-dpo-dictado`, solo documentación):** `docs/seguridad/dictado-por-voz-dossier-dpo.md`, escrito para la persona
+  responsable de protección de datos (no para ingeniería). Responde a «¿se puede evitar el contrato de encargado y la EIPD?»: **no**, porque la voz y lo que se dice del residente
+  son datos personales y de salud aunque no lleven nombre; lo que sí se puede es aligerar el trabajo. Lo comprobado en páginas públicas de Mistral (resumen, **sin leer el contrato
+  original**): su DPA se incorpora por referencia a los términos comerciales (no hay firma aparte); sobre el entrenamiento, los términos comerciales (4.2) dicen que no entrena salvo casos listados y el resumen del DPA (2.3) que puede salvo que se desactive: hay que pedir aclaración; la retención cero cubre
+  transcripción y chat pero solo en pago por uso y con aprobación discrecional; UE por defecto; y **el anexo del DPA dice «categorías especiales: ninguna» y no menciona datos de
+  salud**, así que hay que pedir a Mistral una confirmación o ampliación por escrito. Lleva 10 preguntas numeradas para el DPO, las medidas de la aplicación con la prueba que
+  cada una cubre, los riesgos sin resolver y la alternativa de un modelo propio en la UE (sin estudiar). **Pendiente:** que Orlando se lo lleve al DPO; si pide la EIPD, el siguiente
+  paso sería un borrador. La clave de Mistral sigue sin ponerse en Azure dev.
+- **Dictado por voz, Fase B, tramo 2: la pantalla está hecha (2026-10-23, mergeada en `main` con el PR #58; sin script SQL, el siguiente libre sigue siendo `0067`).**
   Suite en verde proyecto a proyecto: 425 unitarias, 514 de integración y 304 funcionales.
   - **En lenguaje llano:** *modo estricto* es que el botón «Continuar» no avanza mientras quede alguna sugerencia sin revisar; *MediaRecorder* es la pieza del
     navegador que graba el micrófono; un *micrófono falso* es un audio que Chrome «habla» como si fuera el micrófono, para probar sin hablar.
