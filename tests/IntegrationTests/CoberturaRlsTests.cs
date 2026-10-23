@@ -20,6 +20,8 @@ public sealed class CoberturaRlsTests
         ["credenciales"] = Diseno,
         ["eventos_acceso"] = Diseno,
         ["invitaciones_acceso"] = Diseno,
+        ["vinculaciones_cuenta"] = Diseno,
+        ["vinculaciones_cuenta_unidades"] = Diseno,
         ["ambitos_perfil"] = Diseno,
         ["scripts_aplicados"] = Diseno,
         ["sysdiagrams"] = Diseno,

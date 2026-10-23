@@ -13,6 +13,31 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **ADR 0007, incremento I2b: vincular cuentas que ya existen en otro centro (2026-10-23, rama `adr0007-i2b-vincular-cuentas`; script `0065`, el siguiente
+  libre es `0066`).** Decisiones de Orlando (2026-10-23): la Administración del centro nuevo **confirma** tras el canje; las cuentas de varios centros las
+  **gestiona Plataforma**; solo **personal** (los familiares quedan fuera).
+  - **Flujo:** `Administracion/Vinculaciones` (botón en «Usuarios»): emite una hoja con el perfil y las unidades **sin decir a quién** (`HojaVinculacion`, QR,
+    72 h, un solo uso, solo el resumen SHA-256); la persona la canjea en `Cuenta/Vincular` (código escrito en «Mi cuenta» o enlace/QR; solo cuentas activas con
+    TOTP y que no sean la de quien emitió) y acepta con `Cuenta/AceptarVinculacion`, lo que **no concede nada**; la Administración la ve en «Pendientes de
+    confirmar» (nombre y usuario de quien canjeó) y **confirma** (crea el ámbito y las unidades con el mismo INSERT de «Conceder perfil») o **rechaza**.
+    Una hoja sin canjear se anula. Auditoría `ACCOUNT_LINK_ISSUE/CANCEL/CONFIRM/REJECT`; acceso `VINCULACION_ACEPTADA`.
+  - **Cuenta en varios centros:** `RenameAsync` se niega (`ACCOUNT_OTHER_CENTERS`, como ya hacían suspender y las invitaciones); **Plataforma** tiene
+    `Plataforma/Cuentas` («Cuentas de varios centros»): invitación de recuperación (`IssueForMultiCenterAsync`), suspender y reactivar
+    (`ChangeMultiCenterAccountStatusAsync`), con una fila de auditoría por cada centro de la cuenta. Retirar el perfil de un centro no suspende la cuenta.
+  - **Modelo:** `dbo.vinculaciones_cuenta` y `dbo.vinculaciones_cuenta_unidades` (sin RLS: la persona las lee desde otro centro; excepción en
+    `CoberturaRlsTests`; triggers 50541 y 50542; se anula solo lo no canjeado).
+    `SqlAccountLinkRepository`, `AccountLinksApplicationService`; los códigos `ACCOUNT_LINK_INVALID` y `ACCOUNT_LINK_SECOND_FACTOR` están en `ApplicationResultRunner`.
+  - **Pruebas nuevas:** `VinculacionesCuentaTests` (9, integración) y `AccesoTests.Vinculaciones.cs` (6, funcionales). Mutaciones comprobadas: canjear sin
+    exigir el segundo factor, resolver sin filtrar por centro y cambiar el nombre sin la guarda multicentro hacen fallar alguna. Suite 410 unitarios, 500 de
+    integración y 278 funcionales en verde.
+  - **Probado en local con Chrome sin interfaz** (claro, oscuro y 375 px, sin desplazamiento lateral): hoja con QR, código malo, oferta, aceptar, pendiente,
+    confirmar, selector con los dos centros y Plataforma. **Queda en la BD local:** centros «Residencia de prueba (navegador …)» y cuentas
+    `prueba-navegador-*` y `prueba-plataforma-*`.
+  - **Lección (entorno):** la primera pasada de pruebas **justo después de compilar** da con frecuencia cientos de timeouts de SQL (CPU saturada: 74 y 84
+    fallos, 2 a 5 min) y, sin recompilar, la repetición da todo en verde en 20-30 s. La BD local tiene ya **123.000 cuentas** de pruebas (SQL Express, 1 GB de
+    memoria): una consulta global sobre `ambitos_perfil` (el listado de Plataforma) tardó 26 s mientras corría la suite, pero 0,2 s en calma. El listado ya se
+    hace en dos consultas (identificadores, y luego solo esas cuentas).
+  - **Para el DPO:** las reglas de las cuentas de varios centros (quién las suspende, quién las recupera) y que el canje exija el segundo factor.
 - **ADR 0007, incremento I3: «Mi cuenta» (2026-10-22, PR #52 mergeado en `main` como `40196f3`; script `0064`, el siguiente libre es `0065`; suite 410
   unitarios, 491 de integración y 272 funcionales en verde, proyecto a proyecto; CI del PR y CI/CD de `main` en verde, con el `0064` aplicado en Azure SQL).**
   - **Comprobado en Azure dev tras el despliegue** (Chrome sin interfaz, clave de desarrollo leída del ajuste de la Web App): `almendros-enfermeria`
@@ -1437,8 +1462,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **I2 del ADR 0007 está cerrado**, en `main` y comprobado en Azure dev (ver «Dónde estamos»). Orlando elige entre **I3 («Mi cuenta»)**,
-   **I2b (vincular cuentas de otro centro)** y el **dictado por voz del ADR 0009**; antes de datos reales, retirar el acceso de desarrollo
+0. **I0 a I3 e I2b del ADR 0007 están cerrados** (ver «Dónde estamos»). Orlando elige entre **I4 (passkeys)**, el **dictado por voz del ADR 0009** y la
+   retirada del acceso de desarrollo; antes de datos reales, retirar el acceso de desarrollo y llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
    fecha prevista, prueba 2.4 de «Conducta médica»).
    Para entrar en Azure dev hace falta la clave de desarrollo: está solo en el ajuste `DevAuth__Clave` de la Web App

@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
 namespace ResidApp.Infrastructure.Persistence;
@@ -69,6 +70,43 @@ public sealed class SqlAccessInvitationRepository(SqlConnectionFactory connectio
             """, new
         {
             ActorId = access.AccountId.Value, CenterId = centerId.Value, AccountId = account.Id, OccurredAt = Utc(now),
+            Action = issued.Kind == AccessInvitationKind.Alta ? "ACCOUNT_INVITATION_ISSUE" : "ACCOUNT_RECOVERY_ISSUE",
+        }, transaction, cancellationToken: ct));
+        transaction.Commit();
+        return issued;
+    }
+
+    public async Task<IssuedAccessInvitation> IssueForMultiCenterAsync(
+        PlatformAccess access, AccountId accountId, string tokenHash, DateTime now, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await SqlPlatformCenterRepository.EnsureOperatorAsync(connection, transaction, access, ct);
+        if (accountId == access.AccountId)
+        {
+            throw new DomainValidationException("ACCOUNT_SELF_CHANGE");
+        }
+
+        var account = await connection.QuerySingleOrDefaultAsync<AccountRow>(new CommandDefinition(SelectAccount + """
+             WHERE account.id = @AccountId
+               AND (SELECT COUNT(DISTINCT profile.centro_id) FROM dbo.ambitos_perfil profile
+                     WHERE profile.cuenta_id = account.id AND profile.estado = 'ACTIVE') >= 2
+            """, new { CenterId = PlatformCenter.Id, AccountId = accountId.Value }, transaction, cancellationToken: ct))
+            ?? throw new DomainValidationException("ACCOUNT_INVALID");
+        if (!account.Active)
+        {
+            throw new DomainValidationException("ACCOUNT_CHANGE_CONFLICT");
+        }
+
+        var issued = await InsertAsync(connection, transaction, account, CenterId.From(PlatformCenter.Id), access.AccountId, "PLATAFORMA", tokenHash, now, ct);
+        // Cada centro en el que trabaja la cuenta lo ve en su auditoría.
+        await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.eventos_auditoria (id, cuenta_id, perfil_activo, centro_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
+            SELECT NEWID(), @ActorId, 'PLATAFORMA', scope.centro_id, 'ACCOUNT', @AccountId, @Action, @OccurredAt
+              FROM (SELECT DISTINCT centro_id FROM dbo.ambitos_perfil WHERE cuenta_id = @AccountId AND estado = 'ACTIVE') scope
+            """, new
+        {
+            ActorId = access.AccountId.Value, AccountId = account.Id, OccurredAt = Utc(now),
             Action = issued.Kind == AccessInvitationKind.Alta ? "ACCOUNT_INVITATION_ISSUE" : "ACCOUNT_RECOVERY_ISSUE",
         }, transaction, cancellationToken: ct));
         transaction.Commit();

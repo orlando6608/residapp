@@ -47,6 +47,7 @@ public sealed class CuentaViewModel
     public string? Aviso { get; init; }
     public string? ErrorContrasena { get; init; }
     public string? ErrorCodigos { get; init; }
+    public string? ErrorVinculacion { get; init; }
 }
 
 public static class AccesoRecienteDisplay
@@ -67,6 +68,7 @@ public static class AccesoRecienteDisplay
         AccessEventType.ContrasenaCambiada => "Contraseña cambiada",
         AccessEventType.CodigosRegenerados => "Códigos de recuperación nuevos",
         AccessEventType.SesionCerrada => "Sesión cerrada desde Mi cuenta",
+        AccessEventType.VinculacionAceptada => "Vinculación con otro centro aceptada",
         _ => type.ToString(),
     };
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ResidApp.Application.Errors;
 using ResidApp.Application.UseCases;
+using ResidApp.Domain.Accounts;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
@@ -160,6 +161,86 @@ public sealed class PlataformaController(PlatformApplicationService service) : C
                 _ => result.Error.Message,
             });
         return RedirectToAction(nameof(Centro), new { centroId });
+    }
+
+    /// <summary>ADR 0007, I2b: las cuentas con perfiles en varios centros. Ninguna Administración las suspende ni les entrega invitaciones
+    /// (cada una solo retira su propio perfil): lo hace la plataforma, con su soporte.</summary>
+    public async Task<IActionResult> Cuentas(CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Cuentas)) });
+        }
+
+        var result = await service.ListMultiCenterAccountsAsync(Query(activeScope), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+        }
+
+        return View(new PlatformMultiCenterAccountsViewModel(result.Value ?? []));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> InvitacionCuenta(Guid cuentaId, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await service.IssueMultiCenterInvitationAsync(new PlatformAccountCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), AccountId.From(cuentaId)), ct);
+        if (!result.Ok)
+        {
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.InvalidInput => "Esa cuenta ya no tiene perfiles en varios centros, o es la tuya.",
+                ApplicationFailureCode.Conflict => "La cuenta está suspendida.",
+                _ => result.Error.Message,
+            };
+            return RedirectToAction(nameof(Cuentas));
+        }
+
+        Response.Headers.CacheControl = "no-store";
+        var issued = result.Value!;
+        return View("HojaInvitacion", new HojaInvitacionViewModel(
+            issued.Details.Kind, issued.Details.Subject, issued.Details.DisplayName, issued.Details.CenterName, issued.Details.ExpiresAt,
+            Url.Action("Invitacion", "Acceso", new { id = issued.Token }, Request.Scheme)!, Url.Action(nameof(Cuentas))!));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EstadoCuenta(Guid cuentaId, AccountStatus estado, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await service.ChangeMultiCenterAccountStatusAsync(new PlatformAccountCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), AccountId.From(cuentaId)), estado, ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = estado == AccountStatus.Suspended
+                ? "Cuenta suspendida en todos sus centros: no podrá entrar hasta que la reactives."
+                : "Cuenta reactivada.";
+        }
+        else
+        {
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.InvalidInput => "Esa cuenta ya no tiene perfiles en varios centros, o es la tuya.",
+                ApplicationFailureCode.Conflict => "La cuenta ya estaba en ese estado.",
+                _ => result.Error.Message,
+            };
+        }
+
+        return RedirectToAction(nameof(Cuentas));
     }
 
     private static PlatformQuery Query(ActiveProfileScopeCookieValue activeScope) =>

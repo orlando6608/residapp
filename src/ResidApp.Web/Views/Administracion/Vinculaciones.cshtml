@@ -1,0 +1,133 @@
+@using ResidApp.Web.Models
+@model AccountLinksViewModel
+@{
+    ViewData["Title"] = "Acceso de alguien de otro centro";
+    var formato = "dd/MM/yyyy HH:mm";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Usuarios">Usuarios</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Acceso de alguien de otro centro</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Acceso de alguien de otro centro</h1>
+<p class="text-muted">
+    Para dar un perfil de este centro a una persona que <strong>ya tiene cuenta en otro</strong>, no se crea otra cuenta: entregas una
+    hoja con el perfil y las unidades, <strong>sin decir a quién</strong>. La persona la usa desde «Mi cuenta», con su contraseña y su código
+    del móvil, y tú confirmas aquí que es quien tenías delante. Hasta entonces no tiene ningún acceso a este centro.
+</p>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+@{
+    var pending = Model.Open.Where(l => l.IsRedeemed).ToList();
+    var unredeemed = Model.Open.Where(l => !l.IsRedeemed).ToList();
+}
+
+<section class="card mb-4" aria-labelledby="vinculaciones-pendientes">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="vinculaciones-pendientes">Pendientes de confirmar</h2>
+        @if (pending.Count == 0)
+        {
+            <p class="mb-0 text-body-secondary">Nadie ha usado una hoja todavía.</p>
+        }
+        else
+        {
+            <p>Comprueba que quien la ha usado es la persona a la que se la entregaste: si no la reconoces, recházala.</p>
+            <ul class="list-group list-group-flush">
+                @foreach (var link in pending)
+                {
+                    <li class="list-group-item px-0">
+                        <div class="fw-semibold">@(string.IsNullOrWhiteSpace(link.RedeemedByName) ? link.RedeemedBySubject : link.RedeemedByName)
+                            <span class="text-body-secondary fw-normal">· usuario <code>@link.RedeemedBySubject</code></span></div>
+                        <div class="small text-body-secondary mb-2">
+                            Pide @SystemProfileDisplay.Label(link.Profile) en @string.Join(", ", link.UnitNames) ·
+                            la usó el @link.RedeemedAt!.Value.ToLocalTime().ToString(formato)
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <form asp-action="ResolverVinculacion" method="post">
+                                <input type="hidden" name="id" value="@link.Id" />
+                                <input type="hidden" name="confirmar" value="true" />
+                                <button type="submit" class="btn btn-primary">Confirmar</button>
+                            </form>
+                            <form asp-action="ResolverVinculacion" method="post">
+                                <input type="hidden" name="id" value="@link.Id" />
+                                <input type="hidden" name="confirmar" value="false" />
+                                <button type="submit" class="btn btn-outline-danger">Rechazar</button>
+                            </form>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</section>
+
+<section class="card mb-4" aria-labelledby="vinculaciones-sin-usar">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="vinculaciones-sin-usar">Hojas sin usar</h2>
+        @if (unredeemed.Count == 0)
+        {
+            <p class="mb-0 text-body-secondary">No hay ninguna hoja vigente.</p>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var link in unredeemed)
+                {
+                    <li class="list-group-item px-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <div class="fw-semibold">@SystemProfileDisplay.Label(link.Profile) en @string.Join(", ", link.UnitNames)</div>
+                            <div class="small text-body-secondary">Vale hasta el @link.ExpiresAt.ToLocalTime().ToString(formato)</div>
+                        </div>
+                        <form asp-action="AnularVinculacion" method="post">
+                            <input type="hidden" name="id" value="@link.Id" />
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">Anular</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</section>
+
+<section class="card mb-4" aria-labelledby="vinculaciones-nueva">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="vinculaciones-nueva">Preparar una hoja nueva</h2>
+        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+        @if (Model.Units.Count == 0)
+        {
+            <p class="mb-0">Tu ámbito no tiene unidades que conceder.</p>
+        }
+        else
+        {
+            <form asp-action="NuevaVinculacion" method="post">
+                <div class="mb-3">
+                    <label asp-for="Form.Perfil" class="form-label"></label>
+                    <select asp-for="Form.Perfil" asp-items="ProfessionalAccountDisplay.ProfileOptions(Model.Profiles)" class="form-select form-select-lg">
+                        <option value="">Elige un perfil</option>
+                    </select>
+                    <span asp-validation-for="Form.Perfil" class="text-danger"></span>
+                </div>
+                <partial name="_UnidadesPerfil" model="new ProfileUnitsFieldModel(Model.Units, Model.Form.Unidades)" />
+                <p class="form-text">La hoja vale 72 horas y se usa una sola vez. Solo se enseña al crearla.</p>
+                <button type="submit" class="btn btn-primary btn-lg">Crear la hoja</button>
+            </form>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

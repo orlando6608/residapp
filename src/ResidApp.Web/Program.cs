@@ -110,6 +110,8 @@ builder.Services.AddSingleton<AccessFailureThrottle>();
 // ADR 0007, incremento I2: invitaciones de acceso de un solo uso que entregan Administración y Plataforma.
 builder.Services.AddScoped<IAccessInvitationRepository, SqlAccessInvitationRepository>();
 builder.Services.AddScoped<AccessInvitationsApplicationService>();
+builder.Services.AddScoped<IAccountLinkRepository, SqlAccountLinkRepository>();
+builder.Services.AddScoped<AccountLinksApplicationService>();
 builder.Services.Configure<DevAuthOptions>(builder.Configuration.GetSection(DevAuthOptions.Section));
 builder.Services.Configure<AccesoOptions>(builder.Configuration.GetSection(AccesoOptions.Section));
 // ADR 0007, incremento I1: ASP.NET Core Identity solo para las credenciales (contraseña, bloqueo, TOTP y códigos de recuperación) sobre

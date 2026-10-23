@@ -19,7 +19,10 @@
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
 
-<a asp-action="NuevoUsuario" class="btn btn-primary btn-lg mb-3">Alta de usuario</a>
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a asp-action="NuevoUsuario" class="btn btn-primary btn-lg">Alta de usuario</a>
+    <a asp-action="Vinculaciones" class="btn btn-outline-primary btn-lg">Acceso de alguien de otro centro</a>
+</div>
 
 @if (Model.Count == 0)
 {

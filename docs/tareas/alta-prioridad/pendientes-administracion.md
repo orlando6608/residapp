@@ -140,7 +140,7 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
     - se ven todas las cuentas con algún perfil en el centro; las unidades que se conceden o revocan deben ser del ámbito de quien
       gestiona, y los residentes que se asignan, también (regla de `SqlAdministracionResidentDirectory`);
     - el alta lleva un perfil y al menos una unidad, así que toda cuenta nace ligada al centro. Un identificador que ya existe
-      (en cualquier centro, sin distinguir mayúsculas) es un conflicto: vincular una cuenta de otro centro queda fuera;
+      (en cualquier centro, sin distinguir mayúsculas) es un conflicto: para usar una cuenta que ya existe en otro centro, «Acceso de alguien de otro centro» (ADR 0007, I2b, 2026-10-23);
     - perfiles concedibles: Auxiliar, Enfermería, Medicina, Administración y Dirección Clínica; Familiar no;
     - revocar no pide motivo (las fuentes no lo definen); la última unidad de un perfil no se revoca; lo revocado no se
       reactiva; retirar el último residente de un Auxiliar lo deja sin nadie (ADR 0004);
@@ -424,7 +424,7 @@ Huecos de lo ya construido:
   Medicina y Auxiliar ven la habitación y la plaza junto a la unidad (listas, ficha y registro del residente; `ResidentLocationLabel`, sin script). Una unidad o una habitación que se inactive justo mientras llega un
   alta a ella no se bloquea (carrera muy estrecha, como la de las unidades).
 - **Usuarios:** desde el 2026-10-22 (ADR 0007, I2) la ficha de la cuenta y la autorización del familiar entregan la invitación de acceso
-  o de recuperación (hoja con QR, 72 horas, un solo uso); no se vincula una cuenta que ya existe en otro centro (ADR 0007, I2b);
+  o de recuperación (hoja con QR, 72 horas, un solo uso); una cuenta que ya existe en otro centro se vincula con «Acceso de alguien de otro centro» (ADR 0007, I2b, hecha el 2026-10-23: hoja sin decir a quién, la persona acepta con su segundo factor y Administración confirma; solo personal; esas cuentas las suspende y recupera Plataforma);
   no se restringe por residente a Enfermería, Medicina o Dirección; «Mi cuenta» (ADM-30, hecha el 2026-10-22, ADR 0007 I3: contraseña, códigos de recuperación y sesiones propias; el segundo factor solo se prepara desde una invitación; el cambio de perfil ya es «Cambiar ámbito»). Fuera de estas pantallas, el
   nombre de la cuenta solo se usa en la firma del PDF de derivación (2026-10-01). Los permisos no se eligen en el alta ni
   en «Conceder perfil», sino después en la pantalla del perfil.

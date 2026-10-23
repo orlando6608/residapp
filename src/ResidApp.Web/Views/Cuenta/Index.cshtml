@@ -8,6 +8,11 @@
     <div class="col-12 col-lg-9 col-xl-8">
         <h1 class="h3 mb-3">Mi cuenta</h1>
 
+        @if (Model.ErrorVinculacion is not null)
+        {
+            <div class="alert alert-danger" role="alert">@Model.ErrorVinculacion</div>
+        }
+
         @if (Model.Aviso is not null)
         {
             <div class="alert alert-success" role="status">@Model.Aviso</div>
@@ -118,6 +123,26 @@
                 }
             </div>
         </section>
+
+        @if (Model.SegundoFactorActivo)
+        {
+            <section class="card mb-4" aria-labelledby="cuenta-vinculacion">
+                <div class="card-body">
+                    <h2 class="h5 card-title" id="cuenta-vinculacion">Acceso a otro centro</h2>
+                    <p>Si vas a trabajar también en otro centro, su Administración te entrega una hoja con un código (o un QR). No hace falta otra
+                        cuenta: con esta misma cuenta, escribe aquí el código, comprueba lo que te ofrecen y acepta. Después la Administración de ese
+                        centro lo confirma.</p>
+                    <form asp-controller="Cuenta" asp-action="Vincular" method="post">
+                        <div class="mb-3">
+                            <label for="codigo-vinculacion" class="form-label">Código de la hoja</label>
+                            <input type="text" class="form-control form-control-lg font-monospace" id="codigo-vinculacion" name="codigo"
+                                   autocomplete="off" autocapitalize="none" spellcheck="false" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">Ver lo que me ofrecen</button>
+                    </form>
+                </div>
+            </section>
+        }
 
         <section class="card mb-4" aria-labelledby="cuenta-sesiones">
             <div class="card-body">

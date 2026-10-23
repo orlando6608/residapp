@@ -18,6 +18,9 @@ public sealed record SetPlatformAdministrationPrincipalCommand(
 /// <summary>AmbitoDestinoId es el ámbito de Administración (del centro destino) de la cuenta a la que se entrega la invitación.</summary>
 public sealed record PlatformAdministrationCommand(Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, Guid AmbitoDestinoId);
 
+/// <summary>I2b: una cuenta con perfiles en varios centros, a la que Plataforma entrega una invitación o suspende.</summary>
+public sealed record PlatformAccountCommand(Guid AmbitoPerfilId, CenterId CentroId, AccountId CuentaId);
+
 public sealed record AddUnitToAdministrationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, Guid AmbitoDestinoId, UnitId UnidadId);
 
@@ -44,6 +47,29 @@ public sealed class PlatformApplicationService(
             var token = AccessInvitation.NewToken();
             return new IssuedInvitation(token, await invitations.IssueForAdministratorAsync(
                 access, command.CentroDestinoId, command.AmbitoDestinoId, AccessInvitation.Hash(token), clock.GetUtcNow().UtcDateTime, ct));
+        });
+
+    /// <summary>ADR 0007, I2b: las cuentas con perfiles en varios centros, que ninguna Administración gestiona.</summary>
+    public Task<ApplicationResult<IReadOnlyList<PlatformMultiCenterAccount>>> ListMultiCenterAccountsAsync(
+        PlatformQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+            await directory.ListMultiCenterAccountsAsync(await AccessAsync(query.AmbitoPerfilId, query.CentroId, ct), clock.GetUtcNow().UtcDateTime, ct));
+
+    public Task<ApplicationResult<IssuedInvitation>> IssueMultiCenterInvitationAsync(PlatformAccountCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var access = await AccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            var token = AccessInvitation.NewToken();
+            return new IssuedInvitation(token, await invitations.IssueForMultiCenterAsync(
+                access, command.CuentaId, AccessInvitation.Hash(token), clock.GetUtcNow().UtcDateTime, ct));
+        });
+
+    public Task<ApplicationResult<bool>> ChangeMultiCenterAccountStatusAsync(
+        PlatformAccountCommand command, AccountStatus status, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            await centers.ChangeMultiCenterAccountStatusAsync(await AccessAsync(command.AmbitoPerfilId, command.CentroId, ct), command.CuentaId, status, ct);
+            return true;
         });
 
     public Task<ApplicationResult<IReadOnlyList<PlatformCenterSummary>>> ListCentersAsync(PlatformQuery query, CancellationToken ct = default) =>

@@ -1,3 +1,4 @@
+using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
@@ -18,6 +19,9 @@ public interface IPlatformCenterDirectory
     /// <summary>Un centro con sus unidades y sus ámbitos de Administración vigentes (con su marca de principal y las unidades que tiene cada
     /// uno). Null si el centro no existe o es el reservado. Nunca residentes.</summary>
     Task<PlatformCenterDetail?> FindAsync(PlatformAccess access, CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>Las cuentas con perfiles vigentes en dos o más centros, salvo la del operador (ADR 0007, I2b).</summary>
+    Task<IReadOnlyList<PlatformMultiCenterAccount>> ListMultiCenterAccountsAsync(PlatformAccess access, DateTime now, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -37,4 +41,18 @@ public interface IPlatformCenterRepository
 
     /// <summary>Añade una unidad activa del centro al ámbito de una Administración del centro. Ya la tenía: ACCOUNT_CHANGE_CONFLICT.</summary>
     Task AddUnitToAdministrationAsync(PlatformAccess access, CenterId centerId, Guid profileScopeId, UnitId unitId, CancellationToken ct = default);
+
+    /// <summary>Suspende o reactiva una cuenta con perfiles en varios centros (ADR 0005 del legado: la baja global la decide la plataforma;
+    /// una Administración solo retira su propio perfil). Cada centro afectado lo ve en su auditoría. No la propia, ni una de un solo
+    /// centro (ACCOUNT_INVALID); ya estaba así: ACCOUNT_CHANGE_CONFLICT.</summary>
+    Task ChangeMultiCenterAccountStatusAsync(PlatformAccess access, AccountId accountId, AccountStatus status, CancellationToken ct = default);
 }
+
+/// <summary>Una cuenta con perfiles vigentes en dos o más centros (ADR 0007, I2b). Ninguna Administración la suspende ni le entrega
+/// invitaciones: lo hace Plataforma. LiveInvitationExpiresAt, la de la invitación sin usar, si la hay.</summary>
+public sealed record PlatformMultiCenterAccount(
+    AccountId AccountId, string Subject, string? DisplayName, bool Active, bool HasPassword, DateTime? LiveInvitationExpiresAt,
+    IReadOnlyList<PlatformAccountScope> Scopes);
+
+/// <summary>Un perfil vigente de una cuenta en un centro.</summary>
+public sealed record PlatformAccountScope(string CenterName, SystemProfile Profile);

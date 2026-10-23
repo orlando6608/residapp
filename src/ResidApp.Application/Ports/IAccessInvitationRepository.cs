@@ -27,6 +27,10 @@ public interface IAccessInvitationRepository
         PlatformAccess access, CenterId centerId, Guid administrationScopeId, string tokenHash, DateTime now, CancellationToken ct = default);
 
     /// <summary>Solo para el acceso de desarrollo: una invitación para la propia cuenta, sin auditoría administrativa.</summary>
+    /// <summary>I2b: la invitación (de recuperación, si ya tiene contraseña) de una cuenta con perfiles en varios centros, que ninguna
+    /// Administración entrega. Nunca la del operador.</summary>
+    Task<IssuedAccessInvitation> IssueForMultiCenterAsync(PlatformAccess access, AccountId accountId, string tokenHash, DateTime now, CancellationToken ct = default);
+
     Task<IssuedAccessInvitation> IssueForDevelopmentAsync(AccountId accountId, string tokenHash, DateTime now, CancellationToken ct = default);
 
     Task CancelAsync(AccountAdministrationAccess access, string subject, DateTime now, CancellationToken ct = default);

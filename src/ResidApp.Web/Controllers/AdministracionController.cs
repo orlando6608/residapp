@@ -703,7 +703,7 @@ public sealed partial class AdministracionController(
             }
 
             ModelState.AddModelError(string.Empty, result.Error!.Code == ApplicationFailureCode.InvalidInput
-                ? "Escribe un nombre distinto del actual. Tu propia cuenta no se cambia desde aquí."
+                ? "Escribe un nombre distinto del actual. No se cambia el nombre de tu propia cuenta ni el de una con perfiles en otros centros."
                 : result.Error.Message);
         }
 

@@ -23,7 +23,10 @@
 
 @if (ViewData.ModelState.IsValid)
 {
-    <a asp-action="NuevoCentro" class="btn btn-primary btn-lg mb-3">Nuevo centro</a>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a asp-action="NuevoCentro" class="btn btn-primary btn-lg">Nuevo centro</a>
+        <a asp-action="Cuentas" class="btn btn-outline-primary btn-lg">Cuentas de varios centros</a>
+    </div>
 }
 
 @if (ViewData.ModelState.IsValid && Model.Count == 0)

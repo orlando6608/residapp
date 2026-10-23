@@ -3,6 +3,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
@@ -113,6 +114,43 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
         await SqlAdministrationScope.EnsureAdministrationScopeAsync(connection, transaction, centerId, profileScopeId, ct);
         await SqlAdministrationScope.AppendPrincipalChangeAsync(
             connection, transaction, centerId, profileScopeId, principal, access.AccountId, "PLATAFORMA", DateTimeOffset.UtcNow, ct);
+        transaction.Commit();
+    }
+
+    public async Task ChangeMultiCenterAccountStatusAsync(
+        PlatformAccess access, AccountId accountId, AccountStatus status, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await EnsureOperatorAsync(connection, transaction, access, ct);
+        if (accountId == access.AccountId)
+        {
+            throw new DomainValidationException("ACCOUNT_SELF_CHANGE");
+        }
+
+        var current = await connection.QuerySingleOrDefaultAsync<string>(new CommandDefinition("""
+            SELECT account.estado FROM dbo.cuentas account WITH (UPDLOCK, ROWLOCK)
+             WHERE account.id = @AccountId
+               AND (SELECT COUNT(DISTINCT profile.centro_id) FROM dbo.ambitos_perfil profile
+                     WHERE profile.cuenta_id = account.id AND profile.estado = 'ACTIVE') >= 2
+            """, new { AccountId = accountId.Value }, transaction, cancellationToken: ct))
+            ?? throw new DomainValidationException("ACCOUNT_INVALID");
+        if (EnumCode.ParseCode<AccountStatus>(current) == status)
+        {
+            throw new DomainValidationException("ACCOUNT_CHANGE_CONFLICT");
+        }
+
+        await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.cuentas SET estado = @Status WHERE id = @AccountId;
+            -- Cada centro en el que trabaja la cuenta lo ve en su auditoría.
+            INSERT INTO dbo.eventos_auditoria (id, cuenta_id, perfil_activo, centro_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
+            SELECT NEWID(), @ActorId, 'PLATAFORMA', scope.centro_id, 'ACCOUNT', @AccountId, @Action, @OccurredAt
+              FROM (SELECT DISTINCT centro_id FROM dbo.ambitos_perfil WHERE cuenta_id = @AccountId AND estado = 'ACTIVE') scope;
+            """, new
+        {
+            AccountId = accountId.Value, ActorId = access.AccountId.Value, Status = status.ToCode(),
+            Action = status == AccountStatus.Suspended ? "ACCOUNT_SUSPEND" : "ACCOUNT_ACTIVATE", OccurredAt = DateTimeOffset.UtcNow,
+        }, transaction, cancellationToken: ct));
         transaction.Commit();
     }
 
