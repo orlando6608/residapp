@@ -13,6 +13,13 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Cierre de la sesión del 2026-10-23 (última en `main`: `4cd5c6e`, desplegada y comprobada en Azure dev).** I4 está hecho en código, pruebas y documentación, y
+  la documentación del acceso se ha **auditado contra el código**: Manual, `acceso-y-sesion.html`, `flujo-de-trabajo.html`, ADR 0007, README, roadmap, backlog y
+  `pendientes-*.md` dicen lo mismo que la app. **Normas de documentación que salieron de la sesión:** (1) todo término técnico se explica en lenguaje llano
+  la primera vez que aparece; (2) al implementar un módulo hay que quitarlo de «Próximamente» en `Manual.cshtml` y revisar la introducción y la sección del
+  perfil afectado; (3) tras un cambio de acceso, buscar con grep las menciones antiguas («propuesta», «nada implementado», «pendiente») en `README.md`, `docs/` y
+  `wwwroot`. **Desactualizado a propósito, sin tocar:** `docs/seguridad/hallazgos.md` (hallazgos con fecha; su estado ya dice «mitigado») y la pregunta 3.2 de
+  `docs/pendientes-cj/portal-familiar-confirmaciones-cj.html` (documento de CJ, sigue describiendo Entra).
 - **ADR 0007, incremento I4: passkeys (2026-10-23, PR #54 mergeado en `main` como `26d4f83`; script `0066`, el siguiente libre es `0067`; suite 410 unitarios, 502 de
   integración y 294 funcionales en verde; CI y CI/CD de `main` en verde, con el `0066` aplicado en Azure SQL).** Decisiones de Orlando (2026-10-23): la passkey es **entrada completa** (sin contraseña ni TOTP; contraseña y TOTP
   siguen para el personal como alternativa); se da de alta desde «Mi cuenta» con contraseña y TOTP; **Plataforma entra solo con passkey** en cuanto tiene una;
@@ -1500,10 +1507,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **I0 a I4 e I2b del ADR 0007 están hechos** (I4 mergeado y comprobado en Azure dev). Orlando elige entre **I5 (pulsera NFC)**, el **dictado por voz del ADR 0009** y la
+0. **I0 a I4 e I2b del ADR 0007 están hechos** (I4 mergeado y comprobado en Azure dev; el manual y las páginas de acceso están al día). Orlando elige entre **I5 (pulsera NFC)**, el **dictado por voz del ADR 0009** y la
    retirada del acceso de desarrollo; antes de datos reales, retirar el acceso de desarrollo y llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
    fecha prevista, prueba 2.4 de «Conducta médica»).
+   **Pendientes de I4 que Orlando puede querer decidir** (ninguno bloquea): (a) si una cuenta bloqueada por intentos debe poder entrar con passkey (hoy no, como
+   Identity); (b) bloquear el resto de la aplicación a una cuenta de Plataforma hasta que cree su primera passkey (hoy solo se la lleva a «Mi cuenta»); (c) renombrar
+   passkeys; (d) probar con dispositivos reales (iOS, Android, llave física) y no solo con el autenticador virtual; (e) elegir el dominio de Pro antes de que nadie
+   registre una passkey allí y poner `Acceso__PasskeyDominio` (ADR 0007, puerta abierta 5); (f) las passkeys de los familiares, que esperan a la pregunta 3.2 de CJ.
+   **Quedan en Azure dev** las cuentas ficticias `prueba-passkey-20261023-*` (activa, con una passkey virtual) y los datos de pruebas anteriores; no se ha tocado
+   ninguna cuenta `almendros-*` ni Residente Integrado Uno.
    Para entrar en Azure dev hace falta la clave de desarrollo: está solo en el ajuste `DevAuth__Clave` de la Web App
    (`az webapp config appsettings list -g rg-residapp-dev -n app-residapp-dev --query "[?name=='DevAuth__Clave'].value" -o tsv`); no la copies a
    ningún fichero del repositorio.
@@ -1517,6 +1530,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
    (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.
 4. **Familia / Portal Familiar**, que depende de Administración y del proveedor de identidad.
+
+## Lecciones del entorno (sesión del 2026-10-23)
+
+- Tras cada despliegue, Azure dev da 500 o 502 durante 30-45 s (reinicio del contenedor) y luego responde; sondea con `curl` antes de dar un fallo por real.
+- En este equipo no hay Python: para ediciones por lotes de ficheros de texto, usa Node (`node script.js`) o la herramienta Edit. Ojo con los finales de línea: el
+  repositorio trabaja en CRLF y un script que lea y escriba debe conservarlos.
+- Dapper no admite `uint` como parámetro: pasa los contadores de 32 bits como `long`.
+- Una passkey solo se prueba de verdad con un navegador: el recorrido de Chrome sin interfaz con autenticador virtual (CDP `WebAuthn.addVirtualAuthenticator`) está
+  descrito en la entrada de I4; las pruebas HTTP usan `tests/FunctionalTests/SoftwareAuthenticator.cs`.
+- Las mutaciones que sobreviven suelen indicar una defensa redundante (como la comprobación de cuenta del estado de la passkey, cubierta por la de sesión): decide si
+  se quita el código o se añade la prueba que la aísla.
 
 ## Avisos abiertos (fuera de alcance, sin corregir)
 
