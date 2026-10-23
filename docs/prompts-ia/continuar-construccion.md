@@ -64,8 +64,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     disminución de diuresis y una área vacía de conciencia; «no quiere que la toquen» añade «no quiere levantarse»), y «sacro enrojecido»
     sale como **UPP**, que es clínicamente delicado (otra razón para que cada sugerencia se confirme individualmente, como dice el ADR 0009).
     No se ha seguido afinando el prompt para no ajustarlo a esta batería.
-  - **Siguiente:** que CJ valide los esperados (documento `docs/pendientes-cj/` aún sin crear) y fije el rango de temperatura de
-    «Registrar cambio» (hoy solo lo limita la columna `DECIMAL(4,1)`); grabar unos 10 audios reales ficticios (ruido y acentos reales).
+  - **Documento para CJ creado:** `docs/pendientes-cj/dictado-por-voz-confirmaciones-cj.html` (15 preguntas en 5 temas, con la tabla de los 31
+    ejemplos; registrado en `preguntas.html` y en el README de la carpeta; el generador se escribió una vez a partir de otro documento y no
+    está en el repositorio). Sus respuestas llegarán como `dictado-por-voz-confirmaciones-cj.respuestas.json`. **Solo el tema 3, el rango de
+    temperatura, bloquea la Fase B.** Cuando CJ responda, actualizar los esperados de `casos/jerga-es.json` y repetir la prueba.
+  - **Siguiente:** que CJ responda ese documento (valida los esperados y fija el rango de temperatura de «Registrar cambio», que hoy solo
+    limita la columna `DECIMAL(4,1)`); grabar unos 10 audios reales ficticios (ruido y acentos reales).
     Según los resultados, Fase B (con el ADR 0011; el esquema por área se generará desde el dominio en el servidor), ajuste o descartar.
 - **Cierre de la sesión del 2026-10-23 (última en `main`: `4cd5c6e`, desplegada y comprobada en Azure dev).** I4 está hecho en código, pruebas y documentación, y
   la documentación del acceso se ha **auditado contra el código**: Manual, `acceso-y-sesion.html`, `flujo-de-trabajo.html`, ADR 0007, README, roadmap, backlog y
