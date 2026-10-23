@@ -425,7 +425,7 @@ Huecos de lo ya construido:
   alta a ella no se bloquea (carrera muy estrecha, como la de las unidades).
 - **Usuarios:** desde el 2026-10-22 (ADR 0007, I2) la ficha de la cuenta y la autorización del familiar entregan la invitación de acceso
   o de recuperación (hoja con QR, 72 horas, un solo uso); una cuenta que ya existe en otro centro se vincula con «Acceso de alguien de otro centro» (ADR 0007, I2b, hecha el 2026-10-23: hoja sin decir a quién, la persona acepta con su segundo factor y Administración confirma; solo personal; esas cuentas las suspende y recupera Plataforma);
-  no se restringe por residente a Enfermería, Medicina o Dirección; «Mi cuenta» (ADM-30, hecha el 2026-10-22, ADR 0007 I3: contraseña, códigos de recuperación y sesiones propias; el segundo factor solo se prepara desde una invitación; el cambio de perfil ya es «Cambiar ámbito»). Fuera de estas pantallas, el
+  no se restringe por residente a Enfermería, Medicina o Dirección; «Mi cuenta» (ADM-30, hecha el 2026-10-22, ADR 0007 I3: contraseña, códigos de recuperación y sesiones propias; el segundo factor solo se prepara desde una invitación; ADR 0007 I4, hecha el 2026-10-23: passkeys, que se registran y quitan aquí con contraseña y código del móvil, y Plataforma entra solo con passkey; el cambio de perfil ya es «Cambiar ámbito»). Fuera de estas pantallas, el
   nombre de la cuenta solo se usa en la firma del PDF de derivación (2026-10-01). Los permisos no se eligen en el alta ni
   en «Conceder perfil», sino después en la pantalla del perfil.
 - **Familiares:** desde el 2026-10-02 un familiar se vincula a un segundo residente (`VincularFamiliar`, sin script; auditoría `FAMILY_MEMBER_LINK`;

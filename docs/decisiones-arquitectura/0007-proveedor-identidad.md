@@ -74,13 +74,22 @@ Lo que fija la aplicación:
 | **I4** | **Passkeys** (WebAuthn; script `0066`): entrada completa **sin contraseña ni código del móvil**, con verificación de usuario obligatoria (huella, cara o PIN) y passkey «descubrible» (no se escribe el usuario). Se registran desde «Mi cuenta» pidiendo contraseña y TOTP vigente, hasta 10 por cuenta, y se quitan allí; solo personal con TOTP (los familiares quedan fuera hasta la 3.2 de CJ). **Plataforma entra solo con passkey** en cuanto tiene una (la contraseña con código se cierra para esa cuenta) y no puede quitar la última; sin ninguna, su primer acceso con contraseña y código la lleva a «Mi cuenta» a crear la primera (no se bloquea el resto de la aplicación). La invitación de recuperación **borra las passkeys** de la cuenta. Sin `SignInManager`: `PasskeyHandler<CredentialAccount>` a pelo y el estado de cada ceremonia en `PasskeyStateCookie` (cifrada por Data Protection, 5 minutos, un solo uso; el alta, ligada a la sesión que la pidió, y se comprueba que la attestation es de esa cuenta). Origen válido: HTTPS y `Acceso:PasskeyDominio` o sus subdominios (`http://localhost` solo en Development); **sin ese ajuste las passkeys están desactivadas**. Una cuenta bloqueada por intentos tampoco entra con passkey (como en Identity). Registro de accesos: `ENTRADA_PASSKEY`, `PASSKEY_ALTA`, `PASSKEY_BAJA`, `PASSKEY_FALLIDA`. No se guarda la atestación del fabricante ni se verifica (atestación `none`). | Hecho el 2026-10-23 |
 | I5 | Pulsera NFC con PIN (ADR 0009) como entrada rápida en tablet compartida. | Pendiente |
 
+**I4 en lenguaje llano.** Una *passkey* («llave de acceso») es una credencial guardada en el móvil o el portátil de la persona que se
+desbloquea con la huella, la cara o el PIN: hace de contraseña y de código a la vez, y solo vale en la web de ResidApp, así que una web falsa
+no puede usarla. *WebAuthn* es el estándar de los navegadores que lo hace posible. ResidApp guarda solo la clave que comprueba la credencial, no
+la que la desbloquea, que no sale del dispositivo. Una *cookie* es un pequeño fichero que el navegador conserva un rato: aquí guarda, cifrada, el
+punto en que va un registro o una entrada, para que nadie lo altere. El *dominio* es el nombre de la web (por ejemplo,
+`app-residapp-dev.azurewebsites.net`). La *atestación* es la prueba que da el fabricante del dispositivo sobre sí mismo; ResidApp no la
+pide. `SignInManager` es la pieza de Identity que gestiona las entradas; aquí no se usa, y por eso el estado lo guarda nuestra cookie.
+
 Criterios de aceptación: los casos AUTH-SPIKE-T02 a T06 del spike legado contra el almacenamiento real. Desde I0 los cubre
 `tests/FunctionalTests/SesionTests.cs`: la identidad entra solo por el puerto (una cookie fabricada no da acceso); una sesión cerrada se
 deniega en la petición siguiente; la renovación no amplía la caducidad absoluta; la inactividad y la caducidad fallan cerradas; y una cuenta
 suspendida se deniega aunque la sesión sea válida.
 
 Desde I1 los cubren además `tests/FunctionalTests/AccesoTests.cs` y `tests/IntegrationTests/SqlCredentialStoreTests.cs`; desde I2,
-`tests/FunctionalTests/AccesoTests.Invitaciones.cs` y `tests/IntegrationTests/InvitacionesAccesoTests.cs`; desde I3, `tests/FunctionalTests/AccesoTests.Cuenta.cs` y `SqlSessionStoreTests`.
+`tests/FunctionalTests/AccesoTests.Invitaciones.cs` y `tests/IntegrationTests/InvitacionesAccesoTests.cs`; desde I3, `tests/FunctionalTests/AccesoTests.Cuenta.cs` y `SqlSessionStoreTests`; desde I4, `tests/FunctionalTests/AccesoTests.Passkeys.cs` (con
+`SoftwareAuthenticator`, un autenticador ES256 de pruebas) y las de passkeys de `SqlCredentialStoreTests`.
 
 **Lo que I1 e I2 dejan conscientemente para después (revisar con el DPO):**
 

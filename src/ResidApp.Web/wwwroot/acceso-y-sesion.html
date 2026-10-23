@@ -310,7 +310,8 @@
       Nadie se crea su propia cuenta en ResidApp: el acceso lo da quien responde de cada persona. Después, cada vez que abres una
       pantalla, la aplicación comprueba <strong>quién eres</strong>, con tu sesión, y <strong>qué puedes hacer</strong>, con el perfil,
       el centro y las unidades de tu cuenta. Se entra con tu identificador y tu contraseña y, si eres del personal, con un código de
-      tu móvil (segundo factor). La contraseña la eliges tú con la <strong>invitación</strong> de un solo uso que te entrega tu
+      tu móvil (segundo factor), o con una <strong>passkey</strong> («llave de acceso»: una credencial guardada en tu móvil o portátil que se desbloquea con tu huella,
+      tu cara o tu PIN) si la has registrado. La contraseña la eliges tú con la <strong>invitación</strong> de un solo uso que te entrega tu
       Administración. En el entorno de pruebas sigue además un acceso de desarrollo (tu identificador y una clave común), y por eso
       ResidApp solo se usa con datos ficticios hasta que se retire.
     </p>
@@ -342,7 +343,8 @@
       <li>
         <h3>Para entrar</h3>
         <p>Tu identificador de acceso y tu <strong>contraseña</strong>; el personal, además, el <strong>código de 6 cifras</strong>
-          de su aplicación de autenticación. La primera vez, la <strong>invitación</strong> de tu Administración. En el entorno de
+          de su aplicación de autenticación; o, si has registrado una, <strong>«Entrar con passkey»</strong>. La primera vez, la
+          <strong>invitación</strong> de tu Administración. En el entorno de
           pruebas también se entra por el <strong>acceso de desarrollo</strong> con el identificador (por ejemplo,
           <code>almendros-enfermeria</code>) y la clave de desarrollo, que soporte da en privado. En local no se pide clave.</p>
       </li>
@@ -514,8 +516,8 @@
       </li>
       <li class="persona">
         <div class="paso-cab"><span class="n">5</span><span class="perfil" style="color: var(--accent)">La persona</span></div>
-        <p><strong>En «Mi cuenta»</strong> cambia su contraseña, genera códigos de recuperación nuevos y ve y cierra sus sesiones abiertas.
-          Para cambiar de móvil necesita una invitación de recuperación (paso 4).</p>
+        <p><strong>En «Mi cuenta»</strong> cambia su contraseña, genera códigos de recuperación nuevos, registra o quita sus passkeys y ve y
+          cierra sus sesiones abiertas. Para cambiar de móvil necesita una invitación de recuperación (paso 4), que además borra sus passkeys.</p>
       </li>
     </ol>
     <p class="pista">Las cuentas de Plataforma entran solo con passkey en cuanto tienen una (I4). El segundo factor de las familias está por decidir con CJ.</p>
@@ -689,6 +691,11 @@
       (cualquier perfil salvo el de familiar), después te pide el <strong>código de 6 cifras</strong> de tu aplicación de autenticación,
       que preparaste al usar tu invitación. Si no lo llegaste a preparar, la pantalla te pide una invitación nueva. En el entorno de
       pruebas sigue además el acceso de desarrollo (usuario y clave común, sin contraseña).</p>
+    <p class="prose">Si has registrado una <strong>passkey</strong>, pulsas «Entrar con passkey» sin escribir nada: el dispositivo te pide la
+      huella, la cara o el PIN y entras. Es una entrada completa, sin contraseña ni código del móvil, y solo funciona en la dirección web de
+      ResidApp, así que una página falsa que imite a ResidApp no puede aprovecharla. Una cuenta bloqueada por intentos, suspendida o sin ámbito activo tampoco
+      entra con passkey. Las cuentas de <strong>Plataforma</strong> entran solo con passkey en cuanto tienen una; sin ninguna, su primer
+      acceso con contraseña y código las lleva a «Mi cuenta» a crear la primera.</p>
     <div class="diagrama">
       <svg viewBox="0 0 1120 412" style="min-width: 900px" aria-labelledby="d-ent-t d-ent-d">
         <title id="d-ent-t">Qué pasa al pulsar «Entrar»</title>
@@ -766,6 +773,9 @@
         códigos de recuperación nuevos (con tu contraseña y el código del móvil; los anteriores dejan de valer) y ver y cerrar tus sesiones
         abiertas, con los últimos accesos a tu cuenta. El código del móvil no se cambia ahí: para otro móvil hace falta una invitación de
         recuperación de tu Administración.</li>
+      <li><strong>Passkeys</strong>, también en «Mi cuenta» (solo personal): para añadir una hacen falta tu contraseña y el código vigente
+        del móvil, y el dispositivo te pide verificarte. Puedes tener hasta 10 y quitar cualquiera; una cuenta de Plataforma no puede quitar la
+        última. Una passkey queda ligada a la dirección web de ResidApp y no se puede mover a otra: si esa dirección cambiara, habría que registrarlas de nuevo.</li>
       <li><strong>Entrar con otra cuenta</strong> no exige salir antes. La sesión anterior se cierra solo si la nueva entra; si te
         equivocas, conservas la que tenías.</li>
       <li><strong>Familia:</strong> la cuenta de un familiar entra, por ahora, solo con la contraseña (su segundo factor está por
@@ -932,8 +942,10 @@
       </li>
       <li class="bien">
         <h3>Contraseña y segundo factor</h3>
-        <p>La contraseña se guarda como un resumen que no se puede revertir; el personal necesita además el código de su móvil. Cinco
-          fallos bloquean la cuenta y todo queda en un registro de accesos separado de la auditoría clínica.</p>
+        <p>La contraseña se guarda como un resumen que no se puede revertir; el personal necesita además el código de su móvil, o entra con
+          una passkey: la clave que te desbloquea y prueba que eres tú no sale nunca de tu dispositivo, y ResidApp guarda solo la que sirve para
+          comprobarla, que por sí sola no permite entrar. Cinco fallos bloquean la cuenta
+          y todo queda en un registro de accesos separado de la auditoría clínica.</p>
       </li>
       <li class="aviso">
         <h3>Lo que todavía no protege</h3>
@@ -1029,13 +1041,28 @@
               no los toca.</td>
           </tr>
           <tr>
-            <td>Inicio de sesión con contraseña</td>
+            <td>Inicio de sesión con contraseña o passkey</td>
             <td><code>AccesoController</code>, <code>SessionSignIn</code>, <code>PendingAccessCookie</code> (Web);
               <code>SqlCredentialStore</code> (Infrastructure)</td>
             <td>ASP.NET Core Identity solo para las credenciales (<code>UserManager</code>, sin <code>SignInManager</code>): el usuario
               es la cuenta y su nombre, <code>sujeto_externo</code>. Contraseña de 12 caracteres o más, bloqueo 5 / 15 min
               (<code>AccesoOptions</code>), <code>Acceso:IntentosPorMinuto</code> (10). El paso hasta el segundo factor es la cookie
               <code>residapp_acceso_pendiente</code> (10 min, solo <code>/Acceso</code>, con el sello de seguridad).</td>
+          </tr>
+          <tr>
+            <td>Passkeys (I4)</td>
+            <td><code>PasskeyController</code>, <code>CuentaController</code> (alta y baja), <code>PasskeyStateCookie</code>,
+              <code>PasskeyOrigin</code>, <code>wwwroot/js/passkeys.js</code> (Web); <code>SqlCredentialStore</code> y
+              <code>dbo.passkeys</code> (script <code>0066</code>)</td>
+            <td>Registrar o usar una passkey son dos pasos seguidos (el servidor pide algo, el dispositivo lo firma y el servidor lo comprueba), y
+              entre un paso y otro el servidor guarda en una <em>cookie</em> (un pequeño fichero que el navegador conserva un rato) el punto
+              en que va. Esa cookie, <code>residapp_passkey</code>, va cifrada para que nadie la altere, dura 5 minutos y vale una sola vez; la
+              del registro, además, queda ligada a la sesión de quien lo pidió. Se usa <code>PasskeyHandler</code>, la pieza de ASP.NET Core
+              Identity que comprueba las passkeys, sin <code>SignInManager</code>, la otra pieza de Identity que gestiona las entradas y
+              que aquí no se usa. El dispositivo siempre pide la huella, la cara o el PIN. La dirección web a la que se ligan las passkeys
+              (el «dominio») se configura en <code>Acceso:PasskeyDominio</code>, una por entorno (en Azure dev,
+              <code>Acceso__PasskeyDominio</code>); si está vacía, las passkeys están desactivadas. Solo se acepta una petición hecha por
+              HTTPS (conexión cifrada) desde ese dominio o desde otro nombre que cuelgue de él.</td>
           </tr>
           <tr>
             <td>Credenciales y registro de accesos</td>
@@ -1084,10 +1111,12 @@
           <tr>
             <td>Pruebas</td>
             <td><code>SesionTests</code>, <code>SesionFueraDeDesarrolloTests</code>, <code>SqlSessionStoreTests</code>,
-              <code>SessionPolicyTests</code>, <code>AccesoTests</code>, <code>SqlCredentialStoreTests</code></td>
+              <code>SessionPolicyTests</code>, <code>AccesoTests</code> (con <code>AccesoTests.Passkeys.cs</code> y un autenticador de pruebas), <code>SqlCredentialStoreTests</code></td>
             <td>Cubren los casos AUTH-SPIKE-T02 a T06: cookie fabricada, sesión cerrada, renovación sin ampliar la caducidad,
               inactividad y cuenta suspendida. Y de I1: mismo mensaje para todo fallo, bloqueo, segundo factor obligatorio al personal,
-              códigos de recuperación de un solo uso y el paso pendiente que caduca o deja de valer si cambia la contraseña.</td>
+              códigos de recuperación de un solo uso y el paso pendiente que caduca o deja de valer si cambia la contraseña. Y de I4: el alta de
+              una passkey pide contraseña y código, el punto del registro guardado en la cookie vale una sola vez y solo para la sesión que lo pidió, se rechaza una petición hecha desde otra
+              web o con un código de comprobación que no era el pedido, la entrada no abre sesión a una cuenta bloqueada o suspendida y Plataforma con passkey no entra con contraseña.</td>
           </tr>
         </tbody>
       </table>

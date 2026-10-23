@@ -17,6 +17,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   integración y 294 funcionales en verde; CI y CI/CD de `main` en verde, con el `0066` aplicado en Azure SQL).** Decisiones de Orlando (2026-10-23): la passkey es **entrada completa** (sin contraseña ni TOTP; contraseña y TOTP
   siguen para el personal como alternativa); se da de alta desde «Mi cuenta» con contraseña y TOTP; **Plataforma entra solo con passkey** en cuanto tiene una;
   `ServerDomain` explícito por entorno y, en Pro, dominio base dedicado a ResidApp (ADR 0007, puerta abierta 5).
+  - **En lenguaje llano:** una passkey («llave de acceso») es una credencial guardada en el móvil o portátil de la persona que se desbloquea con
+    la huella, la cara o el PIN y sustituye a contraseña y código; solo vale en la web de ResidApp. Una *cookie* es un pequeño fichero que el navegador
+    guarda un rato; el *dominio* es el nombre de la web; una *attestation* es la prueba que el fabricante del dispositivo da sobre sí mismo (no se pide).
   - **Qué hay:** `PasskeyController` (`OpcionesEntrada`, `Entrar`, anónimas) y, en `CuentaController`, `PasskeyOpciones`, `PasskeyAlta` y `QuitarPasskey`;
     `wwwroot/js/passkeys.js`; sección «Passkeys» de «Mi cuenta» y botón «Entrar con passkey» en el login. `SqlCredentialStore` implementa `IUserPasskeyStore`
     sobre `dbo.passkeys`. Sin `SignInManager`: `PasskeyHandler<CredentialAccount>` registrado a mano y el estado de cada ceremonia en `PasskeyStateCookie`

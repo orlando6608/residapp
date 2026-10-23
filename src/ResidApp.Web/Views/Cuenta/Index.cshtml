@@ -154,7 +154,7 @@
                                     <div>
                                         <div><strong>@passkey.Nombre</strong></div>
                                         <div class="small text-body-secondary">
-                                            Añadida el @passkey.CreadaUtc.ToLocalTime().ToString(formato)@(passkey.Sincronizada ? " · se sincroniza con tu cuenta del sistema (iCloud, Google…)" : "")
+                                            Añadida el @passkey.CreadaUtc.ToLocalTime().ToString(formato)@(passkey.Sincronizada ? " · se copia a otros dispositivos tuyos con la cuenta de tu móvil (iCloud o Google)" : "")
                                         </div>
                                     </div>
                                     <form asp-controller="Cuenta" asp-action="QuitarPasskey" method="post">
