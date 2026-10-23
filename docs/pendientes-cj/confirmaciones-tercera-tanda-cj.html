@@ -256,7 +256,7 @@
     .q { break-inside: avoid; }
   }
 </style>
-<body data-doc="confirmaciones-tercera-tanda-cj" data-version="2026-10-19">
+<body data-doc="confirmaciones-tercera-tanda-cj" data-version="2026-10-23">
 
 <div class="page">
   <header>
@@ -278,7 +278,7 @@
   <div class="keyfacts" role="list">
     <div role="listitem"><span class="k">Qué bloquea</span><span>Solo los temas 1 y 2: el resumen periódico y la calidad asistencial de Dirección.</span></div>
     <div role="listitem"><span class="k">Qué no incluye</span><span>La entrada con credenciales reales y el segundo factor: dependen del proveedor de identidad.</span></div>
-    <div role="listitem"><span class="k">Qué falta</span><span>19 respuestas, repartidas en 6 temas.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>21 respuestas, repartidas en 6 temas.</span></div>
   </div>
 
   <section class="howto" aria-labelledby="como">
@@ -536,7 +536,8 @@
       <p>
         Hoy el portal no avisa de nada: la familia tiene que entrar para ver un comunicado nuevo o una propuesta de cita, y Administración llama por teléfono cuando
         propone una cita. En el alcance del producto no entran el contenido sanitario por correo, SMS o WhatsApp ni las notificaciones push en el piloto. Lo que falta decidir es si
-        un aviso <strong>sin ningún contenido</strong> («Tienes una novedad en ResidApp. Entra para verla») sería aceptable. <strong>Nada de esto bloquea.</strong>
+        un aviso <strong>sin ningún contenido</strong> («Tienes una novedad en ResidApp. Entra para verla») sería aceptable, y por qué camino: por correo (pregunta 6.1),
+        solo dentro del portal cuando la familia ya ha entrado (6.3) o con una notificación en el móvil (6.4). <strong>Nada de esto bloquea.</strong>
       </p>
     </div>
     <div class="qs">
@@ -557,6 +558,27 @@
           <label class="choice"><input type="radio" name="r-6-2" value="A"><span class="letter">A</span><span class="txt">No (como está ahora).</span></label>
           <label class="choice"><input type="radio" name="r-6-2" value="B"><span class="letter">B</span><span class="txt">Sí, el día antes.</span></label>
           <label class="choice"><input type="radio" name="r-6-2" value="C"><span class="letter">C</span><span class="txt">Sí, el día antes y otra vez unas horas antes.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="6.3">
+        <div class="q-head"><span class="n">6.3</span><h3 class="q-title" id="t-6-3">Cuando la familia entra en el portal, ¿debe ver destacado que tiene algo pendiente?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es un aviso que solo aparece <strong>dentro</strong> de ResidApp, cuando la familia ya ha entrado: no necesita correo, teléfono ni proveedor externo. Hoy la pantalla de inicio solo lista a los residentes; para ver una propuesta de cita hay que abrir a cada residente y entrar en sus citas, y los comunicados nuevos no se distinguen de los antiguos. El aviso diría solo «Tienes una propuesta de cita esperando tu respuesta» o «Hay un comunicado nuevo», sin más detalle, en la pantalla de inicio y junto al residente al que se refiere.</p>
+        <fieldset class="choices" aria-labelledby="t-6-3">
+          <label class="choice"><input type="radio" name="r-6-3" value="A"><span class="letter">A</span><span class="txt">No: el inicio sigue como está (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-6-3" value="B"><span class="letter">B</span><span class="txt">Sí, solo para las propuestas de cita, que esperan una respuesta.</span></label>
+          <label class="choice"><input type="radio" name="r-6-3" value="C"><span class="letter">C</span><span class="txt">Sí, para las propuestas de cita y para los comunicados nuevos.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="6.4">
+        <div class="q-head"><span class="n">6.4</span><h3 class="q-title" id="t-6-4">¿Se acepta una notificación en el móvil que solo diga «Tienes un aviso en ResidApp»?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Una <em>notificación push</em> es el aviso que aparece en la pantalla del móvil, como el de cualquier aplicación instalada, aunque la familia no tenga ResidApp abierta. Aquí no llevaría ningún contenido: ni el nombre del residente, ni de qué trata, ni la hora de una cita. Solo avisaría de que hay algo y la familia entraría a leerlo en su portal. No necesita el correo ni el teléfono de la familia, pero sí que ponga ResidApp en su móvil (en iPhone, añadiéndola a la pantalla de inicio) y acepte recibir avisos; cada persona puede desactivarlos cuando quiera. Hoy el alcance del piloto dice «sin notificaciones push», así que esto sería una <strong>excepción</strong> que solo puedes decidir tú.</p>
+        <fieldset class="choices" aria-labelledby="t-6-4">
+          <label class="choice"><input type="radio" name="r-6-4" value="A"><span class="letter">A</span><span class="txt">No: en el piloto la familia entra a mirar (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-6-4" value="B"><span class="letter">B</span><span class="txt">Sí, solo cuando el centro propone una cita.</span></label>
+          <label class="choice"><input type="radio" name="r-6-4" value="C"><span class="letter">C</span><span class="txt">Sí, cuando el centro propone una cita y cuando se publica un comunicado.</span></label>
+          <label class="choice"><input type="radio" name="r-6-4" value="D"><span class="letter">D</span><span class="txt">Sí, en esos dos casos y también como recordatorio de una cita confirmada (pregunta 6.2).</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
