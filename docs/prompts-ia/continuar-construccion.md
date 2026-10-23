@@ -14,6 +14,26 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Importar y Exportar probado en Azure dev, avisos a la familia preguntados a CJ y diagnóstico de la suite (2026-10-23, rama `tests-en-serie-y-avisos-cj`, sin push; sin cambios en `src/`).**
+  - **En lenguaje llano:** *push* es el aviso que aparece en la pantalla del móvil, como el de cualquier aplicación instalada; *serializar los tests* es que no
+    corran dos proyectos de prueba a la vez.
+  - **Importar y Exportar (ADR 0010) en Azure dev:** recorrido de `.claude/skills/probar-en-navegador/recorrido-intercambio.js` (copia en el scratchpad que rellena
+    la clave de desarrollo, leída del ajuste `DevAuth__Clave` de la Web App y sin guardarla) con `dev-integrado-administracion`. Da lo mismo que en local: estructura
+    (4 filas importadas y 1 con error esperado), residentes (2 importados; «plaza ocupada» y «31/02» como errores esperados), plantilla aplicada sola, las tres
+    descargas, sin desplazamiento lateral en oscuro ni a 375 px, consola limpia. **No se comprobó la auditoría** (`IMPORT_RUN`, etc.): no hay lectura sin tocar la BD de
+    Azure. **Quedan en Azure dev** (centro del escenario integrado): las unidades «Unidad Norte» y «Unidad Sur» con su estructura, los residentes «Ana (ficticia) Pérez
+    López» y «Rosa (ficticia) Martín», y las plantillas «ERP de prueba» y «Programa destino». No se tocó Residente Integrado Uno.
+  - **Avisos a la familia:** `docs/pendientes-cj/confirmaciones-tercera-tanda-cj.html` ya tenía el tema 6 (6.1 aviso genérico por correo; 6.2 recordatorio de cita).
+    Se añadieron **6.3** (aviso dentro del portal al entrar: propuestas de cita y comunicados nuevos) y **6.4** (push sin contenido, «Tienes un aviso en ResidApp»; es
+    una excepción a `alcance.md` y FAM-10, que solo decide CJ). Versión `2026-10-23`, 21 preguntas; probado en Chrome (se responde, se guarda con 21 claves, sin
+    desplazamiento a 375 px). **No se construye nada hasta que CJ responda.** Lo que hay hoy: el inicio del portal solo lista residentes; la propuesta se ve entrando en
+    las citas de cada uno. El canal de salida (correo, push) no existe en el código y el ADR 0007 lo anota como contradicción (FAM-10).
+  - **Suite lenta o con fallos masivos: no era (solo) el paralelismo.** Hoy `dotnet test src/ResidApp.sln` dio 39 fallos y 7 min (una vez) y hasta 489 fallos en
+    tres pasadas seguidas con un `Directory.Build.rsp` de `-maxcpucount:1`, que **no serializa** y se descartó. Después, con la BD y la máquina tranquilas, la solución
+    pasó en verde **con y sin `-m:1`** (42-52 s) y cada proyecto por separado (36 s y 30 s). Con 2,3 GB libres de 15,7, encaja la lección ya anotada de la presión de
+    memoria (ver «Verificación de `0015`»). **No se cambió el CI ni se añadió ningún flag.** Si vuelve a pasar: compila antes (`dotnet build src/ResidApp.sln`),
+    ejecuta cada proyecto por separado y mira la memoria libre. Con `-m:1` una pasada tardó 6 min justo después de las fallidas y luego 41-52 s: no lo cuentes como
+    prueba a favor ni en contra. Lo que **no** se ha demostrado es que correr a la vez los proyectos sea la causa.
 - **Dictado por voz (ADR 0009) con la arquitectura del ADR 0011: Fase A (prueba de precisión) cerrada, a la espera de CJ (2026-10-23; PR #55 en `main` como `c81dc19`, CI/CD en verde; sin cambios en `src/`).**
   Decisiones de Orlando: primer formulario «Registrar cambio» del Auxiliar; antes de tocar la app, una prueba de precisión aislada; solo la voz sintética
   Elena y variar ritmo y ruido; los resultados esperados los propone ingeniería y CJ los valida. Orlando tiene clave de Mistral, pero **no hay contrato de
@@ -348,8 +368,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     - quedan en la base local los centros «Residencia de prueba (intercambio …)» con sus cuentas `prueba-intercambio-adm*`.
   - **Sin hacer:**
     - no se ha probado con exportaciones reales de ResiPlus, Gerosalus u otro programa;
-    - no se ha probado en Azure dev (el despliegue del 2026-10-21 aplicó el `0060`): conviene hacerlo con un fichero ficticio, sin tocar «Residente
-      Integrado Uno»;
+    - ~~no se ha probado en Azure dev~~ **hecho el 2026-10-23** (ver la primera entrada de «Dónde estamos»);
     - **Aviso (fuera de este bloque):** `dotnet test src/ResidApp.sln` lanza a la vez los proyectos de integración y funcionales contra la misma BD
       local. Ese día falló de forma intermitente: 3 de 6 pasadas, con decenas de tiempos de espera de SQL (ejecución y también inicio de sesión) en
       pruebas de todo tipo.
@@ -1583,7 +1602,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    tanto, grabar unos 10 audios reales ficticios o elegir otra tarea de esta lista. Ver la primera entrada de «Dónde estamos», que lleva también el plan de la Fase B.
    **I0 a I4 e I2b del ADR 0007 están hechos** (I4 mergeado y comprobado en Azure dev; el manual y las páginas de acceso están al día). Quedan **I5 (pulsera NFC)** y la
    retirada del acceso de desarrollo; antes de datos reales, retirar el acceso de desarrollo y llevar al DPO las reglas de las cuentas de varios centros
-   (el límite de intentos por IP ya está corregido). Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
+   (el límite de intentos por IP ya está corregido). Sueltos: (Importar y Exportar ya probado en Azure dev el 2026-10-23), y las dos preguntas a CJ de la guía 2 (hora en la
    fecha prevista, prueba 2.4 de «Conducta médica»).
    **Pendientes de I4 que Orlando puede querer decidir** (ninguno bloquea): (a) si una cuenta bloqueada por intentos debe poder entrar con passkey (hoy no, como
    Identity); (b) bloquear el resto de la aplicación a una cuenta de Plataforma hasta que cree su primera passkey (hoy solo se la lleva a «Mi cuenta»); (c) renombrar
