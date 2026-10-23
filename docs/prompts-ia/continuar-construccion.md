@@ -13,6 +13,30 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **ADR 0007, incremento I4: passkeys (2026-10-23, rama `adr0007-i4-passkeys`, sin mergear; script `0066`, el siguiente libre es `0067`; suite 410 unitarios, 502 de
+  integración y 294 funcionales en verde).** Decisiones de Orlando (2026-10-23): la passkey es **entrada completa** (sin contraseña ni TOTP; contraseña y TOTP
+  siguen para el personal como alternativa); se da de alta desde «Mi cuenta» con contraseña y TOTP; **Plataforma entra solo con passkey** en cuanto tiene una;
+  `ServerDomain` explícito por entorno y, en Pro, dominio base dedicado a ResidApp (ADR 0007, puerta abierta 5).
+  - **Qué hay:** `PasskeyController` (`OpcionesEntrada`, `Entrar`, anónimas) y, en `CuentaController`, `PasskeyOpciones`, `PasskeyAlta` y `QuitarPasskey`;
+    `wwwroot/js/passkeys.js`; sección «Passkeys» de «Mi cuenta» y botón «Entrar con passkey» en el login. `SqlCredentialStore` implementa `IUserPasskeyStore`
+    sobre `dbo.passkeys`. Sin `SignInManager`: `PasskeyHandler<CredentialAccount>` registrado a mano y el estado de cada ceremonia en `PasskeyStateCookie`
+    (5 min, un solo uso, el alta ligada a la sesión). `PasskeyOrigin`: HTTPS y `Acceso:PasskeyDominio` o subdominios; `http://localhost` solo en Development.
+  - **Las passkeys están desactivadas si falta `Acceso:PasskeyDominio`** (el botón no sale y los endpoints dan 404). Lo lleva `appsettings.Development.json`
+    (`localhost`). **Para Azure dev hay que poner el ajuste `Acceso__PasskeyDominio` con el host de la Web App** (`app-residapp-dev…azurewebsites.net`;
+    no se ha puesto) y probar allí con un autenticador virtual; sin hacer.
+  - **Plataforma:** con passkey, el acceso con contraseña se cierra con un mensaje; sin ninguna, su primer acceso con contraseña y código la lleva a «Mi cuenta»,
+    **pero no se bloquea el resto de la aplicación** hasta que la cree (limitación conocida). No puede quitar su última passkey. La recuperación por invitación
+    borra las passkeys.
+  - **Decisión mía a revisar:** una cuenta **bloqueada por intentos** tampoco entra con passkey (como `SignInManager` de Identity); quien adivine contraseñas puede
+    bloquear a una persona también para la passkey durante 15 minutos.
+  - **Pruebas:** `AccesoTests.Passkeys.cs` (16, funcionales, con `SoftwareAuthenticator`, un autenticador ES256 con atestación `none` hecho en C#) y 2 nuevas en
+    `SqlCredentialStoreTests`. Mutaciones comprobadas: no gastar el estado, alta no ligada a la sesión, entrada sin comprobar el bloqueo y Plataforma entrando con
+    contraseña hacen fallar alguna. La comprobación de que la attestation es de la cuenta (`UserEntity`) no la cubre ninguna prueba por separado: es redundante con
+    la sesión.
+  - **Probado en local con Chrome sin interfaz** (autenticador virtual por CDP, claro, oscuro y 375 px, sin desplazamiento ni errores de consola): invitación,
+    contraseña, TOTP, alta de la passkey, salir y «Entrar con passkey». **Queda en la BD local:** cuentas `prueba-navegador-enfermeria-*` del día.
+  - **Sin hacer:** familiares, renombrar passkeys, verificar la atestación del fabricante, probar en Azure dev y con dispositivos reales (iOS, Android, llave).
+  - **Para el DPO:** claves públicas de passkeys custodiadas en `dbo.passkeys`; segundo factor por población.
 - **ADR 0007, incremento I2b: vincular cuentas que ya existen en otro centro (2026-10-23, PR #53 mergeado en `main` como `da5f677`; script `0065`, el siguiente
   libre es `0066`; CI del PR y CI/CD de `main` en verde, con el `0065` aplicado en Azure SQL).** Decisiones de Orlando (2026-10-23): la Administración del centro nuevo **confirma** tras el canje; las cuentas de varios centros las
   **gestiona Plataforma**; solo **personal** (los familiares quedan fuera).
@@ -1468,7 +1492,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-0. **I0 a I3 e I2b del ADR 0007 están cerrados** (ver «Dónde estamos»). Orlando elige entre **I4 (passkeys)**, el **dictado por voz del ADR 0009** y la
+0. **I0 a I4 e I2b del ADR 0007 están hechos** (I4 en la rama `adr0007-i4-passkeys`, pendiente de PR). Orlando elige entre **I5 (pulsera NFC)**, el **dictado por voz del ADR 0009** y la
    retirada del acceso de desarrollo; antes de datos reales, retirar el acceso de desarrollo y llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: probar Importar y Exportar (ADR 0010) en Azure dev, y las dos preguntas a CJ de la guía 2 (hora en la
    fecha prevista, prueba 2.4 de «Conducta médica»).

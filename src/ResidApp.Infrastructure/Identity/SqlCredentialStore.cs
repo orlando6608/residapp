@@ -15,7 +15,7 @@ namespace ResidApp.Infrastructure.Identity;
 public sealed class SqlCredentialStore(SqlConnectionFactory connections, TimeProvider clock) :
     IUserPasswordStore<CredentialAccount>, IUserSecurityStampStore<CredentialAccount>, IUserLockoutStore<CredentialAccount>,
     IUserTwoFactorStore<CredentialAccount>, IUserAuthenticatorKeyStore<CredentialAccount>,
-    IUserTwoFactorRecoveryCodeStore<CredentialAccount>
+    IUserTwoFactorRecoveryCodeStore<CredentialAccount>, IUserPasskeyStore<CredentialAccount>
 {
     private const string SelectAccount = """
         SELECT account.id AS Id, account.sujeto_externo AS UserName, CAST(CASE WHEN account.estado = 'ACTIVE' THEN 1 ELSE 0 END AS BIT) AS Active,
@@ -184,8 +184,93 @@ public sealed class SqlCredentialStore(SqlConnectionFactory connections, TimePro
 
     public Task<int> CountCodesAsync(CredentialAccount user, CancellationToken cancellationToken) => Task.FromResult(Hashes(user).Count());
 
+    /// <summary>Si la credencial ya existe en esa cuenta se actualiza (contador de firmas, copias, nombre); si es de otra cuenta, la clave
+    /// primaria lo rechaza: una passkey nunca cambia de dueño.</summary>
+    public async Task AddOrUpdatePasskeyAsync(CredentialAccount user, UserPasskeyInfo passkey, CancellationToken cancellationToken)
+    {
+        using var connection = await connections.OpenAsync(cancellationToken);
+        await connection.ExecuteAsync(new CommandDefinition("""
+            MERGE dbo.passkeys WITH (HOLDLOCK) AS target
+            USING (SELECT @CredentialId AS credencial_id, @AccountId AS cuenta_id) AS source
+               ON target.credencial_id = source.credencial_id AND target.cuenta_id = source.cuenta_id
+            WHEN MATCHED THEN UPDATE SET
+                nombre = @Name, contador_firmas = @SignCount, verificada = @IsUserVerified, copiada = @IsBackedUp
+            WHEN NOT MATCHED THEN INSERT
+                (credencial_id, cuenta_id, clave_publica, nombre, creada_en, contador_firmas, transportes, verificada, copia_posible, copiada)
+                VALUES (@CredentialId, @AccountId, @PublicKey, @Name, @CreatedAt, @SignCount, @Transports, @IsUserVerified, @IsBackupEligible,
+                        @IsBackedUp);
+            """, new
+        {
+            AccountId = user.Id, passkey.CredentialId, passkey.PublicKey, passkey.Name, CreatedAt = passkey.CreatedAt.UtcDateTime,
+            SignCount = (long)passkey.SignCount, Transports = passkey.Transports is { Length: > 0 } transports ? string.Join(',', transports) : null,
+            passkey.IsUserVerified, passkey.IsBackupEligible, passkey.IsBackedUp,
+        }, cancellationToken: cancellationToken));
+    }
+
+    public async Task<IList<UserPasskeyInfo>> GetPasskeysAsync(CredentialAccount user, CancellationToken cancellationToken)
+    {
+        using var connection = await connections.OpenAsync(cancellationToken);
+        var rows = await connection.QueryAsync<PasskeyRow>(new CommandDefinition(
+            PasskeyColumns + " WHERE cuenta_id = @Id ORDER BY creada_en", new { user.Id }, cancellationToken: cancellationToken));
+        return rows.Select(row => row.ToInfo()).ToList();
+    }
+
+    public async Task<UserPasskeyInfo?> FindPasskeyAsync(CredentialAccount user, byte[] credentialId, CancellationToken cancellationToken)
+    {
+        using var connection = await connections.OpenAsync(cancellationToken);
+        var row = await connection.QuerySingleOrDefaultAsync<PasskeyRow>(new CommandDefinition(
+            PasskeyColumns + " WHERE cuenta_id = @Id AND credencial_id = @credentialId", new { user.Id, credentialId },
+            cancellationToken: cancellationToken));
+        return row?.ToInfo();
+    }
+
+    public async Task<CredentialAccount?> FindByPasskeyIdAsync(byte[] credentialId, CancellationToken cancellationToken)
+    {
+        using var connection = await connections.OpenAsync(cancellationToken);
+        return await connection.QuerySingleOrDefaultAsync<CredentialAccount>(new CommandDefinition(
+            SelectAccount + " WHERE account.id = (SELECT cuenta_id FROM dbo.passkeys WHERE credencial_id = @credentialId)",
+            new { credentialId }, cancellationToken: cancellationToken));
+    }
+
+    public async Task RemovePasskeyAsync(CredentialAccount user, byte[] credentialId, CancellationToken cancellationToken)
+    {
+        using var connection = await connections.OpenAsync(cancellationToken);
+        await connection.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM dbo.passkeys WHERE cuenta_id = @Id AND credencial_id = @credentialId", new { user.Id, credentialId },
+            cancellationToken: cancellationToken));
+    }
+
     public void Dispose()
     {
+    }
+
+    private const string PasskeyColumns = """
+        SELECT credencial_id AS CredentialId, clave_publica AS PublicKey, nombre AS Name, creada_en AS CreatedAt,
+               contador_firmas AS SignCount, transportes AS Transports, verificada AS IsUserVerified,
+               copia_posible AS IsBackupEligible, copiada AS IsBackedUp
+          FROM dbo.passkeys
+        """;
+
+    private sealed class PasskeyRow
+    {
+        public required byte[] CredentialId { get; init; }
+        public required byte[] PublicKey { get; init; }
+        public string? Name { get; init; }
+        public DateTime CreatedAt { get; init; }
+        public long SignCount { get; init; }
+        public string? Transports { get; init; }
+        public bool IsUserVerified { get; init; }
+        public bool IsBackupEligible { get; init; }
+        public bool IsBackedUp { get; init; }
+
+        /// <summary>No se guardan la atestación ni los datos del cliente del alta: solo sirven en el momento de registrarla.</summary>
+        public UserPasskeyInfo ToInfo() => new(
+            CredentialId, PublicKey, new DateTimeOffset(DateTime.SpecifyKind(CreatedAt, DateTimeKind.Utc)), (uint)SignCount,
+            Transports?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? [], IsUserVerified, IsBackupEligible, IsBackedUp,
+            [], [])
+        {
+            Name = Name,
+        };
     }
 
     private static IEnumerable<string> Hashes(CredentialAccount user) =>

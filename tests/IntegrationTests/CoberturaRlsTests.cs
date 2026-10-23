@@ -18,6 +18,7 @@ public sealed class CoberturaRlsTests
         ["cuentas"] = Diseno,
         ["sesiones"] = Diseno,
         ["credenciales"] = Diseno,
+        ["passkeys"] = Diseno,
         ["eventos_acceso"] = Diseno,
         ["invitaciones_acceso"] = Diseno,
         ["vinculaciones_cuenta"] = Diseno,

@@ -124,6 +124,71 @@
             </div>
         </section>
 
+        @if (Model.PasskeysActivas && Model.SegundoFactorActivo)
+        {
+            <section class="card mb-4" aria-labelledby="cuenta-passkeys">
+                <div class="card-body">
+                    <h2 class="h5 card-title" id="cuenta-passkeys">Passkeys</h2>
+                    <p>Una passkey te deja entrar con la huella, la cara o el PIN de tu móvil o portátil, sin escribir contraseña ni código. Solo
+                        funciona en ResidApp y nadie puede copiarla de aquí. Para añadir una hace falta tu contraseña y el código que da ahora tu móvil.</p>
+                    @if (Model.PasskeyObligatoria)
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            Las cuentas de Plataforma entran <strong>solo con passkey</strong>.
+                            @if (Model.Passkeys.Count == 0)
+                            {
+                                <span>Añade la primera ahora: en cuanto la tengas, la contraseña y el código del móvil dejarán de servir para entrar.</span>
+                            }
+                        </div>
+                    }
+                    @if (Model.Passkeys.Count == 0)
+                    {
+                        <p>No tienes ninguna passkey.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush mb-3" aria-label="Tus passkeys">
+                            @foreach (var passkey in Model.Passkeys)
+                            {
+                                <li class="list-group-item px-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <div><strong>@passkey.Nombre</strong></div>
+                                        <div class="small text-body-secondary">
+                                            Añadida el @passkey.CreadaUtc.ToLocalTime().ToString(formato)@(passkey.Sincronizada ? " · se sincroniza con tu cuenta del sistema (iCloud, Google…)" : "")
+                                        </div>
+                                    </div>
+                                    <form asp-controller="Cuenta" asp-action="QuitarPasskey" method="post">
+                                        <input type="hidden" name="id" value="@passkey.Id" />
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm">Quitar</button>
+                                    </form>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    <div id="passkey-alta-error" class="alert alert-danger" role="alert" hidden></div>
+                    <form id="passkey-alta" asp-controller="Cuenta" asp-action="PasskeyOpciones" method="post"
+                          data-url-alta="@Url.Action("PasskeyAlta", "Cuenta")">
+                        <div class="mb-3">
+                            <label for="passkey-nombre" class="form-label">Nombre de la passkey</label>
+                            <input type="text" class="form-control form-control-lg" id="passkey-nombre" name="nombre" maxlength="100"
+                                   autocomplete="off" aria-describedby="passkey-nombre-ayuda" />
+                            <div id="passkey-nombre-ayuda" class="form-text">Para reconocerla en la lista, por ejemplo «Móvil de trabajo».</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="passkey-contrasena" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control form-control-lg" id="passkey-contrasena" name="contrasena" autocomplete="current-password" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="passkey-codigo" class="form-label">Código del móvil</label>
+                            <input type="text" class="form-control form-control-lg" id="passkey-codigo" name="codigo" inputmode="numeric"
+                                   autocomplete="one-time-code" maxlength="12" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">Añadir una passkey</button>
+                    </form>
+                </div>
+            </section>
+        }
+
         @if (Model.SegundoFactorActivo)
         {
             <section class="card mb-4" aria-labelledby="cuenta-vinculacion">
@@ -221,3 +286,7 @@
         </section>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/passkeys.js" asp-append-version="true"></script>
+}

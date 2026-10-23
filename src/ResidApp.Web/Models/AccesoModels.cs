@@ -3,7 +3,7 @@ using ResidApp.Application.Ports;
 namespace ResidApp.Web.Models;
 
 /// <summary>Inicio de sesión con contraseña. SesionCaducada: se llegó aquí al guardar un formulario con la sesión ya terminada.</summary>
-public sealed record AccesoEntrarViewModel(string? Usuario, string? ReturnUrl, bool SesionCaducada, bool AccesoDesarrollo);
+public sealed record AccesoEntrarViewModel(string? Usuario, string? ReturnUrl, bool SesionCaducada, bool AccesoDesarrollo, bool PasskeysActivas);
 
 /// <summary>Alta del segundo factor: la clave para escribirla a mano (en grupos de 4) y la dirección otpauth:// del QR.</summary>
 public sealed record ActivarSegundoFactorViewModel(string Usuario, string ClaveAgrupada, string DireccionAutenticador);
@@ -32,6 +32,10 @@ public sealed record SesionAbiertaViewModel(Guid Id, DateTime CreadaUtc, DateTim
 /// <summary>Un acceso reciente de la cuenta, con su descripción en español.</summary>
 public sealed record AccesoRecienteViewModel(DateTime OcurridoUtc, string Descripcion, bool EsFallo, string? Ip);
 
+/// <summary>Una passkey de la cuenta en «Mi cuenta» (ADR 0007, I4). Id va en base64url; la fecha es UTC. Sincronizada: el sistema del
+/// dispositivo la copia a otros de la misma persona (iCloud, Google).</summary>
+public sealed record PasskeyViewModel(string Id, string Nombre, DateTime CreadaUtc, bool Sincronizada);
+
 /// <summary>«Mi cuenta» (ADM-30 y FAM-16): la propia contraseña, los códigos de recuperación y las sesiones abiertas. Los errores son de la
 /// sección que se acaba de enviar; Aviso, el resultado de una acción correcta.</summary>
 public sealed class CuentaViewModel
@@ -44,6 +48,9 @@ public sealed class CuentaViewModel
     public required int CodigosRestantes { get; init; }
     public required IReadOnlyList<SesionAbiertaViewModel> Sesiones { get; init; }
     public required IReadOnlyList<AccesoRecienteViewModel> Accesos { get; init; }
+    public required IReadOnlyList<PasskeyViewModel> Passkeys { get; init; }
+    public bool PasskeysActivas { get; init; }
+    public bool PasskeyObligatoria { get; init; }
     public string? Aviso { get; init; }
     public string? ErrorContrasena { get; init; }
     public string? ErrorCodigos { get; init; }
@@ -69,10 +76,14 @@ public static class AccesoRecienteDisplay
         AccessEventType.CodigosRegenerados => "Códigos de recuperación nuevos",
         AccessEventType.SesionCerrada => "Sesión cerrada desde Mi cuenta",
         AccessEventType.VinculacionAceptada => "Vinculación con otro centro aceptada",
+        AccessEventType.EntradaPasskey => "Entrada con passkey",
+        AccessEventType.PasskeyAlta => "Passkey añadida",
+        AccessEventType.PasskeyBaja => "Passkey quitada",
+        AccessEventType.PasskeyFallida => "Passkey rechazada",
         _ => type.ToString(),
     };
 
     public static bool EsFallo(AccessEventType type) => type is
         AccessEventType.ContrasenaFallida or AccessEventType.Bloqueo
-        or AccessEventType.SegundoFactorFallido or AccessEventType.InvitacionNoValida;
+        or AccessEventType.SegundoFactorFallido or AccessEventType.InvitacionNoValida or AccessEventType.PasskeyFallida;
 }

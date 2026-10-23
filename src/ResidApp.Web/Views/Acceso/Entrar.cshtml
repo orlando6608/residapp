@@ -38,6 +38,17 @@
                     </div>
                 </form>
 
+                @if (Model.PasskeysActivas)
+                {
+                    <hr />
+                    <div id="passkey-entrada-error" class="alert alert-danger" role="alert" hidden></div>
+                    <div class="d-grid">
+                        <button type="button" id="entrar-passkey" class="btn btn-outline-primary btn-lg"
+                                data-url-opciones="@Url.Action("OpcionesEntrada", "Passkey")" data-url-entrar="@Url.Action("Entrar", "Passkey")"
+                                data-return-url="@Model.ReturnUrl">Entrar con passkey</button>
+                    </div>
+                }
+
                 <p class="text-center small mt-3 mb-0">
                     ¿No tienes cuenta o no puedes entrar? <a asp-controller="Acceso" asp-action="Solicitar">Cómo pedir el acceso</a>
                 </p>
@@ -52,3 +63,10 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @if (Model.PasskeysActivas)
+    {
+        <script src="~/js/passkeys.js" asp-append-version="true"></script>
+    }
+}

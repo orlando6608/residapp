@@ -25,4 +25,10 @@ public sealed class AccesoOptions
 
     /// <summary>Accesos fallidos (contraseña, segundo factor o invitación no válida) que se admiten por dirección IP en <see cref="VentanaFallos"/>.</summary>
     public int FallosPorIp { get; set; } = 20;
+
+    /// <summary>Dominio al que se ligan las passkeys (el «Relying Party ID» de WebAuthn; ADR 0007, incremento I4). Va explícito por entorno, nunca
+    /// deducido de la cabecera Host. Vacío: las passkeys están desactivadas. Una passkey no se mueve a otro dominio.</summary>
+    public string? PasskeyDominio { get; set; }
+
+    public bool PasskeysActivas => !string.IsNullOrWhiteSpace(PasskeyDominio);
 }
