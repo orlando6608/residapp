@@ -167,6 +167,32 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
     }
 
     [Fact]
+    public async Task LaPantallaDeRegistrarCambio_OfreceElDictadoSoloConClave_ConElAvisoDeNoDecirNombres()
+    {
+        var seed = await SeedAsync();
+        using var app = AppWith(Voice());
+        var conClave = await LoginAsync(app, seed.Auxiliar);
+        var sinClave = await LoginAsync(factory, seed.Auxiliar);
+
+        var activa = await conClave.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={seed.Resident}");
+        var desactivada = await sinClave.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={seed.Resident}");
+
+        Assert.Contains("id=\"dictado\"", activa);
+        Assert.Contains($"data-residente=\"{seed.Resident}\"", activa);
+        Assert.Contains("data-url=\"/Auxiliar/DictarCambio\"", activa);
+        Assert.Contains("No digas nombres de personas.", activa);
+        Assert.Contains("Sugerido por voz", activa);
+        Assert.Contains("/js/dictado.js", activa);
+        Assert.Contains("id=\"registrar-continuar\"", activa);
+        // El bloque va oculto hasta que dictado.js comprueba que el navegador puede grabar: sin JavaScript, el formulario manual no cambia.
+        Assert.Matches("<section[^>]*id=\"dictado\"[^>]*hidden", activa);
+        Assert.DoesNotContain("id=\"dictado\"", desactivada);
+        Assert.DoesNotContain("dictado.js", desactivada);
+        Assert.DoesNotContain("No digas nombres", desactivada);
+        Assert.Contains("id=\"registrar-continuar\"", desactivada);
+    }
+
+    [Fact]
     public async Task SinLaClaveDelProveedor_ElDictadoEstaDesactivado_Y404()
     {
         var seed = await SeedAsync();

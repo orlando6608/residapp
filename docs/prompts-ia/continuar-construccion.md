@@ -14,8 +14,32 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Dictado por voz, Fase B, tramo 2: la pantalla está hecha (2026-10-23, rama `dictado-fase-b-tramo-2`, sin push; sin script SQL, el siguiente libre sigue siendo `0067`).**
+  Suite en verde proyecto a proyecto: 425 unitarias, 514 de integración y 304 funcionales.
+  - **En lenguaje llano:** *modo estricto* es que el botón «Continuar» no avanza mientras quede alguna sugerencia sin revisar; *MediaRecorder* es la pieza del
+    navegador que graba el micrófono; un *micrófono falso* es un audio que Chrome «habla» como si fuera el micrófono, para probar sin hablar.
+  - **Qué hay:**
+    - `Views/Auxiliar/RegistrarCambio.cshtml`: bloque «Dictar el cambio» (solo si hay clave de IA; oculto hasta que `dictado.js` comprueba que el navegador graba),
+      aviso fijo «No digas nombres de personas.», lo entendido (la transcripción, solo en pantalla), lista «Revisa cada sugerencia» y el aviso «Revisa lo sugerido por voz
+      para poder continuar» junto a «Continuar» (ahora con `id="registrar-continuar"`). Marca y filas salen de dos `<template>` con un icono SVG propio de micrófono.
+    - `wwwroot/js/dictado.js` (IIFE en español, sin `<script>` en línea): graba con `MediaRecorder` (webm/opus, o mp4 en iPhone), para a los 2 minutos, envía el audio con
+      `RequestVerificationToken` en la cabecera, aplica la sugerencia (marca las casillas, rellena las notas sin pisar lo escrito) y mantiene el modo estricto.
+      `site.css`: `.btn[data-bloqueado-dictado]` (atenuado y cursor no permitido; no usa `disabled`, como pide la guía).
+    - `Manual.cshtml`: párrafo «Dictar el cambio» y la línea de Próximamente (temperatura dictada y otros formularios).
+  - **Decisiones mías, a la espera de CJ** (documento de dictado, tema 4): **4.1** modo estricto = cada **opción** sugerida se revisa una a una («Está bien» o «Quitar»;
+    tocar la casilla a mano también cuenta); las **notas** solo llevan la marca y la pierden al tocarlas o editarlas (la opción B, la recomendada; si CJ elige A o C, se cambia
+    en `dictado.js`); **4.2** el prompt propone menos (A); **4.3** aviso fijo «No digas nombres de personas.» (A). La temperatura no se sugiere (tema 3).
+  - **Probado en Chrome real con micrófono falso** (audio sintético de `tools/PruebaDictado`, Mistral de verdad, `almendros-auxiliar` y Rosa, app local): grabar, parar, sugerencia
+    (c04: `RECHAZA_INGESTA` y `DISMINUCION_INGESTA_LIQUIDOS`), foco al título de la revisión, «Continuar» bloqueado y su mensaje al forzar el clic, confirmar una y quitar otra, desbloqueo,
+    llegada a «Confirmar cambio» (no se confirmó nada), marca de la nota que se quita al tocarla, sin desplazamiento lateral en claro, oscuro y 375 px y consola limpia. Fallos
+    interceptados: micrófono denegado, 429, 403, 503 y sin red; todos dan un mensaje claro, el botón vuelve a «Grabar» y no queda nada bloqueado. Los scripts de la prueba no están en el
+    repositorio (scratchpad): lanzan Chrome con `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream --use-file-for-fake-audio-capture=<wav>%noloop` y el permiso
+    `microphone`; Playwright no pulsa un botón con `aria-disabled`, así que el clic sobre el «Continuar» bloqueado va con `force: true`.
+  - **Sin probar:** un móvil real (iPhone con `audio/mp4`, Android), ruido ambiente real y la lectura con un lector de pantalla; solo se grabó en Chrome de escritorio (webm). No se añadió
+    `Permissions-Policy` (sin ella, el micrófono ya se permite al propio sitio; sigue el hallazgo M3) ni se tocó `sw.js` (`dictado.js` no está en el shell y necesita red).
+  - **Antes de producción:** contrato de encargado con Mistral, región de procesamiento, sin retención de audio, EIPD y revisión del DPO; y que CJ responda el documento de dictado.
 - **Dictado por voz, Fase B, tramo 1: el servidor está hecho (2026-10-23, rama `dictado-fase-b-tramo-1`, sin push; sin script SQL, el siguiente libre sigue siendo `0067`).**
-  Falta la pantalla (tramo 2). Suite en verde proyecto a proyecto: 425 unitarias, 514 de integración y 303 funcionales (2 pasadas de 3 completas; ver el aviso al final).
+  La pantalla es el tramo 2 (hecho: ver la entrada de arriba). Suite en verde proyecto a proyecto: 425 unitarias, 514 de integración y 303 funcionales (2 pasadas de 3 completas; ver el aviso al final).
   - **En lenguaje llano:** *puerto* es una interfaz que dice qué se necesita sin decir quién lo hace; *proveedor autorizado* es una lista corta de empresas de IA
     permitidas, y la aplicación no arranca con otra; *saneado* es quitar de lo que contesta el modelo lo que el formulario no admitiría.
   - **Qué hay:**
@@ -47,7 +71,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Hallazgo y arreglo:** al quitar la temperatura del esquema, el modelo anotaba «37,8 de temperatura» como texto de `ESTADO_CONCIENCIA` (un área que no tiene nada que
     ver). Se añadió al prompt incrustado la regla 6 («las constantes vitales no se registran aquí: no las anotes en ningún área ni en el texto»); repetido c02 en limpio y
     en planta, la temperatura ya no sale. Un test del adaptador comprueba que el prompt lleva esa regla. Es un cambio por el esquema, no un ajuste a la batería de la Fase A.
-  - **Tramo 2 (pendiente, plan):** `wwwroot/js/dictado.js` externo (IIFE en español, `MediaRecorder`, `data-url-*`, token por cabecera como `passkeys.js`); botón y estado en
+  - **Tramo 2 (plan original, hecho: ver la entrada de arriba):** `wwwroot/js/dictado.js` externo (IIFE en español, `MediaRecorder`, `data-url-*`, token por cabecera como `passkeys.js`); botón y estado en
     `RegistrarCambio.cshtml` respetando «Volver a editar»; marca «Sugerido por voz» (`badge text-bg-info` con icono y texto, nunca verde ni solo color) que se quita al tocar;
     **modo estricto** (guardar con `aria-disabled` y bloqueo por JS hasta revisar cada sugerencia, la guía visual prohíbe `disabled`); aviso fijo «No digas nombres»;
     `Permissions-Policy: microphone=(self)`; subir la versión de caché de `sw.js`; `Manual.cshtml`; y `probar-en-navegador` con micrófono falso de Chrome en claro, oscuro y
@@ -1639,8 +1663,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 ## Siguiente tarea
 
 0. **En curso: dictado por voz (ADR 0009) con la arquitectura del ADR 0011.** La Fase A (prueba de precisión, `tools/PruebaDictado`) está mergeada y el **servidor de la
-   Fase B (tramo 1) está hecho** en la rama `dictado-fase-b-tramo-1`. Siguiente: la comprobación manual con Mistral y un audio sintético, y el **tramo 2 (la pantalla)**, cuyo plan está en
-   la primera entrada de «Dónde estamos». **Espera la respuesta de CJ** a `docs/pendientes-cj/dictado-por-voz-confirmaciones-cj.html` (el rango de temperatura, tema 3, bloquea
+   Fase B (tramo 1) está hecho** en la rama `dictado-fase-b-tramo-1`. Siguiente: probarlo en un móvil real con audios ficticios y, cuando CJ responda, ajustar el modo estricto (4.1) y la temperatura (tema 3). Servidor y pantalla están hechos
+   (dos primeras entradas de «Dónde estamos»). **Espera la respuesta de CJ** a `docs/pendientes-cj/dictado-por-voz-confirmaciones-cj.html` (el rango de temperatura, tema 3, bloquea
    solo la temperatura). Mientras tanto, grabar unos 10 audios reales ficticios o elegir otra tarea de esta lista.
    **I0 a I4 e I2b del ADR 0007 están hechos** (I4 mergeado y comprobado en Azure dev; el manual y las páginas de acceso están al día). Quedan **I5 (pulsera NFC)** y la
    retirada del acceso de desarrollo; antes de datos reales, retirar el acceso de desarrollo y llevar al DPO las reglas de las cuentas de varios centros
