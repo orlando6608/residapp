@@ -66,7 +66,7 @@ public class MistralClientTests
         Assert.True(body["response_format"]!["json_schema"]!["strict"]!.GetValue<bool>());
         Assert.Equal(schema.ToJsonString(), body["response_format"]!["json_schema"]!["schema"]!.ToJsonString());
         Assert.Contains("Registrar cambio", body["messages"]![0]!["content"]!.GetValue<string>());
-        Assert.DoesNotContain("temperatura", body["messages"]![0]!["content"]!.GetValue<string>(), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("constantes vitales", body["messages"]![0]!["content"]!.GetValue<string>());
         Assert.Equal("no ha dormido nada", body["messages"]![1]!["content"]!.GetValue<string>());
     }
 

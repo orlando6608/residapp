@@ -38,8 +38,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     `ConfigureTestServices` y `UseSetting`). **Mutaciones: 8 de 8 mueren** (sin filtro de opciones por área, auditar después, sin antiforgery, sin comprobar residente
     asignado, límite sin partición por cuenta, limitador antes de autenticar y perfil Enfermería válido; el control sin cambios da 0 fallos). La del perfil solo la
     caza un test unitario porque en SQL la comprobación de residente asignado ya lo deniega: es una defensa redundante a propósito.
-  - **No se probó con Mistral de verdad en esta sesión:** la suite nunca llama a internet y no hice la comprobación manual con un audio sintético (siguiente paso
-    natural, en local y con la clave de Orlando).
+  - **Probado con Mistral de verdad (2026-10-23, app local, `almendros-auxiliar` y Rosa, audios sintéticos de `tools/PruebaDictado/audios`; la clave solo en el entorno
+    del proceso, sin copiarla a ningún fichero):** `POST /Auxiliar/DictarCambio` da 200 con la transcripción y las áreas esperadas (c04 limpio: `RECHAZA_INGESTA` y
+    `DISMINUCION_INGESTA_LIQUIDOS`; c05 planta en opus: `ATRAGANTAMIENTO`; c03 planta: «cule» por «decul», como en la Fase A), una sola fila `VOICE_DICTATION_USED`
+    por llamada con perfil, unidad y residente y nada más, 400 sin token antiforgery y 429 al pasar de 6 por minuto. El registro de la app solo lleva modelo, bytes,
+    milisegundos y tokens: ninguna frase del dictado. Se ejercitaron `audio/wav` y `audio/ogg`; **no** `audio/webm` ni `audio/mp4` (lo que graba Chrome y iPhone): comprobarlo
+    en el tramo 2 con el micrófono real.
+  - **Hallazgo y arreglo:** al quitar la temperatura del esquema, el modelo anotaba «37,8 de temperatura» como texto de `ESTADO_CONCIENCIA` (un área que no tiene nada que
+    ver). Se añadió al prompt incrustado la regla 6 («las constantes vitales no se registran aquí: no las anotes en ningún área ni en el texto»); repetido c02 en limpio y
+    en planta, la temperatura ya no sale. Un test del adaptador comprueba que el prompt lleva esa regla. Es un cambio por el esquema, no un ajuste a la batería de la Fase A.
   - **Tramo 2 (pendiente, plan):** `wwwroot/js/dictado.js` externo (IIFE en español, `MediaRecorder`, `data-url-*`, token por cabecera como `passkeys.js`); botón y estado en
     `RegistrarCambio.cshtml` respetando «Volver a editar»; marca «Sugerido por voz» (`badge text-bg-info` con icono y texto, nunca verde ni solo color) que se quita al tocar;
     **modo estricto** (guardar con `aria-disabled` y bloqueo por JS hasta revisar cada sugerencia, la guía visual prohíbe `disabled`); aviso fijo «No digas nombres»;

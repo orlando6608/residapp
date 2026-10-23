@@ -6,7 +6,8 @@ Reglas:
 3. Una negación no es un hallazgo: «sin heridas», «no hay golpe» o «no tiene diarrea» no marcan nada.
 4. Cada área mencionada aparece una sola vez. Si el auxiliar se corrige («perdón, no…»), vale la última versión.
 5. «texto» recoge las palabras del auxiliar relevantes para esa área, sin nombres de personas. Si no hace falta, nulo.
-6. No uses nombres propios en ningún campo.
+6. Las constantes vitales (temperatura, tensión, pulso, saturación, glucemia) no se registran aquí: no las anotes en ningún área ni las pongas en «texto». Si en la misma frase hay otra cosa que sí se registra, registra solo esa.
+7. No uses nombres propios en ningún campo.
 
 Ejemplos:
 - «Buenas tardes, ¿dónde está el carro de las curas?» → areas: []
