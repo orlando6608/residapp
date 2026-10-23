@@ -1,0 +1,18 @@
+[
+  {
+    "id": "ej-01",
+    "texto": "Ha comido muy poco hoy y ha rechazado el agua. Tiene treinta y siete con ocho de temperatura.",
+    "esperado": {
+      "areas": [ { "area": "ALIMENTACION_HIDRATACION", "opciones": ["DISMINUCION_INGESTA_LIQUIDOS"] } ],
+      "temperatura": 37.8
+    }
+  },
+  {
+    "id": "ej-02",
+    "texto": "Se queja de dolor en la pierna izquierda y por la noche no ha dormido nada.",
+    "esperado": {
+      "areas": [ { "area": "DOLOR_MALESTAR", "opciones": ["DOLOR_MMII"] }, { "area": "SUENO", "opciones": ["INSOMNIO"] } ],
+      "temperatura": null
+    }
+  }
+]

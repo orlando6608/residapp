@@ -1,0 +1,749 @@
+<!doctype html>
+<!--
+  Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan en «dictado-por-voz-confirmaciones-cj.respuestas.json», en esta misma carpeta;
+  ingeniería las lee de ese fichero. Cómo funciona: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dictado por voz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .bar, .howto, .toc, .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+
+  /* Tabla de ejemplos */
+  .tabla { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; }
+  .tabla table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.92rem; background: var(--surface); }
+  .tabla th, .tabla td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+  .tabla th { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+  .tabla td.num { font-family: var(--mono); color: var(--muted); }
+  .tabla tr.dudoso td { background: var(--blank); }
+  .tabla tr:last-child td { border-bottom: 0; }
+</style>
+<body data-doc="dictado-por-voz-confirmaciones-cj" data-version="2026-10-23">
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="index.html">← Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Producto · Pendiente de CJ</p>
+    <h1>Dictado por voz en «Registrar cambio»</h1>
+    <p class="meta">Estado a 23/10/2026 · Para CJ, responsable de producto</p>
+    <p class="lead prose">
+      Orlando ha aprobado estudiar el <strong>dictado por voz</strong> para que las auxiliares rellenen «Registrar cambio» hablando en lugar de tocar casillas.
+      La auxiliar dicta, el sistema propone qué casillas marcar y qué temperatura anotar, y <strong>ella lo revisa en pantalla y confirma antes de guardar</strong>:
+      nada se guarda solo. Se ha probado con 31 frases inventadas en el lenguaje de planta (UPP, Mepentol, dieta túrmix, absorbentes…), dichas por una voz
+      sintética. Funciona razonablemente, pero hay decisiones clínicas que ingeniería no puede tomar y los resultados esperados de los ejemplos son
+      provisionales hasta que los revises. <strong>Solo el tema 3 (la temperatura) bloquea la construcción;</strong> el resto afina cómo se comporta.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué está hecho</span><span>Una prueba aparte de la aplicación, con audios inventados. No hay nada en ResidApp todavía ni se ha usado ningún dato de residentes.</span></div>
+    <div role="listitem"><span class="k">Qué no hace</span><span>No diagnostica, no prioriza y no guarda el audio ni lo dictado. El nombre del residente no se envía.</span></div>
+    <div role="listitem"><span class="k">Qué falta</span><span>15 respuestas, repartidas en 5 temas.</span></div>
+  </div>
+
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Responde aquí</strong>
+        <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se queda en este navegador: puedes cerrar y seguir otro día.</span></li>
+      <li><span class="step-n">2</span><strong>Guarda</strong>
+        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>dictado-por-voz-confirmaciones-cj.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
+      <li><span class="step-n">3</span><strong>Envíaselo a Orlando</strong>
+        <span>Mándale el fichero descargado por correo o por WhatsApp. Si lo cambias y lo vuelves a guardar, envía el nuevo.</span></li>
+    </ol>
+    <p class="prose meta">
+      ¿Desde otro ordenador? Abre este documento y pulsa «Abrir respuestas guardadas» con tu fichero para seguir donde lo dejaste.
+    </p>
+  </section>
+
+  <nav class="toc" id="indice" aria-label="Temas del documento"></nav>
+
+  <section class="tema" id="tema-1">
+    <h2>Tema 1 · Cómo hablan las auxiliares</h2>
+    <div class="stack prose">
+      <p>Los ejemplos de la tabla del tema 5 usan el lenguaje de planta. Aquí hace falta tu criterio clínico sobre qué significa cada expresión y a qué casilla del formulario corresponde.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Qué quiere decir una auxiliar cuando dice «decul» o «decúbito» (por ejemplo, «decul en el talón, rojo pero sin herida»)?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Ingeniería no sabe si es una forma corta de «decúbito» ni a qué se refiere. Importa porque, si es una UPP, se marcaría «UPP»; si es la postura, no se marca nada.</p>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Es lo mismo que una UPP (úlcera por presión): se marca «UPP».</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Es una zona enrojecida o en riesgo, todavía no una UPP: va en «Lesiones en piel» sin marcar «UPP».</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">Es la postura («decúbito lateral»), no una lesión: no se marca nada de piel.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">Piel enrojecida sin herida («sacro enrojecido, crema barrera»): ¿se marca «UPP»?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es el error más delicado que hemos visto: a una frase así, el sistema le sugirió «UPP» sin que nadie lo dijera. El alcance dice que la auxiliar no diagnostica; ella tendría que revisarlo, pero conviene que la propuesta no lo marque.</p>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">No: el enrojecimiento va solo como texto en «Lesiones en piel», sin marcar «UPP» (como se espera ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Sí, si la auxiliar dice que no se quita al presionar.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">Hace falta una opción nueva «Piel enrojecida» en «Lesiones en piel».</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.3">
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">«Dieta túrmix», «dieta triturada», «absorbentes», «cambios posturales»: ¿necesitan una casilla propia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy no hay opción rápida para ninguno de ellos y el dictado los deja en el texto del área. Una casilla propia permite contarlos, pero alarga el formulario.</p>
+        <fieldset class="choices" aria-labelledby="t-1-3">
+          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">No, que queden como texto libre (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">Sí, alguno merece casilla propia (dime cuál y en qué área en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.4">
+        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">«Ha comido poco»: ¿qué casilla es?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">En «Alimentación / hidratación» solo hay «nula ingesta», «rechaza ingesta», «disminución de ingesta de líquidos» y «atragantamiento». Para comida sólida «comido poco» no encaja, y a veces el dictado lo marca como «disminución de ingesta de líquidos», que no es lo mismo.</p>
+        <fieldset class="choices" aria-labelledby="t-1-4">
+          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">Solo texto, sin casilla.</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">Falta una casilla «Come menos de lo habitual» en «Alimentación / hidratación».</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2">
+    <h2>Tema 2 · En qué área va cada cosa</h2>
+    <div class="stack prose">
+      <p>Hay frases que podrían ir en más de un área del formulario. Lo que decidas se usa para decir al dictado dónde ponerlas.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="2.1">
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">«Está muy somnolienta, cuesta despertarla»: ¿en qué área?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Puede ser sueño (somnolencia) o un cambio del nivel de conciencia, que es más importante.</p>
+        <fieldset class="choices" aria-labelledby="t-2-1">
+          <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">«Sueño», casilla «Somnolencia».</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">«Estado de conciencia».</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="C"><span class="letter">C</span><span class="txt">En las dos.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.2">
+        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">«Está desorientada, no sabe dónde está, no reconoce a su hija, esto es nuevo»: ¿en qué área?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es un cambio cognitivo nuevo. «Estado de conciencia» no tiene casillas, solo texto.</p>
+        <fieldset class="choices" aria-labelledby="t-2-2">
+          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">«Estado de conciencia».</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">«Ánimo / conducta».</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="C"><span class="letter">C</span><span class="txt">En las dos.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.3">
+        <div class="q-head"><span class="n">2.3</span><h3 class="q-title" id="t-2-3">«Hoy participa muy poco, no ha querido bajar a la actividad ni hablar con nadie»: ¿qué se marca?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">A veces el dictado la manda además a «Ánimo / conducta» como «Disminución del ánimo», y nada en la frase lo dice.</p>
+        <fieldset class="choices" aria-labelledby="t-2-3">
+          <label class="choice"><input type="radio" name="r-2-3" value="A"><span class="letter">A</span><span class="txt">Solo «Participación / relación social», con texto.</span></label>
+          <label class="choice"><input type="radio" name="r-2-3" value="B"><span class="letter">B</span><span class="txt">También «Ánimo / conducta», «Disminución del ánimo».</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.4">
+        <div class="q-head"><span class="n">2.4</span><h3 class="q-title" id="t-2-4">«Le duele la barriga, se la agarra y no quiere comer»: ¿se marca también «Rechaza ingesta»?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">El dolor puede explicar que no coma.</p>
+        <fieldset class="choices" aria-labelledby="t-2-4">
+          <label class="choice"><input type="radio" name="r-2-4" value="A"><span class="letter">A</span><span class="txt">Sí: «Dolor abdominal» y «Rechaza ingesta».</span></label>
+          <label class="choice"><input type="radio" name="r-2-4" value="B"><span class="letter">B</span><span class="txt">Solo «Dolor abdominal»; lo de no comer va como texto.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.5">
+        <div class="q-head"><span class="n">2.5</span><h3 class="q-title" id="t-2-5">Si la auxiliar solo dicta una temperatura («treinta y ocho y medio»), ¿qué pasa?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy «Registrar cambio» exige al menos un área, así que una temperatura sola no se puede guardar. Cuando solo hay temperatura, parece más una constante que un cambio.</p>
+        <fieldset class="choices" aria-labelledby="t-2-5">
+          <label class="choice"><input type="radio" name="r-2-5" value="A"><span class="letter">A</span><span class="txt">Que el formulario le pida elegir al menos un área (como está ahora).</span></label>
+          <label class="choice"><input type="radio" name="r-2-5" value="B"><span class="letter">B</span><span class="txt">Que se pueda guardar un cambio con solo la temperatura.</span></label>
+          <label class="choice"><input type="radio" name="r-2-5" value="C"><span class="letter">C</span><span class="txt">Que la temperatura sola se guarde por otro camino (dime cuál en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Temperatura</h2>
+    <div class="stack prose">
+      <p>Hoy el formulario de la auxiliar no limita la temperatura: solo cabe un número con un decimal (por ejemplo 37,8). Para que el dictado no pueda proponer un valor absurdo (por ejemplo, «378» en vez de 37,8) hace falta un mínimo y un máximo. <strong>Esta es la decisión que bloquea construir el dictado en la aplicación.</strong></p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">¿Entre qué valores es una temperatura posible?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Las constantes de Enfermería ya tienen sus propios rangos de referencia; este es solo el límite de lo que se acepta escrito o dictado, no un aviso clínico.</p>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Entre 34,0 y 42,0 °C.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Entre 35,0 y 41,0 °C.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">Otros valores (escríbelos en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">Si la temperatura queda fuera de ese rango, ¿qué hace el formulario?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Un error de un dígito no debería llegar a guardarse, pero tampoco hay que impedir anotar algo real.</p>
+        <fieldset class="choices" aria-labelledby="t-3-2">
+          <label class="choice"><input type="radio" name="r-3-2" value="A"><span class="letter">A</span><span class="txt">No deja guardar y pide corregirla.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="B"><span class="letter">B</span><span class="txt">Deja guardar con un aviso visible.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-4">
+    <h2>Tema 4 · Cómo se usa el dictado</h2>
+    <div class="stack prose">
+      <p>El dictado no guarda nada solo: rellena el formulario con lo que cree haber oído, y la auxiliar lo revisa en la pantalla y confirma. Aquí decides cuánto hay que revisar.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="4.1">
+        <div class="q-head"><span class="n">4.1</span><h3 class="q-title" id="t-4-1">¿Qué se revisa una a una antes de poder guardar?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es la regla más importante para la seguridad: el sistema se equivoca a veces (como marcar «UPP» sin que nadie lo diga). Revisar una a una es más lento.</p>
+        <fieldset class="choices" aria-labelledby="t-4-1">
+          <label class="choice"><input type="radio" name="r-4-1" value="A"><span class="letter">A</span><span class="txt">Solo la temperatura.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="B"><span class="letter">B</span><span class="txt">La temperatura y cada opción rápida marcada por voz (recomendada).</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="C"><span class="letter">C</span><span class="txt">Todo lo sugerido, también los textos.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.2">
+        <div class="q-head"><span class="n">4.2</span><h3 class="q-title" id="t-4-2">Cuando el sistema dude, ¿prefieres que proponga menos o más?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Con instrucciones estrictas marca menos y deja más cosas como texto libre; con instrucciones más abiertas propone más casillas, pero se equivoca más.</p>
+        <fieldset class="choices" aria-labelledby="t-4-2">
+          <label class="choice"><input type="radio" name="r-4-2" value="A"><span class="letter">A</span><span class="txt">Que proponga menos: solo lo que se diga de forma explícita, aunque quede más texto libre.</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="B"><span class="letter">B</span><span class="txt">Que proponga más, aunque alguna sugerencia sea errónea, porque se revisa.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.3">
+        <div class="q-head"><span class="n">4.3</span><h3 class="q-title" id="t-4-3">Nombres de personas al dictar</h3><span class="chip">Pendiente</span></div>
+        <p class="why">El residente ya está elegido en pantalla y su nombre no se envía, pero la auxiliar puede decirlo en voz alta; el audio se envía al proveedor y el nombre quedaría en la transcripción.</p>
+        <fieldset class="choices" aria-labelledby="t-4-3">
+          <label class="choice"><input type="radio" name="r-4-3" value="A"><span class="letter">A</span><span class="txt">Un aviso fijo junto al micrófono: «No digas nombres» (recomendada).</span></label>
+          <label class="choice"><input type="radio" name="r-4-3" value="B"><span class="letter">B</span><span class="txt">Ese aviso y, además, que el sistema avise si cree haber oído un nombre (puede fallar).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-5">
+    <h2>Tema 5 · Revisa los 31 ejemplos</h2>
+    <div class="stack prose">
+      <p>Estas son las frases con las que se está probando el dictado y lo que <strong>ingeniería</strong> cree que debería salir. Esos resultados son provisionales: tu criterio los corrige. Las filas con fondo marcado son las dudosas. Las frases son inventadas y no corresponden a ningún residente. Se han generado con voz sintética.</p>
+      <div class="tabla"><table>
+        <thead><tr><th>N.º</th><th>Lo que dice la auxiliar</th><th>Lo que debería salir</th><th>Nota</th></tr></thead>
+        <tbody>
+        <tr class="dudoso"><td class="num">1</td><td>«Hoy ha comido poco, dieta túrmix, y tiene una UPP en el sacro. Le he puesto Mepentol y le he hecho los cambios posturales cada dos horas.»</td><td>Alimentación / hidratación (solo texto)<br>Lesiones en piel: UPP</td><td><strong>Dudoso.</strong> «Comido poco» no coincide con ninguna opción rápida de alimentación: solo texto.</td></tr>
+        <tr><td class="num">2</td><td>«Ha amanecido con el pañal absorbente empapado, orina muy oscura, y treinta y siete con ocho de temperatura.»</td><td>Heces / diuresis: Cambios de coloración de la orina<br>Temperatura: 37,8 °C</td><td></td></tr>
+        <tr class="dudoso"><td class="num">3</td><td>«Está muy decaído, no quiere levantarse, y se queja de dolor en la pierna izquierda. Decul en el talón, rojo pero sin herida.»</td><td>Ánimo / conducta: Disminución del ánimo<br>Movilidad / funcionalidad: No quiere levantarse<br>Dolor / malestar: Dolor MMII<br>Lesiones en piel (solo texto)</td><td><strong>Dudoso.</strong> «Decul» (¿decúbito?) sin herida: ¿lesión de piel o nada? Pregunta para CJ.</td></tr>
+        <tr><td class="num">4</td><td>«Ha rechazado la comida y casi no bebe, le tengo que dar el agua con espesante.»</td><td>Alimentación / hidratación: Rechaza ingesta, Disminución de ingesta de líquidos</td><td></td></tr>
+        <tr><td class="num">5</td><td>«Se ha atragantado con el puré en la comida, tosía mucho, ya se le ha pasado.»</td><td>Alimentación / hidratación: Atragantamiento</td><td></td></tr>
+        <tr><td class="num">6</td><td>«Tres días sin hacer deposición, está estreñida, le hemos puesto el supositorio.»</td><td>Heces / diuresis: Estreñimiento</td><td></td></tr>
+        <tr><td class="num">7</td><td>«Tiene diarrea desde anoche, cuatro deposiciones líquidas, y treinta y seis con cinco de temperatura.»</td><td>Heces / diuresis: Diarrea<br>Temperatura: 36,5 °C</td><td></td></tr>
+        <tr><td class="num">8</td><td>«Casi no ha orinado en todo el turno, el absorbente está seco.»</td><td>Heces / diuresis: Disminución de diuresis</td><td></td></tr>
+        <tr><td class="num">9</td><td>«No ha dormido nada, ha estado dando vueltas toda la noche.»</td><td>Sueño: Insomnio</td><td></td></tr>
+        <tr class="dudoso"><td class="num">10</td><td>«Hoy está muy somnolienta, cuesta despertarla.»</td><td>Sueño: Somnolencia</td><td><strong>Dudoso.</strong> ¿Solo sueño o también estado de conciencia?</td></tr>
+        <tr><td class="num">11</td><td>«Se ha caído en el baño al levantarse, sin golpe en la cabeza, y tiene un hematoma en el codo derecho.»</td><td>Incidencias / caídas (solo texto)<br>Lesiones en piel: Hematoma</td><td></td></tr>
+        <tr><td class="num">12</td><td>«Tiene una herida en la espinilla izquierda, se la ha hecho con la silla de ruedas, ya la hemos curado.»</td><td>Lesiones en piel: Herida</td><td></td></tr>
+        <tr><td class="num">13</td><td>«UPP en el talón derecho, estadio dos, la he limpiado y le he puesto el apósito.»</td><td>Lesiones en piel: UPP</td><td></td></tr>
+        <tr><td class="num">14</td><td>«Está agresivo con los compañeros del comedor, ha gritado y ha intentado pegar a la auxiliar.»</td><td>Ánimo / conducta: Agresividad</td><td></td></tr>
+        <tr><td class="num">15</td><td>«Muy irritable hoy, todo le molesta, no quiere que la toquen para el aseo.»</td><td>Ánimo / conducta: Irritabilidad</td><td></td></tr>
+        <tr><td class="num">16</td><td>«Dolor de cabeza desde por la mañana, dice que le martillea.»</td><td>Dolor / malestar: Cefalea</td><td></td></tr>
+        <tr class="dudoso"><td class="num">17</td><td>«Le duele la barriga, se la agarra, y no quiere comer.»</td><td>Dolor / malestar: Dolor abdominal<br>Alimentación / hidratación: Rechaza ingesta</td><td><strong>Dudoso.</strong> ¿«No quiere comer» es rechazo de ingesta?</td></tr>
+        <tr><td class="num">18</td><td>«Le duele el brazo derecho cuando se lo movilizamos para vestirla.»</td><td>Dolor / malestar: Dolor MMSS</td><td></td></tr>
+        <tr><td class="num">19</td><td>«Camina con mucha dificultad, arrastra los pies, hoy ha ido con el andador y con ayuda.»</td><td>Movilidad / funcionalidad: Camina con dificultad</td><td></td></tr>
+        <tr><td class="num">20</td><td>«No puede caminar, hoy no se sostiene de pie, la hemos pasado a la silla con la grúa.»</td><td>Movilidad / funcionalidad: Incapacidad para caminar</td><td></td></tr>
+        <tr><td class="num">21</td><td>«Muy débil, flojita, no tiene fuerzas ni para sentarse.»</td><td>Movilidad / funcionalidad: Debilidad generalizada</td><td></td></tr>
+        <tr class="dudoso"><td class="num">22</td><td>«Hoy participa muy poco, no ha querido bajar a la actividad ni hablar con nadie.»</td><td>Participación / relación social (solo texto)</td><td><strong>Dudoso.</strong> ¿Participación social o también bajo ánimo?</td></tr>
+        <tr class="dudoso"><td class="num">23</td><td>«Está desorientada, no sabe dónde está, no reconoce a su hija, esto es nuevo.»</td><td>Estado de conciencia (solo texto)</td><td><strong>Dudoso.</strong> ¿Estado de conciencia o área aparte? Es un cambio de cognición.</td></tr>
+        <tr><td class="num">24</td><td>«Treinta y ocho y medio de temperatura, está muy caliente, he avisado a la enfermera.»</td><td>Temperatura: 38,5 °C</td><td></td></tr>
+        <tr class="dudoso"><td class="num">25</td><td>«Treinta y siete de temperatura y sin ningún cambio, ha hecho el día normal.»</td><td>Temperatura: 37 °C</td><td><strong>Dudoso.</strong> Temperatura sin ningún cambio observado.</td></tr>
+        <tr><td class="num">26</td><td>«Buenos días, ¿me puedes pasar los guantes? Que se me han acabado.»</td><td><em>Nada que registrar</em></td><td>Negativo: no hay nada que registrar.</td></tr>
+        <tr><td class="num">27</td><td>«Ha tenido... perdón, no, no ha tenido diarrea, está estreñida, tres días sin deposición.»</td><td>Heces / diuresis: Estreñimiento</td><td>Autocorrección: solo el estreñimiento.</td></tr>
+        <tr class="dudoso"><td class="num">28</td><td>«Cambio de pañal, sacro enrojecido, le puse crema barrera y almohadillas, cambios posturales cada dos horas, decúbito lateral derecho.»</td><td>Lesiones en piel (solo texto)</td><td><strong>Dudoso.</strong> Piel enrojecida sin herida ni UPP: ¿lesión de piel sin opción?</td></tr>
+        <tr><td class="num">29</td><td>«Come con dieta triturada y se la ha tomado entera, buen día.»</td><td><em>Nada que registrar</em></td><td>Negativo: sin cambios.</td></tr>
+        <tr class="dudoso"><td class="num">30</td><td>«Vengo del turno de noche: ha dormido fatal, insomnio total, dolor en las dos piernas, y al levantarla treinta y siete con dos.»</td><td>Sueño: Insomnio<br>Dolor / malestar: Dolor MMII<br>Temperatura: 37,2 °C</td><td><strong>Dudoso.</strong> «Dolor en las dos piernas»: ¿MMII?</td></tr>
+        <tr><td class="num">31</td><td>«Antonia ha tenido una caída sin consecuencias, la hemos revisado y sin heridas.»</td><td>Incidencias / caídas (solo texto)</td><td>El nombre (ficticio) no debe aparecer en la sugerencia.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="5.1">
+        <div class="q-head"><span class="n">5.1</span><h3 class="q-title" id="t-5-1">¿Es correcto lo que debería salir en cada ejemplo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Si no lo es, indica en el comentario el número del ejemplo y qué debería salir.</p>
+        <fieldset class="choices" aria-labelledby="t-5-1">
+          <label class="choice"><input type="radio" name="r-5-1" value="A"><span class="letter">A</span><span class="txt">Sí, todos son correctos tal como están.</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="B"><span class="letter">B</span><span class="txt">Hay ejemplos que corregir (los indico en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. Ingeniería no ha elegido ninguna opción por ti: las decisiones clínicas son de CJ. Cuando subas tus
+    respuestas, ingeniería las revisa, te consulta lo que no quede claro y lo incorpora. La aplicación no lee este fichero ni sus respuestas.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Guardar respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+    <div class="actions">
+      <button type="button" class="btn" id="btn-abrir">Abrir respuestas guardadas</button>
+      <button type="button" class="btn primary" id="btn-guardar">Guardar respuestas</button>
+      <input type="file" id="fichero" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var FILE = DOC + ".respuestas.json";
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;
+  var savedAt = null;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (dirty) say("", "Tienes cambios que aún no están en el fichero. Pulsa «Guardar respuestas» cuando quieras.");
+    else if (savedAt) say("ok", "Fichero al día (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda en este navegador.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? "Respondida" : "Pendiente";
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  function loaded(data, origin) {
+    apply(data);
+    dirty = false;
+    savedAt = data.guardado || null;
+    store(refresh());
+    var msg = "Respuestas cargadas " + origin + " (guardadas el " + when(data.guardado) + ").";
+    if (data.cuestionario !== VERSION) {
+      say("error", msg + " Son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+    } else {
+      say("ok", msg);
+    }
+  }
+
+  function download(json) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  async function save() {
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    try {
+      if (!window.showSaveFilePicker) throw new Error("sin selector");
+      var handle = await window.showSaveFilePicker({ suggestedName: FILE,
+        types: [{ description: "Respuestas (JSON)", accept: { "application/json": [".json"] } }] });
+      var w = await handle.createWritable();
+      await w.write(json);
+      await w.close();
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      download(json);
+    }
+    dirty = false;
+    savedAt = data.guardado;
+    store(data);
+    say("ok", "Guardado como «" + FILE + "». Ahora envíaselo a Orlando por correo o por WhatsApp.");
+  }
+
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    store(refresh());
+    status();
+  }
+
+  document.getElementById("btn-guardar").addEventListener("click", save);
+  document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
+  document.getElementById("fichero").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    file.text().then(function (t) {
+      var data = JSON.parse(t);
+      if (data.documento !== DOC) {
+        say("error", "Ese fichero es de otro documento («" + data.documento + "»). Elige «" + FILE + "».");
+        return;
+      }
+      loaded(data, "del fichero");
+    }).catch(function () {
+      say("error", "No se ha podido leer ese fichero. Elige «" + FILE + "».");
+    }).finally(function () { e.target.value = ""; });
+  });
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+
+  // Si la página se sirve por http (no desde disco), carga las respuestas ya subidas al repositorio.
+  if (location.protocol.indexOf("http") === 0) {
+    fetch(FILE, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.documento !== DOC) return;
+        if (dirty) {
+          say("", "Hay respuestas en el repositorio (guardadas el " + when(data.guardado) +
+            "), pero mantienes los cambios de este navegador, que aún no están en el fichero.");
+          return;
+        }
+        loaded(data, "del repositorio");
+      })
+      .catch(function () { /* sin fichero de respuestas */ });
+  }
+})();
+</script>
+</body>
+</html>
