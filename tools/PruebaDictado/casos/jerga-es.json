@@ -1,0 +1,125 @@
+[
+  { "id": "c01", "texto": "Hoy ha comido poco, dieta túrmix, y tiene una UPP en el sacro. Le he puesto Mepentol y le he hecho los cambios posturales cada dos horas.",
+    "jerga": ["túrmix", "UPP", "Mepentol", "cambios posturales"], "dudoso": true, "nota": "«Comido poco» no coincide con ninguna opción rápida de alimentación: solo texto.",
+    "esperado": { "areas": [ { "area": "ALIMENTACION_HIDRATACION", "opciones": [] }, { "area": "LESIONES_PIEL", "opciones": ["UPP"] } ], "temperatura": null } },
+
+  { "id": "c02", "texto": "Ha amanecido con el pañal absorbente empapado, orina muy oscura, y treinta y siete con ocho de temperatura.",
+    "jerga": ["absorbente"],
+    "esperado": { "areas": [ { "area": "HECES_DIURESIS", "opciones": ["CAMBIOS_COLORACION_ORINA"] } ], "temperatura": 37.8 } },
+
+  { "id": "c03", "texto": "Está muy decaído, no quiere levantarse, y se queja de dolor en la pierna izquierda. Decul en el talón, rojo pero sin herida.",
+    "jerga": ["decul"], "dudoso": true, "nota": "«Decul» (¿decúbito?) sin herida: ¿lesión de piel o nada? Pregunta para CJ.",
+    "esperado": { "areas": [ { "area": "ANIMO_CONDUCTA", "opciones": ["DISMINUCION_ANIMO"] }, { "area": "MOVILIDAD_FUNCIONALIDAD", "opciones": ["NO_QUIERE_LEVANTARSE"] }, { "area": "DOLOR_MALESTAR", "opciones": ["DOLOR_MMII"] }, { "area": "LESIONES_PIEL", "opciones": [] } ], "temperatura": null } },
+
+  { "id": "c04", "texto": "Ha rechazado la comida y casi no bebe, le tengo que dar el agua con espesante.",
+    "jerga": ["espesante"],
+    "esperado": { "areas": [ { "area": "ALIMENTACION_HIDRATACION", "opciones": ["RECHAZA_INGESTA", "DISMINUCION_INGESTA_LIQUIDOS"] } ], "temperatura": null } },
+
+  { "id": "c05", "texto": "Se ha atragantado con el puré en la comida, tosía mucho, ya se le ha pasado.",
+    "jerga": [],
+    "esperado": { "areas": [ { "area": "ALIMENTACION_HIDRATACION", "opciones": ["ATRAGANTAMIENTO"] } ], "temperatura": null } },
+
+  { "id": "c06", "texto": "Tres días sin hacer deposición, está estreñida, le hemos puesto el supositorio.",
+    "jerga": ["supositorio"],
+    "esperado": { "areas": [ { "area": "HECES_DIURESIS", "opciones": ["ESTRENIMIENTO"] } ], "temperatura": null } },
+
+  { "id": "c07", "texto": "Tiene diarrea desde anoche, cuatro deposiciones líquidas, y treinta y seis con cinco de temperatura.",
+    "jerga": [],
+    "esperado": { "areas": [ { "area": "HECES_DIURESIS", "opciones": ["DIARREA"] } ], "temperatura": 36.5 } },
+
+  { "id": "c08", "texto": "Casi no ha orinado en todo el turno, el absorbente está seco.",
+    "jerga": ["absorbente"],
+    "esperado": { "areas": [ { "area": "HECES_DIURESIS", "opciones": ["DISMINUCION_DIURESIS"] } ], "temperatura": null } },
+
+  { "id": "c09", "texto": "No ha dormido nada, ha estado dando vueltas toda la noche.",
+    "jerga": [],
+    "esperado": { "areas": [ { "area": "SUENO", "opciones": ["INSOMNIO"] } ], "temperatura": null } },
+
+  { "id": "c10", "texto": "Hoy está muy somnolienta, cuesta despertarla.",
+    "jerga": [], "dudoso": true, "nota": "¿Solo sueño o también estado de conciencia?",
+    "esperado": { "areas": [ { "area": "SUENO", "opciones": ["SOMNOLENCIA"] } ], "temperatura": null } },
+
+  { "id": "c11", "texto": "Se ha caído en el baño al levantarse, sin golpe en la cabeza, y tiene un hematoma en el codo derecho.",
+    "jerga": [],
+    "esperado": { "areas": [ { "area": "INCIDENCIAS_CAIDAS", "opciones": [] }, { "area": "LESIONES_PIEL", "opciones": ["HEMATOMA"] } ], "temperatura": null } },
+
+  { "id": "c12", "texto": "Tiene una herida en la espinilla izquierda, se la ha hecho con la silla de ruedas, ya la hemos curado.",
+    "jerga": [],
+    "esperado": { "areas": [ { "area": "LESIONES_PIEL", "opciones": ["HERIDA"] } ], "temperatura": null } },
+
+  { "id": "c13", "texto": "UPP en el talón derecho, estadio dos, la he limpiado y le he puesto el apósito.",
+    "jerga": ["UPP", "estadio dos", "apósito"],
+    "esperado": { "areas": [ { "area": "LESIONES_PIEL", "opciones": ["UPP"] } ], "temperatura": null } },
+
+  { "id": "c14", "texto": "Está agresivo con los compañeros del comedor, ha gritado y ha intentado pegar a la auxiliar.",
+    "jerga": [],
+    "esperado": { "areas": [ { "area": "ANIMO_CONDUCTA", "opciones": ["AGRESIVIDAD"] } ], "temperatura": null } },
+
+  { "id": "c15", "texto": "Muy irritable hoy, todo le molesta, no quiere que la toquen para el aseo.",
+    "jerga": [],
+    "esperado": { "areas": [ { "area": "ANIMO_CONDUCTA", "opciones": ["IRRITABILIDAD"] } ], "temperatura": null } },
+
+  { "id": "c16", "texto": "Dolor de cabeza desde por la mañana, dice que le martillea.",
+    "jerga": [],
+    "esperado": { "areas": [ { "area": "DOLOR_MALESTAR", "opciones": ["CEFALEA"] } ], "temperatura": null } },
+
+  { "id": "c17", "texto": "Le duele la barriga, se la agarra, y no quiere comer.",
+    "jerga": [], "dudoso": true, "nota": "¿«No quiere comer» es rechazo de ingesta?",
+    "esperado": { "areas": [ { "area": "DOLOR_MALESTAR", "opciones": ["DOLOR_ABDOMINAL"] }, { "area": "ALIMENTACION_HIDRATACION", "opciones": ["RECHAZA_INGESTA"] } ], "temperatura": null } },
+
+  { "id": "c18", "texto": "Le duele el brazo derecho cuando se lo movilizamos para vestirla.",
+    "jerga": [],
+    "esperado": { "areas": [ { "area": "DOLOR_MALESTAR", "opciones": ["DOLOR_MMSS"] } ], "temperatura": null } },
+
+  { "id": "c19", "texto": "Camina con mucha dificultad, arrastra los pies, hoy ha ido con el andador y con ayuda.",
+    "jerga": ["andador"],
+    "esperado": { "areas": [ { "area": "MOVILIDAD_FUNCIONALIDAD", "opciones": ["CAMINA_CON_DIFICULTAD"] } ], "temperatura": null } },
+
+  { "id": "c20", "texto": "No puede caminar, hoy no se sostiene de pie, la hemos pasado a la silla con la grúa.",
+    "jerga": ["grúa"],
+    "esperado": { "areas": [ { "area": "MOVILIDAD_FUNCIONALIDAD", "opciones": ["INCAPACIDAD_CAMINAR"] } ], "temperatura": null } },
+
+  { "id": "c21", "texto": "Muy débil, flojita, no tiene fuerzas ni para sentarse.",
+    "jerga": [],
+    "esperado": { "areas": [ { "area": "MOVILIDAD_FUNCIONALIDAD", "opciones": ["DEBILIDAD_GENERALIZADA"] } ], "temperatura": null } },
+
+  { "id": "c22", "texto": "Hoy participa muy poco, no ha querido bajar a la actividad ni hablar con nadie.",
+    "jerga": [], "dudoso": true, "nota": "¿Participación social o también bajo ánimo?",
+    "esperado": { "areas": [ { "area": "PARTICIPACION_RELACION_SOCIAL", "opciones": [] } ], "temperatura": null } },
+
+  { "id": "c23", "texto": "Está desorientada, no sabe dónde está, no reconoce a su hija, esto es nuevo.",
+    "jerga": [], "dudoso": true, "nota": "¿Estado de conciencia o área aparte? Es un cambio de cognición.",
+    "esperado": { "areas": [ { "area": "ESTADO_CONCIENCIA", "opciones": [] } ], "temperatura": null } },
+
+  { "id": "c24", "texto": "Treinta y ocho y medio de temperatura, está muy caliente, he avisado a la enfermera.",
+    "jerga": [],
+    "esperado": { "areas": [], "temperatura": 38.5 } },
+
+  { "id": "c25", "texto": "Treinta y siete de temperatura y sin ningún cambio, ha hecho el día normal.",
+    "jerga": [], "dudoso": true, "nota": "Temperatura sin ningún cambio observado.",
+    "esperado": { "areas": [], "temperatura": 37 } },
+
+  { "id": "c26", "texto": "Buenos días, ¿me puedes pasar los guantes? Que se me han acabado.",
+    "jerga": [], "nota": "Negativo: no hay nada que registrar.",
+    "esperado": { "areas": [], "temperatura": null } },
+
+  { "id": "c27", "texto": "Ha tenido... perdón, no, no ha tenido diarrea, está estreñida, tres días sin deposición.",
+    "jerga": [], "nota": "Autocorrección: solo el estreñimiento.",
+    "esperado": { "areas": [ { "area": "HECES_DIURESIS", "opciones": ["ESTRENIMIENTO"] } ], "temperatura": null } },
+
+  { "id": "c28", "texto": "Cambio de pañal, sacro enrojecido, le puse crema barrera y almohadillas, cambios posturales cada dos horas, decúbito lateral derecho.",
+    "jerga": ["crema barrera", "almohadillas", "cambios posturales", "decúbito lateral"], "dudoso": true, "nota": "Piel enrojecida sin herida ni UPP: ¿lesión de piel sin opción?",
+    "esperado": { "areas": [ { "area": "LESIONES_PIEL", "opciones": [] } ], "temperatura": null } },
+
+  { "id": "c29", "texto": "Come con dieta triturada y se la ha tomado entera, buen día.",
+    "jerga": ["dieta triturada"], "nota": "Negativo: sin cambios.",
+    "esperado": { "areas": [], "temperatura": null } },
+
+  { "id": "c30", "texto": "Vengo del turno de noche: ha dormido fatal, insomnio total, dolor en las dos piernas, y al levantarla treinta y siete con dos.",
+    "jerga": [], "dudoso": true, "nota": "«Dolor en las dos piernas»: ¿MMII?",
+    "esperado": { "areas": [ { "area": "SUENO", "opciones": ["INSOMNIO"] }, { "area": "DOLOR_MALESTAR", "opciones": ["DOLOR_MMII"] } ], "temperatura": 37.2 } },
+
+  { "id": "c31", "texto": "Antonia ha tenido una caída sin consecuencias, la hemos revisado y sin heridas.",
+    "jerga": [], "noDebeAparecer": ["Antonia"], "nota": "El nombre (ficticio) no debe aparecer en la sugerencia.",
+    "esperado": { "areas": [ { "area": "INCIDENCIAS_CAIDAS", "opciones": [] } ], "temperatura": null } }
+]

@@ -48,3 +48,5 @@ Thumbs.db
 .DS_Store
 
 .fake
+# Audios generados para la prueba de dictado (se regeneran con `PruebaDictado generar`)
+tools/PruebaDictado/audios/
