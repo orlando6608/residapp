@@ -31,8 +31,13 @@ public class AuxiliarApplicationServiceTests
             new FindAssignedResident(listAssignedResidents),
             new ReadCurrentBaseline(evidenceProvider, session, baselines),
             new RegisterDailyClosure(scopes, directory, session, closures),
-            new RegisterDailyChange(scopes, directory, session, closures));
+            new RegisterDailyChange(scopes, directory, session, closures),
+            BuildDictation(scopes, directory, session, new FakeVoiceProvider()));
     }
+
+    private static SuggestDailyChangeFromVoice BuildDictation(
+        SqlProfileScopeDirectoryProvider scopes, SqlAssignedResidentDirectory directory, ISessionIdentityProvider session, FakeVoiceProvider provider) =>
+        new(scopes, directory, session, new SqlVoiceDictationAudit(TestDatabase.ConnectionFactory), provider, provider);
 
     [Fact]
     public async Task ListAssignedResidentsAsync_WithNonAuxiliarProfile_ReturnsAccessDenied()
