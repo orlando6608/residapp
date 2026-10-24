@@ -14,6 +14,37 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Logo y nombre propios de cada centro (2026-10-24, rama `logo-por-centro`, script `0068`; el siguiente libre es `0069`). Hecho y probado, sin subir; espera el visto bueno de CJ.**
+  Petición de Orlando: con sesión de un centro, la esquina superior izquierda, la cabecera de impresión y el PDF del informe de derivación muestran el **logo y el nombre del
+  centro** en vez de los de ResidApp. Decisiones de Orlando: Plataforma puede subir el logo (opcional) al dar de alta el centro y después lo cambia, junto con el nombre, **la
+  Administración del propio centro** («Datos del centro»); Plataforma no edita un centro ya creado (ADR 0006, con su nota); ResidApp pasa a una línea «Generado con ResidApp»
+  al pie del PDF y de la impresión; sin sesión, en Plataforma y en la página sin conexión sigue la marca de ResidApp; sin logo propio, el icono de ResidApp con el nombre del
+  centro; formato PNG o JPEG (nunca SVG: puede llevar scripts y el PDF no lo dibuja).
+  - **Datos:** `dbo.logos_centro` (un logo por centro, `VARBINARY(MAX)` de hasta 512 KB, tipo `PNG`/`JPEG`, quién y cuándo). Sin seguridad por filas, como `centros` (el alta
+    de Plataforma la escribe desde otro centro): figura en `Excepciones` de `CoberturaRlsTests` como «Provisión». El nombre sigue en `centros.nombre_visible`.
+  - **Dominio y casos de uso:** `CenterLogo.Normalize` reconoce PNG o JPEG por sus primeros bytes, rechaza más de 512 KB o 1024 px por lado y quita lo que no es imagen (EXIF,
+    texto, bloques extra: lo que podría llevar datos personales). `AdministracionCentroApplicationService` (renombrar, poner y quitar logo) con su auditoría
+    `CENTER_RENAME`, `CENTER_LOGO_SET` y `CENTER_LOGO_REMOVE` (sin la imagen), dadas de alta en `AdministrativeAudit` y en `AuditoriaModels`. `ICenterBrandingDirectory` lee la
+    marca: **el ámbito de la cookie solo vale si pertenece a la cuenta de la sesión** (la cookie no es de fiar, ADR 0008; la consulta SQL lo comprueba), y un ámbito de
+    Plataforma no tiene marca.
+  - **Pantallas:** `Administracion/DatosCentro` (tarjeta nueva en el inicio), `CentroLogoController.Ver` (404 sin motivo; `?v=` con la fecha del logo; `nosniff`), campo de
+    logo compartido `_LogoCentroCampo` (también en `Plataforma/NuevoCentro`) y reductor en `site.js` (512 px por el lado mayor, PNG con transparencia; si pesa más de lo que
+    admite el servidor, JPEG sobre blanco). `_Layout` y `_LayoutFamilia` leen **nombre y logo de SQL en cada página** (`LayoutBrandingResolver`; si falla la lectura sale
+    ResidApp), así un renombrado se ve al instante en todas las sesiones y no hay que reescribir la cookie `residapp_active_scope`: su `CenterName` ya solo lo usa el
+    resto de la app, no el encabezado. `.impresion-pie` repite «Generado con ResidApp» abajo de cada página impresa.
+  - **PDF:** `PdfBranding.AddHeader(section, branding)` (logo de hasta 4 cm de ancho y 1,4 cm de alto, con la proporción de la imagen) y `AddGeneratedBy` en el pie;
+    `ReferralSigning` lee el logo del centro con `ICenterBrandingDirectory` y el nombre del ámbito ya validado. Los informes ya firmados no se regeneran.
+  - **Descubierto al probar en el navegador:** la regla `a.navbar-brand { white-space: normal }` de `_Layout.cshtml.css` no llegaba a aplicarse (la marca salía con
+    `nowrap`); con «ResidApp» daba igual, con el nombre de un centro desbordaba 29 px a 375 px. Arreglado en `site.css`. `sw.js` sube a `residapp-shell-v4`.
+  - **Pruebas:** 444 unitarias, 521 de integración y 302 funcionales en verde (nuevas: `CenterLogoTests`, `LogoCentroTests`, `LogoCentroPageTests`, y casos en
+    `FirmaDerivacionNombreTests` y `ReferralReportPdfRendererTests`). La primera pasada de integración dio 22 fallos que no se repitieron en dos ejecuciones seguidas (con
+    una sola causa real, la de cobertura de seguridad por filas); no se explicó el origen de los otros 21, probablemente carga puntual de la instancia. En navegador real
+    (skill `probar-en-navegador`): claro, oscuro y 375 px sin desplazamiento lateral ni errores de consola; vista de impresión; los PDF abiertos en Chrome (logo ancho, sin
+    logo y de ResidApp).
+  - **Pendiente:** (1) **visto bueno de CJ**: cambia su decisión del 2026-10-02 (icono de ResidApp arriba en todo documento); guía de diseño §4 y la memoria
+    `project_identidad_marca_pdf` ya lo reflejan y dicen que falta; si lo rechaza, revertir. (2) Aplicar `0068` en Azure dev al desplegar y comprobar allí. (3) Sin probar a
+    mano: el portal familiar con logo y el PDF de un informe firmado de punta a punta por la app (solo por pruebas automáticas y con PDF de muestra). (4) Un logo de fondo
+    oscuro o muy ancho se ve sobre un recuadro blanco en la barra; si CJ prefiere otra cosa, es el estilo `.logo-centro` de `site.css`.
 - **Fuera el acceso de desarrollo: se entra solo como en un centro real (2026-10-24, rama `sin-acceso-desarrollo`, script `0067`; el siguiente libre es `0068`).**
   Decisiones de Orlando: una cuenta por perfil; un centro de pruebas (Los Almendros) para las guías 1 a 7 y otro (Los Olmos) para el aislamiento; bases recreadas desde
   cero; la clave de los documentos de CJ (`/AccesoCj`) se queda; dos juegos de cuentas sin credenciales compartidas (CJ y Orlando, este también para mis comprobaciones);

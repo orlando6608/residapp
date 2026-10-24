@@ -70,6 +70,8 @@ builder.Services.AddScoped<IProfessionalAccountDirectory, SqlProfessionalAccount
 builder.Services.AddScoped<IProfessionalAccountRepository, SqlProfessionalAccountRepository>();
 builder.Services.AddScoped<ICenterStructureDirectory, SqlCenterStructureDirectory>();
 builder.Services.AddScoped<ICenterStructureRepository, SqlCenterStructureRepository>();
+builder.Services.AddScoped<ICenterBrandingDirectory, SqlCenterBrandingDirectory>();
+builder.Services.AddScoped<ICenterBrandingRepository, SqlCenterBrandingRepository>();
 builder.Services.AddScoped<IPlatformCenterDirectory, SqlPlatformCenterDirectory>();
 builder.Services.AddScoped<IPlatformCenterRepository, SqlPlatformCenterRepository>();
 builder.Services.AddScoped<IAdministrativeAuditDirectory, SqlAdministrativeAuditDirectory>();
@@ -332,6 +334,7 @@ builder.Services.AddScoped<AdministrationOverviewApplicationService>();
 builder.Services.AddScoped<ICenterLayoutDirectory, SqlCenterLayoutDirectory>();
 builder.Services.AddScoped<ICenterLayoutRepository, SqlCenterLayoutRepository>();
 builder.Services.AddScoped<AdministracionEstructuraApplicationService>();
+builder.Services.AddScoped<AdministracionCentroApplicationService>();
 // Importación y exportación por ficheros (ADR 0010).
 builder.Services.AddSingleton<ITableFileReader, ExcelTableFileReader>();
 builder.Services.AddScoped<IExchangeDirectory, SqlExchangeDirectory>();

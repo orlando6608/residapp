@@ -17,7 +17,7 @@
             seguimiento médico, protocolo urgente, derivación a Urgencias, cierre médico y, con permiso, el estado basal.</li>
         <li><strong>Enfermería y Medicina:</strong> el historial y la línea temporal de cada residente, y la corrección o rectificación de
             la propia valoración.</li>
-        <li><strong>Administración:</strong> residentes y su ficha (traslados, bajas y suspensiones), familiares y autorizaciones, usuarios y permisos, estructura del
+        <li><strong>Administración:</strong> residentes y su ficha (traslados, bajas y suspensiones), familiares y autorizaciones, usuarios y permisos, nombre y logo del centro, estructura del
             centro (unidades, edificios, habitaciones y plazas), turnos, equipos y planificación, comunicados a la familia y auditoría.</li>
         <li><strong>Dirección Clínica:</strong> supervisión operativa por unidad, calidad de proceso y sus plazos, indicadores e informe de actividad, y la consulta
             auditada del basal.</li>
@@ -52,6 +52,7 @@
             <a class="list-group-item list-group-item-action" href="#familiares-administracion">Familiares, autorizaciones y contacto urgente (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#usuarios-administracion">Usuarios, perfiles y unidades (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#estructura-administracion">Estructura del centro: unidades, edificios, habitaciones y plazas (Administración)</a>
+            <a class="list-group-item list-group-item-action" href="#datos-centro-administracion">Nombre y logo del centro (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#intercambio-administracion">Importar y exportar datos (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#auditoria-administracion">Auditoría administrativa (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#turnos-equipos-administracion">Turnos, equipos y planificación (Administración)</a>
@@ -360,7 +361,7 @@
         confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados esta semana. Solo
         son cifras: no salen nombres ni texto de ningún comunicado ni de ninguna solicitud. Si no hay nada que atender, dice
         «No hay nada pendiente». El inicio de Administración tiene estas tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
-        ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»). En el alta, la unidad se elige en una lista con las unidades de tu
+        ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas»), <strong>Datos del centro</strong> (ver «Nombre y logo del centro») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»). En el alta, la unidad se elige en una lista con las unidades de tu
         ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves la foto (o sus iniciales, si no tiene), el nombre, la edad (calculada a partir
         de la fecha de nacimiento), el sexo documentado, la ubicación (unidad, habitación y plaza; si no tiene habitación, pone
         «Sin habitación asignada») y la fecha de alta. Puedes buscar por nombre, sin
@@ -738,6 +739,27 @@
     </p>
 </section>
 
+<section id="datos-centro-administracion" class="mb-4">
+    <h2 class="h5">
+        Nombre y logo del centro
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+    </h2>
+    <p>
+        <strong>Datos del centro</strong> (en el inicio de Administración) permite cambiar el <strong>nombre</strong> del centro y poner su
+        <strong>logo</strong>. El logo es una imagen PNG o JPEG (mejor PNG con fondo transparente): la app la reduce sola y no hace falta
+        prepararla. Si el fichero no es una imagen de ese tipo, o pesa demasiado una vez reducida, te lo indica y no guarda nada. El código
+        del centro no se puede cambiar. Con <strong>Quitar logo</strong> el centro vuelve a mostrar el icono de ResidApp.
+    </p>
+    <p>
+        El nombre y el logo aparecen en la <strong>esquina superior izquierda de todas las pantallas</strong> de quienes trabajan en ese centro
+        (también las familias en su portal), en el encabezado de lo que se imprime y en los <strong>PDF</strong> que genera la app, como el
+        informe de derivación. En esos documentos, ResidApp queda en una línea pequeña al pie: «Generado con ResidApp». El cambio de nombre se
+        ve enseguida en todas las sesiones abiertas. Los informes ya firmados conservan la cabecera con la que se firmaron. Las cuentas de
+        Plataforma, las pantallas de entrada y la página sin conexión siguen mostrando la marca de ResidApp. Todo cambio queda en la auditoría
+        (el logo no se guarda en ella).
+    </p>
+</section>
+
 <section id="plataforma-centros" class="mb-4">
     <h2 class="h5">
         Centros nuevos
@@ -747,7 +769,7 @@
         El perfil <strong>Plataforma</strong> es de quien opera ResidApp, no del personal de un centro. Su inicio tiene una tarjeta,
         <strong>Centros</strong>, que lista los centros (nombre, código, estado y número de unidades) y permite crear uno con
         <strong>Nuevo centro</strong>. El formulario pide el centro (código y nombre), su primera unidad (código y nombre) y su primer
-        administrador (identificador de acceso y nombre). Los códigos llevan de 2 a 64 caracteres: letras sin acentos, dígitos, «-» o
+        administrador (identificador de acceso y nombre). Opcionalmente puedes subir ya el <strong>logo del centro</strong> (PNG o JPEG); después lo cambia la Administración del propio centro, no Plataforma. Los códigos llevan de 2 a 64 caracteres: letras sin acentos, dígitos, «-» o
         «_». Se crea todo a la vez o nada: el centro, la unidad y la cuenta del administrador, que nace activa con el perfil
         Administración y la unidad concedida. Para que pueda entrar, abre el centro (<strong>Administraciones y unidades</strong>) y pulsa
         <strong>«Crear invitación de acceso o de recuperación»</strong> en su Administración: sale la hoja que hay que entregarle. Lo mismo
@@ -914,7 +936,7 @@
     </p>
     <p class="mb-0">
         "Imprimir / guardar como PDF" abre la impresión del navegador con el <strong>informe de actividad agregado</strong>:
-        arriba, el icono y el nombre de ResidApp; después, el centro, las unidades, el periodo y la fecha de generación,
+        arriba, el logo y el nombre del centro (o el icono y el nombre de ResidApp, si no tiene logo propio o eres de Plataforma) y abajo «Generado con ResidApp»; entre medias, las unidades, el periodo y la fecha de generación,
         sin el menú ni el formulario.
     </p>
 </section>
@@ -1377,8 +1399,8 @@
         que Administración puso a tu cuenta, tu perfil y tu identificador de acceso (si tu cuenta no tiene nombre, solo
         el perfil y el identificador). Si el protocolo cambió
         mientras revisabas (por ejemplo, otro profesional registró algo), la app te enseña la vista previa
-        actualizada para que la revises antes de firmar. Cada página del PDF lleva arriba el icono y el nombre de
-        ResidApp. Los informes firmados antes de este cambio se conservan tal como se firmaron, sin ese encabezado.
+        actualizada para que la revises antes de firmar. Cada página del PDF lleva arriba el logo y el nombre de tu centro (o, si no tiene logo propio, el icono de ResidApp) y,
+        al pie, «Generado con ResidApp». Los informes firmados antes de este cambio se conservan tal como se firmaron.
         El PDF firmado no se puede modificar y se descarga con
         <strong>Descargar el informe en PDF</strong> desde el protocolo o el detalle del evento, en los dos
         perfiles. Cada descarga queda registrada.

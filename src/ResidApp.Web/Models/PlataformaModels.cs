@@ -19,6 +19,9 @@ public sealed class NewCenterFormModel
     [Display(Name = "Nombre del centro")]
     public string? NombreCentro { get; set; }
 
+    /// <summary>El logo del centro, opcional: después lo cambia su Administración.</summary>
+    public IFormFile? Logo { get; set; }
+
     [Required(ErrorMessage = "Escribe el código de la primera unidad.")]
     [StringLength(CenterUnit.MaxCodeLength, MinimumLength = CenterUnit.MinCodeLength, ErrorMessage = "El código de la unidad lleva entre {2} y {1} caracteres.")]
     [Display(Name = "Código de la primera unidad")]

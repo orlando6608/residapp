@@ -117,7 +117,7 @@ public sealed class SqlCenterStructureRepository(SqlConnectionFactory connection
         transaction.Commit();
     }
 
-    private static Task LockCenterAsync(SqlConnection connection, SqlTransaction transaction, AccountAdministrationAccess access, CancellationToken ct) =>
+    internal static Task LockCenterAsync(SqlConnection connection, SqlTransaction transaction, AccountAdministrationAccess access, CancellationToken ct) =>
         connection.ExecuteScalarAsync<Guid>(new CommandDefinition(
             "SELECT id FROM dbo.centros WITH (UPDLOCK, ROWLOCK) WHERE id = @CenterId",
             new { CenterId = access.CenterId.Value }, transaction, cancellationToken: ct));

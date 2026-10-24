@@ -1,0 +1,73 @@
+@using ResidApp.Web.Models
+@model DatosCentroViewModel
+@{
+    ViewData["Title"] = "Datos del centro";
+    var logoUrl = Model.Branding?.LogoUpdatedAt is { } actualizado
+        ? Url.Action("Ver", "CentroLogo", new { v = actualizado.UtcTicks })
+        : null;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Datos del centro</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Datos del centro</h1>
+<p class="text-muted">
+    El nombre y el logo del centro salen en la esquina superior izquierda de todas las pantallas de quienes trabajan en él, en la cabecera de lo que se
+    imprime y en los PDF que genera la app. El código del centro no se puede cambiar. Sin logo propio se muestra el icono de ResidApp.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (Model.Branding is null)
+{
+    <div class="alert alert-warning" role="status">No se pueden mostrar los datos del centro.</div>
+}
+else
+{
+    <section class="card mb-3" aria-labelledby="nombre-centro-titulo">
+        <div class="card-body">
+            <h2 class="h5 card-title" id="nombre-centro-titulo">Nombre</h2>
+            <form asp-action="DatosCentro" method="post">
+                <div class="mb-3">
+                    <label asp-for="Form.Nombre" class="form-label"></label>
+                    <input asp-for="Form.Nombre" class="form-control form-control-lg" autocomplete="off" />
+                    <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">Guardar nombre</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="card mb-3" aria-labelledby="logo-centro-titulo">
+        <div class="card-body">
+            <h2 class="h5 card-title" id="logo-centro-titulo">Logo</h2>
+            @if (TempData["LogoError"] is string logoError)
+            {
+                <div class="alert alert-danger" role="alert">@logoError</div>
+            }
+            <form asp-action="LogoCentro" method="post" enctype="multipart/form-data">
+                <partial name="_LogoCentroCampo"
+                         model='new LogoCentroCampoViewModel("Form.Logo", "logo-centro-fichero", logoUrl is null ? "Elige el logo" : "Elige un logo nuevo", logoUrl)' />
+                <button type="submit" class="btn btn-outline-primary btn-lg">Guardar logo</button>
+            </form>
+            @if (logoUrl is not null)
+            {
+                <form asp-action="QuitarLogoCentro" method="post" class="mt-2">
+                    <button type="submit" class="btn btn-outline-danger btn-lg">Quitar logo</button>
+                </form>
+            }
+        </div>
+    </section>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

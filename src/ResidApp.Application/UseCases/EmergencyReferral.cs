@@ -52,7 +52,7 @@ internal static class ReferralSigning
 {
     public static async Task<int> SignAsync(
         IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, IChangeInboxDirectory directory,
-        IReferralReportPdfRenderer renderer, SystemProfile profile, SignReferralReportCommand command,
+        IReferralReportPdfRenderer renderer, ICenterBrandingDirectory branding, SystemProfile profile, SignReferralReportCommand command,
         Func<SignReferralReportInput, Task<int>> persist, CancellationToken ct)
     {
         var report = new ReferralReportInput(command.Motivo, command.InformacionAdicional, command.Comunicaciones);
@@ -70,7 +70,10 @@ internal static class ReferralSigning
         }
 
         var signedAt = DateTimeOffset.UtcNow;
-        var pdf = renderer.Render(detail.ResidentDisplayName, content, new ReferralReportSignature(profile, subject, signedAt, hash, scope.AccountDisplayName));
+        // El PDF lleva el logo y el nombre del centro de quien firma (script 0068); el centro ya está comprobado por el ámbito.
+        var pdf = renderer.Render(
+            detail.ResidentDisplayName, content, new ReferralReportSignature(profile, subject, signedAt, hash, scope.AccountDisplayName),
+            new ReferralReportBranding(scope.CenterName, await branding.ReadLogoAsync(command.CentroId, ct)));
         return await persist(new SignReferralReportInput(
             scope.AccountId, command.CentroId, command.EventoId, command.Revision, command.OperacionId, report, content, hash,
             pdf, Convert.ToHexStringLower(SHA256.HashData(pdf)), signedAt));
@@ -84,22 +87,22 @@ internal static class ReferralSigning
 /// sigue en el protocolo.</summary>
 public sealed class SignReferralReport(
     IProfileScopeDirectoryProvider scopes, IChangeInboxDirectory directory, ISessionIdentityProvider session,
-    INursingAssessmentRepository repository, IReferralReportPdfRenderer renderer)
+    INursingAssessmentRepository repository, IReferralReportPdfRenderer renderer, ICenterBrandingDirectory branding)
 {
     public Task<ApplicationResult<int>> ExecuteAsync(SignReferralReportCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(() => ReferralSigning.SignAsync(
-            scopes, session, directory, renderer, SystemProfile.Enfermeria, command,
+            scopes, session, directory, renderer, branding, SystemProfile.Enfermeria, command,
             input => repository.SignReferralReportAsync(input, ct), ct));
 }
 
 /// <summary>MED-14: firmar el informe de derivación desde el protocolo urgente de Medicina.</summary>
 public sealed class SignMedicalReferralReport(
     IProfileScopeDirectoryProvider scopes, IChangeInboxDirectory directory, ISessionIdentityProvider session,
-    IMedicalAssessmentRepository repository, IReferralReportPdfRenderer renderer)
+    IMedicalAssessmentRepository repository, IReferralReportPdfRenderer renderer, ICenterBrandingDirectory branding)
 {
     public Task<ApplicationResult<int>> ExecuteAsync(SignReferralReportCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(() => ReferralSigning.SignAsync(
-            scopes, session, directory, renderer, SystemProfile.Medicina, command,
+            scopes, session, directory, renderer, branding, SystemProfile.Medicina, command,
             input => repository.SignReferralReportAsync(input, ct), ct));
 }
 

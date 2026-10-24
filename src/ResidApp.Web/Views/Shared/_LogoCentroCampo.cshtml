@@ -1,0 +1,12 @@
+@model ResidApp.Web.Models.LogoCentroCampoViewModel
+@* Campo para elegir el logo del centro (script 0068). site.js lo reduce a 512 px y lo envía como PNG (o JPEG si pesara demasiado) y muestra la
+   vista previa; sin JavaScript el servidor solo acepta un PNG o un JPEG de 512 KB y 1024 píxeles por lado como máximo. *@
+<div class="mb-3">
+    <label class="form-label" for="@Model.Id">@Model.Label</label>
+    <input class="form-control form-control-lg" type="file" accept="image/png,image/jpeg" name="@Model.Name" id="@Model.Id"
+           data-logo-centro data-logo-vista="@(Model.Id)-vista" aria-describedby="@(Model.Id)-ayuda" />
+    <div id="@(Model.Id)-ayuda" class="form-text">
+        Imagen PNG o JPEG (mejor PNG con fondo transparente). La app la reduce sola. Sale en la esquina superior izquierda de las pantallas y arriba de los PDF.
+    </div>
+    <img id="@(Model.Id)-vista" class="logo-centro-vista mt-2" alt="Vista previa del logo" src="@Model.CurrentUrl" hidden="@(Model.CurrentUrl is null)" />
+</div>

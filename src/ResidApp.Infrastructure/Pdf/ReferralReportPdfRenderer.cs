@@ -23,26 +23,28 @@ public sealed class ReferralReportPdfRenderer : IReferralReportPdfRenderer
 
     static ReferralReportPdfRenderer() => GlobalFontSettings.FontResolver = new EmbeddedFontResolver();
 
-    public byte[] Render(string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature)
+    public byte[] Render(
+        string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature, ReferralReportBranding? branding = null)
     {
         lock (RenderLock)
         {
-            return RenderDocument(residentDisplayName, content, signature);
+            return RenderDocument(residentDisplayName, content, signature, branding);
         }
     }
 
-    private static byte[] RenderDocument(string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature)
+    private static byte[] RenderDocument(
+        string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature, ReferralReportBranding? branding)
     {
         var document = new Document();
         document.Info.Title = "Informe de derivación a Urgencias";
-        document.Info.Author = "ResidApp";
+        document.Info.Author = branding?.CenterName ?? "ResidApp";
         var normal = document.Styles[StyleNames.Normal]!;
         normal.Font.Name = FontFamily;
         normal.Font.Size = 10;
 
         var section = document.AddSection();
         section.PageSetup = document.DefaultPageSetup.Clone();
-        PdfBranding.AddHeader(section);
+        PdfBranding.AddHeader(section, branding);
 
         var footer = section.Footers.Primary.AddParagraph();
         footer.Format.Font.Size = 8;
@@ -50,6 +52,7 @@ public sealed class ReferralReportPdfRenderer : IReferralReportPdfRenderer
         footer.AddPageField();
         footer.AddText(" de ");
         footer.AddNumPagesField();
+        PdfBranding.AddGeneratedBy(footer, branding);
 
         var title = section.AddParagraph("Informe de derivación a Urgencias");
         title.Format.Font.Size = 16;
