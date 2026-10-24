@@ -42,9 +42,19 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     (skill `probar-en-navegador`): claro, oscuro y 375 px sin desplazamiento lateral ni errores de consola; vista de impresión; los PDF abiertos en Chrome (logo ancho, sin
     logo y de ResidApp).
   - **Pendiente:** (1) **visto bueno de CJ**: cambia su decisión del 2026-10-02 (icono de ResidApp arriba en todo documento); guía de diseño §4 y la memoria
-    `project_identidad_marca_pdf` ya lo reflejan y dicen que falta; si lo rechaza, revertir. (2) Aplicar `0068` en Azure dev al desplegar y comprobar allí. (3) Sin probar a
-    mano: el portal familiar con logo y el PDF de un informe firmado de punta a punta por la app (solo por pruebas automáticas y con PDF de muestra). (4) Un logo de fondo
-    oscuro o muy ancho se ve sobre un recuadro blanco en la barra; si CJ prefiere otra cosa, es el estilo `.logo-centro` de `site.css`.
+    `project_identidad_marca_pdf` ya lo reflejan y dicen que falta; si lo rechaza, revertir. (2) ~~Aplicar `0068` en Azure dev y comprobar allí~~: hecho al desplegar el PR #62 (el trabajo `deploy`
+    aplicó `0068_logo_centro.sql`). (3) ~~Probar a mano el portal familiar con logo y el PDF de punta a punta~~: hecho el 2026-10-24 en Azure dev con las cuentas de Orlando (ver
+    abajo). (4) Un logo de fondo oscuro o muy ancho se ve sobre un recuadro blanco en la barra; si CJ prefiere otra cosa, es el estilo `.logo-centro` de `site.css`.
+  - **Probado en Azure dev el 2026-10-24 (cuentas `*-orlando-*`):** Los Almendros sin logo (icono de ResidApp con su nombre; `/CentroLogo/Ver` da 404); Plataforma con la marca de
+    ResidApp y el campo del logo en «Nuevo centro»; la Administración de Almendros pone el logo y lo ven Enfermería, Dirección (375 px) y el portal familiar (`/Familia`, no
+    `/PortalFamiliar`; claro y móvil oscuro, «Residencia Los Almendros (ficticia) · Familias»), sin desplazamiento lateral ni errores de consola. **Aislamiento:** Los Olmos ve su
+    nombre con el icono de ResidApp y su propio `/CentroLogo/Ver` da 404 mientras Almendros tiene logo. **PDF:** con logo propio en Los Olmos, un evento de Jaime Ortega
+    derivado y firmado por Enfermería da un PDF con el logo y «Residencia Los Olmos (ficticia)» arriba y «Generado con ResidApp · Plataforma Asistencial Geriátrica» al pie.
+    Los dos logos se quitaron al terminar. **Rastro que queda (no se puede borrar, la auditoría es inmutable):** en Los Olmos, Jaime Ortega tiene un evento de prueba («Disnea
+    brusca en reposo (ficticio, prueba del logo)») derivado a Urgencias con su informe firmado y el protocolo aún abierto: tenlo en cuenta en la guía 8 (aislamiento).
+  - **Corregido tras esas pruebas (rama `portal-familiar-impresion`):** `_LayoutFamilia` no tenía bloque de impresión (nunca lo tuvo), contra la sección 4 de la guía de diseño: una
+    familia que imprimía una pantalla del portal obtenía una hoja sin marca. Ahora lleva `.impresion-pagina`, `.impresion-marca` (logo y nombre del centro, o ResidApp si no hay
+    marca) y `.impresion-pie` («Generado con ResidApp»), igual que `_Layout`; el Manual lo dice. La prueba `Familia_DaAcceso…ConLaAppEntera` lo comprueba y falla sin el arreglo.
 - **Fuera el acceso de desarrollo: se entra solo como en un centro real (2026-10-24, rama `sin-acceso-desarrollo`, script `0067`; el siguiente libre es `0068`).**
   Decisiones de Orlando: una cuenta por perfil; un centro de pruebas (Los Almendros) para las guías 1 a 7 y otro (Los Olmos) para el aislamiento; bases recreadas desde
   cero; la clave de los documentos de CJ (`/AccesoCj`) se queda; dos juegos de cuentas sin credenciales compartidas (CJ y Orlando, este también para mis comprobaciones);

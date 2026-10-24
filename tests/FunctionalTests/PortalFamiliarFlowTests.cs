@@ -158,6 +158,14 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.Contains("No tienes ninguna autorización activa", pending);
         Assert.Contains("Autorización activada.", activated);
         Assert.Contains("Residente Portal Funcional", home);
+        // Al imprimir, el portal lleva la marca del centro arriba y ResidApp al pie, como el resto de la app (guía de diseño, sección 4).
+        var centerName = WebUtility.HtmlDecode(Regex.Replace(
+            Regex.Match(home, "<a class=\"navbar-brand[^>]*>(.*?)</a>", RegexOptions.Singleline).Groups[1].Value, "<[^>]+>", "")).Replace("· Familias", "").Trim();
+        var printHeader = Regex.Match(home, "impresion-marca.*?impresion-pie", RegexOptions.Singleline).Value;
+        Assert.NotEmpty(centerName);
+        Assert.Contains("impresion-pagina", home);
+        Assert.Contains($"<strong>{WebUtility.HtmlEncode(centerName)}</strong>", printHeader);
+        Assert.Contains("Generado con ResidApp", home);
         Assert.Contains("Hoy ha merendado bien y ha paseado por el jardín.", list);
         Assert.Contains("Equipo asistencial del centro", list);
         Assert.DoesNotContain("Esto aún no se ha publicado.", list);

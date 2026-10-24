@@ -59,10 +59,40 @@
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container impresion-pagina">
+        @* Identidad de marca en toda impresión o PDF del navegador, repetida arriba de cada página (site.css,
+           guia-diseno-sistema-visual.md, sección 4): como en _Layout, el logo y el nombre del centro, con ResidApp al pie; sin marca de
+           centro, la de ResidApp. Es un div y no un header para que las páginas que ocultan header al imprimir no lo quiten. *@
+        <div class="d-none impresion-marca">
+            <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+                @if (brandingLayout is null)
+                {
+                    <img src="~/images/logo.svg" alt="ResidApp" style="height: 1.4cm; width: 1.4cm" />
+                    <span class="text-muted"><strong>ResidApp</strong> · Plataforma Asistencial Geriátrica</span>
+                }
+                else
+                {
+                    if (brandingLayout.LogoUrl is { } logoImpresionLayout)
+                    {
+                        <img class="logo-centro" src="@logoImpresionLayout" alt="" style="height: 1.4cm; width: auto; max-width: 5cm" />
+                    }
+                    else
+                    {
+                        <img src="~/images/logo.svg" alt="" style="height: 1.4cm; width: 1.4cm" />
+                    }
+                    <span class="text-muted"><strong>@brandingLayout.Name</strong></span>
+                }
+            </div>
+        </div>
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
+        @if (brandingLayout is not null)
+        {
+            <div class="d-none impresion-pie">
+                <div class="border-top pt-2 mt-3 small text-muted">Generado con ResidApp · Plataforma Asistencial Geriátrica</div>
+            </div>
+        }
     </div>
     <footer class="border-top footer text-muted">
         <div class="container d-flex flex-wrap column-gap-3 row-gap-1">
