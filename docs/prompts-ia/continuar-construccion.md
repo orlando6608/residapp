@@ -47,9 +47,12 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
       fuera `DevAuth__Habilitado` y `DevAuth__Clave`. Comprobado: `/DevAuth/Login` da 404 y la app consulta la base. Mientras no se haga el merge, en Azure corre el
       código de `main` (con el inicio de sesión real) sobre la base nueva; el despliegue del merge no reaplicará nada.
     - El `sqlcmd` de Windows no admite `:` en `-v`: para crear el usuario se usó un fichero SQL temporal, borrado después.
-  - **Pendiente (con confirmación de Orlando):** push de la rama y PR; en Azure, la invitación de `plataforma-orlando` (`invitar_cuenta.sql` con el administrador),
-    `alta-juego.js` y `preparar-almendros.js`; emitir las invitaciones del juego de CJ (la de `plataforma-cj` con el script; las demás, desde Plataforma y las
-    Administraciones de Orlando) y entregárselas. En la instancia local solo quedan `ResidApp` (la de la app) y `ResidAppPruebas` (la de las pruebas); las antiguas se borraron el 2026-10-24.
+  - **Merge (PR #60) y altas en Azure, 2026-10-24:** el despliegue dio el esquema por aplicado y la semilla no cambió nada (tras desplegar, la app tarda unos 45 s
+    en arrancar y mientras tanto da 500). Contraseña de `residappadmin` cambiada otra vez (solo en el secreto de GitHub); invitación de `plataforma-orlando` con
+    `invitar_cuenta.sql`; `alta-juego.js` dio de alta las 10 cuentas del juego de Orlando (credenciales en `~/.residapp/credenciales-app-residapp-dev.azurewebsites.net.json`)
+    y `preparar-almendros.js` dejó hechos los basales de Antonio y Pilar, la foto de Manuel y el historial de Pilar (una segunda pasada no repite nada).
+  - **Pendiente:** emitir las invitaciones del juego de CJ (la de `plataforma-cj` con el script; las demás, desde Plataforma y las Administraciones de Orlando) y
+    entregárselas. **Espera a que Orlando entienda cómo funciona**: no emitirlas sin que lo pida. En la instancia local solo quedan `ResidApp` (la de la app) y `ResidAppPruebas` (la de las pruebas); las antiguas se borraron el 2026-10-24.
 - **Dossier para el DPO sobre el dictado (2026-10-23, rama `dossier-dpo-dictado`, solo documentación):** `docs/seguridad/dictado-por-voz-dossier-dpo.md`, escrito para la persona
   responsable de protección de datos (no para ingeniería). Responde a «¿se puede evitar el contrato de encargado y la EIPD?»: **no**, porque la voz y lo que se dice del residente
   son datos personales y de salud aunque no lleven nombre; lo que sí se puede es aligerar el trabajo. Lo comprobado en páginas públicas de Mistral (resumen, **sin leer el contrato
