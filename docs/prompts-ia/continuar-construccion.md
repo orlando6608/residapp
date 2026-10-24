@@ -36,11 +36,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Documentación al día:** Manual («Cuentas de prueba», sin el acceso de desarrollo), `acceso-y-sesion.html`, `flujo-de-trabajo.html`, README, ADR 0006 y 0007,
     roadmap, backlog, las 8 guías de CJ y sus flujos, `pruebas.html` («Tus cuentas») y su README. Las guías **no** suben `data-version`. Los registros antiguos de este
     fichero y de `docs/tareas/` siguen nombrando las cuentas `dev-*`: son historia.
-  - **Pendiente (cada paso con confirmación de Orlando):** recrear `ACER-ORLANDO/ResidApp` con la semilla; recrear la base de Azure dev justo antes del merge (leer antes su
-    configuración con `az sql db show`) y su usuario limitado; quitar los ajustes `DevAuth__Habilitado` y `DevAuth__Clave` de la Web App; dar de alta el juego de Orlando
-    (`invitar_cuenta.sql` para `plataforma-orlando` + `alta-juego.js`) y `preparar-almendros.js`; emitir las invitaciones del juego de CJ (la de `plataforma-cj` con el
-    script; las demás, desde Plataforma y las Administraciones de Orlando) y entregárselas. Quedan además en la instancia local las bases `ResidAppCiFunc` y
-    `ResidAppCiRepro` de pruebas antiguas, sin tocar.
+  - **Hecho el 2026-10-24, con permiso de Orlando:**
+    - **Local:** copia en `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-recrear-20261024.bak`; `ResidApp` recreada con los
+      68 ficheros de esquema y la semilla; el juego de Orlando dado de alta con `alta-juego.js` (credenciales en `~/.residapp/credenciales-localhost_5203.json`) y Los
+      Almendros preparado.
+    - **Azure dev:** contraseña nueva de `residappadmin` (aleatoria, solo en el secreto `AZURE_SQL_ADMIN_PASSWORD` de GitHub; si hace falta, se vuelve a cambiar con
+      `az sql server update --admin-password` y `gh secret set`); base borrada y creada igual (Basic, 5 DTU, 1 GB, `SQL_Latin1_General_CP1_CI_AS`, copias por zona; la
+      borrada se puede restaurar durante la retención); esquema hasta `0067` y semilla aplicados desde esta rama; `residapp_app` con contraseña **nueva** (sin «app» en
+      ella: Azure lo rechaza) en la cadena de conexión `ResidApp` **y** en el ajuste `ConnectionStrings__ResidApp`, que estaban duplicados y hay que mantener iguales;
+      fuera `DevAuth__Habilitado` y `DevAuth__Clave`. Comprobado: `/DevAuth/Login` da 404 y la app consulta la base. Mientras no se haga el merge, en Azure corre el
+      código de `main` (con el inicio de sesión real) sobre la base nueva; el despliegue del merge no reaplicará nada.
+    - El `sqlcmd` de Windows no admite `:` en `-v`: para crear el usuario se usó un fichero SQL temporal, borrado después.
+  - **Pendiente (con confirmación de Orlando):** push de la rama y PR; en Azure, la invitación de `plataforma-orlando` (`invitar_cuenta.sql` con el administrador),
+    `alta-juego.js` y `preparar-almendros.js`; emitir las invitaciones del juego de CJ (la de `plataforma-cj` con el script; las demás, desde Plataforma y las
+    Administraciones de Orlando) y entregárselas. Quedan en la instancia local las bases `ResidAppCiFunc` y `ResidAppCiRepro` de pruebas antiguas, sin tocar.
 - **Dossier para el DPO sobre el dictado (2026-10-23, rama `dossier-dpo-dictado`, solo documentación):** `docs/seguridad/dictado-por-voz-dossier-dpo.md`, escrito para la persona
   responsable de protección de datos (no para ingeniería). Responde a «¿se puede evitar el contrato de encargado y la EIPD?»: **no**, porque la voz y lo que se dice del residente
   son datos personales y de salud aunque no lleven nombre; lo que sí se puede es aligerar el trabajo. Lo comprobado en páginas públicas de Mistral (resumen, **sin leer el contrato
