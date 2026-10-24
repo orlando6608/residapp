@@ -322,9 +322,11 @@
         entorno, pero no afecta a ningún residente real. Si algo sale mal, no pasa nada: apunta lo que viste en el comentario de la
         prueba.
       </p>
-      <p><strong>Cómo se entra.</strong> Esto no es un acceso real: escribes el nombre de una cuenta de prueba en el campo «Usuario» y
-        pulsas «Entrar». Para cambiar de cuenta, usa «Cambiar de identidad» en el menú de tu perfil (arriba a la derecha) o vuelve a
-        <code>/DevAuth/Login</code>. Si una cuenta tiene varios ámbitos, la aplicación te deja elegir cuál usar.</p>
+      <p><strong>Cómo se entra.</strong> Como en una residencia de verdad: en «Iniciar sesión» escribes el usuario de la cuenta y su
+        contraseña y, después, el código de 6 cifras de tu aplicación de autenticación, o pulsas «Entrar con passkey». La primera vez, cada
+        cuenta se da de alta con la invitación que te entrega Orlando (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
+        de cuenta, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra. Si una cuenta tiene varios ámbitos, la
+        aplicación te deja elegir cuál usar.</p>
       <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
       <p><strong>Si te pierdes</strong>, el <a href="pruebas-4-direccion-flujo.html">flujo de la guía 4</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
     </div>
@@ -333,8 +335,8 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
-        <tr><td><code>dev-integrado-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad, calidad de proceso y consulta auditada del basal; puede fijar los rangos de referencia y los plazos de los hitos del proceso, y publicar, corregir o retirar comunicados a la familia.</td></tr>
-        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
+        <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad, calidad de proceso y consulta auditada del basal; puede fijar los rangos de referencia y los plazos de los hitos del proceso, y publicar, corregir o retirar comunicados a la familia.</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
       </tbody>
     </table></div>
 
@@ -342,16 +344,16 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
       <tbody>
-        <tr><td>Residente Prueba CJ Uno (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
-        <tr><td>Prueba Activación RLS Azure (ficticio)</td><td>Ya tiene historial: seis eventos cerrados, dos informes de derivación firmados y un basal firmado. Úsalo solo para mirar (historial, línea temporal, PDF), no para pruebas nuevas.</td></tr>
-        <tr><td>Residente Integrado Uno (ficticio)</td><td>NO LO TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
+        <tr><td>Antonio García (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
+        <tr><td>Pilar Moreno (ficticia)</td><td>Ya tiene historial: dos eventos cerrados (uno, una derivación a Urgencias con su informe firmado) y un basal firmado. Úsala solo para mirar (historial, línea temporal, PDF), no para pruebas nuevas.</td></tr>
+        <tr><td>Lucía Fernández (ficticia)</td><td>NO LA TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
       </tbody>
     </table></div>
     <div class="stack prose">
       <p class="context">
-        Verás también residentes y eventos de pruebas anteriores («Prueba familiares azure», «Prueba selector unidad azure»,
-        «Prueba Corrección Identidad azure», y algunos eventos abiertos de Integrado Uno y Dos). Ignóralos, salvo que una prueba te
-        mande a ellos. Los eventos no se pueden borrar: cada prueba que hagas dejará sus datos.
+        Verás también lo que hayan dejado tus pruebas anteriores y las de Orlando, que trabaja en el mismo centro con sus propias
+        cuentas (las que llevan «-orlando» en el nombre). Ignóralo, salvo que una prueba te mande a ello. Los eventos no se pueden borrar:
+        cada prueba que hagas dejará sus datos.
       </p>
     </div>
 
@@ -362,7 +364,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (3 de 9).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 9).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">Mejor después de las <a href="pruebas-1-auxiliar-enfermeria.html">guías 1</a> y <a href="pruebas-2-medicina-indicaciones.html">2</a>: Dirección necesita episodios abiertos y derivaciones a Urgencias para tener algo que supervisar (ya hay algunos de pruebas anteriores).</p>
@@ -378,7 +380,7 @@
   <section class="tema" id="tema-1">
     <h2>Dirección Clínica</h2>
     <div class="stack prose">
-      <p>Entra con <code>dev-integrado-direccion</code>. Dirección supervisa, no valora ni indica: ve el estado y los hitos de los episodios, nunca las observaciones ni las valoraciones. Para estas pruebas tiene que haber episodios abiertos; hay algunos de pruebas anteriores, y si cerraste todo en las guías 1 y 2, deja uno abierto.</p>
+      <p>Entra con <code>almendros-direccion</code>. Dirección supervisa, no valora ni indica: ve el estado y los hitos de los episodios, nunca las observaciones ni las valoraciones. Para estas pruebas tiene que haber episodios abiertos; hay algunos de pruebas anteriores, y si cerraste todo en las guías 1 y 2, deja uno abierto.</p>
       <p class="why">Referencia: docs/flujos-clinicos/supervision-clinica-direccion.md (DIR-01 a DIR-16)</p>
     </div>
     <div class="qs">
@@ -453,7 +455,7 @@
           <li>Abre «Consulta auditada del basal». Elige un residente de la lista y «Basal vigente». En «Finalidad del acceso» elige una (por ejemplo, «Revisión de continuidad asistencial»), escribe una justificación breve y pulsa «Consultar». Prueba antes a consultar sin finalidad o sin justificación.</li>
           <li>Vuelve y repite con «Historial de basal» para el mismo residente.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Aparece el basal en solo lectura (prueba con «Residente Prueba CJ Uno», que lo tiene firmado, y con uno sin basal: te dice que no hay). Sin finalidad o sin justificación no se consulta. La finalidad y la justificación valen una hora para ese residente: al repetir, no te las vuelve a pedir. Cada consulta que muestra un basal queda registrada de forma obligatoria con su finalidad; la pantalla de auditoría de Administración todavía no la muestra.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Aparece el basal en solo lectura (prueba con «Antonio García», que lo tiene firmado, y con uno sin basal: te dice que no hay). Sin finalidad o sin justificación no se consulta. La finalidad y la justificación valen una hora para ese residente: al repetir, no te las vuelve a pedir. Cada consulta que muestra un basal queda registrada de forma obligatoria con su finalidad; la pantalla de auditoría de Administración todavía no la muestra.</div>
         <p class="context">Tu opinión: ¿debería verla Administración en su auditoría (quién consultó el basal de quién y para qué)?</p>
         <fieldset class="choices" aria-labelledby="t-5">
           <label class="choice"><input type="radio" name="r-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
@@ -466,9 +468,9 @@
 
       <article class="q" data-q="6">
         <div class="q-head"><span class="n">6</span><h3 class="q-title" id="t-6">Consulta auditada del resto del expediente</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Prueba Activación RLS Azure</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Pilar Moreno</strong></span></div>
         <ol class="pasos">
-          <li>En «Consulta auditada del basal» elige «Prueba Activación RLS Azure (ficticio)», que tiene historial e informes, y en el tipo de recurso, «Línea temporal». Declara la finalidad y la justificación si te las pide, y pulsa «Consultar».</li>
+          <li>En «Consulta auditada del basal» elige «Pilar Moreno (ficticia)», que tiene historial y un informe de derivación, y en el tipo de recurso, «Línea temporal». Declara la finalidad y la justificación si te las pide, y pulsa «Consultar».</li>
           <li>Vuelve y repite, con el mismo residente, con «Historial de eventos cerrados», «Correcciones y rectificaciones», «Trazabilidad clínica» e «Informes de derivación firmados». En los informes, abre un PDF.</li>
           <li>Cambia a otro residente y consulta cualquiera de ellos.</li>
         </ol>
@@ -521,7 +523,7 @@
           <li>Abre «Plazos de los hitos del proceso» desde la pantalla de Inicio, o pulsa «Cambiar los plazos del centro» en «Calidad de proceso». Cambia el plazo de la valoración de Enfermería (por ejemplo, 240 minutos) y pulsa «Guardar».</li>
           <li>Pulsa «Ver los plazos de CJ» y «Guardar» para volver a los de partida. Mira el historial de cambios.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Se escriben en minutos (1 h = 60, 8 h = 480), con un plazo para el evento normal y otro para el prioritario; vacío significa que ese plazo no se mide. Los valores de partida son los tuyos. Cada cambio queda en el historial de la pantalla y en la auditoría; los plazos solo miden y avisan, no cambian ninguna categoría clínica. Solo la Dirección con el permiso puede hacerlo (dev-integrado-direccion lo tiene).</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Se escriben en minutos (1 h = 60, 8 h = 480), con un plazo para el evento normal y otro para el prioritario; vacío significa que ese plazo no se mide. Los valores de partida son los tuyos. Cada cambio queda en el historial de la pantalla y en la auditoría; los plazos solo miden y avisan, no cambian ninguna categoría clínica. Solo la Dirección con el permiso puede hacerlo (almendros-direccion lo tiene).</div>
         <fieldset class="choices" aria-labelledby="t-9">
           <label class="choice"><input type="radio" name="r-9" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-9" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>

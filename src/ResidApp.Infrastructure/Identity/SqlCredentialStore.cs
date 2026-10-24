@@ -282,7 +282,7 @@ public sealed class SqlCredentialStore(SqlConnectionFactory connections, TimePro
 }
 
 /// <summary>Identity compara nombres de usuario «normalizados» (en mayúsculas, por defecto). Aquí el nombre es sujeto_externo y se busca
-/// tal cual se escribe, sin los espacios de alrededor, como hace el acceso de desarrollo.</summary>
+/// tal cual se escribe, sin los espacios de alrededor.</summary>
 public sealed class SubjectLookupNormalizer : ILookupNormalizer
 {
     public string? NormalizeName(string? name) => name?.Trim();

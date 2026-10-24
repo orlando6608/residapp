@@ -32,11 +32,7 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
     private async Task<HttpClient> LoginAsync(WebApplicationFactory<Program> app, string subject)
     {
         var client = app.CreateClient();
-        var page = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            [Token] = ExtractValue(page, Token), ["externalSubject"] = subject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, subject)).EnsureSuccessStatusCode();
         return client;
     }
 

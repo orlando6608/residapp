@@ -250,9 +250,9 @@
     <h2 id="leer">Cómo leer el diagrama</h2>
     <p class="prose">Cada franja es un perfil, con la cuenta con la que entras. Cada caja es una prueba de la guía, con su número. Se lee de izquierda a derecha y de arriba abajo.</p>
     <ul class="leyenda">
-      <li><span class="muestra m-aux" aria-hidden="true"></span><span>Auxiliar · <code>dev-integrado-auxiliar</code></span></li>
-      <li><span class="muestra m-adm" aria-hidden="true"></span><span>Administración · <code>dev-integrado-administracion</code></span></li>
-      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería y Medicina · <code>dev-integrado-enfermeria</code></span></li>
+      <li><span class="muestra m-aux" aria-hidden="true"></span><span>Auxiliar · <code>almendros-auxiliar</code></span></li>
+      <li><span class="muestra m-adm" aria-hidden="true"></span><span>Administración · <code>almendros-administracion</code></span></li>
+      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería y Medicina · <code>almendros-enfermeria</code></span></li>
       <li><span class="estrella">★</span>&nbsp;Imprescindible (borde grueso)</li>
       <li><span class="linea" aria-hidden="true"></span>Lo siguiente que haces</li>
       <li><span class="linea info" aria-hidden="true"></span>Lo que pasa a otro perfil, y dónde lo ve</li>
@@ -278,11 +278,11 @@
         <line class="sep" x1="0" y1="120" x2="1150" y2="120"/>
         <line class="sep" x1="0" y1="655" x2="1150" y2="655"/>
         <text class="lane-label aux" x="14" y="26">Auxiliar</text>
-        <text class="lane-cuenta" x="14" y="44">dev-integrado-auxiliar</text>
+        <text class="lane-cuenta" x="14" y="44">almendros-auxiliar</text>
         <text class="lane-label adm" x="14" y="146">Administración</text>
-        <text class="lane-cuenta" x="14" y="164">dev-integrado-administracion</text>
+        <text class="lane-cuenta" x="14" y="164">almendros-administracion</text>
         <text class="lane-label enf" x="14" y="681">Enfermería y Medicina</text>
-        <text class="lane-cuenta" x="14" y="699">dev-integrado-enfermeria</text>
+        <text class="lane-cuenta" x="14" y="699">almendros-enfermeria</text>
 
         <!-- Flechas -->
         <path class="flecha" d="M280,203 L298,203" marker-end="url(#p1)"/>
@@ -406,7 +406,7 @@
         <span>Da de alta un residente sin contacto prioritario, con el motivo «Sin familia conocida». Mira su ficha como Administración y como Enfermería. Después añádele un familiar y designa su contacto urgente.</span>
         <span class="pasa">Le llega a <strong>Enfermería y Medicina</strong>: su ficha dice «Sin contacto urgente» con el motivo. Si se deriva a Urgencias, la derivación se cierra sin intento de llamada.</span>
       </li>
-      <li class="cambio">Para ver la ficha como Enfermería, entra un momento con <code>dev-integrado-enfermeria</code> y vuelve a <code>dev-integrado-administracion</code>.</li>
+      <li class="cambio">Para ver la ficha como Enfermería, entra un momento con <code>almendros-enfermeria</code> y vuelve a <code>almendros-administracion</code>.</li>
       <li class="adm">
         <div class="paso-cab"><span class="n">7</span><strong>Usuarios, perfiles y permisos</strong><span class="perfil adm">Administración</span></div>
         <span>«Usuarios», «Gestionar» sobre una cuenta de pruebas: concede y revoca un permiso y una unidad.</span>
@@ -414,10 +414,10 @@
       </li>
       <li class="adm">
         <div class="paso-cab"><span class="n">8</span><strong>Asignar residentes a un Auxiliar</strong> <span class="estrella">★</span><span class="perfil adm">Administración</span></div>
-        <span>En «Gestionar» de <code>dev-integrado-auxiliar</code>, retira a «Residente Prueba CJ Dos».</span>
+        <span>En «Gestionar» de <code>almendros-auxiliar</code>, retira a «Carmen López».</span>
         <span class="pasa">Le llega al <strong>Auxiliar</strong>: deja de verlo en «Mis residentes». <strong>Vuelve a asignarlo al terminar:</strong> lo necesitan las guías 1 y 8.</span>
       </li>
-      <li class="cambio">Para comprobarlo, entra con <code>dev-integrado-auxiliar</code>, mira «Mis residentes» y vuelve a <code>dev-integrado-administracion</code>.</li>
+      <li class="cambio">Para comprobarlo, entra con <code>almendros-auxiliar</code>, mira «Mis residentes» y vuelve a <code>almendros-administracion</code>.</li>
       <li class="adm">
         <div class="paso-cab"><span class="n">9</span><strong>Habitaciones y plazas</strong><span class="perfil adm">Administración</span></div>
         <span>«Estructura del centro», «Habitaciones y plazas»: crea una habitación y una plaza. Prueba a repetir el nombre de la habitación.</span>
@@ -430,14 +430,14 @@
       <li class="adm">
         <div class="paso-cab"><span class="n">11</span><strong>Dar de baja y reactivar</strong><span class="perfil adm">Administración</span></div>
         <span>En la misma ficha, «Dar de baja» con motivo; búscalo en «Residentes dados de baja» y «Reactivar».</span>
-        <span class="pasa">La baja no borra nada. No uses un «Prueba CJ» ni un «Integrado» para esta prueba.</span>
+        <span class="pasa">La baja no borra nada. Usa el residente «CJ …» que diste de alta en la prueba 1, nunca uno de los que ya había en el centro.</span>
       </li>
       <li class="adm">
         <div class="paso-cab"><span class="n">12</span><strong>Suspender por ingreso hospitalario</strong><span class="perfil adm">Administración</span></div>
         <span>En la ficha del residente «CJ …», «Suspender (ingreso hospitalario)». Después, «Reanudar atención».</span>
         <span class="pasa">Le llega a <strong>Enfermería</strong>: mientras dura, no puede registrar nada sobre él y ve un aviso de que está suspendido.</span>
       </li>
-      <li class="cambio">Antes de reanudar, entra con <code>dev-integrado-enfermeria</code> e intenta registrar un evento sobre ese residente; después vuelve a <code>dev-integrado-administracion</code>.</li>
+      <li class="cambio">Antes de reanudar, entra con <code>almendros-enfermeria</code> e intenta registrar un evento sobre ese residente; después vuelve a <code>almendros-administracion</code>.</li>
       <li class="adm">
         <div class="paso-cab"><span class="n">13</span><strong>Turnos, equipos y planificación</strong><span class="perfil adm">Administración</span></div>
         <span>«Turnos», «Equipos» (con miembros) y «Planificación de turnos» para varios días; prueba «Ver serie» y retirar fechas.</span>
@@ -455,7 +455,7 @@
       </li>
       <li class="adm">
         <div class="paso-cab"><span class="n">16</span><strong>Poner, cambiar y quitar la foto de un residente</strong><span class="perfil adm">Administración</span></div>
-        <span>En «Residentes», mira la foto y la columna «Ubicación» («Residente Integrado Dos» tiene foto y cama). En la ficha del residente «CJ …», «Foto de identificación»: prueba a guardar sin la casilla del consentimiento, después con ella; pon otra y quítala. Mira la auditoría.</span>
+        <span>En «Residentes», mira la foto y la columna «Ubicación» («Manuel Ruiz» tiene foto y cama). En la ficha del residente «CJ …», «Foto de identificación»: prueba a guardar sin la casilla del consentimiento, después con ella; pon otra y quítala. Mira la auditoría.</span>
         <span class="pasa">Le llega a <strong>Auxiliar, Enfermería y Medicina</strong>: la ven en sus listas y fichas (guía 1, prueba 13). La familia nunca la ve.</span>
       </li>
     </ol>
@@ -466,7 +466,7 @@
     <ul class="lista prose">
       <li><strong>Administración nunca ve observaciones ni valoraciones</strong>, solo datos administrativos. Lo clínico se comprueba entrando como Enfermería.</li>
       <li><strong>La ficha del residente</strong> se abre desde «Residentes»: ahí están «Familiares», «Contactos urgentes», «Corregir identidad», «Trasladar», «Dar de baja», «Suspender (ingreso hospitalario)» y «Foto de identificación».</li>
-      <li><strong>Deja todo como estaba:</strong> «Residente Prueba CJ Dos» asignado al Auxiliar y el residente «CJ …» en su unidad.</li>
+      <li><strong>Deja todo como estaba:</strong> «Carmen López» asignada al Auxiliar y el residente «CJ …» en su unidad.</li>
     </ul>
   </section>
 

@@ -6,13 +6,11 @@ namespace ResidApp.Application.Ports;
 public enum AccessEventType
 {
     [Code("ENTRADA")] Entrada,
-    [Code("ENTRADA_DESARROLLO")] EntradaDesarrollo,
     [Code("CONTRASENA_FALLIDA")] ContrasenaFallida,
     [Code("BLOQUEO")] Bloqueo,
     [Code("SEGUNDO_FACTOR_FALLIDO")] SegundoFactorFallido,
     [Code("SEGUNDO_FACTOR_ALTA")] SegundoFactorAlta,
     [Code("CODIGO_RECUPERACION_USADO")] CodigoRecuperacionUsado,
-    [Code("CREDENCIALES_DESARROLLO")] CredencialesDesarrollo,
     [Code("INVITACION_USADA")] InvitacionUsada,
     [Code("RECUPERACION_USADA")] RecuperacionUsada,
     [Code("INVITACION_NO_VALIDA")] InvitacionNoValida,

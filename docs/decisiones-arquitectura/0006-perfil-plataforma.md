@@ -28,10 +28,14 @@ tenía que hacerla alguien que no fuera un perfil de centro.
 ## Raíz de confianza
 
 La primera cuenta de plataforma no la crea la aplicación: alguien tiene que ser de confianza antes de que exista ninguna cuenta.
-- **Desarrollo:** `database/seed/dev_seed_plataforma.sql` crea `dev-plataforma`.
+- **Desarrollo:** `database/seed/centros_prueba.sql` crea `plataforma-cj` y `plataforma-orlando` (hasta el 2026-10-24,
+  `dev_seed_plataforma.sql` creaba `dev-plataforma`).
 - **Entorno real:** un `INSERT` único, hecho por quien administra la base de datos, de la cuenta y de su ámbito en el centro
-  reservado (ver el seed como plantilla: una fila en `cuentas` y otra en `ambitos_perfil` con `perfil_codigo = 'PLATAFORMA'` y
+  reservado (ver la semilla como plantilla: una fila en `cuentas` y otra en `ambitos_perfil` con `perfil_codigo = 'PLATAFORMA'` y
   `centro_id = '5F3A1C00-0000-4000-8000-000000000001'`). No hay arranque automático por configuración.
+- **Su primera credencial** (también en desarrollo): quien administra la base emite su invitación con
+  `database/operaciones/invitar_cuenta.sql` (emisor `ARRANQUE`, script `0067`) y se la entrega en privado. Con el mismo script se
+  recupera si pierde sus credenciales, porque dentro de la aplicación nadie puede invitar a una cuenta de Plataforma.
 
 ## Consecuencias
 

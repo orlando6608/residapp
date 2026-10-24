@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-23. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-24. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -14,6 +14,33 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Fuera el acceso de desarrollo: se entra solo como en un centro real (2026-10-24, rama `sin-acceso-desarrollo`, script `0067`; el siguiente libre es `0068`).**
+  Decisiones de Orlando: una cuenta por perfil; un centro de pruebas (Los Almendros) para las guías 1 a 7 y otro (Los Olmos) para el aislamiento; bases recreadas desde
+  cero; la clave de los documentos de CJ (`/AccesoCj`) se queda; dos juegos de cuentas sin credenciales compartidas (CJ y Orlando, este también para mis comprobaciones);
+  el escenario que no se puede sembrar se prepara por la app con las cuentas de Orlando. CJ es hombre: escríbelo siempre en masculino.
+  - **Código:** sin `DevAuthController`, `DevAuthOptions`, sus vistas, sus ajustes ni `IssueForDevelopmentAsync`; `0067` quita `ENTRADA_DESARROLLO` y
+    `CREDENCIALES_DESARROLLO` de `eventos_acceso` y cambia el emisor `DESARROLLO` por `ARRANQUE` (falla si quedan filas antiguas: por eso se recrean las bases).
+    `database/operaciones/invitar_cuenta.sql` (a mano, con el administrador de la base) emite la invitación de arranque e imprime su **ruta** (el `sqlcmd` de Windows
+    no admite `:` ni `/` en `-v`). Lo prueba `AccesoTests.InvitacionDeArranque_DesdeLaBase_AbreElAlta_YLaSiguienteEsDeRecuperacion`, que ejecuta el script.
+  - **Pruebas:** las funcionales entran por `tests/FunctionalTests/EntradaDePruebas.cs` (`POST /pruebas/entrar`, un `IStartupFilter` que añade
+    `ResidentsFlowTests.WebAppFactory.CreateHost`; nunca se despliega), con `SessionSignIn` como el inicio de sesión real. Con `app.Map` la cookie de sesión salía con
+    `path=/pruebas/entrar`: por eso es un `app.Use` que compara la ruta. Mutación comprobada: sin leer la sesión actual, `EntrarConOtraCuenta_CierraLaSesionAnterior`
+    falla. Las pruebas locales usan su propia base, **`ResidAppPruebas`** (sin semilla), no la de la app. Suite: 425 unitarias, 514 de integración y 300 funcionales.
+  - **Datos:** las 9 semillas `dev_seed_*` pasan a una, `database/seed/centros_prueba.sql`: Plataforma ×2, Los Almendros (6 residentes con identificador fijo
+    `1A000000-0000-4000-8000-00000000000N`: Rosa, Antonio, Carmen, Lucía, Manuel y Pilar), Los Olmos (Jaime y Teresa) y `varios-centros`, en dos juegos.
+  - **Skill `probar-en-navegador`:** `comun.js` entra como una persona (invitación → contraseña → código del móvil, que calcula leyendo la clave del alta) y guarda las
+    credenciales en `~/.residapp/credenciales-<servidor>.json`; `sembrar.sh` imprime usuario y enlace; `alta-juego.js` da de alta un juego por la cadena real
+    (Plataforma → Administraciones y `varios-centros` → personal y familia); `preparar-almendros.js` firma el basal de Antonio y de Pilar, pone la foto de Manuel y deja a
+    Pilar con un evento cerrado y una derivación con su informe firmado (tras una derivación hay que registrar el intento de llamada y preparar la comunicación a la
+    familia para cerrar). Probado de punta a punta en una base desechable (`ResidAppSemilla`), y repetido sin rehacer nada.
+  - **Documentación al día:** Manual («Cuentas de prueba», sin el acceso de desarrollo), `acceso-y-sesion.html`, `flujo-de-trabajo.html`, README, ADR 0006 y 0007,
+    roadmap, backlog, las 8 guías de CJ y sus flujos, `pruebas.html` («Tus cuentas») y su README. Las guías **no** suben `data-version`. Los registros antiguos de este
+    fichero y de `docs/tareas/` siguen nombrando las cuentas `dev-*`: son historia.
+  - **Pendiente (cada paso con confirmación de Orlando):** recrear `ACER-ORLANDO/ResidApp` con la semilla; recrear la base de Azure dev justo antes del merge (leer antes su
+    configuración con `az sql db show`) y su usuario limitado; quitar los ajustes `DevAuth__Habilitado` y `DevAuth__Clave` de la Web App; dar de alta el juego de Orlando
+    (`invitar_cuenta.sql` para `plataforma-orlando` + `alta-juego.js`) y `preparar-almendros.js`; emitir las invitaciones del juego de CJ (la de `plataforma-cj` con el
+    script; las demás, desde Plataforma y las Administraciones de Orlando) y entregárselas. Quedan además en la instancia local las bases `ResidAppCiFunc` y
+    `ResidAppCiRepro` de pruebas antiguas, sin tocar.
 - **Dossier para el DPO sobre el dictado (2026-10-23, rama `dossier-dpo-dictado`, solo documentación):** `docs/seguridad/dictado-por-voz-dossier-dpo.md`, escrito para la persona
   responsable de protección de datos (no para ingeniería). Responde a «¿se puede evitar el contrato de encargado y la EIPD?»: **no**, porque la voz y lo que se dice del residente
   son datos personales y de salud aunque no lleven nombre; lo que sí se puede es aligerar el trabajo. Lo comprobado en páginas públicas de Mistral (resumen, **sin leer el contrato
@@ -1674,19 +1701,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    Fase B (tramo 1) está hecho** en la rama `dictado-fase-b-tramo-1`. Siguiente: probarlo en un móvil real con audios ficticios y, cuando CJ responda, ajustar el modo estricto (4.1) y la temperatura (tema 3). Servidor y pantalla están hechos
    (dos primeras entradas de «Dónde estamos»). **Espera la respuesta de CJ** a `docs/pendientes-cj/dictado-por-voz-confirmaciones-cj.html` (el rango de temperatura, tema 3, bloquea
    solo la temperatura). Mientras tanto, grabar unos 10 audios reales ficticios o elegir otra tarea de esta lista.
-   **I0 a I4 e I2b del ADR 0007 están hechos** (I4 mergeado y comprobado en Azure dev; el manual y las páginas de acceso están al día). Quedan **I5 (pulsera NFC)** y la
-   retirada del acceso de desarrollo; antes de datos reales, retirar el acceso de desarrollo y llevar al DPO las reglas de las cuentas de varios centros
+   **I0 a I4 e I2b del ADR 0007 están hechos y el acceso de desarrollo está retirado en el código** (rama `sin-acceso-desarrollo`, primera entrada de
+   «Dónde estamos»). Queda **I5 (pulsera NFC)** y, antes de datos reales, llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: (Importar y Exportar ya probado en Azure dev el 2026-10-23), y las dos preguntas a CJ de la guía 2 (hora en la
    fecha prevista, prueba 2.4 de «Conducta médica»).
    **Pendientes de I4 que Orlando puede querer decidir** (ninguno bloquea): (a) si una cuenta bloqueada por intentos debe poder entrar con passkey (hoy no, como
    Identity); (b) bloquear el resto de la aplicación a una cuenta de Plataforma hasta que cree su primera passkey (hoy solo se la lleva a «Mi cuenta»); (c) renombrar
    passkeys; (d) probar con dispositivos reales (iOS, Android, llave física) y no solo con el autenticador virtual; (e) elegir el dominio de Pro antes de que nadie
    registre una passkey allí y poner `Acceso__PasskeyDominio` (ADR 0007, puerta abierta 5); (f) las passkeys de los familiares, que esperan a la pregunta 3.2 de CJ.
-   **Quedan en Azure dev** las cuentas ficticias `prueba-passkey-20261023-*` (activa, con una passkey virtual) y los datos de pruebas anteriores; no se ha tocado
-   ninguna cuenta `almendros-*` ni Residente Integrado Uno.
-   Para entrar en Azure dev hace falta la clave de desarrollo: está solo en el ajuste `DevAuth__Clave` de la Web App
-   (`az webapp config appsettings list -g rg-residapp-dev -n app-residapp-dev --query "[?name=='DevAuth__Clave'].value" -o tsv`); no la copies a
-   ningún fichero del repositorio.
+   Para entrar en Azure dev (cuando esté recreada, ver la primera entrada de «Dónde estamos») se usan las cuentas `*-orlando-*`, con las credenciales de
+   `~/.residapp/credenciales-app-residapp-dev.azurewebsites.net.json` (fuera del repositorio; nunca las copies a él).
 1. **Revisar las respuestas de CJ** que lleguen:
    - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
      finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).
@@ -1831,12 +1855,12 @@ Repite estos pasos antes de dar un bloque por cerrado:
 4. **Suite en verde varias veces** contra la BD local y, además, en el entorno tipo CI (ver «Cómo
    reproducir el CI en local» más abajo).
 5. **BD temporal nueva** con todos los scripts y el seed (`APLICAR_SEED=1`), que se borra al terminar.
-6. **Prueba manual con la app y curl** del flujo completo, con las cuentas `dev-integrado-*`:
+6. **Prueba manual con la app** del flujo completo, en un navegador real con la skill `probar-en-navegador` (entra como una persona:
+   invitación, contraseña y código del móvil; ya no hay acceso de desarrollo para curl):
    - La app se levanta con `dotnet run --launch-profile http` desde `src/ResidApp.Web`, en
      `http://localhost:5203`.
-   - Para entrar, haz un GET de `/DevAuth/Login` para sacar el `__RequestVerificationToken` y un POST
-     con `externalSubject=<cuenta>`. Después, `GET /ProfileScope/Select -L`.
-   - En cada POST, toma el token de una página que tenga formulario y envíalo con `--data-urlencode`.
+   - Con una cuenta recién sembrada (`sembrar.sh`) o con el juego de Orlando de los centros de prueba (`almendros-orlando-*`), cuyas
+     credenciales guarda `comun.js` en `~/.residapp/credenciales-localhost_5203.json`.
 7. **Documentación:**
    - `Manual.cshtml`;
    - el pendiente del vertical;
@@ -1882,8 +1906,8 @@ Repite estos pasos antes de dar un bloque por cerrado:
   En oscuro, `text-danger`/`text-success` y los `btn-outline-*` de serie se quedan en 3,7:1 y el tema los pasa a
   `--bs-*-text-emphasis`; para un color nuevo, usa esos tonos. `text-warning` no sirve como texto ni en claro (1,6:1): usa
   `text-warning-emphasis`.
-- **Capturas con sesión para revisar una pantalla:** `puppeteer-core` (en el directorio temporal, con el Chrome instalado) inicia
-  sesión rellenando `/DevAuth/Login`, emula `prefers-color-scheme` y, con `isMobile` y `hasTouch`, también `any-pointer: coarse`.
+- **Capturas con sesión para revisar una pantalla:** la skill `probar-en-navegador` (Playwright con el Chrome instalado) inicia
+  sesión como una persona (`comun.js`, `entrar`), emula `prefers-color-scheme` y, con `isMobile` y `hasTouch`, también `any-pointer: coarse`.
   En Git Bash, un argumento que empiece por `/` se convierte en una ruta de Windows: exporta `MSYS_NO_PATHCONV=1`.
 
 - **Enums en español en pantalla:** un enum con `[Code("X_Y")]` que el formulario envía como texto se pinta con
@@ -1906,9 +1930,9 @@ Repite estos pasos antes de dar un bloque por cerrado:
   `--default-background-color=00000000`), incrustado como recurso y pasado a MigraDoc con el prefijo `base64:`, sin
   ficheros temporales. Si cambia el SVG, hay que regenerar el PNG. Para ver un PDF como imagen sin poppler, usa
   `Windows.Data.Pdf` desde Windows PowerShell 5.1; Chrome headless no pinta su visor de PDF.
-- **Probar una impresión con sesión en local:** inicia sesión con curl (`/DevAuth/Login` con el token antiforgery;
-  `/ProfileScope/Select` elige solo el ámbito único) e imprime con Chrome por DevTools (`Network.setCookie` +
-  `Page.printToPDF`; Node 20 necesita `--experimental-websocket`). En local, la app devuelve 0 bytes en los estáticos
+- **Probar una impresión con sesión en local:** entra con `comun.js` (`entrar`; con un ámbito único se elige solo) e imprime con
+  `page.pdf()` de Playwright, o con Chrome por DevTools (`Network.setCookie` con la cookie de la sesión + `Page.printToPDF`; Node 20
+  necesita `--experimental-websocket`). En local, la app devuelve 0 bytes en los estáticos
   si el navegador pide compresión (`Accept-Encoding: br/gzip`): para la prueba, manda `Accept-Encoding: identity`.
 - **Decimales en formularios:** la cultura del servidor es es-ES. Un decimal enlazado desde
   `type="text"` convierte «37.8» en 378. Usa `type="number" step="0.1"`, que ASP.NET Core enlaza con

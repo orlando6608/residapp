@@ -4,14 +4,14 @@ using ResidApp.Infrastructure.Persistence;
 namespace ResidApp.IntegrationTests.TestSupport;
 
 /// <summary>
-/// Apunta a la misma instancia real de SQL Server usada en desarrollo (ver database/scripts y
-/// database/seed); no hay todavía una instancia de CI decidida (docs/producto/roadmap.md, "Decisiones
-/// abiertas"). Sobrescribible con RESIDAPP_TEST_CONNECTION_STRING en otra máquina.
+/// Apunta a una base propia de las pruebas en la instancia local (ResidAppPruebas, creada con database/aplicar-scripts.sh, sin
+/// semillas), no a la de la aplicación: así las pruebas no la llenan de centros y auditoría. En el CI es ResidAppTest.
+/// Sobrescribible con RESIDAPP_TEST_CONNECTION_STRING en otra máquina.
 /// </summary>
 internal static class TestDatabase
 {
     private const string DefaultConnectionString =
-        "Server=ACER-ORLANDO;Database=ResidApp;Integrated Security=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+        "Server=ACER-ORLANDO;Database=ResidAppPruebas;Integrated Security=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
     public static string ConnectionString =>
         Environment.GetEnvironmentVariable("RESIDAPP_TEST_CONNECTION_STRING") ?? DefaultConnectionString;

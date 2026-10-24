@@ -2,7 +2,6 @@
 @{
     ViewData["Title"] = "ResidApp";
     var sesion = ResidApp.Web.Security.SessionAuthentication.Subject(User);
-    var accesoDesarrollo = Context.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<ResidApp.Web.Security.DevAuthOptions>>().Value.Habilitado;
     // Solo decide qué fichas se enseñan: cada caso de uso sigue autorizando en el servidor.
     var perfil = sesion is null ? null : ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request)?.Profile;
     var permisos = ViewBag.Permisos as IReadOnlyList<string> ?? [];
@@ -31,10 +30,6 @@ else
 {
     <p class="text-muted">
         Sesión de <strong>@User.Identity!.Name</strong>
-        @if (accesoDesarrollo)
-        {
-            <span>— <a asp-controller="DevAuth" asp-action="Login">entrar con otra cuenta</a></span>
-        }
     </p>
 }
 

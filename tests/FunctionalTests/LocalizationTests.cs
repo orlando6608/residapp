@@ -20,7 +20,7 @@ public class LocalizationTests : IClassFixture<ResidentsFlowTests.WebAppFactory>
     public async Task AnyRequest_IsServedInSpanish_WhateverTheBrowserAsksFor(string acceptLanguage)
     {
         var client = _factory.CreateClient();
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/DevAuth/Login");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/Acceso/Entrar");
         request.Headers.AcceptLanguage.ParseAdd(acceptLanguage);
 
         var response = await client.SendAsync(request);

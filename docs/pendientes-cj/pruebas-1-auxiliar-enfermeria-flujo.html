@@ -189,8 +189,8 @@
     <h2 id="leer">Cómo leer el diagrama</h2>
     <p class="prose">Cada franja es un perfil, con la cuenta con la que entras. Cada caja es una prueba de la guía, con su número. Se lee de izquierda a derecha y de arriba abajo.</p>
     <ul class="leyenda">
-      <li><span class="muestra m-aux" aria-hidden="true"></span>Auxiliar · <code>dev-integrado-auxiliar</code></li>
-      <li><span class="muestra m-enf" aria-hidden="true"></span>Enfermería · <code>dev-integrado-enfermeria</code></li>
+      <li><span class="muestra m-aux" aria-hidden="true"></span>Auxiliar · <code>almendros-auxiliar</code></li>
+      <li><span class="muestra m-enf" aria-hidden="true"></span>Enfermería · <code>almendros-enfermeria</code></li>
       <li><span class="muestra m-fam" aria-hidden="true"></span>Familia (el Portal Familiar se prueba en la guía 6; aquí solo que no enseña la foto)</li>
       <li><span class="estrella">★</span>&nbsp;Imprescindible (borde grueso)</li>
       <li><span class="linea" aria-hidden="true"></span>Lo siguiente que haces</li>
@@ -215,9 +215,9 @@
         <rect class="lane-enf" x="0" y="150" width="980" height="300"/>
         <rect class="lane-fam" x="0" y="450" width="980" height="110"/>
         <text class="lane-label aux" x="14" y="26">Auxiliar</text>
-        <text class="lane-cuenta" x="14" y="44">dev-integrado-auxiliar</text>
+        <text class="lane-cuenta" x="14" y="44">almendros-auxiliar</text>
         <text class="lane-label enf" x="14" y="176">Enfermería</text>
-        <text class="lane-cuenta" x="14" y="194">dev-integrado-enfermeria</text>
+        <text class="lane-cuenta" x="14" y="194">almendros-enfermeria</text>
         <text class="lane-label fam" x="14" y="476">Familia</text>
         <text class="lane-cuenta" x="14" y="494">guía 6</text>
 
@@ -312,37 +312,37 @@
     <ol class="pasos">
       <li class="aux">
         <div class="paso-cab"><span class="n">1</span><strong>Ver mis residentes</strong><span class="perfil aux">Auxiliar</span></div>
-        <span>En Inicio, «Mis residentes (Auxiliar)»: solo ves los cuatro residentes que te ha asignado Administración.</span>
+        <span>En Inicio, «Mis residentes (Auxiliar)»: solo ves los cinco residentes que te ha asignado Administración.</span>
         <span class="pasa">No pasa nada a otro perfil.</span>
       </li>
       <li class="aux">
         <div class="paso-cab"><span class="n">2</span><strong>«Sin cambios»</strong><span class="perfil aux">Auxiliar</span></div>
-        <span>En el registro de Prueba CJ Dos, «Confirmar sin cambios»: el turno queda «Cerrado hoy».</span>
+        <span>En el registro de Carmen, «Confirmar sin cambios»: el turno queda «Cerrado hoy».</span>
         <span class="pasa">No llega nada a Enfermería.</span>
       </li>
       <li class="aux">
         <div class="paso-cab"><span class="n">3</span><strong>Cambio ordinario</strong><span class="perfil aux">Auxiliar</span></div>
-        <span>«Registrar cambio» en Prueba CJ Dos, con áreas observadas y la clasificación «Ordinario».</span>
+        <span>«Registrar cambio» en Carmen, con áreas observadas y la clasificación «Ordinario».</span>
         <span class="pasa">Le llega a <strong>Enfermería</strong>, en «Cambios ordinarios» (prueba 6).</span>
       </li>
       <li class="aux">
         <div class="paso-cab"><span class="n">4</span><strong>Cambio prioritario</strong> <span class="estrella">★</span><span class="perfil aux">Auxiliar</span></div>
-        <span>«Registrar cambio» en Prueba CJ Uno con «Prioritario»: hace falta un motivo de la lista y, en el resumen, el aviso directo (a quién avisaste y qué dijo).</span>
+        <span>«Registrar cambio» en Antonio con «Prioritario»: hace falta un motivo de la lista y, en el resumen, el aviso directo (a quién avisaste y qué dijo).</span>
         <span class="pasa">Le llega a <strong>Enfermería</strong>, en la «Bandeja prioritaria», con el motivo y el aviso (prueba 6).</span>
       </li>
       <li class="aux">
         <div class="paso-cab"><span class="n">5</span><strong>«No valorable»</strong><span class="perfil aux">Auxiliar</span></div>
-        <span>En Prueba CJ Dos, escribe un motivo y pulsa «Marcar no valorable».</span>
+        <span>En Carmen, escribe un motivo y pulsa «Marcar no valorable».</span>
         <span class="pasa">No genera tarea para Enfermería.</span>
       </li>
-      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-enfermeria</code>.</li>
+      <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-enfermeria</code>.</li>
       <li class="enf">
         <div class="paso-cab"><span class="n">6</span><strong>Revisar las bandejas</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
         <span>En Inicio de Enfermería, «Bandeja prioritaria» y «Cambios ordinarios»: ahí están los cambios de las pruebas 4 y 3. Ábrelos con «Ver detalle».</span>
       </li>
       <li class="enf">
         <div class="paso-cab"><span class="n">7</span><strong>Registrar un evento propio</strong><span class="perfil enf">Enfermería</span></div>
-        <span>En «Residentes», abre Prueba CJ Uno, «Registrar evento», escribe la observación y «Guardar evento». Pasas al detalle del evento.</span>
+        <span>En «Residentes», abre Antonio, «Registrar evento», escribe la observación y «Guardar evento». Pasas al detalle del evento.</span>
       </li>
       <li class="enf">
         <div class="paso-cab"><span class="n">8</span><strong>Valorar el evento</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
@@ -360,7 +360,7 @@
       </li>
       <li class="enf">
         <div class="paso-cab"><span class="n">11</span><strong>Protocolo urgente</strong><span class="perfil enf">Enfermería</span></div>
-        <span>Un evento prioritario en Prueba CJ Uno, registrado y valorado. En la decisión asistencial, «Activar protocolo urgente». Registra una actuación, una evolución y un contacto con un servicio.</span>
+        <span>Un evento prioritario en Antonio, registrado y valorado. En la decisión asistencial, «Activar protocolo urgente». Registra una actuación, una evolución y un contacto con un servicio.</span>
         <span class="pasa">El evento aparece en la tarjeta «Protocolos urgentes».</span>
       </li>
       <li class="enf">
@@ -371,8 +371,8 @@
       <li class="cambio">La prueba 13 no depende de las anteriores: puedes hacerla cuando quieras. Usa cuatro cuentas, una detrás de otra.</li>
       <li class="enf">
         <div class="paso-cab"><span class="n">13</span><strong>Foto y cama del residente</strong><span class="perfil enf">Enfermería</span></div>
-        <span>Con <code>dev-integrado-auxiliar</code>, «Mis residentes»: Integrado Dos tiene foto y «Habitación 101 (prueba) · Cama A». Con <code>dev-integrado-enfermeria</code>, en la ficha de «Residente Portal Familiar», pon una foto (prueba antes sin la casilla del consentimiento). Con <code>dev-integrado-medicina</code>, mira esa ficha.</span>
-        <span class="pasa">Con <code>dev-integrado-familiar</code>, en el <strong>Portal Familiar</strong> no aparece ninguna foto: la familia nunca la ve.</span>
+        <span>Con <code>almendros-auxiliar</code>, «Mis residentes»: Manuel tiene foto y «Planta 1 · 102 · A». Con <code>almendros-enfermeria</code>, en la ficha de «Rosa Sánchez», pon una foto (prueba antes sin la casilla del consentimiento). Con <code>almendros-medicina</code>, mira esa ficha.</span>
+        <span class="pasa">Con <code>almendros-elena</code>, en el <strong>Portal Familiar</strong> no aparece ninguna foto: la familia nunca la ve.</span>
       </li>
     </ol>
   </section>
@@ -381,7 +381,7 @@
     <h2 id="mirar">Dónde mirar si no encuentras algo</h2>
     <ul class="lista prose">
       <li><strong>«Iniciar seguimiento», «Cerrar el evento», «Escalar a Medicina» y «Activar protocolo urgente»</strong> son tarjetas de la pantalla «Decisión asistencial». A esa pantalla se llega con «Pasar a decisión asistencial», en el detalle del evento, y ese botón solo aparece después de guardar la valoración.</li>
-      <li><strong>Para cambiar de perfil</strong> no hace falta cerrar la sesión: «Cambiar de identidad», en el menú de tu perfil (arriba a la derecha), o <code>/DevAuth/Login</code>.</li>
+      <li><strong>Para cambiar de perfil</strong>, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra cuenta.</li>
       <li><strong>Lo que registras como Auxiliar</strong> no lo ves tú en ninguna bandeja: lo ve Enfermería, en su Inicio.</li>
       <li><strong>La fecha prevista de un seguimiento</strong> es solo un día, sin hora.</li>
     </ul>

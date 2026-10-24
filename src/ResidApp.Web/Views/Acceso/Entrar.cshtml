@@ -52,13 +52,6 @@
                 <p class="text-center small mt-3 mb-0">
                     ¿No tienes cuenta o no puedes entrar? <a asp-controller="Acceso" asp-action="Solicitar">Cómo pedir el acceso</a>
                 </p>
-
-                @if (Model.AccesoDesarrollo)
-                {
-                    <p class="text-center small mt-2 mb-0">
-                        <a asp-controller="DevAuth" asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl">Acceso de desarrollo (cuentas de prueba)</a>
-                    </p>
-                }
             </div>
         </div>
     </div>

@@ -5,7 +5,7 @@
   Página estática y pública, como el Flujo de trabajo (flujo-de-trabajo.html), cuyo estilo sigue; enlazada desde el pie de
   Views/Shared/_Layout.cshtml y desde el Manual. Revísala con cada incremento del ADR 0007, si cambia quién da de alta las cuentas
   (Plataforma, Usuarios, acceso al portal) o los tiempos de la sesión (Sesion:InactividadMinutos, Sesion:MaximoHoras).
-  Nunca pongas aquí la clave de desarrollo ni la de los documentos de CJ.
+  Nunca pongas aquí contraseñas, enlaces de invitación ni la clave de los documentos de CJ.
 -->
 <html lang="es">
 <head>
@@ -305,15 +305,14 @@
     </nav>
     <p class="eyebrow">ResidApp · Acceso y sesión</p>
     <h1>Cómo se entra en ResidApp: el acceso y la sesión</h1>
-    <p class="meta">Estado a 22/10/2026 · Para quien usa o prueba la aplicación, para Plataforma y soporte, y para quien responde de su seguridad</p>
+    <p class="meta">Estado a 24/10/2026 · Para quien usa o prueba la aplicación, para Plataforma y soporte, y para quien responde de su seguridad</p>
     <p class="lead prose">
       Nadie se crea su propia cuenta en ResidApp: el acceso lo da quien responde de cada persona. Después, cada vez que abres una
       pantalla, la aplicación comprueba <strong>quién eres</strong>, con tu sesión, y <strong>qué puedes hacer</strong>, con el perfil,
       el centro y las unidades de tu cuenta. Se entra con tu identificador y tu contraseña y, si eres del personal, con un código de
       tu móvil (segundo factor), o con una <strong>passkey</strong> («llave de acceso»: una credencial guardada en tu móvil o portátil que se desbloquea con tu huella,
       tu cara o tu PIN) si la has registrado. La contraseña la eliges tú con la <strong>invitación</strong> de un solo uso que te entrega tu
-      Administración. En el entorno de pruebas sigue además un acceso de desarrollo (tu identificador y una clave común), y por eso
-      ResidApp solo se usa con datos ficticios hasta que se retire.
+      Administración. En el entorno de pruebas se entra exactamente igual: desde el 24/10/2026 no hay otra forma de entrar.
     </p>
     <nav aria-label="En esta página">
       <ul class="indice">
@@ -344,9 +343,8 @@
         <h3>Para entrar</h3>
         <p>Tu identificador de acceso y tu <strong>contraseña</strong>; el personal, además, el <strong>código de 6 cifras</strong>
           de su aplicación de autenticación; o, si has registrado una, <strong>«Entrar con passkey»</strong>. La primera vez, la
-          <strong>invitación</strong> de tu Administración. En el entorno de
-          pruebas también se entra por el <strong>acceso de desarrollo</strong> con el identificador (por ejemplo,
-          <code>almendros-enfermeria</code>) y la clave de desarrollo, que soporte da en privado. En local no se pide clave.</p>
+          <strong>invitación</strong> de tu Administración. En el entorno de pruebas, igual, con las cuentas de prueba (por ejemplo,
+          <code>almendros-enfermeria</code>).</p>
       </li>
       <li>
         <h3>Tu ámbito</h3>
@@ -360,7 +358,7 @@
       </li>
       <li class="aviso">
         <h3>Salir de verdad</h3>
-        <p>En una tablet compartida, pulsa siempre <strong>«Salir»</strong> o <strong>«Entrar con otra cuenta»</strong>. Cerrar el
+        <p>En una tablet compartida, pulsa siempre <strong>«Salir»</strong>. Cerrar el
           navegador no siempre basta: algunos recuperan la sesión al volver a abrirse.</p>
       </li>
       <li class="bien">
@@ -369,9 +367,8 @@
           acceso.</p>
       </li>
       <li>
-        <h3>Dos claves distintas</h3>
-        <p>La clave de desarrollo abre la aplicación. La de los documentos de CJ solo abre <code>/pendientes-cj</code>. Ninguna sirve
-          para lo de la otra.</p>
+        <h3>La clave de los documentos de CJ</h3>
+        <p>Solo abre <code>/pendientes-cj</code>, no la aplicación. Para la aplicación, cada persona usa su propia cuenta.</p>
       </li>
     </ul>
   </section>
@@ -464,24 +461,23 @@
           <tr>
             <td>Operador de Plataforma</td>
             <td>Quien administra la base de datos</td>
-            <td>Crea la cuenta y su ámbito por SQL, una sola vez. No hay pantalla, a propósito: es la cuenta más sensible.</td>
-            <td>Tu passkey: en cuanto tienes una, es la única forma de entrar. Hasta entonces, tu contraseña y el código del móvil (en
-              pruebas, también tu identificador y la clave de desarrollo)</td>
+            <td>Crea la cuenta y su ámbito por SQL, una sola vez, y le da su invitación con el script
+              <code>database/operaciones/invitar_cuenta.sql</code>. No hay pantalla, a propósito: es la cuenta más sensible.</td>
+            <td>Tu passkey: en cuanto tienes una, es la única forma de entrar. Hasta entonces, tu contraseña y el código del móvil</td>
           </tr>
           <tr>
             <td>Quien prueba la aplicación (CJ)</td>
             <td>Orlando</td>
-            <td>Nada que crear: las cuentas de prueba ya existen. Solo te da la clave de desarrollo, en privado.</td>
-            <td>Las <a href="#cuentas">cuentas de prueba</a> y la clave</td>
+            <td>Las <a href="#cuentas">cuentas de prueba</a> ya existen, sin contraseña. Orlando te entrega la invitación de cada una, como
+              Plataforma y como Administración harían en un centro real.</td>
+            <td>Cada cuenta de prueba con su contraseña y su código del móvil, o su passkey</td>
           </tr>
         </tbody>
       </table>
     </div>
     <ul class="lista prose">
-      <li><strong>La clave de desarrollo no es personal:</strong> es la misma para todos y solo existe en el entorno de pruebas, hasta
-        que se use con datos reales. Quien la tiene puede entrar con cualquier cuenta; por eso se da en privado y solo a quien prueba.
-        Desde el acceso de desarrollo, «Credenciales de prueba» crea una invitación para la cuenta de la sesión, para probar el camino
-        real con las cuentas de prueba.</li>
+      <li><strong>Las cuentas de prueba tampoco se comparten:</strong> CJ y Orlando tienen cada uno su juego, con los mismos perfiles.
+        Desde el 24/10/2026 no hay ninguna forma de entrar sin contraseña ni ninguna clave común.</li>
       <li><strong>El identificador de acceso no se puede cambiar</strong> después del alta; el nombre visible, sí. Es único en todo
         ResidApp: una persona con cuenta en un centro no necesita otro identificador para trabajar en otro, y sigue con su contraseña y su
         código del móvil (mira «Trabajar en otro centro» más abajo).</li>
@@ -536,7 +532,7 @@
           <li>Entra con su cuenta de Plataforma: «Centros» → <strong>Nuevo centro</strong>.</li>
           <li>Escribe el código y el nombre del centro, su primera unidad y su primer administrador (identificador de acceso y nombre).
             Se crea todo a la vez o nada.</li>
-          <li>Comunica el identificador a esa persona en privado y, en el entorno de pruebas, la clave de desarrollo por otro canal.</li>
+          <li>En el centro, <strong>Crear invitación de acceso</strong> para esa Administración, y entrégale la hoja en privado.</li>
         </ol>
         <p class="pasa">Desde ahí, la Administración monta el centro y da el resto de accesos.</p>
       </li>
@@ -551,7 +547,8 @@
       <li>
         <h3>Alguien del personal no puede entrar</h3>
         <ol>
-          <li>Si ve «Usuario o clave incorrectos.», comprueba que escribe bien su identificador y, en pruebas, la clave vigente.</li>
+          <li>Si ve «Usuario o contraseña incorrectos», comprueba que escribe bien su identificador. Tras 5 fallos seguidos, la cuenta se
+            bloquea 15 minutos.</li>
           <li>Si ve un error 429, que espere un minuto: son demasiados intentos seguidos.</li>
           <li>Si usaba una passkey y no tiene a mano ese dispositivo, puede entrar con su contraseña y el código del móvil.</li>
           <li>Si no es eso, lo resuelve su Administración en «Usuarios»: la cuenta puede estar suspendida o sin ningún perfil vigente. Si ha
@@ -574,16 +571,14 @@
           <li>Familia: su Administración suspende o revoca la autorización. Deja de ver al residente en la siguiente pantalla.</li>
           <li>Plataforma: por SQL, quien administra la base de datos.</li>
         </ol>
-        <p class="pasa">Cambiar la clave de desarrollo no echa a nadie que ya esté dentro.</p>
       </li>
-      <li class="aviso">
-        <h3>La clave de desarrollo</h3>
+      <li>
+        <h3>Plataforma ha perdido su acceso</h3>
         <ol>
-          <li>Se da en privado y solo a quien prueba. Nunca en documentos, en el repositorio, en capturas ni junto al identificador.</li>
-          <li>Si se filtra o alguien deja de probar, se cambia en la Web App (ajuste <code>DevAuth__Clave</code>, 16 caracteres o más) y
-            se da la nueva a quien sigue.</li>
+          <li>Quien administra la base de datos le emite una invitación de recuperación con <code>database/operaciones/invitar_cuenta.sql</code>
+            y se la entrega en privado.</li>
+          <li>Al usarla elige otra contraseña y prepara de nuevo el código del móvil; se cierran sus sesiones y se borran sus passkeys.</li>
         </ol>
-        <p class="pasa">Al cambiarla, la aplicación se reinicia; las sesiones abiertas siguen hasta que se cierran solas.</p>
       </li>
       <li>
         <h3>Un centro sin ninguna Administración que pueda entrar</h3>
@@ -693,8 +688,7 @@
     <p class="prose">En «Iniciar sesión» escribes tu usuario y tu contraseña y pulsas «Entrar». Llegas a ella al abrir una pantalla sin
       sesión, con «Iniciar sesión» en la cabecera o con «Entrar con otra cuenta» en la pantalla de elegir ámbito. Si eres del personal
       (cualquier perfil salvo el de familiar), después te pide el <strong>código de 6 cifras</strong> de tu aplicación de autenticación,
-      que preparaste al usar tu invitación. Si no lo llegaste a preparar, la pantalla te pide una invitación nueva. En el entorno de
-      pruebas sigue además el acceso de desarrollo (usuario y clave común, sin contraseña).</p>
+      que preparaste al usar tu invitación. Si no lo llegaste a preparar, la pantalla te pide una invitación nueva.</p>
     <p class="prose">Si has registrado una <strong>passkey</strong>, pulsas «Entrar con passkey» sin escribir nada: el dispositivo te pide la
       huella, la cara o el PIN y entras. Es una entrada completa, sin contraseña ni código del móvil, y solo funciona en la dirección web de
       ResidApp, así que una página falsa que imite a ResidApp no puede aprovecharla. Una cuenta bloqueada por intentos, suspendida o sin ámbito activo tampoco
@@ -762,8 +756,7 @@
     </div>
     <ul class="lista prose">
       <li><strong>Si algo no cuadra</strong>, el aviso es siempre «Usuario o contraseña incorrectos.», sin decir qué falla: así no
-        se puede averiguar qué cuentas existen. En el acceso de desarrollo es «Usuario o clave incorrectos.» y, en local, sin clave, dice
-        que la cuenta no existe o no tiene ámbito.</li>
+        se puede averiguar qué cuentas existen.</li>
       <li><strong>Cinco fallos seguidos</strong> (contraseña o código del móvil) <strong>bloquean la cuenta 15 minutos</strong>, aunque
         después se escriba bien. Cada fallo, cada bloqueo y cada entrada quedan en el registro de accesos.</li>
       <li><strong>Sin el móvil</strong>, «Usa un código de recuperación» deja entrar con uno de los 10 códigos; cada uno vale una vez.
@@ -799,7 +792,7 @@
         <span class="num">1</span>
         <div class="hito">
           <div class="hito-cab"><span class="cuando">08:00</span><span class="perfil">Enfermería</span></div>
-          <p><strong>Entra</strong> con <code>almendros-enfermeria</code> y la clave. Se abre su sesión, que durará como mucho hasta las 20:00.</p>
+          <p><strong>Entra</strong> con <code>almendros-enfermeria</code>, su contraseña y el código del móvil. Se abre su sesión, que durará como mucho hasta las 20:00.</p>
         </div>
       </li>
       <li>
@@ -856,9 +849,14 @@
 
   <section id="cuentas" aria-labelledby="cuentas-t">
     <h2 id="cuentas-t">Las cuentas de prueba: Residencia Los Almendros</h2>
-    <p class="prose">Es el centro del <a href="/flujo-de-trabajo.html">Flujo de trabajo</a>, ya montado, con una cuenta por perfil. Los
-      pasos 1 a 5 de la vida de Rosa están hechos: el centro con sus dos plantas, sus turnos y sus equipos, Rosa dada de alta en Planta 1
-      · 104 · B y Elena con acceso al portal. Su historia sigue en vivo desde el paso 6, el basal. Rosa y Elena son ficticias.</p>
+    <p class="prose">Es el centro del <a href="/flujo-de-trabajo.html">Flujo de trabajo</a> y de las guías de pruebas de CJ, ya montado, con
+      una cuenta por perfil. Los pasos 1 a 5 de la vida de Rosa están hechos: el centro con sus dos plantas, sus turnos y sus equipos, Rosa
+      dada de alta en Planta 1 · 104 · B y Elena con acceso al portal. Su historia sigue en vivo desde el paso 6, el basal. Hay además otros
+      cinco residentes para las guías (el <a href="/Home/Manual#cuentas-prueba">Manual</a> dice para qué sirve cada uno). Todos son
+      ficticios.</p>
+    <p class="prose">Cada cuenta se da de alta como en un centro real, con su invitación, su contraseña y su código del móvil. Hay dos juegos
+      con los mismos perfiles, para que nadie comparta contraseñas: el de CJ, que es el de abajo, y el de Orlando, con <code>-orlando</code>
+      en el nombre (por ejemplo, <code>almendros-orlando-enfermeria</code>).</p>
     <ul class="perfiles">
       <li class="adm">
         <h3>Administración</h3>
@@ -886,7 +884,7 @@
       <li class="aux">
         <h3>Auxiliar</h3>
         <p class="usuario">almendros-auxiliar</p>
-        <p>Solo Planta 1. Tiene a Rosa en «Mis residentes».</p>
+        <p>Solo Planta 1. Tiene a cinco residentes en «Mis residentes», entre ellos Rosa.</p>
         <p class="nunca">No ve la Planta 2.</p>
       </li>
       <li class="fam">
@@ -896,7 +894,7 @@
       </li>
       <li class="plat">
         <h3>Plataforma</h3>
-        <p class="usuario">dev-plataforma</p>
+        <p class="usuario">plataforma-cj</p>
         <p>No es del centro: es global. Da de alta centros nuevos y atiende a sus Administraciones.</p>
         <p class="nunca">Nunca ve residentes.</p>
       </li>
@@ -904,11 +902,11 @@
     <ul class="lista prose">
       <li><strong>Es un centro compartido.</strong> Lo que hagas en él se queda, y lo ve cualquiera que entre con esas cuentas. No se puede
         reiniciar, porque la auditoría no se borra.</li>
-      <li><strong>Las guías de pruebas de CJ</strong> siguen usando sus propias cuentas (<code>dev-integrado-…</code>), en otro centro. No
-        las mezcles con Los Almendros.</li>
-      <li><strong>Para ver la elección de ámbito</strong>, entra con <code>dev-multi</code>, que tiene varios perfiles. El resto de
-        cuentas de prueba están en el <a href="/Home/Manual#cuentas-prueba">Manual</a>.</li>
-      <li>Las mismas cuentas existen en local y en el entorno publicado. En local se entra sin clave.</li>
+      <li><strong>Un segundo centro</strong>, la «Residencia Los Olmos (ficticia)» (<code>olmos-administracion</code> y
+        <code>olmos-enfermeria</code>), sirve para comprobar que cada centro solo ve lo suyo.</li>
+      <li><strong>Para ver la elección de ámbito</strong>, entra con <code>varios-centros</code>, que tiene perfiles en los dos centros. El
+        resto está en el <a href="/Home/Manual#cuentas-prueba">Manual</a>.</li>
+      <li>Las mismas cuentas existen en local y en el entorno publicado, cada una con sus propias credenciales en cada sitio.</li>
     </ul>
   </section>
 
@@ -935,9 +933,9 @@
           Las cookies solo viajan cifradas y las páginas no pueden leerlas.</p>
       </li>
       <li class="bien">
-        <h3>El acceso de desarrollo, cerrado por defecto</h3>
-        <p>Solo existe si se activa a propósito. Fuera del equipo de desarrollo exige una clave de 16 caracteres o más que no está en el
-          código; sin ella, la aplicación no arranca.</p>
+        <h3>Una sola forma de entrar</h3>
+        <p>El acceso de desarrollo (entrar escribiendo solo el nombre de una cuenta) se retiró el 24/10/2026, también del entorno de
+          pruebas. Las pruebas automáticas usan una entrada que solo existe dentro de ellas y nunca se publica.</p>
       </li>
       <li class="bien">
         <h3>Nada queda abierto por descuido</h3>
@@ -953,8 +951,8 @@
       </li>
       <li class="aviso">
         <h3>Lo que todavía no protege</h3>
-        <p>Mientras siga el acceso de desarrollo, <strong>quien tenga su clave puede entrar con cualquier cuenta de prueba</strong>. Por
-          eso solo se usan datos ficticios y la clave se da en privado; se retira antes de usar datos reales.</p>
+        <p>La pulsera con PIN para las tablets compartidas (I5) aún no existe, y falta la validación del responsable de protección de
+          datos (DPO) de la residencia piloto. Hasta entonces solo se usan datos ficticios.</p>
       </li>
     </ul>
   </section>
@@ -981,8 +979,8 @@
   <section id="falta" aria-labelledby="falta-t">
     <h2 id="falta-t">Lo que falta: el acceso definitivo</h2>
     <p class="prose">ResidApp tendrá su propio inicio de sesión (con ASP.NET Core Identity, el sistema de cuentas que trae la propia plataforma de la aplicación), con los datos de acceso en la misma base de datos
-      de la UE que el resto. Se hace por partes; las cinco primeras (hasta las passkeys) y la vinculación de cuentas entre centros ya están hechas (ADR 0007). Falta además retirar el acceso de
-      desarrollo antes de usar datos reales.</p>
+      de la UE que el resto. Se hace por partes; las cinco primeras (hasta las passkeys) y la vinculación de cuentas entre centros ya están hechas (ADR 0007), y el acceso de desarrollo
+      se retiró el 24/10/2026.</p>
     <ul class="estados">
       <li><div class="pildora ok"><strong>I0 · Sesión segura</strong><span>Sesión cifrada y revocable, todo con sesión, HTTPS. Hecho el 21/10/2026.</span></div></li>
       <li><div class="pildora ok"><strong>I1 · Contraseña</strong><span>Contraseña y segundo factor con app de códigos (TOTP), bloqueo por intentos y registro de accesos. Hecho el 22/10/2026.</span></div></li>
@@ -1017,7 +1015,8 @@
             <td>Altas de cuentas</td>
             <td><code>/Plataforma</code> (Nuevo centro), <code>/Administracion/NuevoUsuario</code> y el acceso al portal en la
               autorización del familiar</td>
-            <td>El perfil Plataforma no se concede desde Usuarios: su primera cuenta es un <code>INSERT</code> (ADR 0006).
+            <td>El perfil Plataforma no se concede desde Usuarios: su primera cuenta es un <code>INSERT</code> (ADR 0006), y su invitación
+              la emite <code>database/operaciones/invitar_cuenta.sql</code> (emisor <code>ARRANQUE</code>).
               <code>cuentas.sujeto_externo</code> es único y no se puede modificar (trigger de <code>0023</code>).</td>
           </tr>
           <tr>
@@ -1076,11 +1075,11 @@
               borra (errores 50537 y 50538) y nunca guarda lo tecleado.</td>
           </tr>
           <tr>
-            <td>Acceso de desarrollo</td>
-            <td><code>DevAuthController</code>, <code>DevAuthOptions</code></td>
-            <td><code>DevAuth:Habilitado</code> (apagado en <code>appsettings.json</code>, encendido en Development),
-              <code>DevAuth:Clave</code> y <code>DevAuth:IntentosPorMinuto</code> (10). Clave comparada en tiempo constante.
-              <code>DevAuth/Credenciales</code> crea una invitación para la cuenta de la sesión (emisor <code>DESARROLLO</code>).</td>
+            <td>Invitación de arranque</td>
+            <td><code>database/operaciones/invitar_cuenta.sql</code></td>
+            <td>Lo ejecuta a mano quien administra la base, con <code>-v CUENTA=…</code>: emite una invitación (emisor <code>ARRANQUE</code>,
+              script <code>0067</code>) para cualquier cuenta activa con ámbito e imprime su ruta. Sirve para la primera Plataforma de un
+              entorno y para recuperarla. El acceso de desarrollo (<code>DevAuth</code>) se retiró el 24/10/2026.</td>
           </tr>
           <tr>
             <td>Invitaciones</td>
@@ -1095,7 +1094,7 @@
           </tr>
           <tr>
             <td>Lo público</td>
-            <td><code>[AllowAnonymous]</code> en Home, Acceso, DevAuth y AccesoCj, y los ficheros estáticos</td>
+            <td><code>[AllowAnonymous]</code> en Home, Acceso, Passkey y AccesoCj, y los ficheros estáticos</td>
             <td>Política global de usuario autenticado. <code>/pendientes-cj</code> va aparte, con su propia clave. Cualquier pantalla
               pública nueva hay que añadirla a propósito, y <code>SesionTests</code> lo vigila.</td>
           </tr>
@@ -1106,11 +1105,12 @@
               Service (<code>httpsOnly</code>, que el CI fija en «Exigir HTTPS en la Web App»).</td>
           </tr>
           <tr>
-            <td>Entorno publicado</td>
-            <td>Ajustes de la Web App <code>DevAuth__Habilitado</code> y <code>DevAuth__Clave</code></td>
-            <td>Nunca en el repositorio. Cambiar la clave reinicia la app y no cierra las sesiones abiertas: la clave solo se pide al
-              entrar. Con <code>DevAuth__Habilitado=false</code> solo se entra con contraseña: las cuentas de prueba necesitan antes su
-              invitación (desde Administración, Plataforma o, mientras siga habilitado, «Credenciales de prueba»).</td>
+            <td>Cuentas de prueba</td>
+            <td><code>database/seed/centros_prueba.sql</code>; en la skill <code>probar-en-navegador</code>, <code>alta-juego.js</code> y
+              <code>preparar-almendros.js</code></td>
+            <td>La semilla crea las cuentas sin contraseña. <code>alta-juego.js</code> da de alta un juego por la cadena real (Plataforma →
+              Administraciones → personal y familia) y guarda sus credenciales fuera del repositorio; <code>preparar-almendros.js</code> deja
+              hecho por la aplicación lo que no se puede sembrar (basales firmados, una foto, un historial).</td>
           </tr>
           <tr>
             <td>Pruebas</td>
@@ -1120,7 +1120,8 @@
               inactividad y cuenta suspendida. Y de I1: mismo mensaje para todo fallo, bloqueo, segundo factor obligatorio al personal,
               códigos de recuperación de un solo uso y el paso pendiente que caduca o deja de valer si cambia la contraseña. Y de I4: el alta de
               una passkey pide contraseña y código, el punto del registro guardado en la cookie vale una sola vez y solo para la sesión que lo pidió, se rechaza una petición hecha desde otra
-              web o con un código de comprobación que no era el pedido, la entrada no abre sesión a una cuenta bloqueada o suspendida y Plataforma con passkey no entra con contraseña.</td>
+              web o con un código de comprobación que no era el pedido, la entrada no abre sesión a una cuenta bloqueada o suspendida y Plataforma con passkey no entra con contraseña.
+              Las demás pruebas funcionales abren sesión con <code>EntradaDePruebas</code>, que solo existe en su servidor de pruebas.</td>
           </tr>
         </tbody>
       </table>
@@ -1128,7 +1129,7 @@
   </section>
 
   <footer>
-    ResidApp · Acceso y sesión · Estado a 21/10/2026. El detalle de cada pantalla está en el <a href="/Home/Manual">Manual de usuario</a>.
+    ResidApp · Acceso y sesión · Estado a 24/10/2026. El detalle de cada pantalla está en el <a href="/Home/Manual">Manual de usuario</a>.
   </footer>
 </div>
 

@@ -250,8 +250,8 @@
     <h2 id="leer">Cómo leer el diagrama</h2>
     <p class="prose">Cada franja es un perfil, con la cuenta con la que entras. Cada caja es una prueba de la guía, con su número. Se lee de izquierda a derecha y de arriba abajo.</p>
     <ul class="leyenda">
-      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · <code>dev-integrado-enfermeria</code></span></li>
-      <li><span class="muestra m-dir" aria-hidden="true"></span><span>Dirección Clínica · <code>dev-integrado-direccion</code></span></li>
+      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · <code>almendros-enfermeria</code></span></li>
+      <li><span class="muestra m-dir" aria-hidden="true"></span><span>Dirección Clínica · <code>almendros-direccion</code></span></li>
       <li><span class="muestra ext" aria-hidden="true"></span>Viene de otras guías</li>
       <li><span class="estrella">★</span>&nbsp;Imprescindible (borde grueso)</li>
       <li><span class="linea" aria-hidden="true"></span>Lo siguiente que haces</li>
@@ -276,9 +276,9 @@
         <rect class="lane-dir" x="0" y="140" width="990" height="340"/>
         <line class="sep" x1="0" y1="140" x2="990" y2="140"/>
         <text class="lane-label enf" x="14" y="26">Enfermería</text>
-        <text class="lane-cuenta" x="14" y="44">dev-integrado-enfermeria</text>
+        <text class="lane-cuenta" x="14" y="44">almendros-enfermeria</text>
         <text class="lane-label dir" x="14" y="166">Dirección Clínica</text>
-        <text class="lane-cuenta" x="14" y="184">dev-integrado-direccion</text>
+        <text class="lane-cuenta" x="14" y="184">almendros-direccion</text>
 
         <!-- Flechas -->
         <path class="flecha info" d="M205,111 L205,193" marker-end="url(#pi1)"/>
@@ -363,7 +363,7 @@
       </li>
       <li class="dir">
         <div class="paso-cab"><span class="n">6</span><strong>Consulta auditada del resto del expediente</strong><span class="perfil dir">Dirección Clínica</span></div>
-        <span>En la misma pantalla, con «Prueba Activación RLS Azure (ficticio)», consulta «Línea temporal», «Historial de eventos cerrados», «Correcciones y rectificaciones», «Trazabilidad clínica» e «Informes de derivación firmados», y abre un PDF.</span>
+        <span>En la misma pantalla, con «Pilar Moreno (ficticia)», consulta «Línea temporal», «Historial de eventos cerrados», «Correcciones y rectificaciones», «Trazabilidad clínica» e «Informes de derivación firmados», y abre un PDF.</span>
         <span class="pasa">Todo es de solo lectura; cada consulta y cada PDF quedan en la auditoría.</span>
       </li>
       <li class="dir">
@@ -371,12 +371,12 @@
         <span>En Inicio, «Rangos de referencia de constantes»: fija un mínimo de saturación de O₂ de 92 y «Guardar rangos».</span>
         <span class="pasa">Le llega a <strong>Enfermería</strong>: al valorar ve el rango bajo el campo y un aviso amarillo con un valor fuera de él (también en la guía 1, prueba 8).</span>
       </li>
-      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-enfermeria</code>.</li>
+      <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-enfermeria</code>.</li>
       <li class="enf">
         <div class="paso-cab"><span class="n">7</span><strong>El rango, en la valoración de Enfermería</strong><span class="perfil enf">Enfermería</span></div>
         <span>Valora un evento y guarda una saturación de 89: aparece el aviso amarillo, solo informativo (no impide guardar).</span>
       </li>
-      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-direccion</code>.</li>
+      <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-direccion</code>.</li>
       <li class="dir">
         <div class="paso-cab"><span class="n">8</span><strong>Calidad de proceso</strong> <span class="estrella">★</span><span class="perfil dir">Dirección Clínica</span></div>
         <span>En Inicio, «Calidad de proceso»: cambia las fechas, «Aplicar», mira cada hito y abre el detalle operativo de un episodio fuera de plazo.</span>

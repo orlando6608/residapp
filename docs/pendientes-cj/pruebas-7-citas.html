@@ -322,9 +322,11 @@
         entorno, pero no afecta a ningún residente real. Si algo sale mal, no pasa nada: apunta lo que viste en el comentario de la
         prueba.
       </p>
-      <p><strong>Cómo se entra.</strong> Esto no es un acceso real: escribes el nombre de una cuenta de prueba en el campo «Usuario» y
-        pulsas «Entrar». Para cambiar de cuenta, usa «Cambiar de identidad» en el menú de tu perfil (arriba a la derecha) o vuelve a
-        <code>/DevAuth/Login</code>. Si una cuenta tiene varios ámbitos, la aplicación te deja elegir cuál usar.</p>
+      <p><strong>Cómo se entra.</strong> Como en una residencia de verdad: en «Iniciar sesión» escribes el usuario de la cuenta y su
+        contraseña y, después, el código de 6 cifras de tu aplicación de autenticación, o pulsas «Entrar con passkey». La primera vez, cada
+        cuenta se da de alta con la invitación que te entrega Orlando (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
+        de cuenta, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra. Si una cuenta tiene varios ámbitos, la
+        aplicación te deja elegir cuál usar.</p>
       <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
       <p><strong>Si te pierdes</strong>, el <a href="pruebas-7-citas-flujo.html">flujo de la guía 7</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
     </div>
@@ -333,9 +335,9 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
-        <tr><td><code>dev-integrado-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), traslados y bajas, familias y su acceso al Portal Familiar, comunicados a la familia, citas, usuarios, estructura, turnos y auditoría. Es la Administración principal del centro.</td></tr>
-        <tr><td><code>dev-integrado-familiar</code></td><td>Familiar (Portal Familiar)</td><td>La hija de «Residente Portal Familiar (ficticio)», con la autorización activa. Solo ve las novedades publicadas y las citas de ese residente.</td></tr>
-        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
+        <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), traslados y bajas, familias y su acceso al Portal Familiar, comunicados a la familia, citas, usuarios, estructura, turnos y auditoría. Es la Administración principal del centro.</td></tr>
+        <tr><td><code>almendros-elena</code></td><td>Familiar (Portal Familiar)</td><td>La hija de «Rosa Sánchez (ficticia)», con la autorización activa. Solo ve las novedades publicadas y las citas de ese residente.</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
       </tbody>
     </table></div>
 
@@ -343,7 +345,7 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
       <tbody>
-        <tr><td>Residente Portal Familiar (ficticio)</td><td>Su hija tiene acceso al Portal Familiar (<code>dev-integrado-familiar</code>). Úsalo para los comunicados que leerá la familia y para las citas.</td></tr>
+        <tr><td>Rosa Sánchez (ficticia)</td><td>Su hija tiene acceso al Portal Familiar (<code>almendros-elena</code>). Úsalo para los comunicados que leerá la familia y para las citas.</td></tr>
       </tbody>
     </table></div>
 
@@ -354,10 +356,10 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (4 de 9).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (4 de 9).</p>
 
     <h3>Antes de esta guía</h3>
-    <p class="prose">La familia (<code>dev-integrado-familiar</code>) tiene que tener su autorización activa. Si hiciste la <a href="pruebas-6-comunicados-portal.html">guía 6</a>, déjala activa al terminar su prueba 12.</p>
+    <p class="prose">La familia (<code>almendros-elena</code>) tiene que tener su autorización activa. Si hiciste la <a href="pruebas-6-comunicados-portal.html">guía 6</a>, déjala activa al terminar su prueba 12.</p>
 
     <h3>En qué orden hacerlas</h3>
     <ul class="lista prose">
@@ -371,14 +373,14 @@
   <section class="tema" id="tema-1">
     <h2>Reserva directa</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-administracion</code> y <code>dev-integrado-familiar</code>: el centro empieza en reserva directa, la familia elige un hueco libre y la cita queda confirmada.</p>
+      <p>Con <code>almendros-administracion</code> y <code>almendros-elena</code>: el centro empieza en reserva directa, la familia elige un hueco libre y la cita queda confirmada.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="1">
         <div class="q-head"><span class="n">1</span><h3 class="q-title" id="t-1">Configurar el servicio de citas</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-integrado-administracion</code> y abre «Citas con la familia». Verás el servicio en reserva directa, las modalidades de cada equipo y las franjas de lunes a viernes que ya están preparadas.</li>
+          <li>Entra con <code>almendros-administracion</code> y abre «Citas con la familia». Verás el servicio en reserva directa, las modalidades de cada equipo y las franjas de lunes a viernes que ya están preparadas.</li>
           <li>Prueba a cambiar la antelación mínima y el horizonte y a marcar o desmarcar alguna modalidad; pulsa «Guardar el servicio». Añade una franja nueva (por ejemplo, los sábados de 10:00 a 12:00 en citas de 20 minutos) y prueba también a añadir una que se solape con otra del mismo equipo y día.</li>
           <li>Añade un bloqueo (un equipo, una modalidad o todas, de una hora a otra, con un motivo) y retíralo después.</li>
         </ol>
@@ -396,7 +398,7 @@
         <div class="q-head"><span class="n">2</span><h3 class="q-title" id="t-2">La familia reserva una cita</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-integrado-familiar</code>, elige a «Residente Portal Familiar (ficticio)» y pulsa «Citas con el equipo asistencial» y después «Reservar una cita».</li>
+          <li>Entra con <code>almendros-elena</code>, elige a «Rosa Sánchez (ficticia)» y pulsa «Citas con el equipo asistencial» y después «Reservar una cita».</li>
           <li>Elige un equipo y una modalidad, mira los huecos libres, elige uno, revisa los datos y pulsa «Confirmar la reserva». Pulsa dos veces seguidas el botón de confirmar, si puedes.</li>
           <li>Abre la cita y prueba a reservar otra con el mismo equipo.</li>
         </ol>
@@ -413,8 +415,8 @@
       <article class="q" data-q="3">
         <div class="q-head"><span class="n">3</span><h3 class="q-title" id="t-3">La familia reprograma y cancela su cita</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Con <code>dev-integrado-familiar</code>, abre una cita confirmada y pulsa «Reprogramar»: elige otro hueco y confirma. Después pulsa «Cancelar la cita» y confirma.</li>
-          <li>Mira que el hueco antiguo vuelve a ofrecerse. Si quieres, entra como <code>dev-integrado-administracion</code> y cambia la antelación mínima a un valor alto (por ejemplo, 720 horas) para ver que la familia ya no puede cambiar una cita próxima.</li>
+          <li>Con <code>almendros-elena</code>, abre una cita confirmada y pulsa «Reprogramar»: elige otro hueco y confirma. Después pulsa «Cancelar la cita» y confirma.</li>
+          <li>Mira que el hueco antiguo vuelve a ofrecerse. Si quieres, entra como <code>almendros-administracion</code> y cambia la antelación mínima a un valor alto (por ejemplo, 720 horas) para ver que la familia ya no puede cambiar una cita próxima.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Reprogramar y cancelar piden confirmación. Los huecos se liberan. En el historial de la cita constan «Reservada», «Reprogramada» y «Cancelada». Si falta menos que la antelación mínima para la cita, el portal dice que hay que llamar por teléfono al centro. Una cita cancelada no se puede reabrir.</div>
         <fieldset class="choices" aria-labelledby="t-3">
@@ -429,7 +431,7 @@
       <article class="q" data-q="4">
         <div class="q-head"><span class="n">4</span><h3 class="q-title" id="t-4">Administración gestiona la agenda de citas</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Con <code>dev-integrado-familiar</code>, reserva una cita (prueba 2). Con <code>dev-integrado-administracion</code>, abre «Citas con la familia» → «Ver la agenda de citas» y busca la semana de esa cita.</li>
+          <li>Con <code>almendros-elena</code>, reserva una cita (prueba 2). Con <code>almendros-administracion</code>, abre «Citas con la familia» → «Ver la agenda de citas» y busca la semana de esa cita.</li>
           <li>Pulsa «Reprogramar», elige otro hueco y escribe un motivo; después «Cancelar» sobre otra cita y escribe otro motivo. Prueba a guardar sin motivo.</li>
           <li>Vuelve con la familia y mira las citas. Si hay una cita ya pasada, prueba «Finalizar».</li>
         </ol>
@@ -455,8 +457,8 @@
         <div class="q-head"><span class="n">5</span><h3 class="q-title" id="t-5">Pasar el centro a solicitud previa y solicitar una cita</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-integrado-administracion</code>, abre «Citas con la familia», cambia el «Modo del servicio» a «Solicitud previa» y pulsa «Guardar». Comprueba que las franjas siguen ahí.</li>
-          <li>Entra con <code>dev-integrado-familiar</code>, abre las citas de su residente y pulsa «Solicitar una cita». Elige equipo, modalidad, motivo, escribe un comentario breve, marca uno o dos días y la parte del día, y pulsa «Enviar la solicitud». Prueba también a enviarla sin elegir el motivo.</li>
+          <li>Entra con <code>almendros-administracion</code>, abre «Citas con la familia», cambia el «Modo del servicio» a «Solicitud previa» y pulsa «Guardar». Comprueba que las franjas siguen ahí.</li>
+          <li>Entra con <code>almendros-elena</code>, abre las citas de su residente y pulsa «Solicitar una cita». Elige equipo, modalidad, motivo, escribe un comentario breve, marca uno o dos días y la parte del día, y pulsa «Enviar la solicitud». Prueba también a enviarla sin elegir el motivo.</li>
           <li>Mira «Mis solicitudes». Intenta enviar una segunda solicitud con el mismo equipo.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>En modo solicitud previa la familia ve «Solicitar una cita» y no «Reservar una cita». Sin motivo no se envía. La solicitud queda «Pendiente de gestión», con lo que pidió y sin ninguna cita confirmada. Una segunda solicitud con el mismo equipo se rechaza con un mensaje claro. No hay chat y en ningún sitio aparece un profesional.</div>
@@ -473,9 +475,9 @@
         <div class="q-head"><span class="n">6</span><h3 class="q-title" id="t-6">Administración propone un horario y la familia lo acepta</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Con <code>dev-integrado-administracion</code>, en «Citas con la familia» pulsa «Ver las solicitudes de cita». Verás la solicitud de la prueba anterior con lo que pidió la familia. Pulsa «Proponer un horario».</li>
+          <li>Con <code>almendros-administracion</code>, en «Citas con la familia» pulsa «Ver las solicitudes de cita». Verás la solicitud de la prueba anterior con lo que pidió la familia. Pulsa «Proponer un horario».</li>
           <li>Elige un hueco (los que encajan con la disponibilidad de la familia llevan una marca), escribe un nombre en «Profesional» y pulsa «Enviar la propuesta». Prueba también a enviarla sin elegir hueco.</li>
-          <li>Con <code>dev-integrado-familiar</code>, abre la solicitud: verás «El centro te propone». Pulsa «Aceptar y confirmar la cita». Después mira «Mis citas» y, con administración, la agenda de esa semana.</li>
+          <li>Con <code>almendros-elena</code>, abre la solicitud: verás «El centro te propone». Pulsa «Aceptar y confirmar la cita». Después mira «Mis citas» y, con administración, la agenda de esa semana.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Sin hueco no se envía la propuesta. Mientras la propuesta esté viva, ese hueco no se ofrece a otra solicitud. La familia ve el día y la hora propuestos pero no el profesional. Solo al aceptar nace una cita «Confirmada», que sale en «Mis citas» y en la agenda de Administración; la solicitud pasa a «Aceptada» y enlaza a la cita. Pulsar «Aceptar» dos veces seguidas no crea dos citas.</div>
         <fieldset class="choices" aria-labelledby="t-6">
@@ -490,7 +492,7 @@
       <article class="q" data-q="7">
         <div class="q-head"><span class="n">7</span><h3 class="q-title" id="t-7">La familia pide otro horario o cancela la solicitud</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Con <code>dev-integrado-familiar</code>, cancela la cita de la prueba anterior (o envía una solicitud para el otro equipo). Con administración, propón un horario a esa solicitud.</li>
+          <li>Con <code>almendros-elena</code>, cancela la cita de la prueba anterior (o envía una solicitud para el otro equipo). Con administración, propón un horario a esa solicitud.</li>
           <li>Con la familia, abre la solicitud y pulsa «Pedir otro horario». Mira el estado y el historial. Con administración, vuelve a proponer, y con la familia pulsa «Cancelar la solicitud» y confirma.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>«Pedir otro horario» devuelve la solicitud a «Pendiente de gestión», sin propuesta, y el hueco queda libre para proponerlo a otra solicitud. Cancelar pide confirmación y deja la solicitud «Cancelada»; el hueco propuesto se libera y la familia puede enviar otra. En el historial constan «Solicitada», «Horario propuesto por el centro», «Otro horario pedido» y «Cancelada».</div>
@@ -506,7 +508,7 @@
       <article class="q" data-q="8">
         <div class="q-head"><span class="n">8</span><h3 class="q-title" id="t-8">Administración cierra una solicitud y cambia de modo</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Con <code>dev-integrado-familiar</code>, envía una solicitud. Con administración, ábrela en «Solicitudes de cita», pulsa «Cerrar la solicitud», prueba a guardar sin motivo y después con motivo.</li>
+          <li>Con <code>almendros-elena</code>, envía una solicitud. Con administración, ábrela en «Solicitudes de cita», pulsa «Cerrar la solicitud», prueba a guardar sin motivo y después con motivo.</li>
           <li>Con la familia, abre la solicitud cerrada. Envía otra solicitud, haz que administración le proponga un horario y, con administración, cambia el «Modo del servicio» a «Reserva directa» sin tocar nada más.</li>
           <li>Con la familia, abre esa solicitud con propuesta e intenta aceptarla. Al terminar, deja el centro en «Reserva directa» para que las pruebas 2 a 4 sigan valiendo.</li>
         </ol>
@@ -525,15 +527,15 @@
   <section class="tema" id="tema-3">
     <h2>Inicio de Administración</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-administracion</code>: lo que el inicio dice que hay que atender.</p>
+      <p>Con <code>almendros-administracion</code>: lo que el inicio dice que hay que atender.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="9">
         <div class="q-head"><span class="n">9</span><h3 class="q-title" id="t-9">El inicio de Administración dice qué hay que atender</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-integrado-administracion</code> y abre el inicio de Administración. Mira el bloque «Requiere atención» y las dos líneas pequeñas de debajo (citas y comunicados).</li>
+          <li>Entra con <code>almendros-administracion</code> y abre el inicio de Administración. Mira el bloque «Requiere atención» y las dos líneas pequeñas de debajo (citas y comunicados).</li>
           <li>Pulsa cada línea del bloque y comprueba que te lleva a la pantalla donde se resuelve: las solicitudes y propuestas de cita, a «Solicitudes de cita»; las autorizaciones y los residentes sin habitación, a la lista de residentes ya filtrada por ese motivo (abajo, en «Requiere atención», puedes cambiar el filtro o quitarlo).</li>
-          <li>Entra con <code>dev-integrado-enfermeria</code> e intenta abrir <code>/Administracion</code>.</li>
+          <li>Entra con <code>almendros-enfermeria</code> e intenta abrir <code>/Administracion</code>.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>El bloque solo tiene cifras (ningún nombre de residente ni texto de una solicitud o de un comunicado) y solo salen las líneas con algo que atender; si no hay nada, dice «No hay nada pendiente». Las cifras cuadran con lo que ves en cada pantalla: las solicitudes por gestionar, con la bandeja; los residentes sin habitación, con la lista filtrada; las citas de hoy y de los próximos 7 días, con la agenda. Enfermería no entra.</div>
         <fieldset class="choices" aria-labelledby="t-9">

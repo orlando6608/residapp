@@ -40,16 +40,12 @@ public partial class AccesoTests
         return (subject, accountId);
     }
 
-    /// <summary>Una sesión de Administración con su ámbito ya elegido (sigue las redirecciones del acceso de desarrollo).</summary>
+    /// <summary>Una sesión de Administración con su ámbito ya elegido (sigue las redirecciones de la entrada de pruebas).</summary>
     private async Task<(HttpClient Client, string Subject, Guid AccountId)> AdministrationAsync(WebApplicationFactory<Program>? app = null)
     {
         var (subject, accountId) = await SesionTests.SeedAccountAsync("ADMINISTRACION");
         var client = (app ?? factory).CreateClient();
-        var page = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = SesionTests.ExtractValue(page, "__RequestVerificationToken"), ["externalSubject"] = subject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, subject)).EnsureSuccessStatusCode();
         return (client, subject, accountId);
     }
 
