@@ -14,7 +14,26 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **«Mi cuenta»: avisos en ventana, fichas con color y passkeys explicadas (2026-10-24, rama `mi-cuenta-avisos-y-fichas`). Hecho y probado, sin subir.** Petición de Orlando tras
+- **Para retomar (2026-10-24, final de la sesión).** `origin/main` ya lleva todo (último: `d07b43d`, «Mi cuenta»). Parte siempre de `origin/main` (`git fetch`): la `main` local suele ir atrás.
+  - **Entorno local:** SQL `ACER-ORLANDO` con solo `ResidApp` (esquema hasta `0068`, semilla y juego de Orlando dado de alta; copia previa en
+    `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-recrear-20261024.bak`) y `ResidAppPruebas` (la de las pruebas). App local parada.
+    El siguiente script libre es `0069`.
+  - **Azure dev:** base recreada, esquema hasta `0068` y semilla aplicados; juego de Orlando dado de alta (10 cuentas) y Los Almendros preparado (basales de Antonio y Pilar, foto de
+    Manuel, historial de Pilar). Credenciales de ese juego en `~/.residapp/credenciales-app-residapp-dev.azurewebsites.net.json` (fuera del repositorio). La contraseña del
+    administrador de la base (`residappadmin`) está **solo** en el secreto de GitHub `AZURE_SQL_ADMIN_PASSWORD`: para usarla a mano hay que cambiarla con
+    `az sql server update --admin-password` y `gh secret set`, y borrar cualquier fichero temporal después.
+  - **Orlando está aprendiendo la forma real de entrar** antes de dar nada a CJ. Ya entró a mano con `almendros-orlando-administracion` y con `olmos-orlando-administracion` (clave del
+    código en su móvil) y registró una passkey en Windows. En `olmos-orlando-enfermeria` se **creó una hoja de recuperación que no se ha usado** (vale hasta el martes
+    2026-10-27 19:44; se puede anular desde su ficha en Administración de Los Olmos): mientras no se use, su contraseña y su clave del fichero siguen valiendo; si se usa, la entrada
+    de esa cuenta en el fichero queda desactualizada (ningún guion la usa).
+  - **Pendiente, con confirmación de Orlando:** (1) **emitir el juego de CJ** (`plataforma-cj` con `database/operaciones/invitar_cuenta.sql` y el administrador de la base; después, desde
+    Plataforma y desde cada Administración, el resto) y que Orlando se las entregue: **espera a que él lo pida**. Las hojas caducan a las 72 h: emitirlas cuando CJ pueda empezar.
+    (2) **Rotar la clave de Mistral**: salió en pantalla al listar los user-secrets. (3) Que Orlando añada otra passkey en Azure y vea la ventana de aviso nueva.
+  - **Decisiones abiertas que salieron al explicar el segundo factor** (no bloquean, conviene llevarlas a CJ y al DPO): (a) ¿lleva cada Auxiliar y Enfermería de planta un móvil con aplicación
+    de autenticación, o la passkey en un dispositivo del centro? Hoy todo el personal necesita contraseña y código del móvil (o passkey); los familiares, solo la contraseña. (b) La clave del
+    código (`dbo.credenciales.clave_autenticador`) se guarda en la base **sin cifrado propio**: decidir si se cifra antes de datos reales. (c) El fichero de credenciales de pruebas junta
+    contraseña y clave en un mismo sitio: vale con datos ficticios, no con reales.
+- **«Mi cuenta»: avisos en ventana, fichas con color y passkeys explicadas (2026-10-24, rama `mi-cuenta-avisos-y-fichas`, ya en `main`, commit `d07b43d`). Hecho y probado.** Petición de Orlando tras
   probar las passkeys en Azure dev: el aviso verde («Passkey … añadida») salía arriba del todo y no lo vio. Decisiones: **todos** los avisos de «Mi cuenta» pasan a una ventana
   modal de Bootstrap (la primera de la app; título «Aviso», botón «Entendido» con el foco, Escape la cierra) y las siete fichas llevan una banda de título de tono propio.
   - **Vista:** `Views/Cuenta/Index.cshtml`: `#aviso-cuenta` sustituye al `alert-success`; un script pequeño la abre solo si hay aviso (`TempData["CuentaAviso"]`, que se consume al
@@ -24,7 +43,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Documentación:** sección nueva «Passkeys» en `wwwroot/acceso-y-sesion.html` (qué son, qué hace falta, con qué cuenta empezar y por qué no con Plataforma, paso a paso, cómo
     probarla, qué conviene saber) y versión corta en el Manual («Mi cuenta»). `docs/pendientes-cj/pruebas.html` ya decía lo justo de las passkeys: sin tocar, sin subir `data-version`.
   - **Pruebas:** `AccesoTests.Cuenta.cs` (el aviso sale una vez y con su ventana; las fichas llevan tonos distintos). Funcionales 303 en verde. En el navegador (local, claro, oscuro, 375 px):
-    sin desplazamiento lateral, sin errores de consola, foco en «Entendido», Escape cierra y no vuelve al recargar. La passkey real solo se ve en Azure tras el merge.
+    sin desplazamiento lateral, sin errores de consola, foco en «Entendido», Escape cierra y no vuelve al recargar. La passkey real solo se ve en Azure tras el despliegue: Orlando la probó antes del cambio (funciona) y falta que vea la ventana nueva.
   - **Aparte, no tocado:** otras pantallas usan `TempData["Mensaje"]` con franja verde arriba (comunicados, protocolo urgente…) y tienen el mismo problema de visibilidad.
 - **Logo y nombre propios de cada centro (2026-10-24, rama `logo-por-centro`, script `0068`; el siguiente libre es `0069`). Hecho y probado, sin subir; espera el visto bueno de CJ.**
   Petición de Orlando: con sesión de un centro, la esquina superior izquierda, la cabecera de impresión y el PDF del informe de derivación muestran el **logo y el nombre del
@@ -1774,8 +1793,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    Identity); (b) bloquear el resto de la aplicación a una cuenta de Plataforma hasta que cree su primera passkey (hoy solo se la lleva a «Mi cuenta»); (c) renombrar
    passkeys; (d) probar con dispositivos reales (iOS, Android, llave física) y no solo con el autenticador virtual; (e) elegir el dominio de Pro antes de que nadie
    registre una passkey allí y poner `Acceso__PasskeyDominio` (ADR 0007, puerta abierta 5); (f) las passkeys de los familiares, que esperan a la pregunta 3.2 de CJ.
-   Para entrar en Azure dev (cuando esté recreada, ver la primera entrada de «Dónde estamos») se usan las cuentas `*-orlando-*`, con las credenciales de
-   `~/.residapp/credenciales-app-residapp-dev.azurewebsites.net.json` (fuera del repositorio; nunca las copies a él).
+   Para entrar en Azure dev se usan las cuentas `*-orlando-*` (ya dadas de alta), con las credenciales de
+   `~/.residapp/credenciales-app-residapp-dev.azurewebsites.net.json` (fuera del repositorio; nunca las copies a él). Ver «Para retomar» al principio de «Dónde estamos».
 1. **Revisar las respuestas de CJ** que lleguen:
    - `docs/pendientes-cj/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
      finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).
