@@ -93,7 +93,22 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
                 : "ACCOUNT_SUBJECT_TAKEN");
         }
 
+        if (data.Logo is not null)
+        {
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.logos_centro (centro_id, tipo, contenido, actualizado_por_cuenta_id, actualizado_por_perfil, actualizado_en)
+                VALUES (@CenterId, @Type, @Content, @ActorId, 'PLATAFORMA', @OccurredAt);
+                """, new
+            {
+                CenterId = operationId, data.Logo.Type, data.Logo.Content, ActorId = access.AccountId.Value, OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+        }
+
         await AuditAsync(connection, transaction, access, operationId, null, "CENTER", operationId, "CENTER_CREATE", occurredAt, ct);
+        if (data.Logo is not null)
+        {
+            await AuditAsync(connection, transaction, access, operationId, null, "CENTER", operationId, "CENTER_LOGO_SET", occurredAt, ct);
+        }
         await AuditAsync(connection, transaction, access, operationId, unitId, "UNIT", unitId, "UNIT_CREATE", occurredAt, ct);
         await AuditAsync(connection, transaction, access, operationId, null, "ACCOUNT", adminId, "ACCOUNT_CREATE", occurredAt, ct);
         await AuditAsync(connection, transaction, access, operationId, null, "PROFILE_SCOPE", profileScopeId, "PROFILE_SCOPE_GRANT", occurredAt, ct);

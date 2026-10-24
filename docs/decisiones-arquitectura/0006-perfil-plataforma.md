@@ -43,4 +43,6 @@ La primera cuenta de plataforma no la crea la aplicación: alguien tiene que ser
   es ahora este perfil.
 - Quien conceda el perfil Plataforma por SQL concede la capacidad de crear centros y cuentas de Administración: es la cuenta más
   sensible del sistema. Cuando exista el proveedor de identidad real, estas cuentas deberían exigir su autenticación reforzada.
-- No hay editar, inactivar ni borrar centros desde la aplicación; llegarán si hace falta.
+- No hay editar, inactivar ni borrar centros desde la aplicación; llegarán si hace falta. Excepción (script 0068): el logo del
+  centro, que Plataforma puede subir (opcional) al darlo de alta, y el nombre y el logo, que después cambia la **Administración del
+  propio centro** desde «Datos del centro». Plataforma no cambia un centro ya creado.

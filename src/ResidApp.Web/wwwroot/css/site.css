@@ -45,6 +45,12 @@
   .impresion-pagina > main {
     display: table-row-group;
   }
+
+  /* Con la marca del centro arriba, la de ResidApp queda al pie de cada página. */
+  .impresion-pie {
+    display: table-footer-group !important;
+    break-inside: avoid;
+  }
 }
 
 /* Foto de identificación del residente (_FotoResidente): de tamaño fijo y cuadrada con las esquinas redondeadas, en las listas y en la ficha;
@@ -74,4 +80,37 @@
 
 .foto-encuadre-acercar {
   max-width: 15rem;
+}
+
+/* Logo propio del centro (script 0068): sobre un recuadro blanco, como el icono de ResidApp, para que se vea igual en tema claro y oscuro. */
+.logo-centro {
+  background: #fff;
+  border-radius: .35rem;
+  padding: 2px;
+  object-fit: contain;
+  width: auto;
+  max-width: 7rem;
+}
+
+.logo-centro-vista {
+  background: #fff;
+  border: 1px solid var(--bs-border-color);
+  border-radius: .35rem;
+  max-height: 5rem;
+  max-width: 100%;
+  padding: .25rem;
+}
+
+/* El nombre del centro (script 0068) sustituye a «ResidApp» en la marca de la esquina superior izquierda y puede ser largo: pasa a la línea
+   siguiente en vez de desbordar la pantalla. En móvil la marca ocupa el hueco que deja el botón del menú. */
+.navbar-brand {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .navbar-brand {
+    flex: 1 1 0;
+  }
 }

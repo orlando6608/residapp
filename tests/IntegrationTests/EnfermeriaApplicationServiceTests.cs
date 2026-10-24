@@ -53,7 +53,8 @@ public class EnfermeriaApplicationServiceTests
             new ActivateUrgentProtocol(scopes, changeInbox, session, assessments),
             new RecordUrgentProtocolEntry(scopes, changeInbox, session, assessments),
             new ListUrgentProtocols(scopes, changeInbox, session),
-            new SignReferralReport(scopes, changeInbox, session, assessments, new ReferralReportPdfRenderer()),
+            new SignReferralReport(
+                scopes, changeInbox, session, assessments, new ReferralReportPdfRenderer(), new SqlCenterBrandingDirectory(TestDatabase.ConnectionFactory)),
             new RecordFamilyCallAttempt(scopes, changeInbox, session, assessments),
             new FindResidentIdentification(scopes, changeInbox, session),
             new DownloadReferralReport(scopes, changeInbox, session, new SqlReferralReportRepository(TestDatabase.ConnectionFactory)),

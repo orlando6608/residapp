@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@inject ResidApp.Application.Ports.ICenterBrandingDirectory CenterBrandingLayout
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -21,6 +22,9 @@
         // Sin sesión (por ejemplo, caducada) no cuenta la cookie de ámbito que haya quedado.
         var activeScopeLayout = sessionSubjectLayout is null ? null : ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request);
         var profileLabelLayout = activeScopeLayout is null ? null : ResidApp.Web.Models.SystemProfileDisplay.Label(activeScopeLayout.Profile);
+        // Quien trabaja en un centro ve el nombre y el logo del centro (script 0068); sin sesión o en Plataforma, la marca de ResidApp.
+        var brandingLayout = await ResidApp.Web.Models.LayoutBrandingResolver.ResolveAsync(User, Context.Request, CenterBrandingLayout, Url, Context.RequestAborted);
+        var centerNameLayout = brandingLayout?.Name ?? activeScopeLayout?.CenterName;
         // «Mi panel»: inicio del perfil activo.
         var panelLayout = activeScopeLayout?.Profile switch
         {
@@ -38,8 +42,15 @@
         <nav class="navbar navbar-expand-md navbar-dark navbar-residapp border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/logo.svg" alt="" width="28" height="28" />
-                    ResidApp
+                    @if (brandingLayout?.LogoUrl is { } logoLayout)
+                    {
+                        <img class="logo-centro" src="@logoLayout" alt="" height="32" />
+                    }
+                    else
+                    {
+                        <img src="~/images/logo.svg" alt="" width="28" height="28" />
+                    }
+                    @(brandingLayout?.Name ?? "ResidApp")
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal" aria-controls="menu-principal"
                         aria-expanded="false" aria-label="Mostrar u ocultar el menú">
@@ -87,14 +98,14 @@
                                     @(profileLabelLayout ?? User.Identity!.Name)
                                     @if (activeScopeLayout is not null)
                                     {
-                                        <span class="d-none d-lg-inline-block text-truncate opacity-75 centro-activo">· @activeScopeLayout.CenterName</span>
+                                        <span class="d-none d-lg-inline-block text-truncate opacity-75 centro-activo">· @centerNameLayout</span>
                                     }
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><span class="dropdown-item-text small">Sesión de @User.Identity!.Name</span></li>
                                     @if (activeScopeLayout is not null)
                                     {
-                                        <li><span class="dropdown-item-text small">Ámbito: @profileLabelLayout · @activeScopeLayout.CenterName</span></li>
+                                        <li><span class="dropdown-item-text small">Ámbito: @profileLabelLayout · @centerNameLayout</span></li>
                                     }
                                     <li><hr class="dropdown-divider" /></li>
                                     <li><a class="dropdown-item" asp-area="" asp-controller="Cuenta" asp-action="Index">Mi cuenta</a></li>
@@ -128,13 +139,35 @@
            no lo quiten. *@
         <div class="d-none impresion-marca">
             <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
-                <img src="~/images/logo.svg" alt="ResidApp" style="height: 1.4cm; width: 1.4cm" />
-                <span class="text-muted"><strong>ResidApp</strong> · Plataforma Asistencial Geriátrica</span>
+                @if (brandingLayout is null)
+                {
+                    <img src="~/images/logo.svg" alt="ResidApp" style="height: 1.4cm; width: 1.4cm" />
+                    <span class="text-muted"><strong>ResidApp</strong> · Plataforma Asistencial Geriátrica</span>
+                }
+                else
+                {
+                    if (brandingLayout.LogoUrl is { } logoImpresionLayout)
+                    {
+                        <img class="logo-centro" src="@logoImpresionLayout" alt="" style="height: 1.4cm; width: auto; max-width: 5cm" />
+                    }
+                    else
+                    {
+                        <img src="~/images/logo.svg" alt="" style="height: 1.4cm; width: 1.4cm" />
+                    }
+                    <span class="text-muted"><strong>@brandingLayout.Name</strong></span>
+                }
             </div>
         </div>
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
+        @if (brandingLayout is not null)
+        {
+            @* Con la marca del centro arriba, la de ResidApp queda al pie de cada página impresa (site.css). *@
+            <div class="d-none impresion-pie">
+                <div class="border-top pt-2 mt-3 small text-muted">Generado con ResidApp · Plataforma Asistencial Geriátrica</div>
+            </div>
+        }
     </div>
 
     <footer class="border-top footer text-muted">

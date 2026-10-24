@@ -46,7 +46,8 @@ public class MedicinaApplicationServiceTests
             new ActivateMedicalUrgentProtocol(scopes, changeInbox, session, medical),
             new RecordMedicalUrgentProtocolEntry(scopes, changeInbox, session, medical),
             new ListMedicalUrgentProtocols(scopes, changeInbox, session),
-            new SignMedicalReferralReport(scopes, changeInbox, session, medical, new ReferralReportPdfRenderer()),
+            new SignMedicalReferralReport(
+                scopes, changeInbox, session, medical, new ReferralReportPdfRenderer(), new SqlCenterBrandingDirectory(TestDatabase.ConnectionFactory)),
             new RecordMedicalFamilyCallAttempt(scopes, changeInbox, session, medical),
             new FindResidentIdentification(scopes, changeInbox, session),
             new DownloadReferralReport(scopes, changeInbox, session, new SqlReferralReportRepository(TestDatabase.ConnectionFactory)),

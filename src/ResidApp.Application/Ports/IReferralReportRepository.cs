@@ -1,4 +1,5 @@
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
@@ -8,10 +9,15 @@ namespace ResidApp.Application.Ports;
 public sealed record ReferralReportSignature(
     SystemProfile Profile, string SignerSubject, DateTimeOffset SignedAt, string ContentHash, string? SignerName = null);
 
-/// <summary>DER-05: genera el PDF del informe de derivación al firmarlo.</summary>
+/// <summary>La marca del centro que firma, para la cabecera del PDF (script 0068): su nombre y su logo propio, si lo tiene (sin él, el icono de
+/// ResidApp). Arriba van el nombre y el logo del centro; ResidApp queda al pie.</summary>
+public sealed record ReferralReportBranding(string CenterName, CenterLogoImage? Logo);
+
+/// <summary>DER-05: genera el PDF del informe de derivación al firmarlo. Sin marca de centro, la cabecera es la de ResidApp.</summary>
 public interface IReferralReportPdfRenderer
 {
-    byte[] Render(string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature);
+    byte[] Render(
+        string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature, ReferralReportBranding? branding = null);
 }
 
 /// <summary>DER-05: el PDF firmado de un evento, para descargarlo.</summary>

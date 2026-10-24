@@ -21,7 +21,7 @@
 <div class="card">
     <div class="card-body">
         <div asp-validation-summary="All" class="text-danger"></div>
-        <form asp-action="NuevoCentro" method="post">
+        <form asp-action="NuevoCentro" method="post" enctype="multipart/form-data">
             <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
             <fieldset class="mb-3">
                 <legend class="h5">Centro</legend>
@@ -35,6 +35,8 @@
                     <input asp-for="Form.NombreCentro" class="form-control form-control-lg" autocomplete="off" />
                     <span asp-validation-for="Form.NombreCentro" class="text-danger"></span>
                 </div>
+                <partial name="_LogoCentroCampo" model='new ResidApp.Web.Models.LogoCentroCampoViewModel("Form.Logo", "logo-centro-fichero", "Logo del centro (opcional)")' />
+                <p class="form-text mt-0">El centro con logo propio lo ve en su encabezado en vez del de ResidApp. Después lo cambia su Administración.</p>
             </fieldset>
             <fieldset class="mb-3">
                 <legend class="h5">Primera unidad</legend>

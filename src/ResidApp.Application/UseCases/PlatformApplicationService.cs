@@ -26,7 +26,7 @@ public sealed record AddUnitToAdministrationCommand(
 
 public sealed record CreateCenterCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? CodigoCentro, string? NombreCentro, string? CodigoUnidad,
-    string? NombreUnidad, string? IdentificadorAdministrador, string? NombreAdministrador);
+    string? NombreUnidad, string? IdentificadorAdministrador, string? NombreAdministrador, byte[]? Logo = null);
 
 /// <summary>
 /// Fachada del perfil de plataforma (script 0026; 0047): lista de centros, alta de un centro con su primera unidad y su primer
@@ -81,7 +81,7 @@ public sealed class PlatformApplicationService(
             var access = await AccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
             var data = NewCenter.Validate(
                 command.CodigoCentro, command.NombreCentro, command.CodigoUnidad, command.NombreUnidad,
-                command.IdentificadorAdministrador, command.NombreAdministrador);
+                command.IdentificadorAdministrador, command.NombreAdministrador, command.Logo);
             return await centers.CreateCenterAsync(access, command.OperacionId, data, ct);
         });
 

@@ -12,21 +12,22 @@ public static class PlatformCenter
     public const string Code = "PLATAFORMA";
 }
 
-/// <summary>Un centro nuevo con su primera unidad y la cuenta de su primer administrador.</summary>
+/// <summary>Un centro nuevo con su primera unidad y la cuenta de su primer administrador, y su logo si se sube al darlo de alta.</summary>
 public sealed record NewCenterData(
-    string CenterCode, string CenterName, CenterUnitData Unit, ProfessionalAccountData Administrator);
+    string CenterCode, string CenterName, CenterUnitData Unit, ProfessionalAccountData Administrator, CenterLogoImage? Logo = null);
 
 /// <summary>
 /// Reglas del alta de un centro por el operador de plataforma. El código del centro sigue las del código de una unidad (de 2 a
 /// 64 caracteres: letras sin acentos, dígitos, «-» y «_», en mayúsculas); el nombre, de 1 a 200. El código reservado no se
-/// puede usar. La unidad y el administrador siguen las reglas de CenterUnit y ProfessionalAccount.
+/// puede usar. La unidad y el administrador siguen las reglas de CenterUnit y ProfessionalAccount; el logo, las de CenterLogo.
 /// </summary>
 public static class NewCenter
 {
     public const string InvalidCode = "CENTER_INVALID";
 
     public static NewCenterData Validate(
-        string? centerCode, string? centerName, string? unitCode, string? unitName, string? adminSubject, string? adminName)
+        string? centerCode, string? centerName, string? unitCode, string? unitName, string? adminSubject, string? adminName,
+        byte[]? logo = null)
     {
         try
         {
@@ -37,9 +38,23 @@ public static class NewCenter
             }
 
             return new NewCenterData(
-                center.Code, center.Name, CenterUnit.Validate(unitCode, unitName), ProfessionalAccount.Validate(adminSubject, adminName));
+                center.Code, center.Name, CenterUnit.Validate(unitCode, unitName), ProfessionalAccount.Validate(adminSubject, adminName),
+                logo is null ? null : CenterLogo.Normalize(logo));
         }
         catch (DomainValidationException error) when (error.Message is CenterUnit.InvalidCode or ProfessionalAccount.InvalidCode)
+        {
+            throw new DomainValidationException(InvalidCode);
+        }
+    }
+
+    /// <summary>El nombre nuevo de un centro (lo cambia su Administración): de 1 a 200 caracteres tras recortar.</summary>
+    public static string ValidateName(string? name)
+    {
+        try
+        {
+            return CenterUnit.ValidateName(name);
+        }
+        catch (DomainValidationException)
         {
             throw new DomainValidationException(InvalidCode);
         }
