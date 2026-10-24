@@ -70,6 +70,20 @@ public partial class AccesoTests
     }
 
     [Fact]
+    public async Task MiCuenta_CadaFichaLlevaSuTonoPropio_EnLaBandaDelTitulo()
+    {
+        var (subject, accountId, _) = await SeedWithTwoFactorAsync();
+        var client = await SignedInWithTotpAsync(subject, accountId);
+
+        var page = await TextAsync(await client.GetAsync("/Cuenta"));
+
+        var tonos = Regex.Matches(page, @"<section class=""card mb-4 acento-([a-z]+)""").Select(m => m.Groups[1].Value).ToList();
+        Assert.True(tonos.Count >= 6, "«Mi cuenta» debería enseñar al menos seis fichas con tono.");
+        Assert.Equal(tonos.Count, tonos.Distinct().Count());
+        Assert.Equal(tonos.Count, Regex.Matches(page, @"<div class=""card-header"">").Count);
+    }
+
+    [Fact]
     public async Task CambiarContrasena_CierraLasDemasSesiones_YLaAntiguaDejaDeValer()
     {
         var (subject, accountId) = await SeedWithPasswordAsync("FAMILIAR");
@@ -89,7 +103,10 @@ public partial class AccesoTests
         Assert.Contains("distinta de la actual", await TextAsync(same));
         Assert.False(closedTooEarly);
         Assert.Equal(HttpStatusCode.Redirect, changed.StatusCode);
-        Assert.Contains("Contraseña cambiada", await TextAsync(await here.GetAsync("/Cuenta")));
+        var avisada = await TextAsync(await here.GetAsync("/Cuenta"));
+        Assert.Contains("Contraseña cambiada", avisada);
+        Assert.Contains("id=\"aviso-cuenta\"", avisada);
+        Assert.DoesNotContain("id=\"aviso-cuenta\"", await TextAsync(await here.GetAsync("/Cuenta")));
         Assert.True(SesionTests.RedirectsToLogin(await elsewhere.GetAsync("/Cuenta")));
         Assert.False(SesionTests.RedirectsToLogin(await here.GetAsync("/Cuenta")));
         Assert.False(OpensSession(await EnterAsync(Client(), subject, Password)));

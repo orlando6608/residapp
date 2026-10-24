@@ -15,12 +15,26 @@
 
         @if (Model.Aviso is not null)
         {
-            <div class="alert alert-success" role="status">@Model.Aviso</div>
+            <div class="modal fade" id="aviso-cuenta" tabindex="-1" aria-labelledby="aviso-cuenta-titulo" aria-describedby="aviso-cuenta-texto">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="aviso-cuenta-titulo">Aviso</h2>
+                        </div>
+                        <div class="modal-body" id="aviso-cuenta-texto">@Model.Aviso</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary btn-lg" data-bs-dismiss="modal">Entendido</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
 
-        <section class="card mb-4" aria-labelledby="cuenta-resumen">
+        <section class="card mb-4 acento-azul" aria-labelledby="cuenta-resumen">
+            <div class="card-header">
+                <h2 class="h5 mb-0" id="cuenta-resumen">Tu cuenta</h2>
+            </div>
             <div class="card-body">
-                <h2 class="h5 card-title" id="cuenta-resumen">Tu cuenta</h2>
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Usuario</dt>
                     <dd class="col-sm-8">@Model.Usuario</dd>
@@ -57,9 +71,11 @@
             </div>
         </section>
 
-        <section class="card mb-4" aria-labelledby="cuenta-contrasena">
+        <section class="card mb-4 acento-verdeazulado" aria-labelledby="cuenta-contrasena">
+            <div class="card-header">
+                <h2 class="h5 mb-0" id="cuenta-contrasena">Cambiar la contraseña</h2>
+            </div>
             <div class="card-body">
-                <h2 class="h5 card-title" id="cuenta-contrasena">Cambiar la contraseña</h2>
                 @if (!Model.TieneContrasena)
                 {
                     <p class="mb-0">Tu cuenta todavía no tiene contraseña. Pídele una invitación a la Administración de tu centro.</p>
@@ -92,9 +108,11 @@
             </div>
         </section>
 
-        <section class="card mb-4" aria-labelledby="cuenta-codigos">
+        <section class="card mb-4 acento-violeta" aria-labelledby="cuenta-codigos">
+            <div class="card-header">
+                <h2 class="h5 mb-0" id="cuenta-codigos">Códigos de recuperación</h2>
+            </div>
             <div class="card-body">
-                <h2 class="h5 card-title" id="cuenta-codigos">Códigos de recuperación</h2>
                 @if (!Model.SegundoFactorActivo)
                 {
                     <p class="mb-0">Tu perfil entra solo con la contraseña, así que no tiene códigos de recuperación.</p>
@@ -126,9 +144,11 @@
 
         @if (Model.PasskeysActivas && Model.SegundoFactorActivo)
         {
-            <section class="card mb-4" aria-labelledby="cuenta-passkeys">
+            <section class="card mb-4 acento-naranja" aria-labelledby="cuenta-passkeys">
+                <div class="card-header">
+                    <h2 class="h5 mb-0" id="cuenta-passkeys">Passkeys</h2>
+                </div>
                 <div class="card-body">
-                    <h2 class="h5 card-title" id="cuenta-passkeys">Passkeys</h2>
                     <p>Una passkey te deja entrar con la huella, la cara o el PIN de tu móvil o portátil, sin escribir contraseña ni código. Solo
                         funciona en ResidApp y nadie puede copiarla de aquí. Para añadir una hace falta tu contraseña y el código que da ahora tu móvil.</p>
                     @if (Model.PasskeyObligatoria)
@@ -191,9 +211,11 @@
 
         @if (Model.SegundoFactorActivo)
         {
-            <section class="card mb-4" aria-labelledby="cuenta-vinculacion">
+            <section class="card mb-4 acento-cian" aria-labelledby="cuenta-vinculacion">
+                <div class="card-header">
+                    <h2 class="h5 mb-0" id="cuenta-vinculacion">Acceso a otro centro</h2>
+                </div>
                 <div class="card-body">
-                    <h2 class="h5 card-title" id="cuenta-vinculacion">Acceso a otro centro</h2>
                     <p>Si vas a trabajar también en otro centro, su Administración te entrega una hoja con un código (o un QR). No hace falta otra
                         cuenta: con esta misma cuenta, escribe aquí el código, comprueba lo que te ofrecen y acepta. Después la Administración de ese
                         centro lo confirma.</p>
@@ -209,9 +231,11 @@
             </section>
         }
 
-        <section class="card mb-4" aria-labelledby="cuenta-sesiones">
+        <section class="card mb-4 acento-rosa" aria-labelledby="cuenta-sesiones">
+            <div class="card-header">
+                <h2 class="h5 mb-0" id="cuenta-sesiones">Sesiones abiertas</h2>
+            </div>
             <div class="card-body">
-                <h2 class="h5 card-title" id="cuenta-sesiones">Sesiones abiertas</h2>
                 <p>Si alguna no es tuya, ciérrala y cambia la contraseña.</p>
                 <ul class="list-group list-group-flush mb-3" aria-label="Sesiones abiertas de tu cuenta">
                     @foreach (var sesion in Model.Sesiones)
@@ -250,9 +274,11 @@
             </div>
         </section>
 
-        <section class="card mb-4" aria-labelledby="cuenta-accesos">
+        <section class="card mb-4 acento-gris" aria-labelledby="cuenta-accesos">
+            <div class="card-header">
+                <h2 class="h5 mb-0" id="cuenta-accesos">Últimos accesos a tu cuenta</h2>
+            </div>
             <div class="card-body">
-                <h2 class="h5 card-title" id="cuenta-accesos">Últimos accesos a tu cuenta</h2>
                 <p>Los fallos aparecen marcados. Si ves uno que no reconoces, cambia la contraseña y avisa a la Administración de tu centro.</p>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0">
@@ -289,4 +315,14 @@
 
 @section Scripts {
     <script src="~/js/passkeys.js" asp-append-version="true"></script>
+    @if (Model.Aviso is not null)
+    {
+        <script>
+            (() => {
+                const aviso = document.getElementById("aviso-cuenta");
+                aviso.addEventListener("shown.bs.modal", () => aviso.querySelector(".btn-primary").focus());
+                bootstrap.Modal.getOrCreateInstance(aviso).show();
+            })();
+        </script>
+    }
 }

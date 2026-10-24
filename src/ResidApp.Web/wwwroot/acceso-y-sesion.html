@@ -321,6 +321,7 @@
         <li><a href="#soporte">Plataforma y soporte</a></li>
         <li><a href="#pantalla">Cada pantalla</a></li>
         <li><a href="#entrar">Entrar</a></li>
+        <li><a href="#passkeys">Passkeys</a></li>
         <li><a href="#duracion">Cuánto dura</a></li>
         <li><a href="#cuentas">Cuentas de prueba</a></li>
         <li><a href="#protege">Qué protege</a></li>
@@ -693,7 +694,7 @@
       huella, la cara o el PIN y entras. Es una entrada completa, sin contraseña ni código del móvil, y solo funciona en la dirección web de
       ResidApp, así que una página falsa que imite a ResidApp no puede aprovecharla. Una cuenta bloqueada por intentos, suspendida o sin ámbito activo tampoco
       entra con passkey. Las cuentas de <strong>Plataforma</strong> entran solo con passkey en cuanto tienen una; sin ninguna, su primer
-      acceso con contraseña y código las lleva a «Mi cuenta» a crear la primera.</p>
+      acceso con contraseña y código las lleva a «Mi cuenta» a crear la primera. Cómo se añade una, paso a paso, está en <a href="#passkeys">Passkeys</a>.</p>
     <div class="diagrama">
       <svg viewBox="0 0 1120 412" style="min-width: 900px" aria-labelledby="d-ent-t d-ent-d">
         <title id="d-ent-t">Qué pasa al pulsar «Entrar»</title>
@@ -771,8 +772,7 @@
         abiertas, con los últimos accesos a tu cuenta. El código del móvil no se cambia ahí: para otro móvil hace falta una invitación de
         recuperación de tu Administración.</li>
       <li><strong>Passkeys</strong>, también en «Mi cuenta» (solo personal): para añadir una hacen falta tu contraseña y el código vigente
-        del móvil, y el dispositivo te pide verificarte. Puedes tener hasta 10 y quitar cualquiera; una cuenta de Plataforma no puede quitar la
-        última. Una passkey queda ligada a la dirección web de ResidApp y no se puede mover a otra: si esa dirección cambiara, habría que registrarlas de nuevo.</li>
+        del móvil, y el dispositivo te pide verificarte. Todo, paso a paso, en <a href="#passkeys">Passkeys</a>.</li>
       <li><strong>Entrar con otra cuenta</strong> no exige salir antes. La sesión anterior se cierra solo si la nueva entra; si te
         equivocas, conservas la que tenías.</li>
       <li><strong>Familia:</strong> la cuenta de un familiar entra, por ahora, solo con la contraseña (su segundo factor está por
@@ -780,6 +780,66 @@
       <li><strong>Si la sesión había terminado al pulsar «Guardar»</strong>, lo escrito no se guarda: tras entrar de nuevo, la pantalla
         de acceso te lo avisa y te devuelve a la pantalla del formulario.</li>
       <li><strong>Al entrar o salir</strong> se olvida el ámbito elegido y termina cualquier lectura clínica declarada por Dirección Clínica.</li>
+    </ul>
+  </section>
+
+  <section id="passkeys" aria-labelledby="passkeys-t">
+    <h2 id="passkeys-t">Passkeys: qué son, qué necesitas y cómo se usan</h2>
+    <p class="prose">Una <strong>passkey</strong> («llave de acceso») es la forma más cómoda de entrar: no escribes usuario, contraseña ni código del
+      móvil, solo te verificas con la huella, la cara o el PIN del dispositivo. Por dentro son dos claves que crea tu dispositivo: la <strong>secreta</strong>
+      nunca sale de él y solo se desbloquea con tu huella, tu cara o tu PIN; la <strong>pública</strong> se la queda ResidApp y no sirve para entrar a nadie.
+      Al entrar, ResidApp le plantea un reto al dispositivo y este lo firma si tú te verificas. Como la passkey solo responde en la dirección web exacta donde se
+      creó, una página falsa que imite a ResidApp no puede aprovecharla.</p>
+
+    <h3>Qué necesitas</h3>
+    <ul class="lista prose">
+      <li>Un <strong>dispositivo que pueda verificarte</strong> con huella, cara o PIN: un ordenador con Windows Hello (PIN o huella) o un móvil con el bloqueo de pantalla
+        activado. Mejor Chrome o Edge; un navegador antiguo avisa de que no admite passkeys.</li>
+      <li>Una <strong>cuenta de personal</strong> que ya tenga contraseña y código del móvil: para añadir la passkey, la app te pide ambos. Los familiares no usan passkeys, por ahora.</li>
+      <li>Que las passkeys estén activadas en el entorno. En el de pruebas lo están, ligadas a <code>app-residapp-dev.azurewebsites.net</code>.</li>
+    </ul>
+
+    <h3>Con qué cuenta empezar</h3>
+    <p class="prose">Con una cuenta que <strong>no</strong> sea de Plataforma, por ejemplo la de Administración de tu centro. En una cuenta normal la passkey es un camino
+      extra: la contraseña y el código del móvil siguen valiendo, así que equivocarse no deja a nadie fuera. En una cuenta de <strong>Plataforma</strong>, en cambio, en cuanto hay una
+      passkey la contraseña deja de servir para entrar y la última no se puede quitar: si se pierde el único dispositivo, solo quien administra la base de datos puede borrar la fila y
+      volver a empezar. Por eso, en Plataforma, registra siempre <strong>dos</strong> passkeys en dos dispositivos distintos.</p>
+
+    <h3>Paso a paso para añadir una</h3>
+    <ol class="pasos">
+      <li class="persona">
+        <div class="paso-cab"><span class="n">1</span><span class="perfil" style="color: var(--accent)">Tú</span></div>
+        <p><strong>Entra</strong> con tu contraseña y tu código del móvil, y abre «Mi cuenta» en el menú con tu nombre (arriba a la derecha).</p>
+      </li>
+      <li class="persona">
+        <div class="paso-cab"><span class="n">2</span><span class="perfil" style="color: var(--accent)">Tú</span></div>
+        <p><strong>Baja hasta la ficha «Passkeys»</strong> (la de la banda naranja). Si no tienes ninguna, dice «No tienes ninguna passkey».</p>
+      </li>
+      <li class="persona">
+        <div class="paso-cab"><span class="n">3</span><span class="perfil" style="color: var(--accent)">Tú</span></div>
+        <p><strong>Rellena el formulario</strong>: un nombre que la reconozca («Windows de Orlando», «Móvil de trabajo»), tu contraseña y el código que da ahora tu móvil. Pulsa «Añadir una passkey».</p>
+      </li>
+      <li class="persona">
+        <div class="paso-cab"><span class="n">4</span><span class="perfil" style="color: var(--accent)">Tu dispositivo</span></div>
+        <p><strong>Se abre una ventana del sistema</strong>, no de ResidApp, que te pide el PIN, la huella o la cara. Si ofrece dónde guardarla, elige <em>Windows Hello</em> o «este
+          dispositivo». «Móvil o tableta» muestra un QR para guardarla en el móvil: también vale, pero es más fácil empezar con el propio equipo. ResidApp nunca ve tu PIN ni tu huella.</p>
+      </li>
+      <li class="persona">
+        <div class="paso-cab"><span class="n">5</span><span class="perfil" style="color: var(--accent)">ResidApp</span></div>
+        <p><strong>Te lo confirma en una ventana de aviso</strong> («Passkey … añadida») que se cierra con «Entendido», y la nueva aparece en la lista con su fecha y el botón «Quitar».</p>
+      </li>
+    </ol>
+
+    <h3>Cómo comprobar que funciona</h3>
+    <p class="prose">Pulsa «Salir» en el menú. En el inicio de sesión pulsa «Entrar con passkey» sin escribir nada: el dispositivo te pide verificarte y entras directamente.
+      Si no tienes a mano el dispositivo donde la registraste, sigues pudiendo entrar con contraseña y código del móvil (salvo en Plataforma).</p>
+
+    <h3>Qué conviene saber</h3>
+    <ul class="tarjetas">
+      <li class="aviso"><h3>Recuperar el acceso las borra</h3><p>Una invitación de recuperación, además de la contraseña y el código del móvil, borra todas tus passkeys: hay que añadirlas de nuevo.</p></li>
+      <li><h3>Hasta 10, y quitar cualquiera</h3><p>Cada una con su nombre, para saber cuál es de cada dispositivo. Una cuenta de Plataforma no puede quitar la última.</p></li>
+      <li><h3>Ligadas a la dirección web</h3><p>No se pueden mover a otra: si la dirección de ResidApp cambiara, habría que registrarlas de nuevo.</p></li>
+      <li class="bien"><h3>Pueden copiarse a tus otros dispositivos</h3><p>Si tu móvil o tu portátil las sincroniza con tu cuenta de Google o de Apple, «Mi cuenta» lo indica en esa passkey.</p></li>
     </ul>
   </section>
 

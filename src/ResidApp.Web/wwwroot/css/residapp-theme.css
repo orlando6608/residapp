@@ -427,3 +427,96 @@ details[open] > summary {
 html:has(.barra-accion) {
   scroll-padding-bottom: 7rem;
 }
+
+/* «Mi cuenta»: cada ficha lleva un tono propio en la banda del título para distinguirlas de un vistazo. Son tonos sin significado clínico:
+   no se usan rojo, ámbar ni verde de estado (guía, sección 3.D) ni la franja izquierda, que en la app indica estado. Texto sobre fondo ≥ 4,5:1
+   en claro y oscuro (WCAG 2.2 AA); el borde de la banda es un adorno. */
+.card[class*="acento-"] > .card-header {
+  color: var(--acento-texto);
+  background-color: var(--acento-fondo);
+  border-bottom: 2px solid var(--acento-borde);
+}
+
+.acento-azul {
+  --acento-fondo: #e2ebf8;
+  --acento-texto: #0f366b;
+  --acento-borde: #759ed7;
+}
+
+.acento-verdeazulado {
+  --acento-fondo: #e2f8f4;
+  --acento-texto: #0f6b59;
+  --acento-borde: #75d7c3;
+}
+
+.acento-violeta {
+  --acento-fondo: #ece2f8;
+  --acento-texto: #3a0f6b;
+  --acento-borde: #a275d7;
+}
+
+.acento-naranja {
+  --acento-fondo: #f8ece2;
+  --acento-texto: #6b370f;
+  --acento-borde: #d79f75;
+}
+
+.acento-rosa {
+  --acento-fondo: #f8e2ee;
+  --acento-texto: #6b0f40;
+  --acento-borde: #d775a9;
+}
+
+.acento-cian {
+  --acento-fondo: #e2f4f8;
+  --acento-texto: #0f596b;
+  --acento-borde: #75c3d7;
+}
+
+.acento-gris {
+  --acento-fondo: #ebedef;
+  --acento-texto: #2d3643;
+  --acento-borde: #9ba4b0;
+}
+
+[data-bs-theme=dark] .acento-azul {
+  --acento-fondo: #21324a;
+  --acento-texto: #b4d0f9;
+  --acento-borde: #3a5a88;
+}
+
+[data-bs-theme=dark] .acento-verdeazulado {
+  --acento-fondo: #214a42;
+  --acento-texto: #b4f9eb;
+  --acento-borde: #3a8878;
+}
+
+[data-bs-theme=dark] .acento-violeta {
+  --acento-fondo: #34214a;
+  --acento-texto: #d4b4f9;
+  --acento-borde: #5e3a88;
+}
+
+[data-bs-theme=dark] .acento-naranja {
+  --acento-fondo: #4a3321;
+  --acento-texto: #f9d2b4;
+  --acento-borde: #885c3a;
+}
+
+[data-bs-theme=dark] .acento-rosa {
+  --acento-fondo: #4a2137;
+  --acento-texto: #f9b4d9;
+  --acento-borde: #883a63;
+}
+
+[data-bs-theme=dark] .acento-cian {
+  --acento-fondo: #21424a;
+  --acento-texto: #b4ebf9;
+  --acento-borde: #3a7888;
+}
+
+[data-bs-theme=dark] .acento-gris {
+  --acento-fondo: #30353b;
+  --acento-texto: #ced5de;
+  --acento-borde: #575f6b;
+}

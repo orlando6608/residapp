@@ -14,6 +14,18 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **«Mi cuenta»: avisos en ventana, fichas con color y passkeys explicadas (2026-10-24, rama `mi-cuenta-avisos-y-fichas`). Hecho y probado, sin subir.** Petición de Orlando tras
+  probar las passkeys en Azure dev: el aviso verde («Passkey … añadida») salía arriba del todo y no lo vio. Decisiones: **todos** los avisos de «Mi cuenta» pasan a una ventana
+  modal de Bootstrap (la primera de la app; título «Aviso», botón «Entendido» con el foco, Escape la cierra) y las siete fichas llevan una banda de título de tono propio.
+  - **Vista:** `Views/Cuenta/Index.cshtml`: `#aviso-cuenta` sustituye al `alert-success`; un script pequeño la abre solo si hay aviso (`TempData["CuentaAviso"]`, que se consume al
+    mostrarla: al recargar no vuelve). Los errores no cambian: siguen dentro de su ficha. Cada `section.card` lleva `acento-<tono>` y su `h2` pasa a un `card-header`.
+  - **Tonos** (`residapp-theme.css`, al final): azul, verdeazulado, violeta, naranja, cian, rosa y gris, con variantes clara y oscura y borde inferior; sin franja izquierda (en la app
+    significa estado clínico) ni rojo, ámbar o verde de estado. Los 14 pares texto/fondo pasan 4,5:1 (mínimo 5,8).
+  - **Documentación:** sección nueva «Passkeys» en `wwwroot/acceso-y-sesion.html` (qué son, qué hace falta, con qué cuenta empezar y por qué no con Plataforma, paso a paso, cómo
+    probarla, qué conviene saber) y versión corta en el Manual («Mi cuenta»). `docs/pendientes-cj/pruebas.html` ya decía lo justo de las passkeys: sin tocar, sin subir `data-version`.
+  - **Pruebas:** `AccesoTests.Cuenta.cs` (el aviso sale una vez y con su ventana; las fichas llevan tonos distintos). Funcionales 303 en verde. En el navegador (local, claro, oscuro, 375 px):
+    sin desplazamiento lateral, sin errores de consola, foco en «Entendido», Escape cierra y no vuelve al recargar. La passkey real solo se ve en Azure tras el merge.
+  - **Aparte, no tocado:** otras pantallas usan `TempData["Mensaje"]` con franja verde arriba (comunicados, protocolo urgente…) y tienen el mismo problema de visibilidad.
 - **Logo y nombre propios de cada centro (2026-10-24, rama `logo-por-centro`, script `0068`; el siguiente libre es `0069`). Hecho y probado, sin subir; espera el visto bueno de CJ.**
   Petición de Orlando: con sesión de un centro, la esquina superior izquierda, la cabecera de impresión y el PDF del informe de derivación muestran el **logo y el nombre del
   centro** en vez de los de ResidApp. Decisiones de Orlando: Plataforma puede subir el logo (opcional) al dar de alta el centro y después lo cambia, junto con el nombre, **la
