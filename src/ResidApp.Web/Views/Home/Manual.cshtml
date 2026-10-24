@@ -26,7 +26,7 @@
     Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, el personal, además
     con un código de su móvil, o con una <strong>passkey</strong> («llave de acceso» guardada en tu móvil o portátil, que se desbloquea con la
     huella, la cara o el PIN). La contraseña la elige cada persona con la <strong>invitación</strong> que le entrega Administración. En
-    el entorno de pruebas sigue además el acceso de desarrollo (ver "Cuentas de prueba").
+    el entorno de pruebas se entra igual (ver "Cuentas de prueba").
     <p class="mt-2 mb-0">
         <strong>Al guardar o enviar:</strong> el botón muestra un círculo giratorio mientras el servidor responde. Una vez enviado,
         no hace falta volver a pulsarlo; un segundo toque se ignora.
@@ -215,30 +215,24 @@
 <section id="cuentas-prueba" class="mb-4">
     <h2 class="h5">Cuentas de prueba y cómo cambiar de usuario</h2>
     <p>
-        En el entorno de pruebas, además de las invitaciones, sigue el <strong>acceso de desarrollo</strong>, sin contraseña, hasta que
-        se use la app con datos reales: en <a asp-controller="DevAuth" asp-action="Login">/DevAuth/Login</a> (enlazado desde
-        «Iniciar sesión») escribes el nombre de una cuenta de prueba (por ejemplo <code>almendros-enfermeria</code>) y entras con ella. En el entorno de
-        pruebas publicado hace falta además la <strong>clave de desarrollo</strong>, que Orlando da en privado. Para <strong>cambiar de
-        usuario</strong> no hace falta cerrar sesión antes: pulsa «Entrar con otra cuenta» y escribe el nombre de otra — se cierra la
-        sesión anterior y se limpia el ámbito activo, así que la app te pedirá elegirlo de nuevo si esa cuenta tiene más de uno. Si el
-        nombre no existe (o, en el entorno de pruebas, la clave no es correcta), no se inicia sesión: te avisa y conservas la sesión que
-        tuvieras.
+        En el entorno de pruebas se entra igual que en un centro real: cada cuenta se da de alta con su <strong>invitación</strong>, elige
+        su contraseña y, si es del personal, prepara el código del móvil; después puede añadir una passkey. No hay otra forma de entrar.
+        Para <strong>cambiar de usuario</strong>, pulsa «Salir» y entra con la otra cuenta. Si una cuenta tiene más de un ámbito, la app te
+        pide elegir con cuál trabajas.
     </p>
     <p>
-        Para probar el inicio de sesión de verdad con una cuenta de prueba (por ejemplo las de Los Almendros), entra con el acceso de
-        desarrollo y pulsa <strong>«crear una invitación para esta cuenta»</strong> (pantalla «Credenciales de prueba»): sale la misma
-        hoja que entrega Administración, de acceso si la cuenta aún no tiene contraseña o de recuperación si ya la tiene, y queda anotado.
-        Ábrela (mejor en otra ventana privada), elige la contraseña y, si es del personal, prepara el código del móvil. Después ya puedes
-        entrar en «Iniciar sesión». Este acceso desaparecerá cuando la app se use con datos reales.
+        Hay dos juegos de cuentas con los mismos perfiles, para que nadie comparta contraseñas: el de <strong>CJ</strong> (las que se
+        listan aquí) y el de <strong>Orlando</strong>, con <code>-orlando</code> en el nombre (por ejemplo
+        <code>almendros-orlando-enfermeria</code>), que también usa ingeniería para sus comprobaciones. La primera cuenta de cada juego, la
+        de Plataforma, recibe su invitación de quien administra la base de datos; Plataforma invita a las Administraciones, y cada
+        Administración a su personal y a los familiares.
     </p>
 
     <h3 class="h6 mt-4">Residencia Los Almendros</h3>
     <p>
-        Es el centro del ejemplo del <a href="~/flujo-de-trabajo.html">Flujo de trabajo</a>, ya montado: «Edificio principal» con
-        Planta 1 y Planta 2 (habitaciones 101–104 y 201–204, plazas A y B), turnos de mañana, tarde y noche, un equipo de Enfermería por
-        planta, rangos de referencia, comunicados a las 19:00 y citas con reserva directa. Rosa Sánchez (ficticia) ya está dada de alta en
-        Planta 1 · 104 · B, con el basal pendiente, y su hija Elena tiene la autorización activa y acceso al Portal Familiar. A partir de ahí,
-        la historia de Rosa se sigue en vivo: basal, cierre de turno, un cambio prioritario, valoraciones, comunicado y cita.
+        Es el centro del ejemplo del <a href="~/flujo-de-trabajo.html">Flujo de trabajo</a> y de las guías de pruebas, ya montado:
+        «Edificio principal» con Planta 1 y Planta 2 (habitaciones 101–104 y 201–204, plazas A y B), turnos de mañana, tarde y noche, un
+        equipo de Enfermería por planta, rangos de referencia, comunicados a las 19:00 y citas con reserva directa.
     </p>
     <div class="table-responsive">
         <table class="table table-sm align-middle">
@@ -254,14 +248,32 @@
                 <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Las dos plantas, con lectura clínica auditada, rangos de referencia y plazos de los hitos.</td></tr>
                 <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Las dos plantas, con permiso de basal.</td></tr>
                 <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Las dos plantas, con permiso de basal; miembro de los equipos de las dos plantas.</td></tr>
-                <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Planta 1, con Rosa en «Mis residentes».</td></tr>
+                <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Planta 1, con cinco residentes en «Mis residentes»: Rosa, Antonio, Carmen, Lucía y Manuel.</td></tr>
                 <tr><td><code>almendros-elena</code></td><td>Familiar</td><td>Elena, hija de Rosa, en el Portal Familiar.</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Residente (ficticio)</th>
+                    <th scope="col">Dónde</th>
+                    <th scope="col">Para qué sirve</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Rosa Sánchez</td><td>Planta 1 · 104 · B</td><td>Sin basal. Sus hijos Elena y Pablo entran en el Portal Familiar: comunicados y citas.</td></tr>
+                <tr><td>Antonio García</td><td>Planta 1 · 101 · A</td><td>Con el basal firmado: para reevaluarlo y para los eventos.</td></tr>
+                <tr><td>Carmen López</td><td>Planta 1 · 101 · B</td><td>Sin basal: para crearlo desde cero.</td></tr>
+                <tr><td>Lucía Fernández</td><td>Planta 1 · 103 · A</td><td>Sin basal, para el recorrido guiado de más abajo. No la uses para otra cosa.</td></tr>
+                <tr><td>Manuel Ruiz</td><td>Planta 1 · 102 · A</td><td>Con foto y cama, para ver cómo salen en las listas.</td></tr>
+                <tr><td>Pilar Moreno</td><td>Planta 2 · 201 · A</td><td>Con historial: basal firmado, un evento cerrado y una derivación a Urgencias con su informe firmado. No está asignada al Auxiliar.</td></tr>
             </tbody>
         </table>
     </div>
 
     <h3 class="h6 mt-4">Otras cuentas de prueba</h3>
-
     <div class="table-responsive">
         <table class="table table-sm align-middle">
             <thead>
@@ -273,54 +285,18 @@
             </thead>
             <tbody>
                 <tr>
-                    <td><code>dev-admin</code></td>
-                    <td>Administración</td>
-                    <td>Las pantallas de Administración en su propio centro de desarrollo: residentes y alta, usuarios, estructura, turnos y auditoría.</td>
+                    <td><code>olmos-administracion</code><br /><code>olmos-enfermeria</code></td>
+                    <td>Administración y Enfermería de la «Residencia Los Olmos (ficticia)»</td>
+                    <td>Un segundo centro, con sus residentes (Jaime Ortega y Teresa Gil), para comprobar que cada centro solo ve lo suyo.</td>
                 </tr>
                 <tr>
-                    <td><code>dev-auxiliar</code></td>
-                    <td>Auxiliar</td>
-                    <td>Mis residentes (2 asignados), registro cotidiano y registrar cambio.</td>
+                    <td><code>varios-centros</code></td>
+                    <td>Enfermería y Medicina en Los Olmos; Dirección Clínica y Familiar en Los Almendros</td>
+                    <td>Ver la elección de ámbito con varios centros a la vez. Su ámbito Familiar no es de ningún residente.</td>
                 </tr>
                 <tr>
-                    <td><code>dev-enfermeria</code></td>
-                    <td>Enfermería</td>
-                    <td>Residentes del ámbito (2 visibles), crear/firmar basal, registrar evento propio, bandejas.</td>
-                </tr>
-                <tr>
-                    <td><code>dev-multi</code></td>
-                    <td>Enfermería y Medicina (mismo centro); Dirección Clínica y Familiar (otro centro)</td>
-                    <td>
-                        Ver la pantalla de selección de ámbito con varias opciones a la vez. Familiar
-                        todavía no tiene ninguna pantalla propia: solo demuestra que el selector también
-                        funciona con ese perfil.
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <code>dev-integrado-auxiliar</code><br />
-                        <code>dev-integrado-enfermeria</code><br />
-                        <code>dev-integrado-direccion</code>
-                    </td>
-                    <td>Auxiliar, Enfermería y Dirección Clínica (mismo centro y unidad)</td>
-                    <td>
-                        Recorrido guiado de extremo a extremo cruzando los tres perfiles — ver más abajo. Con
-                        <code>dev-integrado-direccion</code> se ven además la supervisión, los indicadores, la calidad de proceso, los rangos de referencia y los plazos de los hitos (tiene ambos permisos).
-                    </td>
-                </tr>
-                <tr>
-                    <td><code>dev-integrado-medicina</code></td>
-                    <td>Medicina (mismo centro y unidad, con permiso de basal)</td>
-                    <td>Escalados, valoración médica, indicaciones, evento propio y basal de los residentes integrados.</td>
-                </tr>
-                <tr>
-                    <td><code>dev-integrado-administracion</code></td>
-                    <td>Administración (mismo centro y unidad)</td>
-                    <td>Residentes, ficha administrativa, historial de ubicación, corrección de identidad, alta y usuarios. Es la Administración principal de su centro.</td>
-                </tr>
-                <tr>
-                    <td><code>dev-plataforma</code></td>
-                    <td>Plataforma (centro reservado)</td>
+                    <td><code>plataforma-cj</code></td>
+                    <td>Plataforma</td>
                     <td>Centros nuevos y, en cada centro, las Administraciones y su marca de principal. No ve residentes.</td>
                 </tr>
             </tbody>
@@ -329,32 +305,27 @@
 
     <h3 class="h6 mt-4">Recorrido guiado: un cambio cruza tres perfiles</h3>
     <p>
-        Las tres cuentas <code>dev-integrado-*</code> comparten un mismo centro y unidad ficticios, con dos
-        residentes ("Residente Integrado Uno" y "Residente Integrado Dos"), para poder seguir en persona el
-        mismo caso a través de los tres perfiles que ya intervienen en él:
+        Con Lucía Fernández, que está sin basal, puedes seguir en persona el mismo caso a través de tres perfiles:
     </p>
     <ol>
         <li>
-            Entra como <code>dev-integrado-auxiliar</code>. Abre "Residente Integrado Uno" y
-            <strong>Registrar cambio</strong>: completa un área con texto libre, clasifícalo como
-            <em>Prioritario</em> (elige un motivo y documenta el aviso directo) y confirma.
+            Entra como <code>almendros-auxiliar</code>. Abre a Lucía y <strong>Registrar cambio</strong>: completa un área con texto libre,
+            clasifícalo como <em>Prioritario</em> (elige un motivo y documenta el aviso directo) y confirma.
         </li>
         <li>
-            Cambia a <code>dev-integrado-enfermeria</code>. Abre la <strong>Bandeja prioritaria</strong> desde
-            Inicio: verás ahí el cambio que acabas de registrar. Desde el residente, pulsa
-            "Crear borrador de basal", completa las nueve áreas (puedes dejarlas todas en su valor por
-            defecto) y el índice de Barthel, y fírmalo desde "Confirmar y firmar".
+            Sal y entra como <code>almendros-enfermeria</code>. Abre la <strong>Bandeja prioritaria</strong> desde Inicio: verás ahí el
+            cambio que acabas de registrar. Desde la residente, pulsa "Crear borrador de basal", completa las nueve áreas (puedes dejarlas
+            en su valor por defecto) y el índice de Barthel, y fírmalo desde "Confirmar y firmar".
         </li>
         <li>
-            Cambia a <code>dev-integrado-direccion</code> y abre
-            <a asp-controller="Baseline" asp-action="Direction">Consultar el histórico de basal</a>. Elige
-            "Residente Integrado Uno" en la lista de residentes y "Basal vigente" como tipo de recurso.
-            Verás el basal que acabas de firmar, en modo de solo lectura y auditado.
+            Sal y entra como <code>almendros-direccion</code> y abre
+            <a asp-controller="Baseline" asp-action="Direction">Consultar el histórico de basal</a>. Elige a Lucía en la lista de
+            residentes y "Basal vigente" como tipo de recurso. Verás el basal que acabas de firmar, en modo de solo lectura y auditado.
         </li>
     </ol>
     <p class="mb-0">
-        Para repetir el recorrido desde cero, hazlo con "Residente Integrado Dos": también aparece en la lista de
-        la consulta de Dirección Clínica.
+        Después de hacerlo, Lucía ya tiene basal: el recorrido solo se puede repetir con otro residente sin basal (por ejemplo, uno que
+        des de alta tú).
     </p>
 </section>
 
@@ -1248,7 +1219,7 @@
         resumen del basal vigente y el acceso para <strong>registrar un evento</strong> que observas
         directamente. Si tu ámbito tiene permiso de basal, también ves <strong>Crear borrador de basal</strong>
         o <strong>Iniciar reevaluación</strong> (ver "Crear, completar y firmar el estado basal"). La cuenta de
-        prueba <code>dev-integrado-medicina</code> tiene ese permiso. La ficha muestra también sus
+        prueba <code>almendros-medicina</code> tiene ese permiso. La ficha muestra también sus
         <strong>eventos abiertos</strong> que ve Medicina: los escalados y los propios de Medicina, con su estado.
     </p>
     <p class="mb-0">
@@ -1526,8 +1497,8 @@
         se te pedirá recargar.
     </p>
     <p class="mb-0">
-        En desarrollo, la cuenta <code>dev-integrado-direccion</code> tiene este permiso: los rangos que fije
-        se verán en las valoraciones de <code>dev-integrado-enfermeria</code>, que trabaja en el mismo centro.
+        En el entorno de pruebas, la cuenta <code>almendros-direccion</code> tiene este permiso: los rangos que fije
+        se verán en las valoraciones de <code>almendros-enfermeria</code>, que trabaja en el mismo centro.
     </p>
 </section>
 

@@ -41,11 +41,7 @@ public class IdentificadoresVaciosTests(WebAppFactory factory) : IClassFixture<W
         }
 
         var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
-        var page = await client.GetStringAsync("/DevAuth/Login");
-        await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"), ["externalSubject"] = subject,
-        }));
+        await SesionTests.PostLoginAsync(client, subject);
         // Con un único ámbito, entrar a Inicio lo selecciona.
         Assert.Equal(HttpStatusCode.Redirect, (await client.GetAsync("/ProfileScope/Select")).StatusCode);
         return client;
@@ -92,7 +88,7 @@ public class IdentificadoresVaciosTests(WebAppFactory factory) : IClassFixture<W
         foreach (var (controller, action) in routes)
         {
             // Salir de sesión y los ficheros descargables no son pantallas de lectura con identificadores.
-            if (controller is "DevAuth" or "AccesoCj" || action is "Logout" or "Salir")
+            if (controller is "AccesoCj" || action is "Logout" or "Salir")
             {
                 continue;
             }

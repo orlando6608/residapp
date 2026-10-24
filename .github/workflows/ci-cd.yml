@@ -130,7 +130,7 @@ jobs:
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
           echo "/opt/mssql-tools18/bin" >> "$GITHUB_PATH"
 
-      # Entorno de desarrollo/piloto interno con datos ficticios: aplica esquema pendiente y seeds dev-*.
+      # Entorno de desarrollo/piloto interno con datos ficticios: aplica el esquema pendiente y la semilla de los centros de prueba.
       # Nunca replicar APLICAR_SEED=1 en un entorno de producción con datos reales.
       - name: Aplicar esquema y seed en Azure SQL
         env:

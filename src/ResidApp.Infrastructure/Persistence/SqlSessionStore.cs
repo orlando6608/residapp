@@ -68,7 +68,7 @@ public sealed class SqlSessionStore(SqlConnectionFactory connections) : ISession
                    session.caduca_en AS ExpiresAt, entry.ip AS Ip
               FROM dbo.sesiones session
               OUTER APPLY (SELECT TOP 1 ip FROM dbo.eventos_acceso WITH (NOLOCK)
-                            WHERE sesion_id = session.id AND tipo IN ('ENTRADA', 'ENTRADA_DESARROLLO', 'ENTRADA_PASSKEY')
+                            WHERE sesion_id = session.id AND tipo IN ('ENTRADA', 'ENTRADA_PASSKEY')
                             ORDER BY ocurrido_en) entry
              WHERE session.cuenta_id = @AccountId AND session.cerrada_en IS NULL AND session.caduca_en > @Now
              ORDER BY session.ultima_actividad_en DESC

@@ -26,11 +26,7 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
     private async Task<HttpClient> LoginAsync(string subject, bool followRedirects = true)
     {
         var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { AllowAutoRedirect = followRedirects });
-        var page = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"), ["externalSubject"] = subject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, subject)).EnsureSuccessStatusCode();
         return client;
     }
 
@@ -667,7 +663,7 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
             ["residenteId"] = foreignResidentId, ["eventoId"] = eventId.ToString(), ["comunicadoId"] = communicationId.ToString(), ["vinculoId"] = linkId.ToString(),
             ["id"] = foreignResidentId, ["residentId"] = foreignResidentId,
         };
-        var skipped = new[] { "PortalFamiliar", "Home", "ProfileScope", "DevAuth", "AccesoCj" };
+        var skipped = new[] { "PortalFamiliar", "Home", "ProfileScope", "AccesoCj" };
         var routes = factory.Services.GetRequiredService<IActionDescriptorCollectionProvider>().ActionDescriptors.Items
             .OfType<ControllerActionDescriptor>()
             .Where(a => !skipped.Contains(a.ControllerName))

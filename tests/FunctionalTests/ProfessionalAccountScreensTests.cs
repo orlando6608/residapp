@@ -34,12 +34,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         var admin = await SeedAdministratorAsync();
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = admin.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, admin.ExternalSubject)).EnsureSuccessStatusCode();
 
         var ownPage = WebUtility.HtmlDecode(await client.GetStringAsync($"/Administracion/Usuario?cuentaId={admin.AccountId}"));
         var newPage = await client.GetStringAsync("/Administracion/NuevoUsuario");
@@ -85,12 +80,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         var admin = await SeedAdministratorAsync();
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = admin.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, admin.ExternalSubject)).EnsureSuccessStatusCode();
 
         var newPage = await client.GetStringAsync("/Administracion/NuevaUnidad");
         async Task<string> PostAsync(string path, string page, Dictionary<string, string> fields) =>
@@ -140,12 +130,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         var admin = await SeedAdministratorAsync();
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = admin.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, admin.ExternalSubject)).EnsureSuccessStatusCode();
         async Task<string> PostAsync(string path, string page, Dictionary<string, string> fields) =>
             WebUtility.HtmlDecode(await (await client.PostAsync(path, new FormUrlEncodedContent(new Dictionary<string, string>(fields)
             {
@@ -202,12 +187,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         var admin = await SeedAdministratorAsync();
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = admin.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, admin.ExternalSubject)).EnsureSuccessStatusCode();
         async Task<string> PostAsync(string path, string page, Dictionary<string, string> fields) =>
             WebUtility.HtmlDecode(await (await client.PostAsync(path, new FormUrlEncodedContent(new Dictionary<string, string>(fields)
             {
@@ -282,12 +262,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         var operatorSubject = await SeedPlatformOperatorAsync();
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = operatorSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, operatorSubject)).EnsureSuccessStatusCode();
 
         var home = WebUtility.HtmlDecode(await client.GetStringAsync("/"));
         var newPage = await client.GetStringAsync("/Plataforma/NuevoCentro");
@@ -370,12 +345,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         var admin = await SeedAdministratorAsync();
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = admin.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, admin.ExternalSubject)).EnsureSuccessStatusCode();
         var emptyPage = WebUtility.HtmlDecode(await client.GetStringAsync("/Administracion/Auditoria"));
         var newPage = await client.GetStringAsync("/Administracion/NuevaUnidad");
         (await client.PostAsync("/Administracion/NuevaUnidad", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -411,12 +381,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         var admin = await SeedAdministratorAsync();
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = admin.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, admin.ExternalSubject)).EnsureSuccessStatusCode();
 
         async Task<string> PostFormAsync(string path, string pageWithForm, Dictionary<string, string> fields) =>
             WebUtility.HtmlDecode(await (await client.PostAsync(path, new FormUrlEncodedContent(new Dictionary<string, string>(fields)
@@ -492,12 +457,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         var admin = await SeedAdministratorAsync();
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = admin.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, admin.ExternalSubject)).EnsureSuccessStatusCode();
 
         async Task<string> PostAsync(string path, string pageWithForm, IEnumerable<KeyValuePair<string, string>> fields) =>
             WebUtility.HtmlDecode(await (await client.PostAsync(path, new FormUrlEncodedContent(
@@ -598,12 +558,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
             SELECT NEWID(), centro_id, id, 1, 1, cuenta_id, 'ADMINISTRACION', SYSUTCDATETIME() FROM dbo.ambitos_perfil WHERE cuenta_id = @accountId;
             """, new { secondUnit, code = $"SEGUNDA-{secondUnit:N}"[..20], unitId = admin.UnitId, accountId = admin.AccountId });
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = admin.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, admin.ExternalSubject)).EnsureSuccessStatusCode();
 
         var page = WebUtility.HtmlDecode(await client.GetStringAsync("/Administracion/AmbitoCentro"));
         var added = WebUtility.HtmlDecode(await (await client.PostAsync("/Administracion/AnadirUnidadAlAmbito", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -626,12 +581,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         // Con el usuario limitado escribe en las tablas de plazos bajo la seguridad por filas, y la revisión de calidad ofrece el enlace.
         var direccion = await SeedAdministratorAsync("DIRECCION_CLINICA", "PROCESS_DEADLINES_MANAGE");
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = direccion.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, direccion.ExternalSubject)).EnsureSuccessStatusCode();
 
         var quality = await client.GetStringAsync("/Direccion/Calidad");
         var page = WebUtility.HtmlDecode(await client.GetStringAsync("/PlazosProceso"));
@@ -660,12 +610,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         // Con la app conectada como usuario limitado (RESIDAPP_TEST_APP_CONNECTION_STRING) escribe en las tablas de rangos bajo la seguridad por filas.
         var doctor = await SeedAdministratorAsync("DIRECCION_CLINICA", "REFERENCE_RANGES_MANAGE");
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = doctor.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, doctor.ExternalSubject)).EnsureSuccessStatusCode();
 
         var page = await client.GetStringAsync("/RangosReferencia");
         var saved = WebUtility.HtmlDecode(await (await client.PostAsync("/RangosReferencia", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -692,12 +637,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         var doctor = await SeedAdministratorAsync("DIRECCION_CLINICA", "REFERENCE_RANGES_MANAGE");
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = doctor.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, doctor.ExternalSubject)).EnsureSuccessStatusCode();
 
         var normal = await client.GetStringAsync("/RangosReferencia");
         var suggested = WebUtility.HtmlDecode(await client.GetStringAsync("/RangosReferencia?sugeridos=true"));
@@ -801,57 +741,12 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Equal(!canCreate, page.Contains("Tu ámbito activo no tiene permiso para dar de alta residentes."));
     }
 
-    private const string SessionCookie = "residapp_sesion";
-
-    private async Task<HttpResponseMessage> PostLoginAsync(HttpClient client, string externalSubject)
-    {
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        return await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = externalSubject,
-        }));
-    }
-
-    [Fact]
-    public async Task Login_ConUnaIdentidadSinCuenta_SeRechazaYNoSeIniciaSesion()
-    {
-        var client = _factory.CreateClient();
-
-        var response = await PostLoginAsync(client, $"dev-inexistente-{Guid.NewGuid():N}");
-        var page = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
-        var home = WebUtility.HtmlDecode(await client.GetStringAsync("/"));
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("No existe ninguna cuenta con ese usuario", page);
-        Assert.DoesNotContain(response.Headers.TryGetValues("Set-Cookie", out var cookies) ? cookies : [], c => c.Contains(SessionCookie));
-        Assert.Contains("No has iniciado sesión", home);
-    }
-
-    [Fact]
-    public async Task Login_Rechazado_ConservaLaIdentidadPrevia_YSuBotonSalir()
-    {
-        var account = await SeedAdministratorAsync();
-        var client = _factory.CreateClient();
-        (await PostLoginAsync(client, account.ExternalSubject)).EnsureSuccessStatusCode();
-
-        var rejected = WebUtility.HtmlDecode(await (await PostLoginAsync(client, $"dev-inexistente-{Guid.NewGuid():N}")).Content.ReadAsStringAsync());
-        var empty = WebUtility.HtmlDecode(await (await PostLoginAsync(client, " ")).Content.ReadAsStringAsync());
-        var home = WebUtility.HtmlDecode(await client.GetStringAsync("/"));
-
-        Assert.Contains("No existe ninguna cuenta con ese usuario", rejected);
-        Assert.Contains($"Salir ({account.ExternalSubject})", rejected);
-        Assert.Contains("Escribe el usuario de una cuenta de prueba", empty);
-        Assert.Contains($"Salir ({account.ExternalSubject})", empty);
-        Assert.Contains($"Sesión de <strong>{account.ExternalSubject}</strong>", home);
-    }
-
     [Fact]
     public async Task SeleccionDeAmbito_CuentaQuePierdeSusAmbitos_OfreceCambiarDeIdentidadYSalir()
     {
         var account = await SeedAdministratorAsync();
         var client = _factory.CreateClient();
-        (await PostLoginAsync(client, account.ExternalSubject)).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, account.ExternalSubject)).EnsureSuccessStatusCode();
         using (var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync())
         {
             await connection.ExecuteAsync("""
@@ -874,7 +769,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         // La sesión se abre en la aplicación normal (con el directorio que falla no se podría entrar) y se usa en la que falla.
         var account = await SeedAdministratorAsync();
-        var cookie = SesionTests.SessionCookie(await PostLoginAsync(
+        var cookie = SesionTests.SessionCookie(await SesionTests.PostLoginAsync(
             _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { AllowAutoRedirect = false }),
             account.ExternalSubject));
         var failing = _factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
@@ -910,12 +805,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     {
         var account = await SeedAdministratorAsync(profileCode, permission);
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = account.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, account.ExternalSubject)).EnsureSuccessStatusCode();
         return WebUtility.HtmlDecode(await client.GetStringAsync(path));
     }
 

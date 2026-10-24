@@ -196,7 +196,7 @@ SQL_SERVER=ACER-ORLANDO SQL_DATABASE=ResidApp SQLCMD_EXTRA=-C APLICAR_SEED=1 bas
 - Una base creada a mano, sin `dbo.scripts_aplicados`, necesita antes registrar los scripts que ya tiene (ver [`pipeline-no-provisiona-bd-azure.md`](docs/tareas/alta-prioridad/pipeline-no-provisiona-bd-azure.md)). Una base vacía no.
 - Los seeds de [`database/seed/`](database/seed/) son ficticios e idempotentes. Con `APLICAR_SEED=1` se reaplican en cada ejecución.
 
-### Aplicación y cuentas de desarrollo
+### Aplicación y cuentas de prueba
 
 ```bash
 cd src/ResidApp.Web
@@ -204,15 +204,11 @@ dotnet user-secrets set ConnectionStrings:ResidApp "<cadena de conexión>"
 dotnet run   # http://localhost:5203
 ```
 
-El inicio de sesión de desarrollo (`/DevAuth/Login`) pide el `sujeto_externo` de una cuenta sembrada. Las del escenario integrado comparten centro y unidad: `dev-integrado-auxiliar`, `dev-integrado-enfermeria`, `dev-integrado-medicina` (escalados, evento propio, valoración médica, indicaciones, seguimiento médico, protocolo urgente, derivación a Urgencias y cierre médico) y `dev-integrado-direccion` (esta con el permiso de rangos de referencia). El resto de cuentas está en la cabecera de cada seed.
+Se entra como en un centro real: cada cuenta usa su invitación, elige contraseña y, si es del personal, prepara el código del móvil. Las cuentas de prueba (Residencia Los Almendros, Residencia Los Olmos, Plataforma y una cuenta en varios centros, en dos juegos: el de CJ y el de Orlando) las crea sin contraseña [`database/seed/centros_prueba.sql`](database/seed/centros_prueba.sql). La primera invitación, la de Plataforma, la emite [`database/operaciones/invitar_cuenta.sql`](database/operaciones/invitar_cuenta.sql); el resto se emite desde la aplicación. La skill `probar-en-navegador` lo automatiza (`alta-juego.js` y `preparar-almendros.js`).
 
 ### Tests
 
-Los tests de integración usan por defecto la misma base local (`tests/IntegrationTests/TestSupport/TestDatabase.cs`), que debe tener aplicados todos los scripts; se puede apuntar a otra con `RESIDAPP_TEST_CONNECTION_STRING`. A 28/09/2026: 61 unitarios, 127 de integración y 1 funcional, todos en verde.
-
-**Limitaciones actuales conocidas** (no ocultarlas ni darlas por resueltas):
-
-- La identidad de sesión de `ResidApp.Web` (`DevAuthController`) es un selector de cuenta ficticia por cookie, no autenticación real; la decisión de proveedor productivo sigue abierta (ver [Decisiones pendientes](#decisiones-pendientes)).
+Los tests usan por defecto su propia base local, `ResidAppPruebas` (`tests/IntegrationTests/TestSupport/TestDatabase.cs`), con todos los scripts aplicados y sin semillas; se puede apuntar a otra con `RESIDAPP_TEST_CONNECTION_STRING`. Las pruebas funcionales abren sesión con una entrada que solo existe en su servidor de pruebas (`tests/FunctionalTests/EntradaDePruebas.cs`).
 
 Detalle completo, incluidos los bugs de producción encontrados y corregidos al ejecutar por primera vez contra un motor real, en [`docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`](docs/tareas/alta-prioridad/pendientes-migracion-inicial.md).
 
@@ -238,7 +234,7 @@ El estado detallado vive en [`docs/producto/roadmap.md`](docs/producto/roadmap.m
 
 | Decisión | Estado |
 | --- | --- |
-| Autenticación y segundo factor productivos | Decidido el 2026-10-21: ASP.NET Core Identity propio (el sistema de cuentas que trae la plataforma de la aplicación) sobre Azure SQL en la UE; ver [ADR 0007](docs/decisiones-arquitectura/0007-proveedor-identidad.md). Hechos I0 a I4 e I2b (sesión, contraseña y código del móvil, invitaciones, «Mi cuenta», cuentas en varios centros y passkeys o «llaves de acceso»). Falta la pulsera con PIN para tablets (I5), retirar el acceso de desarrollo y la validación del DPO de la residencia piloto. |
+| Autenticación y segundo factor productivos | Decidido el 2026-10-21: ASP.NET Core Identity propio (el sistema de cuentas que trae la plataforma de la aplicación) sobre Azure SQL en la UE; ver [ADR 0007](docs/decisiones-arquitectura/0007-proveedor-identidad.md). Hechos I0 a I4 e I2b (sesión, contraseña y código del móvil, invitaciones, «Mi cuenta», cuentas en varios centros y passkeys o «llaves de acceso»). Acceso de desarrollo retirado el 2026-10-24. Falta la pulsera con PIN para tablets (I5) y la validación del DPO de la residencia piloto. |
 | SLA, RPO, RTO y copias de seguridad | Pendiente de definir antes de producción. |
 | EIPD, contratos y seguridad | Pendiente de formalizar antes de tratar datos reales. |
 | Configuración real de citas, equipos y tiempos | Pendiente de definir junto con cada centro piloto. |

@@ -4,6 +4,7 @@ using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ResidApp.Infrastructure.Identity;
 using ResidApp.Infrastructure.Persistence;
 
 namespace ResidApp.FunctionalTests;
@@ -23,7 +25,7 @@ namespace ResidApp.FunctionalTests;
 /// </summary>
 public class SesionTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixture<ResidentsFlowTests.WebAppFactory>
 {
-    private static readonly string[] AnonymousControllers = ["Acceso", "AccesoCj", "DevAuth", "Home", "Passkey"];
+    private static readonly string[] AnonymousControllers = ["Acceso", "AccesoCj", "Home", "Passkey"];
 
     internal static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
@@ -51,28 +53,17 @@ public class SesionTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixtu
         return (subject, accountId);
     }
 
-    /// <summary>Inicia sesión por el acceso de desarrollo y devuelve el cliente, que guarda las cookies.</summary>
-    internal static async Task<HttpClient> LoginAsync(WebApplicationFactory<Program> app, string subject, string? key = null, Uri? baseAddress = null)
+    /// <summary>Inicia sesión por la entrada de pruebas (<see cref="EntradaDePruebas"/>) y devuelve el cliente, que guarda las cookies.</summary>
+    internal static async Task<HttpClient> LoginAsync(WebApplicationFactory<Program> app, string subject)
     {
-        var client = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = baseAddress ?? new Uri("http://localhost") });
-        var response = await PostLoginAsync(client, subject, key);
+        var client = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var response = await PostLoginAsync(client, subject);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         return client;
     }
 
-    internal static async Task<HttpResponseMessage> PostLoginAsync(HttpClient client, string subject, string? key = null)
-    {
-        var page = await client.GetStringAsync("/DevAuth/Login");
-        var form = new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"), ["externalSubject"] = subject,
-        };
-        if (key is not null)
-        {
-            form["clave"] = key;
-        }
-        return await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(form));
-    }
+    internal static Task<HttpResponseMessage> PostLoginAsync(HttpClient client, string subject) =>
+        client.PostAsync(EntradaDePruebas.Ruta, new FormUrlEncodedContent(new Dictionary<string, string> { ["sujeto"] = subject }));
 
     /// <summary>El valor «residapp_sesion=…» que puso el servidor, para usarlo desde otro cliente.</summary>
     internal static string SessionCookie(HttpResponseMessage response) =>
@@ -165,7 +156,7 @@ public class SesionTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixtu
         reused.DefaultRequestHeaders.Add("Cookie", cookie);
         var before = await reused.GetAsync("/ProfileScope/Select");
 
-        var home = await client.GetStringAsync("/DevAuth/Login");
+        var home = await client.GetStringAsync("/Acceso/Solicitar");
         await client.PostAsync("/Acceso/Salir", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = ExtractValue(home, "__RequestVerificationToken"),
@@ -259,62 +250,41 @@ public class SesionTests(ResidentsFlowTests.WebAppFactory factory) : IClassFixtu
 }
 
 /// <summary>
-/// El acceso de desarrollo fuera de Development, como en Azure dev: pide la clave, no dice si el usuario existe, limita los intentos,
-/// todas las cookies llevan Secure, solo se fía del balanceador de App Service y, sin clave, la aplicación no arranca. Deshabilitado, no existe.
+/// Fuera de Development, como en Azure dev: todas las cookies llevan Secure, solo se fía del balanceador de App Service y el acceso de
+/// desarrollo, retirado, ya no existe (ADR 0007).
 /// </summary>
 public class SesionFueraDeDesarrolloTests(SesionFueraDeDesarrolloTests.StagingFactory factory) : IClassFixture<SesionFueraDeDesarrolloTests.StagingFactory>
 {
-    private const string Key = "clave-de-desarrollo-de-prueba";
+    private const string Password = "contraseña de prueba larga";
     private static readonly Uri Https = new("https://localhost");
 
     public sealed class StagingFactory : ResidentsFlowTests.WebAppFactory
     {
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
-        {
-            builder.UseEnvironment("Staging");
-            builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["DevAuth:Habilitado"] = "true", ["DevAuth:Clave"] = Key, ["DevAuth:IntentosPorMinuto"] = "1000",
-            }));
-        }
+        protected override void ConfigureWebHost(IWebHostBuilder builder) => builder.UseEnvironment("Staging");
     }
 
-    private WebApplicationFactory<Program> With(string name, string? value) =>
-        factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
-            configuration.AddInMemoryCollection(new Dictionary<string, string?> { [name] = value })));
-
     [Fact]
-    public async Task PideLaClave_ConMensajeNeutro_YLasCookiesSonSecure()
+    public async Task AlEntrarConContrasena_LasCookiesSonSecure()
     {
-        var (subject, _) = await SesionTests.SeedAccountAsync();
+        var (subject, _) = await SesionTests.SeedAccountAsync("FAMILIAR");
+        using (var scope = factory.Services.CreateScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<CredentialAccount>>();
+            Assert.True((await users.AddPasswordAsync((await users.FindByNameAsync(subject))!, Password)).Succeeded);
+        }
         var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = Https });
-        var page = await client.GetAsync("/DevAuth/Login");
 
-        var wrongKey = WebUtility.HtmlDecode(await (await SesionTests.PostLoginAsync(client, subject, "otra-clave")).Content.ReadAsStringAsync());
-        var unknownUser = WebUtility.HtmlDecode(await (await SesionTests.PostLoginAsync(client, $"sesion-{Guid.NewGuid():N}", Key)).Content.ReadAsStringAsync());
-        var ok = await SesionTests.PostLoginAsync(client, subject, Key);
-
-        Assert.Contains("Clave de desarrollo", await page.Content.ReadAsStringAsync());
-        Assert.All(page.Headers.GetValues("Set-Cookie"), cookie => Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase));
-        Assert.Contains("Usuario o clave incorrectos.", wrongKey);
-        Assert.Contains("Usuario o clave incorrectos.", unknownUser);
-        Assert.Equal(HttpStatusCode.Redirect, ok.StatusCode);
-        Assert.Contains("secure", ok.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("residapp_sesion=", StringComparison.Ordinal)),
-            StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task LimitaLosIntentosPorMinuto()
-    {
-        var client = With("DevAuth:IntentosPorMinuto", "2").CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = Https });
-
-        var statuses = new List<HttpStatusCode>();
-        for (var attempt = 0; attempt < 3; attempt++)
+        var page = await client.GetAsync("/Acceso/Entrar");
+        var entered = await client.PostAsync("/Acceso/Entrar", new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            statuses.Add((await SesionTests.PostLoginAsync(client, "nadie", "otra-clave")).StatusCode);
-        }
+            ["__RequestVerificationToken"] = SesionTests.ExtractValue(await page.Content.ReadAsStringAsync(), "__RequestVerificationToken"),
+            ["usuario"] = subject, ["contrasena"] = Password,
+        }));
 
-        Assert.Equal([HttpStatusCode.OK, HttpStatusCode.OK, HttpStatusCode.TooManyRequests], statuses);
+        Assert.All(page.Headers.GetValues("Set-Cookie"), cookie => Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(HttpStatusCode.Redirect, entered.StatusCode);
+        Assert.Contains("secure", entered.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("residapp_sesion=", StringComparison.Ordinal)),
+            StringComparison.OrdinalIgnoreCase);
     }
 
     // App Service termina el TLS y llega con X-Forwarded-Proto; en Linux, desde la red de enlace local (medido en Azure dev). Solo se le
@@ -343,28 +313,21 @@ public class SesionFueraDeDesarrolloTests(SesionFueraDeDesarrolloTests.StagingFa
     }
 
     [Fact]
-    public async Task Deshabilitado_NoExiste_YSinSesionSeVaAlInicioDeSesionConContrasena()
+    public async Task ElAccesoDeDesarrollo_YaNoExiste_YSinSesionSeVaAlInicioDeSesion()
     {
-        var client = With("DevAuth:Habilitado", "false").CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = Https });
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = Https });
 
         var login = await client.GetAsync("/DevAuth/Login");
         var credentials = await client.GetAsync("/DevAuth/Credenciales");
         var protectedPage = await client.GetAsync("/Administracion");
         var entrar = WebUtility.HtmlDecode(await client.GetStringAsync("/Acceso/Entrar"));
 
-        Assert.Equal(HttpStatusCode.NotFound, login.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, credentials.StatusCode);
+        // Sin sesión, cualquier ruta que no exista lleva al inicio de sesión, como las que sí existen.
+        Assert.Equal("/Acceso/Entrar", login.Headers.Location!.AbsolutePath);
+        Assert.Equal("/Acceso/Entrar", credentials.Headers.Location!.AbsolutePath);
         Assert.Equal(HttpStatusCode.Redirect, protectedPage.StatusCode);
         Assert.Equal("/Acceso/Entrar", protectedPage.Headers.Location!.AbsolutePath);
         Assert.Contains("Contraseña", entrar);
         Assert.DoesNotContain("Acceso de desarrollo", entrar);
-    }
-
-    [Fact]
-    public void HabilitadoSinClave_LaAplicacionNoArranca()
-    {
-        var error = Assert.ThrowsAny<Exception>(() => With("DevAuth:Clave", "corta").CreateClient());
-
-        Assert.Contains("DevAuth:Clave", error.ToString());
     }
 }

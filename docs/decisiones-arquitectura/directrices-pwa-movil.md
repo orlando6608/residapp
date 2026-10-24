@@ -26,7 +26,7 @@ Toda vista nueva bajo `src/ResidApp.Web/Views/`:
   siguen `docs/bocetos-pantallas/guia-diseno-sistema-visual.md` — es la directriz vinculante para
   cualquier vista nueva o modificada.
 
-Las vistas ya construidas (`Residents/Create`, `Baseline/Sign`, `Baseline/Direction`, `DevAuth/Login`)
+Las vistas ya construidas (`Residents/Create`, `Baseline/Sign`, `Baseline/Direction`)
 ya aplican esta directriz: controles `-lg`, `type`/`inputmode` correctos, botones en `d-grid d-md-block`
 (ancho completo en móvil, ancho natural en pantallas medianas+). `Baseline/DirectionResult` es la única
 vista con datos tabulares y ya alterna tabla (`d-none d-md-block`) / tarjetas (`d-md-none`) según

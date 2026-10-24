@@ -113,25 +113,6 @@ public sealed class SqlAccessInvitationRepository(SqlConnectionFactory connectio
         return issued;
     }
 
-    public async Task<IssuedAccessInvitation> IssueForDevelopmentAsync(AccountId accountId, string tokenHash, DateTime now, CancellationToken ct = default)
-    {
-        using var connection = await connections.OpenAsync(ct);
-        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
-        var centerId = await connection.ExecuteScalarAsync<Guid?>(new CommandDefinition("""
-            SELECT TOP (1) centro_id FROM dbo.ambitos_perfil WHERE cuenta_id = @AccountId AND estado = 'ACTIVE' ORDER BY concedido_en
-            """, new { AccountId = accountId.Value }, transaction, cancellationToken: ct)) ?? throw new AccessDeniedException();
-        var account = await connection.QuerySingleAsync<AccountRow>(new CommandDefinition(
-            SelectAccount + " WHERE account.id = @AccountId", new { CenterId = centerId, AccountId = accountId.Value }, transaction, cancellationToken: ct));
-        if (!account.Active)
-        {
-            throw new AccessDeniedException();
-        }
-
-        var issued = await InsertAsync(connection, transaction, account, CenterId.From(centerId), accountId, "DESARROLLO", tokenHash, now, ct);
-        transaction.Commit();
-        return issued;
-    }
-
     public async Task CancelAsync(AccountAdministrationAccess access, string subject, DateTime now, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);

@@ -322,9 +322,11 @@
         entorno, pero no afecta a ningún residente real. Si algo sale mal, no pasa nada: apunta lo que viste en el comentario de la
         prueba.
       </p>
-      <p><strong>Cómo se entra.</strong> Esto no es un acceso real: escribes el nombre de una cuenta de prueba en el campo «Usuario» y
-        pulsas «Entrar». Para cambiar de cuenta, usa «Cambiar de identidad» en el menú de tu perfil (arriba a la derecha) o vuelve a
-        <code>/DevAuth/Login</code>. Si una cuenta tiene varios ámbitos, la aplicación te deja elegir cuál usar.</p>
+      <p><strong>Cómo se entra.</strong> Como en una residencia de verdad: en «Iniciar sesión» escribes el usuario de la cuenta y su
+        contraseña y, después, el código de 6 cifras de tu aplicación de autenticación, o pulsas «Entrar con passkey». La primera vez, cada
+        cuenta se da de alta con la invitación que te entrega Orlando (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
+        de cuenta, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra. Si una cuenta tiene varios ámbitos, la
+        aplicación te deja elegir cuál usar.</p>
       <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
       <p><strong>Si te pierdes</strong>, el <a href="pruebas-2-medicina-indicaciones-flujo.html">flujo de la guía 2</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
     </div>
@@ -333,8 +335,8 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
-        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
-        <tr><td><code>dev-integrado-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios. Puede crear y firmar basales.</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
+        <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios. Puede crear y firmar basales.</td></tr>
       </tbody>
     </table></div>
 
@@ -342,16 +344,16 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
       <tbody>
-        <tr><td>Residente Prueba CJ Uno (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
-        <tr><td>Residente Prueba CJ Dos (ficticio)</td><td>Asignado al Auxiliar; al empezar no tiene basal (lo crea la guía 3). Úsalo para los cierres del Auxiliar y para crear un basal desde cero.</td></tr>
-        <tr><td>Residente Integrado Uno (ficticio)</td><td>NO LO TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
+        <tr><td>Antonio García (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
+        <tr><td>Carmen López (ficticia)</td><td>Asignada al Auxiliar; al empezar no tiene basal (lo crea la guía 3). Úsala para los cierres del Auxiliar y para crear un basal desde cero.</td></tr>
+        <tr><td>Lucía Fernández (ficticia)</td><td>NO LA TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
       </tbody>
     </table></div>
     <div class="stack prose">
       <p class="context">
-        Verás también residentes y eventos de pruebas anteriores («Prueba familiares azure», «Prueba selector unidad azure»,
-        «Prueba Corrección Identidad azure», y algunos eventos abiertos de Integrado Uno y Dos). Ignóralos, salvo que una prueba te
-        mande a ellos. Los eventos no se pueden borrar: cada prueba que hagas dejará sus datos.
+        Verás también lo que hayan dejado tus pruebas anteriores y las de Orlando, que trabaja en el mismo centro con sus propias
+        cuentas (las que llevan «-orlando» en el nombre). Ignóralo, salvo que una prueba te mande a ello. Los eventos no se pueden borrar:
+        cada prueba que hagas dejará sus datos.
       </p>
     </div>
 
@@ -362,7 +364,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (6 de 13).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (6 de 13).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">No necesitas ninguna otra guía: cada escalado se crea aquí. Conviene haber hecho la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>, porque aquí se registran y valoran eventos igual que allí.</p>
@@ -381,15 +383,15 @@
   <section class="tema" id="tema-1">
     <h2>Enfermería escala a Medicina</h2>
     <div class="stack prose">
-      <p>Entra con <code>dev-integrado-enfermeria</code>. Enfermería valora un evento y decide escalarlo a Medicina, con su motivo.</p>
+      <p>Entra con <code>almendros-enfermeria</code>. Enfermería valora un evento y decide escalarlo a Medicina, con su motivo.</p>
       <p class="why">Referencia: docs/flujos-clinicos/valoracion-escalado-enfermeria.md (ENF-01 a ENF-16)</p>
     </div>
     <div class="qs">
       <article class="q" data-q="1">
         <div class="q-head"><span class="n">1</span><h3 class="q-title" id="t-1">Escalar a Medicina</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
-          <li>Como Enfermería, registra un evento en «Residente Prueba CJ Uno» («Registrar evento») y valóralo («Empezar valoración», guarda al menos un dato), como en las pruebas 7 y 8 de la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>.</li>
+          <li>Como Enfermería, registra un evento en «Antonio García» («Registrar evento») y valóralo («Empezar valoración», guarda al menos un dato), como en las pruebas 7 y 8 de la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>.</li>
           <li>En la decisión asistencial elige «Escalar a Medicina». Revisa lo que se enviará.</li>
           <li>Intenta escalar sin motivo: no debe dejarte. Escribe el motivo y escala.</li>
         </ol>
@@ -405,7 +407,7 @@
 
       <article class="q" data-q="2">
         <div class="q-head"><span class="n">2</span><h3 class="q-title" id="t-2">Corregir y rectificar una valoración</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>En un evento ya avanzado (el escalado de la prueba 1), abre su detalle. Quien guardó la valoración la última vez ve «Corregir valoración» durante las 6 horas siguientes: escribe el motivo y guarda.</li>
           <li>Pasadas esas 6 horas solo queda «Añadir rectificación».</li>
@@ -426,7 +428,7 @@
   <section class="tema" id="tema-2">
     <h2>Medicina valora e indica</h2>
     <div class="stack prose">
-      <p>Entra con <code>dev-integrado-medicina</code>. Medicina recibe los escalados de Enfermería, los valora y decide: indicar a Enfermería, hacer un seguimiento médico, cerrar o activar el protocolo urgente. Las indicaciones las lee y las realiza Enfermería, y el episodio no se cierra mientras quede alguna sin cumplir.</p>
+      <p>Entra con <code>almendros-medicina</code>. Medicina recibe los escalados de Enfermería, los valora y decide: indicar a Enfermería, hacer un seguimiento médico, cerrar o activar el protocolo urgente. Las indicaciones las lee y las realiza Enfermería, y el episodio no se cierra mientras quede alguna sin cumplir.</p>
       <p class="why">Referencia: docs/flujos-clinicos/valoracion-conducta-medicina.md (MED-01 a MED-18)</p>
     </div>
     <div class="qs">
@@ -448,7 +450,7 @@
 
       <article class="q" data-q="4">
         <div class="q-head"><span class="n">4</span><h3 class="q-title" id="t-4">Valoración médica</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>En el escalado, pulsa «Iniciar valoración médica».</li>
           <li>Escribe hallazgos y exploración, valoración y actuaciones, y alguna constante. Pulsa «Guardar borrador».</li>
@@ -466,7 +468,7 @@
 
       <article class="q" data-q="5">
         <div class="q-head"><span class="n">5</span><h3 class="q-title" id="t-5">Indicación a Enfermería</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>En la conducta médica elige «Registrar indicaciones a Enfermería».</li>
           <li>Escribe el texto (por ejemplo, «Control de temperatura cada 4 horas; avisar si pasa de 37,8»), una fecha prevista o un criterio (o ambos) e información adicional si hace falta. Guarda.</li>
@@ -502,7 +504,7 @@
 
       <article class="q" data-q="7">
         <div class="q-head"><span class="n">7</span><h3 class="q-title" id="t-7">Indicaciones de Medicina: leer y realizar</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>Como Enfermería, abre la tarjeta «Indicaciones»: están las tres de la prueba 5.</li>
           <li>Pulsa «Confirmar lectura». Luego prueba «Registrar como realizada» en una y, en otra, escribe la incidencia y pulsa «Registrar como no realizada».</li>
@@ -540,13 +542,13 @@
   <section class="tema" id="tema-3">
     <h2>Otras decisiones de Medicina</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-medicina</code>: el seguimiento médico, el cierre con comunicación a la familia, los eventos propios de Medicina y el protocolo urgente iniciado por Medicina.</p>
+      <p>Con <code>almendros-medicina</code>: el seguimiento médico, el cierre con comunicación a la familia, los eventos propios de Medicina y el protocolo urgente iniciado por Medicina.</p>
       <p class="why">Referencia: docs/flujos-clinicos/valoracion-conducta-medicina.md (MED-01 a MED-18) y derivacion-urgencias.md</p>
     </div>
     <div class="qs">
       <article class="q" data-q="9">
         <div class="q-head"><span class="n">9</span><h3 class="q-title" id="t-9">Seguimiento médico y fin de turno</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>Con otro escalado (escala otro evento como en la prueba 1 y valóralo como Medicina como en la prueba 4), elige «Iniciar seguimiento médico». Escribe el objetivo (qué resultado esperas antes de decidir; por ejemplo, «Descartar infección urinaria antes de decidir el antibiótico») y una fecha o un criterio.</li>
           <li>Registra una revisión. En el bloque «Al terminar tu turno» prueba «Transferir» a un equipo entrante, con nota, y, en otro seguimiento, «Conservar».</li>
@@ -564,7 +566,7 @@
 
       <article class="q" data-q="10">
         <div class="q-head"><span class="n">10</span><h3 class="q-title" id="t-10">Cerrar con comunicación a la familia</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>En la conducta médica elige «Cerrar el evento». Revisa el resumen de tu valoración y los pendientes.</li>
           <li>Elige «Preparar comunicación», tipo ordinaria o relevante, y escribe un texto comprensible para la familia. Pulsa «Cerrar evento».</li>
@@ -581,9 +583,9 @@
 
       <article class="q" data-q="11">
         <div class="q-head"><span class="n">11</span><h3 class="q-title" id="t-11">Evento propio de Medicina</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Carmen López</strong></span></div>
         <ol class="pasos">
-          <li>En «Residentes» abre «Residente Prueba CJ Dos (ficticio)» y pulsa «Registrar evento». Escribe la observación y guarda.</li>
+          <li>En «Residentes» abre «Carmen López (ficticia)» y pulsa «Registrar evento». Escribe la observación y guarda.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>El evento queda directamente en valoración médica, iniciada por ti, y aparece en «Escalados y eventos propios» como «Evento observado por Medicina». No entra en las bandejas de Enfermería.</div>
         <fieldset class="choices" aria-labelledby="t-11">
@@ -597,7 +599,7 @@
 
       <article class="q" data-q="12">
         <div class="q-head"><span class="n">12</span><h3 class="q-title" id="t-12">Protocolo urgente y derivación iniciados por Medicina</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Carmen López</strong></span></div>
         <ol class="pasos">
           <li>Con un evento propio valorado, elige «Activar protocolo urgente» en la conducta médica.</li>
           <li>Documenta una actuación, deriva a Urgencias, firma, registra el intento de llamada y cierra (como en las pruebas 11 y 12 de la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>).</li>
@@ -617,13 +619,13 @@
   <section class="tema" id="tema-4">
     <h2>Avisos de plazos</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-enfermeria</code> y <code>dev-integrado-medicina</code>: el aviso de los hitos a punto de vencer o vencidos en el inicio de cada perfil.</p>
+      <p>Con <code>almendros-enfermeria</code> y <code>almendros-medicina</code>: el aviso de los hitos a punto de vencer o vencidos en el inicio de cada perfil.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="13">
         <div class="q-head"><span class="n">13</span><h3 class="q-title" id="t-13">Aviso de hitos a punto de vencer o vencidos</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Entra en Inicio de Enfermería y mira la parte de arriba. Haz lo mismo con dev-integrado-medicina.</li>
+          <li>Entra en Inicio de Enfermería y mira la parte de arriba. Haz lo mismo con almendros-medicina.</li>
           <li>Si ves un aviso, pulsa el nombre del residente. Después registra o valora el evento que aparece (por ejemplo, empieza la valoración) y vuelve a Inicio.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Hay una lista de los hitos de tu perfil a punto de pasar de plazo (el último cuarto del plazo) o ya pasados, con el residente, la unidad, el hito y la hora de vencimiento; lo vencido sale primero y en rojo. A Enfermería le tocan la valoración tras un cambio de Auxiliar, la recepción de transferencias y la lectura y realización de indicaciones; a Medicina, la valoración médica. El aviso desaparece al cumplir el hito. Como hay eventos antiguos de pruebas anteriores, es probable que veas avisos. Por ejemplo, con un plazo de 8 h el aviso aparece a partir de las 6 h; con uno de 30 min, a partir de los 22 min y medio.</div>

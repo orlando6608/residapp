@@ -322,9 +322,11 @@
         entorno, pero no afecta a ningún residente real. Si algo sale mal, no pasa nada: apunta lo que viste en el comentario de la
         prueba.
       </p>
-      <p><strong>Cómo se entra.</strong> Esto no es un acceso real: escribes el nombre de una cuenta de prueba en el campo «Usuario» y
-        pulsas «Entrar». Para cambiar de cuenta, usa «Cambiar de identidad» en el menú de tu perfil (arriba a la derecha) o vuelve a
-        <code>/DevAuth/Login</code>. Si una cuenta tiene varios ámbitos, la aplicación te deja elegir cuál usar.</p>
+      <p><strong>Cómo se entra.</strong> Como en una residencia de verdad: en «Iniciar sesión» escribes el usuario de la cuenta y su
+        contraseña y, después, el código de 6 cifras de tu aplicación de autenticación, o pulsas «Entrar con passkey». La primera vez, cada
+        cuenta se da de alta con la invitación que te entrega Orlando (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
+        de cuenta, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra. Si una cuenta tiene varios ámbitos, la
+        aplicación te deja elegir cuál usar.</p>
       <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
       <p><strong>Si te pierdes</strong>, el <a href="pruebas-5-administracion-flujo.html">flujo de la guía 5</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
     </div>
@@ -333,9 +335,9 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
-        <tr><td><code>dev-integrado-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), traslados y bajas, familias y su acceso al Portal Familiar, comunicados a la familia, citas, usuarios, estructura, turnos y auditoría. Es la Administración principal del centro.</td></tr>
-        <tr><td><code>dev-integrado-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (4).</td></tr>
-        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación) y poner la foto de identificación.</td></tr>
+        <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), traslados y bajas, familias y su acceso al Portal Familiar, comunicados a la familia, citas, usuarios, estructura, turnos y auditoría. Es la Administración principal del centro.</td></tr>
+        <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (5).</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación) y poner la foto de identificación.</td></tr>
       </tbody>
     </table></div>
 
@@ -343,9 +345,9 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
       <tbody>
-        <tr><td>Residente Prueba CJ Dos (ficticio)</td><td>Asignado al Auxiliar; al empezar no tiene basal (lo crea la guía 3). Úsalo para los cierres del Auxiliar y para crear un basal desde cero.</td></tr>
-        <tr><td>Residente Integrado Uno (ficticio)</td><td>NO LO TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
-        <tr><td>Residente Integrado Dos (ficticio)</td><td>Solo en la prueba 16: ya tiene foto y cama (Habitación 101 (prueba) · Cama A), para ver cómo salen en la lista.</td></tr>
+        <tr><td>Carmen López (ficticia)</td><td>Asignada al Auxiliar; al empezar no tiene basal (lo crea la guía 3). Úsala para los cierres del Auxiliar y para crear un basal desde cero.</td></tr>
+        <tr><td>Lucía Fernández (ficticia)</td><td>NO LA TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
+        <tr><td>Manuel Ruiz (ficticio)</td><td>Solo en la prueba 16: ya tiene foto y cama (Planta 1 · 102 · A), para ver cómo salen en la lista.</td></tr>
       </tbody>
     </table></div>
 
@@ -356,7 +358,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (3 de 16).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 16).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">No necesitas ninguna otra guía.</p>
@@ -365,7 +367,7 @@
     <ul class="lista prose">
       <li>La prueba 1 da de alta al residente «CJ …» que usan las pruebas 10, 11, 12 y 16; la 10 usa también la habitación y la plaza de la 9.</li>
       <li>La prueba 4 necesita un residente con varios familiares: añade uno en la prueba 3.</li>
-      <li>En la prueba 8 vuelve a asignar «Residente Prueba CJ Dos» al Auxiliar al terminar: lo necesitan la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a> y la <a href="pruebas-8-aislamiento.html">guía 8</a>.</li>
+      <li>En la prueba 8 vuelve a asignar «Carmen López» al Auxiliar al terminar: lo necesitan la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a> y la <a href="pruebas-8-aislamiento.html">guía 8</a>.</li>
       <li>La prueba 15 (auditoría) va al final para ver todo lo que hiciste.</li>
       <li>La prueba 16 (foto de identificación) pone la foto al residente «CJ …» y mira ella misma su auditoría. Si la haces antes de la 15, la verás también allí.</li>
     </ul>
@@ -375,7 +377,7 @@
   <section class="tema" id="tema-1">
     <h2>Residentes y familiares</h2>
     <div class="stack prose">
-      <p>Entra con <code>dev-integrado-administracion</code>. Administración gestiona el centro y solo ve datos administrativos de los residentes: nunca observaciones ni valoraciones clínicas.</p>
+      <p>Entra con <code>almendros-administracion</code>. Administración gestiona el centro y solo ve datos administrativos de los residentes: nunca observaciones ni valoraciones clínicas.</p>
       <p class="why">Referencia: docs/historias-usuarios/administracion.md</p>
     </div>
     <div class="qs">
@@ -484,13 +486,13 @@
   <section class="tema" id="tema-2">
     <h2>Usuarios y asignaciones</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-administracion</code>: los perfiles y permisos de las cuentas y los residentes que ve cada Auxiliar.</p>
+      <p>Con <code>almendros-administracion</code>: los perfiles y permisos de las cuentas y los residentes que ve cada Auxiliar.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="7">
         <div class="q-head"><span class="n">7</span><h3 class="q-title" id="t-7">Usuarios, perfiles y permisos</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Abre «Usuarios» y entra en «Gestionar» sobre una cuenta de pruebas (por ejemplo, <code>dev-integrado-enfermeria</code>).</li>
+          <li>Abre «Usuarios» y entra en «Gestionar» sobre una cuenta de pruebas (por ejemplo, <code>almendros-enfermeria</code>).</li>
           <li>En «Permisos» concede un permiso y revócalo. Prueba también a conceder una unidad y revocarla.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Solo se ofrecen los permisos que corresponden al perfil. No se puede revocar la última unidad de un perfil (hay que revocar el perfil). Cada cambio queda en la auditoría.</div>
@@ -507,7 +509,7 @@
         <div class="q-head"><span class="n">8</span><h3 class="q-title" id="t-8">Asignar residentes a un Auxiliar</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>En «Gestionar» de <code>dev-integrado-auxiliar</code>, retira a «Residente Prueba CJ Dos» y mira «Mis residentes» como Auxiliar. Vuelve a asignarlo.</li>
+          <li>En «Gestionar» de <code>almendros-auxiliar</code>, retira a «Carmen López» y mira «Mis residentes» como Auxiliar. Vuelve a asignarla.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Mientras no está asignado, el Auxiliar no lo ve ni puede abrirlo. Al asignarlo vuelve a aparecer. Solo se asignan residentes de las unidades del perfil.</div>
         <fieldset class="choices" aria-labelledby="t-8">
@@ -524,7 +526,7 @@
   <section class="tema" id="tema-3">
     <h2>Estructura, traslados y bajas</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-administracion</code>: habitaciones y plazas, y el residente «CJ …» que das de alta en la prueba 1.</p>
+      <p>Con <code>almendros-administracion</code>: habitaciones y plazas, y el residente «CJ …» que das de alta en la prueba 1.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="9">
@@ -564,7 +566,7 @@
           <li>Abre la ficha del residente «CJ …» que diste de alta en la prueba 1 y pulsa «Dar de baja». Elige un motivo («Otro motivo» exige escribir cuál) y confirma.</li>
           <li>Abre «Residentes dados de baja» desde Inicio y comprueba que sale. Pulsa «Reactivar», elige una unidad y confirma.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>La baja no borra nada: los datos se conservan 5 años, y el residente sale de las listas activas y pasa a la lista de bajas (solo lectura, con el motivo y la fecha hasta la que se conservan). Si el motivo es fallecimiento, los episodios abiertos se cierran solos con una anotación del sistema; con cualquier otro motivo no. Al reactivar vuelve al centro con una estancia nueva y su historial anterior se conserva. No uses un «Prueba CJ» ni un «Integrado» para esta prueba.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La baja no borra nada: los datos se conservan 5 años, y el residente sale de las listas activas y pasa a la lista de bajas (solo lectura, con el motivo y la fecha hasta la que se conservan). Si el motivo es fallecimiento, los episodios abiertos se cierran solos con una anotación del sistema; con cualquier otro motivo no. Al reactivar vuelve al centro con una estancia nueva y su historial anterior se conserva. Usa el residente «CJ …» que diste de alta en la prueba 1, nunca uno de los que ya había en el centro.</div>
         <fieldset class="choices" aria-labelledby="t-11">
           <label class="choice"><input type="radio" name="r-11" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-11" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -595,7 +597,7 @@
   <section class="tema" id="tema-4">
     <h2>Turnos y Administración principal</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-administracion</code>: turnos, equipos y quién es la Administración principal del centro.</p>
+      <p>Con <code>almendros-administracion</code>: turnos, equipos y quién es la Administración principal del centro.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="13">
@@ -616,11 +618,11 @@
       <article class="q" data-q="14">
         <div class="q-head"><span class="n">14</span><h3 class="q-title" id="t-14">Administración principal del centro</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Con <code>dev-integrado-administracion</code> (la Administración principal), abre «Unidades del centro». <em>Verás:</em> todas las unidades del centro (aquí, una sola) y un texto que dice que eres la Administración principal.</li>
-          <li>En «Usuarios» da de alta una cuenta con perfil Administración (por ejemplo «cj-admin-prueba») con tu unidad. Entra con ella en <code>/DevAuth/Login</code> y abre «Unidades del centro». <em>Verás:</em> solo una explicación de que no eres la principal y a quién pedirlo.</li>
-          <li>Vuelve a <code>dev-integrado-administracion</code>, abre la ficha de ese perfil y pulsa «Marcar como Administración principal». Entra otra vez con la cuenta nueva y abre «Unidades del centro». <em>Verás:</em> ya la lista de unidades y el texto de Administración principal.</li>
+          <li>Con <code>almendros-administracion</code> (la Administración principal), abre «Unidades del centro». <em>Verás:</em> todas las unidades del centro (aquí, las dos plantas) y un texto que dice que eres la Administración principal.</li>
+          <li>En «Usuarios» da de alta una cuenta con perfil Administración (por ejemplo «cj-admin-prueba») solo con la Planta 1. En su ficha pulsa «Crear invitación de acceso», abre la invitación en una ventana privada, elige la contraseña y prepara el código del móvil: ya estás dentro con la cuenta nueva. Abre «Unidades del centro». <em>Verás:</em> solo una explicación de que no eres la principal y a quién pedirlo.</li>
+          <li>Vuelve a <code>almendros-administracion</code>, abre la ficha de ese perfil y pulsa «Marcar como Administración principal». Entra otra vez con la cuenta nueva y abre «Unidades del centro». <em>Verás:</em> ya la lista de unidades y el texto de Administración principal.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Solo la Administración principal ve todas las unidades del centro y se añade las que no tiene (cada ampliación queda en la auditoría). Una Administración que no es principal solo ve una explicación de quién puede hacerlo. La principal marca o quita la marca a otra; el centro siempre conserva al menos una. No se exige que cada unidad tenga una Administración. Este centro tiene una sola unidad, así que no verás «Añadir a mi ámbito».</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Solo la Administración principal ve todas las unidades del centro y se añade las que no tiene (cada ampliación queda en la auditoría). Una Administración que no es principal solo ve una explicación de quién puede hacerlo. La principal marca o quita la marca a otra; el centro siempre conserva al menos una. No se exige que cada unidad tenga una Administración. La cuenta nueva solo tiene la Planta 1: cuando sea la principal verá «Añadir a mi ámbito» en la Planta 2.</div>
         <fieldset class="choices" aria-labelledby="t-14">
           <label class="choice"><input type="radio" name="r-14" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-14" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -660,13 +662,13 @@
   <section class="tema" id="tema-6">
     <h2>Foto y ubicación del residente</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-administracion</code>: la foto de identificación y la ubicación (unidad, habitación y plaza) en la lista y en la ficha. Lo que ven los demás perfiles se prueba en la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>, prueba 13.</p>
+      <p>Con <code>almendros-administracion</code>: la foto de identificación y la ubicación (unidad, habitación y plaza) en la lista y en la ficha. Lo que ven los demás perfiles se prueba en la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>, prueba 13.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="16">
         <div class="q-head"><span class="n">16</span><h3 class="q-title" id="t-16">Poner, cambiar y quitar la foto de un residente</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Abre «Residentes». Mira la foto (o las iniciales) y la columna «Ubicación»: «Residente Integrado Dos» tiene foto y dice «Habitación 101 (prueba) · Cama A»; los que no tienen habitación, «Sin habitación asignada». Mírala también en el móvil.</li>
+          <li>Abre «Residentes». Mira la foto (o las iniciales) y la columna «Ubicación»: «Manuel Ruiz» tiene foto y dice «Planta 1 · 102 · A»; los que no tienen habitación, «Sin habitación asignada». Mírala también en el móvil.</li>
           <li>Abre la ficha del residente «CJ …». En «Foto de identificación» elige o haz una foto (de un objeto, nunca de una persona real). En el recuadro que aparece, arrástrala con el dedo o el ratón para centrar el objeto, prueba los botones de flecha y mueve «Acercar». Pulsa «Guardar foto» sin marcar la casilla del consentimiento. Después márcala y guarda.</li>
           <li>Pon otra foto distinta. Luego pulsa «Quitar foto».</li>
           <li>Abre «Auditoría» y busca las acciones de la foto.</li>

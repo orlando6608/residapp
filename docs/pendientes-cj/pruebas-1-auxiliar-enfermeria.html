@@ -322,9 +322,11 @@
         entorno, pero no afecta a ningún residente real. Si algo sale mal, no pasa nada: apunta lo que viste en el comentario de la
         prueba.
       </p>
-      <p><strong>Cómo se entra.</strong> Esto no es un acceso real: escribes el nombre de una cuenta de prueba en el campo «Usuario» y
-        pulsas «Entrar». Para cambiar de cuenta, usa «Cambiar de identidad» en el menú de tu perfil (arriba a la derecha) o vuelve a
-        <code>/DevAuth/Login</code>. Si una cuenta tiene varios ámbitos, la aplicación te deja elegir cuál usar.</p>
+      <p><strong>Cómo se entra.</strong> Como en una residencia de verdad: en «Iniciar sesión» escribes el usuario de la cuenta y su
+        contraseña y, después, el código de 6 cifras de tu aplicación de autenticación, o pulsas «Entrar con passkey». La primera vez, cada
+        cuenta se da de alta con la invitación que te entrega Orlando (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
+        de cuenta, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra. Si una cuenta tiene varios ámbitos, la
+        aplicación te deja elegir cuál usar.</p>
       <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
       <p><strong>Si te pierdes</strong>, el <a href="pruebas-1-auxiliar-enfermeria-flujo.html">flujo de la guía 1</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
     </div>
@@ -333,10 +335,10 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
-        <tr><td><code>dev-integrado-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (4).</td></tr>
-        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación) y poner la foto de identificación.</td></tr>
-        <tr><td><code>dev-integrado-medicina</code></td><td>Medicina</td><td>Solo en la prueba 13: ve la foto, pero no la cambia.</td></tr>
-        <tr><td><code>dev-integrado-familiar</code></td><td>Familia</td><td>Solo en la prueba 13: el Portal Familiar de «Residente Portal Familiar».</td></tr>
+        <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (5).</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación) y poner la foto de identificación.</td></tr>
+        <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Solo en la prueba 13: ve la foto, pero no la cambia.</td></tr>
+        <tr><td><code>almendros-elena</code></td><td>Familia</td><td>Solo en la prueba 13: el Portal Familiar de «Rosa Sánchez».</td></tr>
       </tbody>
     </table></div>
 
@@ -344,18 +346,18 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
       <tbody>
-        <tr><td>Residente Prueba CJ Uno (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
-        <tr><td>Residente Prueba CJ Dos (ficticio)</td><td>Asignado al Auxiliar; al empezar no tiene basal (lo crea la guía 3). Úsalo para los cierres del Auxiliar y para crear un basal desde cero.</td></tr>
-        <tr><td>Residente Integrado Uno (ficticio)</td><td>NO LO TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
-        <tr><td>Residente Integrado Dos (ficticio)</td><td>Se puede usar si te falta un residente. Ya tiene un escalado y un seguimiento de pruebas anteriores, foto y cama (Habitación 101 (prueba) · Cama A).</td></tr>
-        <tr><td>Residente Portal Familiar (ficticio)</td><td>Solo en la prueba 13: le pones una foto y compruebas que su familia no la ve.</td></tr>
+        <tr><td>Antonio García (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
+        <tr><td>Carmen López (ficticia)</td><td>Asignada al Auxiliar; al empezar no tiene basal (lo crea la guía 3). Úsala para los cierres del Auxiliar y para crear un basal desde cero.</td></tr>
+        <tr><td>Lucía Fernández (ficticia)</td><td>NO LA TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
+        <tr><td>Manuel Ruiz (ficticio)</td><td>Se puede usar si te falta un residente. Ya tiene foto y cama (Planta 1 · 102 · A).</td></tr>
+        <tr><td>Rosa Sánchez (ficticia)</td><td>Solo en la prueba 13: le pones una foto y compruebas que su familia no la ve.</td></tr>
       </tbody>
     </table></div>
     <div class="stack prose">
       <p class="context">
-        Verás también residentes y eventos de pruebas anteriores («Prueba familiares azure», «Prueba selector unidad azure»,
-        «Prueba Corrección Identidad azure», y algunos eventos abiertos de Integrado Uno y Dos). Ignóralos, salvo que una prueba te
-        mande a ellos. Los eventos no se pueden borrar: cada prueba que hagas dejará sus datos.
+        Verás también lo que hayan dejado tus pruebas anteriores y las de Orlando, que trabaja en el mismo centro con sus propias
+        cuentas (las que llevan «-orlando» en el nombre). Ignóralo, salvo que una prueba te mande a ello. Los eventos no se pueden borrar:
+        cada prueba que hagas dejará sus datos.
       </p>
     </div>
 
@@ -366,7 +368,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (4 de 13).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (4 de 13).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">No necesitas ninguna otra guía. Es la primera: deja datos (eventos y un comunicado) que usan otras.</p>
@@ -385,7 +387,7 @@
   <section class="tema" id="tema-1">
     <h2>Auxiliar</h2>
     <div class="stack prose">
-      <p>Entra con <code>dev-integrado-auxiliar</code>. El Auxiliar solo ve a los residentes que Administración le asigna y cierra el turno de cada uno de tres formas: sin cambios, un cambio registrado, o no valorable.</p>
+      <p>Entra con <code>almendros-auxiliar</code>. El Auxiliar solo ve a los residentes que Administración le asigna y cierra el turno de cada uno de tres formas: sin cambios, un cambio registrado, o no valorable.</p>
       <p class="why">Referencia: docs/flujos-clinicos/registro-cotidiano-auxiliar.md (AUX-01 a AUX-13)</p>
     </div>
     <div class="qs">
@@ -396,7 +398,7 @@
           <li>Mira las tarjetas: cada una tiene una franja y una etiqueta que dicen si el residente tiene basal vigente (verde) o pendiente (rojo), y si el turno de hoy ya está «Cerrado hoy».</li>
           <li>Pulsa una tarjeta para abrir su registro cotidiano.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves cuatro residentes (Integrado Uno, Integrado Dos, Prueba CJ Uno y Prueba CJ Dos) y ninguno más. En el registro de un residente con basal ves un resumen con el total de Barthel, sin versiones antiguas ni borradores.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Ves cinco residentes (Rosa, Lucía, Manuel, Antonio y Carmen) y ninguno más. En el registro de un residente con basal ves un resumen con el total de Barthel, sin versiones antiguas ni borradores.</div>
         <fieldset class="choices" aria-labelledby="t-1">
           <label class="choice"><input type="radio" name="r-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -408,9 +410,9 @@
 
       <article class="q" data-q="2">
         <div class="q-head"><span class="n">2</span><h3 class="q-title" id="t-2">«Sin cambios»</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Carmen López</strong></span></div>
         <ol class="pasos">
-          <li>Abre el registro cotidiano de «Residente Prueba CJ Dos (ficticio)».</li>
+          <li>Abre el registro cotidiano de «Carmen López (ficticia)».</li>
           <li>Pulsa «Confirmar sin cambios».</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Vuelves a «Mis residentes» con el aviso «Cierre registrado: sin cambios.» y la tarjeta del residente pasa a «Cerrado hoy». No aparece nada en las bandejas de Enfermería.</div>
@@ -425,7 +427,7 @@
 
       <article class="q" data-q="3">
         <div class="q-head"><span class="n">3</span><h3 class="q-title" id="t-3">Registrar un cambio ordinario</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Carmen López</strong></span></div>
         <ol class="pasos">
           <li>En el registro del residente, pulsa «Registrar cambio».</li>
           <li>En «Áreas observadas» marca una o más opciones rápidas (por ejemplo, en «Alimentación / hidratación»: «Rechaza ingesta») y, en otra área, pulsa «Añadir nota» y escribe algo (por ejemplo, «Refiere dolor al caminar»).</li>
@@ -444,9 +446,9 @@
 
       <article class="q" data-q="4">
         <div class="q-head"><span class="n">4</span><h3 class="q-title" id="t-4">Registrar un cambio prioritario</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
-          <li>Abre «Registrar cambio» de «Residente Prueba CJ Uno (ficticio)» y marca un área con una opción rápida.</li>
+          <li>Abre «Registrar cambio» de «Antonio García (ficticio)» y marca un área con una opción rápida.</li>
           <li>En «Clasificación» elige «Prioritario». Intenta continuar sin elegir motivo: no debe dejarte.</li>
           <li>Elige un motivo de la lista cerrada. Pulsa «Continuar» y, en el resumen, intenta confirmar sin escribir el aviso directo: tampoco debe dejarte.</li>
           <li>Escribe el aviso directo («a quién avisaste y qué dijo»; por ejemplo, «Avisé a la enfermera Marta; dijo que pasa a verlo») y pulsa «Confirmar y enviar».</li>
@@ -463,7 +465,7 @@
 
       <article class="q" data-q="5">
         <div class="q-head"><span class="n">5</span><h3 class="q-title" id="t-5">«No valorable»</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Carmen López</strong></span></div>
         <ol class="pasos">
           <li>En el registro del residente, escribe un motivo y pulsa «Marcar no valorable». Antes, prueba a pulsarlo sin motivo.</li>
         </ol>
@@ -482,7 +484,7 @@
   <section class="tema" id="tema-2">
     <h2>Enfermería</h2>
     <div class="stack prose">
-      <p>Entra con <code>dev-integrado-enfermeria</code>. Enfermería recibe lo que registra el Auxiliar y lo que observa ella misma, lo valora y decide cómo termina: cerrarlo, hacerle seguimiento, escalarlo a Medicina (guía 2) o activar el protocolo urgente.</p>
+      <p>Entra con <code>almendros-enfermeria</code>. Enfermería recibe lo que registra el Auxiliar y lo que observa ella misma, lo valora y decide cómo termina: cerrarlo, hacerle seguimiento, escalarlo a Medicina (guía 2) o activar el protocolo urgente.</p>
       <p class="why">Referencia: docs/flujos-clinicos/valoracion-escalado-enfermeria.md (ENF-01 a ENF-16) y derivacion-urgencias.md (DER-01 a DER-06)</p>
     </div>
     <div class="qs">
@@ -494,7 +496,7 @@
           <li>Busca los cambios que acabas de registrar como Auxiliar en las pruebas 3 y 4.</li>
           <li>Abre uno con «Ver detalle».</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>El prioritario de Prueba CJ Uno está en la bandeja prioritaria, con su motivo y el aviso directo; el ordinario de Prueba CJ Dos, en la ordinaria. El detalle muestra la observación original (no editable), la temperatura y el basal vigente resumido. Es posible que veas también eventos de pruebas anteriores.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El prioritario de Antonio está en la bandeja prioritaria, con su motivo y el aviso directo; el ordinario de Carmen, en la ordinaria. El detalle muestra la observación original (no editable), la temperatura y el basal vigente resumido. Es posible que veas también eventos de pruebas anteriores.</div>
         <fieldset class="choices" aria-labelledby="t-6">
           <label class="choice"><input type="radio" name="r-6" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -506,9 +508,9 @@
 
       <article class="q" data-q="7">
         <div class="q-head"><span class="n">7</span><h3 class="q-title" id="t-7">Registrar un evento propio</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
-          <li>En «Residentes» abre «Residente Prueba CJ Uno (ficticio)» y pulsa «Registrar evento».</li>
+          <li>En «Residentes» abre «Antonio García (ficticio)» y pulsa «Registrar evento».</li>
           <li>Escribe una observación («Tos productiva desde la mañana», por ejemplo), elige «Ordinario» y pulsa «Guardar evento».</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Pasas al detalle del evento, con el aviso «Evento registrado. Ya puedes empezar su valoración.». La observación no se puede editar después. En la bandeja aparece como «Evento observado por Enfermería».</div>
@@ -523,7 +525,7 @@
 
       <article class="q" data-q="8">
         <div class="q-head"><span class="n">8</span><h3 class="q-title" id="t-8">Valorar un evento, con las constantes</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>En el detalle del evento de la prueba 7, pulsa «Empezar valoración».</li>
           <li>Escribe hallazgos y actuaciones y anota algunas constantes (por ejemplo, saturación de O₂ 89 %; si anotas la saturación, indica también si respira «Aire ambiente» u «Oxigenoterapia»). Pulsa «Guardar borrador».</li>
@@ -541,7 +543,7 @@
 
       <article class="q" data-q="9">
         <div class="q-head"><span class="n">9</span><h3 class="q-title" id="t-9">Cerrar un evento sin comunicar a la familia</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>Con la valoración guardada, pulsa «Pasar a decisión asistencial» y elige «Cerrar el evento».</li>
           <li>Fíjate en que debes decidir de forma explícita «No comunicar» o «Preparar comunicación». Prueba a cerrar sin elegir.</li>
@@ -559,7 +561,7 @@
 
       <article class="q" data-q="10">
         <div class="q-head"><span class="n">10</span><h3 class="q-title" id="t-10">Seguimiento y transferencia al equipo entrante</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>Registra un tercer evento (como en la prueba 7) y valóralo (como en la 8: «Empezar valoración» y «Guardar borrador» con algún dato). «Iniciar seguimiento» no aparece hasta entonces: pulsa «Pasar a decisión asistencial» y elige la tarjeta «Iniciar seguimiento». Indica una fecha prevista, un criterio, o ambos (por ejemplo, fecha: mañana (solo se indica el día, no la hora); criterio: «si la saturación sigue por debajo de 92»).</li>
           <li>En la pantalla del seguimiento, registra una actuación («Registrar actuación»), reprograma («Reprogramar», con justificación) y transfiere al «Equipo entrante» con una nota de continuidad («Transferir»).</li>
@@ -577,9 +579,9 @@
 
       <article class="q" data-q="11">
         <div class="q-head"><span class="n">11</span><h3 class="q-title" id="t-11">Protocolo urgente</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
-          <li>Registra un evento prioritario en «Residente Prueba CJ Uno», empieza y guarda la valoración y elige «Activar protocolo urgente». Escribe una nota opcional y activa.</li>
+          <li>Registra un evento prioritario en «Antonio García», empieza y guarda la valoración y elige «Activar protocolo urgente». Escribe una nota opcional y activa.</li>
           <li>En la pantalla del protocolo registra una actuación, una evolución y un contacto con un servicio (por ejemplo, el 112, con su hora).</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Activarlo es un solo paso, sin trabas. Cada registro guarda quién lo hizo y cuándo y no se puede modificar. El evento pasa a «Protocolo urgente activo» y entra en la tarjeta «Protocolos urgentes». El contacto con el servicio no puede tener una hora futura.</div>
@@ -594,7 +596,7 @@
 
       <article class="q" data-q="12">
         <div class="q-head"><span class="n">12</span><h3 class="q-title" id="t-12">Derivar a Urgencias, llamar a la familia y cerrar</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>Desde el protocolo urgente del paso anterior, pulsa «Derivar a Urgencias». Escribe el motivo y, en «Comunicaciones», los contactos de esta derivación (por ejemplo, «Contacto telefónico con SEM a las 18 h»). Pulsa «Ver la vista previa».</li>
           <li>Revisa el informe entero: cada sección está marcada como dato automático o escrito por ti, y tiene una huella. Prueba «Volver a editar». Después pulsa «Firmar y generar PDF» y «Descargar el informe en PDF».</li>
@@ -621,12 +623,12 @@
     <div class="qs">
       <article class="q" data-q="13">
         <div class="q-head"><span class="n">13</span><h3 class="q-title" id="t-13">Ver la foto y la cama, y poner una foto como Enfermería</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residentes: <strong>Residente Integrado Dos</strong> y <strong>Residente Portal Familiar</strong></span></div>
+        <div class="prueba-meta"><span>Residentes: <strong>Manuel Ruiz</strong> y <strong>Rosa Sánchez</strong></span></div>
         <ol class="pasos">
-          <li>Con <code>dev-integrado-auxiliar</code>, abre «Mis residentes». Integrado Dos tiene foto y «Habitación 101 (prueba) · Cama A»; los demás, sus iniciales y «Sin habitación asignada». Abre su registro cotidiano: la foto sale también arriba, junto al nombre.</li>
-          <li>Con <code>dev-integrado-enfermeria</code>, abre «Residentes» y luego la ficha de «Residente Portal Familiar». En «Foto de identificación», elige o haz una foto (de un objeto, nunca de una persona real). En el recuadro que aparece, arrástrala para centrar el objeto y acércala con «Acercar». Pulsa «Guardar foto» sin marcar la casilla del consentimiento. Después márcala y guarda.</li>
-          <li>Con <code>dev-integrado-medicina</code>, abre «Residentes» y la ficha de ese residente.</li>
-          <li>Con <code>dev-integrado-familiar</code>, entra en el Portal Familiar.</li>
+          <li>Con <code>almendros-auxiliar</code>, abre «Mis residentes». Manuel tiene foto y «Planta 1 · 102 · A»; los demás, sus iniciales y «Sin habitación asignada». Abre su registro cotidiano: la foto sale también arriba, junto al nombre.</li>
+          <li>Con <code>almendros-enfermeria</code>, abre «Residentes» y luego la ficha de «Rosa Sánchez». En «Foto de identificación», elige o haz una foto (de un objeto, nunca de una persona real). En el recuadro que aparece, arrástrala para centrar el objeto y acércala con «Acercar». Pulsa «Guardar foto» sin marcar la casilla del consentimiento. Después márcala y guarda.</li>
+          <li>Con <code>almendros-medicina</code>, abre «Residentes» y la ficha de ese residente.</li>
+          <li>Con <code>almendros-elena</code>, entra en el Portal Familiar.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>En las listas y en la cabecera de la ficha la foto es cuadrada, con las esquinas redondeadas. Sin la casilla del consentimiento la foto no se guarda. Al elegirla sale en un recuadro donde se mueve y se acerca y, guardada, sale con ese mismo encuadre en la lista y en la ficha de Enfermería, Medicina y Administración. Auxiliar y Medicina la ven, pero no tienen el recuadro para cambiarla. En el Portal Familiar no aparece ninguna foto.</div>
         <fieldset class="choices" aria-labelledby="t-13">

@@ -18,7 +18,6 @@
 <body>
     @{
         var sessionSubjectLayout = ResidApp.Web.Security.SessionAuthentication.Subject(User);
-        var devAuthLayout = Context.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<ResidApp.Web.Security.DevAuthOptions>>().Value.Habilitado;
         // Sin sesión (por ejemplo, caducada) no cuenta la cookie de ámbito que haya quedado.
         var activeScopeLayout = sessionSubjectLayout is null ? null : ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request);
         var profileLabelLayout = activeScopeLayout is null ? null : ResidApp.Web.Models.SystemProfileDisplay.Label(activeScopeLayout.Profile);
@@ -102,10 +101,6 @@
                                     @if (activeScopeLayout is not null)
                                     {
                                         <li><a class="dropdown-item" asp-area="" asp-controller="ProfileScope" asp-action="Select">Cambiar ámbito</a></li>
-                                    }
-                                    @if (devAuthLayout)
-                                    {
-                                        <li><a class="dropdown-item" asp-area="" asp-controller="DevAuth" asp-action="Login">Entrar con otra cuenta</a></li>
                                     }
                                     <li><hr class="dropdown-divider" /></li>
                                     <li>

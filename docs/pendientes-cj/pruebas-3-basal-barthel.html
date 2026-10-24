@@ -322,9 +322,11 @@
         entorno, pero no afecta a ningún residente real. Si algo sale mal, no pasa nada: apunta lo que viste en el comentario de la
         prueba.
       </p>
-      <p><strong>Cómo se entra.</strong> Esto no es un acceso real: escribes el nombre de una cuenta de prueba en el campo «Usuario» y
-        pulsas «Entrar». Para cambiar de cuenta, usa «Cambiar de identidad» en el menú de tu perfil (arriba a la derecha) o vuelve a
-        <code>/DevAuth/Login</code>. Si una cuenta tiene varios ámbitos, la aplicación te deja elegir cuál usar.</p>
+      <p><strong>Cómo se entra.</strong> Como en una residencia de verdad: en «Iniciar sesión» escribes el usuario de la cuenta y su
+        contraseña y, después, el código de 6 cifras de tu aplicación de autenticación, o pulsas «Entrar con passkey». La primera vez, cada
+        cuenta se da de alta con la invitación que te entrega Orlando (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
+        de cuenta, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra. Si una cuenta tiene varios ámbitos, la
+        aplicación te deja elegir cuál usar.</p>
       <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
       <p><strong>Si te pierdes</strong>, el <a href="pruebas-3-basal-barthel-flujo.html">flujo de la guía 3</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
     </div>
@@ -333,8 +335,8 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
-        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
-        <tr><td><code>dev-integrado-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios. Puede crear y firmar basales.</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
+        <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios. Puede crear y firmar basales.</td></tr>
       </tbody>
     </table></div>
 
@@ -342,10 +344,10 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
       <tbody>
-        <tr><td>Residente Prueba CJ Uno (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
-        <tr><td>Residente Prueba CJ Dos (ficticio)</td><td>Asignado al Auxiliar y sin basal: con él creas un basal desde cero (pruebas 1 a 4).</td></tr>
-        <tr><td>Prueba Activación RLS Azure (ficticio)</td><td>Ya tiene historial: seis eventos cerrados, dos informes de derivación firmados y un basal firmado. Úsalo solo para mirar (historial, línea temporal, PDF), no para pruebas nuevas.</td></tr>
-        <tr><td>Residente Integrado Uno (ficticio)</td><td>NO LO TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
+        <tr><td>Antonio García (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
+        <tr><td>Carmen López (ficticia)</td><td>Asignada al Auxiliar y sin basal: con ella creas un basal desde cero (pruebas 1 a 4).</td></tr>
+        <tr><td>Pilar Moreno (ficticia)</td><td>Ya tiene historial: dos eventos cerrados (uno, una derivación a Urgencias con su informe firmado) y un basal firmado. Úsala solo para mirar (historial, línea temporal, PDF), no para pruebas nuevas.</td></tr>
+        <tr><td>Lucía Fernández (ficticia)</td><td>NO LA TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
       </tbody>
     </table></div>
 
@@ -356,15 +358,15 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (3 de 7).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 7).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">No necesitas ninguna otra guía.</p>
 
     <h3>En qué orden hacerlas</h3>
     <ul class="lista prose">
-      <li>Las pruebas 1 a 4 son el mismo borrador de basal, el de «Residente Prueba CJ Dos»: hazlas seguidas.</li>
-      <li>Las pruebas 5 y 6 son la reevaluación de «Residente Prueba CJ Uno»: la 5 deja un borrador que la 6 cancela.</li>
+      <li>Las pruebas 1 a 4 son el mismo borrador de basal, el de «Carmen López»: hazlas seguidas.</li>
+      <li>Las pruebas 5 y 6 son la reevaluación de «Antonio García»: la 5 deja un borrador que la 6 cancela.</li>
     </ul>
     <p class="why">Si te saltas una prueba, marca D en la que dependa de ella.</p>
   </section>
@@ -372,15 +374,15 @@
   <section class="tema" id="tema-1">
     <h2>Basal y Barthel</h2>
     <div class="stack prose">
-      <p>El basal es el estado habitual de referencia del residente: nueve áreas más la escala de Barthel. Se crea con Enfermería (<code>dev-integrado-enfermeria</code>) o con Medicina (<code>dev-integrado-medicina</code>), que usan las mismas pantallas.</p>
+      <p>El basal es el estado habitual de referencia del residente: nueve áreas más la escala de Barthel. Se crea con Enfermería (<code>almendros-enfermeria</code>) o con Medicina (<code>almendros-medicina</code>), que usan las mismas pantallas.</p>
       <p class="why">Referencia: docs/flujos-clinicos/gestion-basal-barthel.md (BAS-01 a BAS-19)</p>
     </div>
     <div class="qs">
       <article class="q" data-q="1">
         <div class="q-head"><span class="n">1</span><h3 class="q-title" id="t-1">Crear un borrador de basal</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Carmen López</strong></span></div>
         <ol class="pasos">
-          <li>Como Enfermería, abre «Residente Prueba CJ Dos (ficticio)» (no tiene basal) y pulsa «Crear borrador de basal».</li>
+          <li>Como Enfermería, abre «Carmen López (ficticia)» (no tiene basal) y pulsa «Crear borrador de basal».</li>
           <li>Elige el motivo (Alta), la fuente de la información y su fecha. Pulsa «Crear borrador».</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Aviso «Borrador creado». Ves las nueve áreas y el índice de Barthel, todos «Pendiente». Solo puede haber un borrador activo por residente.</div>
@@ -428,7 +430,7 @@
 
       <article class="q" data-q="4">
         <div class="q-head"><span class="n">4</span><h3 class="q-title" id="t-4">Confirmar y firmar</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Residente Prueba CJ Dos</strong></span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Carmen López</strong></span></div>
         <ol class="pasos">
           <li>Con las nueve áreas y Barthel completos, pulsa «Confirmar y firmar». Revisa el resumen completo.</li>
           <li>Firma.</li>
@@ -445,10 +447,10 @@
 
       <article class="q" data-q="5">
         <div class="q-head"><span class="n">5</span><h3 class="q-title" id="t-5">Solo firma quien creó el borrador</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
-          <li>Como Enfermería, inicia una reevaluación de «Residente Prueba CJ Uno (ficticio)» y completa lo que quieras.</li>
-          <li>Entra como Medicina (<code>dev-integrado-medicina</code>), abre el mismo residente y mira si ve ese borrador; intenta crear uno propio.</li>
+          <li>Como Enfermería, inicia una reevaluación de «Antonio García (ficticio)» y completa lo que quieras.</li>
+          <li>Entra como Medicina (<code>almendros-medicina</code>), abre el mismo residente y mira si ve ese borrador; intenta crear uno propio.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Medicina no ve el borrador de Enfermería: en la ficha le ofrece «Crear borrador» como si no existiera ninguno. Si intenta crear otro, la app lo rechaza con el mensaje «Revisa los datos de la operación.», que quizá no explica bien el motivo (ya hay un borrador activo). Solo puede firmar la misma cuenta que creó el borrador, con el mismo perfil. Todavía no se puede aportar a un borrador ajeno (está en «Próximamente»).</div>
         <p class="context">Tu opinión: ¿te parece suficiente ese mensaje, o debería decir «ya hay un borrador activo de Enfermería»?</p>
@@ -463,7 +465,7 @@
 
       <article class="q" data-q="6">
         <div class="q-head"><span class="n">6</span><h3 class="q-title" id="t-6">Reevaluar el basal y cancelar un borrador</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Residente Prueba CJ Uno</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>En el borrador de reevaluación, escribe un motivo en «Cancelar borrador» y cancélalo.</li>
           <li>Vuelve a abrir uno nuevo («Iniciar reevaluación»), complétalo y fírmalo.</li>
@@ -480,9 +482,9 @@
 
       <article class="q" data-q="7">
         <div class="q-head"><span class="n">7</span><h3 class="q-title" id="t-7">Historial y versiones</h3><span class="chip">Sin probar</span></div>
-        <div class="prueba-meta"><span>Residente: <strong>Prueba Activación RLS Azure</strong></span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Pilar Moreno</strong></span></div>
         <ol class="pasos">
-          <li>Abre «Prueba Activación RLS Azure (ficticio)» y pulsa «Ver historial». Mira «Eventos cerrados» y «Versiones del basal».</li>
+          <li>Abre «Pilar Moreno (ficticia)» y pulsa «Ver historial». Mira «Eventos cerrados» y «Versiones del basal».</li>
           <li>Abre una versión con «Ver versión», un evento con «Ver detalle» y «Ver línea temporal».</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Cada evento cerrado muestra el basal y la unidad que estaban vigentes cuando se registró, no los actuales. La línea temporal reúne todos los pasos, del más reciente al más antiguo, con el perfil que los hizo. Nada se puede modificar.</div>

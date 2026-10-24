@@ -14,7 +14,7 @@ public class FlujoDeTrabajoPageTests : IClassFixture<ResidentsFlowTests.WebAppFa
     [Fact]
     public async Task Footer_LinksToTheWorkflowPage()
     {
-        var html = await _factory.CreateClient().GetStringAsync("/DevAuth/Login");
+        var html = await _factory.CreateClient().GetStringAsync("/Acceso/Entrar");
 
         Assert.Contains("href=\"/flujo-de-trabajo.html\">Flujo de trabajo</a>", html);
     }

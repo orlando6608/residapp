@@ -7,7 +7,7 @@ namespace ResidApp.UnitTests;
 public class ProfessionalAccountTests
 {
     [Theory]
-    [InlineData("dev-integrado-enfermeria")]
+    [InlineData("almendros-enfermeria")]
     [InlineData("ana.ruiz@centro.example")]
     [InlineData("auth0_1234")]
     [InlineData("Enfermería-Noche")]

@@ -322,9 +322,11 @@
         entorno, pero no afecta a ningún residente real. Si algo sale mal, no pasa nada: apunta lo que viste en el comentario de la
         prueba.
       </p>
-      <p><strong>Cómo se entra.</strong> Esto no es un acceso real: escribes el nombre de una cuenta de prueba en el campo «Usuario» y
-        pulsas «Entrar». Para cambiar de cuenta, usa «Cambiar de identidad» en el menú de tu perfil (arriba a la derecha) o vuelve a
-        <code>/DevAuth/Login</code>. Si una cuenta tiene varios ámbitos, la aplicación te deja elegir cuál usar.</p>
+      <p><strong>Cómo se entra.</strong> Como en una residencia de verdad: en «Iniciar sesión» escribes el usuario de la cuenta y su
+        contraseña y, después, el código de 6 cifras de tu aplicación de autenticación, o pulsas «Entrar con passkey». La primera vez, cada
+        cuenta se da de alta con la invitación que te entrega Orlando (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
+        de cuenta, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra. Si una cuenta tiene varios ámbitos, la
+        aplicación te deja elegir cuál usar.</p>
       <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
       <p><strong>Si te pierdes</strong>, el <a href="pruebas-8-aislamiento-flujo.html">flujo de la guía 8</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
     </div>
@@ -333,11 +335,11 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
-        <tr><td><code>dev-enfermeria</code></td><td>Enfermería de otro centro</td><td>Otro centro, con sus propios residentes.</td></tr>
-        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
-        <tr><td><code>dev-integrado-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (4).</td></tr>
-        <tr><td><code>dev-multi</code></td><td>Cuatro ámbitos</td><td>Enfermería y Medicina del «Centro de desarrollo A»; Dirección Clínica y Familiar del «Centro de desarrollo B».</td></tr>
-        <tr><td><code>dev-plataforma</code></td><td>Plataforma</td><td>Los centros y, en cada uno, sus Administraciones y unidades. No ve residentes. Solo se usa en la prueba 5.</td></tr>
+        <tr><td><code>olmos-enfermeria</code></td><td>Enfermería de otro centro</td><td>La «Residencia Los Olmos (ficticia)», otro centro, con sus propios residentes.</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
+        <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (5).</td></tr>
+        <tr><td><code>varios-centros</code></td><td>Cuatro ámbitos</td><td>Enfermería y Medicina de Los Olmos; Dirección Clínica y Familiar de Los Almendros.</td></tr>
+        <tr><td><code>plataforma-cj</code></td><td>Plataforma</td><td>Los centros y, en cada uno, sus Administraciones y unidades. No ve residentes. Solo se usa en la prueba 5.</td></tr>
       </tbody>
     </table></div>
 
@@ -348,10 +350,10 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (2 de 5).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (2 de 5).</p>
 
     <h3>Antes de esta guía</h3>
-    <p class="prose">No necesitas ninguna otra guía. La prueba 4 da por hecho que el Auxiliar tiene sus cuatro residentes asignados (si hiciste la <a href="pruebas-5-administracion.html">guía 5</a>, la prueba 8 los deja así).</p>
+    <p class="prose">No necesitas ninguna otra guía. La prueba 4 da por hecho que el Auxiliar tiene sus cinco residentes asignados (si hiciste la <a href="pruebas-5-administracion.html">guía 5</a>, la prueba 8 los deja así).</p>
 
     <h3>En qué orden hacerlas</h3>
     <ul class="lista prose">
@@ -363,7 +365,7 @@
   <section class="tema" id="tema-1">
     <h2>Aislamiento entre centros</h2>
     <div class="stack prose">
-      <p>Estas pruebas comprueban lo que protege la seguridad por filas: que cada centro vea únicamente sus datos. Hay dos centros con residentes: el «Centro de desarrollo — escenario integrado» (las cuentas <code>dev-integrado-…</code>) y otro centro distinto (la cuenta <code>dev-enfermeria</code>). Son pruebas rápidas, de pocos minutos.</p>
+      <p>Estas pruebas comprueban lo que protege la seguridad por filas: que cada centro vea únicamente sus datos. Hay dos centros con residentes: la «Residencia Los Almendros» (las cuentas <code>almendros-…</code>) y la «Residencia Los Olmos» (las cuentas <code>olmos-…</code>). Son pruebas rápidas, de pocos minutos.</p>
       <p class="why">Referencia: docs/decisiones-arquitectura/0008-multicentro-y-grupos.md</p>
     </div>
     <div class="qs">
@@ -371,10 +373,10 @@
         <div class="q-head"><span class="n">1</span><h3 class="q-title" id="t-1">Cada centro ve solo sus residentes</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-enfermeria</code> y abre «Residentes» (Enfermería). Apunta los nombres que ves.</li>
-          <li>Sal («Cambiar de identidad») y entra con <code>dev-integrado-enfermeria</code>. Abre «Residentes» y compara.</li>
+          <li>Entra con <code>olmos-enfermeria</code> y abre «Residentes» (Enfermería). Apunta los nombres que ves.</li>
+          <li>Sal («Salir», en el menú de tu perfil) y entra con <code>almendros-enfermeria</code>. Abre «Residentes» y compara.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Con <code>dev-enfermeria</code> solo ves «Residente Enfermería Uno» y «Residente Enfermería Dos». Con <code>dev-integrado-enfermeria</code> ves los residentes del escenario integrado y ninguno de los otros dos.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Con <code>olmos-enfermeria</code> solo ves «Jaime Ortega» y «Teresa Gil». Con <code>almendros-enfermeria</code> ves los residentes de Los Almendros y ninguno de los otros dos.</div>
         <fieldset class="choices" aria-labelledby="t-1">
           <label class="choice"><input type="radio" name="r-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -388,8 +390,8 @@
         <div class="q-head"><span class="n">2</span><h3 class="q-title" id="t-2">Abrir a mano un residente de otro centro</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-integrado-enfermeria</code>.</li>
-          <li>Cambia la dirección del navegador para ir a: <code>/Enfermeria/Residente?residenteId=443194d9-dfe4-4edc-b9a1-c3cf70d161b1</code> (es «Residente Enfermería Uno», de otro centro). Prueba también <code>/Enfermeria/RegistrarEvento?residenteId=443194d9-dfe4-4edc-b9a1-c3cf70d161b1</code>.</li>
+          <li>Entra con <code>almendros-enfermeria</code>.</li>
+          <li>Cambia la dirección del navegador para ir a: <code>/Enfermeria/Residente?residenteId=1A000000-0000-4000-8000-000000000011</code> (es «Jaime Ortega», de otro centro). Prueba también <code>/Enfermeria/RegistrarEvento?residenteId=1A000000-0000-4000-8000-000000000011</code>.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>No se abre ni se muestra ningún dato de ese residente: la aplicación te devuelve a tu lista de residentes. Si ves su nombre, su ficha o un formulario para registrarle un evento, es un fallo grave: dínoslo cuanto antes.</div>
         <fieldset class="choices" aria-labelledby="t-2">
@@ -404,10 +406,10 @@
       <article class="q" data-q="3">
         <div class="q-head"><span class="n">3</span><h3 class="q-title" id="t-3">Cambiar de ámbito con una cuenta de varios centros</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-multi</code>. Aparece «Seleccionar ámbito» con cuatro ámbitos: Enfermería y Medicina del Centro A, Dirección Clínica y Familiar del Centro B.</li>
+          <li>Entra con <code>varios-centros</code>. Aparece «Seleccionar ámbito» con cuatro ámbitos: Enfermería y Medicina de Los Olmos, Dirección Clínica y Familiar de Los Almendros.</li>
           <li>Elige uno, mira qué pantallas te ofrece y cambia con «Cambiar ámbito» (menú del perfil). Repite con otro.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>En cada ámbito solo ves las pantallas de su perfil y los datos de su centro: ninguno de los residentes del escenario integrado aparece en ninguno de los cuatro. En el ámbito Familiar solo se abre el Portal Familiar, y esa cuenta dice «No tienes ninguna autorización activa» porque no es familiar de ningún residente.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>En cada ámbito solo ves las pantallas de su perfil y los datos de su centro: en Enfermería y Medicina, solo Jaime y Teresa; en Dirección Clínica, solo los residentes de Los Almendros. En el ámbito Familiar solo se abre el Portal Familiar, y esa cuenta dice «No tienes ninguna autorización activa» porque no es familiar de ningún residente.</div>
         <fieldset class="choices" aria-labelledby="t-3">
           <label class="choice"><input type="radio" name="r-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -420,8 +422,8 @@
       <article class="q" data-q="4">
         <div class="q-head"><span class="n">4</span><h3 class="q-title" id="t-4">Un Auxiliar solo ve a sus asignados</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-integrado-auxiliar</code> y comprueba que ves exactamente los cuatro residentes asignados.</li>
-          <li>Intenta abrir a mano: <code>/Auxiliar/Registro?residenteId=fcb9e800-af32-4e43-8aca-84144ef684a8</code> (un residente de tu centro que NO te han asignado).</li>
+          <li>Entra con <code>almendros-auxiliar</code> y comprueba que ves exactamente los cinco residentes asignados (Rosa, Antonio, Carmen, Lucía y Manuel).</li>
+          <li>Intenta abrir a mano: <code>/Auxiliar/Registro?residenteId=1A000000-0000-4000-8000-000000000006</code> (Pilar Moreno, de tu centro, que NO te han asignado).</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Te devuelve a «Mis residentes» sin mostrar nada del residente no asignado.</div>
         <fieldset class="choices" aria-labelledby="t-4">
@@ -436,7 +438,7 @@
       <article class="q" data-q="5">
         <div class="q-head"><span class="n">5</span><h3 class="q-title" id="t-5">Plataforma: Administraciones y unidades de un centro</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-plataforma</code>. Abre «Centros» y, en uno de ellos, «Administraciones y unidades».</li>
+          <li>Entra con <code>plataforma-cj</code>. Abre «Centros» y, en uno de ellos, «Administraciones y unidades».</li>
           <li>Mira las Administraciones del centro y, en una que no sea principal, pulsa «Marcar como Administración principal». Repite para quitar la marca.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>El soporte de la plataforma ve las unidades y las Administraciones vigentes del centro, y puede marcar o quitar la marca de principal y añadir una unidad al ámbito de cualquier Administración (por ejemplo, para recuperar una unidad sin nadie). Cada cambio queda en la auditoría. No ve residentes ni contenido clínico. Si repites el mismo cambio, avisa de que ya estaba así.</div>

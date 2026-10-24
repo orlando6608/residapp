@@ -25,7 +25,7 @@ namespace ResidApp.Web.Controllers;
 public sealed class AccesoController(
     UserManager<CredentialAccount> users, IProfileScopeDirectoryProvider directory, SessionSignIn signIn, PendingAccessCookie pendingCookie,
     IAccessInvitationRepository invitations, InvitationCookie invitationCookie, ISessionStore sessions,
-    IAccessEventLog accessLog, TimeProvider clock, AccessFailureThrottle throttle, IOptions<DevAuthOptions> devAuth,
+    IAccessEventLog accessLog, TimeProvider clock, AccessFailureThrottle throttle,
     IOptions<AccesoOptions> acceso, ILogger<AccesoController> logger) : Controller
 {
     public const string PlatformUsesPasskeyMessage =
@@ -350,7 +350,7 @@ public sealed class AccesoController(
         "Demasiados accesos fallidos desde esta red. Espera unos minutos y vuelve a intentarlo.");
 
     private AccesoEntrarViewModel EntrarModel(string? usuario, string? returnUrl, bool sesionCaducada) =>
-        new(usuario, Url.IsLocalUrl(returnUrl) ? returnUrl : null, sesionCaducada, devAuth.Value.Habilitado, acceso.Value.PasskeysActivas);
+        new(usuario, Url.IsLocalUrl(returnUrl) ? returnUrl : null, sesionCaducada, acceso.Value.PasskeysActivas);
 
     private async Task<bool> MustUsePasskeyAsync(CredentialAccount account, IReadOnlyList<ActiveProfileScope> scopes) =>
         acceso.Value.PasskeysActivas && scopes.Any(scope => scope.Profile == SystemProfile.Plataforma)

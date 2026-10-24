@@ -21,11 +21,7 @@ public class IntercambioScreensTests(WebAppFactory factory) : IClassFixture<WebA
     private async Task<HttpClient> LoginAsync(string subject)
     {
         var client = factory.CreateClient();
-        var page = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"), ["externalSubject"] = subject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, subject)).EnsureSuccessStatusCode();
         return client;
     }
 

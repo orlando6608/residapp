@@ -317,7 +317,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [Fact]
     public async Task Footer_LinksToTheIndex()
     {
-        var html = await _factory.CreateClient().GetStringAsync("/DevAuth/Login");
+        var html = await _factory.CreateClient().GetStringAsync("/Acceso/Entrar");
 
         Assert.Contains("href=\"/pendientes-cj/index.html\"", html);
     }

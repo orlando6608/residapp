@@ -256,30 +256,49 @@ public partial class AccesoTests(ResidentsFlowTests.WebAppFactory factory) : ICl
         Assert.Equal(HttpStatusCode.NotFound, oldMockup.StatusCode);
     }
 
-    [Fact]
-    public async Task AccesoDeDesarrollo_CreaUnaInvitacion_YConEllaSeEntra()
+    /// <summary>Ejecuta database/operaciones/invitar_cuenta.sql como lo haría quien administra la base y devuelve lo que imprime.</summary>
+    private static async Task<IReadOnlyList<string>> BootstrapInvitationAsync(string subject)
     {
-        var (subject, accountId) = await SesionTests.SeedAccountAsync("ADMINISTRACION");
-        var dev = await SesionTests.LoginAsync(factory, subject);
-
-        var sheet = await PostAsync(dev, "/DevAuth/Credenciales", new());
-        var client = Client();
-        var codes = await UseInvitationAsync(client, InvitationUrl(await TextAsync(sheet)), accountId);
-
-        Assert.Contains("no-store", sheet.Headers.CacheControl!.ToString());
-        Assert.Equal(10, codes.Count);
-        Assert.False(SesionTests.RedirectsToLogin(await client.GetAsync("/ProfileScope/Select")));
-        Assert.Equal(1, await EventsAsync(accountId, "CREDENCIALES_DESARROLLO"));
-        Assert.Equal(1, await EventsAsync(accountId, "INVITACION_USADA"));
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "database", "operaciones", "invitar_cuenta.sql")))
+        {
+            directory = directory.Parent;
+        }
+        var script = (await File.ReadAllTextAsync(Path.Combine(directory!.FullName, "database", "operaciones", "invitar_cuenta.sql")))
+            .Replace("$(CUENTA)", subject);
+        var printed = new List<string>();
+        using var connection = (Microsoft.Data.SqlClient.SqlConnection)await new SqlConnectionFactory(
+            ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        // Los PRINT pueden llegar juntos en un solo aviso: se toma cada uno.
+        connection.InfoMessage += (_, message) => printed.AddRange(message.Errors.Cast<Microsoft.Data.SqlClient.SqlError>().Select(e => e.Message));
+        await connection.ExecuteAsync(script);
+        return printed;
     }
 
     [Fact]
-    public async Task SinAccesoDeDesarrollo_SeEntraYSeSaleConContrasena()
+    public async Task InvitacionDeArranque_DesdeLaBase_AbreElAlta_YLaSiguienteEsDeRecuperacion()
     {
-        var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
-            configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["DevAuth:Habilitado"] = "false" })));
+        var (subject, accountId) = await SesionTests.SeedAccountAsync("ADMINISTRACION");
+
+        var printed = await BootstrapInvitationAsync(subject);
+        var client = Client();
+        var codes = await UseInvitationAsync(client, printed[1], accountId);
+        var again = await BootstrapInvitationAsync(subject);
+
+        Assert.StartsWith($"Invitación de alta para {subject}", printed[0]);
+        Assert.Equal(10, codes.Count);
+        Assert.False(SesionTests.RedirectsToLogin(await client.GetAsync("/ProfileScope/Select")));
+        Assert.Equal(1, await EventsAsync(accountId, "INVITACION_USADA"));
+        Assert.Equal(2, await ScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.invitaciones_acceso WHERE cuenta_id = @accountId AND perfil_emisor = 'ARRANQUE'", new { accountId }));
+        Assert.StartsWith($"Invitación de recuperación para {subject}", again[0]);
+    }
+
+    [Fact]
+    public async Task SinSesion_SeEntraYSeSaleConContrasena()
+    {
         var (subject, accountId) = await SeedWithPasswordAsync("FAMILIAR");
-        var client = Client(app);
+        var client = Client();
 
         var entered = await EnterAsync(client, subject, Password);
         var exited = await PostAsync(client, "/Acceso/Salir", new());

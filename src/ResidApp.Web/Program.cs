@@ -92,7 +92,7 @@ builder.Services.AddScoped<CorrectMedicalAssessment>();
 builder.Services.AddScoped<RectifyAssessment>();
 builder.Services.AddSingleton<IReferralReportPdfRenderer, ReferralReportPdfRenderer>();
 // ADR 0007, incremento I0: sesión con cookie cifrada por Data Protection y validada contra dbo.sesiones en cada petición
-// (SessionCookieEvents). La abren el inicio de sesión con contraseña (AccesoController) y, si se habilita, el acceso de desarrollo.
+// (SessionCookieEvents). La abren el inicio de sesión con contraseña (AccesoController) y con passkey (PasskeyController).
 var sessionPolicy = new SessionPolicy(
     TimeSpan.FromMinutes(builder.Configuration.GetValue<int?>("Sesion:InactividadMinutos")
         ?? throw new InvalidOperationException("Falta Sesion:InactividadMinutos en appsettings.json.")),
@@ -113,7 +113,6 @@ builder.Services.AddScoped<IAccessInvitationRepository, SqlAccessInvitationRepos
 builder.Services.AddScoped<AccessInvitationsApplicationService>();
 builder.Services.AddScoped<IAccountLinkRepository, SqlAccountLinkRepository>();
 builder.Services.AddScoped<AccountLinksApplicationService>();
-builder.Services.Configure<DevAuthOptions>(builder.Configuration.GetSection(DevAuthOptions.Section));
 builder.Services.Configure<AccesoOptions>(builder.Configuration.GetSection(AccesoOptions.Section));
 // ADR 0007, incremento I1: ASP.NET Core Identity solo para las credenciales (contraseña, bloqueo, TOTP y códigos de recuperación) sobre
 // dbo.credenciales; el usuario es la cuenta y su nombre, sujeto_externo. No se usa SignInManager ni su cookie: la sesión es la de I0.
@@ -159,20 +158,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/Acceso/Entrar";
         options.EventsType = typeof(SessionCookieEvents);
     });
-// Toda pantalla exige sesión salvo las marcadas con [AllowAnonymous] (Inicio, Manual, inicio de sesión, acceso de desarrollo, clave de CJ)
+// Toda pantalla exige sesión salvo las marcadas con [AllowAnonymous] (Inicio, Manual, inicio de sesión, passkeys, clave de CJ)
 // y los estáticos.
 builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddPolicy(DevAuthOptions.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
-        context.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",
-        _ => new FixedWindowRateLimiterOptions
-        {
-            PermitLimit = context.RequestServices.GetRequiredService<IOptions<DevAuthOptions>>().Value.IntentosPorMinuto,
-            Window = TimeSpan.FromMinutes(1),
-        }));
     options.AddPolicy(AccesoOptions.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
         context.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",
         _ => new FixedWindowRateLimiterOptions
@@ -370,8 +362,6 @@ var app = builder.Build();
 
 // Las horas se calculan con la zona del servidor: si no es Europe/Madrid, en producción no arranca y en desarrollo avisa.
 ServerTimeZone.Verify(app.Environment, app.Logger);
-// El acceso de desarrollo habilitado fuera de Development sin clave no arranca (hallazgo C1).
-DevAuthOptions.Validate(app.Services.GetRequiredService<IOptions<DevAuthOptions>>().Value, app.Environment);
 // Un proveedor de IA que no esté en la lista autorizada (ADR 0011) impide arrancar.
 IaOptions.Validate(app.Services.GetRequiredService<IOptions<IaOptions>>().Value);
 

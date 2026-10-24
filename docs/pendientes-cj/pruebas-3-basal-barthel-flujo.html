@@ -250,8 +250,8 @@
     <h2 id="leer">Cómo leer el diagrama</h2>
     <p class="prose">Cada franja es un perfil, con la cuenta con la que entras. Cada caja es una prueba de la guía, con su número. Se lee de izquierda a derecha y de arriba abajo.</p>
     <ul class="leyenda">
-      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · <code>dev-integrado-enfermeria</code></span></li>
-      <li><span class="muestra m-med" aria-hidden="true"></span><span>Medicina · <code>dev-integrado-medicina</code></span></li>
+      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · <code>almendros-enfermeria</code></span></li>
+      <li><span class="muestra m-med" aria-hidden="true"></span><span>Medicina · <code>almendros-medicina</code></span></li>
       <li><span class="estrella">★</span>&nbsp;Imprescindible (borde grueso)</li>
       <li><span class="linea" aria-hidden="true"></span>Lo siguiente que haces</li>
       <li><span class="linea rel" aria-hidden="true"></span>El mismo residente, visto con otro perfil</li>
@@ -263,7 +263,7 @@
     <div class="diagrama">
       <svg viewBox="0 0 990 400" style="min-width: 860px" role="img" aria-labelledby="svg-t1 svg-d1">
         <title id="svg-t1">Flujo de la guía 3: crear, firmar y reevaluar el basal</title>
-        <desc id="svg-d1">Dos franjas. Enfermería crea el borrador de basal de Prueba CJ Dos (1), completa las nueve áreas (2) y el Barthel (3) y lo firma (4). Después inicia una reevaluación de Prueba CJ Uno (5), que Medicina no ve (5, en la franja de Medicina), y la cancela y vuelve a firmar (6). La prueba 7 solo mira el historial y las versiones.</desc>
+        <desc id="svg-d1">Dos franjas. Enfermería crea el borrador de basal de Carmen (1), completa las nueve áreas (2) y el Barthel (3) y lo firma (4). Después inicia una reevaluación de Antonio (5), que Medicina no ve (5, en la franja de Medicina), y la cancela y vuelve a firmar (6). La prueba 7 solo mira el historial y las versiones.</desc>
         <defs>
           <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
           <marker id="pi1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -275,9 +275,9 @@
         <rect class="lane-med" x="0" y="250" width="990" height="150"/>
         <line class="sep" x1="0" y1="250" x2="990" y2="250"/>
         <text class="lane-label enf" x="14" y="26">Enfermería</text>
-        <text class="lane-cuenta" x="14" y="44">dev-integrado-enfermeria</text>
+        <text class="lane-cuenta" x="14" y="44">almendros-enfermeria</text>
         <text class="lane-label med" x="14" y="276">Medicina</text>
-        <text class="lane-cuenta" x="14" y="294">dev-integrado-medicina</text>
+        <text class="lane-cuenta" x="14" y="294">almendros-medicina</text>
 
         <!-- Flechas -->
         <path class="flecha" d="M280,90 L298,90" marker-end="url(#p1)"/>
@@ -325,7 +325,7 @@
     <ol class="pasos">
       <li class="enf">
         <div class="paso-cab"><span class="n">1</span><strong>Crear un borrador de basal</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
-        <span>Abre «Residente Prueba CJ Dos (ficticio)», que no tiene basal, y pulsa «Crear borrador de basal». Elige el motivo (Alta), la fuente de la información y su fecha, y «Crear borrador».</span>
+        <span>Abre «Carmen López (ficticia)», que no tiene basal, y pulsa «Crear borrador de basal». Elige el motivo (Alta), la fuente de la información y su fecha, y «Crear borrador».</span>
         <span class="pasa">Ves las nueve áreas y el índice de Barthel, todos «Pendiente». Solo puede haber un borrador activo por residente.</span>
       </li>
       <li class="enf">
@@ -343,15 +343,15 @@
       </li>
       <li class="enf">
         <div class="paso-cab"><span class="n">5</span><strong>Reevaluación que deja un borrador</strong><span class="perfil enf">Enfermería</span></div>
-        <span>Inicia una reevaluación de «Residente Prueba CJ Uno (ficticio)» y completa lo que quieras. Déjala sin firmar.</span>
+        <span>Inicia una reevaluación de «Antonio García (ficticio)» y completa lo que quieras. Déjala sin firmar.</span>
       </li>
-      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-medicina</code>.</li>
+      <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-medicina</code>.</li>
       <li class="med">
         <div class="paso-cab"><span class="n">5</span><strong>Medicina no ve el borrador de Enfermería</strong><span class="perfil med">Medicina</span></div>
         <span>Abre el mismo residente: te ofrece «Crear borrador» como si no hubiera ninguno. Si lo intentas, sale «Revisa los datos de la operación.», porque ya hay uno activo.</span>
         <span class="pasa">Solo firma la cuenta que creó el borrador, con el mismo perfil.</span>
       </li>
-      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-enfermeria</code>.</li>
+      <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-enfermeria</code>.</li>
       <li class="enf">
         <div class="paso-cab"><span class="n">6</span><strong>Cancelar el borrador y reevaluar</strong><span class="perfil enf">Enfermería</span></div>
         <span>En el borrador de la prueba 5, escribe un motivo en «Cancelar borrador» y cancélalo. Después «Iniciar reevaluación», complétalo y fírmalo.</span>
@@ -359,7 +359,7 @@
       </li>
       <li class="enf">
         <div class="paso-cab"><span class="n">7</span><strong>Historial y versiones</strong><span class="perfil enf">Enfermería o Medicina</span></div>
-        <span>Abre «Prueba Activación RLS Azure (ficticio)» y «Ver historial»: mira «Eventos cerrados» y «Versiones del basal». Abre una versión, un evento y su línea temporal.</span>
+        <span>Abre «Pilar Moreno (ficticia)» y «Ver historial»: mira «Eventos cerrados» y «Versiones del basal». Abre una versión, un evento y su línea temporal.</span>
         <span class="pasa">Solo para mirar: nada se puede modificar.</span>
       </li>
     </ol>
@@ -370,7 +370,7 @@
     <ul class="lista prose">
       <li><strong>Solo hay un borrador activo por residente</strong> y solo lo ve y lo firma la cuenta que lo creó: por eso Medicina no ve el de Enfermería en la prueba 5.</li>
       <li><strong>Para firmar</strong> hacen falta las nueve áreas y el Barthel completos.</li>
-      <li><strong>«Prueba Activación RLS Azure»</strong> es solo para mirar, y <strong>«Residente Integrado Uno»</strong> no se toca: está sin basal a propósito para el Manual.</li>
+      <li><strong>«Pilar Moreno»</strong> es solo para mirar, y <strong>«Lucía Fernández»</strong> no se toca: está sin basal a propósito para el Manual.</li>
     </ul>
   </section>
 

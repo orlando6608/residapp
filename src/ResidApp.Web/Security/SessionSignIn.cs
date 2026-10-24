@@ -8,7 +8,7 @@ namespace ResidApp.Web.Security;
 
 /// <summary>
 /// Abre y cierra la sesión (ADR 0007): una fila en dbo.sesiones y la cookie cifrada que la apunta. Lo usan el inicio de sesión con
-/// contraseña (AccesoController) y el acceso de desarrollo, que solo se diferencian en cómo comprueban quién es la persona.
+/// contraseña (AccesoController) y el de passkey (PasskeyController), que solo se diferencian en cómo comprueban quién es la persona.
 /// </summary>
 public sealed class SessionSignIn(
     ClinicalAccessDeclarations declarations, ISessionStore sessions, SessionPolicy policy, TimeProvider clock, IAccessEventLog accessLog)

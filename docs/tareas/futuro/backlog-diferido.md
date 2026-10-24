@@ -35,7 +35,7 @@ De "Decisiones abiertas heredadas del legado" en `roadmap.md` (mismo contenido q
 
 | Decisión | Estado |
 | --- | --- |
-| Autenticación y segundo factor productivos | Decidido el 2026-10-21: ASP.NET Core Identity propio (el sistema de cuentas que trae la plataforma de la aplicación) sobre Azure SQL en la UE; ver ADR 0007. Hechos I0 a I4 e I2b (sesión, contraseña y código del móvil, invitaciones, «Mi cuenta», cuentas en varios centros y passkeys o «llaves de acceso»). Falta la pulsera con PIN para tablets (I5), retirar el acceso de desarrollo y la validación del DPO de la residencia piloto. |
+| Autenticación y segundo factor productivos | Decidido el 2026-10-21: ASP.NET Core Identity propio (el sistema de cuentas que trae la plataforma de la aplicación) sobre Azure SQL en la UE; ver ADR 0007. Hechos I0 a I4 e I2b (sesión, contraseña y código del móvil, invitaciones, «Mi cuenta», cuentas en varios centros y passkeys o «llaves de acceso»). Acceso de desarrollo retirado el 2026-10-24. Falta la pulsera con PIN para tablets (I5) y la validación del DPO de la residencia piloto. |
 | SLA, RPO, RTO y copias de seguridad | Pendiente de definir antes de producción. |
 | EIPD, contratos y seguridad | Pendiente de formalizar antes de tratar datos reales. |
 | Configuración real de citas, equipos y tiempos | Pendiente de definir junto con cada centro piloto. |

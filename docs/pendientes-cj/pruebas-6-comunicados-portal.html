@@ -322,9 +322,11 @@
         entorno, pero no afecta a ningún residente real. Si algo sale mal, no pasa nada: apunta lo que viste en el comentario de la
         prueba.
       </p>
-      <p><strong>Cómo se entra.</strong> Esto no es un acceso real: escribes el nombre de una cuenta de prueba en el campo «Usuario» y
-        pulsas «Entrar». Para cambiar de cuenta, usa «Cambiar de identidad» en el menú de tu perfil (arriba a la derecha) o vuelve a
-        <code>/DevAuth/Login</code>. Si una cuenta tiene varios ámbitos, la aplicación te deja elegir cuál usar.</p>
+      <p><strong>Cómo se entra.</strong> Como en una residencia de verdad: en «Iniciar sesión» escribes el usuario de la cuenta y su
+        contraseña y, después, el código de 6 cifras de tu aplicación de autenticación, o pulsas «Entrar con passkey». La primera vez, cada
+        cuenta se da de alta con la invitación que te entrega Orlando (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
+        de cuenta, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra. Si una cuenta tiene varios ámbitos, la
+        aplicación te deja elegir cuál usar.</p>
       <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
       <p><strong>Si te pierdes</strong>, el <a href="pruebas-6-comunicados-portal-flujo.html">flujo de la guía 6</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
     </div>
@@ -333,11 +335,11 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
-        <tr><td><code>dev-integrado-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
-        <tr><td><code>dev-integrado-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios. Puede crear y firmar basales.</td></tr>
-        <tr><td><code>dev-integrado-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad, calidad de proceso y consulta auditada del basal; puede fijar los rangos de referencia y los plazos de los hitos del proceso, y publicar, corregir o retirar comunicados a la familia.</td></tr>
-        <tr><td><code>dev-integrado-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), traslados y bajas, familias y su acceso al Portal Familiar, comunicados a la familia, citas, usuarios, estructura, turnos y auditoría. Es la Administración principal del centro.</td></tr>
-        <tr><td><code>dev-integrado-familiar</code></td><td>Familiar (Portal Familiar)</td><td>La hija de «Residente Portal Familiar (ficticio)», con la autorización activa. Solo ve las novedades publicadas y las citas de ese residente.</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
+        <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios. Puede crear y firmar basales.</td></tr>
+        <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad, calidad de proceso y consulta auditada del basal; puede fijar los rangos de referencia y los plazos de los hitos del proceso, y publicar, corregir o retirar comunicados a la familia.</td></tr>
+        <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), traslados y bajas, familias y su acceso al Portal Familiar, comunicados a la familia, citas, usuarios, estructura, turnos y auditoría. Es la Administración principal del centro.</td></tr>
+        <tr><td><code>almendros-elena</code></td><td>Familiar (Portal Familiar)</td><td>La hija de «Rosa Sánchez (ficticia)», con la autorización activa. Solo ve las novedades publicadas y las citas de ese residente.</td></tr>
       </tbody>
     </table></div>
 
@@ -345,16 +347,16 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
       <tbody>
-        <tr><td>Residente Prueba CJ Uno (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
-        <tr><td>Residente Portal Familiar (ficticio)</td><td>Su hija tiene acceso al Portal Familiar (<code>dev-integrado-familiar</code>). Úsalo para los comunicados que leerá la familia y para las citas.</td></tr>
-        <tr><td>Residente Integrado Uno (ficticio)</td><td>NO LO TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
+        <tr><td>Antonio García (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
+        <tr><td>Rosa Sánchez (ficticia)</td><td>Su hija tiene acceso al Portal Familiar (<code>almendros-elena</code>). Úsalo para los comunicados que leerá la familia y para las citas.</td></tr>
+        <tr><td>Lucía Fernández (ficticia)</td><td>NO LA TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
       </tbody>
     </table></div>
     <div class="stack prose">
       <p class="context">
-        Verás también residentes y eventos de pruebas anteriores («Prueba familiares azure», «Prueba selector unidad azure»,
-        «Prueba Corrección Identidad azure», y algunos eventos abiertos de Integrado Uno y Dos). Ignóralos, salvo que una prueba te
-        mande a ellos. Los eventos no se pueden borrar: cada prueba que hagas dejará sus datos.
+        Verás también lo que hayan dejado tus pruebas anteriores y las de Orlando, que trabaja en el mismo centro con sus propias
+        cuentas (las que llevan «-orlando» en el nombre). Ignóralo, salvo que una prueba te mande a ello. Los eventos no se pueden borrar:
+        cada prueba que hagas dejará sus datos.
       </p>
     </div>
 
@@ -365,7 +367,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justa de tiempo, haz solo esas (5 de 13).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (5 de 13).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">Necesitas al menos un comunicado a la familia aún sin publicar: el que preparaste en la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a> (prueba 12) o en la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a> (prueba 10). Si no tienes ninguno, cierra ahora un evento con «Preparar comunicación», como allí. Los comunicados se publican solos a su hora (a las 19:00, por defecto): haz la prueba 2 antes.</p>
@@ -384,7 +386,7 @@
   <section class="tema" id="tema-1">
     <h2>Comunicados del personal</h2>
     <div class="stack prose">
-      <p>Enfermería (<code>dev-integrado-enfermeria</code>) y Medicina (<code>dev-integrado-medicina</code>) ven en su tarjeta «Comunicaciones» lo que se preparó al cerrar un evento, y pueden corregirlo hasta que se publique.</p>
+      <p>Enfermería (<code>almendros-enfermeria</code>) y Medicina (<code>almendros-medicina</code>) ven en su tarjeta «Comunicaciones» lo que se preparó al cerrar un evento, y pueden corregirlo hasta que se publique.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="1">
@@ -443,7 +445,7 @@
   <section class="tema" id="tema-2">
     <h2>Hora de publicación</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-administracion</code> y <code>dev-integrado-direccion</code>: el horario de los comunicados del centro y publicar un comunicado antes de su hora.</p>
+      <p>Con <code>almendros-administracion</code> y <code>almendros-direccion</code>: el horario de los comunicados del centro y publicar un comunicado antes de su hora.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="4">
@@ -504,14 +506,14 @@
   <section class="tema" id="tema-3">
     <h2>Portal Familiar</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-administracion</code> y <code>dev-integrado-familiar</code> (la hija de «Residente Portal Familiar (ficticio)»): dar acceso a la familia, lo que lee y lo que no ve, corregir o retirar un comunicado ya publicado y suspender el acceso.</p>
+      <p>Con <code>almendros-administracion</code> y <code>almendros-elena</code> (la hija de «Rosa Sánchez (ficticia)»): dar acceso a la familia, lo que lee y lo que no ve, corregir o retirar un comunicado ya publicado y suspender el acceso.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="7">
         <div class="q-head"><span class="n">7</span><h3 class="q-title" id="t-7">Dar acceso al Portal Familiar a un familiar</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-integrado-administracion</code>, abre «Residentes» y elige un residente que tenga un familiar (el que diste de alta en la <a href="pruebas-5-administracion.html">guía 5</a>, prueba 1, por ejemplo).</li>
+          <li>Entra con <code>almendros-administracion</code>, abre «Residentes» y elige un residente que tenga un familiar (el que diste de alta en la <a href="pruebas-5-administracion.html">guía 5</a>, prueba 1, por ejemplo).</li>
           <li>En su familiar pulsa «Autorización». Verás el estado y, debajo, «Acceso al Portal Familiar». Escribe un usuario (por ejemplo <code>familia-prueba-1</code>) y pulsa «Dar acceso al portal».</li>
           <li>Después abre la autorización («Abrir autorización» y luego «Activar»). Comprueba también que ese usuario no aparece en «Usuarios».</li>
         </ol>
@@ -529,9 +531,9 @@
         <div class="q-head"><span class="n">8</span><h3 class="q-title" id="t-8">La familia entra y lee las novedades publicadas</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-integrado-familiar</code> (la hija de «Residente Portal Familiar (ficticio)»). Verás directamente las novedades de ese residente.</li>
-          <li>Para tener algo que leer, publica un comunicado de «Residente Portal Familiar»: como Enfermería (<code>dev-integrado-enfermeria</code>) registra un cambio y ciérralo con una comunicación (como en la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>, prueba 12, o en la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a>, prueba 10), y publícalo antes de su hora con Administración o Dirección (pruebas 5 o 6).</li>
-          <li>Vuelve con <code>dev-integrado-familiar</code>, abre la novedad y prueba los filtros «Relevantes» y «Ordinarias».</li>
+          <li>Entra con <code>almendros-elena</code> (la hija de «Rosa Sánchez (ficticia)»). Verás directamente las novedades de ese residente.</li>
+          <li>Para tener algo que leer, publica un comunicado de «Rosa Sánchez»: como Enfermería (<code>almendros-enfermeria</code>) registra un cambio y ciérralo con una comunicación (como en la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>, prueba 12, o en la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a>, prueba 10), y publícalo antes de su hora con Administración o Dirección (pruebas 5 o 6).</li>
+          <li>Vuelve con <code>almendros-elena</code>, abre la novedad y prueba los filtros «Relevantes» y «Ordinarias».</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Antes de publicar, dice que no hay novedades y avisa de que eso no significa que todo vaya bien. Después aparece el comunicado con su tipo, su fecha y la firma «Equipo asistencial del centro». El texto es el vigente (si se corrigió, el corregido). Siempre hay un aviso de que el portal no es un canal urgente.</div>
         <fieldset class="choices" aria-labelledby="t-8">
@@ -547,7 +549,7 @@
         <div class="q-head"><span class="n">9</span><h3 class="q-title" id="t-9">La familia no ve nada más que lo suyo</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Con <code>dev-integrado-familiar</code>, mira todo lo que se ve: el menú, las novedades y el detalle de una novedad.</li>
+          <li>Con <code>almendros-elena</code>, mira todo lo que se ve: el menú, las novedades y el detalle de una novedad.</li>
           <li>Intenta abrir a mano una pantalla del personal, por ejemplo <code>/Enfermeria/Residentes</code> o <code>/Administracion/Residentes</code>, y la de otro residente cambiando el identificador de la dirección <code>/Familia/Residente/…</code> por otro.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>La familia solo ve el nombre de su residente, la relación y el texto de los comunicados publicados. No ve observaciones, valoraciones, constantes, indicaciones, derivaciones, nombres de profesionales, ni los teléfonos de otros familiares, ni enlaces a «Documentos de CJ». Las pantallas del personal y las de otros residentes no se abren («No tienes acceso a esto»).</div>
@@ -564,9 +566,9 @@
         <div class="q-head"><span class="n">10</span><h3 class="q-title" id="t-10">Publicar una corrección de un comunicado ya publicado</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Parte de un comunicado de «Residente Portal Familiar (ficticio)» ya publicado (el de la prueba 8). Entra con <code>dev-integrado-administracion</code> y abre «Comunicados a la familia».</li>
-          <li>En ese comunicado pulsa «Publicar una corrección», elige el tipo, escribe el texto de la corrección y pulsa «Publicar la corrección». Haz lo mismo con <code>dev-integrado-direccion</code> en su pantalla de comunicados, sobre otro comunicado, si quieres.</li>
-          <li>Entra con <code>dev-integrado-familiar</code> y mira el historial y el detalle del comunicado original.</li>
+          <li>Parte de un comunicado de «Rosa Sánchez (ficticia)» ya publicado (el de la prueba 8). Entra con <code>almendros-administracion</code> y abre «Comunicados a la familia».</li>
+          <li>En ese comunicado pulsa «Publicar una corrección», elige el tipo, escribe el texto de la corrección y pulsa «Publicar la corrección». Haz lo mismo con <code>almendros-direccion</code> en su pantalla de comunicados, sobre otro comunicado, si quieres.</li>
+          <li>Entra con <code>almendros-elena</code> y mira el historial y el detalle del comunicado original.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>La corrección sale en el acto. En el personal se ve bajo el comunicado, que no cambia. La familia ve la corrección con la etiqueta «Corrección» y «Corrige la novedad publicada el…», y el original sigue ahí con el aviso «Tiene una corrección» (y, al abrirlo, «Esta novedad tiene una corrección»). Un comunicado que aún no se ha publicado no ofrece estos botones: ahí lo corrige Enfermería o Medicina como siempre. En «Auditoría» consta «Corrección publicada de un comunicado a la familia».</div>
         <fieldset class="choices" aria-labelledby="t-10">
@@ -581,8 +583,8 @@
       <article class="q" data-q="11">
         <div class="q-head"><span class="n">11</span><h3 class="q-title" id="t-11">Retirar un comunicado ya publicado</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Con <code>dev-integrado-administracion</code> (o <code>dev-integrado-direccion</code>), en «Comunicados a la familia», pulsa «Retirar» en un comunicado ya publicado. Prueba primero a guardar sin motivo; después escribe un motivo y pulsa «Retirar el comunicado».</li>
-          <li>Entra con <code>dev-integrado-familiar</code> y mira el historial y, si el comunicado tenía una corrección, también esa.</li>
+          <li>Con <code>almendros-administracion</code> (o <code>almendros-direccion</code>), en «Comunicados a la familia», pulsa «Retirar» en un comunicado ya publicado. Prueba primero a guardar sin motivo; después escribe un motivo y pulsa «Retirar el comunicado».</li>
+          <li>Entra con <code>almendros-elena</code> y mira el historial y, si el comunicado tenía una corrección, también esa.</li>
           <li>Vuelve a «Comunicados a la familia» con Administración e intenta retirarlo o corregirlo otra vez.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Sin motivo no se retira. Retirado, la familia ve «Esta novedad ya no está disponible» en lugar del texto, sin el motivo, y las correcciones de ese comunicado dejan de verse. El personal sigue viendo el comunicado, la marca «Retirado» y el motivo, y ya no ofrece retirarlo ni corregirlo. No se puede deshacer. En «Auditoría» consta «Comunicado a la familia retirado».</div>
@@ -598,8 +600,8 @@
       <article class="q" data-q="12">
         <div class="q-head"><span class="n">12</span><h3 class="q-title" id="t-12">Quitar o suspender el acceso de la familia</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Entra con <code>dev-integrado-administracion</code> y abre la autorización del familiar de «Residente Portal Familiar (ficticio)». Pulsa «Suspender» y escribe un motivo.</li>
-          <li>Sin cerrar sesión de la familia, vuelve a <code>dev-integrado-familiar</code> y recarga la página. Después, con Administración, vuelve a activarla: la necesitan la prueba 13 y la guía 7.</li>
+          <li>Entra con <code>almendros-administracion</code> y abre la autorización del familiar de «Rosa Sánchez (ficticia)». Pulsa «Suspender» y escribe un motivo.</li>
+          <li>Sin cerrar sesión de la familia, vuelve a <code>almendros-elena</code> y recarga la página. Después, con Administración, vuelve a activarla: la necesitan la prueba 13 y la guía 7.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>En cuanto se suspende, la familia ya no ve a su residente: «No tienes ninguna autorización activa», sin esperar a que caduque la sesión. Al activarla de nuevo, vuelve a ver sus novedades. Revocar tiene el mismo efecto, pero ya no se puede deshacer.</div>
         <fieldset class="choices" aria-labelledby="t-12">
@@ -616,7 +618,7 @@
   <section class="tema" id="tema-4">
     <h2>Supervisión de Dirección</h2>
     <div class="stack prose">
-      <p>Con <code>dev-integrado-direccion</code>, al final, cuando ya hay comunicados programados, publicados, corregidos y retirados.</p>
+      <p>Con <code>almendros-direccion</code>, al final, cuando ya hay comunicados programados, publicados, corregidos y retirados.</p>
     </div>
     <div class="qs">
       <article class="q" data-q="13">

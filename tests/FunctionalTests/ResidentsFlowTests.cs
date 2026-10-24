@@ -2,13 +2,16 @@ using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using Dapper;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using ResidApp.Infrastructure.Persistence;
 
 namespace ResidApp.FunctionalTests;
 
 /// <summary>Camino feliz a través de ResidApp.Web de verdad (Kestrel de pruebas + pipeline HTTP real):
-/// identidad de desarrollo (DevAuth) y alta de residente (Residents/Create). Automatiza lo verificado
+/// sesión abierta con la entrada de pruebas (EntradaDePruebas) y alta de residente (Residents/Create). Automatiza lo verificado
 /// manualmente por curl durante el cableado inicial de la Web.</summary>
 public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory>
 {
@@ -22,13 +25,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var seed = await SeedAsync();
         var client = _factory.CreateClient();
 
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        var loginResponse = await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = seed.ExternalSubject,
-        }));
-        loginResponse.EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, seed.ExternalSubject)).EnsureSuccessStatusCode();
 
         var createPage = await client.GetStringAsync("/Residents/Create");
 
@@ -117,12 +114,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     {
         var seed = await SeedAsync();
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = seed.ExternalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, seed.ExternalSubject)).EnsureSuccessStatusCode();
 
         // Con una sola unidad, ya viene elegida.
         var singleUnitPage = await client.GetStringAsync("/Residents/Create");
@@ -604,13 +596,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     {
         var seed = await SeedAsync();
         var client = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = seed.ExternalSubject,
-        }));
-        var tokenPage = await client.GetStringAsync("/DevAuth/Login");
+        await SesionTests.PostLoginAsync(client, seed.ExternalSubject);
+        var tokenPage = await client.GetStringAsync("/Acceso/Solicitar");
 
         var get = await client.GetAsync("/Baseline/Sign");
         // Sin los campos que rellena la confirmación: antes acababa en un 500 al construir los identificadores.
@@ -1411,12 +1398,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     private async Task<HttpClient> LoginAsync(string externalSubject)
     {
         var client = _factory.CreateClient();
-        var loginPage = await client.GetStringAsync("/DevAuth/Login");
-        (await client.PostAsync("/DevAuth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = ExtractValue(loginPage, "__RequestVerificationToken"),
-            ["externalSubject"] = externalSubject,
-        }))).EnsureSuccessStatusCode();
+        (await SesionTests.PostLoginAsync(client, externalSubject)).EnsureSuccessStatusCode();
         return client;
     }
 
@@ -1534,7 +1516,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     {
         public static string TestConnectionString =>
             Environment.GetEnvironmentVariable("RESIDAPP_TEST_CONNECTION_STRING")
-            ?? "Server=ACER-ORLANDO;Database=ResidApp;Integrated Security=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+            ?? "Server=ACER-ORLANDO;Database=ResidAppPruebas;Integrated Security=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
         // Cadena con la que se conecta la aplicación. Por defecto es la de las pruebas (db_owner, para la que la seguridad por
         // filas es transparente). Con RESIDAPP_TEST_APP_CONNECTION_STRING la aplicación se conecta con el usuario limitado
@@ -1549,5 +1531,12 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         // CreateBuilder(args) sí incorpora desde el arranque, sea cual sea el entorno (Development o no).
         public WebAppFactory() =>
             Environment.SetEnvironmentVariable("ConnectionStrings__ResidApp", AppConnectionString);
+
+        // En CreateHost y no en ConfigureWebHost, que sobrescriben las fábricas derivadas; WithWebHostBuilder también pasa por aquí.
+        protected override IHost CreateHost(IHostBuilder builder)
+        {
+            builder.ConfigureServices(services => services.AddTransient<IStartupFilter, EntradaDePruebas>());
+            return base.CreateHost(builder);
+        }
     }
 }

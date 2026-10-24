@@ -1,5 +1,5 @@
 // Recorrido de Importar y Exportar datos (ADR 0010) con una cuenta de Administración recién sembrada. Ejemplo para escribir otros recorridos.
-// Uso: SUJETO=$(bash sembrar.sh) node recorrido-intercambio.js
+// Uso: mapfile -t cuenta < <(bash sembrar.sh); SUJETO="${cuenta[0]}" ENLACE="${cuenta[1]}" node recorrido-intercambio.js
 const fs = require("fs");
 const path = require("path");
 const { base, salida, abrirChrome, contexto, errores, entrar, captura, desborde } = require("./comun");

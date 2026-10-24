@@ -250,11 +250,11 @@
     <h2 id="leer">Cómo leer el diagrama</h2>
     <p class="prose">Cada franja es una cuenta de prueba. Cada caja es una prueba de la guía, con su número. Las flechas rojas son intentos que la aplicación tiene que bloquear.</p>
     <ul class="leyenda">
-      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · otro centro · <code>dev-enfermeria</code></span></li>
-      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · <code>dev-integrado-enfermeria</code></span></li>
-      <li><span class="muestra m-aux" aria-hidden="true"></span><span>Auxiliar · <code>dev-integrado-auxiliar</code></span></li>
-      <li><span class="muestra m-plat" aria-hidden="true"></span><span>Cuatro ámbitos · <code>dev-multi</code></span></li>
-      <li><span class="muestra m-plat" aria-hidden="true"></span><span>Plataforma · <code>dev-plataforma</code></span></li>
+      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · otro centro · <code>olmos-enfermeria</code></span></li>
+      <li><span class="muestra m-enf" aria-hidden="true"></span><span>Enfermería · <code>almendros-enfermeria</code></span></li>
+      <li><span class="muestra m-aux" aria-hidden="true"></span><span>Auxiliar · <code>almendros-auxiliar</code></span></li>
+      <li><span class="muestra m-plat" aria-hidden="true"></span><span>Cuatro ámbitos · <code>varios-centros</code></span></li>
+      <li><span class="muestra m-plat" aria-hidden="true"></span><span>Plataforma · <code>plataforma-cj</code></span></li>
       <li><span class="estrella">★</span>&nbsp;Imprescindible (borde grueso)</li>
       <li><span class="linea" aria-hidden="true"></span>Lo siguiente que haces</li>
       <li><span class="linea bloq" aria-hidden="true"></span>Lo que la aplicación no deja abrir</li>
@@ -266,7 +266,7 @@
     <div class="diagrama">
       <svg viewBox="0 0 850 550" style="min-width: 760px" role="img" aria-labelledby="svg-t1 svg-d1">
         <title id="svg-t1">Flujo de la guía 8: cada cuenta ve solo lo suyo</title>
-        <desc id="svg-d1">Cinco franjas, una por cuenta. dev-enfermeria (otro centro) ve solo sus dos residentes (1). dev-integrado-enfermeria ve solo los del escenario integrado (1) y no puede abrir a mano un residente del otro centro (2). dev-integrado-auxiliar ve solo sus cuatro asignados y no abre uno no asignado (4). dev-multi elige y cambia entre cuatro ámbitos de dos centros (3). dev-plataforma ve las Administraciones y unidades de un centro, nunca residentes (5).</desc>
+        <desc id="svg-d1">Cinco franjas, una por cuenta. olmos-enfermeria (otro centro) ve solo sus dos residentes (1). almendros-enfermeria ve solo los de Los Almendros (1) y no puede abrir a mano un residente del otro centro (2). almendros-auxiliar ve solo sus cinco asignados y no abre uno no asignado (4). varios-centros elige y cambia entre cuatro ámbitos de dos centros (3). plataforma-cj ve las Administraciones y unidades de un centro, nunca residentes (5).</desc>
         <defs>
           <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
           <marker id="pi1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -284,15 +284,15 @@
         <line class="sep" x1="0" y1="330" x2="850" y2="330"/>
         <line class="sep" x1="0" y1="440" x2="850" y2="440"/>
         <text class="lane-label enf" x="14" y="26">Enfermería · otro centro</text>
-        <text class="lane-cuenta" x="14" y="44">dev-enfermeria</text>
+        <text class="lane-cuenta" x="14" y="44">olmos-enfermeria</text>
         <text class="lane-label enf" x="14" y="136">Enfermería</text>
-        <text class="lane-cuenta" x="14" y="154">dev-integrado-enfermeria</text>
+        <text class="lane-cuenta" x="14" y="154">almendros-enfermeria</text>
         <text class="lane-label aux" x="14" y="246">Auxiliar</text>
-        <text class="lane-cuenta" x="14" y="264">dev-integrado-auxiliar</text>
+        <text class="lane-cuenta" x="14" y="264">almendros-auxiliar</text>
         <text class="lane-label plat" x="14" y="356">Cuatro ámbitos</text>
-        <text class="lane-cuenta" x="14" y="374">dev-multi</text>
+        <text class="lane-cuenta" x="14" y="374">varios-centros</text>
         <text class="lane-label plat" x="14" y="466">Plataforma</text>
-        <text class="lane-cuenta" x="14" y="484">dev-plataforma</text>
+        <text class="lane-cuenta" x="14" y="484">plataforma-cj</text>
 
         <!-- Flechas -->
         <path class="flecha bloq" d="M705,160 C705,38.296754357165966 533.7032456428341,78 412,78" marker-end="url(#pb1)"/>
@@ -306,13 +306,13 @@
         <text class="bt" x="325" y="92" text-anchor="middle">residentes</text>
         <rect class="box enf imp" x="240" y="160" width="170" height="56" rx="8"/>
         <text class="bt" x="325" y="184" text-anchor="middle"><tspan class="n">1</tspan> · Ve solo los del ★</text>
-        <text class="bt" x="325" y="202" text-anchor="middle">escenario integrado</text>
+        <text class="bt" x="325" y="202" text-anchor="middle">Los Almendros</text>
         <rect class="box enf imp" x="620" y="160" width="170" height="56" rx="8"/>
         <text class="bt" x="705" y="184" text-anchor="middle"><tspan class="n">2</tspan> · Abre a mano un ★</text>
         <text class="bt" x="705" y="202" text-anchor="middle">residente ajeno</text>
         <rect class="box aux" x="240" y="270" width="170" height="56" rx="8"/>
         <text class="bt" x="325" y="294" text-anchor="middle"><tspan class="n">4</tspan> · Ve solo sus</text>
-        <text class="bt" x="325" y="312" text-anchor="middle">cuatro asignados</text>
+        <text class="bt" x="325" y="312" text-anchor="middle">cinco asignados</text>
         <rect class="box aux" x="620" y="270" width="170" height="56" rx="8"/>
         <text class="bt" x="705" y="294" text-anchor="middle"><tspan class="n">4</tspan> · Abre a mano uno</text>
         <text class="bt" x="705" y="312" text-anchor="middle">no asignado</text>
@@ -320,10 +320,10 @@
         <text class="bt" x="325" y="404" text-anchor="middle"><tspan class="n">3</tspan> · Elegir y cambiar</text>
         <text class="bt" x="325" y="422" text-anchor="middle">de ámbito</text>
         <rect class="box plat" x="430" y="380" width="170" height="56" rx="8"/>
-        <text class="bt" x="515" y="404" text-anchor="middle">Centro A</text>
+        <text class="bt" x="515" y="404" text-anchor="middle">Los Olmos</text>
         <text class="bt" x="515" y="422" text-anchor="middle">Enfermería · Medicina</text>
         <rect class="box plat" x="620" y="380" width="170" height="56" rx="8"/>
-        <text class="bt" x="705" y="404" text-anchor="middle">Centro B</text>
+        <text class="bt" x="705" y="404" text-anchor="middle">Los Almendros</text>
         <text class="bt" x="705" y="422" text-anchor="middle">Dirección · Familiar</text>
         <rect class="box plat" x="240" y="490" width="170" height="56" rx="8"/>
         <text class="bt" x="325" y="514" text-anchor="middle"><tspan class="n">5</tspan> · Administraciones</text>
@@ -344,33 +344,33 @@
     <ol class="pasos">
       <li class="enf">
         <div class="paso-cab"><span class="n">1</span><strong>Cada centro ve solo sus residentes</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería · otro centro</span></div>
-        <span>Entra con <code>dev-enfermeria</code> y abre «Residentes». Apunta los nombres.</span>
-        <span class="pasa">Solo «Residente Enfermería Uno» y «Residente Enfermería Dos».</span>
+        <span>Entra con <code>olmos-enfermeria</code> y abre «Residentes». Apunta los nombres.</span>
+        <span class="pasa">Solo «Jaime Ortega» y «Teresa Gil».</span>
       </li>
-      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-enfermeria</code>.</li>
+      <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-enfermeria</code>.</li>
       <li class="enf">
         <div class="paso-cab"><span class="n">1</span><strong>Compara con el otro centro</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
         <span>Abre «Residentes» y compara con lo que apuntaste.</span>
-        <span class="pasa">Los del escenario integrado, y ninguno de los otros dos.</span>
+        <span class="pasa">Los de Los Almendros, y ninguno de los otros dos.</span>
       </li>
       <li class="enf">
         <div class="paso-cab"><span class="n">2</span><strong>Abrir a mano un residente de otro centro</strong> <span class="estrella">★</span><span class="perfil enf">Enfermería</span></div>
-        <span>Escribe en la barra de direcciones /Enfermeria/Residente?residenteId=443194d9-dfe4-4edc-b9a1-c3cf70d161b1 y después /Enfermeria/RegistrarEvento?residenteId=443194d9-dfe4-4edc-b9a1-c3cf70d161b1.</span>
+        <span>Escribe en la barra de direcciones /Enfermeria/Residente?residenteId=1A000000-0000-4000-8000-000000000011 y después /Enfermeria/RegistrarEvento?residenteId=1A000000-0000-4000-8000-000000000011.</span>
         <span class="pasa">No se abre: vuelves a tu lista. Si ves su nombre, su ficha o un formulario, es un fallo grave: avísanos cuanto antes.</span>
       </li>
-      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-multi</code>.</li>
+      <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>varios-centros</code>.</li>
       <li class="plat">
         <div class="paso-cab"><span class="n">3</span><strong>Cambiar de ámbito con una cuenta de varios centros</strong><span class="perfil plat">Cuatro ámbitos</span></div>
         <span>En «Seleccionar ámbito» elige uno de los cuatro, mira qué pantallas ofrece y cambia con «Cambiar ámbito» (menú del perfil).</span>
         <span class="pasa">Cada ámbito ve solo las pantallas de su perfil y los datos de su centro. El Familiar dice «No tienes ninguna autorización activa».</span>
       </li>
-      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-integrado-auxiliar</code>.</li>
+      <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-auxiliar</code>.</li>
       <li class="aux">
         <div class="paso-cab"><span class="n">4</span><strong>Un Auxiliar solo ve a sus asignados</strong><span class="perfil aux">Auxiliar</span></div>
-        <span>Comprueba que ves tus cuatro residentes e intenta abrir /Auxiliar/Registro?residenteId=fcb9e800-af32-4e43-8aca-84144ef684a8, uno de tu centro que no te han asignado.</span>
+        <span>Comprueba que ves tus cinco residentes e intenta abrir /Auxiliar/Registro?residenteId=1A000000-0000-4000-8000-000000000006, Pilar Moreno, de tu centro, que no te han asignado.</span>
         <span class="pasa">Vuelves a «Mis residentes» sin ver nada de él.</span>
       </li>
-      <li class="cambio">Cambia de cuenta («Cambiar de identidad», en el menú de tu perfil) y entra con <code>dev-plataforma</code>.</li>
+      <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>plataforma-cj</code>.</li>
       <li class="plat">
         <div class="paso-cab"><span class="n">5</span><strong>Administraciones y unidades de un centro</strong><span class="perfil plat">Plataforma</span></div>
         <span>«Centros» y, en uno, «Administraciones y unidades»: marca una Administración como principal y después quita la marca.</span>
@@ -382,7 +382,7 @@
   <section aria-labelledby="mirar">
     <h2 id="mirar">Dónde mirar si no encuentras algo</h2>
     <ul class="lista prose">
-      <li><strong>Para cambiar de cuenta</strong>, «Cambiar de identidad» en el menú de tu perfil. Para cambiar de ámbito con <code>dev-multi</code>, «Cambiar ámbito».</li>
+      <li><strong>Para cambiar de cuenta</strong>, «Salir» en el menú de tu perfil y entra con la otra. Para cambiar de ámbito con <code>varios-centros</code>, «Cambiar ámbito».</li>
       <li><strong>En las pruebas 2 y 4</strong> la dirección se escribe a mano en la barra del navegador, detrás del nombre del sitio.</li>
       <li><strong>Las preguntas 6, 7 y 8</strong> de la guía no son pruebas: contéstalas al final, pensando en todas las guías.</li>
     </ul>
