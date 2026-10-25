@@ -62,6 +62,17 @@ Flujo: [`supervision-clinica-direccion.md`](../../flujos-clinicos/supervision-cl
 
 ## Pendiente
 
+### Respuestas de CJ del 2026-10-25, por construir
+
+De `docs/pendientes-cj/confirmaciones-tercera-tanda-cj.respuestas.json` y `portal-familiar-confirmaciones-cj.respuestas.json`. Lo que confirma lo que ya hace la app (3.1 a 3.5:
+una anotación por consulta, Dirección ve también las consultas de Dirección, ve el nombre de quien firma o corrige, ve los comunicados sin declarar, la tabla de frecuencia
+está bien, y corregir o retirar un comunicado publicado sigue en manos de Administración y Dirección Clínica, portal 4.1) no cambia nada; las decisiones marcadas «mías, sin confirmar» en el bloque 2 que coinciden con estas respuestas quedan confirmadas.
+
+- **Cuarta finalidad, «calidad asistencial»** (tercera 2.1): da **solo datos agregados por unidad y periodo** (cumplimiento de hitos, indicadores), sin abrir la historia de
+  ningún residente. Un caso concreto se abre con las finalidades que ya existen, con su declaración y su auditoría. Con esto se cierra el bloque 2.
+- **Cerrar un episodio con indicaciones que nadie va a cumplir** (tercera 5.1): **solo Dirección Clínica, indicando un motivo** que queda en la auditoría con su nombre.
+  Hoy no se puede cerrar (`MEDICAL_INDICATIONS_PENDING`, CJ 4.2 de la primera tanda).
+
 En el orden propuesto:
 
 1. **Bloque 2 — lectura clínica auditada (historias 3 y 6; DIR-05, DIR-06, DIR-07, DIR-14, DIR-15):** detalle clínico con permiso, finalidad
