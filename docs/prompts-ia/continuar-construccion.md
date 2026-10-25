@@ -19,6 +19,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Acceso** (portal 1.3): `SqlFamilyPortalReader.AccessibleLinks`, el criterio único del portal, pide además el residente `ACTIVE` y sin suspensión abierta. Se corta y vuelve
     solo, sin tocar la autorización; lo heredan citas y solicitudes. Sin acceso a nadie: «Ahora no tienes acceso a ningún residente» (también en las guías 6 y 8 de CJ).
   - **Correcciones** (4.2): `FamilyPortalVisibility.IsCorrectionVisible`, con la ventana del original; `FamilyPortalCorrection.OriginalVisible` desaparece (siempre sería cierto).
+    En consecuencia, Administración y Dirección solo publican una correctora mientras la familia ve el original (`CanCorrect`; `FAMILY_COMMUNICATION_NOT_VISIBLE` en la
+    transacción; retirar sigue cabiendo), y su lista de comunicados añade a los de 30 días los anteriores que la familia todavía ve (un relevante, hasta 6 meses). La tabla de
+    frecuencia de Dirección sigue contando solo los 30 días.
   - **Lo nuevo** (tercera 6.3): tabla `portal_familiar_visitas` (cuenta + residente → última visita, `MERGE` en la transacción de `ReadResidentAsync`, con RLS). La portada del
     residente marca «Nueva» y cuenta las novedades; la lista de residentes, también, y la propuesta de cita viva («Propuesta de cita pendiente»). Mirar la lista no es visita.
     Ojo en pruebas: **entrar ya es una visita** (lleva al único residente).
@@ -29,7 +32,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Aviso del comentario** (6.1) en «Solicitar una cita».
   - **Pregunta nueva a CJ:** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (citas de un residente suspendido o de baja, huecos a menos de 24 h, lo nuevo en la primera
     visita). `portal-familiar-confirmaciones-cj` no se archiva: queda la 3.2 (código por correo), que espera al ADR 0012.
-  - **Pruebas:** unitarias 451, integración 528 y funcionales 304 en verde. `0070` aplicado en `ResidApp` y `ResidAppPruebas` locales (en `ResidAppPruebas` rellenó 78
+  - **Pruebas:** unitarias 452, integración 529 y funcionales 304 en verde. `0070` aplicado en `ResidApp` y `ResidAppPruebas` locales (en `ResidAppPruebas` rellenó 78
     propuestas antiguas). Navegador (Los Almendros local, `almendros-orlando-administracion`, `-pablo` y `-enfermeria`): lo nuevo, el aviso de propuesta, el plazo, la caducidad y
     volver a proponer, las citas pasadas sin cerrar y el aviso del comentario, en claro, en oscuro y a 375 px, sin desbordes ni errores de consola. Los Almendros vuelve a quedar en
     reserva directa; quedan una solicitud cerrada, una cita finalizada y un comunicado de prueba de Rosa.

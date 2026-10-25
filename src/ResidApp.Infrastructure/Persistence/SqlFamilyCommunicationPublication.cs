@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Families;
 using ResidApp.Shared;
 
 namespace ResidApp.Infrastructure.Persistence;
@@ -98,6 +99,13 @@ public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory conne
         var communication = await LockAndReadAsync(connection, transaction, access, communicationId, ct);
         var occurredAt = DateTimeOffset.UtcNow;
         EnsureCanAmend(communication, occurredAt);
+        if (!FamilyPortalVisibility.IsVisible(
+                EnumCode.ParseCode<FamilyCommunicationType>(communication.TypeCode), FamilyCommunicationSql.ScheduledAt(communication.PreparedAt, communication.ScheduledAt),
+                communication.PublishedEarlyAt is { } early ? Utc(early) : null, occurredAt))
+        {
+            // Una correctora deja de verse con su original (CJ, portal 4.2): sobre uno que la familia ya no ve, no la vería nunca.
+            throw new DomainValidationException("FAMILY_COMMUNICATION_NOT_VISIBLE");
+        }
 
         await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.comunicaciones_familiares_correctoras
@@ -153,9 +161,9 @@ public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory conne
             parameters, transaction, cancellationToken: ct));
         return await connection.QuerySingleOrDefaultAsync<PublishRow>(new CommandDefinition($"""
             SELECT family.preparado_en AS PreparedAt, family.publicacion_programada_en AS ScheduledAt, ea.unidad_id AS UnitId,
-                   family.residente_id AS ResidentId,
-                   CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.comunicaciones_familiares_publicacion_anticipada early
-                                           WHERE early.comunicacion_id = family.id) THEN 1 ELSE 0 END AS BIT) AS PublishedEarly,
+                   family.residente_id AS ResidentId, {FamilyCommunicationSql.CurrentType} AS TypeCode,
+                   (SELECT early.publicada_en FROM dbo.comunicaciones_familiares_publicacion_anticipada early
+                     WHERE early.comunicacion_id = family.id) AS PublishedEarlyAt,
                    CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.comunicaciones_familiares_retiradas withdrawal
                                            WHERE withdrawal.comunicacion_id = family.id) THEN 1 ELSE 0 END AS BIT) AS Withdrawn
             {ScopedCommunications(access)}
@@ -164,7 +172,7 @@ public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory conne
     }
 
     private static bool IsPublished(PublishRow communication, DateTimeOffset now) => FamilyCommunicationSchedule.IsPublished(
-        FamilyCommunicationSql.ScheduledAt(communication.PreparedAt, communication.ScheduledAt), communication.PublishedEarly ? now : null, now);
+        FamilyCommunicationSql.ScheduledAt(communication.PreparedAt, communication.ScheduledAt), communication.PublishedEarlyAt is null ? null : now, now);
 
     /// <summary>Una correctora o una retirada solo caben sobre un comunicado ya publicado (antes se corrige) y todavía no retirado.</summary>
     private static void EnsureCanAmend(PublishRow communication, DateTimeOffset now)
@@ -199,7 +207,8 @@ public sealed class SqlFamilyCommunicationPublication(SqlConnectionFactory conne
         Guid Id, Guid EventId, Guid ResidentId, string ResidentName, string? UnitName, string TypeCode, string Text, DateTime PreparedAt,
         DateTime? ScheduledAt, DateTime? PublishedEarlyAt);
 
-    private sealed record PublishRow(DateTime PreparedAt, DateTime? ScheduledAt, Guid UnitId, Guid ResidentId, bool PublishedEarly, bool Withdrawn);
+    private sealed record PublishRow(
+        DateTime PreparedAt, DateTime? ScheduledAt, Guid UnitId, Guid ResidentId, string TypeCode, DateTime? PublishedEarlyAt, bool Withdrawn);
 
     private sealed record CorrectiveRow(Guid CommunicationId, Guid Id, string TypeCode, string Text, DateTime PublishedAt);
 

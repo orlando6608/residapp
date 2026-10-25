@@ -7,9 +7,10 @@ using ResidApp.Shared;
 namespace ResidApp.Application.UseCases;
 
 /// <summary>Un comunicado con la hora en que se publica solo y si ya está publicado. CanAmend: ya está publicado y no está retirado, así que se
-/// puede publicar una correctora o retirarlo (script 0053).</summary>
+/// puede retirar (script 0053). CanCorrect: además, la familia todavía lo ve, así que se puede publicar una correctora (una correctora deja de
+/// verse con su original, CJ portal 4.2: sobre uno que ya no se ve, la familia no la vería nunca).</summary>
 public sealed record FamilyCommunicationStatusView(
-    AdministrationFamilyCommunication Communication, DateTimeOffset ScheduledAt, bool Published, bool CanAmend);
+    AdministrationFamilyCommunication Communication, DateTimeOffset ScheduledAt, bool Published, bool CanAmend, bool CanCorrect);
 
 
 public sealed record PublishFamilyCommunicationCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid ComunicadoId);
@@ -21,8 +22,8 @@ public sealed record WithdrawFamilyCommunicationCommand(Guid AmbitoPerfilId, Cen
 
 /// <summary>
 /// Comunicados a la familia en Administración y en Dirección Clínica (CJ, 2026-10-07 y 2026-10-10; script 0048): los de las unidades de su ámbito
-/// de los últimos <see cref="WindowDays"/> días con su hora de publicación, y la publicación anticipada, que hacen Administración y Dirección
-/// Clínica. Todavía no hay Portal Familiar: «publicado» significa que ya podrá verlo la familia, no que lo haya visto.
+/// preparados en los últimos <see cref="WindowDays"/> días y los anteriores que la familia todavía ve (un relevante, hasta 6 meses), para poder
+/// corregirlos; con su hora de publicación, y la publicación anticipada, que hacen Administración y Dirección Clínica. Todavía no hay Portal Familiar: «publicado» significa que ya podrá verlo la familia, no que lo haya visto.
 /// </summary>
 public sealed class FamilyCommunicationPublicationApplicationService(
     IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, IFamilyCommunicationDirectory directory,
@@ -36,12 +37,16 @@ public sealed class FamilyCommunicationPublicationApplicationService(
         {
             var access = await ResolveAsync(profileScopeId, centerId, ct);
             var now = DateTimeOffset.UtcNow;
-            var communications = await directory.ListAsync(access, now.AddDays(-WindowDays), ct);
+            // Los candidatos son los preparados en la ventana más larga de la familia (6 meses) y unos días más, como en el portal.
+            var communications = await directory.ListAsync(access, now.AddMonths(-FamilyPortalVisibility.RelevantMonths).AddDays(-3), ct);
             return communications.Select(communication =>
             {
                 var published = FamilyCommunicationSchedule.IsPublished(communication.ScheduledAt, communication.PublishedEarlyAt, now);
-                return new FamilyCommunicationStatusView(communication, communication.ScheduledAt, published, published && communication.Withdrawal is null);
-            }).ToList();
+                var canAmend = published && communication.Withdrawal is null;
+                var visibleToFamily = canAmend
+                    && FamilyPortalVisibility.IsVisible(communication.Type, communication.ScheduledAt, communication.PublishedEarlyAt, now);
+                return new FamilyCommunicationStatusView(communication, communication.ScheduledAt, published, canAmend, visibleToFamily);
+            }).Where(view => view.Communication.PreparedAt >= now.AddDays(-WindowDays) || view.CanCorrect).ToList();
         });
 
     public Task<ApplicationResult<bool>> PublishNowAsync(PublishFamilyCommunicationCommand command, CancellationToken ct = default) =>

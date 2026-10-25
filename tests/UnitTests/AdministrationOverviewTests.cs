@@ -38,7 +38,7 @@ public class AdministrationOverviewTests
                 Guid.NewGuid(), Guid.NewGuid(), ResidentId.From(Guid.NewGuid()), "Residente", null, FamilyCommunicationType.Ordinaria, "Texto",
                 scheduledAt.AddHours(-3), publishedEarlyAt, scheduledAt, [],
                 withdrawn ? new FamilyCommunicationWithdrawalNote("Motivo", scheduledAt) : null),
-            scheduledAt, published, published && !withdrawn);
+            scheduledAt, published, published && !withdrawn, published && !withdrawn);
 
     [Fact]
     public void ResumenDeComunicados_CuentaLosProgramados_YLosPublicadosEnLosUltimosSieteDias()

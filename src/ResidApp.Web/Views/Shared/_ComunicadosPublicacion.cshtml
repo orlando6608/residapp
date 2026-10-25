@@ -16,7 +16,7 @@
 
 @if (Model.Count == 0)
 {
-    <p class="estado-vacio">No hay comunicados a la familia en los últimos @FamilyCommunicationPublicationApplicationService.WindowDays días.</p>
+    <p class="estado-vacio">No hay comunicados a la familia en los últimos @FamilyCommunicationPublicationApplicationService.WindowDays días, ni anteriores que la familia todavía vea.</p>
 }
 else
 {
@@ -69,9 +69,16 @@ else
                         <button type="submit" class="btn btn-outline-primary">Publicar ahora</button>
                     </form>
                 }
-                @if (item.CanAmend)
+                @if (item.CanCorrect)
                 {
                     <a class="btn btn-outline-secondary" asp-action="PublicarCorreccion" asp-route-comunicadoId="@communication.Id">Publicar una corrección</a>
+                }
+                else if (item.CanAmend)
+                {
+                    <p class="text-muted small mb-2">La familia ya no lo ve: una corrección no le llegaría.</p>
+                }
+                @if (item.CanAmend)
+                {
                     <a class="btn btn-outline-danger" asp-action="RetirarComunicado" asp-route-comunicadoId="@communication.Id">Retirar</a>
                 }
             </div>

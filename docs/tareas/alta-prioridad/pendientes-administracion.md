@@ -413,8 +413,9 @@ Orden decidido con Orlando: dictado por voz (va en `continuar-construccion.md`),
   - Lista de **citas pasadas sin cerrar** arriba de la agenda y su cifra en el inicio de Administración, que las sigue finalizando a mano (portal 5.8).
   - Tests: `PortalFamiliarTests` (suspensión y baja, novedades nuevas), `CitasSolicitudesTests` (caducidad a 48 horas y 24 horas antes, volver a proponer),
     `CitasTests` y `AdministracionInicioTests` (citas pasadas sin cerrar), `CorrectorasYRetiradasTests`, unitarias y `PortalFamiliarFlowTests`.
-  - Sin cambiar: una correctora o una retirada se pueden publicar sobre un original que ya no se ve (`EnsureCanAmend` no mira la ventana), y la lista del
-    personal solo enseña los comunicados de 30 días, así que un relevante de más de 30 días no se puede corregir desde la pantalla.
+  - Corregir, solo mientras la familia vea el original (`FamilyCommunicationStatusView.CanCorrect`, y `FAMILY_COMMUNICATION_NOT_VISIBLE` en la transacción); retirar
+    sigue cabiendo después. La lista del personal enseña los de 30 días y además los anteriores que la familia todavía ve (un relevante, hasta 6 meses), para
+    poder corregirlos; la tabla de frecuencia de Dirección sigue contando solo los 30 días. Test `UnRelevanteDeHaceMasDe30Dias_…`.
   - **Resumen periódico** (tercera 1.1 a 1.5): recopilación automática de los comunicados ya publicados en el periodo, sin texto nuevo; una frecuencia para todo el centro;
     si no hay nada, no se publica nada; se suma a los comunicados sueltos. La 1.3 («lo prepara y lo aprueba Enfermería, al guardarlo») no aplica a una recopilación
     automática, que no tiene redacción ni aprobación: **interpretación mía**, a confirmar si el resumen llegara a llevar texto nuevo.

@@ -205,6 +205,31 @@ public class CorrectorasYRetiradasTests
     }
 
     [Fact]
+    public async Task UnRelevanteDeHaceMasDe30Dias_SaleEnLaListaYSeCorrige_YUnoQueLaFamiliaYaNoVe_NoAdmiteCorreccion()
+    {
+        var setup = await SetupAsync("Residente Corregir Antiguo");
+        // Preparados hace 41 días: el relevante lo sigue viendo la familia (6 meses); el ordinario ya no (30 días). Otro ordinario de hace 50 días
+        // ni se ve ni sale en la lista.
+        var relevant = await AddCommunicationAsync(setup, "Relevante antiguo.", FamilyCommunicationType.Relevante, DateTime.UtcNow.AddDays(-41), DateTime.UtcNow.AddDays(-40));
+        var ordinary = await AddCommunicationAsync(setup, "Ordinario antiguo.", FamilyCommunicationType.Ordinaria, DateTime.UtcNow.AddDays(-41), DateTime.UtcNow.AddDays(-40));
+        var recentOrdinary = await PublishedAsync(setup, "Ordinario reciente.");
+
+        var list = (await Staff(setup.Admin.ExternalSubject).ListAsync(setup.Admin.ProfileScopeId, setup.Admin.CenterId)).Value!;
+        var corrected = await CorrectAsync(setup.Admin, relevant, "Corrección del relevante antiguo.");
+        var notVisible = await CorrectAsync(setup.Admin, ordinary, "Corrección que nadie vería.");
+
+        Assert.Equal([recentOrdinary, relevant], list.Select(c => c.Communication.Id));
+        Assert.All(list, c => Assert.True(c.CanCorrect));
+        Assert.True(corrected.Ok, corrected.Error?.Message);
+        Assert.Contains(await ListAsync(setup), c => c.Text == "Corrección del relevante antiguo.");
+        Assert.Equal(ApplicationFailureCode.Conflict, notVisible.Error!.Code);
+        Assert.Equal(1, await CountAsync(
+            "SELECT COUNT(*) FROM dbo.comunicaciones_familiares_correctoras WHERE centro_id = @c", new { c = setup.Admin.CenterId.Value }));
+        // Retirar sigue cabiendo aunque la familia ya no lo vea.
+        Assert.True((await WithdrawAsync(setup.Admin, ordinary, "Era de otro residente.")).Ok);
+    }
+
+    [Fact]
     public async Task OtraFamiliaDelMismoCentro_NoVeLasCorrectorasNiLasRetiradasDeOtroResidente()
     {
         var one = await SetupAsync("Residente Uno Enmienda");

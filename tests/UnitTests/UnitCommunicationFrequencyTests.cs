@@ -19,7 +19,7 @@ public class UnitCommunicationFrequencyTests
         return new(new AdministrationFamilyCommunication(
                 Guid.NewGuid(), Guid.NewGuid(), ResidentId.From(Guid.NewGuid()), "Residente", unit, FamilyCommunicationType.Ordinaria, "Texto",
                 preparedAt, null, scheduledAt, correctiveList, withdrawn ? new FamilyCommunicationWithdrawalNote("Motivo", scheduledAt) : null),
-            scheduledAt, published, published && !withdrawn);
+            scheduledAt, published, published && !withdrawn, published && !withdrawn);
     }
 
     [Fact]
@@ -54,5 +54,15 @@ public class UnitCommunicationFrequencyTests
         Assert.Equal(3.5, units[0].PerWeek);
         Assert.Equal((16, 1, 15), (total.Total, total.Scheduled, total.Published));
         Assert.Empty(UnitCommunicationFrequency.From([], Now));
+    }
+
+    [Fact]
+    public void LosAnterioresALaVentana_QueLaListaEnsenaParaCorregirlos_NoCuentan()
+    {
+        // La lista enseña también los comunicados que la familia todavía ve aunque se prepararan hace más de 30 días; la frecuencia no los cuenta.
+        var units = UnitCommunicationFrequency.From(
+            [Communication("Planta 1", Now.AddDays(-2), published: true), Communication("Planta 1", Now.AddDays(-45), published: true)], Now);
+
+        Assert.Equal(1, Assert.Single(units).Total);
     }
 }

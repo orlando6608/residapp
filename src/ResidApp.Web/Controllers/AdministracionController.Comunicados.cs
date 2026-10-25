@@ -61,9 +61,9 @@ public sealed partial class AdministracionController
     public async Task<IActionResult> PublicarCorreccion(Guid comunicadoId, CancellationToken ct)
     {
         var item = await FindFamilyCommunicationAsync(comunicadoId, ct);
-        if (item is null || !item.CanAmend)
+        if (item is null || !item.CanCorrect)
         {
-            TempData["Error"] = "Ese comunicado no admite una corrección: no está publicado, está retirado o no es de tu ámbito.";
+            TempData["Error"] = "Ese comunicado no admite una corrección: no está publicado, está retirado, la familia ya no lo ve o no es de tu ámbito.";
             return RedirectToAction(nameof(Comunicados));
         }
 
@@ -96,7 +96,7 @@ public sealed partial class AdministracionController
         ModelState.AddModelError(string.Empty, result.Error!.Code switch
         {
             ApplicationFailureCode.AccessDenied => "No se puede acceder a ese comunicado.",
-            ApplicationFailureCode.Conflict => "No se ha publicado: el comunicado aún no está publicado o se ha retirado. Vuelve a la lista para ver su estado.",
+            ApplicationFailureCode.Conflict => "No se ha publicado: el comunicado aún no está publicado, se ha retirado o la familia ya no lo ve. Vuelve a la lista para ver su estado.",
             ApplicationFailureCode.InvalidInput => "Revisa los datos: elige el tipo y escribe un texto de hasta 2000 caracteres.",
             _ => result.Error.Message,
         });

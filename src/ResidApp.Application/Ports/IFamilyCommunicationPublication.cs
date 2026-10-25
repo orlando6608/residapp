@@ -54,7 +54,8 @@ public interface IFamilyCommunicationCorrector
 /// <summary>Publicación correctora o retirada de un comunicado ya publicado, por Administración o Dirección Clínica (script 0053; portal-familiar.md,
 /// historia 3). Cada operación, en una transacción que bloquea el comunicado y comprueba de nuevo el ámbito, que esté publicado y que no esté
 /// retirado, y deja su auditoría sin datos (FAMILY_COMMUNICATION_CORRECTIVE o FAMILY_COMMUNICATION_WITHDRAW, con el perfil que la hizo).
-/// Fuera de ámbito o inexistente, AccessDenied; sin publicar, FAMILY_COMMUNICATION_NOT_PUBLISHED; retirado, FAMILY_COMMUNICATION_WITHDRAWN.</summary>
+/// Fuera de ámbito o inexistente, AccessDenied; sin publicar, FAMILY_COMMUNICATION_NOT_PUBLISHED; retirado, FAMILY_COMMUNICATION_WITHDRAWN; una correctora
+/// sobre un comunicado que la familia ya no ve, FAMILY_COMMUNICATION_NOT_VISIBLE.</summary>
 public interface IFamilyCommunicationAmender
 {
     Task PublishCorrectiveAsync(

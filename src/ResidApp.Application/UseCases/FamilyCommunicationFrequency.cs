@@ -16,6 +16,7 @@ public sealed record UnitCommunicationFrequency(
     /// <summary>Las unidades que tienen algún comunicado en la ventana, por nombre; los comunicados de un residente sin unidad vigente salen juntos como «Sin unidad».</summary>
     public static IReadOnlyList<UnitCommunicationFrequency> From(IEnumerable<FamilyCommunicationStatusView> communications, DateTimeOffset now) =>
         communications
+            .Where(c => c.Communication.PreparedAt >= now.AddDays(-FamilyCommunicationPublicationApplicationService.WindowDays))
             .GroupBy(c => c.Communication.UnitName ?? "Sin unidad")
             .OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase)
             .Select(g => new UnitCommunicationFrequency(
