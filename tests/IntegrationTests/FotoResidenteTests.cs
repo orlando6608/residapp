@@ -2,6 +2,8 @@ using Dapper;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
+using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
@@ -9,9 +11,10 @@ using ResidApp.Shared;
 
 namespace ResidApp.IntegrationTests;
 
-/// <summary>Foto de identificación del residente (estudio de mercado R2, script 0059): la ponen, cambian y quitan Administración y Enfermería;
-/// la ven además Medicina y la Auxiliar que tiene asignado al residente, nadie fuera del ámbito ni de otro centro, ni Dirección Clínica; cada
-/// cambio queda en la auditoría y la foto se guarda sin EXIF. Cada prueba crea su propio centro.</summary>
+/// <summary>Foto de identificación del residente (estudio de mercado R2, scripts 0059 y 0071): la ponen, cambian y quitan Administración, y
+/// Enfermería con el permiso RESIDENT_PHOTO_MANAGE; la ven además Medicina y la Auxiliar que tiene asignado al residente, nadie fuera del ámbito
+/// ni de otro centro, ni Dirección Clínica; se guarda con quién firmó el consentimiento y cuándo; «No quiere foto» la borra y la bloquea; la
+/// baja la borra; cada cambio queda en la auditoría y la foto se guarda sin EXIF. Cada prueba crea su propio centro.</summary>
 public class FotoResidenteTests
 {
     private static byte[] Segment(byte marker, byte[] payload) =>
@@ -29,8 +32,15 @@ public class FotoResidenteTests
         new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), new FixedPhotoSessionIdentityProvider(profile.ExternalSubject),
         new SqlResidentPhotoRepository(TestDatabase.ConnectionFactory));
 
-    private static Task<ApplicationResult<bool>> SetAsync(SeededProfile profile, ResidentId residentId, byte[] photo, bool consent = true) =>
-        Service(profile).SetAsync(new SetResidentPhotoCommand(profile.ProfileScopeId, profile.CenterId, residentId, photo, consent));
+    private static readonly DateOnly SignedOn = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+
+    private static Task<ApplicationResult<bool>> SetAsync(
+        SeededProfile profile, ResidentId residentId, byte[] photo, ResidentPhotoConsentSigner? signer = ResidentPhotoConsentSigner.Representante,
+        DateOnly? signedOn = null) =>
+        Service(profile).SetAsync(new SetResidentPhotoCommand(profile.ProfileScopeId, profile.CenterId, residentId, photo, signer, signedOn ?? SignedOn));
+
+    private static Task<SeededProfile> NurseWithPermissionAsync(SeededProfile admin) =>
+        SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId, [ProfilePermissions.ResidentPhotoManage]);
 
     private static Task<ApplicationResult<byte[]?>> ReadAsync(SeededProfile profile, ResidentId residentId) =>
         Service(profile).ReadAsync(profile.ProfileScopeId, profile.CenterId, residentId);
@@ -66,7 +76,7 @@ public class FotoResidenteTests
     public async Task Enfermeria_CambiaYQuitaLaFoto_YCadaCambioQuedaEnLaAuditoria()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
+        var nurse = await NurseWithPermissionAsync(admin);
         var residentId = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Foto Cambiada");
         byte[] other = [0xFF, 0xD8, .. Segment(0xDA, [1, 1, 0, 0, 63, 0]), 0x77, 0xFF, 0xD9];
 
@@ -105,15 +115,116 @@ public class FotoResidenteTests
         var byDoctor = await SetAsync(doctor, residentId, PhotoWithoutExif);
         var byAuxiliar = await SetAsync(auxiliar, residentId, PhotoWithoutExif);
         var removeByDoctor = await Service(doctor).RemoveAsync(doctor.ProfileScopeId, doctor.CenterId, residentId);
-        var withoutConsent = await SetAsync(admin, residentId, PhotoWithoutExif, consent: false);
+        var withoutConsent = await SetAsync(admin, residentId, PhotoWithoutExif, signer: null);
+        var futureConsent = await SetAsync(admin, residentId, PhotoWithoutExif, signedOn: DateOnly.FromDateTime(DateTime.Today).AddDays(1));
         var png = await SetAsync(admin, residentId, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
 
         Assert.Equal(ApplicationFailureCode.AccessDenied, byDoctor.Error?.Code);
         Assert.Equal(ApplicationFailureCode.AccessDenied, byAuxiliar.Error?.Code);
         Assert.Equal(ApplicationFailureCode.AccessDenied, removeByDoctor.Error?.Code);
         Assert.Equal(ApplicationFailureCode.InvalidInput, withoutConsent.Error?.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, futureConsent.Error?.Code);
         Assert.Equal(ApplicationFailureCode.InvalidInput, png.Error?.Code);
         Assert.Null((await ReadAsync(admin, residentId)).Value);
+    }
+
+    [Fact]
+    public async Task EnfermeriaSinElPermiso_LaVePeroNoLaCambia_YConElPermisoSi_YSeGuardaQuienFirmoYCuando()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
+        var allowedNurse = await NurseWithPermissionAsync(admin);
+        var residentId = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Foto Permiso");
+
+        var withoutPermission = await SetAsync(nurse, residentId, PhotoWithoutExif);
+        var refusalWithoutPermission = await Service(nurse).MarkRefusalAsync(nurse.ProfileScopeId, nurse.CenterId, residentId);
+        var withPermission = await SetAsync(allowedNurse, residentId, PhotoWithoutExif, ResidentPhotoConsentSigner.Residente);
+        var removeWithoutPermission = await Service(nurse).RemoveAsync(nurse.ProfileScopeId, nurse.CenterId, residentId);
+        var editorWithout = (await Service(nurse).ReadEditorAsync(nurse.ProfileScopeId, nurse.CenterId, residentId)).Value!;
+        var editorWith = (await Service(allowedNurse).ReadEditorAsync(allowedNurse.ProfileScopeId, allowedNurse.CenterId, residentId)).Value!;
+        var editorAdmin = (await Service(admin).ReadEditorAsync(admin.ProfileScopeId, admin.CenterId, residentId)).Value!;
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, withoutPermission.Error?.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, refusalWithoutPermission.Error?.Code);
+        Assert.True(withPermission.Ok, withPermission.Error?.Message);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, removeWithoutPermission.Error?.Code);
+        Assert.NotNull((await ReadAsync(nurse, residentId)).Value);
+        Assert.False(editorWithout.CanEdit);
+        Assert.True(editorWith.CanEdit);
+        Assert.True(editorAdmin.CanEdit);
+        Assert.Equal(new ResidentPhotoConsent(ResidentPhotoConsentSigner.Residente, SignedOn), editorAdmin.Status.Consent);
+        Assert.NotNull(editorAdmin.Status.UpdatedAt);
+        Assert.False(editorAdmin.Status.Refused);
+    }
+
+    [Fact]
+    public async Task NoQuiereFoto_BorraLaFoto_YNoDejaPonerOtra_HastaQuitarLaMarca()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var residentId = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente No Quiere Foto");
+        Assert.True((await SetAsync(admin, residentId, PhotoWithoutExif)).Ok);
+        var service = Service(admin);
+
+        var marked = await service.MarkRefusalAsync(admin.ProfileScopeId, admin.CenterId, residentId);
+        var markedAgain = await service.MarkRefusalAsync(admin.ProfileScopeId, admin.CenterId, residentId);
+        var blocked = await SetAsync(admin, residentId, PhotoWithoutExif);
+        var status = (await service.ReadEditorAsync(admin.ProfileScopeId, admin.CenterId, residentId)).Value!.Status;
+        var cleared = await service.ClearRefusalAsync(admin.ProfileScopeId, admin.CenterId, residentId);
+        var clearedAgain = await service.ClearRefusalAsync(admin.ProfileScopeId, admin.CenterId, residentId);
+        var putAgain = await SetAsync(admin, residentId, PhotoWithoutExif);
+
+        Assert.True(marked.Value);
+        Assert.False(markedAgain.Value);
+        Assert.Equal(ApplicationFailureCode.Conflict, blocked.Error?.Code);
+        Assert.Equal(new ResidentPhotoStatus(null, null, true), status);
+        Assert.True(cleared.Value);
+        Assert.False(clearedAgain.Value);
+        Assert.True(putAgain.Ok, putAgain.Error?.Message);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var audit = (await connection.QueryAsync<string>("""
+            SELECT accion_codigo FROM dbo.eventos_auditoria WITH (NOLOCK)
+             WHERE recurso_id = @Id AND accion_codigo LIKE 'RESIDENT_PHOTO_%' ORDER BY ocurrido_en, accion_codigo DESC
+            """, new { Id = residentId.Value })).ToList();
+        Assert.Equal(
+            ["RESIDENT_PHOTO_SET", "RESIDENT_PHOTO_REFUSAL_SET", "RESIDENT_PHOTO_REMOVE", "RESIDENT_PHOTO_REFUSAL_CLEAR", "RESIDENT_PHOTO_SET"],
+            audit);
+    }
+
+    [Fact]
+    public async Task LaBajaBorraLaFoto_YLaSuspensionLaConserva()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var suspended = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Foto Suspendido");
+        var discharged = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Foto Baja");
+        Assert.True((await SetAsync(admin, suspended, PhotoWithoutExif)).Ok);
+        Assert.True((await SetAsync(admin, discharged, PhotoWithoutExif)).Ok);
+        var status = EstadoResidenteTests.Build(admin.ExternalSubject);
+
+        Assert.True((await status.SuspendAsync(new SuspendResidentCommand(admin.ProfileScopeId, admin.CenterId, suspended, Guid.NewGuid(), null))).Ok);
+        Assert.True((await status.DischargeAsync(new DischargeResidentCommand(
+            admin.ProfileScopeId, admin.CenterId, discharged, Guid.NewGuid(), ResidentDischargeReason.AltaVoluntaria, null))).Ok);
+
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.fotos_residente WHERE residente_id = @Id", suspended));
+        Assert.Equal(0, await CountAsync("SELECT COUNT(*) FROM dbo.fotos_residente WHERE residente_id = @Id", discharged));
+        Assert.Equal(1, await CountAsync(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE recurso_id = @Id AND accion_codigo = 'RESIDENT_PHOTO_REMOVE'", discharged));
+    }
+
+    [Fact]
+    public async Task ElPermisoDeLaFoto_SoloSeConcedeAEnfermeria()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+
+        var error = await Assert.ThrowsAsync<Microsoft.Data.SqlClient.SqlException>(() =>
+            SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, admin.CenterId, admin.UnitId, [ProfilePermissions.ResidentPhotoManage]));
+
+        Assert.Contains("PROFILE_PERMISSION_NOT_ALLOWED", error.Message);
+    }
+
+    private static async Task<int> CountAsync(string sql, ResidentId residentId)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        return await connection.ExecuteScalarAsync<int>(sql, new { Id = residentId.Value });
     }
 
     [Fact]

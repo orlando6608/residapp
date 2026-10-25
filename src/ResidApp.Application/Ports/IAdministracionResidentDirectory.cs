@@ -92,22 +92,29 @@ public sealed record AdministrativeResidentDetail(
     public string? NoContactReason => EmergencyContacts is [.., { Action: EmergencyContactSet.NoContact } last] ? last.Reason : null;
 }
 
-/// <summary>Por qué un residente del ámbito requiere atención (inicio de Administración, ADM-01): las mismas cuatro cosas que cuenta el inicio, ahora por residente.</summary>
+/// <summary>Por qué un residente del ámbito requiere atención (inicio de Administración, ADM-01): lo mismo que cuenta el inicio, ahora por residente.</summary>
 public enum ResidentAttentionKind
 {
-    SinHabitacion,
+    UbicacionPendiente,
     AutorizacionPendiente,
     AutorizacionCaducada,
     AutorizacionPorCaducar,
+    SinContactoUrgente,
+    FotoAntigua,
 }
 
-/// <summary>Los motivos de atención de un residente: sin habitación, o algún familiar con la autorización pendiente, caducada o que caduca en <see cref="AdministrationOverviewRules.ExpiringSoonDays"/> días.</summary>
+/// <summary>Los motivos de atención de un residente: ubicación pendiente (sin habitación, o sin cama en una unidad con camas), algún familiar con la
+/// autorización pendiente, caducada o que caduca en <see cref="AdministrationOverviewRules.ExpiringSoonDays"/> días, sin contacto urgente ni motivo, o
+/// una foto de más de 12 meses.</summary>
 public sealed record ResidentAttention(
-    ResidentId ResidentId, bool WithoutRoom, bool AuthorizationPending, bool AuthorizationExpired, bool AuthorizationExpiringSoon)
+    ResidentId ResidentId, bool LocationPending, bool AuthorizationPending, bool AuthorizationExpired, bool AuthorizationExpiringSoon,
+    bool WithoutEmergencyContact = false, bool PhotoToRenew = false)
 {
     public bool Matches(ResidentAttentionKind kind) => kind switch
     {
-        ResidentAttentionKind.SinHabitacion => WithoutRoom,
+        ResidentAttentionKind.UbicacionPendiente => LocationPending,
+        ResidentAttentionKind.SinContactoUrgente => WithoutEmergencyContact,
+        ResidentAttentionKind.FotoAntigua => PhotoToRenew,
         ResidentAttentionKind.AutorizacionPendiente => AuthorizationPending,
         ResidentAttentionKind.AutorizacionCaducada => AuthorizationExpired,
         ResidentAttentionKind.AutorizacionPorCaducar => AuthorizationExpiringSoon,
@@ -122,7 +129,7 @@ public interface IAdministracionResidentDirectory
 {
     Task<IReadOnlyList<AdministrativeResidentSummary>> ListAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
-    /// <summary>Qué residentes del ámbito requieren atención (sin habitación, autorización pendiente, caducada o a punto de caducar), con la misma regla que las cifras
+    /// <summary>Qué residentes del ámbito requieren atención (ResidentAttention), con la misma regla que las cifras
     /// del inicio de Administración. <paramref name="today"/> es el día natural del centro.</summary>
     Task<IReadOnlyList<ResidentAttention>> ListAttentionAsync(Guid profileScopeId, CenterId centerId, DateOnly today, CancellationToken ct = default);
 

@@ -1,3 +1,6 @@
+using ResidApp.Application.UseCases;
+using ResidApp.Domain.Residents;
+
 namespace ResidApp.Web.Models;
 
 /// <summary>La foto de identificación de un residente en una lista o en la cabecera de su ficha (_FotoResidente). Sin foto, sus iniciales.
@@ -10,15 +13,23 @@ public sealed record ResidentPhotoViewModel(Guid ResidentId, string DisplayName,
         .Select(word => char.ToUpperInvariant(word[0])));
 }
 
-/// <summary>El recuadro para poner, cambiar o quitar la foto (_FotoResidenteEditar), en las fichas de Administración y de Enfermería.</summary>
-public sealed record ResidentPhotoEditorViewModel(Guid ResidentId, DateTimeOffset? UpdatedAt);
+/// <summary>El recuadro de la foto (_FotoResidenteEditar), en las fichas de Administración y de Enfermería: su estado (consentimiento, «No quiere
+/// foto») y si quien mira puede cambiarla. Today es el día del centro, para el valor por defecto y el máximo de la fecha de la firma.</summary>
+public sealed record ResidentPhotoEditorViewModel(Guid ResidentId, ResidentPhotoEditorState State, DateOnly Today, DateTimeOffset Now)
+{
+    public bool HasPhoto => State.Status.UpdatedAt is not null;
 
-/// <summary>Formulario de la foto. Consentimiento es la casilla obligatoria: consta el del residente o el de su representante.</summary>
+    public bool RenewalDue => State.Status.UpdatedAt is { } updated && ResidentPhotoRenewal.IsDue(updated, Now);
+}
+
+/// <summary>Formulario de la foto: la imagen y el consentimiento, quién lo firmó y cuándo (CJ, foto 1.1).</summary>
 public sealed class ResidentPhotoFormModel
 {
     public Guid ResidenteId { get; set; }
 
     public IFormFile? Foto { get; set; }
 
-    public bool Consentimiento { get; set; }
+    public ResidentPhotoConsentSigner? Firmante { get; set; }
+
+    public DateOnly? FechaConsentimiento { get; set; }
 }

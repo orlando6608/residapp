@@ -14,6 +14,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Foto, alta con cama e inicio de Administración con las respuestas de CJ (2026-10-25, rama `foto-inicio-administracion` sobre `portal-familiar-respuestas-cj`;
+  script `0071`, el siguiente libre es `0072`). Hecho y probado, sin subir.** Detalle en `pendientes-administracion.md` («Respuestas de CJ del 2026-10-25»).
+  - **Foto:** consentimiento con quién firmó y la fecha; `0071` borró las fotos anteriores (no lo tenían; en Azure, volver a ejecutar `preparar-almendros.js` tras el
+    despliegue para la de Manuel). «No quiere foto» (`fotos_residente_negativas`). Enfermería solo con `RESIDENT_PHOTO_MANAGE`, que la semilla da una vez a las
+    Enfermerías de los centros de prueba (bloque idempotente fuera del de creación). La baja borra la foto. Aviso a los 12 meses. El recuadro lo lee cada ficha con
+    `ResidentPhotoApplicationService.ReadEditorAsync` (estado y si puede cambiarla).
+  - **Alta:** cama obligatoria si la unidad tiene alguna libre, o «Pendiente de asignar» (`PLACE_REQUIRED`, con su mensaje propio en `ApplicationResultRunner`). Los
+    tests que crean residentes con el repositorio en una unidad con camas libres necesitan `LocationPending: true`.
+  - **Inicio:** orden por importancia (contacto urgente primero, cuentas al final); `AdministrationOverview` ganó `ResidentsWithoutEmergencyContact` y
+    `PhotosToRenew` y `ResidentsWithoutRoom` pasó a `ResidentsLocationPending`; `ResidentAttentionKind.SinHabitacion` pasó a `UbicacionPendiente`.
+  - `foto-residente-confirmaciones-cj` archivado. Manual, guías 1 (prueba 13) y 5 (pruebas 1 y 16) al día.
+  - **Pruebas:** unitarias 455, integración 535 y funcionales 307 en verde (las páginas de CJ ahora incluyen la cuarta tanda del portal). Navegador en Los Almendros local (foto con encuadre y consentimiento, aviso de 12 meses,
+    «No quiere foto», alta sin cama rechazada, Usuarios a revisar, Enfermería con permiso; claro, oscuro y 375 px; consola limpia). Queda la foto de Manuel puesta
+    en local; no se creó ningún residente ni quedó ninguna marca.
 - **Portal Familiar con las respuestas de CJ (2026-10-25, rama `portal-familiar-respuestas-cj` desde `origin/main` tras el PR #66; script `0070`, el siguiente libre es `0071`). Hecho y probado, sin subir.**
   El dictado (PR #66) ya está en `main` y desplegado: el CI/CD aplicó `0069` en Azure.
   - **Acceso** (portal 1.3): `SqlFamilyPortalReader.AccessibleLinks`, el criterio único del portal, pide además el residente `ACTIVE` y sin suspensión abierta. Se corta y vuelve
@@ -36,7 +50,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     propuestas antiguas). Navegador (Los Almendros local, `almendros-orlando-administracion`, `-pablo` y `-enfermeria`): lo nuevo, el aviso de propuesta, el plazo, la caducidad y
     volver a proponer, las citas pasadas sin cerrar y el aviso del comentario, en claro, en oscuro y a 375 px, sin desbordes ni errores de consola. Los Almendros vuelve a quedar en
     reserva directa; quedan una solicitud cerrada, una cita finalizada y un comunicado de prueba de Rosa.
-- **Dictado por voz con las respuestas de CJ (2026-10-25, rama `dictado-respuestas-cj`, sobre `respuestas-cj-2026-10-25`; script `0069`, el siguiente libre es `0070`). Hecho y probado, sin subir.**
+- **Dictado por voz con las respuestas de CJ (2026-10-25, rama `dictado-respuestas-cj`, sobre `respuestas-cj-2026-10-25`; script `0069`, el siguiente libre es `0070`). Hecho, probado y en `main` (PR #66, desplegado el 2026-10-25).**
   - **Opciones nuevas:** «Come menos de lo habitual» (`COME_MENOS_HABITUAL`, alimentación) y «Piel enrojecida» (`PIEL_ENROJECIDA`, lesiones en piel): enum, catálogo, etiqueta y
     `0069` (rehace `CK_cccao_opcion`).
   - **Temperatura:** entre 34,0 y 42,0 °C (`DailyChangeTemperature`), comprobada en el formulario (mensaje en español, `min`/`max`) y en `RegisterDailyChange`
@@ -1843,13 +1857,26 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
+**Para retomar (estado al cerrar la sesión del 2026-10-25):**
+- **Dos ramas sin subir, apiladas:** `portal-familiar-respuestas-cj` (commits `50181f6` y `f46ab8c`, sobre `origin/main` = PR #66) y, encima,
+  `foto-inicio-administracion` (`ecf414b`). Las sube Orlando y abre él los PR: o un solo PR desde `foto-inicio-administracion` con los tres commits, o primero el
+  del portal y después el de la foto. No subas nada sin que lo pida.
+- **Tras el merge:** comprobar el CI/CD y que el despliegue aplica `0070` y `0071` en Azure dev (la semilla da `RESIDENT_PHOTO_MANAGE` a las Enfermerías de los centros
+  de prueba). `0071` **borra todas las fotos** también allí: volver a ejecutar `preparar-almendros.js` contra Azure dev (`JUEGO=orlando`) para la foto de Manuel. Justo tras
+  el despliegue la app suele dar 500 unos segundos mientras arranca.
+- **Para CJ (lo envía Orlando):** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (3 preguntas). Decirle también que la app no envía correos (ADR 0012, pendiente
+  de la decisión de Orlando), lo que deja abierta la 3.2 del portal.
+- **Siguiente bloque:** importación y exportación; después Dirección y traslados, organigrama y resumen periódico. Cada uno se planifica cuando Orlando lo pida.
+- **Sueltos sin cerrar:** probar el dictado en un móvil real con audios ficticios; que una enfermera confirme «decul» y el rango 34–42 °C; las invitaciones de CJ esperan a
+  Orlando; rotar la clave de Mistral.
+
 0. **En curso: dictado por voz (ADR 0009) con la arquitectura del ADR 0011.** La Fase A (prueba de precisión, `tools/PruebaDictado`) está mergeada y el **servidor de la
    Fase B (tramo 1) está hecho** en la rama `dictado-fase-b-tramo-1`. Siguiente: probarlo en un móvil real con audios ficticios y, cuando CJ responda, ajustar el modo estricto (4.1) y la temperatura (tema 3). Servidor y pantalla están hechos
    (dos primeras entradas de «Dónde estamos»). **CJ respondió el 2026-10-25** (`docs/pendientes-cj/archivados/dictado-por-voz-confirmaciones-cj.respuestas.json`) y **está hecho** (primera entrada de «Dónde estamos»):
    opciones nuevas «Piel enrojecida» y «Come menos de lo habitual» (script `0069`), temperatura entre 34,0 y 42,0 °C que bloquea fuera de rango, un cambio con solo la temperatura,
    el dictado propone la temperatura y se revisa una a una con las opciones, prompt que «propone menos» con sus reglas de jerga y los ejemplos 1, 3, 10, 25 y 28 corregidos. Sigue pendiente
-   probarlo en un móvil real con audios ficticios. **Portal Familiar: hecho el 2026-10-25** (primera entrada de «Dónde estamos»). **Siguiente bloque: foto e inicio de Administración**
-   (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
+   probarlo en un móvil real con audios ficticios. **Portal Familiar: hecho el 2026-10-25**, y **foto, alta con cama e inicio de Administración: hechos el 2026-10-25** (primeras entradas de «Dónde estamos»).
+   **Siguiente bloque: importación y exportación** (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
    **I0 a I4 e I2b del ADR 0007 están hechos y el acceso de desarrollo está retirado en el código** (rama `sin-acceso-desarrollo`, primera entrada de
    «Dónde estamos»). Queda **I5 (pulsera NFC)** y, antes de datos reales, llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: (Importar y Exportar ya probado en Azure dev el 2026-10-23), y las dos preguntas a CJ de la guía 2 (hora en la

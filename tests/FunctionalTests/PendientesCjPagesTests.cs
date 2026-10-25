@@ -48,11 +48,11 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         "pruebas-1-auxiliar-enfermeria-flujo", "pruebas-2-medicina-indicaciones-flujo", "pruebas-3-basal-barthel-flujo",
         "pruebas-4-direccion-flujo", "pruebas-5-administracion-flujo", "pruebas-6-comunicados-portal-flujo", "pruebas-7-citas-flujo",
         "pruebas-8-aislamiento-flujo",
-        "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj", "foto-residente-confirmaciones-cj",
+        "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj", "portal-familiar-cuarta-tanda-cj",
         "archivados/rangos-referencia-constantes", "archivados/decisiones-direccion-basal-derivacion",
         "archivados/aclaraciones-respuestas-cj", "archivados/traslado-y-baja-residente",
         "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
-        "archivados/confirmaciones-segunda-tanda-cj",
+        "archivados/confirmaciones-segunda-tanda-cj", "archivados/foto-residente-confirmaciones-cj",
     ];
 
     [Theory]
@@ -72,6 +72,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("/pendientes-cj/archivados/traslado-y-baja-residente.respuestas.json")]
     [InlineData("/pendientes-cj/archivados/administracion-ambito-familiares-cargos.respuestas.json")]
     [InlineData("/pendientes-cj/archivados/continuidad-supervision-comunicacion.respuestas.json")]
+    [InlineData("/pendientes-cj/archivados/foto-residente-confirmaciones-cj.respuestas.json")]
     [InlineData("/pendientes-cj/otro-documento.respuestas.json")]
     public async Task SinClave_LasRespuestasDan401(string path)
     {

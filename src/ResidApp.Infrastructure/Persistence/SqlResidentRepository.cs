@@ -68,6 +68,12 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
                 input.InternalReference, OccurredAt = occurredAt, AccountId = input.AccountId.Value, ActiveProfile = activeProfileCode,
             }, transaction, cancellationToken: ct));
             var location = await ResolveLocationAsync(connection, transaction, input.CenterId, input.UnitId, input.RoomId, input.PlaceId, ct);
+            if (input.PlaceId is null && !input.LocationPending && await HasFreePlaceAsync(connection, transaction, input.CenterId, input.UnitId, ct))
+            {
+                // CJ (foto 3.1): en el alta la cama es obligatoria si la unidad tiene alguna libre, salvo «Pendiente de asignar». Sin camas
+                // libres (o sin camas configuradas) sigue siendo opcional.
+                throw new DomainValidationException("PLACE_REQUIRED");
+            }
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.intervalos_ubicacion_residente
                     (id, residente_id, centro_id, episodio_id, unidad_id, edificio_id, planta_id, habitacion_id, plaza_id,
@@ -222,6 +228,18 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
         return new ResolvedLocation(unit.BuildingId, unit.FloorId, roomId, placeIdInput);
     }
 
+    /// <summary>Si la unidad tiene alguna plaza activa, en una habitación activa, que no ocupe nadie.</summary>
+    private static async Task<bool> HasFreePlaceAsync(
+        IDbConnection connection, IDbTransaction transaction, CenterId centerId, UnitId unitId, CancellationToken ct) =>
+        await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+            SELECT COUNT(*)
+              FROM dbo.plazas place
+              JOIN dbo.habitaciones room ON room.id = place.habitacion_id AND room.centro_id = place.centro_id AND room.estado = 'ACTIVE'
+             WHERE place.centro_id = @CenterId AND place.unidad_id = @UnitId AND place.estado = 'ACTIVE'
+               AND NOT EXISTS (SELECT 1 FROM dbo.intervalos_ubicacion_residente location
+                                WHERE location.plaza_id = place.id AND location.vigente_hasta IS NULL)
+            """, new { CenterId = centerId.Value, UnitId = unitId.Value }, transaction, cancellationToken: ct)) > 0;
+
     internal sealed record UnitPlacement(Guid? BuildingId, Guid? FloorId);
 
     internal sealed record ResolvedLocation(Guid? BuildingId, Guid? FloorId, Guid? RoomId, Guid? PlaceId);
@@ -263,7 +281,7 @@ file static class RequestHash
             AccountId = input.AccountId.Value, ActiveProfile = input.ActiveProfile.ToCode(), CenterId = input.CenterId.Value,
             UnitId = input.UnitId.Value, input.DisplayName, BirthDate = input.BirthDate.ToString("yyyy-MM-dd"),
             DocumentedSexCode = input.DocumentedSexCode.ToCode(), input.InternalReference, input.BuildingId,
-            input.FloorId, input.RoomId, input.PlaceId, OperationId = input.OperationId,
+            input.FloorId, input.RoomId, input.PlaceId, input.LocationPending, OperationId = input.OperationId,
             Family = (input.Family ?? []).Select(m => new { m.Data, m.IsPriorityContact }).ToList(), input.NoContactReason,
         });
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));

@@ -191,6 +191,29 @@ public class AdministracionHabitacionesTests
     }
 
     [Fact]
+    public async Task Alta_ConCamasLibres_ExigeUnaOPendienteDeAsignar_YSinCamasLibresSigueSiendoOpcional()
+    {
+        // CJ (foto 3.1): la cama es obligatoria en el alta si la unidad tiene alguna libre, salvo «Pendiente de asignar»; la habitación sola no basta.
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var room = await RoomAsync(admin, "Habitación con una cama");
+        var place = await PlaceAsync(admin, room, "Cama única");
+
+        var withoutBed = await Assert.ThrowsAsync<DomainValidationException>(() => CreateAsync(Input(admin, null, null)));
+        var roomOnly = await Assert.ThrowsAsync<DomainValidationException>(() => CreateAsync(Input(admin, room, null)));
+        var pending = await CreateAsync(Input(admin, room, null) with { LocationPending = true });
+        var inBed = await CreateAsync(Input(admin, null, place));
+        // Ya no queda ninguna cama libre: sin cama vuelve a ser posible.
+        var afterFull = await CreateAsync(Input(admin, null, null));
+
+        Assert.Equal("PLACE_REQUIRED", withoutBed.Code);
+        Assert.Equal("PLACE_REQUIRED", roomOnly.Code);
+        var pendingLocation = await LocationOfAsync(pending.LocationIntervalId);
+        Assert.Equal((room, (Guid?)null), (pendingLocation.Room, pendingLocation.Place));
+        Assert.Equal(place, (await LocationOfAsync(inBed.LocationIntervalId)).Place);
+        Assert.Null((await LocationOfAsync(afterFull.LocationIntervalId)).Room);
+    }
+
+    [Fact]
     public async Task Alta_ConPlazaOcupada_Inactiva_AjenaOInexistente_SeRechaza_YUnReenvioDevuelveElMismoAlta()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);

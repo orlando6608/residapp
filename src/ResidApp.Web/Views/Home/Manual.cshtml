@@ -365,9 +365,13 @@
     </h2>
     <p>
         Lo primero que ves en el inicio de Administración es el bloque <strong>Requiere atención</strong>, con cifras y un
-        enlace a la pantalla donde se resuelve cada una: solicitudes de cita por gestionar, propuestas que esperan la respuesta
-        de la familia, autorizaciones de familiares pendientes de activar, caducadas o que caducan en 30 días, y residentes sin
-        habitación asignada (las de residentes y autorizaciones, de tu ámbito; las de citas, de todo el centro). Las líneas de autorizaciones y de residentes sin habitación llevan a la lista de residentes ya filtrada por ese motivo; en la lista también puedes elegir el filtro «Requiere atención» a mano, y combinarlo con el nombre y la unidad (la lista cuenta residentes y el inicio cuenta autorizaciones, así que un residente con dos familiares pendientes suma dos en el inicio y una vez en la lista). Debajo, las citas
+        enlace a la pantalla donde se resuelve cada una, por orden de importancia: primero los <strong>residentes sin contacto urgente ni
+        motivo indicado</strong> (en una urgencia hay que saber a quién llamar); después las solicitudes de cita por gestionar, las propuestas
+        que esperan la respuesta de la familia y las citas pasadas sin cerrar; las autorizaciones de familiares pendientes de activar,
+        caducadas o que caducan en 30 días; los residentes con la <strong>ubicación pendiente</strong> (sin habitación, o sin cama en una
+        unidad que tiene camas); las <strong>fotos de más de 12 meses</strong>, que conviene renovar; y, al final, las <strong>cuentas
+        profesionales suspendidas o sin ámbito</strong> (sin ningún perfil vigente o con un perfil sin unidades), que llevan a «Usuarios»
+        filtrado (las de residentes y autorizaciones, de tu ámbito; las de citas y cuentas, de todo el centro). Las líneas de residentes y de autorizaciones llevan a la lista de residentes ya filtrada por ese motivo; en la lista también puedes elegir el filtro «Requiere atención» a mano, y combinarlo con el nombre y la unidad (la lista cuenta residentes y el inicio cuenta autorizaciones, así que un residente con dos familiares pendientes suma dos en el inicio y una vez en la lista). Debajo, las citas
         confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados esta semana. Solo
         son cifras: no salen nombres ni texto de ningún comunicado ni de ninguna solicitud. Si no hay nada que atender, dice
         «No hay nada pendiente». El inicio de Administración tiene estas tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
@@ -386,10 +390,17 @@
         <strong>Foto de identificación</strong> (en la ficha administrativa y en la ficha de Enfermería): sirve para reconocer al
         residente en las listas y en su ficha. Elige una foto o hazla con la cámara del móvil. Aparece en un recuadro: arrástrala con
         el dedo o el ratón (o usa los botones de flecha) para centrar la cara, y acércala con <strong>Acercar</strong> si sale
-        pequeña; lo que se ve en el recuadro es lo que se guarda. Marca la casilla que confirma que consta el consentimiento del
-        residente o de su representante y pulsa <strong>Guardar foto</strong>. La app guarda solo ese recuadro, reducido, y le quita
-        los datos de la cámara (como el lugar donde se hizo). Una foto nueva sustituye a la anterior, que no se
-        conserva, y <strong>Quitar foto</strong> la borra. Ponerla, cambiarla y quitarla queda en la auditoría. La ven Auxiliar (solo de
+        pequeña; lo que se ve en el recuadro es lo que se guarda. Indica <strong>quién firmó el consentimiento</strong> (el residente o
+        su representante) y la <strong>fecha de la firma</strong> (no puede ser posterior a hoy; el documento firmado lo guarda el centro,
+        fuera de la app) y pulsa <strong>Guardar foto</strong>; la ficha muestra después quién lo firmó y cuándo. La app guarda solo ese
+        recuadro, reducido, y le quita los datos de la cámara (como el lugar donde se hizo). Una foto nueva sustituye a la anterior, que no
+        se conserva, y <strong>Quitar foto</strong> la borra. Si el residente o su representante no quieren foto, pulsa <strong>No quiere
+        foto</strong>: borra la que hubiera (lo confirmas antes) y la ficha lo muestra para que nadie la vuelva a pedir; no se puede poner otra
+        hasta pulsar <strong>Quitar la marca</strong>, que solo procede si ha firmado un consentimiento nuevo. Al <strong>dar de baja</strong> al
+        residente la foto se borra (si vuelve, hay que pedir un consentimiento nuevo); la suspensión por un ingreso hospitalario la conserva.
+        Cuando la foto tiene más de 12 meses, la ficha y el inicio avisan de que conviene renovarla. Ponerla, cambiarla, quitarla y anotar o
+        quitar «No quiere foto» queda en la auditoría. Enfermería solo la cambia si Administración le da el permiso
+        <strong>Poner, cambiar y quitar la foto del residente</strong> en su perfil (ver «Usuarios, perfiles y unidades»). La ven Auxiliar (solo de
         sus residentes asignados), Enfermería, Medicina y Administración; <strong>nunca se muestra a las familias</strong> ni a
         Dirección Clínica. Si la app no puede mostrar el recuadro (por ejemplo, en un navegador antiguo), solo acepta una foto JPEG
         de 1 MB como máximo, que se guarda entera y en las listas se ve centrada.
@@ -599,7 +610,7 @@
         <strong>Revocar</strong>. Cada perfil tiene sus permisos:
     </p>
     <ul>
-        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta) y reevaluar el basal.</li>
+        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta), reevaluar el basal y poner, cambiar y quitar la foto del residente.</li>
         <li><strong>Medicina:</strong> basal inicial y reevaluar el basal.</li>
         <li><strong>Dirección Clínica:</strong> lectura clínica detallada y auditada, gestionar los rangos de referencia y gestionar los plazos de los hitos del proceso.</li>
         <li>Auxiliar y Administración no tienen permisos configurables.</li>
@@ -647,8 +658,9 @@
         <strong>Habitaciones y plazas</strong> (botón de cada unidad en Estructura) son de la unidad: creas habitaciones y, dentro de cada
         una, plazas; puedes cambiarles el nombre, inactivarlas y reactivarlas (no se borran). Se ve qué plazas están ocupadas. No se puede
         inactivar una habitación o una plaza con un residente ubicado en ella, ni reactivar una plaza de una habitación inactiva. Al dar de
-        alta a un residente puedes elegir, de forma opcional, una habitación o una plaza libre de su unidad; una plaza solo la ocupa un
-        residente a la vez. La ficha administrativa del residente muestra su habitación y su plaza en la ubicación actual y en el historial de ubicación, y Administración, Enfermería, Medicina y Auxiliar las ven junto a la unidad en sus listas de residentes y en la ficha o el registro del residente («Sin habitación asignada» si no la tiene). Cambiar después de
+        alta a un residente, si la unidad tiene alguna cama (plaza) libre, tienes que elegir una o la opción <strong>Pendiente de asignar</strong>
+        (la habitación sola no basta); si no tiene camas libres, la cama es opcional. Una plaza solo la ocupa un residente a la vez. Un residente
+        sin habitación, o sin cama en una unidad con camas, sale en el inicio como «ubicación pendiente». La importación no exige la cama. La ficha administrativa del residente muestra su habitación y su plaza en la ubicación actual y en el historial de ubicación, y Administración, Enfermería, Medicina y Auxiliar las ven junto a la unidad en sus listas de residentes y en la ficha o el registro del residente («Sin habitación asignada» si no la tiene). Cambiar después de
         habitación o plaza es un traslado (ficha del residente → <strong>Trasladar</strong>).
     </p>
 </section>
@@ -1071,10 +1083,10 @@
         aquí que un segundo profesional aporte a un borrador ajeno.
     </p>
     <p class="mb-0">
-        En la ficha también puedes poner, cambiar o quitar la <strong>foto de identificación</strong> del residente, con el
-        consentimiento marcado, y encuadrarla antes de guardarla (ver «Residentes y ficha administrativa» en Administración: funciona
-        igual). Medicina y Auxiliar
-        la ven pero no la cambian.
+        En la ficha también puedes poner, cambiar o quitar la <strong>foto de identificación</strong> del residente, con quién firmó el
+        consentimiento y cuándo, encuadrarla antes de guardarla y anotar que no quiere foto (ver «Residentes y ficha administrativa» en
+        Administración: funciona igual), <strong>si Administración te ha dado el permiso</strong> «Poner, cambiar y quitar la foto del
+        residente»; sin él, la ves pero la ficha te dice que se lo pidas. Medicina y Auxiliar la ven pero no la cambian.
     </p>
 </section>
 

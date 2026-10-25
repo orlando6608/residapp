@@ -27,6 +27,41 @@ public sealed class SqlAdministrationOverview(SqlConnectionFactory connections) 
                                                        WHERE previous.vinculo_id = link.id AND previous.centro_id = link.centro_id))
         """;
 
+    /// <summary>Ubicación pendiente (CJ, tercera 4.1): sin habitación, o sin cama en una unidad que tiene camas configuradas (en las que no tienen,
+    /// la cama es opcional). Alias scoped.</summary>
+    internal const string LocationPending = """
+        EXISTS (SELECT 1 FROM dbo.intervalos_ubicacion_residente location
+                 WHERE location.residente_id = scoped.ResidentId AND location.centro_id = @CenterId AND location.vigente_hasta IS NULL
+                   AND (location.habitacion_id IS NULL
+                        OR (location.plaza_id IS NULL
+                            AND EXISTS (SELECT 1 FROM dbo.plazas place
+                                         WHERE place.centro_id = @CenterId AND place.unidad_id = location.unidad_id AND place.estado = 'ACTIVE'))))
+        """;
+
+    /// <summary>Sin contacto urgente y sin motivo (CJ, tercera 4.4). Tiene contacto si alguna designación AGREGAR o REEMPLAZAR de un familiar no
+    /// la anula otra posterior (REEMPLAZAR, SIN_CONTACTO o QUITAR de ese familiar): la misma regla que EmergencyContactSet.Current. Tiene motivo si
+    /// la última es SIN_CONTACTO. Alias scoped.</summary>
+    internal const string WithoutEmergencyContact = """
+        NOT EXISTS (SELECT 1 FROM dbo.residentes_contacto_urgente contact
+                     WHERE contact.residente_id = scoped.ResidentId AND contact.centro_id = @CenterId
+                       AND contact.accion_codigo IN ('AGREGAR', 'REEMPLAZAR') AND contact.vinculo_id IS NOT NULL
+                       AND NOT EXISTS (SELECT 1 FROM dbo.residentes_contacto_urgente later
+                                        WHERE later.residente_id = contact.residente_id AND later.centro_id = contact.centro_id
+                                          AND later.numero > contact.numero
+                                          AND (later.accion_codigo IN ('REEMPLAZAR', 'SIN_CONTACTO')
+                                               OR (later.accion_codigo = 'QUITAR' AND later.vinculo_id = contact.vinculo_id))))
+        AND ISNULL((SELECT TOP (1) last_designation.accion_codigo FROM dbo.residentes_contacto_urgente last_designation
+                     WHERE last_designation.residente_id = scoped.ResidentId AND last_designation.centro_id = @CenterId
+                     ORDER BY last_designation.numero DESC), '') <> 'SIN_CONTACTO'
+        """;
+
+    /// <summary>Foto de más de 12 meses (CJ, foto 2.3; ResidentPhotoRenewal), con la hora de la base de datos. Alias scoped.</summary>
+    internal const string PhotoToRenew = """
+        EXISTS (SELECT 1 FROM dbo.fotos_residente photo
+                 WHERE photo.residente_id = scoped.ResidentId AND photo.centro_id = @CenterId
+                   AND photo.actualizada_en <= DATEADD(MONTH, -12, SYSUTCDATETIME()))
+        """;
+
     public async Task<AdministrationOverview> ReadAsync(
         AccountAdministrationAccess access, AdministrationOverviewPeriod period, CancellationToken ct = default)
     {
@@ -36,10 +71,8 @@ public sealed class SqlAdministrationOverview(SqlConnectionFactory connections) 
         return await connection.QuerySingleAsync<AdministrationOverview>(new CommandDefinition($"""
             {ScopedAuthorizationsCtes}
             SELECT
-                (SELECT COUNT(*) FROM scoped
-                   JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = scoped.ResidentId AND location.centro_id = @CenterId
-                        AND location.vigente_hasta IS NULL
-                  WHERE location.habitacion_id IS NULL) AS ResidentsWithoutRoom,
+                (SELECT COUNT(*) FROM scoped WHERE {WithoutEmergencyContact}) AS ResidentsWithoutEmergencyContact,
+                (SELECT COUNT(*) FROM scoped WHERE {LocationPending}) AS ResidentsLocationPending,
                 (SELECT COUNT(*) FROM latest WHERE StatusCode IS NULL OR StatusCode = 'PENDIENTE') AS AuthorizationsPending,
                 (SELECT COUNT(*) FROM latest WHERE StatusCode = 'ACTIVA' AND ValidUntil >= @Today AND ValidUntil <= @SoonLimit) AS AuthorizationsExpiringSoon,
                 (SELECT COUNT(*) FROM latest WHERE StatusCode = 'ACTIVA' AND ValidUntil < @Today) AS AuthorizationsExpired,
@@ -51,7 +84,8 @@ public sealed class SqlAdministrationOverview(SqlConnectionFactory connections) 
                 (SELECT COUNT(*) FROM dbo.citas WHERE centro_id = @CenterId AND estado_codigo = 'CONFIRMADA'
                     AND inicio_en >= @TomorrowStart AND inicio_en < @ComingEnd) AS AppointmentsComing,
                 (SELECT COUNT(*) FROM dbo.citas WHERE centro_id = @CenterId AND estado_codigo = 'CONFIRMADA'
-                    AND inicio_en <= @Now) AS AppointmentsPastUnclosed
+                    AND inicio_en <= @Now) AS AppointmentsPastUnclosed,
+                (SELECT COUNT(*) FROM scoped WHERE {PhotoToRenew}) AS PhotosToRenew
             """,
             new
             {

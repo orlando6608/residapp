@@ -13,7 +13,7 @@ namespace ResidApp.Application.Authorization;
 public sealed record ResidentCreatePayload(
     string DisplayName, DateOnly BirthDate, DocumentedSexCode DocumentedSexCode,
     string? InternalReference, Guid? BuildingId, Guid? FloorId, Guid? RoomId, Guid? PlaceId, Guid OperationId,
-    IReadOnlyList<NewResidentFamilyMember>? Family = null, string? NoContactReason = null);
+    IReadOnlyList<NewResidentFamilyMember>? Family = null, string? NoContactReason = null, bool LocationPending = false);
 
 /// <summary>ADM-03: la identidad corregida, ya validada, su motivo y cuántas correcciones tenía el residente al abrir
 /// el formulario (el token contra el doble envío).</summary>
@@ -166,7 +166,8 @@ public static class RequestAuthorizationContextResolver
         var input = new CreateResidentInput(
             operation.Subject.AccountId!.Value, activeProfile, operation.CenterId, operation.UnitId,
             payload.DisplayName, payload.BirthDate, payload.DocumentedSexCode, payload.InternalReference,
-            payload.BuildingId, payload.FloorId, payload.RoomId, payload.PlaceId, payload.OperationId, payload.Family, payload.NoContactReason);
+            payload.BuildingId, payload.FloorId, payload.RoomId, payload.PlaceId, payload.OperationId, payload.Family, payload.NoContactReason,
+            payload.LocationPending);
         return await repository.CreateWithInitialLocationAsync(input, ct);
     }
 

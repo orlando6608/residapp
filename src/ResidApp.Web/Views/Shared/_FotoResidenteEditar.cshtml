@@ -1,7 +1,12 @@
+@using ResidApp.Domain.Residents
 @model ResidApp.Web.Models.ResidentPhotoEditorViewModel
-@* Foto de identificación (script 0059): la ponen, cambian y quitan Administración y Enfermería. site.js muestra el encuadre al elegirla (mover y
-   acercar) y envía el recorte cuadrado que se ve en él; sin JavaScript el encuadre no aparece y el servidor solo acepta un JPEG de 1 MB como máximo.
-   Los botones de flecha son la alternativa al arrastre (WCAG 2.5.7). *@
+@* Foto de identificación (scripts 0059 y 0071): la ponen, cambian y quitan Administración, y Enfermería con el permiso que da Administración.
+   Se guarda quién firmó el consentimiento y cuándo; «No quiere foto» la borra y no deja poner otra hasta quitar la marca. site.js muestra el
+   encuadre al elegirla (mover y acercar) y envía el recorte cuadrado que se ve en él; sin JavaScript el encuadre no aparece y el servidor solo
+   acepta un JPEG de 1 MB como máximo. Los botones de flecha son la alternativa al arrastre (WCAG 2.5.7). *@
+@{
+    var status = Model.State.Status;
+}
 <section class="card mb-3" aria-labelledby="foto-residente-titulo">
     <div class="card-body">
         <h2 class="h5 card-title" id="foto-residente-titulo">Foto de identificación</h2>
@@ -10,39 +15,90 @@
         {
             <div class="alert alert-danger" role="alert">@fotoError</div>
         }
-        <form asp-controller="FotoResidente" asp-action="Guardar" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="Form.ResidenteId" value="@Model.ResidentId" />
-            <div class="mb-3">
-                <label class="form-label" for="foto-residente-fichero">@(Model.UpdatedAt is null ? "Elige o haz una foto" : "Elige o haz una foto nueva")</label>
-                <input class="form-control form-control-lg" type="file" accept="image/*" name="Form.Foto" id="foto-residente-fichero" required
-                       data-foto-residente data-foto-encuadre="foto-residente-encuadre" />
-            </div>
-            <div id="foto-residente-encuadre" class="mb-3" hidden>
-                <p class="form-text mt-0" id="foto-residente-encuadre-ayuda">Arrastra la foto para centrar la cara. Lo que se ve en el recuadro es lo que se guarda.</p>
-                <canvas width="480" height="480" class="foto-encuadre rounded-3 d-block" tabindex="0" role="img"
-                        aria-label="Encuadre de la foto: arrástrala o usa las flechas para centrar la cara" aria-describedby="foto-residente-encuadre-ayuda"
-                        data-foto-lienzo></canvas>
-                <div class="d-flex flex-wrap gap-2 mt-2" role="group" aria-label="Mover la foto">
-                    <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="-1,0" aria-label="Mover la foto a la izquierda">←</button>
-                    <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="0,-1" aria-label="Mover la foto arriba">↑</button>
-                    <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="0,1" aria-label="Mover la foto abajo">↓</button>
-                    <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="1,0" aria-label="Mover la foto a la derecha">→</button>
-                </div>
-                <label class="form-label d-block mt-2" for="foto-residente-acercar">Acercar</label>
-                <input class="form-range foto-encuadre-acercar" type="range" min="1" max="3" step="0.05" value="1" id="foto-residente-acercar" data-foto-acercar />
-            </div>
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" name="Form.Consentimiento" value="true" id="foto-residente-consentimiento" required />
-                <label class="form-check-label" for="foto-residente-consentimiento">
-                    Consta el consentimiento del residente o de su representante para usar esta foto solo para identificarlo.
-                </label>
-            </div>
-            <button type="submit" class="btn btn-outline-primary btn-lg">Guardar foto</button>
-        </form>
-        @if (Model.UpdatedAt is not null)
+        @if (status.Consent is { } consent)
         {
-            <form asp-controller="FotoResidente" asp-action="Quitar" asp-route-residenteId="@Model.ResidentId" method="post" class="mt-2">
-                <button type="submit" class="btn btn-outline-danger btn-lg">Quitar foto</button>
+            <p class="mb-2">Consentimiento firmado por @EnumDisplay.Label(consent.Signer).ToLowerInvariant() el @consent.SignedOn.ToString("dd/MM/yyyy").</p>
+        }
+        @if (Model.RenewalDue)
+        {
+            <div class="alert alert-warning" role="status">La foto tiene más de @ResidentPhotoRenewal.Months meses: conviene renovarla para que siga sirviendo para identificarlo.</div>
+        }
+        @if (status.Refused)
+        {
+            <p class="mb-2"><span class="badge text-bg-secondary">No quiere foto</span> El residente o su representante no quieren foto: no se la pidas.</p>
+            @if (Model.State.CanEdit)
+            {
+                <form asp-controller="FotoResidente" asp-action="QuitarNegativa" asp-route-residenteId="@Model.ResidentId" method="post">
+                    <button type="submit" class="btn btn-outline-secondary btn-lg">Quitar la marca</button>
+                </form>
+                <p class="form-text">Quítala solo si ha cambiado de opinión y ha firmado un consentimiento nuevo.</p>
+            }
+        }
+        else if (!Model.State.CanEdit)
+        {
+            <p class="text-muted mb-0">Para poner o cambiar la foto hace falta el permiso «Poner, cambiar y quitar la foto del residente»: pídeselo a Administración.</p>
+        }
+        else
+        {
+            <form asp-controller="FotoResidente" asp-action="Guardar" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="Form.ResidenteId" value="@Model.ResidentId" />
+                <div class="mb-3">
+                    <label class="form-label" for="foto-residente-fichero">@(Model.HasPhoto ? "Elige o haz una foto nueva" : "Elige o haz una foto")</label>
+                    <input class="form-control form-control-lg" type="file" accept="image/*" name="Form.Foto" id="foto-residente-fichero" required
+                           data-foto-residente data-foto-encuadre="foto-residente-encuadre" />
+                </div>
+                <div id="foto-residente-encuadre" class="mb-3" hidden>
+                    <p class="form-text mt-0" id="foto-residente-encuadre-ayuda">Arrastra la foto para centrar la cara. Lo que se ve en el recuadro es lo que se guarda.</p>
+                    <canvas width="480" height="480" class="foto-encuadre rounded-3 d-block" tabindex="0" role="img"
+                            aria-label="Encuadre de la foto: arrástrala o usa las flechas para centrar la cara" aria-describedby="foto-residente-encuadre-ayuda"
+                            data-foto-lienzo></canvas>
+                    <div class="d-flex flex-wrap gap-2 mt-2" role="group" aria-label="Mover la foto">
+                        <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="-1,0" aria-label="Mover la foto a la izquierda">←</button>
+                        <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="0,-1" aria-label="Mover la foto arriba">↑</button>
+                        <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="0,1" aria-label="Mover la foto abajo">↓</button>
+                        <button type="button" class="btn btn-outline-secondary btn-lg" data-foto-mover="1,0" aria-label="Mover la foto a la derecha">→</button>
+                    </div>
+                    <label class="form-label d-block mt-2" for="foto-residente-acercar">Acercar</label>
+                    <input class="form-range foto-encuadre-acercar" type="range" min="1" max="3" step="0.05" value="1" id="foto-residente-acercar" data-foto-acercar />
+                </div>
+                <fieldset class="mb-3">
+                    <legend class="form-label fs-6">¿Quién firmó el consentimiento para usar esta foto solo para identificarlo?</legend>
+                    @foreach (var signer in Enum.GetValues<ResidentPhotoConsentSigner>())
+                    {
+                        var id = "foto-residente-firmante-" + signer.ToString().ToLowerInvariant();
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="Form.Firmante" value="@signer" id="@id" required />
+                            <label class="form-check-label" for="@id">@EnumDisplay.Label(signer)</label>
+                        </div>
+                    }
+                </fieldset>
+                <div class="mb-3">
+                    <label class="form-label" for="foto-residente-fecha">Fecha de la firma</label>
+                    <input class="form-control form-control-lg" type="date" name="Form.FechaConsentimiento" id="foto-residente-fecha" required
+                           value="@Model.Today.ToString("yyyy-MM-dd")" max="@Model.Today.ToString("yyyy-MM-dd")" aria-describedby="foto-residente-fecha-ayuda" />
+                    <div class="form-text" id="foto-residente-fecha-ayuda">El documento firmado lo guarda el centro, fuera de la app.</div>
+                </div>
+                <button type="submit" class="btn btn-outline-primary btn-lg">Guardar foto</button>
+            </form>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+                @if (Model.HasPhoto)
+                {
+                    <form asp-controller="FotoResidente" asp-action="Quitar" asp-route-residenteId="@Model.ResidentId" method="post">
+                        <button type="submit" class="btn btn-outline-danger btn-lg">Quitar foto</button>
+                    </form>
+                }
+            </div>
+            <form asp-controller="FotoResidente" asp-action="AnotarNegativa" asp-route-residenteId="@Model.ResidentId" method="post" class="mt-3">
+                @if (Model.HasPhoto)
+                {
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="foto-residente-negativa-confirmar" required />
+                        <label class="form-check-label" for="foto-residente-negativa-confirmar">
+                            Entiendo que se borra la foto actual y que no se podrá poner otra hasta quitar la marca.
+                        </label>
+                    </div>
+                }
+                <button type="submit" class="btn btn-outline-secondary btn-lg">No quiere foto</button>
             </form>
         }
     </div>

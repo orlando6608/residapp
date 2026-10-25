@@ -13,8 +13,7 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
   ficha, la foto en la cabecera, «Ubicación actual» y el recuadro «Foto de identificación» (`_FotoResidenteEditar`) para ponerla, cambiarla o quitarla con el
   consentimiento marcado. `FotoResidenteController` (`Ver`, `Guardar`, `Quitar`), `ResidentPhotoApplicationService` y `SqlResidentPhotoRepository`; tabla
   `fotos_residente` (una foto por residente, se sobrescribe y se borra, con seguridad por filas), auditoría `RESIDENT_PHOTO_SET` y `RESIDENT_PHOTO_REMOVE`.
-  **Suposiciones sin confirmar con CJ** en `foto-residente-confirmaciones-cj.html` (consentimiento, quién la pone y quién la ve, conservación tras la baja,
-  auditoría de las vistas y cama obligatoria en el alta, que no se ha cambiado). **Encuadre (2026-10-21, sin script):** al elegir la foto se mueve (arrastre,
+  Las suposiciones las contestó CJ el 2026-10-25 y están hechas (ver «Respuestas de CJ del 2026-10-25», abajo; `docs/pendientes-cj/archivados/foto-residente-confirmaciones-cj.html`). **Encuadre (2026-10-21, sin script):** al elegir la foto se mueve (arrastre,
   botones de flecha o teclado) y se acerca (1× a 3×) en un recuadro, y se envía solo ese recorte cuadrado de 480 px (`site.js`); el servidor no cambia.
 - **Portal Familiar, segunda entrega: corregir o retirar lo ya publicado (2026-10-12, script `0053`)** — Administración y Dirección Clínica, en `Comunicados a la familia`, publican una **corrección vinculada** (`PublishCorrectiveAsync`, auditoría `FAMILY_COMMUNICATION_CORRECTIVE`) o **retiran** un comunicado ya publicado (`WithdrawAsync`, auditoría `FAMILY_COMMUNICATION_WITHDRAW`, motivo obligatorio de hasta 500 caracteres y solo interno), con las acciones `PublicarCorreccion` y `RetirarComunicado` en `AdministracionController` y `DireccionController` y las vistas compartidas `Views/Shared/PublicarCorreccion.cshtml` y `RetirarComunicado.cshtml`. Tablas `comunicaciones_familiares_correctoras` y `comunicaciones_familiares_retiradas` (inmutables, con seguridad por filas; no se corrige un retirado ni se retira dos veces). Solo caben sobre un comunicado ya publicado (`FAMILY_COMMUNICATION_NOT_PUBLISHED`) y no retirado (`FAMILY_COMMUNICATION_WITHDRAWN`); antes de publicarse lo sigue corrigiendo Enfermería o Medicina (0049). **Suposiciones sin confirmar con CJ** (tema 4 de `portal-familiar-confirmaciones-cj.html`): quién lo hace, que la correctora tenga su propia ventana (30 días o 6 meses desde que se publica, aunque el original ya no se vea), que retirar oculte también las correctoras, que el motivo no lo vea la familia y que una retirada no se pueda deshacer. No se avisa a Enfermería ni a Medicina de que se ha corregido o retirado algo que prepararon (su lista de comunicaciones sigue mostrando el texto original).
 - **Lista de residentes: filtro «Requiere atención» (2026-10-12, mejora del inicio de Administración; sin script)** — `Administracion/Residentes?atencion=` (`SinHabitacion`, `AutorizacionPendiente`, `AutorizacionCaducada`, `AutorizacionPorCaducar`) filtra la lista, en un desplegable nuevo que se combina con el nombre y la unidad, y las cuatro líneas del inicio enlazan a él. `IAdministracionResidentDirectory.ListAttentionAsync` / `ResidentAttention` (por residente: sin habitación, algún vínculo pendiente, caducado o que caduca en 30 días) usa los mismos `scoped` y `latest` que el inicio (`SqlAdministrationOverview.ScopedAuthorizationsCtes`, ahora compartidos), así que ambos cuentan igual; solo se lee si se filtra. La lista cuenta residentes y el inicio autorizaciones: con dos familiares pendientes de un mismo residente, el inicio suma dos y la lista muestra una vez a ese residente. Tests: `ListaDeResidentes_FiltraPorMotivoDeAtencion_…` (SQL real: cada motivo, la frontera de «hoy», ámbito y consistencia con el inicio; mutaciones: último cambio y «caducada» con <= hacen fallar), `RequiereAtencion_FiltraPorElMotivo_…` (el filtro del modelo) y las aserciones nuevas del funcional del inicio.
@@ -419,15 +418,23 @@ Orden decidido con Orlando: dictado por voz (va en `continuar-construccion.md`),
   - **Resumen periódico** (tercera 1.1 a 1.5): recopilación automática de los comunicados ya publicados en el periodo, sin texto nuevo; una frecuencia para todo el centro;
     si no hay nada, no se publica nada; se suma a los comunicados sueltos. La 1.3 («lo prepara y lo aprueba Enfermería, al guardarlo») no aplica a una recopilación
     automática, que no tiene redacción ni aprobación: **interpretación mía**, a confirmar si el resumen llegara a llevar texto nuevo.
-- **Foto del residente** (`foto-residente-confirmaciones-cj`):
-  - El consentimiento guarda **quién lo firmó (el residente o su representante) y la fecha**; no el documento escaneado (1.1).
-  - Indicador **«No quiere foto»** en la ficha, para que nadie la vuelva a pedir (1.2).
-  - La ponen, cambian y quitan **Administración, y Enfermería solo con un permiso que da Administración** (1.3; hoy Enfermería puede sin permiso).
-  - **Se borra al dar de baja** al residente (2.2); al suspenderlo (ingreso hospitalario) se conserva. Si se reactiva, se pide un consentimiento nuevo.
-  - **Aviso a Administración cuando la foto tenga más de 12 meses** (2.3).
-- **Alta y ubicación** (foto 3.1 y tercera 4.1): la cama es **obligatoria si la unidad tiene camas libres**, con una opción explícita «Pendiente de asignar»; sin camas
-  configuradas sigue siendo opcional. El inicio llama «ubicación pendiente» a los residentes **sin habitación o sin plaza**.
-- **Inicio de Administración** (tercera 4.4): los **residentes sin contacto urgente designado y sin motivo indicado**; en segundo lugar, las cuentas profesionales suspendidas o sin ámbito.
+- **Foto del residente** (`archivados/foto-residente-confirmaciones-cj`) — **hecho el 2026-10-25, script `0071`:**
+  - El consentimiento guarda **quién lo firmó (el residente o su representante) y la fecha** (1.1; `ResidentPhotoConsent`, columnas
+    `consentimiento_firmante_codigo` y `consentimiento_fecha`). Las fotos que había no lo tenían y `0071` **las borró** (decisión de Orlando).
+  - **«No quiere foto»** (1.2; tabla `fotos_residente_negativas`): borra la foto y no deja poner otra hasta quitar la marca (`RESIDENT_PHOTO_REFUSED`;
+    auditoría `RESIDENT_PHOTO_REFUSAL_SET` y `_CLEAR`). La marca se conserva al dar de baja.
+  - **Enfermería solo con el permiso `RESIDENT_PHOTO_MANAGE`** que da Administración en su perfil (1.3), comprobado también dentro de la transacción. Las
+    Enfermerías que ya existían lo perdieron (decisión de Orlando); la semilla se lo da, una sola vez, a las de los centros de prueba.
+  - **Se borra al dar de baja** (2.2), en la transacción de la baja y con su `RESIDENT_PHOTO_REMOVE`; la suspensión la conserva.
+  - **Aviso a los 12 meses** (2.3; `ResidentPhotoRenewal`): en la ficha de Administración, en el inicio y en el filtro `FotoAntigua`.
+- **Alta y ubicación** (foto 3.1 y tercera 4.1) — **hecho el 2026-10-25, sin script:** en el alta la cama es obligatoria si la unidad tiene alguna libre, salvo
+  «Pendiente de asignar» (`PLACE_REQUIRED` en `SqlResidentRepository`, `CreateResidentCommand.UbicacionPendiente`); la habitación sola no basta. Solo en el
+  alta (decisión de Orlando): trasladar y reactivar no cambian y la importación la pasa como pendiente. «Ubicación pendiente» en el inicio y en el filtro
+  `UbicacionPendiente` (antes `SinHabitacion`) = sin habitación, o sin cama en una unidad con camas configuradas (en las que no tienen, la cama es opcional).
+- **Inicio de Administración** (tercera 4.4) — **hecho el 2026-10-25, sin script:** lo primero, los **residentes sin contacto urgente ni motivo**
+  (`SqlAdministrationOverview.WithoutEmergencyContact`, la misma regla que `EmergencyContactSet.Current`; filtro `SinContactoUrgente`); lo último, las
+  **cuentas profesionales suspendidas, sin perfil vigente o con un perfil sin unidades** (`ProfessionalAccountAttention`; enlace a `Usuarios?revisar=true`).
+  Los residentes de Los Almendros sin contacto (todos menos Rosa) salen ahí: es lo esperado.
 - **Importación y exportación** (`importacion-exportacion-confirmaciones-cj`):
   - El residente importado queda con **la fecha de ingreso que traiga el fichero**, si la trae (1.1): hace falta un campo nuevo en la importación y una columna en
     `residentes` (hoy solo existe `creado_en`).

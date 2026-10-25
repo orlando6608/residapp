@@ -60,7 +60,7 @@ public class AdministracionInicioTests
 
         var overview = await OverviewAsync(admin);
 
-        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0), overview);
+        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), overview);
         Assert.True(overview.NothingPending);
     }
 
@@ -107,15 +107,16 @@ public class AdministracionInicioTests
         var empty = await OverviewAsync(otherCenter);
 
         // Sin cambios y solo abierta están pendientes; el que ya pasó de Pendiente a Activa o Suspendida no (manda el último cambio).
-        Assert.Equal(1, overview.ResidentsWithoutRoom);
+        Assert.Equal(1, overview.ResidentsLocationPending);
         Assert.Equal(2, overview.AuthorizationsPending);
         // Caduca en 30 días y hoy cuentan como «pronto»; la de 31 días, no; la vencida ayer es caducada y no «pronto».
         Assert.Equal(2, overview.AuthorizationsExpiringSoon);
         Assert.Equal(1, overview.AuthorizationsExpired);
         Assert.False(overview.NothingPending);
         // Otra unidad del mismo centro y otro centro no se mezclan con lo anterior.
-        Assert.Equal(new AdministrationOverview(1, 1, 0, 0, 0, 0, 0, 0, 0), elsewhere);
-        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0), empty);
+        // El residente de la otra unidad no tiene contacto urgente ni motivo, ni habitación, y su familiar está pendiente.
+        Assert.Equal(new AdministrationOverview(1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0), elsewhere);
+        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), empty);
     }
 
     [Fact]
@@ -135,6 +136,103 @@ public class AdministracionInicioTests
 
     private static async Task<IReadOnlyList<ResidentAttention>> AttentionAsync(SeededProfile admin) =>
         await new SqlAdministracionResidentDirectory(TestDatabase.ConnectionFactory).ListAttentionAsync(admin.ProfileScopeId, admin.CenterId, Today);
+
+    private static async Task GrantUnitAsync(SeededProfile profile, UnitId unitId)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @ProfileScopeId, @CenterId, @UnitId, SYSUTCDATETIME(), @AccountId)
+            """, new { profile.ProfileScopeId, CenterId = profile.CenterId.Value, UnitId = unitId.Value, AccountId = profile.AccountId.Value });
+    }
+
+    [Fact]
+    public async Task UbicacionPendiente_SinContactoUrgente_YFotoAntigua_ConLaMismaReglaEnElInicioYEnLaLista()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var noBedsUnit = await AddUnitAsync(admin.CenterId);
+        await GrantUnitAsync(admin, noBedsUnit);
+        var estructura = BuildEstructura(admin.ExternalSubject);
+        var room = (await estructura.CreateRoomAsync(new CreateRoomCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), admin.UnitId, "Habitación con camas"))).Value;
+        var bed = (await estructura.CreatePlaceAsync(new CreatePlaceCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), room, "Cama A"))).Value;
+        await estructura.CreatePlaceAsync(new CreatePlaceCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), room, "Cama B"));
+        var roomWithoutBeds = (await estructura.CreateRoomAsync(new CreateRoomCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), noBedsUnit, "Habitación sin camas"))).Value;
+        async Task<ResidentId> CreateAsync(string name, UnitId unit, Guid? roomId, Guid? placeId) =>
+            (await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(new CreateResidentInput(
+                admin.AccountId, SystemProfile.Administracion, admin.CenterId, unit, name, new DateOnly(1940, 5, 20), DocumentedSexCode.NoConsta,
+                null, null, null, roomId, placeId, Guid.NewGuid(), LocationPending: true))).ResidentId;
+        // CJ (tercera 4.1): sin cama en una unidad con camas, pendiente; en una unidad sin camas, la habitación basta.
+        var inBed = await CreateAsync("En su cama", admin.UnitId, null, bed);
+        var roomOnly = await CreateAsync("Sin cama en unidad con camas", admin.UnitId, room, null);
+        var noBedsUnitResident = await CreateAsync("En unidad sin camas", noBedsUnit, roomWithoutBeds, null);
+        var nowhere = await CreateAsync("Sin habitación", noBedsUnit, null, null);
+
+        // Contacto urgente (tercera 4.4): se recorre el historial como EmergencyContactSet.Current.
+        var histories = new Dictionary<ResidentId, (string Action, int Link)[]>
+        {
+            [inBed] = [("AGREGAR", 1)],
+            [roomOnly] = [("AGREGAR", 1), ("QUITAR", 1)],
+            [noBedsUnitResident] = [("SIN_CONTACTO", 0)],
+            [nowhere] = [("AGREGAR", 1), ("AGREGAR", 2), ("QUITAR", 1)],
+        };
+        var withReplaceToNobody = await CreateAsync("Contacto vaciado", noBedsUnit, roomWithoutBeds, null);
+        histories[withReplaceToNobody] = [("AGREGAR", 1), ("REEMPLAZAR", 0)];
+        var withoutHistory = await CreateAsync("Sin historial", noBedsUnit, roomWithoutBeds, null);
+        histories[withoutHistory] = [];
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            foreach (var (residentId, history) in histories)
+            {
+                var links = new[] { await AddFamilyAsync(admin, residentId, "Primer familiar"), await AddFamilyAsync(admin, residentId, "Segundo familiar") };
+                for (var i = 0; i < history.Length; i++)
+                {
+                    await connection.ExecuteAsync("""
+                        INSERT INTO dbo.residentes_contacto_urgente
+                            (id, centro_id, residente_id, numero, vinculo_id, accion_codigo, motivo, designado_por_cuenta_id, designado_por_perfil, designado_en)
+                        VALUES (NEWID(), @CenterId, @ResidentId, @Number, @LinkId, @Action, @Reason, @AccountId, 'ADMINISTRACION', SYSUTCDATETIME())
+                        """, new
+                    {
+                        CenterId = admin.CenterId.Value, ResidentId = residentId.Value, Number = i + 1,
+                        LinkId = history[i].Link == 0 ? (Guid?)null : links[history[i].Link - 1], history[i].Action,
+                        Reason = history[i].Action == "SIN_CONTACTO" ? "No tiene familia (prueba)." : null, AccountId = admin.AccountId.Value,
+                    });
+                }
+            }
+
+            // Foto (CJ, foto 2.3): una de hace 13 meses conviene renovarla; una reciente, no.
+            foreach (var (residentId, monthsAgo) in new[] { (inBed, 13), (roomOnly, 1) })
+            {
+                await connection.ExecuteAsync("""
+                    INSERT INTO dbo.fotos_residente
+                        (residente_id, centro_id, contenido, actualizada_por_cuenta_id, actualizada_por_perfil, actualizada_en,
+                         consentimiento_firmante_codigo, consentimiento_fecha)
+                    VALUES (@ResidentId, @CenterId, 0xFFD8FFD9, @AccountId, 'ADMINISTRACION', DATEADD(MONTH, -@MonthsAgo, SYSUTCDATETIME()),
+                            'RESIDENTE', CAST(DATEADD(MONTH, -@MonthsAgo, SYSUTCDATETIME()) AS DATE))
+                    """, new { ResidentId = residentId.Value, CenterId = admin.CenterId.Value, AccountId = admin.AccountId.Value, MonthsAgo = monthsAgo });
+            }
+        }
+
+        var attention = (await AttentionAsync(admin)).ToDictionary(a => a.ResidentId);
+        var overview = await OverviewAsync(admin);
+
+        Assert.Equal((false, true, false, true), (attention[inBed].LocationPending, attention[roomOnly].LocationPending,
+            attention[noBedsUnitResident].LocationPending, attention[nowhere].LocationPending));
+        Assert.Equal(2, overview.ResidentsLocationPending);
+        foreach (var (residentId, history) in histories)
+        {
+            var current = EmergencyContactSet.Current(history.Select(h => (h.Action, h.Link == 0 ? (Guid?)null : new Guid(h.Link, 0, 0, new byte[8]))));
+            var expected = current.Count == 0 && history.LastOrDefault().Action != EmergencyContactSet.NoContact;
+            Assert.True(expected == attention[residentId].WithoutEmergencyContact, $"Contacto urgente de {residentId.Value}: se esperaba {expected}.");
+        }
+        Assert.Equal(3, overview.ResidentsWithoutEmergencyContact);
+        Assert.Equal(
+            [roomOnly, withReplaceToNobody, withoutHistory],
+            attention.Values.Where(a => a.Matches(ResidentAttentionKind.SinContactoUrgente)).Select(a => a.ResidentId).OrderBy(id => histories.Keys.ToList().IndexOf(id)));
+        Assert.True(attention[inBed].PhotoToRenew);
+        Assert.False(attention[roomOnly].PhotoToRenew);
+        Assert.Equal(1, overview.PhotosToRenew);
+        Assert.Equal([inBed], attention.Values.Where(a => a.Matches(ResidentAttentionKind.FotoAntigua)).Select(a => a.ResidentId));
+    }
 
     [Fact]
     public async Task ListaDeResidentes_FiltraPorMotivoDeAtencion_ConLaMismaReglaQueElInicio_SoloEnElAmbito()
@@ -175,24 +273,24 @@ public class AdministracionInicioTests
 
         Assert.Equal(6, attention.Count);
         // El día de «válida hasta» la autorización aún vale: está a punto de caducar, no caducada.
-        Assert.Equal((false, false, false, true), (mine[endsToday].WithoutRoom, mine[endsToday].AuthorizationPending, mine[endsToday].AuthorizationExpired, mine[endsToday].AuthorizationExpiringSoon));
+        Assert.Equal((false, false, false, true), (mine[endsToday].LocationPending, mine[endsToday].AuthorizationPending, mine[endsToday].AuthorizationExpired, mine[endsToday].AuthorizationExpiringSoon));
         Assert.False(mine.ContainsKey(outsider));
-        Assert.Equal((true, true, false, false), (mine[noRoomPending].WithoutRoom, mine[noRoomPending].AuthorizationPending, mine[noRoomPending].AuthorizationExpired, mine[noRoomPending].AuthorizationExpiringSoon));
-        Assert.Equal((false, false, false, true), (mine[soon].WithoutRoom, mine[soon].AuthorizationPending, mine[soon].AuthorizationExpired, mine[soon].AuthorizationExpiringSoon));
-        Assert.Equal((false, false, true, false), (mine[expired].WithoutRoom, mine[expired].AuthorizationPending, mine[expired].AuthorizationExpired, mine[expired].AuthorizationExpiringSoon));
-        Assert.Equal((false, false, false, false), (mine[fine].WithoutRoom, mine[fine].AuthorizationPending, mine[fine].AuthorizationExpired, mine[fine].AuthorizationExpiringSoon));
-        Assert.Equal((false, false, false, false), (mine[noFamily].WithoutRoom, mine[noFamily].AuthorizationPending, mine[noFamily].AuthorizationExpired, mine[noFamily].AuthorizationExpiringSoon));
-        Assert.Equal([noRoomPending], attention.Where(a => a.Matches(ResidentAttentionKind.SinHabitacion)).Select(a => a.ResidentId));
+        Assert.Equal((true, true, false, false), (mine[noRoomPending].LocationPending, mine[noRoomPending].AuthorizationPending, mine[noRoomPending].AuthorizationExpired, mine[noRoomPending].AuthorizationExpiringSoon));
+        Assert.Equal((false, false, false, true), (mine[soon].LocationPending, mine[soon].AuthorizationPending, mine[soon].AuthorizationExpired, mine[soon].AuthorizationExpiringSoon));
+        Assert.Equal((false, false, true, false), (mine[expired].LocationPending, mine[expired].AuthorizationPending, mine[expired].AuthorizationExpired, mine[expired].AuthorizationExpiringSoon));
+        Assert.Equal((false, false, false, false), (mine[fine].LocationPending, mine[fine].AuthorizationPending, mine[fine].AuthorizationExpired, mine[fine].AuthorizationExpiringSoon));
+        Assert.Equal((false, false, false, false), (mine[noFamily].LocationPending, mine[noFamily].AuthorizationPending, mine[noFamily].AuthorizationExpired, mine[noFamily].AuthorizationExpiringSoon));
+        Assert.Equal([noRoomPending], attention.Where(a => a.Matches(ResidentAttentionKind.UbicacionPendiente)).Select(a => a.ResidentId));
         Assert.Equal([noRoomPending], attention.Where(a => a.Matches(ResidentAttentionKind.AutorizacionPendiente)).Select(a => a.ResidentId));
         Assert.Equal([expired], attention.Where(a => a.Matches(ResidentAttentionKind.AutorizacionCaducada)).Select(a => a.ResidentId));
         Assert.Equal(new[] { soon, endsToday }.OrderBy(id => id.Value), attention.Where(a => a.Matches(ResidentAttentionKind.AutorizacionPorCaducar)).Select(a => a.ResidentId).OrderBy(id => id.Value));
         // La lista y el inicio cuentan lo mismo: cada residente señalado suma al menos una unidad del contador correspondiente.
         var overview = await OverviewAsync(admin);
-        Assert.Equal(1, overview.ResidentsWithoutRoom);
+        Assert.Equal(1, overview.ResidentsLocationPending);
         Assert.Equal(1, overview.AuthorizationsPending);
         Assert.Equal(1, overview.AuthorizationsExpired);
         Assert.Equal(2, overview.AuthorizationsExpiringSoon);
-        Assert.Equal((true, true), (Assert.Single(elsewhere).WithoutRoom, elsewhere[0].AuthorizationPending));
+        Assert.Equal((true, true), (Assert.Single(elsewhere).LocationPending, elsewhere[0].AuthorizationPending));
         var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
         var denied = await Build(nurse.ExternalSubject).ListResidentAttentionAsync(new AdministracionQuery(nurse.ProfileScopeId, nurse.CenterId), Today);
         Assert.Equal(ApplicationFailureCode.AccessDenied, denied.Error!.Code);
@@ -311,7 +409,7 @@ public class AdministracionInicioTests
         Assert.Equal(0, inToday.AppointmentsPastUnclosed);
         Assert.Equal(1, citaStarted.AppointmentsPastUnclosed);
         Assert.False(citaStarted.NothingPending);
-        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0), otherCenter);
+        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), otherCenter);
     }
 
     [Fact]
@@ -330,7 +428,7 @@ public class AdministracionInicioTests
         await Assert.ThrowsAsync<AccessDeniedException>(() => new SqlAdministrationOverview(TestDatabase.ConnectionFactory).ReadAsync(AccessOf(setup.Nurse), NowPeriod()));
 
         Assert.True(admin.Ok, admin.Error?.Message);
-        Assert.Equal((1, 0), (admin.Value!.ResidentsWithoutRoom, admin.Value.AuthorizationsPending));
+        Assert.Equal((1, 0), (admin.Value!.ResidentsLocationPending, admin.Value.AuthorizationsPending));
         Assert.Equal(ApplicationFailureCode.AccessDenied, nurse.Error!.Code);
         Assert.Equal(ApplicationFailureCode.AccessDenied, wrongScope.Error!.Code);
     }

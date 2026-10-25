@@ -130,6 +130,7 @@ public static class SupervisionDisplay
         "CLINICAL_DETAIL_READ" => "Lectura clínica detallada y auditada",
         "REFERENCE_RANGES_MANAGE" => "Gestionar los rangos de referencia de constantes",
         "PROCESS_DEADLINES_MANAGE" => "Gestionar los plazos de los hitos del proceso",
+        "RESIDENT_PHOTO_MANAGE" => "Poner, cambiar y quitar la foto del residente",
         _ => code,
     };
 }

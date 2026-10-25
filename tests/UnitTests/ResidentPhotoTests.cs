@@ -75,6 +75,27 @@ public class ResidentPhotoTests
         Assert.Throws<DomainValidationException>(() => ResidentPhoto.Normalize(photo));
     }
 
+    [Fact]
+    public void Consentimiento_ExigeQuienFirmo_YUnaFechaQueNoSeaFutura()
+    {
+        var today = new DateOnly(2026, 10, 25);
+
+        Assert.Equal(new ResidentPhotoConsent(ResidentPhotoConsentSigner.Residente, today),
+            ResidentPhotoConsent.Validate(ResidentPhotoConsentSigner.Residente, today, today));
+        Assert.Throws<DomainValidationException>(() => ResidentPhotoConsent.Validate(null, today, today));
+        Assert.Throws<DomainValidationException>(() => ResidentPhotoConsent.Validate(ResidentPhotoConsentSigner.Representante, null, today));
+        Assert.Throws<DomainValidationException>(() => ResidentPhotoConsent.Validate(ResidentPhotoConsentSigner.Representante, today.AddDays(1), today));
+    }
+
+    [Fact]
+    public void Renovacion_ConvieneCuandoLaFotoCumple12Meses()
+    {
+        var now = new DateTimeOffset(2026, 10, 25, 10, 0, 0, TimeSpan.Zero);
+
+        Assert.False(ResidentPhotoRenewal.IsDue(now.AddMonths(-12).AddTicks(1), now));
+        Assert.True(ResidentPhotoRenewal.IsDue(now.AddMonths(-12), now));
+    }
+
     private static byte[] Segment(byte marker, byte[] payload) =>
         [0xFF, marker, (byte)((payload.Length + 2) >> 8), (byte)(payload.Length + 2), .. payload];
 }

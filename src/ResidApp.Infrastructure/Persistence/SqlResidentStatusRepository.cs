@@ -72,6 +72,14 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
                 AccountId = target.AccountId.Value, OccurredAt = occurredAt, Action = "RESIDENT_DISCHARGE",
             }, transaction, cancellationToken: ct));
 
+            // CJ (foto 2.2): la foto se recogió para identificar a un residente que está en el centro; al darlo de baja se borra (con su evento). La
+            // suspensión la conserva, y la marca «No quiere foto» se queda.
+            await connection.ExecuteScalarAsync<int>(new CommandDefinition(SqlResidentPhotoRepository.DeletePhoto, new
+            {
+                p.ResidentId, p.CenterId, UnitId = current.UnitId, AccountId = target.AccountId.Value, Profile = "ADMINISTRACION",
+                Action = "RESIDENT_PHOTO_REMOVE", OccurredAt = occurredAt,
+            }, transaction, cancellationToken: ct));
+
             // CJ (2026-10-07): la baja por fallecimiento cierra sola los episodios abiertos, con una anotación de sistema (script 0042).
             // TR_ea_transition_guard lo admite solo con esta baja creada en la misma transacción.
             var closed = input.Reason != ResidentDischargeReason.Fallecimiento ? 0 : await connection.ExecuteAsync(new CommandDefinition("""

@@ -72,6 +72,8 @@ public static class AdministrativeAudit
         ("RESIDENT_IDENTITY_CORRECT", AuditCategory.ResidentesYFamilias),
         ("RESIDENT_PHOTO_SET", AuditCategory.ResidentesYFamilias),
         ("RESIDENT_PHOTO_REMOVE", AuditCategory.ResidentesYFamilias),
+        ("RESIDENT_PHOTO_REFUSAL_SET", AuditCategory.ResidentesYFamilias),
+        ("RESIDENT_PHOTO_REFUSAL_CLEAR", AuditCategory.ResidentesYFamilias),
         ("RESIDENT_TRANSFER", AuditCategory.ResidentesYFamilias),
         ("RESIDENT_DISCHARGE", AuditCategory.ResidentesYFamilias),
         ("RESIDENT_REACTIVATE", AuditCategory.ResidentesYFamilias),

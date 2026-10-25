@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using ResidApp.Application.Ports;
+using ResidApp.Application.UseCases;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Shared;
@@ -101,7 +102,7 @@ public sealed record PendingChangeListViewModel(
 /// son los contactos urgentes designados por Administración (0022, 0044), null si no se pudieron cargar o no hay.</summary>
 public sealed record EnfermeriaResidentDetailViewModel(
     ScopeResidentSummary Resident, CurrentBaselineSummary? Baseline, bool CanManageBaseline = false,
-    IReadOnlyList<OpenEventSummary>? OpenEvents = null, ResidentEmergencyContacts? EmergencyContacts = null);
+    IReadOnlyList<OpenEventSummary>? OpenEvents = null, ResidentEmergencyContacts? EmergencyContacts = null, ResidentPhotoEditorState? Photo = null);
 
 /// <summary>ENF-01: contadores de las bandejas ya construidas (ordinarios, prioritarios y seguimientos,
 /// con cuántos de estos están vencidos), de las comunicaciones familiares pendientes de aprobación y de las

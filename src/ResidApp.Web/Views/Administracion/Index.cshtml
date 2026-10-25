@@ -28,13 +28,18 @@
 {
     <section class="mb-4" aria-labelledby="atencion">
         <h2 class="h5" id="atencion">Requiere atención</h2>
-        @if (attention.NothingPending)
+        @* Por orden de importancia (CJ, tercera 4.4): primero a quién llamar en una urgencia; al final, las cuentas que conviene revisar. *@
+        @if (Model.NothingPending)
         {
             <p class="mb-2">No hay nada pendiente.</p>
         }
         else
         {
             <ul class="list-group mb-2">
+                @if (attention.ResidentsWithoutEmergencyContact > 0)
+                {
+                    <li class="list-group-item"><a asp-action="Residentes" asp-route-atencion="SinContactoUrgente">@Plural(attention.ResidentsWithoutEmergencyContact, "residente sin contacto urgente ni motivo indicado", "residentes sin contacto urgente ni motivo indicado")</a></li>
+                }
                 @if (attention.AppointmentRequestsPending > 0)
                 {
                     <li class="list-group-item"><a asp-action="SolicitudesCitas">@Plural(attention.AppointmentRequestsPending, "solicitud de cita por gestionar", "solicitudes de cita por gestionar")</a></li>
@@ -59,9 +64,17 @@
                 {
                     <li class="list-group-item"><a asp-action="Residentes" asp-route-atencion="AutorizacionPorCaducar">@Plural(attention.AuthorizationsExpiringSoon, "autorización de familiar caduca", "autorizaciones de familiares caducan") en @AdministrationOverviewRules.ExpiringSoonDays días o menos</a></li>
                 }
-                @if (attention.ResidentsWithoutRoom > 0)
+                @if (attention.ResidentsLocationPending > 0)
                 {
-                    <li class="list-group-item"><a asp-action="Residentes" asp-route-atencion="SinHabitacion">@Plural(attention.ResidentsWithoutRoom, "residente sin habitación asignada", "residentes sin habitación asignada")</a></li>
+                    <li class="list-group-item"><a asp-action="Residentes" asp-route-atencion="UbicacionPendiente">@Plural(attention.ResidentsLocationPending, "residente con la ubicación pendiente (sin habitación o sin cama)", "residentes con la ubicación pendiente (sin habitación o sin cama)")</a></li>
+                }
+                @if (attention.PhotosToRenew > 0)
+                {
+                    <li class="list-group-item"><a asp-action="Residentes" asp-route-atencion="FotoAntigua">@Plural(attention.PhotosToRenew, "foto de residente", "fotos de residentes") con más de @ResidApp.Domain.Residents.ResidentPhotoRenewal.Months meses: conviene @(attention.PhotosToRenew == 1 ? "renovarla" : "renovarlas")</a></li>
+                }
+                @if (Model.AccountsToReview is > 0 and var accountsToReview)
+                {
+                    <li class="list-group-item"><a asp-action="Usuarios" asp-route-revisar="true">@Plural(accountsToReview, "cuenta profesional suspendida o sin ámbito", "cuentas profesionales suspendidas o sin ámbito")</a></li>
                 }
             </ul>
         }

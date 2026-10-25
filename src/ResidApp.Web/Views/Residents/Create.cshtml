@@ -14,7 +14,7 @@
 
 <h1 class="h3">Alta de residente</h1>
 <p class="text-muted">
-    Vertical Residente/Basal. La unidad se elige entre las de tu ámbito activo; la habitación y la plaza son opcionales.
+    Vertical Residente/Basal. La unidad se elige entre las de tu ámbito activo; la cama es obligatoria si la unidad tiene alguna libre (o «Pendiente de asignar»).
 </p>
 
 <div class="card">
@@ -60,7 +60,8 @@
                 <div class="mb-3">
                     <label asp-for="Ubicacion" class="form-label"></label>
                     <select asp-for="Ubicacion" class="form-select form-select-lg" aria-describedby="ayuda-ubicacion">
-                        <option value="">Sin habitación ni plaza</option>
+                        <option value="">Elige la cama…</option>
+                        <option value="@CreateResidentFormModel.PendingLocation">Pendiente de asignar</option>
                         @foreach (var unitGroup in locations.GroupBy(l => l.UnitName))
                         {
                             <optgroup label="@unitGroup.Key">
@@ -79,8 +80,8 @@
                         }
                     </select>
                     <div id="ayuda-ubicacion" class="form-text">
-                        Opcional. Debe ser de la unidad que elijas arriba; las plazas ocupadas no se ofrecen. Para cambiar después de habitación o plaza,
-                        usa «Trasladar» en la ficha del residente.
+                        Si la unidad tiene camas libres, elige una o «Pendiente de asignar»; si no tiene, puedes dejarlo así. Debe ser de la unidad que
+                        elijas arriba; las camas ocupadas no se ofrecen. Para cambiar después de habitación o cama, usa «Trasladar» en la ficha del residente.
                     </div>
                     <span asp-validation-for="Ubicacion" class="text-danger"></span>
                 </div>
