@@ -7,7 +7,8 @@ namespace ResidApp.Application.UseCases;
 /// <summary>
 /// El esquema estricto que se le da al modelo para dictar «Registrar cambio» (ADR 0011): se genera desde los enums y el catálogo del dominio, no a
 /// mano, de modo que si cambia el catálogo cambia el esquema. Cada área es una alternativa con solo sus propias opciones; las tres áreas sin lista
-/// rápida no admiten ninguna. Sin temperatura: el rango válido lo fija CJ y mientras no lo haya, el dictado no sugiere ningún valor clínico numérico.
+/// rápida no admiten ninguna. La temperatura es un número o nulo; su rango (34,0 a 42,0 °C, CJ 2026-10-25) no va en el esquema: lo comprueba
+/// SuggestDailyChangeFromVoice.SanitizeTemperature.
 /// </summary>
 public static class DailyChangeDictationSchema
 {
@@ -36,9 +37,10 @@ public static class DailyChangeDictationSchema
     {
         ["type"] = "object",
         ["additionalProperties"] = false,
-        ["required"] = Strings(["areas"]),
+        ["required"] = Strings(["areas", "temperatura"]),
         ["properties"] = new JsonObject
         {
+            ["temperatura"] = new JsonObject { ["type"] = new JsonArray("number", "null") },
             ["areas"] = new JsonObject
             {
                 ["type"] = "array",

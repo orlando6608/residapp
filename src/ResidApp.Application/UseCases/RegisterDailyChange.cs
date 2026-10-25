@@ -28,13 +28,18 @@ public sealed class RegisterDailyChange(
         RegisterDailyChangeCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
-            // AUX-06: exige al menos un área. AUX-07: cada área con contenido, ya sea alguna opción rápida
+            // AUX-06: exige al menos un área o, desde que CJ lo decidió el 2026-10-25 (dictado-por-voz-confirmaciones-cj, 2.5), solo la
+            // temperatura: una fiebre sola es un cambio que merece registrarse. AUX-07: cada área con contenido, ya sea alguna opción rápida
             // del catálogo cerrado de esa área (DailyChangeAreaOptionsCatalog) o texto libre; las tres
             // áreas sin checklist (8, 9, 10) solo admiten texto libre, así que su catálogo está vacío y
             // exigen texto por descarte.
-            if (command.Areas.Count == 0)
+            if (command.Areas.Count == 0 && command.TemperaturaCelsius is null)
             {
                 throw new DomainValidationException("DAILY_CHANGE_AREAS_REQUIRED");
+            }
+            if (command.TemperaturaCelsius is { } temperatura && !DailyChangeTemperature.IsValid(temperatura))
+            {
+                throw new DomainValidationException("DAILY_CHANGE_TEMPERATURE_OUT_OF_RANGE");
             }
             foreach (var area in command.Areas)
             {

@@ -11,13 +11,14 @@ public sealed record SuggestDailyChangeFromVoiceCommand(
 /// <summary>Un área sugerida por el dictado. Es una sugerencia: la persona la revisa y la confirma antes de registrar nada.</summary>
 public sealed record VoiceSuggestedArea(DailyChangeAreaCode Area, IReadOnlyList<DailyChangeAreaOptionCode> Options, string? Text);
 
-/// <summary>Lo entendido (la transcripción, que no se guarda) y lo sugerido para el formulario «Registrar cambio».</summary>
-public sealed record VoiceSuggestion(string Transcript, IReadOnlyList<VoiceSuggestedArea> Areas);
+/// <summary>Lo entendido (la transcripción, que no se guarda) y lo sugerido para el formulario «Registrar cambio»: áreas y, si se dijo, la
+/// temperatura.</summary>
+public sealed record VoiceSuggestion(string Transcript, IReadOnlyList<VoiceSuggestedArea> Areas, decimal? Temperature = null);
 
 /// <summary>Lo que contesta el modelo, tal cual, antes de validarlo. Los nombres coinciden con el esquema de <see cref="DailyChangeDictationSchema"/>.</summary>
 public sealed record VoiceModelArea(string? Area, string? Texto, List<string>? Opciones);
 
-public sealed record VoiceModelOutput(List<VoiceModelArea>? Areas);
+public sealed record VoiceModelOutput(List<VoiceModelArea>? Areas, decimal? Temperatura = null);
 
 /// <summary>
 /// Dictado de «Registrar cambio» (ADR 0009 y 0011): de un audio del Auxiliar saca una sugerencia de áreas y opciones del formulario. Repite la
@@ -79,7 +80,7 @@ public sealed class SuggestDailyChangeFromVoice(
             var output = await generator.GenerateAsync<VoiceModelOutput>(PromptName, transcript, DailyChangeDictationSchema.Build(), ct)
                 ?? throw new InvalidOperationException("VOICE_DICTATION_UNAVAILABLE");
 
-            return new VoiceSuggestion(transcript, Sanitize(output));
+            return new VoiceSuggestion(transcript, Sanitize(output), SanitizeTemperature(output.Temperatura));
         });
 
     /// <summary>
@@ -124,6 +125,11 @@ public sealed class SuggestDailyChangeFromVoice(
             .Where(a => a.Options.Count > 0 || a.Text is not null)
             .ToList();
     }
+
+    /// <summary>La temperatura sugerida, redondeada a una décima, solo si está en el rango de CJ (<see cref="DailyChangeTemperature"/>): fuera de él
+    /// casi siempre es un error de transcripción y el formulario no la dejaría guardar, así que no se sugiere.</summary>
+    public static decimal? SanitizeTemperature(decimal? celsius) =>
+        celsius is { } value && DailyChangeTemperature.IsValid(Math.Round(value, 1)) ? Math.Round(value, 1) : null;
 
     private static string? JoinTexts(string? first, string? second) =>
         first is null ? second : second is null || second == first ? first : $"{first} {second}";

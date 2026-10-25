@@ -85,6 +85,41 @@ public class SqlDailyClosureRepositoryChangeTests
     }
 
     [Fact]
+    public async Task RegisterChangeAsync_ConLasOpcionesDeCJ_PielEnrojecidaYComeMenos_LasGuarda_ConSoloLaTemperaturaTambien()
+    {
+        var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var resident = await _residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            seed.AccountId, SystemProfile.Administracion, seed.CenterId, seed.UnitId,
+            "Residente Cambio Opciones CJ", new DateOnly(1950, 6, 6), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+
+        // Script 0069 (CJ, 2026-10-25): el CHECK de la tabla de opciones admite los dos códigos nuevos.
+        var conOpciones = await _repository.RegisterChangeAsync(new RegisterDailyChangeInput(
+            seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
+            [
+                new DailyChangeAreaInput(DailyChangeAreaCode.LesionesPiel, [DailyChangeAreaOptionCode.PielEnrojecida], null),
+                new DailyChangeAreaInput(DailyChangeAreaCode.AlimentacionHidratacion, [DailyChangeAreaOptionCode.ComeMenosHabitual], null),
+            ],
+            null, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid()));
+        // CJ 2.5: un cambio con solo la temperatura, sin ningún área.
+        var soloTemperatura = await _repository.RegisterChangeAsync(new RegisterDailyChangeInput(
+            seed.AccountId, seed.CenterId, seed.UnitId, resident.ResidentId,
+            [], 38.5m, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid()));
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var opciones = (await connection.QueryAsync<string>(
+            """
+            SELECT opt.opcion_codigo FROM dbo.cierres_cotidianos_cambio_area_opciones opt
+              JOIN dbo.cierres_cotidianos_cambio_areas area ON area.id = opt.area_id
+             WHERE area.cierre_id = @Id ORDER BY opt.opcion_codigo
+            """, new { Id = conOpciones.ClosureId })).ToList();
+        Assert.Equal(["COME_MENOS_HABITUAL", "PIEL_ENROJECIDA"], opciones);
+        Assert.Equal(38.5m, await connection.QuerySingleAsync<decimal>(
+            "SELECT temperatura_celsius FROM dbo.cierres_cotidianos_residente WHERE id = @Id", new { Id = soloTemperatura.ClosureId }));
+        Assert.Equal(0, await connection.QuerySingleAsync<int>(
+            "SELECT COUNT(*) FROM dbo.cierres_cotidianos_cambio_areas WHERE cierre_id = @Id", new { Id = soloTemperatura.ClosureId }));
+    }
+
+    [Fact]
     public async Task RegisterChangeAsync_Prioritario_PersistsReasonAndDirectNotice()
     {
         var seed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);

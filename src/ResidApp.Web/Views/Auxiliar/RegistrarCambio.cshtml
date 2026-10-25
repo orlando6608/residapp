@@ -140,9 +140,11 @@
             <div class="mb-0">
                 <label asp-for="Temperatura" class="form-label"></label>
                 <div class="input-group input-group-lg" style="max-width: 220px;">
-                    <input asp-for="Temperatura" type="number" step="0.1" inputmode="decimal" class="form-control" />
+                    <input asp-for="Temperatura" type="number" step="0.1" min="34" max="42" inputmode="decimal" class="form-control"
+                           aria-describedby="temperatura-ayuda" />
                     <span class="input-group-text">°C</span>
                 </div>
+                <div id="temperatura-ayuda" class="form-text">Entre 34,0 y 42,0 °C. Si solo ha cambiado la temperatura, puedes registrarla sin marcar ningún área.</div>
                 <span asp-validation-for="Temperatura" class="text-danger"></span>
             </div>
         </div>

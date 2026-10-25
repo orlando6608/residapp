@@ -109,6 +109,7 @@ public static class DailyChangeAreaOptionDisplay
         DailyChangeAreaOptionCode.RechazaIngesta => "Rechaza ingesta",
         DailyChangeAreaOptionCode.DisminucionIngestaLiquidos => "Disminución de ingesta de líquidos",
         DailyChangeAreaOptionCode.Atragantamiento => "Atragantamiento",
+        DailyChangeAreaOptionCode.ComeMenosHabitual => "Come menos de lo habitual",
         DailyChangeAreaOptionCode.NoQuiereLevantarse => "No quiere levantarse",
         DailyChangeAreaOptionCode.IncapacidadCaminar => "Incapacidad para caminar",
         DailyChangeAreaOptionCode.CaminaConDificultad => "Camina con dificultad",
@@ -131,6 +132,7 @@ public static class DailyChangeAreaOptionDisplay
         DailyChangeAreaOptionCode.Herida => "Herida",
         DailyChangeAreaOptionCode.Upp => "UPP",
         DailyChangeAreaOptionCode.Hematoma => "Hematoma",
+        DailyChangeAreaOptionCode.PielEnrojecida => "Piel enrojecida",
         _ => option.ToString(),
     };
 }

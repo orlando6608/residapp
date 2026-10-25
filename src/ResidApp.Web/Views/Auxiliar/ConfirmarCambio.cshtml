@@ -28,6 +28,13 @@
 
 <h1 class="h3">Confirmar cambio — @resident.DisplayName</h1>
 
+@if (!areasConContenido.Any())
+{
+    <div class="alert alert-warning" role="status">
+        Solo has anotado la temperatura. Si no hay ningún cambio en el residente, vuelve atrás y usa «Sin cambios».
+    </div>
+}
+
 <div class="card mb-3">
     <div class="card-body">
         <h2 class="h5 card-title">Resumen</h2>

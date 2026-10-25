@@ -46,9 +46,11 @@ Códigos de origen: `AUX-02`, `AUX-04`.
 **Como** Auxiliar, **quiero** registrar los cambios que observo en el día a día de un residente, **para** que Enfermería reciba la información necesaria para valorarlos.
 
 Criterios de aceptación:
-- Debo seleccionar al menos una de las diez áreas de registro cotidiano antes de poder guardar.
-- Cada área admite opciones rápidas predefinidas y, cuando corresponda, texto adicional.
-- La temperatura es un campo opcional; puedo guardar el registro sin completarla.
+- Debo seleccionar al menos una de las diez áreas de registro cotidiano antes de poder guardar, salvo que solo haya cambiado la temperatura:
+  un cambio con solo la temperatura se puede guardar, con un aviso de que no hay ningún área (decisión de CJ del 2026-10-25).
+- Cada área admite opciones rápidas predefinidas y, cuando corresponda, texto adicional. «Come menos de lo habitual» (alimentación) y
+  «Piel enrojecida» (lesiones en piel) se añadieron por decisión de CJ del 2026-10-25.
+- La temperatura es un campo opcional; puedo guardar el registro sin completarla. Si la anoto, tiene que estar entre 34,0 y 42,0 °C.
 - La fecha y hora del registro se generan automáticamente; no tengo que indicar la hora exacta en que observé el cambio.
 
 Códigos de origen: `AUX-02`, `AUX-05`, `AUX-06`, `AUX-07`.

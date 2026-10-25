@@ -1,6 +1,7 @@
 // Dictado por voz de «Registrar cambio» (ADR 0009 y 0011). Graba la voz de la auxiliar, la envía al servidor (que la transcribe y estructura con
-// Mistral, sin guardar nada) y recibe una SUGERENCIA de áreas, opciones y notas. Aquí no se decide nada clínico: la sugerencia solo marca
-// casillas y rellena notas, y cada opción sugerida se revisa una a una («Está bien» o «Quitar») antes de poder pulsar «Continuar».
+// Mistral, sin guardar nada) y recibe una SUGERENCIA de áreas, opciones, notas y temperatura. Aquí no se decide nada clínico: la sugerencia solo
+// marca casillas y rellena campos, y la temperatura y cada opción sugerida se revisan una a una («Está bien» o «Quitar») antes de poder pulsar
+// «Continuar» (CJ, 2026-10-25: las notas no bloquean).
 // Sin micrófono, sin JavaScript o ante cualquier fallo, el formulario se rellena a mano como siempre.
 (() => {
   const tarjeta = document.getElementById("dictado");
@@ -21,10 +22,11 @@
   const plantillaMarca = document.getElementById("dictado-marca");
   const plantillaFila = document.getElementById("dictado-revision-fila");
   const continuar = document.getElementById("registrar-continuar");
+  const temperatura = document.getElementById("Temperatura");
   const aviso = document.getElementById("dictado-bloqueo");
   const maxSegundos = Number(tarjeta.dataset.maxSegundos) || 120;
 
-  // Lo que está pendiente de revisar: las opciones sugeridas (una fila cada una) y las notas sugeridas que nadie ha tocado.
+  // Lo que está pendiente de revisar: las opciones y la temperatura sugeridas (una fila cada una) y las notas sugeridas que nadie ha tocado.
   const opcionesPendientes = new Map(); // input -> fila
   const notasSugeridas = new Set(); // textarea
 
@@ -198,11 +200,11 @@
     (siguiente ?? boton).focus();
   };
 
-  const anadirOpcion = (input) => {
+  /** Una fila de revisión para una casilla marcada o para la temperatura. «Quitar» desmarca la casilla o vacía la temperatura. */
+  const anadirOpcion = (input, nombre = document.querySelector(`label[for="${input.id}"]`)?.textContent.trim() ?? "") => {
     if (opcionesPendientes.has(input)) {
       return;
     }
-    const nombre = document.querySelector(`label[for="${input.id}"]`)?.textContent.trim() ?? "";
     const area = leyendaDe(input)?.firstChild?.textContent.trim() ?? "";
     const fila = plantillaFila.content.firstElementChild.cloneNode(true);
     fila.querySelector("[data-opcion]").textContent = nombre;
@@ -211,7 +213,11 @@
     fila.querySelector('[data-accion="quitar"]').setAttribute("aria-label", `Quitar: ${nombre}`);
     fila.querySelector('[data-accion="confirmar"]').addEventListener("click", () => resolver(input, `${nombre}: confirmado.`));
     fila.querySelector('[data-accion="quitar"]').addEventListener("click", () => {
-      input.checked = false;
+      if (input.type === "checkbox") {
+        input.checked = false;
+      } else {
+        input.value = "";
+      }
       resolver(input, `${nombre}: quitado.`);
     });
     opcionesPendientes.set(input, fila);
@@ -267,6 +273,12 @@
         cambios += 1;
       }
     }
+    // La temperatura dictada (el servidor ya la ha dejado en 34,0–42,0 °C) también se revisa una a una.
+    if (temperatura && typeof respuesta.temperatura === "number" && temperatura.value !== String(respuesta.temperatura)) {
+      temperatura.value = String(respuesta.temperatura);
+      anadirOpcion(temperatura, `Temperatura ${String(respuesta.temperatura).replace(".", ",")} °C`);
+      cambios += 1;
+    }
 
     actualizarBloqueo();
     if (cambios === 0) {
@@ -274,7 +286,7 @@
       return;
     }
     decir(opcionesPendientes.size > 0
-      ? `Se ha rellenado el formulario con una sugerencia. Revisa las ${opcionesPendientes.size} opciones marcadas, una a una, antes de continuar.`
+      ? `Se ha rellenado el formulario con una sugerencia. Revisa las ${opcionesPendientes.size} sugerencias marcadas, una a una, antes de continuar.`
       : "Se han añadido notas sugeridas. Revísalas y edítalas si hace falta.");
     if (opcionesPendientes.size > 0) {
       revisionTitulo.focus();
@@ -288,7 +300,7 @@
       return;
     }
     evento.preventDefault();
-    decir(`Revisa las ${opcionesPendientes.size} opciones sugeridas por voz (Está bien o Quitar) antes de continuar.`);
+    decir(`Revisa las ${opcionesPendientes.size} sugerencias por voz (Está bien o Quitar) antes de continuar.`);
     lista.querySelector("button")?.focus();
   });
 

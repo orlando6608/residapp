@@ -794,6 +794,42 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Auxiliar_RegistraSoloLaTemperatura_ConAviso_YFueraDeRangoNoPasa()
+    {
+        // CJ, 2026-10-25 (dictado-por-voz-confirmaciones-cj 2.5, 3.1 y 3.2): un cambio con solo la temperatura se puede registrar, con un aviso
+        // en la confirmación; fuera de 34,0–42,0 °C el formulario no deja seguir.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var resident = await CreateResidentAsync(admin, seed, "Residente Solo Temperatura Funcional");
+        var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, resident));
+        var page = await auxiliar.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={resident}");
+        async Task<string> PostAsync(string path, string temperatura)
+        {
+            var response = await auxiliar.PostAsync(path, new FormUrlEncodedContent(new[]
+            {
+                KeyValuePair.Create("__RequestVerificationToken", ExtractValue(page, "__RequestVerificationToken")),
+                KeyValuePair.Create("ResidenteId", resident),
+                KeyValuePair.Create("OperacionId", ExtractValue(page, "OperacionId")),
+                KeyValuePair.Create("Temperatura", temperatura),
+                KeyValuePair.Create("__Invariant", "Temperatura"),
+                KeyValuePair.Create("Clasificacion", "Ordinario"),
+            }));
+            return WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        }
+
+        var fueraDeRango = await PostAsync("/Auxiliar/RegistrarCambio", "378");
+        var confirmacion = await PostAsync("/Auxiliar/RegistrarCambio", "38.5");
+        var registrado = await PostAsync("/Auxiliar/ConfirmarCambio", "38.5");
+
+        Assert.Contains("La temperatura tiene que estar entre 34,0 y 42,0 °C", fueraDeRango);
+        Assert.Contains("Solo has anotado la temperatura", confirmacion);
+        Assert.Contains("Cambio registrado", registrado);
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        Assert.Equal(38.5m, await connection.ExecuteScalarAsync<decimal>(
+            "SELECT temperatura_celsius FROM dbo.cierres_cotidianos_residente WHERE residente_id = @resident", new { resident }));
+    }
+
+    [Fact]
     public async Task Auxiliar_RegistraSinCambiosYUnCambioConOpciones_ConLaAppEntera()
     {
         // Los tres cierres cotidianos por la app real: el «sin cambios» (cierre del residente) y un cambio con un área de texto
