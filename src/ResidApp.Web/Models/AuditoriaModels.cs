@@ -78,6 +78,8 @@ public static class AuditActionDisplay
         ["RESIDENT_IDENTITY_CORRECT"] = "Identidad del residente corregida",
         ["RESIDENT_PHOTO_SET"] = "Foto del residente puesta o cambiada",
         ["RESIDENT_PHOTO_REMOVE"] = "Foto del residente quitada",
+        ["RESIDENT_PHOTO_REFUSAL_SET"] = "Anotado que el residente no quiere foto",
+        ["RESIDENT_PHOTO_REFUSAL_CLEAR"] = "Quitada la marca «No quiere foto»",
         ["RESIDENT_TRANSFER"] = "Residente trasladado",
         ["RESIDENT_DISCHARGE"] = "Residente dado de baja",
         ["RESIDENT_REACTIVATE"] = "Residente reactivado",

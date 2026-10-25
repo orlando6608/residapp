@@ -11,7 +11,8 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   Enfermería, Medicina y Auxiliar (también en el registro cotidiano), junto a la ubicación, que ahora dice «Sin habitación asignada» si no la tiene. Enfermería la
   pone, cambia o quita desde la ficha del residente, con el consentimiento marcado, y desde el 2026-10-21 la encuadra (mover y acercar) antes de guardarla;
   Medicina y Auxiliar solo la ven. Detalle en `pendientes-administracion.md`;
-  suposiciones a confirmar en `foto-residente-confirmaciones-cj.html`.
+  desde el 2026-10-25 (script `0071`, respuestas de CJ) solo con el permiso «Poner, cambiar y quitar la foto del residente» que da Administración, con quién
+  firmó el consentimiento y cuándo, y con «No quiere foto» (`docs/pendientes-cj/archivados/foto-residente-confirmaciones-cj.html`).
 - **Historia 1 (bandejas)**: bandeja prioritaria y bandeja de ordinarios
   (`EnfermeriaController/Prioritarios`, `/Ordinarios`) con los cambios que registra Auxiliar y los eventos
   propios de Enfermería, compartidas por unidad, ordenadas de más antiguo a más reciente y con su estado

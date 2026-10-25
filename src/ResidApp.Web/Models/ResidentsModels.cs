@@ -39,13 +39,20 @@ public sealed class CreateResidentFormModel
     [Display(Name = "Referencia interna")]
     public string? ReferenciaInterna { get; set; }
 
-    /// <summary>Habitación o plaza dentro de la unidad (opcional, historia 2, script 0029): «r:{habitación}» o «p:{plaza}». El servidor comprueba
-    /// que sea de la unidad elegida y, si es una plaza, que esté libre.</summary>
-    [Display(Name = "Ubicación en la unidad (opcional)")]
+    /// <summary>Habitación o plaza dentro de la unidad (historia 2, script 0029): «r:{habitación}», «p:{plaza}» o «pendiente» («Pendiente de
+    /// asignar»). El servidor comprueba que sea de la unidad elegida, que la plaza esté libre y, si la unidad tiene camas libres, que se haya
+    /// elegido una o «Pendiente de asignar» (CJ, foto 3.1).</summary>
+    [Display(Name = "Cama")]
     public string? Ubicacion { get; set; }
 
-    /// <summary>La habitación y la plaza elegidas, o null si el texto no es ninguna de las formas válidas (vacío es válido: ninguna).</summary>
-    public (Guid? RoomId, Guid? PlaceId)? ParseLocation() => ParseLocation(Ubicacion);
+    public const string PendingLocation = "pendiente";
+
+    /// <summary>Si se eligió «Pendiente de asignar».</summary>
+    public bool UbicacionPendiente => string.Equals(Ubicacion?.Trim(), PendingLocation, StringComparison.Ordinal);
+
+    /// <summary>La habitación y la plaza elegidas, o null si el texto no es ninguna de las formas válidas (vacío o «Pendiente de asignar» son
+    /// válidos: ninguna).</summary>
+    public (Guid? RoomId, Guid? PlaceId)? ParseLocation() => UbicacionPendiente ? (null, null) : ParseLocation(Ubicacion);
 
     /// <summary>Lo mismo para un texto «r:{habitación}» / «p:{plaza}» de cualquier formulario con selector de ubicación.</summary>
     public static (Guid? RoomId, Guid? PlaceId)? ParseLocation(string? ubicacion)

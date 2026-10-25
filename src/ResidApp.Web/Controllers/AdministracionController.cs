@@ -25,7 +25,7 @@ public sealed partial class AdministracionController(
     FamilyCommunicationPublicationApplicationService familyCommunications, FamilyCommunicationScheduleApplicationService communicationSchedule,
     AppointmentServiceApplicationService appointmentService, AppointmentRequestsApplicationService appointmentRequests,
     AdministrationOverviewApplicationService overview, AdministracionIntercambioApplicationService intercambio,
-    AdministracionCentroApplicationService centro) : Controller
+    AdministracionCentroApplicationService centro, ResidentPhotoApplicationService photos) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -47,7 +47,8 @@ public sealed partial class AdministracionController(
         var communications = await familyCommunications.ListAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
         return View(new AdministracionInicioViewModel(
             result.Value?.Count ?? 0, accounts.Value?.Count ?? 0, attention.Value,
-            communications.Ok ? AdministrationCommunicationsSummary.From(communications.Value!, DateTimeOffset.UtcNow) : null));
+            communications.Ok ? AdministrationCommunicationsSummary.From(communications.Value!, DateTimeOffset.UtcNow) : null,
+            accounts.Ok ? accounts.Value!.Count(ProfessionalAccountAttention.NeedsReview) : null));
     }
 
     public async Task<IActionResult> Residentes(AdministrativeResidentFilter filtro, CancellationToken ct)
@@ -102,7 +103,8 @@ public sealed partial class AdministracionController(
         }
 
         var suspension = await statuses.FindSuspensionAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), ct);
-        return View(new AdministrativeResidentViewModel(result.Value!, DateOnly.FromDateTime(DateTime.Today), suspension.Value));
+        var photo = await photos.ReadEditorAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), ct);
+        return View(new AdministrativeResidentViewModel(result.Value!, DateOnly.FromDateTime(DateTime.Today), suspension.Value, photo.Value));
     }
 
     public async Task<IActionResult> CorregirIdentidad(Guid residenteId, CancellationToken ct)
@@ -560,8 +562,9 @@ public sealed partial class AdministracionController(
         return View(new EmergencyContactViewModel(detail, form));
     }
 
-    /// <summary>ADM-12 (0023): las cuentas con algún perfil en el centro.</summary>
-    public async Task<IActionResult> Usuarios(CancellationToken ct)
+    /// <summary>ADM-12 (0023): las cuentas con algún perfil en el centro. Con <paramref name="revisar"/>, solo las que conviene revisar
+    /// (ProfessionalAccountAttention, el enlace del inicio).</summary>
+    public async Task<IActionResult> Usuarios(bool revisar, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
@@ -575,7 +578,9 @@ public sealed partial class AdministracionController(
             ModelState.AddModelError(string.Empty, result.Error!.Message);
         }
 
-        return View(result.Value ?? []);
+        ViewData["Revisar"] = revisar;
+        var accounts = result.Value ?? [];
+        return View(revisar ? accounts.Where(ProfessionalAccountAttention.NeedsReview).ToList() : accounts);
     }
 
     /// <summary>ADM-13: si la cuenta no tiene perfiles en el centro, se vuelve a la lista sin distinguir el motivo.</summary>

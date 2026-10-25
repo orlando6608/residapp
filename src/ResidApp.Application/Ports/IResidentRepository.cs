@@ -9,7 +9,7 @@ public sealed record CreateResidentInput(
     AccountId AccountId, SystemProfile ActiveProfile, CenterId CenterId, UnitId UnitId,
     string DisplayName, DateOnly BirthDate, DocumentedSexCode DocumentedSexCode,
     string? InternalReference, Guid? BuildingId, Guid? FloorId, Guid? RoomId, Guid? PlaceId, Guid OperationId,
-    IReadOnlyList<NewResidentFamilyMember>? Family = null, string? NoContactReason = null);
+    IReadOnlyList<NewResidentFamilyMember>? Family = null, string? NoContactReason = null, bool LocationPending = false);
 
 /// <summary>Traduce CreateResidentResult de resident-repository.ts.</summary>
 public sealed record CreateResidentResult(ResidentId ResidentId, Guid EpisodeId, Guid LocationIntervalId);

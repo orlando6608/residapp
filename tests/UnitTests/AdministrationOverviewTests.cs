@@ -62,14 +62,18 @@ public class AdministrationOverviewTests
     }
 
     [Fact]
-    public void SinNadaPendiente_SoloSiNoHayResidentesSinHabitacion_NiAutorizacionesNiSolicitudes()
+    public void SinNadaPendiente_SoloSiNoHayNadaQueAtender()
     {
-        Assert.True(new AdministrationOverview(0, 0, 0, 0, 0, 0, 5, 9, 0).NothingPending);
-        Assert.False(new AdministrationOverview(1, 0, 0, 0, 0, 0, 0, 0, 0).NothingPending);
-        Assert.False(new AdministrationOverview(0, 1, 0, 0, 0, 0, 0, 0, 0).NothingPending);
-        Assert.False(new AdministrationOverview(0, 0, 1, 0, 0, 0, 0, 0, 0).NothingPending);
-        Assert.False(new AdministrationOverview(0, 0, 0, 1, 0, 0, 0, 0, 0).NothingPending);
-        Assert.False(new AdministrationOverview(0, 0, 0, 0, 1, 0, 0, 0, 0).NothingPending);
-        Assert.False(new AdministrationOverview(0, 0, 0, 0, 0, 1, 0, 0, 0).NothingPending);
+        Assert.True(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 5, 9, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0).NothingPending);
+        // Sin contacto urgente ni motivo, citas pasadas sin cerrar y fotos de más de 12 meses también piden algo.
+        Assert.False(new AdministrationOverview(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1).NothingPending);
     }
 }

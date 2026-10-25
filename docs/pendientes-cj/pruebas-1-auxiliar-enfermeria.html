@@ -336,7 +336,7 @@
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
         <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (5).</td></tr>
-        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación) y poner la foto de identificación.</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación) y poner la foto de identificación (tiene el permiso de la foto que da Administración).</td></tr>
         <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Solo en la prueba 13: ve la foto, pero no la cambia.</td></tr>
         <tr><td><code>almendros-elena</code></td><td>Familia</td><td>Solo en la prueba 13: el Portal Familiar de «Rosa Sánchez».</td></tr>
       </tbody>
@@ -626,11 +626,11 @@
         <div class="prueba-meta"><span>Residentes: <strong>Manuel Ruiz</strong> y <strong>Rosa Sánchez</strong></span></div>
         <ol class="pasos">
           <li>Con <code>almendros-auxiliar</code>, abre «Mis residentes». Manuel tiene foto y «Planta 1 · 102 · A»; los demás, sus iniciales y «Sin habitación asignada». Abre su registro cotidiano: la foto sale también arriba, junto al nombre.</li>
-          <li>Con <code>almendros-enfermeria</code>, abre «Residentes» y luego la ficha de «Rosa Sánchez». En «Foto de identificación», elige o haz una foto (de un objeto, nunca de una persona real). En el recuadro que aparece, arrástrala para centrar el objeto y acércala con «Acercar». Pulsa «Guardar foto» sin marcar la casilla del consentimiento. Después márcala y guarda.</li>
+          <li>Con <code>almendros-enfermeria</code>, abre «Residentes» y luego la ficha de «Rosa Sánchez». En «Foto de identificación», elige o haz una foto (de un objeto, nunca de una persona real). En el recuadro que aparece, arrástrala para centrar el objeto y acércala con «Acercar». Pulsa «Guardar foto» sin decir quién firmó el consentimiento. Después elige «Su representante», deja la fecha de hoy y guarda.</li>
           <li>Con <code>almendros-medicina</code>, abre «Residentes» y la ficha de ese residente.</li>
           <li>Con <code>almendros-elena</code>, entra en el Portal Familiar.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>En las listas y en la cabecera de la ficha la foto es cuadrada, con las esquinas redondeadas. Sin la casilla del consentimiento la foto no se guarda. Al elegirla sale en un recuadro donde se mueve y se acerca y, guardada, sale con ese mismo encuadre en la lista y en la ficha de Enfermería, Medicina y Administración. Auxiliar y Medicina la ven, pero no tienen el recuadro para cambiarla. En el Portal Familiar no aparece ninguna foto.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>En las listas y en la cabecera de la ficha la foto es cuadrada, con las esquinas redondeadas. Sin decir quién firmó el consentimiento la foto no se guarda; guardada, la ficha dice «Consentimiento firmado por su representante el …». Al elegirla sale en un recuadro donde se mueve y se acerca y, guardada, sale con ese mismo encuadre en la lista y en la ficha de Enfermería, Medicina y Administración. Auxiliar y Medicina la ven, pero no tienen el recuadro para cambiarla. Una Enfermería sin el permiso de la foto la ve y la ficha le dice que se lo pida a Administración. En el Portal Familiar no aparece ninguna foto.</div>
         <fieldset class="choices" aria-labelledby="t-13">
           <label class="choice"><input type="radio" name="r-13" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-13" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>

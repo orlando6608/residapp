@@ -232,6 +232,10 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
 
         var offered = WebUtility.HtmlDecode(await client.GetStringAsync("/Residents/Create"));
         var badLocation = await AdmitAsync("x:1");
+        // CJ (foto 3.1): con una cama libre en la unidad, hay que elegirla o «Pendiente de asignar»; la habitación sola no basta.
+        var withoutBed = await AdmitAsync("");
+        var roomOnly = await AdmitAsync($"r:{roomId}");
+        var pending = await AdmitAsync("pendiente");
         var admitted = await AdmitAsync($"p:{placeId}");
         var occupied = await AdmitAsync($"p:{placeId}");
         var offeredAfter = WebUtility.HtmlDecode(await client.GetStringAsync("/Residents/Create"));
@@ -244,10 +248,13 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("Plaza creada.", placeCreated);
         Assert.Contains("Nombre guardado.", renamed);
         Assert.Contains("Cama 1", renamed);
-        Assert.Contains("Ubicación en la unidad (opcional)", offered);
+        Assert.Contains("Pendiente de asignar", offered);
         Assert.Contains($"value=\"p:{placeId}\">Habitación 12 (ficticia) · Cama 1", offered);
         Assert.Contains($"value=\"r:{roomId}\">Habitación 12 (ficticia)", offered);
         Assert.Contains("Elige una ubicación de la lista.", badLocation);
+        Assert.Contains("Esta unidad tiene camas libres: elige una o «Pendiente de asignar».", withoutBed);
+        Assert.Contains("Esta unidad tiene camas libres: elige una o «Pendiente de asignar».", roomOnly);
+        Assert.Contains("Id del residente", pending);
         Assert.Contains("Id del residente", admitted);
         Assert.DoesNotContain($"value=\"p:{placeId}\"", offeredAfter);
         Assert.Contains($"value=\"r:{roomId}\"", offeredAfter);

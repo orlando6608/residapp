@@ -56,6 +56,9 @@
             </div>
         </div>
         <partial name="_ContactoUrgente" model="new EmergencyContactCardModel(Model.EmergencyContacts)" />
-        <partial name="_FotoResidenteEditar" model="new ResidentPhotoEditorViewModel(Model.Resident.ResidentId.Value, Model.Resident.PhotoUpdatedAt)" />
+        @if (Model.Photo is { } photo)
+        {
+            <partial name="_FotoResidenteEditar" model="new ResidentPhotoEditorViewModel(Model.Resident.ResidentId.Value, photo, DateOnly.FromDateTime(DateTime.Today), DateTimeOffset.UtcNow)" />
+        }
     </div>
 </div>

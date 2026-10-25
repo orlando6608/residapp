@@ -37,7 +37,7 @@ public class ProfessionalAccountTests
     [Fact]
     public void Permisos_CadaPerfilTieneLosQueUsa_YBorradorCompartidoNinguno()
     {
-        Assert.Equal(["RESIDENT_IDENTITY_CREATE", "BASELINE_INITIAL_COMPLETE", "BASELINE_REEVALUATE"],
+        Assert.Equal(["RESIDENT_IDENTITY_CREATE", "BASELINE_INITIAL_COMPLETE", "BASELINE_REEVALUATE", "RESIDENT_PHOTO_MANAGE"],
             ProfilePermissions.For(SystemProfile.Enfermeria));
         Assert.Equal(["BASELINE_INITIAL_COMPLETE", "BASELINE_REEVALUATE"],
             ProfilePermissions.For(SystemProfile.Medicina));

@@ -348,7 +348,7 @@ public sealed class AdministracionIntercambioApplicationService(
     {
         var result = await createResident.ExecuteAsync(new CreateResidentCommand(
             query.AmbitoPerfilId, query.CentroId, plan.UnitId, plan.Name, plan.BirthDate, plan.Sex, plan.Reference, EdificioId: null, PlantaId: null,
-            plan.RoomId, plan.PlaceId, ResidentOperationId(query.CentroId, plan)), ct);
+            plan.RoomId, plan.PlaceId, ResidentOperationId(query.CentroId, plan), UbicacionPendiente: true), ct);
         return result.Ok
             ? report with { Detail = $"Dado de alta ({ExchangeCatalog.Label(plan.Sex)})." }
             : report with

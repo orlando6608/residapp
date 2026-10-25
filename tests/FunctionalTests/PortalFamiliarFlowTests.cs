@@ -627,19 +627,23 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         var withPastAppointment = await BodyAsync(await admin.GetAsync("/Administracion"));
         var agenda = await BodyAsync(await admin.GetAsync("/Administracion/AgendaCitas"));
         var finished = await PostAsync(admin, "/Administracion/FinalizarCita", "/Administracion/AgendaCitas", new() { ["citaId"] = pastAppointment.ToString() });
-        var noRoomList = await BodyAsync(await admin.GetAsync("/Administracion/Residentes?atencion=SinHabitacion"));
+        var noRoomList = await BodyAsync(await admin.GetAsync("/Administracion/Residentes?atencion=UbicacionPendiente"));
         var expiredList = await BodyAsync(await admin.GetAsync("/Administracion/Residentes?atencion=AutorizacionCaducada"));
         var pendingList = await BodyAsync(await admin.GetAsync("/Administracion/Residentes?atencion=AutorizacionPendiente"));
         var nurseHome = await nurse.GetAsync("/Administracion");
 
         Assert.Contains("Requiere atención", emptyHome);
         Assert.Contains("No hay nada pendiente.", emptyHome);
-        Assert.Contains("1 residente sin habitación asignada", beforeAuthorization);
+        // Las cuentas que conviene revisar (CJ, tercera 4.4): la Enfermería de la semilla tiene su unidad, así que no sale.
+        var review = await BodyAsync(await admin.GetAsync("/Administracion/Usuarios?revisar=true"));
+        Assert.Contains("Solo las cuentas que conviene revisar", review);
+        Assert.DoesNotContain(seed.Nurse, review);
+        Assert.Contains("1 residente con la ubicación pendiente (sin habitación o sin cama)", beforeAuthorization);
         Assert.Contains("1 autorización de familiar pendiente de activar", beforeAuthorization);
         Assert.DoesNotContain("No hay nada pendiente.", beforeAuthorization);
         Assert.DoesNotContain("solicitud de cita por gestionar", beforeAuthorization);
-        Assert.Contains("1 residente sin habitación asignada", afterRequest);
-        Assert.Contains("atencion=SinHabitacion", WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion")));
+        Assert.Contains("1 residente con la ubicación pendiente (sin habitación o sin cama)", afterRequest);
+        Assert.Contains("atencion=UbicacionPendiente", WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion")));
         Assert.Contains("Residente Inicio Funcional", noRoomList);
         Assert.Contains("Sin habitación asignada", noRoomList);
         Assert.Contains("Ningún residente coincide", expiredList);

@@ -14,6 +14,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Foto, alta con cama e inicio de Administración con las respuestas de CJ (2026-10-25, rama `foto-inicio-administracion` sobre `portal-familiar-respuestas-cj`;
+  script `0071`, el siguiente libre es `0072`). Hecho y probado, sin subir.** Detalle en `pendientes-administracion.md` («Respuestas de CJ del 2026-10-25»).
+  - **Foto:** consentimiento con quién firmó y la fecha; `0071` borró las fotos anteriores (no lo tenían; en Azure, volver a ejecutar `preparar-almendros.js` tras el
+    despliegue para la de Manuel). «No quiere foto» (`fotos_residente_negativas`). Enfermería solo con `RESIDENT_PHOTO_MANAGE`, que la semilla da una vez a las
+    Enfermerías de los centros de prueba (bloque idempotente fuera del de creación). La baja borra la foto. Aviso a los 12 meses. El recuadro lo lee cada ficha con
+    `ResidentPhotoApplicationService.ReadEditorAsync` (estado y si puede cambiarla).
+  - **Alta:** cama obligatoria si la unidad tiene alguna libre, o «Pendiente de asignar» (`PLACE_REQUIRED`, con su mensaje propio en `ApplicationResultRunner`). Los
+    tests que crean residentes con el repositorio en una unidad con camas libres necesitan `LocationPending: true`.
+  - **Inicio:** orden por importancia (contacto urgente primero, cuentas al final); `AdministrationOverview` ganó `ResidentsWithoutEmergencyContact` y
+    `PhotosToRenew` y `ResidentsWithoutRoom` pasó a `ResidentsLocationPending`; `ResidentAttentionKind.SinHabitacion` pasó a `UbicacionPendiente`.
+  - `foto-residente-confirmaciones-cj` archivado. Manual, guías 1 (prueba 13) y 5 (pruebas 1 y 16) al día.
+  - **Pruebas:** unitarias 455, integración 535 y funcionales 307 en verde (las páginas de CJ ahora incluyen la cuarta tanda del portal). Navegador en Los Almendros local (foto con encuadre y consentimiento, aviso de 12 meses,
+    «No quiere foto», alta sin cama rechazada, Usuarios a revisar, Enfermería con permiso; claro, oscuro y 375 px; consola limpia). Queda la foto de Manuel puesta
+    en local; no se creó ningún residente ni quedó ninguna marca.
 - **Portal Familiar con las respuestas de CJ (2026-10-25, rama `portal-familiar-respuestas-cj` desde `origin/main` tras el PR #66; script `0070`, el siguiente libre es `0071`). Hecho y probado, sin subir.**
   El dictado (PR #66) ya está en `main` y desplegado: el CI/CD aplicó `0069` en Azure.
   - **Acceso** (portal 1.3): `SqlFamilyPortalReader.AccessibleLinks`, el criterio único del portal, pide además el residente `ACTIVE` y sin suspensión abierta. Se corta y vuelve
@@ -1848,8 +1862,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    (dos primeras entradas de «Dónde estamos»). **CJ respondió el 2026-10-25** (`docs/pendientes-cj/archivados/dictado-por-voz-confirmaciones-cj.respuestas.json`) y **está hecho** (primera entrada de «Dónde estamos»):
    opciones nuevas «Piel enrojecida» y «Come menos de lo habitual» (script `0069`), temperatura entre 34,0 y 42,0 °C que bloquea fuera de rango, un cambio con solo la temperatura,
    el dictado propone la temperatura y se revisa una a una con las opciones, prompt que «propone menos» con sus reglas de jerga y los ejemplos 1, 3, 10, 25 y 28 corregidos. Sigue pendiente
-   probarlo en un móvil real con audios ficticios. **Portal Familiar: hecho el 2026-10-25** (primera entrada de «Dónde estamos»). **Siguiente bloque: foto e inicio de Administración**
-   (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
+   probarlo en un móvil real con audios ficticios. **Portal Familiar: hecho el 2026-10-25**, y **foto, alta con cama e inicio de Administración: hechos el 2026-10-25** (primeras entradas de «Dónde estamos»).
+   **Siguiente bloque: importación y exportación** (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
    **I0 a I4 e I2b del ADR 0007 están hechos y el acceso de desarrollo está retirado en el código** (rama `sin-acceso-desarrollo`, primera entrada de
    «Dónde estamos»). Queda **I5 (pulsera NFC)** y, antes de datos reales, llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: (Importar y Exportar ya probado en Azure dev el 2026-10-23), y las dos preguntas a CJ de la guía 2 (hora en la

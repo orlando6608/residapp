@@ -69,17 +69,25 @@ public sealed class ResidentsController(
         var command = new CreateResidentCommand(
             form.AmbitoPerfilId, CenterId.From(form.CentroId), UnitId.From(form.UnidadId!.Value), form.NombreVisible,
             form.FechaNacimiento!.Value, form.SexoDocumentadoCodigo, form.ReferenciaInterna,
-            EdificioId: null, PlantaId: null, location.RoomId, location.PlaceId, form.OperacionId, form.FamilyInputs(), form.MotivoSinContacto);
+            EdificioId: null, PlantaId: null, location.RoomId, location.PlaceId, form.OperacionId, form.FamilyInputs(), form.MotivoSinContacto,
+            form.UbicacionPendiente);
 
         var result = await service.CreateResidentAsync(command, ct);
         if (!result.Ok)
         {
             var chosen = location.RoomId is not null || location.PlaceId is not null;
-            ModelState.AddModelError(string.Empty, chosen && result.Error!.Code == ApplicationFailureCode.Conflict
-                ? "Esa plaza ya está ocupada por otro residente. Elige otra o deja la ubicación vacía."
-                : chosen && result.Error!.Code == ApplicationFailureCode.InvalidInput
-                    ? "La habitación o la plaza elegida no está disponible en esa unidad. Elige otra o deja la ubicación vacía."
-                    : result.Error!.Message);
+            if (result.Error!.Message == ApplicationResultRunner.PlaceRequiredMessage)
+            {
+                ModelState.AddModelError(nameof(form.Ubicacion), result.Error.Message);
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, chosen && result.Error.Code == ApplicationFailureCode.Conflict
+                    ? "Esa cama ya está ocupada por otro residente. Elige otra o «Pendiente de asignar»."
+                    : chosen && result.Error.Code == ApplicationFailureCode.InvalidInput
+                        ? "La habitación o la cama elegida no está disponible en esa unidad. Elige otra o «Pendiente de asignar»."
+                        : result.Error.Message);
+            }
             await ShowActiveScopeAsync(ActiveProfileScopeCookie.Read(Request), ct);
             return View(form);
         }

@@ -108,7 +108,7 @@ async function cerrar(page, eventoId) {
     if (await firmarBasal(page, id)) hecho.push(`basal firmado de ${nombre}`);
   }
 
-  // La foto de Manuel: una imagen ficticia (sus iniciales) generada aquí mismo.
+  // La foto de Manuel: una imagen ficticia (sus iniciales) generada aquí mismo. La Enfermería del juego tiene el permiso de la foto por la semilla.
   await page.goto(`${base}/Enfermeria/Residente?residenteId=${manuel}`);
   if (await page.locator("#foto-residente-fichero").count() && !(await page.locator('button:has-text("Quitar foto")').count())) {
     const imagen = await browser.newPage({ viewport: { width: 240, height: 240 } });
@@ -117,7 +117,8 @@ async function cerrar(page, eventoId) {
     await imagen.screenshot({ path: fichero });
     await imagen.close();
     await page.setInputFiles("#foto-residente-fichero", fichero);
-    await page.check("#foto-residente-consentimiento");
+    // Consentimiento (0071): firmado por su representante, hoy (la fecha por defecto del formulario).
+    await page.check("#foto-residente-firmante-representante");
     await pulsar(page, 'form:has(#foto-residente-fichero) button[type="submit"]');
     await sinErrores(page, "poner la foto");
     hecho.push("foto de Manuel");

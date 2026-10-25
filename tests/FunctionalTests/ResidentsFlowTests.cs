@@ -307,7 +307,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
-        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
 
         var hub = await nurse.GetStringAsync($"/EnfermeriaBasal/Draft?residenteId={residentId}");
         var afterCreate = WebUtility.HtmlDecode(await (await nurse.PostAsync("/EnfermeriaBasal/CrearBorrador", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -354,7 +355,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["Familiares[0].NombreVisible"] = "Familiar Prueba", ["Familiares[0].Relacion"] = "Hija", ["Familiares[0].Telefono"] = "600123456", ["Familiares[0].ContactoPrioritario"] = "true",
         }))).Content.ReadAsStringAsync();
         var residentId = Regex.Match(created, "Id del residente: <code>([0-9a-f-]{36})</code>").Groups[1].Value;
-        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
 
         var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
@@ -405,7 +407,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var seed = await SeedAsync();
         var admin = await LoginAsync(seed.ExternalSubject);
         var residentId = await CreateResidentAsync(admin, seed, "Residente Cierre Indicaciones Funcional");
-        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
         var doctor = await LoginAsync(await GrantMedicineAsync(seed));
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
 
@@ -514,7 +517,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var seed = await SeedAsync();
         var admin = await LoginAsync(seed.ExternalSubject);
         var residentId = await CreateResidentAsync(admin, seed, "Residente Derivacion Funcional");
-        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
         Task<int> RevisionAsync(Guid id) => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @id", new { id });
 
@@ -949,18 +953,20 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     [Fact]
     public async Task FotoDelResidente_AdministracionLaPone_EnfermeriaLaVeYLaQuita_ConLaAppEntera()
     {
-        // Estudio de mercado R2 (script 0059): el primer formulario con fichero de la app. La foto llega sin EXIF a la lista de Enfermería, la
-        // imagen se sirve como JPEG sin que el navegador la reinterprete, y una Auxiliar sin el residente asignado recibe un 404.
+        // Estudio de mercado R2 (scripts 0059 y 0071): el primer formulario con fichero de la app. La foto se guarda con quién firmó el
+        // consentimiento y cuándo, llega sin EXIF a la lista de Enfermería, la imagen se sirve como JPEG sin que el navegador la reinterprete, y
+        // una Auxiliar sin el residente asignado recibe un 404. Enfermería solo la cambia con el permiso que Administración da en su perfil.
         var seed = await SeedAsync();
         var admin = await LoginAsync(seed.ExternalSubject);
         var residentId = await CreateResidentAsync(admin, seed, "Residente Foto Funcional");
         var otherResident = await CreateResidentAsync(admin, seed, "Residente Sin Foto Funcional");
-        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
         var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, otherResident));
         static byte[] Segment(byte marker, byte[] payload) => [0xFF, marker, 0, (byte)(payload.Length + 2), .. payload];
         byte[] image = [.. Segment(0xDA, [1, 1, 0, 0, 63, 0]), 0x12, 0x34, 0xFF, 0xD9];
 
-        async Task<string> SaveAsync(bool consent)
+        async Task<string> SaveAsync(bool consent, string signedOn = "")
         {
             var record = await admin.GetStringAsync($"/Administracion/Residente?residenteId={residentId}");
             using var form = new MultipartFormDataContent
@@ -970,7 +976,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             };
             if (consent)
             {
-                form.Add(new StringContent("true"), "Form.Consentimiento");
+                form.Add(new StringContent("Representante"), "Form.Firmante");
+                form.Add(new StringContent(signedOn.Length > 0 ? signedOn : DateTime.Today.ToString("yyyy-MM-dd")), "Form.FechaConsentimiento");
             }
             var file = new ByteArrayContent([0xFF, 0xD8, .. Segment(0xE1, [.. "Exif\0\0GPS 40.4168 N"u8]), .. image]);
             file.Headers.ContentType = new("image/jpeg");
@@ -979,18 +986,36 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         }
 
         var withoutConsent = await SaveAsync(consent: false);
+        var futureConsent = await SaveAsync(consent: true, signedOn: DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"));
         var saved = await SaveAsync(consent: true);
         var list = WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/Residentes"));
         var photoUrl = Regex.Match(list, $"/FotoResidente/Ver\\?residenteId={residentId}&v=\\d+").Value;
         var photo = await nurse.GetAsync(photoUrl);
         var byOutsider = await auxiliar.GetAsync(photoUrl);
+        var nurseRecordWithoutPermission = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}"));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var (nurseAccount, nurseScope) = await connection.QuerySingleAsync<(Guid, Guid)>(
+            "SELECT c.id, a.id FROM dbo.cuentas c JOIN dbo.ambitos_perfil a ON a.cuenta_id = c.id WHERE c.sujeto_externo = @nurseSubject",
+            new { nurseSubject });
+        var profilePage = await admin.GetStringAsync($"/Administracion/PerfilUsuario?cuentaId={nurseAccount}&ambitoId={nurseScope}");
+        var granted = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/PermisoPerfil", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(profilePage, "__RequestVerificationToken"), ["cuentaId"] = nurseAccount.ToString(),
+            ["ambitoId"] = nurseScope.ToString(), ["permiso"] = "RESIDENT_PHOTO_MANAGE", ["conceder"] = "true",
+        }))).Content.ReadAsStringAsync());
         var nurseRecord = await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}");
         var removed = WebUtility.HtmlDecode(await (await nurse.PostAsync($"/FotoResidente/Quitar?residenteId={residentId}", new FormUrlEncodedContent(
             new Dictionary<string, string> { ["__RequestVerificationToken"] = ExtractValue(nurseRecord, "__RequestVerificationToken") })))
             .Content.ReadAsStringAsync());
 
-        Assert.Contains("Marca la casilla del consentimiento para guardar la foto.", withoutConsent);
+        Assert.Contains("Indica quién firmó el consentimiento y la fecha de la firma para guardar la foto.", withoutConsent);
+        Assert.Contains("La fecha de la firma no puede ser posterior a hoy.", futureConsent);
         Assert.Contains("Foto guardada.", saved);
+        Assert.Contains($"Consentimiento firmado por su representante el {DateTime.Today:dd/MM/yyyy}.", saved);
+        Assert.Contains("Poner, cambiar y quitar la foto del residente", WebUtility.HtmlDecode(profilePage));
+        Assert.Contains("pídeselo a Administración", nurseRecordWithoutPermission);
+        Assert.DoesNotContain("Guardar foto", nurseRecordWithoutPermission);
+        Assert.Contains("Permiso concedido.", granted);
         Assert.Contains("Ubicación actual", saved);
         Assert.Contains("Sin habitación asignada", saved);
         Assert.NotEmpty(photoUrl);
@@ -1030,7 +1055,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         // CJ, 5.1 (2026-10-10): cada centro elige la hora de publicación y el margen. Con el usuario limitado: lee y escribe bajo la seguridad por filas (0051).
         var seed = await SeedAsync();
         var admin = await LoginAsync(seed.ExternalSubject);
-        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
         async Task<string> PostAsync(string time, string margin, string version)
         {
@@ -1071,7 +1097,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var seed = await SeedAsync();
         var admin = await LoginAsync(seed.ExternalSubject);
         var residentId = await CreateResidentAsync(admin, seed, "Residente Comunicados Medicina Funcional");
-        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
         var doctor = await LoginAsync(await GrantMedicineAsync(seed));
         var direction = await LoginAsync(await GrantDirectionAsync(seed));
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
@@ -1158,7 +1185,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         // Enfermería lo dicen, y la ficha deja volver a designar contactos cuando haya familia.
         var seed = await SeedAsync();
         var admin = await LoginAsync(seed.ExternalSubject);
-        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
         var name = $"Residente Sin Familia Funcional {Guid.NewGuid().ToString("N")[..8]}";
 
@@ -1301,7 +1329,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var seed = await SeedAsync();
         var admin = await LoginAsync(seed.ExternalSubject);
         var residentId = await CreateResidentAsync(admin, seed, "Residente Comunicado Funcional");
-        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
         var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
         (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -1348,7 +1377,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var seed = await SeedAsync();
         var admin = await LoginAsync(seed.ExternalSubject);
         var residentId = await CreateResidentAsync(admin, seed, "Residente Correccion Funcional");
-        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
         var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
         (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>

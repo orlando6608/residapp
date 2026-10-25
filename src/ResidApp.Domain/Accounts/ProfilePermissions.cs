@@ -17,9 +17,12 @@ public static class ProfilePermissions
     public const string ReferenceRangesManage = "REFERENCE_RANGES_MANAGE";
     public const string ProcessDeadlinesManage = "PROCESS_DEADLINES_MANAGE";
 
+    /// <summary>Enfermería pone, cambia y quita la foto del residente solo con este permiso (CJ, foto 1.3; script 0071).</summary>
+    public const string ResidentPhotoManage = "RESIDENT_PHOTO_MANAGE";
+
     public static IReadOnlyList<string> For(SystemProfile profile) => profile switch
     {
-        SystemProfile.Enfermeria => [ResidentIdentityCreate, BaselineInitialComplete, BaselineReevaluate],
+        SystemProfile.Enfermeria => [ResidentIdentityCreate, BaselineInitialComplete, BaselineReevaluate, ResidentPhotoManage],
         SystemProfile.Medicina => [BaselineInitialComplete, BaselineReevaluate],
         SystemProfile.DireccionClinica => [ClinicalDetailRead, ReferenceRangesManage, ProcessDeadlinesManage],
         _ => [],

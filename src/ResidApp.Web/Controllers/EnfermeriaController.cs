@@ -24,7 +24,7 @@ namespace ResidApp.Web.Controllers;
 /// </summary>
 public sealed class EnfermeriaController(
     EnfermeriaApplicationService service, FindEmergencyContact findEmergencyContact, ListMilestoneWarnings milestoneWarnings,
-    CorrectFamilyCommunication correctFamilyCommunication, ListEventsReadyToClose readyToClose) : Controller
+    CorrectFamilyCommunication correctFamilyCommunication, ListEventsReadyToClose readyToClose, ResidentPhotoApplicationService photos) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -1135,8 +1135,9 @@ public sealed class EnfermeriaController(
             new ListOpenEventsCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, SystemProfile.Enfermeria), ct);
         var contact = await findEmergencyContact.ExecuteAsync(
             new FindScopeResidentCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId), ct);
+        var photo = await photos.ReadEditorAsync(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, ct);
         return View(new EnfermeriaResidentDetailViewModel(findResult.Value, baselineResult.Ok ? baselineResult.Value : null,
-            OpenEvents: openEvents.Ok ? openEvents.Value : null, EmergencyContacts: contact.Ok ? contact.Value : null));
+            OpenEvents: openEvents.Ok ? openEvents.Value : null, EmergencyContacts: contact.Ok ? contact.Value : null, Photo: photo.Value));
     }
 
     /// <summary>ENF-23/ENF-24 (historia 11): eventos cerrados del residente, con el basal y la ubicación de su

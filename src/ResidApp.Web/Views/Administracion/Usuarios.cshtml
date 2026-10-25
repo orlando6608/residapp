@@ -18,6 +18,13 @@
     no se suman. Conceder un perfil no da acceso a nada fuera de sus unidades.
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
+@if (ViewData["Revisar"] is true)
+{
+    <div class="alert alert-info" role="status">
+        Solo las cuentas que conviene revisar: suspendidas, sin ningún perfil vigente o con un perfil sin unidades.
+        <a class="alert-link" asp-action="Usuarios">Ver todas</a>
+    </div>
+}
 
 <div class="d-flex flex-wrap gap-2 mb-3">
     <a asp-action="NuevoUsuario" class="btn btn-primary btn-lg">Alta de usuario</a>
@@ -26,7 +33,7 @@
 
 @if (Model.Count == 0)
 {
-    <p class="estado-vacio">No hay cuentas con perfil en el centro.</p>
+    <p class="estado-vacio">@(ViewData["Revisar"] is true ? "No hay ninguna cuenta que revisar." : "No hay cuentas con perfil en el centro.")</p>
 }
 else
 {

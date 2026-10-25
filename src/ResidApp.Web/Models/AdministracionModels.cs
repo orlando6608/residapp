@@ -14,8 +14,14 @@ namespace ResidApp.Web.Models;
 
 /// <summary>ADM-01: el inicio de Administración, con el número de residentes activos del ámbito y el de cuentas con
 /// algún perfil en el centro.</summary>
+/// <summary>El inicio de Administración. AccountsToReview son las cuentas suspendidas o sin ámbito (ProfessionalAccountAttention), null si no se
+/// pudieron leer.</summary>
 public sealed record AdministracionInicioViewModel(
-    int Residents, int Accounts, AdministrationOverview? Attention = null, AdministrationCommunicationsSummary? Communications = null);
+    int Residents, int Accounts, AdministrationOverview? Attention = null, AdministrationCommunicationsSummary? Communications = null,
+    int? AccountsToReview = null)
+{
+    public bool NothingPending => Attention is { NothingPending: true } && (AccountsToReview ?? 0) == 0;
+}
 
 /// <summary>ADM-02: buscar y filtrar la lista de residentes. Llega por GET (?q=&amp;unidad=); los campos vacíos no
 /// filtran.</summary>
@@ -27,7 +33,8 @@ public sealed class AdministrativeResidentFilter
     [Display(Name = "Unidad")]
     public Guid? Unidad { get; set; }
 
-    /// <summary>«Requiere atención» (?atencion=SinHabitacion, AutorizacionPendiente, AutorizacionCaducada o AutorizacionPorCaducar): los enlaces del inicio de Administración.</summary>
+    /// <summary>«Requiere atención» (?atencion=SinContactoUrgente, UbicacionPendiente, AutorizacionPendiente, AutorizacionCaducada, AutorizacionPorCaducar o
+    /// FotoAntigua): los enlaces del inicio de Administración.</summary>
     [Display(Name = "Requiere atención")]
     public ResidentAttentionKind? Atencion { get; set; }
 
@@ -65,7 +72,7 @@ public sealed record AdministrativeResidentListViewModel(
 
 /// <summary>ADM-03: la ficha administrativa y la fecha de hoy, para la edad.</summary>
 public sealed record AdministrativeResidentViewModel(
-    AdministrativeResidentDetail Detail, DateOnly Today, ResidentSuspension? Suspension = null);
+    AdministrativeResidentDetail Detail, DateOnly Today, ResidentSuspension? Suspension = null, ResidentPhotoEditorState? Photo = null);
 
 /// <summary>ADM-03 (0021): formulario de corrección de identidad. CorreccionesEsperadas es cuántas correcciones tenía el
 /// residente al abrirlo: si otra se adelanta, la corrección da conflicto y se conserva lo escrito.</summary>
@@ -224,7 +231,9 @@ public static class AdministrativeResidentDisplay
     /// <summary>El texto de cada filtro «requiere atención» de la lista de residentes.</summary>
     public static string Label(ResidentAttentionKind kind) => kind switch
     {
-        ResidentAttentionKind.SinHabitacion => "Sin habitación asignada",
+        ResidentAttentionKind.SinContactoUrgente => "Sin contacto urgente ni motivo indicado",
+        ResidentAttentionKind.UbicacionPendiente => "Ubicación pendiente (sin habitación o sin cama)",
+        ResidentAttentionKind.FotoAntigua => $"Con una foto de más de {ResidentPhotoRenewal.Months} meses",
         ResidentAttentionKind.AutorizacionPendiente => "Con una autorización de familiar pendiente de activar",
         ResidentAttentionKind.AutorizacionCaducada => "Con una autorización de familiar caducada",
         ResidentAttentionKind.AutorizacionPorCaducar => $"Con una autorización de familiar que caduca en {AdministrationOverviewRules.ExpiringSoonDays} días o menos",

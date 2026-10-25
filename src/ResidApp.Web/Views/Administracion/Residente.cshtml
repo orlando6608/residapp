@@ -61,7 +61,10 @@
     </div>
 </section>
 
-<partial name="_FotoResidenteEditar" model="new ResidentPhotoEditorViewModel(resident.ResidentId.Value, resident.PhotoUpdatedAt)" />
+@if (Model.Photo is { } photo)
+{
+    <partial name="_FotoResidenteEditar" model="new ResidentPhotoEditorViewModel(resident.ResidentId.Value, photo, Model.Today, DateTimeOffset.UtcNow)" />
+}
 
 <section class="mb-4">
     <h2 class="h5">Familiares</h2>

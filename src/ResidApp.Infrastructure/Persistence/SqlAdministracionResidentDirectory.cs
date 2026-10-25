@@ -97,9 +97,9 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
         var rows = await connection.QueryAsync<AttentionRow>(new CommandDefinition($"""
             {SqlAdministrationOverview.ScopedAuthorizationsCtes}
             SELECT scoped.ResidentId,
-                   CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.intervalos_ubicacion_residente location
-                                           WHERE location.residente_id = scoped.ResidentId AND location.centro_id = @CenterId
-                                             AND location.vigente_hasta IS NULL AND location.habitacion_id IS NULL) THEN 1 ELSE 0 END AS bit) AS WithoutRoom,
+                   CAST(CASE WHEN {SqlAdministrationOverview.WithoutEmergencyContact} THEN 1 ELSE 0 END AS bit) AS WithoutEmergencyContact,
+                   CAST(CASE WHEN {SqlAdministrationOverview.LocationPending} THEN 1 ELSE 0 END AS bit) AS LocationPending,
+                   CAST(CASE WHEN {SqlAdministrationOverview.PhotoToRenew} THEN 1 ELSE 0 END AS bit) AS PhotoToRenew,
                    CAST(CASE WHEN EXISTS (SELECT 1 FROM latest WHERE latest.ResidentId = scoped.ResidentId
                                              AND (latest.StatusCode IS NULL OR latest.StatusCode = 'PENDIENTE')) THEN 1 ELSE 0 END AS bit) AS AuthorizationPending,
                    CAST(CASE WHEN EXISTS (SELECT 1 FROM latest WHERE latest.ResidentId = scoped.ResidentId
@@ -114,7 +114,8 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                 SoonLimit = todayDate.AddDays(AdministrationOverviewRules.ExpiringSoonDays),
             }, cancellationToken: ct));
         return rows.Select(r => new ResidentAttention(
-            ResidentId.From(r.ResidentId), r.WithoutRoom, r.AuthorizationPending, r.AuthorizationExpired, r.AuthorizationExpiringSoon)).ToList();
+            ResidentId.From(r.ResidentId), r.LocationPending, r.AuthorizationPending, r.AuthorizationExpired, r.AuthorizationExpiringSoon,
+            r.WithoutEmergencyContact, r.PhotoToRenew)).ToList();
     }
 
     public async Task<AdministrativeResidentDetail?> FindAsync(
@@ -215,7 +216,8 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
     private static DateTimeOffset Utc(DateTime value) => new(value, TimeSpan.Zero);
 
     private sealed record AttentionRow(
-        Guid ResidentId, bool WithoutRoom, bool AuthorizationPending, bool AuthorizationExpired, bool AuthorizationExpiringSoon);
+        Guid ResidentId, bool WithoutEmergencyContact, bool LocationPending, bool PhotoToRenew, bool AuthorizationPending, bool AuthorizationExpired,
+        bool AuthorizationExpiringSoon);
 
     private sealed record ResidentRow(
         Guid ResidentId, string DisplayName, DateTime BirthDate, string SexCode, Guid UnitId, string UnitName, DateTime AdmittedAt,
