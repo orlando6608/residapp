@@ -26,6 +26,15 @@ public class LogoCentroPageTests(WebAppFactory factory) : IClassFixture<WebAppFa
     private static string Brand(string html) =>
         Regex.Match(html, "<a class=\"navbar-brand[^>]*>(.*?)</a>", RegexOptions.Singleline).Groups[1].Value;
 
+    /// <summary>El campo del logo trae el encuadre que site.js muestra al elegir la imagen: lienzo apaisado, deslizador y los cuatro botones de flecha.</summary>
+    private static void AssertEncuadreDelLogo(string html)
+    {
+        Assert.Contains("data-logo-lienzo", html);
+        Assert.Contains("width=\"768\" height=\"256\"", html);
+        Assert.Contains("data-logo-acercar", html);
+        Assert.Equal(4, Regex.Matches(html, "data-logo-mover=").Count);
+    }
+
     private async Task<HttpClient> LoginAsync(string subject)
     {
         var client = factory.CreateClient();
@@ -81,6 +90,7 @@ public class LogoCentroPageTests(WebAppFactory factory) : IClassFixture<WebAppFa
         Assert.Contains("Datos del centro", start);
         Assert.Contains(code, Brand(start));
         Assert.Contains("/images/logo.svg", Brand(start));
+        AssertEncuadreDelLogo(start);
 
         var renamed = await BodyAsync(await admin.PostAsync("/Administracion/DatosCentro", new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -161,6 +171,7 @@ public class LogoCentroPageTests(WebAppFactory factory) : IClassFixture<WebAppFa
         var platform = await LoginAsync(subject);
 
         var form = await BodyAsync(await platform.GetAsync("/Plataforma/NuevoCentro"));
+        AssertEncuadreDelLogo(form);
         using var content = new MultipartFormDataContent
         {
             { new StringContent(ExtractValue(form, "__RequestVerificationToken")), "__RequestVerificationToken" },

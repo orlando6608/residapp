@@ -1,12 +1,27 @@
 @model ResidApp.Web.Models.LogoCentroCampoViewModel
-@* Campo para elegir el logo del centro (script 0068). site.js lo reduce a 512 px y lo envía como PNG (o JPEG si pesara demasiado) y muestra la
-   vista previa; sin JavaScript el servidor solo acepta un PNG o un JPEG de 512 KB y 1024 píxeles por lado como máximo. *@
+@* Campo para elegir el logo del centro (script 0068). site.js muestra el encuadre al elegirlo (mover, acercar y alejar) y envía el recuadro
+   apaisado que se ve en él, como PNG (o JPEG si pesara demasiado); sin JavaScript el encuadre no aparece y el servidor solo acepta un PNG o un
+   JPEG de 512 KB y 1024 píxeles por lado como máximo. Los botones de flecha son la alternativa al arrastre (WCAG 2.5.7). *@
 <div class="mb-3">
     <label class="form-label" for="@Model.Id">@Model.Label</label>
     <input class="form-control form-control-lg" type="file" accept="image/png,image/jpeg" name="@Model.Name" id="@Model.Id"
-           data-logo-centro data-logo-vista="@(Model.Id)-vista" aria-describedby="@(Model.Id)-ayuda" />
+           data-logo-centro data-logo-vista="@(Model.Id)-vista" data-logo-encuadre="@(Model.Id)-encuadre" aria-describedby="@(Model.Id)-ayuda" />
     <div id="@(Model.Id)-ayuda" class="form-text">
-        Imagen PNG o JPEG (mejor PNG con fondo transparente). La app la reduce sola. Sale en la esquina superior izquierda de las pantallas y arriba de los PDF.
+        Imagen PNG o JPEG (mejor PNG con fondo transparente). Al elegirla podrás centrarla, acercarla y alejarla. Sale en la esquina superior izquierda de las pantallas y arriba de los PDF.
     </div>
     <img id="@(Model.Id)-vista" class="logo-centro-vista mt-2" alt="Vista previa del logo" src="@Model.CurrentUrl" hidden="@(Model.CurrentUrl is null)" />
+    <div id="@(Model.Id)-encuadre" class="mt-2" hidden>
+        <p class="form-text mt-0" id="@(Model.Id)-encuadre-ayuda">Arrastra el logo para centrarlo. Lo que se ve en el recuadro es lo que se guarda; las zonas vacías quedan transparentes.</p>
+        <canvas width="768" height="256" class="logo-encuadre rounded-3 d-block" tabindex="0" role="img"
+                aria-label="Encuadre del logo: arrástralo o usa las flechas para centrarlo" aria-describedby="@(Model.Id)-encuadre-ayuda"
+                data-logo-lienzo></canvas>
+        <div class="d-flex flex-wrap gap-2 mt-2" role="group" aria-label="Mover el logo">
+            <button type="button" class="btn btn-outline-secondary btn-lg" data-logo-mover="-1,0" aria-label="Mover el logo a la izquierda">←</button>
+            <button type="button" class="btn btn-outline-secondary btn-lg" data-logo-mover="0,-1" aria-label="Mover el logo arriba">↑</button>
+            <button type="button" class="btn btn-outline-secondary btn-lg" data-logo-mover="0,1" aria-label="Mover el logo abajo">↓</button>
+            <button type="button" class="btn btn-outline-secondary btn-lg" data-logo-mover="1,0" aria-label="Mover el logo a la derecha">→</button>
+        </div>
+        <label class="form-label d-block mt-2" for="@(Model.Id)-acercar">Acercar o alejar</label>
+        <input class="form-range logo-encuadre-acercar" type="range" min="0.25" max="3" step="0.05" value="1" id="@(Model.Id)-acercar" data-logo-acercar />
+    </div>
 </div>
