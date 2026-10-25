@@ -1,0 +1,114 @@
+{
+  "documento": "dictado-por-voz-confirmaciones-cj",
+  "cuestionario": "2026-10-23",
+  "guardado": "2026-10-25T13:34:11.394Z",
+  "respondidas": 15,
+  "total": 15,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Qué quiere decir una auxiliar cuando dice «decul» o «decúbito» (por ejemplo, «decul en el talón, rojo pero sin herida»)?",
+      "opcion": "B",
+      "textoOpcion": "Es una zona enrojecida o en riesgo, todavía no una UPP: va en «Lesiones en piel» sin marcar «UPP».",
+      "texto": "En planta «decúbito» se usa a menudo para hablar de una UPP, pero esta frase dice «rojo pero sin herida», así que es una zona enrojecida o en riesgo. Decidir si ya es una UPP (y de qué estadio) es una valoración de Enfermería, no de la auxiliar. Por seguridad la propuesta no debe marcar «UPP»: va como texto en «Lesiones en piel» y Enfermería lo valora. Conviene confirmar con una enfermera del centro que esta es la jerga real.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "Piel enrojecida sin herida («sacro enrojecido, crema barrera»): ¿se marca «UPP»?",
+      "opcion": "C",
+      "textoOpcion": "Hace falta una opción nueva «Piel enrojecida» en «Lesiones en piel».",
+      "texto": "Un sacro enrojecido es muy frecuente y clínicamente útil para prevenir una UPP, pero hoy solo cabe como texto. Si no hay casilla, el sistema tiende a forzarlo hacia «UPP», que es el error más grave visto. Una opción «Piel enrojecida» da un destino correcto y se puede contar y vigilar. Mientras no exista, valdría la opción A (solo texto, nunca marcar «UPP»). Marcar «UPP» solo lo debe hacer la auxiliar si lo dice de forma explícita.",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "«Dieta túrmix», «dieta triturada», «absorbentes», «cambios posturales»: ¿necesitan una casilla propia?",
+      "opcion": "A",
+      "textoOpcion": "No, que queden como texto libre (como está ahora).",
+      "texto": "Que queden como texto libre. «Dieta túrmix», «absorbentes» y «cambios posturales» describen cuidados rutinarios, no cambios del estado. Cada casilla nueva alarga un formulario que la auxiliar usa con prisa. Tras el piloto se verá cuáles se repiten y merecen casilla propia.",
+      "respondida": true
+    },
+    "1.4": {
+      "pregunta": "«Ha comido poco»: ¿qué casilla es?",
+      "opcion": "B",
+      "textoOpcion": "Falta una casilla «Come menos de lo habitual» en «Alimentación / hidratación».",
+      "texto": "Comer menos de lo habitual es una señal temprana de empeoramiento en personas mayores y hoy no tiene casilla. Sin ella el dictado la mete en «Disminución de ingesta de líquidos», que es un dato falso en la ficha. Una casilla «Come menos de lo habitual» en «Alimentación / hidratación» es más fiable que dejarlo como texto, y es de las pocas casillas nuevas que sí compensan.",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "«Está muy somnolienta, cuesta despertarla»: ¿en qué área?",
+      "opcion": "C",
+      "textoOpcion": "En las dos.",
+      "texto": "«Cuesta despertarla» puede ser solo sueño, pero también un descenso del nivel de conciencia, que es urgente. Si hay duda, es más seguro avisar de más que de menos: se marca «Somnolencia» y además «Estado de conciencia» con el texto. A la auxiliar le cuesta poco quitar una de las dos al revisar. Perder una alerta real sería mucho peor.",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "«Está desorientada, no sabe dónde está, no reconoce a su hija, esto es nuevo»: ¿en qué área?",
+      "opcion": "A",
+      "textoOpcion": "«Estado de conciencia».",
+      "texto": "Es un cambio cognitivo nuevo: «Estado de conciencia», con el texto «esto es nuevo» destacado. No es un problema de ánimo o conducta, y marcar las dos áreas diluye la alerta. Una desorientación de aparición brusca es una señal que Enfermería o Medicina deben valorar, así que lo importante es que quede escrito con claridad que es nuevo.",
+      "respondida": true
+    },
+    "2.3": {
+      "pregunta": "«Hoy participa muy poco, no ha querido bajar a la actividad ni hablar con nadie»: ¿qué se marca?",
+      "opcion": "A",
+      "textoOpcion": "Solo «Participación / relación social», con texto.",
+      "texto": "Solo «Participación / relación social», con el texto. La auxiliar no ha dicho que esté triste y el sistema no debe deducirlo: es el mismo error que marcar «UPP» sin que nadie lo diga. Si ella quiere dejar constancia del ánimo, lo marca al revisar.",
+      "respondida": true
+    },
+    "2.4": {
+      "pregunta": "«Le duele la barriga, se la agarra y no quiere comer»: ¿se marca también «Rechaza ingesta»?",
+      "opcion": "A",
+      "textoOpcion": "Sí: «Dolor abdominal» y «Rechaza ingesta».",
+      "texto": "Sí, las dos. Son dos observaciones que la auxiliar ha dicho con sus palabras: le duele la barriga y no quiere comer. Atribuir una causa («no come porque le duele») es una conclusión clínica que no le corresponde. Que queden las dos casillas ayuda a Enfermería a ver el cuadro completo.",
+      "respondida": true
+    },
+    "2.5": {
+      "pregunta": "Si la auxiliar solo dicta una temperatura («treinta y ocho y medio»), ¿qué pasa?",
+      "opcion": "B",
+      "textoOpcion": "Que se pueda guardar un cambio con solo la temperatura.",
+      "texto": "Una fiebre de 38,5 °C sola es un cambio que merece registrarse, y obligar a elegir un área arbitraria produciría datos falsos. Que se pueda guardar con solo la temperatura (A obligaría a inventar un área). Para el caso «37 y sin ningún cambio» (ejemplo 25), bastaría que la temperatura quede como constante y el formulario avise. Como la temperatura se revisa siempre (4.1), el riesgo es bajo.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Entre qué valores es una temperatura posible?",
+      "opcion": "A",
+      "textoOpcion": "Entre 34,0 y 42,0 °C.",
+      "texto": "Entre 34,0 y 42,0 °C. Un rango amplio impide los errores absurdos («378») sin bloquear valores reales. En personas mayores la temperatura axilar baja (hipotermia leve, 34-35 °C) existe y debe poder anotarse, igual que una fiebre alta. Un rango estrecho (35-41) bloquearía casos clínicamente importantes. Convendría que Enfermería confirme estos límites.",
+      "respondida": true
+    },
+    "3.2": {
+      "pregunta": "Si la temperatura queda fuera de ese rango, ¿qué hace el formulario?",
+      "opcion": "A",
+      "textoOpcion": "No deja guardar y pide corregirla.",
+      "texto": "No deja guardar y pide corregirla. Con un rango tan amplio, un valor fuera de él es casi siempre un error de dictado o de tecleo, y un dato así en la ficha es peor que una pausa de unos segundos. Si fuera un valor real (muy poco probable), la auxiliar lo puede dejar escrito en el texto del área y avisar a Enfermería.",
+      "respondida": true
+    },
+    "4.1": {
+      "pregunta": "¿Qué se revisa una a una antes de poder guardar?",
+      "opcion": "B",
+      "textoOpcion": "La temperatura y cada opción rápida marcada por voz (recomendada).",
+      "texto": "La temperatura y cada opción rápida marcada por voz, una a una. El sistema se equivoca a veces y una casilla errónea en el registro es un dato clínico falso. Revisar los textos uno a uno (C) sería demasiado lento y la gente acabaría pulsando «confirmar» sin leer. La B equilibra seguridad y rapidez.",
+      "respondida": true
+    },
+    "4.2": {
+      "pregunta": "Cuando el sistema dude, ¿prefieres que proponga menos o más?",
+      "opcion": "A",
+      "textoOpcion": "Que proponga menos: solo lo que se diga de forma explícita, aunque quede más texto libre.",
+      "texto": "Que proponga menos. Un error por omisión se corrige al revisar, porque el texto sigue ahí. Una casilla marcada de más tiende a aceptarse sin mirar (sesgo de automatización), y acaba como dato falso, como el caso de «UPP». Con datos clínicos pesa más evitar una afirmación falsa que ahorrar un clic.",
+      "respondida": true
+    },
+    "4.3": {
+      "pregunta": "Nombres de personas al dictar",
+      "opcion": "A",
+      "textoOpcion": "Un aviso fijo junto al micrófono: «No digas nombres» (recomendada).",
+      "texto": "Un aviso fijo «No digas nombres» junto al micrófono. La opción B da una falsa sensación de seguridad, porque un detector de nombres puede fallar. Hay además un tema de protección de datos: el audio va a un proveedor, y los datos de salud son categoría especial (art. 9 RGPD). Hace falta contrato de encargado del tratamiento (art. 28), no conservar el audio y valorar una evaluación de impacto. Recomiendo que el DPD lo revise.",
+      "respondida": true
+    },
+    "5.1": {
+      "pregunta": "¿Es correcto lo que debería salir en cada ejemplo?",
+      "opcion": "B",
+      "textoOpcion": "Hay ejemplos que corregir (los indico en el comentario).",
+      "texto": "Casi todos son correctos. A corregir según mis respuestas: ej. 1: «comido poco» pasa a «Come menos de lo habitual» (1.4). Ej. 3: «decul» sin herida va solo como texto en «Lesiones en piel» (1.1); «decaído» es dudoso para «Disminución del ánimo», pues el sistema no debe deducirlo. Ej. 10: «Somnolencia» y además «Estado de conciencia» (2.1). Ej. 25: la temperatura sola se podría guardar pero con aviso de que no hay cambio (2.5). Ej. 28: «Piel enrojecida» en lugar de texto (1.2). Ej. 23, 22 y 17: correctos como están. Ej. 31: el nombre no debe aparecer nunca.",
+      "respondida": true
+    }
+  }
+}

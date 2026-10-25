@@ -1,0 +1,156 @@
+{
+  "documento": "confirmaciones-tercera-tanda-cj",
+  "cuestionario": "2026-10-23",
+  "guardado": "2026-10-25T13:46:09.259Z",
+  "respondidas": 21,
+  "total": 21,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Qué es un resumen periódico?",
+      "opcion": "B",
+      "textoOpcion": "Una recopilación automática de los comunicados ya publicados en el periodo, que la familia ve juntos; sin texto nuevo.",
+      "texto": "Una recopilación automática de los comunicados ya publicados. No obliga a los profesionales a escribir un texto nuevo cada día para cada residente, que sería una carga enorme y acabaría siendo copiar y pegar. Además no crea contenido de salud sin revisar: todo lo que la familia ve ya fue aprobado al publicarse. Un texto nuevo por residente se puede estudiar tras el piloto si las familias lo piden.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Quién fija la frecuencia del resumen?",
+      "opcion": "A",
+      "textoOpcion": "El centro: una frecuencia para todos sus residentes.",
+      "texto": "El centro fija una frecuencia para todos. Es más sencillo de configurar y de explicar a las familias. Que la fije Administración por residente (B) o la familia (C) multiplica las configuraciones y los errores. Si tras el piloto hay demanda, se puede abrir por residente.",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "¿Quién redacta y quién aprueba el resumen?",
+      "opcion": "A",
+      "textoOpcion": "Lo prepara y lo aprueba Enfermería, al guardarlo (como los comunicados).",
+      "texto": "Como el resumen solo recopila comunicados ya aprobados por quien los preparó (1.1 B), no hace falta una segunda aprobación. Lo prepara y lo aprueba Enfermería, igual que los comunicados. Si algún día el resumen contiene texto nuevo, se debería revisar esta respuesta y valorar la aprobación de Medicina (C).",
+      "respondida": true
+    },
+    "1.4": {
+      "pregunta": "Si en el periodo no ha pasado nada (o, en «solo relevantes», no hay ningún comunicado relevante), ¿qué ve la familia?",
+      "opcion": "A",
+      "textoOpcion": "Nada: no se publica ningún resumen.",
+      "texto": "No se publica nada. «Sin novedades» no es lo mismo que «no se ha publicado ningún comunicado»: puede haber pasado algo que el equipo decidió no comunicar, y el mensaje daría una garantía que el centro no puede dar. Es mejor el silencio que una afirmación posiblemente falsa. La familia que quiera saber, llama al centro.",
+      "respondida": true
+    },
+    "1.5": {
+      "pregunta": "Con un resumen semanal, ¿siguen saliendo los comunicados sueltos?",
+      "opcion": "A",
+      "textoOpcion": "Sí: el resumen se suma a los comunicados sueltos.",
+      "texto": "El resumen se suma a los comunicados sueltos. Como el resumen recopila lo ya publicado (1.1 B), los comunicados sueltos tienen que salir antes. Quitar los sueltos retrasaría información que la familia necesita cuanto antes, y los relevantes no deben esperar a un resumen semanal.",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Qué puede ver quien tenga ese permiso con la finalidad de calidad asistencial?",
+      "opcion": "B",
+      "textoOpcion": "Solo datos agregados por unidad y periodo (cumplimiento de hitos, indicadores), sin abrir la historia de ningún residente.",
+      "texto": "Solo datos agregados por unidad y periodo. Una finalidad de calidad con acceso al detalle clínico (A) sería una puerta amplia: cualquier persona designada podría abrir cualquier historia con una justificación genérica («calidad»). Es lo contrario de la minimización (art. 5.1.c RGPD). Si al revisar los indicadores aparece un caso concreto, se abre con las finalidades que ya existen (incidencia o reclamación, continuidad), con declaración y auditoría.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "Cuando Dirección abre la línea temporal o el historial de eventos cerrados de un residente, ¿cómo debe quedar anotado?",
+      "opcion": "A",
+      "textoOpcion": "Una anotación por cada consulta del residente, con la finalidad y la justificación (como está ahora).",
+      "texto": "Una anotación por cada consulta del residente, con la finalidad y la justificación. Una anotación por cada evento abierto (B) llenaría la auditoría de ruido y la haría ilegible, lo que acaba perjudicando la trazabilidad real. La consulta es la unidad que importa: quién miró a quién, cuándo y por qué.",
+      "respondida": true
+    },
+    "3.2": {
+      "pregunta": "En la trazabilidad de un residente, ¿Dirección ve también quién consultó su expediente?",
+      "opcion": "A",
+      "textoOpcion": "Sí: también las consultas de Dirección (como está ahora).",
+      "texto": "Sí, también las consultas de Dirección. Quien supervisa debe poder ser supervisado, y esta transparencia es una garantía para el residente (que puede ejercer su derecho de acceso). Sin mostrar la justificación escrita, el riesgo es bajo.",
+      "respondida": true
+    },
+    "3.3": {
+      "pregunta": "¿Debe Dirección ver el nombre de quien firma un informe de derivación o de quien corrige un registro?",
+      "opcion": "A",
+      "textoOpcion": "Sí, el nombre y el perfil (como está ahora).",
+      "texto": "Sí, el nombre y el perfil, solo al abrir un caso concreto. Para revisar un informe o una corrección hace falta saber quién lo hizo (responsabilidad profesional). Al no haber rankings por persona ni listados generales, el riesgo de uso inadecuado es bajo.",
+      "respondida": true
+    },
+    "3.4": {
+      "pregunta": "Dirección ve el texto de los comunicados a la familia de su ámbito. ¿Debe declarar una finalidad para verlo?",
+      "opcion": "A",
+      "textoOpcion": "No: lo ve sin declarar finalidad (como está ahora).",
+      "texto": "No hace falta declarar. El comunicado ya está aprobado para la familia y no es detalle clínico, así que exigir una declaración sería burocracia sin protección real. El detalle clínico (basal, historial) sí exige declaración, como ahora.",
+      "respondida": true
+    },
+    "3.5": {
+      "pregunta": "La tabla de frecuencia de comunicados por unidad, ¿qué más necesita?",
+      "opcion": "A",
+      "textoOpcion": "Está bien como está.",
+      "texto": "Está bien como está. No hay errores propios de publicación, así que «pendientes y errores» no tiene sentido. Contar los publicados antes de su hora (B) podría servir para vigilar el uso de la publicación anticipada, pero conviene esperar a ver si el piloto lo necesita.",
+      "respondida": true
+    },
+    "4.1": {
+      "pregunta": "¿Qué debe señalar el inicio como «ubicación pendiente» de un residente?",
+      "opcion": "B",
+      "textoOpcion": "Los residentes sin habitación o sin plaza.",
+      "texto": "Sin habitación o sin plaza. La plaza (la cama) importa para identificar y localizar al residente, y una ubicación a medias es un riesgo operativo. Es coherente con hacer la cama obligatoria cuando hay camas libres. La opción C (ninguno) dejaría asignaciones pendientes sin visibilidad.",
+      "respondida": true
+    },
+    "4.2": {
+      "pregunta": "¿Con cuánta antelación debe avisar el inicio de una autorización de familiar que va a caducar?",
+      "opcion": "A",
+      "textoOpcion": "30 días (como está ahora).",
+      "texto": "30 días da tiempo a renovar la autorización con la familia sin generar avisos demasiado pronto (60) ni dejar poco margen (15). Una autorización caducada corta el acceso, así que conviene que el aviso llegue con margen suficiente.",
+      "respondida": true
+    },
+    "4.3": {
+      "pregunta": "Un familiar vinculado a un residente cuya autorización todavía no se ha abierto, ¿cuenta como pendiente?",
+      "opcion": "A",
+      "textoOpcion": "Sí: cuenta como pendiente de activar desde que se vincula (como está ahora).",
+      "texto": "Sí, cuenta como pendiente desde que se vincula. Si no, un familiar vinculado sin autorización quedaría invisible: nadie la abriría y la familia no entraría. Es mejor un aviso de más a Administración que un familiar olvidado.",
+      "respondida": true
+    },
+    "4.4": {
+      "pregunta": "¿Qué otra cosa debe ver Administración nada más entrar?",
+      "opcion": "B",
+      "textoOpcion": "Los residentes sin contacto urgente designado y sin motivo indicado.",
+      "texto": "Los residentes sin contacto urgente designado y sin motivo indicado. Es el aviso más importante para la seguridad: en una urgencia, el centro necesita saber a quién llamar. Como segunda prioridad, las cuentas profesionales suspendidas o sin ámbito (C), que son un riesgo de seguridad de acceso.",
+      "respondida": true
+    },
+    "5.1": {
+      "pregunta": "Si un episodio tiene indicaciones médicas que nadie va a cumplir, ¿quién puede cerrarlo?",
+      "opcion": "B",
+      "textoOpcion": "Solo Dirección, indicando un motivo.",
+      "texto": "Solo Dirección (Clínica), indicando un motivo que queda en la auditoría. Cerrar un episodio con indicaciones sin cumplir es una decisión con responsabilidad clínica, y Administración no debería tomarla. Dejar el episodio abierto para siempre (D) falsea los datos. El motivo y el nombre de quien lo cierra deben quedar auditados.",
+      "respondida": true
+    },
+    "5.2": {
+      "pregunta": "Tras un traslado entre unidades, ¿qué ve la unidad de destino de los episodios ya cerrados del residente?",
+      "opcion": "C",
+      "textoOpcion": "La unidad de destino solo si lo pide, indicando un motivo que queda en la auditoría.",
+      "texto": "La unidad de destino ve los episodios cerrados solo si lo pide, con un motivo que queda en la auditoría. Es un equilibrio: el equipo que atiende ahora al residente a veces necesita el historial (caídas, alergias), pero ver todo desde el primer día (B) es más acceso del necesario. Con A, el destino podría atender sin información importante.",
+      "respondida": true
+    },
+    "6.1": {
+      "pregunta": "Cuando se publica un comunicado o el centro propone una cita, ¿debe llegar a la familia un aviso genérico por correo?",
+      "opcion": "C",
+      "textoOpcion": "Sí, pero solo para las propuestas de cita, que son las que esperan una respuesta.",
+      "texto": "Sí, pero solo para las propuestas de cita, que esperan una respuesta. El correo ya existe (se usa para el código de acceso al portal). El aviso sería genérico, sin nombre ni contenido de salud. Para los comunicados no hace falta empujar: la familia los consulta cuando entra, y así evitamos avisos constantes.",
+      "respondida": true
+    },
+    "6.2": {
+      "pregunta": "¿Debe recibir la familia un recordatorio de una cita confirmada?",
+      "opcion": "B",
+      "textoOpcion": "Sí, el día antes.",
+      "texto": "Sí, el día antes, con un texto genérico («Tienes una cita mañana en ResidApp»), sin decir con quién ni para qué. Reduce las citas perdidas y el coste de implementarlo es bajo si ya hay correo para las propuestas (6.1). Un segundo recordatorio (C) es demasiado para el piloto.",
+      "respondida": true
+    },
+    "6.3": {
+      "pregunta": "Cuando la familia entra en el portal, ¿debe ver destacado que tiene algo pendiente?",
+      "opcion": "C",
+      "textoOpcion": "Sí, para las propuestas de cita y para los comunicados nuevos.",
+      "texto": "Sí, para las propuestas de cita y los comunicados nuevos. Es un aviso dentro del portal, sin coste de privacidad: no sale de la aplicación y no revela nada a terceros. Hoy la familia debe abrir a cada residente para ver si hay algo, y eso hace que se pierdan propuestas.",
+      "respondida": true
+    },
+    "6.4": {
+      "pregunta": "¿Se acepta una notificación en el móvil que solo diga «Tienes un aviso en ResidApp»?",
+      "opcion": "A",
+      "textoOpcion": "No: en el piloto la familia entra a mirar (como está ahora).",
+      "texto": "No hay notificaciones push en el piloto. Aunque el texto sea genérico, una notificación en la pantalla bloqueada revela que la persona tiene relación con una residencia (otra persona puede verla). Además requiere instalar la aplicación y aceptar permisos, y rompe el alcance del piloto. Con el correo (6.1) y el aviso dentro del portal (6.3) ya hay cobertura suficiente.",
+      "respondida": true
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "documento": "importacion-exportacion-confirmaciones-cj",
+  "cuestionario": "2026-10-21",
+  "guardado": "2026-10-25T13:25:48.302Z",
+  "respondidas": 8,
+  "total": 8,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Con qué fecha queda dado de alta un residente importado?",
+      "opcion": "B",
+      "textoOpcion": "La fecha de ingreso que traiga el fichero, si la trae.",
+      "texto": "",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Cuándo un residente del fichero «ya existe» en ResidApp?",
+      "opcion": "B",
+      "textoOpcion": "Solo si coincide la referencia interna; si coinciden nombre y fecha, que avise y deje elegir.",
+      "texto": "Elijo B por seguridad del residente: dos personas distintas con el mismo nombre y fecha de nacimiento son raras pero posibles (en residencias, p. ej. homónimos con apellidos muy comunes). Si la app los fusiona o descarta en silencio, un residente real quedaría sin dar de alta y su asistencia podría asignarse a otra persona. La referencia interna es el identificador fiable; con nombre y fecha iguales, lo prudente es avisar y que decida una persona (principio de exactitud, art. 5.1.d RGPD).",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "Si el fichero trae el nombre y los apellidos en columnas separadas, ¿cómo se guardan?",
+      "opcion": "A",
+      "textoOpcion": "Se unen: «Ana María Pérez López» (como está ahora).",
+      "texto": "Elijo A: es lo mismo que ya ocurre en el alta a mano, así que las listas y los buscadores se comportan igual sin importar el origen del residente. C (nombre y apellidos separados en todas partes) es un cambio grande de modelo de datos que no hace falta para el piloto; se puede reconsiderar si luego se necesita ordenar por apellidos.",
+      "respondida": true
+    },
+    "1.4": {
+      "pregunta": "Si el fichero no dice el sexo de un residente, ¿qué se guarda?",
+      "opcion": "A",
+      "textoOpcion": "«No consta», y se corrige después desde la ficha (como está ahora).",
+      "texto": "Elijo A: «No consta» y corregir en la ficha. Bloquear la fila (B) impediría dar de alta a residentes reales por un dato incompleto del programa de origen. Lo importante es que nunca se deduzca el sexo a partir del nombre u otro dato (exactitud, art. 5.1.d RGPD). Pediría que la vista previa muestre cuántas filas quedan «No consta», para que Administración las corrija enseguida.",
+      "respondida": true
+    },
+    "1.5": {
+      "pregunta": "¿Hay que importar también los familiares?",
+      "opcion": "A",
+      "textoOpcion": "No por ahora: se añaden a mano (como está ahora).",
+      "texto": "Elijo A por ahora: los familiares y el contacto urgente llevan sus propias autorizaciones (quién puede ver qué, comunicaciones, Portal Familiar), y esos datos son de terceros que no están en el fichero con esas autorizaciones. Importarlos sin ellas aumentaría los datos tratados sin una necesidad clara (minimización, art. 5.1.c). Si el piloto demuestra que el doble registro de familiares es un problema real, se podría estudiar B (solo el contacto principal) con las autorizaciones en estado pendiente.",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Qué datos lleva el censo exportado?",
+      "opcion": "A",
+      "textoOpcion": "Nombre, fecha de nacimiento, sexo, unidad, habitación, cama y referencia interna (como está ahora).",
+      "texto": "Elijo A: es el mínimo necesario para que otro programa reconozca al residente. Cada dato de más que sale en un CSV deja de estar bajo el control de ResidApp (un fichero en un ordenador, un correo, un pendrive). Nombre más fecha de nacimiento más estar en una residencia ya es información sensible por su relación con la salud. Recomendaría además un aviso al exportar («contiene datos personales: guárdalo en un lugar seguro y bórralo cuando termines») y que quede en la auditoría quién exportó y cuándo.",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "¿Quién puede importar y exportar?",
+      "opcion": "A",
+      "textoOpcion": "Solo Administración (como está ahora).",
+      "texto": "Elijo A: la importación y la exportación son operaciones masivas de datos personales, con más riesgo que consultar un expediente individual. Dirección Clínica no gestiona la estructura ni las altas, y ya tiene su consulta auditada del expediente; darle exportación del censo completo sería más acceso del necesario (mínimo privilegio, art. 5.1.c y 25 RGPD). Si Dirección necesita un listado, que lo pida a Administración. Pediría que cada importación y exportación quede en la auditoría.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Hay que estudiar la exportación de los registros asistenciales?",
+      "opcion": "C",
+      "textoOpcion": "Sí, pero después del piloto, cuando se sepa qué programa usa el centro.",
+      "texto": "Elijo C: los registros asistenciales (cierres de turno, cambios, valoraciones) son datos de salud, categoría especial (art. 9 RGPD). Exportarlos exige antes un contrato de encargado del tratamiento con cada centro (art. 28), auditoría y probablemente una evaluación de impacto (art. 35). Hacerlo antes del piloto ampliaría el alcance cuando aún no se sabe qué programa de gestión usa el centro, y el formato depende de eso. Después del piloto se decide con datos reales: qué registros, en qué formato y con qué garantías.",
+      "respondida": true
+    }
+  }
+}

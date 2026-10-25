@@ -1,0 +1,65 @@
+{
+  "documento": "foto-residente-confirmaciones-cj",
+  "cuestionario": "2026-10-20",
+  "guardado": "2026-10-25T13:10:45.286Z",
+  "respondidas": 8,
+  "total": 8,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Cómo debe constar el consentimiento para la foto?",
+      "opcion": "B",
+      "textoOpcion": "La app debe guardar también quién firmó el consentimiento (el residente o su representante) y la fecha.",
+      "texto": "El art. 7.1 del RGPD obliga al responsable a poder demostrar que hay consentimiento. Una casilla sola no lo demuestra. Guardar el documento escaneado (C) añade un dato sensible que ya custodia el centro, y eso va contra la minimización.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "Si el residente o su representante no quieren foto, ¿qué hace la app?",
+      "opcion": "B",
+      "textoOpcion": "Se anota «no quiere foto» en la ficha, para que nadie vuelva a pedirla.",
+      "texto": "Respeta la negativa y evita que cada profesional la pida otra vez, lo que acaba siendo presión sobre un residente vulnerable. Es solo un indicador, no un motivo.",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "¿Quién puede poner, cambiar o quitar la foto?",
+      "opcion": "D",
+      "textoOpcion": "Administración, y Enfermería solo con un permiso que da Administración.",
+      "texto": "D (Administración, y Enfermería con permiso). Es el mínimo privilegio, y Enfermería sigue pudiendo hacerlo el día del ingreso si Administración se lo concede. La A es aceptable si el centro es pequeño. Descartaría la C: la Auxiliar usa la foto, no necesita cambiarla",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Debe ver la foto Dirección Clínica?",
+      "opcion": "A",
+      "textoOpcion": "No (como está ahora).",
+      "texto": "",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "¿Qué pasa con la foto cuando el residente se da de baja?",
+      "opcion": "B",
+      "textoOpcion": "Se borra al dar de baja.",
+      "texto": "La foto se recogió para identificar a un residente que está en el centro. Al irse, esa finalidad desaparece y la limitación del plazo de conservación (art. 5.1.e) pide borrarla. Si se reactiva, se pide un consentimiento nuevo. Si en tu centro «baja» incluye ausencias temporales, como un ingreso hospitalario, elegiría la C con un plazo corto",
+      "respondida": true
+    },
+    "2.3": {
+      "pregunta": "¿Hay que pedir que se renueve la foto cada cierto tiempo?",
+      "opcion": "B",
+      "textoOpcion": "Sí: un aviso a Administración cuando la foto tenga más de un tiempo (dime cuánto en el comentario).",
+      "texto": "El principio de exactitud (art. 5.1.d) y la finalidad práctica lo piden: una foto antigua falla como identificación y puede causar errores en la medicación. Pondría 12 meses en el comentario, porque las personas mayores cambian rápido con una enfermedad.",
+      "respondida": true
+    },
+    "2.4": {
+      "pregunta": "¿Hay que anotar en la auditoría cada vez que alguien ve la foto?",
+      "opcion": "A",
+      "textoOpcion": "No: solo se anota quién la pone, la cambia o la quita (como está ahora).",
+      "texto": "Registrar cada vista generaría ruido y nadie lo revisaría. Lo que importa es quién la pone, la cambia o la quita, y eso ya queda. El acceso al expediente sí está auditado, y la foto no lo amplía.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Debe ser obligatorio elegir la cama al dar de alta a un residente?",
+      "opcion": "B",
+      "textoOpcion": "Obligatoria si la unidad tiene camas libres, con una opción explícita «Pendiente de asignar»; si la unidad no tiene camas configuradas, sigue siendo opcional.",
+      "texto": "Evita que se olvide la cama sin bloquear a los centros que aún no han configurado las suyas. Es la opción que propone Ingeniería. La C bloquearía altas reales, por ejemplo en urgencias.",
+      "respondida": true
+    }
+  }
+}
