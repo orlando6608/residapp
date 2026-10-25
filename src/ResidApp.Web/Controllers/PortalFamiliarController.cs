@@ -36,7 +36,7 @@ public sealed partial class PortalFamiliarController(
         return result.Value!.Count switch
         {
             0 => View("Estado", new PortalFamiliarEstadoViewModel(
-                "No tienes ninguna autorización activa",
+                "Ahora no tienes acceso a ningún residente",
                 "Ahora mismo no tienes acceso a la información de ningún residente. Si crees que es un error, contacta con la Administración del centro.")),
             1 when !elegir => RedirectToAction(nameof(Residente), new { linkId = result.Value[0].LinkId }),
             _ => View(result.Value),

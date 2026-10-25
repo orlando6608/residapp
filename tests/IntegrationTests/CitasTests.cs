@@ -411,6 +411,30 @@ public class CitasTests
     }
 
     [Fact]
+    public async Task CitasPasadasSinCerrar_SonLasConfirmadasQueYaEmpezaron_DeCualquierSemana_YSalenAlFinalizarlas()
+    {
+        var setup = await SetupAsync("Residente Citas Sin Cerrar");
+        await ConfigureAsync(setup);
+        var slots = await SlotsAsync(setup.Subject, setup.LinkId);
+        Assert.True((await BookAsync(setup.Subject, setup.LinkId, slots[0])).Ok);
+        var lastMonth = await InsertAppointmentAsync(setup, AppointmentTeam.Enfermeria, DateTime.UtcNow.AddDays(-20));
+        var yesterday = await InsertAppointmentAsync(setup, AppointmentTeam.Medico, DateTime.UtcNow.AddDays(-1));
+        await InsertAppointmentAsync(setup, AppointmentTeam.Medico, DateTime.UtcNow.AddDays(-3), status: "CANCELADA");
+        await InsertAppointmentAsync(setup, AppointmentTeam.Enfermeria, DateTime.UtcNow.AddDays(-4), status: "FINALIZADA");
+        var admin = Admin(setup.Admin.ExternalSubject);
+
+        var before = (await admin.ListPastUnclosedAsync(setup.Admin.ProfileScopeId, setup.Admin.CenterId)).Value!;
+        var finished = await admin.FinishAsync(new AppointmentTargetCommand(setup.Admin.ProfileScopeId, setup.Admin.CenterId, yesterday));
+        var after = (await admin.ListPastUnclosedAsync(setup.Admin.ProfileScopeId, setup.Admin.CenterId)).Value!;
+
+        Assert.Equal([lastMonth, yesterday], before.Select(a => a.Id));
+        Assert.True(finished.Ok, finished.Error?.Message);
+        Assert.Equal([lastMonth], after.Select(a => a.Id));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Admin(setup.Nurse.ExternalSubject).ListPastUnclosedAsync(
+            setup.Nurse.ProfileScopeId, setup.Nurse.CenterId)).Error!.Code);
+    }
+
+    [Fact]
     public async Task Administracion_VeLaAgenda_ReprogramaCancelaYFinaliza_ConMotivoHistorialYSinFiltrarElMotivoALaFamilia()
     {
         var setup = await SetupAsync("Residente Citas Agenda");

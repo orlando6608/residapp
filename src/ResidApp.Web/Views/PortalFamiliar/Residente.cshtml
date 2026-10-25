@@ -8,10 +8,23 @@
     var corrected = Model.Home.Communications.Where(c => c.Corrects is not null).Select(c => c.Corrects!.OriginalId).ToHashSet();
     string Active(FamilyCommunicationType? type) => Model.Tipo == type ? "active" : "";
     string? Current(FamilyCommunicationType? type) => Model.Tipo == type ? "page" : null;
+    var newCount = Model.Home.Communications.Count(c => c.IsNewSince(Model.Home.PreviousVisitAt));
 }
 
 <h1 class="h3">@resident.ResidentName</h1>
 <p class="text-muted">@resident.Relationship</p>
+
+@if (Model.Home.ProposalRequestId is { } proposalRequestId)
+{
+    <div class="alert alert-primary" role="status">
+        <strong>Tienes una propuesta de cita esperando tu respuesta.</strong>
+        <a class="alert-link" asp-action="Solicitud" asp-route-linkId="@resident.LinkId" asp-route-solicitudId="@proposalRequestId">Ver la propuesta</a>
+    </div>
+}
+@if (newCount > 0)
+{
+    <p class="fw-semibold">@(newCount == 1 ? "Hay 1 novedad nueva" : $"Hay {newCount} novedades nuevas") desde tu última visita.</p>
+}
 
 <p><a class="btn btn-outline-primary" asp-action="Citas" asp-route-linkId="@resident.LinkId">Citas con el equipo asistencial</a></p>
 
@@ -52,6 +65,10 @@ else
            class="card text-decoration-none mb-3 border-start border-4 @(item.Type == FamilyCommunicationType.Relevante ? "border-warning" : "border-secondary")">
             <div class="card-body">
                 <p class="text-muted mb-1">
+                    @if (item.IsNewSince(Model.Home.PreviousVisitAt))
+                    {
+                        <span class="badge text-bg-primary">Nueva</span>
+                    }
                     @if (item.Kind == FamilyPortalCommunicationKind.Corrective)
                     {
                         <span class="badge text-bg-dark">Corrección</span>

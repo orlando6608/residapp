@@ -45,11 +45,13 @@ public sealed class SqlAdministrationOverview(SqlConnectionFactory connections) 
                 (SELECT COUNT(*) FROM latest WHERE StatusCode = 'ACTIVA' AND ValidUntil < @Today) AS AuthorizationsExpired,
                 (SELECT COUNT(*) FROM dbo.citas_solicitudes WHERE centro_id = @CenterId AND estado_codigo = 'PENDIENTE') AS AppointmentRequestsPending,
                 (SELECT COUNT(*) FROM dbo.citas_solicitudes WHERE centro_id = @CenterId AND estado_codigo = 'PROPUESTA'
-                    AND propuesta_inicio_en > @Now) AS AppointmentRequestsAwaitingFamily,
+                    AND propuesta_caduca_en > @Now) AS AppointmentRequestsAwaitingFamily,
                 (SELECT COUNT(*) FROM dbo.citas WHERE centro_id = @CenterId AND estado_codigo = 'CONFIRMADA'
                     AND inicio_en >= @TodayStart AND inicio_en < @TomorrowStart) AS AppointmentsToday,
                 (SELECT COUNT(*) FROM dbo.citas WHERE centro_id = @CenterId AND estado_codigo = 'CONFIRMADA'
-                    AND inicio_en >= @TomorrowStart AND inicio_en < @ComingEnd) AS AppointmentsComing
+                    AND inicio_en >= @TomorrowStart AND inicio_en < @ComingEnd) AS AppointmentsComing,
+                (SELECT COUNT(*) FROM dbo.citas WHERE centro_id = @CenterId AND estado_codigo = 'CONFIRMADA'
+                    AND inicio_en <= @Now) AS AppointmentsPastUnclosed
             """,
             new
             {

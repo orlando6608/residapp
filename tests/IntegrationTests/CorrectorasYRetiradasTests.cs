@@ -78,7 +78,6 @@ public class CorrectorasYRetiradasTests
         Assert.Equal("Corrección: fue febrícula, no fiebre.", corrective.Text);
         Assert.Equal(FamilyCommunicationType.Relevante, corrective.Type);
         Assert.Equal(original, corrective.Corrects!.OriginalId);
-        Assert.True(corrective.Corrects.OriginalVisible);
         Assert.Equal("Ha tenido fiebre.", after[1].Text);
         Assert.Equal(FamilyPortalCommunicationKind.Original, after[1].Kind);
         Assert.Equal(corrective.Id, Assert.Single(originalDetail.Corrections).Id);
@@ -189,20 +188,20 @@ public class CorrectorasYRetiradasTests
     }
 
     [Fact]
-    public async Task LaCorrectora_TieneSuPropiaVentana_YSeVeAunqueElOriginalYaNoSeVea()
+    public async Task LaCorrectora_DejaDeVerseCuandoDejaDeVerseElOriginal_AunqueSeaRelevante()
     {
         var setup = await SetupAsync("Residente Ventana Correctora");
-        // Un ordinario de hace 40 días ya no se ve (30); su correctora relevante de hace 20 días sí (6 meses), y una ordinaria de hace 31 días no.
+        // CJ (portal 4.2): un ordinario de hace 40 días ya no se ve (30), y su correctora relevante de hace 20 días tampoco. Un ordinario de
+        // hace 20 días sigue visible, y con él su correctora ordinaria de hace 10.
         var old = await AddCommunicationAsync(setup, "Antiguo.", FamilyCommunicationType.Ordinaria, DateTime.UtcNow.AddDays(-41), DateTime.UtcNow.AddDays(-40));
-        await AddCorrectiveRowAsync(setup, old, FamilyCommunicationType.Relevante, "Corrección relevante reciente.", DateTime.UtcNow.AddDays(-20));
-        await AddCorrectiveRowAsync(setup, old, FamilyCommunicationType.Ordinaria, "Corrección ordinaria antigua.", DateTime.UtcNow.AddDays(-31));
+        await AddCorrectiveRowAsync(setup, old, FamilyCommunicationType.Relevante, "Corrección relevante del antiguo.", DateTime.UtcNow.AddDays(-20));
+        var recent = await AddCommunicationAsync(setup, "Reciente.", FamilyCommunicationType.Ordinaria, DateTime.UtcNow.AddDays(-21), DateTime.UtcNow.AddDays(-20));
+        await AddCorrectiveRowAsync(setup, recent, FamilyCommunicationType.Ordinaria, "Corrección del reciente.", DateTime.UtcNow.AddDays(-10));
 
         var list = await ListAsync(setup);
 
-        var corrective = Assert.Single(list);
-        Assert.Equal("Corrección relevante reciente.", corrective.Text);
-        Assert.False(corrective.Corrects!.OriginalVisible);
-        Assert.Equal(old, corrective.Corrects.OriginalId);
+        Assert.Equal(["Corrección del reciente.", "Reciente."], list.Select(c => c.Text));
+        Assert.Equal(recent, list[0].Corrects!.OriginalId);
     }
 
     [Fact]

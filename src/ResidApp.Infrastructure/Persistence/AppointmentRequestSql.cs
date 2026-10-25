@@ -20,13 +20,13 @@ internal static class AppointmentRequestSql
     internal const string Columns = """
         r.id AS Id, r.residente_id AS ResidentId, r.vinculo_id AS LinkId, r.cuenta_id AS AccountId, r.equipo_codigo AS Team, r.modalidad_codigo AS Modality,
         r.motivo_codigo AS Reason, r.comentario AS Comment, r.disponibilidad_dias AS Days, r.disponibilidad_franja AS DayPart, r.estado_codigo AS Status,
-        r.propuesta_inicio_en AS ProposedStart, r.propuesta_fin_en AS ProposedEnd, r.profesional_interno AS Professional, r.cita_id AS AppointmentId,
+        r.propuesta_inicio_en AS ProposedStart, r.propuesta_fin_en AS ProposedEnd, r.propuesta_en AS ProposedAt, r.profesional_interno AS Professional, r.cita_id AS AppointmentId,
         r.creada_en AS CreatedAt
         """;
 
     internal sealed record RequestRow(
         Guid Id, Guid ResidentId, Guid LinkId, Guid AccountId, string Team, string Modality, string Reason, string? Comment, string Days, string DayPart,
-        string Status, DateTime? ProposedStart, DateTime? ProposedEnd, string? Professional, Guid? AppointmentId, DateTime CreatedAt)
+        string Status, DateTime? ProposedStart, DateTime? ProposedEnd, DateTime? ProposedAt, string? Professional, Guid? AppointmentId, DateTime CreatedAt)
     {
         internal AppointmentRequestStatus StatusValue => EnumCode.ParseCode<AppointmentRequestStatus>(Status);
 
@@ -40,9 +40,13 @@ internal static class AppointmentRequestSql
 
         internal DateTimeOffset? ProposedEndsAt => ProposedEnd is { } end ? AppointmentSql.Utc(end) : null;
 
-        /// <summary>Una propuesta cuya hora ya empezó caduca (se calcula al leer, no se guarda).</summary>
+        /// <summary>Cuándo caduca la propuesta (48 horas o 24 horas antes de la cita, lo que llegue antes; se calcula, no se guarda); null sin propuesta.</summary>
+        internal DateTimeOffset? ProposalExpiresAt => ProposedAt is { } at && ProposedStartsAt is { } start
+            ? AppointmentRequestRules.ProposalExpiresAt(AppointmentSql.Utc(at), start)
+            : null;
+
         internal bool ProposalExpired(DateTimeOffset now) =>
-            StatusValue == AppointmentRequestStatus.Propuesta && ProposedStartsAt is { } start && !AppointmentRequestRules.IsProposalAlive(start, now);
+            StatusValue == AppointmentRequestStatus.Propuesta && ProposalExpiresAt is { } expiresAt && now >= expiresAt;
     }
 
     internal sealed record ChangeRow(Guid RequestId, string Action, string Profile, DateTime At, DateTime? ProposedStart, string? Detail);

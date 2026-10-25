@@ -281,6 +281,97 @@ public class CitasSolicitudesTests
     }
 
     [Fact]
+    public async Task LaPropuesta_CaducaALas48Horas_LiberaElHueco_YAdministracionVuelveAProponer()
+    {
+        var setup = await SetupAsync("Residente Solicitud Caduca Uno");
+        await ConfigureAsync(setup);
+        var other = await OtherResidentFamilyAsync(setup, "Residente Solicitud Caduca Dos");
+        var request = await SentAsync(setup.Subject, setup.LinkId);
+        var otherRequest = await SentAsync(other.Subject, other.LinkId);
+        // Una cita de dentro de más de tres días: gana el límite de 48 horas desde que se propuso (CJ, portal 6.4).
+        var slot = (await ProposalSlotsAsync(setup, request.Id, DateTimeOffset.UtcNow.AddDays(3))).First();
+        Assert.True((await ProposeAsync(setup, request.Id, slot)).Ok);
+        var proposedAt = await ProposedAtAsync(request.Id);
+        var alive = (await ReadAsync(setup.Subject, setup.LinkId, request.Id)).Value!;
+        Assert.Equal(proposedAt.AddHours(48), alive.ProposalExpiresAt);
+        Assert.True(alive.CanAccept);
+        Assert.Equal(proposedAt.AddHours(48), (await AdminViewAsync(setup, request.Id)).ProposalExpiresAt);
+        Assert.Equal(proposedAt.AddHours(48), await StoredExpiryAsync(request.Id));
+        // Al entrar en el portal, la familia que la envió la ve destacada (CJ, tercera 6.3); la otra familia, no.
+        var portalQuery = await QueryAsync(setup.Subject);
+        Assert.True(Assert.Single((await Portal(setup.Subject).ListResidentsAsync(portalQuery)).Value!).ProposalAwaitingAnswer);
+        Assert.Equal(request.Id, (await Portal(setup.Subject).ReadResidentAsync(portalQuery, setup.LinkId)).Value!.ProposalRequestId);
+        Assert.False(Assert.Single((await Portal(other.Subject).ListResidentsAsync(await QueryAsync(other.Subject))).Value!).ProposalAwaitingAnswer);
+        Assert.DoesNotContain(await ProposalSlotsAsync(setup, otherRequest.Id), s => s.StartsAt == slot.StartsAt);
+        // Mientras viva, Administración no puede proponer otra.
+        Assert.Equal(ApplicationFailureCode.Conflict, (await ProposeAsync(setup, request.Id, await FarSlotAsync(setup, otherRequest.Id, 5))).Error!.Code);
+
+        // Pasan 49 horas sin respuesta.
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync(
+                "UPDATE dbo.citas_solicitudes SET propuesta_en = DATEADD(HOUR, -49, SYSUTCDATETIME()) WHERE id = @id", new { id = request.Id });
+        }
+
+        var expired = (await ReadAsync(setup.Subject, setup.LinkId, request.Id)).Value!;
+        Assert.True(expired.ProposalExpired);
+        Assert.False(expired.CanAccept);
+        Assert.True((await AdminViewAsync(setup, request.Id)).ProposalExpired);
+        Assert.Equal(ApplicationFailureCode.Conflict, (await AcceptAsync(setup.Subject, setup.LinkId, request.Id)).Error!.Code);
+        Assert.Contains(await ProposalSlotsAsync(setup, otherRequest.Id), s => s.StartsAt == slot.StartsAt);
+        Assert.False(Assert.Single((await Portal(setup.Subject).ListResidentsAsync(portalQuery)).Value!).ProposalAwaitingAnswer);
+        Assert.Null((await Portal(setup.Subject).ReadResidentAsync(portalQuery, setup.LinkId)).Value!.ProposalRequestId);
+
+        var again = await FarSlotAsync(setup, request.Id, 3);
+        var reproposed = await ProposeAsync(setup, request.Id, again);
+
+        Assert.True(reproposed.Ok, reproposed.Error?.Message);
+        var renewed = (await ReadAsync(setup.Subject, setup.LinkId, request.Id)).Value!;
+        Assert.Equal(again.StartsAt, renewed.ProposedStartsAt);
+        Assert.True(renewed.CanAccept);
+        Assert.Equal(
+            [AppointmentRequestAction.Creada, AppointmentRequestAction.Propuesta, AppointmentRequestAction.Propuesta],
+            (await AdminViewAsync(setup, request.Id)).Changes.Select(c => c.Action));
+        Assert.Equal(2, await AuditAsync(request.Id, "APPOINTMENT_REQUEST_PROPOSE"));
+        Assert.True((await AcceptAsync(setup.Subject, setup.LinkId, request.Id)).Ok);
+    }
+
+    [Fact]
+    public async Task LaPropuesta_CaducaVeinticuatroHorasAntesDeLaCita_YNoSeOfrecenHuecosAMenosDe24Horas()
+    {
+        var setup = await SetupAsync("Residente Solicitud Caduca Antes");
+        await ConfigureAsync(setup);
+        var request = await SentAsync(setup.Subject, setup.LinkId);
+        var now = DateTimeOffset.UtcNow;
+        var slots = await ProposalSlotsAsync(setup, request.Id);
+        Assert.All(slots, s => Assert.True(s.StartsAt > now.AddHours(24)));
+        // Un hueco de dentro de menos de 48 horas: caduca 24 horas antes de la cita, antes que las 48 horas desde la propuesta.
+        var near = slots.First(s => s.StartsAt < now.AddHours(47));
+
+        Assert.True((await ProposeAsync(setup, request.Id, near)).Ok);
+
+        var read = (await ReadAsync(setup.Subject, setup.LinkId, request.Id)).Value!;
+        Assert.Equal(near.StartsAt.AddHours(-24), read.ProposalExpiresAt);
+        Assert.Equal(near.StartsAt.AddHours(-24), await StoredExpiryAsync(request.Id));
+        Assert.False(read.ProposalExpired);
+    }
+
+    private static async Task<DateTimeOffset> ProposedAtAsync(Guid requestId)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        return new DateTimeOffset(DateTime.SpecifyKind(
+            await connection.QuerySingleAsync<DateTime>("SELECT propuesta_en FROM dbo.citas_solicitudes WHERE id = @requestId", new { requestId }), DateTimeKind.Utc));
+    }
+
+    /// <summary>La columna calculada propuesta_caduca_en (script 0070), que usan las consultas: tiene que coincidir con la regla del dominio.</summary>
+    private static async Task<DateTimeOffset> StoredExpiryAsync(Guid requestId)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        return new DateTimeOffset(DateTime.SpecifyKind(
+            await connection.QuerySingleAsync<DateTime>("SELECT propuesta_caduca_en FROM dbo.citas_solicitudes WHERE id = @requestId", new { requestId }), DateTimeKind.Utc));
+    }
+
+    [Fact]
     public async Task Aceptar_CreaLaCitaConfirmada_OcupaElHueco_YRepetirNoDuplica()
     {
         var setup = await SetupAsync("Residente Solicitud Aceptar");
@@ -331,7 +422,8 @@ public class CitasSolicitudesTests
         {
             await connection.ExecuteAsync("""
                 UPDATE dbo.citas_solicitudes
-                   SET estado_codigo = 'PROPUESTA', propuesta_inicio_en = DATEADD(HOUR, -2, SYSUTCDATETIME()), propuesta_fin_en = DATEADD(MINUTE, -90, SYSUTCDATETIME())
+                   SET estado_codigo = 'PROPUESTA', propuesta_inicio_en = DATEADD(HOUR, -2, SYSUTCDATETIME()), propuesta_fin_en = DATEADD(MINUTE, -90, SYSUTCDATETIME()),
+                       propuesta_en = DATEADD(HOUR, -30, SYSUTCDATETIME())
                  WHERE id = @id
                 """, new { id = expired.Id });
         }
@@ -533,9 +625,9 @@ public class CitasSolicitudesTests
         await ForbiddenAsync("""
             INSERT INTO dbo.citas_solicitudes
                 (id, centro_id, residente_id, vinculo_id, cuenta_id, equipo_codigo, modalidad_codigo, motivo_codigo, disponibilidad_dias, disponibilidad_franja,
-                 estado_codigo, propuesta_inicio_en, propuesta_fin_en, operacion_id, creada_en)
+                 estado_codigo, propuesta_inicio_en, propuesta_fin_en, propuesta_en, operacion_id, creada_en)
             SELECT NEWID(), centro_id, residente_id, vinculo_id, cuenta_id, 'ENFERMERIA', 'PRESENCIAL', 'OTRO', '', 'INDIFERENTE', 'PROPUESTA',
-                   SYSUTCDATETIME(), DATEADD(MINUTE, 30, SYSUTCDATETIME()), NEWID(), SYSUTCDATETIME()
+                   SYSUTCDATETIME(), DATEADD(MINUTE, 30, SYSUTCDATETIME()), SYSUTCDATETIME(), NEWID(), SYSUTCDATETIME()
               FROM dbo.citas_solicitudes WHERE id = @id
             """, "APPOINTMENT_REQUEST_TRANSITION_INVALID", new { id = other.Id });
         await ForbiddenAsync("""

@@ -155,7 +155,7 @@ public sealed class SqlFamilyAppointmentRequests(SqlConnectionFactory connection
 
         var startsAt = request.ProposedStartsAt!.Value;
         var endsAt = request.ProposedEndsAt!.Value;
-        if (!AppointmentRequestRules.IsProposalAlive(startsAt, now))
+        if (request.ProposalExpired(now))
         {
             throw new DomainValidationException("APPOINTMENT_REQUEST_EXPIRED");
         }
@@ -223,7 +223,7 @@ public sealed class SqlFamilyAppointmentRequests(SqlConnectionFactory connection
         }
 
         await connection.ExecuteAsync(new CommandDefinition("""
-            UPDATE dbo.citas_solicitudes SET estado_codigo = 'PENDIENTE', propuesta_inicio_en = NULL, propuesta_fin_en = NULL, profesional_interno = NULL
+            UPDATE dbo.citas_solicitudes SET estado_codigo = 'PENDIENTE', propuesta_inicio_en = NULL, propuesta_fin_en = NULL, propuesta_en = NULL, profesional_interno = NULL
              WHERE id = @requestId
             """, new { requestId }, transaction, cancellationToken: ct));
         await RecordChangeAsync(
@@ -257,7 +257,7 @@ public sealed class SqlFamilyAppointmentRequests(SqlConnectionFactory connection
         }
 
         await connection.ExecuteAsync(new CommandDefinition("""
-            UPDATE dbo.citas_solicitudes SET estado_codigo = 'CANCELADA', propuesta_inicio_en = NULL, propuesta_fin_en = NULL, profesional_interno = NULL
+            UPDATE dbo.citas_solicitudes SET estado_codigo = 'CANCELADA', propuesta_inicio_en = NULL, propuesta_fin_en = NULL, propuesta_en = NULL, profesional_interno = NULL
              WHERE id = @requestId
             """, new { requestId }, transaction, cancellationToken: ct));
         await RecordChangeAsync(
@@ -311,7 +311,8 @@ public sealed class SqlFamilyAppointmentRequests(SqlConnectionFactory connection
             var proposed = status is AppointmentRequestStatus.Propuesta or AppointmentRequestStatus.Aceptada;
             return new FamilyAppointmentRequest(
                 row.Id, row.TeamValue, row.ModalityValue, EnumCode.ParseCode<AppointmentRequestReason>(row.Reason), row.Comment, row.Availability, status,
-                AppointmentSql.Utc(row.CreatedAt), proposed ? row.ProposedStartsAt : null, proposed ? row.ProposedEndsAt : null, expired, row.AppointmentId,
+                AppointmentSql.Utc(row.CreatedAt), proposed ? row.ProposedStartsAt : null, proposed ? row.ProposedEndsAt : null,
+                status == AppointmentRequestStatus.Propuesta ? row.ProposalExpiresAt : null, expired, row.AppointmentId,
                 status == AppointmentRequestStatus.Propuesta && !expired, status == AppointmentRequestStatus.Propuesta,
                 status is AppointmentRequestStatus.Pendiente or AppointmentRequestStatus.Propuesta,
                 changes[row.Id].Select(c => new FamilyAppointmentRequestChange(

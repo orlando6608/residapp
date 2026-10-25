@@ -41,13 +41,14 @@ public sealed class SqlAppointmentRequestRepository(SqlConnectionFactory connect
         using var connection = await connections.OpenAsync(ct);
         await SqlProfessionalAccountRepository.EnsureAdministratorAsync(connection, null, access, ct);
         var request = (await ReadAsync(connection, null, access.CenterId.Value, requestId, false, now, ct)).FirstOrDefault() ?? throw new AccessDeniedException();
-        if (request.Status != AppointmentRequestStatus.Pendiente)
+        if (!CanPropose(request.Status, request.ProposalExpired))
         {
             throw new DomainValidationException("APPOINTMENT_REQUEST_NOT_OPEN");
         }
 
         var settings = (await ReadSettingsAsync(connection, null, access.CenterId.Value, ct)).Value with { MinimumNoticeHours = 0 };
-        return await FreeSlotsAsync(connection, null, access.CenterId.Value, request.Team, request.Modality, settings, now, null, ct);
+        return (await FreeSlotsAsync(connection, null, access.CenterId.Value, request.Team, request.Modality, settings, now, null, ct))
+            .Where(s => BornAlive(s, now)).ToList();
     }
 
     public async Task ProposeAsync(
@@ -60,25 +61,33 @@ public sealed class SqlAppointmentRequestRepository(SqlConnectionFactory connect
         var team = (await ReadUnlockedAsync(connection, transaction, center, requestId, ct) ?? throw new AccessDeniedException()).TeamValue;
         await LockTeamAsync(connection, transaction, center, team, ct);
         var request = await ReadForUpdateAsync(connection, transaction, center, requestId, null, null, ct) ?? throw new AccessDeniedException();
-        if (request.StatusValue != AppointmentRequestStatus.Pendiente)
+        if (!CanPropose(request.StatusValue, request.ProposalExpired(now)))
         {
             throw new DomainValidationException("APPOINTMENT_REQUEST_NOT_OPEN");
         }
 
         var settings = (await ReadSettingsAsync(connection, transaction, center, ct)).Value with { MinimumNoticeHours = 0 };
         var slot = (await FreeSlotsAsync(connection, transaction, center, team, request.ModalityValue, settings, now, null, ct))
-            .FirstOrDefault(s => s.StartsAt.UtcDateTime == startsAt.UtcDateTime)
+            .FirstOrDefault(s => s.StartsAt.UtcDateTime == startsAt.UtcDateTime && BornAlive(s, now))
             ?? throw new DomainValidationException("APPOINTMENT_SLOT_UNAVAILABLE");
         await connection.ExecuteAsync(new CommandDefinition("""
             UPDATE dbo.citas_solicitudes
-               SET estado_codigo = 'PROPUESTA', propuesta_inicio_en = @startsAt, propuesta_fin_en = @endsAt, profesional_interno = @professional
+               SET estado_codigo = 'PROPUESTA', propuesta_inicio_en = @startsAt, propuesta_fin_en = @endsAt, propuesta_en = @now, profesional_interno = @professional
              WHERE id = @requestId
-            """, new { requestId, startsAt = slot.StartsAt.UtcDateTime, endsAt = slot.EndsAt.UtcDateTime, professional }, transaction, cancellationToken: ct));
+            """, new { requestId, startsAt = slot.StartsAt.UtcDateTime, endsAt = slot.EndsAt.UtcDateTime, now = now.UtcDateTime, professional }, transaction, cancellationToken: ct));
         await RecordChangeAsync(
             connection, transaction, center, requestId, request.ResidentId, access.AccountId.Value, SystemProfile.Administracion,
             AppointmentRequestAction.Propuesta, "APPOINTMENT_REQUEST_PROPOSE", slot.StartsAt, professional, now, ct);
         transaction.Commit();
     }
+
+    /// <summary>Se propone a una solicitud pendiente o a una cuya propuesta ya caducó (CJ, portal 6.4: después, Administración puede volver a proponer).</summary>
+    private static bool CanPropose(AppointmentRequestStatus status, bool proposalExpired) =>
+        status == AppointmentRequestStatus.Pendiente || (status == AppointmentRequestStatus.Propuesta && proposalExpired);
+
+    /// <summary>Administración no tiene la antelación mínima de la familia, pero una propuesta de un hueco a 24 horas o menos nacería caducada (caduca 24
+    /// horas antes de la cita): solo se ofrecen los que empiezan después (suposición mía, preguntada a CJ).</summary>
+    private static bool BornAlive(AppointmentSlot slot, DateTimeOffset now) => AppointmentRequestRules.IsProposalAlive(now, slot.StartsAt, now);
 
     public async Task CloseAsync(AccountAdministrationAccess access, Guid requestId, string reason, DateTimeOffset now, CancellationToken ct = default)
     {
@@ -93,7 +102,7 @@ public sealed class SqlAppointmentRequestRepository(SqlConnectionFactory connect
         }
 
         await connection.ExecuteAsync(new CommandDefinition("""
-            UPDATE dbo.citas_solicitudes SET estado_codigo = 'CERRADA', propuesta_inicio_en = NULL, propuesta_fin_en = NULL, profesional_interno = NULL
+            UPDATE dbo.citas_solicitudes SET estado_codigo = 'CERRADA', propuesta_inicio_en = NULL, propuesta_fin_en = NULL, propuesta_en = NULL, profesional_interno = NULL
              WHERE id = @requestId
             """, new { requestId }, transaction, cancellationToken: ct));
         await RecordChangeAsync(
@@ -110,7 +119,7 @@ public sealed class SqlAppointmentRequestRepository(SqlConnectionFactory connect
 
     private sealed record AdministrationRow(
         Guid Id, Guid ResidentId, Guid LinkId, Guid AccountId, string Team, string Modality, string Reason, string? Comment, string Days, string DayPart,
-        string Status, DateTime? ProposedStart, DateTime? ProposedEnd, string? Professional, Guid? AppointmentId, DateTime CreatedAt,
+        string Status, DateTime? ProposedStart, DateTime? ProposedEnd, DateTime? ProposedAt, string? Professional, Guid? AppointmentId, DateTime CreatedAt,
         string ResidentName, string FamilyName, string Relationship);
 
     /// <summary>Las solicitudes del centro (una sola si se indica), las más antiguas primero; con <paramref name="onlyOpen"/>, solo las abiertas.</summary>
@@ -132,11 +141,11 @@ public sealed class SqlAppointmentRequestRepository(SqlConnectionFactory connect
         {
             var request = new RequestRow(
                 row.Id, row.ResidentId, row.LinkId, row.AccountId, row.Team, row.Modality, row.Reason, row.Comment, row.Days, row.DayPart, row.Status,
-                row.ProposedStart, row.ProposedEnd, row.Professional, row.AppointmentId, row.CreatedAt);
+                row.ProposedStart, row.ProposedEnd, row.ProposedAt, row.Professional, row.AppointmentId, row.CreatedAt);
             return new AdministrationAppointmentRequest(
                 row.Id, row.ResidentId, row.ResidentName, row.FamilyName, row.Relationship, request.TeamValue, request.ModalityValue,
                 EnumCode.ParseCode<AppointmentRequestReason>(row.Reason), row.Comment, request.Availability, request.StatusValue, Utc(row.CreatedAt),
-                request.ProposedStartsAt, request.ProposedEndsAt, row.Professional, request.ProposalExpired(now), row.AppointmentId,
+                request.ProposedStartsAt, request.ProposedEndsAt, request.ProposalExpiresAt, row.Professional, request.ProposalExpired(now), row.AppointmentId,
                 changes[row.Id].Select(c => new AppointmentRequestChange(
                     EnumCode.ParseCode<AppointmentRequestAction>(c.Action), EnumCode.ParseCode<SystemProfile>(c.Profile), Utc(c.At),
                     c.ProposedStart is { } start ? Utc(start) : null, c.Detail)).ToList());

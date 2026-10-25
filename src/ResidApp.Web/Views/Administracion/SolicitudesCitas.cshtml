@@ -68,7 +68,11 @@ else
                         }
                         @if (request.ProposalExpired)
                         {
-                            <span class="badge text-bg-secondary">Ha caducado: ya empezó</span>
+                            <span class="badge text-bg-secondary">Caducó sin respuesta el @AppointmentDisplay.When(request.ProposalExpiresAt!.Value)</span>
+                        }
+                        else if (request.Status == AppointmentRequestStatus.Propuesta)
+                        {
+                            <span class="text-muted">· caduca el @AppointmentDisplay.When(request.ProposalExpiresAt!.Value) si la familia no responde</span>
                         }
                     </p>
                 }
@@ -81,7 +85,7 @@ else
                         </li>
                     }
                 </ul>
-                @if (request.Status == AppointmentRequestStatus.Pendiente)
+                @if (request.Status == AppointmentRequestStatus.Pendiente || request.ProposalExpired)
                 {
                     <a asp-action="ProponerCita" asp-route-solicitudId="@request.Id" class="btn btn-primary">Proponer un horario</a>
                 }

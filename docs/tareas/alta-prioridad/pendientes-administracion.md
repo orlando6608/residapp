@@ -398,13 +398,23 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
 CJ contestó cinco cuestionarios que tocan este vertical (`docs/pendientes-cj/*.respuestas.json`). Lo que confirma lo que ya hace la app no se repite aquí.
 Orden decidido con Orlando: dictado por voz (va en `continuar-construccion.md`), Portal Familiar, foto e inicio, importación, organigrama y resumen periódico.
 
-- **Portal Familiar** (`portal-familiar-confirmaciones-cj` y tercera tanda):
-  - Al suspender o dar de baja al residente, el acceso de la familia **se corta solo**, y se reactiva si vuelve (portal 1.3).
-  - Una corrección **deja de verse cuando deja de verse el original** (portal 4.2), no a los 6 meses.
-  - Al entrar, la familia ve **destacadas las propuestas de cita y los comunicados nuevos** (tercera 6.3).
+- **Portal Familiar** (`portal-familiar-confirmaciones-cj` y tercera tanda) — **hecho el 2026-10-25, script `0070`, salvo el resumen periódico:**
+  - Al suspender o dar de baja al residente, el acceso de la familia **se corta solo**, y vuelve al reactivarlo (portal 1.3): `AccessibleLinks` exige
+    `estado = 'ACTIVE'` y ninguna suspensión abierta; no toca la autorización. Las citas y solicitudes abiertas no se tocan (**preguntado a CJ** en
+    `portal-familiar-cuarta-tanda-cj`, 1.1). Sin acceso, el título es «Ahora no tienes acceso a ningún residente».
+  - Una corrección **deja de verse cuando deja de verse el original** (portal 4.2): `FamilyPortalVisibility.IsCorrectionVisible`.
+  - Al entrar, **lo publicado desde la última visita** de esa cuenta a ese residente lleva «Nueva» y una **propuesta de cita viva** se destaca (tercera 6.3):
+    tabla `portal_familiar_visitas` (solo la última visita; quién leyó qué sigue en la auditoría). En la primera visita todo es nuevo (**suposición**,
+    pregunta 3.1 de la cuarta tanda).
   - En la solicitud de cita, junto al comentario: «No escribas datos clínicos detallados; el equipo te llamará» (portal 6.1).
-  - Una propuesta del centro **caduca a las 48 horas o 24 horas antes de la cita, lo que llegue antes** (portal 6.4); después, Administración puede volver a proponer.
-  - Lista de **citas pasadas sin cerrar** para Administración, que las sigue cerrando a mano (portal 5.8).
+  - Una propuesta del centro **caduca a las 48 horas o 24 horas antes de la cita, lo que llegue antes** (portal 6.4; `AppointmentRequestRules.ProposalExpiresAt`,
+    columnas `propuesta_en` y `propuesta_caduca_en`); después, Administración vuelve a proponer (el trigger admite PROPUESTA → PROPUESTA). Solo se ofrecen
+    huecos a más de 24 horas, porque los demás nacerían caducados (**suposición**, pregunta 2.1 de la cuarta tanda).
+  - Lista de **citas pasadas sin cerrar** arriba de la agenda y su cifra en el inicio de Administración, que las sigue finalizando a mano (portal 5.8).
+  - Tests: `PortalFamiliarTests` (suspensión y baja, novedades nuevas), `CitasSolicitudesTests` (caducidad a 48 horas y 24 horas antes, volver a proponer),
+    `CitasTests` y `AdministracionInicioTests` (citas pasadas sin cerrar), `CorrectorasYRetiradasTests`, unitarias y `PortalFamiliarFlowTests`.
+  - Sin cambiar: una correctora o una retirada se pueden publicar sobre un original que ya no se ve (`EnsureCanAmend` no mira la ventana), y la lista del
+    personal solo enseña los comunicados de 30 días, así que un relevante de más de 30 días no se puede corregir desde la pantalla.
   - **Resumen periódico** (tercera 1.1 a 1.5): recopilación automática de los comunicados ya publicados en el periodo, sin texto nuevo; una frecuencia para todo el centro;
     si no hay nada, no se publica nada; se suma a los comunicados sueltos. La 1.3 («lo prepara y lo aprueba Enfermería, al guardarlo») no aplica a una recopilación
     automática, que no tiene redacción ni aprobación: **interpretación mía**, a confirmar si el resumen llegara a llevar texto nuevo.

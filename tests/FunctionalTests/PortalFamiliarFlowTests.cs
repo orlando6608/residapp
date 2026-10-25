@@ -137,6 +137,8 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         var activated = await ChangeAsync("Activar", 1);
 
         var family = await LoginAsync(subject);
+        // Entrar ya abre su único residente (primera visita); lo publicado después es nuevo en la siguiente.
+        await AddCommunicationAsync(nurse, seed.Nurse, residentId, "Publicada después de entrar.", now.AddHours(-2), DateTime.UtcNow);
         var home = await BodyAsync(await family.GetAsync("/Familia"));
         var list = await BodyAsync(await family.GetAsync($"/Familia/Residente/{linkId}"));
         var detail = await BodyAsync(await family.GetAsync($"/Familia/Residente/{linkId}/Comunicado/{published}"));
@@ -153,11 +155,16 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         var detailAfterRevocation = await family.GetAsync($"/Familia/Residente/{linkId}/Comunicado/{published}");
 
         Assert.Contains("Acceso al Portal Familiar creado.", granted);
-        Assert.Contains("No tienes ninguna autorización activa", WebUtility.HtmlDecode(await withoutAuthorization.Content.ReadAsStringAsync()));
+        Assert.Contains("Ahora no tienes acceso a ningún residente", WebUtility.HtmlDecode(await withoutAuthorization.Content.ReadAsStringAsync()));
         Assert.Contains("Autorización abierta", opened);
-        Assert.Contains("No tienes ninguna autorización activa", pending);
+        Assert.Contains("Ahora no tienes acceso a ningún residente", pending);
         Assert.Contains("Autorización activada.", activated);
         Assert.Contains("Residente Portal Funcional", home);
+        // Lo publicado desde la visita anterior es nuevo; en la siguiente visita ya no (CJ, tercera 6.3).
+        Assert.Contains("badge text-bg-primary\">Nueva</span>", home);
+        Assert.Contains("Hay 1 novedad nueva desde tu última visita.", home);
+        Assert.DoesNotContain(">Nueva</span>", list);
+        Assert.DoesNotContain("novedad nueva", list);
         // Al imprimir, el portal lleva la marca del centro arriba y ResidApp al pie, como el resto de la app (guía de diseño, sección 4).
         var centerName = WebUtility.HtmlDecode(Regex.Replace(
             Regex.Match(home, "<a class=\"navbar-brand[^>]*>(.*?)</a>", RegexOptions.Singleline).Groups[1].Value, "<[^>]+>", "")).Replace("· Familias", "").Trim();
@@ -190,7 +197,7 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.DoesNotContain(Observation, WebUtility.HtmlDecode(await staffScreen.Content.ReadAsStringAsync()));
         Assert.DoesNotContain(subject, users);
         Assert.Contains("Autorización revocada.", revoked);
-        Assert.Contains("No tienes ninguna autorización activa", afterRevocation);
+        Assert.Contains("Ahora no tienes acceso a ningún residente", afterRevocation);
         Assert.Equal(HttpStatusCode.Forbidden, detailAfterRevocation.StatusCode);
         // Entrar (que ya lleva a su único residente), la portada, el historial y el detalle: cuatro lecturas; las denegadas no dejan rastro.
         Assert.Equal(4, await connection.ExecuteScalarAsync<int>(
@@ -480,6 +487,14 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         var requestUrl = $"{requestsUrl}/{requestId}";
         var proposalPage = await BodyAsync(await family.GetAsync(requestUrl));
         var inboxProposed = await BodyAsync(await admin.GetAsync("/Administracion/SolicitudesCitas"));
+        var residentWithProposal = await BodyAsync(await family.GetAsync($"/Familia/Residente/{linkId}"));
+
+        // Pasan 49 horas sin respuesta: la propuesta caduca (CJ, portal 6.4) y Administración puede volver a proponer.
+        await connection.ExecuteAsync(
+            "UPDATE dbo.citas_solicitudes SET propuesta_en = DATEADD(HOUR, -49, SYSUTCDATETIME()) WHERE id = @requestId", new { requestId });
+        var expiredPage = await BodyAsync(await family.GetAsync(requestUrl));
+        var inboxExpired = await BodyAsync(await admin.GetAsync("/Administracion/SolicitudesCitas"));
+        var residentAfterExpiry = await BodyAsync(await family.GetAsync($"/Familia/Residente/{linkId}"));
 
         // La familia pide otro horario: vuelve a estar pendiente, sin propuesta; Administración la cierra con motivo y la familia lo ve cerrado sin el motivo.
         var anotherTime = await PostAsync(family, $"{requestUrl}/OtroHorario", requestUrl, new());
@@ -531,6 +546,17 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.Contains("Aceptar y confirmar la cita", proposalPage);
         Assert.Contains("Pedir otro horario", proposalPage);
         Assert.DoesNotContain("Dra. Ficticia Interna", proposalPage);
+        Assert.Contains("No escribas datos clínicos detallados; el equipo te llamará.", form);
+        Assert.Contains("Responde antes del", proposalPage);
+        Assert.Contains("si la familia no responde", inboxProposed);
+        Assert.Contains("Tienes una propuesta de cita esperando tu respuesta.", residentWithProposal);
+        Assert.Contains(requestUrl, residentWithProposal);
+        Assert.Contains("Esta propuesta caducó el", expiredPage);
+        Assert.DoesNotContain("Aceptar y confirmar la cita", expiredPage);
+        Assert.Contains("Pedir otro horario", expiredPage);
+        Assert.Contains("Caducó sin respuesta el", inboxExpired);
+        Assert.Contains("Proponer un horario", inboxExpired);
+        Assert.DoesNotContain("Tienes una propuesta de cita esperando tu respuesta.", residentAfterExpiry);
         Assert.Contains("Hemos avisado al centro de que necesitas otro horario", anotherTime);
         Assert.Contains("Pendiente de gestión", anotherTime);
         Assert.DoesNotContain("Aceptar y confirmar la cita", anotherTime);
@@ -589,6 +615,18 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
             ["Form.Motivo"] = "Resultados", ["Form.Comentario"] = "Texto de la familia que el inicio no debe enseñar.", ["Form.ParteDelDia"] = "Indiferente",
         });
         var afterRequest = await BodyAsync(await admin.GetAsync("/Administracion"));
+        var pastAppointment = Guid.NewGuid();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.citas
+                (id, centro_id, residente_id, vinculo_id, cuenta_id, equipo_codigo, modalidad_codigo, inicio_en, fin_en, estado_codigo, operacion_id, creada_en)
+            SELECT @id, link.centro_id, link.residente_id, link.id, account.id, 'MEDICO', 'PRESENCIAL', DATEADD(DAY, -2, SYSUTCDATETIME()),
+                   DATEADD(MINUTE, 30, DATEADD(DAY, -2, SYSUTCDATETIME())), 'CONFIRMADA', NEWID(), DATEADD(DAY, -3, SYSUTCDATETIME())
+              FROM dbo.residentes_familiares link CROSS JOIN dbo.cuentas account
+             WHERE link.id = @linkId AND account.sujeto_externo = @subject
+            """, new { id = pastAppointment, linkId, subject });
+        var withPastAppointment = await BodyAsync(await admin.GetAsync("/Administracion"));
+        var agenda = await BodyAsync(await admin.GetAsync("/Administracion/AgendaCitas"));
+        var finished = await PostAsync(admin, "/Administracion/FinalizarCita", "/Administracion/AgendaCitas", new() { ["citaId"] = pastAppointment.ToString() });
         var noRoomList = await BodyAsync(await admin.GetAsync("/Administracion/Residentes?atencion=SinHabitacion"));
         var expiredList = await BodyAsync(await admin.GetAsync("/Administracion/Residentes?atencion=AutorizacionCaducada"));
         var pendingList = await BodyAsync(await admin.GetAsync("/Administracion/Residentes?atencion=AutorizacionPendiente"));
@@ -612,6 +650,16 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         // Solo cifras: ni el nombre del residente ni lo que escribió la familia salen en el inicio.
         Assert.DoesNotContain("Residente Inicio Funcional", afterRequest);
         Assert.DoesNotContain("Texto de la familia", afterRequest);
+        // CJ, portal 5.8: la cita pasada sin finalizar sale en el inicio y arriba de la agenda, de cualquier semana, hasta que se finaliza.
+        Assert.DoesNotContain("cita pasada sin cerrar", afterRequest);
+        Assert.Contains("1 cita pasada sin cerrar", withPastAppointment);
+        Assert.Contains("AgendaCitas#sin-cerrar", withPastAppointment);
+        var unclosed = Regex.Match(agenda, "id=\"sin-cerrar\".*?</section>", RegexOptions.Singleline).Value;
+        Assert.Contains("Citas pasadas sin cerrar", unclosed);
+        Assert.Contains("Residente Inicio Funcional", unclosed);
+        Assert.Contains(pastAppointment.ToString(), unclosed);
+        Assert.DoesNotContain("Citas pasadas sin cerrar", finished);
+        Assert.Equal("FINALIZADA", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.citas WHERE id = @pastAppointment", new { pastAppointment }));
         Assert.Contains("No se puede acceder", await BodyAsync(nurseHome) + nurseHome.StatusCode);
         Assert.DoesNotContain("Requiere atención", await BodyAsync(nurseHome));
     }

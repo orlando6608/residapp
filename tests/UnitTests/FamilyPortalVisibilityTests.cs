@@ -53,16 +53,17 @@ public class FamilyPortalVisibilityTests
     }
 
     [Fact]
-    public void UnaCorrectoraSale_EnElActo_YTieneLaVentanaDeSuTipo()
+    public void UnaCorrectoraSale_EnElActo_YDejaDeVerseConElOriginal()
     {
-        var published = Scheduled;
+        var corrected = Scheduled.AddDays(5);
 
-        Assert.False(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Relevante, published, published.AddTicks(-1)));
-        Assert.True(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Ordinaria, published, published));
-        Assert.True(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Ordinaria, published, published.AddDays(30).AddTicks(-1)));
-        Assert.False(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Ordinaria, published, published.AddDays(30)));
-        Assert.True(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Relevante, published, published.AddDays(31)));
-        Assert.False(FamilyPortalVisibility.IsVisible(FamilyCommunicationType.Relevante, published, published.AddMonths(6)));
+        Assert.False(FamilyPortalVisibility.IsCorrectionVisible(corrected, FamilyCommunicationType.Ordinaria, Scheduled, corrected.AddTicks(-1)));
+        Assert.True(FamilyPortalVisibility.IsCorrectionVisible(corrected, FamilyCommunicationType.Ordinaria, Scheduled, corrected));
+        // La ventana es la del original, contada desde su publicación: la correctora no la alarga.
+        Assert.True(FamilyPortalVisibility.IsCorrectionVisible(corrected, FamilyCommunicationType.Ordinaria, Scheduled, Scheduled.AddDays(30).AddTicks(-1)));
+        Assert.False(FamilyPortalVisibility.IsCorrectionVisible(corrected, FamilyCommunicationType.Ordinaria, Scheduled, Scheduled.AddDays(30)));
+        Assert.True(FamilyPortalVisibility.IsCorrectionVisible(corrected, FamilyCommunicationType.Relevante, Scheduled, Scheduled.AddDays(31)));
+        Assert.False(FamilyPortalVisibility.IsCorrectionVisible(corrected, FamilyCommunicationType.Relevante, Scheduled, Scheduled.AddMonths(6)));
     }
 }
 

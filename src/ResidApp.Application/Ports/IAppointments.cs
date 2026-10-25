@@ -50,6 +50,11 @@ public interface IAppointmentServiceRepository
     Task<IReadOnlyList<AdministrationAppointment>> ListAgendaAsync(
         AccountAdministrationAccess access, DateTimeOffset from, DateTimeOffset to, CancellationToken ct = default);
 
+    /// <summary>Las citas confirmadas del centro que ya empezaron y nadie finalizó (CJ, portal 5.8: «citas pasadas sin cerrar», para que no se olviden),
+    /// de la más antigua a la más reciente. Las finaliza Administración a mano: que pasara la hora no dice si se celebró.</summary>
+    Task<IReadOnlyList<AdministrationAppointment>> ListPastUnclosedAsync(
+        AccountAdministrationAccess access, DateTimeOffset now, CancellationToken ct = default);
+
     /// <summary>Los huecos a los que se puede pasar una cita confirmada: los de su equipo y modalidad, sin la antelación mínima (Administración no la
     /// tiene) y sin contar el hueco de la propia cita.</summary>
     Task<IReadOnlyList<AppointmentSlot>> ListRescheduleSlotsAsync(

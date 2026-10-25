@@ -59,11 +59,11 @@
             <p class="fs-5 mb-1">@AppointmentDisplay.When(proposed) – @AppointmentDisplay.Time(request.ProposedEndsAt!.Value)</p>
             @if (request.ProposalExpired)
             {
-                <p class="text-danger mb-2">Esta propuesta ha caducado porque la hora ya empezó. Pide otro horario y el centro te propondrá uno nuevo.</p>
+                <p class="text-danger mb-2">Esta propuesta caducó el @AppointmentDisplay.When(request.ProposalExpiresAt!.Value) sin respuesta. El centro puede proponerte otro horario, o puedes pedirlo tú.</p>
             }
             else
             {
-                <p class="text-muted mb-2">La cita solo queda confirmada si la aceptas. El hueco está reservado para ti hasta que respondas o la hora empiece.</p>
+                <p class="text-muted mb-2">Responde antes del @AppointmentDisplay.When(request.ProposalExpiresAt!.Value): hasta entonces el hueco está reservado para ti. La cita solo queda confirmada si la aceptas.</p>
             }
             <div class="d-flex flex-wrap gap-2">
                 @if (request.CanAccept)

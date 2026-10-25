@@ -16,7 +16,7 @@ public sealed class FamilyPortalApplicationService(
 {
     public Task<ApplicationResult<IReadOnlyList<FamilyPortalResident>>> ListResidentsAsync(FamilyPortalQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
-            await reader.ListResidentsAsync(await AccessAsync(query, ct), DateOnly.FromDateTime(DateTime.Today), ct));
+            await reader.ListResidentsAsync(await AccessAsync(query, ct), DateOnly.FromDateTime(DateTime.Today), DateTimeOffset.UtcNow, ct));
 
     public Task<ApplicationResult<FamilyPortalResidentHome>> ReadResidentAsync(FamilyPortalQuery query, Guid linkId, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>

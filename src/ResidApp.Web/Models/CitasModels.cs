@@ -172,7 +172,7 @@ public sealed record CitasViewModel(
 
 /// <summary>La semana de la agenda: del lunes (incluido) al lunes siguiente (excluido), en la hora local del servidor.</summary>
 public sealed record AgendaCitasViewModel(
-    DateOnly Monday, IReadOnlyList<AdministrationAppointment> Appointments, DateTimeOffset Now);
+    DateOnly Monday, IReadOnlyList<AdministrationAppointment> Appointments, DateTimeOffset Now, IReadOnlyList<AdministrationAppointment> PastUnclosed);
 
 public sealed class CancelarCitaFormModel
 {

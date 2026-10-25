@@ -41,10 +41,7 @@ else
     {
         <p class="small text-body-secondary">
             Corrige la novedad publicada el @corrects.OriginalPublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm").
-            @if (corrects.OriginalVisible)
-            {
-                <a asp-action="Comunicado" asp-route-linkId="@Model.Resident.LinkId" asp-route-comunicadoId="@corrects.OriginalId">Ver la novedad original</a>
-            }
+            <a asp-action="Comunicado" asp-route-linkId="@Model.Resident.LinkId" asp-route-comunicadoId="@corrects.OriginalId">Ver la novedad original</a>
         </p>
     }
     @foreach (var correction in Model.Correcciones)

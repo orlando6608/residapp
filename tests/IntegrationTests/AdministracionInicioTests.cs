@@ -60,7 +60,7 @@ public class AdministracionInicioTests
 
         var overview = await OverviewAsync(admin);
 
-        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0), overview);
+        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0), overview);
         Assert.True(overview.NothingPending);
     }
 
@@ -114,8 +114,8 @@ public class AdministracionInicioTests
         Assert.Equal(1, overview.AuthorizationsExpired);
         Assert.False(overview.NothingPending);
         // Otra unidad del mismo centro y otro centro no se mezclan con lo anterior.
-        Assert.Equal(new AdministrationOverview(1, 1, 0, 0, 0, 0, 0, 0), elsewhere);
-        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0), empty);
+        Assert.Equal(new AdministrationOverview(1, 1, 0, 0, 0, 0, 0, 0, 0), elsewhere);
+        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0), empty);
     }
 
     [Fact]
@@ -293,6 +293,8 @@ public class AdministracionInicioTests
         var endsComing = await OverviewAsync(setup.Admin, Around(citaStart.AddDays(-2), citaStart.AddDays(-1), citaStart));
         // Una propuesta cuya hora ya empezó no está esperando a la familia.
         var proposalStarted = await OverviewAsync(setup.Admin, Around(citaStart.AddDays(-1), citaStart.AddDays(1), citaStart.AddDays(8), proposedStart.AddMinutes(1)));
+        // Una cita confirmada cuya hora ya llegó y nadie finalizó es una cita pasada sin cerrar (CJ, portal 5.8).
+        var citaStarted = await OverviewAsync(setup.Admin, Around(citaStart.AddDays(-1), citaStart.AddDays(1), citaStart.AddDays(8), citaStart.AddMinutes(1)));
         var cancelled = await Bookings(otherSubject).CancelAsync(await QueryAsync(otherSubject), otherLink, accepted.Value!.AppointmentId!.Value);
         Assert.True(cancelled.Ok, cancelled.Error?.Message);
         var afterCancel = await OverviewAsync(setup.Admin, Around(citaStart.AddHours(-1), citaStart.AddHours(1), citaStart.AddDays(7)));
@@ -306,7 +308,10 @@ public class AdministracionInicioTests
         Assert.Equal(0, proposalStarted.AppointmentRequestsAwaitingFamily);
         Assert.Equal(1, proposalStarted.AppointmentRequestsPending);
         Assert.Equal((0, 0), (afterCancel.AppointmentsToday, afterCancel.AppointmentsComing));
-        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0), otherCenter);
+        Assert.Equal(0, inToday.AppointmentsPastUnclosed);
+        Assert.Equal(1, citaStarted.AppointmentsPastUnclosed);
+        Assert.False(citaStarted.NothingPending);
+        Assert.Equal(new AdministrationOverview(0, 0, 0, 0, 0, 0, 0, 0, 0), otherCenter);
     }
 
     [Fact]

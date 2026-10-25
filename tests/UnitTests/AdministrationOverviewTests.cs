@@ -64,12 +64,12 @@ public class AdministrationOverviewTests
     [Fact]
     public void SinNadaPendiente_SoloSiNoHayResidentesSinHabitacion_NiAutorizacionesNiSolicitudes()
     {
-        Assert.True(new AdministrationOverview(0, 0, 0, 0, 0, 0, 5, 9).NothingPending);
-        Assert.False(new AdministrationOverview(1, 0, 0, 0, 0, 0, 0, 0).NothingPending);
-        Assert.False(new AdministrationOverview(0, 1, 0, 0, 0, 0, 0, 0).NothingPending);
-        Assert.False(new AdministrationOverview(0, 0, 1, 0, 0, 0, 0, 0).NothingPending);
-        Assert.False(new AdministrationOverview(0, 0, 0, 1, 0, 0, 0, 0).NothingPending);
-        Assert.False(new AdministrationOverview(0, 0, 0, 0, 1, 0, 0, 0).NothingPending);
-        Assert.False(new AdministrationOverview(0, 0, 0, 0, 0, 1, 0, 0).NothingPending);
+        Assert.True(new AdministrationOverview(0, 0, 0, 0, 0, 0, 5, 9, 0).NothingPending);
+        Assert.False(new AdministrationOverview(1, 0, 0, 0, 0, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 1, 0, 0, 0, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 1, 0, 0, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 0, 1, 0, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 0, 0, 1, 0, 0, 0, 0).NothingPending);
+        Assert.False(new AdministrationOverview(0, 0, 0, 0, 0, 1, 0, 0, 0).NothingPending);
     }
 }

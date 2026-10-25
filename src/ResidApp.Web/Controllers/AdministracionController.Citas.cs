@@ -159,7 +159,10 @@ public sealed partial class AdministracionController
             ModelState.AddModelError(string.Empty, result.Error!.Message);
         }
 
-        return View(new AgendaCitasViewModel(monday, result.Value ?? [], DateTimeOffset.UtcNow));
+        var pastUnclosed = result.Ok
+            ? (await appointmentService.ListPastUnclosedAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct)).Value
+            : null;
+        return View(new AgendaCitasViewModel(monday, result.Value ?? [], DateTimeOffset.UtcNow, pastUnclosed ?? []));
     }
 
     [HttpGet]

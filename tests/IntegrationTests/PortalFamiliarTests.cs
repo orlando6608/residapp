@@ -127,6 +127,93 @@ public class PortalFamiliarTests
     }
 
     [Fact]
+    public async Task AlSuspenderODarDeBajaAlResidente_LaFamiliaPierdeElAcceso_YLoRecuperaAlVolver()
+    {
+        var setup = await SetupAsync("Residente Portal Suspendido");
+        var communication = await AddCommunicationAsync(
+            setup, "Ha pasado buena noche.", FamilyCommunicationType.Ordinaria, DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-1));
+        var status = EstadoResidenteTests.Build(setup.Admin.ExternalSubject);
+        var appointments = new FamilyAppointmentsApplicationService(
+            new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedPortalSessionIdentityProvider(setup.Subject),
+            new SqlFamilyAppointments(TestDatabase.ConnectionFactory));
+
+        async Task AssertWithoutAccessAsync()
+        {
+            var query = await QueryAsync(setup.Subject);
+            Assert.Empty((await Portal(setup.Subject).ListResidentsAsync(query)).Value!);
+            Assert.Equal(ApplicationFailureCode.AccessDenied, (await Portal(setup.Subject).ReadResidentAsync(query, setup.LinkId)).Error!.Code);
+            Assert.Equal(ApplicationFailureCode.AccessDenied, (await Portal(setup.Subject).ReadCommunicationAsync(query, setup.LinkId, communication)).Error!.Code);
+            Assert.Equal(ApplicationFailureCode.AccessDenied, (await appointments.ReadHomeAsync(query, setup.LinkId)).Error!.Code);
+        }
+
+        async Task AssertWithAccessAsync()
+        {
+            var query = await QueryAsync(setup.Subject);
+            Assert.Single((await Portal(setup.Subject).ListResidentsAsync(query)).Value!);
+            Assert.True((await Portal(setup.Subject).ReadResidentAsync(query, setup.LinkId)).Ok);
+        }
+
+        // Suspensión (ingreso hospitalario), CJ portal 1.3: el acceso se corta solo y vuelve al terminar.
+        Assert.True((await status.SuspendAsync(new SuspendResidentCommand(
+            setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, Guid.NewGuid(), null))).Ok);
+        await AssertWithoutAccessAsync();
+        Assert.True((await status.ResumeAsync(setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId)).Ok);
+        await AssertWithAccessAsync();
+
+        // Baja: igual, y vuelve al reactivarlo. La autorización no se toca: sigue Activa todo el tiempo.
+        Assert.True((await status.DischargeAsync(new DischargeResidentCommand(
+            setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, Guid.NewGuid(), ResidApp.Domain.Residents.ResidentDischargeReason.AltaVoluntaria, null))).Ok);
+        await AssertWithoutAccessAsync();
+        Assert.True((await status.ReactivateAsync(new ReactivateResidentCommand(
+            setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, Guid.NewGuid(), setup.Admin.UnitId, null, null))).Ok);
+        await AssertWithAccessAsync();
+    }
+
+    [Fact]
+    public async Task LasNovedadesNuevas_SonLasPublicadasDesdeLaUltimaVisita_DeCadaFamiliar()
+    {
+        var setup = await SetupAsync("Residente Portal Novedades Nuevas");
+        await AddCommunicationAsync(setup, "Antes de entrar.", FamilyCommunicationType.Ordinaria, DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-1));
+        // Otra familiar del mismo residente, con su propia cuenta.
+        var otherLink = await AddFamilyAsync(setup.Admin, setup.ResidentId, "Marta Pérez");
+        var otherSubject = $"portal-{Guid.NewGuid():N}"[..20];
+        Assert.True((await Build(setup.Admin.ExternalSubject).GrantFamilyPortalAccessAsync(
+            new GrantFamilyPortalAccessCommand(setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, otherLink, otherSubject))).Ok);
+        await ChangeAsync(setup.Admin, setup.ResidentId, otherLink, FamilyAuthorizationChange.Abrir, 0);
+        await ChangeAsync(setup.Admin, setup.ResidentId, otherLink, FamilyAuthorizationChange.Activar, 1);
+
+        async Task<FamilyPortalResident> SummaryAsync(string subject) =>
+            Assert.Single((await Portal(subject).ListResidentsAsync(await QueryAsync(subject))).Value!);
+
+        async Task<FamilyPortalResidentHome> VisitAsync(string subject, Guid linkId) =>
+            (await Portal(subject).ReadResidentAsync(await QueryAsync(subject), linkId)).Value!;
+
+        // Sin ninguna visita, todo es nuevo; mirar la lista no cuenta como visita.
+        Assert.Equal(1, (await SummaryAsync(setup.Subject)).NewCommunications);
+        Assert.Equal(1, (await SummaryAsync(setup.Subject)).NewCommunications);
+        var first = await VisitAsync(setup.Subject, setup.LinkId);
+        Assert.Null(first.PreviousVisitAt);
+        Assert.True(Assert.Single(first.Communications).IsNewSince(first.PreviousVisitAt));
+
+        var second = await VisitAsync(setup.Subject, setup.LinkId);
+        Assert.NotNull(second.PreviousVisitAt);
+        Assert.False(Assert.Single(second.Communications).IsNewSince(second.PreviousVisitAt));
+        Assert.Equal(0, (await SummaryAsync(setup.Subject)).NewCommunications);
+
+        await AddCommunicationAsync(setup, "Después de entrar.", FamilyCommunicationType.Relevante, DateTime.UtcNow.AddHours(-2), DateTime.UtcNow);
+        Assert.Equal(1, (await SummaryAsync(setup.Subject)).NewCommunications);
+        var third = await VisitAsync(setup.Subject, setup.LinkId);
+        Assert.Equal(["Después de entrar."], third.Communications.Where(c => c.IsNewSince(third.PreviousVisitAt)).Select(c => c.Text));
+
+        // La otra familiar nunca ha entrado: para ella, las dos son nuevas. Sus visitas no dependen de las de la primera.
+        Assert.Equal(2, (await SummaryAsync(otherSubject)).NewCommunications);
+        Assert.False((await SummaryAsync(otherSubject)).ProposalAwaitingAnswer);
+        Assert.Null((await VisitAsync(otherSubject, otherLink)).PreviousVisitAt);
+        Assert.Equal(2, await CountAsync(
+            "SELECT COUNT(*) FROM dbo.portal_familiar_visitas WHERE residente_id = @resident", new { resident = setup.ResidentId.Value }));
+    }
+
+    [Fact]
     public async Task Familiar_VeSoloLosResidentesConAutorizacionActivaYVigente()
     {
         var setup = await SetupAsync();

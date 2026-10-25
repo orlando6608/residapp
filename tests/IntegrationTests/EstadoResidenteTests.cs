@@ -14,7 +14,7 @@ namespace ResidApp.IntegrationTests;
 /// <summary>Baja, reactivación y suspensión por ingreso hospitalario (script 0041, CJ 2026-10-07). Cada prueba crea su propio centro.</summary>
 public class EstadoResidenteTests
 {
-    private static ResidentStatusApplicationService Build(string externalSubject)
+    internal static ResidentStatusApplicationService Build(string externalSubject)
     {
         var session = new FixedStatusSessionIdentityProvider(externalSubject);
         return new ResidentStatusApplicationService(

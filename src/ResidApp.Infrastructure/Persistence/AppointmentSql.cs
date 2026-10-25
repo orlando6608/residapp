@@ -70,7 +70,7 @@ internal static class AppointmentSql
         .ToList();
 
     /// <summary>Lo que ocupa hueco en el equipo y no ha terminado: las citas no canceladas (salvo <paramref name="exceptId"/>) y las propuestas vivas de las
-    /// solicitudes (salvo <paramref name="exceptRequestId"/>), que reservan su hueco (script 0057).</summary>
+    /// solicitudes (salvo <paramref name="exceptRequestId"/>), que reservan su hueco hasta que caducan (scripts 0057 y 0070).</summary>
     internal static async Task<IReadOnlyList<AppointmentSlot>> ReadTakenAsync(
         IDbConnection connection, IDbTransaction? transaction, Guid centerId, AppointmentTeam team, DateTimeOffset now, Guid? exceptId, CancellationToken ct,
         Guid? exceptRequestId = null) =>
@@ -80,7 +80,7 @@ internal static class AppointmentSql
                AND (@exceptId IS NULL OR id <> @exceptId)
             UNION ALL
             SELECT propuesta_inicio_en, propuesta_fin_en FROM dbo.citas_solicitudes WITH (FORCESEEK)
-             WHERE centro_id = @centerId AND equipo_codigo = @team AND estado_codigo = 'PROPUESTA' AND propuesta_fin_en > @now
+             WHERE centro_id = @centerId AND equipo_codigo = @team AND estado_codigo = 'PROPUESTA' AND propuesta_caduca_en > @now
                AND (@exceptRequestId IS NULL OR id <> @exceptRequestId)
             """, new { centerId, team = team.ToCode(), now = now.UtcDateTime, exceptId, exceptRequestId }, transaction, cancellationToken: ct)))
         .Select(row => new AppointmentSlot(Utc(row.StartsAt), Utc(row.EndsAt)))

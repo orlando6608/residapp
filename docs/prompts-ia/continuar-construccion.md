@@ -14,6 +14,25 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Portal Familiar con las respuestas de CJ (2026-10-25, rama `portal-familiar-respuestas-cj` desde `origin/main` tras el PR #66; script `0070`, el siguiente libre es `0071`). Hecho y probado, sin subir.**
+  El dictado (PR #66) ya está en `main` y desplegado: el CI/CD aplicó `0069` en Azure.
+  - **Acceso** (portal 1.3): `SqlFamilyPortalReader.AccessibleLinks`, el criterio único del portal, pide además el residente `ACTIVE` y sin suspensión abierta. Se corta y vuelve
+    solo, sin tocar la autorización; lo heredan citas y solicitudes. Sin acceso a nadie: «Ahora no tienes acceso a ningún residente» (también en las guías 6 y 8 de CJ).
+  - **Correcciones** (4.2): `FamilyPortalVisibility.IsCorrectionVisible`, con la ventana del original; `FamilyPortalCorrection.OriginalVisible` desaparece (siempre sería cierto).
+  - **Lo nuevo** (tercera 6.3): tabla `portal_familiar_visitas` (cuenta + residente → última visita, `MERGE` en la transacción de `ReadResidentAsync`, con RLS). La portada del
+    residente marca «Nueva» y cuenta las novedades; la lista de residentes, también, y la propuesta de cita viva («Propuesta de cita pendiente»). Mirar la lista no es visita.
+    Ojo en pruebas: **entrar ya es una visita** (lleva al único residente).
+  - **Caducidad de la propuesta** (6.4): 48 h desde `propuesta_en` o 24 h antes de la cita (`AppointmentRequestRules.ProposalExpiresAt`; columna calculada `propuesta_caduca_en`
+    con la misma fórmula, usada en la reserva del hueco, el inicio y la portada). Administración vuelve a proponer sobre una caducada (trigger: PROPUESTA → PROPUESTA) y solo ve
+    huecos a más de 24 h. Textos: «Responde antes del…», «Esta propuesta caducó el…», «Caducó sin respuesta el…».
+  - **Citas pasadas sin cerrar** (5.8): sección arriba de la agenda (`ListPastUnclosedAsync`) y cifra en el inicio de Administración (`AppointmentsPastUnclosed`, cuenta como pendiente).
+  - **Aviso del comentario** (6.1) en «Solicitar una cita».
+  - **Pregunta nueva a CJ:** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (citas de un residente suspendido o de baja, huecos a menos de 24 h, lo nuevo en la primera
+    visita). `portal-familiar-confirmaciones-cj` no se archiva: queda la 3.2 (código por correo), que espera al ADR 0012.
+  - **Pruebas:** unitarias 451, integración 528 y funcionales 304 en verde. `0070` aplicado en `ResidApp` y `ResidAppPruebas` locales (en `ResidAppPruebas` rellenó 78
+    propuestas antiguas). Navegador (Los Almendros local, `almendros-orlando-administracion`, `-pablo` y `-enfermeria`): lo nuevo, el aviso de propuesta, el plazo, la caducidad y
+    volver a proponer, las citas pasadas sin cerrar y el aviso del comentario, en claro, en oscuro y a 375 px, sin desbordes ni errores de consola. Los Almendros vuelve a quedar en
+    reserva directa; quedan una solicitud cerrada, una cita finalizada y un comunicado de prueba de Rosa.
 - **Dictado por voz con las respuestas de CJ (2026-10-25, rama `dictado-respuestas-cj`, sobre `respuestas-cj-2026-10-25`; script `0069`, el siguiente libre es `0070`). Hecho y probado, sin subir.**
   - **Opciones nuevas:** «Come menos de lo habitual» (`COME_MENOS_HABITUAL`, alimentación) y «Piel enrojecida» (`PIEL_ENROJECIDA`, lesiones en piel): enum, catálogo, etiqueta y
     `0069` (rehace `CK_cccao_opcion`).
@@ -1826,7 +1845,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    (dos primeras entradas de «Dónde estamos»). **CJ respondió el 2026-10-25** (`docs/pendientes-cj/archivados/dictado-por-voz-confirmaciones-cj.respuestas.json`) y **está hecho** (primera entrada de «Dónde estamos»):
    opciones nuevas «Piel enrojecida» y «Come menos de lo habitual» (script `0069`), temperatura entre 34,0 y 42,0 °C que bloquea fuera de rango, un cambio con solo la temperatura,
    el dictado propone la temperatura y se revisa una a una con las opciones, prompt que «propone menos» con sus reglas de jerga y los ejemplos 1, 3, 10, 25 y 28 corregidos. Sigue pendiente
-   probarlo en un móvil real con audios ficticios. **Siguiente bloque: Portal Familiar** (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
+   probarlo en un móvil real con audios ficticios. **Portal Familiar: hecho el 2026-10-25** (primera entrada de «Dónde estamos»). **Siguiente bloque: foto e inicio de Administración**
+   (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
    **I0 a I4 e I2b del ADR 0007 están hechos y el acceso de desarrollo está retirado en el código** (rama `sin-acceso-desarrollo`, primera entrada de
    «Dónde estamos»). Queda **I5 (pulsera NFC)** y, antes de datos reales, llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: (Importar y Exportar ya probado en Azure dev el 2026-10-23), y las dos preguntas a CJ de la guía 2 (hora en la

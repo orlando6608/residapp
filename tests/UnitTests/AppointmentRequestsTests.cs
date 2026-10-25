@@ -68,13 +68,21 @@ public sealed class AppointmentRequestsTests
     }
 
     [Fact]
-    public void LaPropuesta_EstaVivaMientrasNoHayaEmpezado()
+    public void LaPropuesta_Caduca_A48HorasO24HorasAntesDeLaCita_LoQueLlegueAntes()
     {
-        var now = new DateTimeOffset(2026, 10, 12, 10, 0, 0, TimeSpan.Zero);
+        var proposedAt = new DateTimeOffset(2026, 10, 12, 10, 0, 0, TimeSpan.Zero);
 
-        Assert.True(AppointmentRequestRules.IsProposalAlive(now.AddMinutes(1), now));
-        Assert.False(AppointmentRequestRules.IsProposalAlive(now, now));
-        Assert.False(AppointmentRequestRules.IsProposalAlive(now.AddMinutes(-1), now));
+        // Cita dentro de 10 días: gana el límite de 48 horas desde que se propuso.
+        var farStart = proposedAt.AddDays(10);
+        Assert.Equal(proposedAt.AddHours(48), AppointmentRequestRules.ProposalExpiresAt(proposedAt, farStart));
+        Assert.True(AppointmentRequestRules.IsProposalAlive(proposedAt, farStart, proposedAt.AddHours(48).AddTicks(-1)));
+        Assert.False(AppointmentRequestRules.IsProposalAlive(proposedAt, farStart, proposedAt.AddHours(48)));
+
+        // Cita dentro de 50 horas: gana el límite de 24 horas antes de la cita.
+        var nearStart = proposedAt.AddHours(50);
+        Assert.Equal(proposedAt.AddHours(26), AppointmentRequestRules.ProposalExpiresAt(proposedAt, nearStart));
+        Assert.True(AppointmentRequestRules.IsProposalAlive(proposedAt, nearStart, proposedAt.AddHours(26).AddTicks(-1)));
+        Assert.False(AppointmentRequestRules.IsProposalAlive(proposedAt, nearStart, proposedAt.AddHours(26)));
     }
 
     [Fact]

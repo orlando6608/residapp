@@ -37,6 +37,32 @@
 }
 <div asp-validation-summary="All" class="text-danger"></div>
 
+@if (Model.PastUnclosed.Count > 0)
+{
+    <section class="card mb-4 border-warning" id="sin-cerrar" aria-labelledby="sin-cerrar-titulo">
+        <div class="card-body">
+            <h2 class="h5" id="sin-cerrar-titulo">Citas pasadas sin cerrar</h2>
+            <p class="text-muted">
+                Citas confirmadas cuya hora ya llegó y que nadie ha finalizado, de cualquier semana. Finalízalas cuando sepas que se celebraron: que pasara la
+                hora no lo dice.
+            </p>
+            <ul class="list-group">
+                @foreach (var appointment in Model.PastUnclosed)
+                {
+                    <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <span>@AppointmentDisplay.When(appointment.StartsAt) · @AppointmentDisplay.Label(appointment.Team) · @appointment.ResidentName</span>
+                        <form asp-action="FinalizarCita" method="post">
+                            <input type="hidden" name="citaId" value="@appointment.Id" />
+                            <input type="hidden" name="semana" value="@Model.Monday.ToString("yyyy-MM-dd")" />
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Finalizar</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        </div>
+    </section>
+}
+
 @if (Model.Appointments.Count == 0)
 {
     <p class="estado-vacio">No hay citas esta semana.</p>

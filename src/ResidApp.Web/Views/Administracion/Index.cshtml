@@ -43,6 +43,10 @@
                 {
                     <li class="list-group-item"><a asp-action="SolicitudesCitas">@Plural(attention.AppointmentRequestsAwaitingFamily, "propuesta de cita esperando respuesta de la familia", "propuestas de cita esperando respuesta de la familia")</a></li>
                 }
+                @if (attention.AppointmentsPastUnclosed > 0)
+                {
+                    <li class="list-group-item"><a asp-action="AgendaCitas" asp-fragment="sin-cerrar">@Plural(attention.AppointmentsPastUnclosed, "cita pasada sin cerrar", "citas pasadas sin cerrar")</a></li>
+                }
                 @if (attention.AuthorizationsPending > 0)
                 {
                     <li class="list-group-item"><a asp-action="Residentes" asp-route-atencion="AutorizacionPendiente">@Plural(attention.AuthorizationsPending, "autorización de familiar pendiente de activar", "autorizaciones de familiares pendientes de activar")</a></li>

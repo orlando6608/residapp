@@ -73,6 +73,10 @@ public sealed class AppointmentServiceApplicationService(AdministrationAccessRes
         Guid profileScopeId, CenterId centerId, DateTimeOffset from, DateTimeOffset to, CancellationToken ct = default) =>
         Run(profileScopeId, centerId, access => repository.ListAgendaAsync(access, from, to, ct), ct);
 
+    public Task<ApplicationResult<IReadOnlyList<AdministrationAppointment>>> ListPastUnclosedAsync(
+        Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
+        Run(profileScopeId, centerId, access => repository.ListPastUnclosedAsync(access, DateTimeOffset.UtcNow, ct), ct);
+
     public Task<ApplicationResult<IReadOnlyList<AppointmentSlot>>> ListRescheduleSlotsAsync(
         Guid profileScopeId, CenterId centerId, Guid appointmentId, CancellationToken ct = default) =>
         Run(profileScopeId, centerId, access => repository.ListRescheduleSlotsAsync(access, appointmentId, DateTimeOffset.UtcNow, ct), ct);

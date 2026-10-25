@@ -163,12 +163,23 @@ public sealed class SqlAppointmentServiceRepository(SqlConnectionFactory connect
         transaction.Commit();
     }
 
-    public async Task<IReadOnlyList<AdministrationAppointment>> ListAgendaAsync(
-        AccountAdministrationAccess access, DateTimeOffset from, DateTimeOffset to, CancellationToken ct = default)
+    public Task<IReadOnlyList<AdministrationAppointment>> ListAgendaAsync(
+        AccountAdministrationAccess access, DateTimeOffset from, DateTimeOffset to, CancellationToken ct = default) =>
+        ReadAgendaAsync(access, "appointment.inicio_en >= @from AND appointment.inicio_en < @to", new { from = from.UtcDateTime, to = to.UtcDateTime }, ct);
+
+    public Task<IReadOnlyList<AdministrationAppointment>> ListPastUnclosedAsync(
+        AccountAdministrationAccess access, DateTimeOffset now, CancellationToken ct = default) =>
+        ReadAgendaAsync(access, "appointment.estado_codigo = 'CONFIRMADA' AND appointment.inicio_en <= @now", new { now = now.UtcDateTime }, ct);
+
+    /// <summary>Las citas del centro que cumplen <paramref name="filter"/> (alias appointment), por orden de hora, con su historial.</summary>
+    private async Task<IReadOnlyList<AdministrationAppointment>> ReadAgendaAsync(
+        AccountAdministrationAccess access, string filter, object filterParameters, CancellationToken ct)
     {
         using var connection = await connections.OpenAsync(ct);
         await SqlProfessionalAccountRepository.EnsureAdministratorAsync(connection, null, access, ct);
-        var rows = (await connection.QueryAsync<AgendaRow>(new CommandDefinition("""
+        var parameters = new DynamicParameters(filterParameters);
+        parameters.Add("center", access.CenterId.Value);
+        var rows = (await connection.QueryAsync<AgendaRow>(new CommandDefinition($"""
             SELECT appointment.id AS Id, appointment.residente_id AS ResidentId, resident.nombre_visible AS ResidentName, family.nombre_visible AS FamilyName,
                    link.relacion AS Relationship, appointment.equipo_codigo AS Team, appointment.modalidad_codigo AS Modality,
                    appointment.inicio_en AS StartsAt, appointment.fin_en AS EndsAt, appointment.estado_codigo AS Status
@@ -176,9 +187,9 @@ public sealed class SqlAppointmentServiceRepository(SqlConnectionFactory connect
               JOIN dbo.residentes resident ON resident.id = appointment.residente_id AND resident.centro_id = appointment.centro_id
               JOIN dbo.residentes_familiares link ON link.id = appointment.vinculo_id AND link.centro_id = appointment.centro_id
               JOIN dbo.familiares family ON family.id = link.familiar_id AND family.centro_id = link.centro_id
-             WHERE appointment.centro_id = @center AND appointment.inicio_en >= @from AND appointment.inicio_en < @to
+             WHERE appointment.centro_id = @center AND {filter}
              ORDER BY appointment.inicio_en, resident.nombre_visible
-            """, new { center = access.CenterId.Value, from = from.UtcDateTime, to = to.UtcDateTime }, cancellationToken: ct))).ToList();
+            """, parameters, cancellationToken: ct))).ToList();
         var changes = (await connection.QueryAsync<ChangeRow>(new CommandDefinition("""
             SELECT cita_id AS AppointmentId, accion_codigo AS Action, actor_perfil_codigo AS Profile, ocurrido_en AS At,
                    inicio_anterior_en AS PreviousStartsAt, inicio_nuevo_en AS NewStartsAt, motivo AS Reason

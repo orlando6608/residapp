@@ -74,7 +74,7 @@
         <label asp-for="Form.Comentario" class="form-label"></label>
         <textarea asp-for="Form.Comentario" class="form-control" rows="3" maxlength="@AppointmentRequestInput.MaxCommentLength"></textarea>
         <span asp-validation-for="Form.Comentario" class="text-danger"></span>
-        <div class="form-text">Breve: hasta @AppointmentRequestInput.MaxCommentLength caracteres. No escribas datos clínicos que no sean necesarios.</div>
+        <div class="form-text">Breve: hasta @AppointmentRequestInput.MaxCommentLength caracteres. No escribas datos clínicos detallados; el equipo te llamará.</div>
     </div>
 
     <fieldset class="mb-3">

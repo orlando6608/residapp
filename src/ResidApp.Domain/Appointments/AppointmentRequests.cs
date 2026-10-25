@@ -98,8 +98,22 @@ public static class AppointmentRequestRules
     public const int MaxProfessionalLength = 100;
     public const string ProposalInvalidCode = "APPOINTMENT_PROPOSAL_INVALID";
 
-    /// <summary>Una propuesta está viva mientras su hora no haya empezado: después caduca (se calcula, no se guarda) y deja de reservar el hueco.</summary>
-    public static bool IsProposalAlive(DateTimeOffset proposedStartsAt, DateTimeOffset now) => proposedStartsAt > now;
+    /// <summary>Horas que vive una propuesta desde que el centro la hace, y horas antes de la cita en que caduca aunque no hayan pasado (CJ, portal 6.4).</summary>
+    public const int ProposalLifetimeHours = 48;
+    public const int ProposalCutoffHoursBeforeStart = 24;
+
+    /// <summary>Una propuesta caduca a las 48 horas de hacerla o 24 horas antes de la cita, lo que llegue antes (CJ, portal 6.4): un hueco bloqueado sin
+    /// respuesta perjudica a otras familias. La columna calculada propuesta_caduca_en (script 0070) repite esta fórmula para las consultas.</summary>
+    public static DateTimeOffset ProposalExpiresAt(DateTimeOffset proposedAt, DateTimeOffset proposedStartsAt)
+    {
+        var lifetimeEnd = proposedAt.AddHours(ProposalLifetimeHours);
+        var cutoff = proposedStartsAt.AddHours(-ProposalCutoffHoursBeforeStart);
+        return lifetimeEnd < cutoff ? lifetimeEnd : cutoff;
+    }
+
+    /// <summary>Una propuesta está viva hasta que caduca (se calcula, no se guarda); después deja de reservar el hueco y el centro puede volver a proponer.</summary>
+    public static bool IsProposalAlive(DateTimeOffset proposedAt, DateTimeOffset proposedStartsAt, DateTimeOffset now) =>
+        now < ProposalExpiresAt(proposedAt, proposedStartsAt);
 
     /// <summary>El profesional interno que Administración apunta a una propuesta (opcional, hasta 100 caracteres). Solo lo ve Administración.</summary>
     public static string? NormalizeProfessional(string? professional) =>

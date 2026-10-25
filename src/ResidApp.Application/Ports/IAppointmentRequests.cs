@@ -10,12 +10,12 @@ public sealed record AppointmentRequestChange(
     AppointmentRequestAction Action, SystemProfile ActorProfile, DateTimeOffset At, DateTimeOffset? ProposedStartsAt, string? Detail);
 
 /// <summary>Una solicitud de cita tal como la ve Administración (script 0057): con el residente y el familiar que la envió, lo que pidió y la
-/// propuesta vigente. ProposalExpired es una propuesta cuya hora ya empezó (se calcula al leer).</summary>
+/// propuesta vigente. ProposalExpiresAt es cuándo caduca la propuesta y ProposalExpired, que ya caducó (se calculan al leer).</summary>
 public sealed record AdministrationAppointmentRequest(
     Guid Id, Guid ResidentId, string ResidentName, string FamilyName, string Relationship, AppointmentTeam Team, AppointmentModality Modality,
     AppointmentRequestReason Reason, string? Comment, AppointmentAvailability Availability, AppointmentRequestStatus Status, DateTimeOffset CreatedAt,
-    DateTimeOffset? ProposedStartsAt, DateTimeOffset? ProposedEndsAt, string? InternalProfessional, bool ProposalExpired, Guid? AppointmentId,
-    IReadOnlyList<AppointmentRequestChange> Changes);
+    DateTimeOffset? ProposedStartsAt, DateTimeOffset? ProposedEndsAt, DateTimeOffset? ProposalExpiresAt, string? InternalProfessional, bool ProposalExpired,
+    Guid? AppointmentId, IReadOnlyList<AppointmentRequestChange> Changes);
 
 /// <summary>
 /// Las solicitudes de cita para Administración del centro (script 0057; historia 8 de Administración, CIT-S02, CIT-S04, CIT-C02, CIT-C03). Cada
@@ -31,11 +31,12 @@ public interface IAppointmentRequestRepository
     Task<AdministrationAppointmentRequest> ReadAsync(
         AccountAdministrationAccess access, Guid requestId, DateTimeOffset now, CancellationToken ct = default);
 
-    /// <summary>Los huecos libres del equipo y la modalidad de una solicitud pendiente, sin la antelación mínima (Administración no la tiene).</summary>
+    /// <summary>Los huecos libres del equipo y la modalidad de una solicitud pendiente o con la propuesta caducada, sin la antelación mínima (Administración
+    /// no la tiene) pero a más de 24 horas, para que la propuesta no nazca caducada.</summary>
     Task<IReadOnlyList<AppointmentSlot>> ListProposalSlotsAsync(
         AccountAdministrationAccess access, Guid requestId, DateTimeOffset now, CancellationToken ct = default);
 
-    /// <summary>Propone un hueco libre a una solicitud pendiente y lo reserva mientras la propuesta viva.</summary>
+    /// <summary>Propone un hueco libre a una solicitud pendiente o con la propuesta caducada, y lo reserva mientras la propuesta viva.</summary>
     Task ProposeAsync(
         AccountAdministrationAccess access, Guid requestId, DateTimeOffset startsAt, string? professional, DateTimeOffset now, CancellationToken ct = default);
 
@@ -50,8 +51,8 @@ public sealed record FamilyAppointmentRequestChange(AppointmentRequestAction Act
 /// CanAccept es una propuesta viva; CanRequestAnotherTime, una propuesta (viva o caducada); CanCancel, una solicitud aún abierta.</summary>
 public sealed record FamilyAppointmentRequest(
     Guid Id, AppointmentTeam Team, AppointmentModality Modality, AppointmentRequestReason Reason, string? Comment, AppointmentAvailability Availability,
-    AppointmentRequestStatus Status, DateTimeOffset CreatedAt, DateTimeOffset? ProposedStartsAt, DateTimeOffset? ProposedEndsAt, bool ProposalExpired,
-    Guid? AppointmentId, bool CanAccept, bool CanRequestAnotherTime, bool CanCancel, IReadOnlyList<FamilyAppointmentRequestChange> Changes);
+    AppointmentRequestStatus Status, DateTimeOffset CreatedAt, DateTimeOffset? ProposedStartsAt, DateTimeOffset? ProposedEndsAt, DateTimeOffset? ProposalExpiresAt,
+    bool ProposalExpired, Guid? AppointmentId, bool CanAccept, bool CanRequestAnotherTime, bool CanCancel, IReadOnlyList<FamilyAppointmentRequestChange> Changes);
 
 /// <summary>
 /// Solicitudes de cita del Portal Familiar (script 0057; CIT-S01 a CIT-S04). El acceso a cada residente es el del resto del portal (vínculo y
