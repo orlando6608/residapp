@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-24. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-25. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -45,6 +45,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - **Pruebas:** `AccesoTests.Cuenta.cs` (el aviso sale una vez y con su ventana; las fichas llevan tonos distintos). Funcionales 303 en verde. En el navegador (local, claro, oscuro, 375 px):
     sin desplazamiento lateral, sin errores de consola, foco en «Entendido», Escape cierra y no vuelve al recargar. La passkey real solo se ve en Azure tras el despliegue: Orlando la probó antes del cambio (funciona) y falta que vea la ventana nueva.
   - **Aparte, no tocado:** otras pantallas usan `TempData["Mensaje"]` con franja verde arriba (comunicados, protocolo urgente…) y tienen el mismo problema de visibilidad.
+- **Encuadre del logo del centro (2026-10-25, rama `encuadre-logo-centro`, sin script ni cambios en el servidor). Hecho y probado, sin subir.** Petición de Orlando: dar al
+  logo el mismo control que a la foto del residente (centrar, acercar) y además **alejar**. Decisiones: recuadro apaisado **3:1 (768×256 px)**, que encaja con la cabecera y el PDF;
+  los márgenes que quedan al alejar son **transparentes** (PNG); si el PNG pasa de 480 KB se envía como JPEG sobre blanco, como antes.
+  - **`site.js`:** el encuadre de la foto (antes una función con estado único y 480 px fijos) es ahora `encuadre({ prefijo, campo, cubrir, codificar })`, que se llama dos veces: foto (`cubrir`,
+    JPEG 0,85, `foto.jpg`) y logo (`contener`, PNG, `logo.png`; `logo.jpg` si pesa). El lienzo manda el tamaño (`lienzo.width/height`); el límite del desplazamiento usa `Math.abs(ancho - lienzo)/2`
+    (igual para la foto, que siempre cubre; para el logo permite moverlo dentro del recuadro cuando es más pequeño) y se hace `clearRect` antes de dibujar. Sustituye al reductor de 512 px.
+  - **Pantalla:** `_LogoCentroCampo` lleva ahora el bloque de encuadre (lienzo `data-logo-lienzo`, cuatro botones `data-logo-mover`, deslizador 0,25× a 3×, «Acercar o alejar»), con ids
+    derivados de `Model.Id` (el parcial está en `DatosCentro` y `NuevoCentro`). La vista previa del logo guardado se oculta mientras hay un fichero elegido y vuelve si se vacía el campo.
+    `.logo-encuadre` en `site.css` (damero claro para ver el límite y la transparencia). `sw.js` sube a `residapp-shell-v5`.
+  - **Pruebas:** funcional `LogoCentroPageTests` (ambas pantallas traen el encuadre); sin tests de JavaScript en el repo, así que se probó en Chrome real con la skill `probar-en-navegador`:
+    logo ancho y cuadrado (el fichero es siempre 768×256 con esquinas transparentes), alejar, flechas, teclado, arrastre, guardar (el servido es 768×256 PNG), imagen de ruido que
+    pasa a JPEG, vista previa restaurada, claro, oscuro y 375 px sin desplazamiento lateral ni errores de consola. **Regresión de la foto:** JPEG 480×480, zoom mínimo 1 y sin bordes vacíos.
+  - **Aparte, no tocado:** los logos ya guardados con otra proporción siguen igual (el servidor admite cualquier proporción); en el PDF el ancho máximo (4 cm) limita un poco el alto de un
+    logo 3:1 (1,33 cm en vez de 1,4). No hay guía de prueba de CJ para el logo.
 - **Logo y nombre propios de cada centro (2026-10-24, rama `logo-por-centro`, script `0068`; el siguiente libre es `0069`). Hecho y probado, sin subir; espera el visto bueno de CJ.**
   Petición de Orlando: con sesión de un centro, la esquina superior izquierda, la cabecera de impresión y el PDF del informe de derivación muestran el **logo y el nombre del
   centro** en vez de los de ResidApp. Decisiones de Orlando: Plataforma puede subir el logo (opcional) al dar de alta el centro y después lo cambia, junto con el nombre, **la
@@ -60,7 +74,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     Plataforma no tiene marca.
   - **Pantallas:** `Administracion/DatosCentro` (tarjeta nueva en el inicio), `CentroLogoController.Ver` (404 sin motivo; `?v=` con la fecha del logo; `nosniff`), campo de
     logo compartido `_LogoCentroCampo` (también en `Plataforma/NuevoCentro`) y reductor en `site.js` (512 px por el lado mayor, PNG con transparencia; si pesa más de lo que
-    admite el servidor, JPEG sobre blanco). `_Layout` y `_LayoutFamilia` leen **nombre y logo de SQL en cada página** (`LayoutBrandingResolver`; si falla la lectura sale
+    admite el servidor, JPEG sobre blanco; **sustituido el 2026-10-25 por el encuadre 3:1**, ver arriba). `_Layout` y `_LayoutFamilia` leen **nombre y logo de SQL en cada página** (`LayoutBrandingResolver`; si falla la lectura sale
     ResidApp), así un renombrado se ve al instante en todas las sesiones y no hay que reescribir la cookie `residapp_active_scope`: su `CenterName` ya solo lo usa el
     resto de la app, no el encabezado. `.impresion-pie` repite «Generado con ResidApp» abajo de cada página impresa.
   - **PDF:** `PdfBranding.AddHeader(section, branding)` (logo de hasta 4 cm de ancho y 1,4 cm de alto, con la proporción de la imagen) y `AddGeneratedBy` en el pie;

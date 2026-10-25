@@ -5,6 +5,9 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
 
 ## Hecho
 
+- **Encuadre del logo del centro (2026-10-25, sin script; sobre el script `0068`)** — al elegir el logo en `Datos del centro` o en el alta de un centro (Plataforma) aparece, como en la foto del
+  residente, un recuadro apaisado 3:1 (768×256 px) donde se mueve (arrastre, botones de flecha o teclado) y se acerca o aleja (0,25× a 3×); los márgenes quedan transparentes y se envía ese
+  recuadro como PNG (JPEG sobre blanco si pesa más de 480 KB). `site.js` comparte la función `encuadre` con la foto; el servidor no cambia.
 - **Foto y ubicación en la lista y la ficha de residentes (2026-10-20, script `0059`; estudio de mercado, R2)** — la lista de Administración muestra la foto
   (o las iniciales) y la columna «Ubicación» (unidad, habitación y plaza, o «Sin habitación asignada»: `ResidentLocationLabel`, ahora común a los cuatro perfiles), y la
   ficha, la foto en la cabecera, «Ubicación actual» y el recuadro «Foto de identificación» (`_FotoResidenteEditar`) para ponerla, cambiarla o quitarla con el
