@@ -1,0 +1,205 @@
+{
+  "documento": "portal-familiar-confirmaciones-cj",
+  "cuestionario": "2026-10-15",
+  "guardado": "2026-10-25T13:41:51.963Z",
+  "respondidas": 28,
+  "total": 28,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Todos los familiares con la autorización activa ven lo mismo?",
+      "opcion": "A",
+      "textoOpcion": "Sí: todos los familiares con la autorización activa ven los mismos comunicados de su residente.",
+      "texto": "Todos los familiares con autorización activa ven lo mismo. La autorización ya es el control de acceso, y dar más al referente o al tutor complica el portal. El tutor legal necesita más derechos para decidir (consentimientos), no para leer comunicados. Si algún centro lo pide, se puede estudiar tras el piloto.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "Un comunicado ordinario se ve 30 días y uno relevante 6 meses. ¿Desde cuándo se cuentan?",
+      "opcion": "A",
+      "textoOpcion": "Desde que se publicó (como está ahora).",
+      "texto": "Desde que se publicó. La visibilidad empieza cuando la familia puede verlo, no cuando se preparó. Contar desde la preparación acortaría el plazo real sin que la familia lo sepa.",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "Si el residente se suspende por un ingreso hospitalario o se da de baja, ¿qué ve la familia?",
+      "opcion": "B",
+      "textoOpcion": "Al suspender o dar de baja al residente, el acceso de la familia se corta solo.",
+      "texto": "El acceso se corta solo al suspender o dar de baja. Es una medida de seguridad por defecto: si Administración olvida revocar la autorización, la familia seguiría viendo información de alguien que ya no está en el centro (limitación de la finalidad y del plazo, art. 5 RGPD). Si el residente vuelve, se reactiva. En un ingreso hospitalario la familia sigue en contacto por teléfono.",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "Mientras hay una derivación en curso, ¿debe aparecer algo más en el portal?",
+      "opcion": "A",
+      "textoOpcion": "No: el contacto es por teléfono y el portal solo enseña los comunicados publicados.",
+      "texto": "No. Una derivación urgente se comunica por teléfono, que es el canal fiable. Un aviso fijo en el portal podría no leerse, crea una falsa sensación de estar informado y expone un dato de salud sin necesidad. Evita además decidir qué texto y cuándo se retira.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Quién debe poder ver quién ha leído qué en el portal?",
+      "opcion": "A",
+      "textoOpcion": "Basta con que quede registrado; se consultará si hace falta.",
+      "texto": "Basta con que quede registrado. Si una familia dice que no recibió algo, o se sospecha un acceso indebido, se consulta bajo petición justificada (por ejemplo, del delegado de protección de datos). Una pantalla permanente sería otra superficie de acceso a datos personales. Se puede construir tras el piloto si hace falta.",
+      "respondida": true
+    },
+    "3.2": {
+      "pregunta": "Para el uso real, ¿cómo debe confirmar su identidad un familiar?",
+      "opcion": "A",
+      "textoOpcion": "Contraseña y un código enviado por correo.",
+      "texto": "Contraseña y código por correo. Es una verificación en dos pasos proporcionada al riesgo (comunicados, no historia clínica). El SMS añade coste y es más débil frente al cambio de SIM. Recomiendo además limitar los intentos fallidos, caducar la sesión y avisar al familiar de los accesos nuevos.",
+      "respondida": true
+    },
+    "4.1": {
+      "pregunta": "¿Quién debe poder publicar una corrección o retirar un comunicado ya publicado?",
+      "opcion": "A",
+      "textoOpcion": "Administración y Dirección Clínica, como al publicar antes de hora.",
+      "texto": "Administración y Dirección Clínica, como al publicar antes de hora. Un error (por ejemplo, un comunicado sobre otro residente) es una posible brecha de datos y se debe poder retirar rápido. Si la historia 6 de Administración exige un permiso específico (D), el permiso debe recaer en esos mismos perfiles. Enfermería y Medicina piden la corrección a Administración, que deja constancia.",
+      "respondida": true
+    },
+    "4.2": {
+      "pregunta": "¿Cuánto tiempo ve la familia una corrección?",
+      "opcion": "B",
+      "textoOpcion": "El mismo que el original: la corrección desaparece cuando desaparece el original.",
+      "texto": "La corrección desaparece cuando desaparece el original. Una corrección que se ve 6 meses sin el original que corrige no se entiende, y mantiene visible información sanitaria más tiempo del necesario (limitación del plazo de conservación).",
+      "respondida": true
+    },
+    "4.3": {
+      "pregunta": "Si se retira un comunicado, ¿qué pasa con sus correcciones?",
+      "opcion": "A",
+      "textoOpcion": "También dejan de verse (como está ahora): la familia solo ve que esa novedad no está disponible.",
+      "texto": "También dejan de verse. Sin el original no se entienden. Además, si el original se retiró por un error (otro residente), la corrección podría reproducir el dato que se quiere ocultar. La familia ve que esa novedad no está disponible.",
+      "respondida": true
+    },
+    "4.4": {
+      "pregunta": "¿Debe la familia saber por qué se ha retirado un comunicado?",
+      "opcion": "A",
+      "textoOpcion": "No: la familia solo ve que ya no está disponible, y que llame al centro si tiene dudas (como está ahora).",
+      "texto": "No. El motivo interno puede contener datos de otros residentes o juicios internos. Que la familia llame al centro es suficiente. Si el error afecta a datos de otra persona, se gestiona fuera del portal con el procedimiento de brechas (arts. 33 y 34 RGPD).",
+      "respondida": true
+    },
+    "4.5": {
+      "pregunta": "¿Se puede deshacer una retirada hecha por error?",
+      "opcion": "A",
+      "textoOpcion": "No se puede deshacer: se corrige con una publicación nueva (como está ahora).",
+      "texto": "No se puede deshacer: se publica uno nuevo. Una retirada suele proteger un dato. Deshacerla reabre la exposición y complica la trazabilidad. Un comunicado nuevo deja una historia clara en la auditoría.",
+      "respondida": true
+    },
+    "5.1": {
+      "pregunta": "¿Cuántas citas puede atender un equipo a la vez?",
+      "opcion": "A",
+      "textoOpcion": "Una a la vez por equipo (como está ahora).",
+      "texto": "Una cita a la vez por equipo. Es lo seguro para empezar, sin dobles reservas. Cuando el piloto muestre que faltan huecos, se puede pasar a B con una capacidad por franja que defina el centro.",
+      "respondida": true
+    },
+    "5.2": {
+      "pregunta": "¿Cuántas citas próximas puede tener un residente con el mismo equipo?",
+      "opcion": "A",
+      "textoOpcion": "Una (como está ahora).",
+      "texto": "Una cita futura por residente y equipo. Evita que unas pocas familias copen los huecos. Tras el piloto se podría subir a 2 si hay demanda real.",
+      "respondida": true
+    },
+    "5.3": {
+      "pregunta": "¿Quién de la familia ve y cambia una cita?",
+      "opcion": "A",
+      "textoOpcion": "Solo quien la reservó (como está ahora).",
+      "texto": "Solo quien la reservó. Una cita con el equipo asistencial puede revelar un asunto de salud (motivo, tipo de equipo). Que todos los familiares autorizados vean todo es más acceso del necesario (minimización, art. 5.1.c). La coordinación entre familiares queda en sus manos.",
+      "respondida": true
+    },
+    "5.4": {
+      "pregunta": "¿Hasta cuándo puede la familia reprogramar o cancelar?",
+      "opcion": "A",
+      "textoOpcion": "Hasta la antelación mínima del centro (como está ahora).",
+      "texto": "Hasta la antelación mínima del centro (24 h). El equipo necesita tiempo para reorganizarse y reutilizar el hueco. Pasado ese plazo, se llama por teléfono y Administración lo cambia.",
+      "respondida": true
+    },
+    "5.5": {
+      "pregunta": "¿Son buenos los valores de partida de antelación y horizonte?",
+      "opcion": "A",
+      "textoOpcion": "Sí: 24 horas y 30 días.",
+      "texto": "24 horas y 30 días son valores razonables para empezar. Cada centro puede cambiarlos, y el piloto dirá si hay que ajustarlos. Las franjas sin valor por defecto son correctas: dependen del centro.",
+      "respondida": true
+    },
+    "5.6": {
+      "pregunta": "Cuando el centro cancela o cambia una cita, ¿qué ve la familia?",
+      "opcion": "A",
+      "textoOpcion": "Que lo hizo el centro, sin el motivo (como está ahora).",
+      "texto": "Que lo hizo el centro, sin el motivo. El motivo interno puede incluir información de otros residentes o del equipo. La familia ve la nueva hora si es un cambio y puede llamar si tiene dudas.",
+      "respondida": true
+    },
+    "5.7": {
+      "pregunta": "¿Quién gestiona y quién ve la agenda de citas?",
+      "opcion": "A",
+      "textoOpcion": "Solo Administración, de todo el centro (como está ahora).",
+      "texto": "Solo Administración, de todo el centro. El servicio es del centro, no de una unidad, y B dejaría citas sin gestor. Más perfiles con acceso son más riesgo. Si Enfermería o Medicina necesitan ver sus citas, se añade tras el piloto con permiso explícito.",
+      "respondida": true
+    },
+    "5.8": {
+      "pregunta": "¿Cuándo se da una cita por finalizada?",
+      "opcion": "A",
+      "textoOpcion": "La marca Administración a mano (como está ahora).",
+      "texto": "La marca Administración a mano. Una cita que pasó de hora no siempre se celebró (la familia no vino, se cambió por teléfono), y marcarla sola como finalizada falsearía los datos. Pediría una lista de «citas pasadas sin cerrar» para que no se olviden.",
+      "respondida": true
+    },
+    "6.1": {
+      "pregunta": "¿Qué motivos puede elegir la familia al solicitar una cita?",
+      "opcion": "A",
+      "textoOpcion": "Esa lista (como está ahora).",
+      "texto": "Esa lista cerrada de seis motivos reduce el texto libre con datos de salud. El comentario de 300 caracteres es un riesgo, así que pondría un aviso: «No escribas datos clínicos detallados; el equipo te llamará».",
+      "respondida": true
+    },
+    "6.2": {
+      "pregunta": "¿Cómo indica la familia cuándo podría?",
+      "opcion": "A",
+      "textoOpcion": "Días de la semana y mañana o tarde (como está ahora).",
+      "texto": "Días de la semana y mañana o tarde. Es sencillo para la familia y suficiente para que Administración proponga un hueco. Un tramo horario concreto añade complejidad sin necesidad.",
+      "respondida": true
+    },
+    "6.3": {
+      "pregunta": "¿Cuántas solicitudes abiertas puede tener un residente con el mismo equipo?",
+      "opcion": "A",
+      "textoOpcion": "Una (como está ahora).",
+      "texto": "Una solicitud abierta por residente y equipo. Evita saturar a Administración con solicitudes duplicadas. Cuando se resuelve o cancela, puede enviar otra.",
+      "respondida": true
+    },
+    "6.4": {
+      "pregunta": "¿Cuánto tiempo guarda el centro el hueco que propone?",
+      "opcion": "B",
+      "textoOpcion": "Caduca antes, aunque la hora no haya llegado (indica en el comentario cuántas horas).",
+      "texto": "Que caduque antes de que llegue la hora: un hueco bloqueado semanas sin respuesta perjudica a otras familias, y con un horizonte de 30 días eso puede pasar. Propongo 48 horas (o hasta 24 horas antes de la cita, lo que ocurra primero). Después, Administración puede volver a proponer.",
+      "respondida": true
+    },
+    "6.5": {
+      "pregunta": "¿Cómo se apunta el profesional que atenderá la cita?",
+      "opcion": "A",
+      "textoOpcion": "Texto libre y opcional, solo para el centro (como está ahora).",
+      "texto": "Texto libre, opcional y solo para el centro. El nombre de un trabajador es un dato personal y la familia no lo ve. Una lista obliga a mantener otro catálogo sin beneficio claro en el piloto.",
+      "respondida": true
+    },
+    "6.6": {
+      "pregunta": "Si la propuesta no le viene bien, ¿qué puede hacer la familia?",
+      "opcion": "A",
+      "textoOpcion": "Aceptar, pedir otro horario sin texto o cancelar (como está ahora).",
+      "texto": "Aceptar, pedir otro horario sin texto o cancelar. Sin texto libre, no hay datos de salud no solicitados ni un canal de mensajes que alguien deba atender. Para explicar algo, la familia llama al centro.",
+      "respondida": true
+    },
+    "6.7": {
+      "pregunta": "¿Quién de la familia ve y responde una solicitud?",
+      "opcion": "A",
+      "textoOpcion": "Solo quien la envió (como está ahora).",
+      "texto": "Solo quien la envió, por el mismo motivo que en las citas (5.3): el asunto puede ser de salud y la autorización para leer comunicados no implica ver quién ha pedido qué cita.",
+      "respondida": true
+    },
+    "6.8": {
+      "pregunta": "Si el centro cambia de modo, ¿qué pasa con lo que está abierto?",
+      "opcion": "A",
+      "textoOpcion": "Siguen abiertas y se gestionan con normalidad (como está ahora).",
+      "texto": "Siguen abiertas y se gestionan con normalidad. Cerrarlas solas sorprendería a la familia, que tendría que empezar de cero. Cambiar de modo debe afectar solo a lo nuevo, y la familia sigue pudiendo aceptar o cancelar.",
+      "respondida": true
+    },
+    "6.9": {
+      "pregunta": "Si Administración cierra una solicitud, ¿qué ve la familia?",
+      "opcion": "A",
+      "textoOpcion": "«Cerrada por el centro», sin el motivo (como está ahora).",
+      "texto": "«Cerrada por el centro», sin el motivo. El motivo interno puede incluir información del residente o de terceros. La familia puede llamar o enviar otra solicitud, y el motivo queda en la auditoría.",
+      "respondida": true
+    }
+  }
+}

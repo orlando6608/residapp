@@ -81,7 +81,7 @@ if (generar)
 }
 
 // Variantes a comparar: Mistral:Prompt (nombre del fichero de Prompts, sin .md) y Mistral:EsquemaPorArea (true/false).
-var nombrePrompt = config["Mistral:Prompt"] ?? "registrar-cambio-v2";
+var nombrePrompt = config["Mistral:Prompt"] ?? "registrar-cambio-v3";
 var porArea = !string.Equals(config["Mistral:EsquemaPorArea"], "false", StringComparison.OrdinalIgnoreCase);
 Console.WriteLine($"Texto: {modeloTexto}, prompt: {nombrePrompt}, esquema por área: {porArea}, voz: {carpetaVoz ?? "(texto escrito)"}");
 var esquema = Esquema.Construir(porArea);

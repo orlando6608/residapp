@@ -129,7 +129,7 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
     {
         Transcript = "hoy no ha querido comer nada",
         Output = new VoiceModelOutput([new VoiceModelArea(
-            DailyChangeAreaCode.AlimentacionHidratacion.ToCode(), "no ha querido comer nada", [DailyChangeAreaOptionCode.NulaIngesta.ToCode()])]),
+            DailyChangeAreaCode.AlimentacionHidratacion.ToCode(), "no ha querido comer nada", [DailyChangeAreaOptionCode.NulaIngesta.ToCode()])], 38.5m),
     };
 
     private static async Task<int> AuditRowsAsync(Guid account)
@@ -152,8 +152,9 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var json = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
-        Assert.Equal(["areas", "transcripcion"], json.Select(p => p.Key).Order().ToList());
+        Assert.Equal(["areas", "temperatura", "transcripcion"], json.Select(p => p.Key).Order().ToList());
         Assert.Equal("hoy no ha querido comer nada", json["transcripcion"]!.GetValue<string>());
+        Assert.Equal(38.5m, json["temperatura"]!.GetValue<decimal>());
         var area = Assert.Single(json["areas"]!.AsArray())!.AsObject();
         Assert.Equal(["area", "opciones", "texto"], area.Select(p => p.Key).Order().ToList());
         Assert.Equal("ALIMENTACION_HIDRATACION", area["area"]!.GetValue<string>());

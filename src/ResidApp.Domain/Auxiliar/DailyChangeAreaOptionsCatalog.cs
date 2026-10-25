@@ -14,6 +14,7 @@ public static class DailyChangeAreaOptionsCatalog
                 DailyChangeAreaOptionCode.RechazaIngesta,
                 DailyChangeAreaOptionCode.DisminucionIngestaLiquidos,
                 DailyChangeAreaOptionCode.Atragantamiento,
+                DailyChangeAreaOptionCode.ComeMenosHabitual,
             ],
             [DailyChangeAreaCode.MovilidadFuncionalidad] =
             [
@@ -54,6 +55,7 @@ public static class DailyChangeAreaOptionsCatalog
                 DailyChangeAreaOptionCode.Herida,
                 DailyChangeAreaOptionCode.Upp,
                 DailyChangeAreaOptionCode.Hematoma,
+                DailyChangeAreaOptionCode.PielEnrojecida,
             ],
             [DailyChangeAreaCode.ParticipacionRelacionSocial] = [],
             [DailyChangeAreaCode.IncidenciasCaidas] = [],

@@ -25,6 +25,7 @@ Del "Fuera de alcance" de `alcance.md`, sin cambios ni interpretación adicional
 - Videollamada propia; solo puede ofrecerse como modalidad si el centro dispone del medio externo adecuado.
 - Rankings nominativos de productividad o evaluaciones automáticas de mala praxis.
 - Exportación masiva de historias clínicas individuales.
+- Exportar los registros asistenciales (cierres de turno, cambios, valoraciones) a otro programa: **después del piloto**, cuando se sepa qué programa usa el centro, con contrato de encargado, auditoría y probablemente una evaluación de impacto (CJ, `importacion-exportacion-confirmaciones-cj` 3.1, 2026-10-25).
 - Integraciones con historias clínicas externas en la primera versión.
 - Flujos específicos de Centro de Día y SAAD antes de validar el modelo inicial en residencias.
 - CFS y Pfeiffer dentro del estado basal.

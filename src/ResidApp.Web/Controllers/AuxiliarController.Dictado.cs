@@ -65,6 +65,7 @@ public sealed partial class AuxiliarController
                 opciones = a.Options.Select(o => o.ToCode()).ToList(),
                 texto = a.Text,
             }).ToList(),
+            temperatura = result.Value.Temperature,
         });
     }
 }

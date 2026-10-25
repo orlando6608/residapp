@@ -393,6 +393,43 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
 
 ## Pendiente
 
+### Respuestas de CJ del 2026-10-25, por construir
+
+CJ contestó cinco cuestionarios que tocan este vertical (`docs/pendientes-cj/*.respuestas.json`). Lo que confirma lo que ya hace la app no se repite aquí.
+Orden decidido con Orlando: dictado por voz (va en `continuar-construccion.md`), Portal Familiar, foto e inicio, importación, organigrama y resumen periódico.
+
+- **Portal Familiar** (`portal-familiar-confirmaciones-cj` y tercera tanda):
+  - Al suspender o dar de baja al residente, el acceso de la familia **se corta solo**, y se reactiva si vuelve (portal 1.3).
+  - Una corrección **deja de verse cuando deja de verse el original** (portal 4.2), no a los 6 meses.
+  - Al entrar, la familia ve **destacadas las propuestas de cita y los comunicados nuevos** (tercera 6.3).
+  - En la solicitud de cita, junto al comentario: «No escribas datos clínicos detallados; el equipo te llamará» (portal 6.1).
+  - Una propuesta del centro **caduca a las 48 horas o 24 horas antes de la cita, lo que llegue antes** (portal 6.4); después, Administración puede volver a proponer.
+  - Lista de **citas pasadas sin cerrar** para Administración, que las sigue cerrando a mano (portal 5.8).
+  - **Resumen periódico** (tercera 1.1 a 1.5): recopilación automática de los comunicados ya publicados en el periodo, sin texto nuevo; una frecuencia para todo el centro;
+    si no hay nada, no se publica nada; se suma a los comunicados sueltos. La 1.3 («lo prepara y lo aprueba Enfermería, al guardarlo») no aplica a una recopilación
+    automática, que no tiene redacción ni aprobación: **interpretación mía**, a confirmar si el resumen llegara a llevar texto nuevo.
+- **Foto del residente** (`foto-residente-confirmaciones-cj`):
+  - El consentimiento guarda **quién lo firmó (el residente o su representante) y la fecha**; no el documento escaneado (1.1).
+  - Indicador **«No quiere foto»** en la ficha, para que nadie la vuelva a pedir (1.2).
+  - La ponen, cambian y quitan **Administración, y Enfermería solo con un permiso que da Administración** (1.3; hoy Enfermería puede sin permiso).
+  - **Se borra al dar de baja** al residente (2.2); al suspenderlo (ingreso hospitalario) se conserva. Si se reactiva, se pide un consentimiento nuevo.
+  - **Aviso a Administración cuando la foto tenga más de 12 meses** (2.3).
+- **Alta y ubicación** (foto 3.1 y tercera 4.1): la cama es **obligatoria si la unidad tiene camas libres**, con una opción explícita «Pendiente de asignar»; sin camas
+  configuradas sigue siendo opcional. El inicio llama «ubicación pendiente» a los residentes **sin habitación o sin plaza**.
+- **Inicio de Administración** (tercera 4.4): los **residentes sin contacto urgente designado y sin motivo indicado**; en segundo lugar, las cuentas profesionales suspendidas o sin ámbito.
+- **Importación y exportación** (`importacion-exportacion-confirmaciones-cj`):
+  - El residente importado queda con **la fecha de ingreso que traiga el fichero**, si la trae (1.1): hace falta un campo nuevo en la importación y una columna en
+    `residentes` (hoy solo existe `creado_en`).
+  - «Ya existe» **solo si coincide la referencia interna**; si coinciden nombre y fecha de nacimiento, **avisa y deja elegir** (1.2; hoy lo da por existente sin preguntar).
+  - La vista previa cuenta cuántas filas quedan con el sexo «No consta» (1.4).
+  - Al exportar, un aviso: «Contiene datos personales: guárdalo en un lugar seguro y bórralo cuando termines» (2.1). Importar y exportar ya quedan en la auditoría (`IMPORT_RUN`, `EXPORT_RUN`).
+- **Organigrama y cargos (ADM-07)**, con las ocho decisiones de `organigrama-y-cargos-cj`: los ocupan personas con cuenta o solo con nombre (sin contacto); cada centro crea
+  los suyos y puede cargar los ocho de CJ como plantilla; cada cargo dice si es de una persona o de varias; una persona puede tener varios cargos; un superior por cargo
+  y la coordinación funcional en una nota; un cargo se liga a una o varias unidades (los equipos de turnos, aparte); solo lo actual (lo anterior, en la auditoría);
+  lo gestiona Administración y lo consultan en solo lectura todos los profesionales del centro, nunca la familia. Ocupar un cargo no da permisos.
+- **Esperan al correo (ADR 0012, propuesto):** el aviso genérico por correo de las propuestas de cita (tercera 6.1), el recordatorio el día antes (6.2) y el código por correo
+  para que entre el familiar (portal 3.2, con límite de intentos, caducidad de sesión y aviso de accesos nuevos). CJ supuso que el correo ya existía; hoy la app no envía ninguno.
+
 En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** hecho el 2026-10-07 (ver «Traslado, baja, reactivación y suspensión»); queda el traslado por Enfermería con permiso específico, para cuando un centro lo pida.

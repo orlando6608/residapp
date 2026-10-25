@@ -14,6 +14,32 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Dictado por voz con las respuestas de CJ (2026-10-25, rama `dictado-respuestas-cj`, sobre `respuestas-cj-2026-10-25`; script `0069`, el siguiente libre es `0070`). Hecho y probado, sin subir.**
+  - **Opciones nuevas:** «Come menos de lo habitual» (`COME_MENOS_HABITUAL`, alimentación) y «Piel enrojecida» (`PIEL_ENROJECIDA`, lesiones en piel): enum, catálogo, etiqueta y
+    `0069` (rehace `CK_cccao_opcion`).
+  - **Temperatura:** entre 34,0 y 42,0 °C (`DailyChangeTemperature`), comprobada en el formulario (mensaje en español, `min`/`max`) y en `RegisterDailyChange`
+    (`DAILY_CHANGE_TEMPERATURE_OUT_OF_RANGE`). Un cambio **con solo la temperatura** se puede registrar (`DAILY_CHANGE_AREAS_REQUIRED` exige un área **o** la temperatura) y la
+    confirmación avisa de que no hay ningún área. Las pantallas de Enfermería pintan los cambios recorriendo sus áreas, así que uno sin áreas sale solo con la temperatura.
+  - **El dictado propone la temperatura:** el esquema la pide (número o nulo), `SanitizeTemperature` la descarta fuera de rango y la redondea a una décima, la respuesta JSON
+    lleva `temperatura` y `dictado.js` la rellena y la mete en «Revisa cada sugerencia» como una opción más. Las notas siguen sin bloquear «Continuar» (CJ 4.1 B).
+  - **Prompt v3** (`src/ResidApp.Infrastructure/IA/Prompts/registrar-cambio.md` = `tools/PruebaDictado/Prompts/registrar-cambio-v3.md`, ya por defecto en la herramienta): «que
+    proponga menos» y las reglas de CJ (decul, piel enrojecida, comer poco, somnolencia también en conciencia, desorientación, ánimo sin deducir, dos observaciones sin causa). Los 31
+    casos de `jerga-es.json` corregidos según CJ (c01, c03, c10, c25, c28) y ya sin dudosos. Resultado en texto, dos pasadas: 27/31 exactos, 5/5 temperaturas, **ninguna casilla
+    marcada de más** (los fallos son notas de más o de menos); el v2, 26/31 en opciones y deduciendo «Disminución del ánimo». Detalle en `tools/PruebaDictado/README.md`.
+  - **Pruebas:** unitarias 451, integración 523, funcionales 304 en verde. `0069` aplicado a mano en `ResidApp` y `ResidAppPruebas` locales.
+  - `dictado-por-voz-confirmaciones-cj` archivado (README, `preguntas.html`, `archivo.html`). Manual y la historia 4 del Auxiliar actualizados.
+  - **Falta:** probarlo en el navegador con la cuenta `almendros-orlando-auxiliar` y en un móvil real con audios; confirmar con una enfermera del centro el sentido de «decul» y el
+    rango de temperatura (lo pidió CJ; no bloquea).
+- **Respuestas de CJ del 2026-10-25 (rama `respuestas-cj-2026-10-25`, solo documentación).** CJ contestó seis cuestionarios enteros (88 respuestas): foto del residente,
+  importación y exportación, organigrama y cargos, tercera tanda, Portal Familiar y dictado por voz. Los `.respuestas.json` están en `docs/pendientes-cj/` y su estado en el README
+  pasa a «Contestado; en construcción»; ninguno se archiva hasta que lo pedido esté hecho. Unas 50 respuestas confirman lo que ya hace la app; las que piden cambios están
+  clasificadas en `docs/tareas/alta-prioridad/pendientes-administracion.md` (Portal Familiar, foto, alta y ubicación, inicio, importación, organigrama), `pendientes-direccion.md`
+  (finalidad de calidad = solo agregados; cerrar con indicaciones sin cumplir, solo Dirección con motivo) y `pendientes-enfermeria.md` (episodios cerrados tras un traslado, a petición y
+  con motivo); exportar registros asistenciales, en `docs/tareas/futuro/backlog-diferido.md`. **CJ supuso que la app ya manda correos y no es así:** el aviso de propuesta de cita, el
+  recordatorio del día antes y el código por correo del familiar esperan al **ADR 0012** (`docs/decisiones-arquitectura/0012-envio-correos.md`, propuesto: Azure Communication Services
+  Email, una tarea dentro de la app con «Siempre activo», hoy apagado en la Web App, y lo que debe revisar el DPO). Hay que decírselo a CJ.
+  **Orden acordado con Orlando:** dictado por voz → Portal Familiar → foto e inicio de Administración → importación → Dirección y traslados → organigrama → resumen periódico; el correo,
+  cuando Orlando decida el ADR. CJ pide confirmar con una enfermera del centro el sentido de «decul» y el rango de temperatura 34–42 °C: se anota, no bloquea.
 - **Para retomar (2026-10-24, final de la sesión).** `origin/main` ya lleva todo (último: `d07b43d`, «Mi cuenta»). Parte siempre de `origin/main` (`git fetch`): la `main` local suele ir atrás.
   - **Entorno local:** SQL `ACER-ORLANDO` con solo `ResidApp` (esquema hasta `0068`, semilla y juego de Orlando dado de alta; copia previa en
     `C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\Backup\ResidApp-antes-recrear-20261024.bak`) y `ResidAppPruebas` (la de las pruebas). App local parada.
@@ -1797,8 +1823,10 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 0. **En curso: dictado por voz (ADR 0009) con la arquitectura del ADR 0011.** La Fase A (prueba de precisión, `tools/PruebaDictado`) está mergeada y el **servidor de la
    Fase B (tramo 1) está hecho** en la rama `dictado-fase-b-tramo-1`. Siguiente: probarlo en un móvil real con audios ficticios y, cuando CJ responda, ajustar el modo estricto (4.1) y la temperatura (tema 3). Servidor y pantalla están hechos
-   (dos primeras entradas de «Dónde estamos»). **Espera la respuesta de CJ** a `docs/pendientes-cj/dictado-por-voz-confirmaciones-cj.html` (el rango de temperatura, tema 3, bloquea
-   solo la temperatura). Mientras tanto, grabar unos 10 audios reales ficticios o elegir otra tarea de esta lista.
+   (dos primeras entradas de «Dónde estamos»). **CJ respondió el 2026-10-25** (`docs/pendientes-cj/archivados/dictado-por-voz-confirmaciones-cj.respuestas.json`) y **está hecho** (primera entrada de «Dónde estamos»):
+   opciones nuevas «Piel enrojecida» y «Come menos de lo habitual» (script `0069`), temperatura entre 34,0 y 42,0 °C que bloquea fuera de rango, un cambio con solo la temperatura,
+   el dictado propone la temperatura y se revisa una a una con las opciones, prompt que «propone menos» con sus reglas de jerga y los ejemplos 1, 3, 10, 25 y 28 corregidos. Sigue pendiente
+   probarlo en un móvil real con audios ficticios. **Siguiente bloque: Portal Familiar** (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
    **I0 a I4 e I2b del ADR 0007 están hechos y el acceso de desarrollo está retirado en el código** (rama `sin-acceso-desarrollo`, primera entrada de
    «Dónde estamos»). Queda **I5 (pulsera NFC)** y, antes de datos reales, llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: (Importar y Exportar ya probado en Azure dev el 2026-10-23), y las dos preguntas a CJ de la guía 2 (hora en la

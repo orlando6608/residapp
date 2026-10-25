@@ -18,7 +18,7 @@ public class DictadoCambioTests
     // ---- esquema ----
 
     [Fact]
-    public void Esquema_TieneCadaAreaConSoloSusOpciones_YNingunaTemperatura()
+    public void Esquema_TieneCadaAreaConSoloSusOpciones_YLaTemperaturaComoNumeroONulo()
     {
         var schema = DailyChangeDictationSchema.Build();
         var alternativas = schema["properties"]!["areas"]!["items"]!["anyOf"]!.AsArray();
@@ -40,8 +40,25 @@ public class DictadoCambioTests
             Assert.False(alternativa["additionalProperties"]!.GetValue<bool>());
         }
 
-        // Sin rango de CJ para la temperatura, el dictado no sugiere ningún valor clínico numérico.
-        Assert.DoesNotContain("temperatura", schema.ToJsonString(), StringComparison.OrdinalIgnoreCase);
+        // CJ fijó el rango el 2026-10-25: el modelo puede devolver la temperatura (obligatoria en el esquema estricto, nula si no se dijo).
+        Assert.Contains("temperatura", schema["required"]!.AsArray().Select(r => r!.GetValue<string>()));
+        Assert.Equal(["number", "null"], schema["properties"]!["temperatura"]!["type"]!.AsArray().Select(t => t!.GetValue<string>()));
+    }
+
+    [Theory]
+    [InlineData("38.5", "38.5")]
+    [InlineData("37.84", "37.8")]
+    [InlineData("34.0", "34.0")]
+    [InlineData("42.0", "42.0")]
+    [InlineData("378", null)]
+    [InlineData("33.9", null)]
+    [InlineData("42.1", null)]
+    public void Saneado_LaTemperaturaSoloSeSugiereEnElRangoDeCJ_RedondeadaAUnaDecima(string dicha, string? sugerida)
+    {
+        var resultado = SuggestDailyChangeFromVoice.SanitizeTemperature(decimal.Parse(dicha, System.Globalization.CultureInfo.InvariantCulture));
+
+        Assert.Equal(sugerida is null ? null : decimal.Parse(sugerida, System.Globalization.CultureInfo.InvariantCulture), resultado);
+        Assert.Null(SuggestDailyChangeFromVoice.SanitizeTemperature(null));
     }
 
     // ---- saneado ----

@@ -1,0 +1,65 @@
+{
+  "documento": "organigrama-y-cargos-cj",
+  "cuestionario": "2026-10-13",
+  "guardado": "2026-10-25T13:48:18.698Z",
+  "respondidas": 8,
+  "total": 8,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Quién puede ocupar un cargo?",
+      "opcion": "B",
+      "textoOpcion": "Personas con cuenta, y también personas sin cuenta de las que solo se escribe el nombre (por ejemplo, la gerencia o el personal administrativo).",
+      "texto": "Personas con cuenta y también personas sin cuenta de las que solo se escribe el nombre. El organigrama debe reflejar la estructura real del centro, y gerencia y administrativos suelen no necesitar cuenta. Si solo se guarda el nombre (sin contacto ni otros datos), el tratamiento de datos de esas personas es mínimo. Ocupar un cargo no da permisos, así que no crea ningún acceso. La entidad titular puede figurar como cargo, no como persona.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Los cargos son fijos o cada centro crea los suyos?",
+      "opcion": "A",
+      "textoOpcion": "Cada centro crea y nombra los suyos. Al empezar puede cargar tus ocho cargos como plantilla y cambiarlos, quitar los que no use o añadir otros.",
+      "texto": "Cada centro crea y nombra los suyos, con tus ocho cargos como plantilla inicial. Los centros son distintos (un terapeuta ocupacional, un trabajador social, un fisioterapeuta) y una lista cerrada obligaría a pedir cambios a ingeniería por cada caso.",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "¿Cuántas personas puede ocupar un cargo a la vez?",
+      "opcion": "A",
+      "textoOpcion": "Cada cargo indica si es de una sola persona (Dirección) o si admite varias (Enfermería, Auxiliares).",
+      "texto": "Cada cargo indica si admite una o varias personas. Es la forma más fiel a la realidad: Dirección es una persona, Enfermería y Auxiliares son grupos. Obligar a una sola persona por cargo (C) impediría nombrar a quienes lo ocupan, y admitir varias en todos (B) permitiría errores como dos directores.",
+      "respondida": true
+    },
+    "1.4": {
+      "pregunta": "¿Puede una misma persona ocupar más de un cargo?",
+      "opcion": "A",
+      "textoOpcion": "Sí, varios cargos a la vez.",
+      "texto": "Sí, varios cargos a la vez. En centros pequeños es lo normal, por ejemplo la misma persona como Dirección médica y Medicina. Impedirlo obligaría a inventar cuentas o a dejar cargos vacíos, y el organigrama no concede permisos, así que no hay riesgo de acumular accesos.",
+      "respondida": true
+    },
+    "1.5": {
+      "pregunta": "Además de «de quién depende», ¿se anota la coordinación funcional?",
+      "opcion": "A",
+      "textoOpcion": "Solo de quién depende cada cargo (un superior por cargo). La coordinación funcional se puede escribir en una nota.",
+      "texto": "Solo de quién depende cada cargo, con la coordinación funcional en una nota. Un árbol claro con un superior por cargo es más fácil de leer y de mantener. La segunda línea (B) complica el dibujo y el modelo para un dato que de momento es informativo. Se puede añadir después si el piloto lo pide.",
+      "respondida": true
+    },
+    "1.6": {
+      "pregunta": "¿Se vinculan los cargos a unidades o a equipos?",
+      "opcion": "A",
+      "textoOpcion": "Un cargo puede ligarse a una o varias unidades. Los equipos de turnos quedan aparte, sin relación con el organigrama.",
+      "texto": "Un cargo puede ligarse a una o varias unidades. Los equipos de turnos quedan aparte: son un concepto de planificación, no de estructura. Mezclarlos podría hacer pensar que ser responsable de un equipo da permisos sobre él, y eso ya está decidido que no sucede.",
+      "respondida": true
+    },
+    "1.7": {
+      "pregunta": "¿Hace falta conservar quién ocupó un cargo antes?",
+      "opcion": "A",
+      "textoOpcion": "Solo lo actual. Quién ocupó un cargo antes se consulta en la auditoría.",
+      "texto": "Solo lo actual. El historial de cambios ya queda en la auditoría administrativa. Guardar un histórico de personas en cada cargo con fechas (B) es crear un registro de personal que no se necesita para la finalidad del organigrama (minimización y limitación del plazo de conservación, art. 5 RGPD).",
+      "respondida": true
+    },
+    "1.8": {
+      "pregunta": "¿Quién puede ver el organigrama?",
+      "opcion": "C",
+      "textoOpcion": "Administración lo gestiona y todos los profesionales del centro lo consultan en solo lectura.",
+      "texto": "Administración lo gestiona y todos los profesionales lo consultan en solo lectura. Contiene solo nombre y cargo, sin datos clínicos, y es información que cualquier profesional necesita para saber a quién acudir o escalar un problema. La familia nunca lo ve. Ocultárselo al equipo no protege nada y reduce su utilidad.",
+      "respondida": true
+    }
+  }
+}

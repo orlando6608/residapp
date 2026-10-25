@@ -229,6 +229,34 @@ public class AuxiliarApplicationServiceTests
     }
 
     [Fact]
+    public async Task RegisterDailyChangeAsync_SoloConTemperatura_Succeeds_YFueraDeRangoNoSeGuarda()
+    {
+        var adminSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var auxiliarSeed = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, adminSeed.CenterId, adminSeed.UnitId);
+        var residents = new SqlResidentRepository(TestDatabase.ConnectionFactory);
+        var resident = await residents.CreateWithInitialLocationAsync(new CreateResidentInput(
+            adminSeed.AccountId, SystemProfile.Administracion, adminSeed.CenterId, adminSeed.UnitId,
+            "Residente Cambio Temperatura", new DateOnly(1949, 4, 4), DocumentedSexCode.Mujer, null, null, null, null, null, Guid.NewGuid()));
+        await AssignAsync(auxiliarSeed.ProfileScopeId, adminSeed.CenterId, resident.ResidentId, adminSeed.AccountId);
+        var service = BuildService(auxiliarSeed.ExternalSubject);
+        RegisterDailyChangeCommand Command(decimal temperatura, IReadOnlyList<RegisterDailyChangeAreaCommand>? areas = null) => new(
+            auxiliarSeed.ProfileScopeId, auxiliarSeed.CenterId, resident.ResidentId, areas ?? [],
+            temperatura, DailyChangeClassification.Ordinario, null, null, Guid.NewGuid());
+        var area = new RegisterDailyChangeAreaCommand(DailyChangeAreaCode.Sueno, [DailyChangeAreaOptionCode.Somnolencia], null);
+
+        // CJ, 2026-10-25 (dictado-por-voz-confirmaciones-cj 2.5, 3.1 y 3.2): se puede registrar solo la temperatura, entre 34,0 y 42,0 °C.
+        var soloTemperatura = await service.RegisterDailyChangeAsync(Command(38.5m));
+        var enElLimite = await service.RegisterDailyChangeAsync(Command(34.0m));
+        var demasiadoBaja = await service.RegisterDailyChangeAsync(Command(33.9m, [area]));
+        var demasiadoAlta = await service.RegisterDailyChangeAsync(Command(42.1m, [area]));
+
+        Assert.True(soloTemperatura.Ok);
+        Assert.True(enElLimite.Ok);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, demasiadoBaja.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, demasiadoAlta.Error!.Code);
+    }
+
+    [Fact]
     public async Task RegisterDailyChangeAsync_PrioritarioSinDocumentacion_ReturnsInvalidInput()
     {
         var auxiliarSeed = await SeedFixture.CreateProfileAsync(SystemProfile.Auxiliar);

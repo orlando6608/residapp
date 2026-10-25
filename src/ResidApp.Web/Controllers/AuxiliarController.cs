@@ -138,13 +138,16 @@ public sealed partial class AuxiliarController(AuxiliarApplicationService servic
             return View(form);
         }
 
-        // AUX-06: exige al menos un área con contenido (texto u opción marcada). AUX-10: un prioritario
-        // exige motivo de catálogo cerrado. Comprobación temprana para no llegar a AUX-11A/11B con datos
-        // incompletos; el caso de uso (ConfirmarCambio) vuelve a exigir esto igual, por si se salta este
-        // paso.
-        if (BuildAreas(form).Count == 0)
+        // AUX-06: exige al menos un área con contenido (texto u opción marcada) o la temperatura (CJ, 2026-10-25), y la temperatura
+        // entre 34,0 y 42,0 °C. AUX-10: un prioritario exige motivo de catálogo cerrado. Comprobación temprana para no llegar a
+        // AUX-11A/11B con datos incompletos; el caso de uso (ConfirmarCambio) vuelve a exigir esto igual, por si se salta este paso.
+        if (BuildAreas(form).Count == 0 && form.Temperatura is null)
         {
-            ModelState.AddModelError(string.Empty, "Selecciona al menos un área con contenido.");
+            ModelState.AddModelError(string.Empty, "Selecciona al menos un área con contenido o anota la temperatura.");
+        }
+        if (form.Temperatura is { } temperatura && !DailyChangeTemperature.IsValid(temperatura))
+        {
+            ModelState.AddModelError(nameof(form.Temperatura), "La temperatura tiene que estar entre 34,0 y 42,0 °C. Revísala: suele ser un error al dictarla o al escribirla.");
         }
         if (form.Clasificacion == DailyChangeClassification.Prioritario && form.MotivoPrioritario is null)
         {

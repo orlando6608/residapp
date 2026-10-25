@@ -13,6 +13,7 @@ public enum DailyChangeAreaOptionCode
     [Code("RECHAZA_INGESTA")] RechazaIngesta,
     [Code("DISMINUCION_INGESTA_LIQUIDOS")] DisminucionIngestaLiquidos,
     [Code("ATRAGANTAMIENTO")] Atragantamiento,
+    [Code("COME_MENOS_HABITUAL")] ComeMenosHabitual,
 
     // 2. Movilidad / funcionalidad
     [Code("NO_QUIERE_LEVANTARSE")] NoQuiereLevantarse,
@@ -47,4 +48,5 @@ public enum DailyChangeAreaOptionCode
     [Code("HERIDA")] Herida,
     [Code("UPP")] Upp,
     [Code("HEMATOMA")] Hematoma,
+    [Code("PIEL_ENROJECIDA")] PielEnrojecida,
 }

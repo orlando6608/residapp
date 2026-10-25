@@ -264,6 +264,11 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
 
 ## Pendiente
 
+### Respuesta de CJ del 2026-10-25, por construir
+
+- **Tras un traslado entre unidades** (`docs/pendientes-cj/confirmaciones-tercera-tanda-cj.respuestas.json`, 5.2 C): la unidad de destino **ve los episodios ya cerrados del
+  residente solo si lo pide, indicando un motivo** que queda en la auditoría (como la declaración de acceso de Dirección). Hoy no los ve.
+
 En el orden propuesto de construcción:
 
 1. **Historia 11, bloques siguientes** (común con Medicina):
