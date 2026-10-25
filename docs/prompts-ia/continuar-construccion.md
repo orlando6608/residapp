@@ -50,7 +50,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     propuestas antiguas). Navegador (Los Almendros local, `almendros-orlando-administracion`, `-pablo` y `-enfermeria`): lo nuevo, el aviso de propuesta, el plazo, la caducidad y
     volver a proponer, las citas pasadas sin cerrar y el aviso del comentario, en claro, en oscuro y a 375 px, sin desbordes ni errores de consola. Los Almendros vuelve a quedar en
     reserva directa; quedan una solicitud cerrada, una cita finalizada y un comunicado de prueba de Rosa.
-- **Dictado por voz con las respuestas de CJ (2026-10-25, rama `dictado-respuestas-cj`, sobre `respuestas-cj-2026-10-25`; script `0069`, el siguiente libre es `0070`). Hecho y probado, sin subir.**
+- **Dictado por voz con las respuestas de CJ (2026-10-25, rama `dictado-respuestas-cj`, sobre `respuestas-cj-2026-10-25`; script `0069`, el siguiente libre es `0070`). Hecho, probado y en `main` (PR #66, desplegado el 2026-10-25).**
   - **Opciones nuevas:** «Come menos de lo habitual» (`COME_MENOS_HABITUAL`, alimentación) y «Piel enrojecida» (`PIEL_ENROJECIDA`, lesiones en piel): enum, catálogo, etiqueta y
     `0069` (rehace `CK_cccao_opcion`).
   - **Temperatura:** entre 34,0 y 42,0 °C (`DailyChangeTemperature`), comprobada en el formulario (mensaje en español, `min`/`max`) y en `RegisterDailyChange`
@@ -1856,6 +1856,19 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   Azure fallaría. Antes de crear un script, comprueba cuál es el último número.
 
 ## Siguiente tarea
+
+**Para retomar (estado al cerrar la sesión del 2026-10-25):**
+- **Dos ramas sin subir, apiladas:** `portal-familiar-respuestas-cj` (commits `50181f6` y `f46ab8c`, sobre `origin/main` = PR #66) y, encima,
+  `foto-inicio-administracion` (`ecf414b`). Las sube Orlando y abre él los PR: o un solo PR desde `foto-inicio-administracion` con los tres commits, o primero el
+  del portal y después el de la foto. No subas nada sin que lo pida.
+- **Tras el merge:** comprobar el CI/CD y que el despliegue aplica `0070` y `0071` en Azure dev (la semilla da `RESIDENT_PHOTO_MANAGE` a las Enfermerías de los centros
+  de prueba). `0071` **borra todas las fotos** también allí: volver a ejecutar `preparar-almendros.js` contra Azure dev (`JUEGO=orlando`) para la foto de Manuel. Justo tras
+  el despliegue la app suele dar 500 unos segundos mientras arranca.
+- **Para CJ (lo envía Orlando):** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (3 preguntas). Decirle también que la app no envía correos (ADR 0012, pendiente
+  de la decisión de Orlando), lo que deja abierta la 3.2 del portal.
+- **Siguiente bloque:** importación y exportación; después Dirección y traslados, organigrama y resumen periódico. Cada uno se planifica cuando Orlando lo pida.
+- **Sueltos sin cerrar:** probar el dictado en un móvil real con audios ficticios; que una enfermera confirme «decul» y el rango 34–42 °C; las invitaciones de CJ esperan a
+  Orlando; rotar la clave de Mistral.
 
 0. **En curso: dictado por voz (ADR 0009) con la arquitectura del ADR 0011.** La Fase A (prueba de precisión, `tools/PruebaDictado`) está mergeada y el **servidor de la
    Fase B (tramo 1) está hecho** en la rama `dictado-fase-b-tramo-1`. Siguiente: probarlo en un móvil real con audios ficticios y, cuando CJ responda, ajustar el modo estricto (4.1) y la temperatura (tema 3). Servidor y pantalla están hechos
