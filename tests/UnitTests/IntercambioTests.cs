@@ -249,20 +249,104 @@ public class IntercambioTests
 
         Assert.Equal(
             [
-                ImportOutcome.Nueva, ImportOutcome.Error, ImportOutcome.Error, ImportOutcome.YaExiste, ImportOutcome.YaExiste, ImportOutcome.Error,
-                ImportOutcome.Error, ImportOutcome.Error, ImportOutcome.Error, ImportOutcome.Nueva,
+                ImportOutcome.Nueva, ImportOutcome.Error, ImportOutcome.Error, ImportOutcome.PosibleDuplicado, ImportOutcome.YaExiste,
+                ImportOutcome.PosibleDuplicado, ImportOutcome.Error, ImportOutcome.Error, ImportOutcome.Error, ImportOutcome.Nueva,
             ],
             results.Select(r => r.Report.Outcome));
         Assert.Equal(new ResidentImportPlan(unit.UnitId, room.RoomId, free.PlaceId, "Ana Pérez", new DateOnly(1940, 3, 5), DocumentedSexCode.Mujer, "E-1"),
             results[0].Plan);
         Assert.Equal("La plaza «A» ya está ocupada.", results[1].Report.Detail);
         Assert.Equal("La plaza «B» ya está ocupada.", results[2].Report.Detail);
-        Assert.Equal("Repite la fila 2.", results[5].Report.Detail);
+        Assert.Contains("residente activo de la unidad «Unidad Norte»", results[3].Report.Detail);
+        Assert.Contains("con la fila 2 del fichero", results[5].Report.Detail);
+        Assert.All(new[] { results[3], results[5] }, r => Assert.True(r.Report.CanConfirm && !r.Report.Confirmed));
         Assert.Contains("no está en tu ámbito", results[6].Report.Detail);
         Assert.Equal("La fecha de nacimiento es posterior a hoy.", results[7].Report.Detail);
         Assert.Equal("Falta decir qué sexo es «Q».", results[8].Report.Detail);
         Assert.Equal(DocumentedSexCode.NoConsta, results[9].Plan!.Sex);
         Assert.All(results.Where(r => r.Report.Outcome != ImportOutcome.Nueva), r => Assert.Null(r.Plan));
+    }
+
+    private static (ResidentImportPlanner Planner, ExchangeMapping Mapping) HomonymPlanner(params int[] confirmed)
+    {
+        var unit = new StructureUnit(UnitId.From(Guid.NewGuid()), "NORTE", "Unidad Norte", true, 0);
+        var census = new List<CensusEntry>
+        {
+            new("Luis Gil", new DateOnly(1938, 11, 12), DocumentedSexCode.Hombre, "Unidad Norte", null, null, "E-7"),
+        };
+        return (new ResidentImportPlanner([unit], _ => Task.FromResult<IReadOnlyList<LayoutRoom>>([]), census, Today, confirmed.ToHashSet()),
+            Mapping(ExchangeField.Nombre, ExchangeField.FechaNacimiento, ExchangeField.Unidad, ExchangeField.ReferenciaInterna));
+    }
+
+    [Fact]
+    public async Task Residentes_MismoNombreYFechaConOtraReferencia_EsPosibleDuplicadoYSeConfirmaPorFila()
+    {
+        var (planner, mapping) = HomonymPlanner(confirmed: 3);
+
+        var unconfirmed = await planner.PlanAsync(new ExchangeTableRow(2, ["Luis Gil", "12/11/1938", "Norte", "E-99"]), mapping);
+        var confirmed = await planner.PlanAsync(new ExchangeTableRow(3, ["Luis Gil", "12/11/1938", "Norte", "E-98"]), mapping);
+
+        Assert.Equal(ImportOutcome.PosibleDuplicado, unconfirmed.Report.Outcome);
+        Assert.Null(unconfirmed.Plan);
+        Assert.Equal((ImportOutcome.Nueva, true, true), (confirmed.Report.Outcome, confirmed.Report.CanConfirm, confirmed.Report.Confirmed));
+        Assert.Equal(3, confirmed.Plan!.ConfirmedRow);
+    }
+
+    [Fact]
+    public async Task Residentes_MismaReferenciaYaExiste_AunqueCambienNombreYFecha_YConfirmarNoLoCambia()
+    {
+        var (planner, mapping) = HomonymPlanner(confirmed: 2);
+
+        var (report, plan) = await planner.PlanAsync(new ExchangeTableRow(2, ["Otro Nombre", "01/01/1950", "Norte", "e 7"]), mapping);
+
+        Assert.Equal(ImportOutcome.YaExiste, report.Outcome);
+        Assert.Null(plan);
+    }
+
+    [Fact]
+    public async Task Residentes_DosFilasConLaMismaReferencia_SegundaEsError()
+    {
+        var (planner, mapping) = HomonymPlanner();
+
+        await planner.PlanAsync(new ExchangeTableRow(2, ["Ana Pérez", "05/03/1940", "Norte", "E-1"]), mapping);
+        var (report, _) = await planner.PlanAsync(new ExchangeTableRow(3, ["Otra Distinta", "06/04/1941", "Norte", "E-1"]), mapping);
+
+        Assert.Equal((ImportOutcome.Error, "Repite la referencia interna de la fila 2."), (report.Outcome, report.Detail));
+    }
+
+    [Fact]
+    public async Task Residentes_FechaDeIngreso_SeLeeYSeValida()
+    {
+        var unit = new StructureUnit(UnitId.From(Guid.NewGuid()), "NORTE", "Norte", true, 0);
+        var planner = new ResidentImportPlanner([unit], _ => Task.FromResult<IReadOnlyList<LayoutRoom>>([]), [], Today);
+        var mapping = Mapping(ExchangeField.Nombre, ExchangeField.FechaNacimiento, ExchangeField.FechaIngreso, ExchangeField.Unidad);
+
+        var good = await planner.PlanAsync(new ExchangeTableRow(2, ["Ana", "05/03/1940", "10/01/2024", "Norte"]), mapping);
+        var empty = await planner.PlanAsync(new ExchangeTableRow(3, ["Beatriz", "05/03/1941", "", "Norte"]), mapping);
+        var future = await planner.PlanAsync(new ExchangeTableRow(4, ["Carla", "05/03/1942", "01/01/2030", "Norte"]), mapping);
+        var beforeBirth = await planner.PlanAsync(new ExchangeTableRow(5, ["Dora", "05/03/1943", "01/01/1940", "Norte"]), mapping);
+        var garbage = await planner.PlanAsync(new ExchangeTableRow(6, ["Eva", "05/03/1944", "ayer", "Norte"]), mapping);
+
+        Assert.Equal(new DateOnly(2024, 1, 10), good.Plan!.AdmissionDate);
+        Assert.Null(empty.Plan!.AdmissionDate);
+        Assert.Equal("La fecha de ingreso es posterior a hoy.", future.Report.Detail);
+        Assert.Equal("La fecha de ingreso es anterior a la de nacimiento.", beforeBirth.Report.Detail);
+        Assert.Equal("La fecha de ingreso «ayer» no se entiende con el formato elegido.", garbage.Report.Detail);
+    }
+
+    [Theory]
+    [InlineData("Fecha de ingreso")]
+    [InlineData("F. Ingreso")]
+    [InlineData("Fecha alta")]
+    public void Emparejador_ReconoceLaFechaDeIngresoPorElNombre(string header)
+    {
+        var table = new ExchangeTable(["Nombre", "Fecha nacimiento", header, "Unidad"],
+            [new ExchangeTableRow(2, ["Ana", "05/03/1940", "10/01/2024", "Norte"])]);
+
+        var matches = ColumnMatcher.Match(ExchangeEntity.Residentes, table, Today);
+
+        Assert.Equal(new ColumnMatch(ExchangeField.FechaIngreso, MatchOrigin.Nombre), matches[2]);
+        Assert.Equal(ExchangeField.FechaNacimiento, matches[1].Field);
     }
 
     [Fact]

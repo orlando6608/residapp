@@ -5,10 +5,12 @@ using ResidApp.Shared;
 namespace ResidApp.Application.Ports;
 
 /// <summary>ADM-02: un residente del ámbito de Administración. Solo identidad administrativa, ubicación, fecha de alta y fecha de la foto
-/// (PhotoUpdatedAt, null si no tiene; script 0059): nada de basal, Barthel ni contenido clínico (historia 1).</summary>
+/// (PhotoUpdatedAt, null si no tiene; script 0059): nada de basal, Barthel ni contenido clínico (historia 1). AdmittedAt es cuándo se dio de
+/// alta en ResidApp; AdmissionDate, la fecha de ingreso en el centro que trajo el fichero de la importación (script 0072), null si no consta.</summary>
 public sealed record AdministrativeResidentSummary(
     ResidentId ResidentId, string DisplayName, DateOnly BirthDate, DocumentedSexCode DocumentedSex, UnitId UnitId,
-    string UnitName, DateTimeOffset AdmittedAt, string? RoomName = null, string? PlaceName = null, DateTimeOffset? PhotoUpdatedAt = null)
+    string UnitName, DateTimeOffset AdmittedAt, string? RoomName = null, string? PlaceName = null, DateTimeOffset? PhotoUpdatedAt = null,
+    DateOnly? AdmissionDate = null)
 {
     /// <summary>La unidad con la habitación y la plaza actuales (script 0029).</summary>
     public string LocationLabel => ResidentLocationLabel.Format(UnitName, RoomName, PlaceName);

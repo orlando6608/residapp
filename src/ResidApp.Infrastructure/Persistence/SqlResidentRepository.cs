@@ -49,12 +49,12 @@ public sealed class SqlResidentRepository(SqlConnectionFactory connections) : IR
 
             await connection.ExecuteAsync(new CommandDefinition("""
                 INSERT INTO dbo.residentes
-                    (id, centro_id, nombre_visible, fecha_nacimiento, sexo_documentado_codigo, estado, creado_en, creado_por_cuenta_id, creado_por_perfil)
-                VALUES (@ResidentId, @CenterId, @DisplayName, @BirthDate, @DocumentedSexCode, 'ACTIVE', @OccurredAt, @AccountId, @ActiveProfile)
+                    (id, centro_id, nombre_visible, fecha_nacimiento, fecha_ingreso, sexo_documentado_codigo, estado, creado_en, creado_por_cuenta_id, creado_por_perfil)
+                VALUES (@ResidentId, @CenterId, @DisplayName, @BirthDate, @AdmissionDate, @DocumentedSexCode, 'ACTIVE', @OccurredAt, @AccountId, @ActiveProfile)
                 """, new
             {
                 ResidentId = residentId.Value, CenterId = input.CenterId.Value, DisplayName = input.DisplayName.Trim(),
-                BirthDate = input.BirthDate, DocumentedSexCode = input.DocumentedSexCode.ToCode(),
+                BirthDate = input.BirthDate, input.AdmissionDate, DocumentedSexCode = input.DocumentedSexCode.ToCode(),
                 OccurredAt = occurredAt, AccountId = input.AccountId.Value, ActiveProfile = activeProfileCode,
             }, transaction, cancellationToken: ct));
 
@@ -280,6 +280,7 @@ file static class RequestHash
         {
             AccountId = input.AccountId.Value, ActiveProfile = input.ActiveProfile.ToCode(), CenterId = input.CenterId.Value,
             UnitId = input.UnitId.Value, input.DisplayName, BirthDate = input.BirthDate.ToString("yyyy-MM-dd"),
+            AdmissionDate = input.AdmissionDate?.ToString("yyyy-MM-dd"),
             DocumentedSexCode = input.DocumentedSexCode.ToCode(), input.InternalReference, input.BuildingId,
             input.FloorId, input.RoomId, input.PlaceId, input.LocationPending, OperationId = input.OperationId,
             Family = (input.Family ?? []).Select(m => new { m.Data, m.IsPriorityContact }).ToList(), input.NoContactReason,

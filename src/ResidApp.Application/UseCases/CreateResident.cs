@@ -8,12 +8,13 @@ using ResidApp.Shared;
 namespace ResidApp.Application.UseCases;
 
 /// <summary>Traduce los campos de entrada de resident-baseline-service.ts::createResident. UbicacionPendiente es la opción explícita «Pendiente
-/// de asignar» del alta (CJ, foto 3.1): sin ella, si la unidad tiene camas libres, hay que elegir una. La importación la manda siempre.</summary>
+/// de asignar» del alta (CJ, foto 3.1): sin ella, si la unidad tiene camas libres, hay que elegir una. La importación la manda siempre.
+/// FechaIngreso es la que trae el fichero de la importación (CJ, importación 1.1); el alta a mano no la pide.</summary>
 public sealed record CreateResidentCommand(
     Guid AmbitoPerfilId, CenterId CentroId, UnitId UnidadId, string NombreVisible, DateOnly FechaNacimiento,
     DocumentedSexCode SexoDocumentadoCodigo, string? ReferenciaInterna, Guid? EdificioId, Guid? PlantaId,
     Guid? HabitacionId, Guid? PlazaId, Guid OperacionId, IReadOnlyList<NewResidentFamilyInput>? Familiares = null,
-    string? MotivoSinContacto = null, bool UbicacionPendiente = false);
+    string? MotivoSinContacto = null, bool UbicacionPendiente = false, DateOnly? FechaIngreso = null);
 
 /// <summary>
 /// Traduce createResident de lib/application/resident-baseline-service.ts. Composición interna por
@@ -33,7 +34,7 @@ public sealed class CreateResident(
                 command.NombreVisible, command.FechaNacimiento, command.SexoDocumentadoCodigo, command.ReferenciaInterna,
                 command.EdificioId, command.PlantaId, command.HabitacionId, command.PlazaId, command.OperacionId,
                 ResidentFamilyAtAdmission.Validate(command.Familiares, command.MotivoSinContacto),
-                ResidentFamilyAtAdmission.NoContactReason(command.Familiares, command.MotivoSinContacto), command.UbicacionPendiente);
+                ResidentFamilyAtAdmission.NoContactReason(command.Familiares, command.MotivoSinContacto), command.UbicacionPendiente, command.FechaIngreso);
             return await RequestAuthorizationContextResolver.ExecuteResidentCreateAsync(context, repository, payload, ct);
         });
 }

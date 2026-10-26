@@ -34,6 +34,7 @@ public enum ExchangeField
     [Code("BIRTH_DATE")] [Display(Name = "Fecha de nacimiento")] FechaNacimiento,
     [Code("SEX")] [Display(Name = "Sexo")] Sexo,
     [Code("INTERNAL_REFERENCE")] [Display(Name = "Referencia interna")] ReferenciaInterna,
+    [Code("ADMISSION_DATE")] [Display(Name = "Fecha de ingreso")] FechaIngreso,
 }
 
 /// <summary>Cómo se escriben las fechas del fichero. Al importar, día/mes/año y mes/día/año aceptan además año-mes-día (1940-12-31),
@@ -91,6 +92,9 @@ public static class ExchangeCatalog
         new(ExchangeField.FechaNacimiento, Required: true, Joinable: false,
             ["fecha nacimiento", "fecha de nacimiento", "f nacimiento", "f nac", "fnac", "fecha nac", "fec nac", "f de nacimiento", "nacimiento",
              "fecha nto", "data naixement", "birth date"]),
+        new(ExchangeField.FechaIngreso, Required: false, Joinable: false,
+            ["fecha ingreso", "fecha de ingreso", "f ingreso", "fecha alta", "fecha de alta", "f alta", "ingreso", "fecha admision", "fecha de admision",
+             "admission date"]),
         new(ExchangeField.Sexo, Required: false, Joinable: false, ["sexo", "sexo documentado", "genero", "sex", "gender"]),
         new(ExchangeField.Unidad, Required: true, Joinable: false, UnitSynonyms),
         new(ExchangeField.Habitacion, Required: false, Joinable: false, RoomSynonyms),

@@ -52,7 +52,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         "archivados/rangos-referencia-constantes", "archivados/decisiones-direccion-basal-derivacion",
         "archivados/aclaraciones-respuestas-cj", "archivados/traslado-y-baja-residente",
         "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
-        "archivados/confirmaciones-segunda-tanda-cj", "archivados/foto-residente-confirmaciones-cj",
+        "archivados/confirmaciones-segunda-tanda-cj", "archivados/foto-residente-confirmaciones-cj", "archivados/importacion-exportacion-confirmaciones-cj",
     ];
 
     [Theory]
@@ -73,6 +73,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("/pendientes-cj/archivados/administracion-ambito-familiares-cargos.respuestas.json")]
     [InlineData("/pendientes-cj/archivados/continuidad-supervision-comunicacion.respuestas.json")]
     [InlineData("/pendientes-cj/archivados/foto-residente-confirmaciones-cj.respuestas.json")]
+    [InlineData("/pendientes-cj/archivados/importacion-exportacion-confirmaciones-cj.respuestas.json")]
     [InlineData("/pendientes-cj/otro-documento.respuestas.json")]
     public async Task SinClave_LasRespuestasDan401(string path)
     {

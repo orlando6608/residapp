@@ -435,12 +435,24 @@ Orden decidido con Orlando: dictado por voz (va en `continuar-construccion.md`),
   (`SqlAdministrationOverview.WithoutEmergencyContact`, la misma regla que `EmergencyContactSet.Current`; filtro `SinContactoUrgente`); lo último, las
   **cuentas profesionales suspendidas, sin perfil vigente o con un perfil sin unidades** (`ProfessionalAccountAttention`; enlace a `Usuarios?revisar=true`).
   Los residentes de Los Almendros sin contacto (todos menos Rosa) salen ahí: es lo esperado.
-- **Importación y exportación** (`importacion-exportacion-confirmaciones-cj`):
-  - El residente importado queda con **la fecha de ingreso que traiga el fichero**, si la trae (1.1): hace falta un campo nuevo en la importación y una columna en
-    `residentes` (hoy solo existe `creado_en`).
-  - «Ya existe» **solo si coincide la referencia interna**; si coinciden nombre y fecha de nacimiento, **avisa y deja elegir** (1.2; hoy lo da por existente sin preguntar).
-  - La vista previa cuenta cuántas filas quedan con el sexo «No consta» (1.4).
-  - Al exportar, un aviso: «Contiene datos personales: guárdalo en un lugar seguro y bórralo cuando termines» (2.1). Importar y exportar ya quedan en la auditoría (`IMPORT_RUN`, `EXPORT_RUN`).
+- **Importación y exportación** (`archivados/importacion-exportacion-confirmaciones-cj`) — **hecho el 2026-10-26, script `0072`:**
+  - El residente importado queda con **la fecha de ingreso que traiga el fichero**, si la trae (1.1): columna `residentes.fecha_ingreso` (`DATE NULL`, nunca anterior al
+    nacimiento; la aplicación rechaza una posterior a hoy), campo `ExchangeField.FechaIngreso` («Fecha de ingreso», solo al importar residentes, no entra en el censo
+    exportado) y `CreateResidentCommand.FechaIngreso`. Se ve en la ficha de Administración (`AdministrativeResidentSummary.AdmissionDate`); «Fecha de alta» sigue siendo la
+    de ResidApp. El alta a mano no la pide y los residentes anteriores no la tienen. El formato de fecha elegido vale para nacimiento e ingreso.
+  - «Ya existe» **solo si coincide la referencia interna** (1.2). Con el mismo nombre y fecha de nacimiento pero otra referencia (o ninguna), o repetidos en el propio
+    fichero, la fila sale como **«Posible duplicado»** (`ImportOutcome.PosibleDuplicado`) y no se importa salvo que quien importa marque **«Importar de todos modos»**
+    en esa fila (`ExchangeMappingInput.ConfirmedRows`, `Confirmadas` en el formulario; la vista previa se recalcula al marcar). Dos filas con la misma referencia siguen
+    siendo error. La operación del alta de una fila confirmada incluye su número de fila, para que dos homónimos idénticos en un fichero no se confundan en la
+    idempotencia. Un fichero sin referencias avisa de nuevo al reimportarse (nunca duplica sin confirmar). `intercambio.js` iguala las dos casillas de cada fila (lista
+    móvil y tabla): sin eso, desmarcar la visible dejaba confirmada la oculta (lo encontró el recorrido en Chrome).
+  - La vista previa y el resultado cuentan cuántos residentes quedan con el sexo «No consta» (1.4; `ImportReport.SexNoConsta`).
+  - Exportar muestra el aviso «Contiene datos personales: guárdalo en un lugar seguro y bórralo cuando termines» (2.1). Importar y exportar ya quedaban en la auditoría
+    (`IMPORT_RUN`, `EXPORT_RUN`).
+  - Sin cambios, ya era así: nombre y apellidos unidos (1.3), sin familiares (1.5), censo mínimo (2.1), solo Administración (2.2). **Exportar registros asistenciales
+    (3.1): después del piloto**, cuando se sepa qué programa usa el centro (y con contrato de encargado, auditoría y probablemente evaluación de impacto).
+  - Tests: unitarios `IntercambioTests` (duplicados, confirmación, fecha de ingreso, emparejador), integración `IntercambioTests` (fecha guardada y listada, homónimo
+    confirmado y reimportación) y funcionales `IntercambioScreensTests` (casilla, contador y aviso de exportar). Manual al día.
 - **Organigrama y cargos (ADM-07)**, con las ocho decisiones de `organigrama-y-cargos-cj`: los ocupan personas con cuenta o solo con nombre (sin contacto); cada centro crea
   los suyos y puede cargar los ocho de CJ como plantilla; cada cargo dice si es de una persona o de varias; una persona puede tener varios cargos; un superior por cargo
   y la coordinación funcional en una nota; un cargo se liga a una o varias unidades (los equipos de turnos, aparte); solo lo actual (lo anterior, en la auditoría);

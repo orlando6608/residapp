@@ -18,7 +18,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
         SELECT resident.id AS ResidentId, resident.nombre_visible AS DisplayName, resident.fecha_nacimiento AS BirthDate,
                resident.sexo_documentado_codigo AS SexCode, unit.id AS UnitId, unit.nombre_visible AS UnitName,
                episode.vigente_desde AS AdmittedAt, room.nombre_visible AS RoomName, place.nombre_visible AS PlaceName,
-               photo.actualizada_en AS PhotoUpdatedAt
+               photo.actualizada_en AS PhotoUpdatedAt, resident.fecha_ingreso AS AdmissionDate
           FROM dbo.ambitos_perfil profile
           JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
                AND unit_scope.centro_id = profile.centro_id AND unit_scope.revocado_en IS NULL
@@ -211,7 +211,8 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
 
     private static AdministrativeResidentSummary ToSummary(ResidentRow r) => new(
         ResidentId.From(r.ResidentId), r.DisplayName, DateOnly.FromDateTime(r.BirthDate), EnumCode.ParseCode<DocumentedSexCode>(r.SexCode),
-        UnitId.From(r.UnitId), r.UnitName, Utc(r.AdmittedAt), r.RoomName, r.PlaceName, r.PhotoUpdatedAt is { } photo ? Utc(photo) : null);
+        UnitId.From(r.UnitId), r.UnitName, Utc(r.AdmittedAt), r.RoomName, r.PlaceName, r.PhotoUpdatedAt is { } photo ? Utc(photo) : null,
+        r.AdmissionDate is { } admission ? DateOnly.FromDateTime(admission) : null);
 
     private static DateTimeOffset Utc(DateTime value) => new(value, TimeSpan.Zero);
 
@@ -221,7 +222,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
 
     private sealed record ResidentRow(
         Guid ResidentId, string DisplayName, DateTime BirthDate, string SexCode, Guid UnitId, string UnitName, DateTime AdmittedAt,
-        string? RoomName, string? PlaceName, DateTime? PhotoUpdatedAt);
+        string? RoomName, string? PlaceName, DateTime? PhotoUpdatedAt, DateTime? AdmissionDate);
 
     private sealed record LocationRow(string UnitName, DateTime StartedAt, DateTime? EndedAt, string ProfileCode, string? RoomName, string? PlaceName);
 

@@ -681,20 +681,32 @@
     <p>
         ResidApp propone a qué dato va cada columna por su nombre («F. Nac.», «Hab.», «Nº Cama»…) o por lo que contiene (la única columna
         de fechas, la única de sexo), con la marca <strong>Emparejado automáticamente</strong>; revísalo y cámbialo con el desplegable, o
-        elige <strong>No se usa</strong>. No se enseñan los valores del fichero, solo qué parecen contener. Si hay fechas, eliges su
-        formato (día/mes/año salvo que el fichero venga de EE. UU.). El sexo nunca se deduce: los valores que no reconoce (H/M, V/M, M/F,
-        Hombre, Mujer…) los asignas tú, y una celda vacía es «No consta». Puedes guardar el emparejamiento como plantilla con un nombre
+        elige <strong>No se usa</strong>. No se enseñan los valores del fichero, solo qué parecen contener. Si hay fechas (de nacimiento y,
+        si el fichero la trae, de ingreso), eliges su formato (día/mes/año salvo que el fichero venga de EE. UU.). El sexo nunca se deduce:
+        los valores que no reconoce (H/M, V/M, M/F, Hombre, Mujer…) los asignas tú, y una celda vacía es «No consta». Puedes guardar el emparejamiento como plantilla con un nombre
         (por ejemplo, el de la aplicación de origen): la próxima vez que subas un fichero con las mismas columnas, se aplica solo.
     </p>
     <p>
-        <strong>Ver la vista previa</strong> dice, fila a fila, qué se importará, qué ya existe y qué tiene error y por qué; todavía no se
-        guarda nada. <strong>Importar</strong> crea lo que falta con las mismas reglas que a mano: en la estructura, la unidad (con un
-        código sacado del nombre si no lo trae), su edificio y planta, la habitación y la plaza; en residentes, el alta en su unidad,
-        habitación y plaza. Una fila con error no impide importar las demás. Lo que ya existe no se repite: la estructura se reconoce por su
-        nombre y el residente por su referencia interna o por su nombre y fecha de nacimiento, así que puedes corregir el fichero y volver a
-        importarlo. La importación de residentes no crea unidades, habitaciones ni plazas, no cambia de edificio una unidad que ya lo tiene
-        y no usa nada inactivo. El residente queda dado de alta en la fecha de la importación. No se importan usuarios, familiares ni datos
-        clínicos, y el fichero no se guarda.
+        <strong>Ver la vista previa</strong> dice, fila a fila, qué se importará, qué ya existe, qué es un posible duplicado y qué tiene error
+        y por qué; todavía no se guarda nada. En residentes, la vista previa cuenta además cuántos quedarán con el sexo «No consta»
+        (porque el fichero no lo dice): corrígelo después desde su ficha. <strong>Importar</strong> crea lo que falta con las mismas reglas
+        que a mano: en la estructura, la unidad (con un código sacado del nombre si no lo trae), su edificio y planta, la habitación y la
+        plaza; en residentes, el alta en su unidad, habitación y plaza. Una fila con error no impide importar las demás. Lo que ya existe no
+        se repite: la estructura se reconoce por su nombre y el residente por su <strong>referencia interna</strong>, así que puedes corregir
+        el fichero y volver a importarlo.
+    </p>
+    <p>
+        Si un residente del fichero tiene el <strong>mismo nombre y la misma fecha de nacimiento</strong> que uno activo (o que otra fila
+        del fichero) pero no la misma referencia interna, sale como <strong>Posible duplicado</strong> y no se importa: dos personas distintas
+        pueden llamarse igual. Si es otra persona, marca <strong>Importar de todos modos</strong> en esa fila (la vista previa se recalcula
+        y el botón cuenta la fila); si no, déjala sin marcar. Un fichero sin referencias vuelve a avisar de estos casos cada vez que se
+        importa.
+    </p>
+    <p>
+        La importación de residentes no crea unidades, habitaciones ni plazas, no cambia de edificio una unidad que ya lo tiene y no usa
+        nada inactivo. El residente queda dado de alta con la <strong>fecha de ingreso</strong> que traiga el fichero (si no la trae, queda
+        sin fecha de ingreso; se ve en su ficha). La fecha de alta de la ficha es siempre la de la importación. No se importan usuarios,
+        familiares ni datos clínicos, y el fichero no se guarda.
     </p>
     <p>
         <strong>Exportar datos</strong> descarga en CSV (se abre con Excel) la estructura del centro o el censo de los residentes activos de
@@ -702,8 +714,8 @@
         Con las columnas de ResidApp sirve también para importarlo en otro centro. Para otra aplicación, crea una
         <strong>plantilla de exportación</strong>: subes un fichero de ejemplo suyo (solo se leen los nombres de sus columnas), eliges qué
         dato va en cada columna y el formato de las fechas, y la guardas con un nombre; después la descargas desde la lista. Cada
-        importación, exportación y plantilla guardada queda en la auditoría. Guarda el fichero exportado en un sitio seguro y bórralo
-        cuando ya no lo necesites.
+        importación, exportación y plantilla guardada queda en la auditoría. El fichero exportado contiene datos personales: guárdalo en
+        un lugar seguro y bórralo cuando termines (la pantalla lo recuerda con un aviso).
     </p>
 </section>
 
