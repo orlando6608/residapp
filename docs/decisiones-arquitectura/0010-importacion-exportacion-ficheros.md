@@ -58,12 +58,14 @@ centros, se añade al catálogo.
   alta a mano. Una fila con error no aborta las demás ni deja nada a medias.
 - **Lo que ya existe no se duplica:**
   - la estructura se reconoce por su nombre normalizado;
-  - el residente, por su referencia interna o por nombre y fecha de nacimiento, entre los activos del ámbito;
+  - el residente, por su referencia interna entre los activos del ámbito (CJ, 2026-10-25); con el mismo nombre y fecha de nacimiento pero otra referencia, la
+    fila es un «posible duplicado» que no se importa salvo que quien importa lo confirme fila a fila, porque dos personas distintas pueden llamarse igual;
   - el alta lleva un identificador de operación derivado de la fila, para que un doble envío no la repita.
 - La importación de residentes no crea estructura: se importa antes, incluso desde el mismo fichero.
 - Las fechas se leen como día/mes/año o mes/día/año, y año-mes-día siempre. Si son ambiguas, se avisa.
 - El sexo nunca se deduce de otro dato. Los valores se reconocen (H/M, V/M, M/F, Hombre…) o se asignan a mano, y la celda vacía es «No
-  consta».
+  consta» (la vista previa cuenta cuántos quedan así).
+- Si el fichero trae la fecha de ingreso del residente, se guarda (`residentes.fecha_ingreso`); si no, queda sin ella.
 
 **Exportación:**
 

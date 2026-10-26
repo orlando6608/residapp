@@ -9,8 +9,10 @@ using ResidApp.Shared;
 namespace ResidApp.Application.UseCases;
 
 /// <summary>Lo que se elige en la pantalla: el código de campo de cada columna («» = no se usa), el formato de las fechas y el sexo de
-/// cada valor de la columna de sexo (por su clave normalizada).</summary>
-public sealed record ExchangeMappingInput(IReadOnlyList<string?> Fields, string? DateFormat, IReadOnlyList<SexValueInput> SexValues);
+/// cada valor de la columna de sexo (por su clave normalizada). ConfirmedRows son las filas con un posible duplicado que quien importa ha
+/// decidido dar de alta de todos modos.</summary>
+public sealed record ExchangeMappingInput(
+    IReadOnlyList<string?> Fields, string? DateFormat, IReadOnlyList<SexValueInput> SexValues, IReadOnlyList<int>? ConfirmedRows = null);
 
 public sealed record SexValueInput(string Key, string? Code);
 
@@ -29,15 +31,16 @@ public sealed record ImportAnalysis(
 {
     public bool Ready => Problems.Count == 0;
 
-    public bool UsesDates => Columns.Any(c => c.Field == ExchangeField.FechaNacimiento);
+    public bool UsesDates => Columns.Any(c => c.Field is ExchangeField.FechaNacimiento or ExchangeField.FechaIngreso);
 
     public ExchangeMapping Mapping => new(
         Columns.Select(c => c.Field).ToList(), DateFormat,
         SexValues.Where(v => v.Code is not null).ToDictionary(v => v.Key, v => v.Code!.Value));
 }
 
-/// <summary>La vista previa (Executed = false) o el resultado (Executed = true) de una importación, fila a fila.</summary>
-public sealed record ImportReport(ExchangeEntity Entity, IReadOnlyList<ImportRowReport> Rows, bool Executed)
+/// <summary>La vista previa (Executed = false) o el resultado (Executed = true) de una importación, fila a fila. SexNoConsta son los
+/// residentes que se darán de alta (o se han dado) con el sexo «No consta», para que Administración los corrija enseguida (CJ 1.4).</summary>
+public sealed record ImportReport(ExchangeEntity Entity, IReadOnlyList<ImportRowReport> Rows, bool Executed, int SexNoConsta = 0)
 {
     public int Count(ImportOutcome outcome) => Rows.Count(r => r.Outcome == outcome);
 }
@@ -157,9 +160,9 @@ public sealed class AdministracionIntercambioApplicationService(
         }
 
         var name = write && !string.IsNullOrWhiteSpace(templateName) ? TemplateName(templateName) : null;
-        var rows = entity == ExchangeEntity.Estructura
-            ? await ImportStructureAsync(query, table, analysis.Mapping, write, ct)
-            : await ImportResidentsAsync(query, grant, table, analysis.Mapping, write, ct);
+        var (rows, sexNoConsta) = entity == ExchangeEntity.Estructura
+            ? (await ImportStructureAsync(query, table, analysis.Mapping, write, ct), 0)
+            : await ImportResidentsAsync(query, grant, table, analysis.Mapping, input.ConfirmedRows, write, ct);
         if (write)
         {
             await repository.RecordRunAsync(grant, ExchangeDirection.Importar, ct);
@@ -169,7 +172,7 @@ public sealed class AdministracionIntercambioApplicationService(
             }
         }
 
-        return new ImportReport(entity, rows, write);
+        return new ImportReport(entity, rows, write, sexNoConsta);
     }
 
     private async Task<ImportAnalysis> AnalyzeAsync(
@@ -204,17 +207,17 @@ public sealed class AdministracionIntercambioApplicationService(
             }
         }
 
-        // Fechas: el formato elegido, el de la plantilla o el primero con que se leen todas.
-        var dateValues = ColumnValues(table, fields, ExchangeField.FechaNacimiento);
+        // Fechas (nacimiento e ingreso): el formato elegido, el de la plantilla o el primero con que se leen todas.
+        var dateValues = ColumnValues(table, fields, ExchangeField.FechaNacimiento).Concat(ColumnValues(table, fields, ExchangeField.FechaIngreso)).ToList();
         var dateFormats = ExchangeDates.Candidates(dateValues, today);
         var dateFormat = input?.DateFormat is { } code && EnumCode.TryParseCode<ExchangeDateFormat>(code, out var chosen) ? chosen
             : input is null && template is not null ? template.Mapping.DateFormat
             : dateFormats.Count > 0 ? dateFormats[0] : ExchangeDateFormat.DiaMesAnio;
-        if (fields.Contains(ExchangeField.FechaNacimiento))
+        if (fields.Contains(ExchangeField.FechaNacimiento) || fields.Contains(ExchangeField.FechaIngreso))
         {
             if (dateFormats.Count == 0)
             {
-                notices.Add("Hay fechas de nacimiento que no se entienden con ningún formato: esas filas saldrán con error en la vista previa.");
+                notices.Add("Hay fechas que no se entienden con ningún formato: esas filas saldrán con error en la vista previa.");
             }
             else if (ExchangeDates.Ambiguous(dateValues, today))
             {
@@ -328,27 +331,34 @@ public sealed class AdministracionIntercambioApplicationService(
         return reports;
     }
 
-    private async Task<List<ImportRowReport>> ImportResidentsAsync(
-        AdministracionQuery query, AccountAdministrationAccess grant, ExchangeTable table, ExchangeMapping mapping, bool write, CancellationToken ct)
+    private async Task<(List<ImportRowReport> Rows, int SexNoConsta)> ImportResidentsAsync(
+        AdministracionQuery query, AccountAdministrationAccess grant, ExchangeTable table, ExchangeMapping mapping, IReadOnlyList<int>? confirmedRows,
+        bool write, CancellationToken ct)
     {
         var planner = new ResidentImportPlanner(
             Unwrap(await estructura.ListStructureUnitsAsync(query, ct)), unitId => LoadRoomsAsync(query, unitId, ct),
-            await directory.ListCensusAsync(grant, ct), Today);
+            await directory.ListCensusAsync(grant, ct), Today, confirmedRows?.ToHashSet());
         var reports = new List<ImportRowReport>();
+        var sexNoConsta = 0;
         foreach (var row in table.Rows)
         {
             var (report, plan) = await planner.PlanAsync(row, mapping);
-            reports.Add(write && plan is not null ? await CreateResidentAsync(query, report, plan, ct) : report);
+            var final = write && plan is not null ? await CreateResidentAsync(query, report, plan, ct) : report;
+            reports.Add(final);
+            if (final.Outcome == ImportOutcome.Nueva && plan?.Sex == DocumentedSexCode.NoConsta)
+            {
+                sexNoConsta++;
+            }
         }
 
-        return reports;
+        return (reports, sexNoConsta);
     }
 
     private async Task<ImportRowReport> CreateResidentAsync(AdministracionQuery query, ImportRowReport report, ResidentImportPlan plan, CancellationToken ct)
     {
         var result = await createResident.ExecuteAsync(new CreateResidentCommand(
             query.AmbitoPerfilId, query.CentroId, plan.UnitId, plan.Name, plan.BirthDate, plan.Sex, plan.Reference, EdificioId: null, PlantaId: null,
-            plan.RoomId, plan.PlaceId, ResidentOperationId(query.CentroId, plan), UbicacionPendiente: true), ct);
+            plan.RoomId, plan.PlaceId, ResidentOperationId(query.CentroId, plan), UbicacionPendiente: true, FechaIngreso: plan.AdmissionDate), ct);
         return result.Ok
             ? report with { Detail = $"Dado de alta ({ExchangeCatalog.Label(plan.Sex)})." }
             : report with
@@ -368,7 +378,7 @@ public sealed class AdministracionIntercambioApplicationService(
     /// importación (doble clic, reintento) devuelve el alta ya hecha en lugar de duplicarla.</summary>
     private static Guid ResidentOperationId(CenterId centerId, ResidentImportPlan plan) =>
         new(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join('|', "RESIDENT_IMPORT", centerId.Value, plan.UnitId.Value, plan.RoomId, plan.PlaceId,
-            plan.Name, plan.BirthDate.ToString("yyyy-MM-dd"), plan.Sex.ToCode(), plan.Reference)))[..16]);
+            plan.Name, plan.BirthDate.ToString("yyyy-MM-dd"), plan.Sex.ToCode(), plan.Reference, plan.AdmissionDate?.ToString("yyyy-MM-dd"), plan.ConfirmedRow)))[..16]);
 
     private async Task<IReadOnlyList<LayoutRoom>> LoadRoomsAsync(AdministracionQuery query, Guid unitId, CancellationToken ct) =>
         Unwrap(await estructura.ListRoomsAsync(new ListRoomsQuery(query.AmbitoPerfilId, query.CentroId, UnitId.From(unitId)), ct));

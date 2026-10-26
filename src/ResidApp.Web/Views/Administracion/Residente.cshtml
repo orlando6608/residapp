@@ -50,6 +50,11 @@
             <dd class="col-sm-8">@resident.LocationLabel</dd>
             <dt class="col-sm-4">Fecha de alta</dt>
             <dd class="col-sm-8">@resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+            @if (resident.AdmissionDate is { } admissionDate)
+            {
+                <dt class="col-sm-4">Fecha de ingreso</dt>
+                <dd class="col-sm-8">@admissionDate.ToString("dd/MM/yyyy")</dd>
+            }
         </dl>
         <a asp-action="CorregirIdentidad" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Corregir identidad</a>
         <a asp-action="Trasladar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">Trasladar</a>

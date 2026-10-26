@@ -55,13 +55,19 @@ public class IntercambioScreensTests(WebAppFactory factory) : IClassFixture<WebA
 
     /// <summary>Lo que envía intercambio.js: el token, la entidad, el fichero y, después del análisis, lo elegido.</summary>
     private static async Task<HttpResponseMessage> PostStepAsync(
-        HttpClient client, string action, string token, byte[] file, Dictionary<string, string>? fields = null)
+        HttpClient client, string action, string token, byte[] file, Dictionary<string, string>? fields = null, string entity = "Estructura",
+        params int[] confirmed)
     {
         using var content = new MultipartFormDataContent
         {
             { new StringContent(token), "__RequestVerificationToken" },
-            { new StringContent("Estructura"), "Entidad" },
+            { new StringContent(entity), "Entidad" },
         };
+        foreach (var row in confirmed)
+        {
+            content.Add(new StringContent(row.ToString()), "Confirmadas");
+        }
+
         var fileContent = new ByteArrayContent(file);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("text/csv");
         content.Add(fileContent, "Fichero", "estructura.csv");
@@ -106,6 +112,37 @@ public class IntercambioScreensTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.Contains("Nombre;Fecha de nacimiento;Sexo;Unidad;Habitación;Plaza (cama);Referencia interna", await template.Content.ReadAsStringAsync());
         Assert.Equal("text/csv", export.Content.Headers.ContentType?.MediaType);
         Assert.Contains($"{seed.Unit};{seed.Unit};;;101;A", await export.Content.ReadAsStringAsync());
+        Assert.Contains("Contiene datos personales:", exportPage);
+        Assert.Contains("guárdalo en un lugar seguro y bórralo cuando termines.", exportPage);
+    }
+
+    /// <summary>CJ, importación 1.2 y 1.4: un residente con el mismo nombre y fecha de nacimiento pero otra referencia se avisa y se
+    /// confirma fila a fila con «Importar de todos modos»; la vista previa cuenta los que quedarán con el sexo «No consta».</summary>
+    [Fact]
+    public async Task Administracion_VistaPreviaDeResidentes_AvisaDelPosibleDuplicado_ConLaCasillaYElContadorDeNoConsta()
+    {
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.Admin);
+        var token = ExtractValue(await admin.GetStringAsync("/Administracion/Importar"), "__RequestVerificationToken");
+        var chosen = new Dictionary<string, string>
+        {
+            ["ConEmparejamiento"] = "true", ["Campos[0]"] = "NAME", ["Campos[1]"] = "BIRTH_DATE", ["Campos[2]"] = "UNIT",
+            ["Campos[3]"] = "INTERNAL_REFERENCE", ["FormatoFecha"] = "DMY",
+        };
+        byte[] File(string reference) => Encoding.UTF8.GetBytes($"Nombre;F. Nacimiento;Unidad;Referencia\r\nMarta Gil;01/02/1939;{seed.Unit};{reference}\r\n");
+        await PostStepAsync(admin, "ImportarEjecutar", token, File("M-1"), chosen, "Residentes");
+
+        var warned = await BodyAsync(await PostStepAsync(admin, "ImportarVistaPrevia", token, File("M-2"), chosen, "Residentes"));
+        var confirmed = await BodyAsync(await PostStepAsync(admin, "ImportarVistaPrevia", token, File("M-2"), chosen, "Residentes", 2));
+
+        Assert.Contains("Posible duplicado", warned);
+        Assert.Contains("Importar de todos modos", warned);
+        Assert.Contains("name=\"Confirmadas\" value=\"2\"", warned);
+        Assert.DoesNotContain("checked", warned);
+        Assert.Contains("No hay ninguna fila que importar.", warned);
+        Assert.Contains("1 residente quedará con el sexo «No consta»", confirmed);
+        Assert.Contains("Importar 1 fila", confirmed);
+        Assert.Matches("name=\"Confirmadas\" value=\"2\"[^>]*checked", confirmed);
     }
 
     /// <summary>Guardar una plantilla de exportación redirige a Exportar con su nombre en la dirección (no en TempData: intercambio.js sigue

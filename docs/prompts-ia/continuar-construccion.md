@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-25. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-26. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -14,6 +14,20 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **Importación y exportación con las respuestas de CJ (2026-10-26, rama `importacion-respuestas-cj` desde `origin/main` tras el PR #67; script `0072`, el siguiente libre es `0073`).
+  Hecho y probado, sin subir.** Detalle en `pendientes-administracion.md` («Importación y exportación», hecho el 2026-10-26).
+  - **Fecha de ingreso** (1.1): `residentes.fecha_ingreso` (`DATE NULL`), campo «Fecha de ingreso» en la importación de residentes (no en el censo exportado), visible en la
+    ficha. El alta a mano no la pide.
+  - **Ya existe solo por referencia interna** (1.2): mismo nombre y fecha de nacimiento sin la misma referencia = «Posible duplicado», que solo se importa si se marca
+    «Importar de todos modos» en esa fila (`ConfirmedRows` / `Confirmadas`; la vista previa se recalcula al marcar). Reimportar un fichero sin referencias vuelve a avisar.
+  - **Contador de «No consta»** en la vista previa y el resultado (1.4); **aviso de datos personales** al exportar (2.1).
+  - `importacion-exportacion-confirmaciones-cj` archivado (README, `archivo.html`, `preguntas.html` y `PendientesCjPagesTests` al día). Manual al día. ADR 0010 con el criterio nuevo.
+  - **Pruebas:** unitarias 462, integración 537 y funcionales 311 en verde. Una vuelta de las tres seguidas dio 8 fallos funcionales por tiempo de espera (~1 min, de pruebas sin
+    relación) con la integración en 5 min en lugar de 50 s; repetida la funcional sola, 311 en verde en 52 s. Si se repite, mira primero la carga del equipo y el tamaño de
+    `eventos_auditoria` en `ResidAppPruebas` (71.000 filas ahora). Navegador (Los Almendros no; centro recién sembrado con `probar-en-navegador` y un recorrido propio): casilla, recálculo al marcar y desmarcar, reimportar
+    sin duplicar, contador, aviso de exportar y ficha con la fecha de ingreso; claro, oscuro y 375 px, sin desbordes ni errores de consola. **El recorrido encontró un fallo que
+    ninguna prueba veía:** cada fila lleva dos casillas (lista móvil y tabla, una oculta por CSS) y el formulario enviaba las dos; `intercambio.js` ahora las iguala.
+  - `0072` aplicado en `ResidApp` y `ResidAppPruebas` locales. En Azure dev lo aplica el despliegue tras el merge.
 - **Foto, alta con cama e inicio de Administración con las respuestas de CJ (2026-10-25, rama `foto-inicio-administracion` sobre `portal-familiar-respuestas-cj`;
   script `0071`, el siguiente libre es `0072`). Hecho y probado, sin subir.** Detalle en `pendientes-administracion.md` («Respuestas de CJ del 2026-10-25»).
   - **Foto:** consentimiento con quién firmó y la fecha; `0071` borró las fotos anteriores (no lo tenían; en Azure, volver a ejecutar `preparar-almendros.js` tras el
@@ -1857,16 +1871,16 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-**Para retomar (estado al cerrar la sesión del 2026-10-25):**
-- **Dos ramas sin subir, apiladas:** `portal-familiar-respuestas-cj` (commits `50181f6` y `f46ab8c`, sobre `origin/main` = PR #66) y, encima,
-  `foto-inicio-administracion` (`ecf414b`). Las sube Orlando y abre él los PR: o un solo PR desde `foto-inicio-administracion` con los tres commits, o primero el
-  del portal y después el de la foto. No subas nada sin que lo pida.
-- **Tras el merge:** comprobar el CI/CD y que el despliegue aplica `0070` y `0071` en Azure dev (la semilla da `RESIDENT_PHOTO_MANAGE` a las Enfermerías de los centros
-  de prueba). `0071` **borra todas las fotos** también allí: volver a ejecutar `preparar-almendros.js` contra Azure dev (`JUEGO=orlando`) para la foto de Manuel. Justo tras
-  el despliegue la app suele dar 500 unos segundos mientras arranca.
+**Para retomar (estado al cerrar la sesión del 2026-10-26):**
+- **Rama sin subir:** `importacion-respuestas-cj` (importación y exportación, script `0072`), desde `origin/main`. La sube Orlando y abre él el PR. No subas nada sin que lo pida.
+  El portal y la foto ya están en `main` (PR #67, fusionado el 2026-10-25; el CI/CD de `main` pasó entero).
+- **Tras el merge:** comprobar el CI/CD y que el despliegue aplica `0072` en Azure dev. `0071` **borró todas las fotos** también allí: falta volver a ejecutar
+  `preparar-almendros.js` contra Azure dev (`JUEGO=orlando`) para la foto de Manuel (no verificado que se haya hecho). Justo tras el despliegue la app suele dar 500 unos
+  segundos mientras arranca.
 - **Para CJ (lo envía Orlando):** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (3 preguntas). Decirle también que la app no envía correos (ADR 0012, pendiente
   de la decisión de Orlando), lo que deja abierta la 3.2 del portal.
-- **Siguiente bloque:** importación y exportación; después Dirección y traslados, organigrama y resumen periódico. Cada uno se planifica cuando Orlando lo pida.
+- **Siguiente bloque:** organigrama y cargos (ADM-07, con las ocho decisiones de `organigrama-y-cargos-cj`); después el resumen periódico y Dirección y traslados. Cada uno se
+  planifica cuando Orlando lo pida.
 - **Sueltos sin cerrar:** probar el dictado en un móvil real con audios ficticios; que una enfermera confirme «decul» y el rango 34–42 °C; las invitaciones de CJ esperan a
   Orlando; rotar la clave de Mistral.
 
@@ -1876,7 +1890,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    opciones nuevas «Piel enrojecida» y «Come menos de lo habitual» (script `0069`), temperatura entre 34,0 y 42,0 °C que bloquea fuera de rango, un cambio con solo la temperatura,
    el dictado propone la temperatura y se revisa una a una con las opciones, prompt que «propone menos» con sus reglas de jerga y los ejemplos 1, 3, 10, 25 y 28 corregidos. Sigue pendiente
    probarlo en un móvil real con audios ficticios. **Portal Familiar: hecho el 2026-10-25**, y **foto, alta con cama e inicio de Administración: hechos el 2026-10-25** (primeras entradas de «Dónde estamos»).
-   **Siguiente bloque: importación y exportación** (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
+   **Importación y exportación: hecho el 2026-10-26** (primera entrada de «Dónde estamos»). **Siguiente bloque: organigrama y cargos** (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
    **I0 a I4 e I2b del ADR 0007 están hechos y el acceso de desarrollo está retirado en el código** (rama `sin-acceso-desarrollo`, primera entrada de
    «Dónde estamos»). Queda **I5 (pulsera NFC)** y, antes de datos reales, llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: (Importar y Exportar ya probado en Azure dev el 2026-10-23), y las dos preguntas a CJ de la guía 2 (hora en la

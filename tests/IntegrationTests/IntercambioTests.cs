@@ -34,19 +34,20 @@ public class IntercambioTests
         [.. Encoding.UTF8.GetPreamble(), .. Encoding.UTF8.GetBytes(string.Join("\r\n", lines) + "\r\n")];
 
     /// <summary>Lo que la pantalla devuelve tras el análisis: lo propuesto, sin cambios.</summary>
-    private static ExchangeMappingInput Accept(ImportAnalysis analysis) => new(
+    private static ExchangeMappingInput Accept(ImportAnalysis analysis, IReadOnlyList<int>? confirmedRows = null) => new(
         analysis.Columns.Select(c => c.Field?.ToCode()).ToList(), analysis.DateFormat.ToCode(),
-        analysis.SexValues.Select(v => new SexValueInput(v.Key, v.Code?.ToCode())).ToList());
+        analysis.SexValues.Select(v => new SexValueInput(v.Key, v.Code?.ToCode())).ToList(), confirmedRows);
 
-    private static async Task<ImportReport> ImportAsync(SeededProfile admin, ExchangeEntity entity, byte[] file, bool write = true, string? template = null)
+    private static async Task<ImportReport> ImportAsync(
+        SeededProfile admin, ExchangeEntity entity, byte[] file, bool write = true, string? template = null, IReadOnlyList<int>? confirmedRows = null)
     {
         var service = Build(admin.ExternalSubject);
         var analysis = await service.AnalyzeImportAsync(Query(admin), entity, file, null);
         Assert.True(analysis.Ok, analysis.Error?.Message);
         Assert.True(analysis.Value!.Ready, string.Join(" ", analysis.Value.Problems));
         var result = write
-            ? await service.RunImportAsync(Query(admin), entity, file, Accept(analysis.Value), template)
-            : await service.PreviewImportAsync(Query(admin), entity, file, Accept(analysis.Value));
+            ? await service.RunImportAsync(Query(admin), entity, file, Accept(analysis.Value, confirmedRows), template)
+            : await service.PreviewImportAsync(Query(admin), entity, file, Accept(analysis.Value, confirmedRows));
         Assert.True(result.Ok, result.Error?.Message);
         return result.Value!;
     }
@@ -133,6 +134,51 @@ public class IntercambioTests
             ],
             census);
         Assert.Equal(2, await CountAuditAsync(admin, "RESIDENT_CREATE"));
+    }
+
+    private static async Task<List<CensusEntry>> CensusAsync(SeededProfile admin) =>
+        [.. await new SqlExchangeDirectory(Connections).ListCensusAsync(new AccountAdministrationAccess(admin.ProfileScopeId, admin.AccountId, admin.CenterId))];
+
+    [Fact]
+    public async Task Residentes_LaFechaDeIngresoDelFichero_SeGuarda_YSinElla_QuedaVacia()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        await ImportAsync(admin, ExchangeEntity.Estructura, StructureFile(await UnitNameAsync(admin)));
+        var file = Csv("Nombre;F. Nacimiento;Fecha de ingreso;Unidad", "Ana Pérez;05/03/1940;10/01/2024;Norte", "Rosa Martín;01/01/1941;;Norte");
+
+        var run = await ImportAsync(admin, ExchangeEntity.Residentes, file);
+
+        Assert.All(run.Rows, r => Assert.Equal(ImportOutcome.Nueva, r.Outcome));
+        Assert.Equal(2, run.SexNoConsta);
+        using var connection = await Connections.OpenAsync();
+        var dates = (await connection.QueryAsync<(string Name, DateTime? Admission)>(
+            "SELECT nombre_visible, CAST(fecha_ingreso AS datetime) FROM dbo.residentes WHERE centro_id = @Center ORDER BY nombre_visible",
+            new { Center = admin.CenterId.Value })).ToList();
+        Assert.Equal([("Ana Pérez", (DateTime?)new DateTime(2024, 1, 10)), ("Rosa Martín", null)], dates);
+        var listed = await new SqlAdministracionResidentDirectory(Connections).ListAsync(admin.ProfileScopeId, admin.CenterId);
+        Assert.Equal([("Ana Pérez", (DateOnly?)new DateOnly(2024, 1, 10)), ("Rosa Martín", null)],
+            listed.OrderBy(r => r.DisplayName).Select(r => (r.DisplayName, r.AdmissionDate)));
+    }
+
+    [Fact]
+    public async Task Residentes_MismoNombreYFechaConOtraReferencia_NoSeImportaSalvoQueSeConfirme_YReimportarConReferenciaNoDuplica()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        await ImportAsync(admin, ExchangeEntity.Estructura, StructureFile(await UnitNameAsync(admin)));
+        await ImportAsync(admin, ExchangeEntity.Residentes, Csv("Nombre;F. Nacimiento;Unidad;Referencia", "Marta Gil;01/02/1939;Norte;M-1"));
+        var homonym = Csv("Nombre;F. Nacimiento;Unidad;Referencia", "Marta Gil;01/02/1939;Norte;M-2");
+
+        var unconfirmed = await ImportAsync(admin, ExchangeEntity.Residentes, homonym);
+        var afterUnconfirmed = await CensusAsync(admin);
+        var confirmed = await ImportAsync(admin, ExchangeEntity.Residentes, homonym, confirmedRows: [2]);
+        var again = await ImportAsync(admin, ExchangeEntity.Residentes, homonym);
+
+        Assert.Equal((ImportOutcome.PosibleDuplicado, true), (unconfirmed.Rows[0].Outcome, unconfirmed.Rows[0].CanConfirm));
+        Assert.Single(afterUnconfirmed);
+        Assert.Equal(ImportOutcome.Nueva, confirmed.Rows[0].Outcome);
+        Assert.Equal(["M-1", "M-2"], (await CensusAsync(admin)).Select(c => c.InternalReference).Order());
+        Assert.Equal(ImportOutcome.YaExiste, again.Rows[0].Outcome);
+        Assert.Equal(2, (await CensusAsync(admin)).Count);
     }
 
     [Fact]

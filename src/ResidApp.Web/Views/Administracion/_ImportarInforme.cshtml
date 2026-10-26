@@ -2,23 +2,28 @@
 @model ResidApp.Application.UseCases.ImportReport
 @*
     ADR 0010: la vista previa (Executed = false) o el resultado de una importación, fila a fila. «Fila» es la fila del fichero, para
-    encontrarla en Excel. Desde la vista previa se importa; las filas con error o que ya existen no se importan.
+    encontrarla en Excel. Desde la vista previa se importa; las filas con error o que ya existen no se importan, y las de un posible duplicado
+    (mismo nombre y fecha de nacimiento, sin la misma referencia interna) solo si se marca «Importar de todos modos» (CJ, importación 1.2):
+    al marcarla, intercambio.js vuelve a pedir la vista previa con esa fila confirmada.
 *@
 @{
     var created = Model.Count(ImportOutcome.Nueva);
     var existing = Model.Count(ImportOutcome.YaExiste);
+    var duplicates = Model.Count(ImportOutcome.PosibleDuplicado);
     var errors = Model.Count(ImportOutcome.Error);
     string Plural(int count, string one, string many) => count == 1 ? $"{count} {one}" : $"{count} {many}";
     string Outcome(ImportOutcome outcome) => outcome switch
     {
         ImportOutcome.Nueva => Model.Executed ? "Importada" : "Se importará",
         ImportOutcome.YaExiste => "Ya existe",
+        ImportOutcome.PosibleDuplicado => "Posible duplicado",
         _ => "Error",
     };
     string Badge(ImportOutcome outcome) => outcome switch
     {
         ImportOutcome.Nueva => "text-bg-primary",
         ImportOutcome.YaExiste => "text-bg-secondary",
+        ImportOutcome.PosibleDuplicado => "text-bg-warning",
         _ => "text-bg-danger",
     };
 }
@@ -28,13 +33,19 @@
         @if (Model.Executed)
         {
             <div class="alert @(errors == 0 ? "alert-success" : "alert-warning")" role="status">
-                Importación terminada: @Plural(created, "fila importada", "filas importadas"), @Plural(existing, "ya existía", "ya existían")
+                Importación terminada: @Plural(created, "fila importada", "filas importadas"), @Plural(existing, "ya existía", "ya existían")@(duplicates > 0 ? $", {Plural(duplicates, "posible duplicado sin importar", "posibles duplicados sin importar")}" : "")
                 y @Plural(errors, "con error", "con error").
                 @if (errors > 0)
                 {
                     <span>Corrige las filas con error en el fichero y vuelve a importarlo: lo ya importado no se repite.</span>
                 }
             </div>
+            @if (Model.SexNoConsta > 0)
+            {
+                <p class="alert alert-info" role="note">
+                    @Plural(Model.SexNoConsta, "residente ha quedado", "residentes han quedado") con el sexo «No consta»: corrígelo desde su ficha.
+                </p>
+            }
             <p>
                 <a asp-action="@(Model.Entity == ExchangeEntity.Estructura ? "Estructura" : "Residentes")">
                     @(Model.Entity == ExchangeEntity.Estructura ? "Ver la estructura del centro" : "Ver los residentes")
@@ -44,14 +55,28 @@
         else
         {
             <p>
-                @Plural(created, "fila se importará", "filas se importarán"), @Plural(existing, "ya existe", "ya existen")
+                @Plural(created, "fila se importará", "filas se importarán"), @Plural(existing, "ya existe", "ya existen")@(duplicates > 0 ? $", {Plural(duplicates, "es un posible duplicado", "son posibles duplicados")}" : "")
                 y @Plural(errors, "tiene error", "tienen error"). Nada se ha guardado todavía.
             </p>
+            @if (Model.SexNoConsta > 0)
+            {
+                <p class="alert alert-info" role="note">
+                    @Plural(Model.SexNoConsta, "residente quedará", "residentes quedarán") con el sexo «No consta» porque el fichero no lo dice:
+                    corrígelo después desde su ficha.
+                </p>
+            }
+            @if (duplicates > 0)
+            {
+                <p class="text-body-secondary small">
+                    Un posible duplicado coincide en nombre y fecha de nacimiento con otro residente, pero no en la referencia interna. Dos personas
+                    distintas pueden llamarse igual: si es otra persona, marca «Importar de todos modos»; si no, déjalo sin marcar y no se importará.
+                </p>
+            }
             @if (created > 0)
             {
                 <p class="text-body-secondary small">
-                    Las filas que ya existen o tienen error no se importan. Puedes importar ahora las demás y, después, corregir el fichero y
-                    volver a importarlo: lo ya importado no se repite.
+                    Las filas que ya existen, tienen error o son un posible duplicado sin marcar no se importan. Puedes importar ahora las demás y,
+                    después, corregir el fichero y volver a importarlo: lo que ya existe por su referencia interna no se repite.
                 </p>
                 <div class="d-grid d-md-flex justify-content-md-end mb-3">
                     <button type="submit" class="btn btn-primary btn-lg" formaction="@Url.Action("ImportarEjecutar")" data-destino="informe">
@@ -77,6 +102,14 @@
                         </div>
                         <div>@row.Label</div>
                         <div class="text-body-secondary small">@row.Detail</div>
+                        @if (row.CanConfirm && !Model.Executed)
+                        {
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="Confirmadas" value="@row.Number" id="confirmar-movil-@row.Number"
+                                       checked="@row.Confirmed" data-confirmar data-vista-previa="@Url.Action("ImportarVistaPrevia")" />
+                                <label class="form-check-label" for="confirmar-movil-@row.Number">Importar de todos modos</label>
+                            </div>
+                        }
                     </li>
                 }
             </ul>
@@ -98,7 +131,17 @@
                                 <th scope="row">@row.Number</th>
                                 <td>@row.Label</td>
                                 <td><span class="badge @Badge(row.Outcome)">@Outcome(row.Outcome)</span></td>
-                                <td>@row.Detail</td>
+                                <td>
+                                    @row.Detail
+                                    @if (row.CanConfirm && !Model.Executed)
+                                    {
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" name="Confirmadas" value="@row.Number" id="confirmar-@row.Number"
+                                                   checked="@row.Confirmed" data-confirmar data-vista-previa="@Url.Action("ImportarVistaPrevia")" />
+                                            <label class="form-check-label" for="confirmar-@row.Number">Importar de todos modos</label>
+                                        </div>
+                                    }
+                                </td>
                             </tr>
                         }
                     </tbody>

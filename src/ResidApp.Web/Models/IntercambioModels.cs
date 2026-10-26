@@ -29,9 +29,13 @@ public sealed class ExchangeFormModel
 
     public string? NombrePlantilla { get; set; }
 
+    /// <summary>Los números de fila de los posibles duplicados que se han marcado como «Importar de todos modos» en la vista previa.</summary>
+    public List<int> Confirmadas { get; set; } = [];
+
     public ExchangeMappingInput? Input() => ConEmparejamiento
         ? new ExchangeMappingInput(
-            Campos, FormatoFecha, SexoClaves.Select((key, i) => new SexValueInput(key, i < SexoCodigos.Count ? SexoCodigos[i] : null)).ToList())
+            Campos, FormatoFecha, SexoClaves.Select((key, i) => new SexValueInput(key, i < SexoCodigos.Count ? SexoCodigos[i] : null)).ToList(),
+            Confirmadas)
         : null;
 }
 

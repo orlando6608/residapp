@@ -55,7 +55,7 @@
         @if (Model.UsesDates)
         {
             <div class="mt-3">
-                <label for="formato-fecha" class="form-label fw-semibold">Formato de las fechas de nacimiento</label>
+                <label for="formato-fecha" class="form-label fw-semibold">Formato de las fechas (nacimiento e ingreso)</label>
                 <select id="formato-fecha" name="FormatoFecha" class="form-select" aria-describedby="ayuda-formato-fecha">
                     @foreach (var format in Enum.GetValues<ExchangeDateFormat>())
                     {

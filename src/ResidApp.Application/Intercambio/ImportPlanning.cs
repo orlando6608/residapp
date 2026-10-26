@@ -11,12 +11,14 @@ public enum ImportOutcome
 {
     [Display(Name = "Nueva")] Nueva,
     [Display(Name = "Ya existe")] YaExiste,
+    [Display(Name = "Posible duplicado")] PosibleDuplicado,
     [Display(Name = "Error")] Error,
 }
 
 /// <summary>Lo que pasa (en la vista previa) o ha pasado (al importar) con una fila del fichero. Label la identifica para quien importa;
-/// Detail dice qué se crea, por qué ya existe o qué hay que corregir.</summary>
-public sealed record ImportRowReport(int Number, string Label, ImportOutcome Outcome, string Detail);
+/// Detail dice qué se crea, por qué ya existe o qué hay que corregir. CanConfirm es una fila con un posible duplicado que quien importa
+/// puede decidir dar de alta de todos modos (CJ, importación 1.2); Confirmed, que ya lo ha decidido (entonces el resultado es Nueva).</summary>
+public sealed record ImportRowReport(int Number, string Label, ImportOutcome Outcome, string Detail, bool CanConfirm = false, bool Confirmed = false);
 
 /// <summary>Un paso de la importación que no se ha podido hacer, con el motivo para quien importa.</summary>
 public sealed class ImportStepException(string message) : Exception(message);
@@ -272,21 +274,26 @@ public sealed class StructureImport
 
 /// <summary>Un residente que la importación va a dar de alta, ya resuelto contra la estructura del centro.</summary>
 public sealed record ResidentImportPlan(
-    UnitId UnitId, Guid? RoomId, Guid? PlaceId, string Name, DateOnly BirthDate, DocumentedSexCode Sex, string? Reference);
+    UnitId UnitId, Guid? RoomId, Guid? PlaceId, string Name, DateOnly BirthDate, DocumentedSexCode Sex, string? Reference,
+    DateOnly? AdmissionDate = null, int? ConfirmedRow = null);
 
 /// <summary>
 /// ADR 0010: comprueba cada fila de residentes contra la estructura del ámbito y el censo, sin escribir. La importación de residentes no
 /// crea estructura: la unidad (por nombre o código), la habitación y la plaza tienen que existir (se pueden importar antes, incluso
-/// desde el mismo fichero). Un residente activo con la misma referencia interna, o con el mismo nombre y fecha de nacimiento, ya existe
-/// y no se vuelve a dar de alta; dos filas iguales en el fichero, o dos residentes en la misma plaza, son un error.
+/// desde el mismo fichero). Un residente activo con la misma referencia interna ya existe y no se vuelve a dar de alta; dos filas con la
+/// misma referencia en el fichero, o dos residentes en la misma plaza, son un error. Con el mismo nombre y fecha de nacimiento, pero
+/// sin esa referencia, la fila es un posible duplicado (CJ, importación 1.2): no se importa salvo que quien importa lo confirme, fila a
+/// fila (confirmedRows son los números de fila del fichero), porque dos personas distintas pueden llamarse igual.
 /// </summary>
 public sealed class ResidentImportPlanner(
-    IReadOnlyList<StructureUnit> units, Func<Guid, Task<IReadOnlyList<LayoutRoom>>> loadRooms, IReadOnlyList<CensusEntry> census, DateOnly today)
+    IReadOnlyList<StructureUnit> units, Func<Guid, Task<IReadOnlyList<LayoutRoom>>> loadRooms, IReadOnlyList<CensusEntry> census, DateOnly today,
+    IReadOnlySet<int>? confirmedRows = null)
 {
     private readonly Dictionary<Guid, IReadOnlyList<LayoutRoom>> _rooms = [];
     private readonly HashSet<string> _censusReferences = census.Where(c => c.InternalReference is not null)
         .Select(c => ExchangeText.Normalize(c.InternalReference)).ToHashSet();
-    private readonly HashSet<string> _censusIdentities = census.Select(c => Identity(c.DisplayName, c.BirthDate)).ToHashSet();
+    private readonly Dictionary<string, CensusEntry> _censusIdentities = census.GroupBy(c => Identity(c.DisplayName, c.BirthDate))
+        .ToDictionary(g => g.Key, g => g.First());
     private readonly Dictionary<string, int> _fileKeys = [];
     private readonly HashSet<Guid> _placesTaken = [];
 
@@ -302,6 +309,8 @@ public sealed class ResidentImportPlanner(
         var placeText = ImportRowValues.Value(row, mapping, ExchangeField.Plaza);
         var reference = ImportRowValues.Value(row, mapping, ExchangeField.ReferenciaInterna);
         var birth = ExchangeDates.Parse(birthText, mapping.DateFormat, today);
+        var admissionText = ImportRowValues.Value(row, mapping, ExchangeField.FechaIngreso);
+        var admission = ExchangeDates.Parse(admissionText, mapping.DateFormat, today);
         var label = string.Join(" · ", new[]
         {
             name.Length == 0 ? "(sin nombre)" : name, birth?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? birthText,
@@ -317,6 +326,9 @@ public sealed class ResidentImportPlanner(
             : birthText is null ? "Falta la fecha de nacimiento."
             : birth is null ? $"La fecha de nacimiento «{birthText}» no se entiende con el formato elegido."
             : birth > today ? "La fecha de nacimiento es posterior a hoy."
+            : admissionText is not null && admission is null ? $"La fecha de ingreso «{admissionText}» no se entiende con el formato elegido."
+            : admission > today ? "La fecha de ingreso es posterior a hoy."
+            : admission < birth ? "La fecha de ingreso es anterior a la de nacimiento."
             : sexKey.Length > 0 && !mapping.SexValues.TryGetValue(sexKey, out sex) ? $"Falta decir qué sexo es «{sexText}»."
             : unitText is null ? "Falta la unidad."
             : placeText is not null && roomText is null ? "Para la plaza hace falta la habitación."
@@ -334,17 +346,21 @@ public sealed class ResidentImportPlanner(
             return Report(ImportOutcome.YaExiste, $"Ya hay un residente activo con la referencia interna «{reference}».");
         }
 
-        if (_censusIdentities.Contains(identityKey))
+        if (referenceKey is not null && _fileKeys.TryGetValue(referenceKey, out var sameReference))
         {
-            return Report(ImportOutcome.YaExiste, "Ya hay un residente activo con el mismo nombre y fecha de nacimiento.");
+            return Report(ImportOutcome.Error, $"Repite la referencia interna de la fila {sameReference}.");
         }
 
-        foreach (var key in new[] { referenceKey, identityKey }.OfType<string>())
+        // Mismo nombre y fecha de nacimiento sin la misma referencia: puede ser otra persona. Se avisa y decide quien importa.
+        var confirmed = confirmedRows?.Contains(row.Number) == true;
+        var homonym = _censusIdentities.TryGetValue(identityKey, out var resident)
+            ? $"Coincide en nombre y fecha de nacimiento con un residente activo de la unidad «{resident.UnitName}», pero no en la referencia interna."
+            : _fileKeys.TryGetValue(identityKey, out var earlier) ? $"Coincide en nombre y fecha de nacimiento con la fila {earlier} del fichero, pero no en la referencia interna."
+            : null;
+        if (homonym is not null && !confirmed)
         {
-            if (_fileKeys.TryGetValue(key, out var earlier))
-            {
-                return Report(ImportOutcome.Error, $"Repite la fila {earlier}.");
-            }
+            return (new ImportRowReport(row.Number, label, ImportOutcome.PosibleDuplicado,
+                $"{homonym} Marca «Importar de todos modos» si es otra persona.", CanConfirm: true), null);
         }
 
         var unit = units.FirstOrDefault(u => StructureImport.Same(u.Name, unitText))
@@ -379,7 +395,7 @@ public sealed class ResidentImportPlanner(
 
         foreach (var key in new[] { referenceKey, identityKey }.OfType<string>())
         {
-            _fileKeys[key] = row.Number;
+            _fileKeys.TryAdd(key, row.Number);
         }
 
         if (place is not null)
@@ -387,8 +403,10 @@ public sealed class ResidentImportPlanner(
             _placesTaken.Add(place.PlaceId);
         }
 
-        return (new ImportRowReport(row.Number, label, ImportOutcome.Nueva, $"Se da de alta ({ExchangeCatalog.Label(sex)})."),
-            new ResidentImportPlan(unit.UnitId, room?.RoomId, place?.PlaceId, name, birth.Value, sex, reference));
+        var detail = $"Se da de alta ({ExchangeCatalog.Label(sex)})." + (homonym is null ? "" : " Has marcado que es otra persona.");
+        return (new ImportRowReport(row.Number, label, ImportOutcome.Nueva, detail, CanConfirm: homonym is not null, Confirmed: homonym is not null),
+            new ResidentImportPlan(unit.UnitId, room?.RoomId, place?.PlaceId, name, birth.Value, sex, reference, admission,
+                homonym is null ? null : row.Number));
     }
 
     private static string Identity(string name, DateOnly birth) => $"id:{ExchangeText.Normalize(name)}|{birth:yyyy-MM-dd}";
