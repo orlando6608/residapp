@@ -1,5 +1,7 @@
+using System.ComponentModel.DataAnnotations;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
+using ResidApp.Domain.Supervision;
 
 namespace ResidApp.Web.Models;
 
@@ -189,3 +191,19 @@ public static class ProcessMilestoneDisplay
 /// <summary>DIR-11: los avisos de hitos a punto de vencer o vencidos que ve Enfermería o Medicina en su inicio. Controller es el de su ficha
 /// de residente.</summary>
 public sealed record MilestoneWarningsModel(IReadOnlyList<MilestoneEntry>? Items, string Controller);
+
+/// <summary>Cierre excepcional de un episodio con indicaciones sin cumplir (CJ, tercera 5.1; script 0075): el motivo es obligatorio y hay que confirmar
+/// que las indicaciones se quedan sin resolver.</summary>
+public sealed class CerrarEpisodioExcepcionalFormModel
+{
+    [Required]
+    public Guid EventoId { get; set; }
+
+    [Required(ErrorMessage = "Escribe el motivo del cierre.")]
+    [StringLength(ExceptionalEpisodeClosure.MaxReasonLength, ErrorMessage = "El motivo admite hasta {1} caracteres.")]
+    [Display(Name = "Motivo del cierre")]
+    public string? Motivo { get; set; }
+
+    [Display(Name = "Entiendo que las indicaciones médicas se quedan sin resolver")]
+    public bool Confirmo { get; set; }
+}

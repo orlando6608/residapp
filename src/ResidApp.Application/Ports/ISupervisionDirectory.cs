@@ -77,6 +77,12 @@ public interface ISupervisionDirectory
     /// UTC, como las fechas guardadas (ver SupervisionIndicatorRules.UtcBounds).</summary>
     Task<SupervisionIndicatorFacts> ListIndicatorFactsAsync(
         Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default);
+
+    /// <summary>Cierre excepcional (CJ, tercera 5.1; script 0075) de un episodio abierto del ámbito con indicaciones sin cumplir: lo cierra con el motivo, que queda
+    /// guardado y en la auditoría con la cuenta de Dirección. Las indicaciones no se tocan. Comprueba el ámbito dentro de su transacción: un episodio ajeno, inexistente
+    /// o ya cerrado da AccessDenied sin distinguirlos; sin indicaciones abiertas, EXCEPTIONAL_CLOSURE_NOT_APPLICABLE.</summary>
+    Task CloseExceptionallyAsync(
+        Guid profileScopeId, CenterId centerId, AccountId accountId, Guid eventId, string reason, CancellationToken ct = default);
 }
 
 /// <summary>DIR-08 a DIR-10: hechos de los que salen los indicadores agregados. Solo llevan la unidad, códigos y la fecha

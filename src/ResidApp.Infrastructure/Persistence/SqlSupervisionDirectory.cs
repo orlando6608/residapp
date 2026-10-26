@@ -1,4 +1,7 @@
+using System.Data;
 using Dapper;
+using Microsoft.Data.SqlClient;
+using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
@@ -147,6 +150,65 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
                 _ => SupervisionMilestoneKind.InformeDerivacionFirmado,
             },
             (SystemProfile?)EnumCode.ParseCode<SystemProfile>(r.ProfileCode), r.At)).ToList();
+    }
+
+    /// <summary>Cierre excepcional de Dirección (script 0075). Todo en una transacción: bloquea el episodio, repite la regla de ámbito de Dirección (un episodio ajeno,
+    /// inexistente o ya cerrado no se distingue: AccessDenied), exige alguna indicación abierta, guarda la fila inmutable con el motivo (la base de datos solo deja cerrar
+    /// así si esa fila es de esta misma transacción), cierra con NO_COMUNICAR y audita con el perfil DIRECCION_CLINICA y el motivo como justificación. Las indicaciones no se tocan.</summary>
+    public async Task CloseExceptionallyAsync(
+        Guid profileScopeId, CenterId centerId, AccountId accountId, Guid eventId, string reason, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await connection.ExecuteAsync(new CommandDefinition(
+            "SELECT id FROM dbo.eventos_asistenciales WITH (UPDLOCK, HOLDLOCK) WHERE id = @EventId AND centro_id = @CenterId",
+            new { EventId = eventId, CenterId = centerId.Value }, transaction, cancellationToken: ct));
+        var episode = await connection.QuerySingleOrDefaultAsync<ExceptionalClosureRow>(new CommandDefinition($"""
+            SELECT ea.residente_id AS ResidentId, ea.unidad_id AS UnitId, ea.revision AS Revision,
+                   (SELECT COUNT(*) FROM dbo.indicaciones_medicas i
+                     WHERE i.evento_id = ea.id AND i.estado_codigo IN ('PENDIENTE_LECTURA', 'LEIDA')) AS OpenIndications
+            {ScopedEventsFrom}
+            {ScopedEventsWhere}
+               AND ea.id = @EventId AND ea.estado_codigo <> 'CERRADO'
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, EventId = eventId }, transaction, cancellationToken: ct))
+            ?? throw new AccessDeniedException();
+        if (episode.OpenIndications == 0)
+        {
+            throw new DomainValidationException(ResidApp.Domain.Supervision.ExceptionalEpisodeClosure.NotApplicableCode);
+        }
+
+        var occurredAt = DateTimeOffset.UtcNow;
+        await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.cierres_excepcionales_direccion
+                (evento_id, centro_id, residente_id, motivo, indicaciones_abiertas, cerrado_por_cuenta_id, cerrado_en)
+            VALUES (@EventId, @CenterId, @ResidentId, @Reason, @OpenIndications, @AccountId, @OccurredAt)
+            """, new
+        {
+            EventId = eventId, CenterId = centerId.Value, episode.ResidentId, Reason = reason, episode.OpenIndications,
+            AccountId = accountId.Value, OccurredAt = occurredAt,
+        }, transaction, cancellationToken: ct));
+        var updated = await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.eventos_asistenciales
+               SET estado_codigo = 'CERRADO', revision = revision + 1, cerrado_por_cuenta_id = @AccountId, cerrado_en = @OccurredAt,
+                   comunicacion_familiar_codigo = 'NO_COMUNICAR', cierre_sistema_codigo = 'DIRECCION_EXCEPCIONAL'
+             WHERE id = @EventId AND centro_id = @CenterId AND revision = @Revision AND estado_codigo <> 'CERRADO'
+            """, new { AccountId = accountId.Value, OccurredAt = occurredAt, EventId = eventId, CenterId = centerId.Value, episode.Revision },
+            transaction, cancellationToken: ct));
+        if (updated != 1)
+        {
+            throw new DomainValidationException("CLINICAL_EVENT_REVISION_CONFLICT");
+        }
+
+        await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.eventos_auditoria
+                (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, justificacion, ocurrido_en)
+            VALUES (NEWID(), @AccountId, 'DIRECCION_CLINICA', @CenterId, @UnitId, @ResidentId, 'CLINICAL_EVENT', @EventId,
+                    'CLINICAL_EVENT_CLOSE_EXCEPTIONAL', @Reason, @OccurredAt)
+            """, new
+        {
+            AccountId = accountId.Value, CenterId = centerId.Value, episode.UnitId, episode.ResidentId, EventId = eventId, Reason = reason, OccurredAt = occurredAt,
+        }, transaction, cancellationToken: ct));
+        transaction.Commit();
     }
 
     public async Task<SupervisionScopeInfo?> FindScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
@@ -351,6 +413,8 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
     private sealed record MilestoneRow(string Kind, string ProfileCode, DateTime At);
 
     private sealed record UnitRow(Guid Id, string Name);
+
+    private sealed record ExceptionalClosureRow(Guid ResidentId, Guid UnitId, int Revision, int OpenIndications);
 
     private sealed record EpisodeFactRow(
         Guid UnitId, string OriginCode, string ClassificationCode, DateTime ReceivedAt, bool Escalated, bool UrgentProtocol, bool Referred);

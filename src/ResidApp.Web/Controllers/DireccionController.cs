@@ -271,6 +271,44 @@ public sealed class DireccionController(
         return result.Ok ? View(result.Value) : RedirectToAction(nameof(Pendientes));
     }
 
+    /// <summary>Cierre excepcional de un episodio con indicaciones sin cumplir (CJ, tercera 5.1; script 0075): solo Dirección Clínica, con motivo y confirmación. Las
+    /// indicaciones no se tocan. Queda auditado con el nombre de quien cierra.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CerrarEpisodio([Bind(Prefix = "Form")] CerrarEpisodioExcepcionalFormModel form, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        if (!ModelState.IsValid || !form.Confirmo)
+        {
+            TempData["Error"] = form.Confirmo
+                ? "Escribe el motivo del cierre (hasta " + ResidApp.Domain.Supervision.ExceptionalEpisodeClosure.MaxReasonLength + " caracteres)."
+                : "Marca la casilla para confirmar que las indicaciones se quedan sin resolver y escribe el motivo.";
+            return RedirectToAction(nameof(Episodio), new { eventoId = form.EventoId });
+        }
+
+        var result = await service.CloseEpisodeExceptionallyAsync(
+            new CloseEpisodeExceptionallyCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Motivo), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Episodio cerrado. Las indicaciones médicas se quedan sin resolver y el cierre queda en la auditoría con tu motivo.";
+            return RedirectToAction(nameof(Pendientes));
+        }
+
+        TempData["Error"] = result.Error!.Code switch
+        {
+            ApplicationFailureCode.AccessDenied => "No se puede cerrar ese episodio: no está abierto o no es de tu ámbito.",
+            ApplicationFailureCode.Conflict => "Este episodio no tiene indicaciones médicas abiertas, o cambió mientras lo mirabas: vuelve a abrirlo.",
+            ApplicationFailureCode.InvalidInput => "Revisa el motivo: es obligatorio y admite hasta " + ResidApp.Domain.Supervision.ExceptionalEpisodeClosure.MaxReasonLength + " caracteres.",
+            _ => result.Error.Message,
+        };
+        return RedirectToAction(nameof(Episodio), new { eventoId = form.EventoId });
+    }
+
     /// <summary>DIR-08 a DIR-10 y DIR-16 (bloque 4): indicadores agregados del periodo, por unidad, en total y mes a mes. La
     /// misma página es el informe de actividad imprimible.</summary>
     public async Task<IActionResult> Indicadores(IndicatorPeriodFilter filtro, CancellationToken ct)

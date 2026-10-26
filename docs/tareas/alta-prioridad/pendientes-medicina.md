@@ -30,6 +30,7 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
   usuario (2026-09-28), SUSTITUIDA el 2026-10-10 por la regla de CJ (4.2):** se podía cerrar con indicaciones sin resolver; ahora Medicina no cierra con indicaciones sin cumplir (salvo en protocolo urgente) y, cumplidas, cierra Enfermería o Medicina (ver el bloque «Cierre del episodio con indicaciones»). Antes, siguen en la bandeja de Enfermería, y en
   `/Medicina/Indicaciones` siguen las no resueltas y las no realizadas después del cierre. Script
   `0013_medicina_cierre_evento` (solo el trigger de transiciones).
+- **Excepción: cierre por Dirección Clínica (CJ, tercera tanda 5.1; hecho el 2026-10-26, script `0075`).** Si nadie va a cumplir las indicaciones, **solo Dirección Clínica** puede cerrar el episodio, con un motivo que queda en la auditoría con su nombre (ver `pendientes-direccion.md`, «Cierre excepcional»). Enfermería y Medicina siguen sin poder.
 - **Cierre del episodio con indicaciones (CJ 4.2 de las confirmaciones de la segunda tanda, 2026-10-10; sin script)** — sustituye a la
   decisión del 2026-09-28 de la historia 4. Medicina **no cierra** un episodio con indicaciones sin cumplir (sin leer o sin resolver;
   `MEDICAL_INDICATIONS_PENDING` en `ClinicalEventCloser`), salvo desde `PROTOCOLO_URGENTE_MEDICO` (una derivación a Urgencias puede dejar

@@ -9,7 +9,7 @@ Este fichero documenta la parte clínica de la supervisión: el acceso condicion
 ## Glosario mínimo
 
 - **Permiso + finalidad + auditoría previa**: condición que debe cumplirse, y quedar registrada, antes de que el sistema entregue cualquier contenido clínico detallado a Dirección.
-- **Solo lectura**: todo lo que Dirección consulta en el ámbito clínico es de consulta exclusivamente; no puede modificarlo.
+- **Solo lectura**: todo lo que Dirección consulta en el ámbito clínico es de consulta exclusivamente; no puede modificarlo. **Única excepción de escritura sobre un episodio (CJ, tercera tanda 5.1; 2026-10-26):** cerrar un episodio con indicaciones médicas que nadie va a cumplir, solo Dirección Clínica, indicando un motivo (hasta 300 caracteres) que queda en la auditoría con su nombre. Las indicaciones no se tocan (siguen sin resolver y se cuentan así en los indicadores), el cierre no prepara comunicado a la familia y solo existe si el episodio tiene indicaciones abiertas; no es un cierre libre.
 - **Cambio explícito de perfil**: acción obligatoria para que una cuenta con varios perfiles pueda actuar clínicamente; mientras actúa como Dirección, no puede hacerlo.
 
 ## Flujo paso a paso

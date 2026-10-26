@@ -12,6 +12,7 @@ public static class ClinicalTraceabilityDisplay
         ["CLINICAL_EVENT_REGISTER"] = "Evento registrado",
         ["CLINICAL_EVENT_ESCALATE"] = "Evento escalado a Medicina",
         ["CLINICAL_EVENT_CLOSE"] = "Evento cerrado",
+        ["CLINICAL_EVENT_CLOSE_EXCEPTIONAL"] = "Evento cerrado por Dirección con indicaciones sin cumplir",
         ["DAILY_CLOSURE_CHANGE_REPORTED"] = "Cambio registrado por Auxiliar",
         ["DAILY_CLOSURE_NO_CHANGE"] = "Cierre del día sin cambios (Auxiliar)",
         ["DAILY_CLOSURE_NOT_ASSESSABLE"] = "Cierre del día: no se pudo valorar (Auxiliar)",

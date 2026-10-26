@@ -70,8 +70,19 @@ está bien, y corregir o retirar un comunicado publicado sigue en manos de Admin
 
 - **Cuarta finalidad, «calidad asistencial»** (tercera 2.1): da **solo datos agregados por unidad y periodo** (cumplimiento de hitos, indicadores), sin abrir la historia de
   ningún residente. Un caso concreto se abre con las finalidades que ya existen, con su declaración y su auditoría. Con esto se cierra el bloque 2.
-- **Cerrar un episodio con indicaciones que nadie va a cumplir** (tercera 5.1): **solo Dirección Clínica, indicando un motivo** que queda en la auditoría con su nombre.
-  Hoy no se puede cerrar (`MEDICAL_INDICATIONS_PENDING`, CJ 4.2 de la primera tanda).
+- **Cerrar un episodio con indicaciones que nadie va a cumplir** (tercera 5.1) — **hecho el 2026-10-26, script `0075`:** **solo Dirección Clínica, indicando un motivo** que queda en la auditoría con su nombre.
+  Enfermería y Medicina siguen sin poder (`MEDICAL_INDICATIONS_PENDING`, CJ 4.2 de la primera tanda).
+  - **Decisiones de Orlando (2026-10-26):** las indicaciones **no se tocan** (siguen «pendiente de lectura» o «leída» y los indicadores las cuentan sin resolver); basta el perfil (sin permiso
+    configurable). **Suposición mía, sin confirmar con CJ:** el cierre lleva comunicación familiar «No comunicar» (Dirección no redacta comunicado) y solo existe si el episodio tiene indicaciones
+    abiertas (no es un cierre libre). El motivo admite hasta 300 caracteres (el límite de `eventos_auditoria.justificacion`).
+  - **Cómo está hecho:** tabla inmutable `cierres_excepcionales_direccion` (motivo, cuenta, hora, indicaciones abiertas), valor `DIRECCION_EXCEPCIONAL` en `cierre_sistema_codigo` y
+    `TR_ea_transition_guard` (copia de `0042`) que solo admite ese cierre con la fila de **esa misma transacción** y alguna indicación abierta. `SqlSupervisionDirectory.CloseExceptionallyAsync`
+    (transacción con `UPDLOCK`, regla de ámbito de Dirección repetida, cierra y audita `CLINICAL_EVENT_CLOSE_EXCEPTIONAL` con perfil `DIRECCION_CLINICA` y el motivo como justificación),
+    `DireccionApplicationService.CloseEpisodeExceptionallyAsync` (`ExceptionalEpisodeClosure.NormalizeReason`), `DireccionController.CerrarEpisodio` y el formulario de `Direccion/Episodio` (solo si hay
+    indicaciones abiertas, con casilla de confirmación). La trazabilidad clínica (DIR-14) lleva la acción y **muestra el motivo** (`ClinicalTraceabilityEntry.Reason`, solo en esa acción).
+  - **Tests:** `CierreExcepcionalTests` (integración, 6: cierra con motivo, fila y auditoría, indicaciones intactas, trazabilidad; motivo vacío o de más de 300; solo Dirección del ámbito;
+    sin indicaciones abiertas; Enfermería y Medicina siguen sin cerrar; la BD solo admite el cierre con su fila de la misma transacción y la fila es inmutable) y el funcional
+    `Direccion_CierraUnEpisodioConIndicacionesSinCumplir_ConMotivo_ConLaAppEntera`.
 
 En el orden propuesto:
 

@@ -14,7 +14,19 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Resumen periódico para la familia (2026-10-26, rama `resumen-periodico-familia` desde `main` tras el PR #69; script `0074`, el siguiente libre es `0075`). Hecho y probado, sin subir.**
+- **Cierre excepcional de un episodio con indicaciones sin cumplir (2026-10-26, rama `cierre-excepcional-direccion` desde `main`; script `0075`, el siguiente libre es `0076`). Hecho y probado, sin subir.**
+  Primera pieza del bloque «Dirección y traslados» (las otras dos: `0076` permiso de calidad y `0077` historial tras traslado). Detalle en `pendientes-direccion.md` («Cerrar un episodio con
+  indicaciones que nadie va a cumplir», hecho el 2026-10-26).
+  - **Decisiones de Orlando:** solo Dirección Clínica, con motivo auditado con su nombre; **las indicaciones no se tocan** (siguen sin resolver y los indicadores las cuentan así); basta el perfil.
+    **Suposición mía, sin confirmar con CJ:** el cierre lleva «No comunicar» y solo existe si hay indicaciones abiertas; el motivo admite 300 caracteres (el límite de la justificación de la auditoría).
+  - **Cómo está hecho:** tabla inmutable `cierres_excepcionales_direccion`, `cierre_sistema_codigo = 'DIRECCION_EXCEPCIONAL'` y `TR_ea_transition_guard` reescrito (copia de `0042`: solo admite ese
+    cierre con la fila de la misma transacción y alguna indicación abierta). `SqlSupervisionDirectory.CloseExceptionallyAsync`, `DireccionApplicationService.CloseEpisodeExceptionallyAsync`,
+    `DireccionController.CerrarEpisodio` y el formulario en `Direccion/Episodio`. La acción `CLINICAL_EVENT_CLOSE_EXCEPTIONAL` entra en la trazabilidad clínica con su motivo visible.
+  - **Pruebas:** unitarias 477, integración 563 (`CierreExcepcionalTests`, 6 nuevas) y funcionales 318 (una nueva) en verde; quitar la comprobación de indicaciones abiertas hace fallar una prueba.
+    Navegador (Los Almendros local, Dirección): formulario en claro, oscuro y 375 px y cierre real, sin desbordes ni errores de consola. Manual, flujo ilustrado, `supervision-clinica-direccion.md`
+    y `pendientes-medicina.md` al día.
+  - **Lección:** en este equipo, un `node -e '...'` dentro de Bash pierde las comillas simples del código que lleva dentro (así se rompió un SQL): escribe el guion con Write y ejecútalo con `node fichero.js`.
+- **Resumen periódico para la familia (2026-10-26, PR #70 fusionado y desplegado; script `0074`, el siguiente libre es `0075`). Hecho, probado y en `main`.**
   Detalle en `pendientes-administracion.md` («Resumen periódico», hecho el 2026-10-26).
   - **Decisiones de Orlando (de producto, no de CJ):** frecuencias diaria y semanal (semanal por defecto); el corte es la hora de publicación del centro (19:00); el semanal cierra el
     domingo, de un domingo al siguiente, sin huecos; «solo relevantes» queda fuera; lista con fecha, tipo y texto; solo el último periodo cerrado; si no hay nada, no hay resumen.
@@ -25,7 +37,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     `roadmap.md` y `pendientes-administracion.md`.
   - **Pruebas:** unitarias 477, integración 557 (`ResumenPeriodicoTests`, 5 nuevas) y funcionales 317 en verde (en serie, una por proyecto); cambiar el límite del periodo en `Summarize` hace fallar
     una prueba. Navegador (Los Almendros local, familiar `almendros-orlando-pablo` y Administración): resumen en claro, oscuro y 375 px y formulario del horario, sin desbordes ni errores de consola.
-  - `0074` aplicado en `ResidApp` y `ResidAppPruebas` locales; **en Azure lo aplica el despliegue tras el merge** (y entonces: comprobar el registro «Aplicando: 0074_…»).
+  - `0074` aplicado en `ResidApp` y `ResidAppPruebas` locales y **en Azure dev** (el CI/CD de `main` pasó entero tras el merge: build-and-test y deploy en verde; el registro del despliegue
+    muestra «Aplicando: 0074_resumen_periodico_frecuencia.sql»). La pantalla «Horario de los comunicados» se abrió en Azure con `almendros-orlando-administracion` y muestra la frecuencia
+    (Semanal y Diaria) sin errores; el resumen en el portal de la familia no se ha abierto aún en Azure.
   - **Guía de CJ:** la prueba 14 de `pruebas-6-comunicados-portal` (tema 5, «Resumen periódico para la familia»; versión `2026-10-26`) es la del resumen; CJ aún no ha respondido esa guía
     (no hay `.respuestas.json`). **Falta** que CJ confirme que le encaja lo decidido por Orlando (la prueba se lo pide en el comentario).
     En la BD local quedaron dos comunicados de prueba ficticios de Rosa («prueba del resumen»).
@@ -1901,9 +1915,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 ## Siguiente tarea
 
 **Para retomar (estado al cerrar la sesión del 2026-10-26):**
-- **En `main` y desplegado:** portal y foto (PR #67), importación (PR #68) y organigrama y cargos (PR #69, `0073` aplicado en Azure dev). **Sin subir:** la rama
-  `resumen-periodico-familia` (resumen periódico, script `0074`, hecho y probado; los cambios de este traspaso van con ella, sin commit). Para subirla: commit, push y PR, y tras el
-  merge comprobar el CI/CD y que el despliegue aplica `0074` en Azure dev. No subas nada sin que Orlando lo pida. `docs/seguridad/acceso-por-dispositivo.md` (sin seguir en git) no es de este bloque.
+- **En `main` y desplegado:** portal y foto (PR #67), importación (PR #68), organigrama y cargos (PR #69, `0073`) y resumen periódico (PR #70, `0074`, ambos aplicados en Azure dev).
+  No hay ramas de trabajo sin subir. No subas nada sin que Orlando lo pida. `docs/seguridad/acceso-por-dispositivo.md` (en el índice de git, sin commit) no es de este bloque: no lo incluyas
+  en un commit sin que Orlando lo diga.
 - **La foto de Manuel en Azure dev está hecha y verificada (2026-10-26).** `0071` había borrado las fotos también allí, pero `preparar-almendros.js` (idempotente: solo pone la
   foto si falta) no tuvo nada que hacer: la ficha de Manuel (residente `1A000000-0000-4000-8000-000000000005`) con la Enfermería de Los Almendros ya mostraba la foto, con el
   consentimiento de su representante del 25/10/2026. Las pantallas del organigrama también se abrieron en Azure con `almendros-orlando-enfermeria` (`/Organigrama`) y
@@ -1913,9 +1927,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 - **Para CJ (lo envía Orlando):** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (3 preguntas). Decirle también que la app no envía correos (ADR 0012, pendiente
   de la decisión de Orlando), lo que deja abierta la 3.2 del portal, y que en el organigrama la auditoría dice quién cambió qué cargo y cuándo pero no los nombres de quienes
   lo ocuparon (matiza su 1.7; ya está escrito en `archivados/organigrama-y-cargos-cj.html`). La prueba 17 de la guía 5 es la del organigrama.
-- **Siguiente bloque:** Dirección y traslados (la cuarta finalidad «calidad asistencial» y el cierre de un episodio con indicaciones por Dirección Clínica, en `pendientes-direccion.md`;
-  traslado y baja esperan a CJ). Se planifica (modo plan) cuando Orlando lo pida; el siguiente script libre es `0075`. El resumen periódico ya está hecho (primera entrada de «Dónde estamos»);
-  falta que CJ confirme lo decidido por Orlando (prueba 14 de la guía 6).
+- **Siguiente bloque: «Dirección y traslados», tres piezas con su script, rama y PR (plan aprobado el 2026-10-26):** (1) cierre excepcional con indicaciones sin cumplir, `0075` — **hecho, sin subir**
+  (primera entrada de «Dónde estamos»); (2) permiso `QUALITY_REVIEW` de calidad asistencial, `0076`: sin él, `/Direccion/Indicadores` y `/Direccion/Calidad` no se abren ni se enlazan, **no se concede a las
+  Direcciones existentes** y la semilla se lo da a las de los centros de prueba; (3) la unidad de destino de un traslado ve los episodios cerrados solo si lo pide con un motivo (Historial, línea temporal
+  y detalle, no el PDF; 1 hora por residente y cuenta; tabla y acción de auditoría propias), `0077`. Traslado y baja (CJ `traslado-y-baja-residente`) siguen esperando a CJ. El siguiente script libre es `0076`.
+  El resumen periódico ya está hecho; falta que CJ confirme lo decidido por Orlando (prueba 14 de la guía 6).
 - **Sueltos sin cerrar:** probar el dictado en un móvil real con audios ficticios; que una enfermera confirme «decul» y el rango 34–42 °C; las invitaciones de CJ esperan a
   Orlando; rotar la clave de Mistral.
 

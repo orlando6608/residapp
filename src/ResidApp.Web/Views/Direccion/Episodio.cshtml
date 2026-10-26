@@ -19,8 +19,17 @@
 <h1 class="h3">Detalle operativo del episodio</h1>
 <div class="alert alert-info" role="note">
     Vista de supervisión: muestra el estado y los hitos del episodio, sin observaciones, valoraciones ni indicaciones. Desde aquí no
-    se puede valorar, indicar, escalar, corregir ni cerrar.
+    se puede valorar, indicar, escalar ni corregir. Lo único que se puede hacer es cerrar un episodio con indicaciones médicas que
+    nadie va a cumplir, indicando el motivo (más abajo).
 </div>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
 
 <div class="card mb-3">
     <div class="card-body">
@@ -76,5 +85,33 @@
         </li>
     }
 </ol>
+
+@if (episode.IndicationsPending > 0)
+{
+    <section class="card border-warning mb-4" aria-labelledby="cierre-excepcional-titulo">
+        <div class="card-body">
+            <h2 class="h5 card-title" id="cierre-excepcional-titulo">Cerrar el episodio con indicaciones sin cumplir</h2>
+            <p>
+                Este episodio tiene @episode.IndicationsPending @(episode.IndicationsPending == 1 ? "indicación médica abierta" : "indicaciones médicas abiertas"), así que
+                Enfermería y Medicina no pueden cerrarlo. Si nadie las va a cumplir, puedes cerrarlo tú, indicando el motivo. Es una decisión con
+                responsabilidad clínica: el cierre queda en la auditoría con tu nombre y tu motivo, las indicaciones <strong>no se tocan</strong> (siguen
+                sin resolver y se cuentan así en los indicadores) y no se prepara ningún comunicado a la familia. No se puede deshacer.
+            </p>
+            <form asp-action="CerrarEpisodio" method="post">
+                <input type="hidden" name="Form.EventoId" value="@episode.EventId" />
+                <div class="mb-3">
+                    <label for="cierre-motivo" class="form-label">Motivo del cierre</label>
+                    <textarea id="cierre-motivo" name="Form.Motivo" class="form-control" rows="3" maxlength="@ResidApp.Domain.Supervision.ExceptionalEpisodeClosure.MaxReasonLength" required></textarea>
+                    <div class="form-text">Hasta @ResidApp.Domain.Supervision.ExceptionalEpisodeClosure.MaxReasonLength caracteres. Sin datos clínicos innecesarios.</div>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="cierre-confirmo" name="Form.Confirmo" value="true" />
+                    <label class="form-check-label" for="cierre-confirmo">Entiendo que las indicaciones médicas se quedan sin resolver</label>
+                </div>
+                <button type="submit" class="btn btn-warning btn-lg">Cerrar el episodio</button>
+            </form>
+        </div>
+    </section>
+}
 
 <a asp-action="Pendientes" class="btn btn-outline-secondary btn-lg">Volver a los pendientes</a>
