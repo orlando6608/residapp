@@ -14,7 +14,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Permiso de calidad asistencial `QUALITY_REVIEW` (2026-10-26, rama `permiso-calidad-asistencial`, apilada sobre `cierre-excepcional-direccion` (PR #71); script `0076`, el siguiente libre es `0077`). Hecho y probado, sin subir.**
+- **Permiso de calidad asistencial `QUALITY_REVIEW` (2026-10-26, rama `permiso-calidad-asistencial` desde `main`; script `0076`, el siguiente libre es `0077`). Hecho y probado, sin subir.**
   Segunda pieza del bloque «Dirección y traslados». Detalle en `pendientes-direccion.md` («Cuarta finalidad, calidad asistencial», hecho el 2026-10-26).
   - **Decisiones de Orlando:** no hay cuarta finalidad: es un **permiso** solo de `DIRECCION_CLINICA` que concede Administración. Sin él, `/Direccion/Indicadores` y `/Direccion/Calidad` no se abren
     (vuelven al inicio de Dirección con un aviso) ni se enlazan. **No se concede a las Direcciones existentes** (la semilla se lo da a las de los centros de prueba). **Suposición mía:** no se audita la consulta.
@@ -25,7 +25,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     `/PlazosProceso` solo con el permiso (`PlazosProcesoController.OnActionExecutionAsync`). `0076`: `CK_pp_code` y `TR_pp_profile_catalog` (copia de `0071` más el permiso). Semilla: bloque idempotente al final de `centros_prueba.sql`.
   - **Pruebas:** unitarias 477, integración 564 y funcionales 319 en verde (una nueva de integración y una funcional); quitar la comprobación de SQL hace fallar la de integración; la de la aplicación sola no
     se nota porque la de SQL ya responde acceso denegado (doble defensa). Navegador (Los Almendros local): Administración revoca y concede el permiso desde el perfil y Dirección pierde y recupera tarjetas y pantallas, en claro, oscuro y 375 px, sin desbordes ni errores de consola.
-- **Cierre excepcional de un episodio con indicaciones sin cumplir (2026-10-26, rama `cierre-excepcional-direccion` desde `main`; script `0075`). Hecho y probado, PR #71 abierto (pendiente de merge).**
+- **Cierre excepcional de un episodio con indicaciones sin cumplir (2026-10-26, rama `cierre-excepcional-direccion` desde `main`; script `0075`). Hecho y probado, PR #71 mergeado (2026-10-26).**
   Primera pieza del bloque «Dirección y traslados» (las otras dos: `0076` permiso de calidad y `0077` historial tras traslado). Detalle en `pendientes-direccion.md` («Cerrar un episodio con
   indicaciones que nadie va a cumplir», hecho el 2026-10-26).
   - **Decisiones de Orlando:** solo Dirección Clínica, con motivo auditado con su nombre; **las indicaciones no se tocan** (siguen sin resolver y los indicadores las cuentan así); basta el perfil.
@@ -1938,7 +1938,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 - **Para CJ (lo envía Orlando):** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (3 preguntas). Decirle también que la app no envía correos (ADR 0012, pendiente
   de la decisión de Orlando), lo que deja abierta la 3.2 del portal, y que en el organigrama la auditoría dice quién cambió qué cargo y cuándo pero no los nombres de quienes
   lo ocuparon (matiza su 1.7; ya está escrito en `archivados/organigrama-y-cargos-cj.html`). La prueba 17 de la guía 5 es la del organigrama.
-- **Siguiente bloque: «Dirección y traslados», tres piezas con su script, rama y PR (plan aprobado el 2026-10-26):** (1) cierre excepcional con indicaciones sin cumplir, `0075` — **hecho, PR #71**
+- **Siguiente bloque: «Dirección y traslados», tres piezas con su script, rama y PR (plan aprobado el 2026-10-26):** (1) cierre excepcional con indicaciones sin cumplir, `0075` — **hecho, PR #71 mergeado**
   (entrada de «Dónde estamos»); (2) permiso `QUALITY_REVIEW` de calidad asistencial, `0076` — **hecho, sin subir** (primera entrada de «Dónde estamos»): sin él, `/Direccion/Indicadores` y `/Direccion/Calidad` no se abren ni se enlazan, **no se concede a las
   Direcciones existentes** y la semilla se lo da a las de los centros de prueba; (3) la unidad de destino de un traslado ve los episodios cerrados solo si lo pide con un motivo (Historial, línea temporal
   y detalle, no el PDF; 1 hora por residente y cuenta; tabla y acción de auditoría propias), `0077`. Traslado y baja (CJ `traslado-y-baja-residente`) siguen esperando a CJ. El siguiente script libre es `0077`.
