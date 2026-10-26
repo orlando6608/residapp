@@ -4,10 +4,11 @@ namespace ResidApp.Application.Ports;
 
 /// <summary>DIR-14: un hito de la trazabilidad clínica de un residente, leído de la auditoría (dbo.eventos_auditoria, de solo inserción):
 /// quién (nombre visible de la cuenta, null si no tiene, y perfil), en qué unidad, qué acción, sobre qué recurso y cuándo. No lleva
-/// texto clínico ni valores, ni la justificación de las lecturas de Dirección; Purpose es la finalidad declarada en esas lecturas.</summary>
+/// texto clínico ni valores, ni la justificación de las lecturas de Dirección; Purpose es la finalidad declarada en esas lecturas. Reason es el motivo del cierre excepcional
+/// de Dirección (CJ, tercera 5.1) y solo viene en esa acción.</summary>
 public sealed record ClinicalTraceabilityEntry(
     DateTimeOffset OccurredAt, string? ActorName, SystemProfile ActorProfile, string? UnitName, string Action, string ResourceType,
-    string? Purpose);
+    string? Purpose, string? Reason = null);
 
 /// <summary>Los hitos más recientes primero. Truncated dice que había más de MaxEntries y se han quitado los más antiguos.</summary>
 public sealed record ClinicalTraceabilityPage(IReadOnlyList<ClinicalTraceabilityEntry> Entries, bool Truncated)
@@ -22,7 +23,7 @@ public static class ClinicalTraceability
 {
     public static readonly IReadOnlyList<string> ActionCodes =
     [
-        "CLINICAL_EVENT_REGISTER", "CLINICAL_EVENT_ESCALATE", "CLINICAL_EVENT_CLOSE",
+        "CLINICAL_EVENT_REGISTER", "CLINICAL_EVENT_ESCALATE", "CLINICAL_EVENT_CLOSE", "CLINICAL_EVENT_CLOSE_EXCEPTIONAL",
         "DAILY_CLOSURE_CHANGE_REPORTED", "DAILY_CLOSURE_NO_CHANGE", "DAILY_CLOSURE_NOT_ASSESSABLE", "VOICE_DICTATION_USED",
         "NURSING_ASSESSMENT_START", "NURSING_ASSESSMENT_SAVE", "NURSING_ASSESSMENT_CORRECT",
         "MEDICAL_ASSESSMENT_START", "MEDICAL_ASSESSMENT_SAVE", "MEDICAL_ASSESSMENT_CORRECT", "ASSESSMENT_RECTIFY",

@@ -13,6 +13,9 @@ public sealed record ListSupervisionPendingQuery(
 
 public sealed record FindSupervisionEpisodeQuery(Guid AmbitoPerfilId, CenterId CentroId, Guid EventId);
 
+/// <summary>Cierre excepcional de un episodio con indicaciones sin cumplir (CJ, tercera 5.1): el motivo es obligatorio.</summary>
+public sealed record CloseEpisodeExceptionallyCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EventId, string? Motivo);
+
 /// <summary>DIR-08 a DIR-10: el periodo, con From y To incluidos.</summary>
 public sealed record ReadSupervisionIndicatorsQuery(Guid AmbitoPerfilId, CenterId CentroId, DateOnly From, DateOnly To);
 
@@ -103,6 +106,18 @@ public sealed class DireccionApplicationService(
                 ?? throw new AccessDeniedException();
         });
 
+    /// <summary>Cierre excepcional (CJ, tercera 5.1; script 0075): lo único que escribe Dirección sobre un episodio. Solo Dirección Clínica, con motivo obligatorio y solo si el
+    /// episodio tiene indicaciones médicas abiertas. El ámbito y todo lo demás lo comprueba el directorio dentro de su transacción; queda auditado con el nombre de quien cierra.</summary>
+    public Task<ApplicationResult<bool>> CloseEpisodeExceptionallyAsync(
+        CloseEpisodeExceptionallyCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var reason = ExceptionalEpisodeClosure.NormalizeReason(command.Motivo);
+            var scope = await EnsureDirectionScopeAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await directory.CloseExceptionallyAsync(command.AmbitoPerfilId, command.CentroId, scope.AccountId, command.EventId, reason, ct);
+            return true;
+        });
+
     public Task<ApplicationResult<SupervisionScopeInfo>> ReadScopeAsync(SupervisionQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
@@ -163,7 +178,7 @@ public sealed class DireccionApplicationService(
             return await residents.ListAsync(query.AmbitoPerfilId, query.CentroId, ct);
         });
 
-    private async Task EnsureDirectionScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct)
+    private async Task<ActiveProfileScope> EnsureDirectionScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct)
     {
         var identity = await session.GetVerifiedIdentityAsync(ct) ?? throw new AccessDeniedException();
         var activeScopes = await scopes.ListActiveAsync(identity.ExternalSubject, ct);
@@ -172,5 +187,7 @@ public sealed class DireccionApplicationService(
         {
             throw new AccessDeniedException();
         }
+
+        return scope;
     }
 }

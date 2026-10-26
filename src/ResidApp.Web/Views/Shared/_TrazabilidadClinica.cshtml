@@ -28,6 +28,10 @@ else
                         {
                             <br /><span>Finalidad: @purpose</span>
                         }
+                        @if (entry.Reason is { } reason)
+                        {
+                            <br /><span>Motivo: @reason</span>
+                        }
                     </p>
                 </div>
             </div>
@@ -58,6 +62,10 @@ else
                             @if (ClinicalTraceabilityDisplay.Purpose(entry.Purpose) is { } purpose)
                             {
                                 <div class="text-body-secondary small">Finalidad: @purpose</div>
+                            }
+                            @if (entry.Reason is { } reason)
+                            {
+                                <div class="text-body-secondary small">Motivo: @reason</div>
                             }
                         </td>
                         <td>@ClinicalTraceabilityDisplay.Resource(entry.ResourceType)</td>

@@ -509,6 +509,108 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Equal("CERRADA", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.valoraciones_medicas WHERE evento_id = @eventId", new { eventId }));
         Assert.DoesNotContain("Residente Cierre Indicaciones Funcional", WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/ParaCerrar")));
     }
+
+    [Fact]
+    public async Task Direccion_CierraUnEpisodioConIndicacionesSinCumplir_ConMotivo_ConLaAppEntera()
+    {
+        // CJ, tercera 5.1 (script 0075): con una indicación sin cumplir nadie más cierra el episodio; Dirección Clínica sí, con motivo y confirmación.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Cierre Excepcional Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        var direction = await LoginAsync(await GrantDirectionAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Disnea progresiva (prueba funcional).",
+            ["Clasificacion"] = "Ordinario",
+        }))).Content.ReadAsStringAsync();
+        var eventId = await connection.ExecuteScalarAsync<Guid>(
+            "SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        Task<int> RevisionAsync() => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+        Task<string> PostAsync(HttpClient client, string url, string page, Dictionary<string, string> fields)
+        {
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            return client.PostAsync(url, new FormUrlEncodedContent(fields)).ContinueWith(async r => WebUtility.HtmlDecode(await r.Result.Content.ReadAsStringAsync())).Unwrap();
+        }
+
+        await PostAsync(nurse, "/Enfermeria/EmpezarValoracion", detailPage, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        var assessmentPage = await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}");
+        await PostAsync(nurse, "/Enfermeria/Valoracion", assessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Hallazgos"] = "Crepitantes en base derecha.",
+        });
+        var escalatePage = await nurse.GetStringAsync($"/Enfermeria/Escalar?eventoId={eventId}");
+        await PostAsync(nurse, "/Enfermeria/Escalar", escalatePage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Motivo"] = "Disnea progresiva pese a oxigenoterapia.",
+        });
+        var medicalDetail = await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/EmpezarValoracion", medicalDetail, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        var medicalAssessmentPage = await doctor.GetStringAsync($"/Medicina/Valoracion?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/Valoracion", medicalAssessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.HallazgosExploracion"] = "Crepitantes bibasales.",
+            ["Form.Valoracion"] = "Posible infección respiratoria.", ["Form.Actuaciones"] = "Se solicita radiografía.",
+        });
+        var indicationPage = await doctor.GetStringAsync($"/Medicina/Indicacion?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/Indicacion", indicationPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Texto"] = "Control de SpO2 cada 4 horas.",
+            ["Form.Criterio"] = "Si baja de 90 %, avisar.",
+        });
+        Assert.Equal("CON_INDICACION_PENDIENTE", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+
+        // Dirección ve el episodio con el aviso y el formulario (solo hay uno si hay indicaciones abiertas); Enfermería no puede enviarlo.
+        var episodeUrl = $"/Direccion/Episodio?eventoId={eventId}";
+        var episode = WebUtility.HtmlDecode(await direction.GetStringAsync(episodeUrl));
+        Assert.Contains("Cerrar el episodio con indicaciones sin cumplir", episode);
+        Assert.Contains("1 indicación médica abierta", episode);
+        Assert.Contains("no se tocan", episode);
+        Assert.DoesNotContain("Control de SpO2 cada 4 horas.", episode);
+        var byNurse = await PostAsync(nurse, "/Direccion/CerrarEpisodio", await nurse.GetStringAsync("/Enfermeria"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Motivo"] = "Intento de Enfermería.", ["Form.Confirmo"] = "true",
+        });
+        Assert.DoesNotContain("Episodio cerrado", byNurse);
+        Assert.Equal("CON_INDICACION_PENDIENTE", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+
+        // Sin la casilla de confirmación o sin motivo, no se cierra.
+        var withoutConfirmation = await PostAsync(direction, "/Direccion/CerrarEpisodio", episode, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Motivo"] = "Nadie va a cumplirla.",
+        });
+        var withoutReason = await PostAsync(direction, "/Direccion/CerrarEpisodio", episode, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Motivo"] = "  ", ["Form.Confirmo"] = "true",
+        });
+        Assert.Contains("Marca la casilla", withoutConfirmation);
+        Assert.Contains("Escribe el motivo", withoutReason);
+        Assert.Equal("CON_INDICACION_PENDIENTE", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+
+        var closed = await PostAsync(direction, "/Direccion/CerrarEpisodio", episode, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Motivo"] = "La residente fue trasladada a otro hospital.", ["Form.Confirmo"] = "true",
+        });
+
+        Assert.Contains("Episodio cerrado. Las indicaciones médicas se quedan sin resolver", closed);
+        Assert.Equal(("CERRADO", "DIRECCION_EXCEPCIONAL", "NO_COMUNICAR"), await connection.QuerySingleAsync<(string, string, string)>(
+            "SELECT estado_codigo, cierre_sistema_codigo, comunicacion_familiar_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+        Assert.Equal("PENDIENTE_LECTURA", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId }));
+        Assert.Equal("La residente fue trasladada a otro hospital.", await connection.ExecuteScalarAsync<string>(
+            "SELECT motivo FROM dbo.cierres_excepcionales_direccion WHERE evento_id = @eventId", new { eventId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE recurso_id = @eventId AND accion_codigo = 'CLINICAL_EVENT_CLOSE_EXCEPTIONAL' AND perfil_activo = 'DIRECCION_CLINICA'", new { eventId }));
+        // Ya cerrado, el episodio no se abre desde Dirección: vuelve a los pendientes sin distinguir el motivo.
+        var reopened = await direction.GetAsync(episodeUrl);
+        Assert.DoesNotContain("Cerrar el episodio con indicaciones sin cumplir", WebUtility.HtmlDecode(await reopened.Content.ReadAsStringAsync()));
+    }
     [Fact]
     public async Task Enfermeria_DerivaAUrgenciasConComunicaciones_VistaPreviaFirmaYPdf_ConLaAppEntera()
     {
