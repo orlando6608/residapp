@@ -181,7 +181,7 @@ public class AdministracionAuditoriaTests
     {
         static string[] Names<T>() => typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => p.Name).Order().ToArray();
 
-        Assert.Equal(["Action", "ActorName", "ActorProfile", "AffectedName", "OccurredAt", "ResidentName", "UnitName"], Names<AuditEntry>());
+        Assert.Equal(["Action", "ActorName", "ActorProfile", "AffectedName", "OccurredAt", "PositionName", "ResidentName", "UnitName"], Names<AuditEntry>());
         Assert.Equal(["Entries", "Truncated"], Names<AuditPage>());
         Assert.Equal(["Action", "AffectedAccountId", "FromUtc", "ToExclusiveUtc"], Names<AdministrativeAuditQuery>());
     }

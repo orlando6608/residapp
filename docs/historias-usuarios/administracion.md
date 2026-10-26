@@ -27,6 +27,7 @@ Criterios de aceptación:
 - No puedo crear un centro nuevo: solo gestiono la estructura subordinada de centros ya provisionados por la plataforma.
 - Un traslado de residente cierra el intervalo de ubicación anterior y abre uno nuevo en una única operación atómica; nunca sobrescribe el historial.
 - Asignar un cargo, un turno o una posición organizativa no concede acceso clínico por sí mismo.
+- Cada centro crea sus cargos (con una plantilla inicial opcional), dice si cada uno lo ocupa una persona o varias, de cuál depende y qué unidades tiene ligadas. Los ocupan cuentas de la aplicación o personas sin cuenta de las que solo se guarda el nombre. Lo gestiona Administración y lo consultan en solo lectura todos los profesionales del centro, nunca la familia. Solo se guarda lo actual: la auditoría dice quién cambió qué cargo y cuándo, sin los nombres de las personas.
 
 Códigos de origen: `ADM-11`, `ORG-*` (ver PRD v0.5, bloque de organización).
 

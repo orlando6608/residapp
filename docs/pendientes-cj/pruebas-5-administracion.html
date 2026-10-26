@@ -284,14 +284,14 @@
     </nav>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 5 de 8</p>
     <h1>Guía 5 · Administración del centro</h1>
-    <p class="meta">Estado a 21/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 26/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
-      La gestión del centro: altas, identidad, familiares y contactos urgentes, usuarios y permisos, estructura, traslados, bajas, turnos, Administración principal y auditoría. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
+      La gestión del centro: altas, identidad, familiares y contactos urgentes, usuarios y permisos, estructura, traslados, bajas, turnos, Administración principal, organigrama y cargos, y auditoría. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>16 pruebas. 3 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>17 pruebas. 3 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Unos 40 minutos; las imprescindibles, menos. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -358,7 +358,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 16).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 17).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">No necesitas ninguna otra guía.</p>
@@ -680,6 +680,34 @@
           <label class="choice"><input type="radio" name="r-16" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-16" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-16" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-7">
+    <h2>Organigrama y cargos</h2>
+    <div class="stack prose">
+      <p>Con <code>almendros-administracion</code> se gestiona; con <code>almendros-enfermeria</code> se consulta. Ocupar un cargo no da permisos, y la familia nunca ve el organigrama.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="17">
+        <div class="q-head"><span class="n">17</span><h3 class="q-title" id="t-17">Organigrama y cargos</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Con <code>almendros-administracion</code>, abre «Organigrama y cargos». Si no hay cargos, pulsa «Cargar la plantilla». <em>Verás:</em> los ocho cargos que propusiste, uno debajo de otro según de quién dependen (Dirección del centro arriba).</li>
+          <li>En «Enfermería» pulsa «Cambiar»: escribe una nota, liga la unidad «Planta 1» y guarda. Después abre «Cambiar» en «Dirección del centro» y mira el desplegable «Depende de». <em>Verás:</em> que no te ofrece ningún cargo que dependa de ella (se evita que un cargo dependa de uno de sus subordinados).</li>
+          <li>En «Dirección del centro» pulsa «Poner una persona» y escribe un nombre ficticio, sin elegir cuenta. Prueba a poner una segunda persona. <em>Verás:</em> que es un cargo de una sola persona y hay que quitar antes a la primera. En «Enfermería» pon una cuenta de la lista y una persona sin cuenta.</li>
+          <li>Prueba «Inactivar» en un cargo que tiene personas, quítalas con «Quitar» y vuelve a probar. Después pulsa «Reactivar». Crea un cargo nuevo («Nuevo cargo», por ejemplo «Terapeuta ocupacional») que dependa de «Dirección del centro».</li>
+          <li>Con <code>almendros-enfermeria</code>, pulsa «Organigrama» en la barra superior. <em>Verás:</em> el mismo organigrama, solo para leer (sin botones), con los nombres de quienes ocupan los cargos y las unidades ligadas.</li>
+          <li>Con <code>almendros-administracion</code>, abre «Auditoría» y busca lo que has hecho con los cargos.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La plantilla solo se puede cargar cuando el centro no tiene ningún cargo. Poner a una cuenta en un cargo no le da ninguna pantalla ni permiso nuevo. Un cargo de una sola persona no admite una segunda. Un cargo con personas, o con cargos activos que dependen de él, no se inactiva. La auditoría dice quién cambió qué cargo y cuándo, con el nombre del cargo, pero no los nombres de las personas que lo ocupaban: el organigrama solo guarda lo actual.</div>
+        <fieldset class="choices" aria-labelledby="t-17">
+          <label class="choice"><input type="radio" name="r-17" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-17" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-17" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-17" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

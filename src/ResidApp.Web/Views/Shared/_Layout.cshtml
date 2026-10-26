@@ -64,6 +64,14 @@
                                 <a class="nav-link" asp-area="" asp-controller="@panelLayout" asp-action="Index">Mi panel</a>
                             </li>
                         }
+                        @* ADM-07: el organigrama lo consultan todos los profesionales del centro, no la familia ni Plataforma. *@
+                        @if (activeScopeLayout?.Profile is ResidApp.Shared.SystemProfile.Administracion or ResidApp.Shared.SystemProfile.DireccionClinica
+                            or ResidApp.Shared.SystemProfile.Auxiliar or ResidApp.Shared.SystemProfile.Enfermeria or ResidApp.Shared.SystemProfile.Medicina)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Organigrama" asp-action="Index">Organigrama</a>
+                            </li>
+                        }
                         @* Tema claro, oscuro o automático: los botones los gestiona wwwroot/js/tema.js. Iconos de Bootstrap Icons (MIT). *@
                         <li class="nav-item dropdown">
                             <button class="nav-link dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">

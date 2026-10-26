@@ -10,6 +10,7 @@ public enum AuditCategory
     TurnosYEquipos,
     Citas,
     ImportacionYExportacion,
+    OrganigramaYCargos,
 }
 
 /// <summary>
@@ -123,6 +124,13 @@ public static class AdministrativeAudit
         ("IMPORT_RUN", AuditCategory.ImportacionYExportacion),
         ("EXPORT_RUN", AuditCategory.ImportacionYExportacion),
         ("EXCHANGE_TEMPLATE_SAVE", AuditCategory.ImportacionYExportacion),
+        ("POSITION_CREATE", AuditCategory.OrganigramaYCargos),
+        ("POSITION_UPDATE", AuditCategory.OrganigramaYCargos),
+        ("POSITION_DEACTIVATE", AuditCategory.OrganigramaYCargos),
+        ("POSITION_REACTIVATE", AuditCategory.OrganigramaYCargos),
+        ("POSITION_OCCUPANT_ADD", AuditCategory.OrganigramaYCargos),
+        ("POSITION_OCCUPANT_REMOVE", AuditCategory.OrganigramaYCargos),
+        ("POSITION_TEMPLATE_LOAD", AuditCategory.OrganigramaYCargos),
     ];
 
     public static bool IsAdministrative(string? code) => code is not null && Actions.Any(a => a.Code == code);

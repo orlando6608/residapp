@@ -76,6 +76,27 @@ public static class ApplicationResultRunner
         "FAMILY_AUTHORIZATION_CONFLICT|FAMILY_PORTAL_ACCESS_CONFLICT|FAMILY_MEMBER_CONFLICT|EMERGENCY_CONTACT_CONFLICT|ACCOUNT_SUBJECT_TAKEN|ACCOUNT_CHANGE_CONFLICT|" +
         "PROFILE_SCOPE_DUPLICATE|UNIT_CODE_TAKEN|UNIT_NAME_TAKEN|UNIT_CHANGE_CONFLICT|BUILDING_NAME_TAKEN|FLOOR_NAME_TAKEN|ROOM_NAME_TAKEN|PLACE_NAME_TAKEN|PLACE_OCCUPIED|RESIDENT_TRANSFER_CONFLICT|RESIDENT_STATUS_CONFLICT|STRUCTURE_CHANGE_CONFLICT|CENTER_CODE_TAKEN|SHIFT_NAME_TAKEN|TEAM_NAME_TAKEN|SCHEDULING_CHANGE_CONFLICT|SCHEDULE_CONFLICTS)$", RegexOptions.Compiled);
 
+    private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> PositionFailures = new()
+    {
+        ["POSITION_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "Revisa los datos del cargo: el nombre es obligatorio (hasta 100 caracteres), la nota admite hasta 500 y las unidades tienen que ser de tu ámbito."),
+        ["POSITION_OCCUPANT_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "Elige una cuenta del centro o escribe un nombre (hasta 200 caracteres), pero no las dos cosas."),
+        ["POSITION_CYCLE"] = (ApplicationFailureCode.InvalidInput, "Un cargo no puede depender de sí mismo ni de uno de sus subordinados."),
+        ["POSITION_NAME_TAKEN"] = (ApplicationFailureCode.Conflict, "Ya existe un cargo con ese nombre en el centro."),
+        ["POSITION_SINGLE_OCCUPANT"] = (ApplicationFailureCode.Conflict,
+            "Un cargo de una sola persona no puede tener más de una: quita antes a las demás."),
+        ["POSITION_HAS_OCCUPANTS"] = (ApplicationFailureCode.Conflict, "Quita antes a las personas que ocupan este cargo."),
+        ["POSITION_HAS_SUBORDINATES"] = (ApplicationFailureCode.Conflict,
+            "Hay cargos activos que dependen de este: cámbiales el superior o inactívalos antes."),
+        ["POSITION_INACTIVE"] = (ApplicationFailureCode.Conflict, "El cargo está inactivo: reactívalo para ponerle personas."),
+        ["POSITION_SUPERIOR_INACTIVE"] = (ApplicationFailureCode.Conflict,
+            "Su cargo superior está inactivo: reactiva antes ese cargo o elige otro superior."),
+        ["POSITION_TEMPLATE_NOT_EMPTY"] = (ApplicationFailureCode.Conflict, "La plantilla solo se carga cuando el centro aún no tiene cargos."),
+        ["POSITION_CHANGE_CONFLICT"] = (ApplicationFailureCode.Conflict,
+            "El cargo ya estaba así, o alguien lo ha cambiado mientras tanto: vuelve a cargar la pantalla."),
+    };
+
     public static async Task<ApplicationResult<T>> RunAsync<T>(Func<Task<T>> run)
     {
         try
@@ -106,6 +127,12 @@ public static class ApplicationResultRunner
             // Script 0041: la base de datos impide escribir sobre un residente suspendido por un ingreso hospitalario prolongado.
             return new ApplicationFailure(ApplicationFailureCode.Conflict,
                 "El residente está suspendido por un ingreso hospitalario: no se puede actuar sobre él hasta que Administración reanude su atención.");
+        }
+
+        if (PositionFailures.TryGetValue(message, out var position))
+        {
+            // ADM-07 (script 0073): el organigrama dice qué pasa con el cargo, no un mensaje genérico. Los triggers de la BD lanzan los mismos códigos.
+            return new ApplicationFailure(position.Code, position.Text);
         }
 
         if (message.StartsWith("EXCHANGE_", StringComparison.Ordinal))

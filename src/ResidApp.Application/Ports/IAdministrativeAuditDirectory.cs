@@ -9,11 +9,12 @@ public sealed record AdministrativeAuditQuery(DateTime FromUtc, DateTime ToExclu
 /// <summary>
 /// ADM-28: un evento de auditoría administrativa. Solo nombres y códigos: la tabla no guarda valores ni texto, y este tipo no tiene
 /// ningún campo de texto libre ni contadores (AUD-02). ActorName es el nombre visible de la cuenta (o su identificador de acceso);
-/// AffectedName, la cuenta afectada si la hay; UnitName y ResidentName, cuando constan.
+/// AffectedName, la cuenta afectada si la hay; UnitName y ResidentName, cuando constan. PositionName es el nombre del cargo
+/// en los eventos del organigrama (un cargo no se borra, así que sigue resolviéndose).
 /// </summary>
 public sealed record AuditEntry(
     DateTimeOffset OccurredAt, string ActorName, SystemProfile ActorProfile, string Action, string? AffectedName, string? UnitName,
-    string? ResidentName);
+    string? ResidentName, string? PositionName = null);
 
 /// <summary>Los eventos más recientes primero. Truncated dice que había más de MaxEntries y se han quitado los más antiguos.</summary>
 public sealed record AuditPage(IReadOnlyList<AuditEntry> Entries, bool Truncated)

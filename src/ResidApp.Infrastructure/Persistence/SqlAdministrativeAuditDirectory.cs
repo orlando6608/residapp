@@ -29,7 +29,8 @@ public sealed class SqlAdministrativeAuditDirectory(SqlConnectionFactory connect
                    ev.accion_codigo AS Action,
                    COALESCE(affected.nombre_visible, affected.sujeto_externo) AS AffectedName,
                    unit.nombre_visible AS UnitName,
-                   resident.nombre_visible AS ResidentName
+                   resident.nombre_visible AS ResidentName,
+                   cargo.nombre AS PositionName
               FROM dbo.eventos_auditoria ev
               JOIN dbo.cuentas actor ON actor.id = ev.cuenta_id
               LEFT JOIN dbo.ambitos_perfil profile_scope ON ev.tipo_recurso = 'PROFILE_SCOPE' AND profile_scope.id = ev.recurso_id
@@ -38,6 +39,7 @@ public sealed class SqlAdministrativeAuditDirectory(SqlConnectionFactory connect
                                                                  WHEN 'PROFILE_SCOPE' THEN profile_scope.cuenta_id END
               LEFT JOIN dbo.unidades unit ON unit.centro_id = ev.centro_id AND unit.id = ev.unidad_id
               LEFT JOIN dbo.residentes resident ON resident.centro_id = ev.centro_id AND resident.id = ev.residente_id
+              LEFT JOIN dbo.cargos cargo ON ev.tipo_recurso = 'POSITION' AND cargo.centro_id = ev.centro_id AND cargo.id = ev.recurso_id
              WHERE ev.centro_id = @CenterId
                AND ev.ocurrido_en >= @FromUtc AND ev.ocurrido_en < @ToExclusiveUtc
                AND ev.accion_codigo IN @Actions
@@ -57,11 +59,11 @@ public sealed class SqlAdministrativeAuditDirectory(SqlConnectionFactory connect
         return new AuditPage(
             rows.Take(AuditPage.MaxEntries).Select(row => new AuditEntry(
                 new DateTimeOffset(DateTime.SpecifyKind(row.OccurredAt, DateTimeKind.Utc)), row.ActorName,
-                EnumCode.ParseCode<SystemProfile>(row.ActorProfileCode), row.Action, row.AffectedName, row.UnitName, row.ResidentName)).ToList(),
+                EnumCode.ParseCode<SystemProfile>(row.ActorProfileCode), row.Action, row.AffectedName, row.UnitName, row.ResidentName, row.PositionName)).ToList(),
             truncated);
     }
 
     private sealed record AuditRow(
         DateTime OccurredAt, string ActorName, string ActorProfileCode, string Action, string? AffectedName, string? UnitName,
-        string? ResidentName);
+        string? ResidentName, string? PositionName);
 }

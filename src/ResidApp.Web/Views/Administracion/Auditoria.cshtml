@@ -95,6 +95,10 @@
                     {
                         <div class="small">Cuenta afectada: @entry.AffectedName</div>
                     }
+                    @if (entry.PositionName is not null)
+                    {
+                        <div class="small">Cargo: @entry.PositionName</div>
+                    }
                     @if (entry.UnitName is not null)
                     {
                         <div class="small">Unidad: @entry.UnitName</div>
@@ -124,7 +128,13 @@
                     {
                         <tr>
                             <td>@entry.OccurredAt.LocalDateTime.ToString("g")</td>
-                            <th scope="row">@AuditActionDisplay.Label(entry.Action)</th>
+                            <th scope="row">
+                                @AuditActionDisplay.Label(entry.Action)
+                                @if (entry.PositionName is not null)
+                                {
+                                    <div class="small fw-normal text-body-secondary">Cargo: @entry.PositionName</div>
+                                }
+                            </th>
                             <td>@entry.ActorName <span class="text-muted">(@SystemProfileDisplay.Label(entry.ActorProfile))</span></td>
                             <td>@(entry.AffectedName ?? "—")</td>
                             <td>@(entry.UnitName ?? "—")</td>

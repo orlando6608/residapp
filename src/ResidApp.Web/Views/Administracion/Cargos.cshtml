@@ -1,0 +1,68 @@
+@model ResidApp.Web.Models.OrganigramaViewModel
+@{
+    ViewData["Title"] = "Organigrama y cargos";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Organigrama y cargos</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Organigrama y cargos</h1>
+<p class="text-muted">
+    Cada centro crea y nombra sus cargos, dice de cuál depende cada uno (uno solo) y si lo ocupa una persona o varias, y pone a quien lo
+    ocupa: una cuenta de la aplicación o, sin cuenta, solo un nombre. Solo se guarda lo actual: quién cambió qué cargo y cuándo queda en la
+    <a asp-action="Auditoria">auditoría</a>, sin los nombres. <strong>Ocupar un cargo no da permisos</strong>: los perfiles y permisos se
+    gestionan aparte. Todos los profesionales del centro ven el organigrama en solo lectura; la familia nunca.
+</p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (ViewData.ModelState.IsValid)
+{
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a asp-action="NuevoCargo" class="btn btn-primary btn-lg">Nuevo cargo</a>
+        <a asp-controller="Organigrama" asp-action="Index" class="btn btn-outline-secondary btn-lg">Ver como lo ve el personal</a>
+    </div>
+}
+
+@if (Model.CanLoadTemplate)
+{
+    <section class="card mb-3" aria-labelledby="plantilla-titulo">
+        <div class="card-body">
+            <h2 class="h5 card-title" id="plantilla-titulo">Empezar con la plantilla de CJ</h2>
+            <p class="card-text">
+                El centro todavía no tiene cargos. Puedes cargar los ocho que propuso CJ (Dirección del centro, Dirección médica, Coordinación de
+                Enfermería, Responsable de unidad o planta, Medicina, Enfermería, Auxiliares y Responsable de Administración) y después cambiarlos,
+                quitar los que no uses o añadir otros. Solo se puede hacer ahora, mientras no haya ninguno.
+            </p>
+            <form asp-action="CargarPlantilla" method="post">
+                <button type="submit" class="btn btn-outline-primary btn-lg">Cargar la plantilla</button>
+            </form>
+        </div>
+    </section>
+}
+
+@if (ViewData.ModelState.IsValid && Model.PositionCount == 0)
+{
+    <p class="estado-vacio">El centro todavía no tiene cargos.</p>
+}
+else if (Model.PositionCount > 0)
+{
+    <ul class="organigrama-raiz">
+        @foreach (var root in Model.Roots)
+        {
+            <partial name="_OrganigramaNodo" model="new ResidApp.Web.Models.OrganigramaNodeModel(root, true)" />
+        }
+    </ul>
+}

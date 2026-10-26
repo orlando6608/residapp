@@ -56,6 +56,7 @@
             <a class="list-group-item list-group-item-action" href="#intercambio-administracion">Importar y exportar datos (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#auditoria-administracion">Auditoría administrativa (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#turnos-equipos-administracion">Turnos, equipos y planificación (Administración)</a>
+            <a class="list-group-item list-group-item-action" href="#organigrama-cargos">Organigrama y cargos (todos los profesionales; gestiona Administración)</a>
             <a class="list-group-item list-group-item-action" href="#plataforma-centros">Centros nuevos (Plataforma)</a>
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
@@ -375,7 +376,7 @@
         confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados esta semana. Solo
         son cifras: no salen nombres ni texto de ningún comunicado ni de ninguna solicitud. Si no hay nada que atender, dice
         «No hay nada pendiente». El inicio de Administración tiene estas tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
-        ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas»), <strong>Datos del centro</strong> (ver «Nombre y logo del centro») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»). En el alta, la unidad se elige en una lista con las unidades de tu
+        ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas»), <strong>Datos del centro</strong> (ver «Nombre y logo del centro») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación») y <strong>Organigrama y cargos</strong> (ver «Organigrama y cargos»). En el alta, la unidad se elige en una lista con las unidades de tu
         ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves la foto (o sus iniciales, si no tiene), el nombre, la edad (calculada a partir
         de la fecha de nacimiento), el sexo documentado, la ubicación (unidad, habitación y plaza; si no tiene habitación, pone
         «Sin habitación asignada») y la fecha de alta. Puedes buscar por nombre, sin
@@ -727,7 +728,7 @@
     <p>
         <strong>Auditoría</strong> lista, del más reciente al más antiguo, lo que se ha hecho en tu ámbito con cuentas, perfiles y
         permisos, estructura (centro, unidades, edificios, plantas, habitaciones y plazas), residentes (alta, corrección de identidad, foto puesta o quitada, traslado, baja, reactivación, suspensión y reanudación),
-        familias (familiares, autorizaciones, contactos urgentes y comunicados publicados antes de su hora), turnos y equipos (turnos, equipos y sus miembros, y planificación) e importación y exportación de datos (cada importación, exportación y plantilla guardada, sin sus datos). Cada fila dice cuándo, qué acción, quién la hizo y con qué perfil, y cuando consta, la cuenta afectada, la
+        familias (familiares, autorizaciones, contactos urgentes y comunicados publicados antes de su hora), turnos y equipos (turnos, equipos y sus miembros, y planificación), importación y exportación de datos (cada importación, exportación y plantilla guardada, sin sus datos) y organigrama y cargos (quién cambió qué cargo y cuándo, sin los nombres de las personas). Cada fila dice cuándo, qué acción, quién la hizo y con qué perfil, y cuando consta, la cuenta afectada, la
         unidad y el residente. Los eventos de una unidad solo salen si la unidad está concedida a tu ámbito.
     </p>
     <p>
@@ -774,6 +775,46 @@
         acceso a nada: el acceso sigue dependiendo de los perfiles y las unidades. En los seguimientos de Enfermería y Medicina, la
         transferencia se hace a uno de estos equipos: elige uno de los equipos activos de la unidad del residente, así que una unidad
         sin equipos activos no puede transferir hasta que Administración cree uno.
+    </p>
+</section>
+
+<section id="organigrama-cargos" class="mb-4">
+    <h2 class="h5">
+        Organigrama y cargos
+        <span class="badge text-bg-secondary align-middle">Todos los profesionales · gestiona Administración</span>
+    </h2>
+    <p>
+        El <strong>organigrama</strong> enseña los cargos del centro, de cuál depende cada uno y quién los ocupa ahora. Lo ven en solo lectura
+        todos los profesionales del centro (Administración, Enfermería, Auxiliar, Medicina y Dirección Clínica) desde <strong>Organigrama</strong>,
+        en la barra superior; la familia nunca lo ve. Es información de a quién acudir: <strong>ocupar un cargo no da ningún permiso ni
+        acceso</strong>, y lo que cada persona puede hacer sigue dependiendo de su perfil, sus unidades y sus permisos. Un cargo tampoco tiene
+        relación con los turnos ni con los equipos.
+    </p>
+    <p>
+        <strong>Administración</strong> lo gestiona desde la ficha <strong>Organigrama y cargos</strong> de su inicio (cualquier Administración del
+        centro). Cada centro crea y nombra sus cargos. Si el centro aún no tiene ninguno, puede pulsar <strong>Cargar la plantilla</strong>:
+        crea los ocho cargos que propuso CJ (Dirección del centro, Dirección médica, Coordinación de Enfermería, Responsable de unidad o planta,
+        Medicina, Enfermería, Auxiliares y Responsable de Administración) con su jerarquía, y después puedes cambiarlos, inactivar los que no
+        uses o añadir otros con <strong>Nuevo cargo</strong>. La plantilla solo se carga con la lista vacía.
+    </p>
+    <p>
+        De cada cargo indicas su nombre, si lo ocupa <strong>una sola persona</strong> (por ejemplo, la Dirección) o <strong>varias</strong>
+        (Enfermería, Auxiliares), de qué otro cargo depende (uno solo; la pantalla no deja elegir como superior al propio cargo ni a uno de sus
+        subordinados), una nota opcional para la coordinación funcional (por ejemplo, «Coordinación funcional con la Dirección médica») y las
+        unidades de tu ámbito a las que se liga, si procede. Si el cargo ya estaba ligado a unidades de otra Administración, esas ligas se
+        conservan al guardar.
+    </p>
+    <p>
+        Con <strong>Poner una persona</strong> eliges una <strong>cuenta de la aplicación</strong> del centro o, si no tiene cuenta (por ejemplo,
+        la gerencia o el personal administrativo), escribes <strong>solo su nombre</strong>: no se guarda ningún contacto ni otro dato. Una persona
+        puede ocupar varios cargos, pero un cargo de una sola persona no admite una segunda: quita antes a la que lo ocupa con <strong>Quitar</strong>.
+        Un cargo no se borra: se <strong>inactiva</strong> (deja de salir en el organigrama que ve el personal) y se puede <strong>reactivar</strong>.
+        Para inactivarlo no debe tener personas ni cargos activos que dependan de él, y para reactivarlo su superior tiene que estar activo.
+    </p>
+    <p>
+        El organigrama solo guarda <strong>lo actual</strong>. En la <strong>Auditoría</strong> queda quién cambió qué cargo y cuándo (alta, cambio,
+        inactivación, personas puestas o quitadas, plantilla cargada), con el nombre del cargo pero sin los nombres de las personas: no hay un
+        historial de quién ocupó cada cargo.
     </p>
 </section>
 
@@ -1664,7 +1705,7 @@
     <ul class="mb-0">
         <li>Portal Familiar: el resumen periódico por residente.</li>
         <li>Acceso: la pulsera con chip (NFC) y PIN para entrar rápido en una tablet que comparten varias personas.</li>
-        <li>Más gestión administrativa: organigrama y cargos (aplazado) y un panel completo.</li>
+        <li>Más gestión administrativa: un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
         <li>Dictado por voz en otros formularios (hoy solo «Registrar cambio»).</li>
