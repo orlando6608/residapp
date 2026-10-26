@@ -14,7 +14,22 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Organigrama y cargos con las respuestas de CJ (2026-10-26, rama `organigrama-cargos` desde `origin/main` tras el PR #68; script `0073`, el siguiente libre es `0074`). Hecho y probado, sin subir.**
+- **Resumen periódico para la familia (2026-10-26, rama `resumen-periodico-familia` desde `main` tras el PR #69; script `0074`, el siguiente libre es `0075`). Hecho y probado, sin subir.**
+  Detalle en `pendientes-administracion.md` («Resumen periódico», hecho el 2026-10-26).
+  - **Decisiones de Orlando (de producto, no de CJ):** frecuencias diaria y semanal (semanal por defecto); el corte es la hora de publicación del centro (19:00); el semanal cierra el
+    domingo, de un domingo al siguiente, sin huecos; «solo relevantes» queda fuera; lista con fecha, tipo y texto; solo el último periodo cerrado; si no hay nada, no hay resumen.
+  - **Cómo está hecho:** no se guarda: se calcula al leer (`FamilyCommunicationSchedule.LastClosedSummaryPeriod`, `SqlFamilyPortalReader.Summarize`, `FamilyPortalResidentHome.Summary`),
+    porque la app no tiene tareas en segundo plano. La frecuencia es una columna del horario del centro (`0074`: `resumen_frecuencia_codigo` y, en el historial, `resumen_anterior_codigo`
+    y `resumen_nuevo_codigo`; `FamilyCommunicationScheduleSettings.SummaryFrequency`) y se elige en «Horario de los comunicados». Vista: tarjeta «Resumen semanal/diario» sobre «Novedades del centro».
+  - **Documentación al día:** Manual (horario, Portal Familiar y quitado de «Próximamente»), `flujo-de-trabajo.html`, `portal-familiar.md` (historia 3: ya no pide aprobación propia ni «solo relevantes»),
+    `roadmap.md` y `pendientes-administracion.md`.
+  - **Pruebas:** unitarias 477, integración 557 (`ResumenPeriodicoTests`, 5 nuevas) y funcionales 317 en verde (en serie, una por proyecto); cambiar el límite del periodo en `Summarize` hace fallar
+    una prueba. Navegador (Los Almendros local, familiar `almendros-orlando-pablo` y Administración): resumen en claro, oscuro y 375 px y formulario del horario, sin desbordes ni errores de consola.
+  - `0074` aplicado en `ResidApp` y `ResidAppPruebas` locales; **en Azure lo aplica el despliegue tras el merge** (y entonces: comprobar el registro «Aplicando: 0074_…»).
+  - **Guía de CJ:** la prueba 14 de `pruebas-6-comunicados-portal` (tema 5, «Resumen periódico para la familia»; versión `2026-10-26`) es la del resumen; CJ aún no ha respondido esa guía
+    (no hay `.respuestas.json`). **Falta** que CJ confirme que le encaja lo decidido por Orlando (la prueba se lo pide en el comentario).
+    En la BD local quedaron dos comunicados de prueba ficticios de Rosa («prueba del resumen»).
+- **Organigrama y cargos con las respuestas de CJ (2026-10-26, PR #69 fusionado y desplegado; script `0073`, el siguiente libre es `0074`). Hecho, probado y en `main`.**
   Detalle en `pendientes-administracion.md` («Organigrama y cargos (ADM-07)», hecho el 2026-10-26).
   - **Datos:** `cargos`, `cargos_ocupantes` y `cargos_unidades` (bajo `seg.pol_centro`). Los ocupan cuentas del centro o solo un nombre; cada cargo es de una persona o de varias
     (trigger), depende de un superior (trigger anti-ciclos) y lleva una nota; se liga a unidades. Solo lo actual: personas y ligas se borran; **los cargos no se borran, se
@@ -27,7 +42,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   - `organigrama-y-cargos-cj` archivado (README, `archivo.html`, `preguntas.html`, `PendientesCjPagesTests`); guía 5 (prueba 17), Manual y flujo de trabajo al día.
   - **Pruebas:** unitarias 473, integración 552 y funcionales 317 en verde (en serie, una por proyecto; la prueba AUD-02 de la auditoría ahora admite el campo «PositionName»). Navegador (centro recién sembrado con `probar-en-navegador` y un recorrido propio): plantilla, editar, personas (sin cuenta y cuenta), error del segundo ocupante
     de un cargo de una persona, inactivar con ocupantes, consulta, auditoría sin nombres; claro, oscuro y 375 px, sin desbordes ni errores de consola.
-  - `0073` aplicado en `ResidApp` y `ResidAppPruebas` locales. En Azure dev lo aplica el despliegue tras el merge.
+  - `0073` aplicado en `ResidApp` y `ResidAppPruebas` locales y **en Azure dev** (el CI/CD de `main` pasó entero tras el merge del 2026-10-26: build-and-test y deploy en verde; el registro del despliegue muestra «Aplicando: 0073_organigrama_cargos.sql»). Las pantallas se abrieron en Azure el 2026-10-26 y cargan sin error (centro sin cargos todavía).
 - **Importación y exportación con las respuestas de CJ (2026-10-26, PR #68 fusionado y desplegado; script `0072`).
   Hecho, probado y en `main`.** Detalle en `pendientes-administracion.md` («Importación y exportación», hecho el 2026-10-26).
   - **Fecha de ingreso** (1.1): `residentes.fecha_ingreso` (`DATE NULL`), campo «Fecha de ingreso» en la importación de residentes (no en el censo exportado), visible en la
@@ -1886,15 +1901,21 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 ## Siguiente tarea
 
 **Para retomar (estado al cerrar la sesión del 2026-10-26):**
-- **Rama sin subir:** `organigrama-cargos` (organigrama y cargos, script `0073`), desde `origin/main`. La sube Orlando y abre él el PR. No subas nada sin que lo pida.
-  La importación (PR #68) y el portal y la foto (PR #67) ya están en `main`, desplegados.
-- **Tras el merge:** comprobar el CI/CD y que el despliegue aplica `0073` en Azure dev. `0071` **borró todas las fotos** también allí: falta volver a ejecutar
-  `preparar-almendros.js` contra Azure dev (`JUEGO=orlando`) para la foto de Manuel (no verificado que se haya hecho). Justo tras el despliegue la app suele dar 500 unos
-  segundos mientras arranca.
+- **En `main` y desplegado:** portal y foto (PR #67), importación (PR #68) y organigrama y cargos (PR #69, `0073` aplicado en Azure dev). **Sin subir:** la rama
+  `resumen-periodico-familia` (resumen periódico, script `0074`, hecho y probado; los cambios de este traspaso van con ella, sin commit). Para subirla: commit, push y PR, y tras el
+  merge comprobar el CI/CD y que el despliegue aplica `0074` en Azure dev. No subas nada sin que Orlando lo pida. `docs/seguridad/acceso-por-dispositivo.md` (sin seguir en git) no es de este bloque.
+- **La foto de Manuel en Azure dev está hecha y verificada (2026-10-26).** `0071` había borrado las fotos también allí, pero `preparar-almendros.js` (idempotente: solo pone la
+  foto si falta) no tuvo nada que hacer: la ficha de Manuel (residente `1A000000-0000-4000-8000-000000000005`) con la Enfermería de Los Almendros ya mostraba la foto, con el
+  consentimiento de su representante del 25/10/2026. Las pantallas del organigrama también se abrieron en Azure con `almendros-orlando-enfermeria` (`/Organigrama`) y
+  `almendros-orlando-administracion` (`/Administracion/Cargos`): cargan sin error y el centro aún no ha definido cargos (la plantilla de CJ se carga desde «Empezar con la plantilla de CJ»; no se
+  ha pulsado). Las credenciales del juego están en `~/.residapp/credenciales-app-residapp-dev.azurewebsites.net.json`, fuera del repositorio; nunca las pidas ni las copies. Es BD de
+  desarrollo; no se tocan los datos del centro «Residente Integrado Uno» sin basal. Justo tras un despliegue la app suele dar 500 unos segundos mientras arranca.
 - **Para CJ (lo envía Orlando):** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (3 preguntas). Decirle también que la app no envía correos (ADR 0012, pendiente
-  de la decisión de Orlando), lo que deja abierta la 3.2 del portal.
-- **Siguiente bloque:** el resumen periódico para la familia (tercera 1.1 a 1.5: recopilación automática de lo ya publicado, una frecuencia por centro, si no hay nada no se publica);
-  después Dirección y traslados. Cada uno se planifica cuando Orlando lo pida.
+  de la decisión de Orlando), lo que deja abierta la 3.2 del portal, y que en el organigrama la auditoría dice quién cambió qué cargo y cuándo pero no los nombres de quienes
+  lo ocuparon (matiza su 1.7; ya está escrito en `archivados/organigrama-y-cargos-cj.html`). La prueba 17 de la guía 5 es la del organigrama.
+- **Siguiente bloque:** Dirección y traslados (la cuarta finalidad «calidad asistencial» y el cierre de un episodio con indicaciones por Dirección Clínica, en `pendientes-direccion.md`;
+  traslado y baja esperan a CJ). Se planifica (modo plan) cuando Orlando lo pida; el siguiente script libre es `0075`. El resumen periódico ya está hecho (primera entrada de «Dónde estamos»);
+  falta que CJ confirme lo decidido por Orlando (prueba 14 de la guía 6).
 - **Sueltos sin cerrar:** probar el dictado en un móvil real con audios ficticios; que una enfermera confirme «decul» y el rango 34–42 °C; las invitaciones de CJ esperan a
   Orlando; rotar la clave de Mistral.
 
@@ -1904,7 +1925,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    opciones nuevas «Piel enrojecida» y «Come menos de lo habitual» (script `0069`), temperatura entre 34,0 y 42,0 °C que bloquea fuera de rango, un cambio con solo la temperatura,
    el dictado propone la temperatura y se revisa una a una con las opciones, prompt que «propone menos» con sus reglas de jerga y los ejemplos 1, 3, 10, 25 y 28 corregidos. Sigue pendiente
    probarlo en un móvil real con audios ficticios. **Portal Familiar: hecho el 2026-10-25**, y **foto, alta con cama e inicio de Administración: hechos el 2026-10-25** (primeras entradas de «Dónde estamos»).
-   **Importación y exportación y organigrama y cargos: hechos el 2026-10-26** (primeras entradas de «Dónde estamos»). **Siguiente bloque: resumen periódico** (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
+   **Importación y exportación y organigrama y cargos: hechos el 2026-10-26** (primeras entradas de «Dónde estamos»). **Resumen periódico: hecho el 2026-10-26** (primera entrada de «Dónde estamos»). **Siguiente bloque: Dirección y traslados.**
    **I0 a I4 e I2b del ADR 0007 están hechos y el acceso de desarrollo está retirado en el código** (rama `sin-acceso-desarrollo`, primera entrada de
    «Dónde estamos»). Queda **I5 (pulsera NFC)** y, antes de datos reales, llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: (Importar y Exportar ya probado en Azure dev el 2026-10-23), y las dos preguntas a CJ de la guía 2 (hora en la

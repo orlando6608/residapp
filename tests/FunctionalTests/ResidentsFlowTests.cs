@@ -1058,13 +1058,13 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var nurseSubject = await GrantNursingAsync(seed);
         var nurse = await LoginAsync(nurseSubject);
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
-        async Task<string> PostAsync(string time, string margin, string version)
+        async Task<string> PostAsync(string time, string margin, string version, string frequency = "Semanal")
         {
             var form = await admin.GetStringAsync("/Administracion/HorarioComunicados");
             return WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/HorarioComunicados", new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["__RequestVerificationToken"] = ExtractValue(form, "__RequestVerificationToken"), ["Form.Version"] = version,
-                ["Form.HoraPublicacion"] = time, ["Form.MargenMinutos"] = margin,
+                ["Form.HoraPublicacion"] = time, ["Form.MargenMinutos"] = margin, ["Form.ResumenFrecuencia"] = frequency,
             }))).Content.ReadAsStringAsync());
         }
 
@@ -1072,13 +1072,21 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var invalid = await PostAsync("20:30", "5000", "0");
         var saved = await PostAsync("20:30", "120", "0");
         var stale = await PostAsync("21:00", "30", "0");
+        var daily = await PostAsync("20:30", "120", "1", "Diaria");
         var comunicados = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/Comunicados"));
         var nurseDenied = await nurse.GetAsync("/Administracion/HorarioComunicados");
 
         Assert.Contains("Este centro sigue con el horario de CJ.", initial);
         Assert.Contains("El margen va de 0 a 1440 minutos.", invalid);
         Assert.Contains("Horario de los comunicados guardado.", saved);
-        Assert.Matches(@"19:00 y 60 min\s*→ 20:30 y 120 min", saved);
+        Assert.Matches(@"19:00, 60 min y resumen semanal\s*→ 20:30, 120 min y resumen semanal", saved);
+        // La frecuencia del resumen (por defecto semanal) se elige en el mismo formulario, con las opciones en español.
+        Assert.Contains("Frecuencia del resumen", initial);
+        Assert.Contains(">Semanal</option>", initial);
+        Assert.Contains(">Diaria</option>", initial);
+        Assert.Matches(@"20:30, 120 min y resumen semanal\s*→ 20:30, 120 min y resumen diario", daily);
+        Assert.Equal("DIARIA", await connection.ExecuteScalarAsync<string>(
+            "SELECT resumen_frecuencia_codigo FROM dbo.comunicados_horario_centro WHERE centro_id = @c", new { c = seed.CenterId }));
         Assert.Contains("Otra persona ha cambiado el horario", stale);
         Assert.Contains("Cambiar la hora de publicación y el margen del centro", comunicados);
         Assert.Equal(("20:30:00", 120), (

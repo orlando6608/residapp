@@ -12,7 +12,7 @@ namespace ResidApp.Web.Controllers;
 /// afectan a los comunicados que se guarden después: la hora de los ya guardados queda fijada.</summary>
 public sealed partial class AdministracionController
 {
-    /// <summary>Con <paramref name="cj"/> el formulario trae el horario de CJ (19:00 y 60 minutos), sin guardarlo.</summary>
+    /// <summary>Con <paramref name="cj"/> el formulario trae el horario de CJ (19:00 y 60 minutos, resumen semanal), sin guardarlo.</summary>
     public async Task<IActionResult> HorarioComunicados(bool cj = false, CancellationToken ct = default)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -48,17 +48,17 @@ public sealed partial class AdministracionController
         if (ModelState.IsValid)
         {
             var result = await communicationSchedule.SaveAsync(new SaveFamilyCommunicationScheduleCommand(
-                activeScope.ProfileScopeId, centerId, form.Version, form.HoraPublicacion, form.MargenMinutos), ct);
+                activeScope.ProfileScopeId, centerId, form.Version, form.HoraPublicacion, form.MargenMinutos, form.ResumenFrecuencia), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = "Horario de los comunicados guardado. Se aplica a los comunicados que se guarden a partir de ahora.";
+                TempData["Mensaje"] = "Horario de los comunicados guardado. La hora y el margen se aplican a los comunicados que se guarden a partir de ahora; la frecuencia del resumen, desde ya.";
                 return RedirectToAction(nameof(HorarioComunicados));
             }
 
             ModelState.AddModelError(string.Empty, result.Error!.Code switch
             {
                 ApplicationFailureCode.Conflict => "Otra persona ha cambiado el horario desde que abriste la pantalla. Recarga para ver el vigente; lo que has escrito sigue aquí.",
-                ApplicationFailureCode.InvalidInput => "Revisa la hora y el margen: el margen va de 0 a 1440 minutos.",
+                ApplicationFailureCode.InvalidInput => "Revisa la hora, el margen (de 0 a 1440 minutos) y la frecuencia del resumen.",
                 ApplicationFailureCode.AccessDenied => "No tienes acceso a esta pantalla.",
                 _ => result.Error.Message,
             });

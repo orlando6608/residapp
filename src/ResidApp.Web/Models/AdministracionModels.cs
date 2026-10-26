@@ -429,9 +429,12 @@ public sealed class HorarioComunicadosFormModel
     [Display(Name = "Margen (minutos)")]
     public int? MargenMinutos { get; set; }
 
+    [Display(Name = "Frecuencia del resumen")]
+    public FamilyCommunicationSummaryFrequency ResumenFrecuencia { get; set; } = FamilyCommunicationSummaryFrequency.Semanal;
+
     public static HorarioComunicadosFormModel From(FamilyCommunicationScheduleSettings settings, int version) => new()
     {
-        Version = version, HoraPublicacion = settings.PublicationTime, MargenMinutos = settings.MarginMinutes,
+        Version = version, HoraPublicacion = settings.PublicationTime, MargenMinutos = settings.MarginMinutes, ResumenFrecuencia = settings.SummaryFrequency,
     };
 }
 

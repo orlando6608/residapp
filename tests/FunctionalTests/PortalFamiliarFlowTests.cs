@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using ResidApp.Domain.Enfermeria;
 using ResidApp.Infrastructure.Persistence;
 using static ResidApp.FunctionalTests.ResidentsFlowTests;
 
@@ -118,6 +119,10 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         var now = DateTime.UtcNow;
         var published = await AddCommunicationAsync(nurse, seed.Nurse, residentId, "Hoy ha merendado bien y ha paseado por el jardín.", now.AddHours(-30), now.AddHours(-5));
         await AddCommunicationAsync(nurse, seed.Nurse, residentId, "Esto aún no se ha publicado.", now.AddHours(-1), now.AddHours(20));
+        // Uno publicado dentro del último periodo cerrado del resumen semanal (el centro está en el horario de CJ: semanal, corte el domingo a las 19:00).
+        var summaryEnd = FamilyCommunicationSchedule.LastClosedSummaryPeriod(
+            FamilyCommunicationSummaryFrequency.Semanal, FamilyCommunicationScheduleSettings.Default.PublicationTime, TimeZoneInfo.Local, DateTimeOffset.UtcNow).End;
+        await AddCommunicationAsync(nurse, seed.Nurse, residentId, "Contado en el resumen de la semana.", summaryEnd.UtcDateTime.AddHours(-30), summaryEnd.UtcDateTime.AddHours(-2));
         var foreign = await AddCommunicationAsync(nurse, seed.Nurse, foreignResidentId, "Comunicado de un residente ajeno.", now.AddHours(-30), now.AddHours(-5));
 
         var authorizationUrl = $"/Administracion/AutorizacionFamiliar?residenteId={residentId}&vinculoId={linkId}";
@@ -176,6 +181,11 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.Contains("Hoy ha merendado bien y ha paseado por el jardín.", list);
         Assert.Contains("Equipo asistencial del centro", list);
         Assert.DoesNotContain("Esto aún no se ha publicado.", list);
+        // El resumen semanal (CJ, tercera 1.1 a 1.5) recopila lo ya publicado en el último periodo cerrado y se suma a los sueltos: sale dos veces.
+        Assert.Contains("Resumen semanal", list);
+        Assert.Equal(2, Regex.Matches(list, "Contado en el resumen de la semana\\.").Count);
+        Assert.DoesNotContain("Resumen diario", list);
+        Assert.DoesNotContain("Publicada después de entrar.", Regex.Match(list, "id=\"resumen-titulo\".*?</section>", RegexOptions.Singleline).Value);
         Assert.Contains("Hoy ha merendado bien y ha paseado por el jardín.", detail);
         Assert.Contains("Este portal no es un canal urgente", detail);
         // Nada del evento ni del personal, ni de otros residentes o familiares.

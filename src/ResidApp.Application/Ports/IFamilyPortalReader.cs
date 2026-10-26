@@ -43,11 +43,21 @@ public sealed record FamilyPortalCommunication(
 public sealed record FamilyPortalCommunicationDetail(
     FamilyPortalResident Resident, FamilyPortalCommunication Communication, IReadOnlyList<FamilyPortalCommunication> Corrections);
 
+/// <summary>El resumen periódico (CJ, tercera 1.1 a 1.5): los comunicados ya publicados en el último periodo cerrado, del más antiguo al más reciente,
+/// sin texto nuevo. Solo existe si hay alguno; no se guarda, se calcula al leer. Termina en PeriodEnd, el último corte del centro.</summary>
+public sealed record FamilyPortalSummary(
+    FamilyCommunicationSummaryFrequency Frequency, DateTimeOffset PeriodStart, DateTimeOffset PeriodEnd, IReadOnlyList<FamilyPortalCommunication> Items)
+{
+    /// <summary>Nuevo desde la visita indicada: se cerró después de la última vez que esta cuenta abrió al residente; si nunca lo abrió, lo es.</summary>
+    public bool IsNewSince(DateTimeOffset? lastVisitAt) => FamilyPortalVisibility.IsNewSince(PeriodEnd, lastVisitAt);
+}
+
 /// <summary>El residente con sus novedades. PreviousVisitAt es la visita de esta cuenta anterior a esta (null si es la primera), para marcar las nuevas;
-/// ProposalRequestId, la solicitud de la cuenta con una propuesta de cita viva que responder, la que caduca antes (CJ, tercera 6.3).</summary>
+/// ProposalRequestId, la solicitud de la cuenta con una propuesta de cita viva que responder, la que caduca antes (CJ, tercera 6.3); Summary, el
+/// resumen del último periodo cerrado, que se suma a los comunicados sueltos (null si en ese periodo no se publicó nada: entonces no hay resumen).</summary>
 public sealed record FamilyPortalResidentHome(
     FamilyPortalResident Resident, IReadOnlyList<FamilyPortalCommunication> Communications, DateTimeOffset? PreviousVisitAt = null,
-    Guid? ProposalRequestId = null);
+    Guid? ProposalRequestId = null, FamilyPortalSummary? Summary = null);
 
 /// <summary>
 /// Lecturas del Portal Familiar (script 0052). Todo sale de un solo criterio de acceso: la cuenta es la del familiar, su vínculo con el

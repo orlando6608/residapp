@@ -415,9 +415,22 @@ Orden decidido con Orlando: dictado por voz (va en `continuar-construccion.md`),
   - Corregir, solo mientras la familia vea el original (`FamilyCommunicationStatusView.CanCorrect`, y `FAMILY_COMMUNICATION_NOT_VISIBLE` en la transacción); retirar
     sigue cabiendo después. La lista del personal enseña los de 30 días y además los anteriores que la familia todavía ve (un relevante, hasta 6 meses), para
     poder corregirlos; la tabla de frecuencia de Dirección sigue contando solo los 30 días. Test `UnRelevanteDeHaceMasDe30Dias_…`.
-  - **Resumen periódico** (tercera 1.1 a 1.5): recopilación automática de los comunicados ya publicados en el periodo, sin texto nuevo; una frecuencia para todo el centro;
-    si no hay nada, no se publica nada; se suma a los comunicados sueltos. La 1.3 («lo prepara y lo aprueba Enfermería, al guardarlo») no aplica a una recopilación
-    automática, que no tiene redacción ni aprobación: **interpretación mía**, a confirmar si el resumen llegara a llevar texto nuevo.
+  - **Resumen periódico** (tercera 1.1 a 1.5) — **hecho el 2026-10-26, script `0074`:** recopilación automática de los comunicados ya publicados en el periodo, sin texto nuevo;
+    una frecuencia para todo el centro; si no hay nada, no se publica nada; se suma a los comunicados sueltos. La 1.3 («lo prepara y lo aprueba Enfermería, al guardarlo») no
+    aplica a una recopilación automática, que no tiene redacción ni aprobación: **interpretación mía**, a confirmar si el resumen llegara a llevar texto nuevo.
+    - **Decisiones de Orlando (2026-10-26, de producto, no de CJ):** frecuencias **diaria y semanal** (por defecto semanal); el corte es la **hora de publicación del centro**
+      (19:00 por defecto), con el semanal cerrando el **domingo** (periodo de un domingo al siguiente, sin huecos: un comunicado justo en el corte entra en el periodo que cierra);
+      **«solo relevantes» queda fuera por ahora**; el resumen es la **lista con fecha, tipo y texto** de cada comunicado; solo el **último periodo cerrado**.
+    - **Cómo está hecho:** no se guarda, se **calcula al leer** (la app no tiene tareas en segundo plano). La frecuencia es una columna más del horario del centro
+      (`comunicados_horario_centro.resumen_frecuencia_codigo` y, en el historial, `resumen_anterior_codigo` y `resumen_nuevo_codigo`; sin fila vale semanal),
+      y se elige en «Horario de los comunicados» (`FamilyCommunicationScheduleSettings.SummaryFrequency`, auditoría `FAMILY_SCHEDULE_UPDATE`). El periodo lo da
+      `FamilyCommunicationSchedule.LastClosedSummaryPeriod`; `SqlFamilyPortalReader.Summarize` filtra los visibles publicados en él, sin los retirados (una correctora cuenta como una
+      novedad más) y `FamilyPortalResidentHome.Summary` lo entrega (null si no hay nada). Vista: tarjeta «Resumen semanal/diario» arriba de «Novedades del centro», con «Nuevo» hasta la
+      siguiente visita.
+    - **Tests:** unitarios (`FamilyCommunicationScheduleTests`: periodo diario y semanal, cambio de hora, validación), `ResumenPeriodicoTests` (integración: contenido, límites, retirados,
+      sin resumen, «Nuevo», diaria/semanal, otro centro, historial y fila), y funcionales (`PortalFamiliarFlowTests`, `ResidentsFlowTests.Administracion_CambiaElHorarioDeLosComunicados`).
+    - **Sin cerrar:** el aviso activo a la familia (correo o notificación) no existe: la app no envía correos (ADR 0012); y si CJ quiere «solo relevantes» o texto nuevo en el resumen,
+      hay que revisar la 1.3.
 - **Foto del residente** (`archivados/foto-residente-confirmaciones-cj`) — **hecho el 2026-10-25, script `0071`:**
   - El consentimiento guarda **quién lo firmó (el residente o su representante) y la fecha** (1.1; `ResidentPhotoConsent`, columnas
     `consentimiento_firmante_codigo` y `consentimiento_fecha`). Las fotos que había no lo tenían y `0071` **las borró** (decisión de Orlando).

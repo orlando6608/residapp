@@ -272,7 +272,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="pruebas-6-comunicados-portal" data-version="2026-10-13">
+<body data-doc="pruebas-6-comunicados-portal" data-version="2026-10-26">
 
 <div class="page">
   <header>
@@ -284,16 +284,16 @@
     </nav>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 6 de 8</p>
     <h1>Guía 6 · Comunicados y Portal Familiar</h1>
-    <p class="meta">Estado a 13/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 26/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       Los comunicados a la familia de principio a fin: se preparan al cerrar un evento, se corrigen, se publican, la familia los lee en el Portal Familiar y, si hace falta, se corrigen o se retiran ya publicados. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>13 pruebas. 5 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>14 pruebas. 5 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
-    <div role="listitem"><span class="k">Cuánto</span><span>Unos 35 minutos; las imprescindibles, menos. Puedes dejarlo y seguir otro día.</span></div>
+    <div role="listitem"><span class="k">Cuánto</span><span>Unos 40 minutos; las imprescindibles, menos. Puedes dejarlo y seguir otro día.</span></div>
   </div>
 
   <section class="howto" aria-labelledby="como">
@@ -367,7 +367,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (5 de 13).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (5 de 14).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">Necesitas al menos un comunicado a la familia aún sin publicar: el que preparaste en la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a> (prueba 12) o en la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a> (prueba 10). Si no tienes ninguno, cierra ahora un evento con «Preparar comunicación», como allí. Los comunicados se publican solos a su hora (a las 19:00, por defecto): haz la prueba 2 antes.</p>
@@ -379,6 +379,7 @@
       <li>Las pruebas 10 y 11 parten del comunicado que publicas en la 8.</li>
       <li>Al terminar la prueba 12, deja la autorización de la familia activa: la necesitan la prueba 13 y la <a href="pruebas-7-citas.html">guía 7</a>.</li>
       <li>La prueba 13 va al final porque cuenta los comunicados programados, publicados, corregidos y retirados.</li>
+      <li>La prueba 14 (el resumen para la familia) necesita comunicados ya publicados, como los de las pruebas 5 a 8; el resumen no los recoge hasta el siguiente corte, a las 19:00.</li>
     </ul>
     <p class="why">Si te saltas una prueba, marca D en la que dependa de ella.</p>
   </section>
@@ -633,6 +634,32 @@
           <label class="choice"><input type="radio" name="r-13" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-13" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-13" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-5">
+    <h2>Resumen periódico para la familia</h2>
+    <div class="stack prose">
+      <p>Con <code>almendros-administracion</code> y <code>almendros-elena</code> (la hija de «Rosa Sánchez (ficticia)»). Necesita comunicados ya publicados (los de las pruebas 5 a 8). El resumen recoge lo publicado en el último periodo ya cerrado, así que lo que publicas hoy no entra hasta el siguiente corte, a las 19:00: si vienes de las pruebas anteriores, puede que aún no lo veas hasta mañana. Que el centro lo elija semanal o diario, y que «solo relevantes» no esté, lo decidió Orlando porque tus respuestas (tercera tanda, 1.1 a 1.5) no fijaban esos detalles: dinos en el comentario si te encaja.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="14">
+        <div class="q-head"><span class="n">14</span><h3 class="q-title" id="t-14">El resumen semanal o diario de la familia</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>almendros-administracion</code>, abre «Comunicados a la familia» y pulsa «Cambiar la hora de publicación y el margen del centro». Mira el campo «Frecuencia del resumen» (arranca en «Semanal»).</li>
+          <li>Entra con <code>almendros-elena</code>. Encima de «Novedades del centro» debe aparecer, si en el último periodo cerrado se publicó algo, la tarjeta «Resumen semanal» con los comunicados juntos (tipo, fecha y texto). Los comunicados sueltos siguen saliendo debajo.</li>
+          <li>Con Administración cambia la frecuencia a «Diaria» y guarda. Vuelve con <code>almendros-elena</code> y recarga: la tarjeta pasa a «Resumen diario» y recoge solo lo publicado entre las 19:00 de ayer y las 19:00 de hoy (o de anteayer a ayer, si hoy aún no han dado las 19:00). Si ese día no se publicó nada, no sale tarjeta.</li>
+          <li>Vuelve a «Semanal» y guarda. Mira el historial de la pantalla del horario y, con la familia, la etiqueta «Nuevo» de la tarjeta (sale hasta que la familia abre al residente; al recargar ya no).</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El resumen es una recopilación de lo ya publicado, sin ningún texto nuevo, y no cuenta los comunicados retirados. El semanal se corta el domingo a las 19:00 (de un domingo al siguiente) y el diario cada día a esa hora; solo se ve el último periodo cerrado. Si en el periodo no se publicó nada, no hay resumen y no se dice «sin novedades». La frecuencia es una para todo el centro, y cada cambio queda en el historial. La hora de corte es la hora de publicación del centro. «Solo relevantes» no existe todavía: si lo echas en falta, dilo en el comentario.</div>
+        <fieldset class="choices" aria-labelledby="t-14">
+          <label class="choice"><input type="radio" name="r-14" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-14" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-14" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-14" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

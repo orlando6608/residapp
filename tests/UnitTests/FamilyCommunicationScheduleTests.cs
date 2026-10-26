@@ -77,6 +77,67 @@ public class FamilyCommunicationScheduleTests
         }
     }
 
+    [Fact]
+    public void Settings_Validate_ConLaFrecuenciaDelResumen_ValeSemanalPorDefecto_YRechazaUnaDesconocida()
+    {
+        Assert.Equal(FamilyCommunicationSummaryFrequency.Semanal, FamilyCommunicationScheduleSettings.Default.SummaryFrequency);
+        Assert.Equal(FamilyCommunicationSummaryFrequency.Semanal, FamilyCommunicationScheduleSettings.Validate(new TimeOnly(19, 0), 60).SummaryFrequency);
+        Assert.Equal(
+            FamilyCommunicationSummaryFrequency.Diaria,
+            FamilyCommunicationScheduleSettings.Validate(new TimeOnly(19, 0), 60, FamilyCommunicationSummaryFrequency.Diaria).SummaryFrequency);
+        Assert.NotEqual(
+            FamilyCommunicationScheduleSettings.Default,
+            FamilyCommunicationScheduleSettings.Default with { SummaryFrequency = FamilyCommunicationSummaryFrequency.Diaria });
+        Assert.Equal(FamilyCommunicationScheduleSettings.InvalidCode, Assert.Throws<DomainValidationException>(() =>
+            FamilyCommunicationScheduleSettings.Validate(new TimeOnly(19, 0), 60, (FamilyCommunicationSummaryFrequency)99)).Message);
+        Assert.Equal("SEMANAL", FamilyCommunicationSummaryFrequency.Semanal.ToCode());
+        Assert.Equal("DIARIA", FamilyCommunicationSummaryFrequency.Diaria.ToCode());
+    }
+
+    /// <summary>El resumen diario se corta cada día a la hora de publicación: ni antes de esa hora ni sin huecos.</summary>
+    [Fact]
+    public void LastClosedSummaryPeriod_Diaria_VaDelCorteDeAyerAlDeHoy_YEnElCorteYaCuentaElDeHoy()
+    {
+        var cut = new TimeOnly(19, 0);
+
+        var before = FamilyCommunicationSchedule.LastClosedSummaryPeriod(FamilyCommunicationSummaryFrequency.Diaria, cut, Madrid, Local(10, 8, 18, 59));
+        var at = FamilyCommunicationSchedule.LastClosedSummaryPeriod(FamilyCommunicationSummaryFrequency.Diaria, cut, Madrid, Local(10, 8, 19, 0));
+
+        Assert.Equal((Local(10, 6, 19, 0), Local(10, 7, 19, 0)), before);
+        Assert.Equal((Local(10, 7, 19, 0), Local(10, 8, 19, 0)), at);
+    }
+
+    /// <summary>Semanal: el corte es el domingo a la hora de publicación y el periodo va de domingo a domingo. El 25 de octubre de 2026 es domingo y
+    /// ese día termina el horario de verano: el inicio (18/10) está en UTC+2 y el fin en UTC+1.</summary>
+    [Fact]
+    public void LastClosedSummaryPeriod_Semanal_CortaElDomingo_YRespetaElCambioDeHora()
+    {
+        var cut = new TimeOnly(19, 0);
+
+        var midweek = FamilyCommunicationSchedule.LastClosedSummaryPeriod(FamilyCommunicationSummaryFrequency.Semanal, cut, Madrid, Local(10, 28, 10, 0));
+        var sundayBefore = FamilyCommunicationSchedule.LastClosedSummaryPeriod(FamilyCommunicationSummaryFrequency.Semanal, cut, Madrid, Local(10, 25, 18, 59));
+        var sundayAt = FamilyCommunicationSchedule.LastClosedSummaryPeriod(FamilyCommunicationSummaryFrequency.Semanal, cut, Madrid, Local(10, 25, 19, 0));
+
+        Assert.Equal((Local(10, 18, 19, 0), Local(10, 25, 19, 0)), midweek);
+        Assert.Equal(new DateTimeOffset(2026, 10, 18, 19, 0, 0, TimeSpan.FromHours(2)), midweek.Start);
+        Assert.Equal(new DateTimeOffset(2026, 10, 25, 19, 0, 0, TimeSpan.FromHours(1)), midweek.End);
+        Assert.Equal((Local(10, 11, 19, 0), Local(10, 18, 19, 0)), sundayBefore);
+        Assert.Equal(midweek, sundayAt);
+    }
+
+    [Fact]
+    public void LastClosedSummaryPeriod_ConOtraHoraDeCorte_UsaLaDelCentro()
+    {
+        var cut = new TimeOnly(20, 30);
+
+        Assert.Equal(
+            (Local(10, 7, 20, 30), Local(10, 8, 20, 30)),
+            FamilyCommunicationSchedule.LastClosedSummaryPeriod(FamilyCommunicationSummaryFrequency.Diaria, cut, Madrid, Local(10, 8, 20, 30)));
+        Assert.Equal(
+            (Local(10, 6, 20, 30), Local(10, 7, 20, 30)),
+            FamilyCommunicationSchedule.LastClosedSummaryPeriod(FamilyCommunicationSummaryFrequency.Diaria, cut, Madrid, Local(10, 8, 19, 0)));
+    }
+
     /// <summary>CJ, 2026-10-10 (5.2): se corrige hasta que se publica, no solo durante la primera hora.</summary>
     [Fact]
     public void CanCorrect_HastaQueSePublica_YNoDespuesDeLaPublicacionAnticipada()
