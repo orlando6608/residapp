@@ -9,6 +9,7 @@ Este documento recoge las reglas de trabajo que rigen cualquier colaboración so
 - Cambia solo lo imprescindible; no refactorices código no relacionado. Sigue el estilo existente.
 - Si detectas problemas fuera del alcance, menciónalos, no los corrijas.
 - Ante ambigüedad relevante, declara tus suposiciones; pregunta solo si el error es difícil de revertir.
+- Protección de datos: antes de crear o modificar un ADR, un esquema SQL, una integración con un tercero o una función de IA, consulta al agente `dpo-residapp` (`.claude\agents\dpo-residapp.md`). Sus borradores van en `docs\privacidad\` y los valida una persona antes de usarlos con datos reales.
 
 ## Dónde está el resto del contexto del proyecto
 
