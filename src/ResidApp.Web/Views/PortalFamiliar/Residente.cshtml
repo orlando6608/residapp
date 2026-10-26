@@ -28,6 +28,41 @@
 
 <p><a class="btn btn-outline-primary" asp-action="Citas" asp-route-linkId="@resident.LinkId">Citas con el equipo asistencial</a></p>
 
+@if (Model.Home.Summary is { } summary)
+{
+    <section class="card mb-4 border-start border-4 border-primary" aria-labelledby="resumen-titulo">
+        <div class="card-body">
+            <h2 class="h5 card-title" id="resumen-titulo">
+                @(summary.Frequency == FamilyCommunicationSummaryFrequency.Diaria ? "Resumen diario" : "Resumen semanal")
+                @if (summary.IsNewSince(Model.Home.PreviousVisitAt))
+                {
+                    <span class="badge text-bg-primary">Nuevo</span>
+                }
+            </h2>
+            <p class="text-muted">
+                Lo que el equipo ha publicado entre el @summary.PeriodStart.ToLocalTime().ToString("dd/MM/yyyy HH:mm") y el
+                @summary.PeriodEnd.ToLocalTime().ToString("dd/MM/yyyy HH:mm"), todo junto. Son las mismas novedades de más abajo.
+            </p>
+            <ul class="list-unstyled mb-0">
+                @foreach (var item in summary.Items)
+                {
+                    <li class="mb-3">
+                        <p class="text-muted mb-1">
+                            @if (item.Kind == FamilyPortalCommunicationKind.Corrective)
+                            {
+                                <span class="badge text-bg-dark">Corrección</span>
+                            }
+                            <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(item.Type)</span>
+                            · @item.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @FamilyCommunicationChoice.VisibleAuthor
+                        </p>
+                        <p class="mb-0" style="white-space: pre-line">@item.Text</p>
+                    </li>
+                }
+            </ul>
+        </div>
+    </section>
+}
+
 <h2 class="h5">Novedades del centro</h2>
 <p class="text-muted">
     Aquí ves lo que el equipo asistencial ha querido contarte. Las novedades ordinarias se ven 30 días y las relevantes, 6 meses.

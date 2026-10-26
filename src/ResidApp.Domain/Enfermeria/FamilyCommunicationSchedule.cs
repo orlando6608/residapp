@@ -1,13 +1,24 @@
+using System.ComponentModel.DataAnnotations;
 using ResidApp.Shared;
 
 namespace ResidApp.Domain.Enfermeria;
 
+/// <summary>Cada cuánto recibe la familia el resumen de los comunicados ya publicados (CJ, tercera 1.2: una frecuencia para todo el centro; las
+/// dos opciones y «semanal» de partida las decidió Orlando el 2026-10-26).</summary>
+public enum FamilyCommunicationSummaryFrequency
+{
+    [Code("SEMANAL")] [Display(Name = "Semanal")] Semanal,
+    [Code("DIARIA")] [Display(Name = "Diaria")] Diaria,
+}
+
 /// <summary>
 /// La hora de publicación de los comunicados y el margen de un centro (CJ, 2026-10-10; confirmaciones-segunda-tanda-cj 5.1): cada centro puede
 /// elegirlos. Los valores de CJ (19:00 y 1 hora) son los de partida. El margen es el tiempo mínimo que pasa entre guardar el comunicado y
-/// publicarlo: si a la hora de hoy ya no queda ese margen, sale a la de mañana.
+/// publicarlo: si a la hora de hoy ya no queda ese margen, sale a la de mañana. La frecuencia del resumen (por defecto semanal) va en el mismo
+/// horario: el resumen se corta a la hora de publicación.
 /// </summary>
-public sealed record FamilyCommunicationScheduleSettings(TimeOnly PublicationTime, TimeSpan Margin)
+public sealed record FamilyCommunicationScheduleSettings(
+    TimeOnly PublicationTime, TimeSpan Margin, FamilyCommunicationSummaryFrequency SummaryFrequency = FamilyCommunicationSummaryFrequency.Semanal)
 {
     public const int MaxMarginMinutes = 1440;
 
@@ -18,9 +29,12 @@ public sealed record FamilyCommunicationScheduleSettings(TimeOnly PublicationTim
     public int MarginMinutes => (int)Margin.TotalMinutes;
 
     /// <summary>La hora (con minutos, sin segundos) y el margen en minutos, de 0 a un día; si no, FAMILY_COMMUNICATION_SCHEDULE_INVALID.</summary>
-    public static FamilyCommunicationScheduleSettings Validate(TimeOnly? publicationTime, int? marginMinutes) =>
-        publicationTime is { } time && marginMinutes is >= 0 and <= MaxMarginMinutes
-            ? new FamilyCommunicationScheduleSettings(new TimeOnly(time.Hour, time.Minute), TimeSpan.FromMinutes(marginMinutes.Value))
+    public static FamilyCommunicationScheduleSettings Validate(
+        TimeOnly? publicationTime, int? marginMinutes,
+        FamilyCommunicationSummaryFrequency summaryFrequency = FamilyCommunicationSummaryFrequency.Semanal) =>
+        publicationTime is { } time && marginMinutes is >= 0 and <= MaxMarginMinutes && Enum.IsDefined(summaryFrequency)
+            ? new FamilyCommunicationScheduleSettings(
+                new TimeOnly(time.Hour, time.Minute), TimeSpan.FromMinutes(marginMinutes.Value), summaryFrequency)
             : throw new DomainValidationException(InvalidCode);
 }
 
@@ -63,4 +77,29 @@ public static class FamilyCommunicationSchedule
     /// <summary>Publicada: llegó su hora o se publicó antes.</summary>
     public static bool IsPublished(DateTimeOffset scheduledAt, DateTimeOffset? publishedEarlyAt, DateTimeOffset now) =>
         publishedEarlyAt is not null || now >= scheduledAt;
+
+    /// <summary>
+    /// El último periodo cerrado del resumen para la familia: el que termina en el último corte (la hora de publicación del centro) que ya pasó
+    /// y empieza en el corte anterior. Diaria: de la hora de ayer a la de hoy. Semanal: el corte es el domingo a esa hora, de domingo a domingo.
+    /// El periodo no deja huecos con el siguiente: un comunicado publicado justo en el corte entra en el periodo que cierra ese corte (empieza
+    /// después de su inicio y termina en su fin, incluido).
+    /// </summary>
+    public static (DateTimeOffset Start, DateTimeOffset End) LastClosedSummaryPeriod(
+        FamilyCommunicationSummaryFrequency frequency, TimeOnly cut, TimeZoneInfo zone, DateTimeOffset now)
+    {
+        var local = TimeZoneInfo.ConvertTime(now, zone).DateTime;
+        var end = local.Date + cut.ToTimeSpan();
+        if (end > local)
+        {
+            end = end.AddDays(-1);
+        }
+
+        if (frequency == FamilyCommunicationSummaryFrequency.Semanal)
+        {
+            end = end.AddDays(-(int)end.DayOfWeek);
+        }
+
+        var start = end.AddDays(frequency == FamilyCommunicationSummaryFrequency.Semanal ? -7 : -1);
+        return (new DateTimeOffset(start, zone.GetUtcOffset(start)), new DateTimeOffset(end, zone.GetUtcOffset(end)));
+    }
 }

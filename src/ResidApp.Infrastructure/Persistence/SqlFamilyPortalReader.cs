@@ -96,11 +96,25 @@ public sealed class SqlFamilyPortalReader(SqlConnectionFactory connections) : IF
             WHEN MATCHED THEN UPDATE SET visto_en = @Now
             WHEN NOT MATCHED THEN INSERT (centro_id, cuenta_id, residente_id, visto_en) VALUES (@CenterId, @AccountId, @ResidentId, @Now);
             """, parameters, transaction, cancellationToken: ct));
+        var schedule = await SqlFamilyCommunicationScheduleRepository.ReadEffectiveAsync(connection, transaction, access.CenterId, ct);
         await AuditAsync(connection, transaction, access, resident.ResidentId, "RESIDENT", resident.ResidentId, now, ct);
         transaction.Commit();
         return new FamilyPortalResidentHome(
             new FamilyPortalResident(resident.LinkId, resident.ResidentName, resident.Relationship), communications,
-            previousVisit is { } seenAt ? Utc(seenAt) : null, proposalRequestId);
+            previousVisit is { } seenAt ? Utc(seenAt) : null, proposalRequestId, Summarize(communications, schedule, now));
+    }
+
+    /// <summary>El resumen del último periodo cerrado del centro: lo ya publicado en él, sin lo retirado (una correctora cuenta como una novedad
+    /// más, con su etiqueta). Si no hay nada, no hay resumen (CJ, tercera 1.4).</summary>
+    private static FamilyPortalSummary? Summarize(
+        IReadOnlyList<FamilyPortalCommunication> communications, FamilyCommunicationScheduleSettings schedule, DateTimeOffset now)
+    {
+        var (start, end) = FamilyCommunicationSchedule.LastClosedSummaryPeriod(
+            schedule.SummaryFrequency, schedule.PublicationTime, TimeZoneInfo.Local, now);
+        var items = communications
+            .Where(c => c.Kind != FamilyPortalCommunicationKind.Withdrawn && c.PublishedAt > start && c.PublishedAt <= end)
+            .OrderBy(c => c.PublishedAt).ToList();
+        return items.Count == 0 ? null : new FamilyPortalSummary(schedule.SummaryFrequency, start, end, items);
     }
 
     /// <summary>Lo que la familia ve hoy de un residente (el acceso ya se comprobó), de lo más reciente a lo más antiguo.</summary>
