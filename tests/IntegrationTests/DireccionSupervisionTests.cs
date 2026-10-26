@@ -1,7 +1,9 @@
 using Dapper;
+using Microsoft.Data.SqlClient;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
+using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Supervision;
@@ -27,7 +29,7 @@ public class DireccionSupervisionTests
     /// <summary>Un centro con una unidad, una cuenta de Dirección y una de Enfermería, y un residente.</summary>
     private static async Task<(SeededProfile Direccion, SeededProfile Enfermera, ResidentId ResidentId)> SeedCenterAsync()
     {
-        var direccion = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica);
+        var direccion = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica, [ProfilePermissions.QualityReview]);
         var admin = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, direccion.CenterId, direccion.UnitId);
         var enfermera = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, direccion.CenterId, direccion.UnitId);
         var resident = await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(new CreateResidentInput(
@@ -403,6 +405,51 @@ public class DireccionSupervisionTests
         Assert.Equal(1, before[ProcessMilestone.LlamadaFamilia].Measured);
         Assert.Equal(new MilestoneCount(0, 0, 0), after[ProcessMilestone.LlamadaFamilia]);
         Assert.Equal(1, after[ProcessMilestone.InformeDerivacion].Measured);
+    }
+
+    /// <summary>CJ, 2.1 de la tercera tanda (0076): Indicadores y Calidad de proceso piden el permiso QUALITY_REVIEW, en la aplicación y en la
+    /// propia consulta de SQL; revocarlo los corta; y la base solo lo admite en Dirección Clínica.</summary>
+    [Fact]
+    public async Task Calidad_SinElPermisoNoHayCifras_ConElPermisoSi_YRevocarloLoCorta()
+    {
+        var (direccion, _, _) = await SeedCenterAsync();
+        var sinPermiso = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, direccion.CenterId, direccion.UnitId);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var directory = new SqlSupervisionDirectory(TestDatabase.ConnectionFactory);
+        var from = DateTime.UtcNow.AddDays(-1);
+        var to = DateTime.UtcNow.AddMinutes(5);
+        ReadSupervisionIndicatorsQuery Period(SeededProfile profile) => new(profile.ProfileScopeId, profile.CenterId, today, today);
+
+        var indicatorsWithout = await BuildDireccion(sinPermiso.ExternalSubject).ReadIndicatorsAsync(Period(sinPermiso));
+        var qualityWithout = await BuildDireccion(sinPermiso.ExternalSubject).ReadProcessQualityAsync(Period(sinPermiso));
+        // Segunda defensa: la consulta de SQL por sí sola tampoco entrega cifras sin el permiso.
+        await Assert.ThrowsAsync<AccessDeniedException>(() => directory.ListIndicatorFactsAsync(sinPermiso.ProfileScopeId, sinPermiso.CenterId, from, to));
+        await Assert.ThrowsAsync<AccessDeniedException>(() => directory.ListMilestoneFactsAsync(sinPermiso.ProfileScopeId, sinPermiso.CenterId, from, to));
+        var indicatorsWith = await BuildDireccion(direccion.ExternalSubject).ReadIndicatorsAsync(Period(direccion));
+        var qualityWith = await BuildDireccion(direccion.ExternalSubject).ReadProcessQualityAsync(Period(direccion));
+        // El resto de la supervisión sigue abierto sin el permiso.
+        var panelWithout = await BuildDireccion(sinPermiso.ExternalSubject).ReadPanelAsync(Query(sinPermiso));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, indicatorsWithout.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, qualityWithout.Error!.Code);
+        Assert.True(indicatorsWith.Ok, indicatorsWith.Error?.Message);
+        Assert.True(qualityWith.Ok, qualityWith.Error?.Message);
+        Assert.True(panelWithout.Ok, panelWithout.Error?.Message);
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync(
+            "UPDATE dbo.permisos_perfil SET revocado_en = SYSUTCDATETIME(), revocado_por_cuenta_id = @account WHERE ambito_perfil_id = @scope AND permiso_codigo = 'QUALITY_REVIEW'",
+            new { account = direccion.AccountId.Value, scope = direccion.ProfileScopeId });
+        var revokedIndicators = await BuildDireccion(direccion.ExternalSubject).ReadIndicatorsAsync(Period(direccion));
+        await Assert.ThrowsAsync<AccessDeniedException>(() => directory.ListMilestoneFactsAsync(direccion.ProfileScopeId, direccion.CenterId, from, to));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, revokedIndicators.Error!.Code);
+
+        var enfermera = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, direccion.CenterId, direccion.UnitId);
+        var grant = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync("""
+            INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @scope, @center, 'QUALITY_REVIEW', SYSUTCDATETIME(), @account)
+            """, new { scope = enfermera.ProfileScopeId, center = enfermera.CenterId.Value, account = enfermera.AccountId.Value }));
+        Assert.Contains("PROFILE_PERMISSION_NOT_ALLOWED", grant.Message);
     }
 
     [Fact]

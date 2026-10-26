@@ -586,7 +586,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     public async Task PlazosDeLosHitos_DireccionConPermisoLosGuarda_ConLaAppEntera()
     {
         // Con el usuario limitado escribe en las tablas de plazos bajo la seguridad por filas, y la revisión de calidad ofrece el enlace.
-        var direccion = await SeedAdministratorAsync("DIRECCION_CLINICA", "PROCESS_DEADLINES_MANAGE");
+        var direccion = await SeedAdministratorAsync("DIRECCION_CLINICA", "PROCESS_DEADLINES_MANAGE,QUALITY_REVIEW");
         var client = _factory.CreateClient();
         (await SesionTests.PostLoginAsync(client, direccion.ExternalSubject)).EnsureSuccessStatusCode();
 
@@ -698,10 +698,44 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
     }
 
     [Fact]
+    public async Task IndicadoresYCalidad_SinElPermisoNoSeAbrenNiSeEnlazan_ConElPermisoSi_ConLaAppEntera()
+    {
+        var without = await SeedAdministratorAsync("DIRECCION_CLINICA", "PROCESS_DEADLINES_MANAGE");
+        var withoutClient = _factory.CreateClient();
+        (await SesionTests.PostLoginAsync(withoutClient, without.ExternalSubject)).EnsureSuccessStatusCode();
+        var withPermission = await SeedAdministratorAsync("DIRECCION_CLINICA", "QUALITY_REVIEW");
+        var withClient = _factory.CreateClient();
+        (await SesionTests.PostLoginAsync(withClient, withPermission.ExternalSubject)).EnsureSuccessStatusCode();
+
+        var homeWithout = WebUtility.HtmlDecode(await withoutClient.GetStringAsync("/Direccion"));
+        var indicatorsWithout = WebUtility.HtmlDecode(await withoutClient.GetStringAsync("/Direccion/Indicadores"));
+        var qualityWithout = WebUtility.HtmlDecode(await withoutClient.GetStringAsync("/Direccion/Calidad"));
+        var deadlinesWithout = WebUtility.HtmlDecode(await withoutClient.GetStringAsync("/PlazosProceso"));
+        var homeWith = WebUtility.HtmlDecode(await withClient.GetStringAsync("/Direccion"));
+        var indicatorsWith = WebUtility.HtmlDecode(await withClient.GetStringAsync("/Direccion/Indicadores"));
+        var qualityWith = WebUtility.HtmlDecode(await withClient.GetStringAsync("/Direccion/Calidad"));
+
+        // Sin el permiso: ni tarjetas ni pantallas (se vuelve al inicio con el motivo) ni enlace a Calidad desde los plazos.
+        Assert.DoesNotContain("Indicadores e informe de actividad", homeWithout);
+        Assert.DoesNotContain("Calidad de proceso", homeWithout);
+        Assert.Contains("No puedes abrir esa pantalla", indicatorsWithout);
+        Assert.Contains("No puedes abrir esa pantalla", qualityWithout);
+        Assert.DoesNotContain("Indicadores de actividad", indicatorsWithout);
+        Assert.DoesNotContain("href=\"/Direccion/Calidad\"", deadlinesWithout);
+        Assert.Contains("Plazos de los hitos del proceso", deadlinesWithout);
+        // Con el permiso: tarjetas y pantallas.
+        Assert.Contains("Indicadores e informe de actividad", homeWith);
+        Assert.Contains("Calidad de proceso", homeWith);
+        Assert.DoesNotContain("No puedes abrir esa pantalla", homeWith);
+        Assert.Contains("Indicadores de actividad", indicatorsWith);
+        Assert.Contains("Valoración de Enfermería", qualityWith);
+    }
+
+    [Fact]
     public async Task Calidad_DeDireccion_EnseñaLosPlazosDeCadaHito_ConLaAppEntera()
     {
-        var page = WebUtility.HtmlDecode(await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Calidad"));
-        var invalid = WebUtility.HtmlDecode(await PageAsync("DIRECCION_CLINICA", null, "/Direccion/Calidad?desde=2026-10-05&hasta=2026-10-01"));
+        var page = WebUtility.HtmlDecode(await PageAsync("DIRECCION_CLINICA", "QUALITY_REVIEW", "/Direccion/Calidad"));
+        var invalid = WebUtility.HtmlDecode(await PageAsync("DIRECCION_CLINICA", "QUALITY_REVIEW", "/Direccion/Calidad?desde=2026-10-05&hasta=2026-10-01"));
 
         Assert.Contains("Calidad de proceso", page);
         Assert.Contains("Valoración de Enfermería", page);
@@ -840,7 +874,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
             VALUES (NEWID(), @profileScopeId, @centerId, @unitId, @now, @accountId);
             IF @permission IS NOT NULL
                 INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
-                VALUES (NEWID(), @profileScopeId, @centerId, @permission, @now, @accountId);
+                SELECT NEWID(), @profileScopeId, @centerId, value, @now, @accountId FROM STRING_SPLIT(@permission, ',');
             """, new
         {
             accountId, externalSubject, now, centerId, centerCode = $"FUNC-CENTER-{suffix}", unitId, unitCode = $"FUNC-UNIT-{suffix}",

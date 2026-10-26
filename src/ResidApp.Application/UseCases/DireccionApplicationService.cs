@@ -125,9 +125,8 @@ public sealed class DireccionApplicationService(
             return await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
         });
 
-    /// <summary>DIR-08 a DIR-10 y DIR-16 (bloque 4): indicadores agregados del periodo, sin permiso ni auditoría, porque no
-    /// entregan contenido clínico ni datos de personas (la matriz da «Ver indicadores agregados» y «Generar informes
-    /// agregados» a Dirección).</summary>
+    /// <summary>DIR-08 a DIR-10 y DIR-16 (bloque 4): indicadores agregados del periodo. Sin auditoría, porque no entregan contenido clínico
+    /// ni datos de personas; solo con el permiso QUALITY_REVIEW (CJ, 2.1 de la tercera tanda; script 0076), que concede Administración.</summary>
     public Task<ApplicationResult<SupervisionIndicators>> ReadIndicatorsAsync(
         ReadSupervisionIndicatorsQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
@@ -139,6 +138,7 @@ public sealed class DireccionApplicationService(
 
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
+            EnsureQualityReview(info);
             // El periodo son días de la hora local del servidor (la misma con la que se muestran las fechas) y las fechas se
             // guardan en UTC.
             var zone = TimeZoneInfo.Local;
@@ -148,8 +148,8 @@ public sealed class DireccionApplicationService(
         });
 
     /// <summary>DIR-11: la revisión de calidad de proceso del periodo (días locales, ambos incluidos): hitos medidos y fuera de plazo por
-    /// unidad, nunca por profesional, y los episodios con algún hito fuera de plazo o a punto de vencer. Como el resto de la supervisión
-    /// operativa: sin permiso clínico ni contenido clínico, y la consulta no se audita.</summary>
+    /// unidad, nunca por profesional, y los episodios con algún hito fuera de plazo o a punto de vencer. Sin contenido clínico y sin auditar
+    /// la consulta; solo con el permiso QUALITY_REVIEW.</summary>
     public Task<ApplicationResult<ProcessQualityReport>> ReadProcessQualityAsync(
         ReadSupervisionIndicatorsQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
@@ -161,6 +161,7 @@ public sealed class DireccionApplicationService(
 
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
+            EnsureQualityReview(info);
             var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
             var facts = await directory.ListMilestoneFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
             var effective = await deadlines.GetEffectiveAsync(query.CentroId, ct);
@@ -177,6 +178,14 @@ public sealed class DireccionApplicationService(
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             return await residents.ListAsync(query.AmbitoPerfilId, query.CentroId, ct);
         });
+
+    private static void EnsureQualityReview(SupervisionScopeInfo info)
+    {
+        if (!info.Permissions.Contains(ResidApp.Domain.Accounts.ProfilePermissions.QualityReview))
+        {
+            throw new AccessDeniedException();
+        }
+    }
 
     private async Task<ActiveProfileScope> EnsureDirectionScopeAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct)
     {

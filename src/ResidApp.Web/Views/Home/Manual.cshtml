@@ -257,7 +257,7 @@
             </thead>
             <tbody>
                 <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Administración principal de las dos plantas.</td></tr>
-                <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Las dos plantas, con lectura clínica auditada, rangos de referencia y plazos de los hitos.</td></tr>
+                <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Las dos plantas, con lectura clínica auditada, rangos de referencia, plazos de los hitos e indicadores y calidad de proceso.</td></tr>
                 <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Las dos plantas, con permiso de basal.</td></tr>
                 <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Las dos plantas, con permiso de basal; miembro de los equipos de las dos plantas.</td></tr>
                 <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Planta 1, con cinco residentes en «Mis residentes»: Rosa, Antonio, Carmen, Lucía y Manuel.</td></tr>
@@ -615,7 +615,7 @@
     <ul>
         <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta), reevaluar el basal y poner, cambiar y quitar la foto del residente.</li>
         <li><strong>Medicina:</strong> basal inicial y reevaluar el basal.</li>
-        <li><strong>Dirección Clínica:</strong> lectura clínica detallada y auditada, gestionar los rangos de referencia y gestionar los plazos de los hitos del proceso.</li>
+        <li><strong>Dirección Clínica:</strong> lectura clínica detallada y auditada, gestionar los rangos de referencia, gestionar los plazos de los hitos del proceso y ver los indicadores y la calidad de proceso (las Direcciones que ya existían no lo tienen hasta que se lo concedas).</li>
         <li>Auxiliar y Administración no tienen permisos configurables.</li>
     </ul>
     <p>
@@ -1005,6 +1005,11 @@
         <span class="badge text-bg-secondary align-middle">Perfil: Dirección Clínica</span>
     </h2>
     <p>
+        Esta pantalla y <strong>Calidad de proceso</strong> solo se abren con el permiso <strong>Ver los indicadores y la calidad de proceso</strong>, que concede
+        Administración a cada Dirección Clínica. Sin él, las dos tarjetas no salen en el inicio y, si alguien abre la dirección a mano, vuelve al inicio con un aviso. Solo dan
+        cifras agregadas por unidad y periodo, sin abrir la historia de ningún residente; para mirar un caso concreto está la lectura clínica con su declaración y su auditoría.
+    </p>
+    <p>
         Desde la tarjeta <strong>Indicadores e informe de actividad</strong> del inicio de Dirección Clínica eliges un periodo
         con las fechas "Desde" y "Hasta" (las dos incluidas) y pulsas "Aplicar". Por defecto son los últimos 30 días, y el
         periodo puede llegar a 366 días. Si una fecha no es válida se usa la de por defecto; si "Desde" es posterior a
@@ -1038,7 +1043,7 @@
         <span class="badge text-bg-secondary align-middle">Perfil: Dirección Clínica</span>
     </h2>
     <p>
-        <strong>Calidad de proceso</strong> (desde el inicio de Dirección) mide si se cumplen los plazos de siete hitos del proceso, por unidad y
+        <strong>Calidad de proceso</strong> (desde el inicio de Dirección, con el permiso <strong>Ver los indicadores y la calidad de proceso</strong>) mide si se cumplen los plazos de siete hitos del proceso, por unidad y
         periodo, nunca por profesional y sin contenido clínico: la valoración de Enfermería tras un cambio de Auxiliar (8 h; 30 min si el
         evento es prioritario), la valoración médica tras el escalado (24 h; 30 min), la recepción de una transferencia de seguimiento de
         Enfermería (8 h; 30 min), el informe de derivación (30 min), la primera llamada a la familia (1 h; 30 min), la lectura de una

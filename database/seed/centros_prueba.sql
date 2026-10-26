@@ -306,6 +306,24 @@ SELECT NEWID(), profile.id, profile.centro_id, 'RESIDENT_PHOTO_MANAGE', SYSUTCDA
                     WHERE existing.ambito_perfil_id = profile.id AND existing.permiso_codigo = 'RESIDENT_PHOTO_MANAGE');
 GO
 
+-- Revisión de calidad (0076): las Direcciones de los centros de prueba tienen el permiso QUALITY_REVIEW, concedido por la Administración de CJ de su
+-- centro, para que sigan valiendo las guías de CJ con Indicadores y Calidad de proceso. Mismo criterio que la foto: se da una vez y, si después se
+-- revoca a mano, no se vuelve a dar.
+INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+SELECT NEWID(), profile.id, profile.centro_id, 'QUALITY_REVIEW', SYSUTCDATETIME(), grantor.cuenta_id
+  FROM dbo.ambitos_perfil profile
+  JOIN dbo.cuentas account ON account.id = profile.cuenta_id
+ CROSS APPLY (SELECT TOP (1) admin_scope.cuenta_id
+                FROM dbo.ambitos_perfil admin_scope
+                JOIN dbo.cuentas admin_account ON admin_account.id = admin_scope.cuenta_id
+               WHERE admin_scope.centro_id = profile.centro_id AND admin_scope.perfil_codigo = 'ADMINISTRACION'
+                 AND admin_account.sujeto_externo IN ('almendros-administracion', 'olmos-administracion')) AS grantor
+ WHERE profile.perfil_codigo = 'DIRECCION_CLINICA' AND profile.estado = 'ACTIVE'
+   AND (account.sujeto_externo LIKE 'almendros-%' OR account.sujeto_externo LIKE 'olmos-%' OR account.sujeto_externo LIKE 'varios-centros%')
+   AND NOT EXISTS (SELECT 1 FROM dbo.permisos_perfil existing
+                    WHERE existing.ambito_perfil_id = profile.id AND existing.permiso_codigo = 'QUALITY_REVIEW');
+GO
+
 SELECT account.sujeto_externo AS Cuenta, center.nombre_visible AS Centro, profile.perfil_codigo AS Perfil
   FROM dbo.cuentas account
   JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id

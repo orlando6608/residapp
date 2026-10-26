@@ -185,7 +185,10 @@ public sealed class DireccionController(
             return View(new DireccionInicioViewModel([]));
         }
 
-        return View(new DireccionInicioViewModel(result.Value!));
+        // Las tarjetas de Indicadores y Calidad solo se enseñan con el permiso; solo orienta, cada pantalla vuelve a autorizar.
+        var scope = await service.ReadScopeAsync(new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        var canReviewQuality = scope.Ok && scope.Value!.Permissions.Contains(ResidApp.Domain.Accounts.ProfilePermissions.QualityReview);
+        return View(new DireccionInicioViewModel(result.Value!, canReviewQuality));
     }
 
     public async Task<IActionResult> Pendientes(SupervisionFilter filtro, CancellationToken ct)
@@ -331,6 +334,11 @@ public sealed class DireccionController(
 
         var result = await service.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to), ct);
+        if (QualityReviewDenied(result.Error))
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
@@ -361,6 +369,11 @@ public sealed class DireccionController(
 
         var result = await service.ReadProcessQualityAsync(new ReadSupervisionIndicatorsQuery(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to), ct);
+        if (QualityReviewDenied(result.Error))
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
@@ -369,6 +382,18 @@ public sealed class DireccionController(
         var scope = await service.ReadScopeAsync(new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
         var canManage = scope.Ok && scope.Value!.Permissions.Contains(ResidApp.Domain.Accounts.ProfilePermissions.ProcessDeadlinesManage);
         return View(new ProcessQualityViewModel(from, to, result.Value, canManage));
+    }
+
+    /// <summary>Sin el permiso QUALITY_REVIEW (o fuera de su ámbito) Indicadores y Calidad no se abren: se vuelve al inicio con el motivo.</summary>
+    private bool QualityReviewDenied(ApplicationFailure? error)
+    {
+        if (error?.Code != ApplicationFailureCode.AccessDenied)
+        {
+            return false;
+        }
+
+        TempData["Error"] = "No puedes abrir esa pantalla: hace falta el permiso para ver los indicadores y la calidad de proceso, que concede Administración.";
+        return true;
     }
 
     public async Task<IActionResult> Ambito(CancellationToken ct)
