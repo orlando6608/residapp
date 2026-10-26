@@ -129,6 +129,13 @@ public static class AuditActionDisplay
         ["IMPORT_RUN"] = "Datos importados desde un fichero",
         ["EXPORT_RUN"] = "Datos exportados a un fichero",
         ["EXCHANGE_TEMPLATE_SAVE"] = "Plantilla de importación o exportación guardada",
+        ["POSITION_CREATE"] = "Cargo creado",
+        ["POSITION_UPDATE"] = "Cargo cambiado",
+        ["POSITION_DEACTIVATE"] = "Cargo inactivado",
+        ["POSITION_REACTIVATE"] = "Cargo reactivado",
+        ["POSITION_OCCUPANT_ADD"] = "Persona puesta en un cargo",
+        ["POSITION_OCCUPANT_REMOVE"] = "Persona quitada de un cargo",
+        ["POSITION_TEMPLATE_LOAD"] = "Plantilla de cargos cargada",
     };
 
     public static string Label(string code) => Labels.TryGetValue(code, out var label) ? label : "Acción administrativa";
@@ -142,6 +149,7 @@ public static class AuditActionDisplay
         AuditCategory.TurnosYEquipos => "Turnos y equipos",
         AuditCategory.Citas => "Citas",
         AuditCategory.ImportacionYExportacion => "Importación y exportación",
+        AuditCategory.OrganigramaYCargos => "Organigrama y cargos",
         _ => category.ToString(),
     };
 

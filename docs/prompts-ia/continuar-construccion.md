@@ -14,8 +14,22 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Importación y exportación con las respuestas de CJ (2026-10-26, rama `importacion-respuestas-cj` desde `origin/main` tras el PR #67; script `0072`, el siguiente libre es `0073`).
-  Hecho y probado, sin subir.** Detalle en `pendientes-administracion.md` («Importación y exportación», hecho el 2026-10-26).
+- **Organigrama y cargos con las respuestas de CJ (2026-10-26, rama `organigrama-cargos` desde `origin/main` tras el PR #68; script `0073`, el siguiente libre es `0074`). Hecho y probado, sin subir.**
+  Detalle en `pendientes-administracion.md` («Organigrama y cargos (ADM-07)», hecho el 2026-10-26).
+  - **Datos:** `cargos`, `cargos_ocupantes` y `cargos_unidades` (bajo `seg.pol_centro`). Los ocupan cuentas del centro o solo un nombre; cada cargo es de una persona o de varias
+    (trigger), depende de un superior (trigger anti-ciclos) y lleva una nota; se liga a unidades. Solo lo actual: personas y ligas se borran; **los cargos no se borran, se
+    inactivan**. Plantilla de los ocho de CJ (`PositionTemplate`), solo con el centro sin cargos. **Ocupar un cargo no da permisos.**
+  - **Quién:** cualquier Administración del centro gestiona (`/Administracion/Cargos`); todos los profesionales lo consultan en solo lectura (`/Organigrama`, enlace en la barra
+    superior); la familia y Plataforma vuelven a su inicio. Quien gestiona solo liga unidades de su ámbito y se conservan las ligas ajenas.
+  - **Auditoría** (`POSITION_*`, categoría «Organigrama y cargos»): quién cambió qué cargo y cuándo, con el nombre del cargo y **sin nombres de personas**. Matiza la 1.7 de CJ (no hay
+    historial de quién ocupó cada cargo): **decírselo a CJ**; ya está escrito en el cuestionario archivado.
+  - **Lección:** una columna con colación propia mezclada con las de la BD da «collation conflict» en un `COALESCE`/`ORDER BY`: `COLLATE DATABASE_DEFAULT`.
+  - `organigrama-y-cargos-cj` archivado (README, `archivo.html`, `preguntas.html`, `PendientesCjPagesTests`); guía 5 (prueba 17), Manual y flujo de trabajo al día.
+  - **Pruebas:** unitarias 473, integración 552 y funcionales 317 en verde (en serie, una por proyecto; la prueba AUD-02 de la auditoría ahora admite el campo «PositionName»). Navegador (centro recién sembrado con `probar-en-navegador` y un recorrido propio): plantilla, editar, personas (sin cuenta y cuenta), error del segundo ocupante
+    de un cargo de una persona, inactivar con ocupantes, consulta, auditoría sin nombres; claro, oscuro y 375 px, sin desbordes ni errores de consola.
+  - `0073` aplicado en `ResidApp` y `ResidAppPruebas` locales. En Azure dev lo aplica el despliegue tras el merge.
+- **Importación y exportación con las respuestas de CJ (2026-10-26, PR #68 fusionado y desplegado; script `0072`).
+  Hecho, probado y en `main`.** Detalle en `pendientes-administracion.md` («Importación y exportación», hecho el 2026-10-26).
   - **Fecha de ingreso** (1.1): `residentes.fecha_ingreso` (`DATE NULL`), campo «Fecha de ingreso» en la importación de residentes (no en el censo exportado), visible en la
     ficha. El alta a mano no la pide.
   - **Ya existe solo por referencia interna** (1.2): mismo nombre y fecha de nacimiento sin la misma referencia = «Posible duplicado», que solo se importa si se marca
@@ -27,7 +41,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     `eventos_auditoria` en `ResidAppPruebas` (71.000 filas ahora). Navegador (Los Almendros no; centro recién sembrado con `probar-en-navegador` y un recorrido propio): casilla, recálculo al marcar y desmarcar, reimportar
     sin duplicar, contador, aviso de exportar y ficha con la fecha de ingreso; claro, oscuro y 375 px, sin desbordes ni errores de consola. **El recorrido encontró un fallo que
     ninguna prueba veía:** cada fila lleva dos casillas (lista móvil y tabla, una oculta por CSS) y el formulario enviaba las dos; `intercambio.js` ahora las iguala.
-  - `0072` aplicado en `ResidApp` y `ResidAppPruebas` locales. En Azure dev lo aplica el despliegue tras el merge.
+  - `0072` aplicado en `ResidApp` y `ResidAppPruebas` locales y en Azure dev (el CI/CD de `main` pasó entero tras el merge).
 - **Foto, alta con cama e inicio de Administración con las respuestas de CJ (2026-10-25, rama `foto-inicio-administracion` sobre `portal-familiar-respuestas-cj`;
   script `0071`, el siguiente libre es `0072`). Hecho y probado, sin subir.** Detalle en `pendientes-administracion.md` («Respuestas de CJ del 2026-10-25»).
   - **Foto:** consentimiento con quién firmó y la fecha; `0071` borró las fotos anteriores (no lo tenían; en Azure, volver a ejecutar `preparar-almendros.js` tras el
@@ -1872,15 +1886,15 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 ## Siguiente tarea
 
 **Para retomar (estado al cerrar la sesión del 2026-10-26):**
-- **Rama sin subir:** `importacion-respuestas-cj` (importación y exportación, script `0072`), desde `origin/main`. La sube Orlando y abre él el PR. No subas nada sin que lo pida.
-  El portal y la foto ya están en `main` (PR #67, fusionado el 2026-10-25; el CI/CD de `main` pasó entero).
-- **Tras el merge:** comprobar el CI/CD y que el despliegue aplica `0072` en Azure dev. `0071` **borró todas las fotos** también allí: falta volver a ejecutar
+- **Rama sin subir:** `organigrama-cargos` (organigrama y cargos, script `0073`), desde `origin/main`. La sube Orlando y abre él el PR. No subas nada sin que lo pida.
+  La importación (PR #68) y el portal y la foto (PR #67) ya están en `main`, desplegados.
+- **Tras el merge:** comprobar el CI/CD y que el despliegue aplica `0073` en Azure dev. `0071` **borró todas las fotos** también allí: falta volver a ejecutar
   `preparar-almendros.js` contra Azure dev (`JUEGO=orlando`) para la foto de Manuel (no verificado que se haya hecho). Justo tras el despliegue la app suele dar 500 unos
   segundos mientras arranca.
 - **Para CJ (lo envía Orlando):** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (3 preguntas). Decirle también que la app no envía correos (ADR 0012, pendiente
   de la decisión de Orlando), lo que deja abierta la 3.2 del portal.
-- **Siguiente bloque:** organigrama y cargos (ADM-07, con las ocho decisiones de `organigrama-y-cargos-cj`); después el resumen periódico y Dirección y traslados. Cada uno se
-  planifica cuando Orlando lo pida.
+- **Siguiente bloque:** el resumen periódico para la familia (tercera 1.1 a 1.5: recopilación automática de lo ya publicado, una frecuencia por centro, si no hay nada no se publica);
+  después Dirección y traslados. Cada uno se planifica cuando Orlando lo pida.
 - **Sueltos sin cerrar:** probar el dictado en un móvil real con audios ficticios; que una enfermera confirme «decul» y el rango 34–42 °C; las invitaciones de CJ esperan a
   Orlando; rotar la clave de Mistral.
 
@@ -1890,7 +1904,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    opciones nuevas «Piel enrojecida» y «Come menos de lo habitual» (script `0069`), temperatura entre 34,0 y 42,0 °C que bloquea fuera de rango, un cambio con solo la temperatura,
    el dictado propone la temperatura y se revisa una a una con las opciones, prompt que «propone menos» con sus reglas de jerga y los ejemplos 1, 3, 10, 25 y 28 corregidos. Sigue pendiente
    probarlo en un móvil real con audios ficticios. **Portal Familiar: hecho el 2026-10-25**, y **foto, alta con cama e inicio de Administración: hechos el 2026-10-25** (primeras entradas de «Dónde estamos»).
-   **Importación y exportación: hecho el 2026-10-26** (primera entrada de «Dónde estamos»). **Siguiente bloque: organigrama y cargos** (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
+   **Importación y exportación y organigrama y cargos: hechos el 2026-10-26** (primeras entradas de «Dónde estamos»). **Siguiente bloque: resumen periódico** (ver «Respuestas de CJ del 2026-10-25» en `pendientes-administracion.md`).
    **I0 a I4 e I2b del ADR 0007 están hechos y el acceso de desarrollo está retirado en el código** (rama `sin-acceso-desarrollo`, primera entrada de
    «Dónde estamos»). Queda **I5 (pulsera NFC)** y, antes de datos reales, llevar al DPO las reglas de las cuentas de varios centros
    (el límite de intentos por IP ya está corregido). Sueltos: (Importar y Exportar ya probado en Azure dev el 2026-10-23), y las dos preguntas a CJ de la guía 2 (hora en la
@@ -1906,8 +1920,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
      finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).
    - Siguen sin respuesta: `docs/pendientes-cj/traslado-y-baja-residente.html` (6 respuestas): traslado y baja del residente en Administración.
    - **Dirección, bloque 2:** solo falta la 4ª finalidad (calidad asistencial), pendiente de la respuesta de CJ (ver `pendientes-direccion.md`).
-2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): el organigrama y los cargos (ADM-07; ningún documento los define: pregunta a CJ); después publicaciones,
-   citas, auditoría administrativa y panel.
+2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): el organigrama y los cargos (ADM-07) está hecho (2026-10-26); queda el panel completo.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
    (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.
 4. **Familia / Portal Familiar**, que depende de Administración y del proveedor de identidad.

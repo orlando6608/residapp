@@ -1,0 +1,95 @@
+@model ResidApp.Web.Models.PositionFormViewModel
+@{
+    var title = Model.IsNew ? "Nuevo cargo" : "Cambiar el cargo";
+    ViewData["Title"] = title;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Cargos">Organigrama y cargos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@title</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@title</h1>
+<p class="text-muted">
+    Un cargo depende como mucho de otro. Ocuparlo no da permisos. Las personas que lo ocupan se ponen desde la lista de cargos.
+</p>
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="@(Model.IsNew ? "NuevoCargo" : "EditarCargo")" method="post">
+            <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
+            <input type="hidden" name="Form.CargoId" value="@Model.Form.CargoId" />
+            <div class="mb-3">
+                <label asp-for="Form.Nombre" class="form-label"></label>
+                <input asp-for="Form.Nombre" class="form-control form-control-lg" autocomplete="off" />
+                <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+            </div>
+            <fieldset class="mb-3">
+                <legend class="form-label fs-6">¿Cuántas personas lo ocupan?</legend>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="Form.UnaPersona" id="una-persona" value="true" checked="@Model.Form.UnaPersona" />
+                    <label class="form-check-label" for="una-persona">Una sola persona (por ejemplo, la Dirección)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="Form.UnaPersona" id="varias-personas" value="false" checked="@(!Model.Form.UnaPersona)" />
+                    <label class="form-check-label" for="varias-personas">Varias personas (por ejemplo, Enfermería o Auxiliares)</label>
+                </div>
+            </fieldset>
+            <div class="mb-3">
+                <label asp-for="Form.SuperiorId" class="form-label"></label>
+                <select asp-for="Form.SuperiorId" class="form-select form-select-lg" aria-describedby="ayuda-superior">
+                    <option value="">Ninguno: es un cargo de mayor nivel</option>
+                    @foreach (var superior in Model.Superiors)
+                    {
+                        <option value="@superior.PositionId" selected="@(superior.PositionId == Model.Form.SuperiorId)">@superior.Name@(superior.Active ? "" : " (inactivo)")</option>
+                    }
+                </select>
+                <div id="ayuda-superior" class="form-text">Un cargo no puede depender de sí mismo ni de uno de sus subordinados, así que no salen en la lista.</div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Nota" class="form-label"></label>
+                <textarea asp-for="Form.Nota" class="form-control" rows="3" aria-describedby="ayuda-nota"></textarea>
+                <div id="ayuda-nota" class="form-text">Opcional. Por ejemplo, con quién coordina funcionalmente además de su superior. Hasta 500 caracteres.</div>
+                <span asp-validation-for="Form.Nota" class="text-danger"></span>
+            </div>
+            <fieldset class="mb-3">
+                <legend class="form-label fs-6">Unidades a las que se liga</legend>
+                @if (Model.Units.Count == 0)
+                {
+                    <p class="text-muted mb-1">Tu ámbito no tiene ninguna unidad activa.</p>
+                }
+                else
+                {
+                    @foreach (var unit in Model.Units)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="Form.Unidades" id="unidad-@unit.UnitId.Value" value="@unit.UnitId.Value"
+                                   checked="@Model.Form.Unidades.Contains(unit.UnitId.Value)" />
+                            <label class="form-check-label" for="unidad-@unit.UnitId.Value">@unit.Name</label>
+                        </div>
+                    }
+                }
+                <div class="form-text">
+                    Opcional: un cargo puede ligarse a una o varias unidades. Los equipos de turnos no tienen relación con el organigrama.
+                    @if (Model.OtherUnits.Count > 0)
+                    {
+                        <span>Este cargo también está ligado a unidades que no son de tu ámbito (@string.Join(", ", Model.OtherUnits.Select(u => u.Name))): no se tocan.</span>
+                    }
+                </div>
+            </fieldset>
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Cargos" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">@(Model.IsNew ? "Crear el cargo" : "Guardar")</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

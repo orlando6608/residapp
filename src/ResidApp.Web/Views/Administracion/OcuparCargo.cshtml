@@ -1,0 +1,59 @@
+@model ResidApp.Web.Models.PositionOccupantViewModel
+@{
+    ViewData["Title"] = "Poner una persona en un cargo";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Cargos">Organigrama y cargos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Poner una persona</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Poner una persona en «@Model.Position.Name»</h1>
+<p class="text-muted">
+    Elige una cuenta de la aplicación o, si la persona no tiene cuenta (por ejemplo, la gerencia o el personal administrativo), escribe solo su
+    nombre: no se guarda ningún contacto ni otro dato. Ocupar un cargo no da permisos ni acceso. Una persona puede ocupar varios cargos.
+</p>
+@if (Model.Position.OnePerson && Model.Position.Occupants.Count > 0)
+{
+    <div class="alert alert-warning" role="note">
+        Es un cargo de una sola persona y ya lo ocupa @string.Join(", ", Model.Position.Occupants.Select(o => o.Name)): para poner a otra,
+        quita antes a esa persona desde la lista de cargos.
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="OcuparCargo" method="post">
+            <input type="hidden" name="Form.CargoId" value="@Model.Form.CargoId" />
+            <div class="mb-3">
+                <label asp-for="Form.CuentaId" class="form-label"></label>
+                <select asp-for="Form.CuentaId" class="form-select form-select-lg">
+                    <option value="">Ninguna: es una persona sin cuenta</option>
+                    @foreach (var candidate in Model.Candidates)
+                    {
+                        <option value="@candidate.AccountId.Value" selected="@(candidate.AccountId.Value == Model.Form.CuentaId)">@candidate.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Form.Nombre" class="form-label"></label>
+                <input asp-for="Form.Nombre" class="form-control form-control-lg" autocomplete="off" aria-describedby="ayuda-nombre" />
+                <div id="ayuda-nombre" class="form-text">Elige una cuenta <strong>o</strong> escribe un nombre, no las dos cosas.</div>
+                <span asp-validation-for="Form.Nombre" class="text-danger"></span>
+            </div>
+            <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                <a asp-action="Cargos" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Poner en el cargo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,85 @@
+@model ResidApp.Web.Models.OrganigramaNodeModel
+@*
+    ADM-07: un cargo del organigrama con quien lo ocupa, sus unidades y su nota, y debajo los cargos que dependen de él (anidados). Lo pintan
+    la consulta de todos los profesionales (Manage = false) y la gestión de Administración (Manage = true, con sus acciones). Ocupar un cargo
+    no da permisos: aquí no se enseña ni se cambia ningún permiso.
+*@
+@{
+    var position = Model.Node.Item;
+}
+<li>
+    <div class="card mb-2 @(position.Active ? "" : "border-secondary")">
+        <div class="card-body py-3">
+            <h3 class="h6 mb-1">
+                @position.Name
+                <span class="badge text-bg-secondary align-middle">@(position.OnePerson ? "Una persona" : "Varias personas")</span>
+                @if (!position.Active)
+                {
+                    <span class="badge text-bg-warning align-middle">Inactivo</span>
+                }
+            </h3>
+            @if (position.Occupants.Count == 0)
+            {
+                <p class="mb-1 text-body-secondary">Sin persona asignada.</p>
+            }
+            else
+            {
+                <ul class="list-unstyled mb-1">
+                    @foreach (var occupant in position.Occupants)
+                    {
+                        <li>
+                            @occupant.Name
+                            @if (!occupant.HasAccount)
+                            {
+                                <span class="text-body-secondary small">(sin cuenta)</span>
+                            }
+                            @if (Model.Manage)
+                            {
+                                <form asp-controller="Administracion" asp-action="QuitarOcupante" method="post" class="d-inline">
+                                    <input type="hidden" name="cargoId" value="@position.PositionId" />
+                                    <input type="hidden" name="ocupanteId" value="@occupant.OccupantId" />
+                                    <button type="submit" class="btn btn-link btn-sm" aria-label="Quitar a @occupant.Name del cargo @position.Name">Quitar</button>
+                                </form>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+            @if (position.Units.Count > 0)
+            {
+                <p class="mb-1 small"><span class="text-body-secondary">Unidades:</span> @string.Join(", ", position.Units.Select(u => u.Name))</p>
+            }
+            @if (position.Note is not null)
+            {
+                <p class="mb-1 small"><span class="text-body-secondary">Nota:</span> @position.Note</p>
+            }
+            @if (Model.Manage)
+            {
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    @if (position.Active)
+                    {
+                        <a asp-controller="Administracion" asp-action="OcuparCargo" asp-route-cargoId="@position.PositionId" class="btn btn-outline-primary"
+                           aria-label="Poner una persona en el cargo @position.Name">Poner una persona</a>
+                    }
+                    <a asp-controller="Administracion" asp-action="EditarCargo" asp-route-cargoId="@position.PositionId" class="btn btn-outline-primary"
+                       aria-label="Cambiar el cargo @position.Name">Cambiar</a>
+                    <form asp-controller="Administracion" asp-action="EstadoCargo" method="post">
+                        <input type="hidden" name="cargoId" value="@position.PositionId" />
+                        <input type="hidden" name="activo" value="@(position.Active ? "false" : "true")" />
+                        <button type="submit" class="btn @(position.Active ? "btn-outline-danger" : "btn-outline-success")"
+                                aria-label="@(position.Active ? "Inactivar" : "Reactivar") el cargo @position.Name">@(position.Active ? "Inactivar" : "Reactivar")</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+    @if (Model.Node.Children.Count > 0)
+    {
+        <ul class="organigrama-lista">
+            @foreach (var child in Model.Node.Children)
+            {
+                <partial name="_OrganigramaNodo" model="new ResidApp.Web.Models.OrganigramaNodeModel(child, Model.Manage)" />
+            }
+        </ul>
+    }
+</li>

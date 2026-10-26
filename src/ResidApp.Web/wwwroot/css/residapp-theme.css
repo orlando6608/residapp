@@ -395,6 +395,20 @@ details[open] > summary {
   border-radius: var(--bs-border-radius-lg);
 }
 
+/* Organigrama (ADM-07): cargos anidados; cada nivel cuelga de una línea a la izquierda de su superior. */
+.organigrama-raiz,
+.organigrama-lista {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.organigrama-lista {
+  margin-left: 0.5rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--color-border-control);
+}
+
 /* Índice del Manual: en escritorio, columna lateral fija con su propio desplazamiento. */
 @media (min-width: 992px) {
   .indice-manual {

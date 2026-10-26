@@ -79,6 +79,8 @@ builder.Services.AddScoped<ISchedulingDirectory, SqlSchedulingDirectory>();
 builder.Services.AddScoped<ISchedulingRepository, SqlSchedulingRepository>();
 builder.Services.AddScoped<ISchedulePlanDirectory, SqlSchedulePlanDirectory>();
 builder.Services.AddScoped<ISchedulePlanRepository, SqlSchedulePlanRepository>();
+builder.Services.AddScoped<IOrganizationDirectory, SqlOrganizationDirectory>();
+builder.Services.AddScoped<IOrganizationRepository, SqlOrganizationRepository>();
 builder.Services.AddScoped<INursingAssessmentRepository, SqlNursingAssessmentRepository>();
 builder.Services.AddScoped<IMedicalAssessmentRepository, SqlMedicalAssessmentRepository>();
 builder.Services.AddScoped<IMedicalIndicationRepository, SqlMedicalIndicationRepository>();
@@ -341,6 +343,8 @@ builder.Services.AddScoped<IExchangeDirectory, SqlExchangeDirectory>();
 builder.Services.AddScoped<IExchangeRepository, SqlExchangeRepository>();
 builder.Services.AddScoped<AdministracionIntercambioApplicationService>();
 builder.Services.AddScoped<AdministracionTurnosApplicationService>();
+builder.Services.AddScoped<AdministracionOrganigramaApplicationService>();
+builder.Services.AddScoped<OrganigramaApplicationService>();
 builder.Services.AddScoped<PlatformApplicationService>();
 
 builder.Services.AddScoped<ReferenceRangesApplicationService>();
