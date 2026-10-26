@@ -68,8 +68,16 @@ De `docs/pendientes-cj/confirmaciones-tercera-tanda-cj.respuestas.json` y `porta
 una anotación por consulta, Dirección ve también las consultas de Dirección, ve el nombre de quien firma o corrige, ve los comunicados sin declarar, la tabla de frecuencia
 está bien, y corregir o retirar un comunicado publicado sigue en manos de Administración y Dirección Clínica, portal 4.1) no cambia nada; las decisiones marcadas «mías, sin confirmar» en el bloque 2 que coinciden con estas respuestas quedan confirmadas.
 
-- **Cuarta finalidad, «calidad asistencial»** (tercera 2.1): da **solo datos agregados por unidad y periodo** (cumplimiento de hitos, indicadores), sin abrir la historia de
+- **Cuarta finalidad, «calidad asistencial»** (tercera 2.1) — **hecho el 2026-10-26, script `0076`:** da **solo datos agregados por unidad y periodo** (cumplimiento de hitos, indicadores), sin abrir la historia de
   ningún residente. Un caso concreto se abre con las finalidades que ya existen, con su declaración y su auditoría. Con esto se cierra el bloque 2.
+  - **Decisiones de Orlando (2026-10-26):** no hay cuarta finalidad (`ClinicalDetailAccessPurpose` y `CK_dac_purpose` no cambian); es un **permiso nuevo `QUALITY_REVIEW`**, solo
+    `DIRECCION_CLINICA`, que concede Administración. Sin él, `/Direccion/Indicadores` y `/Direccion/Calidad` no se abren ni se enlazan. **No se concede a las Direcciones que
+    ya existen** (la semilla se lo da a las de los centros de prueba). **Suposición mía:** la consulta de cifras no se audita (como hoy).
+  - **Cómo está hecho:** `ProfilePermissions.QualityReview` y su etiqueta; `DireccionApplicationService.ReadIndicatorsAsync`/`ReadProcessQualityAsync` lo comprueban con los permisos
+    del ámbito y `SqlSupervisionDirectory.ListIndicatorFactsAsync`/`ListMilestoneFactsAsync` vuelven a comprobarlo contra `permisos_perfil` (`AccessDeniedException`); sin permiso, el
+    controlador vuelve al inicio con un aviso, el inicio de Dirección no enseña las dos tarjetas y el camino de migas de Plazos no enlaza a Calidad. Script `0076`: `CK_pp_code` y `TR_pp_profile_catalog`.
+  - **Tests:** `Calidad_SinElPermisoNoHayCifras_ConElPermisoSi_YRevocarloLoCorta` (integración: aplicación y SQL por separado, revocar, y la base solo lo admite en Dirección Clínica) y
+    `IndicadoresYCalidad_SinElPermisoNoSeAbrenNiSeEnlazan_ConElPermisoSi_ConLaAppEntera` (funcional).
 - **Cerrar un episodio con indicaciones que nadie va a cumplir** (tercera 5.1) — **hecho el 2026-10-26, script `0075`:** **solo Dirección Clínica, indicando un motivo** que queda en la auditoría con su nombre.
   Enfermería y Medicina siguen sin poder (`MEDICAL_INDICATIONS_PENDING`, CJ 4.2 de la primera tanda).
   - **Decisiones de Orlando (2026-10-26):** las indicaciones **no se tocan** (siguen «pendiente de lectura» o «leída» y los indicadores las cuentan sin resolver); basta el perfil (sin permiso
@@ -94,7 +102,7 @@ En el orden propuesto:
      «Verificación de trazabilidad documental» (`ClinicalDetailAccessPurpose`; la antigua `SUPERVISION_CLINICA` ya no se ofrece y solo
      sobrevive en las filas de auditoría anteriores). **La cuarta, «revisión de calidad asistencial», NO está:** CJ dice que debería pertenecer
      al perfil de Coordinación Clínica, pero en el modelo Dirección y Coordinación son el mismo perfil (`DIRECCION_CLINICA`); se añadirá cuando se decida cómo
-     distinguirlas. **Respondido por CJ el 2026-10-07** (`docs/pendientes-cj/archivados/aclaraciones-respuestas-cj.html`, 3.1): se mantiene el perfil «Dirección / Coordinación Clínica» y la finalidad de calidad queda tras un **permiso específico** que Administración asigna según la designación del centro (no por el cargo de director). **Sin construir todavía:** el permiso nuevo y la cuarta finalidad.
+     distinguirlas. **Respondido por CJ el 2026-10-07** (`docs/pendientes-cj/archivados/aclaraciones-respuestas-cj.html`, 3.1): se mantiene el perfil «Dirección / Coordinación Clínica» y la finalidad de calidad queda tras un **permiso específico** que Administración asigna según la designación del centro (no por el cargo de director). **Hecho el 2026-10-26 (script `0076`): el permiso `QUALITY_REVIEW`; no hay cuarta finalidad.**
    - **Justificación siempre:** texto breve (hasta 300 caracteres) en cada declaración, «sin copiar información clínica ni datos personales innecesarios»;
      se guarda en la declaración y en cada fila de auditoría (`eventos_auditoria.justificacion`).
    - **Una declaración por residente, 1 hora** (`AccesoClinico:DuracionMinutos` en `appsettings.json`, ajustable más adelante por centro): vale para

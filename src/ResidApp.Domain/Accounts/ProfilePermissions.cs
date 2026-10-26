@@ -20,11 +20,14 @@ public static class ProfilePermissions
     /// <summary>Enfermería pone, cambia y quita la foto del residente solo con este permiso (CJ, foto 1.3; script 0071).</summary>
     public const string ResidentPhotoManage = "RESIDENT_PHOTO_MANAGE";
 
+    /// <summary>Dirección Clínica abre Indicadores y Calidad de proceso solo con este permiso (CJ, 2.1 de la tercera tanda; script 0076).</summary>
+    public const string QualityReview = "QUALITY_REVIEW";
+
     public static IReadOnlyList<string> For(SystemProfile profile) => profile switch
     {
         SystemProfile.Enfermeria => [ResidentIdentityCreate, BaselineInitialComplete, BaselineReevaluate, ResidentPhotoManage],
         SystemProfile.Medicina => [BaselineInitialComplete, BaselineReevaluate],
-        SystemProfile.DireccionClinica => [ClinicalDetailRead, ReferenceRangesManage, ProcessDeadlinesManage],
+        SystemProfile.DireccionClinica => [ClinicalDetailRead, ReferenceRangesManage, ProcessDeadlinesManage, QualityReview],
         _ => [],
     };
 }

@@ -6,7 +6,7 @@ using ResidApp.Domain.Supervision;
 namespace ResidApp.Web.Models;
 
 /// <summary>DIR-01/DIR-02: contadores por unidad del ámbito de supervisión.</summary>
-public sealed record DireccionInicioViewModel(IReadOnlyList<SupervisionUnitSummary> Units)
+public sealed record DireccionInicioViewModel(IReadOnlyList<SupervisionUnitSummary> Units, bool CanReviewQuality = false)
 {
     public int Open => Units.Sum(u => u.Open);
     public int FollowUpsOverdue => Units.Sum(u => u.FollowUpsOverdue);
@@ -133,6 +133,7 @@ public static class SupervisionDisplay
         "REFERENCE_RANGES_MANAGE" => "Gestionar los rangos de referencia de constantes",
         "PROCESS_DEADLINES_MANAGE" => "Gestionar los plazos de los hitos del proceso",
         "RESIDENT_PHOTO_MANAGE" => "Poner, cambiar y quitar la foto del residente",
+        "QUALITY_REVIEW" => "Ver los indicadores y la calidad de proceso",
         _ => code,
     };
 }

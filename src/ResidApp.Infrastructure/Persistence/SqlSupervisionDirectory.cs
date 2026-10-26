@@ -275,11 +275,27 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
             r.ClosedAt is { } closed ? Utc(closed) : null)).ToList();
     }
 
+    /// <summary>Segunda defensa del permiso QUALITY_REVIEW (0076): la aplicación ya lo comprueba, y aquí se vuelve a comprobar contra
+    /// permisos_perfil para que una llamada directa sin él no devuelva cifras.</summary>
+    private static async Task EnsureQualityReviewAsync(
+        Microsoft.Data.SqlClient.SqlConnection connection, Guid profileScopeId, CenterId centerId, CancellationToken ct)
+    {
+        var granted = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+            SELECT COUNT(*) FROM dbo.permisos_perfil
+             WHERE ambito_perfil_id = @ProfileScopeId AND centro_id = @CenterId AND permiso_codigo = 'QUALITY_REVIEW' AND revocado_en IS NULL
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+        if (granted == 0)
+        {
+            throw new AccessDeniedException();
+        }
+    }
+
     /// <summary>DIR-11: los hitos del proceso de todo el ámbito de Dirección (ver ProcessMilestoneQueries).</summary>
     public async Task<IReadOnlyList<MilestoneFact>> ListMilestoneFactsAsync(
         Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
+        await EnsureQualityReviewAsync(connection, profileScopeId, centerId, ct);
         return await ProcessMilestoneQueries.ListAsync(
             connection, ScopedEventsFrom + ScopedEventsWhere, profileScopeId, centerId, from, toExclusive, ct);
     }
@@ -288,6 +304,7 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
         Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
+        await EnsureQualityReviewAsync(connection, profileScopeId, centerId, ct);
         var parameters = new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, From = from, To = toExclusive };
 
         var episodes = await connection.QueryAsync<EpisodeFactRow>(new CommandDefinition($"""

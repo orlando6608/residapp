@@ -18,6 +18,10 @@
     los cerrados no aparecen. No hay ninguna acción asistencial en este perfil; solo puedes publicar un comunicado a la familia antes de su hora.
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
 
 <div class="row g-3 mb-4">
     <div class="col-12 col-md-4">
@@ -43,22 +47,25 @@
             </div>
         </a>
     </div>
-    <div class="col-12 col-md-4">
-        <a asp-action="Indicadores" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Indicadores e informe de actividad</h2>
-                <p class="card-text mb-0">Cifras agregadas por unidad y periodo, con su evolución mes a mes y versión para imprimir.</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-4">
-        <a asp-action="Calidad" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title">Calidad de proceso</h2>
-                <p class="card-text mb-0">Plazos de cada hito del proceso por unidad y periodo, con los episodios fuera de plazo o a punto de vencer.</p>
-            </div>
-        </a>
-    </div>
+    @if (Model.CanReviewQuality)
+    {
+        <div class="col-12 col-md-4">
+            <a asp-action="Indicadores" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Indicadores e informe de actividad</h2>
+                    <p class="card-text mb-0">Cifras agregadas por unidad y periodo, con su evolución mes a mes y versión para imprimir.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-12 col-md-4">
+            <a asp-action="Calidad" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Calidad de proceso</h2>
+                    <p class="card-text mb-0">Plazos de cada hito del proceso por unidad y periodo, con los episodios fuera de plazo o a punto de vencer.</p>
+                </div>
+            </a>
+        </div>
+    }
     <div class="col-12 col-md-4">
         <a asp-action="Comunicados" class="card text-decoration-none h-100">
             <div class="card-body">

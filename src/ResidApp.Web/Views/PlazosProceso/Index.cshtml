@@ -9,7 +9,10 @@
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
         <li class="breadcrumb-item"><a asp-controller="Direccion" asp-action="Index">Dirección Clínica</a></li>
-        <li class="breadcrumb-item"><a asp-controller="Direccion" asp-action="Calidad">Calidad de proceso</a></li>
+        @if (ViewBag.PuedeVerCalidad == true)
+        {
+            <li class="breadcrumb-item"><a asp-controller="Direccion" asp-action="Calidad">Calidad de proceso</a></li>
+        }
         <li class="breadcrumb-item active" aria-current="page">Plazos</li>
     </ol>
 </nav>

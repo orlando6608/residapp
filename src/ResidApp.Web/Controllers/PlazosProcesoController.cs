@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using ResidApp.Application.Errors;
 using ResidApp.Application.UseCases;
 using ResidApp.Shared;
@@ -12,8 +13,19 @@ namespace ResidApp.Web.Controllers;
 /// PROCESS_DEADLINES_MANAGE. Solo sirven para medir los hitos y avisar al equipo responsable: no cambian ninguna categoría ni umbral clínico.
 /// Traduce a ProcessDeadlinesApplicationService; la autorización no vive aquí.
 /// </summary>
-public sealed class PlazosProcesoController(ProcessDeadlinesApplicationService service) : Controller
+public sealed class PlazosProcesoController(ProcessDeadlinesApplicationService service, ListActiveScopePermissions listPermissions) : Controller
 {
+    /// <summary>El enlace a Calidad de proceso del camino de migas solo se enseña con el permiso QUALITY_REVIEW; solo orienta.</summary>
+    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        var permissions = activeScope is null
+            ? null
+            : (await listPermissions.ExecuteAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), context.HttpContext.RequestAborted)).Value;
+        ViewBag.PuedeVerCalidad = permissions?.Contains(ResidApp.Domain.Accounts.ProfilePermissions.QualityReview) == true;
+        await next();
+    }
+
     /// <summary>Con <paramref name="cj"/> el formulario trae los plazos de CJ, sin guardarlos.</summary>
     public async Task<IActionResult> Index(bool cj = false, CancellationToken ct = default)
     {
