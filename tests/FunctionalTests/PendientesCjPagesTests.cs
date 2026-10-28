@@ -48,7 +48,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         "pruebas-1-auxiliar-enfermeria-flujo", "pruebas-2-medicina-indicaciones-flujo", "pruebas-3-basal-barthel-flujo",
         "pruebas-4-direccion-flujo", "pruebas-5-administracion-flujo", "pruebas-6-comunicados-portal-flujo", "pruebas-7-citas-flujo",
         "pruebas-8-aislamiento-flujo",
-        "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj", "portal-familiar-cuarta-tanda-cj",
+        "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj", "portal-familiar-cuarta-tanda-cj", "direccion-y-traslados-confirmaciones-cj",
         "archivados/rangos-referencia-constantes", "archivados/decisiones-direccion-basal-derivacion",
         "archivados/aclaraciones-respuestas-cj", "archivados/traslado-y-baja-residente",
         "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
