@@ -1965,8 +1965,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 **Para retomar (estado al cerrar la sesión del 2026-10-28):**
 - **En `main` y desplegado:** portal y foto (PR #67), importación (PR #68), organigrama y cargos (PR #69, `0073`), resumen periódico (PR #70, `0074`) el bloque «Dirección y traslados» (PR #71, #72 y #73; `0075` a `0077`, aplicados en Azure dev) y sus documentos (PR #74: preguntas a CJ, recordatorio de privacidad y traspaso; desplegado el 2026-10-28 y comprobado en Azure dev: con la clave, `preguntas.html` lo enlaza y el documento abre con sus 9 preguntas).
-  No hay ramas de trabajo sin subir. No subas nada sin que Orlando lo pida. `docs/seguridad/acceso-por-dispositivo.md` (en el índice de git, sin commit) no es de este bloque: no lo incluyas
-  en un commit sin que Orlando lo diga.
+  No hay ramas de trabajo sin subir. No subas nada sin que Orlando lo pida. `docs/seguridad/acceso-por-dispositivo.md` ya está commiteado (`231354e`, borrador de análisis); no es de este bloque.
 - **La foto de Manuel en Azure dev está hecha y verificada (2026-10-26).** `0071` había borrado las fotos también allí, pero `preparar-almendros.js` (idempotente: solo pone la
   foto si falta) no tuvo nada que hacer: la ficha de Manuel (residente `1A000000-0000-4000-8000-000000000005`) con la Enfermería de Los Almendros ya mostraba la foto, con el
   consentimiento de su representante del 25/10/2026. Las pantallas del organigrama también se abrieron en Azure con `almendros-orlando-enfermeria` (`/Organigrama`) y
