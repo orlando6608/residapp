@@ -32,7 +32,7 @@ Qué tiene que mirar esa persona (cada borrador deja sus decisiones abiertas al 
 ## 2. Que Orlando y CJ decidan las mejoras que propone el agente
 
 Son cambios en la aplicación que el agente aconseja y que **no están hechos**. Cada uno está explicado en `docs/tareas/alta-prioridad/pendientes-enfermeria.md` («Tras un traslado entre unidades»),
-y la mayoría se han preguntado a CJ en `docs/pendientes-cj/direccion-y-traslados-confirmaciones-cj.html`:
+y la mayoría se han preguntado a CJ en `docs/pendientes-cj/archivados/direccion-y-traslados-confirmaciones-cj.html`:
 
 1. **Hecho el 2026-10-28 (`0079`).** Una vista de Dirección con **todas las peticiones** del periodo. Hoy solo ve las lecturas residente por residente, y la pantalla dice «Dirección puede revisarlas». (Pregunta 3.3.)
 2. **Hecho en parte el 2026-10-28 (`0079`):** el motivo con **lista cerrada** más texto corto opcional; las filas de lectura siguen copiando el texto. (Pregunta 3.2.)

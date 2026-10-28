@@ -97,5 +97,5 @@ centros, se añade al catálogo.
 
 - Los duplicados solo se detectan entre los residentes activos del ámbito de quien importa.
 - El episodio del residente importado empieza en la fecha de importación, porque el alta no recibe una fecha de ingreso anterior.
-- Lo supuesto al construirlo lo confirma CJ en `docs/pendientes-cj/importacion-exportacion-confirmaciones-cj.html` (no bloquea).
+- Lo supuesto al construirlo lo confirma CJ en `docs/pendientes-cj/archivados/importacion-exportacion-confirmaciones-cj.html` (no bloquea).
 - Una unidad que ya existe no se cambia de edificio ni de planta desde la importación; lo inactivo no se reactiva.

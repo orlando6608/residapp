@@ -388,7 +388,7 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
     - integración: `IntercambioTests` (estructura, residentes, reimportar, plantillas aisladas por centro, exportación auditada, Enfermería sin
       acceso) y `ExcelTableFileReaderTests`;
     - funcionales: `IntercambioScreensTests`.
-  - **Supuestos a confirmar con CJ (no bloquea):** `docs/pendientes-cj/importacion-exportacion-confirmaciones-cj.html`.
+  - **Supuestos a confirmar con CJ (no bloquea):** `docs/pendientes-cj/archivados/importacion-exportacion-confirmaciones-cj.html`.
 
 ## Pendiente
 
@@ -397,7 +397,7 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
 CJ contestó cinco cuestionarios que tocan este vertical (`docs/pendientes-cj/*.respuestas.json`). Lo que confirma lo que ya hace la app no se repite aquí.
 Orden decidido con Orlando: dictado por voz (va en `continuar-construccion.md`), Portal Familiar, foto e inicio, importación, organigrama y resumen periódico.
 
-- **Portal Familiar** (`portal-familiar-confirmaciones-cj` y tercera tanda) — **hecho el 2026-10-25, script `0070`, salvo el resumen periódico:**
+- **Portal Familiar** (`portal-familiar-confirmaciones-cj` y tercera tanda) — **hecho el 2026-10-25, script `0070` (el resumen periódico, el 2026-10-26, script `0074`); quedan solo las respuestas que esperan al correo (ADR 0012): portal 3.2, tercera 6.1 y 6.2.** Revisado el 2026-10-28 contra el código: tercera 4.1 es **parcial** (aviso de «ubicación pendiente» por «sin plaza» solo si la unidad tiene plazas activas configuradas; `SqlAdministrationOverview.cs`, a comentar con CJ) y tercera 6.4 (sin notificaciones push) se cumple por ausencia: la app no tiene `push` ni permisos de notificación.
   - Al suspender o dar de baja al residente, el acceso de la familia **se corta solo**, y vuelve al reactivarlo (portal 1.3): `AccessibleLinks` exige
     `estado = 'ACTIVE'` y ninguna suspensión abierta; no toca la autorización. Las citas y solicitudes abiertas **se cancelan y se cierran solas con la baja, no con la suspensión** (CJ, `archivados/portal-familiar-cuarta-tanda-cj`, 1.1 B, **hecho el 2026-10-28, script `0078`**, ver abajo).
     Sin acceso, el título es «Ahora no tienes acceso a ningún residente».
