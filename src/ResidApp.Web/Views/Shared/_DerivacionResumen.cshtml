@@ -20,9 +20,12 @@
             <p class="mb-2" style="white-space: pre-line"><strong>Comunicaciones:</strong> @derivacion.Communications</p>
         }
         <p class="text-muted small text-break">Huella SHA-256 del contenido: @derivacion.ContentHash</p>
-        <div class="d-grid d-md-flex mb-3">
-            <a asp-action="InformeDerivacion" asp-route-eventoId="@Model.EventId" class="btn btn-outline-primary btn-lg">Descargar el informe en PDF</a>
-        </div>
+        @if (!Model.FromPreviousUnit)
+        {
+            <div class="d-grid d-md-flex mb-3">
+                <a asp-action="InformeDerivacion" asp-route-eventoId="@Model.EventId" class="btn btn-outline-primary btn-lg">Descargar el informe en PDF</a>
+            </div>
+        }
 
         <h3 class="h6">Intentos de llamada a la familia</h3>
         @if (derivacion.CallAttempts.Count == 0 && derivacion.NoContactReason is not null)
