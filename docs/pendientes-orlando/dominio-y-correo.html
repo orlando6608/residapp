@@ -1,0 +1,736 @@
+<!doctype html>
+<!--
+  Documento para Orlando. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan en «dominio-y-correo.respuestas.json»; se pueden dejar en esta misma carpeta para que ingeniería las lea.
+  No contiene claves ni datos secretos: la cadena de conexión de Azure no se escribe aquí ni en el repositorio.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominio, certificado y correo</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --ink: #1a2433;
+    --muted: #5b6676;
+    --rule: #d6dde6;
+    --accent: #0a58ca;
+    --accent-ink: #ffffff;
+    --accent-soft: #e6eefb;
+    --warn-rule: #e0bf55;
+    --warn-bg: #fff8e1;
+    --blank: #fffdf4;
+    --blank-rule: #b9a24f;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #6fae82;
+    --no-bg: #fbe9e7;
+    --no-ink: #7a1f17;
+    --danger: #b3261e;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f141b; --surface: #171d26; --ink: #e3e8ef; --muted: #a3adba; --rule: #2a3340;
+      --accent: #6ea8fe; --accent-ink: #0b1220; --accent-soft: #19243a;
+      --warn-rule: #7c6520; --warn-bg: #2a2410; --blank: #1d2420; --blank-rule: #6f6334;
+      --ok-bg: #173022; --ok-ink: #bfe5c9; --ok-rule: #3f7a52; --no-bg: #3a1c19; --no-ink: #f5c6c1; --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f141b; --surface: #171d26; --ink: #e3e8ef; --muted: #a3adba; --rule: #2a3340;
+    --accent: #6ea8fe; --accent-ink: #0b1220; --accent-soft: #19243a;
+    --warn-rule: #7c6520; --warn-bg: #2a2410; --blank: #1d2420; --blank-rule: #6f6334;
+    --ok-bg: #173022; --ok-ink: #bfe5c9; --ok-rule: #3f7a52; --no-bg: #3a1c19; --no-ink: #f5c6c1; --danger: #f2b8b5;
+  }
+
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-inline: 16px; }
+  .page { max-width: 880px; margin: 0 auto; padding-block: 48px 160px; display: flex; flex-direction: column; gap: 48px; }
+  .prose { max-width: 70ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 600; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .keyfacts .si { color: var(--ok-ink); }
+  .keyfacts .no { color: var(--no-ink); }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+
+  .nota { padding: 12px 16px; border-left: 4px solid var(--warn-rule); background: var(--warn-bg); border-radius: 0 6px 6px 0; }
+  .nota.info { border-left-color: var(--accent); background: var(--accent-soft); }
+
+  /* Glosario */
+  .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .card strong { font-size: 1rem; }
+  .card span { font-size: 0.94rem; color: var(--muted); }
+  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+
+  /* Pasos */
+  .pasos { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; counter-reset: paso; }
+  .pasos > li { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .pasos > li > h3 { display: flex; gap: 12px; align-items: baseline; }
+  .pasos .id { font-family: var(--mono); font-size: 0.85rem; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+  .quien { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .veras { padding-left: 12px; border-left: 3px solid var(--ok-rule); color: var(--muted); font-size: 0.95rem; }
+  .ojo { padding-left: 12px; border-left: 3px solid var(--warn-rule); font-size: 0.95rem; }
+
+  /* Tablas */
+  .tabla { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+  tr:last-child td { border-bottom: 0; }
+  .si-td { color: var(--ok-ink); font-weight: 600; }
+  .no-td { color: var(--no-ink); font-weight: 600; }
+
+  .descartes { display: flex; flex-direction: column; gap: 10px; list-style: none; padding: 0; }
+  .descartes li { background: var(--no-bg); color: var(--no-ink); border-radius: 6px; padding: 10px 14px; }
+  .descartes li span { display: block; color: var(--ink); font-size: 0.94rem; }
+
+  /* Índice y preguntas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); text-decoration: none; color: var(--ink); min-height: 24px; }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q { background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--blank-rule); border-radius: 8px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 999px; padding: 2px 10px; white-space: nowrap; background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted); }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) { .q-head { grid-template-columns: auto 1fr; } .q-head .chip { grid-column: 2; justify-self: start; } }
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice { position: relative; display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); cursor: pointer; }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--accent); color: var(--accent); display: grid; place-items: center; font-weight: 600; line-height: 1; }
+  .choice .txt { padding-top: 2px; }
+  .choice .rec { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ok-ink); background: var(--ok-bg); border-radius: 999px; padding: 1px 8px; margin-left: 6px; white-space: nowrap; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .check { display: flex; gap: 12px; align-items: center; min-height: 48px; cursor: pointer; }
+  .check input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea { font: inherit; font-size: 1rem; color: var(--ink); background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px; padding: 8px 10px; width: 100%; box-sizing: border-box; min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija */
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--rule); box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08); padding: 10px 16px; }
+  .bar-in { max-width: 880px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn { font: inherit; font-size: 0.95rem; font-weight: 600; padding: 10px 14px; min-height: 44px; border-radius: 6px; cursor: pointer; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+  @media print { .bar, .toc { display: none; } .page { padding-bottom: 24px; } .q, .pasos > li { break-inside: avoid; } }
+</style>
+</head>
+<body data-doc="dominio-y-correo" data-version="2026-10-28">
+
+<div class="page">
+  <header>
+    <p class="eyebrow">ResidApp · Infraestructura · Para Orlando</p>
+    <h1>Dominio, certificado y correo: qué hacer, y por qué</h1>
+    <p class="meta">Estado a 28/10/2026 · Escrito a partir de los dos PDFs de <code>docs/decisiones-arquitectura/</code> y del ADR 0012, ya filtrado con lo que ResidApp necesita de verdad</p>
+    <p class="lead prose">
+      Tienes los dominios <code>residapp.es</code> y <code>residapp.cat</code> a tu nombre. Esta guía te dice, paso a paso y con palabras corrientes, qué tienes que hacer en
+      CDmon y en Azure para que la aplicación tenga su propia dirección con candado, y qué hace falta para que algún día pueda mandar correos a las familias.
+      Al final hay un formulario con lo que tienes que decidir.
+    </p>
+  </header>
+
+  <section aria-labelledby="resumen">
+    <h2 id="resumen">La respuesta corta a tus tres preguntas</h2>
+    <div class="keyfacts" role="list">
+      <div role="listitem"><span class="k">Dominio de la app en Azure</span><strong class="si">Sí, hazlo.</strong><span>Es gratis (certificado incluido) y da la dirección con candado. Solo vale el <code>.es</code>; el <code>.cat</code> no interviene.</span></div>
+      <div role="listitem"><span class="k">Azure Communication Services Email (ACS)</span><strong class="si">Sí, para los avisos de la app.</strong><span>Sin él, la aplicación no puede mandar ningún correo. Hace falta un dominio verificado. No hace falta hasta que se construya el envío.</span></div>
+      <div role="listitem"><span class="k">Licencia Microsoft 365 (5,60 €/mes)</span><strong class="no">No para la app.</strong><span>Solo si quieres tener tú buzones <code>@residapp.es</code> para recibir correo. Puedes esperar a tener un centro real.</span></div>
+    </div>
+    <p class="nota info prose">
+      <strong>Qué es lo único que no puede esperar:</strong> si vas a usar passkeys (la entrada con huella o llave) en el dominio propio, el nombre de la web hay que
+      decidirlo <em>antes</em> de que nadie registre una passkey, porque queda atada a él. Por eso la primera pregunta del formulario es qué nombre le damos.
+    </p>
+  </section>
+
+  <nav class="toc" id="indice" aria-label="Partes con preguntas"></nav>
+
+  <section aria-labelledby="glosario">
+    <h2 id="glosario">1 · Cómo funciona, en lenguaje llano</h2>
+    <div class="cards">
+      <div class="card"><strong>Dominio</strong><span>El nombre de una web, como <code>residapp.es</code>. Lo tienes alquilado (por años) a tu nombre en CDmon. Un <em>subdominio</em> es un nombre colgado de él, como <code>dev.residapp.es</code>.</span></div>
+      <div class="card"><strong>DNS</strong><span>La agenda de teléfonos de internet: dice a qué servidor lleva cada nombre. Se edita en el panel de CDmon, apuntando «registros» (líneas de la agenda).</span></div>
+      <div class="card"><strong>Registro CNAME</strong><span>Una línea de esa agenda que dice «este nombre es otro nombre de aquel sitio». La usaremos para que <code>dev.residapp.es</code> lleve a tu aplicación en Azure.</span></div>
+      <div class="card"><strong>Registro TXT</strong><span>Una línea de la agenda que guarda un texto. Sirve para «demostrar» que el dominio es tuyo o para dar permisos de envío de correo.</span></div>
+      <div class="card"><strong>Certificado y HTTPS</strong><span>Es el candado del navegador: cifra lo que viaja entre el móvil y la aplicación. Azure lo da gratis para tu aplicación y lo renueva solo.</span></div>
+      <div class="card"><strong>ACS Email</strong><span>El servicio de Azure que manda correos desde un programa (la «oficina de correos» de la aplicación). No tiene bandeja de entrada: solo envía.</span></div>
+      <div class="card"><strong>SPF, DKIM y DMARC</strong><span>Tres sellos que dicen a Gmail, Outlook, etc. «este correo sale de verdad de ResidApp». Sin ellos, los avisos acaban en la carpeta de basura o alguien se puede hacer pasar por ti.</span></div>
+      <div class="card"><strong>Microsoft 365</strong><span>El correo de oficina de Microsoft (Outlook, buzones). Sirve para <em>recibir y escribir tú</em>. No es lo que manda los avisos automáticos.</span></div>
+      <div class="card"><strong>Buzón compartido</strong><span>Una dirección (por ejemplo <code>soporte@</code>) que lee quien tú decidas desde su propio Outlook. En Microsoft 365 no necesita licencia propia.</span></div>
+      <div class="card"><strong>Passkey</strong><span>Entrar con huella o llave en vez de escribir algo. Queda atada al nombre de la web donde se creó y no se traslada a otra.</span></div>
+    </div>
+    <p class="prose">
+      <strong>La idea importante:</strong> hay <em>dos correos distintos</em>. Uno es el de las personas (tú recibiendo mensajes de un director; eso es Microsoft 365). El otro es el
+      de la aplicación (avisar a una familia de una cita; eso es ACS). Se parecen por fuera, pero son servicios independientes y no hace falta contratar uno para tener el otro.
+    </p>
+  </section>
+
+  <section aria-labelledby="descartes">
+    <h2 id="descartes">2 · Lo que he descartado de los dos PDFs, y por qué</h2>
+    <ul class="descartes">
+      <li><strong>Mandar los avisos de la app con la licencia de Microsoft 365.</strong>
+        <span>El ADR 0012 (el documento de decisión técnica) propone ACS, con dominio propio verificado. Una licencia de oficina no está pensada para envíos automáticos.</span></li>
+      <li><strong>Nombre de la residencia como remitente («Residencia Los Almendros &lt;…&gt;»).</strong>
+        <span>El ADR exige correos genéricos, sin nada que identifique al residente ni su situación. Que la bandeja de una familia diga el nombre de una residencia geriátrica ya cuenta algo de la persona. Remitente fijo: «ResidApp».</span></li>
+      <li><strong>«Responder a» el correo privado de cada residencia.</strong>
+        <span>Sacaría lo que escriba la familia fuera de la aplicación, hacia un buzón que ResidApp no controla, y la app no tiene hoy ni un campo de correo del centro. Solo se retomaría si el DPO (la persona que vela por la protección de datos) lo valida.</span></li>
+      <li><strong>El paso «Solo HTTPS».</strong>
+        <span>Ya lo hace el despliegue automático (<code>ci-cd.yml</code>, <code>--https-only true</code>). No tienes que tocarlo.</span></li>
+      <li><strong>La frase «cumples estrictamente el RGPD».</strong>
+        <span>No se puede afirmar todavía: falta que el DPO revise el contrato de Azure con ACS y el aviso a las familias.</span></li>
+      <li><strong>Las páginas comerciales (<code>residapp.es</code> y <code>residapp.cat</code> en catalán) y el alias <code>suport@residapp.cat</code>.</strong>
+        <span>No bloquean ni la aplicación ni el correo. Quedan fuera de esta guía; la maqueta está en <code>docs/bocetos-pantallas/maqueta_residapp_landingPage.html</code>. El <code>.cat</code> no se usa en nada de lo que sigue.</span></li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="parte-a">
+    <h2 id="parte-a">3 · Paso a paso A: la dirección de la app en Azure</h2>
+    <p class="prose">
+      <strong>Para qué:</strong> hoy la app se abre en <code>app-residapp-dev.azurewebsites.net</code>. Con esto se abrirá en un nombre tuyo, con candado. <strong>Cuánto cuesta:</strong> nada extra
+      (el plan <code>asp-residapp-dev</code> es Basic B1, que admite el certificado gratuito).
+    </p>
+    <p class="nota prose">
+      <strong>Elige el nombre antes de empezar.</strong> Esta guía usa <code>dev.residapp.es</code> (recomendado en la pregunta 1.1: así <code>app.residapp.es</code> queda reservado para producción
+      y no mezclas pruebas con datos reales). Si en el formulario eliges <code>app.residapp.es</code>, cambia <code>dev</code> por <code>app</code> en todos los pasos.
+      Los textos de los botones de Azure y de CDmon cambian de vez en cuando: si ves algo ligeramente distinto, busca la palabra parecida.
+    </p>
+    <ol class="pasos">
+      <li>
+        <h3><span class="id">A1</span> Crear la línea CNAME en CDmon</h3>
+        <span class="quien">Lo haces tú · 5 minutos</span>
+        <p>Entra en tu cuenta de CDmon, busca <code>residapp.es</code> y abre la gestión de <strong>DNS</strong> (a veces se llama «Zona DNS» o «Registros»). Añade un registro nuevo:</p>
+        <ul>
+          <li>Nombre o subdominio: <code>dev</code></li>
+          <li>Tipo: <code>CNAME</code></li>
+          <li>Valor o destino: <code>app-residapp-dev.azurewebsites.net</code></li>
+        </ul>
+        <p class="ojo"><strong>Ojo:</strong> en el nombre escribe solo <code>dev</code>. Muchos paneles añaden solos el <code>.residapp.es</code>; si escribes el nombre completo puede quedar <code>dev.residapp.es.residapp.es</code>, que no funciona.</p>
+        <p class="veras"><strong>Cómo sabes que está bien:</strong> tarda de minutos a un par de horas en difundirse. Cuando lo esté, escribir <code>dev.residapp.es</code> en el navegador aún mostrará un error de certificado: es normal, falta el paso A3.</p>
+      </li>
+      <li>
+        <h3><span class="id">A2</span> Registrar el nombre en la aplicación de Azure</h3>
+        <span class="quien">Lo haces tú · 5 minutos</span>
+        <ol>
+          <li>Entra en el portal de Azure y busca la aplicación <code>app-residapp-dev</code> (grupo de recursos <code>rg-residapp-dev</code>).</li>
+          <li>En el menú de la izquierda, dentro de <strong>Configuración</strong>, pulsa <strong>Dominios personalizados</strong> (en inglés, <em>Custom domains</em>).</li>
+          <li>Pulsa <strong>+ Agregar dominio personalizado</strong>. Como proveedor elige <strong>Todos los demás servicios de dominio</strong> (CDmon no es de Microsoft).</li>
+          <li>En el certificado elige <strong>Certificado administrado de App Service</strong> (gratuito) y, si lo pide, <strong>SNI SSL</strong>.</li>
+          <li>Tipo de registro: <strong>CNAME</strong>. Dominio: <code>dev.residapp.es</code>. Pulsa <strong>Validar</strong> y, si sale en verde, <strong>Agregar</strong>.</li>
+        </ol>
+        <p class="ojo"><strong>Si la validación falla:</strong> casi siempre es porque el paso A1 aún no se ha difundido (espera y reintenta) o porque Azure pide también un registro <code>TXT</code> llamado <code>asuid.dev</code> con un «Id. de comprobación» que te muestra en esa misma pantalla. Si lo pide, créalo en CDmon igual que el CNAME (Tipo <code>TXT</code>, nombre <code>asuid.dev</code>, valor el que te dé Azure).</p>
+        <p class="veras"><strong>Cómo sabes que está bien:</strong> en la lista aparece <code>dev.residapp.es</code> con el estado del certificado «creándose» y luego con un candado (puede tardar unos minutos).</p>
+      </li>
+      <li>
+        <h3><span class="id">A3</span> Comprobar el candado</h3>
+        <span class="quien">Lo haces tú · 2 minutos</span>
+        <p>Abre <code>https://dev.residapp.es</code> en el navegador. Debe cargar ResidApp con el candado. Si escribes <code>http://</code> (sin la «s») debe llevarte solo a <code>https://</code>.</p>
+      </li>
+      <li>
+        <h3><span class="id">A4</span> Decir a la app cuál es su nombre para las passkeys</h3>
+        <span class="quien">Lo haces tú · 3 minutos · reinicia la app unos segundos</span>
+        <ol>
+          <li>En la misma aplicación de Azure, menú izquierdo, <strong>Configuración</strong> → <strong>Variables de entorno</strong> (<em>Environment variables</em>) → pestaña <strong>Configuración de la aplicación</strong>.</li>
+          <li>Busca <code>Acceso__PasskeyDominio</code> (hoy vale <code>app-residapp-dev.azurewebsites.net</code>) y cámbiala a <code>dev.residapp.es</code>. Guarda y confirma el reinicio.</li>
+        </ol>
+        <p class="ojo"><strong>Consecuencia:</strong> las passkeys ya registradas en el nombre antiguo dejan de valer (están atadas a él, y el ADR 0007 lo da por sabido en desarrollo). Cada persona registrará otra la primera vez que entre por el nombre nuevo. La contraseña y el código del móvil siguen igual. Después de este paso, las invitaciones y las guías de CJ tendrán que citar la dirección nueva: dímelo y lo actualizo yo.</p>
+        <p class="veras"><strong>Cómo sabes que está bien:</strong> entras en <code>https://dev.residapp.es</code> con una cuenta de prueba y puedes crear una passkey sin error.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="parte-b">
+    <h2 id="parte-b">4 · Paso a paso B: el envío de correos desde la app (ACS Email)</h2>
+    <p class="prose">
+      <strong>Para qué:</strong> CJ pidió tres correos a las familias: el aviso de que el centro propone una cita, el recordatorio del día antes y el código de acceso al portal. Hoy la aplicación
+      <strong>no envía ninguno</strong>. Para que pueda, hace falta un servicio de envío (ACS Email) y un dominio verificado para que los correos no caigan en la basura ni se puedan falsificar.
+      <strong>Cuándo:</strong> puedes dejar estos pasos hasta que decidas la pregunta 1.5; los dos recursos se pueden crear ya y no gastan nada hasta que se manda un correo.
+      <strong>Cuánto cuesta:</strong> se paga por uso (por correo enviado), sin cuota mensual fija; comprueba el precio actual en la página de precios de Azure al crearlo, porque cambia.
+    </p>
+    <p class="nota prose">
+      <strong>Lo que dirán los correos:</strong> solo «Tienes algo pendiente en ResidApp» o el código. Nunca el nombre del residente, la unidad ni nada de salud (ADR 0012). El remitente
+      será «ResidApp», con una dirección tipo <code>no-responder@avisos.residapp.es</code>. Los textos exactos los validará el DPO.
+    </p>
+    <ol class="pasos">
+      <li>
+        <h3><span class="id">B1</span> Decidir la «geografía» de los datos: Europa</h3>
+        <span class="quien">Lo decides tú · irreversible</span>
+        <p>Al crear los servicios Azure te pide dónde se guardan los datos. Elige <strong>Europe</strong> en los dos recursos de los pasos B2 y B5. <strong>No se puede cambiar después</strong> (habría que borrar y recrear). Aun así, Microsoft avisa de que algunos datos pueden procesarse de paso en otros países; no se dice «todo está en la UE» hasta que el DPO lo valide.</p>
+      </li>
+      <li>
+        <h3><span class="id">B2</span> Crear el servicio «Email Communication Services»</h3>
+        <span class="quien">Lo haces tú · 5 minutos</span>
+        <ol>
+          <li>En el portal de Azure busca <strong>Email Communication Services</strong> y pulsa <strong>Crear</strong>.</li>
+          <li>Suscripción: la de siempre. Grupo de recursos: <code>rg-residapp-dev</code>. Nombre sugerido: <code>ecs-residapp-dev</code>. Ubicación de los datos: <strong>Europe</strong>.</li>
+          <li>Revisar y crear.</li>
+        </ol>
+        <p class="veras">Es el «buzón de salida» donde vivirá el dominio. Aún no manda nada.</p>
+      </li>
+      <li>
+        <h3><span class="id">B3</span> Añadir tu dominio en ese servicio</h3>
+        <span class="quien">Lo haces tú · 5 minutos</span>
+        <ol>
+          <li>Dentro de <code>ecs-residapp-dev</code>, menú izquierdo: <strong>Aprovisionar dominios</strong> (<em>Provision domains</em>) → <strong>Agregar dominio</strong> → <strong>Dominio personalizado</strong>.</li>
+          <li>Escribe el dominio desde el que salen los avisos. Recomendado: <code>avisos.residapp.es</code> (pregunta 1.3). Un subdominio solo para los avisos separa su «reputación» del correo de las personas y evita tener que fusionar sellos SPF.</li>
+          <li>Azure te mostrará una lista de registros DNS que tienes que crear. <strong>Normalmente son cuatro:</strong> un <code>TXT</code> de verificación (demuestra que el dominio es tuyo), un <code>TXT</code> SPF y dos <code>CNAME</code> DKIM (<code>selector1…</code> y <code>selector2…</code>). Los nombres y valores exactos los muestra Azure: <strong>cópialos tal cual, no los escribas a mano</strong>.</li>
+        </ol>
+      </li>
+      <li>
+        <h3><span class="id">B4</span> Crear esos registros en CDmon</h3>
+        <span class="quien">Lo haces tú · 15 minutos</span>
+        <p>Igual que el CNAME del paso A1, uno por uno. Reglas:</p>
+        <ul>
+          <li>El mismo cuidado con el nombre: si CDmon añade solo <code>.residapp.es</code>, quita esa parte de lo que pegues.</li>
+          <li><strong>Solo puede haber un registro SPF por nombre.</strong> Si más adelante usas Microsoft 365 en el dominio principal, su SPF y este no chocan porque este cuelga de <code>avisos</code>, un nombre distinto.</li>
+          <li>Añade además, una sola vez, un registro <code>TXT</code> con nombre <code>_dmarc</code> y valor <code>v=DMARC1; p=none;</code>. Es la política «avísame si algo falsifica mi dominio» en su versión más suave; se endurece cuando veas que los envíos llegan bien.</li>
+        </ul>
+      </li>
+      <li>
+        <h3><span class="id">B5</span> Verificar el dominio</h3>
+        <span class="quien">Lo haces tú · de minutos a un par de horas</span>
+        <p>Vuelve al dominio en Azure y pulsa <strong>Verificar</strong> en cada fila. Cuando las cuatro (verificación de dominio, SPF y las dos DKIM) pasen a <strong>Verificado</strong>, listo. Si alguna no pasa, el 90 % de las veces es el nombre del registro (el problema del <code>.residapp.es</code> duplicado) o que aún no se ha difundido.</p>
+      </li>
+      <li>
+        <h3><span class="id">B6</span> Crear la dirección de envío «ResidApp»</h3>
+        <span class="quien">Lo haces tú · 3 minutos</span>
+        <p>En el dominio ya verificado busca <strong>Direcciones de remitente</strong> (puede aparecer como <em>MailFrom addresses</em> o <em>Sender usernames</em>) y añade una con nombre de usuario <code>no-responder</code> y nombre visible <code>ResidApp</code>. Así el correo llegará como «ResidApp &lt;no-responder@avisos.residapp.es&gt;».</p>
+      </li>
+      <li>
+        <h3><span class="id">B7</span> Crear «Communication Services» y conectar los dos</h3>
+        <span class="quien">Lo haces tú · 10 minutos</span>
+        <ol>
+          <li>Busca <strong>Communication Services</strong> (distinto del anterior) y crea uno: mismo grupo de recursos, nombre sugerido <code>acs-residapp-dev</code>, ubicación de datos <strong>Europe</strong>.</li>
+          <li>Dentro, menú izquierdo: <strong>Correo electrónico</strong> → <strong>Dominios</strong> → <strong>Conectar dominio</strong>, y elige <code>ecs-residapp-dev</code> y <code>avisos.residapp.es</code>.</li>
+        </ol>
+      </li>
+      <li>
+        <h3><span class="id">B8</span> Prueba de que el correo sale y no cae en spam</h3>
+        <span class="quien">Lo haces tú · 10 minutos</span>
+        <p>En <code>acs-residapp-dev</code> abre <strong>Correo electrónico</strong> → <strong>Probar correo electrónico</strong> (<em>Try Email</em>) y envíate uno a tu Gmail y a otra cuenta. Comprueba que llega a la <strong>bandeja de entrada</strong> (no a spam) y, en «Mostrar original» o «Ver cabeceras», que ponen <code>SPF: PASS</code>, <code>DKIM: PASS</code> y <code>DMARC: PASS</code>.</p>
+      </li>
+      <li>
+        <h3><span class="id">B9</span> Guardar la clave de conexión sin pegarla en ningún sitio</h3>
+        <span class="quien">Lo haces tú · cuando yo te lo pida</span>
+        <p>Dentro de <code>acs-residapp-dev</code>, menú <strong>Claves</strong> (<em>Keys</em>), copia la <strong>cadena de conexión</strong> principal. Es una clave secreta: <strong>no la pegues en el chat, ni en un documento, ni en el repositorio</strong>. Cuando la aplicación esté lista para enviar, te daré el nombre exacto de la variable y la pegas tú solo en <strong>Variables de entorno</strong> de la aplicación en Azure, como hiciste en A4.</p>
+      </li>
+      <li>
+        <h3><span class="id">B10</span> Registros de actividad: dónde y cuánto tiempo</h3>
+        <span class="quien">Lo decides tú con el DPO</span>
+        <p>Azure puede guardar un historial de envíos (a quién, cuándo, si rebotó) en un espacio llamado Log Analytics. Contiene direcciones de correo, que son datos personales. Si lo activas, crea ese espacio en Europa y con <strong>poca retención</strong> (30 días es un punto de partida razonable, pero lo decide el DPO). La app guardará además su propio registro de envíos sin contenido (ADR 0012, requisito 3).</p>
+      </li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="m365">
+    <h2 id="m365">5 · Microsoft 365 (5,60 €/mes): ¿lo necesito, y para qué?</h2>
+    <div class="tabla">
+      <table>
+        <thead><tr><th scope="col">Pregunta</th><th scope="col">Respuesta</th></tr></thead>
+        <tbody>
+          <tr><td>¿Hace falta para que la app mande correos?</td><td class="no-td">No. Eso lo hace ACS (parte 4).</td></tr>
+          <tr><td>¿Hace falta para tener la app en <code>dev.residapp.es</code>?</td><td class="no-td">No.</td></tr>
+          <tr><td>¿Para qué sirve entonces?</td><td>Para <strong>recibir y escribir tú</strong> correo con tu dominio: <code>gerencia@residapp.es</code> (la licencia), más buzones compartidos gratis como <code>info@</code>, <code>soporte@</code> o <code>administracion@</code>. Es la cara de ResidApp ante un director de residencia.</td></tr>
+          <tr><td>¿Cuándo conviene contratarla?</td><td>Antes de hablar con un centro real: necesitas una dirección a la que puedan escribir y, para el RGPD, un contacto para ejercer derechos. Mientras sea solo desarrollo, puedes esperar.</td></tr>
+          <tr><td>¿Cuánto cuesta?</td><td>5,60 €/mes por una licencia, según tu PDF (compruébalo al contratar). Los buzones compartidos no cuestan más mientras no pasen de 50 GB.</td></tr>
+          <tr><td>¿Y si solo quiero que <code>info@residapp.es</code> me llegue a Gmail?</td><td>Mira en CDmon si tu plan incluye reenvío o buzones: no lo he podido comprobar. Es más barato, pero menos profesional.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="nota prose">
+      <strong>Un buzón <code>soporte@</code> abierto a las familias es un riesgo de privacidad.</strong> Las familias escribirán el nombre del residente, síntomas o citas: serían datos de salud tratados
+      por correo normal, fuera de la aplicación y sin auditoría. Si lo creas, ponle este aviso en la firma y en la web: «Este buzón es solo para problemas técnicos con la aplicación. No escribas datos
+      de salud ni nombres de residentes; para eso, habla con el centro.» Y define qué haces si llegan (no reenviar, borrar, avisar al centro). Para el piloto, es más prudente no abrir <code>soporte@</code> a familias hasta tener ese procedimiento.
+    </p>
+  </section>
+
+  <section aria-labelledby="dns">
+    <h2 id="dns">6 · Cómo quedará la agenda (DNS) de <code>residapp.es</code> en CDmon</h2>
+    <p class="prose">Es el resumen de todo lo que has creado. Donde pone «lo da Azure», el valor exacto lo copias del portal; yo no puedo inventarlo.</p>
+    <div class="tabla">
+      <table>
+        <thead><tr><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col">Valor</th><th scope="col">Para qué</th></tr></thead>
+        <tbody>
+          <tr><td><code>dev</code></td><td>CNAME</td><td><code>app-residapp-dev.azurewebsites.net</code></td><td>Llevar el nombre a la aplicación (A1)</td></tr>
+          <tr><td><code>asuid.dev</code></td><td>TXT</td><td>lo da Azure</td><td>Solo si Azure lo pide en A2</td></tr>
+          <tr><td><code>avisos</code></td><td>TXT</td><td>lo da Azure (verificación)</td><td>Demostrar que el dominio es tuyo (B3)</td></tr>
+          <tr><td><code>avisos</code></td><td>TXT</td><td>lo da Azure (SPF)</td><td>Permitir a Azure enviar en tu nombre</td></tr>
+          <tr><td>lo da Azure (selector1…)</td><td>CNAME</td><td>lo da Azure</td><td>Firma DKIM 1</td></tr>
+          <tr><td>lo da Azure (selector2…)</td><td>CNAME</td><td>lo da Azure</td><td>Firma DKIM 2</td></tr>
+          <tr><td><code>_dmarc</code></td><td>TXT</td><td><code>v=DMARC1; p=none;</code></td><td>Política contra falsificación (B4)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose meta">Con Microsoft 365 aparecerían además los registros MX, SPF, DKIM y de autodescubrimiento que Microsoft te indique al añadir el dominio. Esos van en el nombre principal, no en <code>avisos</code>.</p>
+  </section>
+
+  <section aria-labelledby="reparto">
+    <h2 id="reparto">7 · Quién hace qué, y qué avisarme después de cada paso</h2>
+    <div class="tabla">
+      <table>
+        <thead><tr><th scope="col">Cuando hayas hecho…</th><th scope="col">Dime…</th><th scope="col">Y yo hago…</th></tr></thead>
+        <tbody>
+          <tr><td>A1 a A4</td><td>«Dominio listo» y el nombre elegido</td><td>Compruebo el candado y la redirección desde fuera, actualizo las invitaciones y guías de CJ con la dirección nueva, y dejo anotado en el ADR 0007 el dominio de las passkeys</td></tr>
+          <tr><td>B2 a B8</td><td>«ACS verificado»</td><td>Compruebo desde fuera que SPF, DKIM y DMARC están publicados, y actualizo el ADR 0012</td></tr>
+          <tr><td>Tus respuestas del formulario</td><td>«Ya respondí» (con el fichero descargado)</td><td>Si apruebas el ADR 0012: el envío de correos, en este orden (1) aviso de cita, (2) recordatorio del día antes, (3) código de acceso del familiar; el «Siempre activo» de la Web App se enciende desde el despliegue</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="dpo">
+    <h2 id="dpo">8 · Antes de usar todo esto con familias reales</h2>
+    <p class="prose">Lo hace una persona (DPO real o abogado), no ingeniería. Ya está en <code>docs/privacidad/antes-de-datos-reales.md</code>; esto se añade:</p>
+    <ul class="prose">
+      <li>Que el contrato de Azure cubre ACS Email como «encargado del tratamiento» (el proveedor que trata datos solo por cuenta tuya) y dónde se guardan datos y registros.</li>
+      <li>El texto exacto de cada plantilla de correo y cómo se avisa a la familia, antes del primer envío, de que recibirá correos y para qué.</li>
+      <li>Cuánto tiempo se guardan los registros de envíos (los de la app y los de Azure).</li>
+      <li>La decisión sobre <code>soporte@</code> y quién es responsable de lo que las familias escriban ahí.</li>
+      <li>Que los dominios estén a nombre de quien corresponda, con verificación en dos pasos en CDmon y renovación automática: si se pierde el dominio, se pierden los correos y alguien podría reutilizarlo.</li>
+      <li>El código de acceso por correo es un blanco de estafas: el texto no llevará enlaces que pidan la contraseña, y se explicará a la familia que ResidApp nunca la pide por correo.</li>
+    </ul>
+  </section>
+
+  <section class="tema" id="tema-1" aria-labelledby="t1">
+    <h2 id="t1">9 · Tus decisiones</h2>
+    <p class="prose meta">Ninguna es irreversible salvo la geografía de datos de la parte 4 (que ya está decidida en la guía: Europa). Cada una trae una opción recomendada, pero eliges tú.</p>
+    <div class="qs">
+
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Qué nombre le damos a la aplicación que hoy está en Azure?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es la decisión que no puede esperar: las passkeys quedan atadas al nombre y no se trasladan. El PDF proponía <code>app.residapp.es</code> sobre la aplicación de desarrollo.</p>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt"><code>dev.residapp.es</code> para la aplicación actual (desarrollo y pruebas de CJ) y dejar <code>app.residapp.es</code> reservado para producción. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt"><code>app.residapp.es</code> ya para la aplicación actual, como decía el PDF. Cuando exista producción habrá que cambiar de nombre y las passkeys se vuelven a registrar.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">Aún no pongo nombre propio: sigo con <code>app-residapp-dev.azurewebsites.net</code> hasta tener producción.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Contratamos ya Microsoft 365 para tener buzones <code>@residapp.es</code>?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">No hace falta para la app. Es solo para que puedas recibir correo con tu dominio (5,60 €/mes por una licencia, según el PDF).</p>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Todavía no: lo contrato antes de hablar con un centro real. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Sí, ya, para tener <code>gerencia@</code> y los buzones compartidos.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">Primero miro qué incluye mi plan de CDmon (reenvío o buzones) y decido.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="1.3">
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">¿Desde qué dominio salen los avisos de la app?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Un subdominio solo para avisos evita que un problema de reputación del correo de la app afecte al tuyo, y evita chocar con el SPF de Microsoft 365 el día que lo contrates.</p>
+        <fieldset class="choices" aria-labelledby="t-1-3">
+          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">El subdominio <code>avisos.residapp.es</code>. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">El dominio principal <code>residapp.es</code> (la dirección parece más «oficial», pero se mezcla con el correo de las personas).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="1.4">
+        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">¿Cómo se presenta el remitente y a dónde responde la familia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Los PDFs proponían el nombre de la residencia y respuestas al correo del centro. Lo he descartado por el ADR 0012 y la revisión de privacidad.</p>
+        <fieldset class="choices" aria-labelledby="t-1-4">
+          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">«ResidApp» como nombre y <code>no-responder@</code> como dirección; el texto dice «No respondas a este correo». <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">«ResidApp» como nombre y respuestas a <code>soporte@residapp.es</code>. Exige crear el buzón y un procedimiento para lo que escriban las familias.</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="C"><span class="letter">C</span><span class="txt">Nombre del centro y respuestas al correo del centro, como decían los PDFs. Solo si el DPO lo valida por escrito; no está construido.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="1.5">
+        <div class="q-head"><span class="n">1.5</span><h3 class="q-title" id="t-1-5">¿Apruebas el ADR 0012, el plan técnico del envío de correos?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Resume: ACS Email con dominio propio; una tarea dentro de la propia aplicación para el recordatorio, con «Siempre activo» encendido en la Web App; y construir primero el aviso de cita, luego el recordatorio y por último el código de acceso. Está en <code>docs/decisiones-arquitectura/0012-envio-correos.md</code>.</p>
+        <fieldset class="choices" aria-labelledby="t-1-5">
+          <label class="choice"><input type="radio" name="r-1-5" value="A"><span class="letter">A</span><span class="txt">Sí, tal como está, con lo que dice esta guía sobre el remitente. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="B"><span class="letter">B</span><span class="txt">Sí, pero con cambios (los escribo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="C"><span class="letter">C</span><span class="txt">Todavía no: primero quiero hablar con el DPO.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="1.6">
+        <div class="q-head"><span class="n">1.6</span><h3 class="q-title" id="t-1-6">¿Tienes acceso a todo lo necesario?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Necesitas poder crear recursos en la suscripción de Azure y editar el DNS de <code>residapp.es</code> en CDmon.</p>
+        <fieldset class="choices" aria-labelledby="t-1-6">
+          <label class="choice"><input type="radio" name="r-1-6" value="A"><span class="letter">A</span><span class="txt">Sí: puedo crear recursos en Azure (rol Propietario o Colaborador) y el DNS de <code>residapp.es</code> está en CDmon y lo puedo editar.</span></label>
+          <label class="choice"><input type="radio" name="r-1-6" value="B"><span class="letter">B</span><span class="txt">No estoy seguro / me falta algo (lo explico en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="1.7">
+        <div class="q-head"><span class="n">1.7</span><h3 class="q-title" id="t-1-7">¿Están protegidos los dos dominios?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Si pierdes la cuenta de CDmon o no se renueva un dominio, se pierden la dirección de la app y el correo. Hay que tener verificación en dos pasos en CDmon y la renovación automática puesta.</p>
+        <fieldset class="choices" aria-labelledby="t-1-7">
+          <label class="choice"><input type="radio" name="r-1-7" value="A"><span class="letter">A</span><span class="txt">Sí: verificación en dos pasos activada y renovación automática puesta en <code>residapp.es</code> y <code>residapp.cat</code>.</span></label>
+          <label class="choice"><input type="radio" name="r-1-7" value="B"><span class="letter">B</span><span class="txt">Lo reviso y lo activo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2" aria-labelledby="t2">
+    <h2 id="t2">10 · Marca lo que ya has hecho</h2>
+    <p class="prose meta">Solo para llevar la cuenta. Cuando marques uno y guardes el fichero, sé en qué punto estás.</p>
+    <div class="qs">
+      <article class="q" data-q="2.1" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">A1</span><h3 class="q-title">CNAME creado en CDmon</h3><span class="chip">Pendiente</span></div>
+        <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label></article>
+      <article class="q" data-q="2.2" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">A2</span><h3 class="q-title">Dominio añadido en Azure y certificado creado</h3><span class="chip">Pendiente</span></div>
+        <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label></article>
+      <article class="q" data-q="2.3" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">A3 y A4</span><h3 class="q-title">Candado comprobado y variable de passkeys cambiada</h3><span class="chip">Pendiente</span></div>
+        <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label></article>
+      <article class="q" data-q="2.4" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">B2 a B4</span><h3 class="q-title">Servicio de correo y dominio de avisos creados, con sus registros en CDmon</h3><span class="chip">Pendiente</span></div>
+        <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label></article>
+      <article class="q" data-q="2.5" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">B5 y B6</span><h3 class="q-title">Dominio de avisos verificado y dirección <code>no-responder</code> creada</h3><span class="chip">Pendiente</span></div>
+        <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label></article>
+      <article class="q" data-q="2.6" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">B7 y B8</span><h3 class="q-title">Servicios conectados y correo de prueba recibido en la bandeja de entrada</h3><span class="chip">Pendiente</span></div>
+        <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label>
+        <label class="field">Resultado de SPF, DKIM y DMARC en el correo de prueba (opcional)<textarea data-field="texto" rows="2"></textarea></label></article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para Orlando. No contiene claves. Hecho con el borrador de los dos PDFs, el ADR 0012 y la segunda lectura del agente de protección de datos,
+    que no sustituye a un DPO o abogado. Los nombres de botones de Azure y CDmon son orientativos: pueden haber cambiado.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Guardar respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+    <div class="actions">
+      <button type="button" class="btn" id="btn-abrir">Abrir respuestas guardadas</button>
+      <button type="button" class="btn primary" id="btn-guardar">Guardar respuestas</button>
+      <input type="file" id="fichero" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Mismo script que los cuestionarios de docs/pendientes-cj, con el texto de la marca «Hecho» para las casillas. */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var FILE = DOC + ".respuestas.json";
+  var KEY = "residapp-pendientes-orlando:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;
+  var savedAt = null;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (dirty) say("", "Tienes cambios que aún no están en el fichero. Pulsa «Guardar respuestas» cuando quieras.");
+    else if (savedAt) say("ok", "Fichero al día (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda en este navegador.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? (q.dataset.si || "Respondida") : (q.dataset.no || "Pendiente");
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  function loaded(data, origin) {
+    apply(data);
+    dirty = false;
+    savedAt = data.guardado || null;
+    store(refresh());
+    var msg = "Respuestas cargadas " + origin + " (guardadas el " + when(data.guardado) + ").";
+    if (data.cuestionario !== VERSION) {
+      say("error", msg + " Son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+    } else {
+      say("ok", msg);
+    }
+  }
+
+  function download(json) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  async function save() {
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    try {
+      if (!window.showSaveFilePicker) throw new Error("sin selector");
+      var handle = await window.showSaveFilePicker({ suggestedName: FILE,
+        types: [{ description: "Respuestas (JSON)", accept: { "application/json": [".json"] } }] });
+      var w = await handle.createWritable();
+      await w.write(json);
+      await w.close();
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      download(json);
+    }
+    dirty = false;
+    savedAt = data.guardado;
+    store(data);
+    say("ok", "Guardado como «" + FILE + "». Déjalo en docs/pendientes-orlando/ y dime «ya respondí».");
+  }
+
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    store(refresh());
+    status();
+  }
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+
+  document.getElementById("btn-guardar").addEventListener("click", save);
+  document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
+  document.getElementById("fichero").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    file.text().then(function (t) {
+      var data = JSON.parse(t);
+      if (data.documento !== DOC) {
+        say("error", "Ese fichero es de otro documento («" + data.documento + "»). Elige «" + FILE + "».");
+        return;
+      }
+      loaded(data, "del fichero");
+    }).catch(function () {
+      say("error", "No se ha podido leer ese fichero. Elige «" + FILE + "».");
+    }).finally(function () { e.target.value = ""; });
+  });
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+})();
+</script>
+</body>
+</html>
