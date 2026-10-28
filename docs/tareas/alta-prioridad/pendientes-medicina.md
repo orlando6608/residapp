@@ -156,6 +156,9 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
 
 ## Pendiente
 
+- **Tras un traslado (CJ 5.2 C) — hecho el 2026-10-28, script `0077`:** Medicina de la unidad de destino abre los episodios cerrados de la unidad anterior, con motivo y 1 hora, **solo los que ya ve**
+  (escalados y propios); ver `pendientes-enfermeria.md`.
+
 En el orden propuesto:
 
 1. **Lo que queda de la historia 9** (común con la historia 11 de Enfermería; ver `pendientes-enfermeria.md`):

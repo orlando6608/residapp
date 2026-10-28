@@ -59,6 +59,7 @@ builder.Services.AddScoped<IDailyClosureRepository, SqlDailyClosureRepository>()
 builder.Services.AddScoped<IClinicalEventRepository, SqlClinicalEventRepository>();
 builder.Services.AddScoped<IChangeInboxDirectory, SqlChangeInboxDirectory>();
 builder.Services.AddScoped<ISupervisionDirectory, SqlSupervisionDirectory>();
+builder.Services.AddScoped<ITransferHistoryAccess, SqlTransferHistoryAccess>();
 builder.Services.AddScoped<IAdministracionResidentDirectory, SqlAdministracionResidentDirectory>();
 builder.Services.AddScoped<IResidentIdentityRepository, SqlResidentIdentityRepository>();
 builder.Services.AddScoped<IResidentPhotoRepository, SqlResidentPhotoRepository>();
@@ -213,6 +214,7 @@ builder.Services.AddSingleton(new ClinicalAccessSettings(
 builder.Services.AddScoped<ReadDirectionBaseline>();
 builder.Services.AddScoped<DownloadDirectionReferralReport>();
 builder.Services.AddScoped<ClinicalAccessDeclarations>();
+builder.Services.AddScoped<TransferHistoryAccess>();
 builder.Services.AddScoped<ListActiveProfileScopes>();
 builder.Services.AddScoped<ListActiveScopeUnits>();
 builder.Services.AddScoped<ListActiveScopeLocations>();

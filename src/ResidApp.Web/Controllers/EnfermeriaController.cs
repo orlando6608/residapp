@@ -24,7 +24,8 @@ namespace ResidApp.Web.Controllers;
 /// </summary>
 public sealed class EnfermeriaController(
     EnfermeriaApplicationService service, FindEmergencyContact findEmergencyContact, ListMilestoneWarnings milestoneWarnings,
-    CorrectFamilyCommunication correctFamilyCommunication, ListEventsReadyToClose readyToClose, ResidentPhotoApplicationService photos) : Controller
+    CorrectFamilyCommunication correctFamilyCommunication, ListEventsReadyToClose readyToClose, ResidentPhotoApplicationService photos,
+    TransferHistoryAccess transferHistory) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -327,7 +328,7 @@ public sealed class EnfermeriaController(
 
         var centroId = CenterId.From(activeScope.CenterId);
         var detailResult = await service.FindPendingChangeDetailAsync(
-            new FindPendingChangeDetailCommand(activeScope.ProfileScopeId, centroId, eventoId), ct);
+            new FindPendingChangeDetailCommand(activeScope.ProfileScopeId, centroId, eventoId, TransferHistoryCookie.Read(Request)), ct);
         if (!detailResult.Ok || detailResult.Value is null)
         {
             return RedirectToAction(nameof(Index));
@@ -1164,12 +1165,47 @@ public sealed class EnfermeriaController(
 
         var residentId = findResult.Value.ResidentId;
         var events = await service.ListClosedEventsAsync(
-            new ListClosedEventsCommand(activeScope.ProfileScopeId, centroId, residentId, SystemProfile.Enfermeria), ct);
+            new ListClosedEventsCommand(activeScope.ProfileScopeId, centroId, residentId, SystemProfile.Enfermeria, TransferHistoryCookie.Read(Request)), ct);
         var baselines = await service.ReadBaselineHistoryAsync(
             new ReadBaselineHistoryCommand(activeScope.ProfileScopeId, centroId, residentId), ct);
+        var previousUnit = await transferHistory.CountAsync(
+            new CountTransferHistoryCommand(activeScope.ProfileScopeId, centroId, residentId, SystemProfile.Enfermeria), ct);
         return View("~/Views/Shared/Historial.cshtml",
-            ResidentHistoryViewModel.From(findResult.Value, events, baselines, nameof(DetalleCambio)));
+            ResidentHistoryViewModel.From(findResult.Value, events, baselines, nameof(DetalleCambio), previousUnit.Ok ? previousUnit.Value : 0));
     }
+
+    /// <summary>Historial tras un traslado (CJ, tercera tanda 5.2 C; 0077): pide con un motivo los episodios cerrados de la unidad anterior del residente.
+    /// La petición vale 1 hora y se recuerda en una cookie con solo su id; cada lectura la revalida y la audita en SQL.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PedirHistorialAnterior(PedirHistorialAnteriorFormModel form, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await transferHistory.DeclareAsync(new DeclareTransferHistoryCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.Motivo, SystemProfile.Enfermeria), ct);
+        if (result.Ok)
+        {
+            TransferHistoryCookie.Write(Response, result.Value);
+        }
+        else
+        {
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.InvalidInput => "Escribe el motivo, de hasta 300 caracteres.",
+                ApplicationFailureCode.AccessDenied or ApplicationFailureCode.Conflict =>
+                    "No se pueden abrir los episodios de la unidad anterior de este residente.",
+                _ => result.Error.Message,
+            };
+        }
+
+        return RedirectToAction(form.Retorno == nameof(LineaTemporal) ? nameof(LineaTemporal) : nameof(Historial), new { residenteId = form.ResidenteId });
+    }
+
 
     /// <summary>ENF-24 (historia 11): una versión firmada del basal, vigente o histórica, con sus nueve áreas y el
     /// Barthel por ítems. Vista común con Medicina.</summary>
@@ -1225,10 +1261,12 @@ public sealed class EnfermeriaController(
             return RedirectToAction(nameof(Residentes));
         }
 
-        var timeline = await service.ReadResidentTimelineAsync(
-            new ReadResidentTimelineCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, SystemProfile.Enfermeria), ct);
+        var timeline = await service.ReadResidentTimelineAsync(new ReadResidentTimelineCommand(
+            activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, SystemProfile.Enfermeria, TransferHistoryCookie.Read(Request)), ct);
+        var previousUnit = await transferHistory.CountAsync(
+            new CountTransferHistoryCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, SystemProfile.Enfermeria), ct);
         return View("~/Views/Shared/LineaTemporal.cshtml",
-            new ResidentTimelineViewModel(findResult.Value, timeline.Ok ? timeline.Value : null, nameof(DetalleCambio)));
+            new ResidentTimelineViewModel(findResult.Value, timeline.Ok ? timeline.Value : null, nameof(DetalleCambio), previousUnit.Ok ? previousUnit.Value : 0));
     }
 
     /// <summary>ENF-16: formulario de alta. Al guardar se continúa en el detalle del evento, desde donde

@@ -4,7 +4,9 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record ReadResidentTimelineCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, SystemProfile Perfil);
+/// <summary>TransferDeclarationId: la petición vigente del historial tras un traslado (0077); con ella salen también los hitos de los cerrados de la unidad anterior.</summary>
+public sealed record ReadResidentTimelineCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, SystemProfile Perfil, Guid? TransferDeclarationId = null);
 
 /// <summary>
 /// HIS-02 (ENF-04, MED-03, MED-24): línea temporal completa del residente, en solo lectura. Decisión del usuario
@@ -31,7 +33,8 @@ public sealed class ReadResidentTimeline(FindScopeResident findScopeResident, IC
             {
                 throw new AccessDeniedException();
             }
-            return await directory.ListTimelineAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
+            return await directory.ListTimelineAsync(
+                command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct, command.TransferDeclarationId);
         });
     }
 }

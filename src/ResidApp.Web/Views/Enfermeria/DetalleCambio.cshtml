@@ -27,6 +27,14 @@
     (@ElapsedTimeDisplay.Since(evento.OccurredAt))
 </p>
 
+@if (evento.FromPreviousUnit)
+{
+    <div class="alert alert-secondary" role="status">
+        Episodio cerrado de una unidad anterior del residente, abierto con tu petición del historial. Es solo lectura, queda registrado con tu motivo cada vez que lo abres
+        y no se puede corregir ni rectificar desde esta unidad.
+    </div>
+}
+
 @if (TempData["Mensaje"] is string mensaje)
 {
     <div class="alert alert-success" role="status">@mensaje</div>
@@ -188,7 +196,7 @@
                 </dl>
                 var enmiendas = evento.Assessment.Amendments;
                 <partial name="_CorreccionesValoracion" model="new CorreccionesValoracionViewModel(
-                    enmiendas, AssessmentAmendmentDisplay.Action(enmiendas, evento.Status == ClinicalEventStatus.EnValoracion, Model.CorrectionWindow),
+                    enmiendas, evento.FromPreviousUnit ? AssessmentAmendmentAction.Ninguna : AssessmentAmendmentDisplay.Action(enmiendas, evento.Status == ClinicalEventStatus.EnValoracion, Model.CorrectionWindow),
                     evento.EventId, enmiendas?.LastSavedAt + Model.CorrectionWindow)" />
             }
         }

@@ -58,6 +58,7 @@ public sealed class ProfileScopeController(ListActiveProfileScopes listActivePro
     {
         await declarations.EndAllAsync(ct);
         ClinicalAccessDeclarationCookie.Clear(Response);
+        TransferHistoryCookie.Clear(Response);
         ActiveProfileScopeCookie.Write(Response, scope.ProfileScopeId, scope.CenterId.Value, scope.CenterName, scope.Profile);
         return returnUrl is not null && Url.IsLocalUrl(returnUrl)
             ? Redirect(returnUrl)

@@ -24,6 +24,11 @@
     </a>
 </p>
 
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
 <section class="mb-4" aria-labelledby="eventos-cerrados">
     <h2 id="eventos-cerrados" class="h5">Eventos cerrados</h2>
     <p class="text-muted small">
@@ -46,6 +51,11 @@
         <partial name="_EventosCerradosLista" model="new ClosedEventsListModel(Model.Events, Model.DetailAction)" />
     }
 </section>
+
+@if (Model.PreviousUnit is not null)
+{
+    <partial name="_HistorialUnidadAnterior" model="Model.PreviousUnit" />
+}
 
 <section class="mb-4" aria-labelledby="versiones-basal">
     <h2 id="versiones-basal" class="h5">Versiones del basal</h2>

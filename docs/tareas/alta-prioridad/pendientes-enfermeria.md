@@ -267,8 +267,22 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
 
 ### Respuesta de CJ del 2026-10-25, por construir
 
-- **Tras un traslado entre unidades** (`docs/pendientes-cj/confirmaciones-tercera-tanda-cj.respuestas.json`, 5.2 C): la unidad de destino **ve los episodios ya cerrados del
-  residente solo si lo pide, indicando un motivo** que queda en la auditoría (como la declaración de acceso de Dirección). Hoy no los ve.
+- **Tras un traslado entre unidades** (`docs/pendientes-cj/confirmaciones-tercera-tanda-cj.respuestas.json`, 5.2 C) — **hecho el 2026-10-28, script `0077`:** la unidad de destino **ve los
+  episodios ya cerrados del residente solo si lo pide, indicando un motivo** que queda en la auditoría (como la declaración de acceso de Dirección).
+  - **Decisiones de Orlando (2026-10-26):** abre **Historial, Línea temporal y Detalle** (solo lectura) de los cerrados anteriores al traslado, **no el PDF de derivación**; motivo de hasta 300
+    caracteres; la petición **vale 1 hora, por cuenta y residente**, y termina al cambiar de residente, de perfil o de ámbito o al cerrar sesión; Enfermería y Medicina (Medicina conserva su regla de
+    escalados y propios); el origen no cambia. **Suposiciones mías:** el bloque solo se ofrece si hay algún cerrado que abrir (se cuenta, sin mostrar contenido); cada lectura se audita
+    (`TRANSFER_HISTORY_READ`, con el motivo) en su propia transacción **antes** de entregar, además de la fila de la petición.
+  - **Cómo está hecho:** tabla inmutable `declaraciones_historial_traslado` (solo crear y terminar; RLS por centro), `SqlChangeInboxDirectory.TransferHistoryScopedEventsFrom` (la regla de las bandejas
+    para eventos **cerrados** de una unidad desde la que se trasladó al residente después de cerrarse, estando el residente ahora en una unidad del ámbito y con la petición vigente; cubre A→B→C),
+    `ListClosedEventsAsync`/`ListTimelineAsync`/`FindAsync` con `transferDeclarationId` opcional (la escritura nunca la pasa: la unidad anterior sigue sin poder escribir), `SqlTransferHistoryAccess` y
+    `TransferHistoryAccess` (pedir y contar), cookie `residapp_transfer_history` (solo el id; se borra con la de Dirección) y `EndAccessDeclarationsAsync` que también termina estas peticiones.
+    Pantalla: bloque «Episodios cerrados de la unidad anterior» en Historial y Línea temporal (`_HistorialUnidadAnterior`), marca «De una unidad anterior», aviso de solo lectura en el detalle y sin
+    corregir/rectificar ni PDF.
+  - **Privacidad (agente `dpo-residapp`, 2026-10-28):** admisible con condiciones; hecho en pantalla: advertencia junto al motivo (sin datos de salud ni nombres), aviso de 1 hora y de que lo revisa
+    Dirección, motivo visible para Dirección en la trazabilidad. **Pendiente de Orlando/DPO real (no creado):** entrada en el registro de actividades de tratamiento, nota de EIPD, información a
+    residentes y personal, quién revisa `TRANSFER_HISTORY_READ` y con qué frecuencia, conservación del motivo (hereda la de la auditoría, aún sin decidir) y vía de purga de la tabla inmutable.
+  - **Tests:** `HistorialTrasTrasladoTests` (integración, 5) y el funcional `UnidadDeDestino_PideLosEpisodiosCerradosDeLaAnterior_ConMotivo_ConLaAppEntera`.
 
 En el orden propuesto de construcción:
 

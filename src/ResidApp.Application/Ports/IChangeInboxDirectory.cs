@@ -195,7 +195,7 @@ public sealed record PendingChangeDetail(
     ClinicalEventStatus Status, int Revision, bool? AssessmentStartedByCurrentAccount, DateTimeOffset? AssessmentStartedAt,
     NursingAssessmentDraft? Assessment, IReadOnlyList<VitalSignRange> ReferenceRanges, ClinicalEventClosure? Closure,
     FollowUpDetail? FollowUp, ClinicalEventEscalation? Escalation, MedicalDetail Medical, UrgentProtocolDetail? UrgentProtocol,
-    ReferralDetail? Referral, ClinicalEventContext? Context = null);
+    ReferralDetail? Referral, ClinicalEventContext? Context = null, bool FromPreviousUnit = false);
 
 /// <summary>HIS-03: basal y ubicación vigentes cuando se creó el evento (dbo.eventos_contexto). La versión del
 /// basal es null si el residente no tenía basal firmado; la unidad, si no tenía ubicación registrada.</summary>
@@ -210,7 +210,7 @@ public sealed record OpenEventSummary(
 public sealed record ClosedEventSummary(
     Guid EventId, ClinicalEventOrigin Origin, DailyChangeClassification Classification, IReadOnlyList<DailyChangeAreaCode> Areas,
     string? Observation, SystemProfile AuthorProfile, DateTimeOffset OccurredAt, DateTimeOffset ClosedAt, bool Escalated,
-    ClinicalEventContext? Context, SystemProfile? ClosedByProfile = null);
+    ClinicalEventContext? Context, SystemProfile? ClosedByProfile = null, bool FromPreviousUnit = false);
 
 /// <summary>
 /// Traduce las bandejas ENF-02 (cambios ordinarios) y ENF-03 (prioritaria), más el detalle ENF-04, sobre
@@ -225,7 +225,10 @@ public interface IChangeInboxDirectory : IMilestoneFactDirectory
     Task<IReadOnlyList<PendingChangeSummary>> ListAsync(
         Guid profileScopeId, CenterId centerId, DailyChangeClassification classification, CancellationToken ct = default);
 
-    Task<PendingChangeDetail?> FindAsync(Guid profileScopeId, CenterId centerId, Guid eventId, CancellationToken ct = default);
+    /// <summary>Con transferDeclarationId (la petición vigente del historial tras un traslado, script 0077) devuelve también un episodio cerrado de la
+    /// unidad anterior del residente, con FromPreviousUnit; sin ella, o si ya no vale, solo los del ámbito. Los casos de uso que escriben no la pasan.</summary>
+    Task<PendingChangeDetail?> FindAsync(
+        Guid profileScopeId, CenterId centerId, Guid eventId, CancellationToken ct = default, Guid? transferDeclarationId = null);
 
     Task<IReadOnlyList<PendingFamilyCommunicationSummary>> ListPendingFamilyCommunicationsAsync(
         Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
@@ -237,8 +240,14 @@ public interface IChangeInboxDirectory : IMilestoneFactDirectory
     Task<IReadOnlyList<OpenEscalationSummary>> ListOpenEscalationsAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
 
     /// <summary>HIS-01: eventos cerrados de un residente visibles para el ámbito (la misma regla que las
-    /// bandejas), del más reciente al más antiguo.</summary>
+    /// bandejas), del más reciente al más antiguo. Con transferDeclarationId vigente, también los cerrados en la unidad anterior (FromPreviousUnit); cada
+    /// lectura queda auditada antes de entregarlos.</summary>
     Task<IReadOnlyList<ClosedEventSummary>> ListClosedEventsAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default, Guid? transferDeclarationId = null);
+
+    /// <summary>Cuántos episodios cerrados de una unidad anterior tiene el residente que el ámbito podría abrir con una petición (solo el número, sin
+    /// contenido): decide si se ofrece pedirlos.</summary>
+    Task<int> CountPreviousUnitClosedEventsAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 
     /// <summary>ENF-18/MED-20: eventos abiertos de un residente visibles para el ámbito (la misma regla que las
@@ -249,9 +258,9 @@ public interface IChangeInboxDirectory : IMilestoneFactDirectory
     /// <summary>HIS-02: línea temporal del residente, del hito más reciente al más antiguo. Solo incluye los
     /// eventos visibles para el ámbito (la misma regla que las bandejas), abiertos y cerrados, más las versiones
     /// del basal y los cambios de ubicación del residente. Quien llama comprueba antes que el residente está en el
-    /// ámbito.</summary>
+    /// ámbito. Con transferDeclarationId vigente, también los hitos de los cerrados en la unidad anterior (FromPreviousUnit), auditados antes.</summary>
     Task<IReadOnlyList<TimelineEntry>> ListTimelineAsync(
-        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default, Guid? transferDeclarationId = null);
 
     /// <summary>DIR-06: lo mismo con el ámbito de Dirección Clínica, que ve todos los eventos de sus unidades. No autoriza nada: solo
     /// se llama después de una lectura auditada del residente (ReadDirectionBaseline).</summary>

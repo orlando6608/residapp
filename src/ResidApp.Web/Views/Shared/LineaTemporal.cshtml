@@ -28,6 +28,15 @@
     }
 </p>
 
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+@if (Model.PreviousUnit is not null)
+{
+    <partial name="_HistorialUnidadAnterior" model="Model.PreviousUnit" />
+}
+
 @if (Model.Entries is null)
 {
     <div class="alert alert-danger">No se ha podido cargar la línea temporal. Vuelve a intentarlo.</div>

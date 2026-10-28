@@ -13,12 +13,34 @@ namespace ResidApp.Web.Models;
 /// detalle del controlador en curso (DetalleCambio en Enfermería, Escalado en Medicina).</summary>
 public sealed record ResidentHistoryViewModel(
     ScopeResidentSummary Resident, IReadOnlyList<ClosedEventSummary>? Events, IReadOnlyList<BaselineHistoryEntry>? Baselines,
-    string DetailAction)
+    string DetailAction, PreviousUnitHistoryModel? PreviousUnit = null)
 {
     public static ResidentHistoryViewModel From(
         ScopeResidentSummary resident, ApplicationResult<IReadOnlyList<ClosedEventSummary>> events,
-        ApplicationResult<IReadOnlyList<BaselineHistoryEntry>> baselines, string detailAction) =>
-        new(resident, events.Ok ? events.Value : null, baselines.Ok ? baselines.Value : null, detailAction);
+        ApplicationResult<IReadOnlyList<BaselineHistoryEntry>> baselines, string detailAction, int previousUnitCount = 0) =>
+        new(resident, events.Ok ? events.Value : null, baselines.Ok ? baselines.Value : null, detailAction,
+            PreviousUnitHistoryModel.For(resident, previousUnitCount, events.Ok && events.Value!.Any(e => e.FromPreviousUnit), "Historial"));
+}
+
+/// <summary>Historial tras un traslado (CJ, tercera tanda 5.2 C; script 0077), parcial _HistorialUnidadAnterior: cuántos episodios cerrados de una unidad
+/// anterior se podrían pedir (Count) y si ya hay una petición vigente (Requested: entonces salen en la lista). ReturnAction es la pantalla a la que volver
+/// tras pedir (Historial o LineaTemporal). Null si no hay nada que ofrecer.</summary>
+public sealed record PreviousUnitHistoryModel(Guid ResidentId, int Count, bool Requested, string ReturnAction)
+{
+    public static PreviousUnitHistoryModel? For(ScopeResidentSummary resident, int count, bool requested, string returnAction) =>
+        count > 0 ? new(resident.ResidentId.Value, count, requested, returnAction) : null;
+}
+
+/// <summary>Pedir los episodios cerrados de la unidad anterior de un residente trasladado: el motivo es obligatorio (hasta 300 caracteres) y queda
+/// auditado con cada lectura. Retorno: Historial o LineaTemporal.</summary>
+public sealed class PedirHistorialAnteriorFormModel
+{
+    public Guid ResidenteId { get; set; }
+
+    [System.ComponentModel.DataAnnotations.StringLength(ResidApp.Domain.Residents.TransferHistoryRequest.MaxReasonLength)]
+    public string? Motivo { get; set; }
+
+    public string? Retorno { get; set; }
 }
 
 /// <summary>Lista de eventos cerrados (parcial _EventosCerradosLista) de Enfermería, Medicina y Dirección. DetailAction null: sin
@@ -74,7 +96,12 @@ public static class ResidentHistoryDisplay
 
 /// <summary>Línea temporal del residente (HIS-02, MED-24), vista común a Enfermería y Medicina. Entries null
 /// significa que no se pudo cargar.</summary>
-public sealed record ResidentTimelineViewModel(ScopeResidentSummary Resident, IReadOnlyList<TimelineEntry>? Entries, string DetailAction);
+public sealed record ResidentTimelineViewModel(
+    ScopeResidentSummary Resident, IReadOnlyList<TimelineEntry>? Entries, string DetailAction, int PreviousUnitCount = 0)
+{
+    public PreviousUnitHistoryModel? PreviousUnit =>
+        PreviousUnitHistoryModel.For(Resident, PreviousUnitCount, Entries?.Any(e => e.FromPreviousUnit) == true, "LineaTemporal");
+}
 
 /// <summary>Textos en español de cada hito de la línea temporal: su título y sus campos, sin los vacíos.</summary>
 public static class TimelineDisplay
