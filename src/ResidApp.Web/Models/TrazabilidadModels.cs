@@ -13,6 +13,7 @@ public static class ClinicalTraceabilityDisplay
         ["CLINICAL_EVENT_ESCALATE"] = "Evento escalado a Medicina",
         ["CLINICAL_EVENT_CLOSE"] = "Evento cerrado",
         ["CLINICAL_EVENT_CLOSE_EXCEPTIONAL"] = "Evento cerrado por Dirección con indicaciones sin cumplir",
+        ["TRANSFER_HISTORY_READ"] = "Lectura del historial anterior de un residente trasladado",
         ["DAILY_CLOSURE_CHANGE_REPORTED"] = "Cambio registrado por Auxiliar",
         ["DAILY_CLOSURE_NO_CHANGE"] = "Cierre del día sin cambios (Auxiliar)",
         ["DAILY_CLOSURE_NOT_ASSESSABLE"] = "Cierre del día: no se pudo valorar (Auxiliar)",
@@ -65,6 +66,7 @@ public static class ClinicalTraceabilityDisplay
         ["BASELINE_DRAFT"] = "Borrador de basal",
         ["BASELINE_VERSION"] = "Versión del basal",
         ["BASELINE"] = "Basal",
+        ["RESIDENT_TRANSFER_HISTORY"] = "Petición del historial anterior",
     };
 
     public static string Action(string code) => Actions.TryGetValue(code, out var label) ? label : "Acción clínica";

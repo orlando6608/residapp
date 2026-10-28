@@ -63,7 +63,7 @@ Tres decisiones relacionadas siguen diferidas y denegadas por defecto — no exi
 | `D1-P05` | Cancelación excepcional de un borrador cuando su creador no está disponible, más allá del motivo trazable ya previsto |
 | `D1-P06` | Actor, alcance y procedimiento para iniciar una rectificación de un basal firmado |
 
-`D1-P04` (traslado) la respondió CJ el 2026-10-07 (`docs/pendientes-cj/archivados/traslado-y-baja-residente.html`): solo entre unidades del mismo centro, los episodios abiertos pasan a la unidad de destino y el borrador de basal a medias se rehace en ella; hecho en el script `0040`.
+`D1-P04` (traslado) la respondió CJ el 2026-10-07 (`docs/pendientes-cj/archivados/traslado-y-baja-residente.html`): solo entre unidades del mismo centro, los episodios abiertos pasan a la unidad de destino y el borrador de basal a medias se rehace en ella; hecho en el script `0040`. Los episodios **cerrados** no se mueven; la unidad de destino los abre (historial, línea temporal y detalle, en solo lectura) solo si lo pide con un motivo, 1 hora, auditado (CJ, tercera tanda 5.2 C; script `0077`).
 
 ## Reglas de negocio adicionales
 

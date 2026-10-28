@@ -19,7 +19,7 @@ public sealed partial class SqlChangeInboxDirectory
                    ev.ocurrido_en AS OccurredAt, actor.nombre_visible AS ActorName, ev.perfil_activo AS ActorProfileCode,
                    unit.nombre_visible AS UnitName, ev.accion_codigo AS Action, ev.tipo_recurso AS ResourceType,
                    ev.proposito_codigo AS Purpose,
-                   CASE WHEN ev.accion_codigo = 'CLINICAL_EVENT_CLOSE_EXCEPTIONAL' THEN ev.justificacion END AS Reason
+                   CASE WHEN ev.accion_codigo IN ('CLINICAL_EVENT_CLOSE_EXCEPTIONAL', 'TRANSFER_HISTORY_READ') THEN ev.justificacion END AS Reason
               FROM dbo.eventos_auditoria ev
               JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
                    AND profile.perfil_codigo = 'DIRECCION_CLINICA' AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL

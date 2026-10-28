@@ -22,7 +22,7 @@ namespace ResidApp.Web.Controllers;
 public sealed class MedicinaController(
     MedicinaApplicationService service, ResidentBaselineApplicationService baselineService, FindEmergencyContact findEmergencyContact,
     ListMilestoneWarnings milestoneWarnings, ListPendingFamilyCommunications listFamilyCommunications,
-    CorrectFamilyCommunication correctFamilyCommunication) : Controller
+    CorrectFamilyCommunication correctFamilyCommunication, TransferHistoryAccess transferHistory) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -167,7 +167,7 @@ public sealed class MedicinaController(
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Escalado), new { eventoId }) });
         }
 
-        var detail = await FindEventAsync(eventoId, ct);
+        var detail = await FindEventAsync(eventoId, ct, TransferHistoryCookie.Read(Request));
         if (detail is null)
         {
             return RedirectToAction(nameof(Escalados));
@@ -1001,11 +1001,47 @@ public sealed class MedicinaController(
         var (scope, resident) = resolved.Value;
         var centroId = CenterId.From(scope.CenterId);
         var events = await service.ListClosedEventsAsync(
-            new ListClosedEventsCommand(scope.ProfileScopeId, centroId, resident.ResidentId, SystemProfile.Medicina), ct);
+            new ListClosedEventsCommand(scope.ProfileScopeId, centroId, resident.ResidentId, SystemProfile.Medicina, TransferHistoryCookie.Read(Request)), ct);
         var baselines = await service.ReadBaselineHistoryAsync(
             new ReadBaselineHistoryCommand(scope.ProfileScopeId, centroId, resident.ResidentId), ct);
-        return View("~/Views/Shared/Historial.cshtml", ResidentHistoryViewModel.From(resident, events, baselines, nameof(Escalado)));
+        var previousUnit = await transferHistory.CountAsync(
+            new CountTransferHistoryCommand(scope.ProfileScopeId, centroId, resident.ResidentId, SystemProfile.Medicina), ct);
+        return View("~/Views/Shared/Historial.cshtml",
+            ResidentHistoryViewModel.From(resident, events, baselines, nameof(Escalado), previousUnit.Ok ? previousUnit.Value : 0));
     }
+
+    /// <summary>Historial tras un traslado (CJ, tercera tanda 5.2 C; 0077): pide con un motivo los episodios cerrados de la unidad anterior del residente.
+    /// La petición vale 1 hora y se recuerda en una cookie con solo su id; cada lectura la revalida y la audita en SQL.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PedirHistorialAnterior(PedirHistorialAnteriorFormModel form, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await transferHistory.DeclareAsync(new DeclareTransferHistoryCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.Motivo, SystemProfile.Medicina), ct);
+        if (result.Ok)
+        {
+            TransferHistoryCookie.Write(Response, result.Value);
+        }
+        else
+        {
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.InvalidInput => "Escribe el motivo, de hasta 300 caracteres.",
+                ApplicationFailureCode.AccessDenied or ApplicationFailureCode.Conflict =>
+                    "No se pueden abrir los episodios de la unidad anterior de este residente.",
+                _ => result.Error.Message,
+            };
+        }
+
+        return RedirectToAction(form.Retorno == nameof(LineaTemporal) ? nameof(LineaTemporal) : nameof(Historial), new { residenteId = form.ResidenteId });
+    }
+
 
     /// <summary>MED-22 (historia 9): una versión firmada del basal, vigente o histórica, con sus nueve áreas y el Barthel
     /// por ítems. Vista común con Enfermería.</summary>
@@ -1039,9 +1075,11 @@ public sealed class MedicinaController(
 
         var (scope, resident) = resolved.Value;
         var timeline = await service.ReadResidentTimelineAsync(new ReadResidentTimelineCommand(
-            scope.ProfileScopeId, CenterId.From(scope.CenterId), resident.ResidentId, SystemProfile.Medicina), ct);
+            scope.ProfileScopeId, CenterId.From(scope.CenterId), resident.ResidentId, SystemProfile.Medicina, TransferHistoryCookie.Read(Request)), ct);
+        var previousUnit = await transferHistory.CountAsync(
+            new CountTransferHistoryCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), resident.ResidentId, SystemProfile.Medicina), ct);
         return View("~/Views/Shared/LineaTemporal.cshtml",
-            new ResidentTimelineViewModel(resident, timeline.Ok ? timeline.Value : null, nameof(Escalado)));
+            new ResidentTimelineViewModel(resident, timeline.Ok ? timeline.Value : null, nameof(Escalado), previousUnit.Ok ? previousUnit.Value : 0));
     }
 
     /// <summary>MED-18: evento propio de Medicina. Al guardar nace ya en valoración médica, iniciada por quien
@@ -1096,7 +1134,7 @@ public sealed class MedicinaController(
     private const string CorrectionConflictMessage =
         "La valoración ha cambiado desde que abriste el formulario (otra pestaña o pulsación tuya). Lo que has escrito sigue aquí: vuelve al detalle para ver la versión actual.";
 
-    private async Task<PendingChangeDetail?> FindEventAsync(Guid eventoId, CancellationToken ct)
+    private async Task<PendingChangeDetail?> FindEventAsync(Guid eventoId, CancellationToken ct, Guid? transferDeclarationId = null)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null || eventoId == Guid.Empty)
@@ -1104,7 +1142,7 @@ public sealed class MedicinaController(
             return null;
         }
         var result = await service.FindEscalationDetailAsync(
-            new FindEscalationDetailCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), eventoId), ct);
+            new FindEscalationDetailCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), eventoId, transferDeclarationId), ct);
         return result.Ok ? result.Value : null;
     }
 

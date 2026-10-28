@@ -419,6 +419,13 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
               JOIN dbo.cuentas account ON account.id = declaration.cuenta_id
              WHERE account.sujeto_externo = @ExternalSubject AND declaration.terminada_en IS NULL AND declaration.caduca_en > SYSUTCDATETIME()
             """, new { ExternalSubject = externalSubject }, cancellationToken: ct));
+        // Las peticiones del historial tras un traslado (0077) acaban igual: al cambiar de ámbito y al cerrar sesión.
+        await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE declaration SET terminada_en = SYSUTCDATETIME()
+              FROM dbo.declaraciones_historial_traslado declaration
+              JOIN dbo.cuentas account ON account.id = declaration.cuenta_id
+             WHERE account.sujeto_externo = @ExternalSubject AND declaration.terminada_en IS NULL AND declaration.caduca_en > SYSUTCDATETIME()
+            """, new { ExternalSubject = externalSubject }, cancellationToken: ct));
     }
 
     private sealed record DeclarationRow(Guid Id, string PurposeCode, string Justification, DateTime ExpiresAt);

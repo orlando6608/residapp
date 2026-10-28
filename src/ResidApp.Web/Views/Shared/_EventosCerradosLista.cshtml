@@ -12,6 +12,10 @@
                                 {
                                     <span class="badge text-bg-danger me-1">Prioritario</span>
                                 }
+                                @if (item.FromPreviousUnit)
+                                {
+                                    <span class="badge text-bg-secondary me-1">De una unidad anterior</span>
+                                }
                                 @if (Model.DetailAction is not null)
                                 {
                                     <a asp-action="@Model.DetailAction" asp-route-eventoId="@item.EventId" class="stretched-link text-body text-decoration-none fw-semibold">@ResidentHistoryDisplay.Summary(item)</a>
@@ -53,6 +57,10 @@
                                 @if (item.Classification == ResidApp.Domain.Auxiliar.DailyChangeClassification.Prioritario)
                                 {
                                     <span class="badge text-bg-danger me-1">Prioritario</span>
+                                }
+                                @if (item.FromPreviousUnit)
+                                {
+                                    <span class="badge text-bg-secondary me-1">De una unidad anterior</span>
                                 }
                                 @ResidentHistoryDisplay.Summary(item)
                             </td>

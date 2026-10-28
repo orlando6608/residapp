@@ -4,7 +4,8 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record FindPendingChangeDetailCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId);
+/// <summary>TransferDeclarationId: la petición vigente del historial tras un traslado (0077), para abrir un cerrado de la unidad anterior (solo lectura).</summary>
+public sealed record FindPendingChangeDetailCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId, Guid? TransferDeclarationId = null);
 
 /// <summary>ENF-04: detalle de un elemento de bandeja. Null (sin error) si el evento no existe o no está
 /// en el ámbito, igual que FindScopeResident — el llamador no distingue "no existe" de "no autorizado".</summary>
@@ -28,6 +29,7 @@ public sealed class FindPendingChangeDetail(
                 throw new AccessDeniedException();
             }
 
-            return await directory.FindAsync(command.AmbitoPerfilId, command.CentroId, command.EventoId, ct);
+            return await directory.FindAsync(
+                command.AmbitoPerfilId, command.CentroId, command.EventoId, ct, command.TransferDeclarationId);
         });
 }

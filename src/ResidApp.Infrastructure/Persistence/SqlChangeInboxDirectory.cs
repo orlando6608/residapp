@@ -71,6 +71,85 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                 WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
         """;
 
+    /// <summary>Historial de un residente trasladado (0077): la misma forma que ScopedEventsFrom (mismos alias y la misma regla de Medicina y de residentes
+    /// restringidos) para los episodios CERRADOS en una unidad anterior del residente, que el ámbito ya no tiene. La unión de unidad sale de dónde está el
+    /// residente ahora (una unidad del ámbito) y de que haya un traslado suyo desde la unidad del episodio hecho después de cerrarse. Con requireDeclaration
+    /// exige además la petición vigente (@DeclarationId: de esta cuenta, ámbito y residente, sin terminar ni caducada); sin ella solo sirve para contar lo que se
+    /// podría pedir. Acaba en WHERE, así que se le pueden añadir condiciones con AND.</summary>
+    internal static string TransferHistoryScopedEventsFrom(bool requireDeclaration) => $"""
+          FROM dbo.eventos_asistenciales ea
+          JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
+               AND profile.perfil_codigo IN ('ENFERMERIA', 'MEDICINA') AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+          {(requireDeclaration ? """
+          JOIN dbo.declaraciones_historial_traslado declaration ON declaration.id = @DeclarationId AND declaration.cuenta_id = profile.cuenta_id
+               AND declaration.ambito_perfil_id = profile.id AND declaration.centro_id = profile.centro_id AND declaration.residente_id = ea.residente_id
+               AND declaration.terminada_en IS NULL AND declaration.caduca_en > SYSUTCDATETIME()
+          """ : "")}
+          JOIN dbo.intervalos_ubicacion_residente current_location ON current_location.residente_id = ea.residente_id
+               AND current_location.centro_id = profile.centro_id AND current_location.vigente_hasta IS NULL
+          JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id
+               AND unit_scope.centro_id = profile.centro_id AND unit_scope.unidad_id = current_location.unidad_id AND unit_scope.revocado_en IS NULL
+          JOIN dbo.unidades unit ON unit.id = ea.unidad_id AND unit.centro_id = profile.centro_id
+          JOIN dbo.residentes resident ON resident.id = ea.residente_id AND resident.centro_id = profile.centro_id
+          LEFT JOIN dbo.ambitos_perfil_residente resident_scope ON resident_scope.ambito_perfil_id = profile.id
+               AND resident_scope.centro_id = profile.centro_id AND resident_scope.residente_id = ea.residente_id
+               AND resident_scope.revocado_en IS NULL
+          LEFT JOIN dbo.cierres_cotidianos_residente closure ON closure.id = ea.cierre_id
+          LEFT JOIN dbo.eventos_clinicos clinical ON clinical.id = ea.evento_clinico_id
+          LEFT JOIN dbo.comunicaciones_familiares family ON family.evento_id = ea.id
+          LEFT JOIN dbo.escalados_medicina escalation ON escalation.evento_id = ea.id
+         WHERE ea.centro_id = @CenterId AND ea.estado_codigo = 'CERRADO'
+           AND NOT EXISTS (SELECT 1 FROM dbo.ambitos_perfil_unidad own_unit
+                            WHERE own_unit.ambito_perfil_id = profile.id AND own_unit.centro_id = profile.centro_id
+                              AND own_unit.unidad_id = ea.unidad_id AND own_unit.revocado_en IS NULL)
+           AND EXISTS (SELECT 1 FROM dbo.traslados_residente transfer
+                        WHERE transfer.residente_id = ea.residente_id AND transfer.centro_id = ea.centro_id
+                          AND transfer.unidad_origen_id = ea.unidad_id AND transfer.trasladado_en >= ea.cerrado_en)
+           AND (profile.perfil_codigo = 'ENFERMERIA' OR escalation.id IS NOT NULL OR ea.origen_codigo = 'EVENTO_MEDICINA')
+           AND (resident_scope.id IS NOT NULL OR NOT EXISTS (
+               SELECT 1 FROM dbo.ambitos_perfil_residente restriction
+                WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
+        """;
+
+    /// <summary>Escribe la fila de auditoría TRANSFER_HISTORY_READ de una lectura con la petición del historial tras un traslado (con su motivo), antes de que
+    /// se entregue nada. Devuelve false, sin escribir, si la petición ya no vale (otra cuenta, ámbito o residente, terminada o caducada): entonces no se
+    /// entrega nada de la unidad anterior. resourceId es el episodio (null: el residente entero, para el historial y la línea temporal).</summary>
+    private static async Task<bool> AuditTransferHistoryReadAsync(
+        System.Data.IDbConnection connection, Guid profileScopeId, CenterId centerId, ResidentId residentId, Guid declarationId,
+        string resourceType, Guid? resourceId, CancellationToken ct)
+    {
+        var written = await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.eventos_auditoria
+                (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, justificacion, ocurrido_en)
+            SELECT NEWID(), declaration.cuenta_id, profile.perfil_codigo, declaration.centro_id,
+                   (SELECT TOP (1) location.unidad_id FROM dbo.intervalos_ubicacion_residente location
+                     WHERE location.residente_id = declaration.residente_id AND location.centro_id = declaration.centro_id AND location.vigente_hasta IS NULL),
+                   declaration.residente_id, @ResourceType, ISNULL(@ResourceId, declaration.residente_id), 'TRANSFER_HISTORY_READ',
+                   declaration.motivo, SYSUTCDATETIME()
+              FROM dbo.declaraciones_historial_traslado declaration
+              JOIN dbo.ambitos_perfil profile ON profile.id = declaration.ambito_perfil_id AND profile.centro_id = declaration.centro_id
+                   AND profile.id = @ProfileScopeId AND profile.cuenta_id = declaration.cuenta_id AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+             WHERE declaration.id = @DeclarationId AND declaration.centro_id = @CenterId AND declaration.residente_id = @ResidentId
+               AND declaration.terminada_en IS NULL AND declaration.caduca_en > SYSUTCDATETIME()
+            """, new
+        {
+            ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value, DeclarationId = declarationId,
+            ResourceType = resourceType, ResourceId = resourceId,
+        }, cancellationToken: ct));
+        return written == 1;
+    }
+
+    public async Task<int> CountPreviousUnitClosedEventsAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return await connection.ExecuteScalarAsync<int>(new CommandDefinition($"""
+            SELECT COUNT(*)
+            {TransferHistoryScopedEventsFrom(requireDeclaration: false)}
+               AND ea.residente_id = @ResidentId
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value }, cancellationToken: ct));
+    }
+
     public async Task<IReadOnlyList<PendingChangeSummary>> ListAsync(
         Guid profileScopeId, CenterId centerId, DailyChangeClassification classification, CancellationToken ct = default)
     {
@@ -112,11 +191,11 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
     }
 
     public async Task<PendingChangeDetail?> FindAsync(
-        Guid profileScopeId, CenterId centerId, Guid eventId, CancellationToken ct = default)
+        Guid profileScopeId, CenterId centerId, Guid eventId, CancellationToken ct = default, Guid? transferDeclarationId = null)
     {
         using var connection = await connections.OpenAsync(ct);
 
-        var row = await connection.QuerySingleOrDefaultAsync<EventDetailRow>(new CommandDefinition($"""
+        async Task<EventDetailRow?> QueryRowAsync(string scopedEventsFrom) => await connection.QuerySingleOrDefaultAsync<EventDetailRow>(new CommandDefinition($"""
             SELECT ea.id AS EventId, ea.origen_codigo AS OriginCode, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentDisplayName,
                    ea.unidad_id AS UnitId, unit.nombre_visible AS UnitName, ea.clasificacion_codigo AS ClassificationCode,
                    closure.temperatura_celsius AS TemperatureCelsius, clinical.observacion AS Observation,
@@ -139,9 +218,25 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                         WHEN ea.valoracion_medica_iniciada_por_cuenta_id = profile.cuenta_id THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END
                        AS MedicalStartedByCurrentAccount,
                    ea.valoracion_medica_iniciada_en AS MedicalStartedAt
-            {ScopedEventsFrom}
+            {scopedEventsFrom}
                AND ea.id = @EventId
-            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, EventId = eventId }, cancellationToken: ct));
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, EventId = eventId, DeclarationId = transferDeclarationId }, cancellationToken: ct));
+
+        var row = await QueryRowAsync(ScopedEventsFrom);
+        var fromPreviousUnit = false;
+        if (row is null && transferDeclarationId is { } declarationId)
+        {
+            // Un cerrado de la unidad anterior: solo con la petición vigente, y se audita antes de entregarlo.
+            row = await QueryRowAsync(TransferHistoryScopedEventsFrom(requireDeclaration: true));
+            if (row is null || !await AuditTransferHistoryReadAsync(
+                    connection, profileScopeId, centerId, ResidentId.From(row.ResidentId), declarationId, "CLINICAL_EVENT", row.EventId, ct))
+            {
+                return null;
+            }
+
+            fromPreviousUnit = true;
+        }
+
         if (row is null)
         {
             return null;
@@ -246,35 +341,47 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                 await FindMedicalFollowUpAsync(connection, profileScopeId, eventId, ct)),
             await FindUrgentProtocolAsync(connection, profileScopeId, eventId, ct),
             await FindReferralAsync(connection, profileScopeId, centerId.Value, row.ResidentId, eventId, ct),
-            (await FindContextsAsync(connection, [eventId], ct)).GetValueOrDefault(eventId));
+            (await FindContextsAsync(connection, [eventId], ct)).GetValueOrDefault(eventId), fromPreviousUnit);
     }
 
     public Task<IReadOnlyList<ClosedEventSummary>> ListClosedEventsAsync(
-        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
-        ListClosedEventsAsync(ScopedEventsFrom, profileScopeId, centerId, residentId, ct);
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default, Guid? transferDeclarationId = null) =>
+        ListClosedEventsAsync(ScopedEventsFrom, profileScopeId, centerId, residentId, ct, transferDeclarationId);
 
     public Task<IReadOnlyList<ClosedEventSummary>> ListDirectionClosedEventsAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
         ListClosedEventsAsync(DirectionScopedEventsFrom, profileScopeId, centerId, residentId, ct);
 
     private async Task<IReadOnlyList<ClosedEventSummary>> ListClosedEventsAsync(
-        string scopedEventsFrom, Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct)
+        string scopedEventsFrom, Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct,
+        Guid? transferDeclarationId = null)
     {
         using var connection = await connections.OpenAsync(ct);
 
-        var events = (await connection.QueryAsync<ClosedEventRow>(new CommandDefinition($"""
+        async Task<List<ClosedEventRow>> QueryEventsAsync(string from) => (await connection.QueryAsync<ClosedEventRow>(new CommandDefinition($"""
             SELECT ea.id AS EventId, ea.origen_codigo AS OriginCode, ea.clasificacion_codigo AS ClassificationCode,
                    clinical.observacion AS Observation,
                    COALESCE(closure.registrado_por_perfil, clinical.registrado_por_perfil) AS AuthorProfileCode,
                    ea.recibido_en AS OccurredAt, ea.cerrado_en AS ClosedAt,
                    CAST(CASE WHEN escalation.id IS NULL THEN 0 ELSE 1 END AS BIT) AS Escalated,
                    {ClosedByProfileSql} AS ClosedByProfileCode
-            {scopedEventsFrom}
+            {from}
                AND ea.residente_id = @ResidentId
                AND ea.estado_codigo = 'CERRADO'
              ORDER BY ea.cerrado_en DESC
-            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value },
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value, DeclarationId = transferDeclarationId },
             cancellationToken: ct))).ToList();
+
+        var events = await QueryEventsAsync(scopedEventsFrom);
+        var previousUnitIds = new HashSet<Guid>();
+        if (transferDeclarationId is { } declarationId && await AuditTransferHistoryReadAsync(
+                connection, profileScopeId, centerId, residentId, declarationId, "CLOSED_EVENTS_HISTORY", null, ct))
+        {
+            var previous = await QueryEventsAsync(TransferHistoryScopedEventsFrom(requireDeclaration: true));
+            previousUnitIds.UnionWith(previous.Select(e => e.EventId));
+            events = events.Concat(previous).OrderByDescending(e => e.ClosedAt).ToList();
+        }
+
         if (events.Count == 0)
         {
             return [];
@@ -290,7 +397,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             areasByClosureId.GetValueOrDefault(e.EventId, []), e.Observation, EnumCode.ParseCode<SystemProfile>(e.AuthorProfileCode),
             new DateTimeOffset(e.OccurredAt, TimeSpan.Zero), new DateTimeOffset(e.ClosedAt, TimeSpan.Zero), e.Escalated,
             contexts.GetValueOrDefault(e.EventId),
-            e.ClosedByProfileCode is null ? null : EnumCode.ParseCode<SystemProfile>(e.ClosedByProfileCode))).ToList();
+            e.ClosedByProfileCode is null ? null : EnumCode.ParseCode<SystemProfile>(e.ClosedByProfileCode),
+            previousUnitIds.Contains(e.EventId))).ToList();
     }
 
     /// <summary>ENF-18/MED-20: eventos abiertos de un residente visibles para el ámbito (ScopedEventsFrom: Medicina solo

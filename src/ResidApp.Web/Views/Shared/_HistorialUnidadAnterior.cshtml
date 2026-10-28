@@ -1,0 +1,36 @@
+@using ResidApp.Domain.Residents
+@model PreviousUnitHistoryModel
+@* Historial tras un traslado (0077): ofrece pedir los episodios cerrados de la unidad anterior, o avisa de que ya salen. *@
+<section class="mb-4" aria-labelledby="unidad-anterior">
+    <h2 id="unidad-anterior" class="h5">Episodios cerrados de la unidad anterior</h2>
+    @if (Model.Requested)
+    {
+        <div class="alert alert-info" role="status">
+            Estás viendo también @(Model.Count == 1 ? "el episodio cerrado" : $"los {Model.Count} episodios cerrados") de la unidad anterior del residente, marcados como «De una unidad anterior».
+            Tu petición vale 1 hora, y se registra con tu motivo cada vez que los abres.
+        </div>
+    }
+    else
+    {
+        <div class="card border-warning">
+            <div class="card-body">
+                <p class="mb-2">
+                    Este residente tiene @(Model.Count == 1 ? "un episodio cerrado" : $"{Model.Count} episodios cerrados") en una unidad anterior, antes de su traslado. No se ven
+                    si no los pides.
+                </p>
+                <form asp-action="PedirHistorialAnterior" method="post">
+                    <input type="hidden" name="ResidenteId" value="@Model.ResidentId" />
+                    <input type="hidden" name="Retorno" value="@Model.ReturnAction" />
+                    <label for="historial-anterior-motivo" class="form-label fw-semibold">Motivo</label>
+                    <textarea id="historial-anterior-motivo" name="Motivo" class="form-control" rows="2" maxlength="@TransferHistoryRequest.MaxReasonLength" required aria-describedby="historial-anterior-ayuda"></textarea>
+                    <div id="historial-anterior-ayuda" class="form-text mb-3">
+                        Indica brevemente por qué necesitas verlos (por ejemplo, la continuidad asistencial tras el traslado), hasta @TransferHistoryRequest.MaxReasonLength caracteres.
+                        No escribas datos de salud ni nombres de personas. Tu petición y cada lectura quedan registradas con este motivo, Dirección puede revisarlas y el acceso
+                        vale 1 hora. Se abren el historial, la línea temporal y el detalle de esos episodios; el informe de derivación no.
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary btn-lg">Pedir los episodios de la unidad anterior</button>
+                </form>
+            </div>
+        </div>
+    }
+</section>

@@ -18,9 +18,13 @@
                                 {
                                     <span class="badge text-bg-light border ms-2">@SystemProfileDisplay.Label(profile)</span>
                                 }
+                                @if (entry.FromPreviousUnit)
+                                {
+                                    <span class="badge text-bg-secondary ms-2">De una unidad anterior</span>
+                                }
                             </div>
                             <div class="d-flex gap-2">
-                                @if (Model.DetailAction is not null && entry is TimelineEntry.ReferralSigned)
+                                @if (Model.DetailAction is not null && entry is TimelineEntry.ReferralSigned && !entry.FromPreviousUnit)
                                 {
                                     <a asp-action="InformeDerivacion" asp-route-eventoId="@entry.EventId" class="btn btn-outline-secondary btn-sm">Descargar PDF</a>
                                 }

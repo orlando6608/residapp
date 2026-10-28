@@ -4,7 +4,8 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record FindEscalationDetailCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId);
+/// <summary>TransferDeclarationId: la petición vigente del historial tras un traslado (0077), para abrir un cerrado de la unidad anterior (solo lectura).</summary>
+public sealed record FindEscalationDetailCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId, Guid? TransferDeclarationId = null);
 
 /// <summary>MED-03: detalle de un escalado recibido, con sus fuentes de solo lectura (observación original,
 /// valoración de Enfermería, constantes, actuaciones, seguimiento y motivo). Con un ámbito de Medicina el
@@ -30,6 +31,7 @@ public sealed class FindEscalationDetail(
                 throw new AccessDeniedException();
             }
 
-            return await directory.FindAsync(command.AmbitoPerfilId, command.CentroId, command.EventoId, ct);
+            return await directory.FindAsync(
+                command.AmbitoPerfilId, command.CentroId, command.EventoId, ct, command.TransferDeclarationId);
         });
 }

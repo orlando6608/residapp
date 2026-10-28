@@ -26,6 +26,7 @@ public sealed class SessionSignIn(
             SessionAuthentication.Principal(stored!.ExternalSubject, sessionId, scope.AccountDisplayName));
         ActiveProfileScopeCookie.Clear(http.Response);
         ClinicalAccessDeclarationCookie.Clear(http.Response);
+        TransferHistoryCookie.Clear(http.Response);
         await accessLog.RecordAsync(entry, scope.AccountId, sessionId, Ip(http), now, ct);
     }
 

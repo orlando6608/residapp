@@ -17,6 +17,9 @@ public abstract record TimelineEntry(DateTimeOffset At, Guid? EventId, SystemPro
     /// los hitos que tienen autor de cuenta (valoraciones guardadas, correcciones y rectificaciones); null si no se pidió o la cuenta no tiene nombre.</summary>
     public string? AuthorName { get; init; }
 
+    /// <summary>El hito es de un episodio cerrado en la unidad anterior del residente, abierto con la petición del historial tras un traslado (0077).</summary>
+    public bool FromPreviousUnit { get; init; }
+
     public sealed record EventRegistered(
         DateTimeOffset At, Guid? EventId, SystemProfile? Profile, ClinicalEventOrigin Origin, DailyChangeClassification Classification,
         string? Observation, IReadOnlyList<DailyChangeAreaCode> Areas) : TimelineEntry(At, EventId, Profile);

@@ -14,7 +14,27 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Permiso de calidad asistencial `QUALITY_REVIEW` (2026-10-26, rama `permiso-calidad-asistencial` desde `main`; script `0076`, el siguiente libre es `0077`). Hecho y probado, sin subir.**
+- **Historial de episodios cerrados tras un traslado (2026-10-28, rama `historial-tras-traslado` desde `main`; script `0077`, el siguiente libre es `0078`). Hecho y probado, sin subir.**
+  Tercera y última pieza del bloque «Dirección y traslados». Detalle en `pendientes-enfermeria.md` («Tras un traslado entre unidades», hecho el 2026-10-28).
+  - **Decisiones de Orlando:** la unidad de destino abre Historial, Línea temporal y Detalle (solo lectura, no el PDF) de los cerrados de la unidad anterior solo si lo pide con un motivo (≤ 300);
+    la petición vale 1 hora por cuenta y residente; Enfermería y Medicina (Medicina conserva su regla). **Suposiciones mías:** el bloque solo se ofrece si hay algún cerrado que abrir; cada lectura se
+    audita antes de entregar (acción `TRANSFER_HISTORY_READ`).
+  - **Cómo está hecho:** tabla inmutable `declaraciones_historial_traslado` (`TR_dht_guard`, `THROW 50570`), `SqlChangeInboxDirectory.TransferHistoryScopedEventsFrom(requireDeclaration)` (tercer `FROM`,
+    `ScopedEventsFrom` no se toca), parámetro opcional `transferDeclarationId` **al final** de `ListClosedEventsAsync`, `ListTimelineAsync` y `FindAsync` (los casos de uso que escriben no lo pasan),
+    `AuditTransferHistoryReadAsync` (inserta la auditoría antes de leer; sin fila no se entrega), `SqlTransferHistoryAccess`/`TransferHistoryAccess`, cookie `residapp_transfer_history`, y
+    `SqlBaselineRepository.EndAccessDeclarationsAsync` termina también estas peticiones. `ClosedEventSummary`, `PendingChangeDetail` y `TimelineEntry` llevan `FromPreviousUnit`.
+  - **Pruebas:** unitarias 477, integración 569 (`HistorialTrasTrasladoTests`, 5 nuevas) y funcionales 320 (una nueva) en verde. Quitar a la vez la auditoría previa y la unión de la petición hace fallar
+    dos pruebas; cada una por separado no (doble defensa: la auditoría ya niega una petición que no vale). Navegador (Los Almendros local): Enfermería de Planta 2 sin Planta 1, Rosa trasladada de Planta 1 a 2:
+    se ofrece el bloque, se pide con motivo, salen los 2 cerrados marcados, línea temporal sin PDF y detalle con aviso de solo lectura, en claro, oscuro y 375 px, sin desbordes ni errores de consola. Datos
+    restaurados después (Rosa en Planta 1, la Enfermería con sus dos plantas).
+  - **Privacidad:** consultado el agente `dpo-residapp` (admisible con condiciones; ver `pendientes-enfermeria.md`). Hecha la advertencia en pantalla (dice que Dirección *puede* revisar las lecturas:
+    hoy no hay vista con todas las peticiones). **Borradores en `docs/privacidad/historial-tras-traslado-01…06`** (registro de actividades, nota de EIPD, información, procedimiento de revisión,
+    conservación y purga, nota retroactiva de `0075`/`0076`): **los valida una persona (DPO real o abogado) antes de usarlos con datos reales**. Las mejoras de código que propone el agente están en
+    `pendientes-enfermeria.md`. Los scripts `0075` y `0076` no se consultaron al DPO antes de crearse (la directriz del CLAUDE.md es posterior al diseño); su nota es el borrador 06 (lo más relevante:
+    la pantalla Calidad de proceso de `0076` muestra el nombre del residente y no se audita).
+  - **Lecciones:** (1) un parámetro opcional nuevo en un método de puerto con muchos llamadores va **detrás de `ct`** para no romper las llamadas posicionales; (2) en `Write` + `node` hay un
+    ayudante `sub.js` (sustituye texto exacto respetando CRLF) en el scratchpad de la sesión; (3) tras `git reset --hard` los ficheros vuelven con CRLF: los guiones deben tolerar `\r?\n`.
+- **Permiso de calidad asistencial `QUALITY_REVIEW` (2026-10-26, rama `permiso-calidad-asistencial` desde `main`; script `0076`). Hecho, probado, PR #72 mergeado y desplegado el 2026-10-26.**
   Segunda pieza del bloque «Dirección y traslados». Detalle en `pendientes-direccion.md` («Cuarta finalidad, calidad asistencial», hecho el 2026-10-26).
   - **Decisiones de Orlando:** no hay cuarta finalidad: es un **permiso** solo de `DIRECCION_CLINICA` que concede Administración. Sin él, `/Direccion/Indicadores` y `/Direccion/Calidad` no se abren
     (vuelven al inicio de Dirección con un aviso) ni se enlazan. **No se concede a las Direcciones existentes** (la semilla se lo da a las de los centros de prueba). **Suposición mía:** no se audita la consulta.
@@ -1939,9 +1959,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   de la decisión de Orlando), lo que deja abierta la 3.2 del portal, y que en el organigrama la auditoría dice quién cambió qué cargo y cuándo pero no los nombres de quienes
   lo ocuparon (matiza su 1.7; ya está escrito en `archivados/organigrama-y-cargos-cj.html`). La prueba 17 de la guía 5 es la del organigrama.
 - **Siguiente bloque: «Dirección y traslados», tres piezas con su script, rama y PR (plan aprobado el 2026-10-26):** (1) cierre excepcional con indicaciones sin cumplir, `0075` — **hecho, PR #71 mergeado**
-  (entrada de «Dónde estamos»); (2) permiso `QUALITY_REVIEW` de calidad asistencial, `0076` — **hecho, sin subir** (primera entrada de «Dónde estamos»): sin él, `/Direccion/Indicadores` y `/Direccion/Calidad` no se abren ni se enlazan, **no se concede a las
+  (entrada de «Dónde estamos»); (2) permiso `QUALITY_REVIEW` de calidad asistencial, `0076` — **hecho, PR #72 mergeado y desplegado**: sin él, `/Direccion/Indicadores` y `/Direccion/Calidad` no se abren ni se enlazan, **no se concede a las
   Direcciones existentes** y la semilla se lo da a las de los centros de prueba; (3) la unidad de destino de un traslado ve los episodios cerrados solo si lo pide con un motivo (Historial, línea temporal
-  y detalle, no el PDF; 1 hora por residente y cuenta; tabla y acción de auditoría propias), `0077`. Traslado y baja (CJ `traslado-y-baja-residente`) siguen esperando a CJ. El siguiente script libre es `0077`.
+  y detalle, no el PDF; 1 hora por residente y cuenta; tabla y acción de auditoría propias), `0077` — **hecho, sin subir** (primera entrada de «Dónde estamos»). Traslado y baja (CJ `traslado-y-baja-residente`) siguen esperando a CJ. El siguiente script libre es `0078`.
   El resumen periódico ya está hecho; falta que CJ confirme lo decidido por Orlando (prueba 14 de la guía 6).
 - **Sueltos sin cerrar:** probar el dictado en un móvil real con audios ficticios; que una enfermera confirme «decul» y el rango 34–42 °C; las invitaciones de CJ esperan a
   Orlando; rotar la clave de Mistral.

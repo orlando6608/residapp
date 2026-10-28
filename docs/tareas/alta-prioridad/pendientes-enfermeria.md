@@ -267,8 +267,27 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
 
 ### Respuesta de CJ del 2026-10-25, por construir
 
-- **Tras un traslado entre unidades** (`docs/pendientes-cj/confirmaciones-tercera-tanda-cj.respuestas.json`, 5.2 C): la unidad de destino **ve los episodios ya cerrados del
-  residente solo si lo pide, indicando un motivo** que queda en la auditoría (como la declaración de acceso de Dirección). Hoy no los ve.
+- **Tras un traslado entre unidades** (`docs/pendientes-cj/confirmaciones-tercera-tanda-cj.respuestas.json`, 5.2 C) — **hecho el 2026-10-28, script `0077`:** la unidad de destino **ve los
+  episodios ya cerrados del residente solo si lo pide, indicando un motivo** que queda en la auditoría (como la declaración de acceso de Dirección).
+  - **Decisiones de Orlando (2026-10-26):** abre **Historial, Línea temporal y Detalle** (solo lectura) de los cerrados anteriores al traslado, **no el PDF de derivación**; motivo de hasta 300
+    caracteres; la petición **vale 1 hora, por cuenta y residente**, y termina al cambiar de residente, de perfil o de ámbito o al cerrar sesión; Enfermería y Medicina (Medicina conserva su regla de
+    escalados y propios); el origen no cambia. **Suposiciones mías:** el bloque solo se ofrece si hay algún cerrado que abrir (se cuenta, sin mostrar contenido); cada lectura se audita
+    (`TRANSFER_HISTORY_READ`, con el motivo) en su propia transacción **antes** de entregar, además de la fila de la petición.
+  - **Cómo está hecho:** tabla inmutable `declaraciones_historial_traslado` (solo crear y terminar; RLS por centro), `SqlChangeInboxDirectory.TransferHistoryScopedEventsFrom` (la regla de las bandejas
+    para eventos **cerrados** de una unidad desde la que se trasladó al residente después de cerrarse, estando el residente ahora en una unidad del ámbito y con la petición vigente; cubre A→B→C),
+    `ListClosedEventsAsync`/`ListTimelineAsync`/`FindAsync` con `transferDeclarationId` opcional (la escritura nunca la pasa: la unidad anterior sigue sin poder escribir), `SqlTransferHistoryAccess` y
+    `TransferHistoryAccess` (pedir y contar), cookie `residapp_transfer_history` (solo el id; se borra con la de Dirección) y `EndAccessDeclarationsAsync` que también termina estas peticiones.
+    Pantalla: bloque «Episodios cerrados de la unidad anterior» en Historial y Línea temporal (`_HistorialUnidadAnterior`), marca «De una unidad anterior», aviso de solo lectura en el detalle y sin
+    corregir/rectificar ni PDF.
+  - **Privacidad (agente `dpo-residapp`, 2026-10-28):** admisible con condiciones; hecho en pantalla: advertencia junto al motivo (sin datos de salud ni nombres), aviso de 1 hora y de que
+    Dirección puede revisar las lecturas, motivo visible para Dirección en la trazabilidad. **Borradores en `docs/privacidad/historial-tras-traslado-01…06`** (registro de actividades, nota de EIPD,
+    información a residentes y personal, procedimiento de revisión de `TRANSFER_HISTORY_READ`, conservación del motivo y purga, nota retroactiva de `0075`/`0076`); **los valida una persona (DPO real o
+    abogado) antes de usarlos con datos reales**, y cada uno deja sus decisiones abiertas (conservación, revisor y frecuencia, base jurídica del registro de accesos, autoridad de control).
+  - **Mejoras que el agente propone y no están hechas (decidir con Orlando/CJ):** (1) una vista de Dirección con todas las peticiones del periodo (hoy solo ve las lecturas residente por residente y tras
+    su propia lectura declarada); (2) motivo con lista cerrada más texto corto opcional, y que las filas de lectura no repitan el texto libre (facilita la purga); (3) anotar las peticiones rechazadas;
+    (4) límite de antigüedad de los episodios accesibles (pregunta para CJ); (5) vía de purga (seudonimizar el texto del motivo con constancia, como `0075`); (6) auditar la consulta de Calidad de proceso
+    de `0076` (muestra nombre del residente y tipo de hito) o documentarlo en la EIPD.
+  - **Tests:** `HistorialTrasTrasladoTests` (integración, 5) y el funcional `UnidadDeDestino_PideLosEpisodiosCerradosDeLaAnterior_ConMotivo_ConLaAppEntera`.
 
 En el orden propuesto de construcción:
 

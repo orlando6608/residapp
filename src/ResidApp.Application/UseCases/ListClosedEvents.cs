@@ -4,7 +4,9 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record ListClosedEventsCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, SystemProfile Perfil);
+/// <summary>TransferDeclarationId: la petición vigente del historial tras un traslado (0077); con ella salen también los cerrados de la unidad anterior.</summary>
+public sealed record ListClosedEventsCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, SystemProfile Perfil, Guid? TransferDeclarationId = null);
 
 /// <summary>
 /// HIS-01 (ENF-23/MED-22): eventos cerrados de un residente en su Historial, con la instantánea de basal y
@@ -33,6 +35,7 @@ public sealed class ListClosedEvents(
                 throw new AccessDeniedException();
             }
 
-            return await directory.ListClosedEventsAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
+            return await directory.ListClosedEventsAsync(
+                command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct, command.TransferDeclarationId);
         });
 }

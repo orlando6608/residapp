@@ -334,6 +334,7 @@ public sealed class AccesoController(
         await signIn.CloseCurrentAsync(HttpContext, SessionCloseReason.Logout, ct);
         ActiveProfileScopeCookie.Clear(Response);
         ClinicalAccessDeclarationCookie.Clear(Response);
+        TransferHistoryCookie.Clear(Response);
         PendingAccessCookie.Clear(Response);
         return RedirectToAction("Index", "Home");
     }

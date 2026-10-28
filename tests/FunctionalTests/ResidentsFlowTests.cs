@@ -858,6 +858,113 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task UnidadDeDestino_PideLosEpisodiosCerradosDeLaAnterior_ConMotivo_ConLaAppEntera()
+    {
+        // CJ, tercera 5.2 C (script 0077): tras un traslado, la unidad de destino no ve los episodios cerrados de la anterior; los abre (historial, línea temporal y
+        // detalle, solo lectura) con una petición con motivo que vale 1 hora y se audita. Enfermería y Medicina, con la app entera y el usuario limitado.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Historial Traslado Funcional");
+        var destinationId = await GrantUnitAsync(seed, "Planta destino historial");
+        var nurseOrigin = await LoginAsync(await GrantNursingAsync(seed));
+        var doctorOrigin = await LoginAsync(await GrantMedicineAsync(seed));
+        var destinationSeed = (seed.ExternalSubject, seed.ProfileScopeId, seed.CenterId, destinationId);
+        var nurse = await LoginAsync(await GrantNursingAsync(destinationSeed));
+        var doctor = await LoginAsync(await GrantMedicineAsync(destinationSeed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        async Task<string> PostAsync(HttpClient client, string url, string page, Dictionary<string, string> fields)
+        {
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            return WebUtility.HtmlDecode(await (await client.PostAsync(url, new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+
+        // Un episodio escalado a Medicina y cerrado por Medicina en la unidad de origen.
+        var registerPage = await nurseOrigin.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await PostAsync(nurseOrigin, "/Enfermeria/RegistrarEvento", registerPage, new()
+        {
+            ["ResidenteId"] = residentId, ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Fiebre desde la tarde (historial funcional).", ["Clasificacion"] = "Ordinario",
+        });
+        var eventId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        Task<int> RevisionAsync() => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+        await PostAsync(nurseOrigin, "/Enfermeria/EmpezarValoracion", detailPage, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        await PostAsync(nurseOrigin, "/Enfermeria/Valoracion", await nurseOrigin.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Hallazgos"] = "Febrícula.",
+        });
+        await PostAsync(nurseOrigin, "/Enfermeria/Escalar", await nurseOrigin.GetStringAsync($"/Enfermeria/Escalar?eventoId={eventId}"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Motivo"] = "Fiebre persistente.",
+        });
+        await PostAsync(doctorOrigin, "/Medicina/EmpezarValoracion", await doctorOrigin.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}"), new()
+        {
+            ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString(),
+        });
+        await PostAsync(doctorOrigin, "/Medicina/Valoracion", await doctorOrigin.GetStringAsync($"/Medicina/Valoracion?eventoId={eventId}"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.HallazgosExploracion"] = "Febrícula sin foco.",
+        });
+        Assert.Contains("Evento cerrado.", await PostAsync(doctorOrigin, "/Medicina/Cerrar", await doctorOrigin.GetStringAsync($"/Medicina/Cerrar?eventoId={eventId}"), new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.OperacionId"] = Guid.NewGuid().ToString(),
+            ["Form.Comunicacion"] = "NoComunicar",
+        }));
+
+        // El traslado a la unidad de destino.
+        var transferPage = await admin.GetStringAsync($"/Administracion/Trasladar?residenteId={residentId}");
+        Assert.Contains("Residente trasladado.", await PostAsync(admin, "/Administracion/Trasladar", transferPage, new()
+        {
+            ["Form.ResidenteId"] = residentId, ["Form.UnidadOrigenId"] = ExtractValue(transferPage, "Form.UnidadOrigenId"),
+            ["Form.OperacionId"] = ExtractValue(transferPage, "Form.OperacionId"), ["Form.UnidadDestinoId"] = destinationId.ToString(),
+        }));
+
+        foreach (var (client, profile, detail, home) in new[]
+                 {
+                     (nurse, "Enfermeria", $"/Enfermeria/DetalleCambio?eventoId={eventId}", "Enfermería"),
+                     (doctor, "Medicina", $"/Medicina/Escalado?eventoId={eventId}", "Medicina"),
+                 })
+        {
+            // Sin petición: ni el episodio en el historial, ni en el detalle; solo se ofrece pedirlo.
+            var history = WebUtility.HtmlDecode(await client.GetStringAsync($"/{profile}/Historial?residenteId={residentId}"));
+            Assert.Contains("Episodios cerrados de la unidad anterior", history);
+            Assert.Contains("Pedir los episodios de la unidad anterior", history);
+            Assert.Contains("No escribas datos de salud ni nombres de personas", history);
+            Assert.DoesNotContain("Fiebre desde la tarde", history);
+            Assert.DoesNotContain("Fiebre desde la tarde", WebUtility.HtmlDecode(await client.GetStringAsync(detail)));
+
+            // Sin motivo, no se abre.
+            var rejected = await PostAsync(client, $"/{profile}/PedirHistorialAnterior", history, new()
+            {
+                ["ResidenteId"] = residentId, ["Retorno"] = "Historial", ["Motivo"] = "   ",
+            });
+            Assert.Contains("Escribe el motivo", rejected);
+            Assert.DoesNotContain("Fiebre desde la tarde", rejected);
+
+            // Con motivo: el historial, la línea temporal y el detalle (solo lectura) lo enseñan, marcado.
+            var opened = await PostAsync(client, $"/{profile}/PedirHistorialAnterior", history, new()
+            {
+                ["ResidenteId"] = residentId, ["Retorno"] = "Historial", ["Motivo"] = "Continuidad asistencial tras el traslado.",
+            });
+            Assert.Contains("Fiebre desde la tarde", opened);
+            Assert.Contains("De una unidad anterior", opened);
+            Assert.Contains("Tu petición vale 1 hora", opened);
+            Assert.DoesNotContain("Pedir los episodios de la unidad anterior", opened);
+            var timeline = WebUtility.HtmlDecode(await client.GetStringAsync($"/{profile}/LineaTemporal?residenteId={residentId}"));
+            Assert.Contains("De una unidad anterior", timeline);
+            Assert.DoesNotContain("Descargar PDF", timeline);
+            var opened2 = WebUtility.HtmlDecode(await client.GetStringAsync(detail));
+            Assert.Contains("Episodio cerrado de una unidad anterior del residente", opened2);
+            Assert.Contains("Fiebre desde la tarde", opened2);
+            Assert.DoesNotContain("Rectificar", opened2);
+        }
+
+        // Cada petición y cada lectura quedan auditadas con el motivo (2 peticiones, y por cada perfil: historial, línea temporal y detalle).
+        Assert.Equal(8, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @residentId AND accion_codigo = 'TRANSFER_HISTORY_READ' AND justificacion = 'Continuidad asistencial tras el traslado.'",
+            new { residentId }));
+    }
+
+    [Fact]
     public async Task Administracion_SuspendeDaDeBajaYReactivaUnResidente_ConLaAppEntera()
     {
         // Suspensión, reanudación, baja y reactivación por la app real con el usuario limitado: pasan por la seguridad por filas de las

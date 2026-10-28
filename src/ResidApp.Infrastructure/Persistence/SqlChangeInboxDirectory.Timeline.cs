@@ -14,15 +14,16 @@ namespace ResidApp.Infrastructure.Persistence;
 public sealed partial class SqlChangeInboxDirectory
 {
     public Task<IReadOnlyList<TimelineEntry>> ListTimelineAsync(
-        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
-        ListTimelineAsync(ScopedEventsFrom, profileScopeId, centerId, residentId, false, ct);
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default, Guid? transferDeclarationId = null) =>
+        ListTimelineAsync(ScopedEventsFrom, profileScopeId, centerId, residentId, false, ct, transferDeclarationId);
 
     public Task<IReadOnlyList<TimelineEntry>> ListDirectionTimelineAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, bool includeAuthorNames = false, CancellationToken ct = default) =>
         ListTimelineAsync(DirectionScopedEventsFrom, profileScopeId, centerId, residentId, includeAuthorNames, ct);
 
     private async Task<IReadOnlyList<TimelineEntry>> ListTimelineAsync(
-        string scopedEventsFrom, Guid profileScopeId, CenterId centerId, ResidentId residentId, bool includeAuthorNames, CancellationToken ct)
+        string scopedEventsFrom, Guid profileScopeId, CenterId centerId, ResidentId residentId, bool includeAuthorNames, CancellationToken ct,
+        Guid? transferDeclarationId = null)
     {
         // Solo la lectura auditada de Dirección (DIR-15) pide el nombre visible de quien guardó, corrigió o rectificó; la línea temporal
         // de Enfermería y Medicina sigue mostrando solo el perfil.
@@ -32,17 +33,29 @@ public sealed partial class SqlChangeInboxDirectory
         using var connection = await connections.OpenAsync(ct);
         var entries = new List<TimelineEntry>();
 
-        var events = (await connection.QueryAsync<TimelineEventRow>(new CommandDefinition($"""
+        async Task<List<TimelineEventRow>> QueryEventsAsync(string from) => (await connection.QueryAsync<TimelineEventRow>(new CommandDefinition($"""
             SELECT ea.id AS EventId, ea.origen_codigo AS OriginCode, ea.clasificacion_codigo AS ClassificationCode,
                    clinical.observacion AS Observation,
                    COALESCE(closure.registrado_por_perfil, clinical.registrado_por_perfil) AS AuthorProfileCode,
                    ea.recibido_en AS OccurredAt, ea.cerrado_en AS ClosedAt, ea.comunicacion_familiar_codigo AS DecisionCode,
                    escalation.motivo AS EscalationReason, escalation.escalado_en AS EscalatedAt, {ClosedByProfileSql} AS ClosedByProfileCode,
                    {FamilyCommunicationSql.CurrentType} AS FamilyTypeCode, {FamilyCommunicationSql.CurrentText} AS FamilyText, family.preparado_en AS FamilyPreparedAt
-            {scopedEventsFrom}
+            {from}
                AND ea.residente_id = @ResidentId
-            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value },
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, ResidentId = residentId.Value, DeclarationId = transferDeclarationId },
             cancellationToken: ct))).ToList();
+
+        var events = await QueryEventsAsync(scopedEventsFrom);
+        // Con la petición del historial tras un traslado vigente (0077), y auditada antes, entran también los episodios cerrados de la unidad anterior.
+        var previousUnitIds = new HashSet<Guid>();
+        if (transferDeclarationId is { } declarationId && await AuditTransferHistoryReadAsync(
+                connection, profileScopeId, centerId, residentId, declarationId, "RESIDENT_TIMELINE", null, ct))
+        {
+            var previous = await QueryEventsAsync(TransferHistoryScopedEventsFrom(requireDeclaration: true));
+            previousUnitIds.UnionWith(previous.Select(e => e.EventId));
+            events.AddRange(previous);
+        }
+
         var ids = events.Select(e => e.EventId).ToList();
 
         if (ids.Count > 0)
@@ -209,7 +222,9 @@ public sealed partial class SqlChangeInboxDirectory
             """, residentParameters, cancellationToken: ct)))
             .Select(l => new TimelineEntry.LocationStarted(Utc(l.StartedAt), l.UnitName)));
 
-        return entries.OrderByDescending(e => e.At).ToList();
+        return entries
+            .Select(e => e.EventId is { } eventId && previousUnitIds.Contains(eventId) ? e with { FromPreviousUnit = true } : e)
+            .OrderByDescending(e => e.At).ToList();
     }
 
     /// <summary>Seguimiento de Enfermería o médico: su inicio y cada acción. Las tablas son las de 0010 y 0014,
