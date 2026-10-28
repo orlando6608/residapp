@@ -27,9 +27,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     dos pruebas; cada una por separado no (doble defensa: la auditoría ya niega una petición que no vale). Navegador (Los Almendros local): Enfermería de Planta 2 sin Planta 1, Rosa trasladada de Planta 1 a 2:
     se ofrece el bloque, se pide con motivo, salen los 2 cerrados marcados, línea temporal sin PDF y detalle con aviso de solo lectura, en claro, oscuro y 375 px, sin desbordes ni errores de consola. Datos
     restaurados después (Rosa en Planta 1, la Enfermería con sus dos plantas).
-  - **Privacidad:** consultado el agente `dpo-residapp` (admisible con condiciones; ver `pendientes-enfermeria.md`). Hecha la advertencia en pantalla; **falta** (de Orlando/DPO real) el registro de
-    actividades, EIPD, información a residentes, quién revisa `TRANSFER_HISTORY_READ`, conservación del motivo y vía de purga. Los scripts `0075` y `0076` no se consultaron al DPO antes de crearse
-    (la directriz del CLAUDE.md es posterior al diseño); conviene que lo vea.
+  - **Privacidad:** consultado el agente `dpo-residapp` (admisible con condiciones; ver `pendientes-enfermeria.md`). Hecha la advertencia en pantalla (dice que Dirección *puede* revisar las lecturas:
+    hoy no hay vista con todas las peticiones). **Borradores en `docs/privacidad/historial-tras-traslado-01…06`** (registro de actividades, nota de EIPD, información, procedimiento de revisión,
+    conservación y purga, nota retroactiva de `0075`/`0076`): **los valida una persona (DPO real o abogado) antes de usarlos con datos reales**. Las mejoras de código que propone el agente están en
+    `pendientes-enfermeria.md`. Los scripts `0075` y `0076` no se consultaron al DPO antes de crearse (la directriz del CLAUDE.md es posterior al diseño); su nota es el borrador 06 (lo más relevante:
+    la pantalla Calidad de proceso de `0076` muestra el nombre del residente y no se audita).
   - **Lecciones:** (1) un parámetro opcional nuevo en un método de puerto con muchos llamadores va **detrás de `ct`** para no romper las llamadas posicionales; (2) en `Write` + `node` hay un
     ayudante `sub.js` (sustituye texto exacto respetando CRLF) en el scratchpad de la sesión; (3) tras `git reset --hard` los ficheros vuelven con CRLF: los guiones deben tolerar `\r?\n`.
 - **Permiso de calidad asistencial `QUALITY_REVIEW` (2026-10-26, rama `permiso-calidad-asistencial` desde `main`; script `0076`). Hecho, probado, PR #72 mergeado y desplegado el 2026-10-26.**
