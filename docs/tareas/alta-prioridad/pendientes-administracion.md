@@ -248,7 +248,7 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
     - ámbito («COND ámbito» de la matriz): el centro del ámbito activo y, en los eventos con unidad, las unidades concedidas al ámbito;
     - periodo por defecto de 30 días, máximo 366, y como mucho 500 filas con aviso;
     - consultar la auditoría no se audita (AUD-01 no lo pide).
-  - **Implementación:** sin script (`IX_audit_scope_time` cubre el acceso por centro y fecha). `Domain/Audit/AdministrativeAudit.cs`;
+  - **Implementación:** sin script en su día (se creyó que `IX_audit_scope_time` cubría el acceso por centro y fecha; **no era cierto**, midió 6.834 lecturas de página con 300.000 filas: lo arregló el script `0080`, ver `docs/decisiones-arquitectura/analisis-crecimiento-auditoria.md`). `Domain/Audit/AdministrativeAudit.cs`;
     `Ports/IAdministrativeAuditDirectory.cs`; `SqlAdministrativeAuditDirectory` (una consulta que repite el ámbito de Administración,
     limita a la lista y resuelve los nombres con `LEFT JOIN`); `AdministracionApplicationService.ListAuditAsync`. Los tipos de la
     lectura no tienen texto libre ni contadores. Etiquetas en `AuditActionDisplay`.

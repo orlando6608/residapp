@@ -120,12 +120,12 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
     {
         var written = await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.eventos_auditoria
-                (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, justificacion, ocurrido_en)
+                (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, justificacion, ocurrido_en, declaracion_id)
             SELECT NEWID(), declaration.cuenta_id, profile.perfil_codigo, declaration.centro_id,
                    (SELECT TOP (1) location.unidad_id FROM dbo.intervalos_ubicacion_residente location
                      WHERE location.residente_id = declaration.residente_id AND location.centro_id = declaration.centro_id AND location.vigente_hasta IS NULL),
                    declaration.residente_id, @ResourceType, ISNULL(@ResourceId, declaration.residente_id), 'TRANSFER_HISTORY_READ',
-                   declaration.motivo, SYSUTCDATETIME()
+                   declaration.motivo, SYSUTCDATETIME(), declaration.id
               FROM dbo.declaraciones_historial_traslado declaration
               JOIN dbo.ambitos_perfil profile ON profile.id = declaration.ambito_perfil_id AND profile.centro_id = declaration.centro_id
                    AND profile.id = @ProfileScopeId AND profile.cuenta_id = declaration.cuenta_id AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
@@ -863,7 +863,8 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
-        return await ProcessMilestoneQueries.ListAsync(connection, ScopedEventsFrom, profileScopeId, centerId, from, toExclusive, ct);
+        return await ProcessMilestoneQueries.ListAsync(
+            connection, ScopedEventsFrom, profileScopeId, centerId, from, toExclusive, includeResidentName: true, ct);
     }
 
     /// <summary>MED-11: seguimientos médicos abiertos del ámbito, con el mismo plan vigente y el mismo orden que

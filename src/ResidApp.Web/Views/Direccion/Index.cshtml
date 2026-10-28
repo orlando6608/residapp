@@ -61,11 +61,19 @@
             <a asp-action="Calidad" class="card text-decoration-none h-100">
                 <div class="card-body">
                     <h2 class="h5 card-title">Calidad de proceso</h2>
-                    <p class="card-text mb-0">Plazos de cada hito del proceso por unidad y periodo, con los episodios fuera de plazo o a punto de vencer.</p>
+                    <p class="card-text mb-0">Plazos de cada hito del proceso por unidad y periodo, solo cifras: ni residentes ni profesionales.</p>
                 </div>
             </a>
         </div>
     }
+    <div class="col-12 col-md-4">
+        <a asp-action="PeticionesHistorial" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Peticiones de historial tras un traslado</h2>
+                <p class="card-text mb-0">Quién ha pedido los episodios cerrados de la unidad anterior de un residente trasladado, para qué y cuántas lecturas hizo, sin contenido clínico.</p>
+            </div>
+        </a>
+    </div>
     <div class="col-12 col-md-4">
         <a asp-action="Comunicados" class="card text-decoration-none h-100">
             <div class="card-body">

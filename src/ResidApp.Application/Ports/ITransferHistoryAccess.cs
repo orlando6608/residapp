@@ -1,3 +1,4 @@
+using ResidApp.Domain.Residents;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
@@ -13,5 +14,5 @@ public interface ITransferHistoryAccess
     /// cuenta no tiene ese ámbito activo de Enfermería o Medicina, el residente no está ahora en una de sus unidades o no tiene episodios cerrados de una unidad
     /// anterior que ese ámbito pueda abrir.</summary>
     Task<Guid?> DeclareAsync(
-        string externalSubject, Guid profileScopeId, CenterId centerId, ResidentId residentId, string reason, int minutes, CancellationToken ct = default);
+        string externalSubject, Guid profileScopeId, CenterId centerId, ResidentId residentId, TransferHistoryReason reason, int minutes, CancellationToken ct = default);
 }

@@ -740,8 +740,37 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("Calidad de proceso", page);
         Assert.Contains("Valoración de Enfermería", page);
         Assert.Contains("Realización de la indicación médica", page);
-        Assert.Contains("Ningún hito fuera de plazo ni a punto de vencer en este periodo.", page);
+        // CJ (2026-10-28, 2.2): solo cifras; ni la lista de episodios con residente ni el enlace al detalle operativo.
+        Assert.Contains("Solo cifras: nunca por profesional ni por residente", page);
+        Assert.Contains("Por unidad", page);
+        Assert.DoesNotContain("Episodios con algún hito fuera de plazo", page);
+        Assert.DoesNotContain("Ver detalle operativo", page);
+        Assert.Contains("name=\"aplicado\"", page);
         Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", invalid);
+    }
+
+    [Fact]
+    public async Task PeticionesDeHistorial_DeDireccion_CarganConLaAppEntera_SinPermisoAparte_YDejanConstanciaDeLaApertura()
+    {
+        // CJ (2026-10-28, 3.3): la lista de peticiones de historial tras un traslado, solo con el ámbito de Dirección (sin QUALITY_REVIEW); con el usuario limitado y la seguridad por filas.
+        var account = await SeedAdministratorAsync("DIRECCION_CLINICA", null);
+        var client = _factory.CreateClient();
+        (await SesionTests.PostLoginAsync(client, account.ExternalSubject)).EnsureSuccessStatusCode();
+
+        var home = WebUtility.HtmlDecode(await client.GetStringAsync("/Direccion"));
+        var opened = WebUtility.HtmlDecode(await client.GetStringAsync("/Direccion/PeticionesHistorial"));
+        var filtered = WebUtility.HtmlDecode(await client.GetStringAsync("/Direccion/PeticionesHistorial?aplicado=true&desde=2026-10-01&hasta=2026-10-02"));
+        var invalid = WebUtility.HtmlDecode(await client.GetStringAsync("/Direccion/PeticionesHistorial?aplicado=true&desde=2026-10-05&hasta=2026-10-01"));
+
+        Assert.Contains("href=\"/Direccion/PeticionesHistorial\"", home);
+        Assert.Contains("Peticiones de historial tras un traslado", opened);
+        Assert.Contains("Sin contenido clínico.", opened);
+        Assert.Contains("Ninguna petición en este periodo.", opened);
+        Assert.Contains("Ninguna petición en este periodo.", filtered);
+        Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", invalid);
+        using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @id AND accion_codigo = 'TRANSFER_HISTORY_REVIEW' AND residente_id IS NULL", new { id = account.AccountId }));
     }
 
     [Theory]

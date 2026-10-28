@@ -138,6 +138,9 @@ public static class AuditActionDisplay
         ["POSITION_OCCUPANT_ADD"] = "Persona puesta en un cargo",
         ["POSITION_OCCUPANT_REMOVE"] = "Persona quitada de un cargo",
         ["POSITION_TEMPLATE_LOAD"] = "Plantilla de cargos cargada",
+        ["DIRECTION_INDICATORS_VIEW"] = "Dirección consultó los indicadores",
+        ["DIRECTION_QUALITY_VIEW"] = "Dirección consultó la calidad de proceso",
+        ["TRANSFER_HISTORY_REVIEW"] = "Dirección revisó las peticiones de historial tras un traslado",
     };
 
     public static string Label(string code) => Labels.TryGetValue(code, out var label) ? label : "Acción administrativa";
@@ -152,6 +155,7 @@ public static class AuditActionDisplay
         AuditCategory.Citas => "Citas",
         AuditCategory.ImportacionYExportacion => "Importación y exportación",
         AuditCategory.OrganigramaYCargos => "Organigrama y cargos",
+        AuditCategory.ConsultasDeDireccion => "Consultas de Dirección",
         _ => category.ToString(),
     };
 

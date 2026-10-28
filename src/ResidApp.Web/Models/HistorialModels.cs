@@ -31,13 +31,15 @@ public sealed record PreviousUnitHistoryModel(Guid ResidentId, int Count, bool R
         count > 0 ? new(resident.ResidentId.Value, count, requested, returnAction) : null;
 }
 
-/// <summary>Pedir los episodios cerrados de la unidad anterior de un residente trasladado: el motivo es obligatorio (hasta 300 caracteres) y queda
-/// auditado con cada lectura. Retorno: Historial o LineaTemporal.</summary>
+/// <summary>Pedir los episodios cerrados de la unidad anterior de un residente trasladado: una finalidad de una lista cerrada y un texto corto (obligatorio con «Otro motivo»)
+/// que quedan auditados con cada lectura. Retorno: Historial o LineaTemporal.</summary>
 public sealed class PedirHistorialAnteriorFormModel
 {
     public Guid ResidenteId { get; set; }
 
-    [System.ComponentModel.DataAnnotations.StringLength(ResidApp.Domain.Residents.TransferHistoryRequest.MaxReasonLength)]
+    public ResidApp.Domain.Residents.TransferHistoryPurpose? Finalidad { get; set; }
+
+    [System.ComponentModel.DataAnnotations.StringLength(ResidApp.Domain.Residents.TransferHistoryRequest.MaxTextLength)]
     public string? Motivo { get; set; }
 
     public string? Retorno { get; set; }

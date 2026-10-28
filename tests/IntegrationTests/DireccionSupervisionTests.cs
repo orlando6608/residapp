@@ -452,6 +452,98 @@ public class DireccionSupervisionTests
         Assert.Contains("PROFILE_PERMISSION_NOT_ALLOWED", grant.Message);
     }
 
+    /// <summary>CJ, 2.2 de «Dirección y traslados» (2026-10-28): Calidad de proceso es solo de cifras; la lectura de Dirección ni siquiera lee el nombre del residente,
+    /// y los avisos de Enfermería y Medicina, que comparten las consultas, siguen enseñándolo.</summary>
+    [Fact]
+    public async Task Calidad_NiLeeNiEntregaNombresDeResidentes_PeroLosAvisosDeEnfermeriaSiLosSiguenViendo()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var service = BuildService(enfermera.ExternalSubject);
+        var urgent = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
+        Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, urgent, await StartAndSaveAsync(enfermera, urgent)))).Ok);
+        var from = DateTime.UtcNow.AddDays(-1);
+        var to = DateTime.UtcNow.AddMinutes(5);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        var directionFacts = await new SqlSupervisionDirectory(TestDatabase.ConnectionFactory).ListMilestoneFactsAsync(direccion.ProfileScopeId, direccion.CenterId, from, to);
+        var nurseFacts = await new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory).ListMilestoneFactsAsync(enfermera.ProfileScopeId, enfermera.CenterId, from, to);
+        var quality = (await BuildDireccion(direccion.ExternalSubject).ReadProcessQualityAsync(
+            new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today))).Value!;
+
+        Assert.NotEmpty(directionFacts);
+        Assert.All(directionFacts, fact => Assert.Equal(string.Empty, fact.ResidentDisplayName));
+        Assert.Contains(nurseFacts, fact => fact.ResidentDisplayName == "Residente Supervisión Dirección");
+        Assert.True(quality.Total[ProcessMilestone.InformeDerivacion].Measured > 0);
+        Assert.Empty(quality.Exceptions);
+    }
+
+    /// <summary>CJ, 2.3 de «Dirección y traslados» (2026-10-28): abrir Indicadores o Calidad deja constancia de quién y cuándo, sin ningún residente ni unidad, una vez por
+    /// apertura (cambiar el periodo no repite), y solo si la cuenta tiene el permiso.</summary>
+    [Fact]
+    public async Task IndicadoresYCalidad_DejanConstanciaDeQuienLosAbre_UnaVezPorApertura_SinResidente_YSoloConElPermiso()
+    {
+        var (direccion, _, _) = await SeedCenterAsync();
+        var sinPermiso = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, direccion.CenterId, direccion.UnitId);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var service = BuildDireccion(direccion.ExternalSubject);
+        ReadSupervisionIndicatorsQuery Query(SeededProfile who, bool opening) => new(who.ProfileScopeId, who.CenterId, today, today, opening);
+        Task<int> CountAsync(SeededProfile who, string action) => ScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @account AND accion_codigo = @action", new { account = who.AccountId.Value, action });
+
+        await service.ReadIndicatorsAsync(Query(direccion, true));
+        await service.ReadIndicatorsAsync(Query(direccion, false));
+        await service.ReadIndicatorsAsync(Query(direccion, false));
+        await service.ReadProcessQualityAsync(Query(direccion, true));
+        await service.ReadProcessQualityAsync(Query(direccion, false));
+        var denied = await BuildDireccion(sinPermiso.ExternalSubject).ReadProcessQualityAsync(Query(sinPermiso, true));
+        var reversed = await service.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today.AddDays(-1), true));
+
+        Assert.Equal(1, await CountAsync(direccion, "DIRECTION_INDICATORS_VIEW"));
+        Assert.Equal(1, await CountAsync(direccion, "DIRECTION_QUALITY_VIEW"));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, denied.Error!.Code);
+        Assert.Equal(0, await CountAsync(sinPermiso, "DIRECTION_QUALITY_VIEW"));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, reversed.Error!.Code);
+        Assert.Equal(1, await CountAsync(direccion, "DIRECTION_INDICATORS_VIEW"));
+        var row = await Connection(c => c.QuerySingleAsync<(string Profile, Guid? Resident, Guid? Unit, string Resource, Guid Center)>(
+            "SELECT TOP (1) perfil_activo, residente_id, unidad_id, tipo_recurso, centro_id FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @account AND accion_codigo = 'DIRECTION_QUALITY_VIEW'",
+            new { account = direccion.AccountId.Value }));
+        Assert.Equal(("DIRECCION_CLINICA", null, null, "DIRECTION_METRICS", direccion.CenterId.Value), row);
+        // Administración las ve en su auditoría (lista cerrada de acciones).
+        Assert.Contains(ResidApp.Domain.Audit.AdministrativeAudit.Actions, a => a.Code == "DIRECTION_QUALITY_VIEW");
+        Assert.Contains(ResidApp.Domain.Audit.AdministrativeAudit.Actions, a => a.Code == "DIRECTION_INDICATORS_VIEW");
+    }
+
+    /// <summary>CJ, 2.1 de «Dirección y traslados» (2026-10-28): Administración puede revocar el permiso y volver a concederlo; revocado corta, vuelto a conceder devuelve.</summary>
+    [Fact]
+    public async Task Calidad_RevocarYVolverAConcederElPermiso_LoCortaYLoDevuelve()
+    {
+        var (direccion, _, _) = await SeedCenterAsync();
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var query = new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today);
+
+        await Connection(c => c.ExecuteAsync(
+            "UPDATE dbo.permisos_perfil SET revocado_en = SYSUTCDATETIME(), revocado_por_cuenta_id = @account WHERE ambito_perfil_id = @scope AND permiso_codigo = 'QUALITY_REVIEW'",
+            new { account = direccion.AccountId.Value, scope = direccion.ProfileScopeId }));
+        var revoked = await BuildDireccion(direccion.ExternalSubject).ReadProcessQualityAsync(query);
+        await Connection(c => c.ExecuteAsync("""
+            INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @scope, @center, 'QUALITY_REVIEW', SYSUTCDATETIME(), @account)
+            """, new { scope = direccion.ProfileScopeId, center = direccion.CenterId.Value, account = direccion.AccountId.Value }));
+        var granted = await BuildDireccion(direccion.ExternalSubject).ReadProcessQualityAsync(query);
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, revoked.Error!.Code);
+        Assert.True(granted.Ok, granted.Error?.Message);
+    }
+
+    private static async Task<T> Connection<T>(Func<System.Data.IDbConnection, Task<T>> action)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        return await action(connection);
+    }
+
+    private static Task<T> ScalarAsync<T>(string sql, object parameters) =>
+        Connection(c => c.ExecuteScalarAsync<T>(sql, parameters))!;
+
     [Fact]
     public async Task Indicadores_OtrosPerfilesNoEntran_YUnPeriodoImposibleSeRechaza()
     {

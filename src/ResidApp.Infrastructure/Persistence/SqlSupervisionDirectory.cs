@@ -166,13 +166,17 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
         var episode = await connection.QuerySingleOrDefaultAsync<ExceptionalClosureRow>(new CommandDefinition($"""
             SELECT ea.residente_id AS ResidentId, ea.unidad_id AS UnitId, ea.revision AS Revision,
                    (SELECT COUNT(*) FROM dbo.indicaciones_medicas i
-                     WHERE i.evento_id = ea.id AND i.estado_codigo IN ('PENDIENTE_LECTURA', 'LEIDA')) AS OpenIndications
+                     WHERE i.evento_id = ea.id AND i.estado_codigo IN ('PENDIENTE_LECTURA', 'LEIDA')) AS OpenIndications,
+                   (SELECT COUNT(*) FROM dbo.protocolos_urgentes pu WITH (FORCESEEK) WHERE pu.evento_id = ea.id)
+                     + (SELECT COUNT(*) FROM dbo.informes_derivacion rd WITH (FORCESEEK) WHERE rd.evento_id = ea.id) AS ReferralRecords
             {ScopedEventsFrom}
             {ScopedEventsWhere}
                AND ea.id = @EventId AND ea.estado_codigo <> 'CERRADO'
             """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, EventId = eventId }, transaction, cancellationToken: ct))
             ?? throw new AccessDeniedException();
-        if (episode.OpenIndications == 0)
+        // Una derivación a Urgencias exige su comunicado relevante a la familia, que este cierre (NO_COMUNICAR) se saltaría: ese episodio lo cierran Enfermería o
+        // Medicina (aviso de CJ a la 1.1 de «Dirección y traslados»). La base de datos lo repite (TR_ea_transition_guard, 0079).
+        if (episode.OpenIndications == 0 || episode.ReferralRecords > 0)
         {
             throw new DomainValidationException(ResidApp.Domain.Supervision.ExceptionalEpisodeClosure.NotApplicableCode);
         }
@@ -290,6 +294,69 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
         }
     }
 
+    /// <summary>Constancia de la apertura de Indicadores, Calidad o la lista de peticiones de historial (CJ, 2026-10-28, 2.3 y 3.3): una fila de auditoría con la cuenta, sin residente ni unidad.</summary>
+    public async Task AuditDirectionViewAsync(Guid profileScopeId, CenterId centerId, string action, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        if (action != "TRANSFER_HISTORY_REVIEW")
+        {
+            await EnsureQualityReviewAsync(connection, profileScopeId, centerId, ct);
+        }
+
+        var written = await connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.eventos_auditoria
+                (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
+            SELECT NEWID(), scope.cuenta_id, 'DIRECCION_CLINICA', scope.centro_id, NULL, NULL,
+                   CASE WHEN @Action = 'TRANSFER_HISTORY_REVIEW' THEN 'DIRECTION_REVIEW' ELSE 'DIRECTION_METRICS' END, scope.centro_id, @Action, SYSUTCDATETIME()
+              FROM dbo.ambitos_perfil scope
+             WHERE scope.id = @ProfileScopeId AND scope.centro_id = @CenterId AND scope.perfil_codigo = 'DIRECCION_CLINICA'
+               AND scope.estado = 'ACTIVE' AND scope.revocado_en IS NULL
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, Action = action }, cancellationToken: ct));
+        if (written != 1)
+        {
+            throw new AccessDeniedException();
+        }
+    }
+
+    /// <summary>Las peticiones de historial tras un traslado del periodo (CJ, 2026-10-28, 3.3), de residentes que están ahora en una unidad del ámbito. Solo datos de la petición: nunca
+    /// contenido clínico. Con el mismo alcance que la trazabilidad (ámbito de Dirección activo, unidad concedida y, si el ámbito restringe residentes, solo esos).</summary>
+    public async Task<TransferHistoryRequestPage> ListTransferHistoryRequestsAsync(
+        Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var rows = (await connection.QueryAsync<TransferRequestRow>(new CommandDefinition($"""
+            SELECT TOP ({TransferHistoryRequestPage.MaxEntries + 1})
+                   declaration.id AS Id, declaration.creada_en AS RequestedAt, account.nombre_visible AS AccountName, requester.perfil_codigo AS ProfileCode,
+                   resident.nombre_visible AS ResidentName, unit.nombre_visible AS UnitName, declaration.motivo AS Reason,
+                   CASE WHEN declaration.proposito_codigo IS NULL THEN NULL
+                        ELSE (SELECT COUNT(*) FROM dbo.eventos_auditoria read_event
+                               WHERE read_event.declaracion_id = declaration.id AND read_event.declaracion_id IS NOT NULL
+                                 AND read_event.accion_codigo = 'TRANSFER_HISTORY_READ' AND read_event.tipo_recurso <> 'RESIDENT_TRANSFER_HISTORY') END AS Reads
+              FROM dbo.declaraciones_historial_traslado declaration
+              JOIN dbo.ambitos_perfil profile ON profile.id = @ProfileScopeId AND profile.centro_id = declaration.centro_id
+                   AND profile.perfil_codigo = 'DIRECCION_CLINICA' AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+              JOIN dbo.ambitos_perfil requester ON requester.id = declaration.ambito_perfil_id AND requester.centro_id = declaration.centro_id
+              JOIN dbo.cuentas account ON account.id = declaration.cuenta_id
+              JOIN dbo.residentes resident ON resident.id = declaration.residente_id AND resident.centro_id = declaration.centro_id
+              JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = declaration.residente_id
+                   AND location.centro_id = declaration.centro_id AND location.vigente_hasta IS NULL
+              JOIN dbo.ambitos_perfil_unidad unit_scope ON unit_scope.ambito_perfil_id = profile.id AND unit_scope.centro_id = profile.centro_id
+                   AND unit_scope.unidad_id = location.unidad_id AND unit_scope.revocado_en IS NULL
+              JOIN dbo.unidades unit ON unit.id = location.unidad_id AND unit.centro_id = declaration.centro_id
+              LEFT JOIN dbo.ambitos_perfil_residente resident_scope ON resident_scope.ambito_perfil_id = profile.id
+                   AND resident_scope.centro_id = profile.centro_id AND resident_scope.residente_id = declaration.residente_id AND resident_scope.revocado_en IS NULL
+             WHERE declaration.centro_id = @CenterId AND declaration.creada_en >= @From AND declaration.creada_en < @To
+               AND (resident_scope.id IS NOT NULL OR NOT EXISTS (
+                        SELECT 1 FROM dbo.ambitos_perfil_residente restriction
+                         WHERE restriction.ambito_perfil_id = profile.id AND restriction.centro_id = profile.centro_id))
+             ORDER BY declaration.creada_en DESC, declaration.id
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, From = from, To = toExclusive }, cancellationToken: ct))).ToList();
+        return new TransferHistoryRequestPage(
+            rows.Take(TransferHistoryRequestPage.MaxEntries).Select(r => new TransferHistoryRequestSummary(
+                r.Id, Utc(r.RequestedAt), r.AccountName, EnumCode.ParseCode<SystemProfile>(r.ProfileCode), r.ResidentName, r.UnitName, r.Reason, r.Reads)).ToList(),
+            rows.Count > TransferHistoryRequestPage.MaxEntries);
+    }
+
     /// <summary>DIR-11: los hitos del proceso de todo el ámbito de Dirección (ver ProcessMilestoneQueries).</summary>
     public async Task<IReadOnlyList<MilestoneFact>> ListMilestoneFactsAsync(
         Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default)
@@ -297,7 +364,7 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
         using var connection = await connections.OpenAsync(ct);
         await EnsureQualityReviewAsync(connection, profileScopeId, centerId, ct);
         return await ProcessMilestoneQueries.ListAsync(
-            connection, ScopedEventsFrom + ScopedEventsWhere, profileScopeId, centerId, from, toExclusive, ct);
+            connection, ScopedEventsFrom + ScopedEventsWhere, profileScopeId, centerId, from, toExclusive, includeResidentName: false, ct);
     }
 
     public async Task<SupervisionIndicatorFacts> ListIndicatorFactsAsync(
@@ -431,7 +498,10 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
 
     private sealed record UnitRow(Guid Id, string Name);
 
-    private sealed record ExceptionalClosureRow(Guid ResidentId, Guid UnitId, int Revision, int OpenIndications);
+    private sealed record TransferRequestRow(
+        Guid Id, DateTime RequestedAt, string? AccountName, string ProfileCode, string ResidentName, string UnitName, string Reason, int? Reads);
+
+    private sealed record ExceptionalClosureRow(Guid ResidentId, Guid UnitId, int Revision, int OpenIndications, int ReferralRecords);
 
     private sealed record EpisodeFactRow(
         Guid UnitId, string OriginCode, string ClassificationCode, DateTime ReceivedAt, bool Escalated, bool UrgentProtocol, bool Referred);

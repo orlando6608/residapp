@@ -929,21 +929,23 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             Assert.Contains("Episodios cerrados de la unidad anterior", history);
             Assert.Contains("Pedir los episodios de la unidad anterior", history);
             Assert.Contains("No escribas datos de salud ni nombres de personas", history);
+            Assert.Contains("Revisión de continuidad asistencial", history);
+            Assert.Contains("Otro motivo", history);
             Assert.DoesNotContain("Fiebre desde la tarde", history);
             Assert.DoesNotContain("Fiebre desde la tarde", WebUtility.HtmlDecode(await client.GetStringAsync(detail)));
 
-            // Sin motivo, no se abre.
+            // Con «Otro motivo» y sin texto, no se abre.
             var rejected = await PostAsync(client, $"/{profile}/PedirHistorialAnterior", history, new()
             {
-                ["ResidenteId"] = residentId, ["Retorno"] = "Historial", ["Motivo"] = "   ",
+                ["ResidenteId"] = residentId, ["Retorno"] = "Historial", ["Finalidad"] = "Otro", ["Motivo"] = "   ",
             });
-            Assert.Contains("Escribe el motivo", rejected);
+            Assert.Contains("con «Otro motivo», escribe cuál", rejected);
             Assert.DoesNotContain("Fiebre desde la tarde", rejected);
 
             // Con motivo: el historial, la línea temporal y el detalle (solo lectura) lo enseñan, marcado.
             var opened = await PostAsync(client, $"/{profile}/PedirHistorialAnterior", history, new()
             {
-                ["ResidenteId"] = residentId, ["Retorno"] = "Historial", ["Motivo"] = "Continuidad asistencial tras el traslado.",
+                ["ResidenteId"] = residentId, ["Retorno"] = "Historial", ["Finalidad"] = "ContinuidadAsistencial", ["Motivo"] = "Tras el traslado.",
             });
             Assert.Contains("Fiebre desde la tarde", opened);
             Assert.Contains("De una unidad anterior", opened);
@@ -960,7 +962,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
 
         // Cada petición y cada lectura quedan auditadas con el motivo (2 peticiones, y por cada perfil: historial, línea temporal y detalle).
         Assert.Equal(8, await connection.ExecuteScalarAsync<int>(
-            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @residentId AND accion_codigo = 'TRANSFER_HISTORY_READ' AND justificacion = 'Continuidad asistencial tras el traslado.'",
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @residentId AND accion_codigo = 'TRANSFER_HISTORY_READ' AND justificacion = 'Revisión de continuidad asistencial — Tras el traslado.'",
             new { residentId }));
     }
 

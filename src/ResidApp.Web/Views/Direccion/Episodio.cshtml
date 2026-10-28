@@ -4,6 +4,8 @@
 @model SupervisionEpisodeDetail
 @{
     var episode = Model.Episode;
+    // Un episodio que viene de una derivación a Urgencias no se cierra con el cierre excepcional: su comunicado relevante a la familia es obligatorio.
+    var fromReferral = Model.Milestones.Any(m => m.Kind is SupervisionMilestoneKind.ProtocoloUrgenteActivado or SupervisionMilestoneKind.InformeDerivacionFirmado);
     ViewData["Title"] = "Detalle operativo del episodio";
 }
 
@@ -86,7 +88,14 @@
     }
 </ol>
 
-@if (episode.IndicationsPending > 0)
+@if (episode.IndicationsPending > 0 && fromReferral)
+{
+    <p class="text-muted" id="cierre-excepcional-derivacion">
+        Este episodio viene de una derivación a Urgencias, así que no se puede cerrar desde aquí: la comunicación relevante a la familia es obligatoria y la hacen
+        Enfermería o Medicina al cerrarlo.
+    </p>
+}
+else if (episode.IndicationsPending > 0)
 {
     <section class="card border-warning mb-4" aria-labelledby="cierre-excepcional-titulo">
         <div class="card-body">

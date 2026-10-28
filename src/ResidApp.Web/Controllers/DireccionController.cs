@@ -305,7 +305,7 @@ public sealed class DireccionController(
         TempData["Error"] = result.Error!.Code switch
         {
             ApplicationFailureCode.AccessDenied => "No se puede cerrar ese episodio: no está abierto o no es de tu ámbito.",
-            ApplicationFailureCode.Conflict => "Este episodio no tiene indicaciones médicas abiertas, o cambió mientras lo mirabas: vuelve a abrirlo.",
+            ApplicationFailureCode.Conflict => "Este episodio no tiene indicaciones médicas abiertas, viene de una derivación a Urgencias (ahí la comunicación a la familia es obligatoria y lo cierran Enfermería o Medicina), o cambió mientras lo mirabas: vuelve a abrirlo.",
             ApplicationFailureCode.InvalidInput => "Revisa el motivo: es obligatorio y admite hasta " + ResidApp.Domain.Supervision.ExceptionalEpisodeClosure.MaxReasonLength + " caracteres.",
             _ => result.Error.Message,
         };
@@ -333,7 +333,7 @@ public sealed class DireccionController(
         }
 
         var result = await service.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(
-            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to), ct);
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to, RecordView: !filtro.Aplicado), ct);
         if (QualityReviewDenied(result.Error))
         {
             return RedirectToAction(nameof(Index));
@@ -368,7 +368,7 @@ public sealed class DireccionController(
         }
 
         var result = await service.ReadProcessQualityAsync(new ReadSupervisionIndicatorsQuery(
-            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to), ct);
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to, RecordView: !filtro.Aplicado), ct);
         if (QualityReviewDenied(result.Error))
         {
             return RedirectToAction(nameof(Index));
@@ -382,6 +382,36 @@ public sealed class DireccionController(
         var scope = await service.ReadScopeAsync(new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
         var canManage = scope.Ok && scope.Value!.Permissions.Contains(ResidApp.Domain.Accounts.ProfilePermissions.ProcessDeadlinesManage);
         return View(new ProcessQualityViewModel(from, to, result.Value, canManage));
+    }
+
+    /// <summary>Peticiones de historial tras un traslado del periodo (CJ, 2026-10-28, 3.3): quién, qué residente, cuándo, finalidad y texto y cuántas lecturas, sin contenido clínico. Abrir la
+    /// pantalla queda registrado; cambiar el periodo no.</summary>
+    public async Task<IActionResult> PeticionesHistorial(IndicatorPeriodFilter filtro, CancellationToken ct)
+    {
+        // Una fecha mal formada en la URL se ignora (toma el valor por defecto), no se muestra como error.
+        ModelState.Clear();
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var (from, to) = filtro.Resolve(today);
+        if (filtro.Validate(today) is { } invalid)
+        {
+            ModelState.AddModelError(string.Empty, invalid);
+            return View(new TransferHistoryRequestsViewModel(from, to, null));
+        }
+
+        var result = await service.ReadTransferHistoryRequestsAsync(new ReadSupervisionIndicatorsQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, to, RecordView: !filtro.Aplicado), ct);
+        if (!result.Ok)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!.Message);
+        }
+
+        return View(new TransferHistoryRequestsViewModel(from, to, result.Value));
     }
 
     /// <summary>Sin el permiso QUALITY_REVIEW (o fuera de su ámbito) Indicadores y Calidad no se abren: se vuelve al inicio con el motivo.</summary>

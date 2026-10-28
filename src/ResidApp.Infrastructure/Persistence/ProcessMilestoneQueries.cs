@@ -10,17 +10,18 @@ namespace ResidApp.Infrastructure.Persistence;
 /// DIR-11: las siete consultas de los hitos del proceso, compartidas por Dirección (todo su ámbito) y por Enfermería y Medicina (los avisos
 /// de su equipo). Cada una trabaja sobre los eventos de un ámbito: <c>scopedEvents</c> es el fragmento «FROM … WHERE …» de ese ámbito con los
 /// alias ea, unit y resident, que ya trae la regla de ámbito. Solo leen fechas, la unidad, el residente y si el evento es prioritario.
-/// Parámetros: @ProfileScopeId, @CenterId, @From y @To (UTC, [From, To)).
+/// Parámetros: @ProfileScopeId, @CenterId, @From y @To (UTC, [From, To)). <c>includeResidentName</c> es false para Dirección (CJ, 2026-10-28, 2.2): su
+/// lectura de Calidad de proceso es solo de cifras y ni siquiera lee el nombre.
 /// </summary>
 internal static class ProcessMilestoneQueries
 {
     public static async Task<IReadOnlyList<MilestoneFact>> ListAsync(
         IDbConnection connection, string scopedEvents, Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive,
-        CancellationToken ct)
+        bool includeResidentName, CancellationToken ct)
     {
         var parameters = new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, From = from, To = toExclusive };
         var scoped = $"""
-            (SELECT DISTINCT ea.id AS EventId, ea.residente_id AS ResidentId, resident.nombre_visible AS ResidentName, ea.unidad_id AS UnitId,
+            (SELECT DISTINCT ea.id AS EventId, ea.residente_id AS ResidentId, {(includeResidentName ? "resident.nombre_visible" : "CAST(N'' AS NVARCHAR(200))")} AS ResidentName, ea.unidad_id AS UnitId,
                     unit.nombre_visible AS UnitName, CAST(CASE WHEN ea.clasificacion_codigo = 'PRIORITARIO' THEN 1 ELSE 0 END AS BIT) AS Priority,
                     CAST(CASE WHEN ea.estado_codigo = 'CERRADO' THEN 1 ELSE 0 END AS BIT) AS EpisodeClosed,
                     ea.origen_codigo AS OriginCode, ea.recibido_en AS ReceivedAt, ea.valoracion_iniciada_en AS AssessmentStartedAt,

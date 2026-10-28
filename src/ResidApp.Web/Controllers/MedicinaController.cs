@@ -1023,7 +1023,7 @@ public sealed class MedicinaController(
         }
 
         var result = await transferHistory.DeclareAsync(new DeclareTransferHistoryCommand(
-            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.Motivo, SystemProfile.Medicina), ct);
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.Motivo, SystemProfile.Medicina, form.Finalidad), ct);
         if (result.Ok)
         {
             TransferHistoryCookie.Write(Response, result.Value);
@@ -1032,7 +1032,7 @@ public sealed class MedicinaController(
         {
             TempData["Error"] = result.Error!.Code switch
             {
-                ApplicationFailureCode.InvalidInput => "Escribe el motivo, de hasta 300 caracteres.",
+                ApplicationFailureCode.InvalidInput => "Elige para qué los necesitas; con «Otro motivo», escribe cuál (hasta " + ResidApp.Domain.Residents.TransferHistoryRequest.MaxTextLength + " caracteres).",
                 ApplicationFailureCode.AccessDenied or ApplicationFailureCode.Conflict =>
                     "No se pueden abrir los episodios de la unidad anterior de este residente.",
                 _ => result.Error.Message,
