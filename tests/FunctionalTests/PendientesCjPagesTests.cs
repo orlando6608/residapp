@@ -53,6 +53,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         "archivados/aclaraciones-respuestas-cj", "archivados/traslado-y-baja-residente",
         "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
         "archivados/confirmaciones-segunda-tanda-cj", "archivados/foto-residente-confirmaciones-cj", "archivados/importacion-exportacion-confirmaciones-cj", "archivados/organigrama-y-cargos-cj",
+        "archivados/dictado-por-voz-confirmaciones-cj",
     ];
 
     [Theory]
@@ -77,6 +78,8 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("/pendientes-cj/archivados/organigrama-y-cargos-cj.respuestas.json")]
     [InlineData("/pendientes-cj/archivados/portal-familiar-cuarta-tanda-cj.respuestas.json")]
     [InlineData("/pendientes-cj/archivados/direccion-y-traslados-confirmaciones-cj.respuestas.json")]
+    [InlineData("/pendientes-cj/archivados/confirmaciones-segunda-tanda-cj.respuestas.json")]
+    [InlineData("/pendientes-cj/archivados/dictado-por-voz-confirmaciones-cj.respuestas.json")]
     [InlineData("/pendientes-cj/otro-documento.respuestas.json")]
     public async Task SinClave_LasRespuestasDan401(string path)
     {
@@ -232,6 +235,15 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         Assert.Contains("archivados/traslado-y-baja-residente.html", archive);
         Assert.Contains("archivados/administracion-ambito-familiares-cargos.html", archive);
         Assert.Contains("archivados/continuidad-supervision-comunicacion.html", archive);
+        foreach (var document in new[]
+                 {
+                     "foto-residente-confirmaciones-cj", "dictado-por-voz-confirmaciones-cj", "importacion-exportacion-confirmaciones-cj",
+                     "organigrama-y-cargos-cj", "portal-familiar-cuarta-tanda-cj", "direccion-y-traslados-confirmaciones-cj",
+                 })
+        {
+            Assert.DoesNotContain(document, questions);
+            Assert.Contains($"archivados/{document}.html", archive);
+        }
     }
 
     [Theory]
@@ -241,6 +253,13 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("traslado-y-baja-residente", 6)]
     [InlineData("administracion-ambito-familiares-cargos", 7)]
     [InlineData("continuidad-supervision-comunicacion", 16)]
+    [InlineData("confirmaciones-segunda-tanda-cj", 12)]
+    [InlineData("foto-residente-confirmaciones-cj", 8)]
+    [InlineData("dictado-por-voz-confirmaciones-cj", 15)]
+    [InlineData("importacion-exportacion-confirmaciones-cj", 8)]
+    [InlineData("organigrama-y-cargos-cj", 8)]
+    [InlineData("portal-familiar-cuarta-tanda-cj", 3)]
+    [InlineData("direccion-y-traslados-confirmaciones-cj", 9)]
     public async Task LosArchivados_TienenSusRespuestasAlLadoParaQueSeAbranContestados(string document, int answered)
     {
         var client = await LoggedInAsync();
@@ -251,7 +270,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         Assert.Contains($"\"documento\": \"{document}\"", json);
         Assert.Contains($"\"respondidas\": {answered}", json);
         Assert.Contains($"data-doc=\"{document}\"", page);
-        Assert.Matches("Archivado el 0[78]/10/2026", page);
+        Assert.Matches("Archivado el \\d{2}/10/2026", page);
     }
 
     [Theory]
@@ -261,6 +280,13 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("traslado-y-baja-residente")]
     [InlineData("administracion-ambito-familiares-cargos")]
     [InlineData("continuidad-supervision-comunicacion")]
+    [InlineData("confirmaciones-segunda-tanda-cj")]
+    [InlineData("foto-residente-confirmaciones-cj")]
+    [InlineData("dictado-por-voz-confirmaciones-cj")]
+    [InlineData("importacion-exportacion-confirmaciones-cj")]
+    [InlineData("organigrama-y-cargos-cj")]
+    [InlineData("portal-familiar-cuarta-tanda-cj")]
+    [InlineData("direccion-y-traslados-confirmaciones-cj")]
     public async Task LosArchivados_LlevanArribaLosEnlacesAlIndiceYALaAplicacion(string document)
     {
         var page = await (await LoggedInAsync()).GetStringAsync($"/pendientes-cj/archivados/{document}.html");
@@ -300,6 +326,14 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("/pendientes-cj/aclaraciones-respuestas-cj.html")]
     [InlineData("/pendientes-cj/traslado-y-baja-residente.respuestas.json")]
     [InlineData("/pendientes-cj/rangos-referencia-constantes.respuestas.json")]
+    [InlineData("/pendientes-cj/confirmaciones-segunda-tanda-cj.html")]
+    [InlineData("/pendientes-cj/foto-residente-confirmaciones-cj.html")]
+    [InlineData("/pendientes-cj/dictado-por-voz-confirmaciones-cj.html")]
+    [InlineData("/pendientes-cj/importacion-exportacion-confirmaciones-cj.html")]
+    [InlineData("/pendientes-cj/organigrama-y-cargos-cj.html")]
+    [InlineData("/pendientes-cj/portal-familiar-cuarta-tanda-cj.html")]
+    [InlineData("/pendientes-cj/direccion-y-traslados-confirmaciones-cj.html")]
+    [InlineData("/pendientes-cj/direccion-y-traslados-confirmaciones-cj.respuestas.json")]
     public async Task LasRutasAntiguasDeLosArchivados_YaNoExisten(string path)
     {
         var response = await (await LoggedInAsync()).GetAsync(path);
