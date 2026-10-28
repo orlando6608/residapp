@@ -41,8 +41,14 @@ public sealed partial class AdministracionController
         var found = await FindActiveResidentAsync(activeScope, residenteId, ct);
         return found is null
             ? RedirectToAction(nameof(Residentes))
-            : View(new DischargeResidentViewModel(found, new DischargeResidentFormModel { ResidenteId = residenteId, OperacionId = Guid.NewGuid() }));
+            : View(new DischargeResidentViewModel(
+                found, new DischargeResidentFormModel { ResidenteId = residenteId, OperacionId = Guid.NewGuid() }, await AppointmentLoadAsync(activeScope, residenteId, ct)));
     }
+
+    /// <summary>Lo que la baja cancelaría y cerraría (citas futuras y solicitudes abiertas); si no se puede leer, nada que avisar.</summary>
+    private async Task<ResidentAppointmentLoad> AppointmentLoadAsync(ActiveProfileScopeCookieValue activeScope, Guid residenteId, CancellationToken ct) =>
+        (await statuses.PreviewDischargeAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), ct)).Value
+        ?? new ResidentAppointmentLoad(0, 0);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -68,8 +74,12 @@ public sealed partial class AdministracionController
                 form.Motivo, form.MotivoTexto), ct);
             if (result.Ok)
             {
+                var outcome = result.Value!;
                 TempData["Mensaje"] = $"{found.DisplayName} se ha dado de baja. Sus datos se conservan {ResidentDischarge.RetentionYears} años."
-                    + (result.Value > 0 ? $" Se {(result.Value == 1 ? "cerró 1 episodio abierto" : $"cerraron {result.Value} episodios abiertos")} por fallecimiento." : string.Empty);
+                    + (outcome.EventsClosed > 0 ? $" Se {(outcome.EventsClosed == 1 ? "cerró 1 episodio abierto" : $"cerraron {outcome.EventsClosed} episodios abiertos")} por fallecimiento." : string.Empty)
+                    + (outcome.AppointmentsCancelled > 0 ? $" Se {(outcome.AppointmentsCancelled == 1 ? "canceló 1 cita futura" : $"cancelaron {outcome.AppointmentsCancelled} citas futuras")}." : string.Empty)
+                    + (outcome.AppointmentRequestsClosed > 0 ? $" Se {(outcome.AppointmentRequestsClosed == 1 ? "cerró 1 solicitud de cita abierta" : $"cerraron {outcome.AppointmentRequestsClosed} solicitudes de cita abiertas")}." : string.Empty)
+                    + (outcome.AppointmentsCancelled + outcome.AppointmentRequestsClosed > 0 ? " La familia no recibe aviso: avísala tú." : string.Empty);
                 return RedirectToAction(nameof(Bajas));
             }
 
@@ -81,7 +91,7 @@ public sealed partial class AdministracionController
             });
         }
 
-        return View(new DischargeResidentViewModel(found, form));
+        return View(new DischargeResidentViewModel(found, form, await AppointmentLoadAsync(activeScope, form.ResidenteId, ct)));
     }
 
     public async Task<IActionResult> Reactivar(Guid residenteId, CancellationToken ct)

@@ -1,0 +1,30 @@
+{
+  "documento": "portal-familiar-cuarta-tanda-cj",
+  "cuestionario": "2026-10-25",
+  "guardado": "2026-10-28T13:18:37.959Z",
+  "respondidas": 3,
+  "total": 3,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Qué pasa con sus citas y solicitudes abiertas?",
+      "opcion": "B",
+      "textoOpcion": "Al dar de baja se cancelan solas las citas futuras y se cierran las solicitudes abiertas, como si lo hiciera el centro; en la suspensión se quedan como están.",
+      "texto": "Elijo B. Al dar de baja la estancia termina: la familia ya no entra al portal (1.3) y no puede ver ni anular sus citas, así que una cita futura queda como un hueco ocupado sin sentido y, cuando pasa su hora, entra en «Citas pasadas sin cerrar» y suma al bloque «Requiere atención» de Administración (la app no las finaliza sola). Cancelarla sola es coherente con lo que ya hace la app al dar de baja por fallecimiento (cierra los episodios abiertos con la anotación «cerrado por el sistema…»). En la suspensión NO: es un ingreso temporal (en el ejemplo, 12 días), el residente sigue activo y la familia vuelve a entrar al reanudar; una cita posterior al regreso sigue siendo válida y cancelarla sola sería una acción irreversible (el hueco lo puede coger otra familia). Ahí que decida Administración, como ahora.\n\nMatices para construirlo: (1) la cancelación y el cierre deben constar en la auditoría y en el historial de la cita como hechos por el sistema a causa de la baja; (2) como todavía no hay avisos a la familia, la pantalla de baja debería decir antes de confirmar cuántas citas se cancelarán y cuántas solicitudes se cerrarán, para que Administración avise por teléfono; (3) al cerrar una solicitud con propuesta viva, el hueco reservado se libera; (4) solo afecta a las citas de ese residente, no a las de la misma persona con otros residentes.",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Puede Administración proponer un hueco para dentro de menos de 24 horas?",
+      "opcion": "A",
+      "textoOpcion": "No: solo huecos que empiezan dentro de más de 24 horas (como está ahora). Si hay prisa, se acuerda por teléfono.",
+      "texto": "Elijo A. (1) Hoy no hay avisos, recordatorios ni correo: la familia solo se entera de una propuesta si entra al portal. Con menos de 24 horas es muy probable que nadie la vea, y mientras está viva el hueco queda reservado y no se ofrece a otra solicitud: se pierde un hueco que otra familia podría haber usado. (2) Respeta la regla que ya fijaste (6.4: caduca a las 48 h o 24 h antes de la cita); B sería una excepción a esa regla y obligaría a decidir cuántas horas antes caduca, con más casos límite. (3) La necesidad de última hora ya tiene salida: el teléfono (las citas y el portal no son canal urgente) y, en reserva directa, la familia puede reservar sola cualquier hueco libre a partir de la antelación mínima que configura el centro. (4) Es lo que está ahora, sin coste de desarrollo. Se puede reabrir cuando existan avisos por correo o recordatorios, que es lo que haría viable una propuesta de última hora.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "La primera vez que un familiar entra, ¿qué le marcamos como nuevo?",
+      "opcion": "A",
+      "textoOpcion": "Todo lo que ve: para esa persona, todo es nuevo (como está ahora).",
+      "texto": "Elijo A. «Nueva» debe significar «aún no la has visto», y el principio de la app es que «publicado» no es «visto» (por eso se registra quién abre cada novedad y cuándo). En la primera visita esa persona no ha visto nada, así que todo es nuevo de verdad. B lo escondería: una novedad relevante (por ejemplo, la de una derivación a Urgencias, que se ve 6 meses) publicada antes de que la familia tuviera acceso pasaría a parecer ya conocida, justo la que más importa que lea. El ruido de A es pequeño y acotado: como mucho 30 días de novedades ordinarias y 6 meses de relevantes, y normalmente el acceso se da al dar de alta al residente, cuando casi no hay nada publicado. Además no requiere cambios. Si en el uso real el contador resulta confuso con muchas novedades antiguas, se puede revisar más adelante (por ejemplo, destacar solo las relevantes en la primera visita).",
+      "respondida": true
+    }
+  }
+}

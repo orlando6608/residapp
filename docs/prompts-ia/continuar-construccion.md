@@ -14,6 +14,11 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
+- **La baja cancela las citas futuras y cierra las solicitudes abiertas (2026-10-28, rama `baja-cancela-citas`; script `0078`, el siguiente libre es `0079`). Hecho y probado en local; sin push.**
+  CJ contestó el 2026-10-28 los dos cuestionarios pendientes (`portal-familiar-cuarta-tanda-cj` y `direccion-y-traslados-confirmaciones-cj`, sus `.respuestas.json` estaban sin seguir en git). Esta pieza es la 1.1 B del portal; el resto de las respuestas de Dirección (2.2, 2.3, 3.2, 3.3 y las cautelas de 1.1 y 2.1) es el bloque B, **todavía sin hacer**.
+  - **Qué hace:** `SqlResidentStatusRepository.DischargeAsync` cancela las citas `CONFIRMADA` con inicio posterior a la baja y cierra las solicitudes `PENDIENTE`/`PROPUESTA` del residente (solo de él), con fila de historial `causa_codigo = BAJA_RESIDENTE`, motivo fijo y la cuenta de Administración que da la baja, y auditoría `APPOINTMENT_CANCEL_DISCHARGE` y `APPOINTMENT_REQUEST_CLOSE_SYSTEM`. Devuelve `DischargeOutcome`. La pantalla de baja avisa antes (`PreviewDischargeAsync`, `ResidentAppointmentLoad`) y dice que la familia no recibe aviso. La suspensión no cambia. Detalle, suposiciones y privacidad en `pendientes-administracion.md` (Portal Familiar, «La baja cancela…»).
+  - **Pruebas:** `BajaCancelaCitasTests` (4), un funcional nuevo en `PortalFamiliarFlowTests`; con los dos triggers desactivados la prueba de la base falla. **La BD de las pruebas es `ResidAppPruebas`, no `ResidApp`:** los scripts nuevos hay que aplicarlos a las dos con `SQL_SERVER=ACER-ORLANDO SQL_DATABASE=… SQLCMD_EXTRA=-C bash database/aplicar-scripts.sh` (si no, todas las pruebas de baja fallan con «Invalid column name»).
+  - **Privacidad:** consultado `dpo-residapp` (admisible con condiciones, cumplidas); lo que valida una persona está en `docs/privacidad/antes-de-datos-reales.md` (apartado 4).
 - **Historial de episodios cerrados tras un traslado (2026-10-28, rama `historial-tras-traslado` desde `main`; script `0077`, el siguiente libre es `0078`). Hecho, probado, PR #73 mergeado y desplegado el 2026-10-28.**
   En Azure dev se comprobó que el Historial de los 6 residentes de Los Almendros carga con el esquema `0077` (200, sin errores de consola); **el flujo completo (trasladar, pedir con motivo, ver) solo se ha probado en local.**
   Tercera y última pieza del bloque «Dirección y traslados». Detalle en `pendientes-enfermeria.md` («Tras un traslado entre unidades», hecho el 2026-10-28).
@@ -133,7 +138,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     huecos a más de 24 h. Textos: «Responde antes del…», «Esta propuesta caducó el…», «Caducó sin respuesta el…».
   - **Citas pasadas sin cerrar** (5.8): sección arriba de la agenda (`ListPastUnclosedAsync`) y cifra en el inicio de Administración (`AppointmentsPastUnclosed`, cuenta como pendiente).
   - **Aviso del comentario** (6.1) en «Solicitar una cita».
-  - **Pregunta nueva a CJ:** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (citas de un residente suspendido o de baja, huecos a menos de 24 h, lo nuevo en la primera
+  - **Pregunta nueva a CJ:** `docs/pendientes-cj/archivados/portal-familiar-cuarta-tanda-cj.html` (citas de un residente suspendido o de baja, huecos a menos de 24 h, lo nuevo en la primera
     visita). `portal-familiar-confirmaciones-cj` no se archiva: queda la 3.2 (código por correo), que espera al ADR 0012.
   - **Pruebas:** unitarias 452, integración 529 y funcionales 304 en verde. `0070` aplicado en `ResidApp` y `ResidAppPruebas` locales (en `ResidAppPruebas` rellenó 78
     propuestas antiguas). Navegador (Los Almendros local, `almendros-orlando-administracion`, `-pablo` y `-enfermeria`): lo nuevo, el aviso de propuesta, el plazo, la caducidad y
@@ -1956,7 +1961,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   `almendros-orlando-administracion` (`/Administracion/Cargos`): cargan sin error y el centro aún no ha definido cargos (la plantilla de CJ se carga desde «Empezar con la plantilla de CJ»; no se
   ha pulsado). Las credenciales del juego están en `~/.residapp/credenciales-app-residapp-dev.azurewebsites.net.json`, fuera del repositorio; nunca las pidas ni las copies. Es BD de
   desarrollo; no se tocan los datos del centro «Residente Integrado Uno» sin basal. Justo tras un despliegue la app suele dar 500 unos segundos mientras arranca.
-- **Para CJ (lo envía Orlando):** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (3 preguntas) y `docs/pendientes-cj/direccion-y-traslados-confirmaciones-cj.html` (9 preguntas sobre las suposiciones de las piezas `0075` a `0077`).
+- **Para CJ (lo envía Orlando):** `docs/pendientes-cj/archivados/portal-familiar-cuarta-tanda-cj.html` (3 preguntas) y `docs/pendientes-cj/direccion-y-traslados-confirmaciones-cj.html` (9 preguntas sobre las suposiciones de las piezas `0075` a `0077`).
   Avisarle también de que **las Direcciones reales no ven «Indicadores» ni «Calidad de proceso» hasta que Administración les conceda «Ver los indicadores y la calidad de proceso»** (pregunta 2.1). Decirle también que la app no envía correos (ADR 0012, pendiente
   de la decisión de Orlando), lo que deja abierta la 3.2 del portal, y que en el organigrama la auditoría dice quién cambió qué cargo y cuándo pero no los nombres de quienes
   lo ocuparon (matiza su 1.7; ya está escrito en `archivados/organigrama-y-cargos-cj.html`). La prueba 17 de la guía 5 es la del organigrama.

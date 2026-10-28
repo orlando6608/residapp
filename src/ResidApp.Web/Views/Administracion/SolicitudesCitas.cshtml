@@ -81,7 +81,7 @@ else
                     {
                         <li>
                             @AppointmentRequestDisplay.Label(change.Action) el @AppointmentDisplay.When(change.At) ·
-                            @(change.ActorProfile == ResidApp.Shared.SystemProfile.Familiar ? "familia" : "centro")@(change.Detail is { Length: > 0 } detail ? " · " + detail : "")
+                            @(change.FromDischarge ? "sistema, a causa de la baja del residente" : change.ActorProfile == ResidApp.Shared.SystemProfile.Familiar ? "familia" : "centro")@(change.Detail is { Length: > 0 } detail ? " · " + detail : "")
                         </li>
                     }
                 </ul>

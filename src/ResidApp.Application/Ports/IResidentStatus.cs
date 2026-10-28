@@ -11,6 +11,13 @@ public sealed record DischargedResident(
 /// <summary>Suspensión abierta de un residente por un ingreso hospitalario prolongado: sigue activo pero no se puede actuar sobre él.</summary>
 public sealed record ResidentSuspension(Guid Id, DateTimeOffset Since, string? Note);
 
+/// <summary>Lo que hizo una baja además de darla (CJ, portal 1.1 B; scripts 0042 y 0078): eventos abiertos cerrados por fallecimiento, citas futuras canceladas
+/// y solicitudes de cita abiertas cerradas.</summary>
+public sealed record DischargeOutcome(int EventsClosed, int AppointmentsCancelled, int AppointmentRequestsClosed);
+
+/// <summary>Las citas futuras y las solicitudes de cita abiertas del residente: lo que una baja cancelaría y cerraría ahora mismo.</summary>
+public sealed record ResidentAppointmentLoad(int FutureAppointments, int OpenRequests);
+
 public sealed record DischargeResidentInput(
     AdministrativeResidentTarget Target, Guid OperationId, ResidentDischargeReason Reason, string? ReasonText);
 
@@ -29,8 +36,8 @@ public interface IResidentStatusRepository
 {
     /// <summary>Cierra el episodio y la ubicación vigentes, pone al residente inactivo, termina su suspensión si la tenía y guarda la baja
     /// (los datos no se borran). Si el motivo es fallecimiento, cierra además los eventos abiertos con una anotación de sistema (script 0042).
-    /// Devuelve cuántos eventos cerró.</summary>
-    Task<int> DischargeAsync(DischargeResidentInput input, CancellationToken ct = default);
+    /// Cancela además las citas futuras y cierra las solicitudes de cita abiertas del residente (script 0078; la suspensión no las toca). Devuelve las tres cifras.</summary>
+    Task<DischargeOutcome> DischargeAsync(DischargeResidentInput input, CancellationToken ct = default);
 
     /// <summary>Abre un episodio y una ubicación nuevos en la unidad indicada, pone al residente activo y marca la baja como reactivada.</summary>
     Task ReactivateAsync(ReactivateResidentInput input, CancellationToken ct = default);
@@ -49,4 +56,7 @@ public interface IResidentStatusDirectory
     Task<DischargedResident?> FindDischargedAsync(Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default);
 
     Task<ResidentSuspension?> FindSuspensionAsync(CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+
+    /// <summary>Cuántas citas futuras y solicitudes abiertas tiene el residente (lo que la baja cancelaría y cerraría), con la hora indicada como «ahora».</summary>
+    Task<ResidentAppointmentLoad> CountAppointmentLoadAsync(CenterId centerId, ResidentId residentId, DateTimeOffset now, CancellationToken ct = default);
 }

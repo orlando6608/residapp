@@ -51,8 +51,17 @@ public sealed class ResidentStatusApplicationService(
             return await directory.FindSuspensionAsync(centerId, residentId, ct);
         });
 
-    /// <summary>Devuelve cuántos eventos abiertos cerró la baja (solo por fallecimiento).</summary>
-    public Task<ApplicationResult<int>> DischargeAsync(DischargeResidentCommand command, CancellationToken ct = default) =>
+    /// <summary>Las citas futuras y solicitudes abiertas que la baja de este residente cancelaría y cerraría (se enseña antes de confirmarla).</summary>
+    public Task<ApplicationResult<ResidentAppointmentLoad>> PreviewDischargeAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            await ResolveActiveResidentAsync(profileScopeId, centerId, residentId, ct);
+            return await directory.CountAppointmentLoadAsync(centerId, residentId, DateTimeOffset.UtcNow, ct);
+        });
+
+    /// <summary>Devuelve cuántos eventos abiertos cerró la baja (solo por fallecimiento), cuántas citas canceló y cuántas solicitudes cerró.</summary>
+    public Task<ApplicationResult<DischargeOutcome>> DischargeAsync(DischargeResidentCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
             var target = await ResolveActiveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);

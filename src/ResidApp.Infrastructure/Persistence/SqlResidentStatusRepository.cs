@@ -21,7 +21,11 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
         VALUES (NEWID(), @AccountId, 'ADMINISTRACION', @CenterId, @UnitId, @ResidentId, 'RESIDENT', @ResidentId, @Action, @OccurredAt);
         """;
 
-    public async Task<int> DischargeAsync(DischargeResidentInput input, CancellationToken ct = default)
+    private const string AppointmentCancelledReason = "Cancelada por el sistema al dar de baja al residente.";
+
+    private const string AppointmentRequestClosedReason = "Cerrada por el sistema al dar de baja al residente.";
+
+    public async Task<DischargeOutcome> DischargeAsync(DischargeResidentInput input, CancellationToken ct = default)
     {
         var target = input.Target;
         using var connection = await connections.OpenAsync(ct);
@@ -33,7 +37,7 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
                     "SELECT COUNT(*) FROM dbo.bajas_residente WHERE id = @DischargeId AND residente_id = @ResidentId AND centro_id = @CenterId",
                     p, transaction, cancellationToken: ct)) > 0)
             {
-                return 0;
+                return new DischargeOutcome(0, 0, 0);
             }
 
             await LockResidentAsync(connection, transaction, p.ResidentId, p.CenterId, "ACTIVE", ct);
@@ -88,8 +92,56 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
                        comunicacion_familiar_codigo = 'NO_COMUNICAR', cierre_sistema_codigo = 'FALLECIMIENTO'
                  WHERE residente_id = @ResidentId AND centro_id = @CenterId AND estado_codigo <> 'CERRADO'
                 """, new { p.ResidentId, p.CenterId, AccountId = target.AccountId.Value, OccurredAt = occurredAt }, transaction, cancellationToken: ct));
+
+            // CJ (portal, cuarta tanda 1.1 B): la baja cancela las citas futuras y cierra las solicitudes de cita abiertas del residente, como hecho del sistema a causa
+            // de la baja (script 0078; los triggers de causa lo admiten solo con esta baja en la misma transacción). La suspensión no las toca.
+            var appointments = await connection.QuerySingleAsync<AppointmentCascadeRow>(new CommandDefinition("""
+                DECLARE @Cancelled TABLE (id UNIQUEIDENTIFIER NOT NULL, inicio_en DATETIME2(3) NOT NULL);
+                DECLARE @Closed TABLE (id UNIQUEIDENTIFIER NOT NULL);
+
+                UPDATE appointment SET estado_codigo = 'CANCELADA'
+                OUTPUT inserted.id, deleted.inicio_en INTO @Cancelled
+                  FROM dbo.citas appointment WITH (FORCESEEK)
+                 WHERE appointment.centro_id = @CenterId AND appointment.residente_id = @ResidentId
+                   AND appointment.estado_codigo = 'CONFIRMADA' AND appointment.inicio_en > @OccurredAt;
+
+                INSERT INTO dbo.citas_cambios
+                    (id, centro_id, cita_id, numero, accion_codigo, actor_cuenta_id, actor_perfil_codigo, inicio_anterior_en, inicio_nuevo_en, motivo, ocurrido_en, causa_codigo)
+                SELECT NEWID(), @CenterId, done.id,
+                       (SELECT ISNULL(MAX(change.numero), 0) + 1 FROM dbo.citas_cambios change WITH (FORCESEEK) WHERE change.cita_id = done.id),
+                       'CANCELADA', @AccountId, 'ADMINISTRACION', done.inicio_en, NULL, @AppointmentReason, @OccurredAt, 'BAJA_RESIDENTE'
+                  FROM @Cancelled done;
+
+                INSERT INTO dbo.eventos_auditoria
+                    (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
+                SELECT NEWID(), @AccountId, 'ADMINISTRACION', @CenterId, NULL, @ResidentId, 'APPOINTMENT', done.id, 'APPOINTMENT_CANCEL_DISCHARGE', @OccurredAt
+                  FROM @Cancelled done;
+
+                UPDATE request SET estado_codigo = 'CERRADA', propuesta_inicio_en = NULL, propuesta_fin_en = NULL, propuesta_en = NULL, profesional_interno = NULL
+                OUTPUT inserted.id INTO @Closed
+                  FROM dbo.citas_solicitudes request WITH (FORCESEEK)
+                 WHERE request.centro_id = @CenterId AND request.residente_id = @ResidentId AND request.estado_codigo IN ('PENDIENTE', 'PROPUESTA');
+
+                INSERT INTO dbo.citas_solicitudes_cambios
+                    (id, centro_id, solicitud_id, numero, accion_codigo, actor_cuenta_id, actor_perfil_codigo, inicio_propuesto_en, detalle, ocurrido_en, causa_codigo)
+                SELECT NEWID(), @CenterId, done.id,
+                       (SELECT ISNULL(MAX(change.numero), 0) + 1 FROM dbo.citas_solicitudes_cambios change WITH (FORCESEEK) WHERE change.solicitud_id = done.id),
+                       'CERRADA', @AccountId, 'ADMINISTRACION', NULL, @RequestReason, @OccurredAt, 'BAJA_RESIDENTE'
+                  FROM @Closed done;
+
+                INSERT INTO dbo.eventos_auditoria
+                    (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
+                SELECT NEWID(), @AccountId, 'ADMINISTRACION', @CenterId, NULL, @ResidentId, 'APPOINTMENT_REQUEST', done.id, 'APPOINTMENT_REQUEST_CLOSE_SYSTEM', @OccurredAt
+                  FROM @Closed done;
+
+                SELECT (SELECT COUNT(*) FROM @Cancelled) AS Cancelled, (SELECT COUNT(*) FROM @Closed) AS Closed;
+                """, new
+            {
+                p.ResidentId, p.CenterId, AccountId = target.AccountId.Value, OccurredAt = occurredAt,
+                AppointmentReason = AppointmentCancelledReason, RequestReason = AppointmentRequestClosedReason,
+            }, transaction, cancellationToken: ct));
             transaction.Commit();
-            return closed;
+            return new DischargeOutcome(closed, appointments.Cancelled, appointments.Closed);
         }
         catch (SqlException error) when (error.Number is 2601 or 2627)
         {
@@ -245,6 +297,8 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
     }
 
     private sealed record CurrentLocationRow(Guid IntervalId, Guid EpisodeId, Guid UnitId, DateTime Since);
+
+    private sealed record AppointmentCascadeRow(int Cancelled, int Closed);
 
     private sealed record OpenDischargeRow(Guid DischargeId, DateTime DischargedAt, string? InternalReference);
 }

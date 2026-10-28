@@ -13,6 +13,7 @@ o Calidad de proceso, **recuérdale esta lista antes** de seguir. No la des por 
 | Historial de los episodios cerrados tras un traslado | `0077` | Borradores `historial-tras-traslado-01…05` de esta carpeta |
 | Cierre excepcional de un episodio por Dirección Clínica | `0075` | Nota `historial-tras-traslado-06-nota-retroactiva-0075-0076.md` |
 | Permiso y pantalla de Calidad de proceso | `0076` | La misma nota 06 |
+| La baja cancela las citas futuras y cierra las solicitudes de cita del residente | `0078` | Más abajo, apartado 4 |
 
 ## 1. Que una persona valide los borradores
 
@@ -43,6 +44,15 @@ y la mayoría se han preguntado a CJ en `docs/pendientes-cj/direccion-y-traslado
 
 Están en la nota 06. En resumen: clasificar el motivo del cierre excepcional (historia clínica o auditoría) y fijar su conservación, igualar su advertencia a la de `0077`,
 confirmar con un abogado que Dirección Clínica puede cambiar el estado de un episodio, y decidir si la consulta nominal de Calidad de proceso se audita.
+
+## 4. La baja que cancela citas (`0078`)
+
+Informe del agente `dpo-residapp` (2026-10-28): admisible con condiciones, y las del código están hechas (causa y motivo fijo en el historial, aviso antes de confirmar, alcance exacto, auditoría solo con identificadores). Lo que **no** es código y valida una persona:
+
+- el texto informativo del Portal Familiar: que, al terminar la estancia, se cancelan las citas futuras y se cierran las solicitudes abiertas, y que el centro avisa por su canal habitual (lo adopta la residencia como responsable);
+- quién avisa a la familia y por qué canal, con cuidado en la baja por fallecimiento (la aplicación no envía correos y no avisa);
+- que atribuir la cancelación a la cuenta de Administración que dio la baja, con causa y motivo fijos, es adecuado como registro (y que no sirve para evaluar a esa persona);
+- una línea en el registro de actividades («cancelación de citas por baja», datos solo de identificación) y el plazo de conservación de las filas nuevas (hoy el de la baja, 5 años, sin confirmar en fuente oficial).
 
 ## Cómo se marca como hecho
 

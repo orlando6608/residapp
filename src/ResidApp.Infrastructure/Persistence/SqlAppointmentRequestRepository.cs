@@ -148,7 +148,7 @@ public sealed class SqlAppointmentRequestRepository(SqlConnectionFactory connect
                 request.ProposedStartsAt, request.ProposedEndsAt, request.ProposalExpiresAt, row.Professional, request.ProposalExpired(now), row.AppointmentId,
                 changes[row.Id].Select(c => new AppointmentRequestChange(
                     EnumCode.ParseCode<AppointmentRequestAction>(c.Action), EnumCode.ParseCode<SystemProfile>(c.Profile), Utc(c.At),
-                    c.ProposedStart is { } start ? Utc(start) : null, c.Detail)).ToList());
+                    c.ProposedStart is { } start ? Utc(start) : null, c.Detail, c.Cause == "BAJA_RESIDENTE")).ToList());
         }).ToList();
     }
 }

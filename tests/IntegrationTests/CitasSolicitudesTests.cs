@@ -40,7 +40,7 @@ public class CitasSolicitudesTests
 
     /// <summary>Un centro con el servicio en el modo indicado (solicitud previa por defecto), las modalidades dadas y, para los dos equipos, una franja todos
     /// los días de 08:00 a 20:00 en citas de 30 minutos: hay huecos sea cual sea el día en que se ejecute la prueba.</summary>
-    private static async Task ConfigureAsync(
+    internal static async Task ConfigureAsync(
         Setup setup, AppointmentServiceMode mode = AppointmentServiceMode.SolicitudPrevia, IReadOnlyCollection<AppointmentModalitySetting>? modalities = null)
     {
         var settings = Settings(setup.Admin.ExternalSubject);
@@ -74,7 +74,7 @@ public class CitasSolicitudesTests
             query.AmbitoPerfilId, query.CentroId, linkId, team, modality, reason, comment, days ?? [], part, operationId ?? Guid.NewGuid()));
     }
 
-    private static async Task<FamilyAppointmentRequest> SentAsync(string subject, Guid linkId, AppointmentTeam team = AppointmentTeam.Medico)
+    internal static async Task<FamilyAppointmentRequest> SentAsync(string subject, Guid linkId, AppointmentTeam team = AppointmentTeam.Medico)
     {
         var sent = await SendAsync(subject, linkId, team);
         Assert.True(sent.Ok, sent.Error?.Message);
@@ -84,18 +84,18 @@ public class CitasSolicitudesTests
     private static async Task<ApplicationResult<FamilyAppointmentRequest>> ReadAsync(string subject, Guid linkId, Guid requestId) =>
         await Requests(subject).ReadAsync(await QueryAsync(subject), linkId, requestId);
 
-    private static async Task<IReadOnlyList<AppointmentSlot>> ProposalSlotsAsync(Setup setup, Guid requestId, DateTimeOffset? from = null)
+    internal static async Task<IReadOnlyList<AppointmentSlot>> ProposalSlotsAsync(Setup setup, Guid requestId, DateTimeOffset? from = null)
     {
         var slots = await AdminRequests(setup.Admin.ExternalSubject).ListProposalSlotsAsync(setup.Admin.ProfileScopeId, setup.Admin.CenterId, requestId);
         Assert.True(slots.Ok, slots.Error?.Message);
         return from is { } start ? slots.Value!.Where(s => s.StartsAt >= start).ToList() : slots.Value!;
     }
 
-    private static Task<ApplicationResult<bool>> ProposeAsync(Setup setup, Guid requestId, AppointmentSlot slot, string? professional = null) =>
+    internal static Task<ApplicationResult<bool>> ProposeAsync(Setup setup, Guid requestId, AppointmentSlot slot, string? professional = null) =>
         AdminRequests(setup.Admin.ExternalSubject).ProposeAsync(new ProposeAppointmentCommand(
             setup.Admin.ProfileScopeId, setup.Admin.CenterId, requestId, slot.StartsAt, professional));
 
-    private static async Task<AdministrationAppointmentRequest> AdminViewAsync(Setup setup, Guid requestId)
+    internal static async Task<AdministrationAppointmentRequest> AdminViewAsync(Setup setup, Guid requestId)
     {
         var read = await AdminRequests(setup.Admin.ExternalSubject).ReadAsync(setup.Admin.ProfileScopeId, setup.Admin.CenterId, requestId);
         Assert.True(read.Ok, read.Error?.Message);
@@ -112,10 +112,10 @@ public class CitasSolicitudesTests
         await Requests(subject).CancelAsync(await QueryAsync(subject), linkId, requestId);
 
     /// <summary>Un hueco de dentro de más de dos días: la familia aún puede cancelar la cita (antelación mínima de una hora).</summary>
-    private static async Task<AppointmentSlot> FarSlotAsync(Setup setup, Guid requestId, int skip = 0) =>
+    internal static async Task<AppointmentSlot> FarSlotAsync(Setup setup, Guid requestId, int skip = 0) =>
         (await ProposalSlotsAsync(setup, requestId, DateTimeOffset.UtcNow.AddDays(2))).Skip(skip).First();
 
-    private static async Task<(string Subject, Guid LinkId, Guid ResidentId)> OtherResidentFamilyAsync(Setup setup, string name)
+    internal static async Task<(string Subject, Guid LinkId, Guid ResidentId)> OtherResidentFamilyAsync(Setup setup, string name)
     {
         var resident = await AdministracionResidentesTests.CreateResidentAsync(setup.Admin, name);
         var linkId = await AddFamilyAsync(setup.Admin, resident, "Familiar " + name);
@@ -128,10 +128,10 @@ public class CitasSolicitudesTests
         return (subject, linkId, resident.Value);
     }
 
-    private static Task<int> AuditAsync(Guid requestId, string action) => CountAsync(
+    internal static Task<int> AuditAsync(Guid requestId, string action) => CountAsync(
         "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE recurso_id = @requestId AND accion_codigo = @action", new { requestId, action });
 
-    private static Task<int> SavedAsync(Guid requestId, string status) => CountAsync(
+    internal static Task<int> SavedAsync(Guid requestId, string status) => CountAsync(
         "SELECT COUNT(*) FROM dbo.citas_solicitudes WHERE id = @requestId AND estado_codigo = @status", new { requestId, status });
 
     [Fact]

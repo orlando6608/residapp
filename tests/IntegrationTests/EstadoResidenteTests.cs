@@ -188,8 +188,8 @@ public class EstadoResidenteTests
         var closed = await service.DischargeAsync(Discharge(admin, deceased, ResidentDischargeReason.Fallecimiento));
         var notClosed = await service.DischargeAsync(Discharge(admin, leaving, ResidentDischargeReason.AltaVoluntaria));
 
-        Assert.Equal(1, closed.Value);
-        Assert.Equal(0, notClosed.Value);
+        Assert.Equal(1, closed.Value!.EventsClosed);
+        Assert.Equal(0, notClosed.Value!.EventsClosed);
         Assert.Equal("CERRADO", await QueryAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @id", new { id = deceasedEvent }));
         Assert.Equal("FALLECIMIENTO", await QueryAsync<string>("SELECT cierre_sistema_codigo FROM dbo.eventos_asistenciales WHERE id = @id", new { id = deceasedEvent }));
         Assert.Equal(admin.AccountId.Value, await QueryAsync<Guid>("SELECT cerrado_por_cuenta_id FROM dbo.eventos_asistenciales WHERE id = @id", new { id = deceasedEvent }));

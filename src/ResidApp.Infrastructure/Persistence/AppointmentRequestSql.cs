@@ -49,7 +49,7 @@ internal static class AppointmentRequestSql
             StatusValue == AppointmentRequestStatus.Propuesta && ProposalExpiresAt is { } expiresAt && now >= expiresAt;
     }
 
-    internal sealed record ChangeRow(Guid RequestId, string Action, string Profile, DateTime At, DateTime? ProposedStart, string? Detail);
+    internal sealed record ChangeRow(Guid RequestId, string Action, string Profile, DateTime At, DateTime? ProposedStart, string? Detail, string? Cause);
 
     /// <summary>El historial de las solicitudes indicadas, por orden.</summary>
     internal static Task<ILookup<Guid, ChangeRow>> ReadChangesAsync(
@@ -64,7 +64,7 @@ internal static class AppointmentRequestSql
         IDbConnection connection, IDbTransaction? transaction, Guid centerId, IReadOnlyCollection<Guid> requestIds, CancellationToken ct) =>
         (await connection.QueryAsync<ChangeRow>(new CommandDefinition("""
             SELECT solicitud_id AS RequestId, accion_codigo AS Action, actor_perfil_codigo AS Profile, ocurrido_en AS At,
-                   inicio_propuesto_en AS ProposedStart, detalle AS Detail
+                   inicio_propuesto_en AS ProposedStart, detalle AS Detail, causa_codigo AS Cause
               FROM dbo.citas_solicitudes_cambios WITH (FORCESEEK) WHERE centro_id = @centerId AND solicitud_id IN @requestIds ORDER BY numero
             """, new { centerId, requestIds }, transaction, cancellationToken: ct))).ToLookup(c => c.RequestId);
 
