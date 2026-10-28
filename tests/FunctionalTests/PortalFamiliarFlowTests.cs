@@ -587,6 +587,61 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
     }
 
     [Fact]
+    public async Task Baja_AvisaAntesDeLasSolicitudesQueCerraria_YLasCierraAlConfirmar_ConLaAppEntera()
+    {
+        // CJ (portal, cuarta tanda 1.1 B): la pantalla de baja dice cuántas citas se cancelarán y cuántas solicitudes se cerrarán, y la baja lo hace.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.Admin);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Baja Citas Funcional", "Madre Baja Citas Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var linkId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+        var authorizationUrl = $"/Administracion/AutorizacionFamiliar?residenteId={residentId}&vinculoId={linkId}";
+        var subject = $"familia-{Guid.NewGuid():N}"[..20];
+        await PostAsync(admin, "/Administracion/AccesoPortalFamiliar", authorizationUrl, new() { ["residenteId"] = residentId, ["vinculoId"] = linkId.ToString(), ["usuario"] = subject });
+        foreach (var (change, expected) in new[] { ("Abrir", 0), ("Activar", 1) })
+        {
+            await PostAsync(admin, "/Administracion/AutorizacionFamiliar", authorizationUrl, new()
+            {
+                ["Form.ResidenteId"] = residentId, ["Form.VinculoId"] = linkId.ToString(), ["Form.CambiosEsperados"] = expected.ToString(), ["Form.Cambio"] = change,
+            });
+        }
+
+        var family = await LoginAsync(subject);
+        var requestsUrl = $"/Familia/Residente/{linkId}/Solicitudes";
+        await PostAsync(admin, "/Administracion/Citas", "/Administracion/Citas", new()
+        {
+            ["Servicio.Version"] = "0", ["Servicio.Modo"] = "SolicitudPrevia", ["Servicio.AntelacionHoras"] = "1", ["Servicio.HorizonteDias"] = "30",
+            ["Servicio.Modalidades"] = "MEDICO:PRESENCIAL",
+        });
+        var dischargeUrl = $"/Administracion/DarDeBaja?residenteId={residentId}";
+        var withoutLoad = await BodyAsync(await admin.GetAsync(dischargeUrl));
+        var form = await BodyAsync(await family.GetAsync($"{requestsUrl}/Nueva"));
+        await PostAsync(family, requestsUrl, $"{requestsUrl}/Nueva", new()
+        {
+            ["Form.OperacionId"] = ExtractValue(form, "Form.OperacionId"), ["Form.Equipo"] = "Medico", ["Form.Modalidad"] = "Presencial",
+            ["Form.Motivo"] = "Resultados", ["Form.Dias"] = "2", ["Form.ParteDelDia"] = "Tarde",
+        });
+        var requestId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.citas_solicitudes WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+
+        var withLoad = await BodyAsync(await admin.GetAsync(dischargeUrl));
+        var discharged = await PostAsync(admin, "/Administracion/DarDeBaja", dischargeUrl, new()
+        {
+            ["Form.ResidenteId"] = residentId, ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.Motivo"] = "AltaVoluntaria",
+        });
+
+        Assert.Contains("No tiene citas futuras ni solicitudes de cita abiertas", withoutLoad);
+        Assert.DoesNotContain("La familia no recibe ningún aviso", withoutLoad);
+        Assert.Contains("0 citas futuras y 1 solicitud abierta", Regex.Replace(withLoad, @"\s+", " "));
+        Assert.Contains("La familia no recibe ningún aviso: avísala tú", withLoad);
+        Assert.Contains("se ha dado de baja", discharged);
+        Assert.Contains("Se cerró 1 solicitud de cita abierta.", discharged);
+        Assert.Contains("La familia no recibe aviso: avísala tú.", discharged);
+        Assert.Equal("CERRADA", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.citas_solicitudes WHERE id = @requestId", new { requestId }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.citas_solicitudes_cambios WHERE solicitud_id = @requestId AND causa_codigo = 'BAJA_RESIDENTE'", new { requestId }));
+    }
+
+    [Fact]
     public async Task InicioDeAdministracion_MuestraLoQueRequiereAtencion_SoloCifras_ConLaAppEntera()
     {
         var seed = await SeedAsync();

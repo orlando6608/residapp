@@ -399,16 +399,28 @@ Orden decidido con Orlando: dictado por voz (va en `continuar-construccion.md`),
 
 - **Portal Familiar** (`portal-familiar-confirmaciones-cj` y tercera tanda) — **hecho el 2026-10-25, script `0070`, salvo el resumen periódico:**
   - Al suspender o dar de baja al residente, el acceso de la familia **se corta solo**, y vuelve al reactivarlo (portal 1.3): `AccessibleLinks` exige
-    `estado = 'ACTIVE'` y ninguna suspensión abierta; no toca la autorización. Las citas y solicitudes abiertas no se tocan (**preguntado a CJ** en
-    `portal-familiar-cuarta-tanda-cj`, 1.1). Sin acceso, el título es «Ahora no tienes acceso a ningún residente».
+    `estado = 'ACTIVE'` y ninguna suspensión abierta; no toca la autorización. Las citas y solicitudes abiertas **se cancelan y se cierran solas con la baja, no con la suspensión** (CJ, `archivados/portal-familiar-cuarta-tanda-cj`, 1.1 B, **hecho el 2026-10-28, script `0078`**, ver abajo).
+    Sin acceso, el título es «Ahora no tienes acceso a ningún residente».
   - Una corrección **deja de verse cuando deja de verse el original** (portal 4.2): `FamilyPortalVisibility.IsCorrectionVisible`.
   - Al entrar, **lo publicado desde la última visita** de esa cuenta a ese residente lleva «Nueva» y una **propuesta de cita viva** se destaca (tercera 6.3):
     tabla `portal_familiar_visitas` (solo la última visita; quién leyó qué sigue en la auditoría). En la primera visita todo es nuevo (**suposición**,
-    pregunta 3.1 de la cuarta tanda).
+    pregunta 3.1 de la cuarta tanda; **CJ lo confirmó el 2026-10-28, opción A**).
   - En la solicitud de cita, junto al comentario: «No escribas datos clínicos detallados; el equipo te llamará» (portal 6.1).
   - Una propuesta del centro **caduca a las 48 horas o 24 horas antes de la cita, lo que llegue antes** (portal 6.4; `AppointmentRequestRules.ProposalExpiresAt`,
     columnas `propuesta_en` y `propuesta_caduca_en`); después, Administración vuelve a proponer (el trigger admite PROPUESTA → PROPUESTA). Solo se ofrecen
-    huecos a más de 24 horas, porque los demás nacerían caducados (**suposición**, pregunta 2.1 de la cuarta tanda).
+    huecos a más de 24 horas, porque los demás nacerían caducados (**suposición**, pregunta 2.1 de la cuarta tanda; **CJ lo confirmó el 2026-10-28, opción A**: si hay prisa, se acuerda por teléfono).
+  - **La baja cancela las citas futuras y cierra las solicitudes abiertas (cuarta tanda 1.1 B) — hecho el 2026-10-28, script `0078`.** Solo las de ese residente (no las de la misma familia con otros residentes), en la transacción
+    de la baja (`SqlResidentStatusRepository.DischargeAsync`, que ahora devuelve `DischargeOutcome` con eventos cerrados, citas canceladas y solicitudes cerradas). El historial de la cita y de la solicitud llevan `causa_codigo = BAJA_RESIDENTE` (se lee como
+    «sistema, a causa de la baja del residente»); la autoría sigue siendo la cuenta de Administración que dio la baja (no hay cuenta de sistema, como en `0042`), con motivo fijo; dos triggers (`TR_citas_cambios_causa`, `TR_citas_solicitudes_cambios_causa`)
+    solo admiten esa causa con una baja del residente en la misma transacción y con el motivo fijo. Auditoría `APPOINTMENT_CANCEL_DISCHARGE` y `APPOINTMENT_REQUEST_CLOSE_SYSTEM` (categoría «Citas»). La propuesta viva que se cierra libera su hueco. La pantalla de baja
+    dice antes de confirmar cuántas citas y solicitudes se verán afectadas y que **la familia no recibe aviso** (`PreviewDischargeAsync`); al reactivar no se restauran.
+    - **Suposiciones mías:** «futura» es `inicio_en` posterior a la hora de la baja, así que una cita confirmada ya pasada no se toca y sigue en «Citas pasadas sin cerrar» (de un residente de baja, hasta que Administración la finalice a mano); la reserva directa
+      que llegara a la vez que la baja no se bloquea (el portal ya no ve al residente).
+    - **Privacidad (agente `dpo-residapp`, 2026-10-28):** admisible con condiciones, todas cumplidas en el código: historial con causa y motivo fijo, aviso previo, alcance exacto con prueba por cada límite, auditoría solo con identificadores. **Falta, para validar una persona antes
+      de datos reales** (anotado en `docs/privacidad/antes-de-datos-reales.md`): el texto informativo del Portal Familiar (que al terminar la estancia se cancelan las citas futuras y se cierran las solicitudes), quién avisa a la familia y por qué canal, la línea en el registro
+      de actividades y el plazo de conservación.
+    - **Tests:** `BajaCancelaCitasTests` (integración, 4: cancela y cierra con historial y auditoría y sin tocar a otro residente ni lo pasado, la suspensión no toca nada, sin citas el aviso va a cero y solo ve el aviso su Administración, y la base de datos rechaza la causa sin baja
+      en la misma transacción), el funcional `Baja_AvisaAntesDeLasSolicitudesQueCerraria_YLasCierraAlConfirmar_ConLaAppEntera` y `EstadoResidenteTests` ajustado al nuevo resultado.
   - Lista de **citas pasadas sin cerrar** arriba de la agenda y su cifra en el inicio de Administración, que las sigue finalizando a mano (portal 5.8).
   - Tests: `PortalFamiliarTests` (suspensión y baja, novedades nuevas), `CitasSolicitudesTests` (caducidad a 48 horas y 24 horas antes, volver a proponer),
     `CitasTests` y `AdministracionInicioTests` (citas pasadas sin cerrar), `CorrectorasYRetiradasTests`, unitarias y `PortalFamiliarFlowTests`.

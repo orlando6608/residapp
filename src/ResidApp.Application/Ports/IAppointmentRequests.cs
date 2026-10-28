@@ -5,9 +5,9 @@ using ResidApp.Shared;
 namespace ResidApp.Application.Ports;
 
 /// <summary>Un paso de la vida de una solicitud (CIT-C03), tal como lo ve Administración. Detail es lo interno: el profesional apuntado a una propuesta
-/// o el motivo de un cierre.</summary>
+/// o el motivo de un cierre. FromDischarge: lo hizo el sistema a causa de la baja del residente (script 0078).</summary>
 public sealed record AppointmentRequestChange(
-    AppointmentRequestAction Action, SystemProfile ActorProfile, DateTimeOffset At, DateTimeOffset? ProposedStartsAt, string? Detail);
+    AppointmentRequestAction Action, SystemProfile ActorProfile, DateTimeOffset At, DateTimeOffset? ProposedStartsAt, string? Detail, bool FromDischarge = false);
 
 /// <summary>Una solicitud de cita tal como la ve Administración (script 0057): con el residente y el familiar que la envió, lo que pidió y la
 /// propuesta vigente. ProposalExpiresAt es cuándo caduca la propuesta y ProposalExpired, que ya caducó (se calculan al leer).</summary>

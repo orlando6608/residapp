@@ -63,6 +63,17 @@ public sealed class SqlResidentStatusDirectory(SqlConnectionFactory connections)
         return row is null ? null : new ResidentSuspension(row.Id, new DateTimeOffset(DateTime.SpecifyKind(row.Since, DateTimeKind.Utc)), row.Note);
     }
 
+    public async Task<ResidentAppointmentLoad> CountAppointmentLoadAsync(CenterId centerId, ResidentId residentId, DateTimeOffset now, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return await connection.QuerySingleAsync<ResidentAppointmentLoad>(new CommandDefinition("""
+            SELECT (SELECT COUNT(*) FROM dbo.citas WITH (FORCESEEK)
+                     WHERE centro_id = @CenterId AND residente_id = @ResidentId AND estado_codigo = 'CONFIRMADA' AND inicio_en > @Now) AS FutureAppointments,
+                   (SELECT COUNT(*) FROM dbo.citas_solicitudes WITH (FORCESEEK)
+                     WHERE centro_id = @CenterId AND residente_id = @ResidentId AND estado_codigo IN ('PENDIENTE', 'PROPUESTA')) AS OpenRequests
+            """, new { CenterId = centerId.Value, ResidentId = residentId.Value, Now = now.UtcDateTime }, cancellationToken: ct));
+    }
+
     private static DischargedResident ToDischarged(DischargedRow r) => new(
         ResidentId.From(r.ResidentId), r.DisplayName, DateOnly.FromDateTime(r.BirthDate), EnumCode.ParseCode<DocumentedSexCode>(r.SexCode),
         r.LastUnitName, EnumCode.ParseCode<ResidentDischargeReason>(r.ReasonCode), r.ReasonText,

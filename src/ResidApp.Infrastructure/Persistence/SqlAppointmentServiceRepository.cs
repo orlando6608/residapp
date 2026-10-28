@@ -192,7 +192,7 @@ public sealed class SqlAppointmentServiceRepository(SqlConnectionFactory connect
             """, parameters, cancellationToken: ct))).ToList();
         var changes = (await connection.QueryAsync<ChangeRow>(new CommandDefinition("""
             SELECT cita_id AS AppointmentId, accion_codigo AS Action, actor_perfil_codigo AS Profile, ocurrido_en AS At,
-                   inicio_anterior_en AS PreviousStartsAt, inicio_nuevo_en AS NewStartsAt, motivo AS Reason
+                   inicio_anterior_en AS PreviousStartsAt, inicio_nuevo_en AS NewStartsAt, motivo AS Reason, causa_codigo AS Cause
               FROM dbo.citas_cambios WHERE centro_id = @center AND cita_id IN @ids ORDER BY numero
             """, new { center = access.CenterId.Value, ids = rows.Select(r => r.Id).ToList() }, cancellationToken: ct))).ToLookup(c => c.AppointmentId);
         return rows.Select(row => new AdministrationAppointment(
@@ -200,7 +200,7 @@ public sealed class SqlAppointmentServiceRepository(SqlConnectionFactory connect
             EnumCode.ParseCode<AppointmentModality>(row.Modality), Utc(row.StartsAt), Utc(row.EndsAt), EnumCode.ParseCode<AppointmentStatus>(row.Status),
             changes[row.Id].Select(c => new AppointmentChange(
                 EnumCode.ParseCode<AppointmentChangeAction>(c.Action), EnumCode.ParseCode<SystemProfile>(c.Profile), Utc(c.At),
-                c.PreviousStartsAt is { } previous ? Utc(previous) : null, c.NewStartsAt is { } next ? Utc(next) : null, c.Reason)).ToList())).ToList();
+                c.PreviousStartsAt is { } previous ? Utc(previous) : null, c.NewStartsAt is { } next ? Utc(next) : null, c.Reason, c.Cause == "BAJA_RESIDENTE")).ToList())).ToList();
     }
 
     public async Task<IReadOnlyList<AppointmentSlot>> ListRescheduleSlotsAsync(
@@ -333,5 +333,5 @@ public sealed class SqlAppointmentServiceRepository(SqlConnectionFactory connect
         string Status);
 
     private sealed record ChangeRow(
-        Guid AppointmentId, string Action, string Profile, DateTime At, DateTime? PreviousStartsAt, DateTime? NewStartsAt, string? Reason);
+        Guid AppointmentId, string Action, string Profile, DateTime At, DateTime? PreviousStartsAt, DateTime? NewStartsAt, string? Reason, string? Cause);
 }

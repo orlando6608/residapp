@@ -1,0 +1,72 @@
+{
+  "documento": "direccion-y-traslados-confirmaciones-cj",
+  "cuestionario": "2026-10-28",
+  "guardado": "2026-10-28T13:24:35.806Z",
+  "respondidas": 9,
+  "total": 9,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "Al cerrarlo así, ¿se avisa a la familia?",
+      "opcion": "A",
+      "textoOpcion": "No se comunica nada a la familia.",
+      "texto": "Elijo A. Es un cierre excepcional de limpieza (indicaciones que nadie va a cumplir), no una decisión asistencial; la decisión de informar a la familia hoy la toma quien conoce el caso (Enfermería o Medicina) al cerrar, y el texto va sin datos internos. Dirección Clínica no valora ni lee lo clínico sin una lectura declarada y auditada, así que no debería redactar ni elegir qué se cuenta a una familia. Además, una novedad firmada como «Equipo asistencial del centro» con un cierre administrativo podría confundir más que informar. Una cautela para ingeniería: si el episodio viene de una derivación a Urgencias, la regla vigente (comunicado relevante obligatorio) no debería saltarse por esta vía; conviene confirmar que ese caso no se puede cerrar así.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Qué pasa con las indicaciones que se quedaban abiertas?",
+      "opcion": "A",
+      "textoOpcion": "Se quedan sin resolver y los indicadores las cuentan como tales.",
+      "texto": "Elijo A. El valor de este cierre es que quede a la vista que las indicaciones no se cumplieron, y los indicadores deben contarlas como incumplidas. Con B, Dirección (que supervisa la calidad) podría mejorar sus propios indicadores al cerrar un episodio: un conflicto de interés evidente. Además choca con el principio de la app («no borra: corrige, rectifica o añade versiones») y con que Dirección nunca indica ni cierra lo clínico; anular una indicación médica es una decisión médica. Si hay un caso legítimo (por ejemplo, la persona falleció o ya no está en el centro), el motivo del cierre queda en la auditoría y explica el porqué sin retocar las cifras.",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "¿Cuándo aparece la opción de cerrar así?",
+      "opcion": "A",
+      "textoOpcion": "Solo si el episodio tiene indicaciones abiertas.",
+      "texto": "Elijo A. Esta capacidad es una excepción para el único caso en que Enfermería y Medicina no pueden cerrar (indicaciones abiertas), que es lo que pediste en 5.1. Con B, Dirección podría cerrar cualquier episodio abierto, y eso se convertiría en un poder general sobre lo asistencial que hoy no tiene («nunca valora, indica ni cierra nada») y que saltaría las decisiones de quien lo está llevando, que sí puede cerrarlo por su cuenta. Mejor la excepción lo más estrecha posible; si en el uso real aparece otro caso atascado, se estudia entonces con el ejemplo delante.",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Quién tiene el permiso en los centros de prueba?",
+      "opcion": "B",
+      "textoOpcion": "Se concede ya el permiso a las Direcciones de los centros de prueba, para que puedas probarlo.",
+      "texto": "Elijo B, limitado a los centros de prueba. Son centros ficticios (Los Almendros y Los Olmos), así que dar el permiso a sus Direcciones no expone ningún dato real y permite validar el trabajo hecho, que es lo que falta antes de usarlo con residentes reales. En un centro real se mantiene la regla que pediste: solo quien Administración designa, no por el cargo. Dos cautelas: que la concesión se limite por identificador a esos centros de prueba (que no sea un «dar a todas las Direcciones existentes» que algún día corra en producción) y que Administración pueda revocarlo y volver a concederlo, para probar también el flujo real de concesión.",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "En «Calidad de proceso», ¿se muestra el nombre del residente?",
+      "opcion": "B",
+      "textoOpcion": "Solo cifras por unidad y periodo, sin nombres de residentes.",
+      "texto": "Elijo B. Elegiste que Dirección vea solo datos agregados por unidad y periodo. Un nombre de residente junto a un hito («Informe de derivación», «Valoración médica») revela un dato clínico (que hubo una derivación o un escalado) sin pasar por la lectura declarada y auditada, que es la regla de la app para todo lo clínico que Dirección lee. Sería saltarse esa regla por una lista de cortesía. Para actuar, Dirección ya tiene la supervisión por unidad, y los avisos de «a punto de vencer» llegan a Enfermería y Medicina, que son quienes tienen que hacerlo. Si más adelante Dirección necesita llegar al caso concreto, mejor una referencia no identificable que lleve a la lectura declarada, que el nombre en abierto.",
+      "respondida": true
+    },
+    "2.3": {
+      "pregunta": "¿Se deja constancia de quién consulta Indicadores y Calidad?",
+      "opcion": "B",
+      "textoOpcion": "Se registra quién consultó y cuándo, sin ningún residente.",
+      "texto": "Elijo B. El permiso es específico y personal (lo designa el centro, no el cargo), y la app deja constancia de quién consulta los datos sensibles; esta vista, aunque agregada, es la de la calidad del centro. Registrar solo quién y cuándo, sin ningún residente, cuesta casi nada, no añade datos personales de residentes y da trazabilidad sobre un permiso delegado. Sugiero registrar una vez por apertura de la pantalla, no cada vez que se cambia un filtro, para no llenar la auditoría de ruido, y que este registro no se use para evaluar el trabajo de las personas.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Hasta qué antigüedad se pueden abrir esos episodios?",
+      "opcion": "A",
+      "textoOpcion": "Sin límite de antigüedad.",
+      "texto": "Elijo A. La petición ya está acotada por un motivo obligatorio, dura 1 hora, es de solo lectura y cada lectura queda registrada; un límite de antigüedad añade poca protección encima. Un episodio antiguo puede ser relevante (una caída o una infección repetida de hace más de un año), y el límite habría que fijarlo con criterio clínico que yo no tengo: cuánto es «reciente» lo decide CJ. Propongo mantener sin límite y, cuando haya uso real, mirar en la auditoría qué antigüedad piden de verdad; si casi nunca se piden episodios viejos, se pone el límite con datos.",
+      "respondida": true
+    },
+    "3.2": {
+      "pregunta": "¿Cómo se escribe el motivo?",
+      "opcion": "B",
+      "textoOpcion": "Una lista cerrada de motivos (por ejemplo, «continuidad asistencial») y, si hace falta, un texto corto opcional.",
+      "texto": "Elijo B. El propio formulario lo dice: con texto libre alguien puede escribir datos de salud o nombres, y ese motivo se guarda en la auditoría y lo lee Dirección. Una lista cerrada reduce ese riesgo, agiliza el paso al profesional y deja datos comparables para revisar (3.3). Sugiero reutilizar las tres finalidades que ya usa Dirección en su lectura declarada (revisión de continuidad asistencial, revisión de una incidencia o reclamación asistencial, verificación de trazabilidad documental) más «Otro», que obligaría a un texto corto con el aviso de no escribir datos de salud ni nombres. Así el motivo sigue el mismo patrón que el resto de la app.",
+      "respondida": true
+    },
+    "3.3": {
+      "pregunta": "¿Cómo revisa Dirección estas peticiones?",
+      "opcion": "B",
+      "textoOpcion": "Con una lista de todas las peticiones del periodo (quién, qué residente, cuándo, motivo y cuántas lecturas), sin contenido clínico.",
+      "texto": "Elijo B. Una auditoría que obliga a saber de antemano qué residente abrir no permite supervisar de verdad: no se ve si alguien pide muchos historiales, fuera de continuidad o sin motivo claro. La lista (quién, residente, cuándo, motivo y número de lecturas), sin contenido clínico, lo permite. No contradice 2.2: aquí solo se revela que hubo un acceso, no un dato clínico, y para abrir el historial Dirección sigue necesitando su lectura declarada y auditada. Con la misma salvedad que ya recoge la auditoría de la app: sirve para revisar accesos, no para comparar o evaluar a las personas.",
+      "respondida": true
+    }
+  }
+}

@@ -85,7 +85,7 @@ else
                     {
                         <li>
                             @AppointmentDisplay.Label(change.Action) el @change.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                            · @(change.ActorProfile == ResidApp.Shared.SystemProfile.Familiar ? "familia" : "Administración")
+                            · @(change.FromDischarge ? "sistema, a causa de la baja del residente" : change.ActorProfile == ResidApp.Shared.SystemProfile.Familiar ? "familia" : "Administración")
                             @if (change.PreviousStartsAt is { } previous && change.NewStartsAt is { } next)
                             {
                                 <text> · de @AppointmentDisplay.When(previous) a @AppointmentDisplay.When(next)</text>

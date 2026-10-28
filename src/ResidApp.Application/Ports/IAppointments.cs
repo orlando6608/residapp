@@ -13,10 +13,11 @@ public sealed record AppointmentServiceView(
     AppointmentServiceSettings Settings, IReadOnlyList<AppointmentModalitySetting> Modalities, IReadOnlyList<AppointmentWindow> Windows,
     IReadOnlyList<AppointmentBlock> Blocks, int Version);
 
-/// <summary>Un paso de la vida de una cita (CIT-C03). Reason es el motivo interno que dio Administración; la familia no lo recibe.</summary>
+/// <summary>Un paso de la vida de una cita (CIT-C03). Reason es el motivo interno que dio Administración; la familia no lo recibe. FromDischarge: lo hizo el
+/// sistema a causa de la baja del residente (script 0078); la autoría sigue siendo la cuenta de Administración que dio la baja.</summary>
 public sealed record AppointmentChange(
     AppointmentChangeAction Action, SystemProfile ActorProfile, DateTimeOffset At, DateTimeOffset? PreviousStartsAt, DateTimeOffset? NewStartsAt,
-    string? Reason);
+    string? Reason, bool FromDischarge = false);
 
 /// <summary>Una cita tal como la ve Administración: con el residente y el familiar que la reservó.</summary>
 public sealed record AdministrationAppointment(

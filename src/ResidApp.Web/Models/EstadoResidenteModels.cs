@@ -21,7 +21,8 @@ public sealed class DischargeResidentFormModel
     public string? MotivoTexto { get; set; }
 }
 
-public sealed record DischargeResidentViewModel(AdministrativeResidentSummary Resident, DischargeResidentFormModel Form);
+/// <summary>Load: lo que la baja cancelaría y cerraría ahora (citas futuras y solicitudes de cita abiertas; script 0078).</summary>
+public sealed record DischargeResidentViewModel(AdministrativeResidentSummary Resident, DischargeResidentFormModel Form, ResidentAppointmentLoad Load);
 
 public sealed record DischargedResidentsViewModel(IReadOnlyList<DischargedResident> Residents, DateOnly Today);
 

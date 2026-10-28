@@ -23,6 +23,21 @@
     en un hospital durante un tiempo, usa <strong>Suspender</strong> en su ficha: no es una baja.
 </p>
 
+@if (Model.Load.FutureAppointments > 0 || Model.Load.OpenRequests > 0)
+{
+    <div class="alert alert-warning" role="status" id="aviso-citas">
+        <strong>Al dar de baja se cancelarán solas las citas y se cerrarán las solicitudes de cita de @resident.DisplayName:</strong>
+        @Model.Load.FutureAppointments @(Model.Load.FutureAppointments == 1 ? "cita futura" : "citas futuras") y
+        @Model.Load.OpenRequests @(Model.Load.OpenRequests == 1 ? "solicitud abierta" : "solicitudes abiertas").
+        Quedan en el historial como «Sistema, a causa de la baja». <strong>La familia no recibe ningún aviso: avísala tú</strong> (por teléfono o por el canal habitual del centro).
+        Si más tarde reactivas al residente, esas citas no se restauran: la familia tendrá que pedirlas de nuevo.
+    </div>
+}
+else
+{
+    <p class="text-muted" id="aviso-citas">No tiene citas futuras ni solicitudes de cita abiertas: la baja no cancela ni cierra nada de la agenda.</p>
+}
+
 <div class="card">
     <div class="card-body">
         <div asp-validation-summary="All" class="text-danger"></div>
