@@ -10,7 +10,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > `docs/tareas/alta-prioridad/pendientes-medicina.md`, `docs/tareas/alta-prioridad/pendientes-direccion.md` y
 > `docs/tareas/alta-prioridad/pendientes-administracion.md`.
 > Mira si hay respuestas de CJ en `docs/pendientes-cj/` (ficheros `*.respuestas.json`, ver su `README.md`; las recibe Orlando por correo o WhatsApp y las guarda ahí;
-> la más esperada es `dictado-por-voz-confirmaciones-cj.respuestas.json`, que desbloquea el dictado por voz). Después
+> el estado de cada documento está en la última columna del README: a 2026-10-28 las ocho guías de pruebas siguen «Pendiente» (CJ no las ha completado) y los avisos por correo esperan al ADR 0012; el resto está hecho). Después
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
