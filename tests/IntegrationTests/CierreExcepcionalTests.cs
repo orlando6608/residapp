@@ -27,7 +27,7 @@ public class CierreExcepcionalTests
         new FixedCierreSessionIdentityProvider(externalSubject),
         new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory), new SqlProcessDeadlineRepository(TestDatabase.ConnectionFactory));
 
-    private sealed record Setup(SeededProfile Enfermera, SeededProfile Medica, SeededProfile Direccion, Guid EventId);
+    private sealed record Setup(SeededProfile Enfermera, SeededProfile Medica, SeededProfile Direccion, Guid EventId, int Revision);
 
     /// <summary>Un evento escalado a Medicina con una indicación sin leer (el episodio queda «con indicación pendiente»), y Dirección Clínica en su unidad.</summary>
     private static async Task<Setup> SeedWithOpenIndicationAsync()
@@ -38,8 +38,9 @@ public class CierreExcepcionalTests
         var revision = await StartAndSaveAsync(enfermera, eventId);
         Assert.True((await BuildService(enfermera.ExternalSubject).EscalateClinicalEventAsync(EscalateCommand(enfermera, eventId, revision))).Ok);
         var saved = await StartAndSaveMedicalAsync(medica, eventId);
-        Assert.True((await BuildMedicina(medica.ExternalSubject).RegisterMedicalIndicationAsync(Indication(medica, eventId, saved))).Ok);
-        return new Setup(enfermera, medica, direccion, eventId);
+        var indicated = await BuildMedicina(medica.ExternalSubject).RegisterMedicalIndicationAsync(Indication(medica, eventId, saved));
+        Assert.True(indicated.Ok, indicated.Error?.Message);
+        return new Setup(enfermera, medica, direccion, eventId, indicated.Value);
     }
 
     private static Task<ApplicationResult<bool>> CloseAsync(SeededProfile who, Guid eventId, string? reason = Reason) =>
@@ -169,6 +170,42 @@ public class CierreExcepcionalTests
 
         Assert.Equal(ApplicationFailureCode.InvalidInput, byNurse.Error!.Code);
         Assert.Equal("CON_INDICACION_PENDIENTE", await StateAsync(setup.EventId));
+    }
+
+    /// <summary>Una derivación a Urgencias no se cierra con el cierre excepcional de Dirección (CJ, Dirección y traslados 1.1; script 0079): ni la aplicación ni la base de datos.</summary>
+    [Fact]
+    public async Task UnaDerivacionAUrgencias_NoSeCierraConElCierreExcepcional_NiEnLaAplicacionNiEnLaBaseDeDatos()
+    {
+        // CJ (Dirección y traslados 1.1): con una derivación a Urgencias el comunicado relevante a la familia es obligatorio, y este cierre lleva NO_COMUNICAR.
+        var setup = await SeedWithOpenIndicationAsync();
+        var activated = await BuildMedicina(setup.Medica.ExternalSubject).ActivateUrgentProtocolAsync(
+            new ActivateUrgentProtocolCommand(setup.Medica.ProfileScopeId, setup.Medica.CenterId, setup.EventId, setup.Revision, "Broncoespasmo."));
+        Assert.True(activated.Ok, activated.Error?.Message);
+        var direccion = BuildDireccion(setup.Direccion.ExternalSubject);
+        Assert.True((await direccion.FindEpisodeAsync(
+            new FindSupervisionEpisodeQuery(setup.Direccion.ProfileScopeId, setup.Direccion.CenterId, setup.EventId))).Value!.Episode.IndicationsPending > 0);
+
+        var closed = await CloseAsync(setup.Direccion, setup.EventId);
+
+        Assert.Equal(ApplicationFailureCode.Conflict, closed.Error!.Code);
+        Assert.Equal("PROTOCOLO_URGENTE_MEDICO", await StateAsync(setup.EventId));
+        Assert.Equal(0, await ScalarAsync<int>("SELECT COUNT(*) FROM dbo.cierres_excepcionales_direccion WHERE evento_id = @eventId", new { eventId = setup.EventId }));
+
+        // Aunque alguien se saltara la aplicación, con la fila de esta misma transacción la base de datos tampoco lo cierra.
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        using var transaction = connection.BeginTransaction();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.cierres_excepcionales_direccion (evento_id, centro_id, residente_id, motivo, indicaciones_abiertas, cerrado_por_cuenta_id, cerrado_en)
+            SELECT id, centro_id, residente_id, N'Motivo', 1, @account, SYSUTCDATETIME() FROM dbo.eventos_asistenciales WHERE id = @id
+            """, new { id = setup.EventId, account = setup.Direccion.AccountId.Value }, transaction);
+        var error = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync("""
+            UPDATE dbo.eventos_asistenciales
+               SET estado_codigo = 'CERRADO', revision = revision + 1, cerrado_por_cuenta_id = @account, cerrado_en = SYSUTCDATETIME(),
+                   comunicacion_familiar_codigo = 'NO_COMUNICAR', cierre_sistema_codigo = 'DIRECCION_EXCEPCIONAL'
+             WHERE id = @id
+            """, new { id = setup.EventId, account = setup.Direccion.AccountId.Value }, transaction));
+        Assert.Contains("CLINICAL_EVENT_TRANSITION_INVALID", error.Message);
+        transaction.Rollback();
     }
 
     /// <summary>La base de datos no deja cerrar «de sistema» por Dirección sin la fila del cierre excepcional de ESA transacción, ni cambiar o borrar la fila.</summary>

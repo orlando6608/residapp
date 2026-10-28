@@ -5,7 +5,8 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record DeclareTransferHistoryCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, string? Motivo, SystemProfile Perfil);
+public sealed record DeclareTransferHistoryCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, string? Motivo, SystemProfile Perfil,
+    TransferHistoryPurpose? Finalidad = null);
 
 public sealed record CountTransferHistoryCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, SystemProfile Perfil);
 
@@ -22,7 +23,7 @@ public sealed class TransferHistoryAccess(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var identity = await EnsureScopeAsync(command.AmbitoPerfilId, command.CentroId, command.Perfil, ct);
-            var reason = TransferHistoryRequest.NormalizeReason(command.Motivo);
+            var reason = TransferHistoryRequest.Normalize(command.Finalidad, command.Motivo);
             return await access.DeclareAsync(
                        identity.ExternalSubject, command.AmbitoPerfilId, command.CentroId, command.ResidenteId, reason, settings.DeclarationMinutes, ct)
                 ?? throw new DomainValidationException(TransferHistoryRequest.NotApplicableCode);

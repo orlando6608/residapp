@@ -11,6 +11,7 @@ public enum AuditCategory
     Citas,
     ImportacionYExportacion,
     OrganigramaYCargos,
+    ConsultasDeDireccion,
 }
 
 /// <summary>
@@ -133,6 +134,9 @@ public static class AdministrativeAudit
         ("POSITION_OCCUPANT_ADD", AuditCategory.OrganigramaYCargos),
         ("POSITION_OCCUPANT_REMOVE", AuditCategory.OrganigramaYCargos),
         ("POSITION_TEMPLATE_LOAD", AuditCategory.OrganigramaYCargos),
+        ("DIRECTION_INDICATORS_VIEW", AuditCategory.ConsultasDeDireccion),
+        ("DIRECTION_QUALITY_VIEW", AuditCategory.ConsultasDeDireccion),
+        ("TRANSFER_HISTORY_REVIEW", AuditCategory.ConsultasDeDireccion),
     ];
 
     public static bool IsAdministrative(string? code) => code is not null && Actions.Any(a => a.Code == code);

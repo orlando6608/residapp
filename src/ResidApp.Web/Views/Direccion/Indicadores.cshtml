@@ -76,11 +76,13 @@
 <h1 class="h3">Indicadores de actividad</h1>
 <p class="text-muted">
     Cifras agregadas por unidad de tu ámbito para el periodo elegido, con su denominador. No identifican a ningún residente
-    ni profesional y no valoran el trabajo de nadie: sirven para ver cómo funciona el proceso.
+    ni profesional y no valoran el trabajo de nadie: sirven para ver cómo funciona el proceso. Abrir esta pantalla queda registrado (quién y cuándo,
+    sin ningún residente) para detectar accesos indebidos; no se usa para valorar la productividad ni el desempeño de nadie.
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
 
 <form method="get" asp-action="Indicadores" class="card mb-3 d-print-none">
+    <input type="hidden" name="aplicado" value="true" />
     <div class="card-body">
         <div class="row g-3 align-items-end">
             <div class="col-12 col-md-3">

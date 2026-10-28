@@ -85,8 +85,8 @@ public class HistorialTrasTrasladoTests
             nurse.ProfileScopeId, nurse.CenterId, residentId, observation, DailyChangeClassification.Ordinario, null, Guid.NewGuid()))).Value!.EventId;
 
     private static Task<ApplicationResult<Guid>> DeclareAsync(
-        SeededProfile who, ResidentId residentId, string? reason = Reason, SystemProfile profile = SystemProfile.Enfermeria) =>
-        BuildAccess(who.ExternalSubject).DeclareAsync(new DeclareTransferHistoryCommand(who.ProfileScopeId, who.CenterId, residentId, reason, profile));
+        SeededProfile who, ResidentId residentId, string? reason = Reason, SystemProfile profile = SystemProfile.Enfermeria, TransferHistoryPurpose? purpose = null) =>
+        BuildAccess(who.ExternalSubject).DeclareAsync(new DeclareTransferHistoryCommand(who.ProfileScopeId, who.CenterId, residentId, reason, profile, purpose));
 
     private static Task<IReadOnlyList<ClosedEventSummary>> ClosedAsync(SeededProfile who, ResidentId residentId, Guid? declarationId = null) =>
         Directory.ListClosedEventsAsync(who.ProfileScopeId, who.CenterId, residentId, transferDeclarationId: declarationId);
@@ -103,12 +103,14 @@ public class HistorialTrasTrasladoTests
             e => e.EventId == s.ClosedEventId);
         Assert.Equal(1, await Directory.CountPreviousUnitClosedEventsAsync(s.NurseDestination.ProfileScopeId, s.NurseDestination.CenterId, s.Resident));
 
-        var declared = await DeclareAsync(s.NurseDestination, s.Resident, "  " + Reason + "  ");
+        var declared = await DeclareAsync(s.NurseDestination, s.Resident, "  " + Reason + "  ", purpose: TransferHistoryPurpose.ContinuidadAsistencial);
         Assert.True(declared.Ok, declared.Error?.Message);
         var declarationId = declared.Value;
         Assert.Equal(1, await ReadAuditCountAsync(s.Resident));
-        Assert.Equal(Reason, await QueryAsync<string>(
+        Assert.Equal("Revisión de continuidad asistencial — " + Reason, await QueryAsync<string>(
             "SELECT TOP (1) justificacion FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @id AND accion_codigo = 'TRANSFER_HISTORY_READ'", new { id = s.Resident.Value }));
+        Assert.Equal("CONTINUIDAD_ASISTENCIAL", await QueryAsync<string>(
+            "SELECT proposito_codigo FROM dbo.declaraciones_historial_traslado WHERE id = @id", new { id = declarationId }));
 
         var history = Assert.Single(await ClosedAsync(s.NurseDestination, s.Resident, declarationId));
         Assert.Equal(s.ClosedEventId, history.EventId);
@@ -132,6 +134,10 @@ public class HistorialTrasTrasladoTests
                 new { id = s.Resident.Value })).Order().ToList();
             Assert.Equal(["CLINICAL_EVENT", "CLOSED_EVENTS_HISTORY", "RESIDENT_TIMELINE", "RESIDENT_TRANSFER_HISTORY"], resources);
         }
+
+        // Cada fila (la de la petición y las de las tres lecturas) lleva el id de su petición: de ahí sale el número de lecturas de la pantalla de Dirección.
+        Assert.Equal(4, await QueryAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE accion_codigo = 'TRANSFER_HISTORY_READ' AND declaracion_id = @id", new { id = declarationId }));
 
         // Lo abierto sigue su camino y el origen no cambia: el episodio cerrado sigue siendo de la unidad anterior, que lo ve como siempre.
         Assert.Null(await Directory.FindAsync(s.NurseDestination.ProfileScopeId, s.NurseDestination.CenterId, s.ClosedEventId));
@@ -184,15 +190,17 @@ public class HistorialTrasTrasladoTests
     }
 
     [Fact]
-    public async Task Pedir_ExigeMotivoDeHastaTrescientosCaracteres_YQueHayaAlgoQuePedirEnSuAmbito()
+    public async Task Pedir_ExigeFinalidadDeLaListaYTextoCortoConOtroMotivo_YQueHayaAlgoQuePedirEnSuAmbito()
     {
         var s = await SeedTransferredAsync();
         var medicina = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, s.Admin.CenterId, s.Destination);
 
         var empty = await DeclareAsync(s.NurseDestination, s.Resident, "   ");
         var missing = await DeclareAsync(s.NurseDestination, s.Resident, null);
-        var tooLong = await DeclareAsync(s.NurseDestination, s.Resident, new string('x', TransferHistoryRequest.MaxReasonLength + 1));
-        var exact = await DeclareAsync(s.NurseDestination, s.Resident, new string('x', TransferHistoryRequest.MaxReasonLength));
+        var tooLong = await DeclareAsync(s.NurseDestination, s.Resident, new string('x', TransferHistoryRequest.MaxTextLength + 1));
+        var notInList = await DeclareAsync(s.NurseDestination, s.Resident, Reason, purpose: (TransferHistoryPurpose)99);
+        var otherWithoutText = await DeclareAsync(s.NurseDestination, s.Resident, "  ", purpose: TransferHistoryPurpose.Otro);
+        var exact = await DeclareAsync(s.NurseDestination, s.Resident, new string('x', TransferHistoryRequest.MaxTextLength));
         // La Enfermería de la unidad de origen ya no tiene al residente; Medicina solo ve escalados y propios, y el cerrado no lo fue.
         var fromOrigin = await DeclareAsync(s.NurseOrigin, s.Resident);
         var asMedicine = await DeclareAsync(medicina, s.Resident, Reason, SystemProfile.Medicina);
@@ -202,6 +210,8 @@ public class HistorialTrasTrasladoTests
         Assert.Equal(ApplicationFailureCode.InvalidInput, empty.Error!.Code);
         Assert.Equal(ApplicationFailureCode.InvalidInput, missing.Error!.Code);
         Assert.Equal(ApplicationFailureCode.InvalidInput, tooLong.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, notInList.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, otherWithoutText.Error!.Code);
         Assert.True(exact.Ok, exact.Error?.Message);
         Assert.Equal(ApplicationFailureCode.Conflict, fromOrigin.Error!.Code);
         Assert.Equal(ApplicationFailureCode.Conflict, asMedicine.Error!.Code);
@@ -209,6 +219,15 @@ public class HistorialTrasTrasladoTests
         Assert.Equal(1, await ReadAuditCountAsync(s.Resident));
         Assert.Empty(await ClosedAsync(medicina, s.Resident));
         Assert.Equal(0, await Directory.CountPreviousUnitClosedEventsAsync(medicina.ProfileScopeId, medicina.CenterId, s.Resident));
+
+        // Una finalidad de la lista vale sin texto: el motivo guardado es su etiqueta, y «Otro motivo» lleva la suya con el texto.
+        var noText = await DeclareAsync(s.NurseDestination, s.Resident, null, purpose: TransferHistoryPurpose.IncidenciaReclamacion);
+        Assert.True(noText.Ok, noText.Error?.Message);
+        Assert.Equal("Revisión de una incidencia o reclamación asistencial", await QueryAsync<string>(
+            "SELECT motivo FROM dbo.declaraciones_historial_traslado WHERE id = @id", new { id = noText.Value }));
+        Assert.Equal("Otro motivo — Aclarar una duda del traslado.", await QueryAsync<string>(
+            "SELECT motivo FROM dbo.declaraciones_historial_traslado WHERE id = @id",
+            new { id = (await DeclareAsync(s.NurseDestination, s.Resident, "Aclarar una duda del traslado.", purpose: TransferHistoryPurpose.Otro)).Value }));
     }
 
     [Fact]
@@ -256,6 +275,63 @@ public class HistorialTrasTrasladoTests
         Assert.Equal(1, ended);
         Assert.Contains("TRANSFER_HISTORY_DECLARATION_IMMUTABLE", endedAgain.Message);
         Assert.Empty(await ClosedAsync(s.NurseDestination, s.Resident, declarationId));
+    }
+
+    private static DireccionApplicationService BuildDireccion(string externalSubject) => new(
+        new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new SqlSupervisionDirectory(TestDatabase.ConnectionFactory),
+        new FixedTransferHistorySessionIdentityProvider(externalSubject), new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory),
+        new SqlProcessDeadlineRepository(TestDatabase.ConnectionFactory));
+
+    /// <summary>CJ, 3.3 de «Dirección y traslados» (2026-10-28; script 0079): Dirección ve la lista de las peticiones del periodo (quién, qué residente, cuándo, para qué y cuántas
+    /// lecturas), sin contenido clínico, solo de residentes que están en una unidad de su ámbito; abrirla queda registrado una vez por apertura; y las peticiones anteriores a 0079 salen «sin dato».</summary>
+    [Fact]
+    public async Task Direccion_VeLasPeticionesDelPeriodoConSusLecturas_SoloDeSuAmbito_YAbrirlaQuedaRegistrado()
+    {
+        var s = await SeedTransferredAsync("Residente Peticiones Dirección");
+        var direccion = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, s.Admin.CenterId, s.Destination);
+        var direccionOrigen = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, s.Admin.CenterId, s.Origin);
+        var otroCentro = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica);
+        var declared = await DeclareAsync(s.NurseDestination, s.Resident, "Tras el traslado.", purpose: TransferHistoryPurpose.ContinuidadAsistencial);
+        Assert.True(declared.Ok, declared.Error?.Message);
+        Assert.Single(await ClosedAsync(s.NurseDestination, s.Resident, declared.Value));
+        Assert.NotNull(await Directory.FindAsync(s.NurseDestination.ProfileScopeId, s.NurseDestination.CenterId, s.ClosedEventId, transferDeclarationId: declared.Value));
+        // Una petición anterior a 0079: sin finalidad ni enlace de lecturas.
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.declaraciones_historial_traslado (id, centro_id, cuenta_id, ambito_perfil_id, residente_id, motivo, creada_en, caduca_en, terminada_en)
+                VALUES (NEWID(), @center, @account, @scope, @resident, N'Texto libre de antes de 0079.', DATEADD(HOUR, -3, SYSUTCDATETIME()), DATEADD(HOUR, -2, SYSUTCDATETIME()), DATEADD(HOUR, -2, SYSUTCDATETIME()))
+                """, new { center = s.NurseDestination.CenterId.Value, account = s.NurseDestination.AccountId.Value, scope = s.NurseDestination.ProfileScopeId, resident = s.Resident.Value });
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        ReadSupervisionIndicatorsQuery Query(SeededProfile who, bool opening) => new(who.ProfileScopeId, who.CenterId, today, today, opening);
+        var seen = await BuildDireccion(direccion.ExternalSubject).ReadTransferHistoryRequestsAsync(Query(direccion, true));
+        var filtered = await BuildDireccion(direccion.ExternalSubject).ReadTransferHistoryRequestsAsync(Query(direccion, false));
+        var fromOrigin = await BuildDireccion(direccionOrigen.ExternalSubject).ReadTransferHistoryRequestsAsync(Query(direccionOrigen, false));
+        var otherCenter = await BuildDireccion(otroCentro.ExternalSubject).ReadTransferHistoryRequestsAsync(Query(otroCentro, false));
+        var asNurse = await BuildDireccion(s.NurseDestination.ExternalSubject).ReadTransferHistoryRequestsAsync(Query(s.NurseDestination, false));
+
+        Assert.True(seen.Ok, seen.Error?.Message);
+        Assert.Equal(2, seen.Value!.Requests.Count);
+        var request = seen.Value.Requests.Single(r => r.Reads is not null);
+        Assert.Equal(2, request.Reads);
+        Assert.Equal("Revisión de continuidad asistencial — Tras el traslado.", request.Reason);
+        Assert.Equal("Residente Peticiones Dirección", request.ResidentName);
+        Assert.Equal(SystemProfile.Enfermeria, request.Profile);
+        Assert.Contains(seen.Value.Requests, r => r.Reads is null && r.Reason == "Texto libre de antes de 0079.");
+        Assert.True(seen.Value.Requests[0].RequestedAt >= seen.Value.Requests[1].RequestedAt);
+        Assert.Equal(2, filtered.Value!.Requests.Count);
+        // Residente en otra unidad que la de esta Dirección, otro centro y otros perfiles: nada.
+        Assert.Empty(fromOrigin.Value!.Requests);
+        Assert.Empty(otherCenter.Value!.Requests);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, asNurse.Error!.Code);
+        // Constancia de la apertura (no del cambio de periodo) y sin ningún residente.
+        Assert.Equal(1, await QueryAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @account AND accion_codigo = 'TRANSFER_HISTORY_REVIEW' AND residente_id IS NULL AND unidad_id IS NULL",
+            new { account = direccion.AccountId.Value }));
+        Assert.Equal(0, await QueryAsync<int>(
+            "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @account AND accion_codigo = 'TRANSFER_HISTORY_REVIEW'", new { account = s.NurseDestination.AccountId.Value }));
     }
 }
 

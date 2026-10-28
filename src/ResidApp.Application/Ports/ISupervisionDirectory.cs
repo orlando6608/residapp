@@ -55,6 +55,16 @@ public sealed record SupervisionScopeInfo(
 /// <summary>DIR-01 a DIR-04 y DIR-17: lectura de supervisión. Cada método comprueba en la propia consulta que el ámbito es
 /// un ámbito activo de Dirección Clínica del centro y que el episodio cae en sus unidades (y en sus residentes, si el
 /// ámbito los restringe): fuera de eso devuelve vacío o null, sin distinguir si existe.</summary>
+/// <summary>Una petición de historial tras un traslado, vista por Dirección (CJ, 2026-10-28, 3.3). Reads son las lecturas que se hicieron con ella; null en las peticiones anteriores al script 0079, que no llevaban
+/// el enlace (la auditoría es inmutable): se enseña «sin dato», no 0.</summary>
+public sealed record TransferHistoryRequestSummary(
+    Guid Id, DateTimeOffset RequestedAt, string? AccountName, SystemProfile Profile, string ResidentName, string UnitName, string Reason, int? Reads);
+
+public sealed record TransferHistoryRequestPage(IReadOnlyList<TransferHistoryRequestSummary> Requests, bool Truncated)
+{
+    public const int MaxEntries = 500;
+}
+
 public interface ISupervisionDirectory
 {
     Task<IReadOnlyList<SupervisionEpisode>> ListOpenEpisodesAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default);
@@ -71,6 +81,16 @@ public interface ISupervisionDirectory
     /// <summary>DIR-11: los hitos del proceso del ámbito que empezaron en [from, toExclusive) (UTC), con cuándo se cumplieron, sin plazos ni
     /// estados: eso lo pone ProcessQualityRules.</summary>
     Task<IReadOnlyList<MilestoneFact>> ListMilestoneFactsAsync(
+        Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default);
+
+    /// <summary>Deja constancia de que esta cuenta de Dirección abrió Indicadores, Calidad de proceso o la lista de peticiones de historial tras un traslado (CJ, 2026-10-28, 2.3 y 3.3): quién y
+    /// cuándo, sin ningún residente ni unidad. Indicadores y Calidad vuelven a comprobar el permiso QUALITY_REVIEW. <paramref name="action"/> es DIRECTION_INDICATORS_VIEW,
+    /// DIRECTION_QUALITY_VIEW o TRANSFER_HISTORY_REVIEW.</summary>
+    Task AuditDirectionViewAsync(Guid profileScopeId, CenterId centerId, string action, CancellationToken ct = default);
+
+    /// <summary>Las peticiones de historial tras un traslado (script 0077) creadas en [from, toExclusive) (UTC) para residentes que están ahora en una unidad del ámbito de Dirección, de la
+    /// más reciente a la más antigua: quién, qué residente, cuándo, finalidad y texto y cuántas lecturas hizo, sin ningún contenido clínico (CJ, 2026-10-28, 3.3). Sin ranking ni totales por cuenta.</summary>
+    Task<TransferHistoryRequestPage> ListTransferHistoryRequestsAsync(
         Guid profileScopeId, CenterId centerId, DateTime from, DateTime toExclusive, CancellationToken ct = default);
 
     /// <summary>DIR-08 a DIR-10: hechos del ámbito con fecha en [from, toExclusive), abiertos o cerrados. Los límites son

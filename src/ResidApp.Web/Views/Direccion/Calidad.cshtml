@@ -17,12 +17,15 @@
 
 <h1 class="h3">Calidad de proceso</h1>
 <p class="text-muted">
-    Cumplimiento de los plazos de cada hito del proceso, por unidad y periodo, y los episodios con algún hito fuera de plazo o a punto de
-    vencer. Nunca por profesional, y sin contenido clínico. Los plazos los fija el centro; no cambian categorías ni umbrales clínicos.
+    Cumplimiento de los plazos de cada hito del proceso, por unidad y periodo. Solo cifras: nunca por profesional ni por residente, y sin
+    contenido clínico. Los avisos de «a punto de vencer» de cada caso les llegan a Enfermería y a Medicina. Los plazos los fija el centro; no
+    cambian categorías ni umbrales clínicos. Esta consulta queda registrada (quién y cuándo, sin ningún residente) para detectar accesos indebidos:
+    no se usa para valorar la productividad ni el desempeño de nadie.
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
 
 <form method="get" asp-action="Calidad" class="card mb-3">
+    <input type="hidden" name="aplicado" value="true" />
     <div class="card-body">
         <div class="row g-3 align-items-end">
             <div class="col-12 col-md-3">
@@ -114,56 +117,6 @@
                                 var count = unit.Counts[milestone];
                                 <td class="text-end text-nowrap">@count.OutOfTerm de @count.Measured</td>
                             }
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-
-    <h2 class="h5">Episodios con algún hito fuera de plazo o a punto de vencer</h2>
-    @if (report.Exceptions.Count == 0)
-    {
-        <p class="estado-vacio">Ningún hito fuera de plazo ni a punto de vencer en este periodo.</p>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <caption class="visually-hidden">Hitos fuera de plazo o a punto de vencer: residente, unidad, hito, inicio, plazo y estado</caption>
-                <thead>
-                    <tr>
-                        <th scope="col">Residente</th>
-                        <th scope="col">Unidad</th>
-                        <th scope="col">Hito</th>
-                        <th scope="col">Empezó</th>
-                        <th scope="col">Plazo</th>
-                        <th scope="col">Estado</th>
-                        <th scope="col"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in report.Exceptions)
-                    {
-                        <tr>
-                            <td>@item.ResidentDisplayName</td>
-                            <td>@item.UnitName</td>
-                            <td>@ProcessMilestoneDisplay.Label(item.Milestone)@(item.Priority ? " (prioritario)" : "")</td>
-                            <td>@item.Start.ToLocalTime().ToString("g")</td>
-                            <td>@ProcessMilestoneDisplay.Term(item.Term)</td>
-                            <td>
-                                <span class="badge @(item.Status == MilestoneStatus.APuntoDeVencer ? "text-bg-warning" : "text-bg-danger")">@ProcessMilestoneDisplay.Status(item.Status)</span>
-                            </td>
-                            <td>
-                                @if (!item.EpisodeClosed)
-                                {
-                                    <a asp-action="Episodio" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle operativo</a>
-                                }
-                                else
-                                {
-                                    <span class="badge text-bg-dark">Cerrado</span>
-                                }
-                            </td>
                         </tr>
                     }
                 </tbody>

@@ -21,12 +21,22 @@
                 <form asp-action="PedirHistorialAnterior" method="post">
                     <input type="hidden" name="ResidenteId" value="@Model.ResidentId" />
                     <input type="hidden" name="Retorno" value="@Model.ReturnAction" />
-                    <label for="historial-anterior-motivo" class="form-label fw-semibold">Motivo</label>
-                    <textarea id="historial-anterior-motivo" name="Motivo" class="form-control" rows="2" maxlength="@TransferHistoryRequest.MaxReasonLength" required aria-describedby="historial-anterior-ayuda"></textarea>
+                    <fieldset class="mb-3">
+                        <legend class="form-label fw-semibold fs-6">¿Para qué los necesitas?</legend>
+                        @foreach (var purpose in Enum.GetValues<TransferHistoryPurpose>())
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="Finalidad" id="historial-anterior-finalidad-@purpose" value="@purpose" required />
+                                <label class="form-check-label" for="historial-anterior-finalidad-@purpose">@TransferHistoryRequest.Label(purpose)</label>
+                            </div>
+                        }
+                    </fieldset>
+                    <label for="historial-anterior-motivo" class="form-label fw-semibold">Texto breve <span class="fw-normal">(obligatorio con «Otro motivo»)</span></label>
+                    <textarea id="historial-anterior-motivo" name="Motivo" class="form-control" rows="2" maxlength="@TransferHistoryRequest.MaxTextLength" aria-describedby="historial-anterior-ayuda"></textarea>
                     <div id="historial-anterior-ayuda" class="form-text mb-3">
-                        Indica brevemente por qué necesitas verlos (por ejemplo, la continuidad asistencial tras el traslado), hasta @TransferHistoryRequest.MaxReasonLength caracteres.
-                        No escribas datos de salud ni nombres de personas. Tu petición y cada lectura quedan registradas con este motivo, Dirección puede revisarlas y el acceso
-                        vale 1 hora. Se abren el historial, la línea temporal y el detalle de esos episodios; el informe de derivación no.
+                        Hasta @TransferHistoryRequest.MaxTextLength caracteres. <strong>No escribas datos de salud ni nombres de personas.</strong> Tu petición y cada lectura quedan registradas con
+                        esta finalidad y este texto, Dirección puede revisarlas y el acceso vale 1 hora. Se abren el historial, la línea temporal y el detalle de esos episodios; el
+                        informe de derivación no. Ese registro sirve para detectar accesos indebidos, no para valorar el desempeño de nadie.
                     </div>
                     <button type="submit" class="btn btn-outline-primary btn-lg">Pedir los episodios de la unidad anterior</button>
                 </form>

@@ -319,7 +319,8 @@ SELECT NEWID(), profile.id, profile.centro_id, 'QUALITY_REVIEW', SYSUTCDATETIME(
                WHERE admin_scope.centro_id = profile.centro_id AND admin_scope.perfil_codigo = 'ADMINISTRACION'
                  AND admin_account.sujeto_externo IN ('almendros-administracion', 'olmos-administracion')) AS grantor
  WHERE profile.perfil_codigo = 'DIRECCION_CLINICA' AND profile.estado = 'ACTIVE'
-   AND (account.sujeto_externo LIKE 'almendros-%' OR account.sujeto_externo LIKE 'olmos-%' OR account.sujeto_externo LIKE 'varios-centros%')
+   -- Lista cerrada de las cuentas ficticias (CJ, 2026-10-28, 2.1): nada de patrones que algún día alcancen una cuenta real.
+   AND account.sujeto_externo IN ('almendros-direccion', 'almendros-orlando-direccion', 'varios-centros', 'varios-centros-orlando')
    AND NOT EXISTS (SELECT 1 FROM dbo.permisos_perfil existing
                     WHERE existing.ambito_perfil_id = profile.id AND existing.permiso_codigo = 'QUALITY_REVIEW');
 GO

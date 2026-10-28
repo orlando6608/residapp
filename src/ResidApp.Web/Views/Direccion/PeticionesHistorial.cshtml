@@ -1,0 +1,102 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model TransferHistoryRequestsViewModel
+@{
+    ViewData["Title"] = "Peticiones de historial tras un traslado";
+    var page = Model.Page;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Dirección Clínica</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Peticiones de historial tras un traslado</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Peticiones de historial tras un traslado</h1>
+<p class="text-muted">
+    Cuando un residente cambia de unidad, la unidad de destino solo abre los episodios cerrados de la anterior si lo pide indicando para qué. Aquí ves esas peticiones del periodo, de la más reciente a la más antigua:
+    quién la hizo, de qué residente, cuándo, para qué y cuántas lecturas se hicieron con ella. <strong>Sin contenido clínico.</strong> Esta lista sirve para detectar accesos indebidos; no se usa para valorar la
+    productividad ni el desempeño de nadie. Abrir esta pantalla queda registrado (quién y cuándo, sin ningún residente). Para leer un episodio concreto, usa tu lectura declarada y auditada.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form method="get" asp-action="PeticionesHistorial" class="card mb-3">
+    <input type="hidden" name="aplicado" value="true" />
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-3">
+                <label for="periodo-desde" class="form-label">Desde</label>
+                <input id="periodo-desde" name="desde" type="date" class="form-control form-control-lg" value="@Model.From.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-12 col-md-3">
+                <label for="periodo-hasta" class="form-label">Hasta</label>
+                <input id="periodo-hasta" name="hasta" type="date" class="form-control form-control-lg" value="@Model.To.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-12 col-md-auto d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Aplicar</button>
+            </div>
+        </div>
+        <p class="form-text mb-0">Las dos fechas se incluyen; por defecto, los últimos @IndicatorPeriodFilter.DefaultDays días. Solo salen residentes que ahora están en una unidad de tu ámbito.</p>
+    </div>
+</form>
+
+@if (page is not null)
+{
+    @if (page.Requests.Count == 0)
+    {
+        <p class="estado-vacio">Ninguna petición en este periodo.</p>
+    }
+    else
+    {
+        @if (page.Truncated)
+        {
+            <div class="alert alert-warning" role="status">Hay más de @TransferHistoryRequestPage.MaxEntries peticiones en el periodo: se enseñan las más recientes. Acorta el periodo para ver el resto.</div>
+        }
+
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-hover align-middle">
+                <caption class="visually-hidden">Peticiones de historial tras un traslado: cuándo, quién, residente, unidad actual, para qué y lecturas</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Cuándo</th>
+                        <th scope="col">Quién</th>
+                        <th scope="col">Residente</th>
+                        <th scope="col">Unidad actual</th>
+                        <th scope="col">Para qué</th>
+                        <th scope="col" class="text-end">Lecturas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var request in page.Requests)
+                    {
+                        <tr>
+                            <td class="text-nowrap">@request.RequestedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(request.AccountName ?? "Cuenta sin nombre") <span class="text-body-secondary">· @SystemProfileDisplay.Label(request.Profile)</span></td>
+                            <td>@request.ResidentName</td>
+                            <td>@request.UnitName</td>
+                            <td>@request.Reason</td>
+                            <td class="text-end">@(request.Reads is { } reads ? reads.ToString() : "sin dato")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <ul class="list-unstyled d-md-none">
+            @foreach (var request in page.Requests)
+            {
+                <li class="card mb-2">
+                    <div class="card-body">
+                        <p class="mb-1 fw-semibold">@request.ResidentName <span class="fw-normal text-body-secondary">· @request.UnitName</span></p>
+                        <p class="mb-1 small">@request.RequestedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @(request.AccountName ?? "Cuenta sin nombre") · @SystemProfileDisplay.Label(request.Profile)</p>
+                        <p class="mb-1">@request.Reason</p>
+                        <p class="mb-0 small text-body-secondary">Lecturas: @(request.Reads is { } reads ? reads.ToString() : "sin dato")</p>
+                    </div>
+                </li>
+            }
+        </ul>
+        <p class="form-text">«Sin dato» son las peticiones anteriores a este registro de lecturas: no se pueden contar.</p>
+    }
+}

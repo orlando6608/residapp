@@ -17,7 +17,8 @@ public sealed record FindSupervisionEpisodeQuery(Guid AmbitoPerfilId, CenterId C
 public sealed record CloseEpisodeExceptionallyCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid EventId, string? Motivo);
 
 /// <summary>DIR-08 a DIR-10: el periodo, con From y To incluidos.</summary>
-public sealed record ReadSupervisionIndicatorsQuery(Guid AmbitoPerfilId, CenterId CentroId, DateOnly From, DateOnly To);
+/// <summary>RecordView: es una apertura de la pantalla (no un cambio del filtro de periodo) y se deja constancia de quién la abre (CJ, 2026-10-28, 2.3).</summary>
+public sealed record ReadSupervisionIndicatorsQuery(Guid AmbitoPerfilId, CenterId CentroId, DateOnly From, DateOnly To, bool RecordView = false);
 
 /// <summary>DIR-01/DIR-02: contadores de una unidad. Open es el denominador de los demás (episodios abiertos de la unidad).</summary>
 public sealed record SupervisionUnitSummary(
@@ -125,8 +126,8 @@ public sealed class DireccionApplicationService(
             return await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
         });
 
-    /// <summary>DIR-08 a DIR-10 y DIR-16 (bloque 4): indicadores agregados del periodo. Sin auditoría, porque no entregan contenido clínico
-    /// ni datos de personas; solo con el permiso QUALITY_REVIEW (CJ, 2.1 de la tercera tanda; script 0076), que concede Administración.</summary>
+    /// <summary>DIR-08 a DIR-10 y DIR-16 (bloque 4): indicadores agregados del periodo. No entregan contenido clínico ni datos de personas; solo con el permiso
+    /// QUALITY_REVIEW (CJ, 2.1 de la tercera tanda; script 0076), que concede Administración. Al abrir la pantalla (RecordView) queda constancia de quién y cuándo, sin residente (CJ, 2026-10-28, 2.3).</summary>
     public Task<ApplicationResult<SupervisionIndicators>> ReadIndicatorsAsync(
         ReadSupervisionIndicatorsQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
@@ -139,6 +140,11 @@ public sealed class DireccionApplicationService(
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
             EnsureQualityReview(info);
+            if (query.RecordView)
+            {
+                await directory.AuditDirectionViewAsync(query.AmbitoPerfilId, query.CentroId, "DIRECTION_INDICATORS_VIEW", ct);
+            }
+
             // El periodo son días de la hora local del servidor (la misma con la que se muestran las fechas) y las fechas se
             // guardan en UTC.
             var zone = TimeZoneInfo.Local;
@@ -148,8 +154,7 @@ public sealed class DireccionApplicationService(
         });
 
     /// <summary>DIR-11: la revisión de calidad de proceso del periodo (días locales, ambos incluidos): hitos medidos y fuera de plazo por
-    /// unidad, nunca por profesional, y los episodios con algún hito fuera de plazo o a punto de vencer. Sin contenido clínico y sin auditar
-    /// la consulta; solo con el permiso QUALITY_REVIEW.</summary>
+    /// unidad, nunca por profesional ni por residente. Sin contenido clínico; solo con el permiso QUALITY_REVIEW.</summary>
     public Task<ApplicationResult<ProcessQualityReport>> ReadProcessQualityAsync(
         ReadSupervisionIndicatorsQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
@@ -162,10 +167,37 @@ public sealed class DireccionApplicationService(
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
             EnsureQualityReview(info);
+            if (query.RecordView)
+            {
+                await directory.AuditDirectionViewAsync(query.AmbitoPerfilId, query.CentroId, "DIRECTION_QUALITY_VIEW", ct);
+            }
+
             var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
             var facts = await directory.ListMilestoneFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
             var effective = await deadlines.GetEffectiveAsync(query.CentroId, ct);
-            return ProcessQualityRules.Build(facts, effective, info.Units, query.From, query.To, DateTime.UtcNow);
+            // CJ (2026-10-28, 2.2): solo cifras por unidad y periodo, sin episodios ni residentes; la lista de excepciones es de Enfermería y Medicina.
+            return ProcessQualityRules.Build(facts, effective, info.Units, query.From, query.To, DateTime.UtcNow) with { Exceptions = [] };
+        });
+
+    /// <summary>Las peticiones de historial tras un traslado del periodo (CJ, 2026-10-28, 3.3), sin contenido clínico y sin permiso aparte: basta el ámbito de Dirección Clínica. Al abrir
+    /// la pantalla (RecordView) se deja constancia primero y solo después se entrega la lista: sin la constancia no se muestra nada.</summary>
+    public Task<ApplicationResult<TransferHistoryRequestPage>> ReadTransferHistoryRequestsAsync(
+        ReadSupervisionIndicatorsQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            if (query.From > query.To || query.To.DayNumber - query.From.DayNumber + 1 > SupervisionIndicatorRules.MaxPeriodDays)
+            {
+                throw new DomainValidationException("APPLICATION_INPUT_INVALID");
+            }
+
+            await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            if (query.RecordView)
+            {
+                await directory.AuditDirectionViewAsync(query.AmbitoPerfilId, query.CentroId, "TRANSFER_HISTORY_REVIEW", ct);
+            }
+
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
+            return await directory.ListTransferHistoryRequestsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
         });
 
     /// <summary>Residentes del ámbito para elegir a quién consultar en la consulta auditada de basal: nombre y unidad,

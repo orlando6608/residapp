@@ -59,6 +59,10 @@ public sealed class IndicatorPeriodFilter
 
     public DateOnly? Hasta { get; set; }
 
+    /// <summary>Lo trae el formulario del periodo (campo oculto aplicado=true): es un cambio de filtro y no una apertura de la pantalla, así que no deja una
+    /// constancia nueva (CJ, 2026-10-28, 2.3).</summary>
+    public bool Aplicado { get; set; }
+
     public (DateOnly From, DateOnly To) Resolve(DateOnly today)
     {
         var to = Hasta ?? today;
@@ -139,6 +143,9 @@ public static class SupervisionDisplay
 }
 
 /// <summary>DIR-11: la revisión de calidad de proceso (null si el periodo no es válido o falló la lectura).</summary>
+/// <summary>La lista de peticiones de historial tras un traslado del periodo (CJ, 2026-10-28, 3.3); null si el periodo no es válido o falló la lectura.</summary>
+public sealed record TransferHistoryRequestsViewModel(DateOnly From, DateOnly To, TransferHistoryRequestPage? Page);
+
 public sealed record ProcessQualityViewModel(DateOnly From, DateOnly To, ProcessQualityReport? Report, bool CanManageDeadlines = false);
 
 /// <summary>DIR-11: textos de los hitos del proceso y de su estado.</summary>
