@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-10-26. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-10-28. Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
@@ -14,7 +14,8 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 > comprueba que la suite pasa en verde contra la base local y propón un plan para la siguiente tarea pendiente antes de tocar código.
 
 ## Dónde estamos
-- **Historial de episodios cerrados tras un traslado (2026-10-28, rama `historial-tras-traslado` desde `main`; script `0077`, el siguiente libre es `0078`). Hecho y probado, sin subir.**
+- **Historial de episodios cerrados tras un traslado (2026-10-28, rama `historial-tras-traslado` desde `main`; script `0077`, el siguiente libre es `0078`). Hecho, probado, PR #73 mergeado y desplegado el 2026-10-28.**
+  En Azure dev se comprobó que el Historial de los 6 residentes de Los Almendros carga con el esquema `0077` (200, sin errores de consola); **el flujo completo (trasladar, pedir con motivo, ver) solo se ha probado en local.**
   Tercera y última pieza del bloque «Dirección y traslados». Detalle en `pendientes-enfermeria.md` («Tras un traslado entre unidades», hecho el 2026-10-28).
   - **Decisiones de Orlando:** la unidad de destino abre Historial, Línea temporal y Detalle (solo lectura, no el PDF) de los cerrados de la unidad anterior solo si lo pide con un motivo (≤ 300);
     la petición vale 1 hora por cuenta y residente; Enfermería y Medicina (Medicina conserva su regla). **Suposiciones mías:** el bloque solo se ofrece si hay algún cerrado que abrir; cada lectura se
@@ -29,7 +30,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
     restaurados después (Rosa en Planta 1, la Enfermería con sus dos plantas).
   - **Privacidad:** consultado el agente `dpo-residapp` (admisible con condiciones; ver `pendientes-enfermeria.md`). Hecha la advertencia en pantalla (dice que Dirección *puede* revisar las lecturas:
     hoy no hay vista con todas las peticiones). **Borradores en `docs/privacidad/historial-tras-traslado-01…06`** (registro de actividades, nota de EIPD, información, procedimiento de revisión,
-    conservación y purga, nota retroactiva de `0075`/`0076`): **los valida una persona (DPO real o abogado) antes de usarlos con datos reales**. Las mejoras de código que propone el agente están en
+    conservación y purga, nota retroactiva de `0075`/`0076`): **los valida una persona (DPO real o abogado) antes de usarlos con datos reales** (lista de recordatorio: `docs/privacidad/antes-de-datos-reales.md`). Las mejoras de código que propone el agente están en
     `pendientes-enfermeria.md`. Los scripts `0075` y `0076` no se consultaron al DPO antes de crearse (la directriz del CLAUDE.md es posterior al diseño); su nota es el borrador 06 (lo más relevante:
     la pantalla Calidad de proceso de `0076` muestra el nombre del residente y no se audita).
   - **Lecciones:** (1) un parámetro opcional nuevo en un método de puerto con muchos llamadores va **detrás de `ct`** para no romper las llamadas posicionales; (2) en `Write` + `node` hay un
@@ -1945,9 +1946,9 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Siguiente tarea
 
-**Para retomar (estado al cerrar la sesión del 2026-10-26):**
-- **En `main` y desplegado:** portal y foto (PR #67), importación (PR #68), organigrama y cargos (PR #69, `0073`) y resumen periódico (PR #70, `0074`, ambos aplicados en Azure dev).
-  No hay ramas de trabajo sin subir. No subas nada sin que Orlando lo pida. `docs/seguridad/acceso-por-dispositivo.md` (en el índice de git, sin commit) no es de este bloque: no lo incluyas
+**Para retomar (estado al cerrar la sesión del 2026-10-28):**
+- **En `main` y desplegado:** portal y foto (PR #67), importación (PR #68), organigrama y cargos (PR #69, `0073`), resumen periódico (PR #70, `0074`) y el bloque «Dirección y traslados» (PR #71, #72 y #73; `0075` a `0077`), todos aplicados en Azure dev.
+  La rama `docs-cj-traslados-y-traspaso` (documento de preguntas a CJ, recordatorio de privacidad y este traspaso) espera su PR; no hay más ramas sin subir. No subas nada sin que Orlando lo pida. `docs/seguridad/acceso-por-dispositivo.md` (en el índice de git, sin commit) no es de este bloque: no lo incluyas
   en un commit sin que Orlando lo diga.
 - **La foto de Manuel en Azure dev está hecha y verificada (2026-10-26).** `0071` había borrado las fotos también allí, pero `preparar-almendros.js` (idempotente: solo pone la
   foto si falta) no tuvo nada que hacer: la ficha de Manuel (residente `1A000000-0000-4000-8000-000000000005`) con la Enfermería de Los Almendros ya mostraba la foto, con el
@@ -1955,14 +1956,17 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
   `almendros-orlando-administracion` (`/Administracion/Cargos`): cargan sin error y el centro aún no ha definido cargos (la plantilla de CJ se carga desde «Empezar con la plantilla de CJ»; no se
   ha pulsado). Las credenciales del juego están en `~/.residapp/credenciales-app-residapp-dev.azurewebsites.net.json`, fuera del repositorio; nunca las pidas ni las copies. Es BD de
   desarrollo; no se tocan los datos del centro «Residente Integrado Uno» sin basal. Justo tras un despliegue la app suele dar 500 unos segundos mientras arranca.
-- **Para CJ (lo envía Orlando):** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (3 preguntas). Decirle también que la app no envía correos (ADR 0012, pendiente
+- **Para CJ (lo envía Orlando):** `docs/pendientes-cj/portal-familiar-cuarta-tanda-cj.html` (3 preguntas) y `docs/pendientes-cj/direccion-y-traslados-confirmaciones-cj.html` (9 preguntas sobre las suposiciones de las piezas `0075` a `0077`).
+  Avisarle también de que **las Direcciones reales no ven «Indicadores» ni «Calidad de proceso» hasta que Administración les conceda «Ver los indicadores y la calidad de proceso»** (pregunta 2.1). Decirle también que la app no envía correos (ADR 0012, pendiente
   de la decisión de Orlando), lo que deja abierta la 3.2 del portal, y que en el organigrama la auditoría dice quién cambió qué cargo y cuándo pero no los nombres de quienes
   lo ocuparon (matiza su 1.7; ya está escrito en `archivados/organigrama-y-cargos-cj.html`). La prueba 17 de la guía 5 es la del organigrama.
 - **Siguiente bloque: «Dirección y traslados», tres piezas con su script, rama y PR (plan aprobado el 2026-10-26):** (1) cierre excepcional con indicaciones sin cumplir, `0075` — **hecho, PR #71 mergeado**
   (entrada de «Dónde estamos»); (2) permiso `QUALITY_REVIEW` de calidad asistencial, `0076` — **hecho, PR #72 mergeado y desplegado**: sin él, `/Direccion/Indicadores` y `/Direccion/Calidad` no se abren ni se enlazan, **no se concede a las
   Direcciones existentes** y la semilla se lo da a las de los centros de prueba; (3) la unidad de destino de un traslado ve los episodios cerrados solo si lo pide con un motivo (Historial, línea temporal
-  y detalle, no el PDF; 1 hora por residente y cuenta; tabla y acción de auditoría propias), `0077` — **hecho, sin subir** (primera entrada de «Dónde estamos»). Traslado y baja (CJ `traslado-y-baja-residente`) siguen esperando a CJ. El siguiente script libre es `0078`.
+  y detalle, no el PDF; 1 hora por residente y cuenta; tabla y acción de auditoría propias), `0077` — **hecho, PR #73 mergeado y desplegado** (primera entrada de «Dónde estamos»). Traslado y baja (CJ `traslado-y-baja-residente`) siguen esperando a CJ. El siguiente script libre es `0078`.
   El resumen periódico ya está hecho; falta que CJ confirme lo decidido por Orlando (prueba 14 de la guía 6).
+- **Antes de usar el historial tras un traslado, el cierre excepcional o Calidad de proceso con residentes reales** (lista completa en `docs/privacidad/antes-de-datos-reales.md`): una persona (DPO real o abogado) valida los borradores de `docs/privacidad/`, y Orlando/CJ deciden las mejoras que propone el agente DPO (vista de Dirección con todas las peticiones, lista cerrada de motivos, registro de rechazos, límite de antigüedad, vía de purga, auditoría de Calidad). **Recuérdaselo a Orlando antes de activar el centro piloto o de mergear algo que toque estas funciones.**
+- **Pendiente de comprobar en Azure dev:** que `almendros-orlando-direccion` ve las fichas de Indicadores y Calidad (permiso `QUALITY_REVIEW` de la semilla), el cierre excepcional (necesita un episodio con indicaciones abiertas) y el flujo completo de `0077`.
 - **Sueltos sin cerrar:** probar el dictado en un móvil real con audios ficticios; que una enfermera confirme «decul» y el rango 34–42 °C; las invitaciones de CJ esperan a
   Orlando; rotar la clave de Mistral.
 
