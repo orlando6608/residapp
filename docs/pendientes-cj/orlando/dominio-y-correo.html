@@ -157,15 +157,22 @@
   @media (max-width: 640px) { .page { padding-bottom: 240px; } }
   footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
   @media print { .bar, .toc { display: none; } .page { padding-bottom: 24px; } .q, .pasos > li { break-inside: avoid; } }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  @media print { .back { display: none; } }
 </style>
 </head>
-<body data-doc="dominio-y-correo" data-version="2026-10-28">
+<body data-doc="dominio-y-correo" data-version="2026-10-29">
 
 <div class="page">
   <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="../orlando.html">← Para Orlando</a>
+      <a href="../index.html">Documentos de CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
     <p class="eyebrow">ResidApp · Infraestructura · Para Orlando</p>
     <h1>Dominio, certificado y correo: qué hacer, y por qué</h1>
-    <p class="meta">Estado a 28/10/2026 · Escrito a partir de los dos PDFs de <code>docs/decisiones-arquitectura/</code> y del ADR 0012, ya filtrado con lo que ResidApp necesita de verdad</p>
+    <p class="meta">Estado a 29/10/2026 (actualizado con tus decisiones de ese día) · Escrito a partir de los dos PDFs de <code>docs/decisiones-arquitectura/</code> y del ADR 0012, ya filtrado con lo que ResidApp necesita de verdad</p>
     <p class="lead prose">
       Tienes los dominios <code>residapp.es</code> y <code>residapp.cat</code> a tu nombre. Esta guía te dice, paso a paso y con palabras corrientes, qué tienes que hacer en
       CDmon y en Azure para que la aplicación tenga su propia dirección con candado, y qué hace falta para que algún día pueda mandar correos a las familias.
@@ -176,7 +183,7 @@
   <section aria-labelledby="resumen">
     <h2 id="resumen">La respuesta corta a tus tres preguntas</h2>
     <div class="keyfacts" role="list">
-      <div role="listitem"><span class="k">Dominio de la app en Azure</span><strong class="si">Sí, hazlo.</strong><span>Es gratis (certificado incluido) y da la dirección con candado. Solo vale el <code>.es</code>; el <code>.cat</code> no interviene.</span></div>
+      <div role="listitem"><span class="k">Dominio de la app en Azure</span><strong class="si">Sí, hazlo.</strong><span>Es gratis (certificado incluido) y da la dirección con candado. Solo vale el <code>.es</code>: el <code>.cat</code> será una landing en catalán y no interviene en la app ni en el correo.</span></div>
       <div role="listitem"><span class="k">Azure Communication Services Email (ACS)</span><strong class="si">Sí, para los avisos de la app.</strong><span>Sin él, la aplicación no puede mandar ningún correo. Hace falta un dominio verificado. No hace falta hasta que se construya el envío.</span></div>
       <div role="listitem"><span class="k">Licencia Microsoft 365 (5,60 €/mes)</span><strong class="no">No para la app.</strong><span>Solo si quieres tener tú buzones <code>@residapp.es</code> para recibir correo. Puedes esperar a tener un centro real.</span></div>
     </div>
@@ -221,8 +228,8 @@
         <span>Ya lo hace el despliegue automático (<code>ci-cd.yml</code>, <code>--https-only true</code>). No tienes que tocarlo.</span></li>
       <li><strong>La frase «cumples estrictamente el RGPD».</strong>
         <span>No se puede afirmar todavía: falta que el DPO revise el contrato de Azure con ACS y el aviso a las familias.</span></li>
-      <li><strong>Las páginas comerciales (<code>residapp.es</code> y <code>residapp.cat</code> en catalán) y el alias <code>suport@residapp.cat</code>.</strong>
-        <span>No bloquean ni la aplicación ni el correo. Quedan fuera de esta guía; la maqueta está en <code>docs/bocetos-pantallas/maqueta_residapp_landingPage.html</code>. El <code>.cat</code> no se usa en nada de lo que sigue.</span></li>
+      <li><strong>Las páginas comerciales (<code>residapp.es</code> en castellano y <code>residapp.cat</code> en catalán, decididas el 29/10) y el alias <code>suport@residapp.cat</code>.</strong>
+        <span>No bloquean ni la aplicación ni el correo. Quedan fuera de esta guía: su análisis, con lo que hay que rediseñar, está en <code>docs/pendientes-cj/orlando/analisis-landing-page.html</code> y la maqueta, en <code>docs/bocetos-pantallas/maqueta_residapp_landingPage.html</code>. El <code>.cat</code> no se usa en nada de lo que sigue (ni la app ni el correo).</span></li>
     </ul>
   </section>
 
@@ -260,7 +267,8 @@
           <li>En el certificado elige <strong>Certificado administrado de App Service</strong> (gratuito) y, si lo pide, <strong>SNI SSL</strong>.</li>
           <li>Tipo de registro: <strong>CNAME</strong>. Dominio: <code>dev.residapp.es</code>. Pulsa <strong>Validar</strong> y, si sale en verde, <strong>Agregar</strong>.</li>
         </ol>
-        <p class="ojo"><strong>Si la validación falla:</strong> casi siempre es porque el paso A1 aún no se ha difundido (espera y reintenta) o porque Azure pide también un registro <code>TXT</code> llamado <code>asuid.dev</code> con un «Id. de comprobación» que te muestra en esa misma pantalla. Si lo pide, créalo en CDmon igual que el CNAME (Tipo <code>TXT</code>, nombre <code>asuid.dev</code>, valor el que te dé Azure).</p>
+        <p class="ojo"><strong>Crea también el registro <code>asuid.dev</code> (obligatorio):</strong> en esa misma pantalla Azure te muestra un «Id. de comprobación de dominio personalizado». Créalo en CDmon como registro <code>TXT</code> (nombre <code>asuid.dev</code>, valor el que te dé Azure) <em>antes</em> de pulsar Validar. Es el sello que dice «solo mi suscripción de Azure puede reclamar este nombre»: sin él, si algún día borras la aplicación y dejas el CNAME apuntando a ella, otra persona podría crear una aplicación con el mismo nombre y hacerse con <code>dev.residapp.es</code>, que es el nombre de las passkeys.</p>
+        <p class="ojo"><strong>Si la validación falla:</strong> casi siempre es porque el paso A1 o este registro aún no se han difundido (espera y reintenta).</p>
         <p class="veras"><strong>Cómo sabes que está bien:</strong> en la lista aparece <code>dev.residapp.es</code> con el estado del certificado «creándose» y luego con un candado (puede tardar unos minutos).</p>
       </li>
       <li>
@@ -275,7 +283,7 @@
           <li>En la misma aplicación de Azure, menú izquierdo, <strong>Configuración</strong> → <strong>Variables de entorno</strong> (<em>Environment variables</em>) → pestaña <strong>Configuración de la aplicación</strong>.</li>
           <li>Busca <code>Acceso__PasskeyDominio</code> (hoy vale <code>app-residapp-dev.azurewebsites.net</code>) y cámbiala a <code>dev.residapp.es</code>. Guarda y confirma el reinicio.</li>
         </ol>
-        <p class="ojo"><strong>Consecuencia:</strong> las passkeys ya registradas en el nombre antiguo dejan de valer (están atadas a él, y el ADR 0007 lo da por sabido en desarrollo). Cada persona registrará otra la primera vez que entre por el nombre nuevo. La contraseña y el código del móvil siguen igual. Después de este paso, las invitaciones y las guías de CJ tendrán que citar la dirección nueva: dímelo y lo actualizo yo.</p>
+        <p class="ojo"><strong>Consecuencia:</strong> las passkeys ya registradas en el nombre antiguo dejan de valer (están atadas a él, y el ADR 0007 lo da por sabido en desarrollo). Cada persona registrará otra la primera vez que entre por el nombre nuevo. La contraseña y el código del móvil siguen igual. Después de este paso, las invitaciones y las guías de CJ tendrán que citar la dirección nueva: dímelo y lo actualizo yo. Este paso ya sigue la propuesta de atar las passkeys al subdominio exacto de cada entorno (<a href="adr-0007-passkeys-por-entorno.html">el documento con las opciones</a>): el ADR 0007 aún dice «nombre base» hasta que apruebes ese borrador.</p>
         <p class="veras"><strong>Cómo sabes que está bien:</strong> entras en <code>https://dev.residapp.es</code> con una cuenta de prueba y puedes crear una passkey sin error.</p>
       </li>
     </ol>
@@ -291,7 +299,7 @@
     </p>
     <p class="nota prose">
       <strong>Lo que dirán los correos:</strong> solo «Tienes algo pendiente en ResidApp» o el código. Nunca el nombre del residente, la unidad ni nada de salud (ADR 0012). El remitente
-      será «ResidApp», con una dirección tipo <code>no-responder@avisos.residapp.es</code>. Los textos exactos los validará el DPO.
+      será «ResidApp», con una dirección tipo <code>no-responder@avisos.residapp.es</code>. Cada correo tendrá una plantilla en castellano y otra en catalán, con el mismo contenido (ADR 0012, requisito 7). Los textos exactos los validará el DPO.
     </p>
     <ol class="pasos">
       <li>
@@ -394,7 +402,7 @@
         <thead><tr><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col">Valor</th><th scope="col">Para qué</th></tr></thead>
         <tbody>
           <tr><td><code>dev</code></td><td>CNAME</td><td><code>app-residapp-dev.azurewebsites.net</code></td><td>Llevar el nombre a la aplicación (A1)</td></tr>
-          <tr><td><code>asuid.dev</code></td><td>TXT</td><td>lo da Azure</td><td>Solo si Azure lo pide en A2</td></tr>
+          <tr><td><code>asuid.dev</code></td><td>TXT</td><td>lo da Azure</td><td>Obligatorio: demuestra que el nombre es tuyo (A2)</td></tr>
           <tr><td><code>avisos</code></td><td>TXT</td><td>lo da Azure (verificación)</td><td>Demostrar que el dominio es tuyo (B3)</td></tr>
           <tr><td><code>avisos</code></td><td>TXT</td><td>lo da Azure (SPF)</td><td>Permitir a Azure enviar en tu nombre</td></tr>
           <tr><td>lo da Azure (selector1…)</td><td>CNAME</td><td>lo da Azure</td><td>Firma DKIM 1</td></tr>
@@ -403,7 +411,7 @@
         </tbody>
       </table>
     </div>
-    <p class="prose meta">Con Microsoft 365 aparecerían además los registros MX, SPF, DKIM y de autodescubrimiento que Microsoft te indique al añadir el dominio. Esos van en el nombre principal, no en <code>avisos</code>.</p>
+    <p class="prose meta">Con Microsoft 365 aparecerían además los registros MX, SPF, DKIM y de autodescubrimiento que Microsoft te indique al añadir el dominio. Esos van en el nombre principal, no en <code>avisos</code>. Cuando se aloje la landing se añadirán también los nombres principales (<code>@</code> y <code>www</code>) de <code>residapp.es</code> y de <code>residapp.cat</code>; sus valores dependen del alojamiento, que aún no está decidido. <code>app</code> se crea solo cuando exista producción.</p>
   </section>
 
   <section aria-labelledby="reparto">
@@ -422,7 +430,7 @@
 
   <section aria-labelledby="dpo">
     <h2 id="dpo">8 · Antes de usar todo esto con familias reales</h2>
-    <p class="prose">Lo hace una persona (DPO real o abogado), no ingeniería. Ya está en <code>docs/privacidad/antes-de-datos-reales.md</code>; esto se añade:</p>
+    <p class="prose">Lo hace una persona (DPO real o abogado), no ingeniería. Ya está en <code>docs/privacidad/antes-de-datos-reales.md</code> (su apartado 6 recoge además las landings y el portal en dos idiomas); esto se añade:</p>
     <ul class="prose">
       <li>Que el contrato de Azure cubre ACS Email como «encargado del tratamiento» (el proveedor que trata datos solo por cuenta tuya) y dónde se guardan datos y registros.</li>
       <li>El texto exacto de cada plantilla de correo y cómo se avisa a la familia, antes del primer envío, de que recibirá correos y para qué.</li>
@@ -483,7 +491,7 @@
 
       <article class="q" data-q="1.5">
         <div class="q-head"><span class="n">1.5</span><h3 class="q-title" id="t-1-5">¿Apruebas el ADR 0012, el plan técnico del envío de correos?</h3><span class="chip">Pendiente</span></div>
-        <p class="why">Resume: ACS Email con dominio propio; una tarea dentro de la propia aplicación para el recordatorio, con «Siempre activo» encendido en la Web App; y construir primero el aviso de cita, luego el recordatorio y por último el código de acceso. Está en <code>docs/decisiones-arquitectura/0012-envio-correos.md</code>.</p>
+        <p class="why">Resume: ACS Email con dominio propio; plantillas de correo en castellano y en catalán; una tarea dentro de la propia aplicación para el recordatorio, con «Siempre activo» encendido en la Web App; y construir primero el aviso de cita, luego el recordatorio y por último el código de acceso. Está en <code>docs/decisiones-arquitectura/0012-envio-correos.md</code>.</p>
         <fieldset class="choices" aria-labelledby="t-1-5">
           <label class="choice"><input type="radio" name="r-1-5" value="A"><span class="letter">A</span><span class="txt">Sí, tal como está, con lo que dice esta guía sobre el remitente. <span class="rec">Recomendada</span></span></label>
           <label class="choice"><input type="radio" name="r-1-5" value="B"><span class="letter">B</span><span class="txt">Sí, pero con cambios (los escribo en el comentario).</span></label>
@@ -554,7 +562,7 @@
 </div>
 
 <script>
-/* Mismo script que los cuestionarios de docs/pendientes-cj, con el texto de la marca «Hecho» para las casillas. */
+/* El mismo script que los cuestionarios de CJ (docs/pendientes-cj), con tres diferencias de texto: la clave del navegador, la marca «Hecho» de las casillas y el aviso al guardar. */
 (function () {
   "use strict";
   var DOC = document.body.dataset.doc;
@@ -582,6 +590,7 @@
       r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
     }
     fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
     r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
     return r;
   }
@@ -692,17 +701,17 @@
     dirty = false;
     savedAt = data.guardado;
     store(data);
-    say("ok", "Guardado como «" + FILE + "». Déjalo en docs/pendientes-orlando/ y dime «ya respondí».");
+    say("ok", "Guardado como «" + FILE + "». Déjalo en docs/pendientes-cj/orlando/ y dime «ya respondí»; una vez publicado, el documento lo carga solo.");
   }
 
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
   function onChange(e) {
     if (!e.target.closest || !e.target.closest("[data-q]")) return;
     dirty = true;
     store(refresh());
     status();
   }
-  document.addEventListener("input", onChange);
-  document.addEventListener("change", onChange);
 
   document.getElementById("btn-guardar").addEventListener("click", save);
   document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
@@ -730,6 +739,22 @@
   }
   refresh();
   status();
+
+  // Si la página se sirve por http (no desde disco), carga las respuestas ya subidas al repositorio.
+  if (location.protocol.indexOf("http") === 0) {
+    fetch(FILE, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.documento !== DOC) return;
+        if (dirty) {
+          say("", "Hay respuestas en el repositorio (guardadas el " + when(data.guardado) +
+            "), pero mantienes los cambios de este navegador, que aún no están en el fichero.");
+          return;
+        }
+        loaded(data, "del repositorio");
+      })
+      .catch(function () { /* sin fichero de respuestas */ });
+  }
 })();
 </script>
 </body>

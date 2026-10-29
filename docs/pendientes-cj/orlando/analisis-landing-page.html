@@ -115,15 +115,22 @@
   details ul { margin-top: 10px; font-size: 0.92rem; }
   footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
   @media print { .page { padding-block: 0; } details { break-inside: avoid; } tr { break-inside: avoid; } }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  @media print { .back { display: none; } }
 </style>
 </head>
 <body>
 
 <div class="page">
   <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="../orlando.html">← Para Orlando</a>
+      <a href="../index.html">Documentos de CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
     <p class="eyebrow">ResidApp · Lanzamiento · Para Orlando</p>
     <h1>La landing page: ¿conviene, sirve y encaja con ResidApp?</h1>
-    <p class="meta">Estado a 28/10/2026 · Escrito a partir de la maqueta (PR #82), de los dos PDFs de dominio y correo, de la guía <code>dominio-y-correo.html</code> y de la revisión del agente de protección de datos, que no sustituye a un DPO real o a un abogado</p>
+    <p class="meta">Estado a 29/10/2026 (actualizado con tus decisiones de ese día) · Escrito a partir de la maqueta (PR #82), de los dos PDFs de dominio y correo, de la guía <code>dominio-y-correo.html</code> y de la revisión del agente de protección de datos, que no sustituye a un DPO real o a un abogado</p>
     <p class="lead prose">
       Preguntaste si la maqueta de la página de presentación de ResidApp es conveniente, útil y coherente con lo que ResidApp quiere ser, y cómo se enlazaría con la
       aplicación, con el dominio que ya has comprado y con el lanzamiento. Aquí tienes la respuesta, sin jerga: lo que no se explique en el momento está al final, en el glosario.
@@ -133,13 +140,13 @@
   <section aria-labelledby="corta">
     <h2 id="corta">1 · La respuesta corta</h2>
     <div class="keyfacts" role="list">
-      <div role="listitem"><span class="k">¿Conviene tener una landing?</span><strong class="mid">Sí, pero no todavía así.</strong><span>ResidApp necesita una cara pública. Pero publicar hoy esta maqueta, con precios y promesas, sería adelantarse: la aplicación aún no se puede usar con datos reales.</span></div>
-      <div role="listitem"><span class="k">¿Sirve?</span><strong class="si">Sí, en versión sobria.</strong><span>Para decir qué es ResidApp, enlazar el acceso y el Manual y recoger contactos de directores interesados en un piloto.</span></div>
-      <div role="listitem"><span class="k">¿Es coherente con los objetivos?</span><strong class="mid">La idea sí; varias frases no.</strong><span>El mensaje de fondo encaja. Pero la maqueta promete cosas que la aplicación hoy no hace (avisos instantáneos, catalán, publicación automática, cumplimiento total).</span></div>
+      <div role="listitem"><span class="k">¿Conviene tener una landing?</span><strong class="mid">Sí, y rediseñada.</strong><span>ResidApp necesita una cara pública, con planes, FAQ y un asistente guiado. Pero publicar esta maqueta tal cual sería adelantarse: promete cosas que la aplicación no hace y la aplicación aún no se puede usar con datos reales. Tú decidiste (29/10) rediseñarla.</span></div>
+      <div role="listitem"><span class="k">¿Sirve?</span><strong class="si">Sí.</strong><span>Para decir qué es ResidApp, mostrar planes y módulos, responder dudas (FAQ), enlazar el acceso cuando exista producción y recoger contactos de directores interesados en un piloto. Sin enlaces al Manual ni al Flujo.</span></div>
+      <div role="listitem"><span class="k">¿Es coherente con los objetivos?</span><strong class="mid">La idea sí; varias frases no.</strong><span>El mensaje de fondo encaja. Pero la maqueta promete cosas que la aplicación hoy no hace (avisos instantáneos, una plataforma en catalán, publicación automática, cumplimiento total).</span></div>
     </div>
     <p class="nota prose">
-      <strong>En una frase:</strong> la idea es buena y el dominio ya está; el momento y el texto no. Mi recomendación es construir una versión corta, sin precios y sin promesas,
-      cuando el correo y la página de privacidad estén listos, y dejar los precios para cuando decidas cómo vas a vender ResidApp.
+      <strong>En una frase:</strong> la idea es buena y el dominio ya está; el momento y el texto no. Mi recomendación es rediseñarla en una versión corta y sin promesas que la aplicación no cumple (con planes, módulos y FAQ, decididos el 29/10),
+      cuando el correo y la página de privacidad estén listos, y fijar los importes con CJ cuando respondan qué es base y qué es módulo.
     </p>
   </section>
 
@@ -177,9 +184,9 @@
           <tr><td>«Alertas instantáneas» a enfermería</td><td><span class="st no">No es cierto hoy</span></td><td>No hay avisos al móvil: CJ los dejó fuera del piloto. Hay una bandeja que se ve al abrir la aplicación.</td><td>«Avisos dentro de la aplicación». Es además un riesgo: si alguien confía en un aviso que no llega.</td></tr>
           <tr><td>«Publicación automática» de novedades a las familias</td><td><span class="st no">No es cierto</span></td><td>Siempre aprueba una persona antes. Solo se programa la hora de algo ya aprobado.</td><td>«Los profesionales aprueban lo que ven las familias».</td></tr>
           <tr><td>«Cumplimiento total de la RGPD»</td><td><span class="st no">No se puede afirmar</span></td><td>El propio README dice que el proyecto no está autorizado para datos reales. Falta que un DPO real o abogado valide los borradores de privacidad y la evaluación de impacto.</td><td>«Diseñada para ayudar a su centro a cumplir con la protección de datos».</td></tr>
-          <tr><td>Selector y landing en catalán</td><td><span class="st no">No existe</span></td><td>La aplicación solo está en español.</td><td>No ofrecer catalán hasta que lo tenga la aplicación.</td></tr>
+          <tr><td>Selector y landing en catalán</td><td><span class="st mid">Decidido el 29/10: landing sí</span></td><td>La aplicación solo está en español. Orlando ha decidido tener una landing en catalán en <code>residapp.cat</code> (ver «El dominio .cat»).</td><td>La landing catalana debe decir con claridad que la aplicación está en español. No prometer «plataforma en catalán».</td></tr>
           <tr><td>«Exportación avanzada de datos»</td><td><span class="st no">No existe</span></td><td>Solo se exporta la estructura del centro y el censo en CSV, nada clínico.</td><td>Quitarlo del plan de 499 €.</td></tr>
-          <tr><td>Tarifas 149 / 299 / 499 € y topes de residentes</td><td><span class="st sb">Sin base</span></td><td>La aplicación no tiene planes, topes ni facturación (la facturación está fuera del alcance).</td><td>Decisión tuya y de CJ. No publicar hasta tenerla.</td></tr>
+          <tr><td>Tarifas 149 / 299 / 499 € y topes de residentes</td><td><span class="st sb">Sin base</span></td><td>La aplicación no tiene planes, topes por número de residentes, módulos que se activen por centro ni facturación de clientes. <strong>Decidido el 29/10:</strong> la landing sí lleva precios y planes (SaaS: planes por censo real del centro y módulos opcionales cobrados aparte). Los importes de la maqueta (149 / 299 / 499 €) no tienen base: son de ejemplo.</td><td>Publicar la estructura cuando tú y CJ fijéis importes y qué es base y qué es módulo. Ver «Precios, FAQ y chat».</td></tr>
           <tr><td>«Sin cuotas de alta ni licencias», «soporte preferente», «formación»</td><td><span class="st sb">Sin base</span></td><td>Son compromisos comerciales que nadie ha decidido todavía.</td><td>No publicar hasta decidirlos.</td></tr>
           <tr><td>Formulario «Agendar demo»</td><td><span class="st no">No envía nada</span></td><td>Solo muestra un aviso en pantalla. Y la aplicación aún no puede enviar correos (ADR 0012, sin aprobar).</td><td>Ver la sección 5.</td></tr>
           <tr><td>Enlace «Privacidad»</td><td><span class="st no">Vacío</span></td><td>La página de privacidad de la aplicación dice «todavía no está redactada».</td><td>Redactarla (con la persona experta) antes de publicar.</td></tr>
@@ -191,7 +198,7 @@
       <summary>Dónde se ha comprobado cada cosa (para quien quiera verlo)</summary>
       <ul>
         <li>Sin avisos al móvil, sin facturación: <code>docs/producto/alcance.md</code> (líneas 42 y 45).</li>
-        <li>Solo español: <code>src/ResidApp.Web/Program.cs</code> (líneas 364–366). Sin traducciones al catalán.</li>
+        <li>Solo español: <code>src/ResidApp.Web/Program.cs</code> (líneas 364–366). Sin traducciones al catalán (ni ficheros de recursos <code>.resx</code>).</li>
         <li>Aprobación profesional previa de lo que ve la familia: <code>docs/producto/objetivos.md</code> (líneas 14 y 43).</li>
         <li>No autorizado para datos reales: <code>README.md</code> (línea 16) y <code>docs/privacidad/antes-de-datos-reales.md</code>.</li>
         <li>Un administrador de la base de datos puede desactivar el filtro por centro: <code>docs/decisiones-arquitectura/0008-multicentro-y-grupos.md</code> (líneas 46–50). Grupos solo propuestos en ese mismo ADR.</li>
@@ -209,14 +216,14 @@
     <h3>Por qué sí sirve</h3>
     <ul class="prose">
       <li>Ya tienes el dominio. Una dirección propia con una página que explique qué es ResidApp da seriedad ante un director de residencia que oiga hablar del proyecto.</li>
-      <li>Da un sitio donde enlazar el acceso a la aplicación, el Manual y el diagrama de flujo de trabajo, que hoy se enseñan con la dirección técnica de Azure.</li>
+      <li>Da un sitio donde enlazar el acceso a la aplicación cuando exista producción. El Manual y el diagrama de flujo de trabajo no se enlazan desde la landing (decisión del 29/10).</li>
       <li>El mensaje de fondo de la maqueta coincide con la visión del proyecto: registro diario trazable y comunicación segura con las familias, sin sustituir al programa de gestión que ya use el centro.</li>
     </ul>
     <h3>Por qué no todavía, y no así</h3>
     <ul class="prose">
       <li><strong>No se puede usar con residentes reales.</strong> El propio README del proyecto lo dice. Los Almendros es un centro de pruebas ficticio, y todavía no hay un centro piloto real identificado.</li>
       <li><strong>Hay frases que hoy son falsas</strong> (sección 3). En una web pública eso se llama publicidad engañosa y, en un producto sanitario, además genera confianza en cosas que no existen (por ejemplo, confiar en un aviso que no llega).</li>
-      <li><strong>Los precios no tienen modelo detrás.</strong> No sé si 149, 299 y 499 € son altos o bajos: no tengo datos de mercado y la aplicación no distingue planes. Es una decisión de negocio tuya y de CJ.</li>
+      <li><strong>Los importes no tienen base.</strong> Los 149, 299 y 499 € de la maqueta son de ejemplo y la aplicación no distingue planes ni módulos. Tú decidiste (29/10) un modelo SaaS con planes por censo y módulos opcionales aparte; faltan los importes (tuyos y de CJ) y que la aplicación sepa activar módulos por centro.</li>
       <li><strong>Faltan piezas legales:</strong> la página de privacidad está sin escribir, no hay aviso legal ni identidad del titular de la web, y el formulario recoge datos personales sin la información que exige la ley.</li>
       <li><strong>La maqueta rompe la guía visual del proyecto,</strong> que es obligatoria: usa otra librería (Tailwind en vez de Bootstrap), otros azules, una «R» en lugar del logo real y letras pequeñas y grises sobre fondo casi negro que no cumplen el contraste de accesibilidad.</li>
       <li><strong>Carga cosas de terceros:</strong> el diseño se descarga de un servicio externo (jsdelivr) y las fotos de otro (Unsplash). Cada visitante les entrega su dirección de internet. Mejor tenerlo todo propio.</li>
@@ -235,7 +242,7 @@
           <tr><td><code>dev.residapp.es</code></td><td>La aplicación de desarrollo y pruebas de CJ.</td><td>Pendiente de tus pasos A1–A4 de la guía.</td></tr>
           <tr><td><code>app.residapp.es</code></td><td>La aplicación de producción, para centros reales.</td><td>Reservado. Aún no existe producción.</td></tr>
           <tr><td><code>avisos.residapp.es</code></td><td>Remitente de los correos automáticos de la aplicación.</td><td>Pendiente de la parte B de la guía y del ADR 0012.</td></tr>
-          <tr><td><code>residapp.cat</code></td><td>Solo redirigir a <code>residapp.es</code> (ver abajo).</td><td>Comprado.</td></tr>
+          <tr><td><code>residapp.cat</code></td><td>La landing en catalán, con su propio «Acceso clientes» hacia <code>app.residapp.es</code> (decidido el 29/10; ver abajo).</td><td>Comprado. Falta la página.</td></tr>
         </tbody>
       </table>
     </div>
@@ -247,21 +254,41 @@
       <li><strong>Si cae una, no cae la otra,</strong> y se pueden ocultar, retirar o cambiar por separado.</li>
     </ul>
     <p class="nota info prose">
-      <strong>Decisión que queda por tomar (tuya, con un ADR):</strong> hay dos formas de evitar el choque con las passkeys. La primera, que la landing sea totalmente propia, sin nada de terceros (la recomiendo de todas formas). La segunda, fijar el nombre de las passkeys en el subdominio de la aplicación (<code>app.residapp.es</code> o <code>dev.residapp.es</code>) y no en <code>residapp.es</code>; hoy el ADR 0007 dice «nombre base», así que habría que actualizarlo. Mi opinión, que debe validar una persona experta: hacer las dos.
+      <strong>Passkeys y landing (propuesta lista, falta tu aprobación):</strong> la landing será totalmente propia, sin nada de terceros, y el nombre de las passkeys se fijará en el subdominio exacto de cada entorno (<code>dev.residapp.es</code> y <code>app.residapp.es</code>), no en <code>residapp.es</code>. Hoy el ADR 0007 todavía dice «nombre base»: el borrador del cambio está en <a href="adr-0007-passkeys-por-entorno.html">el documento con las opciones</a> y el ADR no se ha modificado.
     </p>
     <h3>Dónde alojar una página así</h3>
     <p class="prose">Cualquier alojamiento de páginas fijas sirve: el servicio de páginas estáticas de Azure (Static Web Apps) o el alojamiento web que ya tengas con CDmon (a comprobar qué incluye tu plan). Lo que pese más es que sea barato, con certificado (candado) gratuito y en Europa. No lo he creado ni mirado en el portal.</p>
     <h3>Cambios que necesita la maqueta antes de usarla</h3>
     <ol class="pasos">
       <li><h3><span class="id">1</span> Botón «Acceso Clientes»</h3><span class="quien">Enlace</span><p>Hoy apunta a <code>app.residapp.es</code>, que no existe. Debe apuntar a <code>dev.residapp.es</code> para las pruebas (o ocultarse hasta que haya producción).</p></li>
-      <li><h3><span class="id">2</span> Pie de página</h3><span class="quien">Enlaces</span><p>Manual y Flujo apuntan a la dirección técnica de Azure (<code>app-residapp-dev.azurewebsites.net</code>). Cambiarlos al nombre propio. «Privacidad» debe llevar a una página real.</p></li>
-      <li><h3><span class="id">3</span> Marca y diseño</h3><span class="quien">Diseño</span><p>El logo real de la aplicación (<code>logo.svg</code>), los colores oficiales y letras legibles. Sin librerías ni fotos descargadas de terceros: todo guardado en la propia web. Las fotos, con licencia, y nunca capturas de residentes reales.</p></li>
-      <li><h3><span class="id">4</span> Textos</h3><span class="quien">Contenido</span><p>Cambiar las frases de la tabla de la sección 3 por las de la sección 8. Quitar el selector de catalán, las tarifas y la «exportación avanzada».</p></li>
+      <li><h3><span class="id">2</span> Pie de página</h3><span class="quien">Enlaces</span><p>Decisión de Orlando (29/10): <strong>la landing no enlaza ni al Manual ni al Flujo</strong>. Hoy la maqueta los enlaza a la dirección técnica de Azure (<code>app-residapp-dev.azurewebsites.net</code>): quitarlos. Tampoco debe enlazar a nada de <code>dev.residapp.es</code>. En el pie quedan solo los enlaces legales («Privacidad», aviso legal, cookies), y «Privacidad» debe llevar a una página real.</p></li>
+      <li><h3><span class="id">3</span> Marca y diseño</h3><span class="quien">Diseño</span><p>Decisión de Orlando (29/10): <strong>la landing se rediseña</strong>, no se publica la maqueta tal cual. Debe ser coherente con la aplicación y <strong>cumplir la guía visual del proyecto</strong> (<code>docs/bocetos-pantallas/guia-diseno-sistema-visual.md</code>, vinculante): paleta oficial, Bootstrap 5, accesibilidad WCAG 2.2 AA, modo claro y oscuro, sin colores fijos que no cambien con el modo oscuro. El logo real de la aplicación (<code>logo.svg</code>). <strong>Nada de terceros:</strong> ni librerías desde otro servidor (hoy la maqueta carga Tailwind desde jsdelivr), ni letras, ni fotos de Unsplash; todo, incluidas las imágenes, guardado en la propia web, porque cargar algo de fuera envía la IP de cada visitante a un tercero. Las imágenes, propias o con licencia, y nunca capturas de residentes reales.</p></li>
+      <li><h3><span class="id">4</span> Textos</h3><span class="quien">Contenido</span><p>Cambiar las frases de la tabla de la sección 3 por las de la sección 8. Quitar las tarifas y la «exportación avanzada». <strong>La landing no puede contradecir lo que hace u ofrece la aplicación</strong> (decisión de Orlando, 29/10): cada frase se contrasta con el código y con <code>docs/producto/</code> antes de publicarla. Con una landing por idioma, el selector es/cat pasa a ser un simple enlace entre <code>residapp.es</code> y <code>residapp.cat</code>, no un interruptor dentro de la misma página.</p></li>
       <li><h3><span class="id">5</span> Contacto</h3><span class="quien">Legal</span><p>Al principio es más seguro un enlace de correo (<code>mailto:</code>) o un buzón compartido, con la información de protección de datos al lado, que un formulario con envío. Un formulario real necesita guardar los datos aparte de la base de datos clínica, un sistema contra el correo basura que no use rastreadores, un contrato con el servicio que lo recoja y estar en Europa. Añade el aviso «No escriba datos de residentes» sobre cualquier cuadro de texto libre. La landing es otra cosa que la aplicación: aquí el responsable de los datos de contacto eres tú (ResidApp), no ninguna residencia.</p></li>
       <li><h3><span class="id">6</span> Páginas legales</h3><span class="quien">Legal</span><p>Aviso legal (con quién es el titular: nombre o razón social, NIF y domicilio), política de privacidad y una línea sobre cookies. Si la landing no pone ninguna cookie, basta con decirlo en la política de privacidad.</p></li>
     </ol>
+    <h3>Precios, FAQ y chat (decisiones y peticiones de Orlando, 29/10)</h3>
+    <p class="prose"><strong>Precios y planes: sí.</strong> La app se plantea como software como servicio (SaaS: el centro paga una cuota periódica por usarla, sin instalar nada). Planes según el censo real del centro y <strong>módulos opcionales que se cobran aparte</strong>. Para que la landing no contradiga a la aplicación (condición tuya):</p>
+    <ul class="prose">
+      <li><strong>Hoy la aplicación no tiene módulos que se activen por centro,</strong> ni topes por número de residentes, ni facturación de clientes. Antes de vender «módulos aparte» hay que decidir con CJ qué es base y qué es módulo, y construir el interruptor por centro (encaja con el ADR 0008, multicentro). Mientras no exista, lo que no esté construido se anuncia como «próximamente» (por ejemplo, la «exportación avanzada») o no se anuncia.</li>
+      <li><strong>Los importes los fijáis tú y CJ.</strong> Los de la maqueta no tienen base. Ayuda tener una sola fuente de precios para las dos landings, para que el castellano y el catalán no discrepen.</li>
+      <li><strong>Un precio publicado es una oferta comercial.</strong> Antes de publicarlo hace falta quién es el titular, condiciones de contratación, IVA y el contrato de encargado del tratamiento con cada centro. Y mientras la aplicación no esté autorizada para datos reales, la landing sigue diciendo «en fase de pilotos». Qué obligaciones exactas hay al publicar precios en una web B2B: <strong>a validar con un abogado</strong>.</li>
+    </ul>
+    <p class="prose"><strong>FAQ: sí.</strong> Una sección de preguntas frecuentes, escrita a mano en los dos idiomas, sin servidor. Cada respuesta se contrasta con la aplicación y con la sección 8 (sin absolutos). Las de seguridad, protección de datos y dictado por voz son afirmaciones casi legales: las valida una persona experta. Temas razonables: dónde se guardan los datos, quién ve qué, qué ven las familias, el dictado por voz y el proveedor de IA (declarado aparte), en qué idioma está cada parte, cómo funcionan los planes y los módulos, y cómo es el piloto.</p>
+    <p class="prose"><strong>Chat con bot: hay dos cosas distintas.</strong></p>
+    <ul class="prose">
+      <li><strong>Asistente guiado sin IA</strong> (botones y preguntas de la FAQ con respuestas escritas por nosotros, sin cuadro de texto libre, sin servidor y todo local). Es compatible con todo lo decidido, barato y sin riesgo de privacidad. <strong>Decidido por Orlando el 29/10: el chat es este asistente guiado sin IA.</strong></li>
+      <li><strong>Bot con IA conversacional</strong> (un modelo de lenguaje, como Mistral, que contesta a lo que escriba el visitante). <strong>Hoy no está permitido:</strong> el ADR 0011 solo aprueba el dictado por voz como caso de uso de IA, el puerto de chat no existe y el agente de protección de datos ya recomendó no meter chatbots de IA en las landings. Pediría un ADR nuevo (o ampliar el 0011) con revisión del DPO real. Además: la landing deja de ser una página fija (necesita servidor y una clave); el visitante envía lo que escribe a un tercero (puede incluir datos personales o de un residente sin querer); el bot puede inventar o prometer algo que la aplicación no hace, justo lo que quieres evitar; hay que avisar al visitante de que habla con una IA (obligación de transparencia del Reglamento europeo de IA, a verificar); y hace falta límite de uso por coste y abuso.</li>
+    </ul>
+    <p class="prose">Mi criterio: empezar con la FAQ y el asistente guiado sin IA. Si más adelante los visitantes preguntan cosas que la FAQ no cubre, se estudia el bot con IA con datos reales de uso, como una decisión aparte.</p>
     <h3>El dominio .cat</h3>
-    <p class="prose">Los dos PDFs lo describen de forma distinta: uno habla de una landing «100 % en catalán» y el otro de que «redirigirá al acceso de la aplicación». No pueden ser las dos cosas. Mi propuesta: <code>residapp.cat</code> solo redirige a <code>residapp.es</code>. Una página en catalán prometería una aplicación en catalán que no existe, y las passkeys no valen entre dos dominios distintos.</p>
+    <p class="prose">Los dos PDFs lo describen de forma distinta: uno habla de una landing «100 % en catalán» y el otro de que «redirigirá al acceso de la aplicación». <strong>Decisión de Orlando (29/10/2026):</strong> <code>residapp.cat</code> será una landing en catalán, igual que <code>residapp.es</code> lo será en español, y las dos llevarán a la misma aplicación en <code>app.residapp.es</code>. Con esto se queda sin efecto mi propuesta anterior (que <code>.cat</code> solo redirigiera a <code>.es</code>).</p>
+    <ul class="prose">
+      <li><strong>Las passkeys no se ven afectadas.</strong> La aplicación vive en un solo nombre (<code>app.residapp.es</code>); las landings solo enlazan a ella. Mi objeción anterior («las passkeys no valen entre dos dominios») solo habría pesado si la aplicación se sirviera desde los dos.</li>
+      <li><strong>Lo que sigue pesando: la aplicación está solo en español.</strong> Un visitante que lea la landing en catalán entrará en una aplicación en español. La página catalana debe decirlo («La plataforma está disponible en castellano») y no prometer más.</li>
+      <li><strong>Doble trabajo:</strong> cada texto, el aviso legal y la política de privacidad existirán en dos versiones, que hay que mantener iguales. La persona experta (DPO o abogado) debe validar las dos.</li>
+      <li><strong>Si algún día la aplicación se traduce</strong>, la landing catalana podrá prometer catalán de verdad. Mientras tanto, no.</li>
+    </ul>
   </section>
 
   <section aria-labelledby="lanzamiento">
@@ -275,9 +302,9 @@
         <thead><tr><th>Etapa</th><th>Qué se hace</th><th>Qué debe estar listo antes</th></tr></thead>
         <tbody>
           <tr><td><strong>0 · Ahora</strong></td><td>Poner el nombre propio a la aplicación de pruebas (<code>dev.residapp.es</code>) y preparar el correo de avisos. Sin landing.</td><td>Tus pasos A1–A4 y B de la guía de dominio. Decisión de cuál es el nombre de las passkeys.</td></tr>
-          <tr><td><strong>1 · Landing sobria</strong></td><td>Una página corta: qué es ResidApp, para quién, «estamos en fase de pilotos», contacto y privacidad. Sin precios, sin catalán, sin cifras.</td><td>Página de privacidad y aviso legal redactados; textos corregidos; contacto decidido (enlace de correo o formulario); logo y diseño oficiales.</td></tr>
+          <tr><td><strong>1 · Landing rediseñada</strong></td><td>Una página corta: qué es ResidApp, para quién, «estamos en fase de pilotos», contacto y privacidad. Precios y planes solo cuando estén fijados los importes y qué es módulo (ver «Precios, FAQ y chat»); FAQ; sin cifras de rendimiento. En español primero; la versión en catalán (<code>residapp.cat</code>) después, con sus textos legales también en catalán.</td><td>Página de privacidad y aviso legal redactados; textos corregidos; contacto decidido (enlace de correo o formulario); logo y diseño oficiales.</td></tr>
           <tr><td><strong>2 · Piloto real</strong></td><td>Primer centro real con datos reales.</td><td>Un DPO real o abogado ha validado los borradores de <code>docs/privacidad/</code>; contrato de encargado con el centro (incluyendo Azure y Mistral); evaluación de impacto cerrada por el centro; entorno de producción creado; centro identificado (Los Almendros es de pruebas).</td></tr>
-          <tr><td><strong>3 · Comercial</strong></td><td>Publicar planes y precios.</td><td>Modelo comercial decidido por ti y CJ. Multi-residencia y exportación avanzada solo cuando existan.</td></tr>
+          <tr><td><strong>3 · Comercial</strong></td><td>Publicar los importes definitivos de los planes y los módulos (la estructura puede estar ya en la landing; ver «Precios, FAQ y chat»).</td><td>Importes fijados por ti; qué es base y qué es módulo respondido por CJ; y la aplicación capaz de activar módulos por centro. Multi-residencia y exportación avanzada solo cuando existan (hasta entonces, «próximamente»).</td></tr>
         </tbody>
       </table>
     </div>
@@ -293,12 +320,13 @@
         <h3>Tú (Orlando)</h3>
         <ul>
           <li>Si se hace la landing ahora (etapa 1) o se espera al piloto real (etapa 2).</li>
-          <li>Si se publican precios y cuáles. Si no, quitarlos.</li>
-          <li>Si hay catalán y, en tal caso, cuándo.</li>
+          <li>Los importes de los planes (decidido el 29/10 que la landing lleva precios y planes por censo, con módulos opcionales aparte), junto con CJ qué es base y qué es módulo.</li>
+          <li>Chat: decidido el 29/10 el asistente guiado sin IA. Un bot con IA queda fuera hasta que haya un ADR nuevo y el DPO real lo revise.</li>
+          <li>Cuándo se publica la landing en catalán (decidido el 29/10 que se hará) y si, además, se traduce la aplicación.</li>
           <li>Quién es el titular de la web: tú como persona o una sociedad, con su NIF y domicilio.</li>
           <li>A qué dirección llegan los contactos y quién los atiende.</li>
           <li>Dónde se aloja la página.</li>
-          <li>Si se actualiza el ADR 0007 con el nombre de las passkeys.</li>
+          <li>Aprobar el borrador del ADR 0007 (passkeys en el subdominio exacto) y el ADR 0013 (portal y entrada en castellano y catalán).</li>
         </ul>
       </div>
       <div>
@@ -316,6 +344,7 @@
   <section aria-labelledby="frases">
     <h2 id="frases">8 · Frases de la maqueta y cómo decirlo con prudencia</h2>
     <p class="prose">Propuestas del agente de protección de datos y mías. Las valida una persona antes de publicarlas.</p>
+    <p class="nota info prose"><strong>Orlando está de acuerdo (29/10/2026)</strong> con estas frases y con la forma prudente de decirlo. Se aplican a las dos landings (<code>residapp.es</code> y <code>residapp.cat</code>; la versión catalana dice lo mismo, traducido). Su acuerdo no sustituye la validación de una persona experta (DPO real o abogado) antes de publicar.</p>
     <div class="tabla ancha">
       <table>
         <thead><tr><th>En la maqueta</th><th>Mejor decirlo así</th></tr></thead>
@@ -349,12 +378,16 @@
       <div class="card"><strong>EIPD</strong><span>Evaluación de impacto en protección de datos: un estudio obligatorio cuando se tratan datos de salud de forma sistemática.</span></div>
       <div class="card"><strong>Responsable y encargado</strong><span>El responsable decide para qué se usan los datos (la residencia respecto a sus residentes; ResidApp respecto a los contactos de la landing). El encargado los trata por cuenta del responsable (ResidApp respecto a los residentes).</span></div>
       <div class="card"><strong>Mistral</strong><span>La empresa de inteligencia artificial que transcribe el dictado por voz de la aplicación. Hay que declararla a los centros como proveedor adicional.</span></div>
+      <div class="card"><strong>SaaS (software como servicio)</strong><span>El centro paga una cuota periódica por usar la aplicación en internet, sin instalar nada ni comprar una licencia única.</span></div>
+      <div class="card"><strong>Módulo</strong><span>Un grupo de funciones que un centro puede contratar aparte de la base. Hoy la aplicación no permite activarlos o quitarlos por centro.</span></div>
+      <div class="card"><strong>FAQ</strong><span>Preguntas frecuentes: una sección con las dudas habituales y sus respuestas, escritas de antemano.</span></div>
+      <div class="card"><strong>Asistente guiado sin IA</strong><span>Un «chat» de botones: la persona elige una pregunta y recibe una respuesta escrita por nosotros. No entiende texto libre ni usa inteligencia artificial.</span></div>
       <div class="card"><strong>ADR</strong><span>Un documento corto donde se anota una decisión técnica y por qué se tomó. El 0007 trata de la entrada y las passkeys; el 0012, del correo.</span></div>
     </div>
   </section>
 
   <footer>
-    ResidApp · Documento de trabajo para Orlando. No contiene claves. Hecho con la maqueta de la landing (PR #82), los dos PDFs de dominio y correo, la guía <code>dominio-y-correo.html</code>, los ADR 0007, 0008, 0010, 0011 y 0012 y una consulta al agente de protección de datos, que no sustituye a un DPO real o abogado. No he creado ni modificado la landing ni nada en el dominio, Azure o CDmon.
+    ResidApp · Documento de trabajo para Orlando. No contiene claves. Hecho con la maqueta de la landing (PR #82), los dos PDFs de dominio y correo, la guía <code>dominio-y-correo.html</code>, los ADR 0007, 0008, 0010, 0011, 0012 y 0013 (propuesta) y las consultas al agente de protección de datos, que no sustituye a un DPO real o abogado. No he creado ni modificado la landing ni nada en el dominio, Azure o CDmon.
   </footer>
 </div>
 

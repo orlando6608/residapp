@@ -54,6 +54,8 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
         "archivados/confirmaciones-segunda-tanda-cj", "archivados/foto-residente-confirmaciones-cj", "archivados/importacion-exportacion-confirmaciones-cj", "archivados/organigrama-y-cargos-cj",
         "archivados/dictado-por-voz-confirmaciones-cj",
+        "portal-familiar-dos-idiomas-cj", "modulos-base-y-opcionales-cj",
+        "orlando", "orlando/dominio-y-correo", "orlando/analisis-landing-page", "orlando/adr-0007-passkeys-por-entorno",
     ];
 
     [Theory]
@@ -180,14 +182,35 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     {
         var html = await (await LoggedInAsync()).GetStringAsync("/pendientes-cj/index.html");
 
-        Assert.Contains("tres secciones", html);
+        Assert.Contains("tres secciones para ti", html);
         Assert.Contains("href=\"preguntas.html\"", html);
         Assert.Contains("href=\"pruebas.html\"", html);
         Assert.Contains("href=\"archivo.html\"", html);
+        Assert.Contains("href=\"orlando.html\"", html);
         Assert.Contains("<h2>Preguntas</h2>", html);
         Assert.Contains("<h2>Pruebas</h2>", html);
         Assert.Contains("<h2>Archivo</h2>", html);
+        Assert.Contains("<h2>Para Orlando</h2>", html);
     }
+
+    [Fact]
+    public async Task ParaOrlando_TieneSuTitulo_YTodosSusDocumentosSeAbrenConSuNavegacion()
+    {
+        var client = await LoggedInAsync();
+
+        var html = await client.GetStringAsync("/pendientes-cj/orlando.html");
+        var links = Regex.Matches(html, "<li>\\s*<a href=\"([^\"#]+\\.html)\"").Select(m => m.Groups[1].Value).ToList();
+
+        Assert.Contains("<h1>Para Orlando</h1>", html);
+        Assert.NotEmpty(links);
+        foreach (var link in links)
+        {
+            var page = await client.GetAsync($"/pendientes-cj/{link}");
+            Assert.True(page.IsSuccessStatusCode, $"orlando.html enlaza {link}: {(int)page.StatusCode}");
+            Assert.Contains("href=\"../orlando.html\"", await page.Content.ReadAsStringAsync());
+        }
+    }
+
 
     [Theory]
     [InlineData("preguntas")]
