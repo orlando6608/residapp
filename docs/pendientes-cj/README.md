@@ -3,15 +3,16 @@
 Documentos que CJ tiene que completar: valores clínicos y decisiones de producto que ingeniería no puede
 inventar. Cuando CJ los completa, ingeniería revisa las respuestas y las incorpora a la aplicación.
 
-## Las tres secciones
+## Las secciones (tres para CJ y una para Orlando)
 
-La web (`/pendientes-cj/index.html`) tiene tres secciones, cada una con su página:
+La web (`/pendientes-cj/index.html`) tiene tres secciones para CJ y una de trabajo para Orlando, cada una con su página:
 
 | Sección | Página | Qué hay |
 | --- | --- | --- |
 | **Preguntas** | `preguntas.html` | Documentos con decisiones y valores que CJ tiene que responder, o ya respondidos pero todavía no implementados del todo |
 | **Pruebas** | `pruebas.html` | Guías paso a paso para probar la aplicación (hoy, las 8 guías `pruebas-N-….html`), con el glosario y lo que todavía no se prueba |
 | **Archivo** | `archivo.html` | Documentos **contestados y ya implementados**, en `archivados/`, que se abren con sus respuestas cargadas |
+| **Para Orlando** | `orlando.html` | Documentos de trabajo para Orlando, **no para CJ** (explicaciones en lenguaje llano y decisiones de dominio, correo, landing y privacidad), en `orlando/`. Se publican con la misma clave y la misma regla de la carpeta; sus formularios guardan el `.respuestas.json` en `orlando/`. Sus formularios usan **el mismo script que los de CJ** (guardan el fichero, lo cargan solos del repositorio una vez publicado y avisan si es de otra versión); solo cambian la clave del navegador, la marca «Hecho» de las casillas y el aviso al guardar. Los `.md` que se dejaran en esa carpeta viven en el repositorio pero no se publican |
 
 **Regla de archivo:** un documento se archiva cuando CJ lo ha contestado **y** lo que pedía ya está implementado. Lo que quede sin hacer
 se pregunta en otro documento de Preguntas, y el archivado lo cita (como hicieron los dos de la segunda tanda con `confirmaciones-segunda-tanda-cj.html`, ya archivado). No se borra nada.
@@ -104,6 +105,8 @@ Cada guía tiene además una **página de flujo** (`pruebas-N-…-flujo.html`): 
 
 | Documento | Respuestas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
+| [modulos-base-y-opcionales-cj.html](modulos-base-y-opcionales-cj.html) | `modulos-base-y-opcionales-cj.respuestas.json` | Qué funciones son la base de ResidApp y cuáles podrían ser módulos opcionales cobrados aparte (modelo de suscripción), qué no debe faltar nunca por seguridad del residente y qué debe tener activado el centro piloto (16 respuestas) | Pendiente (creado el 2026-10-29; sirve de base para el interruptor de módulos por centro y para la sección de precios de la landing) |
+| [portal-familiar-dos-idiomas-cj.html](portal-familiar-dos-idiomas-cj.html) | `portal-familiar-dos-idiomas-cj.respuestas.json` | Si hace falta el Portal Familiar, las pantallas de entrada y los correos a las familias en catalán además de castellano, cuándo, idioma por defecto del centro, qué hacer con los comunicados que escribe el personal y quién revisa las traducciones (7 respuestas) | Pendiente (creado el 2026-10-29; decisiones de Orlando en el ADR 0012, requisito 7) |
 | [portal-familiar-confirmaciones-cj.html](portal-familiar-confirmaciones-cj.html) | `portal-familiar-confirmaciones-cj.respuestas.json` | Lo que ingeniería tuvo que suponer al construir el Portal Familiar: qué ve la familia, derivaciones a Urgencias, privacidad, cómo debe identificarse un familiar, qué pasa al corregir o retirar un comunicado ya publicado y cómo funcionan las citas con reserva directa y con solicitud previa (28 respuestas) | Contestado el 2026-10-25; hecho el 2026-10-25 salvo la 3.2 (código por correo), que espera al ADR 0012. Sigue aquí hasta que se haga la 3.2 |
 | [confirmaciones-tercera-tanda-cj.html](confirmaciones-tercera-tanda-cj.html) | `confirmaciones-tercera-tanda-cj.respuestas.json` | El resumen periódico para la familia y la finalidad de calidad asistencial de Dirección, y confirmaciones de Dirección (registro, nombres, comunicados, frecuencia), del inicio de Administración, de los episodios y traslados y de los avisos a la familia; 21 preguntas en 6 temas | Contestado el 2026-10-25; hecho salvo la 6.1 (aviso de propuesta de cita por correo) y la 6.2 (recordatorio el día antes), que esperan al ADR 0012. Sigue aquí hasta que se hagan |
 
@@ -119,6 +122,14 @@ Cada guía tiene además una **página de flujo** (`pruebas-N-…-flujo.html`): 
 | [pruebas-6-comunicados-portal.html](pruebas-6-comunicados-portal.html) | `pruebas-6-comunicados-portal.respuestas.json` | Guía 6: comunicados a la familia y Portal Familiar (14 pruebas, 5 imprescindibles) | Pendiente |
 | [pruebas-7-citas.html](pruebas-7-citas.html) | `pruebas-7-citas.respuestas.json` | Guía 7: citas con la familia e inicio de Administración (9 pruebas, 4 imprescindibles) | Pendiente |
 | [pruebas-8-aislamiento.html](pruebas-8-aislamiento.html) | `pruebas-8-aislamiento.respuestas.json` | Guía 8: aislamiento entre centros (5 pruebas, 2 imprescindibles) y 3 preguntas finales | Pendiente |
+
+### Para Orlando (no son de CJ)
+
+| Documento | Respuestas | Qué hay | Estado |
+| --- | --- | --- | --- |
+| [orlando/dominio-y-correo.html](orlando/dominio-y-correo.html) | `orlando/dominio-y-correo.respuestas.json` | Guía paso a paso de dominio, certificado y correo (ACS Email) con un formulario de 7 decisiones y 6 casillas de lo hecho | Pendiente de Orlando (actualizada el 2026-10-29) |
+| [orlando/analisis-landing-page.html](orlando/analisis-landing-page.html) | — | Análisis de la landing: frente a la aplicación, dominios, precios y planes, FAQ y chat, lanzamiento y frases prudentes. Documento para leer, sin formulario | Actualizado el 2026-10-29 |
+| [orlando/adr-0007-passkeys-por-entorno.html](orlando/adr-0007-passkeys-por-entorno.html) | `orlando/adr-0007-passkeys-por-entorno.respuestas.json` | Borrador de cambio del punto 5 del ADR 0007 (passkeys en el subdominio exacto de cada entorno), explicado en lenguaje llano, con opciones y un formulario de 4 decisiones | Pendiente de Orlando (creado el 2026-10-29); el ADR no se modifica hasta que responda |
 
 ### Archivo (contestados e implementados)
 

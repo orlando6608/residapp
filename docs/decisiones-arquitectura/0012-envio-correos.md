@@ -27,13 +27,24 @@ CJ lo reafirmó en la 6.4).
 2. **Proveedor con garantías.** Contrato de encargado del tratamiento (artículo 28 del RGPD: el proveedor trata los datos solo por cuenta nuestra) y datos guardados en la UE.
    El correo del familiar es un dato personal suyo.
 3. **Registro de envíos sin contenido.** Qué plantilla, a qué familiar (su identificador, no la dirección) y cuándo; con eso se evita mandar dos veces el mismo aviso y se puede
-   comprobar si un aviso salió. No se guarda el texto ni el código.
+   comprobar si un aviso salió. Se anota también la versión de la plantilla y su idioma (prueba de qué texto se mandó). No se guarda el texto ni el código.
 4. **Remitente verificado.** Un dominio propio con SPF y DKIM (las firmas que dicen a los servidores de correo que el remitente es quien dice ser), para que los avisos no
    acaben en la carpeta de correo no deseado y para que nadie pueda hacerse pasar por ResidApp con facilidad.
 5. **Familias sin correo.** Hoy el correo es opcional. Sin correo no hay aviso ni recordatorio (el aviso dentro del portal, 6.3, cubre a todas). Para el código de acceso (3.2)
    el correo pasa a ser **obligatorio** en el familiar que tiene acceso al portal: decidir qué pasa con los que ya tienen cuenta sin correo.
 6. **Si el proveedor falla,** la acción que lo provoca no falla: la propuesta de cita se guarda igual y el envío se reintenta; el código de acceso sí debe avisar de que no se
    pudo mandar.
+7. **Plantillas por idioma (decidido por Orlando el 2026-10-29).** Cada plantilla existe en castellano y en catalán, como ficheros separados y versionados en el
+   repositorio, con el mismo contenido genérico (requisito 1). Asunto, remitente y pie legal van también por idioma. Las dos versiones comparten identificador y versión, y
+   se revisan y aprueban juntas. La traducción catalana la revisa una persona que sepa catalán (el DPO valida el contenido, no la lengua). El correo del código de acceso
+   lleva en los dos idiomas el mismo aviso contra fraude («ResidApp nunca te pedirá este código por teléfono ni por mensaje»). Mientras el portal no esté en catalán (ADR 0013, en propuesta), el
+   correo en catalán dice que el enlace lleva a una pantalla en castellano. Añadir un tercer idioma exige una revisión del DPO por cada plantilla.
+   **Cómo se elige el idioma de cada familiar (decidido por Orlando el 2026-10-29):** por defecto, el idioma del centro; el propio familiar puede cambiarlo en el portal
+   cuando quiera. (El portal y la entrada en los dos idiomas, y dónde se guarda esta elección, están en el ADR 0013, en propuesta.) Guardar la elección de
+   cada familiar añade un dato personal nuevo (valor cerrado «es» o «ca», nunca texto libre), que entra en el registro de actividades, en la información al familiar y en
+   el procedimiento de rectificación. Queda **descartado** deducir el idioma por el
+   nombre o los apellidos, o por el navegador sin decírselo: es inexacto y puede ser discriminatorio. Si falta una de las dos versiones, el sistema usa la otra (el código
+   de acceso no puede quedarse sin enviar); es una suposición de ingeniería a confirmar.
 
 ## Opciones
 
@@ -66,7 +77,9 @@ CJ lo reafirmó en la 6.4).
 - Que el contrato de Azure cubre Communication Services Email como encargado del tratamiento y dónde se guardan los datos y los registros del servicio (a comprobar).
 - Cómo se informa a la familia de que recibirá correos y para qué, y si hace falta verificar su dirección antes del primer envío.
 - Cuánto tiempo se guarda el registro de envíos.
-- El texto de cada plantilla.
+- El texto de cada plantilla, en castellano y en catalán, y que el aviso previo a la familia exista en los dos idiomas y se muestre en el mismo en que luego se envía.
+- Si el idioma de cada familiar se guarda (dato nuevo) y cómo se rectifica; y, con un abogado, si los derechos lingüísticos de las personas usuarias de servicios sociales
+  en Cataluña obligan a la residencia a atenderlas en catalán (la obligación recaería en la residencia, no en ResidApp).
 
 ## Consecuencias
 

@@ -1,0 +1,522 @@
+<!doctype html>
+<!--
+  Documento para Orlando. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan en «adr-0007-passkeys-por-entorno.respuestas.json»; se pueden dejar en esta misma carpeta para que ingeniería las lea.
+  No contiene claves ni datos secretos: la cadena de conexión de Azure no se escribe aquí ni en el repositorio.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passkeys: nombre por entorno</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --ink: #1a2433;
+    --muted: #5b6676;
+    --rule: #d6dde6;
+    --accent: #0a58ca;
+    --accent-ink: #ffffff;
+    --accent-soft: #e6eefb;
+    --warn-rule: #e0bf55;
+    --warn-bg: #fff8e1;
+    --blank: #fffdf4;
+    --blank-rule: #b9a24f;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #6fae82;
+    --no-bg: #fbe9e7;
+    --no-ink: #7a1f17;
+    --danger: #b3261e;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f141b; --surface: #171d26; --ink: #e3e8ef; --muted: #a3adba; --rule: #2a3340;
+      --accent: #6ea8fe; --accent-ink: #0b1220; --accent-soft: #19243a;
+      --warn-rule: #7c6520; --warn-bg: #2a2410; --blank: #1d2420; --blank-rule: #6f6334;
+      --ok-bg: #173022; --ok-ink: #bfe5c9; --ok-rule: #3f7a52; --no-bg: #3a1c19; --no-ink: #f5c6c1; --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f141b; --surface: #171d26; --ink: #e3e8ef; --muted: #a3adba; --rule: #2a3340;
+    --accent: #6ea8fe; --accent-ink: #0b1220; --accent-soft: #19243a;
+    --warn-rule: #7c6520; --warn-bg: #2a2410; --blank: #1d2420; --blank-rule: #6f6334;
+    --ok-bg: #173022; --ok-ink: #bfe5c9; --ok-rule: #3f7a52; --no-bg: #3a1c19; --no-ink: #f5c6c1; --danger: #f2b8b5;
+  }
+
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-inline: 16px; }
+  .page { max-width: 880px; margin: 0 auto; padding-block: 48px 160px; display: flex; flex-direction: column; gap: 48px; }
+  .prose { max-width: 70ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 600; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .keyfacts .si { color: var(--ok-ink); }
+  .keyfacts .no { color: var(--no-ink); }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+
+  .nota { padding: 12px 16px; border-left: 4px solid var(--warn-rule); background: var(--warn-bg); border-radius: 0 6px 6px 0; }
+  .nota.info { border-left-color: var(--accent); background: var(--accent-soft); }
+
+  /* Glosario */
+  .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .card strong { font-size: 1rem; }
+  .card span { font-size: 0.94rem; color: var(--muted); }
+  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+
+  /* Pasos */
+  .pasos { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; counter-reset: paso; }
+  .pasos > li { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .pasos > li > h3 { display: flex; gap: 12px; align-items: baseline; }
+  .pasos .id { font-family: var(--mono); font-size: 0.85rem; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+  .quien { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .veras { padding-left: 12px; border-left: 3px solid var(--ok-rule); color: var(--muted); font-size: 0.95rem; }
+  .ojo { padding-left: 12px; border-left: 3px solid var(--warn-rule); font-size: 0.95rem; }
+
+  /* Tablas */
+  .tabla { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+  tr:last-child td { border-bottom: 0; }
+  .si-td { color: var(--ok-ink); font-weight: 600; }
+  .no-td { color: var(--no-ink); font-weight: 600; }
+
+  .descartes { display: flex; flex-direction: column; gap: 10px; list-style: none; padding: 0; }
+  .descartes li { background: var(--no-bg); color: var(--no-ink); border-radius: 6px; padding: 10px 14px; }
+  .descartes li span { display: block; color: var(--ink); font-size: 0.94rem; }
+
+  /* Índice y preguntas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); text-decoration: none; color: var(--ink); min-height: 24px; }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q { background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--blank-rule); border-radius: 8px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 999px; padding: 2px 10px; white-space: nowrap; background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted); }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) { .q-head { grid-template-columns: auto 1fr; } .q-head .chip { grid-column: 2; justify-self: start; } }
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice { position: relative; display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); cursor: pointer; }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--accent); color: var(--accent); display: grid; place-items: center; font-weight: 600; line-height: 1; }
+  .choice .txt { padding-top: 2px; }
+  .choice .rec { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ok-ink); background: var(--ok-bg); border-radius: 999px; padding: 1px 8px; margin-left: 6px; white-space: nowrap; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .check { display: flex; gap: 12px; align-items: center; min-height: 48px; cursor: pointer; }
+  .check input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea { font: inherit; font-size: 1rem; color: var(--ink); background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px; padding: 8px 10px; width: 100%; box-sizing: border-box; min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija */
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--rule); box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08); padding: 10px 16px; }
+  .bar-in { max-width: 880px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn { font: inherit; font-size: 0.95rem; font-weight: 600; padding: 10px 14px; min-height: 44px; border-radius: 6px; cursor: pointer; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+  @media print { .bar, .toc { display: none; } .page { padding-bottom: 24px; } .q, .pasos > li { break-inside: avoid; } }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  @media print { .back { display: none; } }
+</style>
+</head>
+<body data-doc="adr-0007-passkeys-por-entorno" data-version="2026-10-29">
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="../orlando.html">← Para Orlando</a>
+      <a href="../index.html">Documentos de CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Seguridad · Para Orlando</p>
+    <h1>Passkeys: ¿atadas al dominio base o al subdominio de cada entorno?</h1>
+    <p class="meta">Estado a 29/10/2026 · Borrador de cambio del punto 5 del ADR 0007 · El ADR no se ha modificado todavía · La lectura de privacidad es del agente de protección de datos, que no sustituye a un DPO real o a un abogado</p>
+    <p class="lead prose">
+      Una passkey (entrar con huella o llave) queda atada a un nombre de web, y ese nombre no se puede cambiar después. El ADR 0007 (la decisión sobre cómo se entra en ResidApp)
+      dice hoy que, en producción, ese nombre será el dominio base (<code>residapp.es</code>). Con lo que has decidido hoy (landings, <code>dev</code> y <code>app</code>) conviene cambiarlo.
+      Este documento te explica por qué y te deja elegir.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué decides</span><strong>A qué nombre se atan las passkeys</strong><span>Al subdominio exacto de cada entorno (<code>dev</code> y <code>app</code>) o al dominio base.</span></div>
+    <div role="listitem"><span class="k">Cuándo</span><strong class="no">Antes del paso A4</strong><span>Antes de que nadie registre una passkey en el nombre propio. Después, cambiarlo obliga a registrarlas otra vez.</span></div>
+    <div role="listitem"><span class="k">Cambio en el código</span><strong class="si">Ninguno</strong><span>Es un ajuste por entorno (<code>Acceso__PasskeyDominio</code>). Solo cambia el texto del ADR.</span></div>
+  </div>
+
+  <nav class="toc" id="indice" aria-label="Partes con preguntas"></nav>
+
+  <section aria-labelledby="glosario">
+    <h2 id="glosario">1 · Cómo funciona, en lenguaje llano</h2>
+    <div class="cards">
+      <div class="card"><strong>Passkey</strong><span>Entrar con huella, cara o llave en vez de escribir algo. Se crea en un nombre de web concreto y solo vale allí.</span></div>
+      <div class="card"><strong>Dominio base y subdominio</strong><span>El dominio base es <code>residapp.es</code>. Un subdominio es un nombre colgado de él: <code>dev.residapp.es</code>, <code>app.residapp.es</code>, <code>avisos.residapp.es</code>.</span></div>
+      <div class="card"><strong>«Nombre de la passkey»</strong><span>El nombre al que queda atada. Si es el dominio base, <em>cualquier</em> subdominio puede pedir una firma de esa passkey. Si es un subdominio exacto, solo ese.</span></div>
+      <div class="card"><strong>DNS colgante</strong><span>Una línea de la agenda de nombres que apunta a un servicio que ya no existe. Alguien podría crear ese servicio y quedarse con tu nombre.</span></div>
+      <div class="card"><strong>Cookie con «Domain»</strong><span>Una cookie (nota que el navegador guarda) que se comparte con todos los subdominios. Hoy ninguna cookie de ResidApp lo hace y conviene que siga así.</span></div>
+      <div class="card"><strong>HSTS</strong><span>Una orden al navegador: «a esta web entra siempre con candado». Si se extiende a todos los subdominios (<code>includeSubDomains</code>), un subdominio sin candado dejaría de funcionar.</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="hoy">
+    <h2 id="hoy">2 · Qué dice hoy el ADR 0007, y por qué ya no encaja</h2>
+    <div class="nota prose">
+      <strong>Texto actual (punto 5):</strong> «En Pro será el <strong>dominio base dedicado a ResidApp</strong> (la passkey vale en todos sus subdominios, que no deben alojar contenido de terceros) y el dominio debe estar decidido antes de que nadie registre una passkey allí. En Azure dev será el de la Web App; esas passkeys no se migran a Pro.»
+    </div>
+    <p class="prose">Eso tenía sentido cuando solo se pensaba en una aplicación. Hoy hay más cosas colgadas del mismo dominio:</p>
+    <div class="tabla">
+      <table>
+        <thead><tr><th scope="col">Nombre</th><th scope="col">Qué es</th><th scope="col">¿Debe poder usar passkeys?</th></tr></thead>
+        <tbody>
+          <tr><td><code>residapp.es</code> y <code>residapp.cat</code></td><td>Las landings comerciales (castellano y catalán), webs fijas</td><td class="no-td">No</td></tr>
+          <tr><td><code>dev.residapp.es</code></td><td>La aplicación de desarrollo, con datos de prueba</td><td class="si-td">Sí, solo las de pruebas</td></tr>
+          <tr><td><code>app.residapp.es</code></td><td>La aplicación de producción (cuando exista)</td><td class="si-td">Sí, solo las reales</td></tr>
+          <tr><td><code>avisos.residapp.es</code></td><td>Remitente de los correos de la aplicación</td><td class="no-td">No</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Con el dominio base como nombre de la passkey, <strong>todos</strong> esos nombres (también la landing y un subdominio que se olvide) podrían pedir passkeys de producción. El código lo permite así tal cual (<code>PasskeyOrigin.IsAllowed</code> acepta el dominio y todos sus subdominios).</p>
+  </section>
+
+  <section aria-labelledby="propuesta">
+    <h2 id="propuesta">3 · La propuesta, y qué dice cada opción</h2>
+    <div class="tabla">
+      <table>
+        <thead><tr><th scope="col"></th><th scope="col">A · Subdominio exacto por entorno</th><th scope="col">B · Dominio base (como dice el ADR hoy)</th><th scope="col">C · Seguir en <code>azurewebsites.net</code></th></tr></thead>
+        <tbody>
+          <tr><td><strong>Nombre de la passkey</strong></td><td><code>dev.residapp.es</code> en desarrollo y <code>app.residapp.es</code> en producción</td><td><code>residapp.es</code> en los dos</td><td>El nombre técnico de Azure, hasta tener producción</td></tr>
+          <tr><td><strong>¿Las usa la landing o un subdominio olvidado?</strong></td><td class="si-td">No</td><td class="no-td">Sí, podrían</td><td class="si-td">No</td></tr>
+          <tr><td><strong>¿Se mezclan pruebas y producción?</strong></td><td class="si-td">No: son nombres distintos</td><td class="no-td">Podrían</td><td class="si-td">No</td></tr>
+          <tr><td><strong>Qué exige</strong></td><td>Cuatro cautelas (abajo), todas baratas</td><td>Que ningún subdominio aloje nada de terceros, para siempre</td><td>Nada ahora; más adelante, registrar de nuevo</td></tr>
+          <tr><td><strong>Si cambia el nombre de la app</strong></td><td>Registrar las passkeys otra vez</td><td>Igual</td><td>Igual, al pasar a nombre propio</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">El agente de protección de datos (una segunda lectura, no un dictamen) recomienda la <strong>A</strong>: es la más segura y no cuesta nada de código. El paso A4 de la guía de dominio ya la sigue en desarrollo.</p>
+    <h3>Las cuatro cautelas que acompañan a la opción A</h3>
+    <ol class="prose">
+      <li><strong>Ninguna cookie con el atributo <code>Domain</code></strong> (hoy ninguna lo tiene): las cookies de la aplicación se quedan en <code>app</code> o <code>dev</code>.</li>
+      <li><strong>HSTS sin <code>includeSubDomains</code> ni <code>preload</code></strong> en el dominio raíz, para no forzar el candado a nombres que aún no lo tengan.</li>
+      <li><strong>El DNS de <code>app</code> solo se crea cuando exista producción</strong>, y el de cada subdominio se borra <em>antes</em> de borrar el recurso de Azure al que apunta (así no queda DNS colgante).</li>
+      <li><strong>El registro <code>asuid.dev</code> es obligatorio</strong> al añadir el dominio en Azure (ya cambiado en la guía): demuestra que el nombre es tuyo y nadie más puede reclamarlo.</li>
+    </ol>
+    <h3>Texto propuesto para el punto 5 del ADR 0007</h3>
+    <div class="nota info prose">
+      «<strong>Dominio de las passkeys (I4; decidido el 2026-10-23; revisado el AAAA-MM-DD):</strong> una passkey queda ligada al dominio donde se registró y no se mueve a otro. <code>ServerDomain</code> (<code>IdentityPasskeyOptions</code>) irá <strong>explícito por entorno</strong> en la configuración (<code>Acceso__PasskeyDominio</code>), nunca deducido de la cabecera <code>Host</code>, y será <strong>el subdominio exacto de la aplicación de cada entorno</strong>, no el dominio base: <code>dev.residapp.es</code> en desarrollo y <code>app.residapp.es</code> en producción. Las webs comerciales (<code>residapp.es</code>, <code>residapp.cat</code>) y el remitente de avisos (<code>avisos.residapp.es</code>) quedan fuera del alcance de las passkeys. Las passkeys de desarrollo no se migran a producción. Condiciones: (a) ninguna cookie de la aplicación llevará el atributo <code>Domain</code>; (b) HSTS no se activará con <code>includeSubDomains</code> ni <code>preload</code> en el dominio raíz; (c) el DNS de <code>app.</code> se crea solo cuando exista producción, y el de cada subdominio se borra antes de borrar el recurso de Azure al que apunta; (d) el registro <code>TXT</code> <code>asuid.&lt;subdominio&gt;</code> que Azure ofrece para demostrar la propiedad es obligatorio. Si el nombre de una aplicación cambiara después, cada persona tendría que registrar otra passkey.»
+    </div>
+  </section>
+
+  <section aria-labelledby="despues">
+    <h2 id="despues">4 · Qué hago cuando respondas</h2>
+    <ul class="prose">
+      <li>Si eliges la A y aceptas las cautelas: reescribo el punto 5 del ADR 0007 con el texto de arriba (con la fecha de hoy) y dejo anotado en el ADR 0013 y en la guía de dominio que ya está aprobado.</li>
+      <li>No cambio ningún código: el ajuste por entorno ya existe. Cuando exista producción, la Web App llevará <code>Acceso__PasskeyDominio = app.residapp.es</code>.</li>
+      <li>Las cautelas 1 y 2 se comprueban en el código antes de producción (cookies sin <code>Domain</code> y HSTS); lo anoto en la lista de <code>docs/privacidad/antes-de-datos-reales.md</code>.</li>
+      <li>Si eliges la B o la C, no toco el ADR: dejo escrito el motivo y las consecuencias que te he contado.</li>
+    </ul>
+  </section>
+
+  <section class="tema" id="tema-1" aria-labelledby="t1">
+    <h2 id="t1">5 · Tus decisiones</h2>
+    <p class="prose meta">Cada una trae una opción recomendada, pero eliges tú. Ninguna toca datos reales: hoy todo es desarrollo.</p>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿A qué nombre se atan las passkeys?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es la decisión de fondo. Cambia el punto 5 del ADR 0007 solo si eliges la A.</p>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Al <strong>subdominio exacto de cada entorno</strong>: <code>dev.residapp.es</code> en desarrollo y <code>app.residapp.es</code> en producción. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Al <strong>dominio base</strong> <code>residapp.es</code>, como dice el ADR hoy (la landing y cualquier subdominio podrían pedir passkeys; habría que vigilar que ninguno aloje nada de terceros).</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">Aún no pongo nombre propio: sigo con <code>app-residapp-dev.azurewebsites.net</code> hasta tener producción.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Aceptas las cuatro cautelas de la opción A?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Son: cookies sin Domain, HSTS sin includeSubDomains ni preload, DNS de app solo cuando exista producción (y DNS borrado antes que el recurso) y asuid obligatorio.</p>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Sí, las cuatro. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Sí, pero con cambios (los escribo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">No estoy seguro: quiero que me expliquen alguna antes (dime cuál en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.3">
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">Las passkeys que ya existan en desarrollo se perderán al cambiar de nombre. ¿Te parece bien?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Son solo de cuentas de prueba (las tuyas y las de CJ). Cada persona registrará otra la primera vez que entre por <code>dev.residapp.es</code>. La contraseña y el código del móvil no cambian.</p>
+        <fieldset class="choices" aria-labelledby="t-1-3">
+          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">Sí, son solo de pruebas. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">Antes quiero avisar a CJ (u otras personas que prueban) de que tendrán que registrarla otra vez.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.4">
+        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">¿Reescribo el punto 5 del ADR 0007 con el texto propuesto cuando respondas?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">No lo hago hasta que me lo digas.</p>
+        <fieldset class="choices" aria-labelledby="t-1-4">
+          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">Sí, con el texto propuesto tal cual. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">Sí, pero con cambios en el texto (los escribo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="C"><span class="letter">C</span><span class="txt">No todavía: quiero que lo revise antes una persona (DPO real o abogado).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para Orlando. No contiene claves. Hecho con el ADR 0007 (punto 5), el código de <code>PasskeyOrigin</code> y la lectura del agente de protección de datos
+    (<code>docs/privacidad/landings-y-passkeys-por-subdominio.md</code>), que no sustituye a un DPO o abogado. Qué verificar con un experto: HSTS y valores por defecto de la versión de .NET del proyecto.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Guardar respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+    <div class="actions">
+      <button type="button" class="btn" id="btn-abrir">Abrir respuestas guardadas</button>
+      <button type="button" class="btn primary" id="btn-guardar">Guardar respuestas</button>
+      <input type="file" id="fichero" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<script>
+/* El mismo script que los cuestionarios de CJ (docs/pendientes-cj), con tres diferencias de texto: la clave del navegador, la marca «Hecho» de las casillas y el aviso al guardar. */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var FILE = DOC + ".respuestas.json";
+  var KEY = "residapp-pendientes-orlando:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;
+  var savedAt = null;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (dirty) say("", "Tienes cambios que aún no están en el fichero. Pulsa «Guardar respuestas» cuando quieras.");
+    else if (savedAt) say("ok", "Fichero al día (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda en este navegador.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? (q.dataset.si || "Respondida") : (q.dataset.no || "Pendiente");
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  function loaded(data, origin) {
+    apply(data);
+    dirty = false;
+    savedAt = data.guardado || null;
+    store(refresh());
+    var msg = "Respuestas cargadas " + origin + " (guardadas el " + when(data.guardado) + ").";
+    if (data.cuestionario !== VERSION) {
+      say("error", msg + " Son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+    } else {
+      say("ok", msg);
+    }
+  }
+
+  function download(json) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  async function save() {
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    try {
+      if (!window.showSaveFilePicker) throw new Error("sin selector");
+      var handle = await window.showSaveFilePicker({ suggestedName: FILE,
+        types: [{ description: "Respuestas (JSON)", accept: { "application/json": [".json"] } }] });
+      var w = await handle.createWritable();
+      await w.write(json);
+      await w.close();
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      download(json);
+    }
+    dirty = false;
+    savedAt = data.guardado;
+    store(data);
+    say("ok", "Guardado como «" + FILE + "». Déjalo en docs/pendientes-cj/orlando/ y dime «ya respondí»; una vez publicado, el documento lo carga solo.");
+  }
+
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    store(refresh());
+    status();
+  }
+
+  document.getElementById("btn-guardar").addEventListener("click", save);
+  document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
+  document.getElementById("fichero").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    file.text().then(function (t) {
+      var data = JSON.parse(t);
+      if (data.documento !== DOC) {
+        say("error", "Ese fichero es de otro documento («" + data.documento + "»). Elige «" + FILE + "».");
+        return;
+      }
+      loaded(data, "del fichero");
+    }).catch(function () {
+      say("error", "No se ha podido leer ese fichero. Elige «" + FILE + "».");
+    }).finally(function () { e.target.value = ""; });
+  });
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+
+  // Si la página se sirve por http (no desde disco), carga las respuestas ya subidas al repositorio.
+  if (location.protocol.indexOf("http") === 0) {
+    fetch(FILE, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.documento !== DOC) return;
+        if (dirty) {
+          say("", "Hay respuestas en el repositorio (guardadas el " + when(data.guardado) +
+            "), pero mantienes los cambios de este navegador, que aún no están en el fichero.");
+          return;
+        }
+        loaded(data, "del repositorio");
+      })
+      .catch(function () { /* sin fichero de respuestas */ });
+  }
+})();
+</script>
+</body>
+</html>
