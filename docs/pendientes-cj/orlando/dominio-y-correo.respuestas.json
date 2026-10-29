@@ -1,0 +1,89 @@
+{
+  "documento": "dominio-y-correo",
+  "cuestionario": "2026-10-29",
+  "guardado": "2026-10-29T20:18:16.917Z",
+  "respondidas": 7,
+  "total": 13,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Qué nombre le damos a la aplicación que hoy está en Azure?",
+      "opcion": "A",
+      "textoOpcion": "dev.residapp.es para la aplicación actual (desarrollo y pruebas de CJ) y dejar app.residapp.es reservado para producción. Recomendada",
+      "texto": "",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Contratamos ya Microsoft 365 para tener buzones @residapp.es?",
+      "opcion": "A",
+      "textoOpcion": "Todavía no: lo contrato antes de hablar con un centro real. Recomendada",
+      "texto": "",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "¿Desde qué dominio salen los avisos de la app?",
+      "opcion": "A",
+      "textoOpcion": "El subdominio avisos.residapp.es. Recomendada",
+      "texto": "",
+      "respondida": true
+    },
+    "1.4": {
+      "pregunta": "¿Cómo se presenta el remitente y a dónde responde la familia?",
+      "opcion": "A",
+      "textoOpcion": "«ResidApp» como nombre y no-responder@ como dirección; el texto dice «No respondas a este correo». Recomendada",
+      "texto": "",
+      "respondida": true
+    },
+    "1.5": {
+      "pregunta": "¿Apruebas el ADR 0012, el plan técnico del envío de correos?",
+      "opcion": "A",
+      "textoOpcion": "Sí, tal como está, con lo que dice esta guía sobre el remitente. Recomendada",
+      "texto": "",
+      "respondida": true
+    },
+    "1.6": {
+      "pregunta": "¿Tienes acceso a todo lo necesario?",
+      "opcion": "A",
+      "textoOpcion": "Sí: puedo crear recursos en Azure (rol Propietario o Colaborador) y el DNS de residapp.es está en CDmon y lo puedo editar.",
+      "texto": "",
+      "respondida": true
+    },
+    "1.7": {
+      "pregunta": "¿Están protegidos los dos dominios?",
+      "opcion": "A",
+      "textoOpcion": "Sí: verificación en dos pasos activada y renovación automática puesta en residapp.es y residapp.cat.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "CNAME creado en CDmon",
+      "hecho": false,
+      "respondida": false
+    },
+    "2.2": {
+      "pregunta": "Dominio añadido en Azure y certificado creado",
+      "hecho": false,
+      "respondida": false
+    },
+    "2.3": {
+      "pregunta": "Candado comprobado y variable de passkeys cambiada",
+      "hecho": false,
+      "respondida": false
+    },
+    "2.4": {
+      "pregunta": "Servicio de correo y dominio de avisos creados, con sus registros en CDmon",
+      "hecho": false,
+      "respondida": false
+    },
+    "2.5": {
+      "pregunta": "Dominio de avisos verificado y dirección no-responder creada",
+      "hecho": false,
+      "respondida": false
+    },
+    "2.6": {
+      "pregunta": "Servicios conectados y correo de prueba recibido en la bandeja de entrada",
+      "hecho": false,
+      "texto": "",
+      "respondida": false
+    }
+  }
+}

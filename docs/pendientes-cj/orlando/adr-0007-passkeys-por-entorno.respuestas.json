@@ -1,0 +1,37 @@
+{
+  "documento": "adr-0007-passkeys-por-entorno",
+  "cuestionario": "2026-10-29",
+  "guardado": "2026-10-29T18:39:35.285Z",
+  "respondidas": 4,
+  "total": 4,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿A qué nombre se atan las passkeys?",
+      "opcion": "A",
+      "textoOpcion": "Al subdominio exacto de cada entorno: dev.residapp.es en desarrollo y app.residapp.es en producción. Recomendada",
+      "texto": "Pero dev.residapp.es equivaldría a lo que hoy tenemos desplegado en azure:\napp-residapp-dev.azurewebsites.net",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Aceptas las cuatro cautelas de la opción A?",
+      "opcion": "A",
+      "textoOpcion": "Sí, las cuatro. Recomendada",
+      "texto": "",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "Las passkeys que ya existan en desarrollo se perderán al cambiar de nombre. ¿Te parece bien?",
+      "opcion": "A",
+      "textoOpcion": "Sí, son solo de pruebas. Recomendada",
+      "texto": "",
+      "respondida": true
+    },
+    "1.4": {
+      "pregunta": "¿Reescribo el punto 5 del ADR 0007 con el texto propuesto cuando respondas?",
+      "opcion": "A",
+      "textoOpcion": "Sí, con el texto propuesto tal cual. Recomendada",
+      "texto": "",
+      "respondida": true
+    }
+  }
+}

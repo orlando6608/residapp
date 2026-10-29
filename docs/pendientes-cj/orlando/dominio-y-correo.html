@@ -525,19 +525,25 @@
 
   <section class="tema" id="tema-2" aria-labelledby="t2">
     <h2 id="t2">10 · Marca lo que ya has hecho</h2>
-    <p class="prose meta">Solo para llevar la cuenta. Cuando marques uno y guardes el fichero, sé en qué punto estás.</p>
+    <p class="prose meta">Solo para llevar la cuenta. Cuando marques uno y guardes el fichero, sé en qué punto estás. Debajo de cada casilla te explico qué significa y cuándo marcarla; si dudas, déjala sin marcar. Los pasos B1, B9 y B10 no tienen casilla: B1 ya está decidido, B9 lo haremos cuando la aplicación esté lista para enviar y B10 lo decides con el DPO.</p>
     <div class="qs">
       <article class="q" data-q="2.1" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">A1</span><h3 class="q-title">CNAME creado en CDmon</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es añadir una línea en la «agenda de direcciones» de tu dominio (el DNS, en CDmon) que dice: «<code>dev.residapp.es</code> es otro nombre de la aplicación que ya está en Azure». Márcala cuando hayas guardado esa línea. No hace falta que ya funcione: tarda de unos minutos a un par de horas en difundirse.</p>
         <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label></article>
       <article class="q" data-q="2.2" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">A2</span><h3 class="q-title">Dominio añadido en Azure y certificado creado</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es avisar a Azure de que la aplicación también debe responder al nombre <code>dev.residapp.es</code> y pedirle el candado (el certificado: lo que hace que el navegador muestre «https» sin avisos de peligro). Incluye guardar en CDmon el sello <code>asuid.dev</code>, que impide que otra persona se apropie del nombre. Márcala cuando, en la lista de dominios de la aplicación, <code>dev.residapp.es</code> aparezca con el candado ya creado, no mientras diga «creándose».</p>
         <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label></article>
       <article class="q" data-q="2.3" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">A3 y A4</span><h3 class="q-title">Candado comprobado y variable de passkeys cambiada</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Son dos comprobaciones: (1) abres <code>https://dev.residapp.es</code> y carga ResidApp con candado; (2) cambias en Azure el ajuste <code>Acceso__PasskeyDominio</code> (el nombre al que quedan atadas las llaves de acceso sin contraseña, las passkeys) para que valga <code>dev.residapp.es</code>. Márcala cuando hayas hecho las dos. Recuerda: las passkeys antiguas dejan de valer y cada persona registrará una nueva; la contraseña y el código del móvil no cambian.</p>
         <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label></article>
       <article class="q" data-q="2.4" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">B2 a B4</span><h3 class="q-title">Servicio de correo y dominio de avisos creados, con sus registros en CDmon</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es montar en Azure la pieza que enviará los correos, declarar que saldrán desde <code>avisos.residapp.es</code> y copiar en CDmon los registros que Azure te pide (normalmente cuatro, más uno llamado <code>_dmarc</code>). Esos registros son las «firmas» con las que los correos demuestran que no están falsificados. Todavía no se verifica ni se envía nada. Márcala cuando el servicio exista en Azure y hayas guardado en CDmon todos los registros.</p>
         <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label></article>
       <article class="q" data-q="2.5" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">B5 y B6</span><h3 class="q-title">Dominio de avisos verificado y dirección <code>no-responder</code> creada</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Aquí le preguntas a Azure «¿ya ves los registros que puse?». Cuando las cuatro filas pasan a «Verificado», Azure da por probado que el dominio es tuyo. Después creas la dirección de envío: usuario <code>no-responder</code>, nombre visible «ResidApp». Márcala cuando las cuatro filas digan «Verificado» y la dirección exista.</p>
         <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label></article>
       <article class="q" data-q="2.6" data-si="Hecho" data-no="Pendiente"><div class="q-head"><span class="n">B7 y B8</span><h3 class="q-title">Servicios conectados y correo de prueba recibido en la bandeja de entrada</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Conectas las dos piezas de Azure (la que guarda el dominio y la que envía) y te mandas un correo de prueba a tu Gmail y a otra cuenta. Márcala solo si llega a la bandeja de entrada (no a spam) y, en «Mostrar original», SPF, DKIM y DMARC ponen «PASS» (superó la comprobación). Si no es así, déjala sin marcar y apunta en el recuadro qué ponía.</p>
         <label class="check"><input type="checkbox" data-field="hecho"> Hecho</label>
         <label class="field">Resultado de SPF, DKIM y DMARC en el correo de prueba (opcional)<textarea data-field="texto" rows="2"></textarea></label></article>
     </div>
