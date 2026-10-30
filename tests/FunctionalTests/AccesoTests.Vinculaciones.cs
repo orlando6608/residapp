@@ -68,6 +68,9 @@ public partial class AccesoTests
         var again = await SignedInWithTotpAsync(subject, accountId);
         var selector = await TextAsync(await again.GetAsync("/ProfileScope/Select"));
         Assert.Equal(2, Regex.Matches(selector, "name=\"profileScopeId\"").Count);
+        var changing = await TextAsync(await again.GetAsync("/ProfileScope/Select?cambiar=true"));
+        Assert.Equal(2, Regex.Matches(changing, "name=\"profileScopeId\"").Count);
+        Assert.DoesNotContain("Solo tienes un ámbito activo", changing);
     }
 
     [Fact]
