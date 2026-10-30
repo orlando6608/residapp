@@ -345,6 +345,9 @@
         <h3><span class="id">B6</span> Crear la dirección de envío «ResidApp»</h3>
         <span class="quien">Lo haces tú · 3 minutos</span>
         <p>En el dominio ya verificado busca <strong>Direcciones de remitente</strong> (puede aparecer como <em>MailFrom addresses</em> o <em>Sender usernames</em>) y añade una con nombre de usuario <code>no-responder</code> y nombre visible <code>ResidApp</code>. Así el correo llegará como «ResidApp &lt;no-responder@avisos.residapp.es&gt;».</p>
+        <p class="ojo"><strong>Si Azure ya te creó <code>DoNotReply</code>:</strong> es normal. Azure crea esa dirección sola al verificar el dominio, con ese nombre visible, y sirve para probar, pero no es la que queremos. <code>no-responder</code> se añade además; <code>DoNotReply</code> puede quedarse sin usar.</p>
+        <p class="ojo"><strong>Si el botón «+ Agregar» sale desactivado:</strong> según la comunidad de Microsoft, ocurre mientras el límite de envío de la cuenta es el de fábrica (se puede pedir gratis que lo suban, en el portal, como «Azure Communication Services Email: Sending Limits»). Mientras tanto se puede crear desde el terminal, con la sesión de Azure iniciada y la extensión <code>communication</code> del CLI instalada (<code>az extension add --name communication</code>): <code>az communication email domain sender-username create --domain-name avisos.residapp.es --email-service-name ecs-residapp-dev -g rg-residapp-dev --name no-responder --username no-responder --display-name "ResidApp"</code>. Así se creó el 30/10/2026.</p>
+        <p class="veras"><strong>Cómo sabes que está bien:</strong> en la prueba del paso B8, el correo llega como «ResidApp &lt;no-responder@avisos.residapp.es&gt;». Los resultados SPF, DKIM y DMARC no cambian, porque dependen del dominio y no de la dirección.</p>
       </li>
       <li>
         <h3><span class="id">B7</span> Crear «Communication Services» y conectar los dos</h3>

@@ -1,0 +1,119 @@
+{
+  "documento": "modulos-base-y-opcionales-cj",
+  "cuestionario": "2026-10-29",
+  "guardado": "2026-10-30T11:28:22.680Z",
+  "respondidas": 16,
+  "total": 16,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "Registro cotidiano y eventos",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "Residentes: estado basal y Barthel",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "Medicina: escalados, conducta e indicaciones",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "1.4": {
+      "pregunta": "Derivación (informe en PDF con firma)",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "1.5": {
+      "pregunta": "Organización, cuentas y seguridad",
+      "opcion": "A",
+      "textoOpcion": "Sí: siempre base, en todos los planes.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "Comunicados a la familia (preparar, aprobar, programar, corregir, retirar)",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "Portal Familiar (la familia ve lo publicado)",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.3": {
+      "pregunta": "Citas con la familia (reserva directa o solicitud previa)",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "Dirección Clínica: indicadores, informes agregados y consulta de detalle auditada",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "3.2": {
+      "pregunta": "Calidad de proceso",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "3.3": {
+      "pregunta": "Administración: familias, autorizaciones, turnos, organigrama y cargos",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "3.4": {
+      "pregunta": "Importar y exportar la estructura del centro y el censo de residentes",
+      "opcion": "C",
+      "textoOpcion": "No lo sé / depende (explícalo en el comentario).",
+      "texto": "Importar: Base: todo centro lo tiene\nExportar: Módulo opcional: un centro puede trabajar sin él.",
+      "respondida": true
+    },
+    "4.1": {
+      "pregunta": "Dictado por voz para registrar un cambio",
+      "opcion": "B",
+      "textoOpcion": "Módulo opcional: un centro puede trabajar sin él.",
+      "texto": "si el dictado envía audio o texto clínico a un proveedor externo, tiene implicaciones de protección de datos (por ejemplo, con el DPO)",
+      "respondida": true
+    },
+    "4.2": {
+      "pregunta": "Foto del residente y habitación en las listas",
+      "opcion": "A",
+      "textoOpcion": "Base: todo centro lo tiene.",
+      "texto": "",
+      "respondida": true
+    },
+    "5.1": {
+      "pregunta": "¿Hay alguna función que nunca debería poder faltar en un centro, porque su ausencia haría la atención menos segura?",
+      "texto": "las de los temas 1 y 3 ya cubren esto",
+      "respondida": true
+    },
+    "5.2": {
+      "pregunta": "En el centro piloto, ¿qué debe estar activado?",
+      "opcion": "A",
+      "textoOpcion": "Todo, para probar todas las funciones.",
+      "texto": "",
+      "respondida": true
+    }
+  }
+}

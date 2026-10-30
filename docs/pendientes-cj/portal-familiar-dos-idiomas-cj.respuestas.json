@@ -1,0 +1,58 @@
+{
+  "documento": "portal-familiar-dos-idiomas-cj",
+  "cuestionario": "2026-10-29",
+  "guardado": "2026-10-30T11:05:59.468Z",
+  "respondidas": 7,
+  "total": 7,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "En el centro del piloto, ¿hay familias que pedirían el portal en catalán?",
+      "opcion": "A",
+      "textoOpcion": "Sí, muchas familias.",
+      "texto": "",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Cuándo hace falta?",
+      "opcion": "A",
+      "textoOpcion": "Antes del primer centro con familias reales.",
+      "texto": "",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "¿Qué idioma debe usarse por defecto en el centro del piloto, para quien aún no ha elegido?",
+      "opcion": "A",
+      "textoOpcion": "Castellano.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Os parece bien que sea solo una sugerencia?",
+      "opcion": "A",
+      "textoOpcion": "Sí, solo una sugerencia.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "¿Hay personal en el centro que escriba en catalán?",
+      "opcion": "B",
+      "textoOpcion": "Solo algunas personas.",
+      "texto": "",
+      "respondida": true
+    },
+    "2.3": {
+      "pregunta": "Si una familia ha elegido catalán y el comunicado sale en castellano, ¿es aceptable?",
+      "opcion": "A",
+      "textoOpcion": "Sí, es aceptable.",
+      "texto": "",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Quién puede revisar los textos en catalán?",
+      "opcion": "A",
+      "textoOpcion": "Yo (CJ).",
+      "texto": "",
+      "respondida": true
+    }
+  }
+}

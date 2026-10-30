@@ -1,8 +1,8 @@
 {
   "documento": "dominio-y-correo",
   "cuestionario": "2026-10-29",
-  "guardado": "2026-10-29T20:18:16.917Z",
-  "respondidas": 7,
+  "guardado": "2026-10-30T11:02:55.709Z",
+  "respondidas": 13,
   "total": 13,
   "respuestas": {
     "1.1": {
@@ -56,34 +56,34 @@
     },
     "2.1": {
       "pregunta": "CNAME creado en CDmon",
-      "hecho": false,
-      "respondida": false
+      "hecho": true,
+      "respondida": true
     },
     "2.2": {
       "pregunta": "Dominio añadido en Azure y certificado creado",
-      "hecho": false,
-      "respondida": false
+      "hecho": true,
+      "respondida": true
     },
     "2.3": {
       "pregunta": "Candado comprobado y variable de passkeys cambiada",
-      "hecho": false,
-      "respondida": false
+      "hecho": true,
+      "respondida": true
     },
     "2.4": {
       "pregunta": "Servicio de correo y dominio de avisos creados, con sus registros en CDmon",
-      "hecho": false,
-      "respondida": false
+      "hecho": true,
+      "respondida": true
     },
     "2.5": {
       "pregunta": "Dominio de avisos verificado y dirección no-responder creada",
-      "hecho": false,
-      "respondida": false
+      "hecho": true,
+      "respondida": true
     },
     "2.6": {
       "pregunta": "Servicios conectados y correo de prueba recibido en la bandeja de entrada",
-      "hecho": false,
-      "texto": "",
-      "respondida": false
+      "hecho": true,
+      "texto": "Delivered-To: orlando.santos.tosca@gmail.com\nReceived: by 2002:a05:7011:4450:20b0:562:4632:e88f with SMTP id wu16-n2csp1875758mdb; Fri, 30 Oct 2026 03:51:40 -0700 (PDT)\nX-Received: by 2002:a05:6a20:7346:b0:3e2:4bd9:683e with SMTP id adf61e73a8af0-3e9290669b3mr1891175637.73.1793357500568; Fri, 30 Oct 2026 03:51:40 -0700 (PDT)\nARC-Seal: i=2; a=rsa-sha256; t=1793357500; cv=pass; d=google.com; s=arc-20260327; b=E0sX8emVxYjHn6kwJsmCp7sWBOoGY0levvfGArImZRy2BFP2Oduq6kYyyITB+M4Bzc 7TiDWqqGZL8On1ZiWiVw8sQtdYqXnSswQWlcA6pocTeb3/gBn3vl0DWf81/L6I7NUuDL 006IQbpQOYC5YLqG+6aDNsBgL8k8jGtZ34AxvdE14hxh15nUOgUhYo0GzkvDX5N3s5nB n5d3meDCh0kGjq4JB20RxyyiXXQvbwn3u1TSnC1Td26PCEGr/X/27Jq7W9dbBknFOcZR tE6Xm+yYN+OXS1Jptib3GMI/h/NJGDaM5TyWSGrT2S23h/Tem1H02yylmtE6mwPQvUVA 4dXA==\nARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327; h=request-id:client-request-id:mime-version:message-id:date:subject :to:reply-to:from:sender:dkim-signature; bh=57YUASnfXAoNaTmk2GfZj61rWY+qjK/iKTVP0qKXzsQ=; fh=7Wf8GylJ6XsVkaBA3HZLKvQeSk8q8l76JKU14w4FnZo=; b=RHgUDzyuTkcObkb1bJXfrSFWmvJC82fqLW36/9rHC7rK21CD7s/UI0pMWwWHmyRIZI ZdRbZZMCywp9ByEdPgr9KSeGQQ+8+WzwrhHV+ihN1JX/zygjV4hGXzE9DfVsAM44zchk xAoq4QVlPmKAZd4jjP0B8BrUrQ0TR91kVb2l2pG23TM6FvTdDaRUMqH7qPDKM1LwdZOz Da7tSTtnmDo1m42uVws0A5x5BbnV3dLNgtyb2j0/cwNH7tIMa9Ir2D2QMuiQbzS9KWsY RxlWWbtH4aWu5B4U5yGWBvfwFYIHaL41FKhnB1MGosCSFZsoZp2obnEjlzYzm1l+Sy5L o0fQ==; dara=google.com\nARC-Authentication-Results: i=2; mx.google.com; dkim=pass header.i=@avisos.residapp.es header.s=selector1-azurecomm-prod-net header.b=BkInwKLH; arc=pass (i=1); spf=pass (google.com: domain of no-responder@avisos.residapp.es designates 40.93.65.58 as permitted sender) smtp.mailfrom=no-responder@avisos.residapp.es; dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=residapp.es\nReturn-Path: <no-responder@avisos.residapp.es>\nReceived: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazacs10210058.outbound.protection.outlook.com. [40.93.65.58]) by mx.google.com with ESMTPS id 41be03b00d2f7-cdb09aa7881si1678718a12.378.2026.10.30.03.51.39 (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256); Fri, 30 Oct 2026 03:51:40 -0700 (PDT)\nReceived-SPF: pass (google.com: domain of no-responder@avisos.residapp.es designates 40.93.65.58 as permitted sender) client-ip=40.93.65.58;\nAuthentication-Results: mx.google.com; dkim=pass header.i=@avisos.residapp.es header.s=selector1-azurecomm-prod-net header.b=BkInwKLH; arc=pass (i=1); spf=pass (google.com: domain of no-responder@avisos.residapp.es designates 40.93.65.58 as permitted sender) smtp.mailfrom=no-responder@avisos.residapp.es; dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=residapp.es\nARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none; b=YDipQxvq3cw8nOxLVneyZ3vU7hhNR20H6DDntAHdP/t5dsyDt5ukqaNiqCwyF1ILLpaB+v45mY3EbVfEYhFcHFFE1fB05G6caqEJmBNQL9n9BEaJVMSAOQuLDYeaHZuECBpCkh3P5uDTEFSPzavQbM3rjhRC96OF9Jff8ybbMY2P5kD4yvY8LT0TXJweshLb50ZyNsCI9ciODAeur68/BRS5de+Ch//HZ8SLV8X/S9FnfgIBHjDlrXVUy2/m7E8YQa3VWw531y8LsfsUoJ3l/siNMFZx9ls4WXKe+2yBLKJl579AgHdQh6d0hfqTLVRnK1hdjWy87i8/6hMnh5IYVg==\nARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com; s=arcselector10001; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1; bh=57YUASnfXAoNaTmk2GfZj61rWY+qjK/iKTVP0qKXzsQ=; b=iAD8TerL3HCSMDGtHzHRyU55+AlHnA6u1BhalBEKj3JG9cokdEbupF0mZ3oSpEQEVmkvlcp3ci1m7Ag0FDef3BYcwYNayBzKZ6zLLHp8EgEIKKMVwGm923BwPz4/obQEGnc+euY6bEUEw/4jjK9a8/sUOvpQdxlaLyH6jNlANvPeBHqYF6iL3f5u1FidcQRLA/OKh6UCGgJ4s45t4g6wWZWxN73k9Ye6OTouSO1u/LEHtVS2e3tOMO9tMbk7MQNuU0jf9lXq0WwxZkfed09SfomiB3bSSbNbOBhQsamJmDVEhX7fulaHMljwwyfbiXNPGVTN9UObRfq+TbnMEcXu3g==\nARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none; dkim=none; arc=none\nReceived: from substrate.office.com (2603:10a6:250:46::18) by DB9PR04MB8463.eurprd04.prod.outlook.com with HTTP via MA3P292CA0031.ESPP292.PROD.OUTLOOK.COM; Fri, 30 Oct 2026 10:51:24 +0000\nDKIM-Signature: v=1; a=rsa-sha256; d=avisos.residapp.es; s=selector1-azurecomm-prod-net; c=relaxed/relaxed; t=1793357484; h=from:to:cc:subject:date:messageid; bh=57YUASnfXAoNaTmk2GfZj61rWY+qjK/iKTVP0qKXzsQ=; b=BkInwKLHRb4YAFY+G7zggrL8meZKduOBjKYbpPEZdsjMJ5s93IOtNBFF0IWomntpzqf0SRl0HST bJVRR1HExVSGrjDk+69mTml6QZn0tTZa/O6r3CozQ1mjbUrTDW+iGpIIjJfUav6lnHLEg/ARaGddh CRr6MUGvBLyV7wJtGsu5j6S1C1zrVHCx7rVj0OY+LFV6hpzXM47AXK/nymG9VXoXWdvMSvJQauJSQ EzOHcTU/4Akj2un+qgbn8/U2qKuYBnvBHBR2qYXYyVlevYl7o1hP8C+gF460uoWsPrP4vosd9etkI zrfgaHoW8Tfi1npiHTIZRCKhlPyh0KrCdbBA==\nSender: ResidApp <no-responder@avisos.residapp.es>\nFrom: ResidApp <no-responder@avisos.residapp.es>\nReply-To: ResidApp <no-responder@avisos.residapp.es>\nTo: \"orlando.santos.tosca\" <orlando.santos.tosca@gmail.com>, orlando6608 <orlando6608@gmail.com>\nSubject: Test Email\nDate: Fri, 30 Oct 2026 10:51:24 +0000\nMessage-ID: <202610301051.143b22260ca14aa6bd9fff6070592549-OBZG6ZD4IFBVGRKNIFEUYLLQOJXWILTGGE4DSNJVGA2S2YZWGVRS2NBUHBRS2YJVGE2S2NLDMZRTSMBSMQ3WEODFPRZW25DQ@microsoft.com>\nMIME-Version: 1.0\nX-TsbHttpDeliveryResponseType: Success\nContent-Type: multipart/alternative; boundary=\"=-e7d81u82YnAqcP3g9yq4sA==\"\nX-MS-PublicTrafficType: Email\nclient-request-id: 143b2226-0ca1-4aa6-bd9f-ff6070592549\nrequest-id: 143b2226-0ca1-4aa6-bd9f-ff6070592549\nReturn-Path: no-responder@avisos.residapp.es\nX-MS-TrafficTypeDiagnostic: DB9PR04MB8463:EE_ACSPROD\nX-MS-Exchange-SenderADCheck: 0\nX-MS-Exchange-AntiSpam-Relay: 0\nX-Microsoft-Antispam: BCL:0;ARA:13230040|7149299003|376014|6049299003|61400799027|6133799003|19003699004|18002099003|16102099003|4053099003|4076899003|8096899003|56012099006|261022075727099003|261028144727099003|10067099003|261021121427099003|261022115727099003|261009223027099003|261022105027099003|261026140227099003;\nX-Microsoft-Antispam-Message-Info: t6MUklrWqOYrgw6xI4PtvQemiHpoTSPMdRNcrn5EkzTA9ckkpjpCsNzStaQb/gyAn361rmlnQHvUIUJuD1Pq19VG1TBC2BJeuVeDhvxIlWnhfNG9hzlXckH5lJeUKaPFH8pBUCbAYCor3YjRMLNCD/iD3m3Q8Prk5AFdwIZfnPUhpRmDnHub7FPi0+hyxlZCto9alFrW0Kjwpg6eE7tR8dhk06e8idJut2+QrCJ4nm3D5q/vepEQHrkw15/MulhNp8nEcMKDkF0Y2dIbGL/8DsmlGhN0lzAQBbByUCBv+2ctbJBuWM5uZkQ8SnAWK69sHYR6vDgJaprStqJVLlYgdck+Ttz/DOHMv0Q3/uNFnweWUET/+0iGAscBi8qsModYcqjnA7YvnQEDaF38D4r8OUAoxZ6b90IgUIEKNidfFgib/Leaa0A+rmCecOQLBLzI0SCPrs/DpAXgTbV7FtFGEIAb2aFe3srJWn63TI7rmq7j0VR6Wkl5dteWH+jIZluFGeaAR/Jn4g7BWDZ2h96AV79PgYIp/t6pvC2OtdTdFPnFR2fcpczFiIm0xy3zLoKsTuSU+iUJFzo4/tXB53V2ZULewPykGdqkFy/LLh+fp1XEq3nOYRQxOTn1p1rc6+1czw7hIb/dsuSD59TB4i0KsgLqSUUNAqCfq9LNJ2GQKwA=\nX-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:;PTR:;CAT:NONE;SFS:(13230040)(7149299003)(376014)(6049299003)(61400799027)(6133799003)(19003699004)(18002099003)(16102099003)(4053099003)(4076899003)(8096899003)(56012099006)(261022075727099003)(261028144727099003)(10067099003)(261021121427099003)(261022115727099003)(261009223027099003)(261022105027099003)(261026140227099003);DIR:OUT;SFP:1021;\nX-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1\nX-MS-Exchange-AntiSpam-MessageData-0: pkOOs8T2+dwwvCvN2tK4S2B7sHgjpMXnx0korWasIJ6mPebR/2oP4eF8CUHwvdTzUO7ACXTKhtVVXldweOQnz38Y84t53wJt5Orbvagq4Td8AmAtnUZMMFAOpfyClVtKf+rzXiFb8WD5utFUsOrR5sCN2RHb6X4E4BojUiRVpml6y9OGtVi8sccPT8x5CkvjIa64T0c6gQJtaB4T9XHS4x5xVLM8Ijibh4Jvc5cX7QJ41On4CqOIrUm3vfAdpEI5agiD3JmM6Axr9p5lvRQOtT33T1z3t0nW+jBD0CpyKMuZRE7CVI229sbn7e4t6bAJ6TFPj6AGbXJqP/wUOYEJsi2DZnnbgu/uZ1+lP6kYnwOxUJLCZ6s4htEvWEwePVyI2AUVRIlMhaTYYTaijhST6mGTS30UTdDT3jBwjohbGd4V6CLbDJxPzETc0PE7anxRQn2oO2RQMLlrm9c9gS8eDqKkW5vxRgHRTl2hG58beV9Iz7a7ni23aNvZAhp4oOBH40HOJZnU8Uf6Mw7v7BmZehIddSIcqKXv3rAXAqdx5P2G4SU8757P+Fu5iao32EBVwIhWPKgBBOvEiSoNwumVthcHlzuM3lt/h2MXN5peQKL+enZuJjqg+/JTWU12lWn+VQO2idIH4fjWsrrMtBiFWPVUQSVeiQfTO3HnYVAYZH6yZSDBKnZd6a2rkwUjDeVyPhBcwyqpws5imjxzqGYq0g==\nX-OriginatorOrg: acsemaileu1.onmicrosoft.com\nX-MS-Exchange-CrossTenant-AuthAs: Internal\nX-MS-Exchange-CrossTenant-AuthSource: HttpSubmission-DB9PR04MB8463\nX-MS-Exchange-CrossTenant-Id: b736c519-bda4-4549-a672-0ff56569ed7b\nX-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2026 10:51:24.9248 (UTC)\nX-MS-Exchange-CrossTenant-Network-Message-Id: 1b5acde9-c85a-40d1-dfa8-08df3673be45\nX-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB8463\n\n--=-e7d81u82YnAqcP3g9yq4sA==\nContent-Type: text/plain; charset=utf-8\n\nHello world via email.\n--=-e7d81u82YnAqcP3g9yq4sA==\nContent-Type: multipart/related; boundary=\"=-zbvhgzYYFE1/4nnSuojdlQ==\"; type=\"text/html\"\n\n--=-zbvhgzYYFE1/4nnSuojdlQ==\nContent-Type: text/html; charset=utf-8\nContent-Id: <a6d5508d-4764-4be9-bb49-bb807e5cefcd>\nContent-Transfer-Encoding: base64\n\nPGh0bWw+PGJvZHk+PGRpdiBzdHlsZT0id2hpdGUtc3BhY2U6IHByZS13cmFwOyBmb250LWZhbWls\neTogQXJpYWwsIHNhbnMtc2VyaWY7Ij5IZWxsbyB3b3JsZCB2aWEgZW1haWwuPC9kaXY+PGgxPkhU\nTUwgYm9keSBpbmxpbmUgaW1hZ2VzOjwvaDE+PGltZyBzcmM9ImNpZDpteV9pbmxpbmVfaW1hZ2Vf\nMiIgYWx0PSJteV9pbmxpbmVfaW1hZ2VfMiIgd2lkdGg9IjIwJSIgaGVpZ2h0PSIyMCUiIC8+PGJy\nIC8+PC9ib2R5PjwvaHRtbD4=\n--=-zbvhgzYYFE1/4nnSuojdlQ==\nContent-Type: image/jpeg; name=my_inline_image_2\nContent-Id: <my_inline_image_2>\nContent-Transfer-Encoding: base64\n\n\n--=-zbvhgzYYFE1/4nnSuojdlQ==--\n--=-e7d81u82YnAqcP3g9yq4sA==--",
+      "respondida": true
     }
   }
 }
