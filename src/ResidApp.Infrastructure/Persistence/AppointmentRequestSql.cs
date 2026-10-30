@@ -78,7 +78,7 @@ internal static class AppointmentRequestSql
             """, new { requestId, centerId, accountId, residentId }, transaction, cancellationToken: ct));
 
     /// <summary>Anota el paso en el historial de la solicitud (CIT-C03) y lo audita (recurso APPOINTMENT_REQUEST) en la misma transacción.</summary>
-    internal static async Task RecordChangeAsync(
+    internal static async Task<int> RecordChangeAsync(
         IDbConnection connection, IDbTransaction transaction, Guid centerId, Guid requestId, Guid residentId, Guid accountId, SystemProfile profile,
         AppointmentRequestAction action, string auditAction, DateTimeOffset? proposedStartsAt, string? detail, DateTimeOffset occurredAt, CancellationToken ct)
     {
@@ -98,5 +98,6 @@ internal static class AppointmentRequestSql
             centerId, requestId, number, action = action.ToCode(), accountId, profile = profile.ToCode(), proposed = proposedStartsAt?.UtcDateTime, detail,
             occurredAt = occurredAt.UtcDateTime, residentId, auditAction,
         }, transaction, cancellationToken: ct));
+        return number;
     }
 }

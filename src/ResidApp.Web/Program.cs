@@ -11,6 +11,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Application.Sessions;
 using ResidApp.Application.UseCases;
 using ResidApp.Infrastructure.Authorization;
+using ResidApp.Infrastructure.Correo;
 using ResidApp.Infrastructure.IA;
 using ResidApp.Infrastructure.Identity;
 using ResidApp.Infrastructure.Intercambio;
@@ -250,6 +251,16 @@ builder.Services.AddHttpClient<MistralClient>((services, client) =>
 builder.Services.AddTransient<ISpeechTranscriber>(services => services.GetRequiredService<MistralClient>());
 builder.Services.AddTransient<IStructuredGenerator>(services => services.GetRequiredService<MistralClient>());
 builder.Services.AddScoped<IVoiceDictationAudit, SqlVoiceDictationAudit>();
+
+// Correo (ADR 0012): Azure Communication Services Email detrás de IEmailSender. Apagado por defecto: sin Correo:Activo, la cadena de conexión
+// (Correo__CadenaConexion), la dirección base y los destinos permitidos, la aplicación no reserva ni envía nada.
+builder.Services.Configure<CorreoOptions>(builder.Configuration.GetSection(CorreoOptions.Section));
+builder.Services.AddScoped<IEmailSender, AzureEmailSender>();
+builder.Services.AddScoped<IProposalNoticeStore, SqlProposalNoticeStore>();
+builder.Services.AddScoped(services => new ProposalNoticeService(
+    services.GetRequiredService<IProposalNoticeStore>(), services.GetRequiredService<IEmailSender>(),
+    services.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(),
+    message => services.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
 
 builder.Services.AddScoped<ListScopeResidents>();
 builder.Services.AddScoped<FindScopeResident>();

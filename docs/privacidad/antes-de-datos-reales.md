@@ -94,6 +94,18 @@ Informes del agente `dpo-residapp` del 2026-10-29: `landings-y-passkeys-por-subd
 - el registro de actividades con el idioma preferido del familiar, el idioma por defecto del centro y la cookie técnica, y la misma conservación para el idioma anotado en el registro de envíos de correo;
 - **a verificar con un abogado:** el art. 22.2 de la LSSI y la guía de cookies de la AEPD en fuente oficial (el agente solo vio una nota de prensa y comentarios de despachos), el tope de caducidad de una cookie de idioma exenta, si el art. 128-1 del Codi de consum exige la información legal en catalán en una web B2B, si los derechos lingüísticos en Cataluña obligan a la residencia a atender en catalán, y si la autoridad de control es la AEPD o la APDCAT según el centro piloto.
 
+## 7. Aviso de cita por correo (ADR 0012, pieza 1; `0081`; apagado por defecto)
+
+Construido el 2026-10-30 con datos de prueba y el envío apagado. **Antes de la primera dirección real** (lista completa en `docs/privacidad/aviso-cita-por-correo.md`, apartados 2.7 y 4):
+
+- una persona (DPO real o abogado) valida la base jurídica del aviso (art. 6.1.b, 6.1.f o 6.1.e), la cláusula informativa en castellano y catalán, y si la LSSI aplica;
+- **CJ modifica FAM-10 por escrito** («sin email en el piloto») y contesta `aviso-citas-por-correo-cj`: cómo se confirma la dirección del familiar (casilla «Dirección confirmada con la familia» y etiqueta del campo del correo, aún sin construir) y «propuesta de cita» o «novedad»;
+- el procedimiento de alta de Administración (leer la dirección al familiar, cómo se quita, qué hacer si alguien recibe un aviso ajeno: registro de brechas, art. 33);
+- contrato de encargado con Azure Communication Services (Microsoft como subencargado), garantía de transferencias y retención de ACS; **B10**: seguimiento de aperturas y clics apagado, registros de envío activados y estado de entrega solo en un Log Analytics propio de la UE (30 días), DMARC en `quarantine` antes de producción;
+- plazo de conservación del registro `envios_correo` (propuesta de ingeniería: 12 meses desde `resuelto_en` como tope) y su vía de purga, que aún no existe;
+- el registro de actividades y la información al familiar (apartados 5 y 6 del borrador), y el primer envío real con las cabeceras comprobadas (ni `Reply-To` ni más destinatarios).
+- el catalán lo revisa quien lo sepa (CJ) antes de usarlo; hoy el idioma configurado es el castellano y no existe el ajuste por centro.
+
 ## Cómo se marca como hecho
 
 Cuando una persona valide los borradores y se decidan las mejoras, anótalo aquí con la fecha y quién lo hizo, y quita el recordatorio del traspaso (`docs/prompts-ia/continuar-construccion.md`)

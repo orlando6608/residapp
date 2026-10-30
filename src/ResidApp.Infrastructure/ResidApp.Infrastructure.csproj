@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Communication.Email" Version="1.1.0" />
     <PackageReference Include="Dapper" Version="2.1.79" />
     <!-- Lectura de los ficheros de importación (CSV, XLS y XLSX; ADR 0010). Licencia MIT. -->
     <PackageReference Include="ExcelDataReader" Version="3.9.0" />

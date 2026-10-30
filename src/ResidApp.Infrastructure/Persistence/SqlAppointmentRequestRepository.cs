@@ -51,7 +51,7 @@ public sealed class SqlAppointmentRequestRepository(SqlConnectionFactory connect
             .Where(s => BornAlive(s, now)).ToList();
     }
 
-    public async Task ProposeAsync(
+    public async Task<int> ProposeAsync(
         AccountAdministrationAccess access, Guid requestId, DateTimeOffset startsAt, string? professional, DateTimeOffset now, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
@@ -75,10 +75,11 @@ public sealed class SqlAppointmentRequestRepository(SqlConnectionFactory connect
                SET estado_codigo = 'PROPUESTA', propuesta_inicio_en = @startsAt, propuesta_fin_en = @endsAt, propuesta_en = @now, profesional_interno = @professional
              WHERE id = @requestId
             """, new { requestId, startsAt = slot.StartsAt.UtcDateTime, endsAt = slot.EndsAt.UtcDateTime, now = now.UtcDateTime, professional }, transaction, cancellationToken: ct));
-        await RecordChangeAsync(
+        var changeNumber = await RecordChangeAsync(
             connection, transaction, center, requestId, request.ResidentId, access.AccountId.Value, SystemProfile.Administracion,
             AppointmentRequestAction.Propuesta, "APPOINTMENT_REQUEST_PROPOSE", slot.StartsAt, professional, now, ct);
         transaction.Commit();
+        return changeNumber;
     }
 
     /// <summary>Se propone a una solicitud pendiente o a una cuya propuesta ya caducó (CJ, portal 6.4: después, Administración puede volver a proponer).</summary>

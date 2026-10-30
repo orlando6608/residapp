@@ -36,8 +36,9 @@ public interface IAppointmentRequestRepository
     Task<IReadOnlyList<AppointmentSlot>> ListProposalSlotsAsync(
         AccountAdministrationAccess access, Guid requestId, DateTimeOffset now, CancellationToken ct = default);
 
-    /// <summary>Propone un hueco libre a una solicitud pendiente o con la propuesta caducada, y lo reserva mientras la propuesta viva.</summary>
-    Task ProposeAsync(
+    /// <summary>Propone un hueco libre a una solicitud pendiente o con la propuesta caducada, y lo reserva mientras la propuesta viva. Devuelve el número del
+    /// cambio PROPUESTA que acaba de guardar (ya confirmado): es la clave del aviso por correo.</summary>
+    Task<int> ProposeAsync(
         AccountAdministrationAccess access, Guid requestId, DateTimeOffset startsAt, string? professional, DateTimeOffset now, CancellationToken ct = default);
 
     /// <summary>Cierra una solicitud pendiente o con propuesta; el motivo es interno.</summary>
