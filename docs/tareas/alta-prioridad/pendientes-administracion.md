@@ -500,7 +500,8 @@ Orden decidido con Orlando: dictado por voz (va en `continuar-construccion.md`),
     u `ORDER BY`: usa `COLLATE DATABASE_DEFAULT` en la lectura.
   - **Tests:** unitarios `OrganigramaTests`, integración `AdministracionOrganigramaTests` (15) y funcionales `OrganigramaScreensTests` (3). Guía 5 de CJ (prueba 17), Manual y
     flujo de trabajo al día.
-- **Esperan al correo (ADR 0012, aceptado el 2026-10-30; sin construir):** el aviso genérico por correo de las propuestas de cita (tercera 6.1), el recordatorio el día antes (6.2) y el código por correo
+- **Aviso de propuesta de cita por correo (tercera 6.1) — construido el 2026-10-30, apagado por defecto, script `0081`** (ADR 0012, «Estado de la construcción»; `docs/privacidad/aviso-cita-por-correo.md`). Falta que CJ conteste `aviso-citas-por-correo-cj`, la casilla de dirección confirmada y la validación de una persona antes de usarlo con direcciones reales.
+- **Esperan al correo (ADR 0012, aceptado el 2026-10-30; el aviso de propuesta ya está construido, el resto no):** el aviso genérico por correo de las propuestas de cita (tercera 6.1), el recordatorio el día antes (6.2) y el código por correo
   para que entre el familiar (portal 3.2, con límite de intentos, caducidad de sesión y aviso de accesos nuevos). CJ supuso que el correo ya existía; hoy la app no envía ninguno.
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):

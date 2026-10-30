@@ -14,7 +14,8 @@ public sealed record CloseAppointmentRequestCommand(Guid AmbitoPerfilId, CenterI
 /// libre (y apunta, si quiere, un profesional interno que la familia no ve) y cierra con un motivo interno las solicitudes que no puede atender. Solo
 /// Administración del centro; la comprobación se repite en cada transacción. La cita nace cuando la familia acepta, no aquí.
 /// </summary>
-public sealed class AppointmentRequestsApplicationService(AdministrationAccessResolver administrationAccess, IAppointmentRequestRepository repository)
+public sealed class AppointmentRequestsApplicationService(
+    AdministrationAccessResolver administrationAccess, IAppointmentRequestRepository repository, ProposalNoticeService? proposalNotice = null)
 {
     public Task<ApplicationResult<IReadOnlyList<AdministrationAppointmentRequest>>> ListAsync(
         Guid profileScopeId, CenterId centerId, bool onlyOpen, CancellationToken ct = default) =>
@@ -37,7 +38,13 @@ public sealed class AppointmentRequestsApplicationService(AdministrationAccessRe
                 throw new DomainValidationException(AppointmentSlotRequest.InvalidCode);
             }
 
-            await repository.ProposeAsync(access, command.SolicitudId, startsAt, professional, DateTimeOffset.UtcNow, ct);
+            var changeNumber = await repository.ProposeAsync(access, command.SolicitudId, startsAt, professional, DateTimeOffset.UtcNow, ct);
+            // Ya confirmada la propuesta: el aviso por correo nunca cambia su resultado (ADR 0012).
+            if (proposalNotice is not null)
+            {
+                await proposalNotice.NotifyAsync(command.CentroId, command.SolicitudId, changeNumber);
+            }
+
             return true;
         }, ct);
 

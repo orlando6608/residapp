@@ -49,6 +49,17 @@ CJ lo reafirmó en la 6.4).
    nombre o los apellidos, o por el navegador sin decírselo: es inexacto y puede ser discriminatorio. Si falta una de las dos versiones, el sistema usa la otra (el código
    de acceso no puede quedarse sin enviar); es una suposición de ingeniería a confirmar.
 
+## Estado de la construcción
+
+- **Pieza 1, aviso de propuesta de cita: construida el 2026-10-30, apagada por defecto** (script `0081`, tabla `envios_correo`; lectura de privacidad y 16 condiciones en `docs/privacidad/aviso-cita-por-correo.md`).
+  `IEmailSender` (Application) con el adaptador `AzureEmailSender` (Azure Communication Services Email 1.1.0), `ProposalNoticeService`, `ProposalNoticeTemplate` (textos en castellano y catalán) y `SqlProposalNoticeStore`.
+  Se llama después del `Commit` de proponer; vuelve a comprobar la vigencia y el acceso con la misma consulta que el portal; un solo destinatario (el familiar de la solicitud); sin `Reply-To`;
+  seguimiento de aperturas apagado; sin reintentos (no hay tareas programadas hasta el recordatorio).
+- **Ajustes** (variables de entorno de la Web App, sección `Correo`): `Correo__Activo` (por defecto apagado), `Correo__CadenaConexion`, `Correo__UrlBase` (por ejemplo `https://dev.residapp.es`; el único enlace del correo),
+  `Correo__Remitente` (por defecto `no-responder@avisos.residapp.es`), `Correo__Idioma` (`es` o `ca`; por defecto `es`) y, fuera de producción, `Correo__DireccionesPermitidas__0`, `__1`… Sin ninguna lista, solo se enciende con `Correo__TodosLosDestinos=true`.
+- **Falta:** la casilla «Dirección confirmada con la familia» y la etiqueta del campo del correo (espera la pregunta 2.1 de CJ, `aviso-citas-por-correo-cj`); FAM-10 modificado por escrito; el texto «propuesta de cita» o «novedad» (1.2); la línea del titular de ResidApp en el pie; la vía de purga del registro (espera el plazo del DPO);
+  el recordatorio (pieza 2) y el código de acceso (pieza 3).
+
 ## Opciones
 
 ### Proveedor
@@ -70,7 +81,7 @@ CJ lo reafirmó en la 6.4).
 
 - **Azure Communication Services Email**, con los datos en Europa y un dominio propio verificado. Un puerto (`IEmailSender`, una interfaz de la capa de aplicación) y un
   adaptador para Azure, como con la IA (ADR 0011), para poder cambiar de proveedor sin tocar los casos de uso.
-- **Una tarea dentro de la aplicación** para el recordatorio, con «Siempre activo» encendido, y una tabla de envíos con una clave única por (plantilla, cita o cuenta, día) para
+- **Una tarea dentro de la aplicación** para el recordatorio, con «Siempre activo» encendido, y una tabla de envíos con una clave única por (plantilla, cita o cuenta, día; para el aviso de propuesta, el número del cambio PROPUESTA, no el día) para
   que nunca salga dos veces.
 - **Orden de construcción:** primero el aviso de propuesta de cita (no necesita tarea programada), después el recordatorio y, por último, el código de acceso del familiar,
   que cambia cómo entra y conviene hacerlo junto con la decisión de las passkeys de las familias (ADR 0007).
