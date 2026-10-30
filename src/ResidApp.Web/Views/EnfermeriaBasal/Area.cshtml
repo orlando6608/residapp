@@ -15,7 +15,7 @@
     </ol>
 </nav>
 
-<h1 class="h3">@BaselineAreaDisplay.Label(Model.AreaCode)</h1>
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model="BaselineAreaDisplay.Icon(Model.AreaCode)" />@BaselineAreaDisplay.Label(Model.AreaCode)</h1>
 
 @if (TempData["Error"] is string error)
 {

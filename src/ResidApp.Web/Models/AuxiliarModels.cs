@@ -153,6 +153,21 @@ public static class BaselineAreaDisplay
         _ => area.ToString(),
     };
 
+    /// <summary>Id del icono del área en el sprite (guía de diseño, 2.E). Orienta sobre el tema; nunca dice nada del valor.</summary>
+    public static string Icon(BaselineArea area) => area switch
+    {
+        BaselineArea.Movilidad => "area-movilidad",
+        BaselineArea.Alimentacion => "area-alimentacion",
+        BaselineArea.Continencia => "area-continencia",
+        BaselineArea.AseoHigiene => "area-aseo",
+        BaselineArea.Cognicion => "area-cognicion",
+        BaselineArea.Comunicacion => "area-comunicacion",
+        BaselineArea.Conducta => "area-conducta",
+        BaselineArea.Sueno => "area-sueno",
+        BaselineArea.AyudasHabituales => "area-ayudas",
+        _ => "areas",
+    };
+
     /// <summary>Resumen genérico de una respuesta de área: una línea «Campo: valores» por cada campo con dato,
     /// con el nombre en español del campo ([Display] de la respuesta) y la etiqueta de cada valor de catálogo
     /// (EnumDisplay). Las respuestas de varias opciones se unen con comas. Lo usan AUX-03, la confirmación del
