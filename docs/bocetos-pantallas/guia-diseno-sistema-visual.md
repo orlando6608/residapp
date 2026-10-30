@@ -86,6 +86,28 @@ Pensado para pantallas táctiles de tablets y smartphones (Auxiliares y Enfermer
 * **Un contador a 0 es siempre neutro.** Rojo (cifra y franja) solo si un contador urgente es mayor que 0 (eventos prioritarios, protocolos urgentes, seguimientos vencidos, indicaciones con incidencia); ámbar solo si un contador que pide atención es mayor que 0 (indicaciones sin leer); el resto de recuentos, en el color del texto. El significado nunca depende solo del color: la etiqueta lo dice («prioritarios», «vencidos»).
 * **Etiquetas (`badge`):** se escriben con `text-bg-<color>`, y `residapp-theme.css` las pinta con fondo suave y texto oscuro del mismo tono (`--bs-*-bg-subtle` / `--bs-*-text-emphasis`), que se adaptan solas al modo oscuro.
 
+### E. Iconos (piloto: tarjetas de `Home/Index`)
+Un icono sencillo junto al título ayuda a ubicarse sin leer, sobre todo a quien tiene poca soltura digital. Reglas:
+* **Siempre con texto.** El icono acompaña al título y nunca lo sustituye ni lleva el significado: es decorativo (`aria-hidden="true"`). Tampoco es un valor clínico: nada de caritas, pulgares ni dibujos que parezcan una valoración.
+* **Origen:** [Bootstrap Icons](https://icons.getbootstrap.com) 1.11.3 (licencia MIT), copiados en el sprite `wwwroot/images/iconos.svg`, sin CDN. Para añadir uno, se copia su `<path>` como un nuevo `<symbol id="…" viewBox="0 0 16 16" fill="currentColor">` con un identificador en español.
+* **Uso:** `<partial name="_Icono" model='"residentes"' />` dentro del título, que va como `<h2 class="h5 card-title d-flex align-items-center gap-2">`. La clase `.icono` (24 px) toma el color de los enlaces (`--color-link`), que cumple AA en claro y oscuro. El sprite está en el shell del service worker.
+* **Un icono por destino, el mismo en todos los perfiles:**
+
+| Id | Icono | Para qué |
+| --- | --- | --- |
+| `residentes` | `people` | Lista de residentes |
+| `basal` | `heart-pulse` | Estado basal y su consulta |
+| `constantes` | `activity` | Constantes y sus rangos de referencia |
+| `enfermeria` | `clipboard2-pulse` | Inicio de Enfermería |
+| `medicina` | `journal-medical` | Inicio de Medicina |
+| `supervision` | `clipboard-data` | Supervisión de Dirección Clínica |
+| `plazos` | `calendar-check` | Plazos de los hitos del proceso |
+| `administracion` | `person-vcard` | Administración (ficha administrativa) |
+| `alta-residente` | `person-plus` | Alta de un residente |
+| `centros` | `buildings` | Centros y su estructura (Plataforma) |
+
+* **Pendiente:** extender a las bandejas de Enfermería y Medicina, a las cabeceras de ficha y al menú, tras el visto bueno de CJ al piloto.
+
 ### C. Formularios de Registro Clínico (Firma de Estado Basal)
 * **Inputs:** Utilizar agrupaciones limpias con `.mb-3`.
 * **Botones de Acción Inmediata:** El botón crítico de "Firmar Estado Basal" o "Guardar Incidencia" debe estar ubicado en la zona inferior derecha, ser de tamaño grande `.btn-lg` y usar colores semánticos inequívocos (`.btn-success` para firmas basales estables).

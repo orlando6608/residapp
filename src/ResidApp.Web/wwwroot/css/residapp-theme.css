@@ -345,6 +345,14 @@ details[open] > summary {
   font-variant-numeric: tabular-nums;
 }
 
+/* Icono de una tarjeta o cabecera (sprite wwwroot/images/iconos.svg, guía, sección 2.E). Siempre decorativo: el título lo dice. */
+.icono {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  color: var(--color-link);
+}
+
 /* Opciones de selección rápida como botones-chip (input.btn-check + label.btn.chip, guía, sección 3.2). La marca ✓
    indica la selección sin depender solo del color. */
 .chip {
