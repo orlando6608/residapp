@@ -1,7 +1,10 @@
 # ADR 0012 — Envío de correos a las familias: avisos sin contenido, recordatorio de citas y código de acceso
 
-Estado: **propuesta** el 2026-10-25, pendiente de la decisión de Orlando y de la revisión del DPO (la persona que vela por la protección de datos). Nada de lo que
-describe está construido.
+Estado: **aceptada** el 2026-10-30 (decisión de Orlando; propuesta el 2026-10-25). Sigue pendiente la revisión del DPO real (la persona que vela por la protección de datos)
+antes de usar datos reales. **Decidido por Orlando** (`docs/pendientes-cj/orlando/dominio-y-correo.respuestas.json`): proveedor Azure Communication Services Email con datos en la UE;
+dominio de avisos `avisos.residapp.es`, verificado con SPF, DKIM y DMARC (`p=none`); remitente fijo **«ResidApp» `no-responder@avisos.residapp.es`**, con el texto «No respondas
+a este correo» y **sin el nombre del centro**; Microsoft 365 solo antes de hablar con un centro real. **Hecho en Azure** (`ecs-residapp-dev`, `acs-residapp-dev`); **en la aplicación
+no está construido nada**. La cadena de conexión está en la Web App de Azure dev como `Correo__CadenaConexion` (puesta por Orlando el 2026-10-30, B9; la app aún no la lee). **Sin `Reply-To`** por ahora (decisión de Orlando, 2026-10-30): el correo dice «No respondas a este correo» y una respuesta no llega a nadie; se revisa al contratar Microsoft 365 y crear un buzón.
 
 ## Contexto
 
@@ -37,10 +40,10 @@ CJ lo reafirmó en la 6.4).
 7. **Plantillas por idioma (decidido por Orlando el 2026-10-29).** Cada plantilla existe en castellano y en catalán, como ficheros separados y versionados en el
    repositorio, con el mismo contenido genérico (requisito 1). Asunto, remitente y pie legal van también por idioma. Las dos versiones comparten identificador y versión, y
    se revisan y aprueban juntas. La traducción catalana la revisa una persona que sepa catalán (el DPO valida el contenido, no la lengua). El correo del código de acceso
-   lleva en los dos idiomas el mismo aviso contra fraude («ResidApp nunca te pedirá este código por teléfono ni por mensaje»). Mientras el portal no esté en catalán (ADR 0013, en propuesta), el
+   lleva en los dos idiomas el mismo aviso contra fraude («ResidApp nunca te pedirá este código por teléfono ni por mensaje»). Mientras el portal no esté en catalán (ADR 0013, aceptado), el
    correo en catalán dice que el enlace lleva a una pantalla en castellano. Añadir un tercer idioma exige una revisión del DPO por cada plantilla.
    **Cómo se elige el idioma de cada familiar (decidido por Orlando el 2026-10-29):** por defecto, el idioma del centro; el propio familiar puede cambiarlo en el portal
-   cuando quiera. (El portal y la entrada en los dos idiomas, y dónde se guarda esta elección, están en el ADR 0013, en propuesta.) Guardar la elección de
+   cuando quiera. (El portal y la entrada en los dos idiomas, y dónde se guarda esta elección, están en el ADR 0013, aceptado.) Guardar la elección de
    cada familiar añade un dato personal nuevo (valor cerrado «es» o «ca», nunca texto libre), que entra en el registro de actividades, en la información al familiar y en
    el procedimiento de rectificación. Queda **descartado** deducir el idioma por el
    nombre o los apellidos, o por el navegador sin decírselo: es inexacto y puede ser discriminatorio. Si falta una de las dos versiones, el sistema usa la otra (el código

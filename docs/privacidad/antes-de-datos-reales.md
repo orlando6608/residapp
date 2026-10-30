@@ -85,7 +85,7 @@ Informes del agente `dpo-residapp` del 2026-10-29: `landings-y-passkeys-por-subd
 - una línea nueva en el registro de actividades para los contactos comerciales de la landing (ResidApp como responsable, no la residencia) y su plazo de conservación (el análisis de la landing propone 6 a 12 meses, sin contrastar en fuente oficial);
 - la política de la aplicación (`Views/Home/Privacy.cshtml`, hoy «sin redactar») adoptada por cada residencia como plantilla.
 
-**Portal Familiar y entrada en castellano y catalán** (ADR 0013, en propuesta; solo si se construye):
+**Portal Familiar y entrada en castellano y catalán** (ADR 0013, aceptado el 2026-10-30; aún sin construir):
 
 - la declaración de cookies y la política de privacidad del Portal Familiar validadas en castellano y en catalán, con la cookie de idioma recogida;
 - la cláusula informativa al familiar sobre el campo de idioma (qué se guarda, para qué, que es voluntario, cómo cambiarlo, que no se deduce, qué versión prevalece), validada por el DPO real;
