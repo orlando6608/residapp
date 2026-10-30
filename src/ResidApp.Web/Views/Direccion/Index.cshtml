@@ -27,7 +27,7 @@
     <div class="col-12 col-md-4">
         <a asp-action="Pendientes" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Supervisión de pendientes</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"supervision"' />Supervisión de pendientes</h2>
                 @* Cifra grande con plural real (guia-diseno-sistema-visual.md, 2.B). Los vencidos van en ámbar, como en
                    Pendientes y Episodio: Dirección supervisa, no actúa clínicamente. *@
                 <span class="cifra">@Model.Open</span>
@@ -42,7 +42,7 @@
     <div class="col-12 col-md-4">
         <a asp-action="Derivaciones" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Derivaciones a Urgencias</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"derivaciones"' />Derivaciones a Urgencias</h2>
                 <p class="card-text mb-0">En qué punto está cada derivación en curso: protocolo, informe firmado y llamadas a la familia.</p>
             </div>
         </a>
@@ -52,7 +52,7 @@
         <div class="col-12 col-md-4">
             <a asp-action="Indicadores" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Indicadores e informe de actividad</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"indicadores"' />Indicadores e informe de actividad</h2>
                     <p class="card-text mb-0">Cifras agregadas por unidad y periodo, con su evolución mes a mes y versión para imprimir.</p>
                 </div>
             </a>
@@ -60,7 +60,7 @@
         <div class="col-12 col-md-4">
             <a asp-action="Calidad" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Calidad de proceso</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"calidad"' />Calidad de proceso</h2>
                     <p class="card-text mb-0">Plazos de cada hito del proceso por unidad y periodo, solo cifras: ni residentes ni profesionales.</p>
                 </div>
             </a>
@@ -69,7 +69,7 @@
     <div class="col-12 col-md-4">
         <a asp-action="PeticionesHistorial" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Peticiones de historial tras un traslado</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"peticiones"' />Peticiones de historial tras un traslado</h2>
                 <p class="card-text mb-0">Quién ha pedido los episodios cerrados de la unidad anterior de un residente trasladado, para qué y cuántas lecturas hizo, sin contenido clínico.</p>
             </div>
         </a>
@@ -77,7 +77,7 @@
     <div class="col-12 col-md-4">
         <a asp-action="Comunicados" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Comunicados a la familia</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"comunicados"' />Comunicados a la familia</h2>
                 <p class="card-text mb-0">Los comunicados de tu ámbito, la hora a la que se publican y cuándo publicar uno antes.</p>
             </div>
         </a>
@@ -85,7 +85,7 @@
     <div class="col-12 col-md-4">
         <a asp-action="Ambito" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Mi ámbito de supervisión</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"ambito"' />Mi ámbito de supervisión</h2>
                 <p class="card-text mb-0">Centro, unidades y permisos vigentes de tu perfil activo.</p>
             </div>
         </a>
@@ -93,14 +93,14 @@
     <div class="col-12 col-md-4">
         <a asp-controller="Baseline" asp-action="Direction" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Consulta auditada del basal</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"basal"' />Consulta auditada del basal</h2>
                 <p class="card-text mb-0">Historial de basal de un residente, con registro de auditoría previo.</p>
             </div>
         </a>
     </div>
 </div>
 
-<h2 class="h5">Por unidad</h2>
+<h2 class="h5 d-flex align-items-center gap-2"><partial name="_Icono" model='"unidades"' />Por unidad</h2>
 @if (Model.Units.Count == 0)
 {
     <p class="text-muted">Tu ámbito de supervisión no tiene unidades.</p>

@@ -5,7 +5,7 @@
 
 <div class="card mb-3">
     <div class="card-body">
-        <h2 class="h5 card-title">@(Model.Contacts?.Contacts.Count > 1 ? "Contactos urgentes" : "Contacto urgente")</h2>
+        <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"contacto"' />@(Model.Contacts?.Contacts.Count > 1 ? "Contactos urgentes" : "Contacto urgente")</h2>
         @if (Model.Contacts is { Contacts.Count: > 0 } contactos)
         {
             foreach (var contacto in contactos.Contacts)

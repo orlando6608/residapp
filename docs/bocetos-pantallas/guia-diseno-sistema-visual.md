@@ -86,7 +86,7 @@ Pensado para pantallas táctiles de tablets y smartphones (Auxiliares y Enfermer
 * **Un contador a 0 es siempre neutro.** Rojo (cifra y franja) solo si un contador urgente es mayor que 0 (eventos prioritarios, protocolos urgentes, seguimientos vencidos, indicaciones con incidencia); ámbar solo si un contador que pide atención es mayor que 0 (indicaciones sin leer); el resto de recuentos, en el color del texto. El significado nunca depende solo del color: la etiqueta lo dice («prioritarios», «vencidos»).
 * **Etiquetas (`badge`):** se escriben con `text-bg-<color>`, y `residapp-theme.css` las pinta con fondo suave y texto oscuro del mismo tono (`--bs-*-bg-subtle` / `--bs-*-text-emphasis`), que se adaptan solas al modo oscuro.
 
-### E. Iconos (piloto: tarjetas de `Home/Index`)
+### E. Iconos (piloto: inicios, fichas, decisiones de evento y menú)
 Un icono sencillo junto al título ayuda a ubicarse sin leer, sobre todo a quien tiene poca soltura digital. Reglas:
 * **Siempre con texto.** El icono acompaña al título y nunca lo sustituye ni lleva el significado: es decorativo (`aria-hidden="true"`). Tampoco es un valor clínico: nada de caritas, pulgares ni dibujos que parezcan una valoración.
 * **Origen:** [Bootstrap Icons](https://icons.getbootstrap.com) 1.11.3 (licencia MIT), copiados en el sprite `wwwroot/images/iconos.svg`, sin CDN. Para añadir uno, se copia su `<path>` como un nuevo `<symbol id="…" viewBox="0 0 16 16" fill="currentColor">` con un identificador en español.
@@ -105,8 +105,51 @@ Un icono sencillo junto al título ayuda a ubicarse sin leer, sobre todo a quien
 | `administracion` | `person-vcard` | Administración (ficha administrativa) |
 | `alta-residente` | `person-plus` | Alta de un residente |
 | `centros` | `buildings` | Centros y su estructura (Plataforma) |
+| `prioritarios` | `exclamation-triangle` | Bandeja prioritaria |
+| `protocolos` | `lightning-charge` | Protocolos urgentes |
+| `seguimientos` | `eye` | Seguimientos |
+| `indicaciones` | `clipboard-check` | Indicaciones de Medicina a Enfermería |
+| `para-cerrar` | `check2-circle` | Episodios con las indicaciones cumplidas, para cerrar |
+| `ordinarios` | `journal-text` | Cambios ordinarios |
+| `escalados` | `arrow-up-right-circle` | Escalados a Medicina (y eventos propios) |
+| `comunicaciones` | `chat-left-text` | Comunicaciones familiares pendientes de publicar |
+| `abiertos` | `folder2-open` | Eventos abiertos de un residente |
+| `contacto` | `telephone` | Contactos urgentes |
+| `foto` | `camera` | Foto de identificación |
+| `identidad` | `person-badge` | Identidad del residente |
+| `familiares` | `person-hearts` | Familiares del residente |
+| `ubicacion` | `geo-alt` | Historial de ubicación |
+| `correcciones` | `pencil-square` | Correcciones de identidad |
+| `derivaciones` | `hospital` | Derivaciones a Urgencias |
+| `indicadores` | `bar-chart-line` | Indicadores e informe de actividad |
+| `calidad` | `patch-check` | Calidad de proceso |
+| `peticiones` | `folder-symlink` | Peticiones de historial tras un traslado |
+| `comunicados` | `megaphone` | Comunicados a la familia |
+| `ambito` | `bullseye` | Ámbito de supervisión y «Cambiar ámbito» |
+| `unidades` | `grid-3x3-gap` | Unidades del centro o por unidad |
+| `baja` | `person-dash` | Residentes dados de baja |
+| `usuarios` | `person-gear` | Usuarios del centro |
+| `citas` | `calendar-event` | Citas con la familia |
+| `datos-centro` | `building-gear` | Datos del centro |
+| `turnos` | `clock` | Turnos |
+| `equipos` | `person-workspace` | Equipos |
+| `organigrama` | `diagram-3` | Organigrama y cargos |
+| `planificacion` | `calendar-week` | Planificación de turnos |
+| `importar` / `exportar` | `box-arrow-in-down` / `box-arrow-up` | Importar y exportar datos |
+| `auditoria` | `shield-check` | Auditoría |
+| `inicio` | `house` | «Mi panel» (menú) |
+| `cuenta` | `person-circle` | Menú de usuario y «Mi cuenta» |
+| `salir` / `entrar` | `box-arrow-right` / `box-arrow-in-right` | «Salir» e «Iniciar sesión» |
+| `centro-nuevo` | `building-add` | «Nuevo centro» (Plataforma) |
+| `cuentas` | `person-lines-fill` | «Cuentas de varios centros» (Plataforma) |
 
-* **Pendiente:** extender a las bandejas de Enfermería y Medicina, a las cabeceras de ficha y al menú, tras el visto bueno de CJ al piloto.
+Reglas de uso según dónde va el icono. Se pone siempre que ayude a ubicarse o a reconocer una opción habitual, y nunca en la etiqueta de un dato, un estado o un valor clínico.
+* **Título de tarjeta o de sección** (`h2` con `d-flex align-items-center gap-2`): 24 px, color de enlace. En las fichas de `Enfermeria`/`Medicina`/`Administracion` `Residente`, en las tarjetas de decisión de un evento y en los inicios de cada perfil.
+* **Menú de la cabecera y desplegables:** 16 px y color del texto (`.navbar .icono`, `.dropdown-menu .icono`); el elemento lleva `d-flex align-items-center gap-2`.
+* **Botón principal:** 20 px y color del texto (`.btn .icono`), con `d-inline-flex align-items-center justify-content-center gap-2`. Solo en botones de acción propios de la pantalla (hoy, los de Plataforma).
+* **Tarjetas con cifra en pantalla estrecha** (inicios de Enfermería y Medicina): el icono va encima del título (`flex-column flex-sm-row`), porque palabras largas como «Comunicaciones» no caben a su lado en 375 px.
+
+* **Pendiente:** el resto de pantallas (formularios y listas), el portal familiar y el basal (`EnfermeriaBasal`), tras el visto bueno de CJ al piloto.
 
 ### C. Formularios de Registro Clínico (Firma de Estado Basal)
 * **Inputs:** Utilizar agrupaciones limpias con `.mb-3`.

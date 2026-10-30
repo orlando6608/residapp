@@ -159,7 +159,7 @@
     <div class="col-12 col-md-6">
         <a asp-action="Cerrar" asp-route-eventoId="@evento.EventId" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Cerrar el evento</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"para-cerrar"' />Cerrar el evento</h2>
                 <p class="card-text text-muted mb-0">
                     @(evento.Referral is null
                         ? "Sin derivar a Urgencias. Decides si se comunica a la familia y el evento pasa a Historial."
@@ -175,7 +175,7 @@
         {
             <a asp-action="Derivar" asp-route-eventoId="@evento.EventId" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Derivar a Urgencias</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"derivaciones"' />Derivar a Urgencias</h2>
                     <p class="card-text text-muted mb-0">Informe con vista previa obligatoria, firma y PDF. Después, el intento de llamada a la familia.</p>
                 </div>
             </a>

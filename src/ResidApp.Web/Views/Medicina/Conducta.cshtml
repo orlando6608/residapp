@@ -29,7 +29,7 @@
     <div class="col-12 col-md-6">
         <a asp-action="Indicacion" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">@(conIndicaciones ? "Registrar otra indicación" : "Registrar indicaciones a Enfermería")</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"indicaciones"' />@(conIndicaciones ? "Registrar otra indicación" : "Registrar indicaciones a Enfermería")</h2>
                 <p class="card-text text-muted mb-0">
                     Texto, fecha prevista o criterio e información adicional. Enfermería de la unidad confirma la lectura y registra si la realizó.
                     @if (enSeguimiento)
@@ -43,7 +43,7 @@
     <div class="col-12 col-md-6">
         <a asp-action="Cerrar" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Cerrar el evento</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"para-cerrar"' />Cerrar el evento</h2>
                 <p class="card-text text-muted mb-0">Pasa a Historial. Decides si se comunica a la familia. No se puede cerrar mientras haya indicaciones sin cumplir: cuando estén cumplidas, lo puede cerrar Enfermería o tú.</p>
             </div>
         </a>
@@ -53,7 +53,7 @@
         {
             <a asp-action="IniciarSeguimiento" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Iniciar seguimiento médico</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"seguimientos"' />Iniciar seguimiento médico</h2>
                     <p class="card-text text-muted mb-0">Objetivo y fecha prevista o criterio. El equipo responsable es Medicina de la unidad; el evento sigue en seguimiento hasta que lo resuelvas.</p>
                 </div>
             </a>
@@ -62,7 +62,7 @@
         {
             <div class="card h-100 text-muted">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Iniciar seguimiento médico</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"seguimientos"' />Iniciar seguimiento médico</h2>
                     <p class="card-text mb-0">
                         @(enSeguimiento ? "El evento ya está en seguimiento médico." : "Este evento ya tuvo su seguimiento médico: cada evento admite uno.")
                     </p>
@@ -73,7 +73,7 @@
     <div class="col-12 col-md-6">
         <a asp-action="ActivarProtocolo" asp-route-eventoId="@Model.EventId" class="card text-decoration-none h-100 border-danger">
             <div class="card-body">
-                <h2 class="h5 card-title">Activar protocolo urgente</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"protocolos"' />Activar protocolo urgente</h2>
                 <p class="card-text text-muted mb-0">Un solo paso para no retrasar la atención; después documentas actuaciones, evolución y contactos. Las indicaciones emitidas siguen visibles. La derivación a Urgencias llegará pronto.</p>
             </div>
         </a>

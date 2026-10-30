@@ -61,7 +61,7 @@
                         @if (panelLayout is not null)
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="@panelLayout" asp-action="Index">Mi panel</a>
+                                <a class="nav-link d-flex align-items-center gap-2" asp-area="" asp-controller="@panelLayout" asp-action="Index"><partial name="_Icono" model='"inicio"' />Mi panel</a>
                             </li>
                         }
                         @* ADM-07: el organigrama lo consultan todos los profesionales del centro, no la familia ni Plataforma. *@
@@ -69,7 +69,7 @@
                             or ResidApp.Shared.SystemProfile.Auxiliar or ResidApp.Shared.SystemProfile.Enfermeria or ResidApp.Shared.SystemProfile.Medicina)
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Organigrama" asp-action="Index">Organigrama</a>
+                                <a class="nav-link d-flex align-items-center gap-2" asp-area="" asp-controller="Organigrama" asp-action="Index"><partial name="_Icono" model='"organigrama"' />Organigrama</a>
                             </li>
                         }
                         @* Tema claro, oscuro o automático: los botones los gestiona wwwroot/js/tema.js. Iconos de Bootstrap Icons (MIT). *@
@@ -102,7 +102,8 @@
                         @if (sessionSubjectLayout is not null)
                         {
                             <li class="nav-item dropdown">
-                                <button class="nav-link dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button class="nav-link dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <partial name="_Icono" model='"cuenta"' />
                                     @(profileLabelLayout ?? User.Identity!.Name)
                                     @if (activeScopeLayout is not null)
                                     {
@@ -116,15 +117,15 @@
                                         <li><span class="dropdown-item-text small">Ámbito: @profileLabelLayout · @centerNameLayout</span></li>
                                     }
                                     <li><hr class="dropdown-divider" /></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Cuenta" asp-action="Index">Mi cuenta</a></li>
+                                    <li><a class="dropdown-item d-flex align-items-center gap-2" asp-area="" asp-controller="Cuenta" asp-action="Index"><partial name="_Icono" model='"cuenta"' />Mi cuenta</a></li>
                                     @if (activeScopeLayout is not null)
                                     {
-                                        <li><a class="dropdown-item" asp-area="" asp-controller="ProfileScope" asp-action="Select">Cambiar ámbito</a></li>
+                                        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-area="" asp-controller="ProfileScope" asp-action="Select"><partial name="_Icono" model='"ambito"' />Cambiar ámbito</a></li>
                                     }
                                     <li><hr class="dropdown-divider" /></li>
                                     <li>
                                         <form asp-area="" asp-controller="Acceso" asp-action="Salir" method="post">
-                                            <button type="submit" class="dropdown-item">Salir</button>
+                                            <button type="submit" class="dropdown-item d-flex align-items-center gap-2"><partial name="_Icono" model='"salir"' />Salir</button>
                                         </form>
                                     </li>
                                 </ul>
@@ -133,7 +134,7 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Acceso" asp-action="Entrar">Iniciar sesión</a>
+                                <a class="nav-link d-flex align-items-center gap-2" asp-area="" asp-controller="Acceso" asp-action="Entrar"><partial name="_Icono" model='"entrar"' />Iniciar sesión</a>
                             </li>
                         }
                     </ul>

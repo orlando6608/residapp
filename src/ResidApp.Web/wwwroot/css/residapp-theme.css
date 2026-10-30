@@ -353,6 +353,25 @@ details[open] > summary {
   color: var(--color-link);
 }
 
+/* Icono dentro de la cabecera, de un menú o de un botón: hereda el color del texto (el azul de enlace no se ve sobre la
+   barra ni sobre un botón relleno) y es más pequeño. */
+.navbar .icono,
+.dropdown-menu .icono,
+.btn .icono {
+  color: inherit;
+}
+
+.navbar .icono,
+.dropdown-menu .icono {
+  width: 1rem;
+  height: 1rem;
+}
+
+.btn .icono {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 /* Opciones de selección rápida como botones-chip (input.btn-check + label.btn.chip, guía, sección 3.2). La marca ✓
    indica la selección sin depender solo del color. */
 .chip {

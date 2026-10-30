@@ -11,7 +11,7 @@
 }
 <div class="card mb-3">
     <div class="card-body">
-        <h2 class="h5 card-title">Eventos abiertos</h2>
+        <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"abiertos"' />Eventos abiertos</h2>
         @if (Model.OpenEvents is null)
         {
             <div class="alert alert-danger mb-0">No se han podido cargar los eventos abiertos. Vuelve a intentarlo.</div>
