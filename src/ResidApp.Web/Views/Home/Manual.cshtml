@@ -18,9 +18,10 @@
         <li><strong>Enfermería y Medicina:</strong> el historial y la línea temporal de cada residente, y la corrección o rectificación de
             la propia valoración.</li>
         <li><strong>Administración:</strong> residentes y su ficha (traslados, bajas y suspensiones), familiares y autorizaciones, usuarios y permisos, nombre y logo del centro, estructura del
-            centro (unidades, edificios, habitaciones y plazas), turnos, equipos y planificación, comunicados a la familia y auditoría.</li>
+            centro (unidades, edificios, habitaciones y plazas), turnos, equipos y planificación, organigrama y cargos, citas con la familia, importación y exportación de datos, comunicados a la familia y auditoría.</li>
         <li><strong>Dirección Clínica:</strong> supervisión operativa por unidad, calidad de proceso y sus plazos, indicadores e informe de actividad, y la consulta
             auditada del basal.</li>
+        <li><strong>Familiar:</strong> el Portal Familiar, con las novedades de su residente y las citas con el centro.</li>
         <li><strong>Plataforma:</strong> alta de centros nuevos, Administración principal de cada centro y cuentas que trabajan en varios centros.</li>
     </ul>
     Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, el personal, además
@@ -152,17 +153,17 @@
         menú de la esquina superior derecha.
     </p>
     <p class="mb-0 mt-3">
-        Toda pantalla, salvo el Inicio, este manual, el Flujo de trabajo y la página sin conexión, necesita una sesión abierta: sin ella, la app
+        Toda pantalla, salvo el Inicio, este manual, el Flujo de trabajo, Acceso y sesión, Privacidad y la página sin conexión, necesita una sesión abierta: sin ella, la app
         te lleva a la pantalla de acceso y, al entrar, te devuelve a donde ibas. La sesión se cierra sola tras <strong>30 minutos sin
         usarla</strong> y, en cualquier caso, a las <strong>12 horas</strong> de abrirla; también al pulsar «Salir» o al entrar con otra
-        cuenta. Si Administración suspende tu cuenta, la sesión deja de valer en ese momento. Si la sesión ya había terminado cuando
+        cuenta. Si Administración suspende tu cuenta, la sesión deja de valer en la siguiente pantalla que abras. Si la sesión ya había terminado cuando
         pulsas «Guardar» en un formulario, lo escrito <strong>no se guarda</strong>: la app te pide entrar de nuevo, te lo avisa y te
         devuelve a esa misma pantalla para que lo vuelvas a escribir. Todo el acceso, con diagramas, está en
         <a href="~/acceso-y-sesion.html">Acceso y sesión</a>.
     </p>
     <h2 class="h5" id="mi-cuenta">Mi cuenta</h2>
     <p>
-        Desde el menú con tu nombre, <strong>«Mi cuenta»</strong> es la pantalla de tu propia cuenta, igual para todos los perfiles, también
+        Desde el menú de tu perfil, <strong>«Mi cuenta»</strong> es la pantalla de tu propia cuenta, igual para todos los perfiles, también
         para los familiares. Enseña tu usuario, tus perfiles y, si eres del personal, cuántos códigos de recuperación te quedan, y tiene:
     </p>
     <ul>
@@ -285,6 +286,11 @@
         </table>
     </div>
 
+    <p class="small">
+        El basal firmado de Antonio, la foto de Manuel y el historial de Pilar no vienen en una base recién creada: los deja preparados Orlando
+        al montar el escenario de pruebas. Si no los ves, avísale.
+    </p>
+
     <h3 class="h6 mt-4">Otras cuentas de prueba</h3>
     <div class="table-responsive">
         <table class="table table-sm align-middle">
@@ -326,13 +332,14 @@
         </li>
         <li>
             Sal y entra como <code>almendros-enfermeria</code>. Abre la <strong>Bandeja prioritaria</strong> desde Inicio: verás ahí el
-            cambio que acabas de registrar. Desde la residente, pulsa "Crear borrador de basal", completa las nueve áreas (puedes dejarlas
-            en su valor por defecto) y el índice de Barthel, y fírmalo desde "Confirmar y firmar".
+            cambio que acabas de registrar. Desde la residente, pulsa "Crear borrador de basal", indica el motivo, la fuente y la fecha y pulsa
+            "Crear borrador"; completa las nueve áreas (puedes dejarlas en su valor por defecto) y el índice de Barthel, y fírmalo
+            desde "Confirmar y firmar".
         </li>
         <li>
-            Sal y entra como <code>almendros-direccion</code> y abre
-            <a asp-controller="Baseline" asp-action="Direction">Consultar el histórico de basal</a>. Elige a Lucía en la lista de
-            residentes y "Basal vigente" como tipo de recurso. Verás el basal que acabas de firmar, en modo de solo lectura y auditado.
+            Sal y entra como <code>almendros-direccion</code> y, en tu Inicio, abre la tarjeta
+            <a asp-controller="Baseline" asp-action="Direction">Consulta auditada del basal</a>. Elige a Lucía en la lista de
+            residentes, la finalidad y la justificación, "Basal vigente" como tipo de recurso y pulsa "Consultar". Verás el basal que acabas de firmar, en modo de solo lectura y auditado.
         </li>
     </ol>
     <p class="mb-0">
@@ -376,7 +383,7 @@
         confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados esta semana. Solo
         son cifras: no salen nombres ni texto de ningún comunicado ni de ninguna solicitud. Si no hay nada que atender, dice
         «No hay nada pendiente». El inicio de Administración tiene estas tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
-        ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas»), <strong>Datos del centro</strong> (ver «Nombre y logo del centro») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación») y <strong>Organigrama y cargos</strong> (ver «Organigrama y cargos»). En el alta, la unidad se elige en una lista con las unidades de tu
+        ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas»), <strong>Datos del centro</strong> (ver «Nombre y logo del centro») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»), <strong>Organigrama y cargos</strong> (ver «Organigrama y cargos»), <strong>Citas con la familia</strong> (ver «Citas con la familia») e <strong>Importar datos</strong> y <strong>Exportar datos</strong> (ver «Importar y exportar datos»). En el alta, la unidad se elige en una lista con las unidades de tu
         ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves la foto (o sus iniciales, si no tiene), el nombre, la edad (calculada a partir
         de la fecha de nacimiento), el sexo documentado, la ubicación (unidad, habitación y plaza; si no tiene habitación, pone
         «Sin habitación asignada») y la fecha de alta. Puedes buscar por nombre, sin
@@ -735,7 +742,7 @@
     <p>
         <strong>Auditoría</strong> lista, del más reciente al más antiguo, lo que se ha hecho en tu ámbito con cuentas, perfiles y
         permisos, estructura (centro, unidades, edificios, plantas, habitaciones y plazas), residentes (alta, corrección de identidad, foto puesta o quitada, traslado, baja, reactivación, suspensión y reanudación),
-        familias (familiares, autorizaciones, contactos urgentes y comunicados publicados antes de su hora), turnos y equipos (turnos, equipos y sus miembros, y planificación), importación y exportación de datos (cada importación, exportación y plantilla guardada, sin sus datos) y organigrama y cargos (quién cambió qué cargo y cuándo, sin los nombres de las personas). Cada fila dice cuándo, qué acción, quién la hizo y con qué perfil, y cuando consta, la cuenta afectada, la
+        familias (familiares, autorizaciones, contactos urgentes y comunicados publicados antes de su hora), citas, consultas de Dirección Clínica, turnos y equipos (turnos, equipos y sus miembros, y planificación), importación y exportación de datos (cada importación, exportación y plantilla guardada, sin sus datos) y organigrama y cargos (quién cambió qué cargo y cuándo, sin los nombres de las personas). Cada fila dice cuándo, qué acción, quién la hizo y con qué perfil, y cuando consta, la cuenta afectada, la
         unidad y el residente. Los eventos de una unidad solo salen si la unidad está concedida a tu ámbito.
     </p>
     <p>
@@ -800,8 +807,8 @@
     <p>
         <strong>Administración</strong> lo gestiona desde la ficha <strong>Organigrama y cargos</strong> de su inicio (cualquier Administración del
         centro). Cada centro crea y nombra sus cargos. Si el centro aún no tiene ninguno, puede pulsar <strong>Cargar la plantilla</strong>:
-        crea los ocho cargos que propuso CJ (Dirección del centro, Dirección médica, Coordinación de Enfermería, Responsable de unidad o planta,
-        Medicina, Enfermería, Auxiliares y Responsable de Administración) con su jerarquía, y después puedes cambiarlos, inactivar los que no
+        crea los ocho cargos que propuso CJ (Dirección del centro, Dirección médica / Coordinación médica, Coordinación / Supervisión de Enfermería,
+        Responsable de unidad o planta, Medicina, Enfermería, Auxiliares / Gerocultores y Responsable de Administración) con su jerarquía, y después puedes cambiarlos, inactivar los que no
         uses o añadir otros con <strong>Nuevo cargo</strong>. La plantilla solo se carga con la lista vacía.
     </p>
     <p>
@@ -1116,7 +1123,7 @@
         pantalla sin borrar nada de lo escrito.
     </p>
     <p class="mt-3 mb-0">
-        <strong>Dictar el cambio.</strong> Si tu centro lo tiene activado y tu móvil o tablet tiene micrófono, arriba aparece el bloque
+        <strong>Dictar el cambio.</strong> Si la aplicación lo tiene activado en este entorno y tu móvil o tablet tiene micrófono, arriba aparece el bloque
         <strong>«Dictar el cambio»</strong>. Pulsa <strong>Grabar</strong>, cuenta lo que ha pasado (sin decir nombres de personas) y pulsa
         <strong>Parar</strong>. El audio se envía a un servicio externo de transcripción, que lo convierte en texto y propone qué opciones
         marcar y qué notas escribir; ni el audio ni el texto se guardan, solo queda anotado que se usó el dictado. Lo propuesto es una
@@ -1747,7 +1754,7 @@
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
         <li>Dictado por voz en otros formularios (hoy solo «Registrar cambio»).</li>
-        <li>De Dirección Clínica: el estado de la comunicación familiar (frecuencia, pendientes y errores) y la finalidad «revisión de calidad asistencial» (pendiente de decidir cómo distinguir la Coordinación Clínica de Dirección). La declaración de finalidad y la justificación ya están construidas, y con ellas ya puedes ver el contenido del basal vigente, el historial de versiones, la línea temporal, los eventos cerrados, las correcciones y rectificaciones, la trazabilidad clínica y los informes de derivación firmados.</li>
+        <li>De Dirección Clínica: la finalidad «revisión de calidad asistencial» (pendiente de decidir cómo distinguir la Coordinación Clínica de Dirección). La declaración de finalidad y la justificación ya están construidas, y con ellas ya puedes ver el contenido del basal vigente, el historial de versiones, la línea temporal, los eventos cerrados, las correcciones y rectificaciones, la trazabilidad clínica y los informes de derivación firmados.</li>
     </ul>
 </section>
 </div>
