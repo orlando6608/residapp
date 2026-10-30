@@ -148,6 +148,16 @@ Un icono sencillo junto al título ayuda a ubicarse sin leer, sobre todo a quien
 | `temperatura` | `thermometer-half` | Temperatura |
 | `clasificacion` | `tags` | Clasificación ordinario/prioritario |
 | `resumen` | `card-checklist` | Resumen antes de confirmar |
+| `area-movilidad` | `person-walking` | Basal: Movilidad |
+| `area-alimentacion` | `egg-fried` | Basal: Alimentación |
+| `area-continencia` | `badge-wc` | Basal: Continencia |
+| `area-aseo` | `droplet` | Basal: Aseo e higiene |
+| `area-cognicion` | `puzzle` | Basal: Cognición |
+| `area-comunicacion` | `chat-dots` | Basal: Comunicación |
+| `area-conducta` | `signpost-2` | Basal: Conducta |
+| `area-sueno` | `moon` | Basal: Sueño |
+| `area-ayudas` | `universal-access` | Basal: Ayudas habituales |
+| `barthel` | `clipboard-data` | Índice de Barthel |
 | `centro-nuevo` | `building-add` | «Nuevo centro» (Plataforma) |
 | `cuentas` | `person-lines-fill` | «Cuentas de varios centros» (Plataforma) |
 
@@ -160,7 +170,9 @@ Reglas de uso según dónde va el icono. Se pone siempre que ayude a ubicarse o 
 * **Título de pantalla principal** (`h1` con `h3 d-flex align-items-center gap-2`): el mismo icono que la tarjeta del inicio desde la que se llega, para que la persona reconozca el sitio al llegar. Solo en las pantallas a las que lleva una tarjeta (listas, bandejas y pantallas de gestión), no en los subformularios de una sola acción («Cambiar nombre», «Suspender»…).
 * **Portal familiar:** pocos iconos y solo de orientación: «Citas» (`citas`, en el botón de la ficha), «Novedades del centro» (`comunicaciones`), «Mis residentes» (`residentes`) y el teléfono (`contacto`) en el aviso «no es un canal urgente» de las pantallas de citas (`.alert .icono`, 20 px, color del aviso). Nada de signos de alarma, corazones, caras ni iconos en los estados de una cita ni en «Relevante»/«Ordinaria»: lo dicen la etiqueta y el borde, y un símbolo podría leerse como un juicio sobre el estado de su familiar.
 * **No llevan icono:** los campos de un formulario (la etiqueta ya los nombra), las columnas y filas de una tabla, los botones de envío (por el aviso «Enviando…» de `site.js`) ni los estados.
-* **Pendiente:** títulos de bloque (`fieldset`) de los formularios largos distintos de los del Auxiliar, y el basal (`EnfermeriaBasal`, `Auxiliar/Basal`), tras el visto bueno de CJ al piloto.
+* **Estado basal:** cada una de las nueve áreas lleva su icono (`BaselineAreaDisplay.Icon`) en el centro del borrador, en la confirmación y en la consulta del Auxiliar, y el índice de Barthel el suyo; el icono de una área es siempre el mismo. Orienta sobre el tema, nunca sobre la respuesta: el estado «Completada/Pendiente» sigue en su etiqueta de texto y su borde.
+* **Títulos de bloque de un formulario largo** (`legend` con `d-flex align-items-center gap-2`): solo cuando el bloque es una sección distinta del formulario («Centro», «Primera unidad» y «Primer administrador» de Nuevo centro; «Familiares de contacto» del alta de residente), no cuando la `legend` es la pregunta de un campo («¿Cuántas personas lo ocupan?», «Finalidad del acceso»…).
+* **Pendiente:** secciones de páginas largas que no son `fieldset` («Servicio», «Franjas» y «Bloqueos» de las citas de Administración; las siete secciones de «Mi cuenta») y las áreas dentro de las fichas del registro del Auxiliar. Visto bueno de CJ al piloto.
 
 ### C. Formularios de Registro Clínico (Firma de Estado Basal)
 * **Inputs:** Utilizar agrupaciones limpias con `.mb-3`.

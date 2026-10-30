@@ -24,7 +24,7 @@
         <form asp-action="NuevoCentro" method="post" enctype="multipart/form-data">
             <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
             <fieldset class="mb-3">
-                <legend class="h5">Centro</legend>
+                <legend class="h5 d-flex align-items-center gap-2"><partial name="_Icono" model='"centros"' />Centro</legend>
                 <div class="mb-3">
                     <label asp-for="Form.CodigoCentro" class="form-label"></label>
                     <input asp-for="Form.CodigoCentro" class="form-control form-control-lg" autocomplete="off" aria-describedby="ayuda-codigos" />
@@ -39,7 +39,7 @@
                 <p class="form-text mt-0">El centro con logo propio lo ve en su encabezado en vez del de ResidApp. Después lo cambia su Administración.</p>
             </fieldset>
             <fieldset class="mb-3">
-                <legend class="h5">Primera unidad</legend>
+                <legend class="h5 d-flex align-items-center gap-2"><partial name="_Icono" model='"unidades"' />Primera unidad</legend>
                 <div class="mb-3">
                     <label asp-for="Form.CodigoUnidad" class="form-label"></label>
                     <input asp-for="Form.CodigoUnidad" class="form-control form-control-lg" autocomplete="off" aria-describedby="ayuda-codigos" />
@@ -53,7 +53,7 @@
                 </div>
             </fieldset>
             <fieldset class="mb-3">
-                <legend class="h5">Primer administrador</legend>
+                <legend class="h5 d-flex align-items-center gap-2"><partial name="_Icono" model='"usuarios"' />Primer administrador</legend>
                 <div class="mb-3">
                     <label asp-for="Form.IdentificadorAdministrador" class="form-label"></label>
                     <input asp-for="Form.IdentificadorAdministrador" class="form-control form-control-lg" autocomplete="off" />

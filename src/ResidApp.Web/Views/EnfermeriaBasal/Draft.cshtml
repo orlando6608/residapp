@@ -20,7 +20,7 @@
     </ol>
 </nav>
 
-<h1 class="h3">Estado basal — @Model.Resident.DisplayName</h1>
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"basal"' />Estado basal — @Model.Resident.DisplayName</h1>
 
 @if (TempData["Mensaje"] is string mensaje)
 {
@@ -84,7 +84,7 @@ else
                 <a asp-action="Area" asp-route-residenteId="@Model.Resident.ResidentId.Value" asp-route-areaCode="@area"
                    class="card text-decoration-none h-100 border-start border-4 @(done ? "border-success" : "border-secondary")">
                     <div class="card-body">
-                        <h3 class="h6 card-title mb-1">@BaselineAreaDisplay.Label(area)</h3>
+                        <h3 class="h6 card-title mb-1 d-flex align-items-center gap-2"><partial name="_Icono" model="BaselineAreaDisplay.Icon(area)" />@BaselineAreaDisplay.Label(area)</h3>
                         <span class="badge @(done ? "text-bg-success" : "text-bg-light")">@(done ? "Completada" : "Pendiente")</span>
                     </div>
                 </a>
@@ -94,7 +94,7 @@ else
             <a asp-action="Barthel" asp-route-residenteId="@Model.Resident.ResidentId.Value"
                class="card text-decoration-none h-100 border-start border-4 @(barthelComplete ? "border-success" : "border-secondary")">
                 <div class="card-body">
-                    <h3 class="h6 card-title mb-1">Índice de Barthel</h3>
+                    <h3 class="h6 card-title mb-1 d-flex align-items-center gap-2"><partial name="_Icono" model='"barthel"' />Índice de Barthel</h3>
                     <span class="badge @(barthelComplete ? "text-bg-success" : "text-bg-light")">
                         @(barthelComplete ? $"Completado ({Model.Draft.Barthel.TotalScore}/100)" : "Pendiente")
                     </span>

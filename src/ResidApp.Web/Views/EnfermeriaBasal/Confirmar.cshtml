@@ -17,7 +17,7 @@
     </ol>
 </nav>
 
-<h1 class="h3">Confirmación y firma — @resident.DisplayName</h1>
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"basal"' />Confirmación y firma — @resident.DisplayName</h1>
 <div asp-validation-summary="All" class="text-danger"></div>
 
 @if (TempData["Error"] is string error)
@@ -40,7 +40,7 @@
         <div class="col-12 col-md-6">
             <div class="card h-100">
                 <div class="card-body">
-                    <h3 class="h6 card-title">@BaselineAreaDisplay.Label(area.AreaCode)</h3>
+                    <h3 class="h6 card-title d-flex align-items-center gap-2"><partial name="_Icono" model="BaselineAreaDisplay.Icon(area.AreaCode)" />@BaselineAreaDisplay.Label(area.AreaCode)</h3>
                     <ul class="mb-0">
                         @foreach (var value in BaselineAreaDisplay.Summarize(area.Answer))
                         {
@@ -59,7 +59,7 @@
 
 <div class="card mb-3">
     <div class="card-body">
-        <h2 class="h5 card-title">Índice de Barthel</h2>
+        <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"barthel"' />Índice de Barthel</h2>
         <p class="mb-0"><strong>@Model.Barthel.TotalScore / 100</strong> (@Model.Barthel.AssessmentDate?.ToString("dd/MM/yyyy"))</p>
     </div>
 </div>
