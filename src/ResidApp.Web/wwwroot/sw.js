@@ -6,7 +6,7 @@
 // ante un reintento por pérdida de cobertura es la idempotencia por operationId en el servidor
 // (dbo.idempotency_operations), no este service worker.
 
-const CACHE_NAME = "residapp-shell-v6";
+const CACHE_NAME = "residapp-shell-v9";
 const OFFLINE_URL = "/Home/Offline";
 const SHELL_ASSETS = [
   OFFLINE_URL,

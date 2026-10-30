@@ -27,7 +27,7 @@
 @if (attention is not null)
 {
     <section class="mb-4" aria-labelledby="atencion">
-        <h2 class="h5" id="atencion">Requiere atención</h2>
+        <h2 class="h5 d-flex align-items-center gap-2" id="atencion"><partial name="_Icono" model='"prioritarios"' />Requiere atención</h2>
         @* Por orden de importancia (CJ, tercera 4.4): primero a quién llamar en una urgencia; al final, las cuentas que conviene revisar. *@
         @if (Model.NothingPending)
         {
@@ -96,7 +96,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Residentes" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Residentes</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"residentes"' />Residentes</h2>
                 @* Cifra grande con plural real (guia-diseno-sistema-visual.md, 2.B). *@
                 <span class="cifra">@Model.Residents</span>
                 <span class="d-block">@(Model.Residents == 1 ? "residente en tu ámbito" : "residentes en tu ámbito")</span>
@@ -107,7 +107,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-controller="Residents" asp-action="Create" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Alta de residente</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"alta-residente"' />Alta de residente</h2>
                 <p class="card-text mb-0">Registrar un nuevo residente en el centro. Su basal queda pendiente.</p>
             </div>
         </a>
@@ -115,7 +115,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Bajas" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Residentes dados de baja</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"baja"' />Residentes dados de baja</h2>
                 <p class="card-text mb-0">Lista de solo lectura con el motivo de cada baja y hasta cuándo se conservan sus datos. Desde ahí puedes reactivar a un residente.</p>
             </div>
         </a>
@@ -123,7 +123,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Usuarios" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Usuarios</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"usuarios"' />Usuarios</h2>
                 <span class="cifra">@Model.Accounts</span>
                 <span class="d-block">@(Model.Accounts == 1 ? "cuenta con perfil en el centro" : "cuentas con perfil en el centro")</span>
                 <p class="card-text text-body-secondary mb-0">Alta, suspensión, perfiles, unidades y residentes asignados.</p>
@@ -133,7 +133,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="AmbitoCentro" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Unidades del centro</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"unidades"' />Unidades del centro</h2>
                 <p class="card-text mb-0">Todas las unidades del centro y las de tu ámbito; la Administración principal puede añadirse las que no tiene.</p>
             </div>
         </a>
@@ -141,7 +141,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Comunicados" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Comunicados a la familia</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"comunicados"' />Comunicados a la familia</h2>
                 <p class="card-text mb-0">Los comunicados de tus unidades, la hora a la que se publican y cuándo publicar uno antes.</p>
             </div>
         </a>
@@ -149,7 +149,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Citas" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Citas con la familia</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Citas con la familia</h2>
                 <p class="card-text mb-0">El servicio de citas del centro, sus franjas y bloqueos, y la agenda de citas reservadas.</p>
             </div>
         </a>
@@ -157,7 +157,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="DatosCentro" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Datos del centro</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"datos-centro"' />Datos del centro</h2>
                 <p class="card-text mb-0">El nombre y el logo del centro, que salen en el encabezado, al imprimir y en los PDF.</p>
             </div>
         </a>
@@ -165,7 +165,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Estructura" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Estructura del centro</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"centros"' />Estructura del centro</h2>
                 <p class="card-text mb-0">Crear, renombrar e inactivar las unidades de tu ámbito.</p>
             </div>
         </a>
@@ -173,7 +173,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Turnos" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Turnos</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"turnos"' />Turnos</h2>
                 <p class="card-text mb-0">El catálogo de turnos del centro: nombre y horas.</p>
             </div>
         </a>
@@ -181,7 +181,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Equipos" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Equipos</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"equipos"' />Equipos</h2>
                 <p class="card-text mb-0">Grupos con nombre en cada unidad y sus miembros.</p>
             </div>
         </a>
@@ -189,7 +189,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Cargos" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Organigrama y cargos</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"organigrama"' />Organigrama y cargos</h2>
                 <p class="card-text mb-0">Los cargos del centro, de quién dependen y quién los ocupa. Ocupar un cargo no da permisos.</p>
             </div>
         </a>
@@ -197,7 +197,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Planificacion" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Planificación de turnos</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"planificacion"' />Planificación de turnos</h2>
                 <p class="card-text mb-0">Qué equipo hace qué turno cada día, con aviso de solapamientos.</p>
             </div>
         </a>
@@ -205,7 +205,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Importar" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Importar datos</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"importar"' />Importar datos</h2>
                 <p class="card-text mb-0">Traer la estructura del centro y los residentes desde un fichero CSV o Excel de otra aplicación.</p>
             </div>
         </a>
@@ -213,7 +213,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Exportar" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Exportar datos</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"exportar"' />Exportar datos</h2>
                 <p class="card-text mb-0">Descargar la estructura y el censo de residentes en CSV, con las columnas de ResidApp o de otra aplicación.</p>
             </div>
         </a>
@@ -221,7 +221,7 @@ else
     <div class="col-12 col-md-6">
         <a asp-action="Auditoria" class="card text-decoration-none h-100">
             <div class="card-body">
-                <h2 class="h5 card-title">Auditoría</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"auditoria"' />Auditoría</h2>
                 <p class="card-text mb-0">Quién hizo qué y cuándo en cuentas, perfiles, estructura, residentes y familias.</p>
             </div>
         </a>
