@@ -115,12 +115,16 @@ Desde I1 los cubren además `tests/FunctionalTests/AccesoTests.cs` y `tests/Inte
    piloto». La auditoría de autenticación separada de la clínica que pide el ADR legado existe desde I1 (`dbo.eventos_acceso`;
    antes solo había entradas y salidas en `dbo.sesiones`).
 
-5. **Dominio de las passkeys (I4; decidido el 2026-10-23, dominio de Pro por elegir):** una passkey queda ligada al dominio donde se registró
-   y no se mueve a otro. `ServerDomain` (`IdentityPasskeyOptions`) irá **explícito por entorno** en la configuración, nunca deducido de la
-   cabecera `Host`. En Pro será el **dominio base dedicado a ResidApp** (la passkey vale en todos sus subdominios, que no deben alojar contenido
-   de terceros) y el dominio debe estar decidido antes de que nadie registre una passkey allí. En Azure dev será el de la Web App; esas
-   passkeys no se migran a Pro. Si el piloto empezara en `azurewebsites.net` y pasara después a un dominio propio, cada persona tendría que
-   registrar otra passkey.
+5. **Dominio de las passkeys (I4; decidido el 2026-10-23; revisado el 2026-10-30):** una passkey queda ligada al dominio donde se registró y no
+   se mueve a otro. `ServerDomain` (`IdentityPasskeyOptions`) irá **explícito por entorno** en la configuración (`Acceso__PasskeyDominio`), nunca
+   deducido de la cabecera `Host`, y será **el subdominio exacto de la aplicación de cada entorno**, no el dominio base: `dev.residapp.es` en
+   desarrollo y `app.residapp.es` en producción. Las webs comerciales (`residapp.es`, `residapp.cat`) y el remitente de avisos
+   (`avisos.residapp.es`) quedan fuera del alcance de las passkeys. Las passkeys de desarrollo no se migran a producción. Condiciones: (a) ninguna
+   cookie de la aplicación llevará el atributo `Domain`; (b) HSTS no se activará con `includeSubDomains` ni `preload` en el dominio raíz; (c) el
+   DNS de `app.` se crea solo cuando exista producción, y el de cada subdominio se borra antes de borrar el recurso de Azure al que apunta; (d) el
+   registro `TXT` `asuid.<subdominio>` que Azure ofrece para demostrar la propiedad es obligatorio. Si el nombre de una aplicación cambiara
+   después, cada persona tendría que registrar otra passkey. (Texto aprobado por Orlando el 2026-10-29,
+   `docs/pendientes-cj/orlando/adr-0007-passkeys-por-entorno.html`.)
 
 ## Alternativas descartadas
 

@@ -1,7 +1,10 @@
 # ADR 0013 — Portal Familiar y pantallas de entrada en castellano y catalán
 
-Estado: **propuesta** el 2026-10-29, con las decisiones de Orlando de ese día. Nada de lo que describe está construido. Pendiente de: la respuesta de CJ
-(`docs/pendientes-cj/portal-familiar-dos-idiomas-cj.html`) sobre si hace falta y cuándo, y de la revisión del DPO real (la persona que vela por la protección de datos).
+Estado: **aceptada** el 2026-10-30 (decisión de Orlando, tal cual estaba propuesta el 2026-10-29). Nada de lo que describe está construido. CJ contestó el 2026-10-30
+(`docs/pendientes-cj/portal-familiar-dos-idiomas-cj.respuestas.json`, 7/7): sí hay familias que lo pedirían en catalán («muchas»), hace falta **antes del primer centro con familias
+reales**, el idioma por defecto del centro piloto es el castellano, la sugerencia al personal vale como mera sugerencia, solo algunas personas del personal escriben en catalán,
+es aceptable que un comunicado salga en castellano a una familia que eligió catalán, y los textos en catalán los revisa CJ. **Siguen abiertos:** los dos puntos marcados
+**[Decidir]** y la revisión del DPO real (la persona que vela por la protección de datos); la sugerencia al personal (punto 5) no se construye hasta que el DPO real la apruebe.
 La lectura de privacidad del agente `dpo-residapp` está en `docs/privacidad/portal-familiar-dos-idiomas.md`.
 
 ## Contexto

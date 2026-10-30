@@ -172,11 +172,11 @@
     </nav>
     <p class="eyebrow">ResidApp · Seguridad · Para Orlando</p>
     <h1>Passkeys: ¿atadas al dominio base o al subdominio de cada entorno?</h1>
-    <p class="meta">Estado a 29/10/2026 · Borrador de cambio del punto 5 del ADR 0007 · El ADR no se ha modificado todavía · La lectura de privacidad es del agente de protección de datos, que no sustituye a un DPO real o a un abogado</p>
+    <p class="meta">Estado a 30/10/2026 · Cambio del punto 5 del ADR 0007 aplicado con el texto propuesto, tal como aprobaste · La lectura de privacidad es del agente de protección de datos, que no sustituye a un DPO real o a un abogado</p>
     <p class="lead prose">
       Una passkey (entrar con huella o llave) queda atada a un nombre de web, y ese nombre no se puede cambiar después. El ADR 0007 (la decisión sobre cómo se entra en ResidApp)
-      dice hoy que, en producción, ese nombre será el dominio base (<code>residapp.es</code>). Con lo que has decidido hoy (landings, <code>dev</code> y <code>app</code>) conviene cambiarlo.
-      Este documento te explica por qué y te deja elegir.
+      decía, en producción, que ese nombre sería el dominio base (<code>residapp.es</code>). Con lo que decidiste (landings, <code>dev</code> y <code>app</code>) se ha cambiado:
+      el ADR ya dice el subdominio exacto de cada entorno. Este documento explica por qué y recoge tu decisión.
     </p>
   </header>
 
@@ -201,9 +201,9 @@
   </section>
 
   <section aria-labelledby="hoy">
-    <h2 id="hoy">2 · Qué dice hoy el ADR 0007, y por qué ya no encaja</h2>
+    <h2 id="hoy">2 · Qué decía el ADR 0007, y por qué ya no encajaba</h2>
     <div class="nota prose">
-      <strong>Texto actual (punto 5):</strong> «En Pro será el <strong>dominio base dedicado a ResidApp</strong> (la passkey vale en todos sus subdominios, que no deben alojar contenido de terceros) y el dominio debe estar decidido antes de que nadie registre una passkey allí. En Azure dev será el de la Web App; esas passkeys no se migran a Pro.»
+      <strong>Texto anterior (punto 5):</strong> «En Pro será el <strong>dominio base dedicado a ResidApp</strong> (la passkey vale en todos sus subdominios, que no deben alojar contenido de terceros) y el dominio debe estar decidido antes de que nadie registre una passkey allí. En Azure dev será el de la Web App; esas passkeys no se migran a Pro.»
     </div>
     <p class="prose">Eso tenía sentido cuando solo se pensaba en una aplicación. Hoy hay más cosas colgadas del mismo dominio:</p>
     <div class="tabla">
@@ -224,7 +224,7 @@
     <h2 id="propuesta">3 · La propuesta, y qué dice cada opción</h2>
     <div class="tabla">
       <table>
-        <thead><tr><th scope="col"></th><th scope="col">A · Subdominio exacto por entorno</th><th scope="col">B · Dominio base (como dice el ADR hoy)</th><th scope="col">C · Seguir en <code>azurewebsites.net</code></th></tr></thead>
+        <thead><tr><th scope="col"></th><th scope="col">A · Subdominio exacto por entorno</th><th scope="col">B · Dominio base (como decía el ADR)</th><th scope="col">C · Seguir en <code>azurewebsites.net</code></th></tr></thead>
         <tbody>
           <tr><td><strong>Nombre de la passkey</strong></td><td><code>dev.residapp.es</code> en desarrollo y <code>app.residapp.es</code> en producción</td><td><code>residapp.es</code> en los dos</td><td>El nombre técnico de Azure, hasta tener producción</td></tr>
           <tr><td><strong>¿Las usa la landing o un subdominio olvidado?</strong></td><td class="si-td">No</td><td class="no-td">Sí, podrían</td><td class="si-td">No</td></tr>
@@ -249,9 +249,9 @@
   </section>
 
   <section aria-labelledby="despues">
-    <h2 id="despues">4 · Qué hago cuando respondas</h2>
+    <h2 id="despues">4 · Qué hice al responder (30/10/2026)</h2>
     <ul class="prose">
-      <li>Si eliges la A y aceptas las cautelas: reescribo el punto 5 del ADR 0007 con el texto de arriba (con la fecha de hoy) y dejo anotado en el ADR 0013 y en la guía de dominio que ya está aprobado.</li>
+      <li>Elegiste la A y aceptaste las cautelas: el punto 5 del ADR 0007 está reescrito con el texto de arriba (revisado el 2026-10-30).</li>
       <li>No cambio ningún código: el ajuste por entorno ya existe. Cuando exista producción, la Web App llevará <code>Acceso__PasskeyDominio = app.residapp.es</code>.</li>
       <li>Las cautelas 1 y 2 se comprueban en el código antes de producción (cookies sin <code>Domain</code> y HSTS); lo anoto en la lista de <code>docs/privacidad/antes-de-datos-reales.md</code>.</li>
       <li>Si eliges la B o la C, no toco el ADR: dejo escrito el motivo y las consecuencias que te he contado.</li>

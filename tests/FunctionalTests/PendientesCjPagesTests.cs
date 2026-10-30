@@ -54,7 +54,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
         "archivados/confirmaciones-segunda-tanda-cj", "archivados/foto-residente-confirmaciones-cj", "archivados/importacion-exportacion-confirmaciones-cj", "archivados/organigrama-y-cargos-cj",
         "archivados/dictado-por-voz-confirmaciones-cj",
-        "portal-familiar-dos-idiomas-cj", "modulos-base-y-opcionales-cj",
+        "portal-familiar-dos-idiomas-cj", "modulos-base-y-opcionales-cj", "aviso-citas-por-correo-cj",
         "orlando", "orlando/dominio-y-correo", "orlando/analisis-landing-page", "orlando/adr-0007-passkeys-por-entorno",
     ];
 

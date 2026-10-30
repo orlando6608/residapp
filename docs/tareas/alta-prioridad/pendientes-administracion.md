@@ -500,7 +500,7 @@ Orden decidido con Orlando: dictado por voz (va en `continuar-construccion.md`),
     u `ORDER BY`: usa `COLLATE DATABASE_DEFAULT` en la lectura.
   - **Tests:** unitarios `OrganigramaTests`, integración `AdministracionOrganigramaTests` (15) y funcionales `OrganigramaScreensTests` (3). Guía 5 de CJ (prueba 17), Manual y
     flujo de trabajo al día.
-- **Esperan al correo (ADR 0012, propuesto):** el aviso genérico por correo de las propuestas de cita (tercera 6.1), el recordatorio el día antes (6.2) y el código por correo
+- **Esperan al correo (ADR 0012, aceptado el 2026-10-30; sin construir):** el aviso genérico por correo de las propuestas de cita (tercera 6.1), el recordatorio el día antes (6.2) y el código por correo
   para que entre el familiar (portal 3.2, con límite de intentos, caducidad de sesión y aviso de accesos nuevos). CJ supuso que el correo ya existía; hoy la app no envía ninguno.
 
 En el orden propuesto (cada bloque se planifica antes de construirlo):
