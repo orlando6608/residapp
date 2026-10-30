@@ -40,7 +40,7 @@ else
         <div class="col-12 col-md-4">
             <a asp-controller="Plataforma" asp-action="Index" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Centros</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"centros"' />Centros</h2>
                     <p class="card-text text-muted mb-0">Dar de alta un centro con su primera unidad y su administrador.</p>
                 </div>
             </a>
@@ -51,7 +51,7 @@ else
         <div class="col-12 col-md-4">
             <a asp-controller="Administracion" asp-action="Index" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Administración</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"administracion"' />Administración</h2>
                     <p class="card-text text-muted mb-0">Residentes, ficha administrativa, historial de ubicación y alta.</p>
                 </div>
             </a>
@@ -62,7 +62,7 @@ else
         <div class="col-12 col-md-4">
             <a asp-controller="Residents" asp-action="Create" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Alta de residente</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"alta-residente"' />Alta de residente</h2>
                     <p class="card-text text-muted mb-0">Registrar un nuevo residente en el centro.</p>
                 </div>
             </a>
@@ -73,7 +73,7 @@ else
         <div class="col-12 col-md-4">
             <a asp-controller="Direccion" asp-action="Index" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Supervisión de Dirección Clínica</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"supervision"' />Supervisión de Dirección Clínica</h2>
                     <p class="card-text text-muted mb-0">Episodios abiertos por unidad y pendientes, sin contenido clínico.</p>
                 </div>
             </a>
@@ -81,7 +81,7 @@ else
         <div class="col-12 col-md-4">
             <a asp-controller="Baseline" asp-action="Direction" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Consulta de Dirección Clínica</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"basal"' />Consulta de Dirección Clínica</h2>
                     <p class="card-text text-muted mb-0">Consulta auditada del historial de basal de un residente.</p>
                 </div>
             </a>
@@ -92,7 +92,7 @@ else
         <div class="col-12 col-md-4">
             <a asp-controller="Auxiliar" asp-action="Index" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Mis residentes (Auxiliar)</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"residentes"' />Mis residentes (Auxiliar)</h2>
                     <p class="card-text text-muted mb-0">Registro cotidiano de los residentes asignados.</p>
                 </div>
             </a>
@@ -103,7 +103,7 @@ else
         <div class="col-12 col-md-4">
             <a asp-controller="Enfermeria" asp-action="Index" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Enfermería</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"enfermeria"' />Enfermería</h2>
                     <p class="card-text text-muted mb-0">Residentes del ámbito y su estado basal.</p>
                 </div>
             </a>
@@ -114,7 +114,7 @@ else
         <div class="col-12 col-md-4">
             <a asp-controller="Medicina" asp-action="Index" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Medicina</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"medicina"' />Medicina</h2>
                     <p class="card-text text-muted mb-0">Escalados recibidos y eventos propios, valoración médica e indicaciones a Enfermería.</p>
                 </div>
             </a>
@@ -126,7 +126,7 @@ else
         <div class="col-12 col-md-4">
             <a asp-controller="RangosReferencia" asp-action="Index" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Rangos de referencia de constantes</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"constantes"' />Rangos de referencia de constantes</h2>
                     <p class="card-text text-muted mb-0">Fijar los rangos del centro (Dirección / Coordinación Clínica con permiso).</p>
                 </div>
             </a>
@@ -138,7 +138,7 @@ else
         <div class="col-12 col-md-4">
             <a asp-controller="PlazosProceso" asp-action="Index" class="card text-decoration-none h-100">
                 <div class="card-body">
-                    <h2 class="h5 card-title">Plazos de los hitos del proceso</h2>
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"plazos"' />Plazos de los hitos del proceso</h2>
                     <p class="card-text text-muted mb-0">Fijar los plazos del centro para la revisión de calidad de proceso (Dirección / Coordinación Clínica con permiso).</p>
                 </div>
             </a>

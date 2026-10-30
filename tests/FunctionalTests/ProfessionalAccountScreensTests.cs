@@ -668,7 +668,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         var without = await PageAsync("ENFERMERIA", null);
         var with = await PageAsync("ENFERMERIA", ProfilePermissions.ResidentIdentityCreate);
 
-        Assert.All(new[] { without, with }, page => Assert.Contains("<h2 class=\"h5 card-title\">Enfermería</h2>", page));
+        Assert.All(new[] { without, with }, page => Assert.Contains("Enfermería</h2>", page));
         Assert.DoesNotContain("Alta de residente", without);
         Assert.Contains("Alta de residente", with);
     }
