@@ -38,7 +38,7 @@
         <section class="card mb-3" id="dictado" hidden aria-labelledby="dictado-titulo"
                  data-url="@Url.Action("DictarCambio")" data-residente="@Model.ResidenteId" data-max-segundos="120">
             <div class="card-body">
-                <h2 class="h5 card-title" id="dictado-titulo">Dictar el cambio</h2>
+                <h2 class="h5 card-title d-flex align-items-center gap-2" id="dictado-titulo"><partial name="_Icono" model='"dictado"' />Dictar el cambio</h2>
                 <p class="text-muted mb-2">
                     Pulsa <strong>Grabar</strong>, cuenta lo que ha pasado y pulsa <strong>Parar</strong>. Lo que se entienda aparecerá en el formulario como una
                     <strong>sugerencia</strong>: tienes que revisarla una a una antes de continuar.
@@ -90,7 +90,7 @@
 
     <div class="card mb-3">
         <div class="card-body">
-            <h2 class="h5 card-title">Áreas observadas</h2>
+            <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"areas"' />Áreas observadas</h2>
             <p class="text-muted">Completa al menos una. Deja vacías las que no correspondan.</p>
             @foreach (var area in Enum.GetValues<DailyChangeAreaCode>())
             {
@@ -136,7 +136,7 @@
 
     <div class="card mb-3">
         <div class="card-body">
-            <h2 class="h5 card-title">Temperatura</h2>
+            <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"temperatura"' />Temperatura</h2>
             <div class="mb-0">
                 <label asp-for="Temperatura" class="form-label"></label>
                 <div class="input-group input-group-lg" style="max-width: 220px;">
@@ -152,7 +152,7 @@
 
     <div class="card mb-3">
         <div class="card-body">
-            <h2 class="h5 card-title">Clasificación</h2>
+            <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"clasificacion"' />Clasificación</h2>
             <fieldset class="mb-3">
                 <legend class="visually-hidden">Clasificación</legend>
                 <div class="d-flex flex-wrap gap-2">

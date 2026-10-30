@@ -140,6 +140,14 @@ Un icono sencillo junto al título ayuda a ubicarse sin leer, sobre todo a quien
 | `inicio` | `house` | «Mi panel» (menú) |
 | `cuenta` | `person-circle` | Menú de usuario y «Mi cuenta» |
 | `salir` / `entrar` | `box-arrow-right` / `box-arrow-in-right` | «Salir» e «Iniciar sesión» |
+| `sin-cambios` | `check-circle` | Sin cambios (cierre cotidiano del Auxiliar) |
+| `registrar-cambio` | `journal-plus` | Registrar cambio |
+| `no-valorable` | `slash-circle` | No valorable |
+| `dictado` | `mic` | Dictar el cambio |
+| `areas` | `list-check` | Áreas observadas |
+| `temperatura` | `thermometer-half` | Temperatura |
+| `clasificacion` | `tags` | Clasificación ordinario/prioritario |
+| `resumen` | `card-checklist` | Resumen antes de confirmar |
 | `centro-nuevo` | `building-add` | «Nuevo centro» (Plataforma) |
 | `cuentas` | `person-lines-fill` | «Cuentas de varios centros» (Plataforma) |
 
