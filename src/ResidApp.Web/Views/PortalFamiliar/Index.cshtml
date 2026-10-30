@@ -4,7 +4,7 @@
     ViewData["Title"] = "Mis residentes";
 }
 
-<h1 class="h3">Mis residentes</h1>
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"residentes"' />Mis residentes</h1>
 <p class="text-muted">Elige a quién quieres ver. Solo aparecen los residentes para los que el centro te ha dado acceso.</p>
 <div class="row g-3">
     @foreach (var resident in Model)

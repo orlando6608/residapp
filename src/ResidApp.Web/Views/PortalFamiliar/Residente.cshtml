@@ -26,7 +26,7 @@
     <p class="fw-semibold">@(newCount == 1 ? "Hay 1 novedad nueva" : $"Hay {newCount} novedades nuevas") desde tu última visita.</p>
 }
 
-<p><a class="btn btn-outline-primary" asp-action="Citas" asp-route-linkId="@resident.LinkId">Citas con el equipo asistencial</a></p>
+<p><a class="btn btn-outline-primary d-inline-flex align-items-center gap-2" asp-action="Citas" asp-route-linkId="@resident.LinkId"><partial name="_Icono" model='"citas"' />Citas con el equipo asistencial</a></p>
 
 @if (Model.Home.Summary is { } summary)
 {
@@ -63,7 +63,7 @@
     </section>
 }
 
-<h2 class="h5">Novedades del centro</h2>
+<h2 class="h5 d-flex align-items-center gap-2"><partial name="_Icono" model='"comunicaciones"' />Novedades del centro</h2>
 <p class="text-muted">
     Aquí ves lo que el equipo asistencial ha querido contarte. Las novedades ordinarias se ven 30 días y las relevantes, 6 meses.
     Este portal no es un canal urgente: si necesitas información urgente, llama por teléfono al centro.

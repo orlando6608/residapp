@@ -157,7 +157,10 @@ Reglas de uso según dónde va el icono. Se pone siempre que ayude a ubicarse o 
 * **Botón principal:** 20 px y color del texto (`.btn .icono`), con `d-inline-flex align-items-center justify-content-center gap-2`. Solo en botones de acción propios de la pantalla (hoy, los de Plataforma).
 * **Tarjetas con cifra en pantalla estrecha** (inicios de Enfermería y Medicina): el icono va encima del título (`flex-column flex-sm-row`), porque palabras largas como «Comunicaciones» no caben a su lado en 375 px.
 
-* **Pendiente:** el resto de pantallas (formularios y listas), el portal familiar y el basal (`EnfermeriaBasal`), tras el visto bueno de CJ al piloto.
+* **Título de pantalla principal** (`h1` con `h3 d-flex align-items-center gap-2`): el mismo icono que la tarjeta del inicio desde la que se llega, para que la persona reconozca el sitio al llegar. Solo en las pantallas a las que lleva una tarjeta (listas, bandejas y pantallas de gestión), no en los subformularios de una sola acción («Cambiar nombre», «Suspender»…).
+* **Portal familiar:** pocos iconos y solo de orientación: «Citas» (`citas`, en el botón de la ficha), «Novedades del centro» (`comunicaciones`), «Mis residentes» (`residentes`) y el teléfono (`contacto`) en el aviso «no es un canal urgente» de las pantallas de citas (`.alert .icono`, 20 px, color del aviso). Nada de signos de alarma, corazones, caras ni iconos en los estados de una cita ni en «Relevante»/«Ordinaria»: lo dicen la etiqueta y el borde, y un símbolo podría leerse como un juicio sobre el estado de su familiar.
+* **No llevan icono:** los campos de un formulario (la etiqueta ya los nombra), las columnas y filas de una tabla, los botones de envío (por el aviso «Enviando…» de `site.js`) ni los estados.
+* **Pendiente:** títulos de bloque (`fieldset`) de los formularios largos distintos de los del Auxiliar, y el basal (`EnfermeriaBasal`, `Auxiliar/Basal`), tras el visto bueno de CJ al piloto.
 
 ### C. Formularios de Registro Clínico (Firma de Estado Basal)
 * **Inputs:** Utilizar agrupaciones limpias con `.mb-3`.

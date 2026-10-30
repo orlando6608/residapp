@@ -16,7 +16,7 @@
 </nav>
 
 <h1 class="h3">Solicitud de cita</h1>
-<div class="alert alert-warning" role="note">Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</div>
+<div class="alert alert-warning d-flex align-items-start gap-2" role="note"><partial name="_Icono" model='"contacto"' /><span>Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</span></div>
 @if (TempData["Mensaje"] is string mensaje)
 {
     <div class="alert alert-success" role="status">@mensaje</div>

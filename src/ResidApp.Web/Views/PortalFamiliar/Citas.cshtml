@@ -17,7 +17,7 @@
 
 <h1 class="h3">Citas con el equipo asistencial</h1>
 <p class="text-muted">@resident.ResidentName · @resident.Relationship</p>
-<div class="alert alert-warning" role="note">Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</div>
+<div class="alert alert-warning d-flex align-items-start gap-2" role="note"><partial name="_Icono" model='"contacto"' /><span>Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</span></div>
 
 @if (TempData["Mensaje"] is string mensaje)
 {

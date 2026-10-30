@@ -355,6 +355,7 @@ details[open] > summary {
 
 /* Icono dentro de la cabecera, de un menú o de un botón: hereda el color del texto (el azul de enlace no se ve sobre la
    barra ni sobre un botón relleno) y es más pequeño. */
+.alert .icono,
 .navbar .icono,
 .dropdown-menu .icono,
 .btn .icono {
@@ -365,6 +366,13 @@ details[open] > summary {
 .dropdown-menu .icono {
   width: 1rem;
   height: 1rem;
+}
+
+/* En un aviso, junto a la primera línea de texto (1,5 rem de alto). */
+.alert .icono {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.125rem;
 }
 
 .btn .icono {

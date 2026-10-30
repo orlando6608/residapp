@@ -15,7 +15,7 @@
 </nav>
 
 <h1 class="h3">@(moving is null ? "Revisa tu reserva" : "Revisa el cambio")</h1>
-<div class="alert alert-warning" role="note">Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</div>
+<div class="alert alert-warning d-flex align-items-start gap-2" role="note"><partial name="_Icono" model='"contacto"' /><span>Las citas no son un canal urgente. Si necesitas algo urgente, llama por teléfono al centro.</span></div>
 
 <div class="card mb-3">
     <div class="card-body">
