@@ -278,7 +278,7 @@
   <div class="keyfacts" role="list">
     <div role="listitem"><span class="k">Qué bloquea</span><span>Nada para construir con datos de prueba. Antes de enviar a una dirección real hace falta tener la regla FAM-10 modificada por escrito.</span></div>
     <div role="listitem"><span class="k">Qué no cambia</span><span>Ningún correo lleva datos de salud, ni nombre del residente, de la unidad o del motivo. Sin SMS, WhatsApp ni notificaciones en el móvil.</span></div>
-    <div role="listitem"><span class="k">Preguntas</span><span>3 preguntas en 2 temas.</span></div>
+    <div role="listitem"><span class="k">Preguntas</span><span>6 preguntas en 3 temas.</span></div>
   </div>
 
   <section class="howto" aria-labelledby="como">
@@ -340,11 +340,16 @@
   </section>
 
   <section class="tema" id="tema-2">
-    <h2>Tema 2 · Que el correo llegue a quien debe</h2>
+    <h2>Tema 2 · Que el correo llegue a quien debe, y se entienda</h2>
     <div class="stack prose">
       <p>
         Hoy la dirección de correo del familiar la escribe Administración al registrarlo y la aplicación solo comprueba que lleve una «@». El campo se llama «Correo (opcional)» y no dice que se usará para
         avisos. Si la dirección tiene un error, el aviso «hay una propuesta de cita» llegaría a una persona que no es de la familia. Por eso el campo pasará a decir que se usará para avisos, y hay que decidir cómo se comprueba la dirección.
+      </p>
+      <p>
+        <strong>Así se vería el correo en castellano</strong> (asunto: «Tienes una propuesta de cita pendiente en ResidApp»): «Hay una propuesta de cita pendiente de tu respuesta en ResidApp. Para verla, entra en ResidApp: [dirección de la aplicación].
+        Las propuestas tienen un plazo para responder. No respondas a este correo: nadie lo lee. Si necesitas algo, llama al centro. Si no esperabas este aviso, ignóralo. ResidApp nunca te pedirá tu contraseña por correo, por teléfono ni por mensaje.»
+        Debajo lleva un pie que explica por qué lo recibe y que, para saber más o dejar de recibir avisos, se dirija al centro. En catalán dice lo mismo (asunto: «Tens una proposta de cita pendent a ResidApp») y añade que, de momento, la pantalla a la que lleva el enlace está en castellano.
       </p>
     </div>
     <div class="qs">
@@ -355,6 +360,48 @@
           <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">Administración confirma la dirección con el familiar, de palabra (leyéndosela) al registrarla, y marca «Dirección confirmada con la familia». Sin esa marca no se envía ningún aviso.</span></label>
           <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">Basta con teclearla bien: la aplicación no pide ninguna confirmación (más rápido, con más riesgo de error).</span></label>
           <label class="choice"><input type="radio" name="r-2-1" value="C"><span class="letter">C</span><span class="txt">No lo sé / depende (explícalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.2">
+        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">El correo también existe en catalán. ¿Lo revisas tú, igual que los textos del portal?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">En el otro documento dijiste que revisas los textos en catalán del portal. Este correo es texto nuevo, con palabras que importan («cita», «propuesta», «centro»), y una persona que sepa catalán tiene que darlo por bueno antes de que una familia lo reciba. Hoy se usaría el castellano; el catalán queda preparado.</p>
+        <fieldset class="choices" aria-labelledby="t-2-2">
+          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">Sí, lo reviso yo.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">Lo revisa otra persona (indícala en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="C"><span class="letter">C</span><span class="txt">Un traductor externo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Cuando una familia tiene dudas del aviso</h2>
+    <div class="stack prose">
+      <p>
+        El pie del correo dice que, para saber más o dejar de recibir avisos, la familia se dirija <strong>al centro</strong>: el correo no tiene enlace de baja (un enlace así, sin entrar, sería otra puerta de acceso que preferimos evitar).
+        Para que eso funcione, alguien del centro tiene que saber qué hacer.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">¿Quién atiende en el centro a una familia que dice «me llegó un aviso y no lo esperaba» o «no quiero recibir más avisos»?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Quien lo atienda corrige o quita la dirección en la ficha del familiar y lo anota. Si la dirección era de otra persona, hay que dejar constancia (es un pequeño incidente de protección de datos).</p>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Administración del centro.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Dirección del centro.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">Otra persona (indícala en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">¿Debería poder la familia apagar estos avisos ella misma desde el portal, más adelante?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy basta con pedirlo al centro. Poder apagarlos desde el portal sería más cómodo para la familia, pero es una pantalla más. No cambia nada de lo que se construye ahora.</p>
+        <fieldset class="choices" aria-labelledby="t-3-2">
+          <label class="choice"><input type="radio" name="r-3-2" value="A"><span class="letter">A</span><span class="txt">Sí, más adelante.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="B"><span class="letter">B</span><span class="txt">No, basta con pedirlo al centro.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="C"><span class="letter">C</span><span class="txt">No lo sé / depende (explícalo en el comentario).</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

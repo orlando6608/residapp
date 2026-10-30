@@ -1,0 +1,509 @@
+<!doctype html>
+<!--
+  Documento para Orlando. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan en «aviso-correo-decisiones.respuestas.json»; se pueden dejar en esta misma carpeta para que ingeniería las lea.
+  No contiene claves ni datos secretos: la cadena de conexión de Azure no se escribe aquí ni en el repositorio.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aviso por correo: lo que decides tú y lo que lleva la persona experta</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --ink: #1a2433;
+    --muted: #5b6676;
+    --rule: #d6dde6;
+    --accent: #0a58ca;
+    --accent-ink: #ffffff;
+    --accent-soft: #e6eefb;
+    --warn-rule: #e0bf55;
+    --warn-bg: #fff8e1;
+    --blank: #fffdf4;
+    --blank-rule: #b9a24f;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #6fae82;
+    --no-bg: #fbe9e7;
+    --no-ink: #7a1f17;
+    --danger: #b3261e;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f141b; --surface: #171d26; --ink: #e3e8ef; --muted: #a3adba; --rule: #2a3340;
+      --accent: #6ea8fe; --accent-ink: #0b1220; --accent-soft: #19243a;
+      --warn-rule: #7c6520; --warn-bg: #2a2410; --blank: #1d2420; --blank-rule: #6f6334;
+      --ok-bg: #173022; --ok-ink: #bfe5c9; --ok-rule: #3f7a52; --no-bg: #3a1c19; --no-ink: #f5c6c1; --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f141b; --surface: #171d26; --ink: #e3e8ef; --muted: #a3adba; --rule: #2a3340;
+    --accent: #6ea8fe; --accent-ink: #0b1220; --accent-soft: #19243a;
+    --warn-rule: #7c6520; --warn-bg: #2a2410; --blank: #1d2420; --blank-rule: #6f6334;
+    --ok-bg: #173022; --ok-ink: #bfe5c9; --ok-rule: #3f7a52; --no-bg: #3a1c19; --no-ink: #f5c6c1; --danger: #f2b8b5;
+  }
+
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-inline: 16px; }
+  .page { max-width: 880px; margin: 0 auto; padding-block: 48px 160px; display: flex; flex-direction: column; gap: 48px; }
+  .prose { max-width: 70ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 600; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .keyfacts .si { color: var(--ok-ink); }
+  .keyfacts .no { color: var(--no-ink); }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+
+  .nota { padding: 12px 16px; border-left: 4px solid var(--warn-rule); background: var(--warn-bg); border-radius: 0 6px 6px 0; }
+  .nota.info { border-left-color: var(--accent); background: var(--accent-soft); }
+
+  /* Glosario */
+  .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .card strong { font-size: 1rem; }
+  .card span { font-size: 0.94rem; color: var(--muted); }
+  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+
+  /* Pasos */
+  .pasos { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; counter-reset: paso; }
+  .pasos > li { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .pasos > li > h3 { display: flex; gap: 12px; align-items: baseline; }
+  .pasos .id { font-family: var(--mono); font-size: 0.85rem; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+  .quien { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .veras { padding-left: 12px; border-left: 3px solid var(--ok-rule); color: var(--muted); font-size: 0.95rem; }
+  .ojo { padding-left: 12px; border-left: 3px solid var(--warn-rule); font-size: 0.95rem; }
+
+  /* Tablas */
+  .tabla { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+  tr:last-child td { border-bottom: 0; }
+  .si-td { color: var(--ok-ink); font-weight: 600; }
+  .no-td { color: var(--no-ink); font-weight: 600; }
+
+  .descartes { display: flex; flex-direction: column; gap: 10px; list-style: none; padding: 0; }
+  .descartes li { background: var(--no-bg); color: var(--no-ink); border-radius: 6px; padding: 10px 14px; }
+  .descartes li span { display: block; color: var(--ink); font-size: 0.94rem; }
+
+  /* Índice y preguntas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); text-decoration: none; color: var(--ink); min-height: 24px; }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q { background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--blank-rule); border-radius: 8px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 999px; padding: 2px 10px; white-space: nowrap; background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted); }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) { .q-head { grid-template-columns: auto 1fr; } .q-head .chip { grid-column: 2; justify-self: start; } }
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice { position: relative; display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); cursor: pointer; }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--accent); color: var(--accent); display: grid; place-items: center; font-weight: 600; line-height: 1; }
+  .choice .txt { padding-top: 2px; }
+  .choice .rec { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ok-ink); background: var(--ok-bg); border-radius: 999px; padding: 1px 8px; margin-left: 6px; white-space: nowrap; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .check { display: flex; gap: 12px; align-items: center; min-height: 48px; cursor: pointer; }
+  .check input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea { font: inherit; font-size: 1rem; color: var(--ink); background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px; padding: 8px 10px; width: 100%; box-sizing: border-box; min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija */
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--rule); box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08); padding: 10px 16px; }
+  .bar-in { max-width: 880px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn { font: inherit; font-size: 0.95rem; font-weight: 600; padding: 10px 14px; min-height: 44px; border-radius: 6px; cursor: pointer; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+  @media print { .bar, .toc { display: none; } .page { padding-bottom: 24px; } .q, .pasos > li { break-inside: avoid; } }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  @media print { .back { display: none; } }
+</style>
+</head>
+<body data-doc="aviso-correo-decisiones" data-version="2026-10-30">
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="../orlando.html">← Para Orlando</a>
+      <a href="../index.html">Documentos de CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Correo · Para Orlando</p>
+    <h1>Aviso de cita por correo: lo que decides tú y lo que lleva la persona experta</h1>
+    <p class="meta">Estado a 30/10/2026 · El aviso está construido y apagado · La lectura de privacidad es del agente de protección de datos, que no sustituye a un DPO real o a un abogado</p>
+    <p class="lead prose">
+      Ya se puede construir y probar el correo que avisa a la familia de que el centro le propone una cita (está <strong>apagado</strong>: no envía nada hasta que lo enciendas).
+      Para usarlo con direcciones de verdad faltan cosas que no puede decidir ingeniería: unas son tuyas, otras son de CJ y otras son de una persona experta (un DPO real o un abogado).
+      Este documento junta todo en un sitio: lo tuyo, para que lo decidas aquí, y lo de la persona experta, para que se lo lleves.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué decides tú</span><strong>6 cosas</strong><span>Abajo, con una opción recomendada en cada una.</span></div>
+    <div role="listitem"><span class="k">Qué lleva la persona experta</span><strong>9 preguntas</strong><span>Una tabla para llevarle, con lo que ya propone ingeniería.</span></div>
+    <div role="listitem"><span class="k">Qué decide CJ</span><strong>6 preguntas</strong><span>En su documento «Aviso de cita por correo».</span></div>
+  </div>
+
+  <nav class="toc" id="indice" aria-label="Partes con preguntas"></nav>
+
+  <section aria-labelledby="hecho">
+    <h2 id="hecho">1 · Qué está hecho y qué falta, en pocas palabras</h2>
+    <div class="cards">
+      <div class="card"><strong>Hecho</strong><span>Cuando Administración propone una cita, la aplicación puede mandar un correo corto y genérico («hay una propuesta de cita pendiente»), sin nombre del residente, del centro ni de la cita. Solo a la persona que hizo la solicitud, y solo si sigue pudiendo verla. Un fallo del correo nunca estropea la propuesta.</span></div>
+      <div class="card"><strong>Apagado</strong><span>Por defecto no envía nada. Para encenderlo hacen falta cuatro ajustes en la aplicación de Azure y, fuera de producción, una lista de direcciones permitidas (para no escribir sin querer a personas reales de los datos de prueba).</span></div>
+      <div class="card"><strong>Registro de envíos</strong><span>Una fila por correo, para no mandarlo dos veces y poder explicar si salió. No guarda la dirección, ni el texto, ni nombres. Lo que guarda y cuánto tiempo lo decides tú abajo (1.2) con la persona experta.</span></div>
+      <div class="card"><strong>Lo que falta de código</strong><span>La casilla «Dirección confirmada con la familia» y la frase que explica para qué se usa el correo. Esperan a la respuesta de CJ.</span></div>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-1" aria-labelledby="t1">
+    <h2 id="t1">2 · Tus decisiones</h2>
+    <p class="prose meta">Cada una trae una opción recomendada, pero eliges tú. Ninguna toca datos reales: hoy todo es desarrollo y el correo está apagado.</p>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Quién figura como titular de ResidApp en el pie del correo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">El pie del correo dice que el responsable de los datos es el centro y que ResidApp los trata por su cuenta. La ley pide poder identificar a quien envía, así que antes de usarlo con datos reales hay que añadir una línea con el nombre o la razón social, el NIF y el domicilio de ResidApp. Hoy esa línea no está. No escribas aquí tus datos personales: solo di cuál de las tres opciones es.</p>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Yo, como persona física (la línea se añade antes de los datos reales).</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Una sociedad (la tendremos antes de los datos reales).</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">Todavía no lo sé: mientras sean datos de prueba el correo sale sin esa línea. <span class="rec">Recomendada</span></span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Cuánto tiempo se guarda el registro de envíos?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Solo hace falta para no duplicar (unos días) y para explicar un aviso que no llegó (unos meses). No hay un plazo legal que lo fije: es una decisión tuya con la persona experta. Pasado el plazo, la fila se borra con un procedimiento que aún no existe y se hará cuando haya plazo.</p>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">12 meses desde el envío, como tope (propuesta de trabajo; la persona experta lo confirma). <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">6 meses.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">Lo que diga la persona experta; mientras tanto, no se borra nada.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.3">
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">¿Qué registros de actividad activamos en el servicio de correo de Azure (el paso B10)?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Azure puede anotar quién abrió el correo y cuándo, pero no hace falta y vigilar a las familias entra en el seguimiento que la ley regula. Recomendado: sin seguimiento de aperturas ni de clics; registros de envío (solo recuentos) sí; y el estado de entrega (si un correo rebotó) solo en un espacio propio de ResidApp en la UE, con 30 días de conservación y acceso limitado, porque ese registro sí lleva la dirección.</p>
+        <fieldset class="choices" aria-labelledby="t-1-3">
+          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">Esa combinación: sin seguimiento, registros de envío y estado de entrega en un espacio propio en la UE a 30 días. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">Solo los registros de envío (recuentos); el estado de entrega, apagado.</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="C"><span class="letter">C</span><span class="txt">Nada por ahora, hasta hablar con la persona experta.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.4">
+        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">¿Reforzamos la protección contra suplantación del correo (DMARC) antes de producción?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy el dominio de avisos (avisos.residapp.es) tiene DMARC en modo «solo mirar» (p=none): no impide que alguien se haga pasar por ResidApp. Para un correo con un enlace que lleva a iniciar sesión, conviene pasarlo a «cuarentena» (quarantine) antes de usar datos reales, una vez revisados unos días de informes. Es un cambio de DNS en CDmon, no de código.</p>
+        <fieldset class="choices" aria-labelledby="t-1-4">
+          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">Sí, antes de producción, tras revisar los informes. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">Sí, pero ya ahora, en desarrollo.</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="C"><span class="letter">C</span><span class="txt">No por ahora.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.5">
+        <div class="q-head"><span class="n">1.5</span><h3 class="q-title" id="t-1-5">¿Hacemos ya una prueba real de un correo en Azure dev?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Serviría para comprobar que el correo llega a la bandeja principal, que sale con un solo destinatario y sin «Responder a», y que el texto se ve bien. Se haría solo con una dirección tuya como única permitida. Te guío paso a paso con lo que verás en pantalla; nunca me pasas la cadena de conexión.</p>
+        <fieldset class="choices" aria-labelledby="t-1-5">
+          <label class="choice"><input type="radio" name="r-1-5" value="A"><span class="letter">A</span><span class="txt">Sí, ahora.</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="B"><span class="letter">B</span><span class="txt">Cuando CJ haya contestado su documento. <span class="rec">Recomendada</span></span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="C"><span class="letter">C</span><span class="txt">Mejor no probar un envío real hasta tener todo validado.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.6">
+        <div class="q-head"><span class="n">1.6</span><h3 class="q-title" id="t-1-6">¿Ya tienes a la persona experta (DPO real o abogado) que validará los documentos de privacidad?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es lo que desbloquea usar ResidApp con residentes reales. Todo lo que aparece en la tabla de abajo, y lo que ya estaba pendiente en docs/privacidad/antes-de-datos-reales.md, pasa por ella. No tiene por qué ser la misma persona para todo.</p>
+        <fieldset class="choices" aria-labelledby="t-1-6">
+          <label class="choice"><input type="radio" name="r-1-6" value="A"><span class="letter">A</span><span class="txt">Sí, ya la tengo.</span></label>
+          <label class="choice"><input type="radio" name="r-1-6" value="B"><span class="letter">B</span><span class="txt">No, la busco ahora.</span></label>
+          <label class="choice"><input type="radio" name="r-1-6" value="C"><span class="letter">C</span><span class="txt">Aún no: seguimos con datos de prueba y lo dejo para antes del primer centro real. <span class="rec">Recomendada</span></span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="experta">
+    <h2 id="experta">3 · Para llevar a la persona experta (DPO o abogado)</h2>
+    <p class="prose">Son las cosas que ni tú ni yo podemos decidir, con lo que ya propone ingeniería para que le sirva de punto de partida. El borrador completo, con las fuentes consultadas, es <code>docs/privacidad/aviso-cita-por-correo.md</code> (apartados 2 a 6). Mi lectura no sustituye a la suya.</p>
+    <div class="tabla">
+      <table>
+        <thead><tr><th scope="col">Qué hay que decidir o comprobar</th><th scope="col">Qué propone ingeniería</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Base jurídica del aviso</strong>: con qué derecho se escribe a la familia (ejecución del servicio, interés legítimo u otra)</td><td>Ninguna elegida; las tres candidatas están descritas en el borrador. Debe quedar escrita.</td></tr>
+          <tr><td><strong>Texto informativo al familiar</strong>, en castellano y catalán, al dar de alta su correo y en la «Privacidad» del portal</td><td>Texto propuesto en el apartado 6 del borrador. El catalán lo revisa CJ.</td></tr>
+          <tr><td><strong>Si la ley de servicios de la sociedad de la información (LSSI) aplica</strong> a este aviso, y si el seguimiento de aperturas la activaría</td><td>El seguimiento está apagado; el aviso es del servicio, no publicidad. A confirmar por un abogado.</td></tr>
+          <tr><td><strong>Contrato con Microsoft</strong> (Azure Communication Services): que figure como subencargado, dónde se guardan los datos y cuánto retiene las direcciones de los correos rebotados</td><td>Microsoft dice que los datos «pueden transitar por otras geografías» y no fija la retención de rebotes. Preguntarlo por escrito a Microsoft.</td></tr>
+          <tr><td><strong>Plazo de conservación</strong> del registro de envíos (ver tu decisión 1.2)</td><td>12 meses como tope, y un procedimiento de borrado.</td></tr>
+          <tr><td><strong>Verificar la dirección</strong> antes del primer envío: ¿basta confirmarla de palabra al darla de alta, o hace falta un correo de comprobación?</td><td>De palabra, con una casilla «Dirección confirmada con la familia» (pregunta 2.1 a CJ). Un correo de comprobación sería otro envío.</td></tr>
+          <tr><td><strong>Procedimiento si alguien recibe un aviso ajeno</strong> (dirección mal escrita): registro interno de brechas y si se notifica</td><td>Riesgo bajo con este texto (no dice nada de nadie). Debe quedar escrito quién atiende a la familia (pregunta 3.1 a CJ).</td></tr>
+          <tr><td><strong>Autoridad de control</strong>: AEPD o Agencia Catalana de Protección de Datos, según el tipo de centro piloto</td><td>No se ha decidido; depende del centro.</td></tr>
+          <tr><td><strong>Registro de actividades y evaluación de impacto</strong> del Portal Familiar, con una línea sobre este envío</td><td>Entrada del registro propuesta en el apartado 5 del borrador.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="cj">
+    <h2 id="cj">4 · Lo que espera a CJ</h2>
+    <p class="prose">Está en su documento <a href="../aviso-citas-por-correo-cj.html">«Aviso de cita por correo»</a> (6 preguntas): modificar por escrito la regla FAM-10 («sin email en el piloto»), si el correo dice «propuesta de cita» o «novedad», cómo se confirma la dirección del familiar, si él revisa el catalán del correo, quién atiende a una familia con dudas y si la familia podrá apagar los avisos. Tú se lo pasas.</p>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para Orlando. No contiene claves ni la cadena de conexión de Azure. Hecho con el ADR 0012, la lectura del agente de protección de datos
+    (<code>docs/privacidad/aviso-cita-por-correo.md</code>) y el código del aviso (script <code>0081</code>). No sustituye a un DPO real o a un abogado.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Guardar respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+    <div class="actions">
+      <button type="button" class="btn" id="btn-abrir">Abrir respuestas guardadas</button>
+      <button type="button" class="btn primary" id="btn-guardar">Guardar respuestas</button>
+      <input type="file" id="fichero" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</div>
+
+<script>
+/* El mismo script que los cuestionarios de CJ (docs/pendientes-cj), con tres diferencias de texto: la clave del navegador, la marca «Hecho» de las casillas y el aviso al guardar. */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var FILE = DOC + ".respuestas.json";
+  var KEY = "residapp-pendientes-orlando:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;
+  var savedAt = null;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (dirty) say("", "Tienes cambios que aún no están en el fichero. Pulsa «Guardar respuestas» cuando quieras.");
+    else if (savedAt) say("ok", "Fichero al día (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda en este navegador.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? (q.dataset.si || "Respondida") : (q.dataset.no || "Pendiente");
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  function loaded(data, origin) {
+    apply(data);
+    dirty = false;
+    savedAt = data.guardado || null;
+    store(refresh());
+    var msg = "Respuestas cargadas " + origin + " (guardadas el " + when(data.guardado) + ").";
+    if (data.cuestionario !== VERSION) {
+      say("error", msg + " Son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+    } else {
+      say("ok", msg);
+    }
+  }
+
+  function download(json) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    a.download = FILE;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  async function save() {
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    try {
+      if (!window.showSaveFilePicker) throw new Error("sin selector");
+      var handle = await window.showSaveFilePicker({ suggestedName: FILE,
+        types: [{ description: "Respuestas (JSON)", accept: { "application/json": [".json"] } }] });
+      var w = await handle.createWritable();
+      await w.write(json);
+      await w.close();
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      download(json);
+    }
+    dirty = false;
+    savedAt = data.guardado;
+    store(data);
+    say("ok", "Guardado como «" + FILE + "». Déjalo en docs/pendientes-cj/orlando/ y dime «ya respondí»; una vez publicado, el documento lo carga solo.");
+  }
+
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    store(refresh());
+    status();
+  }
+
+  document.getElementById("btn-guardar").addEventListener("click", save);
+  document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
+  document.getElementById("fichero").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    file.text().then(function (t) {
+      var data = JSON.parse(t);
+      if (data.documento !== DOC) {
+        say("error", "Ese fichero es de otro documento («" + data.documento + "»). Elige «" + FILE + "».");
+        return;
+      }
+      loaded(data, "del fichero");
+    }).catch(function () {
+      say("error", "No se ha podido leer ese fichero. Elige «" + FILE + "».");
+    }).finally(function () { e.target.value = ""; });
+  });
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+
+  // Si la página se sirve por http (no desde disco), carga las respuestas ya subidas al repositorio.
+  if (location.protocol.indexOf("http") === 0) {
+    fetch(FILE, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.documento !== DOC) return;
+        if (dirty) {
+          say("", "Hay respuestas en el repositorio (guardadas el " + when(data.guardado) +
+            "), pero mantienes los cambios de este navegador, que aún no están en el fichero.");
+          return;
+        }
+        loaded(data, "del repositorio");
+      })
+      .catch(function () { /* sin fichero de respuestas */ });
+  }
+})();
+</script>
+</body>
+</html>
