@@ -305,7 +305,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Acceso y sesión</p>
     <h1>Cómo se entra en ResidApp: el acceso y la sesión</h1>
-    <p class="meta">Estado a 24/10/2026 · Para quien usa o prueba la aplicación, para Plataforma y soporte, y para quien responde de su seguridad</p>
+    <p class="meta">Estado a 30/10/2026 · Para quien usa o prueba la aplicación, para Plataforma y soporte, y para quien responde de su seguridad</p>
     <p class="lead prose">
       Nadie se crea su propia cuenta en ResidApp: el acceso lo da quien responde de cada persona. Después, cada vez que abres una
       pantalla, la aplicación comprueba <strong>quién eres</strong>, con tu sesión, y <strong>qué puedes hacer</strong>, con el perfil,
@@ -364,8 +364,8 @@
       </li>
       <li class="bien">
         <h3>Sin sesión</h3>
-        <p>El Inicio, el Manual, el Flujo de trabajo, esta página y la página sin conexión. Todo lo demás te lleva a la pantalla de
-          acceso.</p>
+        <p>El Inicio, el Manual, el Flujo de trabajo, esta página, la página de Privacidad y la página sin conexión. Todo lo demás te lleva
+          a la pantalla de acceso.</p>
       </li>
       <li>
         <h3>La clave de los documentos de CJ</h3>
@@ -533,7 +533,7 @@
           <li>Entra con su cuenta de Plataforma: «Centros» → <strong>Nuevo centro</strong>.</li>
           <li>Escribe el código y el nombre del centro, su primera unidad y su primer administrador (identificador de acceso y nombre).
             Se crea todo a la vez o nada.</li>
-          <li>En el centro, <strong>Crear invitación de acceso</strong> para esa Administración, y entrégale la hoja en privado.</li>
+          <li>En el centro, <strong>Crear invitación de acceso o de recuperación</strong> para esa Administración, y entrégale la hoja en privado.</li>
         </ol>
         <p class="pasa">Desde ahí, la Administración monta el centro y da el resto de accesos.</p>
       </li>
@@ -550,12 +550,13 @@
         <ol>
           <li>Si ve «Usuario o contraseña incorrectos», comprueba que escribe bien su identificador. Tras 5 fallos seguidos, la cuenta se
             bloquea 15 minutos.</li>
-          <li>Si ve un error 429, que espere un minuto: son demasiados intentos seguidos.</li>
+          <li>Si ve un error 429, que espere unos minutos (hasta 15 si hubo muchos fallos desde la misma red): son demasiados intentos seguidos.</li>
           <li>Si usaba una passkey y no tiene a mano ese dispositivo, puede entrar con su contraseña y el código del móvil.</li>
           <li>Si no es eso, lo resuelve su Administración en «Usuarios»: la cuenta puede estar suspendida o sin ningún perfil vigente. Si ha
             perdido el móvil, una invitación de recuperación, que además borra sus passkeys.</li>
         </ol>
-        <p class="pasa">Soporte no crea ni reactiva cuentas de personal desde la aplicación.</p>
+        <p class="pasa">Soporte no crea ni reactiva desde la aplicación las cuentas de personal de un solo centro. Las de personas con perfil en
+          varios centros sí las gestiona Plataforma, en «Cuentas de varios centros».</p>
       </li>
       <li>
         <h3>Una familia no puede entrar</h3>
@@ -568,7 +569,8 @@
       <li class="aviso">
         <h3>Hay que cortar un acceso ya</h3>
         <ol>
-          <li>Personal: su Administración <strong>suspende la cuenta</strong>. Deja de valer en la siguiente pantalla que abra.</li>
+          <li>Personal: su Administración <strong>suspende la cuenta</strong>. Deja de valer en la siguiente pantalla que abra.
+            Si la persona tiene perfil en varios centros, la suspende Plataforma, en «Cuentas de varios centros».</li>
           <li>Familia: su Administración suspende o revoca la autorización. Deja de ver al residente en la siguiente pantalla.</li>
           <li>Plataforma: por SQL, quien administra la base de datos.</li>
         </ol>
@@ -583,8 +585,9 @@
       </li>
       <li>
         <h3>Un centro sin ninguna Administración que pueda entrar</h3>
-        <p>La aplicación todavía no permite a Plataforma reactivar una cuenta ni crear otra Administración en un centro que ya existe. Lo
-          resuelve por SQL quien administra la base de datos.</p>
+        <p>La aplicación todavía no permite a Plataforma reactivar una cuenta de un solo centro ni crear otra Administración en un centro que
+          ya existe (las cuentas con perfil en varios centros sí se reactivan en «Cuentas de varios centros»). Lo resuelve por SQL quien
+          administra la base de datos.</p>
       </li>
       <li>
         <h3>Una cuenta de Plataforma nueva o que se retira</h3>
@@ -600,7 +603,8 @@
         <li>Mirar datos de residentes: Plataforma no puede, y nadie le pasa capturas con ellos.</li>
       </ul>
       <p class="pasa">Las invitaciones: Plataforma entrega la de la primera Administración de cada centro nuevo (y la recuperación de una
-        Administración que no tiene otra que se la dé); la Administración de cada centro, las del resto de cuentas y sus recuperaciones.
+        Administración que no tiene otra que se la dé, y las de las cuentas con perfil en varios centros); la Administración de cada centro,
+        las del resto de cuentas y sus recuperaciones.
         Nadie se entrega una invitación a sí mismo.</p>
     </div>
   </section>
@@ -757,18 +761,19 @@
       </svg>
     </div>
     <ul class="lista prose">
-      <li><strong>Si algo no cuadra</strong>, el aviso es siempre «Usuario o contraseña incorrectos.», sin decir qué falla: así no
-        se puede averiguar qué cuentas existen.</li>
+      <li><strong>Si el usuario o la contraseña no valen</strong>, el aviso es «Usuario o contraseña incorrectos.» y no dice cuál de los dos
+        falla: así no se puede averiguar qué cuentas existen. Con la contraseña correcta, en cambio, la pantalla sí avisa de lo que falta
+        (por ejemplo, que la cuenta de Plataforma entra solo con passkey, o que hay que preparar el código del móvil).</li>
       <li><strong>Cinco fallos seguidos</strong> (contraseña o código del móvil) <strong>bloquean la cuenta 15 minutos</strong>, aunque
         después se escriba bien. Cada fallo, cada bloqueo y cada entrada quedan en el registro de accesos.</li>
       <li><strong>Sin el móvil</strong>, «Usa un código de recuperación» deja entrar con uno de los 10 códigos; cada uno vale una vez.
         Si no te quedan, pide ayuda a tu Administración.</li>
       <li><strong>Entre la contraseña y el código</strong> hay 10 minutos; si se pasan, o si entretanto cambia la contraseña de la cuenta,
         vuelves a empezar. Ese paso intermedio no abre ninguna pantalla.</li>
-      <li><strong>Más de 20 accesos fallidos en 15 minutos</strong> desde la misma conexión (la de toda una residencia cuenta como una),
+      <li><strong>20 accesos fallidos en 15 minutos</strong> desde la misma conexión (la de toda una residencia cuenta como una),
         sea cual sea la cuenta: se rechazan los intentos siguientes con un error (429) hasta que pasa la ventana. Los accesos correctos no
         cuentan, así que varias personas pueden entrar a la vez. Además hay un techo de 120 peticiones por minuto contra inundaciones.</li>
-      <li><strong>«Mi cuenta»</strong>, en el menú con tu nombre, te deja cambiar tu contraseña (se cierran tus demás sesiones), generar 10
+      <li><strong>«Mi cuenta»</strong>, en el menú de tu perfil, te deja cambiar tu contraseña (se cierran tus demás sesiones), generar 10
         códigos de recuperación nuevos (con tu contraseña y el código del móvil; los anteriores dejan de valer) y ver y cerrar tus sesiones
         abiertas, con los últimos accesos a tu cuenta. El código del móvil no se cambia ahí: para otro móvil hace falta una invitación de
         recuperación de tu Administración.</li>
@@ -778,8 +783,8 @@
         tu perfil y entra con la otra cuenta. «Salir» cierra tu sesión en ese momento.</li>
       <li><strong>Familia:</strong> la cuenta de un familiar entra, por ahora, solo con la contraseña (su segundo factor está por
         decidir con CJ) y va directamente al Portal Familiar, con su propio aspecto y sin nada del personal.</li>
-      <li><strong>Si la sesión había terminado al pulsar «Guardar»</strong>, lo escrito no se guarda: tras entrar de nuevo, la pantalla
-        de acceso te lo avisa y te devuelve a la pantalla del formulario.</li>
+      <li><strong>Si la sesión había terminado al pulsar «Guardar»</strong>, lo escrito no se guarda: la pantalla de acceso te lo
+        avisa y, tras entrar de nuevo, te devuelve a la pantalla del formulario.</li>
       <li><strong>Al entrar o salir</strong> se olvida el ámbito elegido y termina cualquier lectura clínica declarada por Dirección Clínica.</li>
     </ul>
   </section>
@@ -810,7 +815,7 @@
     <ol class="pasos">
       <li class="persona">
         <div class="paso-cab"><span class="n">1</span><span class="perfil" style="color: var(--accent)">Tú</span></div>
-        <p><strong>Entra</strong> con tu contraseña y tu código del móvil, y abre «Mi cuenta» en el menú con tu nombre (arriba a la derecha).</p>
+        <p><strong>Entra</strong> con tu contraseña y tu código del móvil, y abre «Mi cuenta» en el menú de tu perfil (arriba a la derecha; en el móvil, tras el botón de menú).</p>
       </li>
       <li class="persona">
         <div class="paso-cab"><span class="n">2</span><span class="perfil" style="color: var(--accent)">Tú</span></div>
@@ -868,7 +873,7 @@
         <div class="hito">
           <div class="hito-cab"><span class="cuando">10:10 – 10:45</span><span class="perfil">Enfermería</span></div>
           <p><strong>Deja la tablet</strong> con el basal de Rosa a medias, sin guardar. A las 10:45 pulsa «Guardar»: han pasado 35 minutos
-            sin uso y la app la lleva a la pantalla de acceso, sin más aviso.</p>
+            sin uso y la app la lleva a la pantalla de acceso, que le avisa de que lo escrito no se ha guardado.</p>
           <p class="pasa">Lo que no había guardado <strong>se pierde</strong>. Entra otra vez: es una sesión nueva, que durará como mucho
             hasta las 22:45.</p>
         </div>
@@ -900,6 +905,7 @@
           <tr><td>Pulsas «Salir»</td><td>En ese momento</td><td class="motivo">Salida (<code>LOGOUT</code>)</td></tr>
           <tr><td>Entras con otra cuenta</td><td>Al entrar con la nueva</td><td class="motivo">Cambio de cuenta (<code>CAMBIO_IDENTIDAD</code>)</td></tr>
           <tr><td>Cierras otra sesión desde «Mi cuenta», o cambias la contraseña</td><td>En la siguiente pantalla que abra esa sesión</td><td class="motivo">Cierre propio (<code>CIERRE_PROPIO</code>)</td></tr>
+          <tr><td>Usas una invitación de recuperación</td><td>Al usarla (se cierran todas tus sesiones)</td><td class="motivo">Recuperación (<code>RECUPERACION</code>)</td></tr>
           <tr><td>30 minutos sin usarla</td><td>En la siguiente pantalla que abras</td><td class="motivo">Inactividad (<code>INACTIVIDAD</code>)</td></tr>
           <tr><td>12 horas desde que entraste, aunque la uses</td><td>En la siguiente pantalla que abras</td><td class="motivo">Caducidad (<code>CADUCIDAD</code>)</td></tr>
           <tr><td>Administración suspende tu cuenta</td><td>En la siguiente pantalla que abras</td><td>La sesión deja de valer y no se puede volver a entrar con esa cuenta.</td></tr>
@@ -1110,7 +1116,7 @@
               <code>SqlCredentialStore</code> (Infrastructure)</td>
             <td>ASP.NET Core Identity solo para las credenciales (<code>UserManager</code>, sin <code>SignInManager</code>): el usuario
               es la cuenta y su nombre, <code>sujeto_externo</code>. Contraseña de 12 caracteres o más, bloqueo 5 / 15 min
-              (<code>AccesoOptions</code>), <code>Acceso:IntentosPorMinuto</code> (10). El paso hasta el segundo factor es la cookie
+              (<code>AccesoOptions</code>), <code>Acceso:IntentosPorMinuto</code> (120). El paso hasta el segundo factor es la cookie
               <code>residapp_acceso_pendiente</code> (10 min, solo <code>/Acceso</code>, con el sello de seguridad).</td>
           </tr>
           <tr>
@@ -1190,7 +1196,7 @@
   </section>
 
   <footer>
-    ResidApp · Acceso y sesión · Estado a 24/10/2026. El detalle de cada pantalla está en el <a href="/Home/Manual">Manual de usuario</a>.
+    ResidApp · Acceso y sesión · Estado a 30/10/2026. El detalle de cada pantalla está en el <a href="/Home/Manual">Manual de usuario</a>.
   </footer>
 </div>
 
