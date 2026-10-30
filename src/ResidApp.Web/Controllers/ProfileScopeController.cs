@@ -15,7 +15,7 @@ namespace ResidApp.Web.Controllers;
 public sealed class ProfileScopeController(ListActiveProfileScopes listActiveProfileScopes, ClinicalAccessDeclarations declarations) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Select(string? returnUrl, CancellationToken ct)
+    public async Task<IActionResult> Select(string? returnUrl, bool cambiar, CancellationToken ct)
     {
         var result = await listActiveProfileScopes.ExecuteAsync(ct);
         if (!result.Ok)
@@ -25,6 +25,12 @@ public sealed class ProfileScopeController(ListActiveProfileScopes listActivePro
         }
 
         var scopes = result.Value!;
+        if (scopes.Count == 1 && cambiar)
+        {
+            // Pulsó «Cambiar ámbito» teniendo uno solo: no se elige por él en silencio, se le dice que no hay otro.
+            return View(ToViewModel(scopes, returnUrl, soloUnAmbito: true));
+        }
+
         return scopes.Count == 1
             ? await SelectScopeAsync(scopes[0], returnUrl, ct)
             : View(ToViewModel(scopes, returnUrl));
@@ -65,9 +71,10 @@ public sealed class ProfileScopeController(ListActiveProfileScopes listActivePro
             : RedirectToAction("Index", "Home");
     }
 
-    private static SelectProfileScopeViewModel ToViewModel(IReadOnlyList<ActiveProfileScope> scopes, string? returnUrl) =>
+    private static SelectProfileScopeViewModel ToViewModel(IReadOnlyList<ActiveProfileScope> scopes, string? returnUrl, bool soloUnAmbito = false) =>
         new()
         {
+            SoloUnAmbito = soloUnAmbito,
             Options = scopes
                 .Select(s => new ProfileScopeOptionViewModel(s.ProfileScopeId, s.CenterId.Value, s.CenterName, SystemProfileDisplay.Label(s.Profile)))
                 .ToList(),

@@ -21,7 +21,16 @@
 
 <div asp-validation-summary="All" class="text-danger"></div>
 
-@if (Model.Options.Count == 0)
+@if (Model.SoloUnAmbito)
+{
+    var unico = Model.Options[0];
+    <div class="alert alert-info" role="status">
+        Solo tienes un ámbito activo: <strong>@unico.ProfileLabel</strong> en <strong>@unico.CenterName</strong>. No hay otro al que cambiar.
+        Si necesitas otro perfil, pídeselo a la Administración de tu centro.
+    </div>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Volver al inicio</a>
+}
+else if (Model.Options.Count == 0)
 {
     <div class="card">
         <div class="card-body">

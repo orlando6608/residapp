@@ -8,6 +8,8 @@ public sealed class SelectProfileScopeViewModel
 {
     public IReadOnlyList<ProfileScopeOptionViewModel> Options { get; init; } = [];
     public string? ReturnUrl { get; init; }
+    /// <summary>La persona pidió cambiar de ámbito pero solo tiene uno: se le avisa en vez de elegirlo sin más.</summary>
+    public bool SoloUnAmbito { get; init; }
 }
 
 public static class SystemProfileDisplay

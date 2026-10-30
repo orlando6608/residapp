@@ -94,6 +94,23 @@ public partial class AccesoTests(ResidentsFlowTests.WebAppFactory factory) : ICl
     }
 
     [Fact]
+    public async Task CambiarAmbito_ConUnSoloAmbito_AvisaEnVezDeElegirloEnSilencio()
+    {
+        var (subject, _) = await SeedWithPasswordAsync("FAMILIAR");
+        var client = Client();
+        await EnterAsync(client, subject, Password);
+
+        var firstTime = await client.GetAsync("/ProfileScope/Select");
+        var changing = await client.GetAsync("/ProfileScope/Select?cambiar=true");
+        var notice = await TextAsync(changing);
+
+        Assert.Equal(HttpStatusCode.Redirect, firstTime.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, changing.StatusCode);
+        Assert.Contains("Solo tienes un ámbito activo", notice);
+        Assert.DoesNotContain("name=\"profileScopeId\"", notice);
+    }
+
+    [Fact]
     public async Task CualquierFallo_DaElMismoMensaje_YNoAbreSesion()
     {
         var wrong = await SeedWithPasswordAsync("FAMILIAR");

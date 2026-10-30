@@ -120,7 +120,7 @@
                                     <li><a class="dropdown-item d-flex align-items-center gap-2" asp-area="" asp-controller="Cuenta" asp-action="Index"><partial name="_Icono" model='"cuenta"' />Mi cuenta</a></li>
                                     @if (activeScopeLayout is not null)
                                     {
-                                        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-area="" asp-controller="ProfileScope" asp-action="Select"><partial name="_Icono" model='"ambito"' />Cambiar ámbito</a></li>
+                                        <li><a class="dropdown-item d-flex align-items-center gap-2" asp-area="" asp-controller="ProfileScope" asp-action="Select" asp-route-cambiar="true"><partial name="_Icono" model='"ambito"' />Cambiar ámbito</a></li>
                                     }
                                     <li><hr class="dropdown-divider" /></li>
                                     <li>
