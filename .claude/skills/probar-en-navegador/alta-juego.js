@@ -11,7 +11,7 @@ const familiar = juego === "cj" ? "elena" : "pablo";
 const plataforma = `plataforma-${juego}`;
 const varios = `varios-centros${infijo}`;
 const centros = {
-  [`almendros${infijo}-administracion`]: ["direccion", "medicina", "enfermeria", "auxiliar", familiar].map((rol) => `almendros${infijo}-${rol}`),
+  [`almendros${infijo}-administracion`]: ["direccion", "medicina", "enfermeria", "enfermeria-planta1", "auxiliar", familiar].map((rol) => `almendros${infijo}-${rol}`),
   [`olmos${infijo}-administracion`]: [`olmos${infijo}-enfermeria`],
 };
 
