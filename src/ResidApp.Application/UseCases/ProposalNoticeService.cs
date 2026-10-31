@@ -39,7 +39,7 @@ public sealed class ProposalNoticeService(
             }
 
             var email = ProposalNoticeTemplate.Render(reservation.Language, settings.BaseUrl);
-            var result = await SendAsync(new EmailMessage(address, email.Subject, email.PlainText, email.Html));
+            var result = await SendAsync(new EmailMessage(address, email.Subject, email.PlainText, email.Html, email.InlineImages));
             await store.ResolveAsync(
                 reservation.Id, result.Accepted ? EmailLog.Sent : EmailLog.Failed, result.Accepted ? null : result.FailureCode, result.OperationId, 1, DateTimeOffset.UtcNow);
             log?.Invoke($"{EmailLog.ProposalTemplate}: {(result.Accepted ? EmailLog.Sent : $"{EmailLog.Failed} {result.FailureCode}")}");

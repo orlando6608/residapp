@@ -2,8 +2,11 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
 
+/// <summary>Una imagen que viaja dentro del propio mensaje y el HTML cita por <c>cid:</c> (sin petición a ningún servidor al abrirlo, así que no hay manera de saber quién lo abrió).</summary>
+public sealed record InlineImage(string ContentId, string Name, string ContentType, byte[] Content);
+
 /// <summary>Un correo ya redactado, con un solo destinatario (ADR 0012, 2.3 de la lectura de privacidad: nunca copia ni copia oculta ni varias personas).</summary>
-public sealed record EmailMessage(string To, string Subject, string PlainText, string Html);
+public sealed record EmailMessage(string To, string Subject, string PlainText, string Html, IReadOnlyList<InlineImage>? InlineImages = null);
 
 /// <summary>Lo que el proveedor contestó: aceptado (con su identificador de operación) o rechazado con un código cerrado. Aceptado no quiere decir entregado.</summary>
 public sealed record EmailSendResult(bool Accepted, string? OperationId, string? FailureCode)

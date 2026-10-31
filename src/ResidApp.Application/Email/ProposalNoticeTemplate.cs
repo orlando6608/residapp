@@ -1,19 +1,20 @@
 using System.Net;
+using ResidApp.Application.Ports;
 
 namespace ResidApp.Application.Email;
 
-/// <summary>El correo ya redactado: asunto, texto plano y HTML (sin imágenes, sin seguimiento y con un solo enlace).</summary>
-public sealed record RenderedEmail(string Subject, string PlainText, string Html);
+/// <summary>El correo ya redactado: asunto, texto plano y HTML (con un solo enlace, sin seguimiento y sin más imagen que el icono de ResidApp dentro del mensaje).</summary>
+public sealed record RenderedEmail(string Subject, string PlainText, string Html, IReadOnlyList<InlineImage>? InlineImages = null);
 
 /// <summary>
-/// Plantilla AVISO_PROPUESTA_CITA, versión 1, en castellano y en catalán (ADR 0012, requisitos 1 y 7; texto de docs/privacidad/aviso-cita-por-correo.md, 2.2).
+/// Plantilla AVISO_PROPUESTA_CITA, versión 2 (el mismo asunto y texto que la 1; la 2 añade el HTML con el estilo de la app y el icono), en castellano y en catalán (ADR 0012, requisitos 1 y 7; texto de docs/privacidad/aviso-cita-por-correo.md, 2.2).
 /// Es genérica a propósito: solo recibe el idioma y la dirección base de la aplicación. No recibe residente, familiar, centro, unidad, equipo, motivo, fecha ni
 /// profesional, así que no puede escribirlos. Las dos lenguas comparten identificador y versión y se revisan juntas (el catalán, una persona que sepa catalán).
 /// Falta, a propósito, la línea con el titular de ResidApp que propone el pie: la decide Orlando.
 /// </summary>
 public static class ProposalNoticeTemplate
 {
-    public const string Version = "1";
+    public const string Version = "2";
 
     public static readonly IReadOnlyList<string> Languages = ["es", "ca"];
 
@@ -50,10 +51,8 @@ public static class ProposalNoticeTemplate
         };
 
         var plain = string.Join("\n\n", paragraphs) + $"\n\n{Dash}\n{footer}\n";
-        var html = "<!doctype html><html><body>"
-            + string.Concat(paragraphs.Select(p => $"<p>{LinkOrText(p, url)}</p>"))
-            + $"<hr><p>{WebUtility.HtmlEncode(footer)}</p></body></html>";
-        return new RenderedEmail(subject, plain, html);
+        var html = EmailLayout.Render(language, subject, paragraphs.Select(p => (LinkOrText(p, url), p.Contains(url))), WebUtility.HtmlEncode(footer));
+        return new RenderedEmail(subject, plain, html, [EmailLayout.Icon]);
     }
 
     /// <summary>El enlace va en texto visible (nunca oculto tras otra palabra): quien lo lee ve a dónde lleva.</summary>

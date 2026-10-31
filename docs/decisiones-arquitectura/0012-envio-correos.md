@@ -26,6 +26,8 @@ CJ lo reafirmó en la 6.4).
 ## Requisitos
 
 1. **Texto genérico.** Ningún correo dice el nombre del residente, la unidad, el equipo, el motivo ni nada de salud. Solo que hay algo pendiente en ResidApp o el código.
+   El HTML puede llevar el estilo de la app y el icono de ResidApp incrustado en el mensaje (`cid:`); no lleva el logotipo ni el nombre del centro, ni imágenes ni recursos
+   enlazados desde un servidor. El texto visible del HTML es el del texto plano más la palabra «ResidApp» de la cabecera (`docs/privacidad/aviso-cita-icono-en-correo.md`).
    Las plantillas están en el repositorio, versionadas como el código, y son las únicas que se pueden mandar.
 2. **Proveedor con garantías.** Contrato de encargado del tratamiento (artículo 28 del RGPD: el proveedor trata los datos solo por cuenta nuestra) y datos guardados en la UE.
    El correo del familiar es un dato personal suyo.
@@ -42,6 +44,7 @@ CJ lo reafirmó en la 6.4).
    se revisan y aprueban juntas. La traducción catalana la revisa una persona que sepa catalán (el DPO valida el contenido, no la lengua). El correo del código de acceso
    lleva en los dos idiomas el mismo aviso contra fraude («ResidApp nunca te pedirá este código por teléfono ni por mensaje»). Mientras el portal no esté en catalán (ADR 0013, aceptado), el
    correo en catalán dice que el enlace lleva a una pantalla en castellano. Añadir un tercer idioma exige una revisión del DPO por cada plantilla.
+   El estilo y el icono son comunes a los dos idiomas (`EmailLayout`), se versionan con la plantilla y no son un parámetro de ella.
    **Cómo se elige el idioma de cada familiar (decidido por Orlando el 2026-10-29):** por defecto, el idioma del centro; el propio familiar puede cambiarlo en el portal
    cuando quiera. (El portal y la entrada en los dos idiomas, y dónde se guarda esta elección, están en el ADR 0013, aceptado.) Guardar la elección de
    cada familiar añade un dato personal nuevo (valor cerrado «es» o «ca», nunca texto libre), que entra en el registro de actividades, en la información al familiar y en
@@ -54,7 +57,8 @@ CJ lo reafirmó en la 6.4).
 - **Pieza 1, aviso de propuesta de cita: construida el 2026-10-30, apagada por defecto** (script `0081`, tabla `envios_correo`; lectura de privacidad y 16 condiciones en `docs/privacidad/aviso-cita-por-correo.md`).
   `IEmailSender` (Application) con el adaptador `AzureEmailSender` (Azure Communication Services Email 1.1.0), `ProposalNoticeService`, `ProposalNoticeTemplate` (textos en castellano y catalán) y `SqlProposalNoticeStore`.
   Se llama después del `Commit` de proponer; vuelve a comprobar la vigencia y el acceso con la misma consulta que el portal; un solo destinatario (el familiar de la solicitud); sin `Reply-To`;
-  seguimiento de aperturas apagado; sin reintentos (no hay tareas programadas hasta el recordatorio).
+  seguimiento de aperturas apagado; HTML con el estilo de la app (`EmailLayout`: banda azul, tarjeta, enlace destacado y modo oscuro) y el icono de ResidApp incrustado (`cid:`), sin recursos remotos
+  (2026-10-31, pendiente de validación humana según `docs/privacidad/aviso-cita-icono-en-correo.md`); sin reintentos (no hay tareas programadas hasta el recordatorio).
 - **Ajustes** (variables de entorno de la Web App, sección `Correo`): `Correo__Activo` (por defecto apagado), `Correo__CadenaConexion`, `Correo__UrlBase` (por ejemplo `https://dev.residapp.es`; el único enlace del correo),
   `Correo__Remitente` (por defecto `no-responder@avisos.residapp.es`), `Correo__Idioma` (`es` o `ca`; por defecto `es`) y, fuera de producción, `Correo__DireccionesPermitidas__0`, `__1`… Sin ninguna lista, solo se enciende con `Correo__TodosLosDestinos=true`.
 - **Falta:** la casilla «Dirección confirmada con la familia» y la etiqueta del campo del correo (espera la pregunta 2.1 de CJ, `aviso-citas-por-correo-cj`); FAM-10 modificado por escrito; el texto «propuesta de cita» o «novedad» (1.2); la línea del titular de ResidApp en el pie; la vía de purga del registro (espera el plazo del DPO);
