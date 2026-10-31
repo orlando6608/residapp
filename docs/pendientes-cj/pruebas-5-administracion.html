@@ -291,9 +291,9 @@
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>17 pruebas. 3 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>18 pruebas. 3 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
-    <div role="listitem"><span class="k">Cuánto</span><span>Unos 40 minutos; las imprescindibles, menos. Puedes dejarlo y seguir otro día.</span></div>
+    <div role="listitem"><span class="k">Cuánto</span><span>Unos 45 minutos; las imprescindibles, menos. Puedes dejarlo y seguir otro día.</span></div>
   </div>
 
   <section class="howto" aria-labelledby="como">
@@ -338,6 +338,7 @@
         <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), traslados y bajas, familias y su acceso al Portal Familiar, comunicados a la familia, citas, usuarios, estructura, turnos y auditoría. Es la Administración principal del centro.</td></tr>
         <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (5).</td></tr>
         <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación) y poner la foto de identificación.</td></tr>
+        <tr><td><code>almendros-enfermeria-planta1</code></td><td>Enfermería</td><td>Como la anterior, pero solo de la Planta 1. Sirve para la prueba 18: es quien no ve lo que se cerró en la Planta 2.</td></tr>
       </tbody>
     </table></div>
 
@@ -347,6 +348,7 @@
       <tbody>
         <tr><td>Carmen López (ficticia)</td><td>Asignada al Auxiliar; al empezar no tiene basal (lo crea la guía 3). Úsala para los cierres del Auxiliar y para crear un basal desde cero.</td></tr>
         <tr><td>Lucía Fernández (ficticia)</td><td>NO LA TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
+        <tr><td>Pilar Moreno (ficticia)</td><td>Solo en la prueba 18: está en la Planta 2 · 201 · A con dos episodios cerrados. La trasladas a la Planta 1 y, al terminar, la devuelves a su sitio.</td></tr>
         <tr><td>Manuel Ruiz (ficticio)</td><td>Solo en la prueba 16: ya tiene foto y cama (Planta 1 · 102 · A), para ver cómo salen en la lista.</td></tr>
       </tbody>
     </table></div>
@@ -358,7 +360,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 17).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 18).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">No necesitas ninguna otra guía.</p>
@@ -709,6 +711,35 @@
           <label class="choice"><input type="radio" name="r-17" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-17" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-17" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-8">
+    <h2>Historial tras un traslado</h2>
+    <div class="stack prose">
+      <p>Con <code>almendros-administracion</code> trasladas a «Pilar Moreno (ficticia)», que tiene dos episodios cerrados en la Planta 2; con <code>almendros-enfermeria-planta1</code>, que solo ve la Planta 1, pides esos episodios; y con <code>almendros-direccion</code> miras la petición. Al final la devuelves a su sitio.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="18">
+        <div class="q-head"><span class="n">18</span><h3 class="q-title" id="t-18">Pedir el historial de la unidad anterior</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>Pilar Moreno</strong></span></div>
+        <ol class="pasos">
+          <li>Con <code>almendros-administracion</code>, abre la ficha de «Pilar Moreno (ficticia)» y pulsa «Trasladar». En «Unidad de destino» elige «Planta 1», en la habitación o plaza una libre (por ejemplo «102 · B») y pulsa «Trasladar».</li>
+          <li>Entra con <code>almendros-enfermeria-planta1</code>, abre a Pilar y pulsa «Ver historial». <em>Verás:</em> un aviso «Este residente tiene 2 episodios cerrados en una unidad anterior, antes de su traslado. No se ven si no los pides», y en «Eventos cerrados» ninguno de ellos.</li>
+          <li>Elige una finalidad en «¿Para qué los necesitas?» (por ejemplo, la revisión de continuidad asistencial), deja el texto breve sin datos de salud ni nombres y pulsa «Pedir los episodios de la unidad anterior». <em>Verás:</em> «Estás viendo también los 2 episodios cerrados de la unidad anterior», y esos episodios marcados «De una unidad anterior».</li>
+          <li>Abre uno con «Ver detalle» y mira la línea temporal. <em>Verás:</em> un aviso de que es un episodio cerrado de una unidad anterior, de solo lectura, que queda registrado con tu motivo cada vez que lo abres y que no se puede corregir ni rectificar desde esta unidad, y sin botones para hacerlo.</li>
+          <li>Entra con <code>almendros-direccion</code> y abre la tarjeta «Peticiones de historial tras un traslado» del inicio. <em>Verás:</em> quién lo pidió, de qué residente, cuándo, para qué y cuántas lecturas hizo, sin contenido clínico.</li>
+          <li>Con <code>almendros-administracion</code>, traslada otra vez a Pilar a la «Planta 2», habitación o plaza «201 · A», para no estropear las demás pruebas.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Los episodios cerrados se quedan en la unidad donde se cerraron, así que la Planta 1 no los ve hasta que los pide con un motivo. La petición vale 1 hora, es de esa persona y de ese residente, y se abre en solo lectura. Tu petición y cada vez que abres esos episodios quedan en la auditoría con el motivo, y Dirección los ve en su lista, sin contenido clínico. El informe de derivación en PDF no se abre por esta vía. Con <code>almendros-enfermeria</code> (de las dos plantas) no se ofrece nada: ya ve los episodios de las dos. Pilar tiene los dos episodios cerrados porque la preparación de Los Almendros se los deja; si no ves «2 episodios», dilo en el comentario.</div>
+        <fieldset class="choices" aria-labelledby="t-18">
+          <label class="choice"><input type="radio" name="r-18" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-18" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-18" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-18" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

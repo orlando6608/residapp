@@ -17,6 +17,7 @@
  *   direccion       Dirección Clínica de las dos plantas: lectura clínica auditada, rangos de referencia y plazos de los hitos
  *   medicina        Medicina de las dos plantas, con permiso de basal
  *   enfermeria      Enfermería de las dos plantas, con permiso de basal; miembro de los equipos de las dos plantas
+ *   enfermeria-planta1  Enfermería solo de la Planta 1 (añadida el 2026-10-31): para la petición del historial tras un traslado (guía 5, prueba 18)
  *   auxiliar        Auxiliar de la Planta 1, con cinco residentes asignados (Rosa, Antonio, Carmen, Lucía y Manuel)
  *   elena / pablo   Portal Familiar: hija e hijo de Rosa, con la autorización activa (Elena es su contacto prioritario)
  * Residentes (identificador fijo: las guías los citan en direcciones):
@@ -323,6 +324,53 @@ SELECT NEWID(), profile.id, profile.centro_id, 'QUALITY_REVIEW', SYSUTCDATETIME(
    AND account.sujeto_externo IN ('almendros-direccion', 'almendros-orlando-direccion', 'varios-centros', 'varios-centros-orlando')
    AND NOT EXISTS (SELECT 1 FROM dbo.permisos_perfil existing
                     WHERE existing.ambito_perfil_id = profile.id AND existing.permiso_codigo = 'QUALITY_REVIEW');
+GO
+
+-- Enfermería solo de la Planta 1 (una cuenta más por juego): para probar la petición del historial tras un traslado (0077, guía 5, prueba 18), que solo
+-- se ofrece a quien no ve la unidad anterior del residente (las Enfermerías de las dos plantas la ven siempre). Mismos permisos que la Enfermería de
+-- las dos plantas y miembro del equipo de la Planta 1. Va fuera del bloque de arriba porque las bases creadas antes ya tienen sus cuentas; sin
+-- contraseña, como las demás (se da de alta con su invitación). Si ya existe, no hace nada.
+BEGIN TRANSACTION;
+
+DECLARE @Now DATETIME2(3) = SYSUTCDATETIME();
+DECLARE @New TABLE (id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(), scope_id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(), sujeto NVARCHAR(200), nombre NVARCHAR(200),
+                    centro_id UNIQUEIDENTIFIER, fuente_scope_id UNIQUEIDENTIFIER, admin_id UNIQUEIDENTIFIER);
+
+INSERT INTO @New (sujeto, nombre, centro_id, fuente_scope_id, admin_id)
+SELECT wanted.sujeto, wanted.nombre, profile.centro_id, profile.id, grantor.cuenta_id
+  FROM (VALUES ('almendros-enfermeria-planta1', N'Enfermería de la Planta 1 de Los Almendros (CJ)', 'almendros-enfermeria'),
+               ('almendros-orlando-enfermeria-planta1', N'Enfermería de la Planta 1 de Los Almendros (Orlando)', 'almendros-orlando-enfermeria'))
+       AS wanted(sujeto, nombre, fuente)
+  JOIN dbo.cuentas source ON source.sujeto_externo = wanted.fuente
+  JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = source.id AND profile.perfil_codigo = 'ENFERMERIA' AND profile.estado = 'ACTIVE'
+ CROSS APPLY (SELECT TOP (1) admin_scope.cuenta_id
+                FROM dbo.ambitos_perfil admin_scope
+                JOIN dbo.cuentas admin_account ON admin_account.id = admin_scope.cuenta_id
+               WHERE admin_scope.centro_id = profile.centro_id AND admin_scope.perfil_codigo = 'ADMINISTRACION'
+                 AND admin_account.sujeto_externo = 'almendros-administracion') AS grantor
+ WHERE NOT EXISTS (SELECT 1 FROM dbo.cuentas existing WHERE existing.sujeto_externo = wanted.sujeto);
+
+INSERT INTO dbo.cuentas (id, sujeto_externo, nombre_visible, estado, creado_en)
+SELECT id, sujeto, nombre, 'ACTIVE', @Now FROM @New;
+
+INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+SELECT scope_id, id, centro_id, 'ENFERMERIA', 'ACTIVE', @Now, admin_id FROM @New;
+
+INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+SELECT NEWID(), added.scope_id, added.centro_id, unit.id, @Now, added.admin_id
+  FROM @New added JOIN dbo.unidades unit ON unit.centro_id = added.centro_id AND unit.codigo = 'PLANTA-1';
+
+INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+SELECT NEWID(), added.scope_id, added.centro_id, permission.permiso_codigo, @Now, added.admin_id
+  FROM @New added JOIN dbo.permisos_perfil permission ON permission.ambito_perfil_id = added.fuente_scope_id;
+
+INSERT INTO dbo.equipos_miembros (id, centro_id, equipo_id, cuenta_id, concedido_en, concedido_por_cuenta_id)
+SELECT NEWID(), added.centro_id, team.id, added.id, @Now, added.admin_id
+  FROM @New added
+  JOIN dbo.unidades unit ON unit.centro_id = added.centro_id AND unit.codigo = 'PLANTA-1'
+  JOIN dbo.equipos team ON team.centro_id = added.centro_id AND team.unidad_id = unit.id AND team.nombre_visible = N'Enfermería Planta 1';
+
+COMMIT TRANSACTION;
 GO
 
 SELECT account.sujeto_externo AS Cuenta, center.nombre_visible AS Centro, profile.perfil_codigo AS Perfil
