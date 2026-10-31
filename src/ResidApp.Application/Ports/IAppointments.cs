@@ -61,9 +61,11 @@ public interface IAppointmentServiceRepository
     Task<IReadOnlyList<AppointmentSlot>> ListRescheduleSlotsAsync(
         AccountAdministrationAccess access, Guid appointmentId, DateTimeOffset now, CancellationToken ct = default);
 
-    Task CancelAsync(AccountAdministrationAccess access, Guid appointmentId, string reason, DateTimeOffset now, CancellationToken ct = default);
+    /// <summary>Cancela una cita confirmada y devuelve el número de su cambio en el historial (ya confirmado en la base).</summary>
+    Task<int> CancelAsync(AccountAdministrationAccess access, Guid appointmentId, string reason, DateTimeOffset now, CancellationToken ct = default);
 
-    Task RescheduleAsync(
+    /// <summary>Pasa una cita confirmada a otro hueco y devuelve el número de su cambio en el historial (ya confirmado en la base).</summary>
+    Task<int> RescheduleAsync(
         AccountAdministrationAccess access, Guid appointmentId, DateTimeOffset newStartsAt, string reason, DateTimeOffset now, CancellationToken ct = default);
 
     /// <summary>Marca como finalizada una cita confirmada cuya hora de inicio ya pasó.</summary>

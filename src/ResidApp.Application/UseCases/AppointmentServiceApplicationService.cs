@@ -26,7 +26,8 @@ public sealed record RescheduleAppointmentCommand(Guid AmbitoPerfilId, CenterId 
 /// (modo, modalidades por equipo, antelación mínima, horizonte máximo), las franjas y los bloqueos, ve la agenda y reprograma, cancela (con motivo) y
 /// finaliza las citas. Solo Administración del centro; la comprobación se repite en cada transacción.
 /// </summary>
-public sealed class AppointmentServiceApplicationService(AdministrationAccessResolver administrationAccess, IAppointmentServiceRepository repository)
+public sealed class AppointmentServiceApplicationService(
+    AdministrationAccessResolver administrationAccess, IAppointmentServiceRepository repository, ChangeNoticeService? changeNotice = null)
 {
     public Task<ApplicationResult<AppointmentServiceView>> ReadAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
         Run(profileScopeId, centerId, (access) => repository.ReadAsync(access, ct), ct);
@@ -85,7 +86,8 @@ public sealed class AppointmentServiceApplicationService(AdministrationAccessRes
         Run(command.AmbitoPerfilId, command.CentroId, async access =>
         {
             var reason = AppointmentReason.Normalize(command.Motivo);
-            await repository.CancelAsync(access, command.CitaId, reason, DateTimeOffset.UtcNow, ct);
+            var changeNumber = await repository.CancelAsync(access, command.CitaId, reason, DateTimeOffset.UtcNow, ct);
+            await RegisterNoticeAsync(command.CentroId, command.CitaId, changeNumber);
             return true;
         }, ct);
 
@@ -98,7 +100,8 @@ public sealed class AppointmentServiceApplicationService(AdministrationAccessRes
                 throw new DomainValidationException(AppointmentSlotRequest.InvalidCode);
             }
 
-            await repository.RescheduleAsync(access, command.CitaId, newStart, reason, DateTimeOffset.UtcNow, ct);
+            var changeNumber = await repository.RescheduleAsync(access, command.CitaId, newStart, reason, DateTimeOffset.UtcNow, ct);
+            await RegisterNoticeAsync(command.CentroId, command.CitaId, changeNumber);
             return true;
         }, ct);
 
@@ -108,6 +111,16 @@ public sealed class AppointmentServiceApplicationService(AdministrationAccessRes
             await repository.FinishAsync(access, command.Id, DateTimeOffset.UtcNow, ct);
             return true;
         }, ct);
+
+    /// <summary>Ya confirmado el cambio: reservar el aviso por correo nunca cambia su resultado (ADR 0012). Solo se llama al reprogramar o cancelar Administración,
+    /// no al reservar, finalizar, ni en los cambios de la familia o de la baja del residente.</summary>
+    private async Task RegisterNoticeAsync(CenterId centerId, Guid appointmentId, int changeNumber)
+    {
+        if (changeNotice is not null)
+        {
+            await changeNotice.RegisterAsync(centerId, appointmentId, changeNumber);
+        }
+    }
 
     private Task<ApplicationResult<T>> Run<T>(Guid profileScopeId, CenterId centerId, Func<AccountAdministrationAccess, Task<T>> run, CancellationToken ct) =>
         ApplicationResultRunner.RunAsync(async () =>

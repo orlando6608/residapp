@@ -20,6 +20,11 @@ public static class ProposalNoticeTemplate
 
     private const string Dash = "—";
 
+    /// <summary>El pie es el mismo en todos los avisos («solo para enviarte este aviso» vale con cualquier plantilla).</summary>
+    internal const string FooterEs = "Recibes este aviso porque esta dirección figura como contacto en ResidApp. El responsable de tus datos es el centro que la registró; ResidApp los trata por su cuenta y solo para enviarte este aviso. Para saber más, ejercer tus derechos de protección de datos o dejar de recibir estos avisos, dirígete al centro. En el apartado «Privacidad» del portal tienes la información completa.";
+
+    internal const string FooterCa = "Reps aquest avís perquè aquesta adreça figura com a contacte a ResidApp. El responsable de les teves dades és el centre que la va registrar; ResidApp les tracta per compte seu i només per enviar-te aquest avís. Per saber-ne més, exercir els teus drets de protecció de dades o deixar de rebre aquests avisos, adreça't al centre. A l'apartat «Privacidad» del portal (en castellà) trobaràs la informació completa.";
+
     public static RenderedEmail Render(string language, string baseUrl)
     {
         var url = baseUrl.TrimEnd('/');
@@ -35,7 +40,7 @@ public static class ProposalNoticeTemplate
                     "No respondas a este correo: nadie lo lee. Si necesitas algo, llama al centro.",
                     "Si no esperabas este aviso, ignóralo. ResidApp nunca te pedirá tu contraseña por correo, por teléfono ni por mensaje.",
                 },
-                "Recibes este aviso porque esta dirección figura como contacto en ResidApp. El responsable de tus datos es el centro que la registró; ResidApp los trata por su cuenta y solo para enviarte este aviso. Para saber más, ejercer tus derechos de protección de datos o dejar de recibir estos avisos, dirígete al centro. En el apartado «Privacidad» del portal tienes la información completa."),
+                FooterEs),
             "ca" => (
                 "Tens una proposta de cita pendent a ResidApp",
                 new[]
@@ -46,7 +51,7 @@ public static class ProposalNoticeTemplate
                     "No responguis a aquest correu: no el llegeix ningú. Si necessites alguna cosa, truca al centre.",
                     "Si no esperaves aquest avís, ignora'l. ResidApp mai no et demanarà la contrasenya per correu, per telèfon ni per missatge.",
                 },
-                "Reps aquest avís perquè aquesta adreça figura com a contacte a ResidApp. El responsable de les teves dades és el centre que la va registrar; ResidApp les tracta per compte seu i només per enviar-te aquest avís. Per saber-ne més, exercir els teus drets de protecció de dades o deixar de rebre aquests avisos, adreça't al centre. A l'apartat «Privacidad» del portal (en castellà) trobaràs la informació completa."),
+                FooterCa),
             _ => throw new ArgumentOutOfRangeException(nameof(language), language, "Idioma no admitido (es o ca)."),
         };
 
@@ -56,7 +61,7 @@ public static class ProposalNoticeTemplate
     }
 
     /// <summary>El enlace va en texto visible (nunca oculto tras otra palabra): quien lo lee ve a dónde lleva.</summary>
-    private static string LinkOrText(string paragraph, string url)
+    internal static string LinkOrText(string paragraph, string url)
     {
         var encodedUrl = WebUtility.HtmlEncode(url);
         return WebUtility.HtmlEncode(paragraph).Replace("\n", "<br>").Replace(encodedUrl, $"<a href=\"{encodedUrl}\">{encodedUrl}</a>");

@@ -29,6 +29,10 @@ public sealed class CorreoOptions
 
     public bool TodosLosDestinos { get; set; }
 
+    /// <summary>Interruptor propio del aviso de cambio de cita (reprogramar o cancelar el centro), además de <see cref="Activo"/>: apagado por defecto, para poder encender
+    /// el aviso de propuesta sin él mientras espera su validación.</summary>
+    public bool AvisoCambioCita { get; set; }
+
     public List<string> DireccionesPermitidas { get; set; } = [];
 
     public bool Operativo =>
@@ -41,6 +45,6 @@ public sealed class CorreoOptions
     private bool ProposalNoticeIdiomaValido => Application.Email.ProposalNoticeTemplate.Languages.Contains(Idioma);
 
     public EmailSettings ToSettings() => Operativo
-        ? new EmailSettings(true, UrlBase!, Idioma, TodosLosDestinos, [.. DireccionesPermitidas])
+        ? new EmailSettings(true, UrlBase!, Idioma, TodosLosDestinos, [.. DireccionesPermitidas], AvisoCambioCita)
         : EmailSettings.Off;
 }
