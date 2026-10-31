@@ -46,7 +46,7 @@ Se puede construir **ya con datos de prueba**, con el envío apagado por defecto
 - **Phishing.** Un correo con «propuesta de cita» y un enlace a un inicio de sesión es el patrón típico de fraude. Por eso: un único enlace en texto visible, sin parámetros ni identificadores ni código, que nunca inicia sesión por sí mismo, y una frase contra el fraude.
 - **Idioma de los textos:** el ADR 0012 (línea 43) pide el mismo contenido en las dos lenguas. Para esta pieza el idioma es el del centro (castellano en el piloto, ADR 0013 línea 6), así que el catalán se entrega probado pero **no se usa** hasta que exista el ajuste del centro y la información previa en catalán.
 
-**Texto propuesto, castellano (plantilla `AVISO_PROPUESTA_CITA`, versión 1, idioma `es`):**
+**Texto propuesto, castellano (plantilla `AVISO_PROPUESTA_CITA`, idioma `es`; este es el asunto y texto de la versión 1, que la versión 2 conserva y a la que solo añade el HTML con el estilo de la app):**
 
 ```
 Asunto: Tienes una propuesta de cita pendiente en ResidApp

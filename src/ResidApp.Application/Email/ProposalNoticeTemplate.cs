@@ -7,14 +7,14 @@ namespace ResidApp.Application.Email;
 public sealed record RenderedEmail(string Subject, string PlainText, string Html, IReadOnlyList<InlineImage>? InlineImages = null);
 
 /// <summary>
-/// Plantilla AVISO_PROPUESTA_CITA, versión 1, en castellano y en catalán (ADR 0012, requisitos 1 y 7; texto de docs/privacidad/aviso-cita-por-correo.md, 2.2).
+/// Plantilla AVISO_PROPUESTA_CITA, versión 2 (el mismo asunto y texto que la 1; la 2 añade el HTML con el estilo de la app y el icono), en castellano y en catalán (ADR 0012, requisitos 1 y 7; texto de docs/privacidad/aviso-cita-por-correo.md, 2.2).
 /// Es genérica a propósito: solo recibe el idioma y la dirección base de la aplicación. No recibe residente, familiar, centro, unidad, equipo, motivo, fecha ni
 /// profesional, así que no puede escribirlos. Las dos lenguas comparten identificador y versión y se revisan juntas (el catalán, una persona que sepa catalán).
 /// Falta, a propósito, la línea con el titular de ResidApp que propone el pie: la decide Orlando.
 /// </summary>
 public static class ProposalNoticeTemplate
 {
-    public const string Version = "1";
+    public const string Version = "2";
 
     public static readonly IReadOnlyList<string> Languages = ["es", "ca"];
 

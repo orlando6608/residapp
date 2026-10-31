@@ -154,7 +154,7 @@ No automatizable, y necesaria porque cada programa de correo hace lo suyo con el
 
 ## A verificar o decidir
 
-1. **[Decidir Orlando]** Subir `ProposalNoticeTemplate.Version` a «2» (recomendado) o dejarla en «1».
+1. **[Decidido por Orlando, que lo dejó a la sesión de código, 2026-10-31]** `ProposalNoticeTemplate.Version` sube a «2».
 2. **[Decidir Orlando / sesión de código]** Pasar las condiciones del apartado 4 a pruebas, empezando por A3 a A7 y B1 a B3, y arreglar la prueba vacía del apartado 5, hallazgo 1.
 3. **A verificar (abogado):** que el icono incrustado no entra en el art. 22 LSSI; no cito más artículos de memoria.
 4. **A verificar:** metadatos del PNG (B3) con una herramienta que lea los bloques; no he podido comprobarlo con lo que tengo.
