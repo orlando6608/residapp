@@ -272,7 +272,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="pruebas-5-administracion" data-version="2026-10-21">
+<body data-doc="pruebas-5-administracion" data-version="2026-10-31">
 
 <div class="page">
   <header>
@@ -284,7 +284,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 5 de 8</p>
     <h1>Guía 5 · Administración del centro</h1>
-    <p class="meta">Estado a 26/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 31/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       La gestión del centro: altas, identidad, familiares y contactos urgentes, usuarios y permisos, estructura, traslados, bajas, turnos, Administración principal, organigrama y cargos, y auditoría. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
     </p>
@@ -369,7 +369,7 @@
       <li>La prueba 4 necesita un residente con varios familiares: añade uno en la prueba 3.</li>
       <li>En la prueba 8 vuelve a asignar «Carmen López» al Auxiliar al terminar: lo necesitan la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a> y la <a href="pruebas-8-aislamiento.html">guía 8</a>.</li>
       <li>La prueba 15 (auditoría) va al final para ver todo lo que hiciste.</li>
-      <li>La prueba 16 (foto de identificación) pone la foto al residente «CJ …» y mira ella misma su auditoría. Si la haces antes de la 15, la verás también allí.</li>
+      <li>La prueba 16 (foto de identificación) pone la foto a «Rosa Sánchez» y mira ella misma su auditoría. Si la haces antes de la 15, la verás también allí.</li>
     </ul>
     <p class="why">Si te saltas una prueba, marca D en la que dependa de ella.</p>
   </section>
@@ -433,10 +433,10 @@
       <article class="q" data-q="4">
         <div class="q-head"><span class="n">4</span><h3 class="q-title" id="t-4">Contactos urgentes</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>En la ficha de un residente con varios familiares abre «Contactos urgentes». Marca dos y guarda.</li>
-          <li>Vuelve a abrirlo, quita todas las marcas y prueba a guardar. Después deja uno solo marcado y guarda.</li>
+          <li>En la ficha de un residente con varios familiares pulsa «Designar contactos urgentes» (o «Cambiar contactos urgentes» si ya tiene). Marca dos y guarda.</li>
+          <li>Vuelve a abrirlo, quita todas las marcas y prueba a guardar sin escribir motivo. Después escribe un motivo (por ejemplo, «sin familia conocida») y guarda. Por último, vuelve a marcar uno solo y guarda.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Puede haber varios contactos urgentes y siempre al menos uno: sin ninguno marcado no se guarda. Los contactos aparecen con su teléfono en la ficha de Enfermería y de Medicina, y el primero rellena «A quién se llama» al registrar un intento de llamada. Cada cambio queda en el historial de la ficha.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Puede haber varios contactos urgentes. Sin ninguno marcado y sin motivo no se guarda; con motivo sí, y la ficha dice «Sin contacto urgente» con ese motivo. Los contactos aparecen con su teléfono en la ficha de Enfermería y de Medicina, y el primero rellena «A quién se llama» al registrar un intento de llamada. Cada cambio queda en el historial de la ficha.</div>
         <fieldset class="choices" aria-labelledby="t-4">
           <label class="choice"><input type="radio" name="r-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -669,8 +669,8 @@
       <article class="q" data-q="16">
         <div class="q-head"><span class="n">16</span><h3 class="q-title" id="t-16">Poner, cambiar y quitar la foto de un residente</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>Abre «Residentes». Mira la foto (o las iniciales) y la columna «Ubicación»: «Manuel Ruiz» tiene foto y dice «Planta 1 · 102 · A»; los que no tienen habitación, «Sin habitación asignada». Mírala también en el móvil.</li>
-          <li>Abre la ficha del residente «CJ …». En «Foto de identificación» elige o haz una foto (de un objeto, nunca de una persona real). En el recuadro que aparece, arrástrala con el dedo o el ratón para centrar el objeto, prueba los botones de flecha y mueve «Acercar». Pulsa «Guardar foto» sin decir quién firmó el consentimiento. Después elige quién lo firmó y la fecha (prueba también una fecha de mañana) y guarda.</li>
+          <li>Abre «Residentes». Mira la foto (o las iniciales) y la columna «Ubicación»: «Manuel Ruiz» tiene foto y dice «Planta 1 · 102 · A»; los demás muestran sus iniciales y su ubicación (por ejemplo, «Planta 1 · 101 · A»), y «Sin habitación asignada» sale solo si el residente no tiene habitación (por ejemplo, uno que des de alta tú). Mírala también en el móvil.</li>
+          <li>Abre la ficha de «Rosa Sánchez». En «Foto de identificación» elige o haz una foto (de un objeto, nunca de una persona real). En el recuadro que aparece, arrástrala con el dedo o el ratón para centrar el objeto, prueba los botones de flecha y mueve «Acercar». Pulsa «Guardar foto» sin decir quién firmó el consentimiento. Después elige quién lo firmó y la fecha (prueba también una fecha de mañana) y guarda.</li>
           <li>Pon otra foto distinta. Luego pulsa «Quitar foto».</li>
           <li>Pulsa «No quiere foto» y, después, «Quitar la marca».</li>
           <li>Abre «Auditoría» y busca las acciones de la foto.</li>

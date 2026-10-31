@@ -272,7 +272,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="pruebas-4-direccion" data-version="2026-10-13">
+<body data-doc="pruebas-4-direccion" data-version="2026-10-31">
 
 <div class="page">
   <header>
@@ -284,16 +284,16 @@
     </nav>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 4 de 8</p>
     <h1>Guía 4 · Dirección Clínica</h1>
-    <p class="meta">Estado a 13/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 31/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       Lo que ve y hace Dirección Clínica: supervisión de pendientes, derivaciones, indicadores, consulta auditada del basal, rangos de referencia, calidad de proceso y plazos. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>9 pruebas. 3 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>10 pruebas. 3 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
-    <div role="listitem"><span class="k">Cuánto</span><span>Unos 30 minutos; las imprescindibles, menos. Puedes dejarlo y seguir otro día.</span></div>
+    <div role="listitem"><span class="k">Cuánto</span><span>Unos 35 minutos; las imprescindibles, menos. Puedes dejarlo y seguir otro día.</span></div>
   </div>
 
   <section class="howto" aria-labelledby="como">
@@ -335,7 +335,7 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
-        <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad, calidad de proceso y consulta auditada del basal; puede fijar los rangos de referencia y los plazos de los hitos del proceso, y publicar, corregir o retirar comunicados a la familia.</td></tr>
+        <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad, calidad de proceso e indicadores (con el permiso «Ver los indicadores y la calidad de proceso», que esta cuenta de prueba ya tiene) y consulta auditada del basal; puede fijar los rangos de referencia y los plazos de los hitos del proceso, y publicar, corregir o retirar comunicados a la familia.</td></tr>
         <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
       </tbody>
     </table></div>
@@ -364,7 +364,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 9).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 10).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">Mejor después de las <a href="pruebas-1-auxiliar-enfermeria.html">guías 1</a> y <a href="pruebas-2-medicina-indicaciones.html">2</a>: Dirección necesita episodios abiertos y derivaciones a Urgencias para tener algo que supervisar (ya hay algunos de pruebas anteriores).</p>
@@ -390,7 +390,7 @@
         <ol class="pasos">
           <li>En Inicio de Dirección, mira las cifras por unidad. Abre «Supervisión de pendientes», filtra por tipo y unidad con «Buscar» y abre «Ver detalle operativo» de uno.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Las cifras (sin valorar, en valoración, escalados, seguimiento y pendientes, protocolo urgente, indicaciones) cuadran con lo que ves en la lista. El detalle muestra estado e hitos (quién, por perfil, y cuándo), sin observaciones, valoraciones ni indicaciones, y sin ninguna acción asistencial.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Las cifras (sin valorar, en valoración, escalados, seguimiento y pendientes, protocolo urgente, indicaciones) cuadran con lo que ves en la lista. El detalle muestra estado e hitos (quién, por perfil, y cuándo), sin observaciones, valoraciones ni indicaciones. La única acción asistencial de este perfil es el cierre excepcional de un episodio con indicaciones sin cumplir (prueba 10).</div>
         <fieldset class="choices" aria-labelledby="t-1">
           <label class="choice"><input type="radio" name="r-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -487,10 +487,10 @@
       <article class="q" data-q="7">
         <div class="q-head"><span class="n">7</span><h3 class="q-title" id="t-7">Rangos de referencia de constantes</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
-          <li>En Inicio, abre «Rangos de referencia de constantes». Fija, por ejemplo, un mínimo de saturación de O₂ de 92 y pulsa «Guardar rangos».</li>
-          <li>Como Enfermería, valora un evento y guarda una saturación de 89.</li>
+          <li>En Inicio, abre «Rangos de referencia de constantes». El centro de prueba ya trae el mínimo de saturación de O₂ en 95. Súbelo a 98 y pulsa «Guardar rangos».</li>
+          <li>Como Enfermería, valora un evento y guarda una saturación de 96: con el mínimo de arranque (95) no habría avisado.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Los rangos son por centro. Se guardan con su historial (fecha, valor anterior y nuevo, perfil). En la valoración de Enfermería aparece un aviso amarillo, solo informativo. Administración no puede usar esta pantalla.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Los rangos son por centro. Se guardan con su historial (fecha, valor anterior y nuevo, perfil). En la valoración de Enfermería, el 96 ya aparece con un aviso amarillo (queda por debajo del nuevo mínimo), solo informativo. Administración no puede usar esta pantalla.</div>
         <fieldset class="choices" aria-labelledby="t-7">
           <label class="choice"><input type="radio" name="r-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -529,6 +529,24 @@
           <label class="choice"><input type="radio" name="r-9" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-9" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-9" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="10">
+        <div class="q-head"><span class="n">10</span><h3 class="q-title" id="t-10">Cerrar un episodio con indicaciones que nadie va a cumplir</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Necesitas un episodio abierto con una indicación médica sin cumplir. Sirve la tercera indicación de la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a>, prueba 5, que se queda sin cumplir. El episodio no puede venir de una derivación a Urgencias.</li>
+          <li>Con <code>almendros-direccion</code>, abre «Supervisión de pendientes» y «Ver detalle operativo» de ese episodio. Baja hasta «Cerrar el episodio con indicaciones sin cumplir».</li>
+          <li>Prueba a pulsar «Cerrar el episodio» sin escribir el motivo y sin marcar la casilla «Entiendo que las indicaciones médicas se quedan sin resolver». Después escribe un motivo, marca la casilla y ciérralo.</li>
+          <li>Abre «Auditoría» como Administración (<code>almendros-administracion</code>) y, como Enfermería, mira el episodio.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin motivo o sin la casilla no se cierra. Con ambos, el episodio pasa a cerrado, sin comunicado a la familia; las indicaciones no se tocan (siguen sin resolver y se cuentan así en los indicadores) y no se puede deshacer. Queda en la auditoría con tu nombre y tu motivo. En un episodio que viene de una derivación a Urgencias el formulario no aparece: ahí cierran Enfermería o Medicina. Es lo único que Dirección Clínica puede hacer sobre un episodio.</div>
+        <fieldset class="choices" aria-labelledby="t-10">
+          <label class="choice"><input type="radio" name="r-10" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-10" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-10" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-10" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

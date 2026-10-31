@@ -240,7 +240,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Ayuda de la guía 6 de pruebas</p>
     <h1>Cómo fluye la guía 6 · Comunicados y Portal Familiar</h1>
-    <p class="meta">Estado a 14/10/2026 · Para quien hace las pruebas</p>
+    <p class="meta">Estado a 31/10/2026 · Para quien hace las pruebas</p>
     <p class="lead prose">
       Un comunicado nace al cerrar un evento (Enfermería o Medicina), lo publican Administración o Dirección (o se publica solo a su hora) y lo lee la familia en el Portal Familiar. Las respuestas se marcan en la <a href="pruebas-6-comunicados-portal.html">guía 6</a>; esta página solo orienta.
     </p>
@@ -267,7 +267,7 @@
     <div class="diagrama">
       <svg viewBox="0 0 1150 600" style="min-width: 1000px" role="img" aria-labelledby="svg-t1 svg-d1">
         <title id="svg-t1">Flujo de la guía 6: del comunicado que se prepara al que lee la familia</title>
-        <desc id="svg-d1">Cinco franjas. Enfermería ve el comunicado preparado al cerrar un evento en su bandeja (1) y lo corrige mientras no se publica (2); Medicina hace lo mismo (3). Administración cambia el horario (4), publica antes de su hora (5), da acceso al portal a un familiar (7), publica una corrección (10), retira un comunicado (11) y suspende el acceso (12). Dirección mira la frecuencia por unidad (13) y también publica antes de su hora (6). La familia lee las novedades publicadas (8), no ve nada más (9) y ve el efecto de las pruebas 10, 11 y 12.</desc>
+        <desc id="svg-d1">Cinco franjas. La familia también lee el resumen semanal o diario (14). Enfermería ve el comunicado preparado al cerrar un evento en su bandeja (1) y lo corrige mientras no se publica (2); Medicina hace lo mismo (3). Administración cambia el horario (4), publica antes de su hora (5), da acceso al portal a un familiar (7), publica una corrección (10), retira un comunicado (11) y suspende el acceso (12). Dirección mira la frecuencia por unidad (13) y también publica antes de su hora (6). La familia lee las novedades publicadas (8), no ve nada más (9) y ve el efecto de las pruebas 10, 11 y 12.</desc>
         <defs>
           <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
           <marker id="pi1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -349,6 +349,9 @@
         <rect class="box fam imp" x="640" y="534" width="150" height="56" rx="8"/>
         <text class="bt" x="715" y="558" text-anchor="middle"><tspan class="n">9</tspan> · No ve nada ★</text>
         <text class="bt" x="715" y="576" text-anchor="middle">más</text>
+        <rect class="box fam" x="300" y="534" width="150" height="56" rx="8"/>
+        <text class="bt" x="375" y="558" text-anchor="middle"><tspan class="n">14</tspan> · Resumen</text>
+        <text class="bt" x="375" y="576" text-anchor="middle">semanal o diario</text>
         <rect class="box fam" x="810" y="534" width="320" height="56" rx="8"/>
         <text class="bt" x="970" y="558" text-anchor="middle">Lo que ve tras 10, 11 y 12:</text>
         <text class="bt" x="970" y="576" text-anchor="middle">corrección, retirada, sin acceso</text>
@@ -430,7 +433,7 @@
       </li>
       <li class="adm">
         <div class="paso-cab"><span class="n">12</span><strong>Suspender el acceso de la familia</strong><span class="perfil adm">Administración</span></div>
-        <span>En la autorización del familiar de «Rosa Sánchez», «Suspender» con motivo. Mira el portal como familia y después <strong>vuelve a activarla</strong>: la necesitan la prueba 13 y la guía 7.</span>
+        <span>En la autorización del familiar de «Rosa Sánchez», «Suspender» con motivo. Mira el portal como familia y después <strong>vuelve a activarla</strong>: la necesitan la prueba 14 y la guía 7.</span>
         <span class="pasa">La <strong>familia</strong> deja de ver a su residente en el acto: «Ahora no tienes acceso a ningún residente».</span>
       </li>
       <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-direccion</code>.</li>
@@ -438,6 +441,12 @@
         <div class="paso-cab"><span class="n">13</span><strong>Frecuencia y estado por unidad</strong><span class="perfil dir">Dirección Clínica</span></div>
         <span>Al final, «Comunicados a la familia»: compara la tabla «Frecuencia y estado por unidad» con la lista de debajo.</span>
         <span class="pasa">Solo cifras: programados, publicados, con corrección y retirados.</span>
+      </li>
+      <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-administracion</code>.</li>
+      <li class="fam">
+        <div class="paso-cab"><span class="n">14</span><strong>El resumen semanal o diario de la familia</strong><span class="perfil fam">Familia</span></div>
+        <span>Con Administración, en «Comunicados a la familia» y «Cambiar la hora de publicación y el margen del centro», mira el campo «Frecuencia del resumen». Con <code>almendros-elena</code>, encima de «Novedades del centro» debe verse, si en el último periodo se publicó algo, la tarjeta «Resumen semanal» con lo publicado; después pon la frecuencia en «Diaria» y recarga.</span>
+        <span class="pasa">La tarjeta pasa a «Resumen diario» y recoge solo lo publicado entre las 19:00 de un día y las 19:00 del siguiente.</span>
       </li>
     </ol>
   </section>
