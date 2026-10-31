@@ -172,9 +172,9 @@
     </nav>
     <p class="eyebrow">ResidApp · Correo · Para Orlando</p>
     <h1>Aviso de cita por correo: lo que decides tú y lo que lleva la persona experta</h1>
-    <p class="meta">Estado a 30/10/2026 · El aviso está construido y apagado · La lectura de privacidad es del agente de protección de datos, que no sustituye a un DPO real o a un abogado</p>
+    <p class="meta">Estado a 31/10/2026 · El aviso está construido, probado en desarrollo y apagado por defecto · La lectura de privacidad es del agente de protección de datos, que no sustituye a un DPO real o a un abogado</p>
     <p class="lead prose">
-      Ya se puede construir y probar el correo que avisa a la familia de que el centro le propone una cita (está <strong>apagado</strong>: no envía nada hasta que lo enciendas).
+      Ya se puede construir y probar el correo que avisa a la familia de que el centro le propone una cita (está <strong>apagado por defecto</strong>: no envía nada hasta que lo enciendas; en desarrollo ya lo encendiste y solo escribe a tu dirección).
       Para usarlo con direcciones de verdad faltan cosas que no puede decidir ingeniería: unas son tuyas, otras son de CJ y otras son de una persona experta (un DPO real o un abogado).
       Este documento junta todo en un sitio: lo tuyo, para que lo decidas aquí, y lo de la persona experta, para que se lo lleves.
     </p>
@@ -200,7 +200,7 @@
 
   <section class="tema" id="tema-1" aria-labelledby="t1">
     <h2 id="t1">2 · Tus decisiones</h2>
-    <p class="prose meta">Cada una trae una opción recomendada, pero eliges tú. Ninguna toca datos reales: hoy todo es desarrollo y el correo está apagado.</p>
+    <p class="prose meta">Cada una trae una opción recomendada, pero eliges tú. Ninguna toca datos reales: hoy todo es desarrollo y el correo, aunque está encendido en desarrollo, solo escribe a tu dirección.</p>
     <div class="qs">
       <article class="q" data-q="1.1">
         <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Quién figura como titular de ResidApp en el pie del correo?</h3><span class="chip">Pendiente</span></div>
@@ -242,13 +242,12 @@
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
-      <article class="q" data-q="1.5">
-        <div class="q-head"><span class="n">1.5</span><h3 class="q-title" id="t-1-5">¿Hacemos ya una prueba real de un correo en Azure dev?</h3><span class="chip">Pendiente</span></div>
-        <p class="why">Serviría para comprobar que el correo llega a la bandeja principal, que sale con un solo destinatario y sin «Responder a», y que el texto se ve bien. Se haría solo con una dirección tuya como única permitida. Te guío paso a paso con lo que verás en pantalla; nunca me pasas la cadena de conexión.</p>
+      <article class="q" data-q="1.5" data-si="Hecha">
+        <div class="q-head"><span class="n">1.5</span><h3 class="q-title" id="t-1-5">Prueba real de un correo en Azure dev</h3><span class="chip">Hecha</span></div>
+        <p class="why">Hecha el 31/10/2026 en Azure dev, con una sola dirección tuya como permitida. El correo llegó a la bandeja principal, salió con un solo destinatario y sin «Responder a», con el remitente «ResidApp» y SPF, DKIM y DMARC en PASS, y el texto genérico con un único enlace a https://dev.residapp.es. Ya no hay nada que decidir aquí salvo si quieres repetirla más adelante.</p>
         <fieldset class="choices" aria-labelledby="t-1-5">
-          <label class="choice"><input type="radio" name="r-1-5" value="A"><span class="letter">A</span><span class="txt">Sí, ahora.</span></label>
-          <label class="choice"><input type="radio" name="r-1-5" value="B"><span class="letter">B</span><span class="txt">Cuando CJ haya contestado su documento. <span class="rec">Recomendada</span></span></label>
-          <label class="choice"><input type="radio" name="r-1-5" value="C"><span class="letter">C</span><span class="txt">Mejor no probar un envío real hasta tener todo validado.</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="A" checked><span class="letter">A</span><span class="txt">Hecha el 31/10/2026; no hace falta repetirla ahora.</span></label>
+          <label class="choice"><input type="radio" name="r-1-5" value="B"><span class="letter">B</span><span class="txt">Repetirla antes de producción, con el DMARC ya reforzado.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
