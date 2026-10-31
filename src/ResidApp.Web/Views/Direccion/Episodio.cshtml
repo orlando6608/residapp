@@ -52,7 +52,7 @@
             <dt class="col-sm-3">Registro</dt>
             <dd class="col-sm-9">@episode.ReceivedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(episode.ReceivedAt))</dd>
             <dt class="col-sm-3">Equipo responsable</dt>
-            <dd class="col-sm-9">El de la unidad (todavía no hay equipos ni turnos configurados).</dd>
+            <dd class="col-sm-9">El de la unidad.</dd>
             @if (episode.HasFollowUp)
             {
                 <dt class="col-sm-3">Seguimiento</dt>

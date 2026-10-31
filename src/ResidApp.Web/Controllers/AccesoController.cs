@@ -18,7 +18,7 @@ namespace ResidApp.Web.Controllers;
 /// Inicio de sesión con contraseña (ADR 0007, incremento I1) y uso de las invitaciones (I2). El personal (cualquier ámbito activo que no
 /// sea de familiar) necesita además un segundo factor TOTP, que solo se da de alta al usar una invitación (decisión de Orlando del
 /// 2026-10-22): así, saber la contraseña de una cuenta no basta para registrar otro móvil. Los familiares entran solo con la contraseña
-/// hasta que CJ decida su segundo factor (pregunta 3.2 del Portal Familiar). Cualquier fallo con la contraseña da el mismo mensaje, exista
+/// hasta que se construya su segundo factor (CJ ya contestó la pregunta 3.2 del Portal Familiar). Cualquier fallo con la contraseña da el mismo mensaje, exista
 /// o no la cuenta; los fallos de contraseña y de segundo factor cuentan para el bloqueo y quedan en dbo.eventos_acceso.
 /// </summary>
 [AllowAnonymous]
