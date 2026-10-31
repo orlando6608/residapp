@@ -272,7 +272,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="pruebas-8-aislamiento" data-version="2026-10-13">
+<body data-doc="pruebas-8-aislamiento" data-version="2026-10-31">
 
 <div class="page">
   <header>
@@ -284,7 +284,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 8 de 8</p>
     <h1>Guía 8 · Aislamiento entre centros y preguntas finales</h1>
-    <p class="meta">Estado a 13/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 31/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       Comprobaciones rápidas de que cada centro ve solo sus datos, y tres preguntas abiertas sobre todas las guías. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
     </p>
@@ -407,7 +407,7 @@
         <div class="q-head"><span class="n">3</span><h3 class="q-title" id="t-3">Cambiar de ámbito con una cuenta de varios centros</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
           <li>Entra con <code>varios-centros</code>. Aparece «Seleccionar ámbito» con cuatro ámbitos: Enfermería y Medicina de Los Olmos, Dirección Clínica y Familiar de Los Almendros.</li>
-          <li>Elige uno, mira qué pantallas te ofrece y cambia con «Cambiar ámbito» (menú del perfil). Repite con otro.</li>
+          <li>Elige uno, mira qué pantallas te ofrece y cambia con «Cambiar ámbito» (menú del perfil). Repite con otro. Deja el ámbito Familiar para el final: el menú del Portal Familiar no tiene «Cambiar ámbito» (solo «Cambiar de residente», «Tema» y «Salir»), así que desde ahí hay que pulsar «Salir» y entrar de nuevo. Dinos en el comentario si echas en falta ese botón.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>En cada ámbito solo ves las pantallas de su perfil y los datos de su centro: en Enfermería y Medicina, solo Jaime y Teresa; en Dirección Clínica, solo los residentes de Los Almendros. En el ámbito Familiar solo se abre el Portal Familiar, y esa cuenta dice «Ahora no tienes acceso a ningún residente» porque no es familiar de ningún residente.</div>
         <fieldset class="choices" aria-labelledby="t-3">

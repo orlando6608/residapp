@@ -240,7 +240,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Ayuda de la guía 4 de pruebas</p>
     <h1>Cómo fluye la guía 4 · Dirección Clínica</h1>
-    <p class="meta">Estado a 14/10/2026 · Para quien hace las pruebas</p>
+    <p class="meta">Estado a 31/10/2026 · Para quien hace las pruebas</p>
     <p class="lead prose">
       Dirección supervisa lo que hacen los demás: necesita episodios abiertos y derivaciones de las guías 1 y 2. Enfermería solo aparece en la prueba 7. Las respuestas se marcan en la <a href="pruebas-4-direccion.html">guía 4</a>; esta página solo orienta.
     </p>
@@ -295,7 +295,7 @@
         <text class="bt" x="290" y="79" text-anchor="middle">Episodios abiertos y derivaciones</text>
         <text class="bt" x="290" y="97" text-anchor="middle">(guías 1 y 2, o pruebas anteriores)</text>
         <rect class="box enf" x="810" y="55" width="150" height="56" rx="8"/>
-        <text class="bt" x="885" y="79" text-anchor="middle"><tspan class="n">7</tspan> · Valorar: SpO₂ 89</text>
+        <text class="bt" x="885" y="79" text-anchor="middle"><tspan class="n">7</tspan> · Valorar: SpO₂ 96</text>
         <text class="bt" x="885" y="97" text-anchor="middle">aviso amarillo</text>
         <rect class="box dir imp" x="130" y="195" width="150" height="56" rx="8"/>
         <text class="bt" x="205" y="219" text-anchor="middle"><tspan class="n">1</tspan> · Supervisión de ★</text>
@@ -322,6 +322,9 @@
         <text class="bt" x="545" y="409" text-anchor="middle"><tspan class="n">8</tspan> · Calidad de ★</text>
         <text class="bt" x="545" y="427" text-anchor="middle">proceso</text>
         <rect class="box dir" x="640" y="385" width="150" height="56" rx="8"/>
+        <rect class="box dir" x="810" y="385" width="150" height="56" rx="8"/>
+        <text class="bt" x="885" y="409" text-anchor="middle"><tspan class="n">10</tspan> · Cierre</text>
+        <text class="bt" x="885" y="427" text-anchor="middle">excepcional</text>
         <text class="bt" x="715" y="409" text-anchor="middle"><tspan class="n">9</tspan> · Plazos de</text>
         <text class="bt" x="715" y="427" text-anchor="middle">los hitos</text>
 
@@ -340,7 +343,7 @@
       <li class="dir">
         <div class="paso-cab"><span class="n">1</span><strong>Supervisión de pendientes</strong> <span class="estrella">★</span><span class="perfil dir">Dirección Clínica</span></div>
         <span>En Inicio de Dirección mira las cifras por unidad. Abre «Supervisión de pendientes», filtra con «Buscar» y abre «Ver detalle operativo» de uno.</span>
-        <span class="pasa">Ves el estado y los hitos (quién, por perfil, y cuándo), sin observaciones ni valoraciones y sin ninguna acción asistencial.</span>
+        <span class="pasa">Ves el estado y los hitos (quién, por perfil, y cuándo), sin observaciones ni valoraciones. La única acción asistencial de este perfil es el cierre excepcional de un episodio con indicaciones sin cumplir (prueba 10).</span>
       </li>
       <li class="dir">
         <div class="paso-cab"><span class="n">2</span><strong>Derivaciones a Urgencias</strong><span class="perfil dir">Dirección Clínica</span></div>
@@ -368,13 +371,13 @@
       </li>
       <li class="dir">
         <div class="paso-cab"><span class="n">7</span><strong>Rangos de referencia de constantes</strong><span class="perfil dir">Dirección Clínica</span></div>
-        <span>En Inicio, «Rangos de referencia de constantes»: fija un mínimo de saturación de O₂ de 92 y «Guardar rangos».</span>
+        <span>En Inicio, «Rangos de referencia de constantes»: sube el mínimo de saturación de O₂ de 95 (el de arranque) a 98 y «Guardar rangos».</span>
         <span class="pasa">Le llega a <strong>Enfermería</strong>: al valorar ve el rango bajo el campo y un aviso amarillo con un valor fuera de él (también en la guía 1, prueba 8).</span>
       </li>
       <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-enfermeria</code>.</li>
       <li class="enf">
         <div class="paso-cab"><span class="n">7</span><strong>El rango, en la valoración de Enfermería</strong><span class="perfil enf">Enfermería</span></div>
-        <span>Valora un evento y guarda una saturación de 89: aparece el aviso amarillo, solo informativo (no impide guardar).</span>
+        <span>Valora un evento y guarda una saturación de 96: aparece el aviso amarillo (con el mínimo de arranque no habría avisado), solo informativo (no impide guardar).</span>
       </li>
       <li class="cambio">Cambia de cuenta («Salir», en el menú de tu perfil) y entra con <code>almendros-direccion</code>.</li>
       <li class="dir">
@@ -386,6 +389,11 @@
         <div class="paso-cab"><span class="n">9</span><strong>Plazos de los hitos del proceso</strong><span class="perfil dir">Dirección Clínica</span></div>
         <span>Desde Inicio, o con «Cambiar los plazos del centro» en «Calidad de proceso», cambia un plazo (por ejemplo, 240 minutos) y «Guardar». Después «Ver los plazos de CJ» y «Guardar» para dejarlos como estaban.</span>
         <span class="pasa">Los plazos cambian lo que mide la prueba 8 y los avisos de plazos del inicio de los demás perfiles.</span>
+      </li>
+      <li class="dir">
+        <div class="paso-cab"><span class="n">10</span><strong>Cerrar un episodio con indicaciones sin cumplir</strong><span class="perfil dir">Dirección Clínica</span></div>
+        <span>Con un episodio abierto con una indicación sin cumplir (la tercera de la guía 2, prueba 5), en «Ver detalle operativo» de «Supervisión de pendientes», «Cerrar el episodio con indicaciones sin cumplir»: motivo, la casilla «Entiendo que las indicaciones médicas se quedan sin resolver» y «Cerrar el episodio».</span>
+        <span class="pasa">El episodio queda cerrado, sin comunicado a la familia y sin tocar las indicaciones; consta en la auditoría con tu motivo. No se puede deshacer, y no aparece en episodios que vienen de una derivación a Urgencias.</span>
       </li>
     </ol>
   </section>

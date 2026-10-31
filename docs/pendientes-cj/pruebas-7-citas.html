@@ -272,7 +272,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="pruebas-7-citas" data-version="2026-10-13">
+<body data-doc="pruebas-7-citas" data-version="2026-10-31">
 
 <div class="page">
   <header>
@@ -284,7 +284,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 7 de 8</p>
     <h1>Guía 7 · Citas con la familia</h1>
-    <p class="meta">Estado a 13/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 31/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       Las citas entre la familia y el equipo asistencial, con reserva directa y con solicitud previa, vistas por la familia y por Administración, y el inicio de Administración con lo que requiere atención. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
     </p>
@@ -433,7 +433,7 @@
         <ol class="pasos">
           <li>Con <code>almendros-elena</code>, reserva una cita (prueba 2). Con <code>almendros-administracion</code>, abre «Citas con la familia» → «Ver la agenda de citas» y busca la semana de esa cita.</li>
           <li>Pulsa «Reprogramar», elige otro hueco y escribe un motivo; después «Cancelar» sobre otra cita y escribe otro motivo. Prueba a guardar sin motivo.</li>
-          <li>Vuelve con la familia y mira las citas. Si hay una cita ya pasada, prueba «Finalizar».</li>
+          <li>Vuelve con la familia y mira las citas. Si hay una cita ya pasada, prueba «Finalizar». Mientras no la finalices, sale en la sección «Citas pasadas sin cerrar» de la agenda y en el bloque «Requiere atención» del inicio de Administración.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>La agenda muestra la hora, el equipo, la modalidad, el residente y la persona de la familia que reservó, y el historial con el motivo. Sin motivo no se reprograma ni se cancela. La familia ve que el centro cambió o canceló la cita (y la hora nueva), pero no el motivo. Solo se puede finalizar una cita confirmada cuya hora ya pasó. Ningún otro perfil (Enfermería, Medicina, Dirección) ve esta agenda.</div>
         <fieldset class="choices" aria-labelledby="t-4">
@@ -479,7 +479,7 @@
           <li>Elige un hueco (los que encajan con la disponibilidad de la familia llevan una marca), escribe un nombre en «Profesional» y pulsa «Enviar la propuesta». Prueba también a enviarla sin elegir hueco.</li>
           <li>Con <code>almendros-elena</code>, abre la solicitud: verás «El centro te propone». Pulsa «Aceptar y confirmar la cita». Después mira «Mis citas» y, con administración, la agenda de esa semana.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin hueco no se envía la propuesta. Mientras la propuesta esté viva, ese hueco no se ofrece a otra solicitud. La familia ve el día y la hora propuestos pero no el profesional. Solo al aceptar nace una cita «Confirmada», que sale en «Mis citas» y en la agenda de Administración; la solicitud pasa a «Aceptada» y enlaza a la cita. Pulsar «Aceptar» dos veces seguidas no crea dos citas.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin hueco no se envía la propuesta. Mientras la propuesta esté viva, ese hueco no se ofrece a otra solicitud. La familia ve el día y la hora propuestos pero no el profesional. Solo al aceptar nace una cita «Confirmada», que sale en «Mis citas» y en la agenda de Administración; la solicitud pasa a «Aceptada» y enlaza a la cita. Pulsar «Aceptar» dos veces seguidas no crea dos citas. Si la familia no responde, la propuesta caduca a las 48 horas o 24 horas antes de la cita, lo que ocurra antes: la bandeja la marca «Caducó sin respuesta» (mientras tanto muestra «caduca el…»), el hueco queda libre y Administración puede volver a proponer. Caducar no se puede provocar con rapidez en esta prueba: basta con que mires que la bandeja enseñe cuándo caduca.</div>
         <fieldset class="choices" aria-labelledby="t-6">
           <label class="choice"><input type="radio" name="r-6" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -534,10 +534,10 @@
         <div class="q-head"><span class="n">9</span><h3 class="q-title" id="t-9">El inicio de Administración dice qué hay que atender</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
           <li>Entra con <code>almendros-administracion</code> y abre el inicio de Administración. Mira el bloque «Requiere atención» y las dos líneas pequeñas de debajo (citas y comunicados).</li>
-          <li>Pulsa cada línea del bloque y comprueba que te lleva a la pantalla donde se resuelve: las solicitudes y propuestas de cita, a «Solicitudes de cita»; las autorizaciones y los residentes sin habitación, a la lista de residentes ya filtrada por ese motivo (abajo, en «Requiere atención», puedes cambiar el filtro o quitarlo).</li>
+          <li>Pulsa cada línea del bloque y comprueba que te lleva a la pantalla donde se resuelve: las solicitudes y propuestas de cita, a «Solicitudes de cita»; las citas pasadas sin cerrar, a la sección «Citas pasadas sin cerrar» de la agenda; las autorizaciones y los residentes con la ubicación pendiente (sin habitación o sin cama), a la lista de residentes ya filtrada por ese motivo (abajo, en «Requiere atención», puedes cambiar el filtro o quitarlo).</li>
           <li>Entra con <code>almendros-enfermeria</code> e intenta abrir <code>/Administracion</code>.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>El bloque solo tiene cifras (ningún nombre de residente ni texto de una solicitud o de un comunicado) y solo salen las líneas con algo que atender; si no hay nada, dice «No hay nada pendiente». Las cifras cuadran con lo que ves en cada pantalla: las solicitudes por gestionar, con la bandeja; los residentes sin habitación, con la lista filtrada; las citas de hoy y de los próximos 7 días, con la agenda. Enfermería no entra.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El bloque solo tiene cifras (ningún nombre de residente ni texto de una solicitud o de un comunicado) y solo salen las líneas con algo que atender; si no hay nada, dice «No hay nada pendiente». Las cifras cuadran con lo que ves en cada pantalla: las solicitudes por gestionar, con la bandeja; los residentes con la ubicación pendiente, con la lista filtrada; las citas de hoy y de los próximos 7 días, con la agenda. Enfermería no entra.</div>
         <fieldset class="choices" aria-labelledby="t-9">
           <label class="choice"><input type="radio" name="r-9" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-9" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>

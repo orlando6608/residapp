@@ -272,7 +272,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="pruebas-1-auxiliar-enfermeria" data-version="2026-10-21">
+<body data-doc="pruebas-1-auxiliar-enfermeria" data-version="2026-10-31">
 
 <div class="page">
   <header>
@@ -284,7 +284,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 1 de 8</p>
     <h1>Guía 1 · Auxiliar y Enfermería</h1>
-    <p class="meta">Estado a 21/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 31/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       El circuito diario: el Auxiliar cierra el turno de sus residentes y Enfermería recibe lo que registra, lo valora y lo cierra, hace un seguimiento, activa el protocolo urgente y deriva a Urgencias. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
     </p>
@@ -377,8 +377,8 @@
     <ul class="lista prose">
       <li>Hazlas en el orden de la guía. La prueba 6 revisa lo que registras como Auxiliar en las pruebas 3 y 4.</li>
       <li>Las pruebas 7, 8 y 9 son el mismo evento: lo registras, lo valoras y lo cierras. La 11 y la 12 también: activas el protocolo urgente y derivas a Urgencias.</li>
-      <li>El aviso de rango de la prueba 8 solo sale si Dirección ya fijó un rango (<a href="pruebas-4-direccion.html">guía 4</a>, prueba 7).</li>
-      <li>La prueba 12 deja un comunicado a la familia preparado, que puedes usar en la <a href="pruebas-6-comunicados-portal.html">guía 6</a>.</li>
+      <li>El centro de prueba ya trae los rangos de referencia que sugirió CJ, así que el aviso de rango de la prueba 8 sale desde el primer día; Dirección puede cambiarlos (<a href="pruebas-4-direccion.html">guía 4</a>, prueba 7).</li>
+      <li>La prueba 12 deja un comunicado a la familia preparado, que puedes usar en la <a href="pruebas-6-comunicados-portal.html">guía 6</a> (la familia que entra al portal es la de Rosa Sánchez, no la de Antonio).</li>
       <li>La prueba 13 (foto y ubicación) no depende de ninguna otra: puedes hacerla cuando quieras. La que pone y quita la foto como Administración es la <a href="pruebas-5-administracion.html">guía 5</a>, prueba 16.</li>
     </ul>
     <p class="why">Si te saltas una prueba, marca D en la que dependa de ella.</p>
@@ -529,7 +529,7 @@
         <ol class="pasos">
           <li>En el detalle del evento de la prueba 7, pulsa «Empezar valoración».</li>
           <li>Escribe hallazgos y actuaciones y anota algunas constantes (por ejemplo, saturación de O₂ 89 %; si anotas la saturación, indica también si respira «Aire ambiente» u «Oxigenoterapia»). Pulsa «Guardar borrador».</li>
-          <li>Si Dirección ha fijado un rango para esa constante (<a href="pruebas-4-direccion.html">guía 4</a>, prueba 7), verás el rango bajo el campo y un aviso amarillo al guardar un valor fuera de él.</li>
+          <li>Si el centro tiene un rango para esa constante (ya trae los sugeridos por CJ; Dirección puede cambiarlos en la <a href="pruebas-4-direccion.html">guía 4</a>, prueba 7), verás el rango bajo el campo y un aviso amarillo al guardar un valor fuera de él.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Hay que guardar al menos un dato. Tras guardar vuelves al detalle con el resumen y quién lo guardó. El aviso de rango es solo informativo: no impide guardar ni cambia la prioridad. En el detalle aparece «Pasar a decisión asistencial».</div>
         <fieldset class="choices" aria-labelledby="t-8">
@@ -625,7 +625,7 @@
         <div class="q-head"><span class="n">13</span><h3 class="q-title" id="t-13">Ver la foto y la cama, y poner una foto como Enfermería</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span>Residentes: <strong>Manuel Ruiz</strong> y <strong>Rosa Sánchez</strong></span></div>
         <ol class="pasos">
-          <li>Con <code>almendros-auxiliar</code>, abre «Mis residentes». Manuel tiene foto y «Planta 1 · 102 · A»; los demás, sus iniciales y «Sin habitación asignada». Abre su registro cotidiano: la foto sale también arriba, junto al nombre.</li>
+          <li>Con <code>almendros-auxiliar</code>, abre «Mis residentes». Manuel tiene foto y «Planta 1 · 102 · A»; los demás, sus iniciales y su ubicación (por ejemplo, «Planta 1 · 101 · A»). Abre su registro cotidiano: la foto sale también arriba, junto al nombre.</li>
           <li>Con <code>almendros-enfermeria</code>, abre «Residentes» y luego la ficha de «Rosa Sánchez». En «Foto de identificación», elige o haz una foto (de un objeto, nunca de una persona real). En el recuadro que aparece, arrástrala para centrar el objeto y acércala con «Acercar». Pulsa «Guardar foto» sin decir quién firmó el consentimiento. Después elige «Su representante», deja la fecha de hoy y guarda.</li>
           <li>Con <code>almendros-medicina</code>, abre «Residentes» y la ficha de ese residente.</li>
           <li>Con <code>almendros-elena</code>, entra en el Portal Familiar.</li>

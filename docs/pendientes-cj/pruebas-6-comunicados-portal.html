@@ -284,7 +284,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 6 de 8</p>
     <h1>Guía 6 · Comunicados y Portal Familiar</h1>
-    <p class="meta">Estado a 26/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 31/10/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       Los comunicados a la familia de principio a fin: se preparan al cerrar un evento, se corrigen, se publican, la familia los lee en el Portal Familiar y, si hace falta, se corrigen o se retiran ya publicados. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
     </p>
@@ -335,8 +335,8 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
-        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación).</td></tr>
-        <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios. Puede crear y firmar basales.</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Prepara los comunicados al cerrar un evento.</td></tr>
+        <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios.</td></tr>
         <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad, calidad de proceso y consulta auditada del basal; puede fijar los rangos de referencia y los plazos de los hitos del proceso, y publicar, corregir o retirar comunicados a la familia.</td></tr>
         <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), traslados y bajas, familias y su acceso al Portal Familiar, comunicados a la familia, citas, usuarios, estructura, turnos y auditoría. Es la Administración principal del centro.</td></tr>
         <tr><td><code>almendros-elena</code></td><td>Familiar (Portal Familiar)</td><td>La hija de «Rosa Sánchez (ficticia)», con la autorización activa. Solo ve las novedades publicadas y las citas de ese residente.</td></tr>
@@ -347,7 +347,7 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
       <tbody>
-        <tr><td>Antonio García (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
+        <tr><td>Antonio García (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para los eventos y comunicados que se preparan en las guías 1 y 2.</td></tr>
         <tr><td>Rosa Sánchez (ficticia)</td><td>Su hija tiene acceso al Portal Familiar (<code>almendros-elena</code>). Úsalo para los comunicados que leerá la familia y para las citas.</td></tr>
         <tr><td>Lucía Fernández (ficticia)</td><td>NO LA TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
       </tbody>
@@ -377,7 +377,7 @@
       <li>La prueba 3 termina después de las pruebas 5 y 6, en las que se publica el comunicado.</li>
       <li>La prueba 4 cambia el horario de los comunicados que se guarden después; los ya guardados conservan su hora.</li>
       <li>Las pruebas 10 y 11 parten del comunicado que publicas en la 8.</li>
-      <li>Al terminar la prueba 12, deja la autorización de la familia activa: la necesitan la prueba 13 y la <a href="pruebas-7-citas.html">guía 7</a>.</li>
+      <li>Al terminar la prueba 12, deja la autorización de la familia activa: la necesitan la prueba 14 y la <a href="pruebas-7-citas.html">guía 7</a>.</li>
       <li>La prueba 13 va al final porque cuenta los comunicados programados, publicados, corregidos y retirados.</li>
       <li>La prueba 14 (el resumen para la familia) necesita comunicados ya publicados, como los de las pruebas 5 a 8; el resumen no los recoge hasta el siguiente corte, a las 19:00.</li>
     </ul>
@@ -455,7 +455,7 @@
         <ol class="pasos">
           <li>Como Administración, abre «Comunicados a la familia» y pulsa «Cambiar la hora de publicación y el margen del centro».</li>
           <li>Pon, por ejemplo, las 20:30 y 120 minutos de margen, y guarda. Prueba antes un margen de 5000 minutos. Pulsa «Ver el horario de CJ» para volver a 19:00 y 60 minutos (sin guardar).</li>
-          <li>Cierra un evento con «Preparar comunicación» (como en la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a>, prueba 10) y mira la hora a la que se publica; compárala con la de un comunicado que ya tuvieras guardado antes del cambio.</li>
+          <li>Cierra un evento de «Rosa Sánchez» (la única residente cuya familia entra al portal) con «Preparar comunicación» (como en la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a>, prueba 10) y mira la hora a la que se publica; compárala con la de un comunicado que ya tuvieras guardado antes del cambio.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Con un margen fuera de 0 a 1440 no deja guardar. El horario nuevo se aplica solo a los comunicados que se guarden después: los ya guardados conservan su hora. El cambio queda en el historial de la pantalla y en la auditoría. Si cambia el horario otra persona a la vez, no se pisa su cambio.</div>
         <fieldset class="choices" aria-labelledby="t-4">
@@ -492,7 +492,7 @@
           <li>Con otro comunicado que aún no se haya publicado (si no te queda ninguno, prepara uno como en la prueba 4), entra como Dirección y abre «Comunicados a la familia» desde Inicio.</li>
           <li>Busca el comunicado y mira su hora. Pulsa «Publicar ahora».</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Dirección ve los comunicados de los residentes de su ámbito de los últimos 30 días, con su hora de publicación y sin el nombre de quien los preparó. «Publicar ahora» lo publica antes de su hora, solo una vez, y queda en la auditoría con el perfil Dirección Clínica. Es la única acción que puede hacer este perfil.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Dirección ve los comunicados de los residentes de su ámbito de los últimos 30 días, con su hora de publicación y sin el nombre de quien los preparó. «Publicar ahora» lo publica antes de su hora, solo una vez, y queda en la auditoría con el perfil Dirección Clínica. Dirección también puede publicar una corrección o retirar un comunicado (pruebas 10 y 11).</div>
         <fieldset class="choices" aria-labelledby="t-6">
           <label class="choice"><input type="radio" name="r-6" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-6" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -602,7 +602,7 @@
         <div class="q-head"><span class="n">12</span><h3 class="q-title" id="t-12">Quitar o suspender el acceso de la familia</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
           <li>Entra con <code>almendros-administracion</code> y abre la autorización del familiar de «Rosa Sánchez (ficticia)». Pulsa «Suspender» y escribe un motivo.</li>
-          <li>Sin cerrar sesión de la familia, vuelve a <code>almendros-elena</code> y recarga la página. Después, con Administración, vuelve a activarla: la necesitan la prueba 13 y la guía 7.</li>
+          <li>Sin cerrar sesión de la familia, vuelve a <code>almendros-elena</code> y recarga la página. Después, con Administración, vuelve a activarla: la necesitan la prueba 14 y la guía 7.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>En cuanto se suspende, la familia ya no ve a su residente: «Ahora no tienes acceso a ningún residente», sin esperar a que caduque la sesión. Al activarla de nuevo, vuelve a ver sus novedades. Revocar tiene el mismo efecto, pero ya no se puede deshacer.</div>
         <fieldset class="choices" aria-labelledby="t-12">
