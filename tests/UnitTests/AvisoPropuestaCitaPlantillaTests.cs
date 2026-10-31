@@ -93,12 +93,12 @@ public class AvisoPropuestaCitaPlantillaTests
         Assert.Equal($"<a href=\"{Url}\">{Url}</a>", Regex.Match(email.Html, @"<a [^>]*>.*?</a>").Value);
     }
 
-    private static readonly string[] AllowedTags = ["html", "head", "meta", "title", "style", "body", "table", "tr", "td", "img", "p", "a", "br"];
+    internal static readonly string[] AllowedTags = ["html", "head", "meta", "title", "style", "body", "table", "tr", "td", "img", "p", "a", "br"];
 
-    private static readonly string[] AllowedAttributes =
+    internal static readonly string[] AllowedAttributes =
         ["lang", "charset", "name", "content", "class", "style", "role", "width", "height", "cellpadding", "cellspacing", "border", "align", "src", "alt", "href"];
 
-    private static readonly string[] AllowedClasses = ["fondo", "tarjeta", "texto", "destacado", "pie"];
+    internal static readonly string[] AllowedClasses = ["fondo", "tarjeta", "texto", "destacado", "pie"];
 
     /// <summary>Lista cerrada de lo permitido (docs/privacidad/aviso-cita-icono-en-correo.md, A2, A4 y A6): ninguna etiqueta, atributo ni clase fuera de lista, así que un
     /// recurso remoto, un texto oculto o una palabra escondida en un atributo no caben aunque nadie los hubiera previsto.</summary>

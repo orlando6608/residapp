@@ -117,8 +117,8 @@ internal static class AppointmentSql
             "SELECT ISNULL(MAX(numero), 0) + 1 FROM dbo.citas_cambios WITH (FORCESEEK) WHERE cita_id = @appointmentId", new { appointmentId }, transaction, cancellationToken: ct));
 
     /// <summary>Anota el paso en el historial de la cita (CIT-C03) y lo audita (recurso APPOINTMENT) en la misma transacción; sin <c>auditAction</c> no
-    /// audita (lo audita quien lo llama sobre otro recurso, como la aceptación de una solicitud).</summary>
-    internal static async Task RecordChangeAsync(
+    /// audita (lo audita quien lo llama sobre otro recurso, como la aceptación de una solicitud). Devuelve el número del cambio.</summary>
+    internal static async Task<int> RecordChangeAsync(
         IDbConnection connection, IDbTransaction transaction, Guid centerId, Guid appointmentId, Guid residentId, Guid accountId, SystemProfile profile,
         AppointmentChangeAction action, string? auditAction, DateTimeOffset? previousStartsAt, DateTimeOffset? newStartsAt, string? reason,
         DateTimeOffset occurredAt, CancellationToken ct)
@@ -138,6 +138,7 @@ internal static class AppointmentSql
             centerId, appointmentId, number, action = action.ToCode(), accountId, profile = profile.ToCode(), previous = previousStartsAt?.UtcDateTime,
             @new = newStartsAt?.UtcDateTime, reason, occurredAt = occurredAt.UtcDateTime, residentId, auditAction,
         }, transaction, cancellationToken: ct));
+        return number;
     }
 
     internal static bool IsUniqueViolation(Microsoft.Data.SqlClient.SqlException error, string indexName) =>

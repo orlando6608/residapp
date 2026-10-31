@@ -17,6 +17,7 @@ using ResidApp.Infrastructure.Identity;
 using ResidApp.Infrastructure.Intercambio;
 using ResidApp.Infrastructure.Pdf;
 using ResidApp.Infrastructure.Persistence;
+using ResidApp.Web.Correo;
 using ResidApp.Web.Security;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -261,6 +262,26 @@ builder.Services.AddScoped(services => new ProposalNoticeService(
     services.GetRequiredService<IProposalNoticeStore>(), services.GetRequiredService<IEmailSender>(),
     services.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(),
     message => services.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
+
+// Aviso de cambio de cita (ADR 0012): se reserva al reprogramar o cancelar Administración y la tarea programada de la aplicación lo envía unos minutos después.
+// Apagado por defecto: además de Correo:Activo hace falta Correo:AvisoCambioCita. «Siempre activo» en la Web App, para que la tarea no se duerma.
+builder.Services.AddScoped<IChangeNoticeStore, SqlChangeNoticeStore>();
+builder.Services.AddScoped(services => new ChangeNoticeService(
+    services.GetRequiredService<IChangeNoticeStore>(), services.GetRequiredService<IEmailSender>(),
+    services.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(),
+    message => services.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
+// La tarea no tiene a nadie conectado y, con el usuario limitado de la aplicación, la seguridad por filas no le dejaría ver nada: usa su propio usuario de base de datos
+// (ConnectionStrings:ResidAppTareas, miembro del rol residapp_tareas; script 0083 y database/seguridad/crear_usuario_tarea_azure.sql). Sin él usa la cadena principal, que
+// en local y en las pruebas es db_owner y ve todo.
+var tasksConnectionString = builder.Configuration.GetConnectionString("ResidAppTareas");
+builder.Services.AddSingleton(new ChangeNoticeTaskIdentity(tasksConnectionString is not null));
+builder.Services.AddKeyedScoped<IChangeNoticeStore>(
+    ChangeNoticeWorker.ServiceKey, (_, _) => new SqlChangeNoticeStore(new SqlConnectionFactory(tasksConnectionString ?? connectionString)));
+builder.Services.AddKeyedScoped<ChangeNoticeService>(ChangeNoticeWorker.ServiceKey, (services, _) => new ChangeNoticeService(
+    services.GetRequiredKeyedService<IChangeNoticeStore>(ChangeNoticeWorker.ServiceKey), services.GetRequiredService<IEmailSender>(),
+    services.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(),
+    message => services.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
+builder.Services.AddHostedService<ChangeNoticeWorker>();
 
 builder.Services.AddScoped<ListScopeResidents>();
 builder.Services.AddScoped<FindScopeResident>();

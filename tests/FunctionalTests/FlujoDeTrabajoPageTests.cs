@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using ResidApp.Application.Email;
 
 namespace ResidApp.FunctionalTests;
 
@@ -31,5 +32,19 @@ public class FlujoDeTrabajoPageTests : IClassFixture<ResidentsFlowTests.WebAppFa
         Assert.Contains("<img src=\"/images/logo.svg\"", html);
         Assert.Contains("Plataforma Asistencial Geriátrica", html);
         Assert.Contains("<a href=\"/\">← Volver a ResidApp</a>", html);
+    }
+
+    /// <summary>El Manual cuenta los dos avisos por correo de las citas y cita el asunto real del aviso de cambio (si cambia la plantilla, esta prueba avisa): no vuelve a decir que
+    /// la aplicación no manda ningún correo al reprogramar o cancelar.</summary>
+    [Fact]
+    public async Task Manual_CuentaElAvisoDeCambioDeCita_ConElAsuntoRealDeLaPlantilla()
+    {
+        var html = await _factory.CreateClient().GetStringAsync("/Home/Manual");
+        var flow = await _factory.CreateClient().GetStringAsync("/flujo-de-trabajo.html");
+
+        Assert.Contains(ChangeNoticeTemplate.Render("es", "https://dev.example.test").Subject, html);
+        Assert.DoesNotContain("no le manda ningún correo", html);
+        Assert.DoesNotContain("Todavía no hay avisos ni recordatorios", flow);
+        Assert.DoesNotContain("la aplicación no envía correos", html);
     }
 }

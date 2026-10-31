@@ -219,7 +219,7 @@ public sealed class SqlAppointmentServiceRepository(SqlConnectionFactory connect
         return slots.Where(slot => slot.StartsAt.UtcDateTime != appointment.StartsAt.UtcDateTime).ToList();
     }
 
-    public async Task CancelAsync(AccountAdministrationAccess access, Guid appointmentId, string reason, DateTimeOffset now, CancellationToken ct = default)
+    public async Task<int> CancelAsync(AccountAdministrationAccess access, Guid appointmentId, string reason, DateTimeOffset now, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -232,13 +232,14 @@ public sealed class SqlAppointmentServiceRepository(SqlConnectionFactory connect
 
         await connection.ExecuteAsync(new CommandDefinition(
             "UPDATE dbo.citas SET estado_codigo = 'CANCELADA' WHERE id = @appointmentId", new { appointmentId }, transaction, cancellationToken: ct));
-        await RecordChangeAsync(
+        var changeNumber = await RecordChangeAsync(
             connection, transaction, access.CenterId.Value, appointmentId, appointment.ResidentId, access.AccountId.Value, SystemProfile.Administracion,
             AppointmentChangeAction.Cancelada, "APPOINTMENT_CANCEL_ADMIN", appointment.StartsAt, null, reason, now, ct);
         transaction.Commit();
+        return changeNumber;
     }
 
-    public async Task RescheduleAsync(
+    public async Task<int> RescheduleAsync(
         AccountAdministrationAccess access, Guid appointmentId, DateTimeOffset newStartsAt, string reason, DateTimeOffset now, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
@@ -272,10 +273,11 @@ public sealed class SqlAppointmentServiceRepository(SqlConnectionFactory connect
             throw new DomainValidationException("APPOINTMENT_SLOT_UNAVAILABLE");
         }
 
-        await RecordChangeAsync(
+        var changeNumber = await RecordChangeAsync(
             connection, transaction, center, appointmentId, appointment.ResidentId, access.AccountId.Value, SystemProfile.Administracion,
             AppointmentChangeAction.Reprogramada, "APPOINTMENT_RESCHEDULE_ADMIN", appointment.StartsAt, slot.StartsAt, reason, now, ct);
         transaction.Commit();
+        return changeNumber;
     }
 
     public async Task FinishAsync(AccountAdministrationAccess access, Guid appointmentId, DateTimeOffset now, CancellationToken ct = default)

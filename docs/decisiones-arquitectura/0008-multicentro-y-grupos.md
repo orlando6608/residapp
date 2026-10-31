@@ -49,6 +49,14 @@ Lo que ya hay (verificado el 2026-10-06):
      seeds y tests), así que la política queda **latente en cualquier entorno cuya aplicación se conecte como `db_owner`**. En Azure dev
      la aplicación ya usa un usuario sin `db_owner` y la política se aplica de verdad. Un `db_owner` puede desactivarla: protege de errores de la aplicación, no de
      quien administra la base.
+   - **Segunda excepción, un rol para la tarea programada (script `0083`, 2026-10-31; ADR 0012).** La tarea del aviso de cambio de cita no tiene persona conectada ni
+     ámbito, así que la función también deja pasar a los miembros del rol `residapp_tareas`, que nace sin miembros: lo ocupa un usuario aparte (`database/seguridad/crear_usuario_tarea_azure.sql`)
+     que solo usa la tarea, con su propia cadena de conexión (`ConnectionStrings:ResidAppTareas`). El rol salta el filtro de centro pero solo con permisos por columnas sobre
+     `envios_correo` y lo mínimo de `citas`, `citas_cambios` (con `DENY` sobre `motivo`), `residentes_familiares`, `familiares` (solo el correo), `residentes`,
+     `suspensiones_residente` y `familiares_autorizaciones_cambios`; sin insertar, borrar ni leer tablas clínicas. La función no se puede modificar mientras la política la referencia
+     (error 3729): el script quita la política, cambia la función y la recrea con los predicados leídos de `sys.security_predicates`, todo en una transacción y con comprobación;
+     en un entorno con usuarios reales se aplica en ventana de mantenimiento. Toda tabla futura de la política queda sin filtro para este rol, y solo la frenan los permisos: hay que
+     revisar sus permisos al añadir tablas. Lectura de privacidad: `docs/privacidad/tarea-correo-identidad-rls.md`.
    - **Las tablas clínicas no tienen ningún salto.** El «administrador global» ya existe como `PLATAFORMA` y, por el ADR 0006, no ve
      contenido clínico. Su salto se limita a las tablas que escribe al provisionar: `centros`, `unidades`, `cuentas`,
      `ambitos_perfil`, `ambitos_perfil_unidad` y `eventos_auditoria`.

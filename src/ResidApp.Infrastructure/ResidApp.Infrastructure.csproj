@@ -6,6 +6,11 @@
     <ProjectReference Include="..\ResidApp.Shared\ResidApp.Shared.csproj" />
   </ItemGroup>
 
+  <!-- Las pruebas de integración ejecutan las consultas reales de la tarea del aviso con el usuario del rol residapp_tareas (SqlChangeNoticeStore). -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="ResidApp.IntegrationTests" />
+  </ItemGroup>
+
   <!-- ASP.NET Core Identity (ADR 0007, I1): UserManager y las interfaces de almacén vienen en el framework compartido, sin paquete. -->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

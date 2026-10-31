@@ -13,6 +13,7 @@ CJ contestó el 2026-10-25 tres preguntas que necesitan mandar correos a las fam
 
 - **Aviso de propuesta de cita** (tercera tanda 6.1, opción C): cuando el centro propone una cita, a la familia le llega un correo genérico. Para los comunicados, no.
 - **Recordatorio de una cita confirmada** (6.2, opción B): un correo el día antes, también genérico («Tienes una cita mañana en ResidApp»), sin decir con quién ni para qué.
+- **Aviso de cambio o cancelación de una cita por el centro** (Orlando, 2026-10-31; **no** pasó por CJ: pendiente de su confirmación): cuando Administración reprograma o cancela una cita confirmada, a quien la reservó le llega un correo genérico («Tienes un cambio en una cita en ResidApp»). Un solo aviso para las dos cosas, sin decir cuál; sin correo al reservar; sin aviso cuando el centro cierra una solicitud o retira una propuesta, ni cuando cambia la familia o la baja del residente cancela las citas. Lectura de privacidad (borrador por validar) en `docs/privacidad/aviso-cita-cambio-cancelacion-por-correo.md`.
 - **Código de acceso del familiar** (portal 3.2, opción A): el familiar entra con su contraseña y un código que le llega por correo (hoy entra solo con la contraseña), con
   límite de intentos fallidos, caducidad de la sesión y un aviso cuando se entra desde un sitio nuevo.
 
@@ -25,7 +26,7 @@ CJ lo reafirmó en la 6.4).
 
 ## Requisitos
 
-1. **Texto genérico.** Ningún correo dice el nombre del residente, la unidad, el equipo, el motivo ni nada de salud. Solo que hay algo pendiente en ResidApp o el código.
+1. **Texto genérico.** Ningún correo dice el nombre del residente, la unidad, el equipo, el motivo ni nada de salud. Solo que hay algo pendiente en ResidApp, que hay un cambio en una cita, o el código. El aviso de cambio no distingue entre reprogramación y cancelación, no dice día, hora, equipo, modalidad ni motivo, y el motivo del cambio que escribe Administración no se lee nunca.
    El HTML puede llevar el estilo de la app y el icono de ResidApp incrustado en el mensaje (`cid:`); no lleva el logotipo ni el nombre del centro, ni imágenes ni recursos
    enlazados desde un servidor. El texto visible del HTML es el del texto plano más la palabra «ResidApp» de la cabecera (`docs/privacidad/aviso-cita-icono-en-correo.md`).
    Las plantillas están en el repositorio, versionadas como el código, y son las únicas que se pueden mandar.
@@ -37,7 +38,7 @@ CJ lo reafirmó en la 6.4).
    acaben en la carpeta de correo no deseado y para que nadie pueda hacerse pasar por ResidApp con facilidad.
 5. **Familias sin correo.** Hoy el correo es opcional. Sin correo no hay aviso ni recordatorio (el aviso dentro del portal, 6.3, cubre a todas). Para el código de acceso (3.2)
    el correo pasa a ser **obligatorio** en el familiar que tiene acceso al portal: decidir qué pasa con los que ya tienen cuenta sin correo.
-6. **Si el proveedor falla,** la acción que lo provoca no falla: la propuesta de cita se guarda igual y el envío se reintenta; el código de acceso sí debe avisar de que no se
+6. **Si el proveedor falla,** la acción que lo provoca no falla: la propuesta de cita, el cambio o la cancelación se guardan igual y el envío se reintenta; el código de acceso sí debe avisar de que no se
    pudo mandar.
 7. **Plantillas por idioma (decidido por Orlando el 2026-10-29).** Cada plantilla existe en castellano y en catalán, como ficheros separados y versionados en el
    repositorio, con el mismo contenido genérico (requisito 1). Asunto, remitente y pie legal van también por idioma. Las dos versiones comparten identificador y versión, y
@@ -59,9 +60,18 @@ CJ lo reafirmó en la 6.4).
   Se llama después del `Commit` de proponer; vuelve a comprobar la vigencia y el acceso con la misma consulta que el portal; un solo destinatario (el familiar de la solicitud); sin `Reply-To`;
   seguimiento de aperturas apagado; HTML con el estilo de la app (`EmailLayout`: banda azul, tarjeta, enlace destacado y modo oscuro) y el icono de ResidApp incrustado (`cid:`), sin recursos remotos
   (2026-10-31, pendiente de validación humana según `docs/privacidad/aviso-cita-icono-en-correo.md`); sin reintentos (no hay tareas programadas hasta el recordatorio).
-- **Ajustes** (variables de entorno de la Web App, sección `Correo`): `Correo__Activo` (por defecto apagado), `Correo__CadenaConexion`, `Correo__UrlBase` (por ejemplo `https://dev.residapp.es`; el único enlace del correo),
+- **Pieza 1 bis, aviso de cambio o cancelación de una cita: construida el 2026-10-31, apagada por defecto** (script `0082`, misma tabla `envios_correo` con la plantilla `AVISO_CAMBIO_CITA`; lectura de privacidad en `docs/privacidad/aviso-cita-cambio-cancelacion-por-correo.md`).
+  `ChangeNoticeService`, `ChangeNoticeTemplate` (textos en castellano y catalán, versión "1"), `SqlChangeNoticeStore` y `ChangeNoticeWorker`, **la primera tarea programada de la aplicación** (un `BackgroundService` de ASP.NET Core que se ejecuta cada minuto).
+  Va en dos tiempos: al reprogramar o cancelar Administración, y solo allí (`AppointmentServiceApplicationService`), se **reserva** una fila PENDIENTE después del `Commit` (clave única: plantilla, cita, número del cambio); la tarea, **unos 5 minutos después**, la reclama (`intentos` pasa a 1, así que dos copias de la aplicación no la mandan dos veces), vuelve a comprobar que el cambio sigue siendo el último de la cita, que lo hizo Administración sin causa de sistema (la baja), que la hora que importaba no ha pasado y que quien la reservó sigue con acceso y con correo, y manda **un solo correo a quien reservó la cita**. Si la cita vuelve a cambiar en esos minutos, solo avisa el último cambio. Sin reintentos. El motivo del cambio no se lee en ningún momento.
+  Decidido por Orlando el 2026-10-31: un solo aviso, con la línea «Aquí no ponemos los detalles…», **sin casilla** «No mandar aviso; voy a llamar yo», envío **diferido** con tarea programada dentro de la aplicación (no una Azure Function; si se pasa a producción con varias instancias, el servicio puede llamarlo una Function sin reescribirlo) y **sin aviso** al cerrar una solicitud o retirar una propuesta.
+  Necesita «Siempre activo» en la Web App (una aplicación dormida no ejecuta la tarea): **no se ha encendido todavía**; con el aviso apagado no hace falta.
+  **Identidad de la tarea (decidido por Orlando el 2026-10-31):** la tarea no tiene persona conectada y, con el usuario limitado de la aplicación, la seguridad por filas no le dejaría ver nada.
+  Tiene un **usuario propio** de base de datos, miembro del rol `residapp_tareas` (script `0083`; ver ADR 0008), con su propia cadena `ConnectionStrings:ResidAppTareas` que solo usa la tarea
+  (la reserva del aviso, dentro de la petición de Administración, usa la conexión normal). Antes de cada vuelta la tarea comprueba que su conexión es de ese rol y, si no, lo registra como error
+  y no procesa nada. Revisión del DPO y condiciones: `docs/privacidad/tarea-correo-identidad-rls.md`.
+- **Ajustes** (variables de entorno de la Web App, sección `Correo`): `Correo__Activo` (por defecto apagado), `Correo__AvisoCambioCita` (interruptor propio del aviso de cambio, por defecto apagado; además de `Correo__Activo`), `Correo__CadenaConexion`, `Correo__UrlBase` (por ejemplo `https://dev.residapp.es`; el único enlace del correo),
   `Correo__Remitente` (por defecto `no-responder@avisos.residapp.es`), `Correo__Idioma` (`es` o `ca`; por defecto `es`) y, fuera de producción, `Correo__DireccionesPermitidas__0`, `__1`… Sin ninguna lista, solo se enciende con `Correo__TodosLosDestinos=true`.
-- **Falta:** la casilla «Dirección confirmada con la familia» y la etiqueta del campo del correo (espera la pregunta 2.1 de CJ, `aviso-citas-por-correo-cj`); FAM-10 modificado por escrito; el texto «propuesta de cita» o «novedad» (1.2); la línea del titular de ResidApp en el pie; la vía de purga del registro (espera el plazo del DPO);
+- **Falta:** para el aviso de cambio, la vía de purga (imprescindible antes de producción, sube el volumen), **antes de encender el aviso en Azure:** que Orlando ejecute `database/seguridad/crear_usuario_tarea_azure.sql` (después de que el CI aplique el `0083`, que en un entorno con usuarios reales se aplica en ventana de mantenimiento) y ponga la contraseña en el ajuste `ResidAppTareas` de la Web App, probar en dev con datos de prueba que la tarea resuelve un aviso y no ve el motivo, y activar la auditoría de Azure SQL para ese usuario, la ampliación de FAM-10 y la confirmación de CJ, la información a la familia ampliada, los reintentos (hoy un fallo queda FALLIDO) y la validación humana del borrador del DPO; además, la casilla «Dirección confirmada con la familia» y la etiqueta del campo del correo (espera la pregunta 2.1 de CJ, `aviso-citas-por-correo-cj`); FAM-10 modificado por escrito; el texto «propuesta de cita» o «novedad» (1.2); la línea del titular de ResidApp en el pie; la vía de purga del registro (espera el plazo del DPO);
   el recordatorio (pieza 2) y el código de acceso (pieza 3).
 
 ## Opciones

@@ -21,7 +21,7 @@ public class CitasTests
         new AdministrationAccessResolver(new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedCitasSessionIdentityProvider(subject)),
         new SqlAppointmentServiceRepository(TestDatabase.ConnectionFactory));
 
-    private static FamilyAppointmentsApplicationService Family(string subject) => new(
+    internal static FamilyAppointmentsApplicationService Family(string subject) => new(
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedCitasSessionIdentityProvider(subject),
         new SqlFamilyAppointments(TestDatabase.ConnectionFactory));
 
@@ -30,7 +30,7 @@ public class CitasTests
 
     /// <summary>Un centro con el servicio en reserva directa, todas las modalidades y, para los dos equipos, una franja todos los días de 08:00 a 20:00 en
     /// citas de 30 minutos: hay huecos sea cual sea el día en que se ejecute la prueba.</summary>
-    private static async Task ConfigureAsync(
+    internal static async Task ConfigureAsync(
         Setup setup, int noticeHours = 1, int horizonDays = 30, AppointmentServiceMode mode = AppointmentServiceMode.ReservaDirecta)
     {
         var admin = Admin(setup.Admin.ExternalSubject);
@@ -54,7 +54,7 @@ public class CitasTests
         }
     }
 
-    private static async Task<IReadOnlyList<AppointmentSlot>> SlotsAsync(
+    internal static async Task<IReadOnlyList<AppointmentSlot>> SlotsAsync(
         string subject, Guid linkId, AppointmentTeam team = AppointmentTeam.Medico, AppointmentModality modality = AppointmentModality.Presencial, Guid? rescheduling = null)
     {
         var result = await Family(subject).ListSlotsAsync(await QueryAsync(subject), linkId, team, modality, rescheduling);
@@ -62,7 +62,7 @@ public class CitasTests
         return result.Value!;
     }
 
-    private static async Task<ApplicationResult<FamilyAppointment>> BookAsync(
+    internal static async Task<ApplicationResult<FamilyAppointment>> BookAsync(
         string subject, Guid linkId, AppointmentSlot slot, AppointmentTeam team = AppointmentTeam.Medico, AppointmentModality modality = AppointmentModality.Presencial,
         Guid? operationId = null)
     {
@@ -98,7 +98,7 @@ public class CitasTests
     }
 
     /// <summary>Una cita insertada directamente con la hora que se quiera (para probar lo que depende del momento).</summary>
-    private static async Task<Guid> InsertAppointmentAsync(
+    internal static async Task<Guid> InsertAppointmentAsync(
         Setup setup, AppointmentTeam team, DateTime startsAtUtc, string status = "CONFIRMADA", AppointmentModality modality = AppointmentModality.Presencial)
     {
         var id = Guid.NewGuid();
