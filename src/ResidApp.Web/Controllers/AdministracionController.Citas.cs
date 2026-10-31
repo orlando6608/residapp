@@ -57,7 +57,7 @@ public sealed partial class AdministracionController
             ModelState.AddModelError(string.Empty, result.Error!.Code switch
             {
                 ApplicationFailureCode.Conflict => "Otra persona ha cambiado la configuración desde que abriste la pantalla. Recarga para ver la vigente; lo que has escrito sigue aquí.",
-                ApplicationFailureCode.InvalidInput => "Revisa los datos: la antelación va de 0 a 720 horas, el horizonte de 1 a 180 días, y la solicitud previa todavía no está disponible.",
+                ApplicationFailureCode.InvalidInput => "Revisa los datos: elige el modo de reserva, la antelación va de 0 a 720 horas y el horizonte de 1 a 180 días.",
                 ApplicationFailureCode.AccessDenied => "No tienes acceso a esta pantalla.",
                 _ => result.Error.Message,
             });
