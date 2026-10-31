@@ -104,7 +104,7 @@ public class AvisoPropuestaCitaTests
         Assert.DoesNotContain("Residente Aviso Correo Uno", message.PlainText + message.Html + message.Subject);
         Assert.DoesNotContain("Lucía", message.PlainText + message.Html + message.Subject);
         var row = Assert.Single(await RowsAsync(request.Id));
-        Assert.Equal(("ENVIADO", (string?)null, 1, "es", "1"), (row.Estado, row.Motivo, row.Intentos, row.Idioma, row.Version));
+        Assert.Equal(("ENVIADO", (string?)null, 1, "es", "2"), (row.Estado, row.Motivo, row.Intentos, row.Idioma, row.Version));
         Assert.StartsWith("op-", row.Operacion);
         Assert.Equal((await LastChangeNumberAsync(request.Id)).ToString(), row.Clave);
         Assert.Equal(1, await StatusCountAsync(request.Id, "PROPUESTA"));

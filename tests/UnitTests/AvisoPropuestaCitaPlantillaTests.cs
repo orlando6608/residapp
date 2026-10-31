@@ -49,16 +49,133 @@ public class AvisoPropuestaCitaPlantillaTests
     [Theory]
     [InlineData("es")]
     [InlineData("ca")]
-    public void UnSoloEnlace_ElConfigurado_SinParametros_Imagenes_NiSeguimiento(string language)
+    public void UnSoloEnlace_ElConfigurado_SinParametros_ImagenesRemotas_NiSeguimiento(string language)
     {
         var email = ProposalNoticeTemplate.Render(language, Url + "/");
 
         var urls = Regex.Matches(email.PlainText + email.Html, @"https?://[^\s<""']+").Select(m => m.Value).Distinct().ToList();
         Assert.Equal([Url], urls);
         Assert.Single(Regex.Matches(email.PlainText, @"https?://"));
-        Assert.DoesNotContain("<img", email.Html, StringComparison.OrdinalIgnoreCase);
+        Assert.Single(Regex.Matches(email.Html, @"<a "));
         Assert.DoesNotContain("?", string.Join(' ', urls));
         Assert.Contains($"<a href=\"{Url}\">{Url}</a>", email.Html);
+        Assert.DoesNotContain("url(", email.Html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("es")]
+    [InlineData("ca")]
+    public void LaUnicaImagen_EsElIconoDeResidApp_DentroDelMensaje_YDecorativa(string language)
+    {
+        var email = ProposalNoticeTemplate.Render(language, Url);
+
+        var image = Assert.Single(email.InlineImages!);
+        Assert.Equal(EmailLayout.IconContentId, image.ContentId);
+        Assert.Equal("image/png", image.ContentType);
+        Assert.Equal(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, image.Content.Take(4));
+        Assert.InRange(image.Content.Length, 1, 30_000);
+        var tag = Assert.Single(Regex.Matches(email.Html, @"<img [^>]*>")).Value;
+        Assert.Contains($"src=\"cid:{EmailLayout.IconContentId}\"", tag);
+        Assert.Contains("alt=\"\"", tag);
+        Assert.DoesNotContain("<link", email.Html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("@import", email.Html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("es")]
+    [InlineData("ca")]
+    public void ElEnlaceVisible_EstaDestacado_YNoSeEscondeTrasOtraPalabra(string language)
+    {
+        var email = ProposalNoticeTemplate.Render(language, Url);
+
+        var highlighted = Assert.Single(Regex.Matches(email.Html, @"<p class=""texto destacado""[^>]*>(.*?)</p>")).Groups[1].Value;
+        Assert.Contains($"<a href=\"{Url}\">{Url}</a>", highlighted);
+        Assert.Equal($"<a href=\"{Url}\">{Url}</a>", Regex.Match(email.Html, @"<a [^>]*>.*?</a>").Value);
+    }
+
+    private static readonly string[] AllowedTags = ["html", "head", "meta", "title", "style", "body", "table", "tr", "td", "img", "p", "a", "br"];
+
+    private static readonly string[] AllowedAttributes =
+        ["lang", "charset", "name", "content", "class", "style", "role", "width", "height", "cellpadding", "cellspacing", "border", "align", "src", "alt", "href"];
+
+    private static readonly string[] AllowedClasses = ["fondo", "tarjeta", "texto", "destacado", "pie"];
+
+    /// <summary>Lista cerrada de lo permitido (docs/privacidad/aviso-cita-icono-en-correo.md, A2, A4 y A6): ninguna etiqueta, atributo ni clase fuera de lista, así que un
+    /// recurso remoto, un texto oculto o una palabra escondida en un atributo no caben aunque nadie los hubiera previsto.</summary>
+    [Theory]
+    [InlineData("es")]
+    [InlineData("ca")]
+    public void ElHtml_SoloUsaEtiquetasAtributosYClasesDeLaListaCerrada_SinTextoOcultoNiComentarios(string language)
+    {
+        var html = ProposalNoticeTemplate.Render(language, Url).Html;
+
+        Assert.All(Regex.Matches(html, @"<([a-zA-Z][a-zA-Z0-9]*)"), m => Assert.Contains(m.Groups[1].Value, AllowedTags));
+        foreach (Match tag in Regex.Matches(html, @"<[a-zA-Z][^>]*>"))
+        {
+            foreach (Match attribute in Regex.Matches(tag.Value, @"\s([a-zA-Z][\w-]*)=""([^""]*)"""))
+            {
+                Assert.Contains(attribute.Groups[1].Value, AllowedAttributes);
+                var value = attribute.Groups[2].Value;
+                if (attribute.Groups[1].Value == "class")
+                {
+                    Assert.All(value.Split(' '), c => Assert.Contains(c, AllowedClasses));
+                }
+
+                if (attribute.Groups[1].Value == "alt")
+                {
+                    Assert.Equal("", value);
+                }
+            }
+        }
+
+        Assert.DoesNotContain("<!--", html);
+        foreach (var hidden in new[] { "display:none", "visibility:hidden", "font-size:0", "opacity:0", "max-height:0", "mso-hide", "@font-face", "data:", "javascript:" })
+        {
+            Assert.DoesNotContain(hidden, html, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Theory]
+    [InlineData("es")]
+    [InlineData("ca")]
+    public void ElTextoQueSeVeEnElHtml_EsElDelTextoPlano_MasLaPalabraResidApp(string language)
+    {
+        var email = ProposalNoticeTemplate.Render(language, Url);
+
+        var visible = Regex.Replace(email.Html, @"<(style|title)>.*?</\1>", "", RegexOptions.Singleline);
+        visible = System.Net.WebUtility.HtmlDecode(Regex.Replace(visible, "<[^>]*>", " "));
+        Assert.Equal(Collapse("ResidApp " + email.PlainText.Replace("—", "")), Collapse(visible));
+
+        static string Collapse(string text) => Regex.Replace(text, @"\s+", " ").Trim();
+    }
+
+    [Theory]
+    [InlineData("es")]
+    [InlineData("ca")]
+    public void ElMarcadoDelHtml_NoLlevaPalabrasDeCentroNiDeSalud_FueraDelTextoQueSeVe(string language)
+    {
+        var markup = Regex.Replace(ProposalNoticeTemplate.Render(language, Url).Html, ">[^<]*<", "><");
+
+        Assert.DoesNotMatch(@"(?i)resid(?!app)|centr|salud|salut|sanit|m[eé]dic|metge|enfermer|geri|cl[ií]nic|asist|cuid|mayor|anci|hospital|unitat|unidad", markup);
+    }
+
+    [Fact]
+    public void ElIcono_EsSiempreElMismoArchivo_YNoLlevaMetadatosDeQuienLoExporto()
+    {
+        var icon = EmailLayout.Icon;
+
+        Assert.Equal("b2b58a45302260bad5855c265b15965cdf2c39e64ff3cd05792d007b170baca2", Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(icon.Content)).ToLowerInvariant());
+        Assert.Equal(("residapp-icono", "icono-residapp.png", "image/png"), (icon.ContentId, icon.Name, icon.ContentType));
+        var chunks = new List<string>();
+        for (var offset = 8; offset < icon.Content.Length;)
+        {
+            chunks.Add(System.Text.Encoding.Latin1.GetString(icon.Content, offset + 4, 4));
+            offset += 12 + (int)System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(icon.Content.AsSpan(offset, 4));
+        }
+
+        Assert.Equal("IHDR", chunks[0]);
+        Assert.Equal("IEND", chunks[^1]);
+        Assert.Empty(chunks.Intersect(["tEXt", "iTXt", "zTXt", "eXIf", "tIME"]));
     }
 
     [Theory]
@@ -82,7 +199,8 @@ public class AvisoPropuestaCitaPlantillaTests
         var ca = ProposalNoticeTemplate.Render("ca", Url);
 
         Assert.Equal(es.PlainText.Split("\n\n").Length, ca.PlainText.Split("\n\n").Length);
-        Assert.Equal(Regex.Matches(es.Html, "<p>").Count, Regex.Matches(ca.Html, "<p>").Count);
+        Assert.Equal(Regex.Matches(es.Html, "<p[ >]").Count, Regex.Matches(ca.Html, "<p[ >]").Count);
+        Assert.Equal(es.PlainText.Split("\n\n").Length, Regex.Matches(es.Html, "<p[ >]").Count);
         Assert.Throws<ArgumentOutOfRangeException>(() => ProposalNoticeTemplate.Render("en", Url));
         Assert.Equal(["es", "ca"], ProposalNoticeTemplate.Languages);
     }
