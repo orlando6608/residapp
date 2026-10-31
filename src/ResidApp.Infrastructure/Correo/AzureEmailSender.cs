@@ -26,6 +26,11 @@ public sealed class AzureEmailSender(IOptions<CorreoOptions> options) : IEmailSe
             {
                 UserEngagementTrackingDisabled = true,
             };
+            foreach (var image in message.InlineImages ?? [])
+            {
+                email.Attachments.Add(new EmailAttachment(image.Name, image.ContentType, BinaryData.FromBytes(image.Content)) { ContentId = image.ContentId });
+            }
+
             var operation = await client.SendAsync(WaitUntil.Started, email, ct);
             return EmailSendResult.Ok(operation.Id);
         }

@@ -11,4 +11,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Email\Images\icono-correo.png" LogicalName="ResidApp.Email.icono-correo.png" />
+  </ItemGroup>
+
 </Project>
