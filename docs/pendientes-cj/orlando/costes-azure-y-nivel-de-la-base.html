@@ -235,7 +235,7 @@
     <h2 id="workflow">6 · El workflow que vuelve a Basic cada noche</h2>
     <p class="nota prose">
       <strong>Estado:</strong> ya está en <code>main</code> (<code>.github/workflows/sql-dev-nivel.yml</code>) y el botón existe en GitHub. El 01/11/2026 se lanzó con <code>Basic</code> y respondió «La base ya está en Basic: no se cambia nada», así que el inicio de sesión en Azure funciona.
-      Aún no se ha probado subir a un nivel mayor y volver, ni ha corrido la ejecución de las 02:00. Solo funciona lanzado desde <code>main</code>: la identidad con la que GitHub entra en Azure solo acepta esa rama.
+      Ese mismo día se probó subir a <code>S0</code> y volver a <code>Basic</code>: la base cambió bien en las dos direcciones (unos 3 minutos en S0) y la web siguió respondiendo, pero la subida salió «en rojo» por un fallo del propio workflow, que comparaba mal el nombre del nivel y que se corrigió después. Falta repetir la subida con el arreglo y ver que corre la ejecución de las 02:00. Solo funciona lanzado desde <code>main</code>: la identidad con la que GitHub entra en Azure solo acepta esa rama.
     </p>
     <h3>Qué hace</h3>
     <ul class="prose">
@@ -275,7 +275,8 @@
         <tbody>
           <tr><td>Fusionar el workflow en <code>main</code></td><td><span class="st si">Hecho</span></td><td>Orlando (PR #105)</td></tr>
           <tr><td>Lanzar <code>Basic</code> a mano (no cambia nada)</td><td><span class="st si">Hecho el 01/11/2026</span></td><td>Ingeniería</td></tr>
-          <tr><td>Probar la subida y la vuelta: lanzar <code>S0</code> y de nuevo <code>Basic</code>. Cuesta unos céntimos</td><td><span class="st mid">Pendiente</span></td><td>Tú, con ayuda; es la base de desarrollo</td></tr>
+          <tr><td>Primera prueba de subida y vuelta (<code>S0</code> y de nuevo <code>Basic</code>): el cambio funcionó, pero la subida salió en rojo por un fallo del workflow</td><td><span class="st mid">Hecho el 01/11/2026, con fallo</span></td><td>Ingeniería</td></tr>
+          <tr><td>Corregir la comparación del nivel (PR de corrección) y repetir la subida a <code>S0</code> y la vuelta, esta vez con las dos ejecuciones en verde. Cuesta unos céntimos</td><td><span class="st mid">Pendiente</span></td><td>Tú fusionas; ingeniería lo repite</td></tr>
           <tr><td>Comprobar al día siguiente que aparece la ejecución de las 02:00 en la pestaña Actions</td><td><span class="st mid">Pendiente</span></td><td>Tú</td></tr>
           <tr><td>Crear un presupuesto con alerta en Azure (por ejemplo, avisar al pasar de 25 € al mes)</td><td><span class="st no">No creado</span></td><td>Decides tú; es un recurso nuevo en Azure</td></tr>
         </tbody>
