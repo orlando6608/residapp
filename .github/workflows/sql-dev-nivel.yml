@@ -40,13 +40,14 @@ jobs:
           NIVEL: ${{ github.event_name == 'workflow_dispatch' && inputs.nivel || 'Basic' }}
         run: |
           grupo=rg-residapp-dev; servidor=sql-residapp-dev; base=sqldb-residapp-dev
-          actual="$(az sql db show --resource-group "$grupo" --server "$servidor" --name "$base" --query currentSku.name -o tsv)"
+          # currentServiceObjectiveName devuelve «Basic», «S0»…; currentSku.name devuelve solo la edición («Standard» para S0, S1 y S2).
+          actual="$(az sql db show --resource-group "$grupo" --server "$servidor" --name "$base" --query currentServiceObjectiveName -o tsv)"
           if [ "$actual" = "$NIVEL" ]; then
             resultado="La base ya está en $NIVEL: no se cambia nada."
           else
             if [ "$NIVEL" = "Basic" ]; then edicion=Basic; else edicion=Standard; fi
             az sql db update --resource-group "$grupo" --server "$servidor" --name "$base" --edition "$edicion" --service-objective "$NIVEL" > /dev/null
-            nuevo="$(az sql db show --resource-group "$grupo" --server "$servidor" --name "$base" --query currentSku.name -o tsv)"
+            nuevo="$(az sql db show --resource-group "$grupo" --server "$servidor" --name "$base" --query currentServiceObjectiveName -o tsv)"
             if [ "$nuevo" != "$NIVEL" ]; then
               echo "::error::Se pidió $NIVEL pero la base quedó en $nuevo."
               exit 1
