@@ -1,0 +1,57 @@
+name: Nivel de la base de Azure dev
+
+# La base de desarrollo cuesta unos 0,14 €/día en Basic y varios euros al día en un nivel mayor. Cada noche vuelve a Basic aunque se haya olvidado bajarla tras una prueba;
+# el botón manual (Actions > Nivel de la base de Azure dev > Run workflow) sirve para subirla o bajarla a mano.
+# La identidad de GitHub (federada) solo entra desde la rama main: este workflow funciona únicamente ya fusionado en main y lanzado desde main.
+on:
+  schedule:
+    # 01:00 UTC = 02:00 en Madrid con horario de invierno y 03:00 con el de verano. GitHub puede retrasar unos minutos las ejecuciones programadas.
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      nivel:
+        description: "Nivel de la base de datos"
+        type: choice
+        options: [Basic, S0, S1, S2]
+        default: Basic
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: sql-dev-nivel
+
+jobs:
+  nivel:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Azure login (OIDC federado, sin secretos de larga duración)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # La ejecución programada solo baja a Basic: nunca sube de nivel sin que alguien lo pida desde el botón manual.
+      # Solo se escribe si el nivel difiere: cambiar de nivel corta las conexiones unos segundos.
+      - name: Poner la base en el nivel pedido
+        env:
+          NIVEL: ${{ github.event_name == 'workflow_dispatch' && inputs.nivel || 'Basic' }}
+        run: |
+          grupo=rg-residapp-dev; servidor=sql-residapp-dev; base=sqldb-residapp-dev
+          actual="$(az sql db show --resource-group "$grupo" --server "$servidor" --name "$base" --query currentSku.name -o tsv)"
+          if [ "$actual" = "$NIVEL" ]; then
+            resultado="La base ya está en $NIVEL: no se cambia nada."
+          else
+            if [ "$NIVEL" = "Basic" ]; then edicion=Basic; else edicion=Standard; fi
+            az sql db update --resource-group "$grupo" --server "$servidor" --name "$base" --edition "$edicion" --service-objective "$NIVEL" > /dev/null
+            nuevo="$(az sql db show --resource-group "$grupo" --server "$servidor" --name "$base" --query currentSku.name -o tsv)"
+            if [ "$nuevo" != "$NIVEL" ]; then
+              echo "::error::Se pidió $NIVEL pero la base quedó en $nuevo."
+              exit 1
+            fi
+            resultado="La base pasó de $actual a $NIVEL."
+          fi
+          echo "$resultado"
+          echo "$resultado" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,314 @@
+<!doctype html>
+<!--
+  Documento para Orlando. Es una explicación para leer, no un cuestionario: no tiene formulario ni script.
+  No contiene claves ni datos secretos. Las cifras son del coste real de Azure (Cost Management) a 01/11/2026 y de los precios públicos de Azure en Spain Central.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Costes de Azure y nivel de la base</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --ink: #1a2433;
+    --muted: #5b6676;
+    --rule: #d6dde6;
+    --accent: #0a58ca;
+    --accent-ink: #ffffff;
+    --accent-soft: #e6eefb;
+    --warn-rule: #e0bf55;
+    --warn-bg: #fff8e1;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --mid-bg: #fff3d6;
+    --mid-ink: #6b4e00;
+    --no-bg: #fbe9e7;
+    --no-ink: #7a1f17;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f141b; --surface: #171d26; --ink: #e3e8ef; --muted: #a3adba; --rule: #2a3340;
+      --accent: #6ea8fe; --accent-ink: #0b1220; --accent-soft: #19243a;
+      --warn-rule: #7c6520; --warn-bg: #2a2410;
+      --ok-bg: #173022; --ok-ink: #bfe5c9;
+      --mid-bg: #33290d; --mid-ink: #f0d58a;
+      --no-bg: #3a1c19; --no-ink: #f5c6c1;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f141b; --surface: #171d26; --ink: #e3e8ef; --muted: #a3adba; --rule: #2a3340;
+    --accent: #6ea8fe; --accent-ink: #0b1220; --accent-soft: #19243a;
+    --warn-rule: #7c6520; --warn-bg: #2a2410;
+    --ok-bg: #173022; --ok-ink: #bfe5c9;
+    --mid-bg: #33290d; --mid-ink: #f0d58a;
+    --no-bg: #3a1c19; --no-ink: #f5c6c1;
+  }
+
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-inline: 16px; }
+  .page { max-width: 880px; margin: 0 auto; padding-block: 48px 64px; display: flex; flex-direction: column; gap: 48px; }
+  .prose { max-width: 70ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .keyfacts .si { color: var(--ok-ink); }
+  .keyfacts .mid { color: var(--mid-ink); }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+
+  .nota { padding: 12px 16px; border-left: 4px solid var(--warn-rule); background: var(--warn-bg); border-radius: 0 6px 6px 0; }
+  .nota.info { border-left-color: var(--accent); background: var(--accent-soft); }
+
+  .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .card strong { font-size: 1rem; }
+  .card span { font-size: 0.94rem; color: var(--muted); }
+  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+
+  .tabla { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tr.total td { font-weight: 600; background: var(--bg); }
+  .tabla.ancha table { min-width: 560px; }
+  .st { display: inline-block; font-size: 0.74rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+  .st.si { background: var(--ok-bg); color: var(--ok-ink); }
+  .st.mid { background: var(--mid-bg); color: var(--mid-ink); }
+  .st.no { background: var(--no-bg); color: var(--no-ink); }
+
+  .pasos { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; counter-reset: paso; }
+  .pasos > li { counter-increment: paso; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .pasos > li::before { content: "Paso " counter(paso); font-family: var(--mono); font-size: 0.82rem; align-self: flex-start; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 2px 10px; }
+
+  details { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 16px; }
+  summary { cursor: pointer; font-weight: 600; min-height: 24px; }
+  summary:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  details ul { margin-top: 10px; font-size: 0.92rem; }
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+  @media print { .page { padding-block: 0; } details { break-inside: avoid; } tr { break-inside: avoid; } }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  @media print { .back { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="../orlando.html">← Para Orlando</a>
+      <a href="../index.html">Documentos de CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Azure · Para Orlando</p>
+    <h1>Cuánto cuesta ResidApp en Azure, y cómo no pagar de más</h1>
+    <p class="meta">Estado a 01/11/2026 · Cifras del coste real de la suscripción de Azure (septiembre y octubre) y de los precios públicos de Azure en la región Spain Central. Los importes están en euros y los de los últimos días pueden variar unos céntimos cuando Azure los cierre.</p>
+    <p class="lead prose">
+      Preguntaste si el servicio en segundo plano que creamos para avisar del cambio de una cita subiría mucho la factura, y pediste un análisis del gasto de septiembre y octubre,
+      sobre todo de las dos últimas semanas de octubre. Aquí tienes la respuesta sin jerga. Lo que no se explique en el momento está al final, en el glosario.
+    </p>
+  </header>
+
+  <section aria-labelledby="corta">
+    <h2 id="corta">1 · La respuesta corta</h2>
+    <div class="keyfacts" role="list">
+      <div role="listitem"><span class="k">¿Cuánto cuesta hoy?</span><strong class="si">Unos 0,52 € al día.</strong><span>Unos 15,7 € al mes: el servidor web (0,38 €/día) más la base de datos (0,14 €/día). El correo cuesta céntimos.</span></div>
+      <div role="listitem"><span class="k">¿El servicio en segundo plano lo sube?</span><strong class="si">No de forma apreciable.</strong><span>Hoy está apagado. Aunque lo enciendas, el servidor y la base se cobran por días enteros, no por lo que hagan.</span></div>
+      <div role="listitem"><span class="k">¿Qué sí lo sube?</span><strong class="mid">Cambiar de nivel y olvidarlo.</strong><span>En septiembre, tres días con la base en un nivel mayor costaron casi 9,4 €. Eso es lo que hay que evitar.</span></div>
+    </div>
+    <p class="nota prose">
+      <strong>En una frase:</strong> la factura de ResidApp es pequeña y estable; el único riesgo real es dejar la base de datos en un nivel más caro después de una prueba.
+      Para eso hay un workflow preparado que la devuelve cada noche a Basic (sección 6).
+    </p>
+  </section>
+
+  <section aria-labelledby="que-pagamos">
+    <h2 id="que-pagamos">2 · Qué pagamos hoy, pieza a pieza</h2>
+    <p class="prose">Todo está en un mismo grupo de Azure llamado <code>rg-residapp-dev</code>, en la región Spain Central (España).</p>
+    <div class="tabla ancha">
+      <table>
+        <thead><tr><th>Pieza</th><th>Qué es, en llano</th><th>Nivel</th><th class="num">€/día</th><th class="num">€/mes</th></tr></thead>
+        <tbody>
+          <tr><td>Servidor web (<code>app-residapp-dev</code>)</td><td>El ordenador alquilado donde «vive» la aplicación.</td><td>B1 (Linux)</td><td class="num">0,38</td><td class="num">≈ 11,4</td></tr>
+          <tr><td>Base de datos (<code>sqldb-residapp-dev</code>)</td><td>Donde se guardan los datos ficticios de desarrollo.</td><td>Basic, 5 DTU, 1 GB</td><td class="num">0,14</td><td class="num">≈ 4,3</td></tr>
+          <tr><td>Correo (<code>acs-residapp-dev</code>)</td><td>El servicio de Azure que envía los avisos por correo.</td><td>Pago por correo enviado</td><td class="num">≈ 0</td><td class="num">≈ 0</td></tr>
+          <tr><td>Certificado de <code>dev.residapp.es</code></td><td>El candado de la dirección propia.</td><td>Gestionado por Azure</td><td class="num">0</td><td class="num">0</td></tr>
+          <tr class="total"><td colspan="3">Total</td><td class="num">≈ 0,52</td><td class="num">≈ 15,7</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">No hay nada más en ese grupo: ni registros de actividad de pago (Log Analytics), ni Application Insights, ni cajas de claves (Key Vault).</p>
+    <p class="nota info prose">En la misma suscripción hay otro grupo, <code>Karla-Miami-Pilates_group</code>, que cuesta unos 0,40–0,45 € al mes. No es de ResidApp.</p>
+  </section>
+
+  <section aria-labelledby="gasto">
+    <h2 id="gasto">3 · Lo que se gastó de verdad en septiembre y octubre</h2>
+    <div class="tabla">
+      <table>
+        <thead><tr><th>ResidApp</th><th class="num">Septiembre</th><th class="num">Octubre</th></tr></thead>
+        <tbody>
+          <tr><td>Servidor web (App Service)</td><td class="num">2,93 €</td><td class="num">11,79 €</td></tr>
+          <tr><td>Base de datos (SQL Database)</td><td class="num">14,25 €</td><td class="num">4,37 €</td></tr>
+          <tr><td>Correo</td><td class="num">0 €</td><td class="num">0,001 €</td></tr>
+          <tr class="total"><td>Total</td><td class="num">17,18 €</td><td class="num">16,16 €</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Septiembre: la base salió cara por unos días</h3>
+    <ul class="prose">
+      <li>El servidor web solo cuenta desde el <strong>23 de septiembre</strong>, cuando se creó. Por eso septiembre tiene solo 2,93 € de servidor.</li>
+      <li>La base costó 14,25 € en lugar de unos 4 €. La diferencia está en unos pocos días con un nivel mayor: el 15 de septiembre costó 1,51 € y los días <strong>28, 29 y 30</strong> costaron 2,65 €, 2,68 € y 4,08 €, frente a los 0,14 € de un día normal. Esos tres días suman casi 9,4 €.</li>
+      <li>Lo más probable es que fuera una prueba con un nivel superior que luego se bajó. No lo he podido comprobar: Azure muestra cuánto se cobró, no por qué se cambió.</li>
+    </ul>
+    <h3>Octubre: constante, y las dos últimas semanas sin sobresaltos</h3>
+    <ul class="prose">
+      <li>Desde el 1 de octubre el gasto es el mismo cada día: <strong>0,52 €</strong>.</li>
+      <li>Del <strong>17 al 31 de octubre</strong> se gastaron 7,83 € en total, exactamente 0,522 € cada día. Del 1 al 16 fueron 8,33 €.</li>
+      <li>Esas dos semanas fueron las de más trabajo (el dominio <code>dev.residapp.es</code>, el correo, las pruebas reales, las bases recreadas del 24 de octubre) y <strong>el gasto no se movió</strong>. Lo único nuevo es 0,001 € de correo el 30 de octubre.</li>
+    </ul>
+    <p class="prose">Si todo sigue igual, <strong>noviembre costaría unos 15,7 €</strong>.</p>
+  </section>
+
+  <section aria-labelledby="segundo-plano">
+    <h2 id="segundo-plano">4 · El servicio en segundo plano y la factura</h2>
+    <p class="prose">
+      Es la tarea que vive dentro de la aplicación y, cada minuto, mira si hay un aviso de cambio de cita pendiente de enviar. Pasa esto con ella:
+    </p>
+    <div class="cards">
+      <div class="card"><strong>Hoy está apagada</strong><span>El interruptor <code>Correo:AvisoCambioCita</code> está en «no» y «Siempre activo» del servidor está desactivado. No consulta la base de datos.</span></div>
+      <div class="card"><strong>«Siempre activo» no cuesta más</strong><span>Con el nivel B1 esa opción está incluida. El servidor ya se paga las 24 horas, lo use o no.</span></div>
+      <div class="card"><strong>La base tiene precio fijo</strong><span>Basic cuesta lo mismo al día con muchas o pocas consultas. Una consulta pequeña por minuto no cambia nada.</span></div>
+      <div class="card"><strong>El correo cuesta una fracción de céntimo</strong><span>Se paga por correo enviado. Octubre entero, con las pruebas reales, costó 0,001 €.</span></div>
+    </div>
+    <p class="nota prose">
+      <strong>El riesgo real es de rendimiento, no de dinero.</strong> Basic es muy pequeña (5 DTU, mira el glosario) y ya dio tiempos de espera en algunas pruebas.
+      Si al encender el aviso la aplicación fuera lenta, la solución sería subir la base a S0, unos 0,43 € al día más. Ese sería el único coste de verdad.
+    </p>
+  </section>
+
+  <section aria-labelledby="nivel">
+    <h2 id="nivel">5 · Qué es «cambiar de nivel» (SKU)</h2>
+    <p class="prose">
+      Cada pieza de Azure se contrata en un <strong>nivel</strong>, que en Azure se llama SKU: es el tamaño de la pieza. A más nivel, más potencia y más precio, y se cobra por el tiempo que estés en él.
+      Cambiar de nivel es pasar de uno a otro, por ejemplo para hacer una prueba que necesita más potencia. Se puede subir y bajar las veces que quieras, sin perder datos.
+    </p>
+    <div class="tabla">
+      <table>
+        <thead><tr><th>Nivel de la base</th><th class="num">€/día aprox.</th><th>Para qué sirve</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Basic</strong> (el de ahora)</td><td class="num">0,14</td><td>Desarrollo con pocos datos. Máximo 2 GB.</td></tr>
+          <tr><td>S0</td><td class="num">0,43</td><td>Un primer escalón si Basic se queda corta.</td></tr>
+          <tr><td>S1</td><td class="num">0,87</td><td>Más potencia para pruebas pesadas.</td></tr>
+          <tr><td>S2 y superiores</td><td class="num">más</td><td>Subir y bajar es un gasto que conviene vigilar.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Importes de los precios públicos de Azure en Spain Central, consultados el 01/11/2026. Son cifras de referencia, no una factura.</p>
+    <ul class="prose">
+      <li><strong>Bajar de nuevo a Basic siempre se puede</strong> mientras la base ocupe menos de 2 GB. Hoy está limitada a 1 GB, así que no hay problema.</li>
+      <li>El cambio no borra nada, pero <strong>corta las conexiones durante unos segundos</strong> cuando termina.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="workflow">
+    <h2 id="workflow">6 · El workflow que vuelve a Basic cada noche</h2>
+    <p class="nota prose">
+      <strong>Estado:</strong> está escrito en el repositorio (<code>.github/workflows/sql-dev-nivel.yml</code>), pero <strong>todavía no está fusionado en <code>main</code></strong>.
+      Hasta entonces no hace nada y el botón de abajo no existe en GitHub. Solo funciona lanzado desde <code>main</code>: la identidad con la que GitHub entra en Azure solo acepta esa rama.
+    </p>
+    <h3>Qué hace</h3>
+    <ul class="prose">
+      <li><strong>Cada noche</strong>, a las 02:00 de Madrid en invierno (03:00 en verano), mira el nivel de la base y, si no es Basic, la devuelve a Basic. Si ya está en Basic, no toca nada.</li>
+      <li><strong>Nunca sube de nivel por su cuenta.</strong> Subir solo ocurre cuando tú lo pides con el botón.</li>
+      <li>Si algo falla (por ejemplo, la base no puede bajar a Basic), la ejecución sale en rojo y GitHub te avisa por correo.</li>
+    </ul>
+    <h3>El botón manual, paso a paso</h3>
+    <ol class="pasos">
+      <li>Entra en el repositorio en GitHub (<code>orlando6608/residapp</code>) y abre la pestaña <strong>Actions</strong>.</li>
+      <li>En la lista de la izquierda elige <strong>«Nivel de la base de Azure dev»</strong>.</li>
+      <li>A la derecha, abre el desplegable gris <strong>«Run workflow»</strong>.</li>
+      <li>Deja la rama en <code>main</code> y elige el nivel: <code>Basic</code> (por defecto), <code>S0</code>, <code>S1</code> o <code>S2</code>.</li>
+      <li>Pulsa el botón verde <strong>«Run workflow»</strong>.</li>
+      <li>Espera unos segundos, refresca la página y abre la ejecución nueva. El resumen dirá, por ejemplo, «La base pasó de Basic a S0» o «La base ya está en Basic: no se cambia nada».</li>
+    </ol>
+    <h3>Cuándo usar el botón</h3>
+    <ul class="prose">
+      <li><strong>Subir:</strong> antes de una prueba pesada, elige <code>S0</code> o <code>S1</code>.</li>
+      <li><strong>Bajar:</strong> al terminar la prueba, elige <code>Basic</code> sin esperar a la noche.</li>
+      <li><strong>Comprobar:</strong> lanza <code>Basic</code> cuando quieras para confirmar que la base sigue en Basic.</li>
+    </ul>
+    <h3>Límites</h3>
+    <ul class="prose">
+      <li>Cada cambio corta las conexiones unos segundos. No lo hagas mientras alguien esté usando la aplicación de desarrollo.</li>
+      <li>Si te olvidas de bajar la base, paga el nivel mayor hasta las 02:00 de esa noche. Pierdes unas horas de un nivel caro, no días.</li>
+      <li>Si un despliegue de la aplicación coincidiera justo con el cambio de nivel, podría fallar y habría que relanzarlo.</li>
+      <li>GitHub apaga los workflows programados si el repositorio pasa 60 días sin actividad; hoy no es el caso.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="falta">
+    <h2 id="falta">7 · Qué queda por hacer y qué decides tú</h2>
+    <div class="tabla ancha">
+      <table>
+        <thead><tr><th>Qué</th><th>Estado</th><th>Quién</th></tr></thead>
+        <tbody>
+          <tr><td>Fusionar el workflow en <code>main</code> (rama, commit y PR)</td><td><span class="st mid">Pendiente</span></td><td>Ingeniería, cuando lo pidas</td></tr>
+          <tr><td>Probarlo: lanzar <code>Basic</code> (no cambia nada), luego <code>S0</code> y de nuevo <code>Basic</code>. Cuesta unos céntimos</td><td><span class="st mid">Pendiente</span></td><td>Tú, con ayuda; es la base de desarrollo</td></tr>
+          <tr><td>Comprobar al día siguiente que aparece la ejecución de las 02:00 en la pestaña Actions</td><td><span class="st mid">Pendiente</span></td><td>Tú</td></tr>
+          <tr><td>Crear un presupuesto con alerta en Azure (por ejemplo, avisar al pasar de 25 € al mes)</td><td><span class="st no">No creado</span></td><td>Decides tú; es un recurso nuevo en Azure</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">
+      Cuando el centro tenga datos reales, la infraestructura será otra (más potencia, copias de seguridad, un entorno de pruebas aparte para desplegar sin cortes) y el coste cambiará de orden de magnitud.
+      Esta cifra de 15,7 € al mes es del entorno de desarrollo y <strong>no vale como estimación de producción</strong>.
+    </p>
+  </section>
+
+  <section aria-labelledby="glosario">
+    <h2 id="glosario">8 · Glosario, en lenguaje llano</h2>
+    <div class="cards">
+      <div class="card"><strong>Azure</strong><span>La nube de Microsoft: los ordenadores alquilados donde viven la aplicación y su base de datos.</span></div>
+      <div class="card"><strong>Grupo de recursos</strong><span>Una carpeta de Azure que reúne las piezas de un mismo proyecto. El de ResidApp es <code>rg-residapp-dev</code>.</span></div>
+      <div class="card"><strong>App Service y plan B1</strong><span>El servicio de Azure que ejecuta la aplicación web. B1 es su tamaño pequeño, con un cobro fijo por día.</span></div>
+      <div class="card"><strong>SQL Database y Basic</strong><span>El servicio de Azure que guarda la base de datos. Basic es su nivel más pequeño y barato.</span></div>
+      <div class="card"><strong>SKU (nivel)</strong><span>El tamaño contratado de una pieza de Azure. Cambiar de SKU es pasar a un nivel mayor o menor.</span></div>
+      <div class="card"><strong>DTU</strong><span>Una medida mezclada de lo que puede hacer una base de datos (procesador, memoria y disco). Basic tiene 5; cuantos más, más potencia.</span></div>
+      <div class="card"><strong>«Siempre activo» (Always On)</strong><span>Un ajuste que evita que Azure duerma la aplicación cuando nadie la usa, para que sus tareas en segundo plano sigan funcionando.</span></div>
+      <div class="card"><strong>Servicio o tarea en segundo plano</strong><span>Un trabajo que la aplicación hace sola, sin que nadie pulse nada. Aquí, enviar los avisos de cambio de cita.</span></div>
+      <div class="card"><strong>Azure Communication Services (ACS)</strong><span>El servicio de Azure que envía los correos de la aplicación.</span></div>
+      <div class="card"><strong>Workflow y GitHub Actions</strong><span>Una tarea automática que GitHub ejecuta por ti a una hora fija o cuando pulsas un botón.</span></div>
+      <div class="card"><strong>Fusionar en <code>main</code></strong><span>Pasar un cambio de una rama de trabajo a la rama principal del proyecto, que es la que Azure usa.</span></div>
+      <div class="card"><strong>Cost Management</strong><span>La herramienta de Azure que muestra cuánto se ha cobrado de cada pieza, día a día.</span></div>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para Orlando. No contiene claves. Hecho con el coste real de Azure Cost Management (septiembre y octubre de 2026), el estado de <code>rg-residapp-dev</code> consultado con la línea de órdenes de Azure,
+    los precios públicos de Azure en Spain Central, el ADR 0012 y el workflow <code>.github/workflows/sql-dev-nivel.yml</code> (sin fusionar).
+  </footer>
+</div>
+
+</body>
+</html>
