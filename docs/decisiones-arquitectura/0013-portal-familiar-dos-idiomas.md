@@ -10,7 +10,7 @@ La lectura de privacidad del agente `dpo-residapp` está en `docs/privacidad/por
 ## Contexto
 
 La aplicación está solo en castellano (`Program.cs` fija `es-ES` y no hay ficheros de traducción). Orlando decidió el 2026-10-29 que `residapp.cat` tendrá una landing en
-catalán (`docs/pendientes-cj/orlando/analisis-landing-page.html`) y que los correos a las familias se redactarán en los dos idiomas (ADR 0012, requisito 7). Para que la
+catalán (`docs/pendientes-cj/archivados/analisis-landing-page.html`) y que los correos a las familias se redactarán en los dos idiomas (ADR 0012, requisito 7). Para que la
 familia no pase del correo o la landing en catalán a una pantalla en castellano, se propone que **la parte que usan las familias** también esté en los dos idiomas. La parte
 profesional (todo lo que ve el personal) sigue solo en castellano.
 
