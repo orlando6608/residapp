@@ -1,0 +1,51 @@
+{
+  "documento": "aviso-correo-decisiones",
+  "cuestionario": "2026-10-30",
+  "guardado": "2026-11-02T11:16:29.699Z",
+  "respondidas": 6,
+  "total": 6,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Quién figura como titular de ResidApp en el pie del correo?",
+      "opcion": "C",
+      "textoOpcion": "Todavía no lo sé: mientras sean datos de prueba el correo sale sin esa línea. Recomendada",
+      "texto": "Coincido con C. Hoy todo es de desarrollo con datos de prueba y el correo solo escribe a mi dirección, así que no se trata a ninguna persona real y aún no hace falta identificar a un titular. Eso sí, la línea con nombre o razón social, NIF y domicilio es un requisito previo a cualquier dato real (transparencia: quien recibe el correo debe poder saber quién lo envía), así que debe quedar como punto bloqueante en la lista de «antes de datos reales». Además, elegir entre persona física y sociedad condiciona los contratos de encargado del tratamiento con los centros, por lo que conviene decidirlo antes del primer centro real y no en el último momento.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Cuánto tiempo se guarda el registro de envíos?",
+      "opcion": "A",
+      "textoOpcion": "12 meses desde el envío, como tope (propuesta de trabajo; la persona experta lo confirma). Recomendada",
+      "texto": "Coincido con A (12 meses como tope). El registro solo guarda una fila por correo, sin dirección, texto ni nombres, y su finalidad es doble: evitar duplicados (días) y poder explicar un aviso que no llegó (meses). Un año cubre de sobra una consulta o reclamación de la familia y respeta el principio de limitación del plazo de conservación (RGPD, art. 5.1.e): guardar solo lo necesario y solo el tiempo necesario. Con 6 meses (B) podría quedarse corto si la familia reclama tarde o hay una auditoría; con C no se borraría nada, lo contrario al principio anterior. Es un tope, no un mínimo: la persona experta puede acortarlo. Importante: hoy el procedimiento de borrado no existe, así que hay que construirlo antes de usar datos reales o el plazo no se cumpliría en la práctica.",
+      "respondida": true
+    },
+    "1.3": {
+      "pregunta": "¿Qué registros de actividad activamos en el servicio de correo de Azure (el paso B10)?",
+      "opcion": "A",
+      "textoOpcion": "Esa combinación: sin seguimiento, registros de envío y estado de entrega en un espacio propio en la UE a 30 días. Recomendada",
+      "texto": "Coincido con A. Sin seguimiento de aperturas ni clics: no aporta nada al servicio (el aviso es genérico y la cita se consulta dentro de la app), supone vigilar a las familias y entra en el terreno de la normativa de comunicaciones electrónicas (LSSI/ePrivacy) y del RGPD, que exigiría una base clara o consentimiento; y en un entorno asistencial saber quién lee qué es más intrusivo de lo que parece. Registros de envío con solo recuentos: útiles para operar y detectar fallos sin datos personales. Estado de entrega (rebotes): sirve para saber si la familia no recibió el aviso, pero lleva la dirección, así que se limita a un espacio propio en la UE, 30 días y acceso restringido (minimización y limitación del plazo). Matiz: Microsoft dice que los datos pueden transitar por otras geografías y no fija la retención de rebotes; por eso esa pregunta está en la lista para la persona experta. Mientras tanto, esta combinación es el mejor equilibrio entre utilidad y mínimo dato.",
+      "respondida": true
+    },
+    "1.4": {
+      "pregunta": "¿Reforzamos la protección contra suplantación del correo (DMARC) antes de producción?",
+      "opcion": "A",
+      "textoOpcion": "Sí, antes de producción, tras revisar los informes. Recomendada",
+      "texto": "Elijo A: sí, antes de producción y tras revisar los informes. Con p=none cualquiera puede hacerse pasar por avisos.residapp.es, y el correo lleva un enlace para iniciar sesión, que es justo el caso típico de phishing contra familias de personas mayores; hay que pasar a «quarantine» antes de usar datos reales. Pero no a ciegas: primero conviene tener unos días de informes agregados para confirmar que todo lo legítimo pasa SPF/DKIM alineado (la prueba del 31/10 dio PASS, pero solo cubre un envío), y subir de forma gradual (porcentaje) para no perder correos legítimos. B (ya, en desarrollo) no reduce ningún riesgo hoy porque el correo solo escribe a mi dirección; lo único útil de adelantarlo es empezar a recoger informes, y eso ya se puede hacer con p=none. C deja un hueco evidente antes de producción. Más adelante, valorar pasar a «reject».",
+      "respondida": true
+    },
+    "1.5": {
+      "pregunta": "Prueba real de un correo en Azure dev",
+      "opcion": "A",
+      "textoOpcion": "Hecha el 31/10/2026; no hace falta repetirla ahora.",
+      "texto": "Coincido con A. La prueba del 31/10/2026 ya demostró lo esencial: llegó a la bandeja principal, con un solo destinatario, sin «Responder a», remitente «ResidApp», SPF, DKIM y DMARC en PASS y texto genérico con un único enlace. Repetirla ahora no aporta información nueva. Matiz: al endurecer el DMARC (1.4) cambia la política que se aplica al correo, así que conviene una comprobación rápida de entrega después de ese cambio, incluida en la lista previa a producción y no como una decisión nueva.",
+      "respondida": true
+    },
+    "1.6": {
+      "pregunta": "¿Ya tienes a la persona experta (DPO real o abogado) que validará los documentos de privacidad?",
+      "opcion": "C",
+      "textoOpcion": "Aún no: seguimos con datos de prueba y lo dejo para antes del primer centro real. Recomendada",
+      "texto": "Coincido con C. Mientras todo sean datos de prueba no se trata a ninguna persona real, así que no hay obligación legal inmediata y buscar ya a la persona experta sería adelantar un coste. Pero es el bloqueo duro para usar ResidApp con residentes reales: hay datos de salud de personas mayores (categoría especial en el RGPD), por lo que probablemente haga falta además una evaluación de impacto, y encontrar a un DPO o abogado puede llevar semanas. Propongo no esperar al último momento: dejar lista la tabla de la sección 3 y empezar la búsqueda en cuanto haya un primer centro interesado y, en todo caso, antes de cargar ningún dato real.",
+      "respondida": true
+    }
+  }
+}
