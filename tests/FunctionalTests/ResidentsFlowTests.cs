@@ -721,6 +721,86 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Administracion_ConfirmaLaDireccionDelFamiliar_LaQuitaYLaPierdeAlCambiarla_ConLaAppEntera()
+    {
+        // Script 0084: con el usuario limitado de la aplicación y la seguridad por filas, la casilla se guarda, se enseña, se quita y se pierde al cambiar la dirección.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Dirección Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var addPage = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/AnadirFamiliar?residenteId={residentId}"));
+        Assert.Contains("Correo para avisos de ResidApp (opcional)", addPage);
+        Assert.Contains("Dirección confirmada con la familia: se la he leído a la persona a quien pertenece y me ha dicho que es correcta", addPage);
+        Assert.DoesNotContain("name=\"Form.ConfirmarCorreo\" checked", addPage);
+        var added = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/AnadirFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(addPage, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = residentId,
+            ["Form.OperacionId"] = ExtractValue(addPage, "Form.OperacionId"),
+            ["Form.NombreVisible"] = "Familiar Dirección",
+            ["Form.Relacion"] = "Hija",
+            ["Form.Telefono"] = "600000000",
+            ["Form.Correo"] = "familiar.direccion@example.test",
+        }))).Content.ReadAsStringAsync());
+        var linkId = await connection.ExecuteScalarAsync<Guid>(
+            """
+            SELECT l.id FROM dbo.residentes_familiares l JOIN dbo.familiares f ON f.id = l.familiar_id
+             WHERE l.residente_id = @residentId AND f.nombre_visible = 'Familiar Dirección'
+            """, new { residentId });
+        var fichaSinConfirmar = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/Residente?residenteId={residentId}"));
+
+        async Task<string> EditAsync(string email, bool confirm)
+        {
+            var page = await admin.GetStringAsync($"/Administracion/EditarFamiliar?residenteId={residentId}&vinculoId={linkId}");
+            var form = new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+                ["Form.ResidenteId"] = residentId,
+                ["Form.VinculoId"] = linkId.ToString(),
+                ["Form.Version"] = ExtractValue(page, "Form.Version"),
+                ["Form.NombreVisible"] = "Familiar Dirección",
+                ["Form.Relacion"] = "Hija",
+                ["Form.Telefono"] = "600000000",
+                ["Form.Correo"] = email,
+            };
+            if (confirm)
+            {
+                form["Form.ConfirmarCorreo"] = "true";
+            }
+
+            return WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/EditarFamiliar", new FormUrlEncodedContent(form))).Content.ReadAsStringAsync());
+        }
+
+        var confirmed = await EditAsync("familiar.direccion@example.test", confirm: true);
+        var fichaConfirmada = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/Residente?residenteId={residentId}"));
+        var editPage = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/EditarFamiliar?residenteId={residentId}&vinculoId={linkId}"));
+        var removed = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/QuitarConfirmacionCorreo", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(editPage.Replace("&#x2B;", "+"), "__RequestVerificationToken"),
+            ["residenteId"] = residentId,
+            ["vinculoId"] = linkId.ToString(),
+            ["version"] = ExtractValue(editPage, "Form.Version"),
+        }))).Content.ReadAsStringAsync());
+        var withoutAddress = await EditAsync("", confirm: true);
+
+        Assert.Contains("Familiar añadido.", added);
+        Assert.Contains("Correo sin confirmar: ResidApp no enviará avisos a esta dirección.", fichaSinConfirmar);
+        Assert.Contains("Datos del familiar guardados.", confirmed);
+        Assert.Contains("Dirección confirmada el ", fichaConfirmada);
+        Assert.DoesNotContain("Correo sin confirmar", fichaConfirmada);
+        Assert.Contains("Quitar la confirmación de la dirección", editPage);
+        Assert.Contains("Confirmación de la dirección quitada", removed);
+        Assert.Contains("Correo sin confirmar: ResidApp no enviará avisos a esta dirección.", removed);
+        Assert.Contains("Escribe el correo para poder confirmarlo.", withoutAddress);
+        Assert.Equal(
+            ["FAMILY_EMAIL_CONFIRM", "FAMILY_EMAIL_UNCONFIRM"],
+            (await connection.QueryAsync<string>(
+                "SELECT accion_codigo FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @residentId AND accion_codigo LIKE 'FAMILY_EMAIL_%' ORDER BY accion_codigo",
+                new { residentId })).ToArray());
+    }
+
+    [Fact]
     public async Task Administracion_CorrigeIdentidadYGestionaFamiliares_ConLaAppEntera()
     {
         // Identidad corregida, familiar añadido, su autorización abierta y activada y su designación como contacto urgente, por la

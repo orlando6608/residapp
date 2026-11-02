@@ -38,7 +38,7 @@ public sealed class SqlChangeNoticeStore(SqlConnectionFactory connections) : ICh
          WHERE c.id = @appointmentId AND c.centro_id = @center
         """;
 
-    internal const string RecipientSql = $"SELECT fam.correo AS Address {SqlFamilyPortalReader.AccessibleLinks} AND link.id = @LinkId";
+    internal const string RecipientSql = $"SELECT fam.correo AS Address, fam.correo_confirmado_en AS ConfirmedAt {SqlFamilyPortalReader.AccessibleLinks} AND link.id = @LinkId";
 
     internal const string IdentitySql = "SELECT CASE WHEN IS_MEMBER(N'residapp_tareas') = 1 OR IS_MEMBER(N'db_owner') = 1 THEN 1 ELSE 0 END";
 
@@ -111,7 +111,13 @@ public sealed class SqlChangeNoticeStore(SqlConnectionFactory connections) : ICh
             return new(null, EmailLog.NoAccess);
         }
 
-        return string.IsNullOrWhiteSpace(recipient.Address) ? new(null, EmailLog.NoAddress) : new(recipient.Address.Trim(), null);
+        if (string.IsNullOrWhiteSpace(recipient.Address))
+        {
+            return new(null, EmailLog.NoAddress);
+        }
+
+        // CJ, 2026-11-02 (2.1 A): sin «Dirección confirmada con la familia» no sale ningún aviso, y el omitido no se manda más tarde al confirmar.
+        return recipient.ConfirmedAt is null ? new(null, EmailLog.AddressNotConfirmed) : new(recipient.Address.Trim(), null);
     }
 
     public async Task ResolveAsync(
@@ -129,7 +135,7 @@ public sealed class SqlChangeNoticeStore(SqlConnectionFactory connections) : ICh
 
     private sealed record DueRow(Guid Id, Guid CenterId, Guid AppointmentId, string ChangeKey, string Language);
 
-    private sealed record Recipient(string? Address);
+    private sealed record Recipient(string? Address, DateTime? ConfirmedAt);
 
     private sealed record ChangeRow(
         string Status, DateTime StartsAt, Guid AccountId, Guid LinkId, int? LastNumber, string? Action, string? ActorProfile, string? Cause, DateTime? PreviousStart, DateTime? NewStart)

@@ -54,8 +54,8 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
         "archivados/confirmaciones-segunda-tanda-cj", "archivados/foto-residente-confirmaciones-cj", "archivados/importacion-exportacion-confirmaciones-cj", "archivados/organigrama-y-cargos-cj",
         "archivados/dictado-por-voz-confirmaciones-cj",
-        "portal-familiar-dos-idiomas-cj", "modulos-base-y-opcionales-cj", "aviso-citas-por-correo-cj",
-        "orlando", "orlando/dominio-y-correo", "orlando/analisis-landing-page", "orlando/adr-0007-passkeys-por-entorno", "orlando/aviso-correo-decisiones",
+        "archivados/aviso-citas-por-correo-cj", "archivados/adr-0007-passkeys-por-entorno", "portal-familiar-dos-idiomas-cj", "modulos-base-y-opcionales-cj",
+        "orlando", "orlando/dominio-y-correo", "orlando/analisis-landing-page", "orlando/aviso-correo-decisiones",
         "orlando/costes-azure-y-nivel-de-la-base",
     ];
 
@@ -83,6 +83,8 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("/pendientes-cj/archivados/direccion-y-traslados-confirmaciones-cj.respuestas.json")]
     [InlineData("/pendientes-cj/archivados/confirmaciones-segunda-tanda-cj.respuestas.json")]
     [InlineData("/pendientes-cj/archivados/dictado-por-voz-confirmaciones-cj.respuestas.json")]
+    [InlineData("/pendientes-cj/archivados/aviso-citas-por-correo-cj.respuestas.json")]
+    [InlineData("/pendientes-cj/archivados/adr-0007-passkeys-por-entorno.respuestas.json")]
     [InlineData("/pendientes-cj/otro-documento.respuestas.json")]
     public async Task SinClave_LasRespuestasDan401(string path)
     {

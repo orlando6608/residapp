@@ -45,6 +45,7 @@ public static class EmailLog
 
     public const string NoAddress = "SIN_CORREO";
     public const string NoAccess = "SIN_ACCESO";
+    public const string AddressNotConfirmed = "DIRECCION_NO_CONFIRMADA";
     public const string ProposalNotCurrent = "PROPUESTA_NO_VIGENTE";
     public const string AppointmentNotCurrent = "CITA_NO_VIGENTE";
     public const string AppointmentPassed = "CITA_PASADA";
@@ -52,6 +53,15 @@ public static class EmailLog
     public const string ProviderRejected = "ACS_RECHAZADO";
     public const string ProviderUnavailable = "ACS_NO_DISPONIBLE";
     public const string TimedOut = "TIEMPO_AGOTADO";
+}
+
+/// <summary>La purga del registro de envíos (script 0085): borra lo que lleva más de 12 meses con el procedimiento de la base de datos, que fija el plazo. Devuelve cuántas filas borró.
+/// Solo la puede ejecutar la conexión de la tarea programada (rol residapp_tareas).</summary>
+public interface IEmailLogPurge
+{
+    Task<bool> HasTaskIdentityAsync(CancellationToken ct = default);
+
+    Task<int> PurgeAsync(CancellationToken ct = default);
 }
 
 /// <summary>El envío reservado. Sin dirección, la fila ya quedó en OMITIDO y no hay nada que mandar.</summary>

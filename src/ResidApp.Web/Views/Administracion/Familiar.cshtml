@@ -69,8 +69,35 @@
             </div>
             <div class="mb-3">
                 <label asp-for="Form.Correo" class="form-label"></label>
-                <input asp-for="Form.Correo" type="email" class="form-control form-control-lg" autocomplete="off" />
+                <input asp-for="Form.Correo" type="email" class="form-control form-control-lg" autocomplete="off" aria-describedby="ayuda-correo" />
                 <span asp-validation-for="Form.Correo" class="text-danger"></span>
+                <div id="ayuda-correo" class="form-text">
+                    <p class="mb-1">
+                        Este correo solo sirve para mandar a esa persona avisos de ResidApp: que tiene una propuesta de cita pendiente o que el centro ha cambiado o cancelado
+                        una cita que reservó. Los avisos no dicen el nombre del residente, ni el centro, ni la fecha, ni el motivo: solo que entre en ResidApp. Es voluntario:
+                        puede pedir que se quite cuando quiera y entonces lo verá todo al entrar en ResidApp.
+                    </p>
+                    <p class="mb-0">
+                        Antes de marcar la casilla, cuéntele esto, léale la dirección despacio (letra a letra si hace falta) y espere a que le diga que es correcta. Si no ha podido
+                        hacerlo, deje la casilla sin marcar: es correcto y simplemente no se enviará ningún aviso a esa dirección. Si cambia o borra la dirección, la confirmación se quita y hay que volver a
+                        confirmarla. Si alguien le pide que no le manden más avisos, borre la dirección. El correo no sustituye al teléfono: si algo
+                        es urgente, llame.
+                    </p>
+                </div>
+                @if (Model.EmailConfirmedAt is { } confirmedAt)
+                {
+                    <div class="alert alert-success py-2 mt-2 mb-2" role="status">
+                        La dirección actual está confirmada desde el @confirmedAt.ToLocalTime().ToString("dd/MM/yyyy"). Si la cambias o la borras, la confirmación se quita.
+                    </div>
+                }
+                else if (editing && !string.IsNullOrWhiteSpace(Model.Form.Correo))
+                {
+                    <div class="alert alert-warning py-2 mt-2 mb-2" role="status">Correo sin confirmar: ResidApp no enviará avisos a esta dirección.</div>
+                }
+                <div class="form-check mt-2">
+                    <input asp-for="Form.ConfirmarCorreo" class="form-check-input" />
+                    <label asp-for="Form.ConfirmarCorreo" class="form-check-label"></label>
+                </div>
             </div>
             <div class="mb-3">
                 <div class="form-check">
@@ -89,6 +116,16 @@
                 <button type="submit" class="btn btn-primary btn-lg">@(editing ? "Guardar cambios" : "Añadir familiar")</button>
             </div>
         </form>
+        @if (editing && Model.EmailConfirmedAt is not null)
+        {
+            <hr />
+            <form asp-action="QuitarConfirmacionCorreo" method="post" class="d-grid d-md-flex justify-content-md-end">
+                <input type="hidden" name="residenteId" value="@Model.Form.ResidenteId" />
+                <input type="hidden" name="vinculoId" value="@Model.Form.VinculoId" />
+                <input type="hidden" name="version" value="@Model.Form.Version" />
+                <button type="submit" class="btn btn-outline-danger">Quitar la confirmación de la dirección</button>
+            </form>
+        }
     </div>
 </div>
 

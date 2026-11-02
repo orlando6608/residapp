@@ -458,7 +458,7 @@
     <p>
         <strong>Al dar de alta a un residente</strong> (Administración, o Enfermería con permiso) puedes registrar en el mismo formulario a sus
         familiares de contacto prioritario, referentes y tutores legales: hasta tres filas, cada una con nombre, relación, teléfono y, si
-        quieres, correo, y las marcas «Familiar referente», «Tutor legal» y «Contacto prioritario» (un familiar puede tener varias). Tiene que haber al menos un
+        quieres, correo (el correo del alta queda sin confirmar y no se le envía ningún aviso hasta que lo confirmes después, desde «Editar familiar»), y las marcas «Familiar referente», «Tutor legal» y «Contacto prioritario» (un familiar puede tener varias). Tiene que haber al menos un
         <strong>contacto prioritario</strong> (es el contacto urgente) y puede haber varios. Si el residente no tiene a nadie a quien avisar (por ejemplo,
         «sin familia conocida»), no marques ninguno y escribe el <strong>motivo</strong>: queda anotado en la ficha. Las filas en blanco se ignoran; una fila a medias, no. El alta no se guarda sin
         un contacto prioritario o un motivo; la ficha avisa si el residente no tiene familiares o ninguno es de contacto, referente o tutor (salvo que conste el motivo). Los
@@ -468,8 +468,14 @@
     <p>
         En la ficha administrativa, la sección <strong>Familiares</strong> lista los familiares del residente con su
         relación, teléfono, correo y el estado de su autorización. Con <strong>Añadir familiar</strong> escribes nombre,
-        relación (por ejemplo, «Hija»), teléfono y, si quieres, correo. Añadir un familiar no le da acceso a nada.
-        <strong>Editar</strong> cambia esos datos; el cambio queda en la auditoría. Si otra persona de Administración cambia al mismo
+        relación (por ejemplo, «Hija»), teléfono y, si quieres, el «Correo para avisos de ResidApp». Añadir un familiar no le da acceso a nada.
+        <strong>Dirección confirmada con la familia.</strong> Debajo del correo hay una casilla, que nunca viene marcada: «Dirección confirmada con la familia: se la he leído a la persona a quien
+        pertenece y me ha dicho que es correcta». Márcala solo si de verdad le has leído la dirección despacio (letra a letra si hace falta) y te ha dicho que es correcta; si no has podido, déjala sin marcar:
+        no pasa nada, simplemente <strong>no se envía ningún aviso por correo a esa dirección</strong>. Si la marcas sin haber escrito el correo, la pantalla te dice «Escribe el correo para poder confirmarlo.».
+        Si cambias o borras la dirección y no vuelves a marcar la casilla, la confirmación se pierde y hay que volver a confirmarla. Si alguien te pide que no le manden más avisos, borra la dirección (quitar solo la
+        confirmación no basta). Un aviso que se omitió por falta de confirmación no se manda más tarde aunque confirmes después. En la ficha del residente, cada familiar con correo dice «Correo sin confirmar: ResidApp no
+        enviará avisos a esta dirección.» o «Dirección confirmada el dd/mm/aaaa.» (la fecha, no quién la confirmó).
+        <strong>Editar</strong> cambia esos datos; el cambio queda en la auditoría. Si la dirección está confirmada, la pantalla de edición lo dice con la fecha y ofrece «Quitar la confirmación de la dirección», que quita solo la confirmación. Si otra persona de Administración cambia al mismo
         familiar mientras tú lo editas, al guardar la app no pisa su cambio: te enseña los datos actuales y te pide que los revises y
         vuelvas a guardar.
     </p>
@@ -477,7 +483,7 @@
         Con <strong>Vincular un familiar que ya existe</strong> <strong>buscas</strong>, por nombre o teléfono (al menos 3 letras o cifras), a un familiar de
         <strong>cualquier unidad del centro</strong> (por ejemplo, la hija de dos padres que viven en unidades distintas) y escribes su relación con este
         residente. La lista enseña su nombre, su teléfono y a cuántos residentes está vinculado, no a cuáles. Es la misma
-        persona: su nombre, teléfono y correo son los mismos para todos sus residentes y, si los editas, el cambio vale para todos (la
+        persona: su nombre, teléfono y correo (y la confirmación de la dirección) son los mismos para todos sus residentes y, si los editas, el cambio vale para todos (la
         pantalla de edición te lo avisa). La relación y la autorización son de cada residente por separado, y vincularlo no abre su
         autorización. Salen como máximo 30 resultados y solo familiares de tu centro.
     </p>
@@ -557,7 +563,7 @@
         <strong>Aviso por correo de un cambio.</strong> Si está activado en la aplicación, a los pocos minutos (unos 5) de reprogramar o cancelar una cita confirmada, la persona de la
         familia que la reservó recibe un único correo genérico («Tienes un cambio en una cita en ResidApp») con un enlace a ResidApp. No dice el día, la hora, el equipo, la modalidad
         ni el motivo, ni si la cita se cambió o se canceló, y no se puede responder. Solo le llega a quien reservó la cita (no al resto de familiares con acceso) y solo si su ficha tiene
-        correo y aún tiene acceso al Portal Familiar. Si la cita vuelve a cambiar en esos minutos, solo se avisa del último cambio; si el residente se da de baja o ya pasó la hora de la
+        correo con la dirección confirmada con la familia y aún tiene acceso al Portal Familiar. Si no estaba confirmada, el aviso se omite y no se manda después aunque se confirme más tarde. Si la cita vuelve a cambiar en esos minutos, solo se avisa del último cambio; si el residente se da de baja o ya pasó la hora de la
         cita, no se envía. No se manda al reservar ni al finalizar, ni cuando la familia cambia o cancela su propia cita, ni por la baja del residente, ni al cerrar una solicitud o
         retirar una propuesta. Está apagado por defecto (tiene su propio interruptor, además del general del correo, y se enciende para todo el entorno, no por centro) y, en las pruebas,
         solo llega a las direcciones autorizadas. La pantalla no dice si el correo salió ni si el aviso está activado: avísala tú en todo caso. Tampoco hay recordatorios de citas. Una cita confirmada cuya hora ya pasó se puede
@@ -572,7 +578,7 @@
         familia llevan una marca) y, si quieres, apuntar un profesional: es solo para el centro y la familia no lo ve nunca. Mientras la propuesta esté viva, ese hueco queda
         reservado y no se ofrece a otra solicitud. La propuesta <strong>caduca</strong> a las 48 horas de hacerla o 24 horas antes de la cita, lo que llegue antes: la bandeja dice
         hasta cuándo vale y, si caduca sin respuesta, el hueco se libera y puedes <strong>volver a proponer</strong> otro.
-        <strong>Aviso por correo.</strong> Al proponer un horario, si el aviso está activado en la aplicación y el familiar que hizo la solicitud tiene correo en su ficha, le llega
+        <strong>Aviso por correo.</strong> Al proponer un horario, si el aviso está activado en la aplicación y el familiar que hizo la solicitud tiene correo en su ficha con la dirección confirmada con la familia (si no, no se envía y tampoco se manda después aunque se confirme más tarde), le llega
         un único correo genérico con un enlace a ResidApp: no dice el residente, el centro, el motivo, el día ni la hora, y no se puede responder. Está apagado por defecto y, en las
         pruebas, solo llega a las direcciones autorizadas. La pantalla no dice si el correo salió, y la propuesta vale igual que se envíe o no. Este correo no se manda al cerrar
         una solicitud ni por la baja del residente. Cuando el centro reprograma o cancela una cita ya confirmada hay otro aviso distinto (ver «Agenda»). La cita solo se confirma cuando la familia <strong>acepta</strong>; también
@@ -1738,7 +1744,7 @@
         una cita»: elige el equipo (médico o de Enfermería) y la modalidad que el centro admite, ve los huecos libres, elige uno, revisa los datos y confirma; la cita queda
         confirmada al momento. Si el hueco se ocupa justo antes de confirmar, no se crea la cita y se le ofrecen los que quedan. Pulsar dos veces el botón no duplica la cita.
         Con el mismo equipo solo puede tener una cita próxima. Puede <strong>reprogramar</strong> o <strong>cancelar</strong> sus citas (con confirmación) hasta la antelación mínima
-        del centro; después, por teléfono. Solo ve las citas que reservó ella misma. Si el centro reprograma o cancela una cita que reservó ella y el aviso por correo está activado, puede recibir un correo genérico
+        del centro; después, por teléfono. Solo ve las citas que reservó ella misma. Si el centro reprograma o cancela una cita que reservó ella y el aviso por correo está activado y su dirección está confirmada, puede recibir un correo genérico
         («Tienes un cambio en una cita en ResidApp») sin detalles: los ve al entrar en el portal. No le llega si fue ella quien cambió o canceló la cita. Todas las pantallas recuerdan que las citas no son un canal urgente. Si el centro
         desactiva el servicio, no se ofrece reservar, pero las citas ya confirmadas se siguen viendo y se pueden cancelar.
     </p>

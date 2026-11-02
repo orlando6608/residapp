@@ -68,7 +68,16 @@ public class AvisoPropuestaCitaTests
     {
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         await connection.ExecuteAsync(
-            "UPDATE dbo.familiares SET correo = @address WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId)", new { address, linkId });
+            "UPDATE dbo.familiares SET correo = @address, correo_confirmado_en = CASE WHEN @address IS NULL THEN NULL ELSE SYSUTCDATETIME() END, correo_confirmado_por_cuenta_id = CASE WHEN @address IS NULL THEN NULL ELSE creado_por_cuenta_id END WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId)", new { address, linkId });
+    }
+
+/// <summary>Pone o quita la marca «Dirección confirmada con la familia» sin tocar la dirección (script 0084).</summary>
+    private static async Task SetConfirmationAsync(Guid linkId, bool confirmed)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync(
+            "UPDATE dbo.familiares SET correo_confirmado_en = CASE WHEN @confirmed = 1 THEN SYSUTCDATETIME() END, correo_confirmado_por_cuenta_id = CASE WHEN @confirmed = 1 THEN creado_por_cuenta_id END WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId)",
+            new { confirmed, linkId });
     }
 
     private static async Task<List<EmailRow>> RowsAsync(Guid requestId)
@@ -141,6 +150,27 @@ public class AvisoPropuestaCitaTests
         Assert.Empty(sender.Sent);
         var row = Assert.Single(await RowsAsync(request.Id));
         Assert.Equal(("OMITIDO", "SIN_CORREO", 0), (row.Estado, row.Motivo, row.Intentos));
+    }
+
+    [Fact]
+    public async Task SinLaDireccionConfirmada_SeAnotaOmitido_SinEnvio_YConfirmarDespuesNoLoMandaAtrasado()
+    {
+        var (setup, request) = await WithRequestAsync("Residente Aviso Correo Sin Confirmar");
+        await SetConfirmationAsync(setup.LinkId, confirmed: false);
+        var sender = new FakeEmailSender();
+
+        var proposed = await ProposeAsync(setup, request.Id, await FarSlotAsync(setup, request.Id), Notice(sender, Active()));
+
+        Assert.True(proposed.Ok, proposed.Error?.Message);
+        Assert.Empty(sender.Sent);
+        var row = Assert.Single(await RowsAsync(request.Id));
+        Assert.Equal(("OMITIDO", "DIRECCION_NO_CONFIRMADA", 0), (row.Estado, row.Motivo, row.Intentos));
+        Assert.Equal(1, await StatusCountAsync(request.Id, "PROPUESTA"));
+
+        // CJ, 2026-11-02 (D6): confirmar después no manda el aviso atrasado.
+        await SetConfirmationAsync(setup.LinkId, confirmed: true);
+        Assert.Empty(sender.Sent);
+        Assert.Equal("OMITIDO", Assert.Single(await RowsAsync(request.Id)).Estado);
     }
 
     [Fact]

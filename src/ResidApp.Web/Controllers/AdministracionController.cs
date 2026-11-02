@@ -216,11 +216,16 @@ public sealed partial class AdministracionController(
             return RedirectToAction(nameof(Residentes));
         }
 
+        if (form.ConfirmarCorreo && string.IsNullOrWhiteSpace(form.Correo))
+        {
+            ModelState.AddModelError("Form.Correo", "Escribe el correo para poder confirmarlo.");
+        }
+
         if (ModelState.IsValid)
         {
             var result = await service.AddFamilyMemberAsync(new AddFamilyMemberCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.OperacionId,
-                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Referente, form.TutorLegal), ct);
+                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Referente, form.TutorLegal, form.ConfirmarCorreo), ct);
             if (result.Ok)
             {
                 TempData["Mensaje"] = "Familiar añadido. No tiene autorización de acceso hasta que la abras y la actives.";
@@ -317,7 +322,7 @@ public sealed partial class AdministracionController(
             return detail is null ? RedirectToAction(nameof(Residentes)) : RedirectToAction(nameof(Residente), new { residenteId });
         }
 
-        return View("Familiar", new FamilyMemberViewModel(detail!.Resident, EditForm(residenteId, member), member.OtherResidentLinks));
+        return View("Familiar", new FamilyMemberViewModel(detail!.Resident, EditForm(residenteId, member), member.OtherResidentLinks, member.EmailConfirmedAt));
     }
 
     /// <summary>El formulario de edición con los datos actuales del familiar y su versión (ver FamilyMemberData.Version).</summary>
@@ -350,11 +355,16 @@ public sealed partial class AdministracionController(
             return RedirectToAction(nameof(Residentes));
         }
 
+        if (form.ConfirmarCorreo && string.IsNullOrWhiteSpace(form.Correo))
+        {
+            ModelState.AddModelError("Form.Correo", "Escribe el correo para poder confirmarlo.");
+        }
+
         if (ModelState.IsValid)
         {
             var result = await service.UpdateFamilyMemberAsync(new UpdateFamilyMemberCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), linkId,
-                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Version ?? string.Empty, form.Referente, form.TutorLegal), ct);
+                form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Version ?? string.Empty, form.Referente, form.TutorLegal, form.ConfirmarCorreo), ct);
             if (result.Ok)
             {
                 TempData["Mensaje"] = "Datos del familiar guardados.";
@@ -379,13 +389,42 @@ public sealed partial class AdministracionController(
                 ModelState.Clear();
                 ModelState.AddModelError(string.Empty,
                     "Otra persona ha cambiado los datos de este familiar mientras los editabas. Aquí tienes los datos actuales: revísalos y vuelve a guardar si aún hace falta.");
-                return View("Familiar", new FamilyMemberViewModel(fresh.Resident, EditForm(form.ResidenteId, current), current.OtherResidentLinks));
+                return View("Familiar", new FamilyMemberViewModel(fresh.Resident, EditForm(form.ResidenteId, current), current.OtherResidentLinks, current.EmailConfirmedAt));
             }
 
             ModelState.AddModelError(string.Empty, FamilyMemberError(result.Error, editing: true));
         }
 
-        return View("Familiar", new FamilyMemberViewModel(detail.Resident, form, detail.Family.FirstOrDefault(f => f.LinkId == linkId)?.OtherResidentLinks ?? 0));
+        var shown = detail.Family.FirstOrDefault(f => f.LinkId == linkId);
+        return View("Familiar", new FamilyMemberViewModel(detail.Resident, form, shown?.OtherResidentLinks ?? 0, shown?.EmailConfirmedAt));
+    }
+
+    /// <summary>Quitar solo la confirmación de la dirección del familiar (CJ, 2026-11-02): ante una queja o una dirección dudosa. Con la versión de los datos que enseñaba
+    /// la pantalla. Para «no quiero más avisos» se borra la dirección, no basta quitar la marca.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> QuitarConfirmacionCorreo(Guid residenteId, Guid vinculoId, string? version, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var result = await service.RemoveFamilyEmailConfirmationAsync(new RemoveFamilyEmailConfirmationCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), vinculoId, version ?? string.Empty), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Confirmación de la dirección quitada: no se enviarán avisos a ese correo hasta que se vuelva a confirmar.";
+        }
+        else
+        {
+            TempData["Error"] = result.Error!.Code == ApplicationFailureCode.Conflict
+                ? "La dirección ya había cambiado o ya no estaba confirmada. Revisa los datos del familiar."
+                : result.Error.Message;
+        }
+
+        return RedirectToAction(nameof(Residente), new { residenteId });
     }
 
     /// <summary>ADM-10/ADM-11 (0022): la autorización de acceso de un familiar, con su historial y los cambios posibles.</summary>
