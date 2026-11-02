@@ -74,7 +74,7 @@ Derivados de las consultas reales (`SqlChangeNoticeStore.cs`, líneas 46 a 110, 
 - **Registro de actividades (art. 30 RGPD):** la entrada del aviso de cambio (apartado 5 del borrador) añade: «tratamiento automático por un proceso del sistema, sin persona conectada, para todos los centros que lo tengan activo; lectura limitada a los datos mínimos para el envío».
 - **Medidas de seguridad (arts. 25, 30.1.g y 32 RGPD; wording a contrastar con EUR-Lex):** rol de base de datos de mínimo privilegio con permisos por columnas; el motivo del cambio bloqueado por permiso; credencial propia fuera del repositorio; rotación; sin contenido ni dirección en los registros; interruptores de apagado (`Correo__Activo`, `Correo__AvisoCambioCita`).
 - **Si el centro es público o concertado** (Esquema Nacional de Seguridad, RD 311/2022): el mínimo privilegio y la gestión de credenciales son medidas exigibles; las medidas exactas, **a verificar** con el responsable de seguridad del centro.
-- **Auditoría del servidor:** activar la auditoría de Azure SQL para el usuario `residapp_tarea` si no lo está **[a verificar]**: es la única traza de lo que hace una identidad sin persona.
+- **Auditoría del servidor:** auditoría de Azure SQL para el usuario `residapp_tarea` **(activada en Azure dev el 2026-11-02 (ver «Auditoría de residapp_tarea» en `docs/prompts-ia/continuar-construccion.md`); en producción hay que repetirla)**: es la única traza de lo que hace una identidad sin persona.
 - **Contrato de encargado (art. 28):** la tarea es un tratamiento de ResidApp por cuenta de la residencia; nada que cambiar si la instrucción de la residencia incluye los tres avisos (borrador del aviso de cambio, parte B).
 
 ## Condiciones antes de fusionar
@@ -94,7 +94,7 @@ Derivados de las consultas reales (`SqlChangeNoticeStore.cs`, líneas 46 a 110, 
 
 1. Script operativo ejecutado **por Orlando** con el administrador; contraseña en la Web App (o Key Vault), no en el chat ni en el repositorio.
 2. Comprobación en Azure dev con datos de prueba: la tarea, con ese usuario, resuelve un aviso de una cita de un centro de prueba **y no ve el motivo**.
-3. Auditoría de Azure SQL activa para el usuario **[a verificar]**.
+3. Auditoría de Azure SQL activa para el usuario (activada en Azure dev el 2026-11-02 (ver «Auditoría de residapp_tarea» en `docs/prompts-ia/continuar-construccion.md`); en producción hay que repetirla).
 4. Todo lo ya exigido por el borrador del aviso de cambio: textos, información a la familia, FAM-10 ampliado por CJ, contrato de Azure, B10.
 5. En producción, el cambio de la política con aviso previo y en ventana de mantenimiento.
 
@@ -108,7 +108,7 @@ Derivados de las consultas reales (`SqlChangeNoticeStore.cs`, líneas 46 a 110, 
 1. **A verificar (técnico):** que `ALTER FUNCTION` sobre `seg.fn_centro_del_ambito` falla con la política activa en Azure SQL y en el contenedor del CI (la documentación lo dice; no lo he ejecutado), y que el procedimiento de quitar y volver a poner los predicados deja `sys.security_predicates` idéntico.
 2. **A verificar:** `IS_MEMBER` dentro de `EXECUTE AS` (pruebas) y, si se elige la alternativa, dentro de `EXECUTE AS OWNER`.
 3. **A verificar:** nombres exactos de las columnas de H3 contra el esquema real; las consultas de `ChangeNoticeService` que no he leído por completo.
-4. **A verificar:** auditoría de Azure SQL, administrador Entra y plan de Azure para una identidad administrada.
+4. **A verificar:** administrador Entra y plan de Azure para una identidad administrada.
 5. **[Decidir Orlando]** periodicidad de rotación de la contraseña; ventana de mantenimiento; proceso aparte en el futuro; si la purga futura de `envios_correo` la hace esta identidad.
 6. **[Decidir DPO]** proporcionalidad del acceso transversal; conservación de la auditoría del servidor.
 7. **Fuera de este documento:** `eventos_acceso` (IP), TOTP en claro y otras puertas abiertas de los ADR; no se tocan aquí.
