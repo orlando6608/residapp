@@ -395,6 +395,7 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.DoesNotContain("Guardar el servicio", nurseConfiguration);
         Assert.Contains("Reservar una cita", home);
         Assert.Contains("Las citas no son un canal urgente", home);
+        Assert.Contains(ResidApp.Infrastructure.Correo.CorreoOptions.RemitenteDefecto, home);
         Assert.Contains("No tienes citas.", home);
         Assert.Contains("Equipo médico", chooser);
         Assert.DoesNotContain("Equipo de Enfermería", chooser);

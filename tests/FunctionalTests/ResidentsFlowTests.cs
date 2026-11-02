@@ -733,6 +733,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Correo para avisos de ResidApp (opcional)", addPage);
         Assert.Contains("Dirección confirmada con la familia: se la he leído a la persona a quien pertenece y me ha dicho que es correcta", addPage);
         Assert.DoesNotContain("name=\"Form.ConfirmarCorreo\" checked", addPage);
+        Assert.Contains(ResidApp.Infrastructure.Correo.CorreoOptions.RemitenteDefecto, addPage);
         var added = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/AnadirFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = ExtractValue(addPage, "__RequestVerificationToken"),

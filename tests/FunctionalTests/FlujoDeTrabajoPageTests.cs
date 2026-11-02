@@ -43,6 +43,7 @@ public class FlujoDeTrabajoPageTests : IClassFixture<ResidentsFlowTests.WebAppFa
         var flow = await _factory.CreateClient().GetStringAsync("/flujo-de-trabajo.html");
 
         Assert.Contains(ChangeNoticeTemplate.Render("es", "https://dev.example.test").Subject, html);
+        Assert.Contains(ResidApp.Infrastructure.Correo.CorreoOptions.RemitenteDefecto, html);
         Assert.DoesNotContain("no le manda ningún correo", html);
         Assert.DoesNotContain("Todavía no hay avisos ni recordatorios", flow);
         Assert.DoesNotContain("la aplicación no envía correos", html);
