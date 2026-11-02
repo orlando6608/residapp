@@ -1,0 +1,51 @@
+{
+  "documento": "aviso-citas-por-correo-cj",
+  "cuestionario": "2026-10-30",
+  "guardado": "2026-11-02T11:55:31.877Z",
+  "respondidas": 6,
+  "total": 6,
+  "respuestas": {
+    "1.1": {
+      "pregunta": "¿Dejas por escrito que la regla FAM-10 se modifica con esa redacción?",
+      "opcion": "A",
+      "textoOpcion": "Sí, con la redacción propuesta tal cual.",
+      "texto": "Coincido con A. Es lo que ya decidiste el 25/10 (6.1, opción C), el aviso es genérico y sin datos de salud, y el asesor de protección de datos lo considera admisible en esas condiciones; dejar FAM-10 sin modificar haría que el alcance del producto diga una cosa y la aplicación haga otra. Un matiz sobre la redacción: enumera «propuesta de cita, recordatorio y código de acceso», pero según el manual y la página de acceso de hoy no hay recordatorios de cita (están pendientes de implementar)  en cambio sí existe el aviso por cambio de una cita confirmada, que la redacción no nombra.",
+      "respondida": true
+    },
+    "1.2": {
+      "pregunta": "¿Cómo debe llamarse lo que llega: «propuesta de cita» o «novedad»?",
+      "opcion": "A",
+      "textoOpcion": "«Propuesta de cita» (más claro para la familia).",
+      "texto": "Coincido con A. «Propuesta de cita» le dice a la familia qué esperar al abrir, y un correo vago con un enlace para iniciar sesión se parece más a un intento de phishing que uno claro. El riesgo de dar una pista a un destinatario equivocado es pequeño (no hay nombre, centro, fecha ni motivo) y lo cubre la comprobación de la dirección (2.1). Matiz: ese asunto solo vale para el aviso de propuesta. Si el mismo texto se reutiliza para el cambio o la cancelación de una cita ya confirmada, ahí «propuesta» sería inexacto y habría que usar las palabras adecuada «Cancelación, cambio» u otro asunto propio.",
+      "respondida": true
+    },
+    "2.1": {
+      "pregunta": "¿Cómo se comprueba que la dirección de correo es de verdad del familiar?",
+      "opcion": "A",
+      "textoOpcion": "Administración confirma la dirección con el familiar, de palabra (leyéndosela) al registrarla, y marca «Dirección confirmada con la familia». Sin esa marca no se envía ningún aviso.",
+      "texto": "La verificación por correo me parece una mejora razonable para una fase posterior si en el piloto se detectan errores de dirección. Si la verificación de palabra basta jurídicamente es justo una de las preguntas que lleva la persona experta.",
+      "respondida": true
+    },
+    "2.2": {
+      "pregunta": "El correo también existe en catalán. ¿Lo revisas tú, igual que los textos del portal?",
+      "opcion": "B",
+      "textoOpcion": "Lo revisa otra persona (indícala en el comentario).",
+      "texto": "Entiendo que estamos hablando del texto genérico de los avisos por lo que es un texto predefinido tanto en catalán como en español.\nLo revisa ingeniería usando un traductor externo.",
+      "respondida": true
+    },
+    "3.1": {
+      "pregunta": "¿Quién atiende en el centro a una familia que dice «me llegó un aviso y no lo esperaba» o «no quiero recibir más avisos»?",
+      "opcion": "A",
+      "textoOpcion": "Administración del centro.",
+      "texto": "Coincido con A. Administración ya es quien da de alta y gestiona a los familiares y sus autorizaciones, así que puede corregir o quitar la dirección, y no ve datos clínicos. Dirección no encaja tan bien porque su papel es de supervisión, no de gestionar fichas de familiares. Para que funcione hay que dejar claras tres cosas: una persona de referencia con suplente (vacaciones, turnos); un procedimiento corto por escrito (corregir o quitar la dirección, anotar fecha y motivo); y qué se hace si el aviso llegó a un desconocido (dejar constancia como incidente y que la persona experta diga si hay algo más que hacer). También conviene comprobar que ese cambio de dirección quede en la auditoría.",
+      "respondida": true
+    },
+    "3.2": {
+      "pregunta": "¿Debería poder la familia apagar estos avisos ella misma desde el portal, más adelante?",
+      "opcion": "A",
+      "textoOpcion": "Sí, más adelante.",
+      "texto": "Si, esa opción debería de estar en el portal de la familia\nEl correo no lleva enlace de baja a propósito, así que hoy la única salida es llamar al centro; que la familia pueda apagarlo desde el portal (donde ya ha iniciado sesión) le da control sin abrir otra puerta de acceso y quita trabajo a Administración. Matiz: apagar el aviso no debe hacer que se pierda una propuesta de cita; la pantalla debería decir que el correo no sustituye al teléfono y que tendrá que mirar el portal o esperar la llamada del centro. Como no cambia lo que se construye ahora, no hay prisa, pero conviene dejarlo registrado para la siguiente fase.",
+      "respondida": true
+    }
+  }
+}
