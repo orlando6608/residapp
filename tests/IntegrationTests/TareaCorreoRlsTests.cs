@@ -55,7 +55,7 @@ public sealed class TareaCorreoRlsTests
         await ConfigureAsync(setup);
         using var admin = await TestDatabase.ConnectionFactory.OpenAsync();
         await admin.ExecuteAsync(
-            "UPDATE dbo.familiares SET correo = @FamilyAddress WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId)", new { FamilyAddress, linkId = setup.LinkId });
+            "UPDATE dbo.familiares SET correo = @FamilyAddress, correo_confirmado_en = CASE WHEN @FamilyAddress IS NULL THEN NULL ELSE SYSUTCDATETIME() END, correo_confirmado_por_cuenta_id = CASE WHEN @FamilyAddress IS NULL THEN NULL ELSE creado_por_cuenta_id END WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId)", new { FamilyAddress, linkId = setup.LinkId });
         var booked = await BookAsync(setup.Subject, setup.LinkId, (await SlotsAsync(setup.Subject, setup.LinkId))[0]);
         Assert.True(booked.Ok, booked.Error?.Message);
         await new SqlChangeNoticeStore(TestDatabase.ConnectionFactory).RegisterAsync(setup.Admin.CenterId, booked.Value!.Id, 1, "es", "1", DateTimeOffset.UtcNow);
@@ -125,6 +125,58 @@ public sealed class TareaCorreoRlsTests
         }
     }
 
+    /// <summary>Copia la fila del aviso con otra clave y otras fechas (para probar la purga): devuelve su id.</summary>
+    private static async Task<Guid> CopyRowAsync(SqlConnection admin, Guid templateRowId, string key, int createdMonthsAgo, int? resolvedMonthsAgo)
+    {
+        var id = Guid.NewGuid();
+        await admin.ExecuteAsync("""
+            INSERT INTO dbo.envios_correo
+                (id, centro_id, plantilla_codigo, plantilla_version, idioma, familiar_id, referencia_id, referencia_clave, estado_codigo, motivo_codigo, intentos, creado_en, resuelto_en)
+            SELECT @id, centro_id, plantilla_codigo, plantilla_version, idioma, familiar_id, referencia_id, @key,
+                   CASE WHEN @resolved IS NULL THEN 'PENDIENTE' ELSE 'OMITIDO' END, CASE WHEN @resolved IS NULL THEN NULL ELSE 'CITA_PASADA' END, 0,
+                   DATEADD(MONTH, -@created, SYSUTCDATETIME()), CASE WHEN @resolved IS NULL THEN NULL ELSE DATEADD(MONTH, -@resolved, SYSUTCDATETIME()) END
+              FROM dbo.envios_correo WHERE id = @templateRowId
+            """, new { id, key, created = createdMonthsAgo, resolved = resolvedMonthsAgo, templateRowId });
+        return id;
+    }
+
+    [Fact]
+    public async Task LaPurga_BorraSoloLoQueLlevaMasDe12Meses_ConElRolDeLaTarea_SinDarleDeleteSobreLaTabla()
+    {
+        var notice = await SeedAsync("Residente Tarea Correo Purga");
+        using var admin = await TestDatabase.ConnectionFactory.OpenAsync();
+        var oldResolved = await CopyRowAsync(admin, notice.EmailId, "81", createdMonthsAgo: 14, resolvedMonthsAgo: 13);
+        var oldNeverResolved = await CopyRowAsync(admin, notice.EmailId, "82", createdMonthsAgo: 14, resolvedMonthsAgo: null);
+        var oldCreatedResolvedRecently = await CopyRowAsync(admin, notice.EmailId, "83", createdMonthsAgo: 14, resolvedMonthsAgo: 2);
+        var recent = await CopyRowAsync(admin, notice.EmailId, "84", createdMonthsAgo: 11, resolvedMonthsAgo: 11);
+        using var task = await OpenAsAsync(TaskUser);
+
+        var deleted = await task.ExecuteScalarAsync<int>("EXEC dbo.purgar_envios_correo");
+
+        Assert.True(deleted >= 2);
+        async Task<bool> ExistsAsync(Guid id) => await admin.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.envios_correo WHERE id = @id", new { id }) == 1;
+        Assert.False(await ExistsAsync(oldResolved));
+        Assert.False(await ExistsAsync(oldNeverResolved));
+        Assert.True(await ExistsAsync(oldCreatedResolvedRecently));
+        Assert.True(await ExistsAsync(recent));
+        Assert.True(await ExistsAsync(notice.EmailId));
+        // El rol solo ejecuta el procedimiento: el plazo está en la base y no se puede borrar otra cosa.
+        await AssertDeniedAsync(task, $"DELETE FROM dbo.envios_correo WHERE id = '{recent}'");
+        Assert.Equal(0, await task.ExecuteScalarAsync<int>("EXEC dbo.purgar_envios_correo"));
+    }
+
+    [Fact]
+    public async Task LaPurga_SinElRolNoSeEjecuta_YElLoteTieneLimites()
+    {
+        using var noRole = await OpenAsAsync(NoRoleUser);
+        var denied = await Assert.ThrowsAsync<SqlException>(() => noRole.ExecuteScalarAsync<int>("EXEC dbo.purgar_envios_correo"));
+        Assert.Equal(229, denied.Number);
+
+        using var admin = await TestDatabase.ConnectionFactory.OpenAsync();
+        var badBatch = await Assert.ThrowsAsync<SqlException>(() => admin.ExecuteScalarAsync<int>("EXEC dbo.purgar_envios_correo @lote = 0"));
+        Assert.Equal(50850, badBatch.Number);
+    }
+
     [Fact]
     public async Task ElRolDeLaTarea_NoInsertaNiBorraNiCambiaLaIdentidadDeUnaFila_SoloLasColumnasDeResolucion()
     {
@@ -136,6 +188,9 @@ public sealed class TareaCorreoRlsTests
         await AssertDeniedAsync(task, $"UPDATE dbo.envios_correo SET referencia_clave = N'9' WHERE id = '{notice.EmailId}'");
         await AssertDeniedAsync(task, $"UPDATE dbo.citas SET estado_codigo = 'CANCELADA' WHERE id = '{notice.AppointmentId}'");
         await AssertDeniedAsync(task, $"UPDATE dbo.familiares SET correo = N'otra@example.test' WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = '{notice.LinkId}')");
+        // script 0084: lee si la dirección está confirmada, pero ni la cambia ni ve qué cuenta la confirmó
+        await AssertDeniedAsync(task, $"UPDATE dbo.familiares SET correo_confirmado_en = NULL, correo_confirmado_por_cuenta_id = NULL WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = '{notice.LinkId}')");
+        await AssertDeniedAsync(task, "SELECT correo_confirmado_por_cuenta_id FROM dbo.familiares");
         await AssertDeniedAsync(task, $"""
             INSERT INTO dbo.envios_correo (id, centro_id, plantilla_codigo, plantilla_version, idioma, familiar_id, referencia_id, referencia_clave, estado_codigo, intentos, creado_en)
             SELECT NEWID(), centro_id, plantilla_codigo, plantilla_version, idioma, familiar_id, referencia_id, N'77', 'PENDIENTE', 0, SYSUTCDATETIME() FROM dbo.envios_correo WHERE id = '{notice.EmailId}'

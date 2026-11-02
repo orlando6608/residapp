@@ -134,8 +134,13 @@ public sealed class FamilyMemberFormModel
 
     [StringLength(FamilyMember.MaxEmailLength, ErrorMessage = "El correo no puede pasar de {1} caracteres.")]
     [EmailAddress(ErrorMessage = "Escribe un correo válido.")]
-    [Display(Name = "Correo electrónico (opcional)")]
+    [Display(Name = "Correo para avisos de ResidApp (opcional)")]
     public string? Correo { get; set; }
+
+    /// <summary>Aviso por correo (ADR 0012): Administración marca que le ha leído la dirección a la persona a quien pertenece y que le ha dicho que es correcta. Sin
+    /// esta marca no se envía ningún aviso a esa dirección. Nunca viene marcada de antemano.</summary>
+    [Display(Name = "Dirección confirmada con la familia: se la he leído a la persona a quien pertenece y me ha dicho que es correcta")]
+    public bool ConfirmarCorreo { get; set; }
 
     [Display(Name = "Familiar referente")]
     public bool Referente { get; set; }
@@ -146,7 +151,9 @@ public sealed class FamilyMemberFormModel
 
 /// <summary>ADM-09: el residente junto al formulario del familiar.</summary>
 /// <summary>SharedWith es a cuántos otros residentes está vinculado también el familiar que se edita (sus datos de contacto valen para todos).</summary>
-public sealed record FamilyMemberViewModel(AdministrativeResidentSummary Resident, FamilyMemberFormModel Form, int SharedWith = 0);
+/// <summary>EmailConfirmedAt es cuándo se confirmó la dirección que tiene hoy el familiar (null: sin confirmar o sin correo).</summary>
+public sealed record FamilyMemberViewModel(
+    AdministrativeResidentSummary Resident, FamilyMemberFormModel Form, int SharedWith = 0, DateTimeOffset? EmailConfirmedAt = null);
 
 /// <summary>Vincular a un residente un familiar que ya existe: se elige entre los vinculables y se escribe la relación con este residente.
 /// OperacionId nace con el formulario y es el identificador del vínculo.</summary>
@@ -239,6 +246,12 @@ public static class AdministrativeResidentDisplay
         ResidentAttentionKind.AutorizacionPorCaducar => $"Con una autorización de familiar que caduca en {AdministrationOverviewRules.ExpiringSoonDays} días o menos",
         _ => kind.ToString(),
     };
+
+    /// <summary>Aviso por correo (ADR 0012, script 0084): si la dirección está confirmada con la familia. Sin confirmar, ResidApp no envía ningún aviso a ese correo. Solo la
+    /// fecha: no se enseña qué cuenta la confirmó (dato del personal, docs/privacidad/direccion-confirmada-familia.md, riesgo 2).</summary>
+    public static string EmailConfirmation(ResidentFamilyMember member) => member.EmailConfirmedAt is { } at
+        ? $"Dirección confirmada el {at.ToLocalTime():dd/MM/yyyy}."
+        : "Correo sin confirmar: ResidApp no enviará avisos a esta dirección.";
 
     /// <summary>ADM-08: la autorización tal como cuenta hoy, p. ej. «Activa hasta el 31/10/2026» o «Sin autorización».</summary>
     public static string Authorization(ResidentFamilyMember member, DateOnly today)

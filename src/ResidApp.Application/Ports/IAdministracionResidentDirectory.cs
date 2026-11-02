@@ -32,11 +32,12 @@ public sealed record FamilyAuthorizationChangeEntry(
 /// <summary>ADM-08 (0022): un familiar vinculado al residente. LinkId identifica el vínculo; AuthorizationChanges va del
 /// primero al último y está vacía si la autorización no se ha abierto.</summary>
 /// <summary>OtherResidentLinks es a cuántos otros residentes del centro está vinculado también el familiar (sus datos de contacto
-/// son compartidos); no dice cuáles. PortalAccount es el usuario con el que entra al Portal Familiar (script 0052), null si aún no tiene acceso.</summary>
+/// son compartidos); no dice cuáles. PortalAccount es el usuario con el que entra al Portal Familiar (script 0052), null si aún no tiene acceso.
+/// EmailConfirmedAt es cuándo se confirmó la dirección con la familia (script 0084); null si no hay correo o no está confirmado, y entonces no se le envía ningún aviso.</summary>
 public sealed record ResidentFamilyMember(
     Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email,
     IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges, int OtherResidentLinks = 0, bool IsReferent = false,
-    bool IsLegalGuardian = false, string? PortalAccount = null)
+    bool IsLegalGuardian = false, string? PortalAccount = null, DateTimeOffset? EmailConfirmedAt = null)
 {
     public FamilyAuthorizationChangeEntry? CurrentAuthorization => AuthorizationChanges.Count == 0 ? null : AuthorizationChanges[^1];
 }
@@ -166,7 +167,8 @@ public interface IResidentFamilyRepository
 {
     /// <summary>Crea el familiar con el identificador operationId y lo vincula al residente, sin autorización. Un reenvío
     /// con el mismo operationId no duplica nada: devuelve el vínculo ya creado.</summary>
-    Task<Guid> AddAsync(AdministrativeResidentTarget target, Guid operationId, FamilyMemberData data, CancellationToken ct = default);
+    Task<Guid> AddAsync(
+        AdministrativeResidentTarget target, Guid operationId, FamilyMemberData data, bool confirmEmail = false, CancellationToken ct = default);
 
     /// <summary>Vincula al residente un familiar que ya existe y que es vinculable (ver LinkableFamilyMember; si no, acceso denegado,
     /// sin distinguir el motivo), con la relación propia de este residente y sin abrir su autorización. operationId es el identificador del
@@ -176,9 +178,15 @@ public interface IResidentFamilyRepository
         CancellationToken ct = default);
 
     /// <summary>expectedVersion es FamilyMemberData.Version de los datos que vio quien edita; si ya no coincide con los actuales,
-    /// FAMILY_MEMBER_CONFLICT.</summary>
+    /// FAMILY_MEMBER_CONFLICT. confirmEmail es la casilla «Dirección confirmada con la familia» (CJ, 2026-11-02): confirma el correo tal como queda
+    /// tras este guardado; si el correo cambia o se quita sin ella, la confirmación anterior se pierde.</summary>
     Task UpdateAsync(
-        AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, string expectedVersion, CancellationToken ct = default);
+        AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, string expectedVersion, bool confirmEmail = false,
+        CancellationToken ct = default);
+
+    /// <summary>Quita solo la confirmación de la dirección. Con la versión que vio quien la quita; si ya no estaba confirmada, FAMILY_MEMBER_CONFLICT.</summary>
+    Task RemoveEmailConfirmationAsync(
+        AdministrativeResidentTarget target, Guid linkId, string expectedVersion, CancellationToken ct = default);
 
     /// <summary>Registra el cambio si el vínculo sigue teniendo expectedChanges cambios (si no, conflicto) y es válido desde
     /// su estado efectivo de hoy. Devuelve cuántos cambios tiene ya.</summary>

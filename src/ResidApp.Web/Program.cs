@@ -282,6 +282,9 @@ builder.Services.AddKeyedScoped<ChangeNoticeService>(ChangeNoticeWorker.ServiceK
     services.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(),
     message => services.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
 builder.Services.AddHostedService<ChangeNoticeWorker>();
+// La purga del registro de envíos (script 0085) usa la misma conexión propia de la tarea: el rol solo puede ejecutar el procedimiento que borra lo de más de 12 meses.
+builder.Services.AddScoped<IEmailLogPurge>(_ => new SqlEmailLogPurge(new SqlConnectionFactory(tasksConnectionString ?? connectionString)));
+builder.Services.AddHostedService<EmailLogPurgeWorker>();
 
 builder.Services.AddScoped<ListScopeResidents>();
 builder.Services.AddScoped<FindScopeResident>();

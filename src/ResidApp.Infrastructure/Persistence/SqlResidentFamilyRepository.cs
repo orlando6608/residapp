@@ -22,9 +22,33 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         VALUES (NEWID(), @AccountId, 'ADMINISTRACION', @CenterId, @UnitId, @ResidentId, @ResourceType, @ResourceId, @Action, @OccurredAt);
         """;
 
+    private const string MemberForUpdateSql = """
+        SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, link.relacion AS Relationship, f.telefono AS Phone, f.correo AS Email,
+               link.es_referente AS IsReferent, link.es_tutor_legal AS IsLegalGuardian,
+               f.correo_confirmado_en AS EmailConfirmedAt, f.correo_confirmado_por_cuenta_id AS EmailConfirmedBy
+          FROM dbo.residentes_familiares link WITH (UPDLOCK, ROWLOCK)
+          JOIN dbo.familiares f WITH (UPDLOCK, ROWLOCK) ON f.id = link.familiar_id AND f.centro_id = link.centro_id
+         WHERE link.id = @LinkId AND link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
+        """;
+
+    /// <summary>Una fila más de auditoría sobre el familiar (solo identificadores; nunca la dirección), en la misma transacción que el cambio.</summary>
+    private static Task AuditFamilyAsync(
+        SqlConnection connection, SqlTransaction transaction, AdministrativeResidentTarget target, Guid familyId, string action,
+        DateTimeOffset occurredAt, CancellationToken ct) =>
+        connection.ExecuteAsync(new CommandDefinition(InsertAudit, new
+        {
+            AccountId = target.AccountId.Value, CenterId = target.CenterId.Value, UnitId = target.UnitId.Value, ResidentId = target.ResidentId.Value,
+            ResourceType = "FAMILY_MEMBER", ResourceId = familyId, Action = action, OccurredAt = occurredAt,
+        }, transaction, cancellationToken: ct));
+
     public async Task<Guid> AddAsync(
-        AdministrativeResidentTarget target, Guid operationId, FamilyMemberData data, CancellationToken ct = default)
+        AdministrativeResidentTarget target, Guid operationId, FamilyMemberData data, bool confirmEmail = false, CancellationToken ct = default)
     {
+        if (confirmEmail && data.Email is null)
+        {
+            throw new DomainValidationException(FamilyMember.InvalidCode);
+        }
+
         using var connection = await connections.OpenAsync(ct);
         var previous = await FindAddedLinkAsync(connection, null, target, operationId, ct);
         if (previous is not null)
@@ -38,8 +62,8 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         try
         {
             await connection.ExecuteAsync(new CommandDefinition($"""
-                INSERT INTO dbo.familiares (id, centro_id, nombre_visible, telefono, correo, creado_por_cuenta_id, creado_en)
-                VALUES (@FamilyId, @CenterId, @DisplayName, @Phone, @Email, @AccountId, @OccurredAt);
+                INSERT INTO dbo.familiares (id, centro_id, nombre_visible, telefono, correo, creado_por_cuenta_id, creado_en, correo_confirmado_en, correo_confirmado_por_cuenta_id)
+                VALUES (@FamilyId, @CenterId, @DisplayName, @Phone, @Email, @AccountId, @OccurredAt, @ConfirmedAt, @ConfirmedBy);
 
                 INSERT INTO dbo.residentes_familiares
                     (id, centro_id, residente_id, familiar_id, relacion, es_referente, es_tutor_legal, vinculado_por_cuenta_id, vinculado_en)
@@ -52,7 +76,13 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
                 AccountId = target.AccountId.Value, CenterId = target.CenterId.Value, UnitId = target.UnitId.Value,
                 ResidentId = target.ResidentId.Value, ResourceType = "FAMILY_MEMBER", ResourceId = operationId,
                 Action = "FAMILY_MEMBER_CREATE", OccurredAt = occurredAt,
+                ConfirmedAt = confirmEmail ? occurredAt.UtcDateTime : (DateTime?)null, ConfirmedBy = confirmEmail ? target.AccountId.Value : (Guid?)null,
             }, transaction, cancellationToken: ct));
+            if (confirmEmail)
+            {
+                await AuditFamilyAsync(connection, transaction, target, operationId, "FAMILY_EMAIL_CONFIRM", occurredAt, ct);
+            }
+
             transaction.Commit();
             return linkId;
         }
@@ -123,19 +153,16 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         return operationId;
     }
 
+    /// <summary>confirmEmail es la casilla «Dirección confirmada con la familia» (CJ, 2026-11-02): solo cuenta si hay correo y lo confirma como está en este guardado. Si el
+    /// correo cambia o se quita, la confirmación anterior se pierde (la base de datos lo garantiza aunque este código no lo hiciera, script 0084); si no cambia, se conserva.</summary>
     public async Task UpdateAsync(
-        AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, string expectedVersion, CancellationToken ct = default)
+        AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, string expectedVersion, bool confirmEmail = false,
+        CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
-        var current = await connection.QuerySingleOrDefaultAsync<MemberRow>(new CommandDefinition("""
-            SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, link.relacion AS Relationship, f.telefono AS Phone, f.correo AS Email,
-                   link.es_referente AS IsReferent, link.es_tutor_legal AS IsLegalGuardian
-              FROM dbo.residentes_familiares link WITH (UPDLOCK, ROWLOCK)
-              JOIN dbo.familiares f WITH (UPDLOCK, ROWLOCK) ON f.id = link.familiar_id AND f.centro_id = link.centro_id
-             WHERE link.id = @LinkId AND link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
-            """, new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value },
-            transaction, cancellationToken: ct))
+        var current = await connection.QuerySingleOrDefaultAsync<MemberRow>(new CommandDefinition(MemberForUpdateSql,
+            new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value }, transaction, cancellationToken: ct))
             ?? throw new AccessDeniedException();
         var currentData = new FamilyMemberData(current.DisplayName, current.Relationship, current.Phone, current.Email, current.IsReferent, current.IsLegalGuardian);
         if (!string.Equals(currentData.Version, expectedVersion, StringComparison.Ordinal))
@@ -143,26 +170,80 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
             throw new DomainValidationException("FAMILY_MEMBER_CONFLICT");
         }
 
-        if (currentData.SameAs(data))
+        var emailChanged = !string.Equals(current.Email, data.Email, StringComparison.Ordinal);
+        var wasConfirmed = current.EmailConfirmedAt is not null;
+        if (confirmEmail && data.Email is null)
         {
             throw new DomainValidationException(FamilyMember.InvalidCode);
         }
 
+        // Confirmar ahora: la casilla marcada sobre una dirección nueva o que aún no estaba confirmada. Con la misma ya confirmada no hay nada que hacer.
+        var confirmNow = confirmEmail && (emailChanged || !wasConfirmed);
+        var sameData = currentData.SameAs(data);
+        if (sameData && !confirmNow)
+        {
+            throw new DomainValidationException(FamilyMember.InvalidCode);
+        }
+
+        var occurredAt = DateTimeOffset.UtcNow;
+        var keepConfirmation = !confirmNow && wasConfirmed && !emailChanged;
         await connection.ExecuteAsync(new CommandDefinition($"""
-            UPDATE dbo.familiares SET nombre_visible = @DisplayName, telefono = @Phone, correo = @Email
+            UPDATE dbo.familiares SET nombre_visible = @DisplayName, telefono = @Phone, correo = @Email,
+                   correo_confirmado_en = @ConfirmedAt, correo_confirmado_por_cuenta_id = @ConfirmedBy
              WHERE id = @FamilyId AND centro_id = @CenterId;
 
             UPDATE dbo.residentes_familiares SET relacion = @Relationship, es_referente = @IsReferent, es_tutor_legal = @IsLegalGuardian
              WHERE id = @LinkId AND centro_id = @CenterId;
-
-            {InsertAudit}
             """, new
         {
             current.FamilyId, LinkId = linkId, data.DisplayName, data.Phone, data.Email, data.Relationship, data.IsReferent, data.IsLegalGuardian,
-            AccountId = target.AccountId.Value, CenterId = target.CenterId.Value, UnitId = target.UnitId.Value,
-            ResidentId = target.ResidentId.Value, ResourceType = "FAMILY_MEMBER", ResourceId = current.FamilyId,
-            Action = "FAMILY_MEMBER_UPDATE", OccurredAt = DateTimeOffset.UtcNow,
+            CenterId = target.CenterId.Value,
+            ConfirmedAt = confirmNow ? occurredAt.UtcDateTime : keepConfirmation ? current.EmailConfirmedAt : null,
+            ConfirmedBy = confirmNow ? target.AccountId.Value : keepConfirmation ? current.EmailConfirmedBy : null,
         }, transaction, cancellationToken: ct));
+        if (!sameData)
+        {
+            await AuditFamilyAsync(connection, transaction, target, current.FamilyId, "FAMILY_MEMBER_UPDATE", occurredAt, ct);
+        }
+
+        if (emailChanged)
+        {
+            await AuditFamilyAsync(connection, transaction, target, current.FamilyId, "FAMILY_EMAIL_CHANGE", occurredAt, ct);
+        }
+
+        if (confirmNow)
+        {
+            await AuditFamilyAsync(connection, transaction, target, current.FamilyId, "FAMILY_EMAIL_CONFIRM", occurredAt, ct);
+        }
+        else if (wasConfirmed && !keepConfirmation)
+        {
+            await AuditFamilyAsync(connection, transaction, target, current.FamilyId, "FAMILY_EMAIL_UNCONFIRM", occurredAt, ct);
+        }
+
+        transaction.Commit();
+    }
+
+    /// <summary>Quita la confirmación de la dirección (queja de la familia, dirección dudosa) sin tocar nada más. Con la versión que vio quien la quita; si la dirección
+    /// ya no estaba confirmada, FAMILY_MEMBER_CONFLICT. Para «no quiero más avisos» no basta quitar la marca: se borra la dirección.</summary>
+    public async Task RemoveEmailConfirmationAsync(
+        AdministrativeResidentTarget target, Guid linkId, string expectedVersion, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var current = await connection.QuerySingleOrDefaultAsync<MemberRow>(new CommandDefinition(MemberForUpdateSql,
+            new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value }, transaction, cancellationToken: ct))
+            ?? throw new AccessDeniedException();
+        var currentData = new FamilyMemberData(current.DisplayName, current.Relationship, current.Phone, current.Email, current.IsReferent, current.IsLegalGuardian);
+        if (!string.Equals(currentData.Version, expectedVersion, StringComparison.Ordinal) || current.EmailConfirmedAt is null)
+        {
+            throw new DomainValidationException("FAMILY_MEMBER_CONFLICT");
+        }
+
+        await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.familiares SET correo_confirmado_en = NULL, correo_confirmado_por_cuenta_id = NULL
+             WHERE id = @FamilyId AND centro_id = @CenterId
+            """, new { current.FamilyId, CenterId = target.CenterId.Value }, transaction, cancellationToken: ct));
+        await AuditFamilyAsync(connection, transaction, target, current.FamilyId, "FAMILY_EMAIL_UNCONFIRM", DateTimeOffset.UtcNow, ct);
         transaction.Commit();
     }
 
@@ -457,7 +538,9 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
 
     private sealed record LinkRow(Guid ResidentId, Guid FamilyId, string Relationship);
 
-    private sealed record MemberRow(Guid FamilyId, string DisplayName, string Relationship, string Phone, string? Email, bool IsReferent, bool IsLegalGuardian);
+    private sealed record MemberRow(
+        Guid FamilyId, string DisplayName, string Relationship, string Phone, string? Email, bool IsReferent, bool IsLegalGuardian,
+        DateTime? EmailConfirmedAt, Guid? EmailConfirmedBy);
 
     private sealed record AuthorizationRow(int Number, string StatusCode, DateTime? ValidUntil);
 

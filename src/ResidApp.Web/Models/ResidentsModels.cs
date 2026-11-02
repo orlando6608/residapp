@@ -104,7 +104,7 @@ public sealed class NewResidentFamilyFormRow
     [Display(Name = "Teléfono")]
     public string? Telefono { get; set; }
 
-    [Display(Name = "Correo electrónico (opcional)")]
+    [Display(Name = "Correo para avisos de ResidApp (opcional)")]
     public string? Correo { get; set; }
 
     [Display(Name = "Familiar referente")]

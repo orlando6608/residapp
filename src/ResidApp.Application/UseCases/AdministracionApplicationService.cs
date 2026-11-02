@@ -27,7 +27,7 @@ public sealed record CorrectResidentIdentityCommand(
 /// familiar, así que un reenvío no lo duplica.</summary>
 public sealed record AddFamilyMemberCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid OperacionId, string? NombreVisible, string? Relacion,
-    string? Telefono, string? Correo, bool Referente = false, bool TutorLegal = false);
+    string? Telefono, string? Correo, bool Referente = false, bool TutorLegal = false, bool ConfirmarCorreo = false);
 
 /// <summary>Vincular al residente un familiar que ya existe (ver LinkableFamilyMember). OperacionId nace con el formulario y es el
 /// identificador del vínculo, así que un reenvío no lo duplica; Relacion es la de este residente.</summary>
@@ -37,7 +37,11 @@ public sealed record LinkFamilyMemberCommand(
 /// <summary>VersionEsperada es FamilyMemberData.Version de los datos que enseñaba la pantalla al abrirla.</summary>
 public sealed record UpdateFamilyMemberCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string? NombreVisible, string? Relacion,
-    string? Telefono, string? Correo, string VersionEsperada, bool Referente = false, bool TutorLegal = false);
+    string? Telefono, string? Correo, string VersionEsperada, bool Referente = false, bool TutorLegal = false, bool ConfirmarCorreo = false);
+
+/// <summary>Quitar solo la confirmación de la dirección del familiar (CJ, 2026-11-02). VersionEsperada es la de los datos que enseñaba la pantalla.</summary>
+public sealed record RemoveFamilyEmailConfirmationCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string VersionEsperada);
 
 /// <summary>CJ, 2026-10-07: Motivo es obligatorio.</summary>
 public sealed record UnlinkFamilyMemberCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string? Motivo);
@@ -152,7 +156,7 @@ public sealed class AdministracionApplicationService(
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             var data = FamilyMember.Validate(command.NombreVisible, command.Relacion, command.Telefono, command.Correo, command.Referente, command.TutorLegal);
-            return await families.AddAsync(target, command.OperacionId, data, ct);
+            return await families.AddAsync(target, command.OperacionId, data, command.ConfirmarCorreo, ct);
         });
 
     /// <summary>Los familiares del centro que se pueden vincular al residente (CJ, 2026-10-10: no solo los del ámbito) y cuyo nombre o teléfono
@@ -182,7 +186,16 @@ public sealed class AdministracionApplicationService(
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             var data = FamilyMember.Validate(command.NombreVisible, command.Relacion, command.Telefono, command.Correo, command.Referente, command.TutorLegal);
-            await families.UpdateAsync(target, command.VinculoId, data, command.VersionEsperada, ct);
+            await families.UpdateAsync(target, command.VinculoId, data, command.VersionEsperada, command.ConfirmarCorreo, ct);
+            return true;
+        });
+
+    /// <summary>CJ, 2026-11-02: quitar la confirmación de la dirección (sin tocar el resto). Sin ella no se envía ningún aviso a esa dirección.</summary>
+    public Task<ApplicationResult<bool>> RemoveFamilyEmailConfirmationAsync(RemoveFamilyEmailConfirmationCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
+            await families.RemoveEmailConfirmationAsync(target, command.VinculoId, command.VersionEsperada, ct);
             return true;
         });
 

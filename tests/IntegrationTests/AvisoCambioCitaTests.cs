@@ -82,7 +82,16 @@ public class AvisoCambioCitaTests
     {
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         await connection.ExecuteAsync(
-            "UPDATE dbo.familiares SET correo = @address WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId)", new { address, linkId });
+            "UPDATE dbo.familiares SET correo = @address, correo_confirmado_en = CASE WHEN @address IS NULL THEN NULL ELSE SYSUTCDATETIME() END, correo_confirmado_por_cuenta_id = CASE WHEN @address IS NULL THEN NULL ELSE creado_por_cuenta_id END WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId)", new { address, linkId });
+    }
+
+/// <summary>Pone o quita la marca «Dirección confirmada con la familia» sin tocar la dirección (script 0084).</summary>
+    private static async Task SetConfirmationAsync(Guid linkId, bool confirmed)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync(
+            "UPDATE dbo.familiares SET correo_confirmado_en = CASE WHEN @confirmed = 1 THEN SYSUTCDATETIME() END, correo_confirmado_por_cuenta_id = CASE WHEN @confirmed = 1 THEN creado_por_cuenta_id END WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId)",
+            new { confirmed, linkId });
     }
 
     /// <summary>Los avisos de cambio que otras pruebas dejaron sin enviar no deben quitarle el turno a los de esta (la tarea procesa los más antiguos primero).</summary>
@@ -274,6 +283,44 @@ public class AvisoCambioCitaTests
 
         Assert.Empty(sender.Sent);
         Assert.Equal(("OMITIDO", "SIN_CORREO"), (Assert.Single(await RowsAsync(appointments[0])).Estado, Assert.Single(await RowsAsync(appointments[0])).Motivo));
+    }
+
+    [Fact]
+    public async Task SinLaDireccionConfirmada_SeAnotaOmitido_SinEnvio_YConfirmarDespuesNoLoMandaAtrasado()
+    {
+        var (setup, appointments) = await WithAppointmentsAsync("Residente Aviso Cambio Sin Confirmar");
+        await SetConfirmationAsync(setup.LinkId, confirmed: false);
+        var sender = new FakeEmailSender();
+        var notice = Notice(sender, Active());
+        Assert.True((await CancelAsync(setup, appointments[0], notice)).Ok);
+
+        await ProcessAsync(notice);
+
+        Assert.Empty(sender.Sent);
+        var row = Assert.Single(await RowsAsync(appointments[0]));
+        Assert.Equal(("OMITIDO", "DIRECCION_NO_CONFIRMADA"), (row.Estado, row.Motivo));
+
+        // CJ, 2026-11-02 (D6): confirmar después no manda el aviso atrasado.
+        await SetConfirmationAsync(setup.LinkId, confirmed: true);
+        await ProcessAsync(notice);
+        Assert.Empty(sender.Sent);
+    }
+
+    [Fact]
+    public async Task SiSeQuitaLaConfirmacionEntreLaReservaYElEnvio_NoSeEnvia()
+    {
+        var (setup, appointments) = await WithAppointmentsAsync("Residente Aviso Cambio Confirmacion Quitada");
+        var sender = new FakeEmailSender();
+        var notice = Notice(sender, Active());
+        Assert.True((await CancelAsync(setup, appointments[0], notice)).Ok);
+        Assert.Equal("PENDIENTE", Assert.Single(await RowsAsync(appointments[0])).Estado);
+
+        await SetConfirmationAsync(setup.LinkId, confirmed: false);
+        await ProcessAsync(notice);
+
+        Assert.Empty(sender.Sent);
+        var row = Assert.Single(await RowsAsync(appointments[0]));
+        Assert.Equal(("OMITIDO", "DIRECCION_NO_CONFIRMADA"), (row.Estado, row.Motivo));
     }
 
     [Fact]

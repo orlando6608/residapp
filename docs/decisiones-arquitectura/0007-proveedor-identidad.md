@@ -124,7 +124,7 @@ Desde I1 los cubren además `tests/FunctionalTests/AccesoTests.cs` y `tests/Inte
    DNS de `app.` se crea solo cuando exista producción, y el de cada subdominio se borra antes de borrar el recurso de Azure al que apunta; (d) el
    registro `TXT` `asuid.<subdominio>` que Azure ofrece para demostrar la propiedad es obligatorio. Si el nombre de una aplicación cambiara
    después, cada persona tendría que registrar otra passkey. (Texto aprobado por Orlando el 2026-10-29,
-   `docs/pendientes-cj/orlando/adr-0007-passkeys-por-entorno.html`.)
+   `docs/pendientes-cj/archivados/adr-0007-passkeys-por-entorno.html`.)
 
 ## Alternativas descartadas
 

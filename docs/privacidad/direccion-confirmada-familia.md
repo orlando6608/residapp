@@ -128,7 +128,7 @@ Sin jerga. Los corchetes se quitan hasta que exista lo que nombran. Si se pide, 
 
 **Ayuda bajo el campo:**
 «Este correo solo sirve para mandar a esa persona avisos de ResidApp: que tiene una propuesta de cita pendiente[, que el centro ha cambiado o cancelado una cita que reservó, o un recordatorio]. Los avisos no dicen el nombre del residente, ni el centro, ni la fecha, ni el motivo: solo que entre en ResidApp. Es voluntario: puede pedir que se quite cuando quiera y entonces lo verá todo al entrar en ResidApp.
-Antes de marcar la casilla, cuéntele esto, léale la dirección despacio (letra a letra si hace falta) y espere a que le diga que es correcta. Si no ha podido hacerlo, deje la casilla sin marcar: es correcto y no pasa nada, simplemente no se enviará ningún aviso a esa dirección. Si cambia o borra la dirección, la casilla se desmarca sola y hay que volver a confirmarla. Si alguien le pide que no le manden más avisos, borre la dirección. El correo no sustituye al teléfono: si algo es urgente, llame.»
+Antes de marcar la casilla, cuéntele esto, léale la dirección despacio (letra a letra si hace falta) y espere a que le diga que es correcta. Si no ha podido hacerlo, deje la casilla sin marcar: es correcto y no pasa nada, simplemente no se enviará ningún aviso a esa dirección. Si cambia o borra la dirección, la confirmación se quita y hay que volver a confirmarla. Si alguien le pide que no le manden más avisos, borre la dirección. El correo no sustituye al teléfono: si algo es urgente, llame.»
 
 **Mensaje en la ficha cuando hay correo y no hay marca:**
 «Correo sin confirmar: ResidApp no enviará avisos a esta dirección.»

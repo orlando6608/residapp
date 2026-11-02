@@ -49,7 +49,7 @@ public sealed class SqlProposalNoticeStore(SqlConnectionFactory connections) : I
         else
         {
             var recipient = await connection.QuerySingleOrDefaultAsync<Recipient>(new CommandDefinition(
-                $"SELECT fam.correo AS Address {SqlFamilyPortalReader.AccessibleLinks} AND link.id = @LinkId",
+                $"SELECT fam.correo AS Address, fam.correo_confirmado_en AS ConfirmedAt {SqlFamilyPortalReader.AccessibleLinks} AND link.id = @LinkId",
                 new
                 {
                     AccountId = request.AccountId, CenterId = centerId.Value, Today = DateOnly.FromDateTime(now.LocalDateTime).ToDateTime(TimeOnly.MinValue), request.LinkId,
@@ -61,6 +61,11 @@ public sealed class SqlProposalNoticeStore(SqlConnectionFactory connections) : I
             else if (string.IsNullOrWhiteSpace(recipient.Address))
             {
                 reason = EmailLog.NoAddress;
+            }
+            else if (recipient.ConfirmedAt is null)
+            {
+                // CJ, 2026-11-02 (2.1 A): sin «Dirección confirmada con la familia» no sale ningún aviso. El omitido no se manda más tarde al confirmar.
+                reason = EmailLog.AddressNotConfirmed;
             }
             else
             {
@@ -102,7 +107,7 @@ public sealed class SqlProposalNoticeStore(SqlConnectionFactory connections) : I
             """, new { id, state, reason, operationId, attempts, now = now.UtcDateTime }, cancellationToken: ct));
     }
 
-    private sealed record Recipient(string? Address);
+    private sealed record Recipient(string? Address, DateTime? ConfirmedAt);
 
     private sealed record NoticeRequestRow(
         string Status, Guid AccountId, Guid LinkId, DateTime? ProposedStart, DateTime? ProposedAt, int? LastNumber, string? LastAction)
