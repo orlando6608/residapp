@@ -136,6 +136,29 @@ jobs:
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
           echo "/opt/mssql-tools18/bin" >> "$GITHUB_PATH"
 
+      # Hallazgo A3: la base ya no acepta «todos los servicios de Azure». Este paso (1) abre una regla con la IP de este runner solo mientras se aplican los
+      # scripts (el paso «Cerrar…» la quita, falle o no) y (2) deja las reglas «webapp-salida-…» iguales a las direcciones de salida posibles de la Web App:
+      # si Azure las cambia, el siguiente despliegue las corrige. No toca «AllowDevMachine» (la IP de casa de Orlando).
+      - name: Abrir el firewall de SQL a este runner y sincronizar las direcciones de la Web App
+        run: |
+          rg=rg-residapp-dev; srv=sql-residapp-dev
+          runner_ip="$(curl -fsS --retry 3 https://api.ipify.org)"
+          # reglas de un despliegue anterior que se cortó antes de cerrarlas
+          for old in $(az sql server firewall-rule list -g "$rg" -s "$srv" --query "[?starts_with(name,'ci-runner-')].name" -o tsv); do
+            az sql server firewall-rule delete -g "$rg" -s "$srv" -n "$old" --yes -o none
+          done
+          az sql server firewall-rule create -g "$rg" -s "$srv" -n "ci-runner-$GITHUB_RUN_ID" --start-ip-address "$runner_ip" --end-ip-address "$runner_ip" -o none
+          want="$(az webapp show -g "$rg" -n app-residapp-dev --query possibleOutboundIpAddresses -o tsv | tr ',' '\n' | sort -u)"
+          # sin direcciones no se borra nada: dejaría a la Web App sin base de datos
+          [ -n "$want" ] || { echo "No se pudieron leer las direcciones de salida de la Web App"; exit 1; }
+          while read -r name ip; do
+            grep -qx "$ip" <<< "$want" || az sql server firewall-rule delete -g "$rg" -s "$srv" -n "$name" --yes -o none </dev/null
+          done < <(az sql server firewall-rule list -g "$rg" -s "$srv" --query "[?starts_with(name,'webapp-salida-')].[name,startIpAddress]" -o tsv)
+          have="$(az sql server firewall-rule list -g "$rg" -s "$srv" --query "[?starts_with(name,'webapp-salida-')].startIpAddress" -o tsv)"
+          for ip in $want; do
+            grep -qx "$ip" <<< "$have" || az sql server firewall-rule create -g "$rg" -s "$srv" -n "webapp-salida-${ip//./-}" --start-ip-address "$ip" --end-ip-address "$ip" -o none
+          done
+
       # Entorno de desarrollo/piloto interno con datos ficticios: aplica el esquema pendiente y la semilla de los centros de prueba.
       # Nunca replicar APLICAR_SEED=1 en un entorno de producción con datos reales.
       - name: Aplicar esquema y seed en Azure SQL
@@ -155,7 +178,18 @@ jobs:
           export SQL_USER="${SQL_ADMIN_USER:-$(valor 'User ID')}"
           export SQL_PASSWORD="${SQL_ADMIN_PASSWORD:-$(valor Password)}"
           echo "::add-mask::$SQL_PASSWORD"
+          # Una regla nueva del firewall puede tardar en aplicarse: se espera a poder entrar (hasta unos 3 minutos) antes de lanzar los scripts.
+          for intento in $(seq 1 18); do
+            sqlcmd -C -S "$SQL_SERVER" -d "$SQL_DATABASE" -U "$SQL_USER" -P "$SQL_PASSWORD" -b -Q "SELECT 1" > /dev/null 2>&1 && break
+            [ "$intento" -eq 18 ] && { echo "No se pudo entrar en la base: ¿ha llegado a aplicarse la regla del firewall de este runner?"; exit 1; }
+            sleep 10
+          done
           APLICAR_SEED=1 bash database/aplicar-scripts.sh
+
+      # Se cierra siempre, aunque los scripts hayan fallado. El «|| true» es para el caso de que el paso de abrir ni siquiera llegara a crearla.
+      - name: Cerrar la regla del firewall de SQL de este runner
+        if: always()
+        run: az sql server firewall-rule delete -g rg-residapp-dev -s sql-residapp-dev -n "ci-runner-$GITHUB_RUN_ID" --yes -o none || true
 
       # La aplicación calcula todas las horas con la zona del servidor y en producción no arranca si no es Europe/Madrid (ServerTimeZone).
       # Se fija aquí para que una Web App nueva o recreada no dependa de un ajuste manual. Solo se escribe si difiere: cambiar un ajuste reinicia la app.
