@@ -1,0 +1,305 @@
+<!doctype html>
+<!--
+  Hoja de acceso para CJ. Es una PLANTILLA EN BLANCO: la rellena Orlando en su navegador (panel de arriba) y la guarda como PDF con
+  «Imprimir». Los datos solo existen en esa ventana: no se guardan ni se envían a ningún sitio. NUNCA escribas aquí la contraseña, la clave
+  del móvil ni un enlace de invitación, y no guardes en el repositorio el PDF ya relleno.
+  Aplicación de autenticación: Microsoft Authenticator (decisión de Orlando, 2026-11-03). Textos de pantalla: Views/Acceso/Entrar.cshtml y
+  Views/Acceso/SegundoFactor.cshtml. Bloqueo: AccesoOptions (5 intentos, 15 minutos). Las cuentas de cada guía: su tabla «Cuentas de prueba».
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoja de acceso para CJ</title>
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --warn-bg: #fff3bf;
+    --warn-ink: #5c4400;
+    --warn-rule: #e0b800;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+      --warn-bg: #3a3000;
+      --warn-ink: #ffe27a;
+      --warn-rule: #8a7000;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); line-height: 1.6; padding-inline: 16px; }
+  .page { max-width: 780px; margin: 0 auto; padding-block: 40px 64px; display: flex; flex-direction: column; gap: 28px; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.4rem; }
+  h3 { font-size: 1.1rem; }
+  p, ol, ul { margin: 0; }
+  a { color: var(--accent); }
+  code, .dato { font-family: var(--mono); }
+  code { background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; overflow-wrap: anywhere; }
+  .marca { display: flex; align-items: center; gap: 12px; }
+  .marca img { width: 48px; height: 48px; border-radius: 10px; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin: 0; }
+  .lead { font-size: 1.08rem; }
+
+  .panel { background: var(--surface); border: 2px dashed var(--accent); border-radius: 8px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .panel h2 { font-size: 1.15rem; }
+  .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .campo { display: flex; flex-direction: column; gap: 4px; }
+  .campo label { font-weight: 600; }
+  .campo input[type="text"], .campo input[type="password"] { font: inherit; padding: 10px 12px; min-height: 44px; border: 1px solid var(--muted);
+    border-radius: 6px; background: var(--bg); color: var(--ink); }
+  .campo input:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .campo .ayuda { font-size: 0.88rem; color: var(--muted); }
+  .mostrar { display: flex; align-items: center; gap: 8px; font-size: 0.92rem; min-height: 28px; }
+  .acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  button { font: inherit; font-weight: 600; min-height: 44px; padding: 8px 18px; border-radius: 6px; border: 1px solid var(--accent);
+    background: var(--accent); color: var(--bg); cursor: pointer; }
+  #faltan { font-size: 0.95rem; }
+
+  .paso { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 20px 22px; display: flex; flex-direction: column; gap: 12px;
+    break-inside: avoid; }
+  .paso > h2 { display: flex; align-items: baseline; gap: 12px; }
+  .num { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 50%;
+    background: var(--accent); color: var(--bg); font-family: var(--sans); font-size: 1rem; }
+  .pasos { padding-left: 1.4em; display: flex; flex-direction: column; gap: 8px; }
+  .nota { background: var(--accent-soft); border-left: 4px solid var(--accent); border-radius: 4px; padding: 10px 14px; }
+  .dato { display: inline-block; background: var(--accent-soft); border: 1px solid var(--rule); border-radius: 6px; padding: 2px 10px; font-weight: 700;
+    font-size: 1.05rem; overflow-wrap: anywhere; }
+  .dato.clave { letter-spacing: 0.08em; }
+  .hueco { background: var(--warn-bg); color: var(--warn-ink); border: 1px dashed var(--warn-rule); font-family: var(--sans); font-weight: 600;
+    letter-spacing: normal; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+  th { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .aviso { color: var(--muted); font-size: 0.95rem; }
+
+  @media print {
+    :root { --bg: #fff; --surface: #fff; --ink: #000; --muted: #333; --rule: #bbb; --accent: #1b5f6b; --accent-soft: #e3eff0;
+      --warn-bg: #fff3bf; --warn-ink: #5c4400; --warn-rule: #e0b800; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { padding-inline: 0; }
+    .no-print { display: none !important; }
+    .page { padding-block: 0; gap: 16px; }
+    .paso { padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <div class="marca">
+      <img src="data:image/png;base64,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" alt="" width="48" height="48">
+      <p class="eyebrow">ResidApp · Hoja de acceso para CJ</p>
+    </div>
+    <h1>Cómo entrar en tus cuentas de prueba</h1>
+    <p class="lead">Aquí tienes, paso a paso, todo lo que necesitas para entrar en la aplicación y empezar las guías de pruebas. Son unos pocos
+      pasos y la mayoría se hacen una sola vez.</p>
+  </header>
+
+  <section class="panel no-print" aria-labelledby="panel-titulo">
+    <h2 id="panel-titulo">Solo para Orlando: rellena estos campos antes de guardar la hoja</h2>
+    <p class="aviso">Lo que escribas aparece en los pasos de abajo. Los datos solo están en esta ventana: no se guardan ni se envían a
+      ningún sitio, y se pierden al cerrarla. Cuando esté completa, pulsa «Guardar como PDF», envíasela a CJ por un canal privado y
+      borra después el PDF.</p>
+    <div class="campos">
+      <div class="campo">
+        <label for="f-direccion">Dirección de la aplicación</label>
+        <input type="text" id="f-direccion" value="https://dev.residapp.es" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="campo">
+        <label for="f-contrasena">Contraseña única de las cuentas</label>
+        <input type="password" id="f-contrasena" autocomplete="off" spellcheck="false">
+        <label class="mostrar"><input type="checkbox" id="f-mostrar"> Mostrar lo que he escrito</label>
+      </div>
+      <div class="campo">
+        <label for="f-clave">Clave del móvil</label>
+        <input type="text" id="f-clave" autocomplete="off" spellcheck="false">
+        <span class="ayuda">La del bloque «almendros-enfermeria» del fichero de credenciales de CJ.</span>
+      </div>
+      <div class="campo">
+        <label for="f-contacto">Cómo avisar a Orlando</label>
+        <input type="text" id="f-contacto" autocomplete="off" placeholder="WhatsApp, correo…">
+      </div>
+    </div>
+    <div class="acciones">
+      <button type="button" id="imprimir">Guardar como PDF (Imprimir)</button>
+      <p id="faltan" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="paso" aria-labelledby="p0">
+    <h2 id="p0">Antes de empezar</h2>
+    <p>Necesitas <strong>tu móvil</strong> y dos datos que están en esta hoja: la <strong>contraseña</strong> y la <strong>clave del móvil</strong>.
+      Son cuentas de prueba con datos inventados: nada de lo que hagas afecta a ningún residente real.</p>
+    <p>Para entrar, la aplicación te pide dos cosas: la contraseña y un <strong>número de 6 cifras</strong> que sale en tu móvil. Así, aunque
+      alguien averiguara la contraseña, no podría entrar sin tu móvil.</p>
+    <p>Tus cuentas ya están creadas: <strong>no tienes que darte de alta ni abrir invitaciones</strong>.</p>
+  </section>
+
+  <section class="paso" aria-labelledby="p1">
+    <h2 id="p1"><span class="num" aria-hidden="true">1</span> Instala Microsoft Authenticator en tu móvil</h2>
+    <p>Es la aplicación que te enseña el número de 6 cifras. Se instala una vez.</p>
+    <ol class="pasos">
+      <li>Abre la tienda de aplicaciones de tu móvil: <strong>Play Store</strong> en Android o <strong>App Store</strong> en iPhone.</li>
+      <li>Busca <strong>«Microsoft Authenticator»</strong> (de Microsoft Corporation, gratuita) e instálala.</li>
+      <li>Ábrela. Si te ofrece iniciar sesión con una cuenta de Microsoft o activar una copia de seguridad, puedes dejarlo para más tarde:
+        normalmente no hace falta para esto.</li>
+    </ol>
+    <p class="nota"><strong>¿Qué hace esta aplicación?</strong> Guarda una clave secreta y, a partir de ella, enseña un número de 6 cifras que
+      <strong>cambia cada 30 segundos</strong>. Lo calcula tu propio móvil. ResidApp te pedirá ese número cada vez que entres.</p>
+  </section>
+
+  <section class="paso" aria-labelledby="p2">
+    <h2 id="p2"><span class="num" aria-hidden="true">2</span> Añade la clave (solo una vez)</h2>
+    <p>Esta clave sirve para <strong>todas</strong> tus cuentas del personal: la añades una sola vez.</p>
+    <ol class="pasos">
+      <li>En Microsoft Authenticator pulsa el botón <strong>«+»</strong> (arriba a la derecha) o <strong>«Agregar cuenta»</strong>.</li>
+      <li>Elige <strong>«Otra cuenta (Google, Facebook, etc.)»</strong>.</li>
+      <li>La aplicación abre la cámara para leer un código QR. Aquí no hay QR: pulsa <strong>«Escribir código manualmente»</strong>.</li>
+      <li><strong>Nombre de la cuenta:</strong> escribe <span class="dato">ResidApp</span>.</li>
+      <li><strong>Clave secreta:</strong> escribe <span class="dato clave" data-campo="clave"></span> (da igual si la pones con o sin
+        espacios).</li>
+      <li>Pulsa <strong>«Finalizar»</strong>.</li>
+    </ol>
+    <p>Si todo ha ido bien, en la lista de la aplicación aparece <strong>ResidApp</strong> con un número de 6 cifras y un pequeño círculo
+      que se va vaciando: cuando se vacía, el número cambia.</p>
+    <p class="nota">Los nombres de los botones pueden ser un poco distintos según tu móvil y la versión de la aplicación. Lo importante es
+      buscar la opción de <strong>escribir la clave a mano</strong>. Si más tarde el número no te funciona, comprueba que la hora de tu móvil
+      está en «automática».</p>
+  </section>
+
+  <section class="paso" aria-labelledby="p3">
+    <h2 id="p3"><span class="num" aria-hidden="true">3</span> Entra por primera vez para comprobar que funciona</h2>
+    <ol class="pasos">
+      <li>En el navegador de tu móvil u ordenador abre <span class="dato" data-campo="direccion"></span>.</li>
+      <li>En la pantalla <strong>«Iniciar sesión»</strong>, en <strong>«Usuario»</strong> escribe <span class="dato">almendros-enfermeria</span> y en
+        <strong>«Contraseña»</strong> escribe <span class="dato" data-campo="contrasena"></span>. Pulsa <strong>«Entrar»</strong>.</li>
+      <li>Aparece la pantalla <strong>«Código de verificación»</strong>. Abre Microsoft Authenticator, mira el número de <strong>ResidApp</strong>,
+        escríbelo en <strong>«Código»</strong> antes de que cambie y pulsa <strong>«Comprobar»</strong>.</li>
+      <li>Si ves la pantalla de inicio de ResidApp, ya está todo listo.</li>
+    </ol>
+    <p class="nota">Si el número no entra, espera a que cambie y escribe el nuevo. Ignora el botón «Entrar con passkey»: no lo necesitas.
+      Las guías pueden mostrar otra dirección parecida (<code>app-residapp-dev.azurewebsites.net</code>): es la misma aplicación y también vale.</p>
+  </section>
+
+  <section class="paso" aria-labelledby="p4">
+    <h2 id="p4"><span class="num" aria-hidden="true">4</span> Tus cuentas y cómo cambiar de una a otra</h2>
+    <p>En cada guía verás «entra con» y un usuario. <strong>La contraseña es siempre la misma</strong> y <strong>el número de 6 cifras también</strong>
+      (el de la entrada «ResidApp» de tu móvil).</p>
+    <table>
+      <thead><tr><th scope="col">Guía</th><th scope="col">Usuarios que usa</th></tr></thead>
+      <tbody>
+        <tr><td>2 · Medicina e indicaciones</td><td><code>almendros-enfermeria</code>, <code>almendros-medicina</code></td></tr>
+        <tr><td>3 · Basal y Barthel</td><td><code>almendros-enfermeria</code>, <code>almendros-medicina</code></td></tr>
+        <tr><td>4 · Dirección Clínica</td><td><code>almendros-direccion</code>, <code>almendros-enfermeria</code></td></tr>
+        <tr><td>5 · Administración del centro</td><td><code>almendros-administracion</code>, <code>almendros-auxiliar</code>,
+          <code>almendros-enfermeria</code>, <code>almendros-enfermeria-planta1</code></td></tr>
+        <tr><td>6 · Comunicados y Portal Familiar</td><td><code>almendros-enfermeria</code>, <code>almendros-medicina</code>,
+          <code>almendros-direccion</code>, <code>almendros-administracion</code>, <code>almendros-elena</code></td></tr>
+        <tr><td>7 · Citas con la familia</td><td><code>almendros-administracion</code>, <code>almendros-elena</code>, <code>almendros-enfermeria</code></td></tr>
+        <tr><td>8 · Aislamiento entre centros</td><td><code>olmos-enfermeria</code>, <code>almendros-enfermeria</code>, <code>almendros-auxiliar</code>,
+          <code>varios-centros</code>, <code>plataforma-cj</code></td></tr>
+        <tr><td>1 · Auxiliar y Enfermería</td><td><code>almendros-auxiliar</code>, <code>almendros-enfermeria</code>, <code>almendros-medicina</code>,
+          <code>almendros-elena</code></td></tr>
+      </tbody>
+    </table>
+    <ul class="pasos">
+      <li><code>almendros-elena</code> es la familiar: entra <strong>solo con usuario y contraseña</strong>, sin número de 6 cifras.</li>
+      <li><code>varios-centros</code>: al entrar sale <strong>«Seleccionar ámbito»</strong>; elige el que pida la guía.</li>
+      <li><code>plataforma-cj</code>: al entrar te lleva a <strong>«Mi cuenta»</strong>. Es normal. Solo se usa en la prueba 5 de la guía 8.</li>
+      <li><strong>Para cambiar de cuenta:</strong> abre el menú de tu perfil (arriba a la derecha), pulsa <strong>«Salir»</strong> y entra con la otra.</li>
+      <li>La sesión se cierra sola tras <strong>30 minutos</strong> sin usarla: vuelve a entrar y sigue donde lo dejaste.</li>
+    </ul>
+  </section>
+
+  <section class="paso" aria-labelledby="p5">
+    <h2 id="p5"><span class="num" aria-hidden="true">5</span> Qué guías hacer y en qué orden</h2>
+    <ol class="pasos">
+      <li><strong>Guía 2</strong> (Medicina e indicaciones): ya contestaste las pruebas 1 a 6. Sigue desde la <strong>prueba 7</strong>.</li>
+      <li><strong>Guías 3, 4, 5, 6, 7 y 8</strong>, en ese orden.</li>
+      <li>Al final, <strong>repite la guía 1 entera</strong>: la hemos cambiado desde la última vez que la hiciste.</li>
+    </ol>
+    <p><strong>Dónde están las guías:</strong> en el pie de página de ResidApp pulsa «Documentos de CJ», escribe la clave de los documentos (la de
+      siempre) y abre «Pruebas».</p>
+    <p><strong>Cómo responder:</strong> en cada prueba marca lo que ha ocurrido y, si quieres, escribe un comentario. Al terminar una guía pulsa
+      <strong>«Guardar respuestas»</strong> (barra de abajo): se descarga un fichero que acaba en <code>.respuestas.json</code>. Envíaselo a Orlando
+      por <span class="dato" data-campo="contacto"></span>. Si cambias algo y vuelves a guardar, envía el nuevo.</p>
+  </section>
+
+  <section class="paso" aria-labelledby="p6">
+    <h2 id="p6">Si algo no funciona</h2>
+    <ul class="pasos">
+      <li><strong>El número de 6 cifras no vale:</strong> espera a que cambie y escribe el nuevo. Comprueba que la hora del móvil está en automática.</li>
+      <li><strong>Cinco fallos seguidos</strong> (contraseña o número) <strong>bloquean la cuenta durante 15 minutos</strong>. Espera y vuelve a intentarlo.</li>
+      <li><strong>La contraseña no entra:</strong> escríbela despacio, respetando mayúsculas y minúsculas. Si sigue sin entrar, avisa a Orlando.</li>
+      <li><strong>Cambias de móvil o lo pierdes:</strong> avisa a Orlando y te prepara otro acceso.</li>
+      <li><strong>Ves algo raro en la aplicación:</strong> apúntalo en el comentario de la prueba.</li>
+    </ul>
+  </section>
+
+  <section class="paso" aria-labelledby="p7">
+    <h2 id="p7">Importante</h2>
+    <p>Esta contraseña y esta clave solo valen para este entorno de pruebas, con datos inventados. No las uses en ningún otro sitio ni las compartas.
+      Cuando termines las guías, borra esta hoja de tu móvil o de tu correo.</p>
+  </section>
+</div>
+
+<script>
+  // Coloca en cada paso lo que Orlando ha escrito. Sin guardar nada y sin enviar nada a ningún sitio.
+  (function () {
+    var campos = {
+      direccion: { entrada: "f-direccion", etiqueta: "la dirección", formato: function (v) { return v.trim(); } },
+      contrasena: { entrada: "f-contrasena", etiqueta: "la contraseña", formato: function (v) { return v; } },
+      clave: { entrada: "f-clave", etiqueta: "la clave del móvil", formato: function (v) {
+        var limpia = v.replace(/\s+/g, "").toUpperCase();
+        return limpia.replace(/(.{4})(?=.)/g, "$1 ");
+      } },
+      contacto: { entrada: "f-contacto", etiqueta: "cómo avisar a Orlando", formato: function (v) { return v.trim(); } }
+    };
+
+    function pintar() {
+      var faltan = [];
+      Object.keys(campos).forEach(function (nombre) {
+        var c = campos[nombre];
+        var valor = c.formato(document.getElementById(c.entrada).value);
+        if (!valor) faltan.push(c.etiqueta);
+        document.querySelectorAll('[data-campo="' + nombre + '"]').forEach(function (el) {
+          el.textContent = valor || "(falta " + c.etiqueta + ")";
+          el.classList.toggle("hueco", !valor);
+        });
+      });
+      document.getElementById("faltan").textContent = faltan.length
+        ? "Falta: " + faltan.join(", ") + "."
+        : "Hoja completa. Ya puedes guardarla como PDF.";
+    }
+
+    Object.keys(campos).forEach(function (nombre) {
+      document.getElementById(campos[nombre].entrada).addEventListener("input", pintar);
+    });
+    document.getElementById("f-mostrar").addEventListener("change", function (e) {
+      document.getElementById("f-contrasena").type = e.target.checked ? "text" : "password";
+    });
+    document.getElementById("imprimir").addEventListener("click", function () { window.print(); });
+    pintar();
+  })();
+</script>
+</body>
+</html>
