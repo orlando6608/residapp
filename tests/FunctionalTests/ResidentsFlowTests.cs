@@ -1090,6 +1090,55 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Administracion_VeElPlazoDeConservacionDeLasBajas_Con15Anos_YAvisaDeLosVencidosYLosProximos_ConLaAppEntera()
+    {
+        // Art. 12 de la Llei 21/2000 (Ley 16/2010): 15 años desde la baja. La lista de bajas avisa de lo vencido y de lo que vence en 12 meses, y dice que no se borra nada.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var vigente = await CreateResidentAsync(admin, seed, "Residente Plazo Vigente");
+        var vencido = await CreateResidentAsync(admin, seed, "Residente Plazo Vencido");
+        var proximo = await CreateResidentAsync(admin, seed, "Residente Plazo Proximo");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        foreach (var residentId in new[] { vigente, vencido, proximo })
+        {
+            var page = await admin.GetStringAsync($"/Administracion/DarDeBaja?residenteId={residentId}");
+            Assert.Contains("se conservan 15 años desde la baja", WebUtility.HtmlDecode(page));
+            var response = await admin.PostAsync("/Administracion/DarDeBaja", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+                ["Form.ResidenteId"] = residentId,
+                ["Form.OperacionId"] = ExtractValue(page, "Form.OperacionId"),
+                ["Form.Motivo"] = "AltaVoluntaria",
+            }));
+            Assert.Contains("Sus datos se conservan 15 años", WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()));
+        }
+
+        var expected = DateOnly.FromDateTime(await connection.ExecuteScalarAsync<DateTime>(
+            "SELECT dada_en FROM dbo.bajas_residente WHERE residente_id = @residentId", new { residentId = vigente })).AddYears(15);
+        Assert.Equal(expected, DateOnly.FromDateTime(await connection.ExecuteScalarAsync<DateTime>(
+            "SELECT conservar_hasta FROM dbo.bajas_residente WHERE residente_id = @residentId", new { residentId = vigente })));
+
+        // El disparador de la baja no deja cambiar conservar_hasta: se desactiva solo para colocar dos fechas de prueba y se vuelve a activar.
+        await connection.ExecuteAsync("DISABLE TRIGGER dbo.TR_bjr_guard ON dbo.bajas_residente");
+        try
+        {
+            await connection.ExecuteAsync("UPDATE dbo.bajas_residente SET conservar_hasta = DATEADD(DAY, -1, CAST(SYSUTCDATETIME() AS DATE)) WHERE residente_id = @residentId", new { residentId = vencido });
+            await connection.ExecuteAsync("UPDATE dbo.bajas_residente SET conservar_hasta = DATEADD(MONTH, 6, CAST(SYSUTCDATETIME() AS DATE)) WHERE residente_id = @residentId", new { residentId = proximo });
+        }
+        finally
+        {
+            await connection.ExecuteAsync("ENABLE TRIGGER dbo.TR_bjr_guard ON dbo.bajas_residente");
+        }
+
+        var list = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/Bajas"));
+        Assert.Contains("1 con el plazo vencido y 1 que vence en los próximos 12 meses", list);
+        Assert.Contains("no borra nada", list);
+        Assert.Single(Regex.Matches(list, "Plazo vencido</span>"));
+        Assert.Single(Regex.Matches(list, "Vence en menos de 12 meses</span>"));
+    }
+
+    [Fact]
     public async Task Auxiliar_RegistraSoloLaTemperatura_ConAviso_YFueraDeRangoNoPasa()
     {
         // CJ, 2026-10-25 (dictado-por-voz-confirmaciones-cj 2.5, 3.1 y 3.2): un cambio con solo la temperatura se puede registrar, con un aviso
