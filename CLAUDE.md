@@ -11,6 +11,7 @@ Este documento recoge las reglas de trabajo que rigen cualquier colaboración so
 - Ante ambigüedad relevante, declara tus suposiciones; pregunta solo si el error es difícil de revertir.
 - Protección de datos: antes de crear o modificar un ADR, un esquema SQL, una integración con un tercero o una función de IA, consulta al agente `dpo-residapp` (`.claude\agents\dpo-residapp.md`). Sus borradores van en `docs\privacidad\` y los valida una persona antes de usarlos con datos reales.
 - Documentación de usuario: antes de dar por cerrado un cambio funcional en una pantalla, consulta al agente `doc-usuario-residapp` (`.claude\agents\doc-usuario-residapp.md`) para saber qué parte del Manual, de «Flujo de trabajo», de «Acceso y sesión» o de las guías de pruebas de CJ hay que actualizar. Solo informa; los cambios los aplica una persona o la sesión principal.
+- Calidad de pruebas: antes de dar por cerrado un bloque funcional (no cada cambio pequeño), consulta al agente `qa-revisor-residapp` (`.claude\agents\qa-revisor-residapp.md`) para saber qué requisitos no tienen prueba, qué escenarios límite faltan y si hay defectos probables. Parte de los requisitos, no del código. Solo informa; las pruebas y los arreglos los aplica una persona o la sesión principal.
 
 ## Dónde está el resto del contexto del proyecto
 

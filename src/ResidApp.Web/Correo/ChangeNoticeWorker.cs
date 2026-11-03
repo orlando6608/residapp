@@ -17,7 +17,7 @@ public sealed record ChangeNoticeTaskIdentity(bool HasOwnConnection);
 /// (una vez, hasta que se corrija) y no procesa nada.
 /// </summary>
 public sealed class ChangeNoticeWorker(
-    IServiceScopeFactory scopes, IOptions<CorreoOptions> options, ChangeNoticeTaskIdentity identity, ILogger<ChangeNoticeWorker> logger) : BackgroundService
+    IServiceScopeFactory scopes, IOptions<CorreoOptions> options, ChangeNoticeTaskIdentity identity, ILogger<ChangeNoticeWorker> logger, TimeSpan? interval = null) : BackgroundService
 {
     public const string ServiceKey = "tareas";
 
@@ -27,7 +27,7 @@ public sealed class ChangeNoticeWorker(
     {
         var settings = options.Value.ToSettings();
         var identityErrorLogged = false;
-        using var timer = new PeriodicTimer(Interval);
+        using var timer = new PeriodicTimer(interval ?? Interval);
         try
         {
             do

@@ -69,4 +69,25 @@ public class CorreoOptionsTests
         Assert.True(options.ToSettings().Active);
         Assert.True(options.ToSettings().AnyRecipient);
     }
+
+    [Fact]
+    public void ElAvisoDeCambioDeCita_PorDefectoEstaApagado_AunqueElCorreoEsteEncendido()
+    {
+        Assert.False(new CorreoOptions().AvisoCambioCita);
+        Assert.False(Complete().ToSettings().ChangeNotice);
+    }
+
+    [Fact]
+    public void ElAvisoDeCambioDeCita_ConSuInterruptor_LlegaALosAjustes_PeroSoloConElCorreoEncendido()
+    {
+        var encendido = Complete();
+        encendido.AvisoCambioCita = true;
+        Assert.True(encendido.ToSettings().Active);
+        Assert.True(encendido.ToSettings().ChangeNotice);
+
+        var correoApagado = Complete();
+        correoApagado.AvisoCambioCita = true;
+        correoApagado.Activo = false;
+        Assert.False(correoApagado.ToSettings().ChangeNotice);
+    }
 }

@@ -9,7 +9,7 @@ namespace ResidApp.Web.Correo;
 /// borró, nunca datos de ninguna.
 /// </summary>
 public sealed class EmailLogPurgeWorker(
-    IServiceScopeFactory scopes, ChangeNoticeTaskIdentity identity, ILogger<EmailLogPurgeWorker> logger) : BackgroundService
+    IServiceScopeFactory scopes, ChangeNoticeTaskIdentity identity, ILogger<EmailLogPurgeWorker> logger, TimeSpan? interval = null, TimeSpan? startDelay = null) : BackgroundService
 {
     public static readonly TimeSpan Interval = TimeSpan.FromHours(24);
 
@@ -20,9 +20,9 @@ public sealed class EmailLogPurgeWorker(
     {
         try
         {
-            await Task.Delay(StartDelay, stoppingToken);
+            await Task.Delay(startDelay ?? StartDelay, stoppingToken);
             var identityWarningLogged = false;
-            using var timer = new PeriodicTimer(Interval);
+            using var timer = new PeriodicTimer(interval ?? Interval);
             do
             {
                 try

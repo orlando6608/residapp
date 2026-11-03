@@ -4,6 +4,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Application.Sessions;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Appointments;
+using ResidApp.Domain.Families;
 using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Persistence;
@@ -408,6 +409,137 @@ public class AvisoCambioCitaTests
         await Task.WhenAll(ProcessAsync(notice), ProcessAsync(notice));
 
         Assert.Single(sender.Sent);
+        Assert.Equal("ENVIADO", Assert.Single(await RowsAsync(appointments[0])).Estado);
+    }
+
+    /// <summary>Otra fila ACTIVA de la autorización con su fecha «válida hasta». El número es el que sigue a los dos de la preparación del portal (Abrir y Activar).</summary>
+    private static async Task RenewAuthorizationAsync(Setup setup, DateOnly validUntil)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.familiares_autorizaciones_cambios
+                (id, centro_id, vinculo_id, numero, estado_codigo, valida_hasta, motivo, registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
+            VALUES (NEWID(), @centerId, @linkId, 3, 'ACTIVA', @validUntil, NULL, @accountId, 'ADMINISTRACION', SYSUTCDATETIME())
+            """, new { centerId = setup.Admin.CenterId.Value, linkId = setup.LinkId, validUntil = validUntil.ToDateTime(TimeOnly.MinValue), accountId = setup.Admin.AccountId.Value });
+    }
+
+    private static async Task<DateTimeOffset> ReservedAtAsync(Guid appointmentId)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var created = await connection.ExecuteScalarAsync<DateTime>(
+            "SELECT creado_en FROM dbo.envios_correo WHERE plantilla_codigo = 'AVISO_CAMBIO_CITA' AND referencia_id = @appointmentId", new { appointmentId });
+        return new DateTimeOffset(DateTime.SpecifyKind(created, DateTimeKind.Utc));
+    }
+
+    /// <summary>Entre reservar el aviso y enviarlo pasan unos minutos: si en ese rato la familia pierde el acceso, se vuelve a comprobar con el mismo criterio que el portal y el
+    /// aviso queda OMITIDO sin enviar nada (docs/privacidad/aviso-cita-cambio-cancelacion-por-correo.md, N3). La baja del residente ya la cubre otra prueba.</summary>
+    [Theory]
+    [InlineData("suspension")]
+    [InlineData("desvinculado")]
+    [InlineData("autorizacionSuspendida")]
+    [InlineData("autorizacionRevocada")]
+    [InlineData("autorizacionCaducada")]
+    public async Task ElAvisoDeCambio_VuelveAComprobarElAcceso_EnElMomentoDeEnviar(string change)
+    {
+        var (setup, appointments) = await WithAppointmentsAsync("Residente Aviso Cambio Acceso " + change);
+        var sender = new FakeEmailSender();
+        var notice = Notice(sender, Active());
+        Assert.True((await CancelAsync(setup, appointments[0], notice)).Ok);
+
+        switch (change)
+        {
+            case "suspension":
+                Assert.True((await EstadoResidenteTests.Build(setup.Admin.ExternalSubject).SuspendAsync(new SuspendResidentCommand(
+                    setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, Guid.NewGuid(), null))).Ok);
+                break;
+            case "desvinculado":
+                Assert.True((await AdministracionResidentesTests.Build(setup.Admin.ExternalSubject).UnlinkFamilyMemberAsync(new UnlinkFamilyMemberCommand(
+                    setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, setup.LinkId, "Ya no es familiar."))).Ok);
+                break;
+            case "autorizacionSuspendida":
+                await ChangeAsync(setup.Admin, setup.ResidentId, setup.LinkId, FamilyAuthorizationChange.Suspender, 2, "Petición del familiar.");
+                break;
+            case "autorizacionRevocada":
+                await ChangeAsync(setup.Admin, setup.ResidentId, setup.LinkId, FamilyAuthorizationChange.Revocar, 2, "Deja de estar autorizado.");
+                break;
+            case "autorizacionCaducada":
+                await RenewAuthorizationAsync(setup, DateOnly.FromDateTime(DateTime.Today).AddDays(-1));
+                break;
+        }
+
+        await ProcessAsync(notice);
+
+        Assert.Empty(sender.Sent);
+        var row = Assert.Single(await RowsAsync(appointments[0]));
+        Assert.Equal(("OMITIDO", "SIN_ACCESO"), (row.Estado, row.Motivo));
+    }
+
+    [Fact]
+    public async Task ElUltimoDiaDeLaAutorizacion_TodaviaDaAcceso_YElAvisoSale()
+    {
+        var (setup, appointments) = await WithAppointmentsAsync("Residente Aviso Cambio Ultimo Dia");
+        var sender = new FakeEmailSender();
+        var notice = Notice(sender, Active());
+        Assert.True((await CancelAsync(setup, appointments[0], notice)).Ok);
+        await RenewAuthorizationAsync(setup, DateOnly.FromDateTime(DateTime.Today));
+
+        await ProcessAsync(notice);
+
+        Assert.Equal(FamilyAddress, Assert.Single(sender.Sent).To);
+        Assert.Equal("ENVIADO", Assert.Single(await RowsAsync(appointments[0])).Estado);
+    }
+
+    /// <summary>El aviso de cambio vale «para los dos modos» del servicio de citas (ADR 0012): también cuando la cita nació de una solicitud previa que la familia aceptó, y va a
+    /// quien la pidió.</summary>
+    [Theory]
+    [InlineData("cancelar")]
+    [InlineData("reprogramar")]
+    public async Task SiLaCitaNacioDeUnaSolicitudPrevia_ElCambioDelCentro_AvisaAQuienLaPidio(string change)
+    {
+        await ClearPendingAsync();
+        var setup = await SetupAsync("Residente Aviso Cambio Solicitud " + change);
+        await CitasSolicitudesTests.ConfigureAsync(setup);
+        await SetAddressAsync(setup.LinkId, FamilyAddress);
+        var request = await CitasSolicitudesTests.SentAsync(setup.Subject, setup.LinkId);
+        Assert.True((await CitasSolicitudesTests.ProposeAsync(setup, request.Id, await CitasSolicitudesTests.FarSlotAsync(setup, request.Id))).Ok);
+        var accepted = await new FamilyAppointmentRequestsApplicationService(
+            new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedCambioSessionIdentityProvider(setup.Subject),
+            new SqlFamilyAppointmentRequests(TestDatabase.ConnectionFactory)).AcceptAsync(await QueryAsync(setup.Subject), setup.LinkId, request.Id);
+        Assert.True(accepted.Ok, accepted.Error?.Message);
+        Assert.NotNull(accepted.Value!.AppointmentId);
+        var appointment = accepted.Value.AppointmentId.Value;
+        var sender = new FakeEmailSender();
+        var notice = Notice(sender, Active());
+
+        var changed = change == "cancelar" ? await CancelAsync(setup, appointment, notice) : await RescheduleAsync(setup, appointment, notice);
+        Assert.True(changed.Ok, changed.Error?.Message);
+        await ProcessAsync(notice);
+
+        Assert.Equal(FamilyAddress, Assert.Single(sender.Sent).To);
+        Assert.Equal("ENVIADO", Assert.Single(await RowsAsync(appointment)).Estado);
+    }
+
+    /// <summary>La espera de unos 5 minutos del ADR 0012: las demás pruebas la ponen a cero para no esperar; esta usa la real y mueve el reloj.</summary>
+    [Fact]
+    public async Task ElAvisoDeCambio_EsperaSusCincoMinutos_YSoloSaleCuandoPasan()
+    {
+        var (setup, appointments) = await WithAppointmentsAsync("Residente Aviso Cambio Espera");
+        var sender = new FakeEmailSender();
+        var notice = new ChangeNoticeService(new SqlChangeNoticeStore(TestDatabase.ConnectionFactory), sender, Active());
+        Assert.True((await CancelAsync(setup, appointments[0], notice)).Ok);
+        var reserved = await ReservedAtAsync(appointments[0]);
+
+        var early = await notice.ProcessDueAsync(reserved.AddMinutes(4).AddSeconds(59));
+
+        Assert.Equal(0, early);
+        Assert.Empty(sender.Sent);
+        var waiting = Assert.Single(await RowsAsync(appointments[0]));
+        Assert.Equal(("PENDIENTE", 0), (waiting.Estado, waiting.Intentos));
+
+        var late = await notice.ProcessDueAsync(reserved.AddMinutes(5).AddSeconds(1));
+
+        Assert.Equal(1, late);
+        Assert.Equal(FamilyAddress, Assert.Single(sender.Sent).To);
         Assert.Equal("ENVIADO", Assert.Single(await RowsAsync(appointments[0])).Estado);
     }
 
