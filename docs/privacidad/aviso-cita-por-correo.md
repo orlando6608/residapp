@@ -163,7 +163,7 @@ Fuentes consultadas hoy (2026-10-30), páginas de Microsoft Learn: `learn.micros
 
 **Imprescindible antes de usar con direcciones reales:**
 1. **Registro de actividades** (art. 30): una actividad nueva, parte A (residencia) y parte B (ResidApp), apartado 5 de este documento.
-2. **Información al familiar** (art. 13) en castellano y catalán: texto del apartado 6, en el alta (junto al campo del correo) y en la política del Portal Familiar. Hoy `Views/Home/Privacy.cshtml` está sin redactar.
+2. **Información al familiar** (art. 13) en castellano y catalán: texto del apartado 6, en el alta (junto al campo del correo) y en la política del Portal Familiar. Desde el 2026-11-03 `Views/Home/Privacy.cshtml` tiene un borrador en castellano, sin validar (`politica-privacidad-portal.md`).
 3. **Procedimiento de alta:** Administración lee la dirección a la persona y la confirma; cómo se quita; qué hacer si alguien dice que recibió un aviso ajeno (brechas, art. 33).
 4. **Contrato de encargado** (art. 28): Azure Communication Services (Microsoft) en la lista de subencargados; ubicación de datos y retención de registros de ACS según el apartado 2.6.
 5. **Decisión escrita de CJ** de que FAM-10 queda modificado (aviso por correo sin contenido) y actualizar el alcance del producto (lo hace Orlando o una sesión de código).

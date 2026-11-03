@@ -1,6 +1,225 @@
 @{
     ViewData["Title"] = "Política de privacidad";
-}
-<h1>@ViewData["Title"]</h1>
 
-<p>Esta página detallará la política de privacidad del sitio. Todavía no está redactada.</p>
+    // Dato que falta y que no se debe inventar: lo fija una persona (Orlando, el centro o su DPO). Ver docs/privacidad/politica-privacidad-portal.md.
+    Microsoft.AspNetCore.Html.IHtmlContent Pend(string que) =>
+        new Microsoft.AspNetCore.Html.HtmlString($"<span class=\"badge text-bg-warning text-wrap text-start\">Por completar: {System.Net.WebUtility.HtmlEncode(que)}</span>");
+}
+<h1 class="h3 mb-3">@ViewData["Title"]</h1>
+
+<div class="alert alert-warning" role="alert">
+    <strong>Texto en revisión.</strong> Esta política todavía no la ha validado una persona experta en protección de datos (un delegado de protección de datos o un abogado).
+    Los datos marcados <span class="badge text-bg-warning">Por completar</span> aún no están decididos. La aplicación solo se usa con datos inventados hasta que esté validada.
+</div>
+
+<p class="text-body-secondary">Última actualización: @Pend("fecha de publicación")</p>
+
+<h2 class="h5 mt-4" id="en-pocas-palabras">En pocas palabras</h2>
+<ul>
+    <li>ResidApp es una aplicación que usan las residencias de personas mayores para organizar los cuidados y mantener informadas a las familias.</li>
+    <li><strong>El responsable de tus datos es el centro (la residencia) que te dio acceso o que cuida de ti o de tu familiar.</strong> ResidApp trabaja por cuenta del centro y solo según sus instrucciones.</li>
+    <li>Se tratan datos de salud de las personas residentes. Son datos especialmente protegidos y solo los ve el personal que los necesita para su trabajo.</li>
+    <li>Si tienes cuenta, guardamos los datos mínimos para que puedas entrar y para dejar constancia de quién hace qué.</li>
+    <li>No hay publicidad, ni analítica, ni cookies de terceros. Las cookies que usamos son las necesarias para que la aplicación funcione (apartado 10).</li>
+    <li>Para ejercer tus derechos (acceder a tus datos, corregirlos, pedir que se borren, etc.), <strong>escribe a tu centro</strong> (apartado 12).</li>
+    <li>Si no estás conforme, puedes reclamar ante la autoridad de protección de datos (apartado 13).</li>
+</ul>
+
+<h2 class="h5 mt-4" id="quien-es-quien">1. Quién es quién</h2>
+<p><strong>El centro (la residencia) es el responsable del tratamiento.</strong> Esto significa que el centro decide para qué se usan tus datos y cómo, y responde ante ti y ante la autoridad. Cada centro tiene su propia información de privacidad, que debe entregarte al darte de alta. @Pend("cada centro confirma cómo la entrega")</p>
+<p><strong>ResidApp es la encargada del tratamiento.</strong> Esto significa que ResidApp guarda y procesa los datos por cuenta del centro, con su autorización y siguiendo sus instrucciones. ResidApp no usa tus datos para sus propios fines.</p>
+<p class="mb-1"><strong>Quién presta el servicio ResidApp:</strong></p>
+<ul>
+    <li>Nombre o razón social: @Pend("identidad del prestador")</li>
+    <li>NIF: @Pend("NIF")</li>
+    <li>Domicilio: @Pend("domicilio")</li>
+    <li>Correo de contacto de privacidad: @Pend("correo")</li>
+    <li>Delegado de protección de datos de ResidApp: @Pend("nombre y contacto, o «no se ha designado»")</li>
+</ul>
+<p>Los datos de tu centro (nombre, domicilio y contacto de su delegado de protección de datos) están en el apartado 12.</p>
+
+<h2 class="h5 mt-4" id="datos">2. Qué datos tratamos y para qué</h2>
+<p>Esta página describe lo que ResidApp hace hoy. Si una función no está aquí, es que no existe.</p>
+
+<h3 class="h6 mt-3">2.1 Personas residentes</h3>
+<p class="mb-1">Los datos los introduce el personal del centro:</p>
+<ul>
+    <li><strong>Identificación:</strong> nombre, fecha de nacimiento, sexo, unidad y habitación o plaza, y estado (en el centro, de baja, suspendido).</li>
+    <li><strong>Salud y cuidados:</strong> la valoración inicial (la «basal»: cómo está la persona al ingresar, con escalas de autonomía y cognición), el registro diario de cuidados, las incidencias, las valoraciones de Enfermería y Medicina, las indicaciones médicas y los informes de derivación a otros servicios sanitarios.</li>
+    <li><strong>Comunicados a la familia:</strong> los textos que el centro decide publicar.</li>
+    <li><strong>Contactos:</strong> sus familiares, su contacto urgente y quién la representa.</li>
+    <li><strong>Foto de identificación:</strong> solo con consentimiento (apartado 7).</li>
+    <li><strong>Traslados, bajas y suspensiones:</strong> cuándo y por qué motivo.</li>
+</ul>
+<p><strong>Para qué:</strong> prestar la atención y los cuidados, coordinar al equipo, informar a la familia y dejar constancia de lo que se hace. ResidApp <strong>no</strong> guarda la medicación de las personas residentes ni su administración.</p>
+
+<h3 class="h6 mt-3">2.2 Familiares y representantes</h3>
+<p class="mb-1">Los datos los introduce la Administración del centro a partir de lo que tú le das:</p>
+<ul>
+    <li><strong>Nombre, teléfono y relación</strong> con la persona residente. El <strong>correo electrónico es opcional</strong>.</li>
+    <li><strong>Tu autorización de acceso</strong> al Portal Familiar: si está activa, hasta cuándo y si eres la persona de referencia o su representante.</li>
+    <li><strong>Tu cuenta:</strong> identificador de acceso y contraseña (la contraseña se guarda transformada, de forma que nadie puede leerla).</li>
+    <li><strong>Tus citas:</strong> las solicitudes y las citas que reservas con el centro.</li>
+    <li>Si tu centro lo usa: la marca interna de que el centro <strong>ha confirmado contigo tu dirección de correo</strong>, con quién la anotó y cuándo.</li>
+</ul>
+<p><strong>Para qué:</strong> que puedas ver lo que el centro publica para la familia, gestionar citas y recibir los avisos que hayas aceptado. El centro también usa tu teléfono para localizarte si hace falta. El Portal Familiar <strong>no</strong> da acceso al historial clínico interno.</p>
+
+<h3 class="h6 mt-3">2.3 Personal del centro</h3>
+<p class="mb-1">Los datos los introduce la Administración del centro:</p>
+<ul>
+    <li><strong>Cuenta:</strong> nombre, identificador de acceso, perfil (Auxiliar, Enfermería, Medicina, Dirección Clínica, Administración), centro, unidades a las que tienes acceso y, si el centro lo registra, cargo, equipo o turno.</li>
+    <li><strong>Credenciales:</strong> la contraseña (transformada), la clave del segundo factor, los códigos de recuperación (transformados) y, si las usas, las llaves de acceso («passkeys»).</li>
+    <li><strong>Registro de entradas:</strong> cuándo entras, sales o fallas la contraseña o el código, con la <strong>dirección IP</strong> desde la que lo haces.</li>
+    <li><strong>Sesiones:</strong> cada sesión que abres guarda cuándo empezó y cuándo terminó, y la dirección IP desde la que se abrió. Puedes verlas y cerrarlas desde «Mi cuenta».</li>
+    <li><strong>Registro de actividad (auditoría):</strong> cuenta, perfil, centro, fecha y hora de las acciones que cambian datos o consultan datos sensibles. En algunas consultas se guarda también el motivo que escribes.</li>
+    <li><strong>Tu firma</strong> en los documentos que firmas dentro de la aplicación (por ejemplo, un informe de derivación).</li>
+    <li>Si usas el dictado por voz: tu voz (apartado 6).</li>
+</ul>
+<p><strong>Para qué:</strong> que solo entren las personas autorizadas, que cada una vea solo lo que le corresponde y poder demostrar quién consultó o cambió un dato de salud. Este registro sirve para la seguridad y para detectar accesos indebidos. <strong>ResidApp no incluye listas ni clasificaciones de personal por rendimiento.</strong></p>
+
+<h3 class="h6 mt-3">2.4 Quien visita esta web sin cuenta</h3>
+<p>Esta página, el manual y las hojas de ayuda se pueden ver sin iniciar sesión. Al visitarlas, el servidor recibe tu dirección IP y los datos técnicos que envía tu navegador, necesarios para mostrarte la página. @Pend("qué registros técnicos del servidor se guardan y durante cuánto tiempo")</p>
+<p>Al intentar iniciar sesión, la IP se usa también para limitar los intentos repetidos (para frenar a quien pruebe contraseñas al azar).</p>
+
+<h2 class="h5 mt-4" id="base-legal">3. Con qué base legal</h2>
+<p>La base legal exacta la fija <strong>cada centro</strong> y te la explica en su información de privacidad. Con carácter orientativo:</p>
+<ul>
+    <li><strong>Atención y cuidados de las personas residentes</strong> (incluidos los datos de salud): es necesario para prestar asistencia sanitaria y social y para cumplir las obligaciones legales de documentación clínica. @Pend("el centro y su delegado confirman la base y la condición del art. 9 del RGPD")</li>
+    <li><strong>Familiares:</strong> el servicio que el centro presta a la familia y el interés legítimo del centro en coordinar visitas y citas. @Pend("el delegado de protección de datos confirma cuál aplica")</li>
+    <li><strong>Personal:</strong> la relación laboral o de servicios y el interés legítimo del centro en la seguridad de los datos que custodia. @Pend("el delegado de protección de datos confirma")</li>
+    <li><strong>Foto de la persona residente:</strong> el consentimiento de la persona o de su representante (apartado 7).</li>
+</ul>
+
+<h2 class="h5 mt-4" id="quien-ve">4. Quién puede ver los datos</h2>
+<ul>
+    <li><strong>Dentro del centro:</strong> solo el personal con permiso, y solo los residentes y unidades de su ámbito. Cada perfil ve cosas distintas: por ejemplo, Auxiliar no ve lo mismo que Medicina, y el Portal Familiar no ve el historial clínico.</li>
+    <li><strong>Las familias:</strong> solo lo que el centro publica para ellas y solo sobre la persona residente con la que tienen autorización.</li>
+    <li><strong>ResidApp:</strong> el perfil de «Plataforma» crea los centros y su primer administrador y <strong>no ve residentes ni contenido clínico</strong>. Quienes mantienen la base de datos pueden tener acceso técnico por razón de su función, con deber de confidencialidad. @Pend("quién, con qué controles y con qué registro de esos accesos")</li>
+    <li><strong>Otras empresas:</strong> las del apartado 9, solo en la medida necesaria para prestar el servicio. Los datos no se venden ni se ceden para publicidad.</li>
+    <li><strong>Autoridades:</strong> si una ley o una resolución lo exige, el centro les facilitará lo que corresponda.</li>
+</ul>
+
+<h2 class="h5 mt-4" id="avisos-correo">5. Avisos por correo</h2>
+<p>El centro <strong>puede</strong> tener activados avisos genéricos por correo para las familias que le hayan dado su dirección. Hoy hay dos: «Tienes una propuesta de cita pendiente» (cuando el centro propone una cita) y «Tienes un cambio en una cita» (cuando el centro cambia o cancela una cita que reservaste; se envía a quien la reservó).</p>
+<p>Estos avisos <strong>no dicen</strong> el nombre de la persona residente, ni el centro, ni la fecha, ni el motivo, ni nada de salud. Solo te piden que entres en ResidApp. El remitente es «ResidApp» y no se puede responder al correo: si necesitas algo, llama al centro.</p>
+<ul>
+    <li>Solo se envían a una dirección que el centro <strong>ha confirmado contigo</strong> y mientras tengas acceso al Portal Familiar.</li>
+    <li>Son <strong>voluntarios</strong>. Para dejar de recibirlos, pide al centro que borre tu dirección. Verás las novedades igualmente al entrar en ResidApp.</li>
+    <li><strong>Por tu seguridad:</strong> ResidApp nunca te pedirá tu contraseña por correo, por teléfono ni por mensaje. Si recibes un aviso que no esperabas, ignóralo y cuéntaselo al centro.</li>
+    <li>Para enviarlos usamos el servicio de correo de Microsoft (apartado 9). Guardamos un registro de cada envío <strong>sin el contenido ni la dirección</strong>: solo qué aviso, a qué familiar (por su identificador interno), cuándo y si salió.</li>
+</ul>
+
+<h2 class="h5 mt-4" id="dictado">6. Dictado por voz (solo si el centro lo activa)</h2>
+<p>En la pantalla «Registrar cambio», una auxiliar puede <strong>contar hablando</strong> lo que ha observado en una persona residente, en lugar de marcar casillas. Esta función <strong>solo está disponible si ResidApp y el centro la han activado</strong>. @Pend("confirmar su estado antes de publicar; hoy está apagada y solo se ha probado con audios y datos inventados")</p>
+<ol>
+    <li>La auxiliar graba un audio corto.</li>
+    <li>El audio se envía a un proveedor externo, <strong>Mistral AI</strong>, que lo pasa a texto. Un segundo servicio de Mistral propone, con ese texto, qué casillas y notas rellenar.</li>
+    <li>La pantalla muestra una <strong>sugerencia</strong>. La auxiliar la revisa una a una y es ella quien confirma. <strong>Nada se guarda sin su confirmación y no se toma ninguna decisión automática sobre la persona.</strong></li>
+</ol>
+<ul>
+    <li>Se envían <strong>el audio y su texto</strong>. Si en el audio se dice un nombre, llega al proveedor; por eso la pantalla pide no decir nombres de personas.</li>
+    <li><strong>No</strong> se envían el nombre ni el identificador de la persona residente, ni el centro, ni la cuenta de quien dicta, ni historial alguno.</li>
+    <li><strong>ResidApp no guarda ni el audio ni el texto.</strong> Solo anota en la auditoría que se usó el dictado: quién, en qué unidad, sobre qué residente y cuándo.</li>
+    <li>La voz de quien dicta es también un dato personal suyo. Se usa solo para pasarla a texto, no para identificarla.</li>
+    <li>Mistral AI es una empresa francesa. @Pend("confirmar por escrito con Mistral la región de tratamiento, que no conserva el audio ni el texto y que no los usa para entrenar sus modelos")</li>
+</ul>
+<p>Si no hay micrófono, si falla el servicio o si prefieres no usarlo, el formulario normal funciona igual.</p>
+
+<h2 class="h5 mt-4" id="foto">7. Foto de la persona residente</h2>
+<p>La foto sirve para identificar bien a la persona (por ejemplo, en las listas del personal). Es <strong>opcional</strong> y solo se guarda <strong>con el consentimiento por escrito</strong> de la persona residente o de su representante. En ResidApp se anota quién firmó el consentimiento y la fecha; el documento firmado lo guarda el centro.</p>
+<ul>
+    <li>La ven el personal de Auxiliar, Enfermería, Medicina y Administración. <strong>Nunca se muestra a las familias.</strong></li>
+    <li>Se guarda una sola foto por persona: al cambiarla se sustituye la anterior, y al quitarla se borra. También se borra al dar de baja a la persona.</li>
+    <li>Si la persona no quiere foto, se anota «No quiere foto» y no se guarda ninguna.</li>
+    <li>Pasados 12 meses se avisa al personal de que conviene renovarla. Es un aviso, no un borrado.</li>
+</ul>
+
+<h2 class="h5 mt-4" id="conservacion">8. Cuánto tiempo se guardan los datos</h2>
+<p>El plazo lo fija el centro (como responsable) y la ley. ResidApp aplica lo que el centro le indica. Hoy:</p>
+<ul class="list-group mb-3">
+    <li class="list-group-item"><strong>Historia de cuidados y datos de salud.</strong> 15 años desde la baja de la persona: es el plazo que propone ResidApp por defecto, basado en la ley catalana de documentación clínica, y el centro puede fijar otro dentro de lo que la ley permita. ResidApp no borra nada sola cuando vence. @Pend("una persona experta confirma el plazo y que una residencia cuenta como centro sanitario a efectos de esa ley")</li>
+    <li class="list-group-item"><strong>Cuentas del personal.</strong> Se suspenden y no se borran mientras figuren en documentos clínicos ya firmados. <strong>Cuentas de las familias:</strong> a petición, el centro borra su nombre, teléfono y correo y cierra su acceso. @Pend("plazo tras la baja de la cuenta")</li>
+    <li class="list-group-item"><strong>Registro de entradas (con la IP).</strong> Hoy no se puede borrar. @Pend("plazo y vía de borrado sin decidir")</li>
+    <li class="list-group-item"><strong>Registro de actividad (auditoría).</strong> Hoy no se puede borrar. @Pend("plazo y vía de borrado sin decidir")</li>
+    <li class="list-group-item"><strong>Sesiones abiertas y cerradas.</strong> Hoy no se pueden borrar. @Pend("plazo y vía de borrado sin decidir")</li>
+    <li class="list-group-item"><strong>Registro de envíos de correo (sin contenido ni dirección).</strong> Como máximo 12 meses; se borra solo. @Pend("confirmación de la persona experta")</li>
+    <li class="list-group-item"><strong>Registros de entrega del servicio de correo de Microsoft.</strong> @Pend("plazo sin configurar")</li>
+    <li class="list-group-item"><strong>Foto.</strong> Hasta que se cambia, se quita o se da de baja a la persona (apartado 7).</li>
+    <li class="list-group-item"><strong>Audio y texto del dictado.</strong> ResidApp no los guarda. @Pend("lo que conserva Mistral")</li>
+    <li class="list-group-item"><strong>Copias de seguridad.</strong> @Pend("plazo sin decidir")</li>
+</ul>
+
+<h2 class="h5 mt-4" id="empresas">9. Empresas que intervienen y transferencias fuera de la UE</h2>
+<p>Estas empresas son <strong>subencargadas</strong>: trabajan para ResidApp, que trabaja para el centro. Tratan los datos solo para dar el servicio y están obligadas por contrato.</p>
+<ul class="list-group mb-3">
+    <li class="list-group-item"><strong>Microsoft Azure.</strong> Aloja la aplicación y la base de datos donde se guardan todos los datos. Interviene siempre. Región: @Pend("región de Azure; se prefiere la Unión Europea")</li>
+    <li class="list-group-item"><strong>Microsoft Azure Communication Services.</strong> Envía los avisos por correo del apartado 5. Solo interviene si el centro los tiene activados.</li>
+    <li class="list-group-item"><strong>Mistral AI.</strong> Pasa a texto el dictado y propone la sugerencia del apartado 6. Solo interviene si el centro tiene activado el dictado.</li>
+</ul>
+<p><strong>Transferencias fuera de la Unión Europea.</strong> ResidApp no tiene previsto enviar datos fuera de la UE. @Pend("confirmar la región real de Azure y de Mistral y la garantía aplicable") Microsoft indica, para su servicio de correo, que los datos pueden transitar o procesarse en otras zonas geográficas; en nuestros avisos solo viajaría una dirección de correo y la hora de envío.</p>
+<p><strong>Letras de Google en dos páginas de ayuda.</strong> Las páginas «Flujo de trabajo» y «Acceso y sesión» cargan los tipos de letra desde Google. Al abrirlas, tu navegador se conecta con Google y le llega tu dirección IP. @Pend("ResidApp va a servir esas letras desde su propio servidor; quitar este párrafo cuando esté hecho") Los documentos de trabajo del equipo del proyecto (guías de pruebas) también cargan esas letras. El resto de la aplicación no carga nada de terceros.</p>
+
+<h2 class="h5 mt-4" id="cookies">10. Cookies y almacenamiento en tu dispositivo</h2>
+<p>Una <strong>cookie</strong> es un pequeño fichero que el navegador guarda en tu dispositivo. Además, la aplicación guarda en tu navegador una preferencia y una copia de sus propios ficheros.</p>
+<p><strong>ResidApp no usa cookies de publicidad, ni de análisis, ni de terceros.</strong> Todas las cookies de esta página son técnicas: sin ellas la aplicación no puede funcionar o no sería segura. Por eso no te pedimos que las aceptes. La única preferencia que no es imprescindible es el tema claro u oscuro, que se guarda solo cuando tú lo eliges. Las cookies solo se envían al sitio de la aplicación y por conexión cifrada.</p>
+
+<h3 class="h6 mt-3">Cookies de la aplicación</h3>
+<ul class="list-group mb-3">
+    <li class="list-group-item"><code>residapp_sesion</code> — Mantiene tu sesión abierta (va cifrada y firmada). Dura hasta que cierres el navegador (algunos navegadores recuperan la sesión al volver a abrirse) o pulses «Salir»; además, el servidor deja de aceptarla a los 30 minutos sin actividad o a las 12 horas, lo que ocurra antes.</li>
+    <li class="list-group-item"><code>residapp_active_scope</code> — Recuerda el centro y el perfil con el que trabajas. No da acceso por sí sola: el servidor comprueba siempre tu permiso. Dura hasta que cierres el navegador, cambies de perfil o pulses «Salir».</li>
+    <li class="list-group-item"><code>residapp_clinical_access</code> — Solo para Dirección Clínica: recuerda la declaración que haces antes de consultar el detalle clínico de una persona. Dura hasta 1 hora.</li>
+    <li class="list-group-item"><code>residapp_transfer_history</code> — Solo para Enfermería y Medicina: recuerda que has pedido ver el historial anterior de una persona trasladada de unidad. Dura hasta 1 hora.</li>
+    <li class="list-group-item"><code>residapp_acceso_pendiente</code> — Recuerda que ya has puesto bien la contraseña y falta el código (va cifrada). Dura 10 minutos.</li>
+    <li class="list-group-item"><code>residapp_invitacion</code> — Recuerda la invitación que usas para crear tu acceso (va cifrada). Dura 30 minutos.</li>
+    <li class="list-group-item"><code>residapp_passkey</code> — Guarda el paso intermedio al entrar o registrar una llave de acceso (va cifrada, un solo uso). Dura 5 minutos.</li>
+    <li class="list-group-item">Cookies de protección de formularios y de mensajes entre pantallas (por ejemplo, «Datos guardados») — Impiden que otra web envíe formularios en tu nombre y llevan un aviso breve a la pantalla siguiente. Duran hasta que cierres el navegador. @Pend("nombre exacto de cada una, a confirmar en el navegador")</li>
+    <li class="list-group-item"><code>residapp_cj_acceso</code> — Acceso reservado al equipo del proyecto a sus documentos de trabajo. No afecta a residentes, familias ni personal. @Pend("quitar esta línea si ese acceso desaparece antes de producción")</li>
+</ul>
+
+<h3 class="h6 mt-3">Almacenamiento en el navegador que no son cookies</h3>
+<ul class="list-group mb-3">
+    <li class="list-group-item"><code>residapp-tema</code> — Recuerda si prefieres tema claro, oscuro o automático. Solo se guarda cuando lo eliges en el menú «Tema» y no lleva datos personales.</li>
+    <li class="list-group-item"><code>residapp-pendientes-cj:…</code> — Solo en las guías de pruebas del equipo del proyecto: guarda en ese navegador el borrador de las respuestas hasta que se envían. No se usa en el resto de la aplicación.</li>
+    <li class="list-group-item"><code>residapp-shell-v9</code> — Una copia de los ficheros de la propia aplicación (estilos, iconos y la página «sin conexión»). No guarda datos personales ni clínicos, y la aplicación no funciona sin conexión.</li>
+</ul>
+<p>La aplicación no guarda en tu dispositivo ninguna copia de datos de residentes. Si usas una llave de acceso (passkey), la clave secreta queda en tu móvil u ordenador y <strong>nunca llega a ResidApp</strong>; ResidApp solo guarda la clave que sirve para comprobarla. Puedes borrar las cookies y los datos del sitio desde los ajustes de tu navegador; tendrás que volver a iniciar sesión.</p>
+
+<h2 class="h5 mt-4" id="seguridad">11. Seguridad</h2>
+<ul>
+    <li><strong>Solo entra quien tiene cuenta.</strong> Todas las pantallas piden iniciar sesión, salvo esta página, el manual, la ayuda y la pantalla de entrada. Las cuentas las crea el centro; nadie puede crearse una por su cuenta.</li>
+    <li><strong>Permiso para cada cosa.</strong> El servidor comprueba en cada petición quién eres, con qué perfil actúas y a qué residentes y unidades llega tu permiso. Lo que no está permitido expresamente, se deniega.</li>
+    <li><strong>Cada centro, separado.</strong> Los datos de un centro no se mezclan con los de otro: las reglas están en el servidor y en la propia base de datos.</li>
+    <li><strong>Contraseña larga y segundo paso.</strong> La contraseña tiene al menos 12 caracteres. El personal usa además un código temporal que genera una aplicación en su móvil, o una llave de acceso («passkey», una credencial que se desbloquea en tu dispositivo con la huella, la cara o el PIN, cuando el servicio la tiene activada). Las familias entran con usuario y contraseña.</li>
+    <li><strong>Frenos a los intentos repetidos.</strong> Tras 5 fallos seguidos, la cuenta se bloquea 15 minutos. También se limitan los intentos por dirección IP.</li>
+    <li><strong>Invitaciones de un solo uso</strong>, que caducan a las 72 horas y que el centro puede anular.</li>
+    <li><strong>Sesiones con tiempo límite</strong>, que se pueden cerrar desde «Mi cuenta».</li>
+    <li><strong>Registro de actividad</strong> que no se puede modificar ni borrar, de las acciones sobre datos de salud y las consultas sensibles.</li>
+    <li><strong>Cifrado.</strong> Las conexiones van cifradas (HTTPS) y la base de datos cifra en disco lo que guarda. Las contraseñas se guardan además transformadas, de modo que nadie puede leerlas.</li>
+    <li><strong>Pocos datos.</strong> Los avisos por correo no llevan datos de salud y el dictado no envía el nombre de la persona.</li>
+</ul>
+<p>Ningún sistema es infalible. Si hay una brecha de seguridad que afecte a tus datos, el centro (responsable) la gestionará con ResidApp conforme a la ley y te avisará cuando proceda.</p>
+
+<h2 class="h5 mt-4" id="derechos">12. Tus derechos y cómo ejercerlos</h2>
+<ul>
+    <li><strong>Acceso:</strong> saber qué datos tuyos se tratan y recibir una copia.</li>
+    <li><strong>Rectificación:</strong> corregir datos incorrectos o incompletos.</li>
+    <li><strong>Supresión:</strong> pedir que se borren tus datos. Si lo pides, el centro borra tu nombre, teléfono y correo en ResidApp y cierra tu acceso (lo hace la Administración principal del centro). Se conservan tu identificador de acceso y la relación con la persona residente (por ejemplo, «hija»), porque no se pueden cambiar. Lo que la ley manda conservar, como la documentación clínica y los registros de seguridad, se conserva mientras dure esa obligación, y puede incluir nombres que el personal escribió a mano. @Pend("una persona experta decide si, además, hay que guardar aparte los datos suprimidos (bloqueo) y durante cuánto tiempo")</li>
+    <li><strong>Oposición:</strong> oponerte a un tratamiento basado en el interés legítimo o en una misión pública.</li>
+    <li><strong>Limitación:</strong> pedir que se congele el uso de tus datos mientras se resuelve una duda o reclamación.</li>
+    <li><strong>Portabilidad:</strong> recibir los datos que nos diste en un formato de uso común, cuando el tratamiento se base en tu consentimiento o en un contrato.</li>
+    <li><strong>Retirar tu consentimiento</strong> cuando el tratamiento se base en él (por ejemplo, la foto).</li>
+</ul>
+<p><strong>Cómo ejercerlos: dirígete a tu centro</strong>, que es el responsable. Puedes hacerlo directamente o por medio de un representante.</p>
+<ul>
+    <li>Centro: @Pend("nombre del centro, domicilio y correo o ventanilla para ejercer derechos; lo rellena cada centro")</li>
+    <li>Delegado de protección de datos del centro: @Pend("nombre y contacto, o «no designado»")</li>
+</ul>
+<p>Si lo prefieres, puedes escribir a ResidApp (apartado 1), que trasladará tu petición al centro. @Pend("ResidApp confirma este compromiso en el contrato con cada centro") El centro debe contestar en <strong>un mes</strong>, ampliable en dos meses más si la petición es compleja, avisándote del motivo.</p>
+<p>Las <strong>personas residentes con capacidad disminuida</strong> pueden ejercer sus derechos por medio de su representante legal. @Pend("cada centro indica cómo se acredita la representación y cómo se atiende a las familias de personas fallecidas")</p>
+
+<h2 class="h5 mt-4" id="reclamacion">13. Reclamación ante la autoridad de protección de datos</h2>
+<p>Si crees que tus derechos no se han respetado, puedes reclamar ante la autoridad de protección de datos que corresponda a tu centro: @Pend("Agencia Española de Protección de Datos o Autoritat Catalana de Protecció de Dades, según el tipo de centro")</p>
+<p>Te recomendamos hablar antes con el centro, pero no es obligatorio.</p>
+
+<h2 class="h5 mt-4" id="cambios">14. Cambios en esta política</h2>
+<p>Si cambia lo que ResidApp hace con los datos, actualizaremos esta página y la fecha de arriba. Si el cambio es importante, el centro te informará de otra forma. Esta página está solo en castellano.</p>
