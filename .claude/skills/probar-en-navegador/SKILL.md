@@ -74,8 +74,10 @@ Desde la raíz del repositorio, en Bash:
 
 ## Dar de alta un juego de cuentas y preparar Los Almendros
 
-Tras recrear una base (local o Azure dev) con la semilla, las cuentas existen sin contraseña. Para el juego de Orlando (nunca el de CJ, que
-da de alta él mismo con las hojas que le entrega Orlando):
+Tras recrear una base (local o Azure dev) con la semilla, las cuentas existen sin contraseña. Para el juego de Orlando (el de CJ lo da de alta
+él mismo con las hojas que le entrega Orlando; **excepción de Orlando, 2026-11-03, solo Azure dev y datos ficticios:** alta asistida del
+juego de CJ con `JUEGO=cj`, `CONTRASENA` (una contraseña única que teclea Orlando; sin ella, cada cuenta recibe una distinta) y
+`CREDENCIALES` aparte, y la clave del móvil de una cuenta copiada al resto con SQL; nunca en un centro real):
 
 1. La invitación de `plataforma-orlando`, con el administrador de esa base (en Azure dev, el administrador de Azure SQL):
 

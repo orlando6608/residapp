@@ -29,8 +29,8 @@ redirigen a `/AccesoCj` y los `.respuestas.json` dan 401. Se pide una vez por se
 datos reales hará falta autenticación de verdad (ver el ADR 0007 de proveedor de identidad).
 
 **No es la clave de la aplicación.** Desde el 2026-10-24 en la aplicación se entra como en un centro real, también en Azure dev: cada
-cuenta de prueba de CJ (`database/seed/centros_prueba.sql`) se da de alta con la invitación que le entrega Orlando, y tiene su propia
-contraseña y su código del móvil o passkey (ADR 0007). `pruebas.html` («Tus cuentas») se lo explica a CJ. Al cambiar las cuentas y los
+cuenta de prueba de CJ (`database/seed/centros_prueba.sql`) la dio de alta Orlando el 2026-11-03, con una contraseña única y una clave del
+código del móvil únicas para todo el personal (excepción solo de Azure dev, con datos ficticios, que nunca se aplica a un centro real, y sin escribirlas en el repositorio; ADR 0007). `pruebas.html` («Tus cuentas») se lo explica a CJ. Al cambiar las cuentas y los
 residentes de las guías no se subió su `data-version`: los pasos y lo que se comprueba son los mismos, así que sus respuestas siguen valiendo.
 
 ## Cómo responderlos (CJ)

@@ -81,7 +81,7 @@ async function nuevaPagina(ctx) {
 // Usa la invitación como la persona: elige la contraseña y, si es del personal, prepara el código del móvil. Guarda las credenciales.
 async function darDeAlta(ctx, sujeto, enlace) {
   const page = await nuevaPagina(ctx);
-  const credencial = { contrasena: `Prueba ${sujeto} ${Date.now()}`, clave: null };
+  const credencial = { contrasena: process.env.CONTRASENA ?? `Prueba ${sujeto} ${Date.now()}`, clave: null };
   await page.goto(enlace);
   await page.fill('input[name="contrasena"]', credencial.contrasena);
   await page.fill('input[name="confirmacion"]', credencial.contrasena);
