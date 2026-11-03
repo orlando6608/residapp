@@ -129,7 +129,7 @@ recomienda 15 años para el curso clínico (cuadro de 07-04-2017). ResidApp fija
 - **Cuentas del personal:** no hay función; procedimiento escrito en `expurgo-y-supresion.md`, apartado 4. Los registros de entradas (con IP), sesiones y auditoría hoy **no se pueden borrar** y no tienen plazo decidido.
 
 **Sin resolver (decide una persona):** si una residencia cuenta como «centro sanitario» a efectos del art. 12 y quién es la «dirección médica» que decide el expurgo; el plazo de `eventos_acceso`, `sesiones` y auditoría;
-el expurgo real (no se construye hasta que se acerque el primer vencimiento, 2041 como pronto: condiciones en el apartado 2.10 del informe); y informar a CJ de que sus «5 años» se sustituyen por 15 con la cita de la ley.
+el expurgo real (no se construye hasta que se acerque el primer vencimiento, 2041 como pronto: condiciones en el apartado 2.10 del informe);. CJ ya está avisado de que sus «5 años» pasan a 15 (guía 5, `pruebas.html` y documento archivado, 2026-11-03).
 
 ## Cómo se marca como hecho
 
