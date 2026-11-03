@@ -42,7 +42,7 @@ public class EstadoResidenteTests
             new AdministracionQuery(admin.ProfileScopeId, admin.CenterId))).Value!.Count;
 
     [Fact]
-    public async Task Baja_CierraLaEstancia_ConservaLosDatosCincoAnios_YSaleDeLaListaActiva_YUnReenvioYaNoLoEncuentra()
+    public async Task Baja_CierraLaEstancia_ConservaLosDatosQuinceAnios_YSaleDeLaListaActiva_YUnReenvioYaNoLoEncuentra()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var resident = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Baja Integración");
@@ -69,7 +69,8 @@ public class EstadoResidenteTests
         Assert.Equal(resident, discharged.ResidentId);
         Assert.Equal(ResidentDischargeReason.AltaVoluntaria, discharged.Reason);
         Assert.Equal("Vuelve con su familia.", discharged.ReasonText);
-        Assert.Equal(DateOnly.FromDateTime(discharged.DischargedAt.UtcDateTime).AddYears(5), discharged.RetainUntil);
+        Assert.Equal(DateOnly.FromDateTime(discharged.DischargedAt.UtcDateTime).AddYears(15), discharged.RetainUntil);
+        Assert.Equal(ResidentRetentionStatus.Vigente, ResidentDischarge.RetentionStatus(discharged.RetainUntil, DateOnly.FromDateTime(DateTime.Today)));
     }
 
     [Fact]

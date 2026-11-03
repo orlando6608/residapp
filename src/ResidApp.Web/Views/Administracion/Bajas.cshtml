@@ -1,3 +1,4 @@
+@using ResidApp.Domain.Residents
 @using ResidApp.Web.Models
 @model DischargedResidentsViewModel
 @{
@@ -14,8 +15,21 @@
 
 <h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"baja"' />Residentes dados de baja</h1>
 <p class="text-muted">
-    Solo lectura. Sus datos no se borran y se conservan hasta la fecha indicada; puedes reactivar a un residente si vuelve al centro.
+    Solo lectura. Sus datos no se borran solos y se conservan @ResidentDischarge.RetentionYears años desde la baja; puedes reactivar a un residente si vuelve al centro.
 </p>
+@{
+    var expired = Model.Residents.Count(r => ResidentDischarge.RetentionStatus(r.RetainUntil, Model.Today) == ResidentRetentionStatus.Vencido);
+    var soon = Model.Residents.Count(r => ResidentDischarge.RetentionStatus(r.RetainUntil, Model.Today) == ResidentRetentionStatus.VenceEnBreve);
+}
+@if (expired > 0 || soon > 0)
+{
+    <div class="alert alert-warning" role="status">
+        <strong>Plazo de conservación:</strong>
+        @(expired > 0 ? $"{expired} con el plazo vencido" : "")@(expired > 0 && soon > 0 ? " y " : "")@(soon > 0 ? $"{soon} que vence{(soon == 1 ? "" : "n")} en los próximos {ResidentDischarge.RetentionWarningMonths} meses" : "").
+        ResidApp <strong>no borra nada</strong> por sí sola. Que un plazo haya vencido no obliga a destruir la documentación: conservarla o expurgarla lo decide
+        la dirección médica del centro, y el centro deja constancia de lo que elimine.
+    </div>
+}
 <div asp-validation-summary="All" class="text-danger"></div>
 @if (TempData["Mensaje"] is string mensaje)
 {
@@ -42,7 +56,18 @@ else
                         <p class="mb-1 small">
                             Baja el @resident.DischargedAt.ToLocalTime().ToString("dd/MM/yyyy"): <strong>@EnumDisplay.Label(resident.Reason)</strong>@(resident.ReasonText is null ? "" : " · " + resident.ReasonText)
                         </p>
-                        <p class="mb-0 small text-body-secondary">Datos conservados hasta el @resident.RetainUntil.ToString("dd/MM/yyyy").</p>
+                        @{ var retention = ResidentDischarge.RetentionStatus(resident.RetainUntil, Model.Today); }
+                        <p class="mb-0 small text-body-secondary">
+                            Datos conservados hasta el @resident.RetainUntil.ToString("dd/MM/yyyy").
+                            @if (retention == ResidentRetentionStatus.Vencido)
+                            {
+                                <span class="badge text-bg-warning">Plazo vencido</span>
+                            }
+                            else if (retention == ResidentRetentionStatus.VenceEnBreve)
+                            {
+                                <span class="badge text-bg-warning">Vence en menos de @ResidentDischarge.RetentionWarningMonths meses</span>
+                            }
+                        </p>
                     </div>
                     <a asp-action="Reactivar" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-primary mt-2 mt-md-0">Reactivar</a>
                 </div>

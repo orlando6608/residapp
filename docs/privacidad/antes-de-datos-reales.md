@@ -27,7 +27,7 @@ Qué tiene que mirar esa persona (cada borrador deja sus decisiones abiertas al 
 - el texto informativo para residentes, representantes y personal;
 - el procedimiento de revisión de las lecturas `TRANSFER_HISTORY_READ` (quién, cada cuánto);
 - cuánto se conserva el motivo que escribe quien pide el historial y cómo se borraría, porque la tabla no admite cambios;
-- los plazos legales de conservación de la documentación clínica en Cataluña, que el agente no pudo confirmar en fuente oficial y dejó «a verificar»;
+- los plazos legales de conservación de la documentación clínica en Cataluña: el texto literal del art. 12 de la Llei 21/2000 se leyó en el BOE el 2026-11-03 y el plazo por defecto de ResidApp es de 15 años desde la baja; lo que falta es que una persona confirme si una residencia cuenta como centro sanitario a efectos de ese artículo y quién es la «dirección médica» que decide el expurgo (`expurgo-y-supresion.md`);
 - qué autoridad de control corresponde (AEPD o APDCAT) según el tipo de centro piloto.
 
 ## 2. Que Orlando y CJ decidan las mejoras que propone el agente
@@ -39,7 +39,7 @@ y la mayoría se han preguntado a CJ en `docs/pendientes-cj/archivados/direccion
 2. **Hecho en parte el 2026-10-28 (`0079`):** el motivo con **lista cerrada** más texto corto opcional; las filas de lectura siguen copiando el texto. (Pregunta 3.2.)
 3. **Registrar las peticiones rechazadas**, para detectar sondeos.
 4. Un **límite de antigüedad** de los episodios que se pueden abrir. **CJ lo descartó el 2026-10-28** (3.1: sin límite; se mirará con datos de uso).
-5. Una **vía de purga** del motivo (por ejemplo, sustituir el texto por una marca fija dejando constancia, como ya hace `0075`).
+5. Una **vía de purga** del motivo (por ejemplo, sustituir el texto por una marca fija dejando constancia; **sin implementar**: `0075` solo aporta el patrón de la fila de constancia en la misma transacción, no sustituye ningún texto).
 6. **Hecho el 2026-10-28 (`0079`).** **Auditar la consulta de Calidad de proceso** de `0076` (2.3) y quitar el nombre del residente de la lista de hitos (2.2).
 
 ## 3. Condiciones abiertas de `0075` y `0076`
@@ -54,7 +54,7 @@ Informe del agente `dpo-residapp` (2026-10-28): admisible con condiciones, y las
 - el texto informativo del Portal Familiar: que, al terminar la estancia, se cancelan las citas futuras y se cierran las solicitudes abiertas, y que el centro avisa por su canal habitual (lo adopta la residencia como responsable);
 - quién avisa a la familia y por qué canal, con cuidado en la baja por fallecimiento (la aplicación no envía correos y no avisa);
 - que atribuir la cancelación a la cuenta de Administración que dio la baja, con causa y motivo fijos, es adecuado como registro (y que no sirve para evaluar a esa persona);
-- una línea en el registro de actividades («cancelación de citas por baja», datos solo de identificación) y el plazo de conservación de las filas nuevas (hoy el de la baja, 5 años, sin confirmar en fuente oficial).
+- una línea en el registro de actividades («cancelación de citas por baja», datos solo de identificación) y el plazo de conservación de las filas nuevas (hoy el de la baja, 15 años desde el 2026-11-03: texto literal del art. 12 de la Llei 21/2000 leído en el BOE; falta que una persona confirme que una residencia cuenta como centro sanitario a efectos de ese artículo).
 
 ## 5. Dirección y traslados: respuestas de CJ del 2026-10-28 (`0079`)
 
