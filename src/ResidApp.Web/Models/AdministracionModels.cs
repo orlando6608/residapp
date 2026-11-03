@@ -421,6 +421,28 @@ public sealed class UnlinkFamilyFormModel
     public string? Motivo { get; set; }
 }
 
+/// <summary>Anonimizar a un familiar (script 0087). Version es la de los datos que enseñaba la pantalla; Motivo es quién lo pide, de una lista cerrada.</summary>
+public sealed class AnonymizeFamilyFormModel
+{
+    public Guid ResidenteId { get; set; }
+
+    public Guid VinculoId { get; set; }
+
+    public string Version { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Elige quién lo pide.")]
+    [Display(Name = "¿Quién lo pide?")]
+    public ResidApp.Domain.Families.FamilyAnonymizationReason? Motivo { get; set; }
+
+    // Sin este mensaje, la validación del navegador de una casilla sin marcar sale en inglés («The ... field is required»).
+    [Required(ErrorMessage = "Marca la casilla para continuar: hay que comprobar la identidad y no se puede deshacer.")]
+    [Display(Name = "He comprobado la identidad de quien lo pide y entiendo que no se puede deshacer")]
+    public bool Confirmado { get; set; }
+}
+
+public sealed record AnonymizeFamilyViewModel(
+    AdministrativeResidentSummary Resident, ResidentFamilyMember Member, FamilyAnonymizationPreview Preview, AnonymizeFamilyFormModel Form);
+
 public sealed record UnlinkFamilyViewModel(
     AdministrativeResidentSummary Resident, ResidentFamilyMember Member, UnlinkFamilyFormModel Form, bool OnlyEmergencyContact = false);
 

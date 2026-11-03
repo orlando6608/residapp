@@ -49,7 +49,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                (SELECT COUNT(*) FROM dbo.residentes_familiares linked
                  WHERE linked.familiar_id = f.id AND linked.centro_id = f.centro_id AND linked.desvinculado_en IS NULL) AS ActiveLinks
           FROM dbo.familiares f
-         WHERE f.centro_id = @CenterId
+         WHERE f.centro_id = @CenterId AND f.anonimizado_en IS NULL
            AND NOT EXISTS (SELECT 1 FROM dbo.residentes_familiares mine
                             WHERE mine.familiar_id = f.id AND mine.centro_id = f.centro_id AND mine.residente_id = @ResidentId AND mine.desvinculado_en IS NULL)
         """;
@@ -174,7 +174,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
             SELECT link.id AS LinkId, f.nombre_visible AS DisplayName, link.relacion AS Relationship, f.telefono AS Phone, f.correo AS Email,
                    link.es_referente AS IsReferent, link.es_tutor_legal AS IsLegalGuardian,
                    (SELECT account.sujeto_externo FROM dbo.cuentas account WHERE account.id = f.cuenta_id) AS PortalAccount,
-                   f.correo_confirmado_en AS EmailConfirmedAt,
+                   f.correo_confirmado_en AS EmailConfirmedAt, f.anonimizado_en AS AnonymizedAt,
                    (SELECT COUNT(*) FROM dbo.residentes_familiares o
                      WHERE o.familiar_id = link.familiar_id AND o.centro_id = link.centro_id AND o.id <> link.id AND o.desvinculado_en IS NULL) AS OtherResidentLinks
               FROM dbo.residentes_familiares link
@@ -184,7 +184,8 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
             """, parameters, cancellationToken: ct)))
             .Select(f => new ResidentFamilyMember(
                 f.LinkId, f.DisplayName, f.Relationship, f.Phone, f.Email, changes[f.LinkId].ToList(), f.OtherResidentLinks,
-                f.IsReferent, f.IsLegalGuardian, f.PortalAccount, f.EmailConfirmedAt is { } confirmedAt ? Utc(confirmedAt) : null))
+                f.IsReferent, f.IsLegalGuardian, f.PortalAccount, f.EmailConfirmedAt is { } confirmedAt ? Utc(confirmedAt) : null,
+                f.AnonymizedAt is { } anonymizedAt ? Utc(anonymizedAt) : null))
             .ToList();
         var contacts = (await connection.QueryAsync<ContactRow>(new CommandDefinition("""
             SELECT d.numero AS Number, d.accion_codigo AS Action, d.vinculo_id AS LinkId, f.nombre_visible AS DisplayName, d.designado_en AS At,
@@ -235,7 +236,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
 
     private sealed record FamilyRow(
         Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email, bool IsReferent, bool IsLegalGuardian, string? PortalAccount,
-        DateTime? EmailConfirmedAt, int OtherResidentLinks);
+        DateTime? EmailConfirmedAt, DateTime? AnonymizedAt, int OtherResidentLinks);
 
     private sealed record LinkableRow(Guid FamilyId, string DisplayName, string Phone, int ActiveLinks);
 

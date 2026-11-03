@@ -161,6 +161,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await EnsureNotAnonymizedAsync(connection, transaction, linkId, target.CenterId.Value, ct);
         var current = await connection.QuerySingleOrDefaultAsync<MemberRow>(new CommandDefinition(MemberForUpdateSql,
             new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value }, transaction, cancellationToken: ct))
             ?? throw new AccessDeniedException();
@@ -230,6 +231,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await EnsureNotAnonymizedAsync(connection, transaction, linkId, target.CenterId.Value, ct);
         var current = await connection.QuerySingleOrDefaultAsync<MemberRow>(new CommandDefinition(MemberForUpdateSql,
             new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value }, transaction, cancellationToken: ct))
             ?? throw new AccessDeniedException();
@@ -253,6 +255,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await EnsureNotAnonymizedAsync(connection, transaction, linkId, target.CenterId.Value, ct);
         var parameters = new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value };
         var linked = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
             SELECT COUNT(*) FROM dbo.residentes_familiares WITH (UPDLOCK, ROWLOCK)
@@ -312,6 +315,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await EnsureNotAnonymizedAsync(connection, transaction, linkId, target.CenterId.Value, ct);
         // El bloqueo del familiar ordena dos altas simultáneas de su acceso: la segunda ya lo ve con cuenta.
         var family = await connection.QuerySingleOrDefaultAsync<PortalFamilyRow>(new CommandDefinition("""
             SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, f.cuenta_id AS AccountId
@@ -367,6 +371,12 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         await connection.ExecuteAsync(new CommandDefinition("""
             SELECT id FROM dbo.residentes WITH (UPDLOCK, ROWLOCK) WHERE id = @ResidentId AND centro_id = @CenterId
             """, parameters, transaction, cancellationToken: ct));
+        foreach (var wantedLink in wanted)
+        {
+            // Tras el bloqueo del residente: si una anonimización simultánea terminó antes, se ve aquí.
+            await EnsureNotAnonymizedAsync(connection, transaction, wantedLink, target.CenterId.Value, ct);
+        }
+
         var designations = (await connection.QueryAsync<DesignationRow>(new CommandDefinition("""
             SELECT numero AS Number, accion_codigo AS Action, vinculo_id AS LinkId
               FROM dbo.residentes_contacto_urgente
@@ -507,6 +517,175 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         transaction.Commit();
     }
 
+    /// <summary>Un familiar anonimizado (script 0087) ya no se edita, ni recibe acceso o autorizaciones, ni se designa contacto urgente: FAMILY_ANONYMIZATION_ALREADY.</summary>
+    private static async Task EnsureNotAnonymizedAsync(SqlConnection connection, SqlTransaction transaction, Guid linkId, Guid centerId, CancellationToken ct)
+    {
+        if (await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+                SELECT COUNT(*)
+                  FROM dbo.residentes_familiares link
+                  JOIN dbo.familiares f ON f.id = link.familiar_id AND f.centro_id = link.centro_id
+                 WHERE link.id = @LinkId AND link.centro_id = @CenterId AND f.anonimizado_en IS NOT NULL
+                """, new { LinkId = linkId, CenterId = centerId }, transaction, cancellationToken: ct)) > 0)
+        {
+            throw new DomainValidationException(FamilyAnonymization.AlreadyCode);
+        }
+    }
+
+    public async Task<FamilyAnonymizationPreview> PreviewAnonymizationAsync(
+        AdministrativeResidentTarget target, Guid profileScopeId, Guid linkId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var context = await ReadAnonymizationContextAsync(connection, null, target, linkId, ct);
+        var principal = await SqlAdministrationScope.IsPrincipalAsync(connection, null, profileScopeId, ct);
+        return new FamilyAnonymizationPreview(
+            context.DisplayName, principal, context.AlreadyAnonymized, context.Links.Count, context.UrgentContactOf, context.LegalGuardianOf,
+            context.AccountId is not null, context.AccountInOtherCenters, context.Version);
+    }
+
+    /// <summary>El familiar del vínculo con todos sus vínculos vigentes del centro, de quién es contacto urgente o representante y qué cuenta tiene. Dentro de la transacción de
+    /// la escritura bloquea las filas del vínculo y del familiar (MemberForUpdateSql).</summary>
+    private static async Task<AnonymizationContext> ReadAnonymizationContextAsync(
+        SqlConnection connection, SqlTransaction? transaction, AdministrativeResidentTarget target, Guid linkId, CancellationToken ct)
+    {
+        var member = await connection.QuerySingleOrDefaultAsync<MemberRow>(new CommandDefinition(MemberForUpdateSql,
+            new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value }, transaction, cancellationToken: ct))
+            ?? throw new AccessDeniedException();
+        var parameters = new { member.FamilyId, CenterId = target.CenterId.Value };
+        var account = await connection.QuerySingleAsync<AnonymizationRow>(new CommandDefinition("""
+            SELECT cuenta_id AS AccountId, anonimizado_en AS AnonymizedAt FROM dbo.familiares WHERE id = @FamilyId AND centro_id = @CenterId
+            """, parameters, transaction, cancellationToken: ct));
+        var links = (await connection.QueryAsync<AnonymizationLinkRow>(new CommandDefinition("""
+            SELECT link.id AS LinkId, link.residente_id AS ResidentId, resident.nombre_visible AS ResidentName, link.es_tutor_legal AS IsLegalGuardian,
+                   CAST(CASE WHEN resident.estado = 'ACTIVE' THEN 1 ELSE 0 END AS BIT) AS ResidentActive
+              FROM dbo.residentes_familiares link
+              JOIN dbo.residentes resident ON resident.id = link.residente_id AND resident.centro_id = link.centro_id
+             WHERE link.familiar_id = @FamilyId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
+             ORDER BY resident.nombre_visible
+            """, parameters, transaction, cancellationToken: ct))).ToList();
+        if (transaction is not null)
+        {
+            // Ordena esta lectura con una designación de contacto urgente simultánea (DesignateEmergencyContactAsync bloquea al residente).
+            await connection.ExecuteAsync(new CommandDefinition(
+                "SELECT id FROM dbo.residentes WITH (UPDLOCK, ROWLOCK) WHERE centro_id = @CenterId AND id IN @ResidentIds ORDER BY id",
+                new { parameters.CenterId, ResidentIds = links.Select(l => l.ResidentId).ToArray() }, transaction, cancellationToken: ct));
+        }
+
+        var designations = (await connection.QueryAsync<AnonymizationDesignationRow>(new CommandDefinition("""
+            SELECT residente_id AS ResidentId, numero AS Number, accion_codigo AS Action, vinculo_id AS LinkId
+              FROM dbo.residentes_contacto_urgente
+             WHERE centro_id = @CenterId AND residente_id IN @ResidentIds
+             ORDER BY residente_id, numero
+            """, new { parameters.CenterId, ResidentIds = links.Select(l => l.ResidentId).ToArray() }, transaction, cancellationToken: ct)))
+            .ToLookup(d => d.ResidentId);
+        // Solo impiden anonimizar los residentes activos: de uno de baja no se puede cambiar el contacto ni el tutor, y no debe quedar el familiar bloqueado para siempre.
+        var urgentContactOf = links
+            .Where(l => l.ResidentActive && EmergencyContactSet.Current(designations[l.ResidentId].OrderBy(d => d.Number).Select(d => (d.Action, d.LinkId))).Contains(l.LinkId))
+            .Select(l => l.ResidentName).ToList();
+        var guardianOf = links.Where(l => l.ResidentActive && l.IsLegalGuardian).Select(l => l.ResidentName).ToList();
+        var inOtherCenters = account.AccountId is { } accountId && await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+            SELECT COUNT(*) FROM dbo.ambitos_perfil WHERE cuenta_id = @AccountId AND centro_id <> @CenterId AND estado = 'ACTIVE'
+            """, new { AccountId = accountId, parameters.CenterId }, transaction, cancellationToken: ct)) > 0;
+        var version = new FamilyMemberData(member.DisplayName, member.Relationship, member.Phone, member.Email, member.IsReferent, member.IsLegalGuardian).Version;
+        return new AnonymizationContext(
+            member.FamilyId, member.DisplayName, version, account.AccountId, account.AnonymizedAt is not null, inOtherCenters, links, urgentContactOf, guardianOf);
+    }
+
+    public async Task AnonymizeAsync(
+        AdministrativeResidentTarget target, Guid profileScopeId, Guid linkId, FamilyAnonymizationReason reason, string expectedVersion,
+        CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        if (!await SqlAdministrationScope.IsPrincipalAsync(connection, transaction, profileScopeId, ct))
+        {
+            throw new DomainValidationException(FamilyAnonymization.NotPrincipalCode);
+        }
+
+        var context = await ReadAnonymizationContextAsync(connection, transaction, target, linkId, ct);
+        if (context.AlreadyAnonymized)
+        {
+            throw new DomainValidationException(FamilyAnonymization.AlreadyCode);
+        }
+
+        if (!string.Equals(context.Version, expectedVersion, StringComparison.Ordinal))
+        {
+            throw new DomainValidationException("FAMILY_MEMBER_CONFLICT");
+        }
+
+        if (context.IsBlocked)
+        {
+            throw new DomainValidationException(FamilyAnonymization.BlockedCode);
+        }
+
+        var occurredAt = DateTimeOffset.UtcNow;
+        var centerId = target.CenterId.Value;
+        // Se sobrescribe y no se borra la fila: citas, autorizaciones y auditoría apuntan a ella. La base de datos exige que el estado anonimizado tenga estos valores (CK_fam_anonimizado).
+        var updated = await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.familiares
+               SET nombre_visible = @Name, telefono = @Phone, correo = NULL, correo_confirmado_en = NULL, correo_confirmado_por_cuenta_id = NULL,
+                   anonimizado_en = @OccurredAt, anonimizado_por_cuenta_id = @ActorId, anonimizado_motivo_codigo = @ReasonCode
+             WHERE id = @FamilyId AND centro_id = @CenterId AND anonimizado_en IS NULL
+            """, new
+        {
+            Name = FamilyAnonymization.Name, Phone = FamilyAnonymization.Phone, OccurredAt = occurredAt.UtcDateTime, ActorId = target.AccountId.Value,
+            ReasonCode = reason.ToCode(), context.FamilyId, CenterId = centerId,
+        }, transaction, cancellationToken: ct));
+        if (updated != 1)
+        {
+            throw new DomainValidationException("FAMILY_MEMBER_CONFLICT");
+        }
+
+        // Sin vínculo con acceso no hay portal: se revoca toda autorización abierta, con un motivo fijo (la fila queda inmutable y no debe llevar lo que escriba quien anonimiza).
+        foreach (var link in context.Links)
+        {
+            var latest = await connection.QuerySingleOrDefaultAsync<AuthorizationRow>(new CommandDefinition("""
+                SELECT TOP 1 numero AS Number, estado_codigo AS StatusCode, valida_hasta AS ValidUntil
+                  FROM dbo.familiares_autorizaciones_cambios WHERE vinculo_id = @LinkId AND centro_id = @CenterId ORDER BY numero DESC
+                """, new { link.LinkId, CenterId = centerId }, transaction, cancellationToken: ct));
+            if (latest is not null && latest.StatusCode != "REVOCADA")
+            {
+                await connection.ExecuteAsync(new CommandDefinition("""
+                    INSERT INTO dbo.familiares_autorizaciones_cambios
+                        (id, centro_id, vinculo_id, numero, estado_codigo, valida_hasta, motivo, registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
+                    VALUES (NEWID(), @CenterId, @LinkId, @Number, 'REVOCADA', NULL, @Reason, @ActorId, 'ADMINISTRACION', @OccurredAt)
+                    """, new
+                {
+                    CenterId = centerId, link.LinkId, Number = latest.Number + 1, Reason = FamilyAnonymization.AuthorizationRevocationReason,
+                    ActorId = target.AccountId.Value, OccurredAt = occurredAt,
+                }, transaction, cancellationToken: ct));
+            }
+        }
+
+        if (context.AccountId is { } accountId)
+        {
+            // El perfil de familiar de este centro siempre se revoca. La cuenta global solo se toca si no tiene perfiles en otros centros (ADR 0005: otra residencia es también responsable de ella).
+            await connection.ExecuteAsync(new CommandDefinition("""
+                UPDATE dbo.ambitos_perfil SET estado = 'REVOKED', revocado_en = @OccurredAt, revocado_por_cuenta_id = @ActorId
+                 WHERE cuenta_id = @AccountId AND centro_id = @CenterId AND perfil_codigo = 'FAMILIAR' AND estado = 'ACTIVE'
+                """, new { AccountId = accountId, CenterId = centerId, OccurredAt = occurredAt, ActorId = target.AccountId.Value }, transaction, cancellationToken: ct));
+            if (!context.AccountInOtherCenters)
+            {
+                // Suspender basta para cerrar las sesiones abiertas (se rechazan si la cuenta no está activa). El identificador de acceso (sujeto_externo) es inmutable y se queda.
+                await connection.ExecuteAsync(new CommandDefinition("""
+                    UPDATE dbo.cuentas SET estado = 'SUSPENDED', nombre_visible = NULL WHERE id = @AccountId;
+                    DELETE FROM dbo.passkeys WHERE cuenta_id = @AccountId;
+                    DELETE FROM dbo.credenciales WHERE cuenta_id = @AccountId;
+                    UPDATE invitation SET anulada_en = @OccurredAt
+                      FROM dbo.invitaciones_acceso invitation WITH (FORCESEEK)
+                     WHERE invitation.cuenta_id = @AccountId AND invitation.usada_en IS NULL AND invitation.anulada_en IS NULL;
+                    """, new { AccountId = accountId, OccurredAt = occurredAt.UtcDateTime }, transaction, cancellationToken: ct));
+            }
+        }
+
+        // Una sola fila de auditoría, sin residente ni unidad (afecta a todos sus residentes) y sin ningún dato de la persona.
+        await connection.ExecuteAsync(new CommandDefinition(InsertAudit, new
+        {
+            AccountId = target.AccountId.Value, CenterId = centerId, UnitId = (Guid?)null, ResidentId = (Guid?)null, ResourceType = "FAMILY_MEMBER",
+            ResourceId = context.FamilyId, Action = "FAMILY_MEMBER_ANONYMIZE", OccurredAt = occurredAt,
+        }, transaction, cancellationToken: ct));
+        transaction.Commit();
+    }
+
     /// <summary>El motivo de quedarse sin contacto urgente cuando se desvincula al único: el del desvínculo, con su origen, sin pasar de lo que cabe.</summary>
     private static string NoContactReasonAfterUnlink(string unlinkReason)
     {
@@ -549,6 +728,19 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
     private sealed record DesignationRow(int Number, string Action, Guid? LinkId);
 
     private sealed record UnlinkRow(Guid FamilyId, bool Unlinked);
+
+    private sealed record AnonymizationRow(Guid? AccountId, DateTime? AnonymizedAt);
+
+    private sealed record AnonymizationLinkRow(Guid LinkId, Guid ResidentId, string ResidentName, bool IsLegalGuardian, bool ResidentActive);
+
+    private sealed record AnonymizationDesignationRow(Guid ResidentId, int Number, string Action, Guid? LinkId);
+
+    private sealed record AnonymizationContext(
+        Guid FamilyId, string DisplayName, string Version, Guid? AccountId, bool AlreadyAnonymized, bool AccountInOtherCenters,
+        IReadOnlyList<AnonymizationLinkRow> Links, IReadOnlyList<string> UrgentContactOf, IReadOnlyList<string> LegalGuardianOf)
+    {
+        public bool IsBlocked => UrgentContactOf.Count > 0 || LegalGuardianOf.Count > 0;
+    }
 
     private sealed record AddedRow(Guid CenterId, Guid? LinkId);
 }

@@ -89,6 +89,7 @@ public static class AuditActionDisplay
         ["FAMILY_MEMBER_UPDATE"] = "Datos del familiar cambiados",
         ["FAMILY_EMAIL_CHANGE"] = "Correo del familiar añadido, cambiado o quitado",
         ["FAMILY_EMAIL_CONFIRM"] = "Correo del familiar confirmado con la familia",
+        ["FAMILY_MEMBER_ANONYMIZE"] = "Familiar anonimizado (nombre, teléfono y correo borrados, acceso cerrado)",
         ["FAMILY_EMAIL_UNCONFIRM"] = "Confirmación del correo del familiar quitada",
         ["FAMILY_MEMBER_LINK"] = "Familiar vinculado a otro residente",
         ["FAMILY_PORTAL_ACCESS_GRANT"] = "Acceso al Portal Familiar dado a un familiar",

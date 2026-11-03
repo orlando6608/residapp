@@ -264,7 +264,7 @@
     <div class="diagrama">
       <svg viewBox="0 0 1150 775" style="min-width: 1000px" role="img" aria-labelledby="svg-t1 svg-d1">
         <title id="svg-t1">Flujo de la guía 5: lo que hace Administración y lo que cambia para los demás perfiles</title>
-        <desc id="svg-d1">Tres franjas. Administración tiene cinco filas: residentes y familiares (pruebas 1 a 6), usuarios y asignaciones (7 y 8), estructura, traslados y bajas (9 a 12), turnos, Administración principal y auditoría (13 a 15), la foto del residente (16), que Auxiliar, Enfermería y Medicina ven en la guía 1, prueba 13, el organigrama y los cargos (17), que ven en solo lectura todos los profesionales, y el historial tras un traslado (18), que pide Enfermería de la Planta 1 y revisa Dirección. La asignación de la prueba 8 cambia lo que ve el Auxiliar. Los contactos urgentes (4), el residente sin contacto urgente (6) y la suspensión por ingreso (12) se ven en la ficha de Enfermería y Medicina.</desc>
+        <desc id="svg-d1">Tres franjas. Administración tiene cinco filas: residentes y familiares (pruebas 1 a 6), usuarios y asignaciones (7 y 8), estructura, traslados y bajas (9 a 12), turnos, Administración principal y auditoría (13 a 15), la foto del residente (16), que Auxiliar, Enfermería y Medicina ven en la guía 1, prueba 13, el organigrama y los cargos (17), que ven en solo lectura todos los profesionales, el historial tras un traslado (18), que pide Enfermería de la Planta 1 y revisa Dirección, y anonimizar a un familiar (19), que solo ve Administración. La asignación de la prueba 8 cambia lo que ve el Auxiliar. Los contactos urgentes (4), el residente sin contacto urgente (6) y la suspensión por ingreso (12) se ven en la ficha de Enfermería y Medicina.</desc>
         <defs>
           <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
           <marker id="pi1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -358,6 +358,9 @@
         <rect class="box adm" x="470" y="555" width="150" height="56" rx="8"/>
         <text class="bt" x="545" y="579" text-anchor="middle"><tspan class="n">18</tspan> · Historial tras</text>
         <text class="bt" x="545" y="597" text-anchor="middle">un traslado</text>
+        <rect class="box adm" x="640" y="555" width="150" height="56" rx="8"/>
+        <text class="bt" x="715" y="579" text-anchor="middle"><tspan class="n">19</tspan> · Anonimizar a</text>
+        <text class="bt" x="715" y="597" text-anchor="middle">un familiar</text>
         <rect class="box enf" x="640" y="695" width="150" height="56" rx="8"/>
         <text class="bt" x="715" y="719" text-anchor="middle"><tspan class="n">12</tspan> · No deja registrar</text>
         <text class="bt" x="715" y="737" text-anchor="middle">(suspendido)</text>
@@ -474,6 +477,11 @@
         <div class="paso-cab"><span class="n">18</span><strong>Historial tras un traslado</strong><span class="perfil adm">Administración</span></div>
         <span>Traslada a «Pilar Moreno (ficticia)» a la «Planta 1» (por ejemplo, la plaza «102 · B»). Más tarde, devuélvela a la «Planta 2», «201 · A».</span>
         <span class="pasa">Le llega a <strong>Enfermería de la Planta 1</strong> (<code>almendros-enfermeria-planta1</code>): en «Ver historial» de Pilar le avisan de que hay episodios cerrados en la unidad anterior y puede pedirlos con un motivo, que vale 1 hora y queda en la auditoría. <strong>Dirección</strong> los ve en «Peticiones de historial tras un traslado». <code>almendros-enfermeria</code> (de las dos plantas) no necesita pedir nada.</span>
+      </li>
+      <li class="adm">
+        <div class="paso-cab"><span class="n">19</span><strong>Anonimizar a un familiar</strong><span class="perfil adm">Administración</span></div>
+        <span>Añade un familiar nuevo («CJ Familiar de prueba») al residente «CJ …», ábrelo con «Editar» y pulsa al final «Anonimizar a este familiar…». Solo con ese familiar ficticio: nunca con Elena ni con Pablo.</span>
+        <span class="pasa">Lo hace solo la <strong>Administración principal</strong>. El familiar pasa a «Persona anonimizada» y pierde el acceso al Portal Familiar; no se puede deshacer.</span>
       </li>
     </ol>
   </section>

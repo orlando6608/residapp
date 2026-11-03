@@ -14,6 +14,8 @@ o Calidad de proceso, **recuérdale esta lista antes** de seguir. No la des por 
 | Cierre excepcional de un episodio por Dirección Clínica | `0075` | Nota `historial-tras-traslado-06-nota-retroactiva-0075-0076.md` |
 | Permiso y pantalla de Calidad de proceso | `0076` | La misma nota 06 |
 | La baja cancela las citas futuras y cierra las solicitudes de cita del residente | `0078` | Más abajo, apartado 4 |
+| Plazo de conservación de las bajas: 15 años desde la baja y lista de vencimientos | `0086` | Más abajo, apartado 8 |
+| Anonimizar a un familiar que pide la supresión de sus datos | `0087` | Más abajo, apartado 8 |
 | Respuestas de CJ a Dirección y traslados: finalidad del motivo, lista de peticiones, constancia de consulta, Calidad sin nombres | `0079` | Más abajo, apartado 5 |
 | Landings en castellano y catalán, dominios propios y Portal Familiar en dos idiomas (aún sin construir) | — | Más abajo, apartado 6 |
 
@@ -107,6 +109,27 @@ Construido el 2026-10-30 con datos de prueba y el envío apagado. **Antes de la 
 - el registro de actividades y la información al familiar (apartados 5 y 6 del borrador), y el primer envío real con las cabeceras comprobadas (ni `Reply-To` ni más destinatarios).
 - el catalán lo revisa ingeniería con un traductor externo (CJ, 2026-11-02, 2.2 B; sustituye a «lo revisa CJ») antes de usarlo; hoy el idioma configurado es el castellano y no existe el ajuste por centro;
 - **la persona experta** (DPO real o abogado) aún no existe (Orlando, 2026-11-02, 1.6 C): se deja para antes del primer centro real, pero encontrarla puede llevar semanas, así que conviene empezar la búsqueda en cuanto haya un centro interesado y, en todo caso, antes de cargar ningún dato real.
+
+## 8. Plazo de 15 años, expurgo y supresión de un familiar (`0086` y `0087`; decisiones de Orlando del 2026-11-03)
+
+Informe del agente `dpo-residapp` del 2026-11-03: `expurgo-y-supresion.md` (borrador; lo valida una persona). El texto literal del art. 12 de la Llei 21/2000 (Ley 16/2010, BOE-A-2010-10215) se leyó en el BOE:
+15 años desde el alta de cada proceso asistencial para consentimientos, informes de alta y de pruebas, entre otros; el resto «puede destruirse» a los 5 años; y la Comissió Tècnica de Documentació Clínica
+recomienda 15 años para el curso clínico (cuadro de 07-04-2017). ResidApp fija **15 años desde la baja** para todo lo clínico y **no borra nada sola**: la pantalla de bajas avisa de lo vencido y de lo que vence en 12 meses.
+
+**Lo que no se puede usar con datos reales hasta que una persona lo decida:**
+
+- **Anonimizar a un familiar borra de verdad, sin copia bloqueada del dato anterior** (Orlando, 2026-11-03, opción A). El art. 32 de la LOPDGDD parece exigir **bloquear** los datos al suprimirlos (reservarlos sin uso,
+  a disposición de jueces y autoridades, durante el plazo de las responsabilidades); el agente lo leyó en un resumen del BOE, no en el texto literal, y un análisis de un despacho lee que la Agencia entiende que el bloqueo
+  excluye el borrado material. **Antes de anonimizar a una familia real, el DPO real o un abogado debe decir por escrito si basta con borrar o hace falta bloquear.** Si hace falta bloquear: una tabla de copias sin lectura
+  para la aplicación, con plazo y procedimiento de destrucción, dentro de la misma transacción de `AnonymizeAsync` y con un script nuevo (no cambia nada más).
+- **No es anonimato total** mientras exista el identificador de acceso de la cuenta (`sujeto_externo`, inmutable; si lo eligió Administración puede llevar un nombre o un correo), el vínculo con el residente y los textos que
+  otros escribieron a mano en filas inmutables (llamadas de derivación, comunicados, comentarios de cita). Propuesta del agente: que ResidApp genere el identificador de acceso de los familiares nuevos (código aleatorio);
+  lo decide Orlando.
+- **El texto de la pantalla** (qué pasa y qué no cambia) y la política de «Privacidad» (apartados 8 y 12) los valida esa persona.
+- **Cuentas del personal:** no hay función; procedimiento escrito en `expurgo-y-supresion.md`, apartado 4. Los registros de entradas (con IP), sesiones y auditoría hoy **no se pueden borrar** y no tienen plazo decidido.
+
+**Sin resolver (decide una persona):** si una residencia cuenta como «centro sanitario» a efectos del art. 12 y quién es la «dirección médica» que decide el expurgo; el plazo de `eventos_acceso`, `sesiones` y auditoría;
+el expurgo real (no se construye hasta que se acerque el primer vencimiento, 2041 como pronto: condiciones en el apartado 2.10 del informe); y informar a CJ de que sus «5 años» se sustituyen por 15 con la cita de la ley.
 
 ## Cómo se marca como hecho
 

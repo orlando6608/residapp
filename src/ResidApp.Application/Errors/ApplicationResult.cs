@@ -97,6 +97,19 @@ public static class ApplicationResultRunner
             "El cargo ya estaba así, o alguien lo ha cambiado mientras tanto: vuelve a cargar la pantalla."),
     };
 
+    /// <summary>Anonimizar a un familiar (script 0087): cada fallo dice qué pasa y qué hacer. Los triggers de la base de datos lanzan los mismos códigos.</summary>
+    private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> FamilyAnonymizationFailures = new()
+    {
+        ["FAMILY_ANONYMIZATION_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "Elige quién lo pide y marca la casilla de confirmación: hay que comprobar la identidad y es algo que no se puede deshacer."),
+        ["FAMILY_ANONYMIZATION_NOT_PRINCIPAL"] = (ApplicationFailureCode.AccessDenied,
+            "Solo la Administración principal del centro puede anonimizar a un familiar. Pásale la petición."),
+        ["FAMILY_ANONYMIZATION_BLOCKED"] = (ApplicationFailureCode.Conflict,
+            "Es contacto urgente o representante legal de algún residente: cámbialo antes de anonimizarlo."),
+        ["FAMILY_ANONYMIZATION_ALREADY"] = (ApplicationFailureCode.Conflict, "Este familiar ya está anonimizado: no se puede cambiar."),
+        ["FAMILY_MEMBER_ANONYMIZED_IMMUTABLE"] = (ApplicationFailureCode.Conflict, "Este familiar ya está anonimizado: no se puede cambiar."),
+    };
+
     public static async Task<ApplicationResult<T>> RunAsync<T>(Func<Task<T>> run)
     {
         try
@@ -127,6 +140,11 @@ public static class ApplicationResultRunner
             // Script 0041: la base de datos impide escribir sobre un residente suspendido por un ingreso hospitalario prolongado.
             return new ApplicationFailure(ApplicationFailureCode.Conflict,
                 "El residente está suspendido por un ingreso hospitalario: no se puede actuar sobre él hasta que Administración reanude su atención.");
+        }
+
+        if (FamilyAnonymizationFailures.TryGetValue(message, out var anonymization))
+        {
+            return new ApplicationFailure(anonymization.Code, anonymization.Text);
         }
 
         if (PositionFailures.TryGetValue(message, out var position))
