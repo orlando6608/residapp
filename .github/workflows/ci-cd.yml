@@ -145,14 +145,14 @@ jobs:
           runner_ip="$(curl -fsS --retry 3 https://api.ipify.org)"
           # reglas de un despliegue anterior que se cortó antes de cerrarlas
           for old in $(az sql server firewall-rule list -g "$rg" -s "$srv" --query "[?starts_with(name,'ci-runner-')].name" -o tsv); do
-            az sql server firewall-rule delete -g "$rg" -s "$srv" -n "$old" --yes -o none
+            az sql server firewall-rule delete -g "$rg" -s "$srv" -n "$old" -o none
           done
           az sql server firewall-rule create -g "$rg" -s "$srv" -n "ci-runner-$GITHUB_RUN_ID" --start-ip-address "$runner_ip" --end-ip-address "$runner_ip" -o none
           want="$(az webapp show -g "$rg" -n app-residapp-dev --query possibleOutboundIpAddresses -o tsv | tr ',' '\n' | sort -u)"
           # sin direcciones no se borra nada: dejaría a la Web App sin base de datos
           [ -n "$want" ] || { echo "No se pudieron leer las direcciones de salida de la Web App"; exit 1; }
           while read -r name ip; do
-            grep -qx "$ip" <<< "$want" || az sql server firewall-rule delete -g "$rg" -s "$srv" -n "$name" --yes -o none </dev/null
+            grep -qx "$ip" <<< "$want" || az sql server firewall-rule delete -g "$rg" -s "$srv" -n "$name" -o none </dev/null
           done < <(az sql server firewall-rule list -g "$rg" -s "$srv" --query "[?starts_with(name,'webapp-salida-')].[name,startIpAddress]" -o tsv)
           have="$(az sql server firewall-rule list -g "$rg" -s "$srv" --query "[?starts_with(name,'webapp-salida-')].startIpAddress" -o tsv)"
           for ip in $want; do
@@ -186,10 +186,15 @@ jobs:
           done
           APLICAR_SEED=1 bash database/aplicar-scripts.sh
 
-      # Se cierra siempre, aunque los scripts hayan fallado. El «|| true» es para el caso de que el paso de abrir ni siquiera llegara a crearla.
+      # Se cierra siempre, aunque los scripts hayan fallado. Si el paso de abrir ni siquiera llegó a crearla no hay nada que cerrar; si existe y no se puede borrar,
+      # el paso falla a la vista (antes un «|| true» escondió que «az sql server firewall-rule delete» no admite «--yes»).
       - name: Cerrar la regla del firewall de SQL de este runner
         if: always()
-        run: az sql server firewall-rule delete -g rg-residapp-dev -s sql-residapp-dev -n "ci-runner-$GITHUB_RUN_ID" --yes -o none || true
+        run: |
+          rg=rg-residapp-dev; srv=sql-residapp-dev; regla="ci-runner-$GITHUB_RUN_ID"
+          if az sql server firewall-rule show -g "$rg" -s "$srv" -n "$regla" -o none 2> /dev/null; then
+            az sql server firewall-rule delete -g "$rg" -s "$srv" -n "$regla" -o none
+          fi
 
       # La aplicación calcula todas las horas con la zona del servidor y en producción no arranca si no es Europe/Madrid (ServerTimeZone).
       # Se fija aquí para que una Web App nueva o recreada no dependa de un ajuste manual. Solo se escribe si difiere: cambiar un ajuste reinicia la app.

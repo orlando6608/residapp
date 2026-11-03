@@ -2250,6 +2250,7 @@ Repite estos pasos antes de dar un bloque por cerrado:
 
 ## Lecciones técnicas que conviene no redescubrir
 
+- **`az sql server firewall-rule delete` no admite `--yes`, y un `|| true` lo escondió (2026-11-03, A3).** El primer despliegue con el paso de cerrar la regla del runner salió «correcto» aunque la regla `ci-runner-<run>` seguía en el servidor: el paso tenía `--yes` y `|| true`, y el error («unrecognized arguments: --yes») solo se veía en el registro. Se detectó porque tras el despliegue se listaron las reglas en vez de fiarse del ✓. Reglas: (1) no poner `|| true` a un comando de limpieza; comprobar antes si existe (`az sql server firewall-rule show` devuelve error si no, código 3) y dejar que falle a la vista; (2) **probar los pasos de un workflow contra el servicio real**, no con un `az` simulado: un simulacro no conoce la sintaxis y dio por bueno un comando que no existía; el arnés de la corrección (regla vieja, sobrante y faltante creadas a propósito en Azure con la puerta general abierta, y limpieza garantizada con `trap`) sí lo habría detectado.
 - **Ficheros subidos (foto del residente, el primer formulario `multipart/form-data`):**
   - el servidor no tiene librería de imágenes: el navegador reduce y recodifica la foto (`site.js`, `createImageBitmap` con `imageOrientation: "from-image"`, y
     `DataTransfer` para cambiar el fichero del `<input>`);
