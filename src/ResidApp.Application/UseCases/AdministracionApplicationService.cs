@@ -43,6 +43,13 @@ public sealed record UpdateFamilyMemberCommand(
 public sealed record RemoveFamilyEmailConfirmationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string VersionEsperada);
 
+/// <summary>Lo que hay que decir antes de anonimizar al familiar de un vínculo (script 0087).</summary>
+public sealed record PreviewFamilyAnonymizationQuery(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId);
+
+/// <summary>Anonimizar a un familiar (script 0087). Confirmado es la casilla «he comprobado la identidad y no se puede deshacer»; VersionEsperada, la de los datos que enseñaba la pantalla.</summary>
+public sealed record AnonymizeFamilyMemberCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, FamilyAnonymizationReason? Motivo, bool Confirmado, string VersionEsperada);
+
 /// <summary>CJ, 2026-10-07: Motivo es obligatorio.</summary>
 public sealed record UnlinkFamilyMemberCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string? Motivo);
 
@@ -205,6 +212,25 @@ public sealed class AdministracionApplicationService(
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             await families.UnlinkAsync(target, command.VinculoId, FamilyMember.ValidateUnlinkReason(command.Motivo), ct);
+            return true;
+        });
+
+    /// <summary>Script 0087: lo que hay que enseñar antes de anonimizar al familiar. Sin cambiar nada; dice si quien mira es la Administración principal.</summary>
+    public Task<ApplicationResult<FamilyAnonymizationPreview>> PreviewFamilyAnonymizationAsync(
+        PreviewFamilyAnonymizationQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var target = await ResolveResidentAsync(query.AmbitoPerfilId, query.CentroId, query.ResidenteId, ct);
+            return await families.PreviewAnonymizationAsync(target, query.AmbitoPerfilId, query.VinculoId, ct);
+        });
+
+    /// <summary>Script 0087: anonimiza al familiar en todos sus residentes. Solo la Administración principal (se vuelve a comprobar dentro de la transacción).</summary>
+    public Task<ApplicationResult<bool>> AnonymizeFamilyMemberAsync(AnonymizeFamilyMemberCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var reason = FamilyAnonymization.Validate(command.Motivo, command.Confirmado);
+            var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
+            await families.AnonymizeAsync(target, command.AmbitoPerfilId, command.VinculoId, reason, command.VersionEsperada, ct);
             return true;
         });
 

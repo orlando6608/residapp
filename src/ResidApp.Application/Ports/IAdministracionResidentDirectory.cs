@@ -37,8 +37,11 @@ public sealed record FamilyAuthorizationChangeEntry(
 public sealed record ResidentFamilyMember(
     Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email,
     IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges, int OtherResidentLinks = 0, bool IsReferent = false,
-    bool IsLegalGuardian = false, string? PortalAccount = null, DateTimeOffset? EmailConfirmedAt = null)
+    bool IsLegalGuardian = false, string? PortalAccount = null, DateTimeOffset? EmailConfirmedAt = null, DateTimeOffset? AnonymizedAt = null)
 {
+    /// <summary>Cuándo se anonimizó (script 0087): su nombre, teléfono y correo están borrados, no tiene acceso y ya no se puede editar.</summary>
+    public bool IsAnonymized => AnonymizedAt is not null;
+
     public FamilyAuthorizationChangeEntry? CurrentAuthorization => AuthorizationChanges.Count == 0 ? null : AuthorizationChanges[^1];
 }
 
@@ -211,6 +214,28 @@ public interface IResidentFamilyRepository
     /// el centro y sin unidades, y la enlaza al familiar. No toca la autorización, que se abre y se activa aparte. Si el familiar ya tiene cuenta,
     /// FAMILY_PORTAL_ACCESS_CONFLICT; si el usuario ya existe, ACCOUNT_SUBJECT_TAKEN; un vínculo que no es del residente, acceso denegado.</summary>
     Task GrantPortalAccessAsync(AdministrativeResidentTarget target, Guid linkId, string subject, CancellationToken ct = default);
+
+    /// <summary>Lo que la pantalla de «Anonimizar a este familiar» tiene que decir antes de confirmar (script 0087): sin cambiar nada.</summary>
+    Task<FamilyAnonymizationPreview> PreviewAnonymizationAsync(
+        AdministrativeResidentTarget target, Guid profileScopeId, Guid linkId, CancellationToken ct = default);
+
+    /// <summary>Anonimiza al familiar del vínculo en todos sus residentes (script 0087), en una transacción: sobrescribe nombre, teléfono y correo, revoca sus autorizaciones y cierra su acceso al
+    /// portal. Solo la Administración principal del centro (FAMILY_ANONYMIZATION_NOT_PRINCIPAL, comprobado dentro de la transacción). Con la versión que vio quien anonimiza (si cambió,
+    /// FAMILY_MEMBER_CONFLICT). Si es contacto urgente o representante legal de algún residente, FAMILY_ANONYMIZATION_BLOCKED: se cambia antes. Ya anonimizado, FAMILY_ANONYMIZATION_ALREADY.
+    /// Se deja una fila de auditoría sin datos, con el motivo de la lista cerrada. Sin copia bloqueada del dato anterior: pendiente de la decisión del DPO real.</summary>
+    Task AnonymizeAsync(
+        AdministrativeResidentTarget target, Guid profileScopeId, Guid linkId, FamilyAnonymizationReason reason, string expectedVersion,
+        CancellationToken ct = default);
+}
+
+/// <summary>Lo que ve quien va a anonimizar: a cuántos residentes está vinculado, de cuáles es contacto urgente o representante (lo que impide anonimizarlo hasta cambiarlo) y qué pasa con su cuenta.
+/// IsPrincipal es si quien mira es la Administración principal (solo ella puede). Version es la de los datos que se enseñan, para detectar que otra persona los cambió.</summary>
+public sealed record FamilyAnonymizationPreview(
+    string DisplayName, bool IsPrincipal, bool AlreadyAnonymized, int ResidentCount, IReadOnlyList<string> UrgentContactOf,
+    IReadOnlyList<string> LegalGuardianOf, bool HasPortalAccount, bool AccountInOtherCenters, string Version)
+{
+    /// <summary>Mientras sea contacto urgente o representante de alguien, no se puede anonimizar.</summary>
+    public bool IsBlocked => UrgentContactOf.Count > 0 || LegalGuardianOf.Count > 0;
 }
 
 /// <summary>Traslado del residente (script 0040). ExpectedUnitId es la unidad en la que estaba al abrir el formulario; OperationId

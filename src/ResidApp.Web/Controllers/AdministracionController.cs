@@ -322,6 +322,12 @@ public sealed partial class AdministracionController(
             return detail is null ? RedirectToAction(nameof(Residentes)) : RedirectToAction(nameof(Residente), new { residenteId });
         }
 
+        if (member.IsAnonymized)
+        {
+            TempData["Mensaje"] = "Este familiar está anonimizado: ya no se puede cambiar.";
+            return RedirectToAction(nameof(Residente), new { residenteId });
+        }
+
         return View("Familiar", new FamilyMemberViewModel(detail!.Resident, EditForm(residenteId, member), member.OtherResidentLinks, member.EmailConfirmedAt));
     }
 
@@ -442,6 +448,12 @@ public sealed partial class AdministracionController(
         if (member is null)
         {
             return detail is null ? RedirectToAction(nameof(Residentes)) : RedirectToAction(nameof(Residente), new { residenteId });
+        }
+
+        if (member.IsAnonymized)
+        {
+            TempData["Mensaje"] = "Este familiar está anonimizado: ya no tiene autorización de acceso.";
+            return RedirectToAction(nameof(Residente), new { residenteId });
         }
 
         if (member.PortalAccount is { } portalAccount)

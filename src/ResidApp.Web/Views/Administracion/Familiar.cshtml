@@ -117,6 +117,14 @@
                 <button type="submit" class="btn btn-primary btn-lg">@(editing ? "Guardar cambios" : "Añadir familiar")</button>
             </div>
         </form>
+        @if (editing)
+        {
+            <hr />
+            <div class="d-grid d-md-flex justify-content-md-end">
+                <a asp-action="AnonimizarFamiliar" asp-route-residenteId="@Model.Form.ResidenteId" asp-route-vinculoId="@Model.Form.VinculoId"
+                   class="btn btn-outline-danger">Anonimizar a este familiar…</a>
+            </div>
+        }
         @if (editing && Model.EmailConfirmedAt is not null)
         {
             <hr />

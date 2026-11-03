@@ -89,12 +89,24 @@ public sealed class SqlProfessionalAccountRepository(SqlConnectionFactory connec
         return AccountId.From(operationId);
     }
 
+    /// <summary>La cuenta del portal de un familiar anonimizado (script 0087) se suspendió a propósito: no se reactiva ni se renombra. FAMILY_ANONYMIZATION_ALREADY.</summary>
+    private static async Task EnsureNotAnonymizedFamilyAccountAsync(SqlConnection connection, SqlTransaction transaction, Guid accountId, CancellationToken ct)
+    {
+        if (await connection.ExecuteScalarAsync<int>(new CommandDefinition(
+                "SELECT COUNT(*) FROM dbo.familiares WHERE cuenta_id = @AccountId AND anonimizado_en IS NOT NULL",
+                new { AccountId = accountId }, transaction, cancellationToken: ct)) > 0)
+        {
+            throw new DomainValidationException("FAMILY_ANONYMIZATION_ALREADY");
+        }
+    }
+
     public async Task RenameAsync(AccountAdministrationAccess access, AccountId accountId, string displayName, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
         await EnsureAdministratorAsync(connection, transaction, access, ct);
         var account = await LockAccountAsync(connection, transaction, access, accountId, ct);
+        await EnsureNotAnonymizedFamilyAccountAsync(connection, transaction, accountId.Value, ct);
         if (await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
                 SELECT COUNT(*) FROM dbo.ambitos_perfil WHERE cuenta_id = @AccountId AND centro_id <> @CenterId AND estado = 'ACTIVE'
                 """, new { AccountId = accountId.Value, CenterId = access.CenterId.Value }, transaction, cancellationToken: ct)) > 0)
@@ -122,6 +134,7 @@ public sealed class SqlProfessionalAccountRepository(SqlConnectionFactory connec
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
         await EnsureAdministratorAsync(connection, transaction, access, ct);
         var account = await LockAccountAsync(connection, transaction, access, accountId, ct);
+        await EnsureNotAnonymizedFamilyAccountAsync(connection, transaction, accountId.Value, ct);
         if (await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
                 SELECT COUNT(*) FROM dbo.ambitos_perfil WHERE cuenta_id = @AccountId AND centro_id <> @CenterId AND estado = 'ACTIVE'
                 """, new { AccountId = accountId.Value, CenterId = access.CenterId.Value }, transaction, cancellationToken: ct)) > 0)

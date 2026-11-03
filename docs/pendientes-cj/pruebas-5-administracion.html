@@ -291,7 +291,7 @@
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>18 pruebas. 3 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>19 pruebas. 3 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Unos 45 minutos; las imprescindibles, menos. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -360,7 +360,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 18).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (3 de 19).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">No necesitas ninguna otra guía.</p>
@@ -371,6 +371,7 @@
       <li>La prueba 4 necesita un residente con varios familiares: añade uno en la prueba 3.</li>
       <li>En la prueba 8 vuelve a asignar «Carmen López» al Auxiliar al terminar: lo necesitan la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a> y la <a href="pruebas-8-aislamiento.html">guía 8</a>.</li>
       <li>La prueba 15 (auditoría) va al final para ver todo lo que hiciste.</li>
+      <li>La prueba 19 (anonimizar a un familiar) usa el residente «CJ …» de la prueba 1 y un familiar nuevo que se crea en ella; deja una fila más en la auditoría.</li>
       <li>La prueba 16 (foto de identificación) pone la foto a «Rosa Sánchez» y mira ella misma su auditoría. Si la haces antes de la 15, la verás también allí.</li>
     </ul>
     <p class="why">Si te saltas una prueba, marca D en la que dependa de ella.</p>
@@ -740,6 +741,35 @@
           <label class="choice"><input type="radio" name="r-18" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-18" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-18" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-9">
+    <h2>Anonimizar a un familiar</h2>
+    <div class="stack prose">
+      <p>Cuando una persona pide que se borren sus datos, solo la Administración principal puede <strong>anonimizar</strong> al familiar: se borran su nombre, su teléfono y su correo y se le cierra el acceso. <strong>No se puede deshacer.</strong> Hazlo solo con el familiar ficticio que creas en esta prueba, <strong>nunca con Elena, con Pablo ni con ningún familiar de las otras guías</strong> (la <a href="pruebas-6-comunicados-portal.html">guía 6</a> los necesita).</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="19">
+        <div class="q-head"><span class="n">19</span><h3 class="q-title" id="t-19">Anonimizar a un familiar</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span>Residente: <strong>CJ …</strong> (la de la prueba 1)</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>almendros-administracion</code>. En la ficha del residente «CJ …» de la prueba 1, pulsa «Añadir familiar»: nombre «CJ Familiar de prueba», relación «Prima» y un teléfono inventado. No marques «Tutor legal» ni lo designes contacto urgente. Guarda.</li>
+          <li>En su fila pulsa «Editar» y, al final de la pantalla, «Anonimizar a este familiar…». Lee «Qué pasará» y «Qué no cambia». Pulsa «Anonimizar» sin elegir nada en «¿Quién lo pide?» y sin marcar la casilla.</li>
+          <li>Elige «La propia persona», marca «He comprobado la identidad de quien lo pide y entiendo que no se puede deshacer» y pulsa «Anonimizar».</li>
+          <li>En la ficha, mira la fila de ese familiar e intenta abrir «Editar» o «Autorización».</li>
+          <li>Abre «Auditoría» y busca la acción.</li>
+          <li>Con otro familiar que sea <strong>contacto urgente</strong> (se designa en la prueba 3), abre «Editar» → «Anonimizar a este familiar…». <strong>No cambies nada.</strong></li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin elegir quién lo pide o sin marcar la casilla no se anonimiza: la pantalla lo pide. La pantalla avisa de que no se puede deshacer y de que se borran nombre, teléfono y correo, se revocan sus autorizaciones y se cierra su acceso al Portal Familiar; y dice también lo que <strong>no cambia</strong> (lo que el personal escribió a mano, los informes firmados, los registros de entradas y de actividad, el identificador de acceso, el vínculo con el residente y sus citas): no es un anonimato total. Tras anonimizar sale «Familiar anonimizado. Anótalo en el registro de derechos de tu centro.»; en la ficha, el familiar pasa a «Persona anonimizada», con la marca «Anonimizado» y solo ofrece «Desvincular»; «Editar» y «Autorización» te devuelven a la ficha con un aviso. En «Auditoría» hay una fila «Familiar anonimizado (nombre, teléfono y correo borrados, acceso cerrado)», sin el nombre del familiar, sin residente y sin unidad. Con un contacto urgente (paso 6), la pantalla dice «No se puede anonimizar todavía» y a qué residentes afecta, y el botón «Anonimizar» no se puede pulsar. <strong>Para CJ:</strong> en el comentario, di si las cuatro opciones de «¿Quién lo pide?» te parecen completas.</div>
+        <fieldset class="choices" aria-labelledby="t-19">
+          <label class="choice"><input type="radio" name="r-19" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-19" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-19" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-19" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>

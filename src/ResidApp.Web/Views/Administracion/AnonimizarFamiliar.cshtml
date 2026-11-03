@@ -1,0 +1,117 @@
+@using ResidApp.Domain.Families
+@model AnonymizeFamilyViewModel
+@{
+    var resident = Model.Resident;
+    var member = Model.Member;
+    var preview = Model.Preview;
+    ViewData["Title"] = "Anonimizar familiar";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value">@resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Anonimizar familiar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Anonimizar a @preview.DisplayName</h1>
+
+@if (preview.AlreadyAnonymized)
+{
+    <div class="alert alert-info" role="status">Este familiar ya está anonimizado: no se puede cambiar.</div>
+    <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Volver a la ficha</a>
+}
+else if (!preview.IsPrincipal)
+{
+    <div class="alert alert-warning" role="status">
+        Solo la <strong>Administración principal</strong> del centro puede anonimizar a un familiar, porque no se puede deshacer y afecta a todos sus residentes.
+        Si te lo piden, pásale la petición.
+    </div>
+    <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Volver a la ficha</a>
+}
+else
+{
+    <div class="alert alert-danger" role="alert">
+        Vas a borrar de ResidApp los datos de contacto de <strong>@preview.DisplayName</strong>. <strong>Esto no se puede deshacer.</strong>
+    </div>
+
+    @if (preview.IsBlocked)
+    {
+        <div class="alert alert-warning" role="alert">
+            <p class="mb-2"><strong>No se puede anonimizar todavía.</strong> Cámbialo antes:</p>
+            <ul class="mb-0">
+                @if (preview.UrgentContactOf.Count > 0)
+                {
+                    <li>Es contacto urgente de: @string.Join(", ", preview.UrgentContactOf). Designa a otra persona desde «Contactos urgentes» en su ficha.</li>
+                }
+                @if (preview.LegalGuardianOf.Count > 0)
+                {
+                    <li>Consta como tutor legal o representante de: @string.Join(", ", preview.LegalGuardianOf). Si ya no lo es, desmarca «Tutor legal» al editarlo; si lo sigue siendo, ResidApp perdería la constancia de quién representa a la persona residente.</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h6">Qué pasará</h2>
+            <p class="small text-body-secondary mb-2">Todo a la vez: si algo falla, no se hace nada.</p>
+            <ul>
+                <li>Se borran su nombre, su teléfono y su correo. Su ficha pasa a llamarse «Persona anonimizada».</li>
+                <li>Está vinculado a @(preview.ResidentCount == 1 ? "1 residente" : $"{preview.ResidentCount} residentes"): el cambio vale para @(preview.ResidentCount == 1 ? "él" : "todos"). El vínculo y la relación se conservan.</li>
+                <li>Pierde el acceso al Portal Familiar: se revocan sus autorizaciones@(preview.HasPortalAccount && !preview.AccountInOtherCenters ? ", se suspende su cuenta y se borran su contraseña y sus llaves de acceso" : "").</li>
+                @if (preview.HasPortalAccount && preview.AccountInOtherCenters)
+                {
+                    <li>Su cuenta sigue activa en otro centro: aquí solo se le quita el acceso.</li>
+                }
+            </ul>
+            <h2 class="h6">Qué no cambia</h2>
+            <ul class="mb-0">
+                <li>Lo que el personal escribió a mano (por ejemplo, a quién se llamó en una derivación, un comunicado o el comentario de una cita) y los informes ya firmados: forman parte de la historia del residente y se conservan.</li>
+                <li>Los registros de entradas y de actividad de su cuenta: sirven para la seguridad y no se pueden borrar. Quedan sin su nombre si su cuenta no se usa en otro centro.</li>
+                <li>Sus citas y solicitudes de cita: siguen en la agenda con el nombre «Persona anonimizada». Cancélalas antes si hace falta.</li>
+                <li>Su identificador de acceso, que no se puede cambiar. Si lleva su nombre o su correo, sigue visible para la Administración.</li>
+                <li>Lo que esté en papel, en correos o en tu propio archivo: lo tratas tú según el procedimiento de tu centro.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <form asp-action="AnonimizarFamiliar" method="post">
+                <input type="hidden" name="Form.ResidenteId" value="@Model.Form.ResidenteId" />
+                <input type="hidden" name="Form.VinculoId" value="@Model.Form.VinculoId" />
+                <input type="hidden" name="Form.Version" value="@Model.Form.Version" />
+
+                <div class="mb-3">
+                    <label asp-for="Form.Motivo" class="form-label"></label>
+                    <select asp-for="Form.Motivo" class="form-select form-select-lg" asp-items="Html.GetEnumSelectList<FamilyAnonymizationReason>()">
+                        <option value="">Elige…</option>
+                    </select>
+                    <span asp-validation-for="Form.Motivo" class="text-danger"></span>
+                    <div class="form-text">No escribas nombres ni motivos: la lista es todo lo que se guarda. Quién hizo la petición y su documento van al registro de derechos de tu centro.</div>
+                </div>
+                <div class="form-check mb-3">
+                    <input asp-for="Form.Confirmado" class="form-check-input" />
+                    <label asp-for="Form.Confirmado" class="form-check-label"></label>
+                </div>
+                <p class="small text-body-secondary">
+                    Recuerda: tu centro debe contestar por escrito en el plazo de un mes (ampliable) y anotar la petición en su registro de derechos.
+                </p>
+
+                <div class="d-grid d-md-flex justify-content-md-end gap-2">
+                    <a asp-action="Residente" asp-route-residenteId="@resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                    <button type="submit" class="btn btn-danger btn-lg" disabled="@preview.IsBlocked">Anonimizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

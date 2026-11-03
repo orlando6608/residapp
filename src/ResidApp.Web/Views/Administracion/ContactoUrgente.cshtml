@@ -29,7 +29,7 @@
             <input type="hidden" name="Form.DesignacionesEsperadas" value="@Model.Form.DesignacionesEsperadas" />
             <fieldset class="mb-3">
                 <legend class="form-label fs-6">Contactos urgentes</legend>
-                @foreach (var member in Model.Detail.Family)
+                @foreach (var member in Model.Detail.Family.Where(f => !f.IsAnonymized))
                 {
                     var id = "contacto-" + member.LinkId;
                     <div class="form-check mb-2">

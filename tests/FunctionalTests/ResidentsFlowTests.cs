@@ -1090,6 +1090,80 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Administracion_AnonimizaAUnFamiliar_ConLaAppEntera_SoloSiEsLaPrincipal_YLaFichaLoMuestraAnonimizado()
+    {
+        // Script 0087 con el usuario limitado de la aplicación y la seguridad por filas: pantalla de confirmación, validación, anonimización y ficha.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Anonimizar Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var addPage = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/AnadirFamiliar?residenteId={residentId}"));
+        await admin.PostAsync("/Administracion/AnadirFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(addPage, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = residentId,
+            ["Form.OperacionId"] = ExtractValue(addPage, "Form.OperacionId"),
+            ["Form.NombreVisible"] = "Familiar Anonimizar Funcional",
+            ["Form.Relacion"] = "Hija",
+            ["Form.Telefono"] = "600000001",
+            ["Form.Correo"] = "anonimizar.funcional@example.test",
+        }));
+        var linkId = await connection.ExecuteScalarAsync<Guid>(
+            """
+            SELECT l.id FROM dbo.residentes_familiares l JOIN dbo.familiares f ON f.id = l.familiar_id
+             WHERE l.residente_id = @residentId AND f.nombre_visible = 'Familiar Anonimizar Funcional'
+            """, new { residentId });
+        var url = $"/Administracion/AnonimizarFamiliar?residenteId={residentId}&vinculoId={linkId}";
+
+        async Task<string> PostAsync(Dictionary<string, string> fields)
+        {
+            var page = await admin.GetStringAsync(url);
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            fields["Form.ResidenteId"] = residentId;
+            fields["Form.VinculoId"] = linkId.ToString();
+            fields["Form.Version"] = ExtractValue(page, "Form.Version");
+            return WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/AnonimizarFamiliar", new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        }
+
+        // Sin ser la principal, la pantalla lo explica y no ofrece nada que enviar.
+        var notPrincipal = WebUtility.HtmlDecode(await admin.GetStringAsync(url));
+        Assert.Contains("del centro puede anonimizar a un familiar", notPrincipal);
+        Assert.DoesNotContain("name=\"Form.Confirmado\"", notPrincipal);
+        Assert.Contains("Anonimizar a este familiar", WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/EditarFamiliar?residenteId={residentId}&vinculoId={linkId}")));
+
+        // Con la marca de principal: avisa de lo que pasa y de lo que no, y pide quién lo pide y la confirmación.
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.administraciones_principales_cambios (id, centro_id, ambito_perfil_id, numero, principal, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            SELECT NEWID(), centro_id, id, 1, 1, cuenta_id, 'ADMINISTRACION', SYSUTCDATETIME()
+              FROM dbo.ambitos_perfil WHERE id = @scope
+            """, new { scope = seed.ProfileScopeId });
+        var confirmPage = WebUtility.HtmlDecode(await admin.GetStringAsync(url));
+        Assert.Contains("Esto no se puede deshacer", confirmPage);
+        Assert.Contains("Qué no cambia", confirmPage);
+        Assert.Contains("La propia persona", confirmPage);
+        Assert.Contains("Elige…", confirmPage);
+
+        var withoutChoice = await PostAsync(new() { ["Form.Confirmado"] = "true" });
+        Assert.Contains("Elige quién lo pide.", withoutChoice);
+        var withoutConfirmation = await PostAsync(new() { ["Form.Motivo"] = "PeticionDelInteresado" });
+        Assert.Contains("hay que comprobar la identidad", withoutConfirmation);
+        Assert.Equal("Familiar Anonimizar Funcional", await connection.ExecuteScalarAsync<string>(
+            "SELECT f.nombre_visible FROM dbo.familiares f JOIN dbo.residentes_familiares l ON l.familiar_id = f.id WHERE l.id = @linkId", new { linkId }));
+
+        var done = await PostAsync(new() { ["Form.Motivo"] = "PeticionDelInteresado", ["Form.Confirmado"] = "true" });
+
+        Assert.Contains("Familiar anonimizado. Anótalo en el registro de derechos de tu centro.", done);
+        Assert.Contains("Persona anonimizada", done);
+        Assert.Contains("Anonimizado", done);
+        Assert.DoesNotContain("Familiar Anonimizar Funcional", done);
+        Assert.DoesNotContain("anonimizar.funcional@example.test", done);
+        Assert.Equal("-", await connection.ExecuteScalarAsync<string>(
+            "SELECT f.telefono FROM dbo.familiares f JOIN dbo.residentes_familiares l ON l.familiar_id = f.id WHERE l.id = @linkId", new { linkId }));
+        Assert.Contains("ya no se puede cambiar", WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/EditarFamiliar?residenteId={residentId}&vinculoId={linkId}")));
+        Assert.Contains("ya está anonimizado", WebUtility.HtmlDecode(await admin.GetStringAsync(url)));
+    }
+
+    [Fact]
     public async Task Administracion_VeElPlazoDeConservacionDeLasBajas_Con15Anos_YAvisaDeLosVencidosYLosProximos_ConLaAppEntera()
     {
         // Art. 12 de la Llei 21/2000 (Ley 16/2010): 15 años desde la baja. La lista de bajas avisa de lo vencido y de lo que vence en 12 meses, y dice que no se borra nada.
