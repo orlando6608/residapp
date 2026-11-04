@@ -21,6 +21,8 @@ using ResidApp.Web.Correo;
 using ResidApp.Web.Security;
 
 var builder = WebApplication.CreateBuilder(args);
+// No decir qué servidor es (M3): sin la cabecera «Server: Kestrel».
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews(options =>
@@ -414,6 +416,9 @@ IaOptions.Validate(app.Services.GetRequiredService<IOptions<IaOptions>>().Value)
 
 // Configure the HTTP request pipeline.
 app.UseForwardedHeaders();
+// Cabeceras de seguridad y política de contenido (M3). Seguridad:CspSoloInforme=true la deja solo en modo aviso, sin bloquear nada.
+// Un valor que no sea true/false (por ejemplo «1») no tumba el arranque: se queda en el modo seguro, que es bloquear.
+app.UseSecurityHeaders(bool.TryParse(builder.Configuration["Seguridad:CspSoloInforme"], out var cspSoloInforme) && cspSoloInforme);
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

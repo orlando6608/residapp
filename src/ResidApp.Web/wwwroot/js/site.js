@@ -236,3 +236,14 @@
     },
   });
 })();
+
+// Botones «Imprimir» y «Reintentar»: ni un manejador en línea (onclick) ni una dirección javascript: los deja pasar la política de contenido (CSP, M3).
+// data-imprimir abre el cuadro de impresión; data-recargar vuelve a cargar la página.
+document.addEventListener("click", (evento) => {
+  if (evento.target.closest("[data-imprimir]")) {
+    window.print();
+  }
+  if (evento.target.closest("[data-recargar]")) {
+    location.reload();
+  }
+});

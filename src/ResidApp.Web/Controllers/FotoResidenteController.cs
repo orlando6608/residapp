@@ -38,7 +38,8 @@ public sealed class FotoResidenteController(ResidentPhotoApplicationService phot
             return NotFound();
         }
 
-        Response.Headers.CacheControl = "private, max-age=86400";
+        // Dato personal de un residente: el navegador no la guarda (M3); antes se quedaba 24 horas, también en un equipo compartido.
+        Response.Headers.CacheControl = "no-store";
         Response.Headers.XContentTypeOptions = "nosniff";
         Response.Headers["Cross-Origin-Resource-Policy"] = "same-origin";
         return File(result.Value, "image/jpeg");

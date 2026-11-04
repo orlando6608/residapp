@@ -1437,7 +1437,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Equal(HttpStatusCode.OK, photo.StatusCode);
         Assert.Equal("image/jpeg", photo.Content.Headers.ContentType?.MediaType);
         Assert.Equal("nosniff", Assert.Single(photo.Headers.GetValues("X-Content-Type-Options")));
-        Assert.True(photo.Headers.CacheControl?.Private);
+        Assert.True(photo.Headers.CacheControl?.NoStore);
         Assert.Equal([0xFF, 0xD8, .. image], await photo.Content.ReadAsByteArrayAsync());
         Assert.Equal(HttpStatusCode.NotFound, byOutsider.StatusCode);
         Assert.Contains("Foto de identificación", nurseRecord);
