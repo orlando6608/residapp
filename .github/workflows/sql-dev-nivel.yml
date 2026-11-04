@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - name: Azure login (OIDC federado, sin secretos de larga duración)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
