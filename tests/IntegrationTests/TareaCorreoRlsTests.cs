@@ -177,6 +177,71 @@ public sealed class TareaCorreoRlsTests
         Assert.Equal(50850, badBatch.Number);
     }
 
+    /// <summary>Copia la fila del aviso con otra plantilla, clave, intentos y antigüedad en minutos (para probar el cierre de los pendientes): devuelve su id. Con <paramref name="sent"/>, la deja ENVIADO.</summary>
+    private static async Task<Guid> CopyPendingAsync(SqlConnection admin, Guid templateRowId, string template, string key, int attempts, int createdMinutesAgo, bool sent = false)
+    {
+        var id = Guid.NewGuid();
+        await admin.ExecuteAsync("""
+            INSERT INTO dbo.envios_correo
+                (id, centro_id, plantilla_codigo, plantilla_version, idioma, familiar_id, referencia_id, referencia_clave, estado_codigo, motivo_codigo, acs_operacion_id, intentos, creado_en, resuelto_en)
+            SELECT @id, centro_id, @template, plantilla_version, idioma, familiar_id, referencia_id, @key,
+                   CASE WHEN @sent = 1 THEN 'ENVIADO' ELSE 'PENDIENTE' END, NULL, CASE WHEN @sent = 1 THEN N'op-previa' END, @attempts,
+                   DATEADD(MINUTE, -@minutes, SYSUTCDATETIME()), CASE WHEN @sent = 1 THEN DATEADD(MINUTE, -@minutes + 1, SYSUTCDATETIME()) END
+              FROM dbo.envios_correo WHERE id = @templateRowId
+            """, new { id, template, key, attempts, minutes = createdMinutesAgo, sent, templateRowId });
+        return id;
+    }
+
+    [Fact]
+    public async Task ElCierre_MarcaFallidoSinResolver_SoloLoQueSuperaElPlazo_ConElRolDeLaTarea()
+    {
+        var notice = await SeedAsync("Residente Tarea Correo Cierre");
+        using var admin = await TestDatabase.ConnectionFactory.OpenAsync();
+        var proposalOld = await CopyPendingAsync(admin, notice.EmailId, "AVISO_PROPUESTA_CITA", "91", attempts: 0, createdMinutesAgo: 20);
+        var proposalRecent = await CopyPendingAsync(admin, notice.EmailId, "AVISO_PROPUESTA_CITA", "92", attempts: 0, createdMinutesAgo: 10);
+        var changeClaimedOld = await CopyPendingAsync(admin, notice.EmailId, "AVISO_CAMBIO_CITA", "93", attempts: 1, createdMinutesAgo: 40);
+        var changeClaimedRecent = await CopyPendingAsync(admin, notice.EmailId, "AVISO_CAMBIO_CITA", "94", attempts: 1, createdMinutesAgo: 20);
+        var changeUnclaimedOld = await CopyPendingAsync(admin, notice.EmailId, "AVISO_CAMBIO_CITA", "95", attempts: 0, createdMinutesAgo: 60 * 24 * 40);
+        var sentOld = await CopyPendingAsync(admin, notice.EmailId, "AVISO_PROPUESTA_CITA", "96", attempts: 1, createdMinutesAgo: 120, sent: true);
+        using var task = await OpenAsAsync(TaskUser);
+
+        var closed = await task.ExecuteScalarAsync<int>("EXEC dbo.cerrar_envios_correo_sin_resolver");
+
+        Assert.True(closed >= 2);
+        async Task<(string Estado, string? Motivo, string? Operacion, int Intentos, bool Resuelto)> RowAsync(Guid id) =>
+            await admin.QuerySingleAsync<(string, string?, string?, int, bool)>(
+                "SELECT estado_codigo, motivo_codigo, acs_operacion_id, CONVERT(INT, intentos), CONVERT(BIT, CASE WHEN resuelto_en IS NULL THEN 0 ELSE 1 END) FROM dbo.envios_correo WHERE id = @id", new { id });
+        Assert.Equal(("FALLIDO", "RESULTADO_DESCONOCIDO", (string?)null, 0, true), await RowAsync(proposalOld));
+        Assert.Equal(("FALLIDO", "RESULTADO_DESCONOCIDO", (string?)null, 1, true), await RowAsync(changeClaimedOld));
+        Assert.Equal(("PENDIENTE", (string?)null, (string?)null, 0, false), await RowAsync(proposalRecent));
+        Assert.Equal(("PENDIENTE", (string?)null, (string?)null, 1, false), await RowAsync(changeClaimedRecent));
+        Assert.Equal(("PENDIENTE", (string?)null, (string?)null, 0, false), await RowAsync(changeUnclaimedOld)); // sin reclamar: sigue esperando de verdad
+        Assert.Equal(("ENVIADO", (string?)null, "op-previa", 1, true), await RowAsync(sentOld));
+        Assert.Equal(("PENDIENTE", (string?)null, (string?)null, 0, false), await RowAsync(notice.EmailId));
+        Assert.Equal(0, await task.ExecuteScalarAsync<int>("EXEC dbo.cerrar_envios_correo_sin_resolver"));
+
+        // Lo cerrado no se reabre: la resolución tardía de la tarea sobre la fila cerrada no la cambia ni falla.
+        Assert.Equal(0, await task.ExecuteAsync(SqlChangeNoticeStore.ResolveSql, new
+        {
+            id = changeClaimedOld, state = "ENVIADO", reason = (string?)null, operationId = "op-tardia", attempts = 1, now = DateTime.UtcNow,
+        }));
+        Assert.Equal(("FALLIDO", "RESULTADO_DESCONOCIDO", (string?)null, 1, true), await RowAsync(changeClaimedOld));
+    }
+
+    [Fact]
+    public async Task ElCierre_SinElRolNoSeEjecuta_ElLoteTieneLimites_YNoHayDeleteSobreLaTabla()
+    {
+        using var noRole = await OpenAsAsync(NoRoleUser);
+        var denied = await Assert.ThrowsAsync<SqlException>(() => noRole.ExecuteScalarAsync<int>("EXEC dbo.cerrar_envios_correo_sin_resolver"));
+        Assert.Equal(229, denied.Number);
+
+        using var admin = await TestDatabase.ConnectionFactory.OpenAsync();
+        var badBatch = await Assert.ThrowsAsync<SqlException>(() => admin.ExecuteScalarAsync<int>("EXEC dbo.cerrar_envios_correo_sin_resolver @lote = 0"));
+        Assert.Equal(50880, badBatch.Number);
+        // El plazo y el motivo no son parámetros.
+        await Assert.ThrowsAsync<SqlException>(() => admin.ExecuteScalarAsync<int>("EXEC dbo.cerrar_envios_correo_sin_resolver @plazo = 0"));
+    }
+
     [Fact]
     public async Task ElRolDeLaTarea_NoInsertaNiBorraNiCambiaLaIdentidadDeUnaFila_SoloLasColumnasDeResolucion()
     {

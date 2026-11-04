@@ -179,7 +179,7 @@ Se suman a las 16 del borrador de la propuesta y a las del borrador del icono, q
 9. **N9. Ningún fallo cambia el resultado de la acción.** Un `IEmailSender` que lanza excepción o tarda más del máximo: la cita queda cancelada o reprogramada, `Ok` para Administración, y el registro dice `FALLIDO` con código cerrado.
 10. **N10. Interruptor propio.** `Correo__Activo` falso **o** `Correo__AvisoCambioCita` falso (por defecto): no se reserva fila ni se envía. En desarrollo, solo a la lista de direcciones permitidas.
 11. **N11. Registro sin contenido.** Las columnas de la tabla no cambian (condición 12 de la propuesta); los códigos nuevos son cerrados; la prueba de esquema sigue fallando ante cualquier columna con dirección, asunto, cuerpo, hora o motivo.
-12. **N12. Sin reintentos hasta que haya tarea programada.** Cuando exista: todo reintento repite N3, con tope de intentos y **nunca después de la hora relevante de la cita**.
+12. **N12. Sin reintentos hasta que haya tarea programada.** Cuando exista: todo reintento repite N3, con tope de intentos y **nunca después de la hora relevante de la cita**. *Actualización 2026-11-04:* ya existe la tarea programada y sigue sin haber reintentos; los avisos reclamados que no llegan a resolverse (más de 30 minutos) se cierran como `FALLIDO / RESULTADO_DESCONOCIDO` («sin confirmar», puede haber salido) y no se reenvían (script `0089`, ADR 0012).
 13. **N13. Textos de Administración.** Las pantallas de cancelar y reprogramar conservan «Avísala también por teléfono»; ninguna dice que «la familia ha sido avisada por correo».
 14. **N14. Logs.** Solo plantilla, estado y código; nunca dirección ni excepción completa (condición 13 de la propuesta).
 
