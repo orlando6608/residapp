@@ -131,6 +131,19 @@ recomienda 15 años para el curso clínico (cuadro de 07-04-2017). ResidApp fija
 **Sin resolver (decide una persona):** si una residencia cuenta como «centro sanitario» a efectos del art. 12 y quién es la «dirección médica» que decide el expurgo; el plazo de `eventos_acceso`, `sesiones` y auditoría;
 el expurgo real (no se construye hasta que se acerque el primer vencimiento, 2041 como pronto: condiciones en el apartado 2.10 del informe);. CJ ya está avisado de que sus «5 años» pasan a 15 (guía 5, `pruebas.html` y documento archivado, 2026-11-03).
 
+## 9. Qué ve Plataforma de la estructura de cada centro (`0090`, M1; lectura de `dpo-residapp` del 2026-11-04)
+
+Las tablas `unidades`, `ambitos_perfil_unidad`, `administraciones_principales_cambios` y `logos_centro` están ya bajo la seguridad por filas. Plataforma (el personal de ResidApp, que actúa como encargada del tratamiento) conserva
+lo que su código ya hacía, ahora escrito en la base: **ve e inserta** unidades, asignaciones de personal a unidad e historial de Administración principal de cualquier centro; en los logos **solo inserta** (al dar de alta un centro) y no
+ve ni cambia el de un centro ya creado. No ve la auditoría de otros centros (`0088`) ni nada clínico.
+
+- **A validar por el DPO real o abogado:** que el contrato de encargado (art. 28) con cada residencia y la información al personal recojan que el operador de ResidApp ve la estructura y las Administraciones de todos los centros (qué cuenta está en qué unidad, quién es principal), no la actividad asistencial.
+- **Sin decidir (producto o DPO):** si la lectura del detalle de un centro por Plataforma (`FindAsync`, que muestra el identificador de acceso y el nombre de las Administraciones) debe dejar constancia; hoy no la deja.
+- **Límites conocidos (revisión de calidad, 2026-11-04):** los `UPDATE` solo comprueban el centro, no el autor (`revocado_por_cuenta_id`, `actualizado_por_*` pueden fijarse a cualquier valor); el salto de Plataforma se apoya en el disparador que limita su ámbito al centro reservado y en que `ambitos_perfil` no tiene política (M2, permisos mínimos del usuario de la app, sigue pendiente); crear una unidad con el identificador de una de otro centro daría un error 500 (clave primaria) en vez del error de dominio de antes, solo con una petición manipulada.
+- **Plazo de conservación** del historial de `administraciones_principales_cambios` (inmutable): debe seguir al de la auditoría, que sigue sin decidir (apartado 8).
+- **Política de privacidad para profesionales:** aún no existe; cuando se redacte debe decir que el operador ve estructura y administradores.
+- **Coste medido** (2026-11-04, SQL Server 2022 en contenedor, 501 centros, 6.000 unidades, 4.000 ámbitos y 16.000 asignaciones, usuario `residapp_app`): la consulta de autorización por petición pasa de 0,05-0,06 ms a 0,08 ms; las listas de un centro (sus unidades, sus asignaciones), de 0,01-0,03 ms a 0,07-0,10 ms. **Lo que sí crece es la pantalla de centros de Plataforma** (cuenta las unidades de todos los centros): de 0,6-1 ms a 16-18 ms con 500 centros, en proporción a las unidades (unos 3 µs por unidad). No medido: Azure SQL (nivel B1, más lento), concurrencia ni caché fría. Una consulta sobre estas tablas **sin** `WHERE centro_id` pasa a evaluar la política fila a fila (unos 8 ms con 6.000 filas); el código no las hace.
+
 ## Cómo se marca como hecho
 
 Cuando una persona valide los borradores y se decidan las mejoras, anótalo aquí con la fecha y quién lo hizo, y quita el recordatorio del traspaso (`docs/prompts-ia/continuar-construccion.md`)

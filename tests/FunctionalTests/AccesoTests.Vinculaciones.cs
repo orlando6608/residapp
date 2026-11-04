@@ -55,6 +55,9 @@ public partial class AccesoTests
 
         Assert.Contains("Acceso a ", offer);
         Assert.Contains("Enfermería", offer);
+        // La persona invitada no tiene ámbito en ese centro: aun así la hoja le dice a qué unidades se la ofrecen (la política de `unidades` no debe esconderlas).
+        var unitName = await ScalarAsync<string>("SELECT nombre_visible FROM dbo.unidades WHERE CAST(id AS NVARCHAR(36)) = @unit", new { unit = await AdminUnitAsync(adminAccountId) });
+        Assert.Contains(WebUtility.HtmlEncode(unitName), Regex.Match(offer, @"Unidades</dt>\s*<dd[^>]*>([^<]*)").Groups[1].Value);
         Assert.Equal(HttpStatusCode.Redirect, accepted.StatusCode);
         Assert.Contains("Has aceptado el acceso", afterAccepting);
         Assert.Equal(0, scopesBefore);
