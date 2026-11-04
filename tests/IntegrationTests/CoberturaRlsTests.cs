@@ -69,8 +69,8 @@ public sealed class CoberturaRlsTests
              WHERE c.name = N'centro_id'
             """)).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        Assert.Empty(ChildTables.Where(name => !required.Contains(name)));
-        Assert.Empty(ChildTables.Where(name => !withForeignKey.Contains(name)));
+        Assert.All(ChildTables, name => Assert.Contains(name, required));
+        Assert.All(ChildTables, name => Assert.Contains(name, withForeignKey));
     }
 
     [Fact]

@@ -81,7 +81,7 @@ public class CorreccionComunicadosTests
         Assert.Equal(Original, await new Func<Task<string>>(async () =>
         {
             using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
-            return await connection.ExecuteScalarAsync<string>("SELECT texto FROM dbo.comunicaciones_familiares WHERE id = @communicationId", new { communicationId });
+            return (await connection.ExecuteScalarAsync<string>("SELECT texto FROM dbo.comunicaciones_familiares WHERE id = @communicationId", new { communicationId }))!;
         })());
         Assert.Equal(1, await CountAsync(
             "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_COMMUNICATION_CORRECT' AND recurso_id = @c",
