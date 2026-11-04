@@ -287,4 +287,113 @@ public sealed class RlsCentroTests
             "EXEC sys.sp_set_session_context @key = N'ambito_perfil_id', @value = @ambito",
             new { ambito = b.Profile.ProfileScopeId }));
     }
+
+    private const int BlockPredicateViolation = 33504;
+
+    private static async Task InsertAuditAsync(SqlConnection connection, Guid centerId, Guid accountId, string profile, string action = "TEST_ACTION") =>
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.eventos_auditoria (id, cuenta_id, perfil_activo, centro_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
+            VALUES (NEWID(), @accountId, @profile, @centerId, N'TEST', NEWID(), @action, SYSUTCDATETIME())
+            """, new { centerId, accountId, profile, action });
+
+    private static async Task<int> AuditCountAsync(SqlConnection connection, string action) =>
+        await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE accion_codigo = @action", new { action });
+
+    /// <summary>Un operador de Plataforma: su ámbito vive en el centro reservado (un disparador lo exige) y no ve el de ningún otro centro.</summary>
+    private static async Task<(TenantScope Scope, Guid AccountId, Guid ProfileScopeId)> SeedPlatformOperatorAsync()
+    {
+        var accountId = Guid.NewGuid();
+        var profileScopeId = Guid.NewGuid();
+        var subject = $"test-plat-{Guid.NewGuid():N}"[..28];
+        using var admin = await TestDatabase.ConnectionFactory.OpenAsync();
+        await admin.ExecuteAsync("""
+            INSERT INTO dbo.cuentas (id, sujeto_externo, nombre_visible, estado, creado_en) VALUES (@accountId, @subject, N'Operador RLS', 'ACTIVE', SYSUTCDATETIME());
+            INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
+            VALUES (@profileScopeId, @accountId, @centerId, 'PLATAFORMA', 'ACTIVE', SYSUTCDATETIME(), @accountId)
+            """, new { accountId, subject, profileScopeId, centerId = ResidApp.Domain.Platform.PlatformCenter.Id });
+        return (new TenantScope(subject, profileScopeId), accountId, profileScopeId);
+    }
+
+    [Fact]
+    public async Task La_auditoria_solo_se_ve_la_del_centro_del_ambito()
+    {
+        var a = await SeedCenterWithResidentAsync();
+        var b = await SeedCenterWithResidentAsync();
+        var action = $"RLS_{Guid.NewGuid():N}"[..30];
+        using (var admin = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await InsertAuditAsync(admin, a.Profile.CenterId.Value, a.Profile.AccountId.Value, "ADMINISTRACION", action);
+            await InsertAuditAsync(admin, b.Profile.CenterId.Value, b.Profile.AccountId.Value, "ADMINISTRACION", action);
+        }
+
+        using var asA = await OpenLimitedAsync(ScopeOf(a.Profile));
+        Assert.Equal(1, await AuditCountAsync(asA, action));
+        using var withoutScope = await OpenLimitedAsync(null);
+        Assert.Equal(0, await AuditCountAsync(withoutScope, action));
+    }
+
+    [Fact]
+    public async Task Un_ambito_no_puede_escribir_auditoria_en_otro_centro_ni_a_nombre_de_otra_cuenta_o_perfil()
+    {
+        var a = await SeedCenterWithResidentAsync();
+        var b = await SeedCenterWithResidentAsync();
+        using var connection = await OpenLimitedAsync(ScopeOf(a.Profile));
+
+        await InsertAuditAsync(connection, a.Profile.CenterId.Value, a.Profile.AccountId.Value, "ADMINISTRACION");
+        var otherCenter = await Assert.ThrowsAsync<SqlException>(() =>
+            InsertAuditAsync(connection, b.Profile.CenterId.Value, a.Profile.AccountId.Value, "ADMINISTRACION"));
+        var otherAccount = await Assert.ThrowsAsync<SqlException>(() =>
+            InsertAuditAsync(connection, a.Profile.CenterId.Value, b.Profile.AccountId.Value, "ADMINISTRACION"));
+        var otherProfile = await Assert.ThrowsAsync<SqlException>(() =>
+            InsertAuditAsync(connection, a.Profile.CenterId.Value, a.Profile.AccountId.Value, "MEDICINA"));
+        var impersonatedPlatform = await Assert.ThrowsAsync<SqlException>(() =>
+            InsertAuditAsync(connection, b.Profile.CenterId.Value, a.Profile.AccountId.Value, "PLATAFORMA"));
+
+        Assert.All([otherCenter, otherAccount, otherProfile, impersonatedPlatform], error => Assert.Equal(BlockPredicateViolation, error.Number));
+    }
+
+    [Fact]
+    public async Task Plataforma_deja_constancia_en_cualquier_centro_pero_no_lee_la_de_otros()
+    {
+        var center = await SeedCenterWithResidentAsync();
+        var operatorScope = await SeedPlatformOperatorAsync();
+        var action = $"RLS_{Guid.NewGuid():N}"[..30];
+        using var connection = await OpenLimitedAsync(operatorScope.Scope);
+
+        await InsertAuditAsync(connection, center.Profile.CenterId.Value, operatorScope.AccountId, "PLATAFORMA", action);
+        Assert.Equal(0, await AuditCountAsync(connection, action));
+
+        using var admin = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal(1, await AuditCountAsync(admin, action));
+        // El centro afectado sí la ve en su auditoría.
+        using var asCenter = await OpenLimitedAsync(ScopeOf(center.Profile));
+        Assert.Equal(1, await AuditCountAsync(asCenter, action));
+    }
+
+    [Fact]
+    public async Task El_salto_de_Plataforma_exige_ser_Plataforma_con_ambito_vigente_y_firmar_con_su_cuenta()
+    {
+        var center = await SeedCenterWithResidentAsync();
+        var operatorScope = await SeedPlatformOperatorAsync();
+        using (var connection = await OpenLimitedAsync(operatorScope.Scope))
+        {
+            var otherAccount = await Assert.ThrowsAsync<SqlException>(() =>
+                InsertAuditAsync(connection, center.Profile.CenterId.Value, center.Profile.AccountId.Value, "PLATAFORMA"));
+            var otherProfile = await Assert.ThrowsAsync<SqlException>(() =>
+                InsertAuditAsync(connection, center.Profile.CenterId.Value, operatorScope.AccountId, "ADMINISTRACION"));
+            Assert.All([otherAccount, otherProfile], error => Assert.Equal(BlockPredicateViolation, error.Number));
+        }
+
+        // Un ámbito revocado ya no escribe en ningún centro.
+        using (var admin = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await admin.ExecuteAsync(
+                "UPDATE dbo.ambitos_perfil SET estado = 'REVOKED', revocado_en = SYSUTCDATETIME(), revocado_por_cuenta_id = cuenta_id WHERE id = @id", new { id = operatorScope.ProfileScopeId });
+        }
+
+        using var revoked = await OpenLimitedAsync(operatorScope.Scope);
+        var error = await Assert.ThrowsAsync<SqlException>(() =>
+            InsertAuditAsync(revoked, center.Profile.CenterId.Value, operatorScope.AccountId, "PLATAFORMA"));
+        Assert.Equal(BlockPredicateViolation, error.Number);
+    }
 }

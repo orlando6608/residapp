@@ -29,7 +29,6 @@ public sealed class CoberturaRlsTests
 
         ["unidades"] = Provision,
         ["ambitos_perfil_unidad"] = Provision,
-        ["eventos_auditoria"] = Provision,
         ["administraciones_principales_cambios"] = Provision,
         ["logos_centro"] = Provision,
     };
