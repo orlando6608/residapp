@@ -73,7 +73,7 @@ public sealed class PlataformaController(PlatformApplicationService service) : C
                 form.CodigoUnidad, form.NombreUnidad, form.IdentificadorAdministrador, form.NombreAdministrador, logo), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = "Centro creado. Para que su administrador pueda entrar, entra en el centro y crea su invitación de acceso.";
+                TempData["Mensaje"] = "Centro creado. Para que su administrador pueda entrar, pulsa «Administraciones y unidades» en ese centro y luego «Crear invitación de acceso o de recuperación».";
                 return RedirectToAction(nameof(Index));
             }
 
