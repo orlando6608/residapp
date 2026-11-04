@@ -105,6 +105,17 @@ Consecuencias para el diseño:
 | G2 | `grupos` y `centros.grupo_id` (script `0031`), alta de centro con grupo opcional en `/Plataforma`, con auditoría | Un cliente con varias residencias |
 | G3 | Catálogo y resolvedor `centro → grupo → BD` | Un cliente que pida su propia base, con ADR propio |
 
+## Permisos de escritura de la aplicación (`0091`, hallazgo M2, 2026-11-04)
+
+La seguridad por filas decide **qué filas** ve y escribe la aplicación; no decide **qué operaciones** puede hacer en cada tabla. Hasta `0091`, `residapp_app` era `db_datawriter`: podía modificar y borrar en cualquier tabla, y lo único que lo impedía en las
+inmutables eran los disparadores `INSTEAD OF`. Ahora el usuario es `db_datareader` más el rol `residapp_aplicacion` (el usuario se crea después de los scripts, así que los permisos van al rol, como en `residapp_tareas`, `0083`):
+
+- INSERT en las 100 tablas de la aplicación; UPDATE solo donde el código actualiza (48; en `declaraciones_acceso_clinico` y `declaraciones_historial_traslado`, solo la columna `terminada_en`); DELETE solo en 13 tablas de configuración, borradores y credenciales.
+- Todo lo no concedido va con `DENY`, que gana a cualquier permiso heredado. Una tabla nueva no recibe permiso alguno hasta que un script la añada, y `PermisosAplicacionTests` obliga a declararlo: compara la matriz con los permisos
+  efectivos y con el código de `src/`.
+- **No cubre:** el INSERT (lo acotan las políticas por filas), qué columnas se actualizan en las tablas con UPDATE ni la autoría de lo insertado. Una purga futura se hace con un procedimiento `EXECUTE AS OWNER` (`0085`, `0089`), no quitando un `DENY`.
+  Detalle y reversión de emergencia en `docs/privacidad/antes-de-datos-reales.md`, apartado 10.
+
 ## Consecuencias
 
 - Hoy no cambia ningún comportamiento de la aplicación.
