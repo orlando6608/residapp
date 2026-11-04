@@ -75,7 +75,7 @@ public class AnonimizarFamiliarTests
     private static async Task<T> QueryAsync<T>(string sql, object? parameters = null)
     {
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
-        return await connection.ExecuteScalarAsync<T>(sql, parameters);
+        return (await connection.ExecuteScalarAsync<T>(sql, parameters))!;
     }
 
     private static async Task ExecuteAsync(string sql, object? parameters = null)
@@ -387,7 +387,7 @@ public class AnonimizarFamiliarTests
             setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, setup.LinkId, member.DisplayName, member.Relationship, member.Phone, member.Email,
             new FamilyMemberData(member.DisplayName, member.Relationship, member.Phone, member.Email, member.IsReferent, member.IsLegalGuardian).Version,
             Referente: member.IsReferent, TutorLegal: false))).Ok);
-        Assert.True((await PreviewAsync(setup)).UrgentContactOf.Contains("Residente De Baja Anonimizar"));
+        Assert.Contains("Residente De Baja Anonimizar", (await PreviewAsync(setup)).UrgentContactOf);
         var discharge = await EstadoResidenteTests.Build(setup.Admin.ExternalSubject).DischargeAsync(new DischargeResidentCommand(
             setup.Admin.ProfileScopeId, setup.Admin.CenterId, secondResident, Guid.NewGuid(), ResidApp.Domain.Residents.ResidentDischargeReason.Fallecimiento, null));
         Assert.True(discharge.Ok, discharge.Error?.Message);
@@ -414,7 +414,7 @@ public class AnonimizarFamiliarTests
             await Task.WhenAll(designate, anonymize);
 
             // Si ganó la anonimización, la designación falla; si ganó la designación, la anonimización se rechaza por ser contacto urgente. Nunca las dos.
-            Assert.False(designate.Result.Ok && anonymize.Result.Ok, $"Ronda {round}: las dos tuvieron éxito");
+            Assert.False((await designate).Ok && (await anonymize).Ok, $"Ronda {round}: las dos tuvieron éxito");
             var anonymized = await QueryAsync<int>("SELECT COUNT(*) FROM dbo.familiares WHERE centro_id = @C AND anonimizado_en IS NOT NULL", new { C = setup.Admin.CenterId.Value });
             var urgent = (await DetailAsync(setup)).CurrentEmergencyContacts.Contains(setup.LinkId);
             Assert.False(anonymized == 1 && urgent, $"Ronda {round}: un anonimizado quedó como contacto urgente");

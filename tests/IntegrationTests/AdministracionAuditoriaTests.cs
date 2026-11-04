@@ -101,7 +101,7 @@ public class AdministracionAuditoriaTests
     private static async Task<string> UnitNameAsync(UnitId unitId)
     {
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
-        return await connection.ExecuteScalarAsync<string>("SELECT nombre_visible FROM dbo.unidades WHERE id = @id", new { id = unitId.Value });
+        return (await connection.ExecuteScalarAsync<string>("SELECT nombre_visible FROM dbo.unidades WHERE id = @id", new { id = unitId.Value }))!;
     }
 
     [Fact]

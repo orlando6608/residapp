@@ -346,7 +346,7 @@ public class AdministracionPlanificacionTests
         Assert.Equal(10, series.ActiveDates.Count);
         Assert.Equal(10, series.RetiredDates);
         Assert.Equal(dates.Take(10), series.ActiveDates.Select(d => d.Date));
-        Assert.Single((await ListAsync(w)).Where(e => e.BatchId == other));
+        Assert.Single(await ListAsync(w), e => e.BatchId == other);
         Assert.Equal(1, await CountAsync(
             "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE recurso_id = @batch AND accion_codigo = 'SCHEDULE_SERIES_RETIRE' AND unidad_id = @unit",
             new { batch, unit = w.Admin.UnitId.Value }));
