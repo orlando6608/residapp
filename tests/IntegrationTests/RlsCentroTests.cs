@@ -798,10 +798,10 @@ public sealed class RlsCentroTests
         var centerId = center.Profile.CenterId.Value;
         string Token() => Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
         string live = Token(), annulled = Token(), redeemed = Token(), expired = Token();
-        string? unitName;
+        string unitName;
         using (var admin = await TestDatabase.ConnectionFactory.OpenAsync())
         {
-            unitName = await admin.ExecuteScalarAsync<string>("SELECT nombre_visible FROM dbo.unidades WHERE id = @id", new { id = center.Profile.UnitId.Value });
+            unitName = (await admin.ExecuteScalarAsync<string>("SELECT nombre_visible FROM dbo.unidades WHERE id = @id", new { id = center.Profile.UnitId.Value }))!;
             foreach (var (token, annulledAt, redeemedAt, expiresInDays) in new (string, bool, bool, int)[] { (live, false, false, 2), (annulled, true, false, 2), (redeemed, false, true, 2), (expired, false, false, -1) })
             {
                 var id = Guid.NewGuid();
