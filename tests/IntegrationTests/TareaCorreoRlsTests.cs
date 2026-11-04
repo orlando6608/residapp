@@ -119,6 +119,12 @@ public sealed class TareaCorreoRlsTests
             "SELECT * FROM dbo.cuentas",
             "SELECT * FROM dbo.ambitos_perfil",
             "SELECT * FROM dbo.citas_solicitudes",
+            // script 0090: la estructura del centro tampoco es de la tarea (ni leer ni insertar)
+            "SELECT * FROM dbo.unidades",
+            "SELECT * FROM dbo.ambitos_perfil_unidad",
+            "SELECT * FROM dbo.administraciones_principales_cambios",
+            "SELECT * FROM dbo.logos_centro",
+            "INSERT INTO dbo.unidades (id, centro_id, codigo, nombre_visible, estado, creado_en) VALUES (NEWID(), NEWID(), N'X', N'X', 'ACTIVE', SYSUTCDATETIME())",
         })
         {
             await AssertDeniedAsync(task, sql);

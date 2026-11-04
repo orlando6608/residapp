@@ -60,6 +60,15 @@ Lo que ya hay (verificado el 2026-10-06):
    - **Las tablas clínicas no tienen ningún salto.** El «administrador global» ya existe como `PLATAFORMA` y, por el ADR 0006, no ve
      contenido clínico. Su salto se limita a las tablas que escribe al provisionar: `centros`, `unidades`, `cuentas`,
      `ambitos_perfil`, `ambitos_perfil_unidad` y `eventos_auditoria`.
+     **Actualización 2026-11-04 (M1, scripts `0088` y `0090`; lectura de `dpo-residapp`).** El salto es por tabla y por operación, y nunca de UPDATE ni de DELETE: `eventos_auditoria`, solo
+     INSERT (Plataforma no lee la auditoría de otros centros); `unidades`, `ambitos_perfil_unidad` y `administraciones_principales_cambios`, lectura e INSERT en cualquier centro (la lectura es
+     necesaria para contar unidades, mostrar las Administraciones y numerar los cambios de principal); `logos_centro`, solo INSERT al dar de alta un centro (ni lee ni cambia los de centros ya creados). El INSERT
+     exige un ámbito vigente de un perfil PLATAFORMA (cuenta activa, sujeto coincidente) y, donde la tabla tiene columnas de autor, que lleven la cuenta y el perfil del ámbito activo. El ámbito de
+     Plataforma solo puede vivir en el centro reservado (disparador). El filtro es siempre por centro, nunca por unidad. El DELETE ya lo impiden los disparadores `INSTEAD OF` de `unidades`,
+     `ambitos_perfil_unidad` y `administraciones_principales_cambios`. `centros`, `cuentas` y `ambitos_perfil` siguen sin política (el login las lee antes de elegir ámbito).
+     Insertar en `unidades` y `ambitos_perfil_unidad` exige además un ámbito de ADMINISTRACION o PLATAFORMA (decisión de Orlando tras la revisión de calidad: un auxiliar o un familiar no puede darse una unidad). La hoja de
+     acceso a otro centro (`vinculaciones_cuenta`) la ve alguien sin ámbito en ese centro y enseña los nombres de las unidades: lo resuelve el procedimiento `dbo.nombres_unidades_vinculacion` (`EXECUTE AS OWNER`, solo
+     de una hoja viva y con el resumen de su código), no un salto de lectura en `unidades`.
    - El login lista los ámbitos de una cuenta antes de elegir centro: esas consultas (`cuentas`, `ambitos_perfil`) van en un modo de
      autenticación propio, fuera de las tablas clínicas.
    - El ámbito llega al factory por `ITenantContext` (puerto en Application; `RequestTenantContext` en Web lee el sujeto de

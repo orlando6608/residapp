@@ -10,7 +10,6 @@ namespace ResidApp.IntegrationTests;
 public sealed class CoberturaRlsTests
 {
     private const string Diseno = "Por diseño: la lee el login antes de que haya ámbito, o no es de datos";
-    private const string Provision = "Provisión: la escribe PLATAFORMA en otro centro; llevará política con su salto (ADR 0008)";
 
     private static readonly Dictionary<string, string> Excepciones = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -26,11 +25,6 @@ public sealed class CoberturaRlsTests
         ["ambitos_perfil"] = Diseno,
         ["scripts_aplicados"] = Diseno,
         ["sysdiagrams"] = Diseno,
-
-        ["unidades"] = Provision,
-        ["ambitos_perfil_unidad"] = Provision,
-        ["administraciones_principales_cambios"] = Provision,
-        ["logos_centro"] = Provision,
     };
 
     private sealed record TableRow(string Name, bool HasPolicy);
@@ -87,6 +81,47 @@ public sealed class CoberturaRlsTests
             .Order().ToList();
 
         Assert.True(incomplete.Count == 0, "Tablas con la política a medias (falta FILTER o BLOCK al insertar/actualizar): " + string.Join(", ", incomplete));
+    }
+
+    /// <summary>Script 0090: qué función protege cada tabla de la estructura del centro, por tipo y operación. Las tres funciones de ese script no se usan en ninguna otra tabla:
+    /// un «salto» no se reutiliza sin que alguien lo decida aquí.</summary>
+    [Fact]
+    public async Task Las_tablas_de_estructura_usan_las_funciones_previstas_y_ninguna_otra_tabla_las_usa()
+    {
+        var expected = new Dictionary<string, string>
+        {
+            ["unidades|FILTER|"] = "fn_centro_o_plataforma",
+            ["unidades|BLOCK|AFTER INSERT"] = "fn_unidad_escribe",
+            ["unidades|BLOCK|AFTER UPDATE"] = "fn_centro_del_ambito",
+            ["ambitos_perfil_unidad|FILTER|"] = "fn_centro_o_plataforma",
+            ["ambitos_perfil_unidad|BLOCK|AFTER INSERT"] = "fn_asignacion_escribe",
+            ["ambitos_perfil_unidad|BLOCK|AFTER UPDATE"] = "fn_centro_del_ambito",
+            ["administraciones_principales_cambios|FILTER|"] = "fn_centro_o_plataforma",
+            ["administraciones_principales_cambios|BLOCK|AFTER INSERT"] = "fn_estructura_escribe",
+            ["administraciones_principales_cambios|BLOCK|AFTER UPDATE"] = "fn_centro_del_ambito",
+            ["logos_centro|FILTER|"] = "fn_centro_del_ambito",
+            ["logos_centro|BLOCK|AFTER INSERT"] = "fn_estructura_escribe",
+            ["logos_centro|BLOCK|AFTER UPDATE"] = "fn_centro_del_ambito",
+        };
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var rows = (await connection.QueryAsync<(string Table, string Type, string Operation, string Definition)>("""
+            SELECT OBJECT_NAME(sp.target_object_id), sp.predicate_type_desc, ISNULL(sp.operation_desc, N''), sp.predicate_definition
+              FROM sys.security_predicates sp
+            """)).ToList();
+
+        foreach (var (key, function) in expected)
+        {
+            var parts = key.Split('|');
+            var row = Assert.Single(rows, r => r.Table == parts[0] && r.Type == parts[1] && r.Operation == parts[2]);
+            Assert.Contains($"[{function}]", row.Definition);
+        }
+
+        var tableNames = expected.Keys.Select(k => k.Split('|')[0]).ToHashSet();
+        foreach (var function in new[] { "fn_centro_o_plataforma", "fn_unidad_escribe", "fn_asignacion_escribe", "fn_estructura_escribe" })
+        {
+            var users = rows.Where(r => r.Definition.Contains($"[{function}]")).Select(r => r.Table).Distinct().ToList();
+            Assert.All(users, table => Assert.Contains(table, tableNames));
+        }
     }
 
     [Fact]

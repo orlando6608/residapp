@@ -105,8 +105,10 @@ public sealed class SqlAccountLinkRepository(SqlConnectionFactory connections) :
             return null;
         }
 
-        var units = await UnitNamesAsync(connection, null, [row.Id], ct);
-        return new LiveAccountLink(row.Id, row.CenterName, EnumCode.ParseCode<SystemProfile>(row.ProfileCode), units.GetValueOrDefault(row.Id) ?? [], row.ExpiresAt);
+        // La persona invitada no tiene ámbito en ese centro y la política de `unidades` no le deja leerlas: un procedimiento (script 0090) devuelve solo las de esta hoja viva.
+        var units = (await connection.QueryAsync<string>(new CommandDefinition(
+            "EXEC dbo.nombres_unidades_vinculacion @TokenHash, @Now", new { TokenHash = tokenHash, Now = now }, cancellationToken: ct))).ToList();
+        return new LiveAccountLink(row.Id, row.CenterName, EnumCode.ParseCode<SystemProfile>(row.ProfileCode), units, row.ExpiresAt);
     }
 
     public async Task RedeemAsync(AccountId accountId, Guid linkId, DateTime now, CancellationToken ct = default)

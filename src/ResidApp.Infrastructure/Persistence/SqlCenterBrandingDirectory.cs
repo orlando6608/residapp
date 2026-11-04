@@ -7,8 +7,8 @@ namespace ResidApp.Infrastructure.Persistence;
 
 /// <summary>
 /// Lee la marca del centro (script 0068). Por el ámbito, comprueba en SQL que el ámbito de la cookie pertenece a la cuenta de la sesión, está
-/// vigente y no es de Plataforma (que se muestra con la marca de ResidApp); el logo no tiene seguridad por filas, así que esta unión es lo que
-/// lo protege.
+/// vigente y no es de Plataforma (que se muestra con la marca de ResidApp). El logo tiene además seguridad por filas (script 0090): solo se ve el del
+/// centro del ámbito activo.
 /// </summary>
 public sealed class SqlCenterBrandingDirectory(SqlConnectionFactory connections) : ICenterBrandingDirectory
 {
