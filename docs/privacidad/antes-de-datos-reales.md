@@ -139,10 +139,29 @@ ve ni cambia el de un centro ya creado. No ve la auditoría de otros centros (`0
 
 - **A validar por el DPO real o abogado:** que el contrato de encargado (art. 28) con cada residencia y la información al personal recojan que el operador de ResidApp ve la estructura y las Administraciones de todos los centros (qué cuenta está en qué unidad, quién es principal), no la actividad asistencial.
 - **Sin decidir (producto o DPO):** si la lectura del detalle de un centro por Plataforma (`FindAsync`, que muestra el identificador de acceso y el nombre de las Administraciones) debe dejar constancia; hoy no la deja.
-- **Límites conocidos (revisión de calidad, 2026-11-04):** los `UPDATE` solo comprueban el centro, no el autor (`revocado_por_cuenta_id`, `actualizado_por_*` pueden fijarse a cualquier valor); el salto de Plataforma se apoya en el disparador que limita su ámbito al centro reservado y en que `ambitos_perfil` no tiene política (M2, permisos mínimos del usuario de la app, sigue pendiente); crear una unidad con el identificador de una de otro centro daría un error 500 (clave primaria) en vez del error de dominio de antes, solo con una petición manipulada.
+- **Límites conocidos (revisión de calidad, 2026-11-04):** los `UPDATE` solo comprueban el centro, no el autor (`revocado_por_cuenta_id`, `actualizado_por_*` pueden fijarse a cualquier valor); el salto de Plataforma se apoya en el disparador que limita su ámbito al centro reservado y en que `ambitos_perfil` no tiene política (M2, permisos mínimos del usuario de la app, hecho en `0091`: apartado 10); crear una unidad con el identificador de una de otro centro daría un error 500 (clave primaria) en vez del error de dominio de antes, solo con una petición manipulada.
 - **Plazo de conservación** del historial de `administraciones_principales_cambios` (inmutable): debe seguir al de la auditoría, que sigue sin decidir (apartado 8).
 - **Política de privacidad para profesionales:** aún no existe; cuando se redacte debe decir que el operador ve estructura y administradores.
 - **Coste medido** (2026-11-04, SQL Server 2022 en contenedor, 501 centros, 6.000 unidades, 4.000 ámbitos y 16.000 asignaciones, usuario `residapp_app`): la consulta de autorización por petición pasa de 0,05-0,06 ms a 0,08 ms; las listas de un centro (sus unidades, sus asignaciones), de 0,01-0,03 ms a 0,07-0,10 ms. **Lo que sí crece es la pantalla de centros de Plataforma** (cuenta las unidades de todos los centros): de 0,6-1 ms a 16-18 ms con 500 centros, en proporción a las unidades (unos 3 µs por unidad). No medido: Azure SQL (nivel B1, más lento), concurrencia ni caché fría. Una consulta sobre estas tablas **sin** `WHERE centro_id` pasa a evaluar la política fila a fila (unos 8 ms con 6.000 filas); el código no las hace.
+
+## 10. Permisos mínimos del usuario de la app (`0091`, M2; lectura de `dpo-residapp` del 2026-11-04)
+
+`residapp_app`, el usuario con el que la web entra en la base, ya **no** es `db_datawriter`: pertenece al rol `residapp_aplicacion`, que recibe en cada tabla solo lo que el código hace en ella (INSERT en las 100 tablas, UPDATE en 48,
+DELETE en 13) y lleva un `DENY` de todo lo demás, que gana aunque alguien vuelva a meter a la aplicación en `db_datawriter`. Las tablas inmutables (auditoría, versiones, correcciones, cambios) quedan protegidas dos veces:
+por sus disparadores y por permisos. Las dos declaraciones de acceso clínico (`declaraciones_*`) solo permiten actualizar la columna `terminada_en`. Es una medida técnica del artículo 32 (integridad y mínimo privilegio):
+no cambia ningún tratamiento, finalidad ni dato.
+
+- **A validar por la persona experta (DPO real o abogado):** que esta medida figure como medida de seguridad del artículo 32 en el registro de actividades y en la EIPD, y la política de borrado y purga de auditoría, `eventos_acceso` y `sesiones`
+  (sigue sin decidir: apartado 8).
+- **Límites conocidos, que no hay que confundir con cobertura de la autoría:** (1) el INSERT sigue concedido donde la aplicación inserta: M2 protege contra la **alteración y el borrado** de lo escrito, no contra que la aplicación
+  inserte filas falsas (en la auditoría lo acota `0088`, que exige la cuenta y el perfil del ámbito activo); (2) los `UPDATE` concedidos lo son de **tabla entera**: pueden cambiar columnas como `revocado_por_cuenta_id` o
+  `actualizado_por_*` (apartado 9); (3) hay tablas con UPDATE que son registro de hechos pero mutables por diseño (`sesiones`, `invitaciones_acceso`, borradores de basal); (4) la clave TOTP en claro (puerta abierta) sigue
+  siendo legible por la aplicación: M2 no la mitiga; (5) el borrado de `passkeys` no deja evento de auditoría (`SqlCredentialStore`): mejora aparte.
+- **Cualquier purga futura** (los 15 años, `envios_correo`, el motivo de un cambio de cita, `eventos_acceso`, `sesiones`, la auditoría) debe hacerse con un procedimiento `EXECUTE AS OWNER` aprobado por el DPO, como `0085` y `0089`, **no quitando
+  un `DENY`**. Ninguna cuenta de la aplicación puede borrar por la vía ordinaria fuera de las 13 tablas de configuración, borradores y credenciales que la matriz declara.
+- **Reversión de emergencia:** `ALTER ROLE db_datawriter ADD MEMBER residapp_app;`. En un centro con datos reales debe autorizarla Orlando y dejar constancia (incidencia), no quedar como parche silencioso.
+- **Pendiente de CJ:** que los rangos de referencia (`rangos_referencia_constantes`) y los borradores de basal se puedan borrar sin perder historial clínico (los valores ya registrados se copian en el registro; a confirmar).
+- **Cargos (`cargos_ocupantes`, `cargos_unidades`):** se borran filas al cambiar de ocupante; el historial de quién ocupó un cargo lo conserva la auditoría (`0073`: quién cambió qué cargo y cuándo, no los nombres de quienes lo ocuparon). Aceptado así en el organigrama.
 
 ## Cómo se marca como hecho
 
