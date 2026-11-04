@@ -185,6 +185,83 @@ public class TareasCorreoTests
         Assert.Equal(0, task.Purge.PurgeCalls);
     }
 
+    // ---- La tarea que cierra los avisos que quedaron PENDIENTE (script 0089) ----
+
+    [Theory]
+    [InlineData(true, "falta darle el rol al usuario")]
+    [InlineData(false, "falta la cadena de conexión 'ResidAppTareas'")]
+    public async Task Cierre_SinElRolDeLaTarea_AvisaUnaSolaVez_YNoCierraNada(bool ownConnection, string cause)
+    {
+        await using var task = new CloserHarness(ownConnection);
+        task.Closer.HasRole = false;
+        await task.StartAsync();
+        await WaitUntilAsync(() => task.Closer.IdentityChecks >= 5, "cinco vueltas sin el rol");
+
+        var entry = Assert.Single(task.Log.Snapshot());
+        Assert.Equal(LogLevel.Warning, entry.Level);
+        Assert.Contains("residapp_tareas", entry.Message);
+        Assert.Contains(cause, entry.Message);
+        Assert.Equal(0, task.Closer.CloseCalls);
+    }
+
+    [Fact]
+    public async Task Cierre_ConElRol_SiCierraFilas_RegistraSoloElRecuento_ComoAdvertencia()
+    {
+        await using var task = new CloserHarness();
+        task.Closer.Closed = 3;
+        await task.StartAsync();
+        await WaitUntilAsync(() => task.Closer.CloseCalls >= 2, "dos vueltas");
+
+        var entries = task.Log.Snapshot();
+        Assert.NotEmpty(entries);
+        Assert.All(entries, entry =>
+        {
+            Assert.Equal(LogLevel.Warning, entry.Level);
+            Assert.Contains("3 filas", entry.Message);
+            Assert.Null(entry.Exception);
+        });
+    }
+
+    [Fact]
+    public async Task Cierre_ConElRol_SinFilasQueCerrar_NoRegistraNada()
+    {
+        await using var task = new CloserHarness();
+        await task.StartAsync();
+        await WaitUntilAsync(() => task.Closer.CloseCalls >= 3, "tres vueltas");
+
+        Assert.Empty(task.Log.Snapshot());
+    }
+
+    [Fact]
+    public async Task Cierre_SiUnaVueltaFalla_NoSeDetiene_YNoRegistraLaExcepcionEntera()
+    {
+        await using var task = new CloserHarness();
+        task.Closer.Explode = true;
+        await task.StartAsync();
+        await WaitUntilAsync(() => task.Closer.CloseCalls >= 3, "tres vueltas que fallan");
+
+        var entries = task.Log.Snapshot();
+        Assert.NotEmpty(entries);
+        Assert.All(entries, entry =>
+        {
+            Assert.Equal(LogLevel.Warning, entry.Level);
+            Assert.Null(entry.Exception);
+            Assert.DoesNotContain(Address, entry.Message);
+            Assert.Contains(nameof(InvalidOperationException), entry.Message);
+        });
+    }
+
+    [Fact]
+    public async Task Cierre_EsperaElRetrasoDeArranqueAntesDeLaPrimeraVuelta()
+    {
+        await using var task = new CloserHarness(startDelay: TimeSpan.FromHours(1));
+        await task.StartAsync();
+        await Task.Delay(200);
+
+        Assert.Equal(0, task.Closer.IdentityChecks);
+        Assert.Equal(0, task.Closer.CloseCalls);
+    }
+
     // ---- Dobles ----
 
     private sealed class ChangeNoticeHarness : IAsyncDisposable
@@ -240,6 +317,57 @@ public class TareasCorreoTests
             await _worker.StopAsync(default);
             _worker.Dispose();
             await _services.DisposeAsync();
+        }
+    }
+
+    private sealed class CloserHarness : IAsyncDisposable
+    {
+        private readonly ServiceProvider _services;
+        private readonly UnresolvedNoticeWorker _worker;
+
+        public CloserHarness(bool ownConnection = true, TimeSpan? startDelay = null)
+        {
+            _services = new ServiceCollection().AddScoped<IUnresolvedNoticeCloser>(_ => Closer).BuildServiceProvider();
+            _worker = new UnresolvedNoticeWorker(
+                _services.GetRequiredService<IServiceScopeFactory>(), new ChangeNoticeTaskIdentity(ownConnection), Log, Round, startDelay ?? TimeSpan.Zero);
+        }
+
+        public FakeCloser Closer { get; } = new();
+
+        public CapturingLogger<UnresolvedNoticeWorker> Log { get; } = new();
+
+        public Task StartAsync() => _worker.StartAsync(default);
+
+        public async ValueTask DisposeAsync()
+        {
+            await _worker.StopAsync(default);
+            _worker.Dispose();
+            await _services.DisposeAsync();
+        }
+    }
+
+    private sealed class FakeCloser : IUnresolvedNoticeCloser
+    {
+        private int _identityChecks;
+        private int _closeCalls;
+        public volatile bool HasRole = true;
+        public volatile bool Explode;
+        public int Closed;
+
+        public int IdentityChecks => Volatile.Read(ref _identityChecks);
+
+        public int CloseCalls => Volatile.Read(ref _closeCalls);
+
+        public Task<bool> HasTaskIdentityAsync(CancellationToken ct = default)
+        {
+            Interlocked.Increment(ref _identityChecks);
+            return Task.FromResult(HasRole);
+        }
+
+        public Task<int> CloseAsync(CancellationToken ct = default)
+        {
+            Interlocked.Increment(ref _closeCalls);
+            return Explode ? throw new InvalidOperationException("fallo con " + Address) : Task.FromResult(Closed);
         }
     }
 

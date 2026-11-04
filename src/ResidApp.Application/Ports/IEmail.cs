@@ -64,6 +64,15 @@ public interface IEmailLogPurge
     Task<int> PurgeAsync(CancellationToken ct = default);
 }
 
+/// <summary>El cierre de los avisos que quedaron PENDIENTE (script 0089): los marca FALLIDO / RESULTADO_DESCONOCIDO («sin confirmar», puede haber salido) con el procedimiento de la
+/// base de datos, que fija el plazo y el motivo. Devuelve cuántas filas cerró. Solo la puede ejecutar la conexión de la tarea programada (rol residapp_tareas).</summary>
+public interface IUnresolvedNoticeCloser
+{
+    Task<bool> HasTaskIdentityAsync(CancellationToken ct = default);
+
+    Task<int> CloseAsync(CancellationToken ct = default);
+}
+
 /// <summary>El envío reservado. Sin dirección, la fila ya quedó en OMITIDO y no hay nada que mandar.</summary>
 public sealed record NoticeReservation(Guid Id, string? Address, string Language);
 
