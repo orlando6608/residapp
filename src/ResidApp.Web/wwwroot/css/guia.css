@@ -81,6 +81,8 @@
 .guia-diagrama .caja { stroke-width: 2; }
 .guia-diagrama .caja.plat { fill: var(--lane-plat-bg); stroke: var(--lane-plat); }
 .guia-diagrama .caja.adm { fill: var(--lane-adm-bg); stroke: var(--lane-adm); }
+.guia-diagrama .caja.aux { fill: var(--lane-aux-bg); stroke: var(--lane-aux); }
+.guia-diagrama .caja.enf { fill: var(--lane-enf-bg); stroke: var(--lane-enf); }
 .guia-diagrama .caja.fuera { fill: none; stroke: var(--bs-secondary-color); stroke-dasharray: 6 4; }
 .guia-diagrama .titulo { font-weight: 700; font-size: 14px; }
 .guia-diagrama .flecha { stroke: var(--bs-secondary-color); stroke-width: 2; fill: none; }
@@ -135,8 +137,19 @@
   /* Solo la barra y el pie de la web (hijos directos de body): la cabecera de cada ficha también es un <header>. */
   body > header, body > footer, .guia-no-imprimir { display: none !important; }
 
-  body { font-size: 11pt; color: #000; background: #fff; }
+  body { font-size: 10pt; line-height: 1.3; color: #000; background: #fff; }
   a { color: inherit; text-decoration: none; }
+
+  /* Compacto: una ficha tiene que caber en una página (la regla de la Guía es de una página como máximo por ficha). */
+  .ficha { padding: 0.5rem 0.9rem; margin-bottom: 0.9rem; }
+  .ficha h3 { font-size: 1.1rem; }
+  .ficha h4 { margin: 0.6rem 0 0.15rem; font-size: 0.95rem; }
+  .ficha ul, .ficha ol { margin-bottom: 0.25rem; }
+  .ficha li { margin-bottom: 0.1rem; }
+  .ficha dd { margin-bottom: 0.3rem; }
+  .ficha-referencias { font-size: 8.5pt; margin-bottom: 0; }
+  .ficha-referencias li { margin-bottom: 0; }
+  .ficha-referencias .ruta { font-size: 8pt; }
 
   .ficha { break-inside: avoid; }
   .ficha h3, .ficha h4, h2, .ficha dt { break-after: avoid; }

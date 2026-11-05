@@ -22,7 +22,7 @@ public partial class GuiaDerivaTests
     /// <summary>Perfiles cuya guía todavía no está escrita (plan de la Guía, §5). Se vacía fase a fase: un perfil con guía que siga aquí, o sin ella y fuera de aquí, falla.</summary>
     private static readonly SystemProfile[] SinGuiaTodavia =
     [
-        SystemProfile.Administracion, SystemProfile.Auxiliar, SystemProfile.Enfermeria, SystemProfile.Medicina,
+        SystemProfile.Administracion, SystemProfile.Enfermeria, SystemProfile.Medicina,
         SystemProfile.DireccionClinica, SystemProfile.Familiar,
     ];
 
@@ -101,8 +101,12 @@ public partial class GuiaDerivaTests
             var controladores = ficha.Rutas.Select(r => r.Split('/')[0]).Distinct().ToList();
             var vistas = controladores.Select(c => Web("Views", c)).Append(Web("Views", "Shared"))
                 .Where(Directory.Exists).SelectMany(d => Directory.EnumerateFiles(d, "*.cshtml", SearchOption.AllDirectories)).Select(File.ReadAllText).ToList();
+            // Los textos salen de las vistas, de los controladores y modelos, de los avisos de la capa de aplicación y del JavaScript de las pantallas.
             var codigo = controladores.SelectMany(c => Directory.EnumerateFiles(Web("Controllers"), c + "Controller*.cs")).Select(File.ReadAllText)
-                .Concat(Directory.EnumerateFiles(Web("Models"), "*.cs").Select(File.ReadAllText)).ToList();
+                .Concat(Directory.EnumerateFiles(Web("Models"), "*.cs").Select(File.ReadAllText))
+                .Concat(Directory.EnumerateFiles(Web("wwwroot", "js"), "*.js").Select(File.ReadAllText))
+                .Concat(Directory.EnumerateFiles(Path.Combine(Raiz(), "src", "ResidApp.Application"), "*.cs", SearchOption.AllDirectories)
+                    .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")).Select(File.ReadAllText)).ToList();
 
             foreach (var texto in ficha.Pasos.SelectMany(p => p.Botones ?? []))
             {
@@ -130,7 +134,11 @@ public partial class GuiaDerivaTests
         foreach (var (perfil, ficha) in Fichas())
         {
             Assert.Equal(ficha.Manual.Titulo, TituloDe(manual, ficha.Manual.Id, ficha.Manual.Titulo, $"{ficha.Codigo}: Manual"));
-            Assert.Equal(ficha.Flujo.Titulo, TituloDe(flujo, ficha.Flujo.Id, ficha.Flujo.Titulo, $"{ficha.Codigo}: Flujo"));
+            if (ficha.Flujo is { } f)
+            {
+                Assert.Equal(f.Titulo, TituloDe(flujo, f.Id, f.Titulo, $"{ficha.Codigo}: Flujo"));
+            }
+
             if (ficha.Acceso is { } r)
             {
                 Assert.Equal(r.Titulo, TituloDe(acceso, r.Id, r.Titulo, $"{ficha.Codigo}: Acceso"));
@@ -238,10 +246,57 @@ public partial class GuiaDerivaTests
         }
     }
 
+    [Fact]
+    public void LosCodigosDeFichaQueCitaUnTextoExisten()
+    {
+        var existentes = Fichas().Select(x => x.Ficha.Codigo).ToHashSet();
+        foreach (var file in Directory.EnumerateFiles(Web("Guia"), "*.json"))
+        {
+            // Solo las citas «ver XXX-00» o «de XXX-00 a YYY-00»: los códigos que las propias fichas declaran no cuentan como cita.
+            foreach (Match cita in CodigoCitado().Matches(File.ReadAllText(file)))
+            {
+                Assert.True(existentes.Contains(cita.Groups[1].Value), $"{Path.GetFileName(file)} cita {cita.Groups[1].Value}, que no existe como ficha.");
+            }
+        }
+    }
+
+    [Fact]
+    public void UnCampoObligatorioQueFalta_HaceFallarLaCarga()
+    {
+        var carpeta = Path.Combine(Path.GetTempPath(), "guia-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(carpeta);
+        try
+        {
+            // Una ficha sin «mensajes»: la carga tiene que fallar diciendo cuál falta, no dar una ficha a medias.
+            File.WriteAllText(Path.Combine(carpeta, "auxiliar.json"), """
+                { "perfil": "Auxiliar", "proposito": "x", "dependeDe": [], "entregaA": [], "siempre": [], "conPermiso": [], "nunca": [],
+                  "revisadoPara": null, "revisado": "2026-11-05",
+                  "fichas": [ { "codigo": "AUX-01", "pregunta": "¿Cómo x?", "palabras": [], "permisos": [], "antes": [], "pasos": [],
+                                "despues": [], "dudas": [], "rutas": [], "manual": { "id": "a", "titulo": "b" } } ] }
+                """);
+            var error = Assert.ThrowsAny<JsonException>(() => GuiaCatalogo.Cargar(carpeta));
+            Assert.Contains("Mensajes", error.Message);
+
+            // Un campo que sobra (una errata en el nombre) también.
+            File.WriteAllText(Path.Combine(carpeta, "auxiliar.json"), """
+                { "perfil": "Auxiliar", "proposito": "x", "dependeDe": [], "entregaA": [], "siempre": [], "conPermiso": [], "nunca": [],
+                  "revisadoPara": null, "revisado": "2026-11-05", "fichas": [], "propocito": "errata" }
+                """);
+            Assert.ThrowsAny<JsonException>(() => GuiaCatalogo.Cargar(carpeta));
+        }
+        finally
+        {
+            Directory.Delete(carpeta, true);
+        }
+    }
+
     private static IEnumerable<(GuiaPerfil Perfil, GuiaFicha Ficha)> Fichas() => Catalogo().Perfiles.SelectMany(p => p.Fichas.Select(f => (p, f)));
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex Espacios();
+
+    [GeneratedRegex(@"(?:ver|de|a|y|o) ([A-Z]{3}-\d{2})\b")]
+    private static partial Regex CodigoCitado();
 
     [GeneratedRegex(@"\bCJ\b")]
     private static partial Regex CjSuelto();

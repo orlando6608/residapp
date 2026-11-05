@@ -1,0 +1,266 @@
+{
+  "perfil": "Auxiliar",
+  "proposito": "El Auxiliar es quien está con los residentes en cada turno. Su trabajo en ResidApp es dejar constancia, para cada residente que tiene asignado, de cómo ha ido el turno: sin cambios, con un cambio que Enfermería deba valorar, o no valorable. ResidApp no diagnostica ni decide nada clínico: recoge lo que observas y se lo hace llegar a Enfermería.",
+  "rutina": [
+    "Entras con tu cuenta, abres **Mis residentes** y ves solo a los residentes que Administración te ha asignado.",
+    "Durante el turno, si observas un cambio en un residente, lo registras como ordinario o prioritario.",
+    "Al terminar el turno, cierras a cada residente: «Sin cambios», «Registrar cambio» o «No valorable». Las tarjetas te dicen quiénes están «Cerrado hoy» y quiénes «Pendiente»."
+  ],
+  "dependeDe": ["Administración"],
+  "entregaA": ["Enfermería"],
+  "siempre": [
+    "Ver a tus residentes asignados, con su foto y su estado basal vigente (solo lectura).",
+    "Cerrar el turno de un residente con «Sin cambios» o con «No valorable».",
+    "Registrar un cambio, ordinario o prioritario.",
+    "Dictar el cambio por voz, si tu centro lo tiene activado."
+  ],
+  "conPermiso": [],
+  "nunca": [
+    "Ver a un residente que no tienes asignado.",
+    "Cambiar la foto del residente, ni ver el historial del basal ni firmarlo.",
+    "Ver las valoraciones, las indicaciones médicas ni las bandejas de Enfermería y Medicina.",
+    "Corregir o anular un cierre o un cambio ya registrado, ni ver qué ha pasado después con él."
+  ],
+  "revisadoPara": null,
+  "revisado": "2026-11-05",
+  "fichas": [
+    {
+      "codigo": "AUX-01",
+      "pregunta": "¿Cómo veo a mis residentes y qué dicen las etiquetas de cada tarjeta?",
+      "palabras": ["mis residentes", "lista", "tarjeta", "basal vigente", "cerrado hoy", "pendiente"],
+      "permisos": [],
+      "antes": [
+        "Que Administración te haya asignado residentes: los asigna en tu perfil de usuario. Solo ves a los asignados que están en tus unidades."
+      ],
+      "pasos": [
+        { "texto": "Pulsa **Mi panel** (arriba). Se abre **Mis residentes**.", "botones": ["Mi panel", "Mis residentes"] },
+        { "texto": "Cada tarjeta muestra la foto (o las iniciales), el nombre y la ubicación: unidad, habitación y plaza." },
+        { "texto": "Lee las dos etiquetas: **Basal vigente** o **Basal pendiente**, y **Cierre cotidiano: Cerrado hoy** o **Pendiente**.", "campos": ["Basal vigente", "Basal pendiente", "Cerrado hoy", "Pendiente"] },
+        { "texto": "Pulsa la tarjeta para abrir el **Registro cotidiano** de ese residente (ver AUX-03 a AUX-06)." }
+      ],
+      "despues": [
+        { "para": "Auxiliar", "texto": "Mirar no guarda nada. «Cerrado hoy» sale cuando hay algún cierre de hoy de ese residente, sea «Sin cambios», un cambio o «No valorable». Un residente sin basal vigente se puede abrir y cerrar igual." }
+      ],
+      "dudas": [
+        { "p": "«No tienes residentes asignados.»", "r": "Los asigna Administración: pídeselo si deberías tenerlos." },
+        { "p": "Un residente que debería salir no sale.", "r": "Solo salen los asignados a ti, activos y en tus unidades. Si no está asignado, o está fuera de tus unidades, no aparece: que lo revise Administración." },
+        { "p": "«El residente está suspendido por un ingreso hospitalario: no se puede actuar sobre él hasta que Administración reanude su atención.»", "r": "Puedes ver al residente, pero no registrar nada sobre él (ni cierre ni cambio) hasta que Administración reanude su atención." },
+        { "p": "Trabajo de noche y «Cerrado hoy» vuelve a «Pendiente» a una hora rara.", "r": "El «hoy» lo cuenta la aplicación por el día en hora universal (UTC), que cambia a la 1:00 en invierno y a las 2:00 en verano en la península. Después de esa hora, el residente vuelve a salir como «Pendiente»." }
+      ],
+      "rutas": ["Auxiliar/Index"],
+      "mensajes": [
+        "No tienes residentes asignados.",
+        "El residente está suspendido por un ingreso hospitalario: no se puede actuar sobre él hasta que Administración reanude su atención."
+      ],
+      "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
+      "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
+    },
+    {
+      "codigo": "AUX-02",
+      "pregunta": "¿Cómo consulto el estado basal y la foto de un residente?",
+      "palabras": ["basal", "estado basal", "barthel", "foto", "consultar"],
+      "permisos": [],
+      "antes": [
+        "Que el residente esté asignado a ti (ver AUX-01).",
+        "Que tenga un basal vigente: lo firman Enfermería o Medicina. Si no lo tiene, la pantalla lo dice."
+      ],
+      "pasos": [
+        { "texto": "Abre al residente desde **Mis residentes**. La foto sale en la cabecera.", "botones": ["Mis residentes"] },
+        { "texto": "En **Estado basal vigente** ves el resumen: «Barthel total» sobre 100 y cuándo se firmó.", "campos": ["Estado basal vigente"] },
+        { "texto": "Pulsa **Consultar estado basal** para ver el detalle: el **Índice de Barthel** y las nueve áreas (Movilidad, Alimentación, Continencia, Aseo e higiene, Cognición, Comunicación, Conducta, Sueño y Ayudas habituales).", "botones": ["Consultar estado basal"], "campos": ["Índice de Barthel"] }
+      ],
+      "despues": [
+        { "para": "Auxiliar", "texto": "Es solo lectura: no hay ningún botón para cambiar nada. Solo ves el basal **vigente**; el historial de versiones, los borradores y la firma son de Enfermería y Medicina. La foto la ves, pero no puedes ponerla ni cambiarla." }
+      ],
+      "dudas": [
+        { "p": "«Sin basal vigente registrado para este residente.»", "r": "Todavía nadie lo ha firmado. Mientras tanto puedes cerrar el turno del residente con normalidad." }
+      ],
+      "rutas": ["Auxiliar/Registro", "Auxiliar/Basal"],
+      "mensajes": ["Sin basal vigente registrado para este residente."],
+      "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
+      "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
+    },
+    {
+      "codigo": "AUX-03",
+      "pregunta": "¿Cómo cierro el turno de un residente sin cambios?",
+      "palabras": ["sin cambios", "cierre de turno", "cerrar turno", "confirmar"],
+      "permisos": [],
+      "antes": [
+        "Que el residente esté asignado a ti (ver AUX-01).",
+        "Que durante el turno no hayas observado ningún cambio en él. Si has observado alguno, ver AUX-05 o AUX-06."
+      ],
+      "pasos": [
+        { "texto": "Abre al residente desde **Mis residentes**. Verás tres tarjetas: «Sin cambios», «Registrar cambio» y «No valorable».", "botones": ["Mis residentes"] },
+        { "texto": "En la tarjeta **Sin cambios**, pulsa **Confirmar sin cambios**. No hay pantalla de confirmación: se guarda al pulsar.", "botones": ["Confirmar sin cambios"] },
+        { "texto": "Vuelves a **Mis residentes** con el aviso «Cierre registrado: sin cambios.» y el residente sale como «Cerrado hoy»." }
+      ],
+      "despues": [
+        { "para": "Auxiliar", "texto": "«Sin cambios» confirma que la situación habitual se mantiene y **no genera ninguna tarea para Enfermería**. Queda registrado con la fecha y la hora que pone la aplicación." }
+      ],
+      "dudas": [
+        { "p": "Me he equivocado y quería registrar un cambio.", "r": "Un cierre no se puede deshacer (ver AUX-08). Si hay algo que Enfermería debe valorar, registra el cambio (ver AUX-05)." },
+        { "p": "¿Puedo pulsarlo dos veces?", "r": "Pulsar dos veces seguidas el mismo formulario no duplica el registro. Aun así, la aplicación no te impide hacer otro cierre más tarde el mismo día." }
+      ],
+      "rutas": ["Auxiliar/Registro", "Auxiliar/SinCambios"],
+      "mensajes": ["Cierre registrado: sin cambios."],
+      "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
+      "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
+    },
+    {
+      "codigo": "AUX-04",
+      "pregunta": "¿Cómo marco a un residente como no valorable?",
+      "palabras": ["no valorable", "motivo", "no se pudo valorar", "cierre"],
+      "permisos": [],
+      "antes": [
+        "Que el residente esté asignado a ti (ver AUX-01).",
+        "Un motivo por el que no pudiste valorarlo en este turno (obligatorio, hasta 500 caracteres)."
+      ],
+      "pasos": [
+        { "texto": "Abre al residente desde **Mis residentes**.", "botones": ["Mis residentes"] },
+        { "texto": "En la tarjeta **No valorable**, escribe el «Motivo».", "campos": ["Motivo"] },
+        { "texto": "Pulsa **Marcar no valorable**.", "botones": ["Marcar no valorable"] },
+        { "texto": "Vuelves a **Mis residentes** con el aviso «Cierre registrado: día marcado como no valorable.»" }
+      ],
+      "despues": [
+        { "para": "Auxiliar", "texto": "Queda registrado el cierre con tu motivo. **No valorable nunca equivale a estabilidad clínica**: dice que no se pudo valorar, no que todo esté bien." }
+      ],
+      "dudas": [
+        { "p": "«Indica un motivo para marcar el día como no valorable.»", "r": "El motivo es obligatorio: escríbelo y vuelve a pulsar «Marcar no valorable»." }
+      ],
+      "rutas": ["Auxiliar/Registro", "Auxiliar/NoValorable"],
+      "mensajes": [
+        "Cierre registrado: día marcado como no valorable.",
+        "Indica un motivo para marcar el día como no valorable."
+      ],
+      "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
+      "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
+    },
+    {
+      "codigo": "AUX-05",
+      "pregunta": "¿Cómo registro un cambio ordinario?",
+      "palabras": ["registrar cambio", "cambio ordinario", "áreas observadas", "temperatura", "continuar", "confirmar y enviar"],
+      "permisos": [],
+      "antes": [
+        "Que el residente esté asignado a ti (ver AUX-01).",
+        "Haber observado algo en al menos una área, o haber tomado la temperatura. Si el cambio es urgente o grave, ver AUX-06."
+      ],
+      "pasos": [
+        { "texto": "Abre al residente y, en la tarjeta **Registrar cambio**, pulsa **Registrar cambio**.", "botones": ["Registrar cambio"] },
+        { "texto": "En **Áreas observadas**, marca las opciones rápidas o escribe una nota en las áreas donde has visto algo (completa al menos una; deja vacías las demás). Las áreas son: Alimentación / hidratación, Movilidad / funcionalidad, Ánimo / conducta, Dolor / malestar, Heces / diuresis, Sueño, Lesiones en piel, Participación / relación social, Incidencias / caídas y Estado de conciencia.", "campos": ["Áreas observadas", "Alimentación / hidratación", "Movilidad / funcionalidad", "Ánimo / conducta", "Dolor / malestar", "Heces / diuresis", "Sueño", "Lesiones en piel", "Participación / relación social", "Incidencias / caídas", "Estado de conciencia", "Añadir nota"] },
+        { "texto": "Si la has tomado, escribe la «Temperatura (°C)», entre 34,0 y 42,0. Si solo ha cambiado la temperatura, puedes registrarla sin marcar ningún área.", "campos": ["Temperatura (°C)"] },
+        { "texto": "En **Clasificación**, deja marcado «Ordinario» (viene así por defecto).", "campos": ["Clasificación", "Ordinario"] },
+        { "texto": "Pulsa **Continuar** (la barra de abajo siempre está a la vista).", "botones": ["Continuar"] },
+        { "texto": "Revisa el **Resumen**. Si algo no es correcto, pulsa **Volver a editar** (no pierdes nada de lo escrito). Si está bien, pulsa **Confirmar y enviar**.", "botones": ["Volver a editar", "Confirmar y enviar"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "Le llega a la **Bandeja de cambios ordinarios** (la ficha «Cambios ordinarios» de su inicio). La fecha y la hora las pone la aplicación." },
+        { "para": "Auxiliar", "texto": "Vuelves a **Mis residentes** con «Cambio registrado: enviado a la bandeja ordinaria de Enfermería.» No ves lo que Enfermería haga después, y no puedes corregir ni anular lo enviado (ver AUX-08)." }
+      ],
+      "dudas": [
+        { "p": "«Selecciona al menos un área con contenido o anota la temperatura.»", "r": "No has marcado ni escrito nada. Completa al menos un área o la temperatura." },
+        { "p": "«La temperatura tiene que estar entre 34,0 y 42,0 °C. Revísala…»", "r": "Fuera de ese rango la app no te deja seguir: suele ser un error al escribirla o al dictarla." },
+        { "p": "Aviso amarillo: «Solo has anotado la temperatura…»", "r": "Si no hay ningún cambio en el residente, vuelve atrás y usa «Sin cambios» (ver AUX-03)." }
+      ],
+      "rutas": ["Auxiliar/Registro", "Auxiliar/RegistrarCambio", "Auxiliar/ConfirmarCambio"],
+      "mensajes": [
+        "Selecciona al menos un área con contenido o anota la temperatura.",
+        "La temperatura tiene que estar entre 34,0 y 42,0 °C.",
+        "Solo has anotado la temperatura.",
+        "Cambio registrado: enviado a la bandeja"
+      ],
+      "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
+      "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
+    },
+    {
+      "codigo": "AUX-06",
+      "pregunta": "¿Cómo registro un cambio prioritario?",
+      "palabras": ["cambio prioritario", "prioritario", "motivo prioritario", "aviso directo", "urgente"],
+      "permisos": [],
+      "antes": [
+        "Lo que ya se pide para un cambio ordinario (ver AUX-05).",
+        "Saber qué protocolo sigue tu centro para avisar: ResidApp **no avisa a nadie por sí sola**. El aviso directo lo haces tú, según el protocolo del centro; en la aplicación solo lo dejas escrito."
+      ],
+      "pasos": [
+        { "texto": "Haz los pasos 1 a 3 de AUX-05: **Registrar cambio**, «Áreas observadas» y, si la tienes, la «Temperatura (°C)».", "botones": ["Registrar cambio"] },
+        { "texto": "En **Clasificación**, marca **Prioritario** y elige el «Motivo prioritario»: Alteración de conciencia o del estado general, Caída, lesión o traumatismo, Fiebre o sospecha de infección, Dolor nuevo o intenso, Dificultad respiratoria o Déficit neurológico nuevo.", "campos": ["Prioritario", "Motivo prioritario", "Alteración de conciencia o del estado general", "Caída, lesión o traumatismo", "Fiebre o sospecha de infección", "Dolor nuevo o intenso", "Dificultad respiratoria", "Déficit neurológico nuevo"] },
+        { "texto": "Pulsa **Continuar**.", "botones": ["Continuar"] },
+        { "texto": "En la confirmación sale el aviso «Evento prioritario: recuerda aplicar el protocolo del centro.» Escribe el «Aviso directo documentado»: cómo y a quién avisaste. Es obligatorio.", "campos": ["Aviso directo documentado"] },
+        { "texto": "Pulsa **Confirmar y enviar** (en un cambio prioritario el botón es rojo).", "botones": ["Confirmar y enviar"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "Le llega a la **Bandeja prioritaria** (la ficha «Bandeja prioritaria» de su inicio)." },
+        { "para": "Auxiliar", "texto": "Vuelves a **Mis residentes** con «Cambio registrado: enviado a la bandeja prioritaria de Enfermería.» No ves lo que pasa después ni puedes corregirlo (ver AUX-08)." }
+      ],
+      "dudas": [
+        { "p": "«Elige el motivo prioritario.»", "r": "Has marcado «Prioritario» sin elegir motivo. Elige uno de los seis." },
+        { "p": "«Documenta el aviso directo antes de confirmar un evento prioritario.»", "r": "Escribe en «Aviso directo documentado» el aviso que has dado y vuelve a pulsar «Confirmar y enviar»." },
+        { "p": "He marcado «Prioritario» por error.", "r": "Antes de confirmar, pulsa «Volver a editar» y cambia la clasificación: no pierdes lo escrito." }
+      ],
+      "rutas": ["Auxiliar/RegistrarCambio", "Auxiliar/ConfirmarCambio"],
+      "mensajes": [
+        "Elige el motivo prioritario.",
+        "Documenta el aviso directo antes de confirmar un evento prioritario.",
+        "Evento prioritario: recuerda aplicar el protocolo del centro."
+      ],
+      "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
+      "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
+    },
+    {
+      "codigo": "AUX-07",
+      "pregunta": "¿Cómo dicto el cambio por voz?",
+      "palabras": ["dictado", "voz", "micrófono", "grabar", "sugerencia"],
+      "permisos": [],
+      "antes": [
+        "Que tu centro tenga el dictado activado y que tu dispositivo tenga micrófono. Si no ves el bloque «Dictar el cambio» en «Registrar cambio», no está disponible: rellena el formulario a mano.",
+        "**No digas nombres de personas** al dictar."
+      ],
+      "pasos": [
+        { "texto": "En **Registrar cambio**, busca el bloque **Dictar el cambio** y pulsa **Grabar**. Cuenta lo que ha pasado y pulsa **Parar** (se para solo a los 2 minutos).", "botones": ["Grabar", "Parar"], "campos": ["Dictar el cambio"] },
+        { "texto": "Verás «Lo que se ha entendido» y la lista «Revisa cada sugerencia». Lo que se entiende aparece en el formulario como una **sugerencia** (casillas marcadas, notas con la etiqueta «Sugerido por voz»).", "campos": ["Lo que se ha entendido", "Revisa cada sugerencia"] },
+        { "texto": "Revisa las sugerencias una a una: **Está bien** o **Quitar**.", "botones": ["Está bien", "Quitar"] },
+        { "texto": "**Continuar** queda bloqueado hasta que revises todas. Después sigue como en AUX-05 o AUX-06.", "botones": ["Continuar"] }
+      ],
+      "despues": [
+        { "para": "Auxiliar", "texto": "El dictado **solo sugiere**: no registra nada por sí mismo. Ni el audio ni el texto dictado se guardan; solo queda anotado que se usó el dictado. El audio se envía a un servicio externo de transcripción." }
+      ],
+      "dudas": [
+        { "p": "«No se encuentra ningún micrófono. Puedes rellenar el formulario a mano.»", "r": "Tu dispositivo no tiene micrófono: rellena el formulario a mano." },
+        { "p": "«No hay permiso para usar el micrófono…»", "r": "Da el permiso al micrófono en el navegador, o rellena el formulario a mano." },
+        { "p": "«Has usado el dictado muchas veces seguidas. Espera un minuto o rellena el formulario a mano.»", "r": "Hay un límite de 6 dictados por minuto." },
+        { "p": "«No se ha entendido nada que se pueda anotar.»", "r": "Vuelve a grabar o rellena el formulario a mano." }
+      ],
+      "rutas": ["Auxiliar/RegistrarCambio", "Auxiliar/DictarCambio"],
+      "mensajes": [
+        "No se encuentra ningún micrófono. Puedes rellenar el formulario a mano.",
+        "Has usado el dictado muchas veces seguidas. Espera un minuto o rellena el formulario a mano.",
+        "No se ha entendido nada que se pueda anotar."
+      ],
+      "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
+      "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
+    },
+    {
+      "codigo": "AUX-08",
+      "pregunta": "¿Cómo corrijo o deshago algo que he registrado por error?",
+      "palabras": ["corregir", "deshacer", "anular", "error", "me he equivocado"],
+      "permisos": [],
+      "antes": [
+        "Saber que **desde tu perfil no se puede**: un cierre o un cambio, una vez confirmado, no se puede editar ni borrar."
+      ],
+      "pasos": [
+        { "texto": "Antes de confirmar un cambio, pulsa **Volver a editar** para corregirlo: no pierdes nada de lo escrito.", "botones": ["Volver a editar"] },
+        { "texto": "Si ya lo has confirmado, no hay botón para editarlo ni anularlo. La aplicación sí te deja registrar un cierre o un cambio nuevo con lo correcto, pero **no borra el anterior**." },
+        { "texto": "Si hace falta aclarar algo a Enfermería, díselo según el protocolo de tu centro." }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "Lo que ya enviaste sigue en su bandeja tal como lo registraste. Enfermería lo valora y puede corregir sus propias valoraciones, pero no lo que tú registraste." }
+      ],
+      "dudas": [
+        { "p": "¿Puedo ver qué ha hecho Enfermería con mi cambio?", "r": "No. Tu perfil solo ve «Cerrado hoy» o «Pendiente» y los avisos al guardar." }
+      ],
+      "rutas": ["Auxiliar/Registro", "Auxiliar/ConfirmarCambio"],
+      "mensajes": [],
+      "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
+      "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
+    }
+  ]
+}
