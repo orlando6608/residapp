@@ -1,0 +1,80 @@
+@using ResidApp.Web.Models
+@model (GuiaPerfil Perfil, GuiaFicha Ficha)
+@{
+    var perfil = Model.Perfil;
+    var ficha = Model.Ficha;
+    // A quién le llega: los perfiles que aparecen en «después», sin el propio.
+    var destinos = ficha.Despues.Select(d => GuiaPerfiles.PorTitulo(d.Para)).Where(e => e is not null && e.Perfil != perfil.Profile).Distinct().ToList();
+    var propio = GuiaPerfiles.Of(perfil.Profile);
+}
+
+<article class="ficha perfil-@propio.Slug" id="@ficha.Codigo" aria-labelledby="@(ficha.Codigo)-t">
+    <header>
+        <h3 id="@(ficha.Codigo)-t"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</h3>
+        <p class="ficha-etiquetas">
+            @if (ficha.Permisos.Count == 0)
+            {
+                <span class="etiqueta etiqueta-siempre">Siempre</span>
+            }
+            else
+            {
+                <span class="etiqueta etiqueta-permiso">Requiere permiso</span>
+                <span>@string.Join(" · ", ficha.Permisos.Select(SupervisionDisplay.PermissionLabel))@(ficha.Concede is null ? "" : " · lo concede " + ficha.Concede)</span>
+            }
+            <span class="guia-chip perfil-@propio.Slug">@propio.Titulo</span>
+            @foreach (var destino in destinos)
+            {
+                <span aria-hidden="true">→</span>
+                <span class="guia-chip perfil-@destino!.Slug"><span class="visually-hidden">Le llega a </span>@destino.Titulo</span>
+            }
+        </p>
+    </header>
+
+    <h4>Qué necesito antes</h4>
+    <ul>
+        @foreach (var item in ficha.Antes)
+        {
+            <li>@GuiaTexto.Html(item)</li>
+        }
+    </ul>
+
+    <h4>Pasos</h4>
+    <ol class="pasos">
+        @foreach (var paso in ficha.Pasos)
+        {
+            <li>@GuiaTexto.Html(paso.Texto)</li>
+        }
+    </ol>
+
+    <h4>Qué pasa después y a quién le llega</h4>
+    <dl>
+        @foreach (var despues in ficha.Despues)
+        {
+            <dt>Le llega a: @despues.Para</dt>
+            <dd>@GuiaTexto.Html(despues.Texto)</dd>
+        }
+    </dl>
+
+    @if (ficha.Dudas.Count > 0)
+    {
+        <h4>Errores o dudas frecuentes</h4>
+        <dl>
+            @foreach (var duda in ficha.Dudas)
+            {
+                <dt>@GuiaTexto.Html(duda.P)</dt>
+                <dd>@GuiaTexto.Html(duda.R)</dd>
+            }
+        </dl>
+    }
+
+    @* En papel los enlaces no funcionan: cada referencia se lee entera, con su ruta escrita. *@
+    <h4>Dónde se explica con más detalle</h4>
+    <ul class="ficha-referencias">
+        <li>Manual de usuario, apartado «@ficha.Manual.Titulo» <a href="/Home/Manual#@ficha.Manual.Id" class="ruta">/Home/Manual#@ficha.Manual.Id</a></li>
+        <li>Flujo de trabajo, sección «@ficha.Flujo.Titulo» <a href="/flujo-de-trabajo.html#@ficha.Flujo.Id" class="ruta">/flujo-de-trabajo.html#@ficha.Flujo.Id</a></li>
+        @if (ficha.Acceso is { } acceso)
+        {
+            <li>Acceso y sesión, sección «@acceso.Titulo» <a href="/acceso-y-sesion.html#@acceso.Id" class="ruta">/acceso-y-sesion.html#@acceso.Id</a></li>
+        }
+    </ul>
+</article>

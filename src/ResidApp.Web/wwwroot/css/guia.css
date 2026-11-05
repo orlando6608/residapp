@@ -1,0 +1,149 @@
+/* Guía por perfil (/Guia). Los colores de cada perfil son los mismos que en «Flujo de trabajo» (GuiaDerivaTests lo comprueba).
+   Sobre Bootstrap 5: el modo claro u oscuro lo fija tema.js con data-bs-theme; al imprimir sale siempre en claro. */
+
+:root {
+  --lane-plat: #4a5560; --lane-plat-bg: #eef0f2;
+  --lane-adm: #2e6b2f;  --lane-adm-bg: #eaf4ea;
+  --lane-aux: #6b4fa0;  --lane-aux-bg: #f1edf8;
+  --lane-enf: #1b5f6b;  --lane-enf-bg: #e6f1f2;
+  --lane-med: #2457a6;  --lane-med-bg: #e8eff9;
+  --lane-dir: #9b2c4a;  --lane-dir-bg: #f8e9ee;
+  --lane-fam: #8a5a12;  --lane-fam-bg: #f8f0e3;
+}
+
+[data-bs-theme="dark"] {
+  --lane-plat: #b6c0ca; --lane-plat-bg: #1d2226;
+  --lane-adm: #95d095;  --lane-adm-bg: #172617;
+  --lane-aux: #b9a2e6;  --lane-aux-bg: #1f1a2b;
+  --lane-enf: #72c0cb;  --lane-enf-bg: #142427;
+  --lane-med: #8fb3ec;  --lane-med-bg: #172030;
+  --lane-dir: #f0a3b8;  --lane-dir-bg: #2a1820;
+  --lane-fam: #e2b56a;  --lane-fam-bg: #2a2114;
+}
+
+.perfil-plataforma { --perfil: var(--lane-plat); --perfil-bg: var(--lane-plat-bg); }
+.perfil-administracion { --perfil: var(--lane-adm); --perfil-bg: var(--lane-adm-bg); }
+.perfil-auxiliar { --perfil: var(--lane-aux); --perfil-bg: var(--lane-aux-bg); }
+.perfil-enfermeria { --perfil: var(--lane-enf); --perfil-bg: var(--lane-enf-bg); }
+.perfil-medicina { --perfil: var(--lane-med); --perfil-bg: var(--lane-med-bg); }
+.perfil-direccion { --perfil: var(--lane-dir); --perfil-bg: var(--lane-dir-bg); }
+.perfil-familia { --perfil: var(--lane-fam); --perfil-bg: var(--lane-fam-bg); }
+
+/* Nombre del perfil en un chip: color y borde del perfil, y siempre el nombre escrito (no depende solo del color). */
+.guia-chip {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  border: 1.5px solid var(--perfil);
+  border-radius: 999px;
+  background: var(--perfil-bg);
+  color: var(--perfil);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.guia-pendiente { opacity: 0.6; }
+
+.guia-cabecera {
+  border-top: 6px solid var(--perfil);
+  padding-top: 0.75rem;
+}
+
+.guia-cabecera h1 { color: var(--perfil); }
+
+/* Lo que puede hacer siempre / solo con permiso / nunca: tres bloques con etiqueta de texto y símbolo distinto. */
+.guia-permisos { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+.guia-permisos > section { border: 1px solid var(--bs-border-color); border-radius: 0.5rem; padding: 0.75rem 1rem; }
+.guia-permisos h3 { font-size: 1rem; }
+.guia-permisos ul { padding-left: 1.1rem; margin-bottom: 0; }
+
+.etiqueta {
+  display: inline-block;
+  padding: 0.05rem 0.5rem;
+  border: 1.5px solid currentColor;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.etiqueta-siempre::before { content: "● "; }
+.etiqueta-permiso::before { content: "◆ "; }
+.etiqueta-nunca::before { content: "✕ "; }
+.etiqueta-siempre { color: var(--bs-success-text-emphasis); }
+.etiqueta-permiso { color: var(--bs-warning-text-emphasis); }
+.etiqueta-nunca { color: var(--bs-danger-text-emphasis); }
+
+/* Diagrama «De quién depende y a quién le entrega trabajo»: SVG en vertical para que quepa en un móvil. */
+.guia-diagrama { max-width: 26rem; margin-inline: auto; }
+.guia-diagrama svg { width: 100%; height: auto; display: block; }
+.guia-diagrama text { fill: var(--bs-body-color); font-size: 13px; }
+.guia-diagrama .caja { stroke-width: 2; }
+.guia-diagrama .caja.plat { fill: var(--lane-plat-bg); stroke: var(--lane-plat); }
+.guia-diagrama .caja.adm { fill: var(--lane-adm-bg); stroke: var(--lane-adm); }
+.guia-diagrama .caja.fuera { fill: none; stroke: var(--bs-secondary-color); stroke-dasharray: 6 4; }
+.guia-diagrama .titulo { font-weight: 700; font-size: 14px; }
+.guia-diagrama .flecha { stroke: var(--bs-secondary-color); stroke-width: 2; fill: none; }
+.guia-diagrama .punta { fill: var(--bs-secondary-color); }
+.guia-diagrama .nota { fill: var(--bs-secondary-color); font-size: 12px; }
+
+/* Ficha: una tarea, una pregunta. Borde izquierdo y código con el color del perfil. */
+.ficha {
+  border: 1px solid var(--bs-border-color);
+  border-left: 6px solid var(--perfil);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  scroll-margin-top: 1rem;
+}
+.ficha h3 { font-size: 1.25rem; margin: 0; }
+.ficha h4 { font-size: 1rem; margin: 1rem 0 0.25rem; color: var(--perfil); }
+.ficha-codigo {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 0.25rem;
+  background: var(--perfil-bg);
+  border: 1.5px solid var(--perfil);
+  color: var(--perfil);
+  font-family: var(--bs-font-monospace);
+  font-size: 0.9rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.ficha-etiquetas { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0.5rem 0 0; }
+.ficha dl { margin-bottom: 0; }
+.ficha dt { font-weight: 600; }
+.ficha dd { margin-bottom: 0.5rem; }
+.ficha ol.pasos { padding-left: 1.4rem; }
+.ficha ol.pasos li { margin-bottom: 0.35rem; }
+.ficha-referencias { font-size: 0.9rem; }
+.ficha-referencias li { margin-bottom: 0.25rem; }
+.ficha-referencias .ruta { font-family: var(--bs-font-monospace); font-size: 0.85rem; }
+
+/* Índice de preguntas y de fichas. */
+.guia-indice { columns: 1; padding-left: 0; list-style: none; }
+.guia-indice li { margin-bottom: 0.35rem; break-inside: avoid; }
+.guia-indice .ficha-codigo { margin-right: 0.4rem; }
+@media (min-width: 768px) { .guia-indice { columns: 2; column-gap: 2rem; } }
+
+.guia-sello { font-size: 0.875rem; color: var(--bs-secondary-color); border-top: 1px solid var(--bs-border-color); padding-top: 0.5rem; margin-top: 2rem; }
+
+@media print {
+  @page { size: A4; margin: 16mm 14mm 20mm; }
+
+  /* Solo la barra y el pie de la web (hijos directos de body): la cabecera de cada ficha también es un <header>. */
+  body > header, body > footer, .guia-no-imprimir { display: none !important; }
+
+  body { font-size: 11pt; color: #000; background: #fff; }
+  a { color: inherit; text-decoration: none; }
+
+  .ficha { break-inside: avoid; }
+  .ficha h3, .ficha h4, h2, .ficha dt { break-after: avoid; }
+  .ficha li, .ficha dd { break-inside: avoid; }
+  .guia-permisos > section, .guia-diagrama { break-inside: avoid; }
+
+  /* El sello de revisión se repite en el pie de cada página (sección «PieImpresion» del _Layout); el del final de la página es solo para la pantalla. */
+  .guia-sello-pantalla { display: none; }
+  .guia-sello { font-size: 9pt; margin-top: 0; }
+}
