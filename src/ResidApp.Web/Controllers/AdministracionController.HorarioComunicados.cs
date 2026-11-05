@@ -12,8 +12,8 @@ namespace ResidApp.Web.Controllers;
 /// afectan a los comunicados que se guarden después: la hora de los ya guardados queda fijada.</summary>
 public sealed partial class AdministracionController
 {
-    /// <summary>Con <paramref name="cj"/> el formulario trae el horario de CJ (19:00 y 60 minutos, resumen semanal), sin guardarlo.</summary>
-    public async Task<IActionResult> HorarioComunicados(bool cj = false, CancellationToken ct = default)
+    /// <summary>Con <paramref name="sugeridos"/> el formulario trae el horario sugerido (19:00 y 60 minutos, resumen semanal), sin guardarlo.</summary>
+    public async Task<IActionResult> HorarioComunicados(bool sugeridos = false, CancellationToken ct = default)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
@@ -29,8 +29,8 @@ public sealed partial class AdministracionController
         }
 
         return View(new HorarioComunicadosViewModel(
-            result.Value, HorarioComunicadosFormModel.From(cj ? FamilyCommunicationScheduleSettings.Default : result.Value!.Settings, result.Value!.Version),
-            RestoredDefaults: cj));
+            result.Value, HorarioComunicadosFormModel.From(sugeridos ? FamilyCommunicationScheduleSettings.Default : result.Value!.Settings, result.Value!.Version),
+            RestoredDefaults: sugeridos));
     }
 
     /// <summary>Ante un conflicto de versión no se sobrescribe el cambio ajeno: se vuelve a mostrar lo escrito y se pide recargar.</summary>

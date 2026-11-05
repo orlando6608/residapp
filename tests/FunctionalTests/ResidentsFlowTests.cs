@@ -1491,7 +1491,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var comunicados = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/Comunicados"));
         var nurseDenied = await nurse.GetAsync("/Administracion/HorarioComunicados");
 
-        Assert.Contains("Este centro sigue con el horario de CJ.", initial);
+        Assert.Contains("Este centro sigue con el horario sugerido.", initial);
         Assert.Contains("El margen va de 0 a 1440 minutos.", invalid);
         Assert.Contains("Horario de los comunicados guardado.", saved);
         Assert.Matches(@"19:00, 60 min y resumen semanal\s*→ 20:30, 120 min y resumen semanal", saved);

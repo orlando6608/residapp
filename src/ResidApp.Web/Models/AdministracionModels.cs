@@ -473,6 +473,6 @@ public sealed class HorarioComunicadosFormModel
     };
 }
 
-/// <summary>View es null si no se pudo leer (perfil sin acceso); RestoredDefaults, que el formulario trae el horario de CJ sin guardarlo.</summary>
+/// <summary>View es null si no se pudo leer (perfil sin acceso); RestoredDefaults, que el formulario trae el horario sugerido sin guardarlo.</summary>
 public sealed record HorarioComunicadosViewModel(
     FamilyCommunicationScheduleView? View, HorarioComunicadosFormModel Form, bool RestoredDefaults = false);

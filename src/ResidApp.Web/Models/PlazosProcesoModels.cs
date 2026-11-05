@@ -34,7 +34,7 @@ public sealed class PlazosProcesoFormModel
         })],
     };
 
-    /// <summary>Los plazos de CJ, sin guardarlos.</summary>
+    /// <summary>Los plazos sugeridos, sin guardarlos.</summary>
     public static PlazosProcesoFormModel Defaults(int version) => new()
     {
         Version = version,
@@ -47,6 +47,6 @@ public sealed class PlazosProcesoFormModel
     };
 }
 
-/// <summary>View es null si no se pudo leer (sin permiso o fallo técnico). RestoredDefaults avisa de que el formulario trae los plazos de CJ
+/// <summary>View es null si no se pudo leer (sin permiso o fallo técnico). RestoredDefaults avisa de que el formulario trae los plazos sugeridos
 /// sin guardar.</summary>
 public sealed record PlazosProcesoViewModel(ProcessDeadlinesView? View, PlazosProcesoFormModel Form, bool RestoredDefaults = false);
