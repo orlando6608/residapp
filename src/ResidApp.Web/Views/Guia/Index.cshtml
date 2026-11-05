@@ -48,22 +48,15 @@
     </ul>
 </section>
 
-<section class="mb-4" aria-labelledby="preguntas">
-    <h2 class="h4" id="preguntas">Índice de preguntas</h2>
-    <ul class="guia-indice">
-        @foreach (var (slug, titulo, ficha) in Model.Preguntas())
+<section class="mb-4" aria-labelledby="mas">
+    <h2 class="h4" id="mas">Más en la Guía</h2>
+    <ul>
+        <li><a asp-action="Preguntas">Todas las preguntas</a>: cada tarea «¿Cómo…?», por orden alfabético, con el código de su ficha.</li>
+            <li><a asp-action="Matriz">Quién entrega qué a quién</a>: qué fichas dejan trabajo, o información, a otro perfil.</li>
+        @if (Model.Glosario is not null)
         {
-            <li class="perfil-@slug">
-                @if (slug == GuiaComun.Slug)
-                {
-                    <a asp-action="Comun" asp-fragment="@ficha.Codigo"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a>
-                }
-                else
-                {
-                    <a asp-action="Perfil" asp-route-slug="@slug" asp-fragment="@ficha.Codigo"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a>
-                }
-                <span class="text-muted small">(@titulo)</span>
-            </li>
+            <li><a asp-action="Glosario">Glosario</a>: las palabras que usan las fichas, en una frase corriente.</li>
         }
+        <li><a asp-action="Todo">Guía completa</a>: todo en un solo documento, para imprimirlo o guardarlo como PDF.</li>
     </ul>
 </section>

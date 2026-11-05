@@ -14,6 +14,19 @@ public class GuiaController(GuiaCatalogo catalogo) : Controller
     [HttpGet("Guia/" + GuiaComun.Slug)]
     public IActionResult Comun() => catalogo.Comun is { } comun ? View(comun) : NotFound();
 
+    [HttpGet("Guia/preguntas")]
+    public IActionResult Preguntas() => View(catalogo);
+
+    [HttpGet("Guia/matriz")]
+    public IActionResult Matriz() => View(catalogo);
+
+    [HttpGet("Guia/glosario")]
+    public IActionResult Glosario() => catalogo.Glosario is null ? NotFound() : View(catalogo);
+
+    /// <summary>Todas las guías en un solo documento, para imprimir.</summary>
+    [HttpGet("Guia/todo")]
+    public IActionResult Todo() => View(catalogo);
+
     [HttpGet("Guia/{slug}")]
     public IActionResult Perfil(string slug)
     {

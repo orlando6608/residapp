@@ -134,10 +134,38 @@
 .guia-indice .ficha-codigo { margin-right: 0.4rem; }
 @media (min-width: 768px) { .guia-indice { columns: 2; column-gap: 2rem; } }
 
+/* Matriz «quién entrega qué a quién»: una casilla por origen y destino, con los códigos de las fichas. */
+/* position: relative para que el texto oculto de las casillas vacías no ensanche la página: lo absoluto se escapa del desplazamiento de la tabla. */
+.guia-matriz-caja { position: relative; }
+.guia-matriz { font-size: 0.875rem; }
+.guia-matriz th[scope="col"] { border-top: 4px solid var(--perfil); vertical-align: bottom; min-width: 6.5rem; }
+.guia-matriz th[scope="row"] { border-left: 4px solid var(--perfil); min-width: 8rem; }
+.guia-matriz .ficha-codigo { margin: 0 0.25rem 0.25rem 0; padding: 0 0.3rem; font-size: 0.75rem; }
+
+/* Glosario: cada término con su frase y las fichas donde se usa. */
+.guia-glosario { margin-bottom: 0; }
+.guia-termino { break-inside: avoid; margin-bottom: 0.9rem; }
+.guia-glosario dt { font-weight: 700; }
+.guia-glosario dd { margin-bottom: 0; }
+.guia-glosario .ficha-codigo { margin: 0 0.2rem 0 0; padding: 0 0.3rem; font-size: 0.75rem; }
+@media (min-width: 992px) { .guia-glosario { columns: 2; column-gap: 2rem; } }
+
+/* «Guía completa» (/Guia/todo): cada guía es un capítulo. */
+.guia-capitulo { margin-top: 3rem; }
+
 .guia-sello { font-size: 0.875rem; color: var(--bs-secondary-color); border-top: 1px solid var(--bs-border-color); padding-top: 0.5rem; margin-top: 2rem; }
 
 @media print {
   @page { size: A4; margin: 16mm 14mm 20mm; }
+  /* La matriz tiene nueve columnas: en papel va en una página apaisada (en vertical se cortaba la última columna). */
+  @page apaisada { size: A4 landscape; margin: 10mm 12mm 16mm; }
+  .guia-apaisado { page: apaisada; }
+  .guia-matriz-caja { overflow: visible; }
+  .guia-matriz .ficha-codigo { white-space: nowrap; }
+  .guia-matriz > thead > tr > th, .guia-matriz > tbody > tr > th, .guia-matriz > tbody > tr > td { padding: 0.15rem 0.3rem; }
+  .guia-matriz tr { break-inside: avoid; }
+  .guia-apaisado p { font-size: 9pt; margin-bottom: 0.4rem; }
+  .guia-apaisado .h2 { font-size: 1.3rem; margin-bottom: 0.3rem; }
 
   /* Solo la barra y el pie de la web (hijos directos de body): la cabecera de cada ficha también es un <header>. */
   body > header, body > footer, .guia-no-imprimir { display: none !important; }
@@ -160,6 +188,15 @@
   .ficha h3, .ficha h4, h2, .ficha dt { break-after: avoid; }
   .ficha li, .ficha dd { break-inside: avoid; }
   .guia-permisos > section, .guia-diagrama { break-inside: avoid; }
+
+  /* Guía completa: cada capítulo en página nueva; la matriz y el glosario, más compactos. */
+  .guia-capitulo { margin-top: 0; break-before: page; }
+  .guia-matriz { font-size: 7.5pt; line-height: 1.15; }
+  .guia-matriz th[scope="col"], .guia-matriz th[scope="row"] { min-width: 0; }
+  .guia-matriz .ficha-codigo, .guia-glosario .ficha-codigo { font-size: 7pt; border-width: 1px; }
+  .guia-matriz .ficha-codigo { margin: 0 0.15rem 0.1rem 0; padding: 0 0.2rem; }
+  .guia-glosario { columns: 2; column-gap: 1.2rem; font-size: 9pt; }
+  .guia-indice { font-size: 9pt; }
 
   /* El sello de revisión se repite en el pie de cada página (sección «PieImpresion» del _Layout); el del final de la página es solo para la pantalla. */
   .guia-sello-pantalla { display: none; }

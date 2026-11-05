@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Mvc;
 using ResidApp.Shared;
 
 namespace ResidApp.Web.Models;
@@ -61,6 +62,23 @@ public sealed record GuiaComun(string Proposito, string? RevisadoPara, string Re
     public const string Prefijo = "TOD";
 }
 
+/// <summary>Una entrada del glosario (Guia/glosario.json): «Ver» son los códigos de las fichas donde se usa el término.</summary>
+public sealed record GuiaTermino(string Termino, string Significa, IReadOnlyList<string> Ver);
+
+public sealed record GuiaGlosario(string? RevisadoPara, string Revisado, IReadOnlyList<GuiaTermino> Terminos)
+{
+    /// <summary>Por orden alfabético, sin que los acentos cambien el orden («Ámbito» antes que «Auditoría»).</summary>
+    public IEnumerable<GuiaTermino> Ordenados() =>
+        Terminos.OrderBy(t => t.Termino, StringComparer.Create(new System.Globalization.CultureInfo("es-ES"), true));
+}
+
+public static class GuiaEnlaces
+{
+    /// <summary>El enlace a una ficha: dentro de la misma página si todo está en «Todo», y si no, a la página de su guía.</summary>
+    public static string Ficha(this IUrlHelper url, string slug, string codigo, bool enTodo) =>
+        enTodo ? "#" + codigo : (slug == GuiaComun.Slug ? url.Action("Comun", "Guia") : url.Action("Perfil", "Guia", new { slug }))! + "#" + codigo;
+}
+
 public static class GuiaPerfiles
 {
     public sealed record Entrada(SystemProfile Perfil, string Slug, string Titulo);
@@ -96,13 +114,17 @@ public sealed class GuiaCatalogo
     /// <summary>El capítulo «Para todos», si existe comun.json.</summary>
     public GuiaComun? Comun { get; }
 
-    private GuiaCatalogo(IReadOnlyList<GuiaPerfil> perfiles, GuiaComun? comun)
+    /// <summary>El glosario, si existe glosario.json.</summary>
+    public GuiaGlosario? Glosario { get; }
+
+    private GuiaCatalogo(IReadOnlyList<GuiaPerfil> perfiles, GuiaComun? comun, GuiaGlosario? glosario)
     {
         Perfiles = perfiles;
         Comun = comun;
+        Glosario = glosario;
     }
 
-    /// <summary>Lee un JSON por perfil de la carpeta (plataforma.json…), en el orden de <see cref="GuiaPerfiles.Todos"/>, y comun.json aparte.</summary>
+    /// <summary>Lee un JSON por perfil de la carpeta (plataforma.json…), en el orden de <see cref="GuiaPerfiles.Todos"/>, y comun.json y glosario.json aparte.</summary>
     public static GuiaCatalogo Cargar(string carpeta)
     {
         var contexto = new NullabilityInfoContext();
@@ -114,7 +136,15 @@ public sealed class GuiaCatalogo
             Validar(comun, "comun.json", contexto);
         }
 
-        var perfiles = Directory.EnumerateFiles(carpeta, "*.json").Where(file => Path.GetFileName(file) != "comun.json")
+        GuiaGlosario? glosario = null;
+        if (File.Exists(Path.Combine(carpeta, "glosario.json")))
+        {
+            glosario = JsonSerializer.Deserialize<GuiaGlosario>(File.ReadAllText(Path.Combine(carpeta, "glosario.json")), Options)
+                ?? throw new JsonException("glosario.json está vacío.");
+            Validar(glosario, "glosario.json", contexto);
+        }
+
+        var perfiles = Directory.EnumerateFiles(carpeta, "*.json").Where(file => Path.GetFileName(file) is not ("comun.json" or "glosario.json"))
             .Select(file =>
             {
                 var perfil = JsonSerializer.Deserialize<GuiaPerfil>(File.ReadAllText(file), Options)
@@ -124,7 +154,7 @@ public sealed class GuiaCatalogo
             })
             .OrderBy(p => GuiaPerfiles.Todos.ToList().FindIndex(e => e.Perfil == p.Profile))
             .ToList();
-        return new GuiaCatalogo(perfiles, comun);
+        return new GuiaCatalogo(perfiles, comun, glosario);
     }
 
     /// <summary>System.Text.Json deja en null un campo que falta, aunque no sea opcional: aquí se rechaza, indicando cuál es y en qué ficha.</summary>
@@ -171,6 +201,47 @@ public sealed class GuiaCatalogo
         Perfiles.SelectMany(p => p.Fichas.Select(f => (Slug: p.Slug, Titulo: p.Titulo, Ficha: f)))
             .Concat((Comun?.Fichas ?? []).Select(f => (Slug: GuiaComun.Slug, Titulo: GuiaComun.Titulo, Ficha: f)))
             .OrderBy(x => x.Ficha.Pregunta.TrimStart('¿'), StringComparer.Create(new System.Globalization.CultureInfo("es-ES"), true));
+
+    /// <summary>Todas las fichas con el «slug» de su guía, en el orden de lectura: «Para todos» y luego cada perfil.</summary>
+    public IEnumerable<(string Slug, GuiaFicha Ficha)> Fichas() =>
+        (Comun?.Fichas ?? []).Select(f => (Slug: GuiaComun.Slug, Ficha: f))
+            .Concat(Perfiles.SelectMany(p => p.Fichas.Select(f => (Slug: p.Slug, Ficha: f))));
+
+    /// <summary>Una guía (o «Para todos») por su «slug» y la ficha por su código, para enlazar desde el glosario.</summary>
+    public string? SlugDe(string codigo) => Fichas().Where(x => x.Ficha.Codigo == codigo).Select(x => x.Slug).FirstOrDefault();
+
+    /// <summary>Quién entrega qué a quién, sacado de «Qué pasa después y a quién le llega» de cada ficha: para cada guía de origen y cada destino
+    /// (un perfil o «Personal del centro»), los códigos de las fichas. No cuenta lo que la guía se entrega a sí misma ni a «Tú».</summary>
+    public IReadOnlyDictionary<(string Origen, string Destino), IReadOnlyList<string>> Entregas()
+    {
+        var resultado = new Dictionary<(string, string), List<string>>();
+        foreach (var (slug, ficha) in Fichas())
+        {
+            foreach (var para in ficha.Despues.Select(d => d.Para).Distinct())
+            {
+                var destino = para == GuiaDespues.Personal ? GuiaMatriz.PersonalSlug : GuiaDespues.Perfil(para)?.Slug;
+                if (destino is null || destino == slug)
+                {
+                    continue;
+                }
+
+                if (!resultado.TryGetValue((slug, destino), out var codigos))
+                {
+                    resultado[(slug, destino)] = codigos = [];
+                }
+
+                codigos.Add(ficha.Codigo);
+            }
+        }
+
+        return resultado.ToDictionary(x => x.Key, x => (IReadOnlyList<string>)x.Value);
+    }
+}
+
+/// <summary>Los nombres de las columnas de la matriz que no son un perfil.</summary>
+public static class GuiaMatriz
+{
+    public const string PersonalSlug = "personal";
 }
 
 /// <summary>El texto de las fichas es texto plano con una marca mínima: **negrita** (botones y pantallas), *cursiva* y `código`. Todo lo demás se escapa.</summary>

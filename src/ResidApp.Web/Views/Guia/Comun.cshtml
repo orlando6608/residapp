@@ -17,39 +17,9 @@
     </ol>
 </nav>
 
+<partial name="_Comun" model="(Model, false)" />
+
 <div class="perfil-@GuiaComun.Slug">
-    <div class="guia-cabecera mb-3">
-        <h1 class="h2">Guía: @GuiaComun.Titulo</h1>
-        <p class="text-muted mb-0">
-            Lo que vale para cualquier perfil, tarea a tarea. El detalle de cada pantalla está en el
-            <a asp-controller="Home" asp-action="Manual">Manual de usuario</a> (<span class="font-monospace">/Home/Manual</span>) y el acceso, con
-            diagramas, en <a href="~/acceso-y-sesion.html">Acceso y sesión</a> (<span class="font-monospace">/acceso-y-sesion.html</span>).
-        </p>
-    </div>
-
-    <section class="mb-4" aria-labelledby="para-que">
-        <h2 class="h4" id="para-que">Para qué sirve este capítulo</h2>
-        <p>@GuiaTexto.Html(Model.Proposito)</p>
-    </section>
-
-    <section class="mb-4" aria-labelledby="indice-fichas">
-        <h2 class="h4" id="indice-fichas">Índice de tareas</h2>
-        <ul class="guia-indice">
-            @foreach (var ficha in Model.Fichas)
-            {
-                <li><a href="#@ficha.Codigo"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a></li>
-            }
-        </ul>
-    </section>
-
-    <section aria-labelledby="fichas">
-        <h2 class="h4" id="fichas">Tareas</h2>
-        @foreach (var ficha in Model.Fichas)
-        {
-            <partial name="_Ficha" model="((GuiaPerfil?)null, ficha)" />
-        }
-    </section>
-
     <p class="guia-sello guia-sello-pantalla">@sello · Estado a @fecha · Guía por perfil: @GuiaComun.Titulo</p>
 </div>
 

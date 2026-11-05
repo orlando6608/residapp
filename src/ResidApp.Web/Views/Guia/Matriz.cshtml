@@ -1,0 +1,20 @@
+@using ResidApp.Web.Models
+@model GuiaCatalogo
+@{
+    ViewData["Title"] = "Guía: quién entrega qué a quién";
+}
+
+<link rel="stylesheet" href="~/css/guia.css" asp-append-version="true" />
+
+<nav aria-label="breadcrumb" class="guia-no-imprimir">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Guía por perfil</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Quién entrega qué a quién</li>
+    </ol>
+</nav>
+
+<div class="guia-apaisado">
+    <h1 class="h2">Quién entrega qué a quién</h1>
+    <partial name="_Matriz" model="(Model, false)" />
+</div>

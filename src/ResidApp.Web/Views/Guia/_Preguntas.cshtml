@@ -1,0 +1,13 @@
+@using ResidApp.Web.Models
+@* Todas las tareas por orden alfabético de la pregunta. Lo usan Preguntas y Todo. *@
+@model (GuiaCatalogo Catalogo, bool EnTodo)
+
+<ul class="guia-indice">
+    @foreach (var (slug, titulo, ficha) in Model.Catalogo.Preguntas())
+    {
+        <li class="perfil-@slug">
+            <a href="@Url.Ficha(slug, ficha.Codigo, Model.EnTodo)"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a>
+            <span class="text-muted small">(@titulo)</span>
+        </li>
+    }
+</ul>

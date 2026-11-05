@@ -1,0 +1,53 @@
+@using ResidApp.Web.Models
+@* Quién entrega qué a quién: una fila por guía de origen, una columna por destino, y en cada casilla los códigos de las fichas. Sale de «Qué pasa después» de cada ficha. *@
+@model (GuiaCatalogo Catalogo, bool EnTodo)
+@{
+    var entregas = Model.Catalogo.Entregas();
+    var origenes = GuiaPerfiles.Todos.Select(e => (Slug: e.Slug, Titulo: e.Titulo)).Append((Slug: GuiaComun.Slug, Titulo: GuiaComun.Titulo)).ToList();
+    var destinos = GuiaPerfiles.Todos.Select(e => (Slug: e.Slug, Titulo: e.Titulo)).Append((Slug: GuiaMatriz.PersonalSlug, Titulo: GuiaDespues.Personal)).ToList();
+}
+
+<p>
+    Cada fila es la guía donde está la tarea; cada columna, a quién le llega su resultado. En la casilla están los códigos de las fichas.
+    «Le llega» incluye lo que la otra persona solo ve, sin poder cambiarlo. Una casilla vacía (—) significa que ninguna ficha entrega nada
+    en ese sentido.
+</p>
+<div class="table-responsive guia-matriz-caja">
+    <table class="table table-sm align-middle guia-matriz">
+        <caption class="visually-hidden">Quién entrega qué a quién: fichas por guía de origen y destinatario</caption>
+        <thead>
+            <tr>
+                <th scope="col">Desde ↓ · le llega a →</th>
+                @foreach (var destino in destinos)
+                {
+                    <th scope="col" class="perfil-@(destino.Slug == GuiaMatriz.PersonalSlug ? GuiaComun.Slug : destino.Slug)">@destino.Titulo</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var origen in origenes)
+            {
+                <tr>
+                    <th scope="row" class="perfil-@origen.Slug">@origen.Titulo</th>
+                    @foreach (var destino in destinos)
+                    {
+                        <td>
+                            @if (entregas.TryGetValue((origen.Slug, destino.Slug), out var codigos))
+                            {
+                                @foreach (var codigo in codigos)
+                                {
+                                    <a class="ficha-codigo perfil-@origen.Slug" href="@Url.Ficha(origen.Slug, codigo, Model.EnTodo)">@codigo</a>
+                                }
+                            }
+                            else
+                            {
+                                <span aria-hidden="true">—</span>
+                                <span class="visually-hidden">ninguna</span>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
