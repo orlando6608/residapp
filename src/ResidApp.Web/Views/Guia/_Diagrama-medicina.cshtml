@@ -1,0 +1,32 @@
+@* Medicina: de quién depende y a quién le entrega trabajo. SVG en vertical (cabe en un móvil), con el mismo estilo de cajas que «Flujo de trabajo». *@
+<figure class="guia-diagrama mb-0">
+    <svg viewBox="0 0 360 390" role="img" aria-labelledby="diag-med-t diag-med-d">
+        <title id="diag-med-t">Enfermería escala eventos a Medicina, Medicina le da indicaciones y, al cerrar, la familia recibe un comunicado</title>
+        <desc id="diag-med-d">Enfermería escala a Medicina los eventos que necesitan una valoración médica. Medicina valora, da indicaciones a Enfermería, hace seguimiento médico, activa el protocolo urgente, deriva a Urgencias y cierra el episodio. Al cerrar puede preparar un comunicado que se publica para la familia. Administración da a Medicina los residentes y los permisos.</desc>
+        <defs>
+            <marker id="diag-med-p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0 0 L10 5 L0 10 z" /></marker>
+        </defs>
+        <rect class="caja enf" x="30" y="8" width="300" height="64" rx="8" />
+        <text class="titulo" x="180" y="32" text-anchor="middle">Enfermería</text>
+        <text x="180" y="54" text-anchor="middle">Escala los eventos a Medicina</text>
+
+        <path class="flecha" d="M90 76 L90 124" marker-end="url(#diag-med-p)" />
+        <text class="nota" x="98" y="104">escalados</text>
+        <path class="flecha" d="M250 124 L250 76" marker-end="url(#diag-med-p)" />
+        <text class="nota" x="258" y="104">indicaciones</text>
+
+        <rect class="caja med" x="30" y="130" width="300" height="100" rx="8" />
+        <text class="titulo" x="180" y="154" text-anchor="middle">Medicina</text>
+        <text x="180" y="176" text-anchor="middle">Valora, indica, hace seguimiento,</text>
+        <text x="180" y="194" text-anchor="middle">activa el protocolo, deriva y cierra</text>
+        <text class="nota" x="180" y="216" text-anchor="middle">(Administración te da residentes y permisos)</text>
+
+        <path class="flecha" d="M180 234 L180 280" marker-end="url(#diag-med-p)" />
+        <text class="nota" x="192" y="262">comunicado al cerrar</text>
+
+        <rect class="caja fam" x="30" y="286" width="300" height="64" rx="8" />
+        <text class="titulo" x="180" y="310" text-anchor="middle">Familia</text>
+        <text x="180" y="332" text-anchor="middle">Lo lee en el Portal Familiar</text>
+    </svg>
+    <figcaption class="visually-hidden">Enfermería escala eventos a Medicina y recibe sus indicaciones. Al cerrar, Medicina puede preparar un comunicado para la familia.</figcaption>
+</figure>

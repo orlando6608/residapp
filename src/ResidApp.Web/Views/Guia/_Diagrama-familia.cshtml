@@ -1,0 +1,31 @@
+@* Familia: de quién depende y a quién le entrega trabajo. SVG en vertical (cabe en un móvil), con el mismo estilo de cajas que «Flujo de trabajo». *@
+<figure class="guia-diagrama mb-0">
+    <svg viewBox="0 0 360 350" role="img" aria-labelledby="diag-fam-t diag-fam-d">
+        <title id="diag-fam-t">Enfermería o Medicina publican las novedades, la familia las lee y Administración le da el acceso y gestiona sus citas</title>
+        <desc id="diag-fam-d">Enfermería o Medicina preparan las novedades al cerrar un evento y el centro las publica. La familia las lee en el Portal Familiar y reserva o solicita citas. Administración da el acceso a la familia y recibe sus solicitudes de cita y sus reservas en la agenda.</desc>
+        <defs>
+            <marker id="diag-fam-p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0 0 L10 5 L0 10 z" /></marker>
+        </defs>
+        <rect class="caja enf" x="30" y="8" width="300" height="70" rx="8" />
+        <text class="titulo" x="180" y="32" text-anchor="middle">Enfermería o Medicina</text>
+        <text x="180" y="54" text-anchor="middle">Preparan las novedades</text>
+        <text class="nota" x="180" y="70" text-anchor="middle">(y el centro las publica a su hora)</text>
+
+        <path class="flecha" d="M180 82 L180 126" marker-end="url(#diag-fam-p)" />
+        <text class="nota" x="192" y="110">novedades publicadas</text>
+
+        <rect class="caja fam" x="30" y="132" width="300" height="82" rx="8" />
+        <text class="titulo" x="180" y="156" text-anchor="middle">Familia</text>
+        <text x="180" y="178" text-anchor="middle">Lee las novedades y</text>
+        <text x="180" y="196" text-anchor="middle">reserva o solicita citas</text>
+
+        <path class="flecha" d="M180 258 L180 218" marker-end="url(#diag-fam-p)" />
+        <text class="nota" x="192" y="244">te da el acceso</text>
+
+        <rect class="caja adm" x="30" y="264" width="300" height="78" rx="8" />
+        <text class="titulo" x="180" y="288" text-anchor="middle">Administración</text>
+        <text x="180" y="310" text-anchor="middle">Gestiona tu acceso y tus citas;</text>
+        <text x="180" y="328" text-anchor="middle">recibe tus solicitudes de cita</text>
+    </svg>
+    <figcaption class="visually-hidden">Enfermería o Medicina publican novedades para la familia. Administración da el acceso y gestiona las citas.</figcaption>
+</figure>
