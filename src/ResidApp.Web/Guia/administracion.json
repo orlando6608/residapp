@@ -1,6 +1,6 @@
 {
   "perfil": "Administracion",
-  "proposito": "Administración monta y mantiene el centro: su nombre y logo, sus unidades, edificios y habitaciones, las cuentas de las personas que trabajan en él con sus perfiles, unidades y permisos, y la entrada y salida de datos. También da de alta a los residentes, sus familias, los comunicados y las citas. No ve el basal ni ningún contenido clínico. **Esta guía se está completando por entregas:** de momento cubre el inicio, el centro y su estructura, y las personas y sus accesos; las tareas de residentes, familias, comunicados, citas, turnos y organigrama llegarán después.",
+  "proposito": "Administración monta y mantiene el centro: su nombre y logo, sus unidades, edificios y habitaciones, las cuentas de las personas que trabajan en él con sus perfiles, unidades y permisos, y la entrada y salida de datos. También da de alta a los residentes y sus familias, y gestiona los comunicados y las citas. No ve el basal ni ningún contenido clínico. **Esta guía se está completando por entregas:** de momento cubre el inicio, el centro y su estructura, las personas y sus accesos, los residentes y las familias; las tareas de comunicados, citas, turnos y organigrama llegarán después.",
   "rutina": [
     "Abres **Inicio de Administración** y miras el bloque **Requiere atención**: cada línea te lleva a la pantalla donde se resuelve.",
     "Cuando empieza alguien, le das de alta en **Usuarios**, le concedes su perfil y sus unidades y le entregas su invitación en mano.",
@@ -174,7 +174,7 @@
         { "para": "Enfermería", "texto": "Quien da de alta a los residentes (Administración, y Enfermería si tiene el permiso) puede elegirles habitación y plaza libres de su unidad." }
       ],
       "dudas": [
-        { "p": "Quiero cambiar a un residente de habitación.", "r": "Crear o renombrar una habitación o una plaza no cambia dónde está ningún residente. Cambiar a un residente de habitación o plaza es un traslado y todavía no está disponible." },
+        { "p": "Quiero cambiar a un residente de habitación.", "r": "Crear o renombrar una habitación o una plaza no cambia dónde está ningún residente. Para moverlo, usa **Trasladar** en su ficha (ver ADM-22)." },
         { "p": "«Ya existe otra habitación con ese nombre en la unidad.»", "r": "Usa un nombre distinto; con las plazas ocurre igual dentro de su habitación." }
       ],
       "rutas": ["Administracion/Habitaciones", "Administracion/NuevaHabitacion", "Administracion/NuevaPlaza", "Administracion/NombreHabitacion", "Administracion/NombrePlaza"],
@@ -567,6 +567,481 @@
         "Ningún evento coincide con la búsqueda."
       ],
       "manual": { "id": "auditoria-administracion", "titulo": "Auditoría administrativa" }
+    },
+    {
+      "codigo": "ADM-19",
+      "pregunta": "¿Cómo doy de alta a un residente desde Administración?",
+      "palabras": ["alta de residente", "residente nuevo", "familiares", "contacto urgente", "cama", "unidad"],
+      "permisos": [],
+      "antes": [
+        "Los datos del residente: unidad, nombre completo, fecha de nacimiento y sexo documentado.",
+        "Al menos un familiar de **contacto prioritario** (nombre, relación y teléfono) o, si no tiene a nadie, el motivo.",
+        "Que la unidad tenga camas, si quieres asignársela ya (ver ADM-05). Enfermería también puede dar de alta, pero solo si le has concedido el permiso (ver ADM-14 y ENF-17)."
+      ],
+      "pasos": [
+        { "texto": "En el inicio de Administración, abre la tarjeta **Alta de residente**.", "botones": ["Alta de residente"] },
+        { "texto": "Elige la «Unidad». Si tiene camas libres, elige una «Cama» o «Pendiente de asignar»: hay que elegir una de las dos. Las camas ocupadas no se ofrecen.", "campos": ["Unidad", "Pendiente de asignar"] },
+        { "texto": "Escribe el «Nombre completo», la «Fecha de nacimiento», el «Sexo documentado» y, si quieres, la «Referencia interna».", "campos": ["Nombre completo", "Fecha de nacimiento", "Sexo documentado", "Referencia interna"] },
+        { "texto": "En «Familiares de contacto» escribe «Nombre», «Relación con el residente», «Teléfono» y, si quieres, el correo, y marca «Contacto prioritario (contacto urgente)». Si no hay ningún contacto, escribe el «Motivo de no tener contacto urgente».", "campos": ["Familiares de contacto", "Relación con el residente", "Contacto prioritario (contacto urgente)", "Motivo de no tener contacto urgente"] },
+        { "texto": "Pulsa **Dar de alta**.", "botones": ["Dar de alta"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "Verás «Residente dado de alta». Su estado basal queda **pendiente** hasta que Enfermería o Medicina lo completen y firmen (ver ENF-18 y MED-13)." },
+        { "para": "Auxiliar", "texto": "No lo ve hasta que lo asignes a un Auxiliar (ver ADM-15)." },
+        { "para": "Administración", "texto": "Faltan la foto con consentimiento (ver ADM-26), la autorización de la familia (ver ADM-29) y, si hace falta, el resto de familiares (ver ADM-27)." }
+      ],
+      "dudas": [
+        { "p": "«Revisa los familiares: marca al menos un contacto prioritario o, si el residente no tiene contacto urgente, escribe el motivo…»", "r": "Marca un contacto prioritario o escribe el motivo; y cada familiar necesita nombre, relación y un teléfono válido." },
+        { "p": "«Esa cama ya está ocupada por otro residente. Elige otra o «Pendiente de asignar».»", "r": "Otra persona la ocupó mientras rellenabas el formulario. Elige otra cama. Para cambiarla después, usa **Trasladar** en su ficha (ver ADM-22)." },
+        { "p": "«Esta unidad tiene camas libres: elige una o «Pendiente de asignar».»", "r": "Elige una cama o «Pendiente de asignar»; solo se puede dejar sin elegir si la unidad no tiene camas libres." }
+      ],
+      "rutas": ["Administracion/Index", "Residents/Create", "Residents/Confirmation"],
+      "mensajes": [
+        "Revisa los familiares: marca al menos un contacto prioritario",
+        "Esa cama ya está ocupada por otro residente.",
+        "Esta unidad tiene camas libres: elige una o «Pendiente de asignar»."
+      ],
+      "manual": { "id": "alta-residente", "titulo": "Dar de alta un residente" },
+      "flujo": { "id": "llegada", "titulo": "Llega un residente: alta, familia y basal" }
+    },
+    {
+      "codigo": "ADM-20",
+      "pregunta": "¿Cómo busco un residente y qué hay en su ficha administrativa?",
+      "palabras": ["residentes", "buscar", "ficha administrativa", "requiere atención", "filtrar", "historial de ubicación"],
+      "permisos": [],
+      "antes": [
+        "Nada especial. La ficha es solo administrativa: **no incluye el basal ni ningún contenido clínico**."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre la tarjeta **Residentes**. Ves los residentes activos de tu ámbito, por orden alfabético, con su edad, sexo documentado, ubicación y fecha de alta.", "botones": ["Residentes"] },
+        { "texto": "Para buscar, escribe parte del «Nombre» (sin importar mayúsculas ni acentos) y, si tu ámbito tiene más de una unidad, elige la «Unidad». El filtro «Requiere atención» enseña solo a quienes tienen algo pendiente: sin contacto urgente, ubicación pendiente, foto de más de 12 meses o una autorización de familiar pendiente, caducada o por caducar. Pulsa **Buscar**; **Limpiar** quita el filtro.", "botones": ["Buscar", "Limpiar"], "campos": ["Nombre", "Unidad", "Requiere atención"] },
+        { "texto": "Pulsa el nombre del residente para abrir su ficha: identidad, ubicación actual, fechas de alta y de ingreso, familiares, contactos urgentes, historial de ubicación y correcciones de identidad." },
+        { "texto": "Desde la ficha haces el resto: **Corregir identidad** (ver ADM-21), **Trasladar** (ver ADM-22), **Suspender (ingreso hospitalario)** (ver ADM-23) y **Dar de baja** (ver ADM-24).", "botones": ["Corregir identidad", "Trasladar", "Suspender (ingreso hospitalario)", "Dar de baja"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Las líneas de «Requiere atención» del inicio te traen a esta lista ya filtrada por ese motivo (ver ADM-01)." }
+      ],
+      "dudas": [
+        { "p": "«No hay residentes en tu ámbito.»", "r": "Aún no hay ninguno dado de alta (ver ADM-19) o importado (ver ADM-08)." },
+        { "p": "«Ningún residente coincide con la búsqueda.»", "r": "Quita el filtro con Limpiar o prueba con menos letras." },
+        { "p": "No veo a un residente que di de baja.", "r": "Las bajas no salen aquí: están en «Residentes dados de baja» (ver ADM-25)." }
+      ],
+      "rutas": ["Administracion/Residentes", "Administracion/Residente"],
+      "mensajes": [
+        "No hay residentes en tu ámbito.",
+        "Ningún residente coincide con la búsqueda."
+      ],
+      "manual": { "id": "residentes-administracion", "titulo": "Residentes y ficha administrativa" }
+    },
+    {
+      "codigo": "ADM-21",
+      "pregunta": "¿Cómo corrijo el nombre, la fecha de nacimiento o el sexo documentado de un residente?",
+      "palabras": ["corregir identidad", "error en el nombre", "fecha de nacimiento", "sexo documentado"],
+      "permisos": [],
+      "antes": [
+        "Los datos correctos, tomados de la **documentación administrativa**, y el motivo de la corrección (es obligatorio)."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Corregir identidad**. Arriba ves la identidad vigente.", "botones": ["Corregir identidad"] },
+        { "texto": "Cambia el «Nombre», la «Fecha de nacimiento» o el «Sexo documentado», y escribe el «Motivo de la corrección».", "campos": ["Nombre", "Fecha de nacimiento", "Sexo documentado", "Motivo de la corrección"] },
+        { "texto": "Pulsa **Guardar corrección**.", "botones": ["Guardar corrección"] }
+      ],
+      "despues": [
+        { "para": "Personal del centro", "texto": "Ven la identidad corregida. La versión anterior, la nueva y el motivo quedan en el historial de la ficha y en la auditoría." }
+      ],
+      "dudas": [
+        { "p": "«Revisa los datos: el nombre no puede quedar vacío, la fecha de nacimiento no puede ser futura, el motivo es obligatorio y algo tiene que cambiar.»", "r": "Corrige lo que indica; si no cambias nada, no hay corrección que guardar." },
+        { "p": "«La identidad ha cambiado desde que abriste el formulario.»", "r": "Otra persona la corrigió antes. Revisa los datos vigentes y, si hace falta, vuelve a enviar la corrección." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/CorregirIdentidad"],
+      "mensajes": [
+        "Identidad corregida.",
+        "La identidad ha cambiado desde que abriste el formulario.",
+        "Revisa los datos: el nombre no puede quedar vacío"
+      ],
+      "manual": { "id": "residentes-administracion", "titulo": "Residentes y ficha administrativa" }
+    },
+    {
+      "codigo": "ADM-22",
+      "pregunta": "¿Cómo traslado a un residente a otra unidad, habitación o plaza?",
+      "palabras": ["trasladar", "cambio de unidad", "cambio de habitación", "cambio de cama", "traslado"],
+      "permisos": [],
+      "antes": [
+        "La unidad de destino, que tiene que ser una **unidad activa de tu ámbito**, y, si quieres, una habitación o plaza libres de esa unidad (ver ADM-05)."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Trasladar**. Ves su ubicación actual.", "botones": ["Trasladar"] },
+        { "texto": "Elige la «Unidad de destino» y, si quieres, la «Habitación o plaza en la unidad (opcional)» (o «Sin habitación ni plaza»). Las plazas ocupadas no se ofrecen.", "campos": ["Unidad de destino", "Habitación o plaza en la unidad (opcional)", "Sin habitación ni plaza"] },
+        { "texto": "Pulsa **Trasladar**.", "botones": ["Trasladar"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "Los episodios abiertos del residente **pasan a la unidad de destino** y la unidad de origen deja de verlos. Los episodios cerrados no cambian de unidad." },
+        { "para": "Medicina", "texto": "Si tenía un borrador de basal a medias y cambia de unidad, el borrador se cancela y el basal se rehace en la unidad de destino." },
+        { "para": "Administración", "texto": "Verás un aviso con cuántos episodios abiertos pasaron. El cambio queda en el historial de ubicación de la ficha y en la auditoría; reenviar el formulario no lo repite." }
+      ],
+      "dudas": [
+        { "p": "«Tu ámbito activo no tiene ninguna unidad a la que trasladar.»", "r": "Solo puedes trasladar a unidades de tu ámbito: pide que te añadan la unidad (ver ADM-07)." },
+        { "p": "«Revisa el destino: tiene que ser una unidad activa de tu ámbito, con una habitación o plaza disponibles de esa unidad, y algo tiene que cambiar.»", "r": "Elige otra unidad, habitación o plaza, o comprueba que no es la actual." },
+        { "p": "«El residente ya no está donde lo veías, esa plaza está ocupada o el traslado ya se hizo.»", "r": "Revisa la ficha y vuelve a intentarlo." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/Trasladar"],
+      "mensajes": [
+        "Residente trasladado.",
+        "Revisa el destino: tiene que ser una unidad activa de tu ámbito",
+        "El residente ya no está donde lo veías, esa plaza está ocupada o el traslado ya se hizo.",
+        "Tu ámbito activo no tiene ninguna unidad a la que trasladar."
+      ],
+      "manual": { "id": "residentes-administracion", "titulo": "Residentes y ficha administrativa" },
+      "flujo": { "id": "estancia", "titulo": "La estancia cambia: traslado, ingreso y baja" }
+    },
+    {
+      "codigo": "ADM-23",
+      "pregunta": "¿Cómo suspendo la atención de un residente por un ingreso hospitalario y cómo la reanudo?",
+      "palabras": ["suspender", "ingreso hospitalario", "reanudar atención", "hospital"],
+      "permisos": [],
+      "antes": [
+        "Que se trate de un ingreso hospitalario **prolongado**: si deja el centro, es una baja (ver ADM-24).",
+        "Opcional: el hospital, para la nota."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Suspender (ingreso hospitalario)**.", "botones": ["Suspender (ingreso hospitalario)"] },
+        { "texto": "Si quieres, escribe la «Nota (por ejemplo, el hospital; opcional)» y pulsa **Suspender**.", "botones": ["Suspender"], "campos": ["Nota (por ejemplo, el hospital; opcional)"] },
+        { "texto": "Cuando vuelva, abre su ficha y pulsa **Reanudar atención**.", "botones": ["Reanudar atención"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "Su perfil sigue activo, pero mientras esté suspendido **no se puede actuar sobre él**: no se registran cambios, eventos, constantes ni basales, ni se emiten comunicados a sus familiares." },
+        { "para": "Auxiliar", "texto": "No puede registrarle cambios hasta que se reanude." },
+        { "para": "Administración", "texto": "Verás «Residente suspendido: no se puede actuar sobre él hasta que lo reanudes.» y, al volver, «Atención reanudada: ya se puede actuar sobre el residente.»." }
+      ],
+      "dudas": [
+        { "p": "«El residente no estaba suspendido.»", "r": "Ya se había reanudado: abre su ficha para ver su estado." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/Suspender", "Administracion/Reanudar"],
+      "mensajes": [
+        "Residente suspendido: no se puede actuar sobre él hasta que lo reanudes.",
+        "Atención reanudada: ya se puede actuar sobre el residente.",
+        "El residente no estaba suspendido."
+      ],
+      "manual": { "id": "residentes-administracion", "titulo": "Residentes y ficha administrativa" },
+      "flujo": { "id": "estancia", "titulo": "La estancia cambia: traslado, ingreso y baja" }
+    },
+    {
+      "codigo": "ADM-24",
+      "pregunta": "¿Cómo doy de baja a un residente?",
+      "palabras": ["baja", "dar de baja", "fallecimiento", "alta voluntaria", "traslado a otro centro", "conservación"],
+      "permisos": [],
+      "antes": [
+        "El **motivo** de la baja: Fallecimiento, Alta voluntaria, Traslado a otro centro u Otro motivo (con este, hay que escribir cuál).",
+        "Una forma de **avisar tú a la familia**: ResidApp no le manda ningún aviso."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Dar de baja**. La pantalla dice cuántas citas futuras y solicitudes de cita abiertas se cancelarán o cerrarán solas.", "botones": ["Dar de baja"] },
+        { "texto": "Elige el «Motivo de la baja» y, si es «Otro motivo», escribe el «Detalle del motivo (obligatorio con «Otro motivo»)».", "campos": ["Motivo de la baja", "Detalle del motivo (obligatorio con «Otro motivo»)"] },
+        { "texto": "Pulsa **Dar de baja**.", "botones": ["Dar de baja"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "**No recibe ningún aviso: avísala tú** (por teléfono o por el canal habitual del centro). Sus citas futuras se cancelan y sus solicitudes abiertas se cierran, y quedan en el historial como «Sistema, a causa de la baja»; si reactivas al residente, no se restauran." },
+        { "para": "Administración", "texto": "Los datos **no se borran**: se conservan 15 años desde la baja, en solo lectura, en «Residentes dados de baja» (ver ADM-25). Si solo está ingresado en un hospital un tiempo, no es una baja: usa Suspender (ver ADM-23)." }
+      ],
+      "dudas": [
+        { "p": "«Si el motivo es «Otro motivo», escribe cuál (hasta 500 caracteres).»", "r": "Rellena el detalle del motivo." },
+        { "p": "«El estado del residente ha cambiado mientras preparabas la baja. Revisa su ficha.»", "r": "Otra persona cambió su estado antes: abre la ficha y vuelve a empezar si sigue siendo lo que quieres." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/DarDeBaja"],
+      "mensajes": [
+        "se ha dado de baja. Sus datos se conservan",
+        "Si el motivo es «Otro motivo», escribe cuál (hasta 500 caracteres).",
+        "El estado del residente ha cambiado mientras preparabas la baja. Revisa su ficha."
+      ],
+      "manual": { "id": "residentes-administracion", "titulo": "Residentes y ficha administrativa" },
+      "flujo": { "id": "estancia", "titulo": "La estancia cambia: traslado, ingreso y baja" }
+    },
+    {
+      "codigo": "ADM-25",
+      "pregunta": "¿Cómo veo los residentes dados de baja y reactivo a uno que vuelve?",
+      "palabras": ["bajas", "residentes dados de baja", "reactivar", "plazo de conservación", "vuelve al centro"],
+      "permisos": [],
+      "antes": [
+        "Para reactivar: la **unidad** de tu ámbito en la que vuelve, y, si quieres, una habitación o plaza libres de esa unidad."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Residentes dados de baja**. Es una lista de solo lectura: cada residente con el motivo de la baja, su última unidad y hasta cuándo se conservan sus datos.", "botones": ["Residentes dados de baja"] },
+        { "texto": "Si un residente vuelve al centro, pulsa **Reactivar** en su fila.", "botones": ["Reactivar"] },
+        { "texto": "Elige la «Unidad» y, si quieres, la «Habitación o plaza en la unidad (opcional)» y pulsa **Reactivar**.", "botones": ["Reactivar"], "campos": ["Unidad", "Habitación o plaza en la unidad (opcional)"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Se abre una **estancia nueva** en esa unidad y el residente vuelve a estar en las listas; su historial anterior se conserva y verás «Residente reactivado.». Las citas que se cancelaron con la baja no se restauran: la familia tendrá que pedirlas de nuevo." }
+      ],
+      "dudas": [
+        { "p": "Una baja sale con «Plazo vencido» o «Vence en menos de 12 meses».", "r": "ResidApp no borra nada por sí sola: conservar la documentación o eliminarla lo decide la dirección médica del centro, que deja constancia de lo que elimine." },
+        { "p": "«Esa plaza ya está ocupada, o el estado del residente ha cambiado. Revisa la lista de bajas.»", "r": "Elige otra plaza o vuelve a la lista." },
+        { "p": "«Tu ámbito activo no tiene ninguna unidad en la que reactivar al residente.»", "r": "Pide que te añadan una unidad a tu ámbito (ver ADM-07)." }
+      ],
+      "rutas": ["Administracion/Bajas", "Administracion/Reactivar"],
+      "mensajes": [
+        "Residente reactivado.",
+        "Esa plaza ya está ocupada, o el estado del residente ha cambiado. Revisa la lista de bajas.",
+        "Tu ámbito activo no tiene ninguna unidad en la que reactivar al residente."
+      ],
+      "manual": { "id": "residentes-administracion", "titulo": "Residentes y ficha administrativa" },
+      "flujo": { "id": "estancia", "titulo": "La estancia cambia: traslado, ingreso y baja" }
+    },
+    {
+      "codigo": "ADM-26",
+      "pregunta": "¿Cómo pongo, cambio o quito la foto de un residente desde Administración?",
+      "palabras": ["foto", "foto de identificación", "consentimiento", "no quiere foto", "renovar foto"],
+      "permisos": [],
+      "antes": [
+        "Saber quién firmó el consentimiento para usar la foto **solo para identificar** al residente y la fecha de la firma. El documento firmado lo guarda el centro, fuera de la app.",
+        "Una foto JPEG de 1 MB como máximo. Si la eliges desde el móvil, la app la reduce sola."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, busca el apartado «Foto de identificación».", "campos": ["Foto de identificación"] },
+        { "texto": "Elige o haz una foto («Elige o haz una foto»); la app te deja encuadrarla: arrástrala o usa las flechas, y «Acercar» para ajustarla.", "campos": ["Elige o haz una foto", "Acercar"] },
+        { "texto": "Marca quién firmó el consentimiento y escribe la «Fecha de la firma».", "campos": ["Fecha de la firma"] },
+        { "texto": "Pulsa **Guardar foto**. Para quitarla, **Quitar foto**.", "botones": ["Guardar foto", "Quitar foto"] },
+        { "texto": "Si el residente o su representante no quieren foto, pulsa **No quiere foto**: se borra la actual y no se podrá poner otra hasta quitar la marca con **Quitar la marca** (solo con un consentimiento nuevo firmado).", "botones": ["No quiere foto", "Quitar la marca"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "La foto sirve para reconocer al residente en las listas y en su ficha. **No se muestra a las familias.** Enfermería también puede ponerla si le has concedido el permiso (ver ADM-14 y ENF-19)." },
+        { "para": "Administración", "texto": "Verás «Foto guardada.», «Foto quitada.» o «Anotado que no quiere foto.». Si la foto tiene más de 12 meses, aparece en «Requiere atención» (ver ADM-01)." }
+      ],
+      "dudas": [
+        { "p": "«Indica quién firmó el consentimiento y la fecha de la firma para guardar la foto.»", "r": "Faltan el firmante o la fecha: son obligatorios." },
+        { "p": "«Está anotado que no quiere foto: quita la marca antes, solo si ha firmado un consentimiento nuevo.»", "r": "Pulsa «Quitar la marca» solo con un consentimiento nuevo firmado." }
+      ],
+      "rutas": ["Administracion/Residente", "FotoResidente/Guardar", "FotoResidente/Quitar", "FotoResidente/AnotarNegativa", "FotoResidente/QuitarNegativa"],
+      "mensajes": [
+        "Foto guardada.",
+        "Foto quitada.",
+        "Anotado que no quiere foto.",
+        "Indica quién firmó el consentimiento y la fecha de la firma para guardar la foto."
+      ],
+      "manual": { "id": "residentes-administracion", "titulo": "Residentes y ficha administrativa" },
+      "flujo": { "id": "llegada", "titulo": "Llega un residente: alta, familia y basal" }
+    },
+    {
+      "codigo": "ADM-27",
+      "pregunta": "¿Cómo añado un familiar a un residente, o vinculo uno que ya existe en el centro?",
+      "palabras": ["añadir familiar", "vincular familiar", "familiar existente", "relación", "teléfono"],
+      "permisos": [],
+      "antes": [
+        "Del familiar: nombre, relación con el residente (por ejemplo «Hija») y teléfono; el correo es opcional.",
+        "Si la persona ya es familiar de otro residente del centro, **vincúlala en vez de añadirla de nuevo**: así no queda duplicada y sus datos de contacto son los mismos para todos sus residentes."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, baja a los familiares. Para uno nuevo, pulsa **Añadir familiar**, escribe el «Nombre», la «Relación con el residente (p. ej., «Hija»)» y el «Teléfono», y pulsa **Añadir familiar**.", "botones": ["Añadir familiar"], "campos": ["Relación con el residente (p. ej., «Hija»)", "Teléfono"] },
+        { "texto": "Para uno que ya existe, pulsa **Vincular un familiar que ya existe**, escribe su «Nombre o teléfono» (al menos unas letras o cifras) y pulsa **Buscar**.", "botones": ["Vincular un familiar que ya existe", "Buscar"], "campos": ["Nombre o teléfono"] },
+        { "texto": "Elige al familiar en «Familiar», escribe la «Relación con este residente (p. ej., «Hija»)» y pulsa **Vincular familiar**.", "botones": ["Vincular familiar"], "campos": ["Familiar", "Relación con este residente (p. ej., «Hija»)"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "El familiar no tiene ningún acceso: «Familiar añadido. No tiene autorización de acceso hasta que la abras y la actives.» Sigue con su autorización (ver ADM-29) y, si debe avisarse en urgencias, designa los contactos urgentes (ver ADM-31)." }
+      ],
+      "dudas": [
+        { "p": "«Ese familiar ya está vinculado a este residente.»", "r": "No hace falta repetirlo: está en la lista de la ficha." },
+        { "p": "«Escribe la relación con el residente (hasta 100 caracteres).»", "r": "La relación es obligatoria." },
+        { "p": "«Ese familiar ya no está disponible. Búscalo de nuevo.»", "r": "Pulsa Buscar otra vez y elígelo de nuevo." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/AnadirFamiliar", "Administracion/VincularFamiliar"],
+      "mensajes": [
+        "Familiar añadido. No tiene autorización de acceso hasta que la abras y la actives.",
+        "Familiar vinculado. No tiene autorización de acceso hasta que la abras y la actives.",
+        "Ese familiar ya está vinculado a este residente.",
+        "Escribe la relación con el residente (hasta 100 caracteres)."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
+      "flujo": { "id": "llegada", "titulo": "Llega un residente: alta, familia y basal" }
+    },
+    {
+      "codigo": "ADM-28",
+      "pregunta": "¿Cómo cambio los datos de un familiar y confirmo su correo para avisos?",
+      "palabras": ["editar familiar", "correo", "avisos", "confirmar dirección", "referente", "tutor legal"],
+      "permisos": [],
+      "antes": [
+        "Para el correo: hablar con la persona, **leerle la dirección despacio** y esperar a que diga que es correcta. El correo es voluntario y solo sirve para avisarle de que tiene una propuesta de cita pendiente o de que el centro ha cambiado o cancelado una cita: los avisos no dicen el nombre del residente, ni el centro, ni la fecha ni el motivo.",
+        "Si el familiar está vinculado a más residentes, los cambios de nombre, teléfono y correo valen para todos; la relación es solo de este residente."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Editar** en la fila del familiar.", "botones": ["Editar"] },
+        { "texto": "Cambia el «Nombre», la «Relación», el «Teléfono» o el «Correo para avisos de ResidApp (opcional)».", "campos": ["Teléfono", "Correo para avisos de ResidApp (opcional)"] },
+        { "texto": "Solo si ya se la has leído y la persona ha dicho que es correcta, marca la casilla de confirmación de la dirección. Sin ella, ResidApp no envía ningún aviso a ese correo.", "campos": ["Dirección confirmada con la familia: se la he leído a la persona a quien pertenece y me ha dicho que es correcta"] },
+        { "texto": "Marca «Familiar referente» o «Tutor legal» si procede y pulsa **Guardar cambios**.", "botones": ["Guardar cambios"], "campos": ["Familiar referente", "Tutor legal"] },
+        { "texto": "Si la persona pide que no le manden más avisos, pulsa **Quitar la confirmación de la dirección** o borra el correo.", "botones": ["Quitar la confirmación de la dirección"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Si el correo está confirmado, recibe los avisos de ResidApp, que le dicen solo que entre en la aplicación. El correo no sustituye al teléfono: si algo es urgente, se llama. Cambiar o borrar la dirección quita la confirmación y hay que volver a confirmarla." }
+      ],
+      "dudas": [
+        { "p": "«Datos del familiar guardados.»", "r": "Es la confirmación. Cambiar los datos no cambia su autorización de acceso." },
+        { "p": "«Correo sin confirmar: ResidApp no enviará avisos a esta dirección.»", "r": "Confirma la dirección con la persona y marca la casilla, o déjala así si no ha podido hacerse: es correcto y simplemente no se enviará ningún aviso." },
+        { "p": "«Este familiar está anonimizado: ya no se puede cambiar.»", "r": "Un familiar anonimizado ya no se edita (ver ADM-33)." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/EditarFamiliar", "Administracion/QuitarConfirmacionCorreo"],
+      "mensajes": [
+        "Datos del familiar guardados.",
+        "Confirmación de la dirección quitada: no se enviarán avisos a ese correo hasta que se vuelva a confirmar.",
+        "Correo sin confirmar: ResidApp no enviará avisos a esta dirección.",
+        "Este familiar está anonimizado: ya no se puede cambiar."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" }
+    },
+    {
+      "codigo": "ADM-29",
+      "pregunta": "¿Cómo abro, activo, suspendo o revoco la autorización de un familiar?",
+      "palabras": ["autorización", "abrir autorización", "activar", "suspender", "revocar", "válida hasta", "caducada"],
+      "permisos": [],
+      "antes": [
+        "Que el familiar esté ya vinculado al residente (ver ADM-27).",
+        "Que la persona **representante o el propio residente autorice** el acceso de ese familiar. Solo una autorización **Activa** da acceso al Portal Familiar; mientras no lo esté, el estado se registra pero no da acceso a nada."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Autorización** en la fila del familiar. «Estado de hoy» dice si hay autorización y en qué estado.", "botones": ["Autorización"], "campos": ["Estado de hoy"] },
+        { "texto": "Para empezar, pulsa **Abrir autorización**: queda Pendiente y todavía no da acceso." },
+        { "texto": "Para darle acceso, pulsa **Activar**; si quieres que caduque, escribe antes «Válida hasta (opcional; ese día incluido)». Sin fecha, sigue activa hasta que se suspenda o se revoque.", "botones": ["Activar"], "campos": ["Válida hasta (opcional; ese día incluido)"] },
+        { "texto": "Para cortar el acceso, escribe el «Motivo» y pulsa **Suspender** (efecto inmediato; se levanta volviendo a activarla) o **Revocar** (definitivo: no se podrá volver a activar).", "botones": ["Suspender", "Revocar"], "campos": ["Motivo"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Con la autorización Activa y con cuenta, entra al Portal Familiar y ve al residente (ver ADM-30). Si se suspende, se revoca o caduca, deja de verlo." },
+        { "para": "Administración", "texto": "Abajo está el **Historial** de cada cambio, con su estado y su motivo. Las autorizaciones pendientes, caducadas o por caducar salen en «Requiere atención» (ver ADM-01)." }
+      ],
+      "dudas": [
+        { "p": "«La autorización está revocada: no admite más cambios.»", "r": "Revocar es definitivo: para volver a dar acceso, abre una autorización nueva si procede." },
+        { "p": "«Autorización abierta: queda pendiente hasta que la actives.»", "r": "Es la confirmación de «Abrir autorización»." },
+        { "p": "«Este familiar está anonimizado: ya no tiene autorización de acceso.»", "r": "Un familiar anonimizado pierde el acceso para siempre (ver ADM-33)." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/AutorizacionFamiliar"],
+      "mensajes": [
+        "Autorización abierta: queda pendiente hasta que la actives.",
+        "Autorización activada.",
+        "Autorización suspendida.",
+        "Autorización revocada.",
+        "Este familiar está anonimizado: ya no tiene autorización de acceso."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "ADM-30",
+      "pregunta": "¿Cómo doy a un familiar acceso al Portal Familiar?",
+      "palabras": ["acceso al portal", "usuario del familiar", "invitación", "Portal Familiar", "dar acceso"],
+      "permisos": [],
+      "antes": [
+        "Que el familiar tenga la autorización **abierta y activa** (ver ADM-29): dar el acceso no la abre ni la activa.",
+        "El **usuario** con el que entrará: de 3 a 200 caracteres, sin espacios.",
+        "Una forma de **entregarle la invitación en mano** (impresa o en pantalla)."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Autorización** en la fila del familiar y baja a **Acceso al Portal Familiar**.", "botones": ["Autorización"], "campos": ["Acceso al Portal Familiar"] },
+        { "texto": "Si todavía no tiene cuenta, escribe el «Usuario» y pulsa **Dar acceso al portal**.", "botones": ["Dar acceso al portal"], "campos": ["Usuario"] },
+        { "texto": "Entrégale su invitación de acceso, como a cualquier cuenta (ver ADM-11): con ella elige su contraseña. Los familiares entran solo con contraseña." }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Elige su contraseña con la invitación (ver TOD-01) y entra al Portal Familiar. **Solo ve al residente mientras su autorización está Activa**; para cortarle el acceso, suspende o revoca la autorización." }
+      ],
+      "dudas": [
+        { "p": "«Acceso al Portal Familiar creado. Para que pueda entrar, entrégale su invitación de acceso (abajo); para que vea la información, su autorización tiene que estar Activa.»", "r": "Es la confirmación. Falta la invitación y, si no lo está, activar la autorización." },
+        { "p": "«Ese usuario ya existe o este familiar ya tiene acceso. Recarga la pantalla para ver su estado.»", "r": "Elige otro usuario, o recarga: puede que otra persona ya le diera el acceso." },
+        { "p": "Las cuentas de Familia no salen en «Usuarios».", "r": "Es lo normal: se gestionan desde la ficha del residente." }
+      ],
+      "rutas": ["Administracion/AutorizacionFamiliar", "Administracion/AccesoPortalFamiliar", "Administracion/Invitacion"],
+      "mensajes": [
+        "Acceso al Portal Familiar creado. Para que pueda entrar, entrégale su invitación de acceso (abajo); para que vea la información, su autorización tiene que estar Activa.",
+        "Ese usuario ya existe o este familiar ya tiene acceso. Recarga la pantalla para ver su estado."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "ADM-31",
+      "pregunta": "¿Cómo designo los contactos urgentes de un residente?",
+      "palabras": ["contacto urgente", "contactos urgentes", "urgencia", "sin contacto urgente", "motivo"],
+      "permisos": [],
+      "antes": [
+        "Que los familiares ya estén vinculados al residente (ver ADM-27).",
+        "Si no hay a quién avisar, el **motivo** (por ejemplo «sin familia conocida»)."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Designar contactos urgentes** (si ya hay, el botón dice **Cambiar contactos urgentes**; si no tiene familiares, **Anotar que no tiene contacto urgente**).", "botones": ["Designar contactos urgentes", "Cambiar contactos urgentes"] },
+        { "texto": "Marca a quién o a quiénes se avisa en una urgencia. Puedes marcar varios.", "campos": ["Contactos urgentes"] },
+        { "texto": "Si no marcas a nadie, escribe el «Motivo de no tener contacto urgente».", "campos": ["Motivo de no tener contacto urgente"] },
+        { "texto": "Pulsa **Guardar**.", "botones": ["Guardar"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "En una urgencia ven a quién avisar. Ser contacto urgente **no da acceso** al Portal Familiar." },
+        { "para": "Administración", "texto": "Verás «Contactos urgentes guardados.». Cada cambio queda en el historial de la ficha. Los residentes sin contacto urgente ni motivo salen primero en «Requiere atención» (ver ADM-01)." }
+      ],
+      "dudas": [
+        { "p": "Quiero avisar a alguien que no es familiar.", "r": "Solo se eligen entre los familiares del residente: añádelo antes como familiar (ver ADM-27)." },
+        { "p": "«Contactos urgentes guardados: el residente queda sin contacto urgente.»", "r": "No marcaste a nadie: asegúrate de haber escrito el motivo." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/ContactoUrgente"],
+      "mensajes": [
+        "Contactos urgentes guardados.",
+        "Contactos urgentes guardados: el residente queda sin contacto urgente."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
+      "flujo": { "id": "llegada", "titulo": "Llega un residente: alta, familia y basal" }
+    },
+    {
+      "codigo": "ADM-32",
+      "pregunta": "¿Cómo desvinculo a un familiar de un residente?",
+      "palabras": ["desvincular", "quitar familiar", "ya no es familiar", "motivo"],
+      "permisos": [],
+      "antes": [
+        "El **motivo** de la desvinculación (obligatorio, hasta 500 caracteres).",
+        "Si es el único contacto urgente del residente, piensa a quién designarás después (ver ADM-31)."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Desvincular** en la fila del familiar.", "botones": ["Desvincular"] },
+        { "texto": "Escribe el «Motivo» y pulsa **Desvincular**.", "botones": ["Desvincular"], "campos": ["Motivo"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Pierde el acceso al Portal Familiar **para ese residente** y, si era contacto urgente, deja de serlo. Sigue siendo familiar de sus demás residentes." },
+        { "para": "Administración", "texto": "Verás «Familiar desvinculado. El vínculo queda en el historial de la ficha.» y el familiar sale en «Familiares desvinculados», con las fechas y el motivo. Si era el único contacto urgente, el residente se queda sin él y el motivo vale también para eso." }
+      ],
+      "dudas": [
+        { "p": "«Este familiar ya estaba desvinculado. Revisa la ficha.»", "r": "Otra persona lo desvinculó antes." },
+        { "p": "«Revisa el motivo (obligatorio, hasta 500 caracteres).»", "r": "Escribe un motivo." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/DesvincularFamiliar"],
+      "mensajes": [
+        "Familiar desvinculado. El vínculo queda en el historial de la ficha.",
+        "Este familiar ya estaba desvinculado. Revisa la ficha.",
+        "Revisa el motivo (obligatorio, hasta 500 caracteres)."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" }
+    },
+    {
+      "codigo": "ADM-33",
+      "pregunta": "¿Cómo anonimizo a un familiar que pide que se borren sus datos?",
+      "palabras": ["anonimizar", "borrar datos", "derecho de supresión", "persona anonimizada", "Administración principal"],
+      "permisos": [],
+      "antes": [
+        "Ser la **Administración principal** del centro: no se puede deshacer y afecta a todos los residentes de ese familiar. Si te lo piden y no lo eres, pásale la petición a quien lo sea (ver ADM-07).",
+        "Haber **comprobado la identidad** de quien lo pide. Tu centro debe contestar por escrito en el plazo de un mes (ampliable) y anotar la petición en su registro de derechos.",
+        "Que el familiar no sea contacto urgente ni tutor legal de un residente que sigue en el centro: si lo es, la pantalla dice de cuáles y hay que cambiarlo antes (ver ADM-31 y ADM-28).",
+        "**Todavía no se usa con familias reales:** antes, una persona experta en protección de datos tiene que decidir si basta con borrar o si hay que guardar aparte los datos suprimidos."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Editar** en la fila del familiar y, al final, **Anonimizar a este familiar…**.", "botones": ["Editar", "Anonimizar a este familiar…"] },
+        { "texto": "Lee **Qué pasará** y **Qué no cambia**. Si algo impide anonimizarlo, la pantalla lo dice («No se puede anonimizar todavía») y el botón queda desactivado.", "campos": ["Qué pasará", "Qué no cambia"] },
+        { "texto": "Elige «¿Quién lo pide?» (la propia persona, su representante, sus allegados o herederos si ha fallecido, o el centro por un alta por error) y marca «He comprobado la identidad de quien lo pide y entiendo que no se puede deshacer».", "campos": ["¿Quién lo pide?", "He comprobado la identidad de quien lo pide y entiendo que no se puede deshacer"] },
+        { "texto": "Pulsa **Anonimizar**.", "botones": ["Anonimizar"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Se borran su nombre, su teléfono y su correo, y su ficha pasa a llamarse «Persona anonimizada». Pierde el acceso al Portal Familiar: se revocan sus autorizaciones y, si su cuenta no se usa en otro centro, se suspende y se borran su contraseña y sus llaves de acceso." },
+        { "para": "Administración", "texto": "Verás «Familiar anonimizado. Anótalo en el registro de derechos de tu centro.». **No cambian** lo que el personal escribió a mano, los informes firmados, los registros de acceso ni las citas ya hechas, que siguen con «Persona anonimizada»; el papel y los correos los tratas tú según el procedimiento de tu centro." }
+      ],
+      "dudas": [
+        { "p": "«Este familiar ya está anonimizado: no se puede cambiar.»", "r": "Solo queda «Desvincular»; editarlo o darle autorización lleva de vuelta a la ficha con un aviso." },
+        { "p": "«Solo la Administración principal del centro puede anonimizar a un familiar.»", "r": "Tu cuenta no tiene la marca de principal: pasa la petición a quien la tenga." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/EditarFamiliar", "Administracion/AnonimizarFamiliar"],
+      "mensajes": [
+        "Familiar anonimizado. Anótalo en el registro de derechos de tu centro.",
+        "Este familiar ya está anonimizado: no se puede cambiar."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" }
     }
   ]
 }
