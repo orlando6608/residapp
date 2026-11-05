@@ -15,7 +15,16 @@ public sealed record GuiaReferencia(string Id, string Titulo);
 public sealed record GuiaPaso(string Texto, IReadOnlyList<string>? Botones = null, IReadOnlyList<string>? Campos = null);
 
 /// <summary>Lo que pasa después para un perfil: «Para» es el título del perfil (Administración, Plataforma…).</summary>
-public sealed record GuiaDespues(string Para, string Texto);
+public sealed record GuiaDespues(string Para, string Texto)
+{
+    /// <summary>Destinatarios que no son un perfil: la persona que lee la ficha y todo el personal del centro (por ejemplo, quien recibe una cuenta nueva).</summary>
+    public const string Tu = "Tú";
+    public const string Personal = "Personal del centro";
+
+    public static GuiaPerfiles.Entrada? Perfil(string para) => para is Tu or Personal ? null : GuiaPerfiles.PorTitulo(para);
+
+    public static bool EsValido(string para) => para is Tu or Personal || GuiaPerfiles.PorTitulo(para) is not null;
+}
 
 public sealed record GuiaDuda(string P, string R);
 
@@ -44,13 +53,12 @@ public sealed record GuiaPerfil(
 }
 
 /// <summary>El capítulo «Para todos» (Guia/comun.json): lo que vale para cualquier perfil. Sus fichas son las mismas que las de un perfil (códigos TOD-NN);
-/// en «después», «Para» puede ser «Tú» además de un perfil.</summary>
+/// en «después», «Para» puede ser «Tú» o «Personal del centro» además de un perfil.</summary>
 public sealed record GuiaComun(string Proposito, string? RevisadoPara, string Revisado, IReadOnlyList<GuiaFicha> Fichas)
 {
     public const string Titulo = "Para todos";
     public const string Slug = "para-todos";
     public const string Prefijo = "TOD";
-    public const string Tu = "Tú";
 }
 
 public static class GuiaPerfiles

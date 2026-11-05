@@ -1,0 +1,572 @@
+{
+  "perfil": "Administracion",
+  "proposito": "Administración monta y mantiene el centro: su nombre y logo, sus unidades, edificios y habitaciones, las cuentas de las personas que trabajan en él con sus perfiles, unidades y permisos, y la entrada y salida de datos. También da de alta a los residentes, sus familias, los comunicados y las citas. No ve el basal ni ningún contenido clínico. **Esta guía se está completando por entregas:** de momento cubre el inicio, el centro y su estructura, y las personas y sus accesos; las tareas de residentes, familias, comunicados, citas, turnos y organigrama llegarán después.",
+  "rutina": [
+    "Abres **Inicio de Administración** y miras el bloque **Requiere atención**: cada línea te lleva a la pantalla donde se resuelve.",
+    "Cuando empieza alguien, le das de alta en **Usuarios**, le concedes su perfil y sus unidades y le entregas su invitación en mano.",
+    "Cuando cambia el centro (una unidad nueva, una habitación, un logo), lo actualizas en **Estructura del centro** o en **Datos del centro**."
+  ],
+  "dependeDe": ["Plataforma"],
+  "entregaA": ["Auxiliar", "Enfermería", "Medicina", "Dirección / Coordinación Clínica", "Familia"],
+  "siempre": [
+    "Cambiar el nombre y el logo del centro, y crear, renombrar e inactivar unidades, edificios, plantas, habitaciones y plazas.",
+    "Dar de alta cuentas del personal, entregarles su invitación de acceso o de recuperación, concederles y revocarles perfiles y unidades, y suspenderlas o reactivarlas.",
+    "Conceder y revocar los permisos configurables de Enfermería, Medicina y Dirección / Coordinación Clínica, y asignar residentes a un Auxiliar.",
+    "Dar acceso a alguien que ya tiene cuenta en otro centro, con una hoja que esa persona usa desde «Mi cuenta».",
+    "Importar y exportar la estructura y el censo de residentes, y consultar la auditoría administrativa de tu ámbito."
+  ],
+  "conPermiso": [],
+  "nunca": [
+    "Ver el basal ni ningún contenido clínico (valoraciones, indicaciones, eventos).",
+    "Cambiar tu propia cuenta (nombre, estado, perfiles): lo hace otra Administración, o Plataforma.",
+    "Suspender, renombrar o entregar invitaciones a una cuenta con perfiles vigentes en otros centros: lo hace Plataforma.",
+    "Crear un centro nuevo, ni ver otro centro: eso es de Plataforma.",
+    "Añadirte unidades a tu ámbito ni marcar a otra cuenta como principal, si no eres la Administración principal del centro."
+  ],
+  "revisadoPara": null,
+  "revisado": "2026-11-05",
+  "fichas": [
+    {
+      "codigo": "ADM-01",
+      "pregunta": "¿Cómo uso el inicio de Administración y qué es «Requiere atención»?",
+      "palabras": ["inicio", "requiere atención", "tarjetas", "pendientes", "cifras", "panel"],
+      "permisos": [],
+      "antes": [
+        "Entrar con tu cuenta y, si tienes varios ámbitos, elegir el de Administración (ver TOD-04)."
+      ],
+      "pasos": [
+        { "texto": "Entras al **Inicio de Administración**. Arriba está **Requiere atención**: cada línea es un enlace a la pantalla donde se resuelve, por orden de importancia: residentes sin contacto urgente ni motivo indicado, solicitudes y propuestas de cita, citas pasadas sin cerrar, autorizaciones de familiares pendientes, caducadas o por caducar, residentes con la ubicación pendiente, fotos de más de 12 meses y cuentas profesionales suspendidas o sin ámbito.", "campos": ["Inicio de Administración", "Requiere atención"] },
+        { "texto": "Si no hay nada que atender, dice «No hay nada pendiente.». Solo son cifras: no salen nombres ni texto clínico." },
+        { "texto": "Debajo, las citas confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados esta semana." },
+        { "texto": "Las tarjetas abren cada tarea: **Residentes**, **Alta de residente**, **Residentes dados de baja**, **Usuarios**, **Unidades del centro**, **Comunicados a la familia**, **Citas con la familia**, **Datos del centro**, **Estructura del centro**, **Turnos**, **Equipos**, **Organigrama y cargos**, **Planificación de turnos**, **Importar datos**, **Exportar datos** y **Auditoría**.", "botones": ["Usuarios", "Unidades del centro", "Datos del centro", "Estructura del centro", "Importar datos", "Exportar datos", "Auditoría"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Cada línea te lleva ya filtrada a la lista donde se resuelve (por ejemplo, **Usuarios** solo con las cuentas que conviene revisar). Las cifras de residentes y autorizaciones son de tu ámbito; las de citas y cuentas, de todo el centro." }
+      ],
+      "dudas": [
+        { "p": "«Ahora mismo no se pueden mostrar las cifras de lo que requiere atención.»", "r": "Es un fallo momentáneo al calcularlas; el resto del inicio funciona. Vuelve a abrir el inicio." },
+        { "p": "No veo una tarjeta.", "r": "Las tarjetas del inicio son las del perfil con el que has entrado: comprueba tu ámbito en el menú." }
+      ],
+      "rutas": ["Administracion/Index", "Administracion/Residentes"],
+      "mensajes": [
+        "No hay nada pendiente.",
+        "Ahora mismo no se pueden mostrar las cifras de lo que requiere atención."
+      ],
+      "manual": { "id": "residentes-administracion", "titulo": "Residentes y ficha administrativa" }
+    },
+    {
+      "codigo": "ADM-02",
+      "pregunta": "¿Cómo cambio el nombre y el logo del centro?",
+      "palabras": ["nombre del centro", "logo", "imagen", "encabezado", "PDF", "datos del centro"],
+      "permisos": [],
+      "antes": [
+        "El **nombre nuevo** del centro, de 1 a 200 caracteres. El código del centro no se puede cambiar.",
+        "El **logo**, si lo cambias: una imagen PNG (mejor con fondo transparente) o JPEG de hasta 512 KB y 1.024 píxeles por lado."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre la tarjeta **Datos del centro**.", "botones": ["Datos del centro"] },
+        { "texto": "En **Nombre**, cambia el «Nombre del centro» y pulsa **Guardar nombre**.", "botones": ["Guardar nombre"], "campos": ["Nombre del centro"] },
+        { "texto": "En **Logo**, elige la imagen con «Elige el logo» (o «Elige un logo nuevo»). Aparece un recuadro apaisado: arrastra el logo para centrarlo, o usa las flechas, y ajusta el tamaño con «Acercar o alejar». Lo que ves en el recuadro es lo que se guarda.", "campos": ["Elige el logo", "Acercar o alejar"] },
+        { "texto": "Pulsa **Guardar logo**. Para volver al icono de ResidApp, pulsa **Quitar logo**.", "botones": ["Guardar logo", "Quitar logo"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "El nombre y el logo salen en la esquina superior izquierda de todas las pantallas del centro, también en el Portal Familiar, y arriba de lo que se imprime y de los PDF." },
+        { "para": "Personal del centro", "texto": "El cambio de nombre se ve enseguida en todas las sesiones abiertas. Los informes ya firmados conservan la cabecera con la que se firmaron. Todo cambio queda en la auditoría." }
+      ],
+      "dudas": [
+        { "p": "«Escribe un nombre distinto del actual, de 1 a 200 caracteres.»", "r": "El nombre que has escrito es el de ahora o está vacío o es demasiado largo." },
+        { "p": "«Elige un logo.»", "r": "Pulsaste «Guardar logo» sin haber elegido ninguna imagen." },
+        { "p": "El fichero no se acepta.", "r": "Tiene que ser PNG o JPEG y no pasar de 512 KB ni de 1.024 píxeles por lado; si no, la pantalla lo indica y no guarda nada." }
+      ],
+      "rutas": ["Administracion/DatosCentro", "Administracion/LogoCentro", "Administracion/QuitarLogoCentro"],
+      "mensajes": [
+        "Nombre del centro guardado.",
+        "Escribe un nombre distinto del actual, de 1 a 200 caracteres.",
+        "Logo guardado.",
+        "Logo quitado.",
+        "Elige un logo."
+      ],
+      "manual": { "id": "datos-centro-administracion", "titulo": "Nombre y logo del centro" }
+    },
+    {
+      "codigo": "ADM-03",
+      "pregunta": "¿Cómo creo una unidad, le cambio el nombre o la inactivo?",
+      "palabras": ["unidad", "nueva unidad", "código de unidad", "inactivar", "reactivar", "estructura"],
+      "permisos": [],
+      "antes": [
+        "Para una unidad nueva: un **código** de 2 a 64 caracteres (letras sin acentos, dígitos, «-» o «_»; se guarda en mayúsculas; **no se puede cambiar después**) y un **nombre**.",
+        "Para inactivarla: que **no tenga residentes ubicados** en ella."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Estructura del centro**. Ves las unidades de tu ámbito, con su estado («Activa» o «Inactiva»), su edificio y planta y cuántos residentes tienen ubicados.", "botones": ["Estructura del centro"] },
+        { "texto": "Nueva: pulsa **Nueva unidad**, escribe el «Código» y el «Nombre» y pulsa **Crear unidad**.", "botones": ["Nueva unidad", "Crear unidad"], "campos": ["Código", "Nombre"] },
+        { "texto": "Renombrar: en su fila, pulsa **Cambiar nombre**, escribe el nombre nuevo y pulsa **Guardar nombre**. El código no cambia.", "botones": ["Cambiar nombre", "Guardar nombre"] },
+        { "texto": "Inactivar o volver a activar: pulsa **Inactivar** (o **Reactivar**) en su fila.", "botones": ["Inactivar", "Reactivar"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "La unidad nueva queda concedida a tu ámbito, pero a nadie más: después, desde **Usuarios**, se concede a cada perfil (ver ADM-13). Crear o cambiar una unidad no da acceso clínico a nadie." },
+        { "para": "Personal del centro", "texto": "Una unidad inactiva deja de ofrecerse en el alta de residentes y en la gestión de usuarios." }
+      ],
+      "dudas": [
+        { "p": "«Ya existe una unidad con ese código o con ese nombre en el centro.»", "r": "Cambia el código o el nombre; el código identifica la unidad en todo el centro." },
+        { "p": "«No se puede inactivar una unidad con residentes ubicados en ella.»", "r": "Primero hay que cambiar de unidad a sus residentes (un traslado) o darlos de baja." },
+        { "p": "«Ya existe otra unidad con ese nombre en el centro.»", "r": "Al renombrar, el nombre tampoco puede repetirse." }
+      ],
+      "rutas": ["Administracion/Estructura", "Administracion/NuevaUnidad", "Administracion/NombreUnidad", "Administracion/EstadoUnidad"],
+      "mensajes": [
+        "Unidad creada. Ya la ofrecen el alta de residentes y la gestión de usuarios de tu ámbito.",
+        "Ya existe una unidad con ese código o con ese nombre en el centro.",
+        "Nombre guardado.",
+        "Unidad reactivada.",
+        "No se puede inactivar una unidad con residentes ubicados en ella.",
+        "Ya existe otra unidad con ese nombre en el centro."
+      ],
+      "manual": { "id": "estructura-administracion", "titulo": "Estructura del centro: unidades, edificios, habitaciones y plazas" },
+      "flujo": { "id": "centro", "titulo": "Antes del primer residente: un centro nuevo" }
+    },
+    {
+      "codigo": "ADM-04",
+      "pregunta": "¿Cómo creo los edificios y las plantas del centro?",
+      "palabras": ["edificio", "planta", "agrupar unidades", "inactivar"],
+      "permisos": [],
+      "antes": [
+        "Los edificios y las plantas son **opcionales** y del centro entero: sirven para agrupar las unidades. Nada se borra: se inactiva.",
+        "El nombre del edificio o de la planta (hasta 200 caracteres)."
+      ],
+      "pasos": [
+        { "texto": "En **Estructura del centro**, pulsa **Edificios y plantas**.", "botones": ["Edificios y plantas"] },
+        { "texto": "Edificio: escribe «Nuevo edificio» y pulsa **Crear edificio**.", "botones": ["Crear edificio"], "campos": ["Nuevo edificio"] },
+        { "texto": "Planta: dentro del edificio, escribe «Nueva planta en» ese edificio y pulsa **Crear planta**.", "botones": ["Crear planta"], "campos": ["Nueva planta en"] },
+        { "texto": "Para renombrar, pulsa **Cambiar nombre** en el edificio o la planta, escribe el nombre y pulsa **Guardar nombre**. Para retirarlos de uso, **Inactivar** (o **Reactivar**).", "botones": ["Cambiar nombre", "Guardar nombre", "Inactivar", "Reactivar"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Falta colocar cada unidad en su edificio y planta (ver ADM-06). Crear o cambiar un edificio o una planta no da acceso a nadie." }
+      ],
+      "dudas": [
+        { "p": "«Edificio creado.» o «Planta creada.»", "r": "Es la confirmación; los verás en la lista, con su estado «Activo» o «Activa»." },
+        { "p": "«Ya existe otro edificio con ese nombre en el centro.» o «Ya existe otra planta con ese nombre en el edificio.»", "r": "Usa un nombre distinto." }
+      ],
+      "rutas": ["Administracion/Edificios", "Administracion/NuevoEdificio", "Administracion/NuevaPlanta", "Administracion/NombreEdificio", "Administracion/NombrePlanta"],
+      "mensajes": [
+        "Edificio creado.",
+        "Planta creada.",
+        "Ya existe otro edificio con ese nombre en el centro.",
+        "Ya existe otra planta con ese nombre en el edificio."
+      ],
+      "manual": { "id": "estructura-administracion", "titulo": "Estructura del centro: unidades, edificios, habitaciones y plazas" }
+    },
+    {
+      "codigo": "ADM-05",
+      "pregunta": "¿Cómo creo las habitaciones y las plazas de una unidad?",
+      "palabras": ["habitación", "plaza", "cama", "ocupada", "libre"],
+      "permisos": [],
+      "antes": [
+        "Las habitaciones son de cada unidad y las plazas, de cada habitación. Son opcionales: al dar de alta a un residente se puede elegir una habitación o una plaza libre de su unidad.",
+        "El nombre de la habitación o la plaza (hasta 200 caracteres)."
+      ],
+      "pasos": [
+        { "texto": "En **Estructura del centro**, pulsa **Habitaciones y plazas** en la fila de la unidad.", "botones": ["Habitaciones y plazas"] },
+        { "texto": "Habitación: escribe «Nueva habitación» y pulsa **Crear habitación**.", "botones": ["Crear habitación"], "campos": ["Nueva habitación"] },
+        { "texto": "Plaza: dentro de la habitación, escribe «Nueva plaza en» esa habitación y pulsa **Crear plaza**. Cada plaza dice si está «Ocupada» o «Libre».", "botones": ["Crear plaza"], "campos": ["Nueva plaza en"] },
+        { "texto": "Para renombrar, **Cambiar nombre** y **Guardar nombre**; para retirarla de uso, **Inactivar** (o **Reactivar**).", "botones": ["Cambiar nombre", "Guardar nombre", "Inactivar", "Reactivar"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "Quien da de alta a los residentes (Administración, y Enfermería si tiene el permiso) puede elegirles habitación y plaza libres de su unidad." }
+      ],
+      "dudas": [
+        { "p": "Quiero cambiar a un residente de habitación.", "r": "Crear o renombrar una habitación o una plaza no cambia dónde está ningún residente. Cambiar a un residente de habitación o plaza es un traslado y todavía no está disponible." },
+        { "p": "«Ya existe otra habitación con ese nombre en la unidad.»", "r": "Usa un nombre distinto; con las plazas ocurre igual dentro de su habitación." }
+      ],
+      "rutas": ["Administracion/Habitaciones", "Administracion/NuevaHabitacion", "Administracion/NuevaPlaza", "Administracion/NombreHabitacion", "Administracion/NombrePlaza"],
+      "mensajes": [
+        "Habitación creada.",
+        "Plaza creada.",
+        "Ya existe otra habitación con ese nombre en la unidad.",
+        "Ya existe otra plaza con ese nombre en la habitación."
+      ],
+      "manual": { "id": "estructura-administracion", "titulo": "Estructura del centro: unidades, edificios, habitaciones y plazas" }
+    },
+    {
+      "codigo": "ADM-06",
+      "pregunta": "¿Cómo coloco una unidad en un edificio y una planta?",
+      "palabras": ["ubicar unidad", "edificio y planta", "sin edificio", "agrupar"],
+      "permisos": [],
+      "antes": [
+        "Que el edificio (y su planta, si la usas) ya existan y estén activos (ver ADM-04)."
+      ],
+      "pasos": [
+        { "texto": "En **Estructura del centro**, pulsa **Edificio y planta** en la fila de la unidad.", "botones": ["Edificio y planta"] },
+        { "texto": "En «Edificio y planta», elige un edificio y una planta (o «Sin edificio» para quitarla) y pulsa **Guardar**.", "botones": ["Guardar"], "campos": ["Edificio y planta", "Sin edificio"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "La unidad aparece agrupada en su edificio y planta. Solo agrupa: no da acceso a nadie ni cambia dónde está ningún residente. Queda en la auditoría." }
+      ],
+      "dudas": [
+        { "p": "No hay edificios activos.", "r": "Créalos antes en «Edificios y plantas» (ver ADM-04)." },
+        { "p": "«La unidad ya está en esa ubicación.»", "r": "Elige otra o pulsa «Cancelar»." },
+        { "p": "«Elige un edificio y una planta activos.»", "r": "El edificio o la planta elegidos se han inactivado: reactívalos o elige otros." }
+      ],
+      "rutas": ["Administracion/UbicacionUnidad", "Administracion/Estructura"],
+      "mensajes": [
+        "Ubicación de la unidad guardada.",
+        "La unidad ya está en esa ubicación.",
+        "Elige un edificio y una planta activos."
+      ],
+      "manual": { "id": "estructura-administracion", "titulo": "Estructura del centro: unidades, edificios, habitaciones y plazas" }
+    },
+    {
+      "codigo": "ADM-07",
+      "pregunta": "¿Cómo veo todas las unidades del centro, me añado una a mi ámbito o marco a otra Administración como principal?",
+      "palabras": ["ámbito", "unidades del centro", "Administración principal", "añadir a mi ámbito", "principal"],
+      "permisos": [],
+      "antes": [
+        "Ser la **Administración principal** del centro: es la única que ve todas sus unidades y puede añadírselas, o marcar a otra cuenta de Administración como principal. Las demás ven solo las suyas."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Unidades del centro**. Cada unidad dice si está «En tu ámbito» o «Fuera de tu ámbito».", "botones": ["Unidades del centro"] },
+        { "texto": "Para una que no tienes, pulsa **Añadir a mi ámbito**.", "botones": ["Añadir a mi ámbito"] },
+        { "texto": "Para dar la marca a otra Administración: **Usuarios**, abre su ficha, **Gestionar** su perfil de Administración y pulsa **Marcar como Administración principal** (o **Quitar la marca de principal**).", "botones": ["Gestionar", "Marcar como Administración principal", "Quitar la marca de principal"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Cada ampliación queda en la auditoría con quién y cuándo. El centro tiene que conservar al menos una Administración principal. Si tu centro no tiene ninguna o necesitas recuperar una unidad, lo hace Plataforma (ver PLA-04 y PLA-05)." }
+      ],
+      "dudas": [
+        { "p": "«Solo la Administración principal del centro puede añadirse unidades.»", "r": "Tu cuenta no tiene la marca de principal: pídelo a quien la tenga." },
+        { "p": "«Esa unidad ya está en tu ámbito.»", "r": "No hace falta añadirla." },
+        { "p": "«El centro tiene que conservar al menos una Administración principal: marca antes a otra.»", "r": "No se puede quitar la última marca: marca primero a otra cuenta." }
+      ],
+      "rutas": ["Administracion/AmbitoCentro", "Administracion/AnadirUnidadAlAmbito", "Administracion/MarcarPrincipal", "Administracion/PerfilUsuario"],
+      "mensajes": [
+        "Unidad añadida a tu ámbito. Queda en la auditoría.",
+        "Solo la Administración principal del centro puede añadirse unidades.",
+        "Esa unidad ya está en tu ámbito.",
+        "Marcada como Administración principal.",
+        "El centro tiene que conservar al menos una Administración principal: marca antes a otra."
+      ],
+      "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" }
+    },
+    {
+      "codigo": "ADM-08",
+      "pregunta": "¿Cómo importo la estructura y los residentes desde un fichero CSV o Excel?",
+      "palabras": ["importar", "CSV", "Excel", "plantilla", "emparejar columnas", "vista previa", "censo"],
+      "permisos": [],
+      "antes": [
+        "Un fichero **CSV, XLS o XLSX de hasta 5 MB**, con los nombres de las columnas en la primera fila (se lee la primera hoja), o una plantilla vacía de ResidApp. No se importan usuarios, familiares ni datos clínicos.",
+        "Importa **primero la estructura y después los residentes**; puede ser el mismo fichero.",
+        "Un lugar seguro donde guardarlo y borrarlo después: el fichero no se guarda en ResidApp, pero contiene datos personales."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Importar datos**. Si no tienes fichero, descarga la plantilla de estructura o la de residentes (CSV), rellénala y úsala.", "botones": ["Importar datos"] },
+        { "texto": "En «Qué importas» elige **Estructura** o **Residentes**, elige el «Fichero» y pulsa **Analizar el fichero**.", "botones": ["Analizar el fichero"], "campos": ["Qué importas", "Fichero"] },
+        { "texto": "En **Columnas del fichero**, ResidApp propone a qué dato va cada columna («Emparejado automáticamente»): revísalo o elige «No se usa». Indica el «Formato de las fechas» y, si el fichero trae sexo, qué significa cada valor que ResidApp no reconoce.", "campos": ["Columnas del fichero", "Formato de las fechas (nacimiento e ingreso)"] },
+        { "texto": "Opcional: «Guardar este emparejamiento como plantilla»: la próxima vez que subas un fichero con las mismas columnas se aplicará solo.", "campos": ["Guardar este emparejamiento como plantilla (opcional)"] },
+        { "texto": "Pulsa **Ver la vista previa**: cada fila dice «Se importará», «Ya existe», «Posible duplicado» o «Error». Una posible duplicada solo se importa si marcas «Importar de todos modos».", "botones": ["Ver la vista previa"], "campos": ["Importar de todos modos"] },
+        { "texto": "Si es lo que esperabas, pulsa **Importar** (el botón dice cuántas filas, por ejemplo «Importar 3 filas»). No se importa nada hasta que lo confirmas." }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Sale el «Resultado de la importación», fila a fila (la fila es la del fichero, para encontrarla en Excel). Las filas con error o que ya existen no se importan." }
+      ],
+      "dudas": [
+        { "p": "Una columna no se empareja sola.", "r": "Elígela a mano en su lista; ResidApp no enseña los valores del fichero, solo qué parecen contener y cuántos distintos hay." },
+        { "p": "Importé los residentes antes que la estructura.", "r": "Importa primero la estructura y después los residentes. Si una fila sale con error, la vista previa dice el motivo." }
+      ],
+      "rutas": ["Administracion/Importar", "Administracion/ImportarAnalizar", "Administracion/ImportarVistaPrevia", "Administracion/ImportarEjecutar"],
+      "mensajes": [],
+      "manual": { "id": "intercambio-administracion", "titulo": "Importar y exportar datos" }
+    },
+    {
+      "codigo": "ADM-09",
+      "pregunta": "¿Cómo exporto la estructura y el censo de residentes?",
+      "palabras": ["exportar", "CSV", "descargar", "censo", "plantilla de exportación", "otra aplicación"],
+      "permisos": [],
+      "antes": [
+        "Un lugar seguro donde guardar el fichero y borrarlo al terminar: **contiene datos personales** (nombre, fecha de nacimiento, sexo, ubicación y referencia interna), nunca el basal ni nada clínico.",
+        "Si lo llevas a otra aplicación con otras columnas: un fichero de ejemplo de esa aplicación (solo se leen los nombres de sus columnas)."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Exportar datos**.", "botones": ["Exportar datos"] },
+        { "texto": "**Con las columnas de ResidApp:** pulsa el botón de la estructura o del censo y se descarga un CSV (se abre con Excel); son las mismas columnas que la importación, así que sirve para pasar datos de un centro a otro.", "campos": ["Con las columnas de ResidApp"] },
+        { "texto": "**Con las columnas de otra aplicación:** si ya hay plantillas, pulsa **Descargar** en la que quieras. Si no, en «Nueva plantilla de exportación» elige «Qué exporta», sube el «Fichero de ejemplo», pulsa **Analizar el fichero**, elige qué dato de ResidApp va en cada columna y guarda la plantilla.", "botones": ["Descargar", "Analizar el fichero"], "campos": ["Con las columnas de otra aplicación", "Nueva plantilla de exportación", "Qué exporta", "Fichero de ejemplo"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "El censo incluye los residentes activos de tu ámbito. Cada exportación queda en la auditoría." }
+      ],
+      "dudas": [
+        { "p": "No hay plantillas de exportación.", "r": "«Aún no hay plantillas de exportación.» Crea una con un fichero de ejemplo de la otra aplicación." }
+      ],
+      "rutas": ["Administracion/Exportar", "Administracion/ExportarDescargar", "Administracion/ExportarPlantillaAnalizar", "Administracion/ExportarPlantillaGuardar"],
+      "mensajes": [
+        "Aún no hay plantillas de exportación."
+      ],
+      "manual": { "id": "intercambio-administracion", "titulo": "Importar y exportar datos" }
+    },
+    {
+      "codigo": "ADM-10",
+      "pregunta": "¿Cómo doy de alta a una persona del personal?",
+      "palabras": ["alta de usuario", "nueva cuenta", "identificador de acceso", "perfil", "unidades", "profesional"],
+      "permisos": [],
+      "antes": [
+        "El **identificador de acceso**: de 3 a 200 caracteres, sin espacios (letras, dígitos, «.», «_», «-» o «@»). Es con el que la persona entra y **no se puede cambiar**; no puede ser el de una cuenta que ya exista.",
+        "Su **nombre**, su **perfil** (Auxiliar, Enfermería, Medicina, Administración o Dirección Clínica) y **al menos una unidad** de las de tu ámbito.",
+        "Las cuentas de Familia no se dan de alta aquí: no aparecen en «Usuarios» y se gestionan desde la ficha del residente."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Usuarios** y pulsa **Alta de usuario**.", "botones": ["Usuarios", "Alta de usuario"] },
+        { "texto": "Escribe el «Identificador de acceso» y el «Nombre», elige el «Perfil» y marca las «Unidades».", "campos": ["Identificador de acceso", "Nombre", "Perfil", "Unidades"] },
+        { "texto": "Pulsa **Dar de alta**.", "botones": ["Dar de alta"] },
+        { "texto": "Entrégale su invitación en mano (ver ADM-11): la cuenta nace activa pero sin contraseña, y sin invitación no puede entrar." }
+      ],
+      "despues": [
+        { "para": "Personal del centro", "texto": "Con la invitación elige su contraseña y, si es del personal, prepara el código del móvil (ver TOD-01). Al entrar ve solo el perfil y las unidades que le has concedido." }
+      ],
+      "dudas": [
+        { "p": "«Ya existe una cuenta con ese identificador de acceso.»", "r": "Elige otro. Si la persona ya trabaja en otro centro, no se crea otra cuenta: ver ADM-17." },
+        { "p": "«Tu ámbito no tiene unidades activas: no puedes conceder ninguna.»", "r": "Crea una unidad (ver ADM-03) o, si no eres la Administración principal, pídele a quien lo sea que te añada unidades (ver ADM-07)." },
+        { "p": "«Elige al menos una unidad.»", "r": "Marca por lo menos una en «Unidades»." }
+      ],
+      "rutas": ["Administracion/Usuarios", "Administracion/NuevoUsuario"],
+      "mensajes": [
+        "Usuario dado de alta. Para que pueda entrar, entrégale su invitación de acceso (abajo).",
+        "Ya existe una cuenta con ese identificador de acceso.",
+        "Tu ámbito no tiene unidades activas: no puedes conceder ninguna.",
+        "Elige al menos una unidad."
+      ],
+      "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" },
+      "acceso": { "id": "pedir", "titulo": "Cómo se pide el acceso" }
+    },
+    {
+      "codigo": "ADM-11",
+      "pregunta": "¿Cómo entrego a una persona su invitación de acceso o de recuperación?",
+      "palabras": ["invitación", "hoja", "QR", "recuperación", "olvidó la contraseña", "perdió el móvil", "anular invitación"],
+      "permisos": [],
+      "antes": [
+        "Una forma de **entregarla en mano** (impresora o pantalla para enseñar el código QR). La hoja solo se ve en el momento de crearla.",
+        "Que la cuenta no sea la tuya y que no tenga perfiles vigentes en otros centros: en esos casos lo hace otra Administración o Plataforma."
+      ],
+      "pasos": [
+        { "texto": "En **Usuarios**, abre la ficha de la cuenta (pulsa su nombre). En la ficha **Entrar en ResidApp** verás si ya tiene contraseña.", "botones": ["Usuarios"], "campos": ["Entrar en ResidApp"] },
+        { "texto": "Si todavía no tiene contraseña, pulsa **Crear invitación de acceso**. Si ya la tiene y la olvidó o perdió el móvil, pulsa **Crear invitación de recuperación**.", "botones": ["Crear invitación de acceso", "Crear invitación de recuperación"] },
+        { "texto": "Sale la hoja con el usuario, el centro, «Vale hasta» (72 horas, una sola vez) y un código QR. Pulsa **Imprimir** o enséñale la pantalla, y **entrégasela en mano**.", "botones": ["Imprimir"] },
+        { "texto": "Si se pierde la hoja, crea otra: **la nueva anula la anterior**. Para dejar una sin valor, pulsa **Anular la invitación**.", "botones": ["Anular la invitación"] }
+      ],
+      "despues": [
+        { "para": "Personal del centro", "texto": "Con la de acceso elige su contraseña y prepara el código del móvil (ver TOD-01). Con la de recuperación elige otra contraseña, prepara de nuevo el código, **pierde sus passkeys** y se le cierran todas las sesiones abiertas (ver TOD-09). Hasta que la use, su contraseña de siempre sigue valiendo: si temes que alguien la conozca, suspéndele la cuenta (ver ADM-16)." }
+      ],
+      "dudas": [
+        { "p": "«No se puede entregar una invitación a esta cuenta: es la tuya o tiene perfiles vigentes en otros centros.»", "r": "Pídesela a otra Administración de tu centro o a Plataforma (ver PLA-03 y PLA-07)." },
+        { "p": "«La cuenta está suspendida, o la invitación ya se había usado o anulado.»", "r": "Reactiva la cuenta antes (ver ADM-16)." },
+        { "p": "«Invitación anulada: ya no sirve para entrar.»", "r": "Es la confirmación de «Anular la invitación»." }
+      ],
+      "rutas": ["Administracion/Usuario", "Administracion/Invitacion", "Administracion/AnularInvitacion"],
+      "mensajes": [
+        "Invitación anulada: ya no sirve para entrar.",
+        "No se puede entregar una invitación a esta cuenta: es la tuya o tiene perfiles vigentes en otros centros.",
+        "La cuenta está suspendida, o la invitación ya se había usado o anulado."
+      ],
+      "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" },
+      "acceso": { "id": "pedir", "titulo": "Cómo se pide el acceso" }
+    },
+    {
+      "codigo": "ADM-12",
+      "pregunta": "¿Cómo le concedo otro perfil a una cuenta?",
+      "palabras": ["conceder perfil", "perfil nuevo", "segundo perfil", "varios perfiles"],
+      "permisos": [],
+      "antes": [
+        "El perfil que quieres darle (Auxiliar, Enfermería, Medicina, Administración o Dirección Clínica) y al menos una de las unidades de tu ámbito.",
+        "Que no sea tu propia cuenta: la ves pero no la puedes cambiar; otra Administración puede hacerlo."
+      ],
+      "pasos": [
+        { "texto": "En **Usuarios**, abre la ficha de la cuenta y pulsa **Conceder perfil**.", "botones": ["Conceder perfil"] },
+        { "texto": "Elige el «Perfil» y marca las «Unidades» (solo puedes conceder las de tu ámbito).", "campos": ["Perfil", "Unidades"] },
+        { "texto": "Pulsa **Conceder perfil**.", "botones": ["Conceder perfil"] }
+      ],
+      "despues": [
+        { "para": "Personal del centro", "texto": "El perfil vale desde la siguiente pantalla que abra la persona. Para usarlo tendrá que elegirlo al entrar (ver TOD-04): **los permisos de sus perfiles no se suman**." }
+      ],
+      "dudas": [
+        { "p": "«La cuenta ya tiene ese perfil vigente en este centro.»", "r": "No hace falta concederlo: revisa sus unidades (ver ADM-13)." },
+        { "p": "«La cuenta ya tiene vigentes todos los perfiles que se conceden desde aquí.»", "r": "No queda ningún perfil por conceder." }
+      ],
+      "rutas": ["Administracion/Usuario", "Administracion/ConcederPerfil"],
+      "mensajes": [
+        "Perfil concedido. Vale desde la siguiente pantalla que abra la persona.",
+        "La cuenta ya tiene ese perfil vigente en este centro.",
+        "La cuenta ya tiene vigentes todos los perfiles que se conceden desde aquí."
+      ],
+      "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" }
+    },
+    {
+      "codigo": "ADM-13",
+      "pregunta": "¿Cómo cambio las unidades de un perfil o lo revoco?",
+      "palabras": ["unidades de un perfil", "conceder unidad", "revocar unidad", "revocar perfil", "gestionar"],
+      "permisos": [],
+      "antes": [
+        "Que la cuenta no sea la tuya y que el perfil esté «Vigente».",
+        "Recuerda que un perfil vale **solo en sus unidades**: conceder o quitar una unidad cambia lo que la persona ve."
+      ],
+      "pasos": [
+        { "texto": "En **Usuarios**, abre la ficha de la cuenta y pulsa **Gestionar** en el perfil.", "botones": ["Gestionar"] },
+        { "texto": "En **Unidades**, para añadir una elige la unidad en «Añadir unidad» y pulsa **Conceder unidad**. Para quitar una, pulsa **Revocar unidad** en su fila.", "botones": ["Conceder unidad", "Revocar unidad"], "campos": ["Unidades", "Añadir unidad"] },
+        { "texto": "Para que la persona deje de entrar con ese perfil, baja a **Revocar el perfil** y pulsa **Revocar perfil**. No se deshace: si vuelve a hacer falta, se concede de nuevo.", "botones": ["Revocar perfil"], "campos": ["Revocar el perfil"] }
+      ],
+      "despues": [
+        { "para": "Personal del centro", "texto": "Los cambios valen desde la siguiente pantalla que abra la persona. Los perfiles y unidades revocados se conservan como historial." }
+      ],
+      "dudas": [
+        { "p": "«No se puede revocar: es la última unidad del perfil (revoca el perfil) o no es de tu ámbito.»", "r": "La última unidad no se revoca: si ya no hace falta, revoca el perfil." },
+        { "p": "«Perfil revocado. Si hace falta otra vez, hay que concederlo de nuevo.»", "r": "Es la confirmación de «Revocar perfil»." }
+      ],
+      "rutas": ["Administracion/Usuario", "Administracion/PerfilUsuario", "Administracion/UnidadPerfil", "Administracion/RevocarPerfil"],
+      "mensajes": [
+        "Unidad concedida.",
+        "Unidad revocada.",
+        "No se puede revocar: es la última unidad del perfil (revoca el perfil) o no es de tu ámbito.",
+        "Perfil revocado. Si hace falta otra vez, hay que concederlo de nuevo."
+      ],
+      "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" }
+    },
+    {
+      "codigo": "ADM-14",
+      "pregunta": "¿Cómo concedo o revoco un permiso configurable de Enfermería, Medicina o Dirección?",
+      "palabras": ["permiso", "conceder permiso", "revocar permiso", "basal", "alta de residentes", "foto", "rangos", "plazos", "indicadores", "lectura clínica"],
+      "permisos": [],
+      "antes": [
+        "Ningún perfil trae estos permisos por defecto: **solo Administración los concede**. Valen en las unidades del perfil.",
+        "Ten claro qué permiso corresponde a cada perfil: **Enfermería:** «Dar de alta residentes», «Basal inicial (al alta)», «Reevaluar el basal» y «Poner, cambiar y quitar la foto del residente». **Medicina:** «Basal inicial (al alta)» y «Reevaluar el basal». **Dirección:** «Lectura clínica detallada y auditada», «Gestionar los rangos de referencia de constantes», «Gestionar los plazos de los hitos del proceso» y «Ver los indicadores y la calidad de proceso». Auxiliar, Familia, Administración y Plataforma no tienen permisos configurables."
+      ],
+      "pasos": [
+        { "texto": "En **Usuarios**, abre la ficha de la cuenta y pulsa **Gestionar** en su perfil.", "botones": ["Gestionar"] },
+        { "texto": "Baja a **Permisos**. Cada permiso del perfil dice «no concedido» o «desde el» día en que se concedió.", "campos": ["Permisos"] },
+        { "texto": "Pulsa **Conceder** para darlo o **Revocar** para quitarlo.", "botones": ["Conceder", "Revocar"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "Con «Dar de alta residentes» aparece **Alta de residente** en su inicio; con los dos permisos de basal puede crear, completar y firmar el basal; con el de la foto, ponerla o cambiarla." },
+        { "para": "Medicina", "texto": "Con los permisos de basal puede crear, completar y firmar el basal." },
+        { "para": "Dirección / Coordinación Clínica", "texto": "Con cada permiso se le abren la lectura clínica con finalidad declarada, los rangos, los plazos o los indicadores y la calidad de proceso." }
+      ],
+      "dudas": [
+        { "p": "Concedí el permiso y no lo ve.", "r": "Vale desde la siguiente pantalla que abra la persona y solo en las unidades de ese perfil. Si tiene dos perfiles, el permiso es del perfil donde lo concedes." },
+        { "p": "Quiero que Auxiliar o Familia hagan algo más.", "r": "No hay permisos configurables para esos perfiles." }
+      ],
+      "rutas": ["Administracion/Usuario", "Administracion/PerfilUsuario", "Administracion/PermisoPerfil"],
+      "mensajes": [
+        "Permiso concedido.",
+        "Permiso revocado."
+      ],
+      "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" }
+    },
+    {
+      "codigo": "ADM-15",
+      "pregunta": "¿Cómo asigno residentes a un Auxiliar?",
+      "palabras": ["residentes asignados", "asignar", "retirar", "auxiliar", "mis residentes"],
+      "permisos": [],
+      "antes": [
+        "Que la cuenta tenga el perfil de **Auxiliar** vigente y unidades concedidas (ver ADM-13): solo se pueden asignar residentes de esas unidades."
+      ],
+      "pasos": [
+        { "texto": "En **Usuarios**, abre la ficha de la cuenta y pulsa **Gestionar** en el perfil Auxiliar.", "botones": ["Gestionar"] },
+        { "texto": "En **Residentes asignados**, elige el residente en «Asignar residente» y pulsa **Asignar**. Para quitar uno, pulsa **Retirar** en su fila.", "botones": ["Asignar", "Retirar"], "campos": ["Residentes asignados", "Asignar residente"] }
+      ],
+      "despues": [
+        { "para": "Auxiliar", "texto": "Solo ve a los residentes que tiene asignados y que están en sus unidades (ver AUX-01). Sin ninguno asignado no ve a nadie, y retirar el último no le da acceso a toda la unidad." }
+      ],
+      "dudas": [
+        { "p": "«No hay más residentes de sus unidades que se puedan asignar.»", "r": "Ya los tiene todos, o sus unidades no tienen más residentes." },
+        { "p": "El Auxiliar dice que no ve a nadie.", "r": "Comprueba aquí que tiene residentes asignados y que están en alguna de sus unidades." }
+      ],
+      "rutas": ["Administracion/Usuario", "Administracion/PerfilUsuario", "Administracion/ResidentePerfil"],
+      "mensajes": [
+        "Residente asignado.",
+        "Residente retirado.",
+        "No hay más residentes de sus unidades que se puedan asignar."
+      ],
+      "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" }
+    },
+    {
+      "codigo": "ADM-16",
+      "pregunta": "¿Cómo suspendo o reactivo una cuenta, o le pongo nombre?",
+      "palabras": ["suspender cuenta", "reactivar cuenta", "poner nombre", "cambiar nombre", "ya no trabaja"],
+      "permisos": [],
+      "antes": [
+        "Que la cuenta no sea la tuya y que **no tenga perfiles vigentes en otros centros**: esas las suspende, renombra y gestiona Plataforma (ver PLA-06). Si alguien deja de trabajar solo en tu centro, revoca sus perfiles (ver ADM-13)."
+      ],
+      "pasos": [
+        { "texto": "En **Usuarios**, abre la ficha de la cuenta (el listado muestra su estado, «Activa» o «Suspendida»).", "botones": ["Usuarios"] },
+        { "texto": "Para suspenderla, pulsa **Suspender cuenta**. Para volver a activarla, **Reactivar cuenta**.", "botones": ["Suspender cuenta", "Reactivar cuenta"] },
+        { "texto": "Para el nombre, pulsa **Poner nombre** (o **Cambiar nombre**), escríbelo y pulsa **Guardar nombre**. El identificador de acceso no cambia.", "botones": ["Poner nombre", "Cambiar nombre", "Guardar nombre"] }
+      ],
+      "despues": [
+        { "para": "Personal del centro", "texto": "Una cuenta suspendida no puede entrar con ningún perfil, aunque los conserve; si tenía una sesión abierta, deja de valer en la siguiente pantalla que abra." }
+      ],
+      "dudas": [
+        { "p": "«Cuenta suspendida: no podrá entrar con ningún perfil hasta que la reactives.»", "r": "Es la confirmación. Las cuentas suspendidas salen en «Requiere atención» del inicio." },
+        { "p": "«No se puede cambiar el estado: la cuenta tiene perfiles vigentes en otros centros, o es la tuya.»", "r": "Lo hace otra Administración de tu centro o Plataforma." }
+      ],
+      "rutas": ["Administracion/Usuario", "Administracion/EstadoUsuario", "Administracion/NombreUsuario"],
+      "mensajes": [
+        "Cuenta suspendida: no podrá entrar con ningún perfil hasta que la reactives.",
+        "Cuenta reactivada.",
+        "No se puede cambiar el estado: la cuenta tiene perfiles vigentes en otros centros, o es la tuya.",
+        "Nombre guardado."
+      ],
+      "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" }
+    },
+    {
+      "codigo": "ADM-17",
+      "pregunta": "¿Cómo doy acceso a mi centro a alguien que ya tiene cuenta en otro?",
+      "palabras": ["otro centro", "vinculación", "hoja", "confirmar", "rechazar", "misma cuenta"],
+      "permisos": [],
+      "antes": [
+        "Que la persona **ya tenga cuenta en otro centro** y sea del personal, con el código del móvil preparado. No se crea otra cuenta: sigue con su contraseña y su código.",
+        "El perfil y las unidades de tu ámbito que quieres darle, y una forma de **entregarle la hoja en mano**."
+      ],
+      "pasos": [
+        { "texto": "En **Usuarios**, pulsa **Acceso de alguien de otro centro**.", "botones": ["Acceso de alguien de otro centro"] },
+        { "texto": "En **Preparar una hoja nueva**, elige el «Perfil» y las unidades y pulsa **Crear la hoja**. Sale una hoja con un código y un QR, **sin decir a quién**: se ve una sola vez, vale 72 horas y se usa una sola vez. Entrégasela en mano.", "botones": ["Crear la hoja"], "campos": ["Preparar una hoja nueva"] },
+        { "texto": "La persona la usa desde «Mi cuenta» (ver TOD-08). Entonces aparece en **Pendientes de confirmar**, con su nombre y su usuario: comprueba que es quien tenías delante y pulsa **Confirmar**; si no la reconoces, **Rechazar**.", "botones": ["Confirmar", "Rechazar"], "campos": ["Pendientes de confirmar"] },
+        { "texto": "Una hoja que nadie ha usado, en **Hojas sin usar**, se puede dejar sin valor con **Anular**.", "botones": ["Anular"], "campos": ["Hojas sin usar"] }
+      ],
+      "despues": [
+        { "para": "Personal del centro", "texto": "Al confirmar, se crea el perfil con sus unidades y la persona podrá elegir tu centro al entrar (ver TOD-04); cada centro solo ve lo suyo. Hasta entonces no tiene ningún acceso. Cada emisión, anulación y resolución queda en la auditoría." }
+      ],
+      "dudas": [
+        { "p": "Nadie ha usado la hoja.", "r": "«Nadie ha usado una hoja todavía.» La persona tiene que aceptarla en «Mi cuenta» antes de 72 horas." },
+        { "p": "Quiero suspenderle la cuenta o cambiarle el nombre.", "r": "Una cuenta que trabaja en varios centros la gestiona Plataforma; tú solo puedes revocar el perfil de tu centro (ver ADM-13)." },
+        { "p": "«Tu ámbito no tiene unidades que conceder.»", "r": "Crea una unidad o pide que te añadan unidades (ver ADM-03 y ADM-07)." }
+      ],
+      "rutas": ["Administracion/Usuarios", "Administracion/Vinculaciones", "Administracion/NuevaVinculacion", "Administracion/ResolverVinculacion", "Administracion/AnularVinculacion"],
+      "mensajes": [
+        "Nadie ha usado una hoja todavía.",
+        "Tu ámbito no tiene unidades que conceder."
+      ],
+      "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" },
+      "acceso": { "id": "otro-centro", "titulo": "Trabajar en otro centro con la misma cuenta" }
+    },
+    {
+      "codigo": "ADM-18",
+      "pregunta": "¿Cómo consulto quién hizo qué en el centro (auditoría administrativa)?",
+      "palabras": ["auditoría", "quién hizo qué", "registro", "filtrar", "periodo", "acción"],
+      "permisos": [],
+      "antes": [
+        "Qué quieres encontrar: un **periodo**, un **tipo de acción** y, si procede, la **cuenta afectada**. La auditoría no contiene texto clínico y no sirve para comparar a las personas."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Auditoría**.", "botones": ["Auditoría"] },
+        { "texto": "Elige «Desde» y «Hasta», el «Tipo de acción» (o «Todas») y la «Cuenta afectada», y pulsa **Buscar**. **Limpiar** vuelve a empezar.", "botones": ["Buscar", "Limpiar"], "campos": ["Desde", "Hasta", "Tipo de acción", "Cuenta afectada"] },
+        { "texto": "Cada evento dice qué ocurrió, cuándo, quién lo hizo y con qué perfil, y, según el caso, la cuenta, el cargo, la unidad o el residente afectados." }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Ves cuentas, perfiles, permisos, estructura, residentes y familias de tu ámbito. El registro no se puede modificar ni borrar, y las acciones clínicas no aparecen." }
+      ],
+      "dudas": [
+        { "p": "«Ningún evento coincide con la búsqueda.»", "r": "Amplía el periodo o quita el tipo de acción." },
+        { "p": "Salen solo los más recientes.", "r": "Cuando hay más eventos de los que caben, la pantalla lo avisa: acota el periodo o el tipo de acción para ver el resto." }
+      ],
+      "rutas": ["Administracion/Auditoria"],
+      "mensajes": [
+        "Ningún evento coincide con la búsqueda."
+      ],
+      "manual": { "id": "auditoria-administracion", "titulo": "Auditoría administrativa" }
+    }
+  ]
+}

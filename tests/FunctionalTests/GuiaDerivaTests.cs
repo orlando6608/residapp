@@ -20,10 +20,7 @@ namespace ResidApp.FunctionalTests;
 public partial class GuiaDerivaTests
 {
     /// <summary>Perfiles cuya guía todavía no está escrita (plan de la Guía, §5). Se vacía fase a fase: un perfil con guía que siga aquí, o sin ella y fuera de aquí, falla.</summary>
-    private static readonly SystemProfile[] SinGuiaTodavia =
-    [
-        SystemProfile.Administracion,
-    ];
+    private static readonly SystemProfile[] SinGuiaTodavia = [];
 
     private static readonly Dictionary<SystemProfile, string> Prefijos = new()
     {
@@ -168,18 +165,18 @@ public partial class GuiaDerivaTests
         foreach (var perfil in catalogo.Perfiles)
         {
             Assert.All(perfil.DependeDe.Concat(perfil.EntregaA), titulo => Assert.NotNull(GuiaPerfiles.PorTitulo(titulo)));
-            RevisarFichas(perfil.Perfil, Prefijos[perfil.Profile], perfil.Revisado, perfil.Fichas, GuiaPerfiles.PorTitulo, codigos, preguntas);
+            RevisarFichas(perfil.Perfil, Prefijos[perfil.Profile], perfil.Revisado, perfil.Fichas, codigos, preguntas);
         }
 
-        // «Para todos»: mismas reglas, con su prefijo y con «Tú» además de los perfiles como destinatario.
+        // «Para todos»: mismas reglas, con su prefijo.
         if (catalogo.Comun is { } comun)
         {
-            RevisarFichas(GuiaComun.Titulo, GuiaComun.Prefijo, comun.Revisado, comun.Fichas, titulo => titulo == GuiaComun.Tu ? GuiaPerfiles.Todos[0] : GuiaPerfiles.PorTitulo(titulo), codigos, preguntas);
+            RevisarFichas(GuiaComun.Titulo, GuiaComun.Prefijo, comun.Revisado, comun.Fichas, codigos, preguntas);
         }
     }
 
     private static void RevisarFichas(string nombre, string prefijo, string revisado, IReadOnlyList<GuiaFicha> fichas,
-        Func<string, GuiaPerfiles.Entrada?> destinatario, HashSet<string> codigos, HashSet<string> preguntas)
+        HashSet<string> codigos, HashSet<string> preguntas)
     {
         Assert.NotEmpty(fichas);
         Assert.True(DateOnly.TryParseExact(revisado, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fecha) && fecha <= DateOnly.FromDateTime(DateTime.Today),
@@ -191,7 +188,7 @@ public partial class GuiaDerivaTests
             Assert.True(preguntas.Add(ficha.Pregunta), $"Pregunta repetida: {ficha.Pregunta}");
             Assert.StartsWith("¿Cómo ", ficha.Pregunta);
             Assert.True(ficha.Antes.Count > 0 && ficha.Pasos.Count > 0 && ficha.Despues.Count > 0, $"{ficha.Codigo}: faltan «antes», «pasos» o «después».");
-            Assert.All(ficha.Despues, d => Assert.True(destinatario(d.Para) is not null, $"{ficha.Codigo}: «{d.Para}» no es un destinatario válido de la Guía."));
+            Assert.All(ficha.Despues, d => Assert.True(GuiaDespues.EsValido(d.Para), $"{ficha.Codigo}: «{d.Para}» no es un destinatario válido de la Guía."));
             Assert.True(ficha.Permisos.Count == 0 == (ficha.Concede is null), $"{ficha.Codigo}: «concede» solo va con permisos.");
         }
     }

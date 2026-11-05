@@ -1,0 +1,38 @@
+@* Administración: de quién depende y a quién le entrega trabajo. SVG en vertical (cabe en un móvil), con el mismo estilo de cajas que «Flujo de trabajo». *@
+<figure class="guia-diagrama mb-0">
+    <svg viewBox="0 0 360 350" role="img" aria-labelledby="diag-adm-t diag-adm-d">
+        <title id="diag-adm-t">Plataforma entrega la invitación a Administración, que da cuentas, perfiles y residentes al personal e invita a la familia</title>
+        <desc id="diag-adm-d">Plataforma da de alta el centro y entrega la invitación a la primera Administración. Administración monta la estructura del centro, da de alta a su personal con sus perfiles, unidades, permisos y residentes asignados, y da acceso al Portal Familiar a las familias autorizadas. Administración no ve el basal ni ningún contenido clínico.</desc>
+        <defs>
+            <marker id="diag-adm-p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0 0 L10 5 L0 10 z" /></marker>
+        </defs>
+        <rect class="caja plat" x="30" y="8" width="300" height="56" rx="8" />
+        <text class="titulo" x="180" y="32" text-anchor="middle">Plataforma</text>
+        <text x="180" y="52" text-anchor="middle">Da de alta el centro</text>
+
+        <path class="flecha" d="M180 68 L180 108" marker-end="url(#diag-adm-p)" />
+        <text class="nota" x="192" y="94">invitación, en mano</text>
+
+        <rect class="caja adm" x="30" y="114" width="300" height="88" rx="8" />
+        <text class="titulo" x="180" y="138" text-anchor="middle">Administración</text>
+        <text x="180" y="160" text-anchor="middle">Monta el centro, da de alta</text>
+        <text x="180" y="178" text-anchor="middle">a las personas y sus accesos</text>
+        <text class="nota" x="180" y="195" text-anchor="middle">(no ve el basal ni lo clínico)</text>
+
+        <path class="flecha" d="M95 206 L95 252" marker-end="url(#diag-adm-p)" />
+        <text class="nota" x="87" y="232" text-anchor="end">sus cuentas</text>
+        <path class="flecha" d="M265 206 L265 252" marker-end="url(#diag-adm-p)" />
+        <text class="nota" x="273" y="232">invitación</text>
+
+        <rect class="caja fuera" x="20" y="258" width="160" height="78" rx="8" />
+        <text class="titulo" x="100" y="282" text-anchor="middle">Personal</text>
+        <text x="100" y="304" text-anchor="middle">Auxiliar, Enfermería,</text>
+        <text x="100" y="322" text-anchor="middle">Medicina y Dirección</text>
+
+        <rect class="caja fam" x="190" y="258" width="150" height="78" rx="8" />
+        <text class="titulo" x="265" y="282" text-anchor="middle">Familia</text>
+        <text x="265" y="304" text-anchor="middle">Entra al Portal</text>
+        <text x="265" y="322" text-anchor="middle">Familiar</text>
+    </svg>
+    <figcaption class="visually-hidden">Plataforma entrega la invitación a Administración, que da cuentas, perfiles y residentes al personal y da acceso a las familias autorizadas. No ve lo clínico.</figcaption>
+</figure>
