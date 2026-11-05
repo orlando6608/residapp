@@ -23,7 +23,6 @@ public partial class GuiaDerivaTests
     private static readonly SystemProfile[] SinGuiaTodavia =
     [
         SystemProfile.Administracion,
-        SystemProfile.DireccionClinica,
     ];
 
     private static readonly Dictionary<SystemProfile, string> Prefijos = new()
