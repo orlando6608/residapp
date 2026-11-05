@@ -26,8 +26,8 @@ public sealed class PlazosProcesoController(ProcessDeadlinesApplicationService s
         await next();
     }
 
-    /// <summary>Con <paramref name="cj"/> el formulario trae los plazos de CJ, sin guardarlos.</summary>
-    public async Task<IActionResult> Index(bool cj = false, CancellationToken ct = default)
+    /// <summary>Con <paramref name="sugeridos"/> el formulario trae los plazos sugeridos, sin guardarlos.</summary>
+    public async Task<IActionResult> Index(bool sugeridos = false, CancellationToken ct = default)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
@@ -41,7 +41,7 @@ public sealed class PlazosProcesoController(ProcessDeadlinesApplicationService s
             return View(new PlazosProcesoViewModel(null, new PlazosProcesoFormModel()));
         }
 
-        return View(cj
+        return View(sugeridos
             ? new PlazosProcesoViewModel(result.Value, PlazosProcesoFormModel.Defaults(result.Value!.Version), RestoredDefaults: true)
             : new PlazosProcesoViewModel(result.Value, PlazosProcesoFormModel.From(result.Value!)));
     }

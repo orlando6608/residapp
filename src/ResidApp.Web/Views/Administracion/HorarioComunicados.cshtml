@@ -20,7 +20,7 @@
 <p class="text-muted">
     Quien prepara un comunicado lo aprueba al guardarlo. El comunicado se publica a la hora que fijes aquí, siempre que al guardarlo falte al menos el
     margen (el tiempo mínimo para corregir errores); si no, se publica a esa hora del día siguiente. Hasta que se publica se puede corregir. El horario de
-    partida es el que fijó CJ (@defaults.PublicationTime.ToString("HH:mm") y @defaults.MarginMinutes minutos). Un cambio de hora o de margen solo vale para
+    partida es el sugerido (@defaults.PublicationTime.ToString("HH:mm") y @defaults.MarginMinutes minutos). Un cambio de hora o de margen solo vale para
     los comunicados que se guarden a partir de entonces: los que ya están guardados conservan su hora.
 </p>
 @if (TempData["Mensaje"] is string mensaje)
@@ -37,7 +37,7 @@ else
 {
     @if (Model.RestoredDefaults)
     {
-        <div class="alert alert-info" role="status">Aquí tienes el horario de CJ. No se guarda hasta que pulses «Guardar».</div>
+        <div class="alert alert-info" role="status">Aquí tienes el horario sugerido. No se guarda hasta que pulses «Guardar».</div>
     }
 
     <form asp-action="HorarioComunicados" method="post">
@@ -66,7 +66,7 @@ else
             </div>
         </div>
         <div class="d-grid d-md-flex justify-content-md-end gap-2">
-            <a asp-action="HorarioComunicados" asp-route-cj="true" class="btn btn-outline-secondary btn-lg">Ver el horario de CJ</a>
+            <a asp-action="HorarioComunicados" asp-route-sugeridos="true" class="btn btn-outline-secondary btn-lg">Ver el horario sugerido</a>
             <button type="submit" class="btn btn-primary btn-lg">Guardar</button>
         </div>
     </form>
@@ -74,7 +74,7 @@ else
     <h2 class="h5 mt-4">Historial de cambios</h2>
     @if (Model.View.History.Count == 0)
     {
-        <p class="estado-vacio">Este centro sigue con el horario de CJ.</p>
+        <p class="estado-vacio">Este centro sigue con el horario sugerido.</p>
     }
     else
     {
