@@ -538,7 +538,7 @@
       ],
       "pasos": [
         { "texto": "Pulsa **Inicio** (en las migas de pan, arriba) y abre la tarjeta **Alta de residente**.", "botones": ["Inicio", "Alta de residente"] },
-        { "texto": "Elige la «Unidad» y, si quieres, la «Cama» (o «Pendiente de asignar»). Las camas ocupadas no se ofrecen.", "campos": ["Unidad", "Cama", "Pendiente de asignar"] },
+        { "texto": "Elige la «Unidad». Si tiene camas libres, elige una «Cama» o «Pendiente de asignar»: hay que elegir una de las dos. Las camas ocupadas no se ofrecen.", "campos": ["Unidad", "Cama", "Pendiente de asignar"] },
         { "texto": "Escribe el «Nombre completo», la «Fecha de nacimiento», el «Sexo documentado» y, si quieres, la «Referencia interna».", "campos": ["Nombre completo", "Fecha de nacimiento", "Sexo documentado", "Referencia interna"] },
         { "texto": "En «Familiares de contacto» escribe «Nombre», «Relación con el residente», «Teléfono» y, si quieres, el correo, y marca «Contacto prioritario (contacto urgente)». Si no hay ningún contacto, escribe el «Motivo de no tener contacto urgente».", "campos": ["Familiares de contacto", "Relación con el residente", "Contacto prioritario (contacto urgente)", "Motivo de no tener contacto urgente"] },
         { "texto": "Pulsa **Dar de alta**.", "botones": ["Dar de alta"] }
