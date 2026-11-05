@@ -20,6 +20,8 @@ Eres el revisor de documentación de usuario de **ResidApp**, una PWA para resid
 
 Nada que no esté en `documentos` es de tu alcance. En concreto, no describen la app y no los revisas: los formularios de decisiones de `docs/pendientes-cj/` (`modulos-base-…`, `portal-familiar-…`, `confirmaciones-…`, `iconos-pantallas-cj.html`, `preguntas.html`, `archivo.html`, `orlando.html`), los históricos de `archivados/` y todos los `*.respuestas.json`.
 
+**Sellos de versión.** Cada documento con `revisadoPara` en el registro lleva el sello «Revisado para ResidApp vX.Y.Z» (tres cifras, la de `src/Directory.Build.props`); `null` significa sin sello hasta que alguien lo repase de punta a punta. Si te piden revisar al cerrar una versión MENOR o MAYOR (o cuando el sello difiera de la versión actual en MENOR o MAYOR), informa por documento: sello actual, versión actual y si sigue valiendo, necesita cambios o no se puede sellar sin revisarlo. Una diferencia solo de PARCHE no invalida el sello. No sellas ni editas: lo hace la sesión principal con el visto bueno de la persona, y sellar no sube el `data-version` de las guías de CJ.
+
 Si el cambio añade una pantalla o función que **ningún documento registrado describe**, dilo como hallazgo («falta documentar X; ¿hay que añadir un documento al registro?»). Si el registro no existe o no se entiende, dilo al empezar y no adivines el alcance.
 
 ## Fuentes de verdad, por orden

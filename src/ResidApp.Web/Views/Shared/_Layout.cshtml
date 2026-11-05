@@ -182,7 +182,9 @@
     <footer class="border-top footer text-muted">
         @* Los enlaces pasan a la línea siguiente cuando no caben (antes desbordaban en móvil). *@
         <div class="container d-flex flex-wrap column-gap-3 row-gap-1">
-            <span>&copy; 2026 ResidApp</span>
+            @* La versión (Directory.Build.props) solo se muestra con sesión iniciada. /Home/Offline no la lleva: es una copia fija. *@
+            @{ var versionLayout = sessionSubjectLayout is null ? null : typeof(ResidApp.Web.Security.SessionAuthentication).Assembly.GetName().Version?.ToString(3); }
+            <span>&copy; 2026 ResidApp@(versionLayout is null ? "" : " v" + versionLayout)</span>
             <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
             <a asp-area="" asp-controller="Home" asp-action="Manual">Manual de usuario</a>
             <a href="~/flujo-de-trabajo.html">Flujo de trabajo</a>
