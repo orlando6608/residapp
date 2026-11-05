@@ -1,0 +1,462 @@
+{
+  "perfil": "Medicina",
+  "proposito": "Medicina valora lo que Enfermería le escala y los eventos que observa directamente. Da indicaciones a Enfermería, hace seguimiento médico, activa el protocolo urgente, deriva a Urgencias y cierra el episodio; con permiso, también firma el estado basal. ResidApp no diagnostica ni propone ninguna conducta: registra lo que decides tú.",
+  "rutina": [
+    "Entras en el **Inicio de Medicina**: las tarjetas te dicen cuántos escalados o eventos propios esperan valoración, cuántos protocolos urgentes y seguimientos hay abiertos y cuántas indicaciones siguen sin leer.",
+    "Abres cada escalado, inicias la valoración médica y la guardas.",
+    "Decides la conducta: una indicación a Enfermería, un seguimiento médico, el protocolo urgente o el cierre.",
+    "Al terminar el turno, pasas tus seguimientos abiertos al equipo entrante o los conservas para tu próxima revisión."
+  ],
+  "dependeDe": ["Enfermería", "Administración"],
+  "entregaA": ["Enfermería", "Familia"],
+  "siempre": [
+    "Ver los residentes de tu ámbito, con su foto, su ubicación y el resumen del basal vigente.",
+    "Registrar un evento que observas directamente y valorar los escalados que te llegan de Enfermería.",
+    "Dar indicaciones a Enfermería y hacer seguimiento médico.",
+    "Activar el protocolo urgente, derivar a Urgencias y firmar el informe de derivación.",
+    "Cerrar el episodio y decidir si se comunica a la familia.",
+    "Corregir o rectificar tu valoración, y corregir un comunicado a la familia antes de que se publique.",
+    "Consultar el historial y la línea temporal de los eventos que ves."
+  ],
+  "conPermiso": [
+    "Crear, completar y firmar el **estado basal** de un residente (ver MED-13). Hacen falta **Basal inicial (al alta)** para el primero y **Reevaluar el basal** para los siguientes; los concede Administración."
+  ],
+  "nunca": [
+    "Modificar la observación de origen ni la valoración de Enfermería.",
+    "Ver eventos que no te escalaron ni son tuyos: en el historial, Medicina solo ve los que se le escalaron y los suyos propios.",
+    "Cerrar un evento con indicaciones sin cumplir, salvo en protocolo urgente tras derivar a Urgencias.",
+    "Corregir lo que no sea tu valoración médica: ni la observación original, ni el basal, las indicaciones, el protocolo o el informe de derivación firmado.",
+    "Dar de alta residentes: es un permiso aparte, que Medicina no tiene."
+  ],
+  "revisadoPara": null,
+  "revisado": "2026-11-05",
+  "fichas": [
+    {
+      "codigo": "MED-01",
+      "pregunta": "¿Cómo me oriento en el Inicio de Medicina y qué cuenta cada tarjeta?",
+      "palabras": ["inicio", "tarjetas", "bandejas", "mi panel", "pendientes"],
+      "permisos": [],
+      "antes": [
+        "Haber entrado con el perfil Medicina en un ámbito con unidades. Si tu cuenta tiene más de un perfil o centro, eliges con cuál trabajas al entrar."
+      ],
+      "pasos": [
+        { "texto": "Pulsa **Mi panel** (arriba): se abre el **Inicio de Medicina**.", "botones": ["Mi panel"], "campos": ["Inicio de Medicina"] },
+        { "texto": "Lee las tarjetas, de lo más urgente a lo menos: **Escalados y eventos propios** (por valorar), **Protocolos urgentes**, **Seguimientos** (los vencidos salen como «pendientes»), **Indicaciones** (con las que están «sin leer» o «con incidencia»), **Residentes** y **Comunicaciones** (familiares aún por publicar).", "campos": ["Escalados y eventos propios", "Protocolos urgentes", "Seguimientos", "Indicaciones", "Residentes", "Comunicaciones", "sin leer", "con incidencia"] },
+        { "texto": "Pulsa una tarjeta para abrir su bandeja." }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "Mirar no cambia nada. Las bandejas son de tus unidades y las comparte el resto de Medicina de esa unidad: otro profesional puede continuar lo que tú empezaste." }
+      ],
+      "dudas": [
+        { "p": "«No hay escalados ni eventos propios pendientes.»", "r": "No hay nada por valorar ahora mismo." },
+        { "p": "No veo un escalado que debería ver.", "r": "Solo ves lo de las unidades de tu ámbito, y solo los eventos que se te escalaron o que registraste tú. Si crees que falta una unidad, pídeselo a Administración." }
+      ],
+      "rutas": ["Medicina/Index", "Medicina/Escalados"],
+      "mensajes": ["No hay escalados ni eventos propios pendientes."],
+      "manual": { "id": "escalado-medicina", "titulo": "Escalar a Medicina y escalados recibidos" },
+      "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
+    },
+    {
+      "codigo": "MED-02",
+      "pregunta": "¿Cómo veo a mis residentes y abro su ficha?",
+      "palabras": ["residentes", "ficha", "buscar", "basal vigente", "contacto urgente", "ubicación"],
+      "permisos": [],
+      "antes": [
+        "Que Administración haya dado de alta a los residentes y te haya dado las unidades en tu ámbito."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, pulsa la tarjeta **Residentes**.", "botones": ["Residentes"] },
+        { "texto": "Si quieres filtrar, escribe un «Nombre», elige el «Estado basal» o la «Unidad» y pulsa **Buscar**.", "botones": ["Buscar"], "campos": ["Nombre", "Estado basal", "Unidad"] },
+        { "texto": "Cada tarjeta muestra la foto, el nombre, la ubicación y **Basal vigente** o **Basal pendiente**. Pulsa la tarjeta para abrir la ficha.", "campos": ["Basal vigente", "Basal pendiente"] },
+        { "texto": "En la ficha ves el «Estado basal vigente» (resumen), los «Eventos abiertos» que ve Medicina (escalados y propios, con su estado) y el contacto urgente. Arriba están **Registrar evento** y **Ver historial**.", "botones": ["Registrar evento", "Ver historial"], "campos": ["Estado basal vigente", "Eventos abiertos"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "Mirar no guarda nada. Si tu ámbito tiene permiso de basal, en la ficha también sale **Crear borrador de basal** o **Iniciar reevaluación** (ver MED-13)." }
+      ],
+      "dudas": [
+        { "p": "«No hay residentes en tu ámbito.»", "r": "No hay residentes activos en las unidades de tu ámbito. Si deberías ver alguno, pídeselo a Administración." },
+        { "p": "El contacto urgente no sale o está desactualizado.", "r": "Lo designa y lo cambia Administración, no Medicina." }
+      ],
+      "rutas": ["Medicina/Residentes", "Medicina/Residente"],
+      "mensajes": ["No hay residentes en tu ámbito."],
+      "manual": { "id": "evento-propio-medicina", "titulo": "Residentes y evento propio" },
+      "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
+    },
+    {
+      "codigo": "MED-03",
+      "pregunta": "¿Cómo registro un evento que observo yo directamente?",
+      "palabras": ["evento propio", "registrar evento", "observación", "clasificación"],
+      "permisos": [],
+      "antes": [
+        "Estar en la ficha del residente (ver MED-02).",
+        "Saber que **la observación no se puede editar** una vez guardada."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Registrar evento**.", "botones": ["Registrar evento"] },
+        { "texto": "Escribe la «Observación»: qué se observa, cuándo y en qué circunstancias.", "campos": ["Observación"] },
+        { "texto": "Elige la «Clasificación inicial» y, si quieres, escribe «Datos clínicos pertinentes» (constantes u otros datos relevantes).", "campos": ["Clasificación inicial", "Datos clínicos pertinentes"] },
+        { "texto": "Pulsa **Guardar y valorar**. Pasas directamente a completar tu valoración (ver MED-04).", "botones": ["Guardar y valorar"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "El evento queda **en valoración médica, iniciada por ti**, y aparece en «Escalados y eventos propios»: otro profesional de Medicina de tu unidad puede continuarlo." },
+        { "para": "Enfermería", "texto": "No lo recibe en sus bandejas. Solo lo ve si le das una indicación sobre él (ver MED-05)." }
+      ],
+      "dudas": [
+        { "p": "«Indica qué observas.»", "r": "Falta la observación: es obligatoria." },
+        { "p": "Me equivoqué en la observación.", "r": "No se puede editar. Aclara lo que haga falta en tu valoración médica (MED-04); si ya la guardaste, se corrige o se rectifica (MED-10)." }
+      ],
+      "rutas": ["Medicina/Residente", "Medicina/RegistrarEvento"],
+      "mensajes": ["Indica qué observas.", "Evento registrado. Completa tu valoración médica."],
+      "manual": { "id": "evento-propio-medicina", "titulo": "Residentes y evento propio" },
+      "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
+    },
+    {
+      "codigo": "MED-04",
+      "pregunta": "¿Cómo valoro un escalado que me llega de Enfermería?",
+      "palabras": ["escalado", "valoración médica", "hallazgos", "exploración", "constantes", "borrador"],
+      "permisos": [],
+      "antes": [
+        "Un escalado o un evento propio en tu bandeja (ver MED-01).",
+        "Saber que **no modificas** la observación ni la valoración de Enfermería, y que no eres el responsable exclusivo: cualquier profesional de Medicina de la unidad puede continuar tu valoración."
+      ],
+      "pasos": [
+        { "texto": "Abre la tarjeta **Escalados y eventos propios** y pulsa el evento. Cada uno muestra el motivo (o la observación), las constantes y las actuaciones.", "botones": ["Escalados y eventos propios"] },
+        { "texto": "En el detalle lee el «Motivo del escalado» y la información reunida (solo lectura).", "campos": ["Motivo del escalado"] },
+        { "texto": "Pulsa **Iniciar valoración médica**: queda registrado quién y a qué hora. Después, **Completar valoración médica** (o **Continuar valoración médica** si ya hay un borrador).", "botones": ["Iniciar valoración médica", "Completar valoración médica", "Continuar valoración médica"] },
+        { "texto": "Escribe «Hallazgos y exploración», «Valoración» y «Actuaciones», y las constantes que quieras.", "campos": ["Hallazgos y exploración", "Valoración", "Actuaciones"] },
+        { "texto": "Pulsa **Guardar borrador**. Cada guardado queda como una versión que no se puede modificar.", "botones": ["Guardar borrador"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "Verás «Valoración médica guardada.». El evento sigue «En valoración médica». Con la valoración guardada, **Pasar a conducta médica** te deja elegir cómo sigue (ver MED-05)." },
+        { "para": "Enfermería", "texto": "Ve tu valoración en solo lectura en el detalle del evento, con sus correcciones y rectificaciones." }
+      ],
+      "dudas": [
+        { "p": "«Este evento ha cambiado desde que lo abriste…»", "r": "Otro profesional (u otra pestaña tuya) lo cambió. Recarga para ver la versión actual; lo que escribiste sigue en el formulario." },
+        { "p": "«Revisa los datos: la valoración necesita al menos un dato, la PA con ambas cifras…»", "r": "Rellena al menos un campo; la presión arterial lleva las dos cifras; el flujo de O₂ solo con oxigenoterapia; y otra constante, con nombre y valor." }
+      ],
+      "rutas": ["Medicina/Escalados", "Medicina/Escalado", "Medicina/EmpezarValoracion", "Medicina/Valoracion"],
+      "mensajes": [
+        "Valoración médica guardada.",
+        "Este evento ha cambiado desde que lo abriste",
+        "Revisa los datos: la valoración necesita al menos un dato, la PA con ambas cifras, el flujo de O₂ solo con oxigenoterapia y la otra constante con nombre y valor."
+      ],
+      "manual": { "id": "valoracion-medica", "titulo": "Valoración médica, indicaciones y cierre médico" },
+      "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
+    },
+    {
+      "codigo": "MED-05",
+      "pregunta": "¿Cómo elijo la conducta y doy una indicación a Enfermería?",
+      "palabras": ["conducta médica", "indicación", "indicaciones", "enfermería", "fecha prevista", "criterio"],
+      "permisos": [],
+      "antes": [
+        "Tener guardada la valoración médica (ver MED-04).",
+        "Saber que la app no propone ninguna salida ni asigna prioridades: eliges tú."
+      ],
+      "pasos": [
+        { "texto": "En el detalle del evento, pulsa **Pasar a conducta médica**.", "botones": ["Pasar a conducta médica"] },
+        { "texto": "Elige **Registrar indicaciones a Enfermería** (si ya hay alguna, será «Registrar otra indicación»).", "botones": ["Registrar indicaciones a Enfermería", "Registrar otra indicación"] },
+        { "texto": "Escribe la «Indicación», una «Fecha prevista», un «Criterio» o ambos, y, si hace falta, «Información adicional».", "campos": ["Indicación", "Fecha prevista", "Criterio", "Información adicional"] },
+        { "texto": "Pulsa **Registrar indicación**.", "botones": ["Registrar indicación"] },
+        { "texto": "Para ver cómo van, abre la tarjeta **Indicaciones**: cada una está «Pendiente de lectura», «Leída, pendiente de realizar», «Realizada» o «No realizada (con incidencia)», y marca «Vencida» si pasó su fecha sin realizarse.", "botones": ["Indicaciones"], "campos": ["Pendiente de lectura", "Leída, pendiente de realizar", "Realizada", "No realizada (con incidencia)", "Vencida"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "La ve en su bandeja de indicaciones: primero confirma la lectura y después registra si la realizó o describe la incidencia." },
+        { "para": "Medicina", "texto": "El evento pasa a «Con indicación pendiente» y sale de la bandeja de escalados. Puedes añadir más indicaciones o cerrarlo (ver MED-09). La valoración ya no se modifica, salvo con MED-10." }
+      ],
+      "dudas": [
+        { "p": "«Escribe la indicación.»", "r": "El texto de la indicación es obligatorio." },
+        { "p": "«Revisa los datos: escribe la indicación e indica una fecha prevista o un criterio…»", "r": "Falta la fecha prevista o el criterio (basta uno de los dos), o no hay una valoración médica guardada." },
+        { "p": "Quiero cambiar una indicación ya registrada.", "r": "No hay forma de editarla. Registra otra indicación con lo correcto." },
+        { "p": "Quiero otra salida: seguimiento, protocolo urgente o cierre.", "r": "Están en la misma pantalla de conducta: ver MED-06, MED-07 y MED-09." }
+      ],
+      "rutas": ["Medicina/Escalado", "Medicina/Conducta", "Medicina/Indicacion", "Medicina/Indicaciones"],
+      "mensajes": [
+        "Escribe la indicación.",
+        "Indicación registrada. Enfermería de la unidad la verá en su bandeja de indicaciones.",
+        "Revisa los datos: escribe la indicación e indica una fecha prevista o un criterio. Hace falta una valoración médica guardada."
+      ],
+      "manual": { "id": "valoracion-medica", "titulo": "Valoración médica, indicaciones y cierre médico" },
+      "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
+    },
+    {
+      "codigo": "MED-06",
+      "pregunta": "¿Cómo hago un seguimiento médico y lo paso al siguiente turno?",
+      "palabras": ["seguimiento médico", "revisión", "reprogramar", "transferir", "conservar", "cambio de turno"],
+      "permisos": [],
+      "antes": [
+        "Tener guardada la valoración médica, o indicaciones ya emitidas (ver MED-05).",
+        "Saber que cada evento admite **un solo** seguimiento médico."
+      ],
+      "pasos": [
+        { "texto": "En **Conducta médica**, pulsa **Iniciar seguimiento médico**.", "botones": ["Iniciar seguimiento médico"] },
+        { "texto": "Escribe el «Objetivo del seguimiento» (qué esperas antes de decidir) y una «Fecha prevista de revisión», un «Criterio de revisión» o ambos. Pulsa **Iniciar seguimiento médico**.", "campos": ["Objetivo del seguimiento", "Fecha prevista de revisión", "Criterio de revisión"] },
+        { "texto": "El evento pasa a la tarjeta **Seguimientos**. Ábrelo y usa **Registrar revisión** (escribe la «Revisión») o **Reprogramar** (nueva fecha o criterio, y una «Justificación»).", "botones": ["Registrar revisión", "Reprogramar"], "campos": ["Revisión", "Nueva fecha prevista", "Nuevo criterio", "Justificación"] },
+        { "texto": "Al terminar tu turno, en «Al terminar tu turno» decide: **Transferir** (elige el «Equipo entrante» y escribe la «Nota de continuidad») o **Conservar** (nota opcional).", "botones": ["Transferir", "Conservar"], "campos": ["Al terminar tu turno", "Equipo entrante", "Nota de continuidad"] },
+        { "texto": "Quien recibe la transferencia puede pulsar **Confirmar recepción** (es opcional).", "botones": ["Confirmar recepción"] },
+        { "texto": "Para terminar el seguimiento, pulsa **Resolver**: vuelves a la conducta, donde cierras el evento o registras una indicación.", "botones": ["Resolver"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "El evento queda «En seguimiento médico» en la bandeja de la unidad, con el objetivo, la próxima revisión, la última actuación y quién lo lleva. Si la fecha prevista pasa, consta como **Pendiente** pero sigue abierto." },
+        { "para": "Enfermería", "texto": "Ve el seguimiento en solo lectura en el detalle del evento." }
+      ],
+      "dudas": [
+        { "p": "«La unidad del residente no tiene equipos activos. Pide a Administración que cree uno para poder transferir.»", "r": "Sin equipo entrante no se puede transferir. Pide a Administración que cree uno o usa «Conservar»." },
+        { "p": "«Para reprogramar indica una nueva fecha o criterio y justifica el cambio.»", "r": "Rellena la fecha o el criterio nuevos, y la «Justificación»." },
+        { "p": "«Este evento ya tuvo su seguimiento médico: cada evento admite uno.»", "r": "No se puede abrir un segundo seguimiento; usa una indicación o cierra el evento." }
+      ],
+      "rutas": ["Medicina/Conducta", "Medicina/IniciarSeguimiento", "Medicina/Seguimientos", "Medicina/Seguimiento"],
+      "mensajes": [
+        "Seguimiento médico iniciado.",
+        "Transferencia registrada. El equipo entrante puede confirmar la recepción.",
+        "La unidad del residente no tiene equipos activos. Pide a Administración que cree uno para poder transferir.",
+        "Para reprogramar indica una nueva fecha o criterio y justifica el cambio.",
+        "Este evento ya tuvo su seguimiento médico: cada evento admite uno."
+      ],
+      "manual": { "id": "seguimientos-medicina", "titulo": "Seguimiento médico y continuidad entre turnos" },
+      "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
+    },
+    {
+      "codigo": "MED-07",
+      "pregunta": "¿Cómo activo el protocolo urgente y documento lo que hago?",
+      "palabras": ["protocolo urgente", "urgencia", "actuación", "evolución", "contacto con un servicio", "112"],
+      "permisos": [],
+      "antes": [
+        "Tener guardada la valoración médica, o indicaciones emitidas, o estar resolviendo un seguimiento médico.",
+        "Saber que activarlo es **un solo paso**, para no retrasar la atención: lo demás se documenta cuando puedas."
+      ],
+      "pasos": [
+        { "texto": "En **Conducta médica**, pulsa **Activar protocolo urgente**.", "botones": ["Activar protocolo urgente"] },
+        { "texto": "Si quieres, escribe la «Nota de activación (opcional)» y pulsa de nuevo **Activar protocolo urgente**.", "campos": ["Nota de activación (opcional)"] },
+        { "texto": "En el protocolo, cuando puedas, documenta con **Registrar actuación**, **Registrar evolución** o **Registrar contacto con un servicio** (con el «Servicio contactado» y la «Hora del contacto», que no puede ser futura).", "botones": ["Registrar actuación", "Registrar evolución", "Registrar contacto"], "campos": ["Servicio contactado", "Hora del contacto"] },
+        { "texto": "Desde el protocolo puedes **Derivar a Urgencias** (ver MED-08) o **Cerrar el evento** (ver MED-09).", "botones": ["Derivar a Urgencias", "Cerrar el evento"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "El evento pasa a «Protocolo urgente activo (Medicina)», sale de las demás bandejas y entra en la tarjeta **Protocolos urgentes**. Si había un seguimiento, termina. Cada registro conserva quién y cuándo, y nada se modifica después." },
+        { "para": "Enfermería", "texto": "Ve el protocolo en solo lectura en el detalle del evento: el protocolo pertenece al perfil que lo activó." }
+      ],
+      "dudas": [
+        { "p": "«Revisa los datos: la nota es demasiado larga. Para activar el protocolo hace falta una valoración médica guardada.»", "r": "Acorta la nota, o guarda antes la valoración médica (MED-04)." },
+        { "p": "«Para registrar un contacto indica el servicio y la hora del contacto, que no puede ser futura.»", "r": "Rellena el servicio (por ejemplo, 112 o Urgencias del hospital) y una hora que no sea futura." },
+        { "p": "¿Los contactos con servicios salen en el informe de derivación?", "r": "No: quedan en la trazabilidad interna. Para el informe, usa su apartado «Comunicaciones» (MED-08)." }
+      ],
+      "rutas": ["Medicina/Conducta", "Medicina/ActivarProtocolo", "Medicina/Protocolos", "Medicina/Protocolo"],
+      "mensajes": [
+        "Protocolo urgente activado. Documenta las actuaciones cuando puedas: la atención va primero.",
+        "Revisa los datos: la nota es demasiado larga. Para activar el protocolo hace falta una valoración médica guardada.",
+        "Para registrar un contacto indica el servicio y la hora del contacto, que no puede ser futura."
+      ],
+      "manual": { "id": "protocolo-urgente", "titulo": "Protocolo urgente" },
+      "flujo": { "id": "urgencia", "titulo": "Si es urgente: protocolo y derivación" }
+    },
+    {
+      "codigo": "MED-08",
+      "pregunta": "¿Cómo derivo a Urgencias, firmo el informe y registro la llamada a la familia?",
+      "palabras": ["derivar", "urgencias", "informe", "pdf", "firma", "vista previa", "llamada", "familia"],
+      "permisos": [],
+      "antes": [
+        "Tener el protocolo urgente activado **por tu perfil**: solo deriva quien lo activó. Cada evento tiene un solo informe.",
+        "Tener a mano el motivo de la derivación y, si lo hay, el contacto urgente del residente (lo ves en la ficha)."
+      ],
+      "pasos": [
+        { "texto": "En el protocolo, pulsa **Derivar a Urgencias**.", "botones": ["Derivar a Urgencias"] },
+        { "texto": "Escribe el «Motivo de la derivación» (obligatorio) y, si quieres, «Información adicional para Urgencias (opcional)» y «Comunicaciones (opcional)» (los contactos de esta derivación; viajan con el informe).", "campos": ["Motivo de la derivación", "Información adicional para Urgencias (opcional)", "Comunicaciones (opcional)"] },
+        { "texto": "Pulsa **Ver la vista previa**, que es obligatoria: cada sección sale como «Dato automático» o «Escrito por ti», con su huella.", "botones": ["Ver la vista previa"], "campos": ["Dato automático", "Escrito por ti"] },
+        { "texto": "Revisa y pulsa **Firmar y generar PDF** (o **Volver a editar**). La firma registra tu cuenta, la fecha y la hora, sin certificado. Descarga el PDF con **Descargar el informe en PDF**.", "botones": ["Firmar y generar PDF", "Volver a editar", "Descargar el informe en PDF"] },
+        { "texto": "Registra la llamada a la familia: en «Registrar un intento de llamada a la familia» elige «A quién se llama», «Hora de la llamada» y «Resultado» (Contactado, No contesta o Número erróneo), y pulsa **Registrar la llamada**.", "botones": ["Registrar la llamada"], "campos": ["Registrar un intento de llamada a la familia", "A quién se llama", "Hora de la llamada", "Resultado", "No contesta", "Número erróneo"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "El PDF firmado no se puede modificar. El evento sigue en el protocolo, donde puedes seguir documentando. Para cerrarlo hace falta al menos un intento de llamada (salvo que el residente no tenga contacto urgente) y preparar la comunicación a la familia (ver MED-09)." },
+        { "para": "Enfermería", "texto": "Ve el informe y puede descargar el PDF desde el protocolo o el detalle del evento." }
+      ],
+      "dudas": [
+        { "p": "«El informe ha cambiado desde la vista previa…»", "r": "Otro profesional registró algo mientras revisabas. Te muestra la vista previa actualizada: revísala antes de firmar." },
+        { "p": "«Revisa los datos: el motivo de la derivación es obligatorio…»", "r": "Escribe el motivo de la derivación y no te pases de la longitud máxima de cada texto." },
+        { "p": "«Para registrar la llamada indica a quién llamas, la hora (no puede ser futura) y el resultado.»", "r": "Rellena los tres campos. Si el residente no tiene contacto urgente, la pantalla lo dice y escribes tú a quién llamas." }
+      ],
+      "rutas": ["Medicina/Protocolo", "Medicina/Derivar", "Medicina/InformeDerivacion", "Medicina/IntentoLlamada"],
+      "mensajes": [
+        "Informe de derivación firmado. Registra el intento de llamada a la familia cuando puedas: la atención va primero.",
+        "Intento de llamada registrado.",
+        "El informe ha cambiado desde la vista previa",
+        "Revisa los datos: el motivo de la derivación es obligatorio",
+        "Para registrar la llamada indica a quién llamas, la hora (no puede ser futura) y el resultado."
+      ],
+      "manual": { "id": "derivacion-urgencias", "titulo": "Derivación a Urgencias" },
+      "flujo": { "id": "urgencia", "titulo": "Si es urgente: protocolo y derivación" }
+    },
+    {
+      "codigo": "MED-09",
+      "pregunta": "¿Cómo cierro el episodio y decido si se comunica a la familia?",
+      "palabras": ["cerrar", "cierre", "comunicación familiar", "comunicado", "indicaciones sin cumplir", "historial"],
+      "permisos": [],
+      "antes": [
+        "Tener guardada la valoración médica.",
+        "Que las indicaciones estén cumplidas: **no se puede cerrar** con indicaciones sin leer o sin resolver (el botón sale desactivado). La única excepción es el protocolo urgente, tras derivar a Urgencias.",
+        "Si derivaste a Urgencias: al menos un intento de llamada a la familia (salvo que el residente no tenga contacto urgente)."
+      ],
+      "pasos": [
+        { "texto": "En **Conducta médica** (o en el protocolo), pulsa **Cerrar el evento**.", "botones": ["Cerrar el evento"] },
+        { "texto": "Revisa el «Resumen de la valoración médica» y los «Pendientes»: las indicaciones sin cumplir y las no realizadas, con su incidencia.", "campos": ["Resumen de la valoración médica", "Pendientes"] },
+        { "texto": "En «¿Se comunica a la familia?» elige **No comunicar** o **Preparar comunicación**. Es obligatorio decidirlo; tras una derivación ya viene «Sí: Preparar comunicación».", "campos": ["¿Se comunica a la familia?", "No comunicar", "Preparar comunicación"] },
+        { "texto": "Si preparas la comunicación, elige el «Tipo de comunicación» (Ordinaria o Relevante) y escribe el «Texto para la familia»: comprensible, sin datos internos ni escalas.", "campos": ["Tipo de comunicación", "Texto para la familia"] },
+        { "texto": "Pulsa **Cerrar evento**.", "botones": ["Cerrar evento"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "Verás «Evento cerrado. Enfermería no tiene que cerrarlo.» y el evento pasa a Historial. Pulsar dos veces no lo cierra dos veces." },
+        { "para": "Familia", "texto": "Si preparaste la comunicación, se publica a la hora del centro (por defecto, las 19:00, con 1 hora de margen), firmada «Equipo asistencial del centro». Una ordinaria se ve 30 días y una relevante, 6 meses." },
+        { "para": "Enfermería", "texto": "En el detalle del evento verá «Cerrado por Medicina»." }
+      ],
+      "dudas": [
+        { "p": "«No se puede cerrar el evento mientras queden indicaciones sin cumplir: Enfermería tiene que leerlas y registrar si se realizaron.»", "r": "Espera a que Enfermería las lea y registre el resultado: sigue su estado en la tarjeta «Indicaciones». Cuando estén cumplidas, el evento lo puedes cerrar tú o Enfermería." },
+        { "p": "«Decide si se comunica a la familia.»", "r": "Elige «No comunicar» o «Preparar comunicación» antes de pulsar «Cerrar evento»." },
+        { "p": "«Con una derivación a Urgencias, al cerrar hay que preparar la actualización relevante…»", "r": "Registra un intento de llamada (MED-08) y prepara la comunicación a la familia, que aquí es obligatoria y de tipo relevante." }
+      ],
+      "rutas": ["Medicina/Conducta", "Medicina/Protocolo", "Medicina/Cerrar"],
+      "mensajes": [
+        "Evento cerrado. Enfermería no tiene que cerrarlo.",
+        "No se puede cerrar el evento mientras queden indicaciones sin cumplir: Enfermería tiene que leerlas y registrar si se realizaron.",
+        "Decide si se comunica a la familia.",
+        "Con una derivación a Urgencias, al cerrar hay que preparar la actualización relevante para la familia"
+      ],
+      "manual": { "id": "valoracion-medica", "titulo": "Valoración médica, indicaciones y cierre médico" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "MED-10",
+      "pregunta": "¿Cómo corrijo o rectifico mi valoración médica?",
+      "palabras": ["corregir", "rectificar", "rectificación", "error", "motivo de la corrección", "6 horas"],
+      "permisos": [],
+      "antes": [
+        "Haber sido **tú** quien guardó la valoración por última vez, y que el evento ya haya avanzado (mientras esté en valoración, se sigue editando con normalidad).",
+        "Dentro de las **6 horas** siguientes a ese último guardado se **corrige**; pasadas, se **rectifica**. Es una política provisional, pendiente de validar con el centro."
+      ],
+      "pasos": [
+        { "texto": "Abre el detalle del evento: desde la ficha del residente, en «Eventos abiertos», pulsa **Ver detalle**.", "botones": ["Ver detalle"] },
+        { "texto": "En «Valoración médica», dentro del plazo ves **Corregir valoración** (el detalle indica hasta cuándo). Escribe el «Motivo de la corrección», reescribe lo necesario y pulsa **Guardar corrección**.", "botones": ["Corregir valoración", "Guardar corrección"], "campos": ["Motivo de la corrección"] },
+        { "texto": "Pasado el plazo, pulsa **Añadir rectificación**, escribe la «Rectificación» y el «Motivo», y vuelve a pulsar **Añadir rectificación**.", "botones": ["Añadir rectificación"], "campos": ["Rectificación", "Motivo"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "Verás «Valoración médica corregida.» o «Rectificación añadida.». La versión corregida es la que se muestra, con un aviso y su motivo; la original queda en la línea temporal. La rectificación aparece debajo de la original, sin cambiarla." },
+        { "para": "Enfermería", "texto": "Ve las correcciones y rectificaciones, pero no puede hacerlas sobre tu valoración." }
+      ],
+      "dudas": [
+        { "p": "«No puedes corregir ni rectificar esta valoración: solo lo hace quien la guardó por última vez…»", "r": "Solo quien guardó la valoración por última vez puede corregirla o rectificarla. Dentro del plazo se corrige; después, se añade una rectificación." },
+        { "p": "«Revisa los datos: el motivo es obligatorio…»", "r": "Indica el motivo de la corrección y deja al menos un dato en la valoración." },
+        { "p": "¿Puedo corregir también las indicaciones, el protocolo o el informe firmado?", "r": "No. Solo se corrige la valoración médica; el basal, la observación original, las indicaciones, el protocolo y el informe firmado no se modifican." }
+      ],
+      "rutas": ["Medicina/Residente", "Medicina/Escalado", "Medicina/CorregirValoracion", "Medicina/RectificarValoracion"],
+      "mensajes": [
+        "Valoración médica corregida.",
+        "Rectificación añadida.",
+        "No puedes corregir ni rectificar esta valoración: solo lo hace quien la guardó por última vez",
+        "Revisa los datos: el motivo es obligatorio, la valoración necesita al menos un dato"
+      ],
+      "manual": { "id": "correccion", "titulo": "Corregir o rectificar una valoración" },
+      "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
+    },
+    {
+      "codigo": "MED-11",
+      "pregunta": "¿Cómo corrijo un comunicado a la familia antes de que se publique?",
+      "palabras": ["comunicaciones", "comunicado", "corregir comunicado", "familia", "tipo", "texto"],
+      "permisos": [],
+      "antes": [
+        "Que el comunicado sea de un evento de tu ámbito (que te escalaron o que observaste tú) y que **todavía no se haya publicado**."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Comunicaciones**: lista las comunicaciones familiares con la hora a la que se publican.", "botones": ["Comunicaciones"] },
+        { "texto": "Pulsa **Corregir** en el comunicado.", "botones": ["Corregir"] },
+        { "texto": "Cambia el «Tipo de comunicación» (Ordinaria o Relevante) o el «Texto para la familia».", "campos": ["Tipo de comunicación", "Texto para la familia"] },
+        { "texto": "Pulsa **Guardar la corrección**.", "botones": ["Guardar la corrección"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "Verás «Comunicado corregido. La familia verá el texto corregido.». La corrección queda en el historial y en la auditoría con tu perfil." },
+        { "para": "Familia", "texto": "Cuando llega la hora de publicación, ve el texto corregido, firmado «Equipo asistencial del centro»." }
+      ],
+      "dudas": [
+        { "p": "«Ese comunicado ya no se puede corregir: ya llegó su hora de publicación o ya está publicado.»", "r": "Desde Medicina ya no se cambia. Administración o Dirección Clínica pueden publicar una corrección que se ve junto a la original, o retirarlo." },
+        { "p": "«No se ha guardado: alguien lo corrigió antes o ya llegó su hora de publicación.»", "r": "Vuelve a la lista para ver el estado actual. Lo que escribiste sigue en la pantalla por si quieres copiarlo." },
+        { "p": "«No hay comunicaciones familiares en los últimos 30 días.»", "r": "No hay ninguna en la lista; se crean al cerrar un evento con «Preparar comunicación» (MED-09)." }
+      ],
+      "rutas": ["Medicina/Index", "Medicina/Comunicaciones", "Medicina/CorregirComunicacion"],
+      "mensajes": [
+        "Comunicado corregido. La familia verá el texto corregido.",
+        "Ese comunicado ya no se puede corregir: ya llegó su hora de publicación o ya está publicado.",
+        "No se ha guardado: alguien lo corrigió antes o ya llegó su hora de publicación.",
+        "No hay comunicaciones familiares en los últimos 30 días."
+      ],
+      "manual": { "id": "valoracion-medica", "titulo": "Valoración médica, indicaciones y cierre médico" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "MED-12",
+      "pregunta": "¿Cómo consulto el historial y la línea temporal de un residente?",
+      "palabras": ["historial", "línea temporal", "eventos cerrados", "versiones del basal", "unidad anterior", "traslado"],
+      "permisos": [],
+      "antes": [
+        "Estar en la ficha del residente (ver MED-02).",
+        "Saber que **Medicina solo ve los eventos que se le escalaron y los suyos propios**, y que todo es de solo lectura."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Ver historial**.", "botones": ["Ver historial"] },
+        { "texto": "En «Eventos cerrados» (del más reciente al más antiguo), pulsa **Ver detalle**. El evento muestra el basal y la unidad de su fecha: **Ver ese basal** lo abre.", "botones": ["Ver detalle", "Ver ese basal"], "campos": ["Eventos cerrados"] },
+        { "texto": "En «Versiones del basal», pulsa **Ver versión** para abrir una (la vigente y las históricas).", "botones": ["Ver versión"], "campos": ["Versiones del basal"] },
+        { "texto": "Para ver toda la secuencia, pulsa **Ver línea temporal**: va por días, con cada paso del residente. **Ver evento** abre su detalle.", "botones": ["Ver línea temporal", "Ver evento"] },
+        { "texto": "Si el residente se trasladó y sale «Episodios cerrados de la unidad anterior», responde «¿Para qué los necesitas?», escribe un texto breve (hasta 150 caracteres; solo obligatorio con «Otro motivo») y pulsa **Pedir los episodios de la unidad anterior**.", "botones": ["Pedir los episodios de la unidad anterior"], "campos": ["¿Para qué los necesitas?", "Otro motivo"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "Leer no modifica nada. La petición de la unidad anterior vale 1 hora y termina antes si cambias de residente, de perfil o de ámbito, o sales. Tu petición y cada vez que abres esos episodios quedan en la auditoría con tu motivo; esos episodios son de solo lectura y no se corrigen ni rectifican desde aquí." }
+      ],
+      "dudas": [
+        { "p": "«Elige para qué los necesitas; con «Otro motivo», escribe cuál…»", "r": "Falta el motivo, o has elegido «Otro motivo» sin escribir cuál. No escribas datos de salud ni nombres de personas." },
+        { "p": "«No se pueden abrir los episodios de la unidad anterior de este residente.»", "r": "No se pudo declarar la petición. Si crees que es un error, avisa a Administración." },
+        { "p": "El informe de derivación en PDF no se abre desde aquí.", "r": "Es así: el PDF de un episodio de una unidad anterior no se abre por este camino." }
+      ],
+      "rutas": ["Medicina/Residente", "Medicina/Historial", "Medicina/LineaTemporal", "Medicina/VersionBasal", "Medicina/PedirHistorialAnterior"],
+      "mensajes": [
+        "Elige para qué los necesitas; con «Otro motivo», escribe cuál",
+        "No se pueden abrir los episodios de la unidad anterior de este residente."
+      ],
+      "manual": { "id": "historial", "titulo": "Historial y línea temporal del residente" },
+      "flujo": { "id": "estancia", "titulo": "La estancia cambia: traslado, ingreso y baja" }
+    },
+    {
+      "codigo": "MED-13",
+      "pregunta": "¿Cómo creo, completo y firmo el estado basal de un residente?",
+      "palabras": ["basal", "estado basal", "barthel", "firmar", "reevaluación", "borrador", "permiso"],
+      "permisos": ["BASELINE_INITIAL_COMPLETE", "BASELINE_REEVALUATE"],
+      "concede": "Administración",
+      "antes": [
+        "Tener el permiso en tu ámbito: **Basal inicial (al alta)** para el primer basal y **Reevaluar el basal** para los siguientes. Sin él, el botón no sale en la ficha. Poder gestionar el basal nunca permite dar de alta residentes.",
+        "El motivo del basal (alta, revisión programada o cambio funcional consolidado), la fuente de la información y su fecha.",
+        "Saber que solo puede haber un borrador activo por residente, y que **solo firma la misma cuenta que lo creó, con el mismo perfil**."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Crear borrador de basal** (si ya tiene uno vigente, sale **Iniciar reevaluación**).", "botones": ["Crear borrador de basal", "Iniciar reevaluación"] },
+        { "texto": "En «Crear borrador» elige el «Motivo», la «Fuente de la información» y la «Fecha de la información», y pulsa **Crear borrador**.", "botones": ["Crear borrador"], "campos": ["Motivo", "Fuente de la información", "Fecha de la información"] },
+        { "texto": "Completa las nueve áreas, una a una: en cada una pulsa **Guardar área** y queda «Completada».", "botones": ["Guardar área"], "campos": ["Completada"] },
+        { "texto": "Completa el **Índice de Barthel** (diez ítems; el total sale sobre 100) y pulsa **Guardar Barthel**.", "botones": ["Guardar Barthel"], "campos": ["Índice de Barthel"] },
+        { "texto": "Con las nueve áreas y el Barthel completos, pulsa **Confirmar y firmar**, revisa el resumen y pulsa **Firmar estado basal**.", "botones": ["Confirmar y firmar", "Firmar estado basal"] }
+      ],
+      "despues": [
+        { "para": "Medicina", "texto": "Verás «Basal firmado»: la versión nueva pasa a vigente de inmediato y la anterior, a histórica." },
+        { "para": "Auxiliar", "texto": "Ve el basal vigente en solo lectura en el registro cotidiano de sus residentes." },
+        { "para": "Enfermería", "texto": "Ve el basal vigente y su historial de versiones." }
+      ],
+      "dudas": [
+        { "p": "No me sale el botón «Crear borrador de basal».", "r": "Tu ámbito no tiene el permiso de basal. Se lo pide a Administración, que es quien lo concede." },
+        { "p": "«Cancelar borrador»: ¿puedo anular un borrador?", "r": "Sí, antes de firmarlo: escribe el «Motivo de la cancelación» y pulsa «Cancelar borrador»." },
+        { "p": "«No tienes un borrador activo para este residente.»", "r": "No hay borrador o ya se firmó o se canceló. Vuelve a la ficha y créalo de nuevo." },
+        { "p": "No puedo firmar un borrador creado por otra persona.", "r": "Solo firma la cuenta que lo creó, con el mismo perfil: si lo empezó otra persona, que lo firme ella." }
+      ],
+      "rutas": ["Medicina/Residente", "EnfermeriaBasal/Draft", "EnfermeriaBasal/Area", "EnfermeriaBasal/Barthel", "EnfermeriaBasal/Confirmar", "Baseline/Sign"],
+      "mensajes": [
+        "Borrador creado. Completa ahora las nueve áreas y el índice de Barthel.",
+        "Índice de Barthel guardado.",
+        "No tienes un borrador activo para este residente.",
+        "Indica un motivo para cancelar el borrador."
+      ],
+      "manual": { "id": "firmar-basal", "titulo": "Crear, completar y firmar el estado basal" },
+      "flujo": { "id": "llegada", "titulo": "Llega un residente: alta, familia y basal" }
+    }
+  ]
+}

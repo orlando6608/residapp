@@ -83,6 +83,9 @@
 .guia-diagrama .caja.adm { fill: var(--lane-adm-bg); stroke: var(--lane-adm); }
 .guia-diagrama .caja.aux { fill: var(--lane-aux-bg); stroke: var(--lane-aux); }
 .guia-diagrama .caja.enf { fill: var(--lane-enf-bg); stroke: var(--lane-enf); }
+.guia-diagrama .caja.med { fill: var(--lane-med-bg); stroke: var(--lane-med); }
+.guia-diagrama .caja.dir { fill: var(--lane-dir-bg); stroke: var(--lane-dir); }
+.guia-diagrama .caja.fam { fill: var(--lane-fam-bg); stroke: var(--lane-fam); }
 .guia-diagrama .caja.fuera { fill: none; stroke: var(--bs-secondary-color); stroke-dasharray: 6 4; }
 .guia-diagrama .titulo { font-weight: 700; font-size: 14px; }
 .guia-diagrama .flecha { stroke: var(--bs-secondary-color); stroke-width: 2; fill: none; }

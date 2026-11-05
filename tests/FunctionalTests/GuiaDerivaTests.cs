@@ -22,8 +22,8 @@ public partial class GuiaDerivaTests
     /// <summary>Perfiles cuya guía todavía no está escrita (plan de la Guía, §5). Se vacía fase a fase: un perfil con guía que siga aquí, o sin ella y fuera de aquí, falla.</summary>
     private static readonly SystemProfile[] SinGuiaTodavia =
     [
-        SystemProfile.Administracion, SystemProfile.Enfermeria, SystemProfile.Medicina,
-        SystemProfile.DireccionClinica, SystemProfile.Familiar,
+        SystemProfile.Administracion, SystemProfile.Enfermeria,
+        SystemProfile.DireccionClinica,
     ];
 
     private static readonly Dictionary<SystemProfile, string> Prefijos = new()

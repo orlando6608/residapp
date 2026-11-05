@@ -1,0 +1,305 @@
+{
+  "perfil": "Familiar",
+  "proposito": "El Portal Familiar es la parte de ResidApp para las familias. Te deja leer las novedades que el equipo asistencial decide publicar sobre tu residente y reservar o solicitar citas con el equipo. No es un canal urgente y no hay chat: lo urgente se resuelve siempre por teléfono con el centro.",
+  "rutina": [
+    "Entras con tu usuario y tu contraseña. Si solo tienes un residente, llegas directamente a su pantalla.",
+    "Lees las novedades nuevas (llevan la etiqueta «Nueva») y, si el centro lo ha elegido, el resumen diario o semanal.",
+    "Cuando lo necesitas, reservas o solicitas una cita, o respondes a la propuesta que te hace el centro.",
+    "Si necesitas algo urgente, llamas por teléfono al centro."
+  ],
+  "dependeDe": ["Administración", "Enfermería", "Medicina"],
+  "entregaA": ["Administración"],
+  "siempre": [
+    "Leer las novedades publicadas sobre tu residente y, si el centro lo ha elegido, su resumen diario o semanal.",
+    "Reservar una cita directamente o solicitarla, según cómo lo tenga organizado el centro.",
+    "Reprogramar o cancelar tus citas hasta la antelación mínima que fije el centro.",
+    "Responder a una propuesta de cita: aceptarla, pedir otro horario o cancelar la solicitud."
+  ],
+  "conPermiso": [],
+  "nunca": [
+    "Ver observaciones, valoraciones, constantes, el basal, indicaciones, derivaciones ni el historial del residente.",
+    "Ver la foto de identificación del residente ni los nombres de los profesionales.",
+    "Ver datos de otros familiares ni las citas que ha reservado otra persona.",
+    "Escribir al equipo (no hay chat) ni elegir un profesional concreto para una cita.",
+    "Usar el portal para algo urgente: para eso, el teléfono del centro."
+  ],
+  "revisadoPara": null,
+  "revisado": "2026-11-05",
+  "fichas": [
+    {
+      "codigo": "FAM-01",
+      "pregunta": "¿Cómo entro al Portal Familiar y cómo cambio de residente?",
+      "palabras": ["entrar", "iniciar sesión", "contraseña", "invitación", "cambiar de residente", "salir"],
+      "permisos": [],
+      "antes": [
+        "Que la Administración del centro te haya dado acceso: te dice tu **usuario** y te entrega la **hoja de invitación** (con un código QR y una dirección).",
+        "Que tu autorización esté **activa** y sin caducar: Administración la abre y la activa en la ficha del residente.",
+        "Una contraseña nueva de al menos 12 caracteres. A las familias no se les pide el código del móvil."
+      ],
+      "pasos": [
+        { "texto": "**La primera vez**, escanea el código QR de la hoja con la cámara del móvil, o escribe su dirección. Se abre «Elige tu contraseña».", "campos": ["Elige tu contraseña"] },
+        { "texto": "Escribe «Contraseña nueva» y «Repite la contraseña», y pulsa **Guardar y continuar**. Entras directamente al portal.", "botones": ["Guardar y continuar"], "campos": ["Contraseña nueva", "Repite la contraseña"] },
+        { "texto": "**Las demás veces**, en «Iniciar sesión» escribe «Usuario» y «Contraseña» y pulsa **Entrar**.", "botones": ["Entrar"], "campos": ["Iniciar sesión", "Usuario", "Contraseña"] },
+        { "texto": "Si solo tienes un residente, llegas directamente a su pantalla. Si tienes varios, ves «Mis residentes»: pulsa la tarjeta de aquel al que quieres ver.", "campos": ["Mis residentes"] },
+        { "texto": "Para ver a otro residente, pulsa **Cambiar de residente** en la cabecera (en el móvil, está tras el botón de menú de la esquina superior derecha).", "botones": ["Cambiar de residente"] },
+        { "texto": "Al terminar, pulsa **Salir**. La sesión también se cierra sola a los 30 minutos sin usarla.", "botones": ["Salir"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Entras al portal con lo que Administración te ha dado: ves solo los residentes para los que tienes la autorización activa. Cada entrada y cada vez que abres las novedades quedan registradas (quién y cuándo), sin guardar su contenido." },
+        { "para": "Administración", "texto": "Si no puedes entrar o no ves a tu residente, es a quien tienes que acudir: da y renueva los accesos." }
+      ],
+      "dudas": [
+        { "p": "«Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.»", "r": "Revisa el usuario y la contraseña. El aviso es el mismo si la cuenta no existe o está suspendida, para no dar pistas a quien intente adivinar cuentas. Tras 5 fallos seguidos hay que esperar 15 minutos." },
+        { "p": "«Ahora no tienes acceso a ningún residente»", "r": "Tu autorización no está activa (suspendida, revocada o caducada) o el residente no está disponible ahora (por ejemplo, por un ingreso hospitalario). El portal no cuenta el motivo. Contacta con la Administración del centro." },
+        { "p": "La hoja de invitación caducó, se perdió o ya la usaste.", "r": "Vale 72 horas y una sola vez. Pide otra a Administración: la nueva anula la anterior." },
+        { "p": "Olvidé mi contraseña.", "r": "Pide a Administración una invitación de recuperación. Con ella eliges otra contraseña." }
+      ],
+      "rutas": ["Acceso/Entrar", "Acceso/Invitacion", "PortalFamiliar/Index"],
+      "mensajes": [
+        "Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.",
+        "Ahora no tienes acceso a ningún residente",
+        "Ahora mismo no tienes acceso a la información de ningún residente. Si crees que es un error, contacta con la Administración del centro."
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" },
+      "acceso": { "id": "entrar", "titulo": "Entrar" }
+    },
+    {
+      "codigo": "FAM-02",
+      "pregunta": "¿Cómo leo las novedades que el centro publica sobre mi residente?",
+      "palabras": ["novedades", "comunicados", "nueva", "relevantes", "ordinarias", "corrección", "leer"],
+      "permisos": [],
+      "antes": [
+        "Haber entrado en el portal y estar viendo a tu residente (ver FAM-01).",
+        "Saber que las novedades son lo que el equipo asistencial ha decidido contarte: no son un parte completo."
+      ],
+      "pasos": [
+        { "texto": "Abre a tu residente. Si hay novedades que no has visto, arriba dice «Hay N novedades nuevas desde tu última visita» y cada una lleva la etiqueta **Nueva**.", "campos": ["Nueva"] },
+        { "texto": "En «Novedades del centro» puedes filtrar con **Todas**, **Relevantes** u **Ordinarias**.", "botones": ["Todas", "Relevantes", "Ordinarias"], "campos": ["Novedades del centro"] },
+        { "texto": "Pulsa una novedad para abrirla. Ves su tipo, cuándo se publicó y su texto, firmado siempre como «Equipo asistencial del centro»." },
+        { "texto": "Si una novedad muestra «Tiene una corrección», ábrela y pulsa **Ver la corrección**. Si lo que abres es una «Corrección», **Ver la novedad original** te lleva a la anterior.", "botones": ["Ver la corrección", "Ver la novedad original"] },
+        { "texto": "Para volver a la lista, pulsa **Volver a las novedades**.", "botones": ["Volver a las novedades"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Leer no cambia nada ni avisa al centro, pero queda registrado quién abrió las novedades y cuándo (no su contenido). Una novedad ordinaria se ve 30 días y una relevante, 6 meses, contados desde que se publicó." }
+      ],
+      "dudas": [
+        { "p": "«No hay novedades publicadas para mostrar.»", "r": "Que no haya novedades no significa que todo vaya bien ni mal: el centro te avisará por teléfono si ocurre algo importante." },
+        { "p": "«Esta novedad ya no está disponible. Si tienes dudas, llama por teléfono al centro.»", "r": "El centro la ha retirado. El portal no muestra su texto." },
+        { "p": "Una novedad que vi antes ya no sale.", "r": "Ha pasado su plazo: las ordinarias se ven 30 días y las relevantes, 6 meses." },
+        { "p": "Quiero contestar a una novedad.", "r": "No hay chat ni respuestas en el portal. Llama por teléfono al centro." }
+      ],
+      "rutas": ["PortalFamiliar/Residente", "PortalFamiliar/Comunicado"],
+      "mensajes": [
+        "No hay novedades publicadas para mostrar.",
+        "Esta novedad ya no está disponible. Si tienes dudas, llama por teléfono al centro."
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "FAM-03",
+      "pregunta": "¿Cómo veo el resumen diario o semanal de lo publicado?",
+      "palabras": ["resumen", "resumen semanal", "resumen diario", "periodo"],
+      "permisos": [],
+      "antes": [
+        "Estar viendo a tu residente (ver FAM-01).",
+        "El centro decide si el resumen es diario o semanal. Si no se ha publicado nada en el último periodo, no hay resumen."
+      ],
+      "pasos": [
+        { "texto": "Abre a tu residente. Encima de las novedades, busca la tarjeta **Resumen diario** o **Resumen semanal**.", "campos": ["Resumen diario", "Resumen semanal"] },
+        { "texto": "Lee el periodo que recoge («Lo que el equipo ha publicado entre el … y el …») y, debajo, cada novedad con su tipo, su fecha y su texto.", "campos": ["Lo que el equipo ha publicado entre el"] },
+        { "texto": "Si lleva la etiqueta **Nuevo**, es que todavía no has abierto a tu residente desde que se cerró ese periodo." }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "El resumen no añade nada nuevo: son las mismas novedades de más abajo, juntas. Solo se ve el último periodo cerrado. El diario se corta cada día y el semanal, cada domingo." }
+      ],
+      "dudas": [
+        { "p": "No veo ningún resumen.", "r": "No se publicó nada en el último periodo cerrado (el portal no dice «sin novedades»). Las novedades sueltas siguen saliendo en cuanto se publican, como en FAM-02." },
+        { "p": "Una novedad que esperaba no sale en el resumen.", "r": "El resumen no incluye las novedades retiradas. Si fue una novedad suelta, búscala en la lista de «Novedades del centro» (FAM-02)." }
+      ],
+      "rutas": ["PortalFamiliar/Residente"],
+      "mensajes": ["Son las mismas novedades de más abajo."],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "FAM-04",
+      "pregunta": "¿Cómo reservo una cita con el equipo asistencial?",
+      "palabras": ["reservar", "cita", "reserva directa", "hueco", "equipo médico", "enfermería", "videoconferencia"],
+      "permisos": [],
+      "antes": [
+        "Estar viendo a tu residente (ver FAM-01).",
+        "Que el centro tenga la **reserva directa** activa. Si en su lugar ves «Solicitar una cita», sigue FAM-05.",
+        "Tener en cuenta que las citas no son un canal urgente. Con el mismo equipo solo puedes tener una cita próxima."
+      ],
+      "pasos": [
+        { "texto": "En la pantalla de tu residente, pulsa **Citas con el equipo asistencial**.", "botones": ["Citas con el equipo asistencial"] },
+        { "texto": "Pulsa **Reservar una cita**.", "botones": ["Reservar una cita"] },
+        { "texto": "En «¿Con quién y cómo?» elige, bajo **Equipo médico** o **Equipo de Enfermería**, la modalidad que quieras: Presencial, Telefónica o Videoconferencia (las que tenga habilitadas el centro). Nunca eliges un profesional concreto.", "campos": ["¿Con quién y cómo?", "Equipo médico", "Equipo de Enfermería", "Presencial", "Telefónica", "Videoconferencia"] },
+        { "texto": "En «Huecos libres», pulsa la hora que te venga bien. Los huecos están agrupados por día.", "campos": ["Huecos libres"] },
+        { "texto": "En «Revisa tu reserva» comprueba el residente, con quién, cómo y cuándo, y pulsa **Confirmar la reserva**. Si no te viene bien, **Elegir otro hueco**.", "botones": ["Confirmar la reserva", "Elegir otro hueco"], "campos": ["Revisa tu reserva"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Verás «Cita confirmada.» y la cita con el estado «Confirmada», que aparece también en «Mis citas». Pulsar dos veces el botón no duplica la cita." },
+        { "para": "Administración", "texto": "La ve en su agenda de citas y puede reprogramarla o cancelarla, siempre con un motivo." }
+      ],
+      "dudas": [
+        { "p": "«Ese hueco ya no está libre. Elige otro.»", "r": "Otra familia lo ocupó justo antes. Elige uno de los que quedan." },
+        { "p": "«No se ha podido confirmar: el hueco ya no está libre, ya tienes una cita próxima con ese equipo o ya no se puede cambiar. Elige otro hueco o revisa tus citas.»", "r": "No se ha creado la cita. Mira «Mis citas»: si ya tienes una próxima con ese equipo, no se puede reservar otra." },
+        { "p": "«Ahora mismo no hay huecos libres. Prueba otro día o llama por teléfono al centro.»", "r": "Vuelve a mirar más tarde o llama al centro." },
+        { "p": "«El centro todavía no ha habilitado ninguna modalidad de cita. Llama por teléfono al centro.»", "r": "El centro no ofrece citas desde el portal por ahora. Pídela por teléfono." }
+      ],
+      "rutas": ["PortalFamiliar/Citas", "PortalFamiliar/NuevaCita", "PortalFamiliar/RevisarCita", "PortalFamiliar/ReservarCita", "PortalFamiliar/Cita"],
+      "mensajes": [
+        "Cita confirmada.",
+        "Ese hueco ya no está libre. Elige otro.",
+        "No se ha podido confirmar: el hueco ya no está libre, ya tienes una cita próxima con ese equipo o ya no se puede cambiar.",
+        "Ahora mismo no hay huecos libres. Prueba otro día o llama por teléfono al centro.",
+        "El centro todavía no ha habilitado ninguna modalidad de cita. Llama por teléfono al centro."
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "FAM-05",
+      "pregunta": "¿Cómo solicito una cita cuando el centro trabaja con solicitud previa?",
+      "palabras": ["solicitar", "solicitud", "cita", "motivo", "comentario", "disponibilidad"],
+      "permisos": [],
+      "antes": [
+        "Estar viendo a tu residente (ver FAM-01).",
+        "Que el centro tenga la **solicitud previa** activa: en lugar de «Reservar una cita» verás **Solicitar una cita**.",
+        "Con cada equipo solo puedes tener una solicitud abierta, y ninguna si ya tienes una cita próxima con ese equipo."
+      ],
+      "pasos": [
+        { "texto": "Pulsa **Citas con el equipo asistencial** y después **Solicitar una cita**.", "botones": ["Citas con el equipo asistencial", "Solicitar una cita"] },
+        { "texto": "Elige «Con quién» (equipo médico o de Enfermería) y «Cómo» (la modalidad).", "campos": ["Con quién", "Cómo"] },
+        { "texto": "Elige el «Motivo»: Seguimiento general, Resultados de pruebas o informes, Medicación o tratamiento, Un cambio reciente en el residente, Información sobre los cuidados u Otro motivo.", "campos": ["Motivo", "Seguimiento general", "Información sobre los cuidados"] },
+        { "texto": "Si quieres, escribe un «Comentario (opcional)» breve: hasta 300 caracteres y sin datos clínicos detallados; el equipo te llamará.", "campos": ["Comentario (opcional)"] },
+        { "texto": "En «¿Qué días podrías?» marca los días en que podrías (si no marcas ninguno, vale cualquier día) y en «Parte del día» elige Me da igual, Por la mañana o Por la tarde.", "campos": ["¿Qué días podrías?", "Parte del día", "Por la mañana"] },
+        { "texto": "Pulsa **Enviar la solicitud**.", "botones": ["Enviar la solicitud"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Verás «Solicitud enviada…» y la solicitud en «Pendiente de gestión». No hay ninguna cita hasta que el centro te proponga un día y una hora y tú lo aceptes (ver FAM-06)." },
+        { "para": "Administración", "texto": "Le llega a su bandeja de solicitudes de cita. Propone un día y una hora y deja ese hueco reservado para ti." }
+      ],
+      "dudas": [
+        { "p": "«No se ha podido enviar la solicitud: revisa los datos, puede que ya tengas una solicitud abierta o una cita próxima con ese equipo, o que el centro ya no admita solicitudes.»", "r": "No se ha enviado nada. Mira «Mis solicitudes» y «Mis citas» antes de volver a intentarlo." },
+        { "p": "«Elige con quién quieres la cita.» / «Elige cómo quieres la cita.» / «Elige el motivo de la cita.»", "r": "Falta rellenar ese campo. Elígelo y vuelve a pulsar «Enviar la solicitud»." },
+        { "p": "«Ahora mismo el centro no admite solicitudes de cita desde el portal.»", "r": "El centro ha cambiado el modo o lo ha desactivado. Pide la cita por teléfono." },
+        { "p": "¿Puedo pedir a un profesional concreto?", "r": "No: solo eliges el equipo. Tampoco hay chat; si necesitas algo más, llama por teléfono." }
+      ],
+      "rutas": ["PortalFamiliar/Citas", "PortalFamiliar/NuevaSolicitud", "PortalFamiliar/EnviarSolicitud", "PortalFamiliar/Solicitud"],
+      "mensajes": [
+        "No se ha podido enviar la solicitud: revisa los datos",
+        "Elige con quién quieres la cita.",
+        "Elige cómo quieres la cita.",
+        "Elige el motivo de la cita.",
+        "Ahora mismo el centro no admite solicitudes de cita desde el portal."
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "FAM-06",
+      "pregunta": "¿Cómo respondo a la propuesta de cita que me hace el centro?",
+      "palabras": ["propuesta", "aceptar", "otro horario", "cancelar solicitud", "caducada"],
+      "permisos": [],
+      "antes": [
+        "Haber enviado una solicitud (ver FAM-05) y que el centro te haya propuesto un día y una hora.",
+        "Lo sabes porque en «Mis residentes» sale **Propuesta de cita pendiente**, y al abrir a tu residente, «Tienes una propuesta de cita esperando tu respuesta»."
+      ],
+      "pasos": [
+        { "texto": "Pulsa **Ver la propuesta** (o, en «Citas con el equipo asistencial», abre la solicitud desde «Mis solicitudes»).", "botones": ["Ver la propuesta"], "campos": ["Mis solicitudes"] },
+        { "texto": "En «El centro te propone» lee el día y la hora, y hasta cuándo puedes responder: hasta entonces el hueco está reservado para ti.", "campos": ["El centro te propone"] },
+        { "texto": "Si te viene bien, pulsa **Aceptar y confirmar la cita**. La cita queda confirmada.", "botones": ["Aceptar y confirmar la cita"] },
+        { "texto": "Si no te viene bien, pulsa **Pedir otro horario**. El centro te propondrá uno nuevo.", "botones": ["Pedir otro horario"] },
+        { "texto": "Si ya no la necesitas, pulsa **Cancelar la solicitud** y confirma con **Sí, cancelar la solicitud**. Con **No, mantenerla** la dejas como estaba.", "botones": ["Cancelar la solicitud", "Sí, cancelar la solicitud", "No, mantenerla"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Al aceptar verás «Cita confirmada.» y la cita en «Mis citas». Al pedir otro horario verás «Hemos avisado al centro de que necesitas otro horario. Te propondrá uno nuevo.»" },
+        { "para": "Administración", "texto": "Lo ve en su bandeja de solicitudes. Si cancelas, el hueco queda libre para otras familias." }
+      ],
+      "dudas": [
+        { "p": "«Esta propuesta caducó el … sin respuesta. El centro puede proponerte otro horario, o puedes pedirlo tú.»", "r": "Ya no puedes aceptarla. Pulsa «Pedir otro horario» o espera a que el centro te proponga otro." },
+        { "p": "«No se ha podido aceptar: la propuesta ya no está vigente, el horario ya no está libre o ya tienes una cita próxima con ese equipo.»", "r": "No se ha creado la cita. Pide otro horario o llama por teléfono al centro." },
+        { "p": "«El centro ha cerrado esta solicitud.»", "r": "Si sigues necesitando una cita, llama por teléfono al centro o envía una solicitud nueva (FAM-05)." }
+      ],
+      "rutas": ["PortalFamiliar/Solicitud", "PortalFamiliar/AceptarSolicitud", "PortalFamiliar/PedirOtroHorario", "PortalFamiliar/ConfirmarCancelarSolicitud", "PortalFamiliar/CancelarSolicitud"],
+      "mensajes": [
+        "Hemos avisado al centro de que necesitas otro horario. Te propondrá uno nuevo.",
+        "sin respuesta. El centro puede proponerte otro horario, o puedes pedirlo tú.",
+        "No se ha podido aceptar: la propuesta ya no está vigente, el horario ya no está libre o ya tienes una cita próxima con ese equipo.",
+        "El centro ha cerrado esta solicitud."
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "FAM-07",
+      "pregunta": "¿Cómo cambio o cancelo una cita que ya tengo?",
+      "palabras": ["reprogramar", "cancelar", "cambiar cita", "mis citas", "antelación"],
+      "permisos": [],
+      "antes": [
+        "Tener una cita con el estado «Confirmada».",
+        "Que falte más de la **antelación mínima** que fija el centro (con reserva directa, la ves bajo «Reservar una cita»: «Puedes cambiar o cancelar una cita hasta … horas antes»). Después, solo por teléfono."
+      ],
+      "pasos": [
+        { "texto": "Pulsa **Citas con el equipo asistencial** y, en «Mis citas», la cita que quieres cambiar.", "botones": ["Citas con el equipo asistencial"], "campos": ["Mis citas"] },
+        { "texto": "Para moverla a otro día u hora, pulsa **Reprogramar**. Eliges un hueco nuevo con el mismo equipo y la misma modalidad; la cita actual no cambia hasta que confirmes.", "botones": ["Reprogramar"] },
+        { "texto": "En «Revisa el cambio» comprueba el «Hueco nuevo» y el «Hueco actual», y pulsa **Confirmar el cambio**.", "botones": ["Confirmar el cambio"], "campos": ["Hueco nuevo", "Hueco actual"] },
+        { "texto": "Para anularla, pulsa **Cancelar la cita**. En «¿Cancelar esta cita?» pulsa **Sí, cancelar la cita**, o **No, mantenerla** para dejarla como está.", "botones": ["Cancelar la cita", "Sí, cancelar la cita", "No, mantenerla"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Verás «Cita reprogramada.» o «Cita cancelada. El hueco queda libre.», y en el «Historial» de la cita queda anotado el cambio." },
+        { "para": "Administración", "texto": "Ve el cambio en su agenda. El hueco que dejas queda libre para otras familias." }
+      ],
+      "dudas": [
+        { "p": "«Esta cita ya no se puede cancelar desde el portal. Llama por teléfono al centro.»", "r": "Ya ha pasado la antelación mínima, o la cita ya no está confirmada. Llama por teléfono al centro. Si no puedes reprogramarla, verás «Esa cita ya no se puede reprogramar.»" },
+        { "p": "El centro ha cambiado o cancelado mi cita y me llega un correo.", "r": "Puede llegarte un correo genérico, «Tienes un cambio en una cita en ResidApp», sin día ni hora: los ves al entrar en el portal. Sale de no-responder@avisos.residapp.es; si no lo ves, mira el correo no deseado. No sustituye a la llamada del centro." },
+        { "p": "«Ahora mismo el centro no ofrece reservar citas desde el portal.» al pulsar «Reprogramar».", "r": "Reprogramar solo funciona si el centro tiene la reserva directa activa. Cancelar sí puedes, y para cambiarla, llama por teléfono al centro." },
+        { "p": "El centro ha desactivado las citas del portal.", "r": "Ya no puedes reservar, pero las citas que ya tenías confirmadas se siguen viendo y se pueden cancelar." }
+      ],
+      "rutas": ["PortalFamiliar/Citas", "PortalFamiliar/Cita", "PortalFamiliar/NuevaCita", "PortalFamiliar/RevisarCita", "PortalFamiliar/ReservarCita", "PortalFamiliar/ConfirmarCancelarCita", "PortalFamiliar/CancelarCita"],
+      "mensajes": [
+        "Cita reprogramada.",
+        "Cita cancelada. El hueco queda libre.",
+        "Esta cita ya no se puede cancelar desde el portal. Llama por teléfono al centro.",
+        "Esa cita ya no se puede reprogramar.",
+        "Tienes un cambio en una cita en ResidApp",
+        "no-responder@avisos.residapp.es",
+        "Ahora mismo el centro no ofrece reservar citas desde el portal."
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "FAM-08",
+      "pregunta": "¿Cómo sé qué información me corresponde y qué hago si necesito algo urgente?",
+      "palabras": ["urgente", "teléfono", "qué veo", "qué no veo", "información", "privacidad"],
+      "permisos": [],
+      "antes": [
+        "Saber que el portal enseña solo lo que el centro decide publicar y las citas que gestionas tú; no es un parte médico ni un canal urgente."
+      ],
+      "pasos": [
+        { "texto": "Para saber cómo está tu residente, lee las **Novedades del centro** (ver FAM-02) y, si hay, el resumen (ver FAM-03).", "campos": ["Novedades del centro"] },
+        { "texto": "Si necesitas algo **urgente**, no uses el portal: llama por teléfono al centro. Lo recuerda cada pantalla: «Este portal no es un canal urgente.»" },
+        { "texto": "Si necesitas información que no sale aquí (valoraciones, constantes, medicación, historial), pídela por teléfono al centro: el portal no la muestra nunca." },
+        { "texto": "Si dejas de ver a tu residente, ver FAM-01: puede que haya cambiado tu autorización." }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Nunca ves observaciones, valoraciones, constantes, el basal, indicaciones, derivaciones, el historial, la foto de identificación del residente, nombres de profesionales ni datos de otros familiares." }
+      ],
+      "dudas": [
+        { "p": "No hay novedades: ¿está todo bien?", "r": "No se puede deducir. Que no haya novedades no significa que todo vaya bien ni mal; el centro te avisará por teléfono si ocurre algo importante." },
+        { "p": "¿Quién ve que he leído una novedad?", "r": "Queda registrado quién y cuándo abrió las novedades, para la auditoría del centro; no se guarda el contenido y no se avisa a nadie." }
+      ],
+      "rutas": ["PortalFamiliar/Residente", "PortalFamiliar/Index"],
+      "mensajes": [
+        "Este portal no es un canal urgente. Si necesitas información urgente, llama por teléfono al centro."
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    }
+  ]
+}
