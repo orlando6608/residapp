@@ -28,6 +28,8 @@
 .perfil-medicina { --perfil: var(--lane-med); --perfil-bg: var(--lane-med-bg); }
 .perfil-direccion { --perfil: var(--lane-dir); --perfil-bg: var(--lane-dir-bg); }
 .perfil-familia { --perfil: var(--lane-fam); --perfil-bg: var(--lane-fam-bg); }
+/* «Para todos»: no es un perfil, así que sin color de perfil (neutro, legible en claro, oscuro y en blanco y negro). */
+.perfil-para-todos { --perfil: var(--bs-emphasis-color); --perfil-bg: var(--bs-tertiary-bg); }
 
 /* Nombre del perfil en un chip: color y borde del perfil, y siempre el nombre escrito (no depende solo del color). */
 .guia-chip {

@@ -23,6 +23,13 @@
 
 <section class="mb-4" aria-labelledby="perfiles">
     <h2 class="h4" id="perfiles">Elige tu perfil</h2>
+    @if (Model.Comun is not null)
+    {
+        <p>
+            Antes de nada, <a asp-action="Comun">«Para todos»</a>: entrar, cambiar de centro o de perfil, tu cuenta, recuperar el acceso,
+            el modo oscuro e imprimir. Vale para cualquier perfil.
+        </p>
+    }
     <ul class="list-unstyled d-flex flex-wrap gap-2">
         @foreach (var entrada in GuiaPerfiles.Todos)
         {
@@ -44,11 +51,18 @@
 <section class="mb-4" aria-labelledby="preguntas">
     <h2 class="h4" id="preguntas">Índice de preguntas</h2>
     <ul class="guia-indice">
-        @foreach (var (perfil, ficha) in Model.Preguntas())
+        @foreach (var (slug, titulo, ficha) in Model.Preguntas())
         {
-            <li class="perfil-@perfil.Slug">
-                <a asp-action="Perfil" asp-route-slug="@perfil.Slug" asp-fragment="@ficha.Codigo"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a>
-                <span class="text-muted small">(@perfil.Titulo)</span>
+            <li class="perfil-@slug">
+                @if (slug == GuiaComun.Slug)
+                {
+                    <a asp-action="Comun" asp-fragment="@ficha.Codigo"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a>
+                }
+                else
+                {
+                    <a asp-action="Perfil" asp-route-slug="@slug" asp-fragment="@ficha.Codigo"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a>
+                }
+                <span class="text-muted small">(@titulo)</span>
             </li>
         }
     </ul>

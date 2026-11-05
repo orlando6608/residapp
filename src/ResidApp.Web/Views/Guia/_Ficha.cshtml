@@ -1,11 +1,12 @@
 @using ResidApp.Web.Models
-@model (GuiaPerfil Perfil, GuiaFicha Ficha)
+@* Perfil nulo: la ficha es del capítulo «Para todos». *@
+@model (GuiaPerfil? Perfil, GuiaFicha Ficha)
 @{
     var perfil = Model.Perfil;
     var ficha = Model.Ficha;
     // A quién le llega: los perfiles que aparecen en «después», sin el propio.
-    var destinos = ficha.Despues.Select(d => GuiaPerfiles.PorTitulo(d.Para)).Where(e => e is not null && e.Perfil != perfil.Profile).Distinct().ToList();
-    var propio = GuiaPerfiles.Of(perfil.Profile);
+    var destinos = ficha.Despues.Select(d => GuiaPerfiles.PorTitulo(d.Para)).Where(e => e is not null && (perfil is null || e.Perfil != perfil.Profile)).Distinct().ToList();
+    var propio = perfil is null ? (Slug: GuiaComun.Slug, Titulo: GuiaComun.Titulo) : (Slug: GuiaPerfiles.Of(perfil.Profile).Slug, Titulo: GuiaPerfiles.Of(perfil.Profile).Titulo);
 }
 
 <article class="ficha perfil-@propio.Slug" id="@ficha.Codigo" aria-labelledby="@(ficha.Codigo)-t">

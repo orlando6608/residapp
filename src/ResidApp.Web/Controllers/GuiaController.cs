@@ -10,6 +10,10 @@ public class GuiaController(GuiaCatalogo catalogo) : Controller
 {
     public IActionResult Index() => View(catalogo);
 
+    /// <summary>El capítulo «Para todos». La ruta literal gana a «Guia/{slug}».</summary>
+    [HttpGet("Guia/" + GuiaComun.Slug)]
+    public IActionResult Comun() => catalogo.Comun is { } comun ? View(comun) : NotFound();
+
     [HttpGet("Guia/{slug}")]
     public IActionResult Perfil(string slug)
     {

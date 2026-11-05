@@ -1,0 +1,347 @@
+{
+  "proposito": "Esto vale para cualquier persona con una cuenta de ResidApp, sea cual sea su perfil: entrar la primera vez y cada día, cambiar de centro o de perfil, cuidar tu cuenta (contraseña, códigos de recuperación, sesiones), recuperar el acceso si lo pierdes, elegir el modo claro u oscuro e imprimir. Se cuenta una sola vez aquí; las guías de cada perfil remiten a estas fichas. Nadie se crea su propia cuenta: la da de alta la Administración de tu centro, que es también a quien hay que acudir si no puedes entrar.",
+  "revisadoPara": null,
+  "revisado": "2026-11-05",
+  "fichas": [
+    {
+      "codigo": "TOD-01",
+      "pregunta": "¿Cómo entro por primera vez con mi invitación?",
+      "palabras": ["primera vez", "invitación", "hoja", "QR", "elegir contraseña", "segundo factor", "código del móvil", "códigos de recuperación"],
+      "permisos": [],
+      "antes": [
+        "La **hoja de invitación** que te entrega en mano la Administración de tu centro, impresa o en su pantalla: lleva un código QR y una dirección. Vale **72 horas** y **una sola vez**.",
+        "Una contraseña que no uses en otro sitio, de **al menos 12 caracteres** (una frase de varias palabras vale).",
+        "Si eres del personal (todos los perfiles menos Familia): un móvil con una **aplicación de autenticación** (Microsoft Authenticator, Google Authenticator u otra) y papel y bolígrafo para apuntar unos códigos."
+      ],
+      "pasos": [
+        { "texto": "Escanea el QR de la hoja con la cámara del móvil, o escribe su dirección en el navegador. Se abre **Elige tu contraseña**, con tu usuario: con él entrarás a partir de ahora.", "campos": ["Elige tu contraseña"] },
+        { "texto": "Escribe la «Contraseña nueva», repítela en «Repite la contraseña» y pulsa **Guardar y continuar**. Si eres de Familia, ya has entrado: aquí termina.", "botones": ["Guardar y continuar"], "campos": ["Contraseña nueva", "Repite la contraseña"] },
+        { "texto": "Personal: se abre **Activar el segundo factor**. En la aplicación de autenticación añade una cuenta y escanea el código QR de la pantalla (si no puedes, escribe a mano la clave que aparece debajo; los espacios no importan).", "campos": ["Activar el segundo factor"] },
+        { "texto": "Escribe el «Código» de 6 cifras que te muestra la aplicación y pulsa **Activar y entrar**.", "botones": ["Activar y entrar"], "campos": ["Código"] },
+        { "texto": "Sale una lista de **10 códigos de recuperación**. Apúntalos en papel y guárdalos en un sitio seguro, no en el móvil: no se vuelven a mostrar. Después pulsa **Ya los he guardado, continuar**.", "botones": ["Ya los he guardado, continuar"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Entras a tu inicio, o a elegir ámbito si tu cuenta tiene varios (ver TOD-04). Desde ahora entras como se cuenta en TOD-02. La invitación queda usada." }
+      ],
+      "dudas": [
+        { "p": "«Esta invitación ya no vale: se ha usado, se ha anulado o ha caducado. Pide otra a la Administración de tu centro.»", "r": "Pasaron las 72 horas, ya la usaste, o te dieron otra más nueva (la nueva anula la anterior). Pide otra hoja." },
+        { "p": "«Las dos contraseñas no coinciden.» o «La contraseña tiene que tener al menos»", "r": "Vuelve a escribirla en los dos campos; no hay más reglas que la longitud." },
+        { "p": "Dejé a medias el código del móvil.", "r": "Al volver a entrar con la contraseña, la app te dice que necesitas una invitación: «Tu cuenta necesita preparar el código del móvil, y eso solo se hace con una invitación: pídela a la Administración de tu centro.»" },
+        { "p": "Perdí los 10 códigos de recuperación.", "r": "Mientras te funcione el móvil, genera otros nuevos (ver TOD-06)." }
+      ],
+      "rutas": ["Acceso/Invitacion", "Acceso/ActivarSegundoFactor"],
+      "mensajes": [
+        "Esta invitación ya no vale: se ha usado, se ha anulado o ha caducado. Pide otra a la Administración de tu centro.",
+        "Las dos contraseñas no coinciden.",
+        "La contraseña tiene que tener al menos",
+        "Tu cuenta necesita preparar el código del móvil, y eso solo se hace con una invitación: pídela a la Administración de tu centro."
+      ],
+      "manual": { "id": "entrar-ambito", "titulo": "Entrar y elegir tu ámbito de trabajo" },
+      "acceso": { "id": "entrar", "titulo": "Entrar" }
+    },
+    {
+      "codigo": "TOD-02",
+      "pregunta": "¿Cómo entro cada día con mi usuario y mi contraseña?",
+      "palabras": ["iniciar sesión", "entrar", "usuario", "contraseña", "código del móvil", "bloqueada", "código de recuperación", "sesión"],
+      "permisos": [],
+      "antes": [
+        "Tu **usuario** (el que te dio la Administración al darte de alta) y tu contraseña.",
+        "Si eres del personal: tu móvil, con la aplicación de autenticación. Si no lo tienes a mano, uno de tus códigos de recuperación apuntados en papel."
+      ],
+      "pasos": [
+        { "texto": "Abre ResidApp. Si una pantalla necesita sesión, la app te lleva a **Iniciar sesión** y, al entrar, te devuelve a donde ibas.", "campos": ["Iniciar sesión"] },
+        { "texto": "Escribe tu «Usuario» y tu «Contraseña» y pulsa **Entrar**. Si eres de Familia, entras ya.", "botones": ["Entrar"], "campos": ["Usuario", "Contraseña"] },
+        { "texto": "Personal: en **Código de verificación** escribe el código de 6 cifras que muestra ahora la aplicación de autenticación y pulsa **Comprobar**.", "botones": ["Comprobar"], "campos": ["Código de verificación"] },
+        { "texto": "Sin el móvil: pulsa **Usa un código de recuperación**, escribe uno de tus códigos y pulsa **Comprobar**. Cada código sirve **una sola vez**.", "botones": ["Usa un código de recuperación"], "campos": ["Código de recuperación"] },
+        { "texto": "Si tu cuenta puede trabajar con varios centros o perfiles, la app te pide elegir uno (ver TOD-04); si solo tiene uno, entras directamente a tu inicio." }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "La sesión se cierra sola tras **30 minutos sin usarla** y, en cualquier caso, a las **12 horas** de abrirla. Si la sesión terminó justo al guardar un formulario, lo que escribías **no se guarda**: la app te lo avisa y te devuelve a esa pantalla para volver a escribirlo." }
+      ],
+      "dudas": [
+        { "p": "«Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.»", "r": "El aviso es el mismo si el usuario no existe, la contraseña es otra, la cuenta está suspendida o no tiene perfiles: así no se dan pistas. Tras 5 fallos seguidos, la cuenta se bloquea 15 minutos aunque después la escribas bien. Si no recuerdas la contraseña, ver TOD-09." },
+        { "p": "Pasé más de 10 minutos entre la contraseña y el código.", "r": "Hay que volver a escribir la contraseña. Los códigos de 6 cifras equivocados también cuentan para el bloqueo." },
+        { "p": "«Tu sesión había terminado: lo que estabas guardando no se ha guardado.»", "r": "Entra de nuevo y vuelve a escribirlo." },
+        { "p": "No tengo cuenta.", "r": "Nadie se crea la suya: pídela a la Administración de tu centro («Cómo pedir el acceso», un enlace al pie de Iniciar sesión)." }
+      ],
+      "rutas": ["Acceso/Entrar", "Acceso/SegundoFactor", "Acceso/CodigoRecuperacion"],
+      "mensajes": [
+        "Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.",
+        "Tu sesión había terminado",
+        "no se ha guardado"
+      ],
+      "manual": { "id": "entrar-ambito", "titulo": "Entrar y elegir tu ámbito de trabajo" },
+      "acceso": { "id": "entrar", "titulo": "Entrar" }
+    },
+    {
+      "codigo": "TOD-03",
+      "pregunta": "¿Cómo entro con la huella, la cara o el PIN, sin contraseña ni código?",
+      "palabras": ["passkey", "llave de acceso", "huella", "cara", "PIN", "entrar sin contraseña", "Mi cuenta"],
+      "permisos": [],
+      "antes": [
+        "Que las **passkeys** estén activadas en la aplicación. Una passkey («llave de acceso») es una credencial guardada en tu móvil o portátil que se desbloquea con tu huella, tu cara o tu PIN. Si no ves la ficha «Passkeys» en «Mi cuenta», no lo están.",
+        "Ser del personal. Si trabajas en Plataforma, ver PLA-01 y PLA-08: tu cuenta entra solo con passkey.",
+        "Tu contraseña y el código que da ahora tu móvil, para añadirla."
+      ],
+      "pasos": [
+        { "texto": "Abre el menú con el nombre de tu perfil (en el móvil, tras el botón de menú de la esquina superior derecha) y pulsa **Mi cuenta**.", "botones": ["Mi cuenta"] },
+        { "texto": "Baja a la ficha **Passkeys**. Escribe un «Nombre de la passkey» que la reconozca (por ejemplo «Móvil de trabajo»), tu «Contraseña» y el «Código del móvil».", "campos": ["Passkeys", "Nombre de la passkey", "Contraseña", "Código del móvil"] },
+        { "texto": "Pulsa **Añadir una passkey**. Se abre una ventana de tu dispositivo, no de ResidApp, que te pide la huella, la cara o el PIN.", "botones": ["Añadir una passkey"] },
+        { "texto": "Sale un aviso de que se ha añadido. Pulsa **Entendido**. Para probarla, pulsa **Salir** y, en Iniciar sesión, **Entrar con passkey**.", "botones": ["Entendido", "Salir", "Entrar con passkey"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Con **Entrar con passkey** no escribes usuario, contraseña ni código del móvil. Si no tienes a mano el dispositivo donde la registraste, sigues pudiendo entrar con contraseña y código. Puedes tener hasta 10 y quitar cualquiera con **Quitar**." }
+      ],
+      "dudas": [
+        { "p": "«Ya tienes 10 passkeys, que es el máximo. Quita alguna antes de añadir otra.»", "r": "Quita una que ya no uses con «Quitar» y vuelve a intentarlo." },
+        { "p": "«El registro ha caducado o no es el que pediste. Vuelve a empezar.»", "r": "Pulsa otra vez «Añadir una passkey» y confirma en el dispositivo sin tardar." },
+        { "p": "Me dieron una invitación de recuperación.", "r": "Al usarla se borran todas tus passkeys: tienes que añadirlas de nuevo." }
+      ],
+      "rutas": ["Cuenta/Index", "Cuenta/PasskeyOpciones", "Cuenta/PasskeyAlta", "Cuenta/QuitarPasskey", "Acceso/Entrar"],
+      "mensajes": [
+        "passkeys, que es el máximo. Quita alguna antes de añadir otra.",
+        "El registro ha caducado o no es el que pediste. Vuelve a empezar."
+      ],
+      "manual": { "id": "mi-cuenta", "titulo": "Mi cuenta" },
+      "acceso": { "id": "passkeys", "titulo": "Passkeys" }
+    },
+    {
+      "codigo": "TOD-04",
+      "pregunta": "¿Cómo elijo o cambio el centro y el perfil con el que trabajo?",
+      "palabras": ["cambiar ámbito", "ámbito", "centro", "perfil", "varios centros", "entrar con otra cuenta", "seleccionar ámbito"],
+      "permisos": [],
+      "antes": [
+        "Que tu cuenta tenga **más de un ámbito**, es decir, más de una combinación de centro y perfil. Quien trabaja con un único perfil en un único centro no elige nada: ese ámbito se selecciona solo."
+      ],
+      "pasos": [
+        { "texto": "Al entrar, si tu cuenta tiene varios ámbitos, se abre **Seleccionar ámbito**. Cada botón lleva el centro y, a la derecha, el perfil: pulsa el que quieras usar.", "campos": ["Seleccionar ámbito"] },
+        { "texto": "Para cambiar más tarde, abre el menú con el nombre de tu perfil (en el móvil, el botón de menú de la esquina superior derecha) y pulsa **Cambiar ámbito**. Verás de nuevo la lista.", "botones": ["Cambiar ámbito"] },
+        { "texto": "Pulsa el nuevo ámbito. Vas al inicio de ese perfil en ese centro; **Mi panel** te lleva siempre al inicio del perfil activo.", "botones": ["Mi panel"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Trabajas con los accesos del perfil elegido: con Enfermería no ves los de Medicina. El menú muestra con qué cuenta has entrado y tu ámbito activo («Ámbito: perfil · centro»). Cada centro solo ve lo suyo." }
+      ],
+      "dudas": [
+        { "p": "«Solo tienes un ámbito activo: … No hay otro al que cambiar.»", "r": "Tu cuenta solo tiene ese perfil en ese centro. Si necesitas otro, pídeselo a la Administración de tu centro." },
+        { "p": "«Tu cuenta no tiene ningún ámbito activo en este momento. Contacta con Administración.»", "r": "Pulsa **Entrar con otra cuenta** o **Salir** y pide a la Administración que te devuelva un ámbito." },
+        { "p": "Sale un error y un botón **Reintentar**.", "r": "La pantalla no pudo cargar tus ámbitos (por ejemplo, por un fallo de conexión). Reintenta; no significa que no los tengas." },
+        { "p": "«Ese ámbito ya no está disponible para tu cuenta.»", "r": "Ya no está disponible (por ejemplo, porque Administración lo ha quitado): elige otro de la lista." },
+        { "p": "Soy de Familia y no veo «Cambiar ámbito».", "r": "En el Portal Familiar el menú trae **Cambiar de residente**, no «Cambiar ámbito»: ver FAM-01." }
+      ],
+      "rutas": ["ProfileScope/Select", "Home/Index"],
+      "mensajes": [
+        "Ese ámbito ya no está disponible para tu cuenta.",
+        "Tu cuenta no tiene ningún ámbito activo en este momento. Contacta con Administración."
+      ],
+      "manual": { "id": "entrar-ambito", "titulo": "Entrar y elegir tu ámbito de trabajo" },
+      "acceso": { "id": "otro-centro", "titulo": "Trabajar en otro centro con la misma cuenta" }
+    },
+    {
+      "codigo": "TOD-05",
+      "pregunta": "¿Cómo cambio mi contraseña?",
+      "palabras": ["cambiar contraseña", "contraseña nueva", "Mi cuenta", "seguridad"],
+      "permisos": [],
+      "antes": [
+        "Tu **contraseña actual**.",
+        "Una contraseña nueva de **al menos 12 caracteres**, distinta de la actual y sin más reglas: una frase larga vale."
+      ],
+      "pasos": [
+        { "texto": "Abre el menú con el nombre de tu perfil y pulsa **Mi cuenta**. En el Portal Familiar, pulsa **Mi cuenta** en la cabecera (en el móvil, tras el botón de menú de la esquina superior derecha).", "botones": ["Mi cuenta"] },
+        { "texto": "En la ficha **Cambiar la contraseña**, escribe la «Contraseña actual», la «Contraseña nueva» y «Repite la contraseña nueva».", "campos": ["Cambiar la contraseña", "Contraseña actual", "Contraseña nueva", "Repite la contraseña nueva"] },
+        { "texto": "Pulsa **Cambiar la contraseña**. Sale una ventana de aviso: ciérrala con **Entendido**.", "botones": ["Cambiar la contraseña", "Entendido"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "«Contraseña cambiada. Se han cerrado las demás sesiones abiertas de tu cuenta.» Se mantiene la sesión en la que estás. Desde ahora entras con la nueva." }
+      ],
+      "dudas": [
+        { "p": "«La contraseña actual no es correcta. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.»", "r": "Equivocarse con la actual cuenta como un intento fallido, igual que al entrar." },
+        { "p": "«La contraseña nueva tiene que ser distinta de la actual.» o «Las dos contraseñas nuevas no coinciden.»", "r": "Corrige la nueva y repítela igual en los dos campos." },
+        { "p": "«Tu cuenta todavía no tiene contraseña. Pídele una invitación a la Administración de tu centro.»", "r": "Sin contraseña no hay nada que cambiar: ver TOD-01." },
+        { "p": "Soy de Familia y no encuentro «Mi cuenta».", "r": "En el Portal Familiar está en la cabecera, junto a «Cambiar de residente», «Tema» y «Salir» (en el móvil, tras el botón de menú de la esquina superior derecha). Es la misma pantalla que ve el personal. Si no puedes entrar, pide una invitación de recuperación (ver TOD-09)." }
+      ],
+      "rutas": ["Cuenta/Index", "Cuenta/CambiarContrasena"],
+      "mensajes": [
+        "La contraseña actual no es correcta. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.",
+        "La contraseña nueva tiene que ser distinta de la actual.",
+        "Las dos contraseñas nuevas no coinciden.",
+        "Contraseña cambiada. Se han cerrado las demás sesiones abiertas de tu cuenta."
+      ],
+      "manual": { "id": "mi-cuenta", "titulo": "Mi cuenta" },
+      "acceso": { "id": "entrar", "titulo": "Entrar" }
+    },
+    {
+      "codigo": "TOD-06",
+      "pregunta": "¿Cómo genero códigos de recuperación nuevos?",
+      "palabras": ["códigos de recuperación", "regenerar", "perdí los códigos", "quedan pocos", "Mi cuenta"],
+      "permisos": [],
+      "antes": [
+        "Ser del personal. Quien es de Familia entra solo con la contraseña y no tiene estos códigos.",
+        "Tu **contraseña** y el **código de 6 cifras** que da ahora tu móvil.",
+        "Papel y bolígrafo."
+      ],
+      "pasos": [
+        { "texto": "Abre el menú con el nombre de tu perfil y pulsa **Mi cuenta**. En la ficha **Tu cuenta**, la línea «Código del móvil» dice cuántos códigos te quedan sin usar.", "botones": ["Mi cuenta"], "campos": ["Tu cuenta", "Código del móvil"] },
+        { "texto": "Baja a la ficha **Códigos de recuperación**. Escribe tu «Contraseña» y el «Código del móvil» que da ahora tu aplicación.", "campos": ["Códigos de recuperación", "Contraseña", "Código del móvil"] },
+        { "texto": "Pulsa **Generar códigos nuevos**. Salen 10 códigos nuevos con el aviso «Guarda estos códigos ahora: no se volverán a mostrar.»", "botones": ["Generar códigos nuevos"] },
+        { "texto": "Apúntalos en papel y guárdalos en un sitio seguro, no en el móvil. Pulsa **Ya los he guardado, continuar**.", "botones": ["Ya los he guardado, continuar"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Los códigos anteriores **dejan de valer**, los hayas usado o no. Cada código nuevo sirve una sola vez (ver TOD-02)." }
+      ],
+      "dudas": [
+        { "p": "«El código del móvil no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya.»", "r": "El código cambia cada 30 segundos: escribe el que muestra la aplicación en ese momento, y que sea la cuenta «ResidApp»." },
+        { "p": "Cambié de móvil o lo perdí.", "r": "Esta pantalla no sirve para eso: pide a la Administración de tu centro una invitación de recuperación (ver TOD-09)." },
+        { "p": "«Tu perfil entra solo con la contraseña, así que no tiene códigos de recuperación.»", "r": "Es lo normal en Familia: no hay nada que generar." }
+      ],
+      "rutas": ["Cuenta/Index", "Cuenta/RegenerarCodigos", "Acceso/ActivarSegundoFactor"],
+      "mensajes": [
+        "El código del móvil no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya.",
+        "Tu perfil entra solo con la contraseña, así que no tiene códigos de recuperación.",
+        "Guarda estos códigos ahora: no se volverán a mostrar."
+      ],
+      "manual": { "id": "mi-cuenta", "titulo": "Mi cuenta" },
+      "acceso": { "id": "entrar", "titulo": "Entrar" }
+    },
+    {
+      "codigo": "TOD-07",
+      "pregunta": "¿Cómo veo quién ha entrado en mi cuenta y cierro las sesiones que no reconozco?",
+      "palabras": ["sesiones abiertas", "cerrar sesión", "últimos accesos", "dirección IP", "no reconozco", "Mi cuenta"],
+      "permisos": [],
+      "antes": [
+        "Nada especial: es la misma pantalla para todos los perfiles."
+      ],
+      "pasos": [
+        { "texto": "Abre el menú con el nombre de tu perfil y pulsa **Mi cuenta**. En el Portal Familiar, pulsa **Mi cuenta** en la cabecera (en el móvil, tras el botón de menú de la esquina superior derecha).", "botones": ["Mi cuenta"] },
+        { "texto": "En **Sesiones abiertas** ves las que tienes ahora: cuándo empezó cada una, su última actividad y la dirección IP desde la que se abrió. La tuya lleva la etiqueta «Esta sesión».", "campos": ["Sesiones abiertas", "Esta sesión"] },
+        { "texto": "Pulsa **Cerrar** en la que no sea tuya, o **Cerrar todas las demás** para dejar solo la actual.", "botones": ["Cerrar", "Cerrar todas las demás"] },
+        { "texto": "En **Últimos accesos a tu cuenta** revisa las entradas, los fallos y los cambios recientes: los fallos llevan la etiqueta «Fallo».", "campos": ["Últimos accesos a tu cuenta", "Fallo"] },
+        { "texto": "Si ves algo que no reconoces, cambia la contraseña (ver TOD-05) y avisa a la Administración de tu centro." }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Si avisas, es quien puede suspender la cuenta o darte una invitación de recuperación." },
+        { "para": "Tú", "texto": "Cada sesión que cierras sale en seguida: la próxima pantalla que abra ese dispositivo le pedirá entrar de nuevo." }
+      ],
+      "dudas": [
+        { "p": "«Esta es la sesión en la que estás. Para cerrarla, usa «Salir» en el menú.»", "r": "Para cerrar la tuya usa **Salir** en el menú de tu perfil." },
+        { "p": "«Esa sesión ya estaba cerrada.»", "r": "No hace falta hacer nada más." }
+      ],
+      "rutas": ["Cuenta/Index", "Cuenta/CerrarSesion", "Cuenta/CerrarOtrasSesiones"],
+      "mensajes": [
+        "Esta es la sesión en la que estás. Para cerrarla, usa «Salir» en el menú.",
+        "Esa sesión ya estaba cerrada.",
+        "Se han cerrado las demás sesiones abiertas de tu cuenta."
+      ],
+      "manual": { "id": "mi-cuenta", "titulo": "Mi cuenta" },
+      "acceso": { "id": "duracion", "titulo": "Cuánto dura la sesión" }
+    },
+    {
+      "codigo": "TOD-08",
+      "pregunta": "¿Cómo acepto el acceso a otro centro con mi misma cuenta?",
+      "palabras": ["otro centro", "vinculación", "hoja", "código de la hoja", "varios centros", "aceptar", "Mi cuenta"],
+      "permisos": [],
+      "antes": [
+        "Ser del personal, con el **código del móvil** ya preparado.",
+        "La **hoja** que te entrega en mano la Administración del otro centro, con un código o un QR. No hace falta otra cuenta: sigues con tu usuario, tu contraseña y tu código del móvil."
+      ],
+      "pasos": [
+        { "texto": "Abre el menú con el nombre de tu perfil y pulsa **Mi cuenta**. Baja a la ficha **Acceso a otro centro**.", "botones": ["Mi cuenta"], "campos": ["Acceso a otro centro"] },
+        { "texto": "Escribe el «Código de la hoja» (o escanea su QR con la cámara) y pulsa **Ver lo que me ofrecen**.", "botones": ["Ver lo que me ofrecen"], "campos": ["Código de la hoja"] },
+        { "texto": "Comprueba el centro, el «Perfil» y las «Unidades» que te ofrecen. Si es lo que esperabas, pulsa **Aceptar**; si no esperabas esa hoja, pulsa **No aceptar**.", "botones": ["Aceptar", "No aceptar"], "campos": ["Perfil", "Unidades"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Aceptar **no te da acceso todavía**: la Administración de ese centro tiene que confirmar que eres tú." },
+        { "para": "Tú", "texto": "Cuando lo confirme, al entrar eliges con qué centro trabajas (ver TOD-04). Cada centro solo ve lo suyo." }
+      ],
+      "dudas": [
+        { "p": "«Ese código no vale: no existe, ya se ha usado, se ha anulado o ha caducado. Pide otra hoja a la Administración del centro.»", "r": "Pide otra hoja; la nueva anula la anterior." },
+        { "p": "«El acceso a otro centro es para el personal: tu cuenta no tiene el código del móvil preparado.»", "r": "Es una cuenta de Familia o no ha terminado el alta (ver TOD-01)." },
+        { "p": "«Ya tienes el perfil … en …»", "r": "Esa combinación de perfil y centro ya la tienes: no hace falta aceptar nada." },
+        { "p": "No veo la ficha «Acceso a otro centro».", "r": "Solo sale a quien tiene el código del móvil preparado." }
+      ],
+      "rutas": ["Cuenta/Index", "Cuenta/VincularCodigo", "Cuenta/AceptarVinculacion"],
+      "mensajes": [
+        "Ese código no vale: no existe, ya se ha usado, se ha anulado o ha caducado. Pide otra hoja a la Administración del centro.",
+        "El acceso a otro centro es para el personal: tu cuenta no tiene el código del móvil preparado.",
+        "Su Administración tiene que confirmar que eres tú; hasta entonces no verás ese centro."
+      ],
+      "manual": { "id": "mi-cuenta", "titulo": "Mi cuenta" },
+      "acceso": { "id": "otro-centro", "titulo": "Trabajar en otro centro con la misma cuenta" }
+    },
+    {
+      "codigo": "TOD-09",
+      "pregunta": "¿Cómo recupero el acceso si olvido la contraseña o pierdo el móvil?",
+      "palabras": ["olvidé la contraseña", "perdí el móvil", "invitación de recuperación", "cuenta bloqueada", "recuperar acceso"],
+      "permisos": [],
+      "antes": [
+        "Que la Administración de tu centro te dé una **invitación de recuperación**: nadie puede dártela a sí mismo desde la aplicación, y tampoco hay una opción de «he olvidado mi contraseña» en Iniciar sesión (el enlace «Cómo pedir el acceso», bajo el formulario, explica a quién pedirla).",
+        "Si solo estás bloqueado por intentos fallidos, espera 15 minutos: la cuenta se desbloquea sola."
+      ],
+      "pasos": [
+        { "texto": "Pide a la Administración de tu centro una invitación de recuperación. Si te quedan códigos de recuperación y solo has perdido el móvil, antes puedes entrar con uno (ver TOD-02) y generar otros (ver TOD-06)." },
+        { "texto": "Te entrega una hoja con un código QR y una dirección. Escanéala o escribe la dirección: se abre **Recuperar el acceso**, con tu usuario.", "campos": ["Recuperar el acceso"] },
+        { "texto": "Escribe una «Contraseña nueva», repítela y pulsa **Guardar y continuar**.", "botones": ["Guardar y continuar"], "campos": ["Contraseña nueva"] },
+        { "texto": "Personal: prepara de nuevo el código del móvil y apunta los códigos de recuperación nuevos, como la primera vez (pasos 3 a 5 de TOD-01)." }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "La contraseña nueva sustituye a la anterior; el código del móvil anterior deja de valer; se **borran tus passkeys** (tendrás que añadirlas de nuevo, ver TOD-03) y se cierran las sesiones abiertas en cualquier dispositivo. La invitación vale 72 horas y una sola vez." }
+      ],
+      "dudas": [
+        { "p": "«Esta invitación ya no vale: se ha usado, se ha anulado o ha caducado. Pide otra a la Administración de tu centro.»", "r": "Pasaron las 72 horas, ya la usaste o te dieron otra más nueva, que anula la anterior." },
+        { "p": "Fallé varias veces y la cuenta no me deja entrar, aunque ahora escribo bien la contraseña.", "r": "Tras 5 intentos fallidos seguidos la cuenta se bloquea 15 minutos (el aviso es el de TOD-02). Espera, o usa una invitación de recuperación, que también la desbloquea." },
+        { "p": "Trabajo en Plataforma.", "r": "Esa invitación la entrega Plataforma a las Administraciones, y no a sí misma: ver PLA-08 si perdiste las passkeys." }
+      ],
+      "rutas": ["Acceso/Invitacion", "Acceso/Solicitar"],
+      "mensajes": [
+        "Esta invitación ya no vale: se ha usado, se ha anulado o ha caducado. Pide otra a la Administración de tu centro."
+      ],
+      "manual": { "id": "entrar-ambito", "titulo": "Entrar y elegir tu ámbito de trabajo" },
+      "acceso": { "id": "pedir", "titulo": "Cómo se pide el acceso" }
+    },
+    {
+      "codigo": "TOD-10",
+      "pregunta": "¿Cómo elijo entre el modo claro, el oscuro o el del dispositivo?",
+      "palabras": ["tema", "modo oscuro", "modo claro", "automático", "apariencia", "colores"],
+      "permisos": [],
+      "antes": [
+        "Nada especial: se elige en la cabecera, en todas las pantallas y en todos los perfiles."
+      ],
+      "pasos": [
+        { "texto": "En la cabecera, pulsa **Tema**. En el móvil está tras el botón de menú de la esquina superior derecha.", "botones": ["Tema"] },
+        { "texto": "Elige **Claro**, **Oscuro** o **Automático (como el dispositivo)**, que sigue el ajuste de tu móvil o tu ordenador (por ejemplo, oscuro por la noche).", "botones": ["Claro", "Oscuro", "Automático (como el dispositivo)"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "La elección se recuerda **en ese dispositivo**: en otro hay que elegirla de nuevo. El color nunca va solo: una cifra en rojo o ámbar en el inicio siempre lleva también su texto." }
+      ],
+      "dudas": [
+        { "p": "Imprimo y sale en claro aunque tengo el modo oscuro.", "r": "Es a propósito: al imprimir o guardar como PDF, la página sale siempre en modo claro (ver TOD-11)." }
+      ],
+      "rutas": ["Home/Index"],
+      "mensajes": [],
+      "manual": { "id": "apariencia", "titulo": "Apariencia: colores, modo claro y modo oscuro" }
+    },
+    {
+      "codigo": "TOD-11",
+      "pregunta": "¿Cómo imprimo una pantalla o la guardo como PDF?",
+      "palabras": ["imprimir", "PDF", "guardar como PDF", "papel", "hoja", "Ctrl+P"],
+      "permisos": [],
+      "antes": [
+        "Un navegador con impresión: es la función de impresión del propio navegador, no de ResidApp.",
+        "Cualquier pantalla se puede imprimir; solo algunas llevan además un botón propio."
+      ],
+      "pasos": [
+        { "texto": "Abre la pantalla que quieres sacar. Si tiene un botón propio, púlsalo: **Imprimir** en la hoja de invitación o de acceso a otro centro, **Imprimir / guardar como PDF** en los indicadores.", "botones": ["Imprimir", "Imprimir / guardar como PDF"] },
+        { "texto": "Sin botón propio, usa la impresión del navegador: **Ctrl+P** (en Mac, **Cmd+P**) o el menú del navegador, opción «Imprimir»." },
+        { "texto": "En «Destino», elige tu impresora para sacarlo en papel, o **Guardar como PDF** para un archivo. Comprueba la vista previa y confirma." }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Sale siempre en modo claro. La cabecera de lo que imprimes lleva el nombre y el logo de tu centro; los PDF que genera la propia app, como el informe de derivación, llevan «Generado con ResidApp» al pie. Lo que imprimes puede tener datos de residentes: trátalo como cualquier otro papel clínico y no lo dejes a la vista." }
+      ],
+      "dudas": [
+        { "p": "La vista previa corta una tabla ancha o salen páginas de más.", "r": "Es la impresión del navegador: prueba el modo «Horizontal» o ajusta la escala en sus opciones. Para sacar una guía de ResidApp en papel, mejor desde la propia guía (cada tarea cabe en una página)." }
+      ],
+      "rutas": ["Home/Index", "Direccion/Indicadores", "Administracion/Invitacion"],
+      "mensajes": [],
+      "manual": { "id": "apariencia", "titulo": "Apariencia: colores, modo claro y modo oscuro" }
+    }
+  ]
+}
