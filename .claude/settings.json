@@ -28,5 +28,19 @@
     "additionalDirectories": [
       "\\tmp"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/aviso-doc-usuario.js"]
+          }
+        ]
+      }
+    ]
   }
 }
