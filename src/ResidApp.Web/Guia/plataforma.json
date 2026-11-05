@@ -1,67 +1,298 @@
 {
   "perfil": "Plataforma",
   "proposito": "Plataforma es el perfil de quien opera ResidApp, no del personal de un centro. Su trabajo es dar de alta los centros nuevos, entregar su primer acceso a la Administración de cada uno y dar soporte de accesos. Este perfil no ve residentes ni contenido clínico.",
+  "rutina": [
+    "Cuando un centro se incorpora: das de alta el centro con su primera unidad y su primer administrador, y le entregas la invitación en mano.",
+    "Cuando una Administración pierde el acceso y no tiene otra en su centro que se lo dé: creas tú su invitación de recuperación.",
+    "Cuando alguien trabaja en más de un centro con la misma cuenta: eres tú quien la suspende, la reactiva o le entrega la invitación, porque afecta a todos sus centros.",
+    "Entras siempre con tu passkey y llegas a tu inicio, con la tarjeta **Centros**."
+  ],
   "dependeDe": [],
   "entregaA": ["Administración"],
   "siempre": [
     "Ver la lista de centros.",
     "Crear un centro nuevo con su primera unidad y su primer administrador.",
     "Crear la invitación de acceso o de recuperación de una Administración.",
-    "Marcar o quitar la marca de Administración principal, y añadir una unidad al ámbito de una Administración."
+    "Marcar o quitar la marca de Administración principal, y añadir una unidad al ámbito de una Administración.",
+    "Ver, suspender y reactivar las cuentas que trabajan en más de un centro, y entregarles su invitación.",
+    "Añadir y quitar tus passkeys."
   ],
   "conPermiso": [],
   "nunca": [
-    "Ver residentes, familiares ni nada clínico."
+    "Ver residentes, familiares ni nada clínico.",
+    "Ver la auditoría: lo que haces queda en la auditoría de cada centro y la ve su Administración.",
+    "Entregarte una invitación a ti ni suspender tu propia cuenta."
   ],
   "revisadoPara": null,
   "revisado": "2026-11-05",
   "fichas": [
     {
+      "codigo": "PLA-01",
+      "pregunta": "¿Cómo entro a ResidApp con mi passkey?",
+      "palabras": ["entrar", "iniciar sesión", "passkey", "huella", "acceso"],
+      "permisos": [],
+      "antes": [
+        "Tener ya una **passkey** en tu cuenta (se añade desde «Mi cuenta»; ver PLA-08). Mientras no tengas ninguna, entras con tu usuario, tu contraseña y el código del móvil, y la app te lleva a «Mi cuenta» para crear la primera.",
+        "Estar en un dispositivo que tenga esa passkey, o que la tenga sincronizada."
+      ],
+      "pasos": [
+        { "texto": "En la pantalla **Iniciar sesión**, pulsa **Entrar con passkey**. No escribas nada.", "botones": ["Entrar con passkey"], "campos": ["Iniciar sesión"] },
+        { "texto": "Tu dispositivo te pide la huella, la cara o el PIN. Confírmalo." },
+        { "texto": "Entras a tu inicio. Con un solo ámbito no hay que elegir nada y ves la tarjeta **Centros**." }
+      ],
+      "despues": [
+        { "para": "Plataforma", "texto": "Con la passkey no te pide ningún otro factor. Si te da un error, cuenta como un intento fallido para el límite de la conexión." }
+      ],
+      "dudas": [
+        { "p": "«Las cuentas de Plataforma entran solo con passkey. Usa «Entrar con passkey».»", "r": "Has escrito tu usuario y tu contraseña correctos, pero en cuanto una cuenta de Plataforma tiene passkey ya no entra con contraseña. Pulsa «Entrar con passkey»." },
+        { "p": "«No se ha podido entrar con esa passkey. Prueba de nuevo o entra con tu usuario y contraseña.»", "r": "Vuelve a intentarlo. Si tu cuenta está suspendida o no tiene ámbito activo, el mensaje es el mismo." },
+        { "p": "«Se ha cancelado o ha pasado demasiado tiempo. Vuelve a intentarlo.»", "r": "El dispositivo no recibió tu confirmación a tiempo. Pulsa de nuevo «Entrar con passkey»." },
+        { "p": "No veo el botón «Entrar con passkey».", "r": "El navegador no admite passkeys, o las passkeys no están activadas en esa dirección web. Prueba con un navegador más reciente." }
+      ],
+      "rutas": ["Acceso/Entrar", "Passkey/Entrar"],
+      "mensajes": [
+        "Las cuentas de Plataforma entran solo con passkey.",
+        "No se ha podido entrar con esa passkey. Prueba de nuevo o entra con tu usuario y contraseña.",
+        "Se ha cancelado o ha pasado demasiado tiempo. Vuelve a intentarlo."
+      ],
+      "manual": { "id": "entrar-ambito", "titulo": "Entrar y elegir tu ámbito de trabajo" },
+      "acceso": { "id": "entrar", "titulo": "Entrar" }
+    },
+    {
       "codigo": "PLA-02",
       "pregunta": "¿Cómo creo un centro nuevo y qué datos necesito?",
       "palabras": ["alta de centro", "centro nuevo", "primer administrador", "primera unidad", "logo", "invitación"],
       "permisos": [],
-      "concede": null,
       "antes": [
-        "Estar dentro con el perfil **Plataforma** (se entra con passkey).",
-        "Del **centro**: un *código* (de 2 a 64 caracteres: letras sin acentos, dígitos, «-» o «_»; se guarda en mayúsculas y **no se puede cambiar después**; «PLATAFORMA» no vale) y un *nombre* (hasta 200 caracteres).",
+        "Estar dentro con el perfil **Plataforma** (se entra con passkey; ver PLA-01).",
+        "Del **centro**: *código* (2 a 64 caracteres: letras sin acentos, dígitos, «-» o «_»; **no se puede cambiar**) y *nombre*.",
         "De su **primera unidad**: un código (mismas reglas) y un nombre.",
-        "Del **primer administrador**: un *identificador de acceso* (de 3 a 200 caracteres: letras, dígitos y `.` `_` `-` `@`, sin espacios; **no puede ser el de una cuenta que ya exista**) y su nombre.",
-        "Opcional, el **logo** del centro: una imagen PNG o JPEG de 512 KB y 1024 píxeles por lado como máximo. Después lo cambia la Administración del propio centro.",
-        "Una forma de **entregar la invitación en mano**: una impresora, o la pantalla para enseñar el código QR."
+        "Del **primer administrador**: un *identificador de acceso* (de 3 a 200 caracteres: letras, dígitos y `.` `_` `-` `@`; **no puede ser el de una cuenta que ya exista**) y su nombre.",
+        "Opcional, el **logo**: PNG o JPEG, hasta 512 KB y 1024 píxeles por lado. Luego lo cambia la Administración del centro."
       ],
       "pasos": [
         { "texto": "Abre **Centros** (es la tarjeta de tu inicio, o el enlace «Mi panel» de arriba) y pulsa **Nuevo centro**.", "botones": ["Centros", "Mi panel", "Nuevo centro"] },
-        { "texto": "En **Centro**, escribe «Código del centro» y «Nombre del centro». Si quieres, añade el «Logo del centro (opcional)».", "campos": ["Código del centro", "Nombre del centro", "Logo del centro (opcional)"] },
+        { "texto": "En **Centro**: «Código del centro», «Nombre del centro» y «Logo del centro (opcional)».", "campos": ["Código del centro", "Nombre del centro", "Logo del centro (opcional)"] },
         { "texto": "En **Primera unidad**, escribe «Código de la primera unidad» y «Nombre de la primera unidad».", "campos": ["Código de la primera unidad", "Nombre de la primera unidad"] },
         { "texto": "En **Primer administrador**, escribe «Identificador de acceso del administrador» y «Nombre del administrador».", "campos": ["Identificador de acceso del administrador", "Nombre del administrador"] },
-        { "texto": "Pulsa **Crear centro**. Se crea todo a la vez o nada: el centro, la unidad y la cuenta del administrador, que nace activa con el perfil Administración y la unidad concedida.", "botones": ["Crear centro"] },
-        { "texto": "Sale el aviso verde «Centro creado…». En el centro nuevo, pulsa **Administraciones y unidades**.", "botones": ["Administraciones y unidades"] },
-        { "texto": "En la tarjeta del administrador, pulsa **Crear invitación de acceso o de recuperación**. Sale la hoja con su usuario, el centro, hasta cuándo vale (72 horas, una sola vez) y un código QR.", "botones": ["Crear invitación de acceso o de recuperación"] },
+        { "texto": "Pulsa **Crear centro**. Se crea todo a la vez o nada: el centro, la unidad y la cuenta del administrador, activa y con el perfil Administración.", "botones": ["Crear centro"] },
+        { "texto": "Tras el aviso «Centro creado…», pulsa **Administraciones y unidades** en el centro nuevo y, en la tarjeta del administrador, **Crear invitación de acceso o de recuperación** (ver PLA-03). Sale la hoja con un código QR y «Vale hasta» (72 horas, una sola vez).", "botones": ["Administraciones y unidades", "Crear invitación de acceso o de recuperación"] },
         { "texto": "Pulsa **Imprimir** (o enséñale la pantalla) y **entrégale la hoja en mano**.", "botones": ["Imprimir"] }
       ],
       "despues": [
-        { "para": "Administración", "texto": "En cuanto use la invitación elige su contraseña (al menos 12 caracteres) y prepara el código del móvil. Entra en el **Inicio de Administración** de su centro, como **Administración principal** (la primera de un centro lo es) y con la unidad concedida. Lo encuentra vacío: todavía no hay residentes, usuarios ni estructura. Lo primero que le toca es dar nombre y logo al centro, montar su estructura (edificios, habitaciones y plazas) y dar de alta a su equipo con sus perfiles y permisos." },
+        { "para": "Administración", "texto": "Con la hoja elige su contraseña (12 caracteres como mínimo) y prepara el código del móvil. Entra en el **Inicio de Administración** como **Administración principal** y lo encuentra vacío: sin residentes, usuarios ni estructura. Lo primero: nombre y logo del centro, su estructura (edificios, habitaciones y plazas) y el alta de su equipo." },
         { "para": "Plataforma", "texto": "Tu parte termina al entregar la hoja. No ves residentes ni contenido clínico. Todo queda en la auditoría." }
       ],
       "dudas": [
-        { "p": "«Ya existe un centro con ese código o una cuenta con ese identificador de acceso.»", "r": "No se ha creado nada. Cambia el código del centro o el identificador del administrador y vuelve a pulsar «Crear centro»." },
-        { "p": "«Revisa los datos: los códigos llevan de 2 a 64 caracteres…»", "r": "Corrige el campo que no cumpla: los códigos no admiten acentos ni espacios, y el identificador de acceso no admite espacios." },
-        { "p": "El logo no se acepta.", "r": "Tiene que ser una imagen PNG o JPEG de 512 KB y 1024 píxeles por lado como máximo. Si la eliges desde el ordenador o el móvil, la app la reduce sola." },
-        { "p": "Se perdió la hoja o pasaron las 72 horas.", "r": "Vuelve a «Administraciones y unidades» y crea otra invitación: la nueva anula la anterior." },
-        { "p": "«La cuenta está suspendida.»", "r": "A una cuenta suspendida no se le puede entregar una invitación mientras siga así. La tarjeta de su Administración lo indica con la etiqueta «Cuenta suspendida»." },
-        { "p": "«Esa cuenta tiene perfiles vigentes en otros centros: no se le entrega desde aquí.»", "r": "Si la persona trabaja en más de un centro, su invitación se crea desde «Cuentas de varios centros» (botón junto a «Nuevo centro»)." }
+        { "p": "«Ya existe un centro con ese código o una cuenta con ese identificador de acceso.»", "r": "No se ha creado nada: cambia el código o el identificador y vuelve a pulsar «Crear centro»." },
+        { "p": "«Revisa los datos: los códigos llevan de 2 a 64 caracteres…»", "r": "Corrige el campo que no cumpla: ni los códigos ni el identificador admiten acentos o espacios." },
+        { "p": "Se perdió la hoja, caducó, o no sale el botón de invitación.", "r": "Ver PLA-03: se crea otra, y la nueva anula la anterior." }
       ],
       "rutas": ["Plataforma/Index", "Plataforma/NuevoCentro", "Plataforma/Centro", "Plataforma/Invitacion"],
       "mensajes": [
         "Ya existe un centro con ese código o una cuenta con ese identificador de acceso.",
-        "Revisa los datos: los códigos llevan de 2 a 64 caracteres",
-        "La cuenta está suspendida.",
-        "Esa cuenta tiene perfiles vigentes en otros centros: no se le entrega desde aquí."
+        "Revisa los datos: los códigos llevan de 2 a 64 caracteres"
       ],
       "manual": { "id": "plataforma-centros", "titulo": "Centros nuevos" },
       "flujo": { "id": "centro", "titulo": "Antes del primer residente: un centro nuevo" },
       "acceso": { "id": "pedir", "titulo": "Cómo se pide el acceso" }
+    },
+    {
+      "codigo": "PLA-03",
+      "pregunta": "¿Cómo creo o vuelvo a crear la invitación de una Administración?",
+      "palabras": ["invitación", "recuperación", "recuperar acceso", "administración sin acceso", "hoja", "código QR"],
+      "permisos": [],
+      "antes": [
+        "Que la Administración exista (se crea con el centro; ver PLA-02) y que su cuenta esté activa: sin la etiqueta «Cuenta suspendida».",
+        "Que trabaje solo en ese centro. Si tiene perfiles en otros centros, su invitación se crea desde «Cuentas de varios centros» (ver PLA-07).",
+        "Una forma de entregarla en mano."
+      ],
+      "pasos": [
+        { "texto": "Abre **Centros** y, en el centro, pulsa **Administraciones y unidades**.", "botones": ["Centros", "Administraciones y unidades"] },
+        { "texto": "En la tarjeta de esa Administración, pulsa **Crear invitación de acceso o de recuperación**. Es de acceso si todavía no tiene contraseña, y de recuperación si ya la tiene.", "botones": ["Crear invitación de acceso o de recuperación"] },
+        { "texto": "Sale la hoja con el usuario, el centro, «Vale hasta» (72 horas, una sola vez) y un código QR." },
+        { "texto": "Pulsa **Imprimir** (o enséñale la pantalla) y **entrégale la hoja en mano**.", "botones": ["Imprimir"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Escanea el código (o escribe la dirección de la hoja), elige su contraseña y prepara de nuevo el código del móvil. Si era una **recuperación**, la contraseña anterior, el código anterior y las sesiones abiertas dejan de valer; en cualquier caso, sus passkeys se borran y tiene que añadirlas otra vez." },
+        { "para": "Plataforma", "texto": "La hoja se enseña **una sola vez**. Si se pierde o caduca, crea otra: la nueva anula la anterior. La acción queda en la auditoría de ese centro." }
+      ],
+      "dudas": [
+        { "p": "No aparece el botón «Crear invitación de acceso o de recuperación».", "r": "La cuenta está suspendida (lo indica la etiqueta «Cuenta suspendida»): no se puede invitar a una cuenta suspendida." },
+        { "p": "«Esa cuenta tiene perfiles vigentes en otros centros: no se le entrega desde aquí.»", "r": "Usa «Cuentas de varios centros» (ver PLA-07)." },
+        { "p": "Una Administración se quedó sin acceso y no hay otra en su centro.", "r": "Es el caso para el que sirve esta ficha: Plataforma le crea una invitación de recuperación." }
+      ],
+      "rutas": ["Plataforma/Centro", "Plataforma/Invitacion"],
+      "mensajes": [
+        "La cuenta está suspendida.",
+        "Esa cuenta tiene perfiles vigentes en otros centros: no se le entrega desde aquí.",
+        "Esta hoja solo se enseña ahora."
+      ],
+      "manual": { "id": "plataforma-centros", "titulo": "Centros nuevos" },
+      "flujo": { "id": "centro", "titulo": "Antes del primer residente: un centro nuevo" },
+      "acceso": { "id": "soporte", "titulo": "Qué hace Plataforma o soporte" }
+    },
+    {
+      "codigo": "PLA-04",
+      "pregunta": "¿Cómo marco o quito la «Administración principal» de un centro?",
+      "palabras": ["administración principal", "principal", "marcar", "quitar la marca", "unidades del centro"],
+      "permisos": [],
+      "antes": [
+        "Saber qué cambia: la Administración **principal** ve todas las unidades del centro y se añade las que no tiene. La primera Administración de un centro nuevo lo es."
+      ],
+      "pasos": [
+        { "texto": "Abre **Centros** y, en el centro, pulsa **Administraciones y unidades**.", "botones": ["Centros", "Administraciones y unidades"] },
+        { "texto": "En la tarjeta de la Administración, pulsa **Marcar como Administración principal** (si no lo es) o **Quitar la marca de principal** (si lo es).", "botones": ["Marcar como Administración principal", "Quitar la marca de principal"] },
+        { "texto": "Sale un aviso verde: «Marcada como Administración principal.» o «Ya no es Administración principal.»" }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "La Administración marcada pasa a ver todas las unidades del centro; si se la quitas, deja de ser la que lo ve todo. El cambio queda en la auditoría del centro, que la Administración puede consultar." },
+        { "para": "Plataforma", "texto": "Los botones salen siempre en cada Administración, incluso si su cuenta está suspendida." }
+      ],
+      "dudas": [
+        { "p": "¿Puedo quitar la marca a la única Administración principal?", "r": "Sí: tú puedes, una Administración no (a ella la app se lo impide con la última). Si lo haces, comprueba que otra Administración queda marcada, o vuelve a marcarla." },
+        { "p": "«Ese perfil ya estaba así. Revisa el centro.»", "r": "Esa Administración ya tenía (o ya no tenía) la marca. No ha cambiado nada." }
+      ],
+      "rutas": ["Plataforma/Centro", "Plataforma/MarcarPrincipal"],
+      "mensajes": [
+        "Marcada como Administración principal.",
+        "Ya no es Administración principal.",
+        "Ese perfil ya estaba así. Revisa el centro."
+      ],
+      "manual": { "id": "plataforma-centros", "titulo": "Centros nuevos" },
+      "flujo": { "id": "centro", "titulo": "Antes del primer residente: un centro nuevo" }
+    },
+    {
+      "codigo": "PLA-05",
+      "pregunta": "¿Cómo añado una unidad al ámbito de una Administración?",
+      "palabras": ["unidad", "ámbito", "unidad sin administración", "recuperar una unidad"],
+      "permisos": [],
+      "antes": [
+        "Que la unidad exista y esté activa en el centro.",
+        "Saber para qué sirve: la Administración principal ya se añade sola las unidades que no tiene. Esto sirve para otra Administración, o para recuperar una unidad que se ha quedado sin Administración."
+      ],
+      "pasos": [
+        { "texto": "Abre **Centros** y, en el centro, pulsa **Administraciones y unidades**.", "botones": ["Centros", "Administraciones y unidades"] },
+        { "texto": "En la tarjeta de la Administración, mira su lista de **Unidades**: las que no tiene salen con la etiqueta «Fuera de su ámbito».", "campos": ["Unidades", "Fuera de su ámbito"] },
+        { "texto": "En la unidad que quieras, pulsa **Añadir a su ámbito**.", "botones": ["Añadir a su ámbito"] },
+        { "texto": "Sale el aviso «Unidad añadida al ámbito de esa Administración. Queda en la auditoría.» y la unidad pasa a «En su ámbito».", "campos": ["En su ámbito"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Esa Administración pasa a tener la unidad en su ámbito. Queda en la auditoría del centro." }
+      ],
+      "dudas": [
+        { "p": "«Esa Administración ya tiene la unidad.»", "r": "No ha cambiado nada: la unidad ya estaba en su ámbito." },
+        { "p": "«Esa unidad no existe o no está activa en el centro.»", "r": "Revisa que la unidad siga activa; si no lo está, la Administración del centro puede activarla." }
+      ],
+      "rutas": ["Plataforma/Centro", "Plataforma/AnadirUnidad"],
+      "mensajes": [
+        "Unidad añadida al ámbito de esa Administración. Queda en la auditoría.",
+        "Esa Administración ya tiene la unidad.",
+        "Esa unidad no existe o no está activa en el centro."
+      ],
+      "manual": { "id": "plataforma-centros", "titulo": "Centros nuevos" },
+      "flujo": { "id": "centro", "titulo": "Antes del primer residente: un centro nuevo" }
+    },
+    {
+      "codigo": "PLA-06",
+      "pregunta": "¿Cómo veo, suspendo o reactivo una cuenta que trabaja en varios centros?",
+      "palabras": ["cuentas de varios centros", "suspender", "reactivar", "cuenta suspendida", "varios centros"],
+      "permisos": [],
+      "antes": [
+        "Saber qué es: una cuenta con perfiles activos en dos o más centros. Ninguna Administración puede suspenderla, cambiarle el nombre ni entregarle una invitación, porque afectaría a los demás centros: lo haces tú.",
+        "No puedes suspender tu propia cuenta."
+      ],
+      "pasos": [
+        { "texto": "En **Centros**, pulsa **Cuentas de varios centros**.", "botones": ["Centros", "Cuentas de varios centros"] },
+        { "texto": "Cada fila muestra el nombre y el identificador de la persona, los centros y perfiles en los que trabaja, la etiqueta «Suspendida» si lo está y, si tiene una invitación sin usar, hasta cuándo vale.", "campos": ["Suspendida"] },
+        { "texto": "Pulsa **Suspender** en la fila (o **Reactivar**, si ya está suspendida). No pide confirmación: se aplica al pulsar.", "botones": ["Suspender", "Reactivar"] },
+        { "texto": "Sale un aviso verde: «Cuenta suspendida en todos sus centros: no podrá entrar hasta que la reactives.» o «Cuenta reactivada.»" }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Cada Administración de los centros de esa cuenta ve la acción en su Auditoría. La persona queda fuera en su siguiente clic, y tampoco entra con contraseña ni con passkey; sus invitaciones sin usar no valen mientras esté suspendida y vuelven a valer al reactivarla." },
+        { "para": "Plataforma", "texto": "No es lo mismo que «Cuenta suspendida» en un solo centro, que aplica la Administración de ese centro a cuentas que trabajan solo en él." }
+      ],
+      "dudas": [
+        { "p": "«Ninguna cuenta tiene perfiles en varios centros.»", "r": "La lista está vacía: no hay nadie que trabaje en más de un centro con la misma cuenta." },
+        { "p": "«Esa cuenta ya no tiene perfiles en varios centros, o es la tuya.»", "r": "La cuenta ya trabaja solo en un centro (se gestiona desde «Administraciones y unidades»), o intentas suspender la tuya." },
+        { "p": "«La cuenta ya estaba en ese estado.»", "r": "Alguien ya la había suspendido o reactivado. No ha cambiado nada." }
+      ],
+      "rutas": ["Plataforma/Index", "Plataforma/Cuentas", "Plataforma/EstadoCuenta"],
+      "mensajes": [
+        "Cuenta suspendida en todos sus centros: no podrá entrar hasta que la reactives.",
+        "Cuenta reactivada.",
+        "Ninguna cuenta tiene perfiles en varios centros.",
+        "Esa cuenta ya no tiene perfiles en varios centros, o es la tuya.",
+        "La cuenta ya estaba en ese estado."
+      ],
+      "manual": { "id": "plataforma-centros", "titulo": "Centros nuevos" },
+      "acceso": { "id": "otro-centro", "titulo": "Trabajar en otro centro con la misma cuenta" }
+    },
+    {
+      "codigo": "PLA-07",
+      "pregunta": "¿Cómo entrego la invitación de acceso o de recuperación a una cuenta de varios centros?",
+      "palabras": ["invitación", "recuperación", "varios centros", "recuperar acceso", "otro centro"],
+      "permisos": [],
+      "antes": [
+        "Que la cuenta salga en «Cuentas de varios centros» y esté activa (sin la etiqueta «Suspendida»; si lo está, ver PLA-06).",
+        "Una forma de entregarla en mano."
+      ],
+      "pasos": [
+        { "texto": "En **Centros**, pulsa **Cuentas de varios centros**.", "botones": ["Centros", "Cuentas de varios centros"] },
+        { "texto": "En la fila de la persona, pulsa **Invitación de recuperación** (si ya tiene contraseña) o **Invitación de acceso** (si todavía no la tiene).", "botones": ["Invitación de recuperación", "Invitación de acceso"] },
+        { "texto": "Sale la hoja con el usuario, el centro, «Vale hasta» (72 horas, una sola vez) y un código QR. Pulsa **Imprimir** (o enséñale la pantalla) y **entrégasela en mano**.", "botones": ["Imprimir"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Cada Administración de los centros de esa cuenta ve la invitación en su Auditoría." },
+        { "para": "Plataforma", "texto": "Si es de recuperación, la persona vuelve a elegir contraseña y a preparar el código del móvil, y sus sesiones abiertas se cierran cuando use la hoja. La hoja se enseña **una sola vez**; si se pierde, crea otra: la nueva anula la anterior." }
+      ],
+      "dudas": [
+        { "p": "No hay botón de invitación en la fila.", "r": "La cuenta está suspendida: primero reactívala (ver PLA-06)." },
+        { "p": "«Esa cuenta ya no tiene perfiles en varios centros, o es la tuya.»", "r": "Si ahora trabaja solo en un centro, su invitación se crea desde «Administraciones y unidades» (ver PLA-03). No puedes crearte una invitación a ti." },
+        { "p": "En la fila sale «Tiene una invitación sin usar hasta…».", "r": "Ya hay una invitación viva; si creas otra, anula la anterior." }
+      ],
+      "rutas": ["Plataforma/Cuentas", "Plataforma/InvitacionCuenta"],
+      "mensajes": [
+        "Esa cuenta ya no tiene perfiles en varios centros, o es la tuya.",
+        "Tiene una invitación sin usar hasta el"
+      ],
+      "manual": { "id": "plataforma-centros", "titulo": "Centros nuevos" },
+      "acceso": { "id": "otro-centro", "titulo": "Trabajar en otro centro con la misma cuenta" }
+    },
+    {
+      "codigo": "PLA-08",
+      "pregunta": "¿Cómo añado o quito una passkey, y qué hago si las pierdo todas?",
+      "palabras": ["passkey", "añadir passkey", "quitar passkey", "perder passkey", "mi cuenta", "huella"],
+      "permisos": [],
+      "antes": [
+        "Tu **contraseña** y el **código** que da ahora tu móvil.",
+        "Que las passkeys estén activadas en la aplicación: si no ves la ficha «Passkeys» en «Mi cuenta», no lo están.",
+        "Un segundo dispositivo: **registra siempre dos passkeys en dos dispositivos distintos**, porque la última no se puede quitar y, si pierdes todas, la app no te lo arregla."
+      ],
+      "pasos": [
+        { "texto": "Abre **Mi cuenta** y baja a la ficha **Passkeys**.", "botones": ["Mi cuenta"], "campos": ["Passkeys"] },
+        { "texto": "Escribe un «Nombre de la passkey» (para reconocerla en la lista, por ejemplo «Móvil de trabajo»), tu «Contraseña» y el «Código del móvil».", "campos": ["Nombre de la passkey", "Contraseña", "Código del móvil"] },
+        { "texto": "Pulsa **Añadir una passkey**. Tu dispositivo te pide la huella, la cara o el PIN.", "botones": ["Añadir una passkey"] },
+        { "texto": "Sale un aviso («Passkey … añadida…»). Pulsa **Entendido**. Repite los pasos en un segundo dispositivo.", "botones": ["Entendido"] },
+        { "texto": "Para quitar una, pulsa **Quitar** en su fila de la lista. No pide confirmación.", "botones": ["Quitar"] }
+      ],
+      "despues": [
+        { "para": "Plataforma", "texto": "En cuanto tienes una passkey, la contraseña y el código del móvil **dejan de servirte para entrar** (ver PLA-01). Puedes tener hasta 10. Cada una solo funciona en ResidApp y en la dirección web donde la creaste. Si usas una invitación de recuperación, todas se borran." }
+      ],
+      "dudas": [
+        { "p": "«Tu cuenta de Plataforma necesita al menos una passkey: añade otra antes de quitar ésta.»", "r": "No se puede quitar la última. Añade otra antes." },
+        { "p": "«Ya tienes 10 passkeys, que es el máximo. Quita alguna antes de añadir otra.»", "r": "Quita una que ya no uses y vuelve a intentarlo." },
+        { "p": "«El código del móvil no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya.»", "r": "El código cambia cada 30 segundos: escribe el que da ahora tu aplicación de autenticación." },
+        { "p": "He perdido todas mis passkeys.", "r": "Ni tú ni una Administración podéis arreglarlo desde la aplicación: no puedes darte una invitación a ti. Lo tiene que hacer quien administra la base de datos de ResidApp, que borra las passkeys para que vuelvas a entrar con contraseña y código y registres otra." }
+      ],
+      "rutas": ["Cuenta/Index", "Cuenta/PasskeyOpciones", "Cuenta/PasskeyAlta", "Cuenta/QuitarPasskey"],
+      "mensajes": [
+        "Tu cuenta de Plataforma necesita al menos una passkey: añade otra antes de quitar ésta.",
+        "passkeys, que es el máximo. Quita alguna antes de añadir otra.",
+        "El código del móvil no es correcto."
+      ],
+      "manual": { "id": "entrar-ambito", "titulo": "Entrar y elegir tu ámbito de trabajo" },
+      "acceso": { "id": "passkeys", "titulo": "Passkeys" }
     }
   ]
 }
