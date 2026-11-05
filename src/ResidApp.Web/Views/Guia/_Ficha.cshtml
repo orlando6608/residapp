@@ -5,7 +5,7 @@
     var perfil = Model.Perfil;
     var ficha = Model.Ficha;
     // A quién le llega: los perfiles que aparecen en «después», sin el propio.
-    var destinos = ficha.Despues.Select(d => GuiaPerfiles.PorTitulo(d.Para)).Where(e => e is not null && (perfil is null || e.Perfil != perfil.Profile)).Distinct().ToList();
+    var destinos = ficha.Despues.Select(d => GuiaDespues.Perfil(d.Para)).Where(e => e is not null && (perfil is null || e.Perfil != perfil.Profile)).Distinct().ToList();
     var propio = perfil is null ? (Slug: GuiaComun.Slug, Titulo: GuiaComun.Titulo) : (Slug: GuiaPerfiles.Of(perfil.Profile).Slug, Titulo: GuiaPerfiles.Of(perfil.Profile).Titulo);
 }
 

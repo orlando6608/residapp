@@ -394,7 +394,7 @@
       "pasos": [
         { "texto": "En el Inicio, abre **Plazos de los hitos del proceso** (o, en «Calidad de proceso», el botón **Cambiar los plazos del centro**).", "botones": ["Plazos de los hitos del proceso", "Cambiar los plazos del centro"] },
         { "texto": "En cada hito, escribe el «Plazo (minutos)» y el «Plazo si es prioritario (minutos)». Un plazo va de 1 a 10080 minutos (una semana).", "campos": ["Plazo (minutos)", "Plazo si es prioritario (minutos)"] },
-        { "texto": "Si quieres volver a los plazos de partida, pulsa el botón que los trae al formulario: no guarda nada hasta que pulses **Guardar**." },
+        { "texto": "Si quieres volver a los plazos de partida, pulsa **Ver los plazos sugeridos**: los trae al formulario y no guarda nada hasta que pulses **Guardar**.", "botones": ["Ver los plazos sugeridos"] },
         { "texto": "Pulsa **Guardar**.", "botones": ["Guardar"] }
       ],
       "despues": [
