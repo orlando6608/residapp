@@ -43,6 +43,16 @@ public sealed record GuiaPerfil(
     public string? NombreEnPantalla => SystemProfileDisplay.Label(Profile) is var label && label != Titulo ? label : null;
 }
 
+/// <summary>El capítulo «Para todos» (Guia/comun.json): lo que vale para cualquier perfil. Sus fichas son las mismas que las de un perfil (códigos TOD-NN);
+/// en «después», «Para» puede ser «Tú» además de un perfil.</summary>
+public sealed record GuiaComun(string Proposito, string? RevisadoPara, string Revisado, IReadOnlyList<GuiaFicha> Fichas)
+{
+    public const string Titulo = "Para todos";
+    public const string Slug = "para-todos";
+    public const string Prefijo = "TOD";
+    public const string Tu = "Tú";
+}
+
 public static class GuiaPerfiles
 {
     public sealed record Entrada(SystemProfile Perfil, string Slug, string Titulo);
@@ -75,13 +85,28 @@ public sealed class GuiaCatalogo
 
     public IReadOnlyList<GuiaPerfil> Perfiles { get; }
 
-    private GuiaCatalogo(IReadOnlyList<GuiaPerfil> perfiles) => Perfiles = perfiles;
+    /// <summary>El capítulo «Para todos», si existe comun.json.</summary>
+    public GuiaComun? Comun { get; }
 
-    /// <summary>Lee un JSON por perfil de la carpeta (plataforma.json…), en el orden de <see cref="GuiaPerfiles.Todos"/>.</summary>
+    private GuiaCatalogo(IReadOnlyList<GuiaPerfil> perfiles, GuiaComun? comun)
+    {
+        Perfiles = perfiles;
+        Comun = comun;
+    }
+
+    /// <summary>Lee un JSON por perfil de la carpeta (plataforma.json…), en el orden de <see cref="GuiaPerfiles.Todos"/>, y comun.json aparte.</summary>
     public static GuiaCatalogo Cargar(string carpeta)
     {
         var contexto = new NullabilityInfoContext();
-        var perfiles = Directory.EnumerateFiles(carpeta, "*.json")
+        GuiaComun? comun = null;
+        if (File.Exists(Path.Combine(carpeta, "comun.json")))
+        {
+            comun = JsonSerializer.Deserialize<GuiaComun>(File.ReadAllText(Path.Combine(carpeta, "comun.json")), Options)
+                ?? throw new JsonException("comun.json está vacío.");
+            Validar(comun, "comun.json", contexto);
+        }
+
+        var perfiles = Directory.EnumerateFiles(carpeta, "*.json").Where(file => Path.GetFileName(file) != "comun.json")
             .Select(file =>
             {
                 var perfil = JsonSerializer.Deserialize<GuiaPerfil>(File.ReadAllText(file), Options)
@@ -91,7 +116,7 @@ public sealed class GuiaCatalogo
             })
             .OrderBy(p => GuiaPerfiles.Todos.ToList().FindIndex(e => e.Perfil == p.Profile))
             .ToList();
-        return new GuiaCatalogo(perfiles);
+        return new GuiaCatalogo(perfiles, comun);
     }
 
     /// <summary>System.Text.Json deja en null un campo que falta, aunque no sea opcional: aquí se rechaza, indicando cuál es y en qué ficha.</summary>
@@ -133,10 +158,11 @@ public sealed class GuiaCatalogo
 
     public GuiaPerfil? Perfil(string slug) => Perfiles.FirstOrDefault(p => p.Slug == slug);
 
-    /// <summary>Todas las fichas con su perfil, por orden alfabético de la pregunta (índice de preguntas).</summary>
-    public IEnumerable<(GuiaPerfil Perfil, GuiaFicha Ficha)> Preguntas() =>
-        Perfiles.SelectMany(p => p.Fichas.Select(f => (p, f)))
-            .OrderBy(x => x.f.Pregunta.TrimStart('¿'), StringComparer.Create(new System.Globalization.CultureInfo("es-ES"), true));
+    /// <summary>Todas las fichas con el título y el «slug» de su guía («Para todos» incluido), por orden alfabético de la pregunta (índice de preguntas).</summary>
+    public IEnumerable<(string Slug, string Titulo, GuiaFicha Ficha)> Preguntas() =>
+        Perfiles.SelectMany(p => p.Fichas.Select(f => (Slug: p.Slug, Titulo: p.Titulo, Ficha: f)))
+            .Concat((Comun?.Fichas ?? []).Select(f => (Slug: GuiaComun.Slug, Titulo: GuiaComun.Titulo, Ficha: f)))
+            .OrderBy(x => x.Ficha.Pregunta.TrimStart('¿'), StringComparer.Create(new System.Globalization.CultureInfo("es-ES"), true));
 }
 
 /// <summary>El texto de las fichas es texto plano con una marca mínima: **negrita** (botones y pantallas), *cursiva* y `código`. Todo lo demás se escapa.</summary>

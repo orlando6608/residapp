@@ -150,6 +150,8 @@ public partial class GuiaDerivaTests
     {
         var inicio = html.IndexOf($"id=\"{id}\"", StringComparison.Ordinal);
         Assert.True(inicio >= 0, $"{donde}: no existe la sección «{id}».");
+        // Desde el principio de la etiqueta que lleva el id: así vale un id puesto en el propio <h2> y no solo en su <section>.
+        inicio = html.LastIndexOf('<', inicio);
         var h2 = Regex.Match(html[inicio..], "<h2[^>]*>(.*?)</h2>", RegexOptions.Singleline);
         Assert.True(h2.Success, $"{donde}: la sección «{id}» no tiene título.");
         var titulo = Espacios().Replace(Regex.Replace(h2.Groups[1].Value, "<[^>]+>", " "), " ").Trim();
@@ -162,22 +164,35 @@ public partial class GuiaDerivaTests
     {
         var codigos = new HashSet<string>();
         var preguntas = new HashSet<string>();
-        foreach (var perfil in Catalogo().Perfiles)
+        var catalogo = Catalogo();
+        foreach (var perfil in catalogo.Perfiles)
         {
             Assert.All(perfil.DependeDe.Concat(perfil.EntregaA), titulo => Assert.NotNull(GuiaPerfiles.PorTitulo(titulo)));
-            Assert.NotEmpty(perfil.Fichas);
-            Assert.True(DateOnly.TryParseExact(perfil.Revisado, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fecha) && fecha <= DateOnly.FromDateTime(DateTime.Today),
-                $"{perfil.Perfil}: «revisado» no es una fecha yyyy-MM-dd pasada.");
-            foreach (var ficha in perfil.Fichas)
-            {
-                Assert.Matches($"^{Prefijos[perfil.Profile]}-\\d{{2}}$", ficha.Codigo);
-                Assert.True(codigos.Add(ficha.Codigo), $"Código repetido: {ficha.Codigo}.");
-                Assert.True(preguntas.Add(ficha.Pregunta), $"Pregunta repetida: {ficha.Pregunta}");
-                Assert.StartsWith("¿Cómo ", ficha.Pregunta);
-                Assert.True(ficha.Antes.Count > 0 && ficha.Pasos.Count > 0 && ficha.Despues.Count > 0, $"{ficha.Codigo}: faltan «antes», «pasos» o «después».");
-                Assert.All(ficha.Despues, d => Assert.True(GuiaPerfiles.PorTitulo(d.Para) is not null, $"{ficha.Codigo}: «{d.Para}» no es un perfil de la Guía."));
-                Assert.True(ficha.Permisos.Count == 0 == (ficha.Concede is null), $"{ficha.Codigo}: «concede» solo va con permisos.");
-            }
+            RevisarFichas(perfil.Perfil, Prefijos[perfil.Profile], perfil.Revisado, perfil.Fichas, GuiaPerfiles.PorTitulo, codigos, preguntas);
+        }
+
+        // «Para todos»: mismas reglas, con su prefijo y con «Tú» además de los perfiles como destinatario.
+        if (catalogo.Comun is { } comun)
+        {
+            RevisarFichas(GuiaComun.Titulo, GuiaComun.Prefijo, comun.Revisado, comun.Fichas, titulo => titulo == GuiaComun.Tu ? GuiaPerfiles.Todos[0] : GuiaPerfiles.PorTitulo(titulo), codigos, preguntas);
+        }
+    }
+
+    private static void RevisarFichas(string nombre, string prefijo, string revisado, IReadOnlyList<GuiaFicha> fichas,
+        Func<string, GuiaPerfiles.Entrada?> destinatario, HashSet<string> codigos, HashSet<string> preguntas)
+    {
+        Assert.NotEmpty(fichas);
+        Assert.True(DateOnly.TryParseExact(revisado, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fecha) && fecha <= DateOnly.FromDateTime(DateTime.Today),
+            $"{nombre}: «revisado» no es una fecha yyyy-MM-dd pasada.");
+        foreach (var ficha in fichas)
+        {
+            Assert.Matches($"^{prefijo}-\\d{{2}}$", ficha.Codigo);
+            Assert.True(codigos.Add(ficha.Codigo), $"Código repetido: {ficha.Codigo}.");
+            Assert.True(preguntas.Add(ficha.Pregunta), $"Pregunta repetida: {ficha.Pregunta}");
+            Assert.StartsWith("¿Cómo ", ficha.Pregunta);
+            Assert.True(ficha.Antes.Count > 0 && ficha.Pasos.Count > 0 && ficha.Despues.Count > 0, $"{ficha.Codigo}: faltan «antes», «pasos» o «después».");
+            Assert.All(ficha.Despues, d => Assert.True(destinatario(d.Para) is not null, $"{ficha.Codigo}: «{d.Para}» no es un destinatario válido de la Guía."));
+            Assert.True(ficha.Permisos.Count == 0 == (ficha.Concede is null), $"{ficha.Codigo}: «concede» solo va con permisos.");
         }
     }
 
@@ -219,9 +234,15 @@ public partial class GuiaDerivaTests
         var sello = entrada.GetProperty("revisadoPara") is { ValueKind: JsonValueKind.String } valor ? valor.GetString() : null;
         var version = Regex.Match(File.ReadAllText(Path.Combine(Raiz(), "src", "Directory.Build.props")), "<Version>([^<]+)</Version>").Groups[1].Value;
 
-        foreach (var perfil in Catalogo().Perfiles)
+        var catalogo = Catalogo();
+        foreach (var perfil in catalogo.Perfiles)
         {
             Assert.True(perfil.RevisadoPara == sello, $"{perfil.Perfil}: revisadoPara es «{perfil.RevisadoPara}» y el registro dice «{sello}».");
+        }
+
+        if (catalogo.Comun is { } comun)
+        {
+            Assert.True(comun.RevisadoPara == sello, $"{GuiaComun.Titulo}: revisadoPara es «{comun.RevisadoPara}» y el registro dice «{sello}».");
         }
 
         if (sello is not null)
@@ -289,7 +310,13 @@ public partial class GuiaDerivaTests
         }
     }
 
-    private static IEnumerable<(GuiaPerfil Perfil, GuiaFicha Ficha)> Fichas() => Catalogo().Perfiles.SelectMany(p => p.Fichas.Select(f => (p, f)));
+    /// <summary>Las fichas de todos los perfiles y las del capítulo «Para todos», con el nombre de su guía.</summary>
+    private static IEnumerable<(string Guia, GuiaFicha Ficha)> Fichas()
+    {
+        var catalogo = Catalogo();
+        return catalogo.Perfiles.SelectMany(p => p.Fichas.Select(f => (p.Perfil, f)))
+            .Concat((catalogo.Comun?.Fichas ?? []).Select(f => (GuiaComun.Titulo, f)));
+    }
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex Espacios();
@@ -320,6 +347,13 @@ public class GuiaPageTests(ResidentsFlowTests.WebAppFactory factory) : IClassFix
         Assert.Contains("id=\"PLA-02\"", html);
         Assert.Contains("Crear invitación de acceso o de recuperación", html);
         Assert.Contains("Pendiente de revisión de punta a punta", html);
+
+        var comun = await client.GetAsync("/Guia/para-todos");
+        Assert.Equal(HttpStatusCode.OK, comun.StatusCode);
+        html = WebUtility.HtmlDecode(await comun.Content.ReadAsStringAsync());
+        Assert.Contains("id=\"TOD-01\"", html);
+        Assert.Contains("Ya los he guardado, continuar", html);
+        Assert.Contains("¿Cómo entro por primera vez con mi invitación?", WebUtility.HtmlDecode(await indice.Content.ReadAsStringAsync()));
 
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/Guia/no-existe")).StatusCode);
     }

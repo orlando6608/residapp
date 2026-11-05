@@ -165,6 +165,12 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.Contains("Ahora no tienes acceso a ningún residente", pending);
         Assert.Contains("Autorización activada.", activated);
         Assert.Contains("Residente Portal Funcional", home);
+        // El menú del portal lleva a «Mi cuenta» (contraseña, sesiones): la familia no tiene el menú del personal.
+        Assert.Contains("href=\"/Cuenta\">Mi cuenta</a>", home);
+        // Y allí sigue con la cabecera del portal, no con la del personal («Mi panel», «Cambiar ámbito»).
+        var account = await BodyAsync(await family.GetAsync("/Cuenta"));
+        Assert.Contains("Cambiar de residente", account);
+        Assert.DoesNotContain("Cambiar ámbito", account);
         // Lo publicado desde la visita anterior es nuevo; en la siguiente visita ya no (CJ, tercera 6.3).
         Assert.Contains("badge text-bg-primary\">Nueva</span>", home);
         Assert.Contains("Hay 1 novedad nueva desde tu última visita.", home);
