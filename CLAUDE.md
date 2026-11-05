@@ -10,7 +10,11 @@ Este documento recoge las reglas de trabajo que rigen cualquier colaboración so
 - Si detectas problemas fuera del alcance, menciónalos, no los corrijas.
 - Ante ambigüedad relevante, declara tus suposiciones; pregunta solo si el error es difícil de revertir.
 - Protección de datos: antes de crear o modificar un ADR, un esquema SQL, una integración con un tercero o una función de IA, consulta al agente `dpo-residapp` (`.claude\agents\dpo-residapp.md`). Sus borradores van en `docs\privacidad\` y los valida una persona antes de usarlos con datos reales.
-- Documentación de usuario: antes de dar por cerrado un cambio funcional en una pantalla, consulta al agente `doc-usuario-residapp` (`.claude\agents\doc-usuario-residapp.md`) para saber qué parte del Manual, de «Flujo de trabajo», de «Acceso y sesión» o de las guías de pruebas de CJ hay que actualizar. Solo informa; los cambios los aplica una persona o la sesión principal.
+- Documentación de usuario: antes de dar por cerrado un cambio funcional en una pantalla (texto visible, ruta, botón o comportamiento en las carpetas `disparadores` de `.claude\documentacion-usuario.json`), consulta al agente `doc-usuario-residapp` (`.claude\agents\doc-usuario-residapp.md`) para saber qué documentación hay que actualizar. La lista de documentos vive solo en ese registro: al crear documentación de usuario nueva, se añade allí. El agente solo informa y termina con «Tamaño de la actualización: breve / larga»:
+  - **Breve**: la sesión principal aplica los cambios en el momento y los lista al final.
+  - **Larga**: no se edita nada; se presentan los documentos afectados y una propuesta, y se pregunta. Subir el `data-version` de una guía de CJ requiere el visto bueno de la persona.
+  - Si el cambio no altera texto visible, ruta ni comportamiento (p. ej. solo CSS), basta una línea en el mensaje final («no afecta a la documentación de usuario») y no se lanza el agente.
+  - Lo que el agente no puede confirmar leyendo (JavaScript, sesión, passkeys) se comprueba con la skill `probar-en-navegador`.
 - Calidad de pruebas: antes de dar por cerrado un bloque funcional (no cada cambio pequeño), consulta al agente `qa-revisor-residapp` (`.claude\agents\qa-revisor-residapp.md`) para saber qué requisitos no tienen prueba, qué escenarios límite faltan y si hay defectos probables. Parte de los requisitos, no del código. Solo informa; las pruebas y los arreglos los aplica una persona o la sesión principal.
 
 ## Dónde está el resto del contexto del proyecto

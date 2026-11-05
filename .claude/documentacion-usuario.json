@@ -1,0 +1,18 @@
+{
+  "_comentario": "Registro único de la documentación de usuario que hay que mantener al día. Lo leen el agente doc-usuario-residapp y el hook .claude/hooks/aviso-doc-usuario.js. Para añadir documentación nueva: una línea en «documentos». Para vigilar una carpeta de código nueva: una línea en «disparadores». Los comodines (*) los interpreta el agente; el hook solo usa «disparadores» (por prefijo) y las rutas exactas de «documentos».",
+  "disparadores": [
+    "src/ResidApp.Web/Views/",
+    "src/ResidApp.Web/Controllers/"
+  ],
+  "documentos": [
+    { "ruta": "src/ResidApp.Web/Views/Home/Manual.cshtml", "que": "Manual de usuario (/Home/Manual)" },
+    { "ruta": "src/ResidApp.Web/wwwroot/flujo-de-trabajo.html", "que": "Flujo de trabajo" },
+    { "ruta": "src/ResidApp.Web/wwwroot/acceso-y-sesion.html", "que": "Acceso y sesión" },
+    { "ruta": "docs/pendientes-cj/pruebas-*.html", "que": "Guías de pruebas de CJ (pruebas-1 a 8), sus páginas de flujo (-flujo) y el índice pruebas.html" }
+  ],
+  "excluidos": [
+    "docs/pendientes-cj/archivados/",
+    "docs/pendientes-cj/orlando/",
+    "*.respuestas.json"
+  ]
+}
