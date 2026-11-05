@@ -116,7 +116,7 @@
       "pasos": [
         { "texto": "Al entrar, si tu cuenta tiene varios ámbitos, se abre **Seleccionar ámbito**. Cada botón lleva el centro y, a la derecha, el perfil: pulsa el que quieras usar.", "campos": ["Seleccionar ámbito"] },
         { "texto": "Para cambiar más tarde, abre el menú con el nombre de tu perfil (en el móvil, el botón de menú de la esquina superior derecha) y pulsa **Cambiar ámbito**. Verás de nuevo la lista.", "botones": ["Cambiar ámbito"] },
-        { "texto": "Pulsa el nuevo ámbito. Vas al inicio de ese perfil en ese centro; **Mi panel** te lleva siempre al inicio del perfil activo.", "botones": ["Mi panel"] }
+        { "texto": "Pulsa el nuevo ámbito. Vas al **Inicio** general de ese centro, con una tarjeta por cada perfil que tengas; **Mi panel** te lleva siempre al inicio del perfil activo.", "botones": ["Mi panel"] }
       ],
       "despues": [
         { "para": "Tú", "texto": "Trabajas con los accesos del perfil elegido: con Enfermería no ves los de Medicina. El menú muestra con qué cuenta has entrado y tu ámbito activo («Ámbito: perfil · centro»). Cada centro solo ve lo suyo." }

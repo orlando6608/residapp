@@ -19,7 +19,7 @@
     "Consultar el historial y la línea temporal de los eventos que ves."
   ],
   "conPermiso": [
-    "Crear, completar y firmar el **estado basal** de un residente (ver MED-13). Hacen falta **Basal inicial (al alta)** para el primero y **Reevaluar el basal** para los siguientes; los concede Administración."
+    "Crear, completar y firmar el **estado basal** de un residente (ver MED-13). Hace falta **Basal inicial (al alta)** para el basal del alta y **Reevaluar el basal** para cualquier otro motivo; los concede Administración."
   ],
   "nunca": [
     "Modificar la observación de origen ni la valoración de Enfermería.",
@@ -426,7 +426,7 @@
       "permisos": ["BASELINE_INITIAL_COMPLETE", "BASELINE_REEVALUATE"],
       "concede": "Administración",
       "antes": [
-        "Tener el permiso en tu ámbito: **Basal inicial (al alta)** para el primer basal y **Reevaluar el basal** para los siguientes. Sin él, el botón no sale en la ficha. Poder gestionar el basal nunca permite dar de alta residentes.",
+        "Tener el permiso en tu ámbito: **Basal inicial (al alta)** para el motivo «Alta» y **Reevaluar el basal** para los demás motivos. Sin él, el botón no sale en la ficha. Poder gestionar el basal nunca permite dar de alta residentes.",
         "El motivo del basal (alta, revisión programada o cambio funcional consolidado), la fuente de la información y su fecha.",
         "Saber que solo puede haber un borrador activo por residente, y que **solo firma la misma cuenta que lo creó, con el mismo perfil**."
       ],

@@ -20,7 +20,7 @@
   ],
   "conPermiso": [
     "**Dar de alta residentes** (ver ENF-17).",
-    "Crear, completar y firmar el **estado basal**: **Basal inicial (al alta)** para el primero y **Reevaluar el basal** para los siguientes (ver ENF-18).",
+    "Crear, completar y firmar el **estado basal**: **Basal inicial (al alta)** para el basal del alta y **Reevaluar el basal** para cualquier otro motivo (ver ENF-18).",
     "**Poner, cambiar y quitar la foto del residente** (ver ENF-19).",
     "Los tres permisos los concede Administración."
   ],
@@ -30,7 +30,7 @@
     "Cerrar un episodio con indicaciones de Medicina sin cumplir.",
     "Corregir una valoración que no guardaste tú por última vez, ni el basal, ni la observación original.",
     "Firmar un basal que no creaste tú.",
-    "Ver o cambiar los rangos de referencia de las constantes: los fija Dirección Clínica."
+    "Cambiar los rangos de referencia de las constantes: los fija Dirección Clínica. Tú los ves en la valoración, como aviso."
   ],
   "revisadoPara": null,
   "revisado": "2026-11-05",

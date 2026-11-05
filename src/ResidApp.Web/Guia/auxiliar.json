@@ -12,7 +12,7 @@
     "Ver a tus residentes asignados, con su foto y su estado basal vigente (solo lectura).",
     "Cerrar el turno de un residente con «Sin cambios» o con «No valorable».",
     "Registrar un cambio, ordinario o prioritario.",
-    "Dictar el cambio por voz, si tu centro lo tiene activado."
+    "Dictar el cambio por voz, si la aplicación lo tiene disponible (si no ves el bloque «Dictar el cambio», no lo está)."
   ],
   "conPermiso": [],
   "nunca": [
@@ -211,7 +211,7 @@
       "palabras": ["dictado", "voz", "micrófono", "grabar", "sugerencia"],
       "permisos": [],
       "antes": [
-        "Que tu centro tenga el dictado activado y que tu dispositivo tenga micrófono. Si no ves el bloque «Dictar el cambio» en «Registrar cambio», no está disponible: rellena el formulario a mano.",
+        "Que la aplicación tenga activado el dictado (no depende de tu centro) y que tu dispositivo tenga micrófono. Si no ves el bloque «Dictar el cambio» en «Registrar cambio», no está disponible: rellena el formulario a mano.",
         "**No digas nombres de personas** al dictar."
       ],
       "pasos": [

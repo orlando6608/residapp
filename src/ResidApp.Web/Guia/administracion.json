@@ -37,7 +37,7 @@
       "pasos": [
         { "texto": "Entras al **Inicio de Administración**. Arriba está **Requiere atención**: cada línea es un enlace a la pantalla donde se resuelve, por orden de importancia: residentes sin contacto urgente ni motivo indicado, solicitudes y propuestas de cita, citas pasadas sin cerrar, autorizaciones de familiares pendientes, caducadas o por caducar, residentes con la ubicación pendiente, fotos de más de 12 meses y cuentas profesionales suspendidas o sin ámbito.", "campos": ["Inicio de Administración", "Requiere atención"] },
         { "texto": "Si no hay nada que atender, dice «No hay nada pendiente.». Solo son cifras: no salen nombres ni texto clínico." },
-        { "texto": "Debajo, las citas confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados esta semana." },
+        { "texto": "Debajo, las citas confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados en los últimos 7 días." },
         { "texto": "Las tarjetas abren cada tarea: **Residentes**, **Alta de residente**, **Residentes dados de baja**, **Usuarios**, **Unidades del centro**, **Comunicados a la familia**, **Citas con la familia**, **Datos del centro**, **Estructura del centro**, **Turnos**, **Equipos**, **Organigrama y cargos**, **Planificación de turnos**, **Importar datos**, **Exportar datos** y **Auditoría**.", "botones": ["Usuarios", "Unidades del centro", "Datos del centro", "Estructura del centro", "Importar datos", "Exportar datos", "Auditoría"] }
       ],
       "despues": [
@@ -675,8 +675,8 @@
         { "texto": "Pulsa **Trasladar**.", "botones": ["Trasladar"] }
       ],
       "despues": [
-        { "para": "Enfermería", "texto": "Los episodios abiertos del residente **pasan a la unidad de destino** y la unidad de origen deja de verlos. Los episodios cerrados no cambian de unidad." },
-        { "para": "Medicina", "texto": "Si tenía un borrador de basal a medias y cambia de unidad, el borrador se cancela y el basal se rehace en la unidad de destino." },
+        { "para": "Enfermería", "texto": "Los episodios abiertos del residente **pasan a la unidad de destino** y la unidad de origen deja de verlos. Los episodios cerrados no cambian de unidad. Si tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad de destino." },
+        { "para": "Medicina", "texto": "Si tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad de destino." },
         { "para": "Administración", "texto": "Verás un aviso con cuántos episodios abiertos pasaron. El cambio queda en el historial de ubicación de la ficha y en la auditoría; reenviar el formulario no lo repite." }
       ],
       "dudas": [

@@ -8,7 +8,8 @@
 
 @{
     var sello = Model.Perfiles[0].RevisadoPara is null ? "Pendiente de revisión de punta a punta" : "Revisado para ResidApp v" + Model.Perfiles[0].RevisadoPara;
-    var fecha = DateOnly.ParseExact(Model.Perfiles.Select(p => p.Revisado).Max()!, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture).ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+    var revisiones = Model.Perfiles.Select(p => p.Revisado).Concat(Model.Comun is null ? [] : [Model.Comun.Revisado]).Concat(Model.Glosario is null ? [] : [Model.Glosario.Revisado]);
+    var fecha = DateOnly.ParseExact(revisiones.Max()!, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture).ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
 }
 <nav aria-label="breadcrumb" class="guia-no-imprimir">
     <ol class="breadcrumb">

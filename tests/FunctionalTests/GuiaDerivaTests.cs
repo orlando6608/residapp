@@ -30,6 +30,9 @@ public partial class GuiaDerivaTests
         [SystemProfile.Familiar] = "FAM",
     };
 
+    /// <summary>Códigos de ficha que se retiraron: no se vuelven a usar nunca (plan de la Guía, §2.4). Al retirar una ficha, su código se añade aquí.</summary>
+    private static readonly HashSet<string> CodigosRetirados = [];
+
     // Palabras que no deben salir en una página pública de usuario real (decisiones D5 y D9 del plan).
     private static readonly string[] PalabrasInternas = ["Orlando", "almendros", "olmos", "entorno de pruebas", "cuenta de prueba", "plataforma-cj"];
 
@@ -123,6 +126,33 @@ public partial class GuiaDerivaTests
     }
 
     [Fact]
+    public void LosPasosQueDicenEnElInicioAbrenUnaTarjetaDelInicioDeSuPerfil()
+    {
+        // «En el Inicio, abre X» lleva al panel del perfil (Mi panel). Las tarjetas de Rangos o de Plazos, por ejemplo, están en el Inicio general: ahí hay que decir «Pulsa Inicio».
+        var carpetas = new Dictionary<SystemProfile, string>
+        {
+            [SystemProfile.Plataforma] = "Plataforma", [SystemProfile.Administracion] = "Administracion", [SystemProfile.Auxiliar] = "Auxiliar",
+            [SystemProfile.Enfermeria] = "Enfermeria", [SystemProfile.Medicina] = "Medicina", [SystemProfile.DireccionClinica] = "Direccion",
+        };
+        var comprobados = 0;
+        foreach (var perfil in Catalogo().Perfiles.Where(p => carpetas.ContainsKey(p.Profile)))
+        {
+            var inicio = File.ReadAllText(Web("Views", carpetas[perfil.Profile], "Index.cshtml"));
+            foreach (var ficha in perfil.Fichas)
+            {
+                foreach (var paso in ficha.Pasos.Where(p => p.Texto.StartsWith("En el Inicio", StringComparison.OrdinalIgnoreCase) && p.Botones is { Count: > 0 }))
+                {
+                    comprobados++;
+                    Assert.True(inicio.Contains(paso.Botones![0], StringComparison.Ordinal),
+                        $"{ficha.Codigo}: «{paso.Botones[0]}» no está en el Inicio de {perfil.Perfil} (Views/{carpetas[perfil.Profile]}/Index.cshtml); si está en el Inicio general, el paso debe empezar por «Pulsa Inicio».");
+                }
+            }
+        }
+
+        Assert.True(comprobados > 10, "No se ha comprobado ningún paso «En el Inicio».");
+    }
+
+    [Fact]
     public void LasReferenciasAlManualAlFlujoYAAccesoExisten_ConElMismoTitulo()
     {
         var manual = File.ReadAllText(Web("Views", "Home", "Manual.cshtml"));
@@ -180,8 +210,8 @@ public partial class GuiaDerivaTests
         HashSet<string> codigos, HashSet<string> preguntas)
     {
         Assert.NotEmpty(fichas);
-        Assert.True(DateOnly.TryParseExact(revisado, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fecha) && fecha <= DateOnly.FromDateTime(DateTime.Today),
-            $"{nombre}: «revisado» no es una fecha yyyy-MM-dd pasada.");
+        Assert.True(DateOnly.TryParseExact(revisado, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fecha) && fecha <= DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1),
+            $"{nombre}: «revisado» no es una fecha yyyy-MM-dd pasada (se admite un día más por la zona horaria).");
         foreach (var ficha in fichas)
         {
             Assert.Matches($"^{prefijo}-\\d{{2}}$", ficha.Codigo);
@@ -191,6 +221,16 @@ public partial class GuiaDerivaTests
             Assert.True(ficha.Antes.Count > 0 && ficha.Pasos.Count > 0 && ficha.Despues.Count > 0, $"{ficha.Codigo}: faltan «antes», «pasos» o «después».");
             Assert.All(ficha.Despues, d => Assert.True(GuiaDespues.EsValido(d.Para), $"{ficha.Codigo}: «{d.Para}» no es un destinatario válido de la Guía."));
             Assert.True(ficha.Permisos.Count == 0 == (ficha.Concede is null), $"{ficha.Codigo}: «concede» solo va con permisos.");
+            Assert.True(ficha.Concede is null or "Administración", $"{ficha.Codigo}: los permisos configurables los concede Administración, no «{ficha.Concede}».");
+            Assert.False(CodigosRetirados.Contains(ficha.Codigo), $"{ficha.Codigo}: es un código retirado y no se reutiliza nunca.");
+        }
+
+        // Un código no se reutiliza ni se borra sin avisar: del 01 al último tiene que estar cada uno, o figurar como retirado.
+        var numeros = fichas.Select(f => int.Parse(f.Codigo[^2..], CultureInfo.InvariantCulture)).ToHashSet();
+        for (var n = 1; n <= numeros.Max(); n++)
+        {
+            Assert.True(numeros.Contains(n) || CodigosRetirados.Contains($"{prefijo}-{n:00}"),
+                $"{nombre}: falta el código {prefijo}-{n:00}. Si retiraste la ficha, añade el código a CodigosRetirados.");
         }
     }
 
@@ -281,6 +321,14 @@ public partial class GuiaDerivaTests
                 Assert.True(existentes.Contains(cita.Groups[1].Value), $"{Path.GetFileName(file)} cita {cita.Groups[1].Value}, que no existe como ficha.");
             }
         }
+    }
+
+    [Fact]
+    public void ElTextoDeLasFichasEscapaElHtml_YMarcaSoloNegritaCursivaYCodigo()
+    {
+        Assert.Equal("&lt;script&gt;alert(1)&lt;/script&gt; Tom &amp; Jerry", GuiaTexto.Html("<script>alert(1)</script> Tom & Jerry").ToString());
+        Assert.Equal("<strong>a</strong> <em>b</em> <code>c</code>", GuiaTexto.Html("**a** *b* `c`").ToString());
+        Assert.DoesNotContain("<img", GuiaTexto.Html("**<img src=x onerror=alert(1)>**").ToString());
     }
 
     [Fact]
@@ -400,6 +448,18 @@ public class GuiaPageTests(ResidentsFlowTests.WebAppFactory factory) : IClassFix
         Assert.Contains("Ya los he guardado, continuar", html);
 
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/Guia/no-existe")).StatusCode);
+    }
+
+    [Fact]
+    public async Task UnaFichaConPermisoMuestraRequierePermisoYQuienLoConcede()
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/Guia/enfermeria"));
+        var ficha = html[html.IndexOf("id=\"ENF-17\"", StringComparison.Ordinal)..];
+        ficha = ficha[..ficha.IndexOf("</header>", StringComparison.Ordinal)];
+        Assert.Contains("Requiere permiso", ficha);
+        Assert.Contains("Dar de alta residentes", ficha);
+        Assert.Contains("lo concede Administración", ficha);
     }
 
     [Fact]
