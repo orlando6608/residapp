@@ -1,0 +1,117 @@
+@using ResidApp.Web.Models
+@* Una guía de perfil, sin la página alrededor: la usan Perfil (una sola) y Todo (todas, para imprimir). Los id llevan el slug para no repetirse en Todo. *@
+@model (GuiaPerfil Perfil, bool EnTodo)
+@{
+    var perfil = Model.Perfil;
+    var enTodo = Model.EnTodo;
+}
+
+<div class="perfil-@perfil.Slug">
+    <div class="guia-cabecera mb-3">
+        @if (enTodo)
+        {
+            <h2 class="h2">Guía de @perfil.Titulo</h2>
+        }
+        else
+        {
+            <h1 class="h2">Guía de @perfil.Titulo</h1>
+        }
+        @if (perfil.NombreEnPantalla is { } enPantalla)
+        {
+            <p class="mb-1">En pantalla, este perfil se llama «@enPantalla».</p>
+        }
+        <p class="text-muted mb-0">
+            Lo que puedes hacer en ResidApp con este perfil, tarea a tarea. ResidApp no diagnostica ni sustituye los protocolos de tu
+            centro. El detalle de cada pantalla está en el <a asp-controller="Home" asp-action="Manual">Manual de usuario</a>
+            (<span class="font-monospace">/Home/Manual</span>) y los procesos de principio a fin, en el
+            <a href="~/flujo-de-trabajo.html">Flujo de trabajo</a> (<span class="font-monospace">/flujo-de-trabajo.html</span>).
+            Entrar, cambiar de centro o de perfil, tu cuenta y recuperar el acceso valen para todos y están en el capítulo
+            <a asp-action="Comun">«Para todos»</a>.
+        </p>
+    </div>
+
+    <section class="mb-4" aria-labelledby="para-que-@perfil.Slug">
+        <h2 class="h4" id="para-que-@perfil.Slug">Para qué existe este perfil</h2>
+        <p>@GuiaTexto.Html(perfil.Proposito)</p>
+    </section>
+
+    @if (perfil.Rutina is { Count: > 0 } rutina)
+    {
+        <section class="mb-4" aria-labelledby="rutina-@perfil.Slug">
+            <h2 class="h4" id="rutina-@perfil.Slug">Un día típico</h2>
+            <ul>
+                @foreach (var item in rutina)
+                {
+                    <li>@GuiaTexto.Html(item)</li>
+                }
+            </ul>
+        </section>
+    }
+
+    <section class="mb-4" aria-labelledby="depende-@perfil.Slug">
+        <h2 class="h4" id="depende-@perfil.Slug">De quién depende y a quién le entrega trabajo</h2>
+        <partial name="@("_Diagrama-" + perfil.Slug)" />
+        <ul class="mt-3">
+            <li>@(perfil.DependeDe.Count == 0 ? "No depende de ningún otro perfil." : "Depende de: " + string.Join(", ", perfil.DependeDe) + ".")</li>
+            <li>@(perfil.EntregaA.Count == 0 ? "No le entrega trabajo a ningún otro perfil." : "Le entrega trabajo a: " + string.Join(", ", perfil.EntregaA) + ".")</li>
+        </ul>
+    </section>
+
+    <section class="mb-4" aria-labelledby="que-puedes-@perfil.Slug">
+        <h2 class="h4" id="que-puedes-@perfil.Slug">Lo que puedes hacer y lo que no</h2>
+        <div class="guia-permisos">
+            <section aria-labelledby="p-siempre-@perfil.Slug">
+                <h3 id="p-siempre-@perfil.Slug"><span class="etiqueta etiqueta-siempre">Siempre</span></h3>
+                <ul>
+                    @foreach (var item in perfil.Siempre)
+                    {
+                        <li>@GuiaTexto.Html(item)</li>
+                    }
+                </ul>
+            </section>
+            <section aria-labelledby="p-permiso-@perfil.Slug">
+                <h3 id="p-permiso-@perfil.Slug"><span class="etiqueta etiqueta-permiso">Requiere permiso</span></h3>
+                @if (perfil.ConPermiso.Count == 0)
+                {
+                    <p class="mb-0">Este perfil no tiene permisos configurables.</p>
+                }
+                else
+                {
+                    <ul>
+                        @foreach (var item in perfil.ConPermiso)
+                        {
+                            <li>@GuiaTexto.Html(item)</li>
+                        }
+                    </ul>
+                }
+            </section>
+            <section aria-labelledby="p-nunca-@perfil.Slug">
+                <h3 id="p-nunca-@perfil.Slug"><span class="etiqueta etiqueta-nunca">Nunca</span></h3>
+                <ul>
+                    @foreach (var item in perfil.Nunca)
+                    {
+                        <li>@GuiaTexto.Html(item)</li>
+                    }
+                </ul>
+            </section>
+        </div>
+    </section>
+
+    <section class="mb-4" aria-labelledby="indice-fichas-@perfil.Slug">
+        <h2 class="h4" id="indice-fichas-@perfil.Slug">Índice de tareas</h2>
+        <ul class="guia-indice">
+            @foreach (var ficha in perfil.Fichas)
+            {
+                <li><a href="#@ficha.Codigo"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a></li>
+            }
+        </ul>
+    </section>
+
+    <section aria-labelledby="fichas-@perfil.Slug">
+        <h2 class="h4" id="fichas-@perfil.Slug">Tareas</h2>
+        @foreach (var ficha in perfil.Fichas)
+        {
+            <partial name="_Ficha" model="(perfil, ficha)" />
+        }
+    </section>
+</div>

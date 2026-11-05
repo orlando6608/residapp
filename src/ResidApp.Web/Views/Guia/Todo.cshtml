@@ -1,0 +1,78 @@
+@using ResidApp.Web.Models
+@model GuiaCatalogo
+@{
+    ViewData["Title"] = "Guía por perfil: completa";
+}
+
+<link rel="stylesheet" href="~/css/guia.css" asp-append-version="true" />
+
+@{
+    var sello = Model.Perfiles[0].RevisadoPara is null ? "Pendiente de revisión de punta a punta" : "Revisado para ResidApp v" + Model.Perfiles[0].RevisadoPara;
+    var fecha = DateOnly.ParseExact(Model.Perfiles.Select(p => p.Revisado).Max()!, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture).ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+}
+<nav aria-label="breadcrumb" class="guia-no-imprimir">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Guía por perfil</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Guía completa</li>
+    </ol>
+</nav>
+
+<div class="guia-portada">
+    <h1 class="h2">Guía por perfil: completa</h1>
+    <p class="text-muted">
+        Todas las guías en un solo documento, para imprimirlo o guardarlo como PDF: «Para todos», una guía por perfil, la matriz de quién
+        entrega qué a quién, todas las preguntas y el glosario. Cada guía empieza en página nueva y ninguna ficha se parte. En papel, busca
+        cada tarea por el código de su ficha. ResidApp no diagnostica ni sustituye los protocolos de tu centro.
+    </p>
+    <p class="guia-sello guia-sello-pantalla">@sello · Estado a @fecha</p>
+    <h2 class="h4" id="contenido">Contenido</h2>
+    <ul>
+        @if (Model.Comun is not null)
+        {
+            <li><a href="#capitulo-@GuiaComun.Slug">@GuiaComun.Titulo</a></li>
+        }
+        @foreach (var perfil in Model.Perfiles)
+        {
+            <li><a href="#capitulo-@perfil.Slug">Guía de @perfil.Titulo</a></li>
+        }
+        <li><a href="#capitulo-matriz">Quién entrega qué a quién</a></li>
+        <li><a href="#capitulo-preguntas">Todas las preguntas</a></li>
+        @if (Model.Glosario is not null)
+        {
+            <li><a href="#capitulo-glosario">Glosario</a></li>
+        }
+    </ul>
+</div>
+
+@if (Model.Comun is { } comun)
+{
+    <div class="guia-capitulo" id="capitulo-@GuiaComun.Slug">
+        <partial name="_Comun" model="(comun, true)" />
+    </div>
+}
+@foreach (var perfil in Model.Perfiles)
+{
+    <div class="guia-capitulo" id="capitulo-@perfil.Slug">
+        <partial name="_Perfil" model="(perfil, true)" />
+    </div>
+}
+<div class="guia-capitulo guia-apaisado" id="capitulo-matriz">
+    <h2 class="h2">Quién entrega qué a quién</h2>
+    <partial name="_Matriz" model="(Model, true)" />
+</div>
+<div class="guia-capitulo" id="capitulo-preguntas">
+    <h2 class="h2">Todas las preguntas</h2>
+    <partial name="_Preguntas" model="(Model, true)" />
+</div>
+@if (Model.Glosario is not null)
+{
+    <div class="guia-capitulo" id="capitulo-glosario">
+        <h2 class="h2">Glosario</h2>
+        <partial name="_Glosario" model="(Model, true)" />
+    </div>
+}
+
+@section PieImpresion {
+    <p class="guia-sello mb-0">@sello · Estado a @fecha · Guía por perfil: completa</p>
+}

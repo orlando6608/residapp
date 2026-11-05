@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using ResidApp.Domain.Accounts;
 using ResidApp.Shared;
 using ResidApp.Web.Controllers;
@@ -242,6 +243,11 @@ public partial class GuiaDerivaTests
             Assert.True(comun.RevisadoPara == sello, $"{GuiaComun.Titulo}: revisadoPara es «{comun.RevisadoPara}» y el registro dice «{sello}».");
         }
 
+        if (catalogo.Glosario is { } glosario)
+        {
+            Assert.True(glosario.RevisadoPara == sello, $"Glosario: revisadoPara es «{glosario.RevisadoPara}» y el registro dice «{sello}».");
+        }
+
         if (sello is not null)
         {
             Assert.True(System.Version.Parse(sello) <= System.Version.Parse(version), $"El sello v{sello} es posterior a la versión de la app v{version}.");
@@ -273,6 +279,42 @@ public partial class GuiaDerivaTests
             foreach (Match cita in CodigoCitado().Matches(File.ReadAllText(file)))
             {
                 Assert.True(existentes.Contains(cita.Groups[1].Value), $"{Path.GetFileName(file)} cita {cita.Groups[1].Value}, que no existe como ficha.");
+            }
+        }
+    }
+
+    [Fact]
+    public void ElGlosarioNoRepiteTerminos_YSusFichasExisten()
+    {
+        var glosario = Catalogo().Glosario;
+        Assert.NotNull(glosario);
+        var existentes = Fichas().Select(x => x.Ficha.Codigo).ToHashSet();
+        var vistos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var termino in glosario.Terminos)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(termino.Significa), $"«{termino.Termino}» no dice qué significa.");
+            Assert.True(vistos.Add(termino.Termino), $"Término repetido: {termino.Termino}");
+            Assert.True(termino.Ver.Count > 0, $"«{termino.Termino}» no remite a ninguna ficha.");
+            foreach (var codigo in termino.Ver)
+            {
+                Assert.True(existentes.Contains(codigo), $"«{termino.Termino}» remite a {codigo}, que no existe como ficha.");
+            }
+        }
+    }
+
+    [Fact]
+    public void CadaEntregaQueDeclaraUnaGuiaLaHaceAlMenosUnaFicha()
+    {
+        // El diagrama de cada perfil dice a quién le entrega trabajo; la matriz sale de las fichas. Si no coinciden, una de las dos miente.
+        var catalogo = Catalogo();
+        var entregas = catalogo.Entregas();
+        foreach (var perfil in catalogo.Perfiles)
+        {
+            foreach (var para in perfil.EntregaA)
+            {
+                var destino = GuiaPerfiles.PorTitulo(para);
+                Assert.True(destino is not null, $"{perfil.Perfil}: «{para}» no es un perfil.");
+                Assert.True(entregas.ContainsKey((perfil.Slug, destino.Slug)), $"{perfil.Perfil} dice que le entrega trabajo a {para}, pero ninguna de sus fichas lo hace.");
             }
         }
     }
@@ -336,7 +378,13 @@ public class GuiaPageTests(ResidentsFlowTests.WebAppFactory factory) : IClassFix
         var indice = await client.GetAsync("/Guia");
         Assert.Equal(HttpStatusCode.OK, indice.StatusCode);
         var html = WebUtility.HtmlDecode(await indice.Content.ReadAsStringAsync());
-        Assert.Contains("¿Cómo creo un centro nuevo y qué datos necesito?", html);
+        Assert.Contains("Todas las preguntas", html);
+
+        var preguntas = await client.GetAsync("/Guia/preguntas");
+        Assert.Equal(HttpStatusCode.OK, preguntas.StatusCode);
+        var htmlPreguntas = WebUtility.HtmlDecode(await preguntas.Content.ReadAsStringAsync());
+        Assert.Contains("¿Cómo creo un centro nuevo y qué datos necesito?", htmlPreguntas);
+        Assert.Contains("¿Cómo entro por primera vez con mi invitación?", htmlPreguntas);
 
         var plataforma = await client.GetAsync("/Guia/plataforma");
         Assert.Equal(HttpStatusCode.OK, plataforma.StatusCode);
@@ -350,9 +398,35 @@ public class GuiaPageTests(ResidentsFlowTests.WebAppFactory factory) : IClassFix
         html = WebUtility.HtmlDecode(await comun.Content.ReadAsStringAsync());
         Assert.Contains("id=\"TOD-01\"", html);
         Assert.Contains("Ya los he guardado, continuar", html);
-        Assert.Contains("¿Cómo entro por primera vez con mi invitación?", WebUtility.HtmlDecode(await indice.Content.ReadAsStringAsync()));
 
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/Guia/no-existe")).StatusCode);
+    }
+
+    [Fact]
+    public async Task LaMatrizElGlosarioYLaGuiaCompletaSeVenSinSesion()
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var catalogo = factory.Services.GetRequiredService<GuiaCatalogo>();
+
+        var matriz = WebUtility.HtmlDecode(await client.GetStringAsync("/Guia/matriz"));
+        Assert.Contains("Quién entrega qué a quién", matriz);
+        Assert.Contains("PLA-02", matriz);
+
+        var glosario = WebUtility.HtmlDecode(await client.GetStringAsync("/Guia/glosario"));
+        Assert.Contains("Basal (estado basal)", glosario);
+        Assert.Contains("href=\"/Guia/enfermeria#ENF-18\"", glosario);
+
+        // La guía completa lleva todas las fichas, una sola vez y sin ningún id repetido (cada guía es un capítulo de la misma página).
+        var todo = WebUtility.HtmlDecode(await client.GetStringAsync("/Guia/todo"));
+        foreach (var (_, ficha) in catalogo.Fichas())
+        {
+            Assert.Single(Regex.Matches(todo, "id=\"" + ficha.Codigo + "\""));
+        }
+
+        var ids = Regex.Matches(todo, @"\sid=""([^""]+)""").Select(m => m.Groups[1].Value).ToList();
+        Assert.True(ids.Count > 127, "No se han leído los id de la página.");
+        Assert.Empty(ids.GroupBy(id => id).Where(g => g.Count() > 1).Select(g => g.Key));
+        Assert.Contains("Pendiente de revisión de punta a punta", todo);
     }
 
     [Fact]

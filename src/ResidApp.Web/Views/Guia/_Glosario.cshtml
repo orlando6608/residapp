@@ -1,0 +1,23 @@
+@using ResidApp.Web.Models
+@* Los términos que usan las fichas, con una frase corriente cada uno y las fichas donde se usan. Lo usan Glosario y Todo. *@
+@model (GuiaCatalogo Catalogo, bool EnTodo)
+
+<dl class="guia-glosario">
+    @foreach (var termino in Model.Catalogo.Glosario!.Ordenados())
+    {
+        <div class="guia-termino">
+            <dt>@termino.Termino</dt>
+            <dd>
+                @GuiaTexto.Html(termino.Significa)
+                <span class="small">
+                    Ver:
+                    @foreach (var codigo in termino.Ver)
+                    {
+                        var slug = Model.Catalogo.SlugDe(codigo)!;
+                        <a class="ficha-codigo perfil-@slug" href="@Url.Ficha(slug, codigo, Model.EnTodo)">@codigo</a>
+                    }
+                </span>
+            </dd>
+        </div>
+    }
+</dl>

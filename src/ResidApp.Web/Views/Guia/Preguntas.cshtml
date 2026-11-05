@@ -1,0 +1,22 @@
+@using ResidApp.Web.Models
+@model GuiaCatalogo
+@{
+    ViewData["Title"] = "Guía: todas las preguntas";
+}
+
+<link rel="stylesheet" href="~/css/guia.css" asp-append-version="true" />
+
+<nav aria-label="breadcrumb" class="guia-no-imprimir">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Guía por perfil</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Todas las preguntas</li>
+    </ol>
+</nav>
+
+<h1 class="h2">Todas las preguntas</h1>
+<p class="text-muted">
+    Cada tarea de la Guía es una pregunta «¿Cómo…?», por orden alfabético, con el código de su ficha y la guía donde está. En papel,
+    busca la ficha por su código.
+</p>
+<partial name="_Preguntas" model="(Model, false)" />

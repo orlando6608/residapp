@@ -1,0 +1,48 @@
+@using ResidApp.Web.Models
+@* El capítulo «Para todos» sin la página alrededor: lo usan Comun y Todo. *@
+@model (GuiaComun Comun, bool EnTodo)
+@{
+    var comun = Model.Comun;
+    var enTodo = Model.EnTodo;
+}
+
+<div class="perfil-@GuiaComun.Slug">
+    <div class="guia-cabecera mb-3">
+        @if (enTodo)
+        {
+            <h2 class="h2">Guía: @GuiaComun.Titulo</h2>
+        }
+        else
+        {
+            <h1 class="h2">Guía: @GuiaComun.Titulo</h1>
+        }
+        <p class="text-muted mb-0">
+            Lo que vale para cualquier perfil, tarea a tarea. El detalle de cada pantalla está en el
+            <a asp-controller="Home" asp-action="Manual">Manual de usuario</a> (<span class="font-monospace">/Home/Manual</span>) y el acceso, con
+            diagramas, en <a href="~/acceso-y-sesion.html">Acceso y sesión</a> (<span class="font-monospace">/acceso-y-sesion.html</span>).
+        </p>
+    </div>
+
+    <section class="mb-4" aria-labelledby="para-que-@GuiaComun.Slug">
+        <h2 class="h4" id="para-que-@GuiaComun.Slug">Para qué sirve este capítulo</h2>
+        <p>@GuiaTexto.Html(comun.Proposito)</p>
+    </section>
+
+    <section class="mb-4" aria-labelledby="indice-fichas-@GuiaComun.Slug">
+        <h2 class="h4" id="indice-fichas-@GuiaComun.Slug">Índice de tareas</h2>
+        <ul class="guia-indice">
+            @foreach (var ficha in comun.Fichas)
+            {
+                <li><a href="#@ficha.Codigo"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a></li>
+            }
+        </ul>
+    </section>
+
+    <section aria-labelledby="fichas-@GuiaComun.Slug">
+        <h2 class="h4" id="fichas-@GuiaComun.Slug">Tareas</h2>
+        @foreach (var ficha in comun.Fichas)
+        {
+            <partial name="_Ficha" model="((GuiaPerfil?)null, ficha)" />
+        }
+    </section>
+</div>
