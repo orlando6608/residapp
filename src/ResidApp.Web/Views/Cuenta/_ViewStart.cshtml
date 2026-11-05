@@ -1,0 +1,6 @@
+@{
+    // «Mi cuenta» es la misma pantalla para todos, pero la familia la ve con la cabecera de su portal y el personal con la suya.
+    Layout = ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request)?.Profile == ResidApp.Shared.SystemProfile.Familiar
+        ? "_LayoutFamilia"
+        : "_Layout";
+}
