@@ -1,6 +1,6 @@
 {
   "perfil": "Administracion",
-  "proposito": "Administración monta y mantiene el centro: su nombre y logo, sus unidades, edificios y habitaciones, las cuentas de las personas que trabajan en él con sus perfiles, unidades y permisos, y la entrada y salida de datos. También da de alta a los residentes y sus familias, y gestiona los comunicados y las citas. No ve el basal ni ningún contenido clínico. **Esta guía se está completando por entregas:** de momento cubre el inicio, el centro y su estructura, las personas y sus accesos, los residentes y las familias; las tareas de comunicados, citas, turnos y organigrama llegarán después.",
+  "proposito": "Administración monta y mantiene el centro: su nombre y logo, sus unidades, edificios y habitaciones, las cuentas de las personas que trabajan en él con sus perfiles, unidades y permisos, y la entrada y salida de datos. También da de alta a los residentes y sus familias, gestiona los comunicados y las citas, y organiza los turnos, los equipos y el organigrama. No ve el basal ni ningún contenido clínico.",
   "rutina": [
     "Abres **Inicio de Administración** y miras el bloque **Requiere atención**: cada línea te lleva a la pantalla donde se resuelve.",
     "Cuando empieza alguien, le das de alta en **Usuarios**, le concedes su perfil y sus unidades y le entregas su invitación en mano.",
@@ -1042,6 +1042,418 @@
         "Este familiar ya está anonimizado: no se puede cambiar."
       ],
       "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" }
+    },
+    {
+      "codigo": "ADM-34",
+      "pregunta": "¿Cómo veo los comunicados a la familia de mis unidades y adelanto uno desde Administración?",
+      "palabras": ["comunicados", "publicar ahora", "novedades", "familia", "hora de publicación"],
+      "permisos": [],
+      "antes": [
+        "Cada comunicado lo prepara y lo aprueba Enfermería o Medicina al guardarlo, y se publica a la hora que tenía fijada el centro en ese momento (ver ADM-36). Hasta que se publica, quien lo preparó puede corregirlo.",
+        "Si la información es **urgente, este no es el canal**: avisa también por teléfono o por el canal habitual del centro."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Comunicados a la familia**. Ves los comunicados de las unidades de tu ámbito de los últimos 30 días y los anteriores que la familia todavía ve (uno relevante se ve 6 meses).", "botones": ["Comunicados a la familia"] },
+        { "texto": "Cada uno dice el residente, el tipo, cuándo se preparó y si «Se publica el…» o ya está publicado. La familia lo verá firmado como «Equipo asistencial del centro»." },
+        { "texto": "En uno que aún no se ha publicado, pulsa **Publicar ahora** para adelantarlo.", "botones": ["Publicar ahora"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Lo ve en el Portal Familiar en cuanto se publica (ver FAM-02)." },
+        { "para": "Administración", "texto": "Verás «Comunicado publicado antes de su hora. Queda en la auditoría.». Solo se puede una vez." }
+      ],
+      "dudas": [
+        { "p": "«Ese comunicado ya estaba publicado.»", "r": "Se publicó a su hora o lo adelantó otra persona. Vuelve a la lista." },
+        { "p": "«No se puede acceder a ese comunicado.»", "r": "El comunicado no es de tu ámbito." },
+        { "p": "Quiero cambiar un comunicado ya publicado.", "r": "Ya no se edita: se publica una corrección o, en casos excepcionales, se retira (ver ADM-35)." }
+      ],
+      "rutas": ["Administracion/Comunicados", "Administracion/PublicarComunicado"],
+      "mensajes": [
+        "Comunicado publicado antes de su hora. Queda en la auditoría.",
+        "Ese comunicado ya estaba publicado.",
+        "No se puede acceder a ese comunicado."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "ADM-35",
+      "pregunta": "¿Cómo publico una corrección de un comunicado ya publicado o lo retiro desde Administración?",
+      "palabras": ["corrección", "publicar una corrección", "retirar", "comunicado", "motivo de la retirada"],
+      "permisos": [],
+      "antes": [
+        "Que el comunicado ya esté publicado y la familia todavía lo vea.",
+        "Para **retirar**, un motivo (hasta 500 caracteres): lo ve solo el personal. Es excepcional y **no se puede deshacer**."
+      ],
+      "pasos": [
+        { "texto": "En **Comunicados a la familia**, busca el comunicado ya publicado.", "botones": ["Comunicados a la familia"] },
+        { "texto": "Para corregirlo, pulsa **Publicar una corrección**, elige el «Tipo de la corrección» (ordinaria o relevante), escribe el «Texto de la corrección» (hasta 2000 caracteres) y pulsa **Publicar la corrección**.", "botones": ["Publicar una corrección", "Publicar la corrección"], "campos": ["Tipo de la corrección", "Texto de la corrección"] },
+        { "texto": "Para retirarlo, pulsa **Retirar**, escribe el «Motivo de la retirada» y pulsa **Retirar el comunicado**.", "botones": ["Retirar", "Retirar el comunicado"], "campos": ["Motivo de la retirada"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Una corrección se ve como una publicación nueva, junto al comunicado original. Un comunicado retirado se ve como «Esta novedad ya no está disponible.», sin su texto." },
+        { "para": "Administración", "texto": "Las dos acciones quedan en la auditoría con tu perfil (la retirada, con tu motivo). La corrección de un comunicado aún no publicado la hace Enfermería o Medicina, no Administración." }
+      ],
+      "dudas": [
+        { "p": "«Ese comunicado no admite una corrección: no está publicado, está retirado, la familia ya no lo ve o no es de tu ámbito.»", "r": "Solo se corrige un comunicado publicado, no retirado y que la familia aún vea." },
+        { "p": "«Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.»", "r": "Solo se retira un comunicado publicado y todavía no retirado." },
+        { "p": "«Revisa los datos: escribe el motivo de la retirada, de hasta 500 caracteres.»", "r": "El motivo es obligatorio y no puede pasar de 500 caracteres." }
+      ],
+      "rutas": ["Administracion/Comunicados", "Administracion/PublicarCorreccion", "Administracion/RetirarComunicado"],
+      "mensajes": [
+        "Corrección publicada. La familia la ve junto al comunicado original. Queda en la auditoría.",
+        "Comunicado retirado. La familia ve que ya no está disponible. Queda en la auditoría con tu motivo.",
+        "Ese comunicado no admite una corrección: no está publicado, está retirado, la familia ya no lo ve o no es de tu ámbito.",
+        "Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.",
+        "Revisa los datos: escribe el motivo de la retirada, de hasta 500 caracteres."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "ADM-36",
+      "pregunta": "¿Cómo cambio la hora de publicación de los comunicados, el margen y la frecuencia del resumen?",
+      "palabras": ["horario de comunicados", "hora de publicación", "margen", "resumen diario", "resumen semanal"],
+      "permisos": [],
+      "antes": [
+        "La **hora** a la que quieres que se publiquen los comunicados, el **margen** (el tiempo mínimo que falta entre guardar un comunicado y su publicación, para poder corregir errores; de 0 a 1.440 minutos) y si el resumen que ve la familia es diario o semanal."
+      ],
+      "pasos": [
+        { "texto": "En **Comunicados a la familia**, pulsa «Cambiar la hora de publicación y el margen del centro».", "botones": ["Comunicados a la familia"] },
+        { "texto": "Escribe la «Hora de publicación» y el «Margen (minutos)» y elige la «Frecuencia del resumen».", "campos": ["Hora de publicación", "Margen (minutos)", "Frecuencia del resumen"] },
+        { "texto": "Pulsa **Guardar**. Para volver a empezar desde los valores de partida, pulsa **Ver el horario sugerido**: los trae al formulario y no guarda nada hasta que pulses Guardar.", "botones": ["Guardar", "Ver el horario sugerido"] }
+      ],
+      "despues": [
+        { "para": "Enfermería", "texto": "Un comunicado se publica a la hora fijada si al guardarlo faltaba al menos el margen; si no, a esa hora del día siguiente. El cambio de hora o de margen vale solo para los comunicados que se guarden a partir de entonces: los ya guardados conservan su hora." },
+        { "para": "Familia", "texto": "Además de los comunicados de siempre, ve un resumen de los publicados en ese tiempo: el diario se corta cada día a la hora de publicación y el semanal, el domingo. Si no se publicó nada, no hay resumen. La frecuencia del resumen vale desde ya." }
+      ],
+      "dudas": [
+        { "p": "«Otra persona ha cambiado el horario desde que abriste la pantalla. Recarga para ver el vigente; lo que has escrito sigue aquí.»", "r": "Recarga y vuelve a guardar si sigue siendo lo que quieres." },
+        { "p": "«Revisa la hora, el margen (de 0 a 1440 minutos) y la frecuencia del resumen.»", "r": "Falta la hora, el margen se pasa del rango o no has elegido la frecuencia." },
+        { "p": "«Este centro sigue con el horario sugerido.»", "r": "Aún no se ha cambiado nunca; abajo aparece el historial de cambios cuando los haya." }
+      ],
+      "rutas": ["Administracion/Comunicados", "Administracion/HorarioComunicados"],
+      "mensajes": [
+        "Horario de los comunicados guardado. La hora y el margen se aplican a los comunicados que se guarden a partir de ahora; la frecuencia del resumen, desde ya.",
+        "Otra persona ha cambiado el horario desde que abriste la pantalla.",
+        "Revisa la hora, el margen (de 0 a 1440 minutos) y la frecuencia del resumen."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "ADM-37",
+      "pregunta": "¿Cómo configuro el servicio de citas con la familia?",
+      "palabras": ["citas", "reserva directa", "solicitud previa", "antelación", "horizonte", "modalidades", "servicio desactivado"],
+      "permisos": [],
+      "antes": [
+        "Decidir el **modo**: con **reserva directa**, la familia ve los huecos libres de cada equipo y modalidad y reserva uno sin que nadie se lo confirme; con **solicitud previa**, la familia envía una solicitud y tú le propones un hueco. Solo hay un modo vigente por centro.",
+        "Cuánta **antelación mínima** (de 0 a 720 horas) y cuántos días de **horizonte** (de 1 a 180) quieres ofrecer.",
+        "Qué modalidades admite cada equipo: Presencial, Telefónica o Videoconferencia, para el equipo médico y el de Enfermería."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Citas con la familia**.", "botones": ["Citas con la familia"] },
+        { "texto": "En **Servicio**, elige el «Modo del servicio» («Servicio desactivado», «Reserva directa» o «Solicitud previa»), la «Antelación mínima (horas)» y el «Horizonte máximo (días)», y marca las «Modalidades que admite cada equipo».", "campos": ["Modo del servicio", "Antelación mínima (horas)", "Horizonte máximo (días)", "Modalidades que admite cada equipo"] },
+        { "texto": "Pulsa **Guardar el servicio**. Sin franjas (ver ADM-38) la familia no ve ningún hueco.", "botones": ["Guardar el servicio"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Con reserva directa ve los huecos y reserva (ver FAM-04); con solicitud previa envía una solicitud (ver FAM-05). No reserva, reprograma ni cancela con menos antelación que la fijada: después tiene que llamar. Administración sí puede." },
+        { "para": "Administración", "texto": "La configuración se aplica a las reservas nuevas; las citas ya confirmadas y las solicitudes abiertas se conservan. Las citas no son un canal urgente. Las horas son las del centro." }
+      ],
+      "dudas": [
+        { "p": "«Revisa los datos: elige el modo de reserva, la antelación va de 0 a 720 horas y el horizonte de 1 a 180 días.»", "r": "Corrige el campo que se sale del rango." },
+        { "p": "«Otra persona ha cambiado la configuración desde que abriste la pantalla. Recarga para ver la vigente; lo que has escrito sigue aquí.»", "r": "Recarga y vuelve a guardar." },
+        { "p": "«No se puede mostrar la configuración.»", "r": "Es un fallo momentáneo: vuelve a abrir la pantalla." }
+      ],
+      "rutas": ["Administracion/Citas"],
+      "mensajes": [
+        "Configuración del servicio de citas guardada. Se aplica a las reservas nuevas; las citas ya confirmadas se conservan.",
+        "Revisa los datos: elige el modo de reserva, la antelación va de 0 a 720 horas y el horizonte de 1 a 180 días.",
+        "Otra persona ha cambiado la configuración desde que abriste la pantalla."
+      ],
+      "manual": { "id": "citas-administracion", "titulo": "Citas con la familia" }
+    },
+    {
+      "codigo": "ADM-38",
+      "pregunta": "¿Cómo añado franjas de atención y bloqueos al servicio de citas?",
+      "palabras": ["franjas", "bloqueos", "huecos", "horario de citas", "vacaciones", "sesión clínica"],
+      "permisos": [],
+      "antes": [
+        "Cada **franja** se repite todas las semanas, el día elegido, de la hora de inicio a la de fin, en citas de la duración indicada (de 5 a 240 minutos). Un equipo atiende una cita a la vez. Los huecos salen de las franjas cada vez que la familia los consulta; no se elige nunca un profesional concreto.",
+        "Un **bloqueo** quita los huecos de un equipo (de todas sus modalidades o de una) durante un rato: una sesión clínica, unas vacaciones."
+      ],
+      "pasos": [
+        { "texto": "En **Citas con la familia**, baja a **Franjas de atención** y, en «Añadir una franja», elige el «Equipo», el «Día de la semana», «Desde», «Hasta» y la «Duración de cada cita (minutos)». Pulsa **Añadir la franja**.", "botones": ["Añadir la franja"], "campos": ["Franjas de atención", "Día de la semana", "Duración de cada cita (minutos)"] },
+        { "texto": "Para dejar de ofrecer una franja, pulsa **Retirar** en su fila.", "botones": ["Retirar"] },
+        { "texto": "En **Bloqueos**, en «Añadir un bloqueo», elige el «Equipo» y la «Modalidad» (o «Todas las modalidades»), el rango «Desde» y «Hasta» y un «Motivo» (hasta 200 caracteres). Pulsa **Añadir el bloqueo**; para quitarlo, **Retirar**.", "botones": ["Añadir el bloqueo"], "campos": ["Bloqueos", "Modalidad", "Todas las modalidades", "Motivo"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Los huecos de una franja retirada o de un bloqueo dejan de ofrecerse. **No se cancelan las citas ya confirmadas**: esas se gestionan en la agenda (ver ADM-39)." }
+      ],
+      "dudas": [
+        { "p": "«La franja se solapa con otra del mismo equipo y día.»", "r": "Cambia las horas o retira la otra franja." },
+        { "p": "«Revisa la franja: la hora de fin debe ser posterior a la de inicio, la duración de 5 a 240 minutos y debe caber al menos una cita.»", "r": "Corrige las horas o la duración." },
+        { "p": "«No hay franjas. Sin franjas, la familia no ve ningún hueco.»", "r": "Añade al menos una franja." }
+      ],
+      "rutas": ["Administracion/Citas", "Administracion/CitasFranja", "Administracion/CitasBloqueo"],
+      "mensajes": [
+        "Franja añadida. Los huecos salen de las franjas cada vez que la familia los consulta.",
+        "Franja retirada. Las citas ya confirmadas se conservan.",
+        "Bloqueo añadido. Los huecos de ese rato dejan de ofrecerse; las citas ya confirmadas no se tocan.",
+        "Bloqueo retirado. Los huecos vuelven a ofrecerse.",
+        "La franja se solapa con otra del mismo equipo y día."
+      ],
+      "manual": { "id": "citas-administracion", "titulo": "Citas con la familia" }
+    },
+    {
+      "codigo": "ADM-39",
+      "pregunta": "¿Cómo veo la agenda de citas y reprogramo, cancelo o finalizo una cita?",
+      "palabras": ["agenda", "reprogramar", "cancelar cita", "finalizar", "citas pasadas sin cerrar"],
+      "permisos": [],
+      "antes": [
+        "Para reprogramar o cancelar: un **motivo** (hasta 500 caracteres). Lo ve el personal y queda en la auditoría; la familia no lo ve.",
+        "Una forma de **avisar tú a la familia** por teléfono: ResidApp le muestra el cambio, pero no la llama."
+      ],
+      "pasos": [
+        { "texto": "En **Citas con la familia**, pulsa **Ver la agenda de citas**. Ves las citas de la semana, con la persona de la familia que las reservó; cambia de semana con «← Semana anterior», «Esta semana» y «Semana siguiente →».", "botones": ["Ver la agenda de citas", "Esta semana"] },
+        { "texto": "Para moverla, pulsa **Reprogramar**, elige el «Nuevo hueco» entre los libres del mismo equipo, escribe el «Motivo» y pulsa **Reprogramar la cita**. Administración no tiene antelación mínima.", "botones": ["Reprogramar", "Reprogramar la cita"], "campos": ["Nuevo hueco", "Motivo"] },
+        { "texto": "Para anularla, pulsa **Cancelar**, escribe el «Motivo» y pulsa **Cancelar la cita**: el hueco queda libre.", "botones": ["Cancelar", "Cancelar la cita"] },
+        { "texto": "En **Citas pasadas sin cerrar** (de cualquier semana) pulsa **Finalizar** cuando sepas que la cita se celebró: que pasara la hora no lo dice.", "botones": ["Finalizar"], "campos": ["Citas pasadas sin cerrar"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Ve la hora nueva y que la cambió el centro, o que el centro la canceló, **sin el motivo**. Una baja del residente cancela solas sus citas futuras (ver ADM-24)." },
+        { "para": "Administración", "texto": "Cada cambio queda con quién y cuándo. Las citas pasadas sin cerrar salen en «Requiere atención» del inicio (ver ADM-01)." }
+      ],
+      "dudas": [
+        { "p": "«Ese hueco ya no está libre o la cita ya no está confirmada. Elige otro hueco; lo que has escrito sigue aquí.»", "r": "Otra persona lo ocupó o cambió la cita: elige otro." },
+        { "p": "«La cita ya no está confirmada. Vuelve a la agenda para ver su estado.»", "r": "Ya se canceló o se finalizó." },
+        { "p": "«Solo se puede finalizar una cita confirmada cuya hora de inicio ya ha pasado.»", "r": "Espera a que llegue su hora." },
+        { "p": "«No hay huecos libres de este equipo dentro del horizonte del servicio. Revisa las franjas y los bloqueos.»", "r": "Añade franjas o retira un bloqueo (ver ADM-38)." }
+      ],
+      "rutas": ["Administracion/Citas", "Administracion/AgendaCitas", "Administracion/ReprogramarCita", "Administracion/CancelarCita"],
+      "mensajes": [
+        "Cita reprogramada. La familia verá la hora nueva y que la cambió el centro, sin el motivo. Queda en la auditoría.",
+        "Cita cancelada. La familia verá que el centro la ha cancelado, sin el motivo. Queda en la auditoría.",
+        "Cita finalizada.",
+        "Ese hueco ya no está libre o la cita ya no está confirmada.",
+        "La cita ya no está confirmada. Vuelve a la agenda para ver su estado.",
+        "Solo se puede finalizar una cita confirmada cuya hora de inicio ya ha pasado."
+      ],
+      "manual": { "id": "citas-administracion", "titulo": "Citas con la familia" }
+    },
+    {
+      "codigo": "ADM-40",
+      "pregunta": "¿Cómo gestiono las solicitudes de cita: propongo un horario o cierro la solicitud?",
+      "palabras": ["solicitudes de cita", "proponer un horario", "cerrar la solicitud", "solicitud previa", "propuesta"],
+      "permisos": [],
+      "antes": [
+        "Que el servicio esté en **solicitud previa** (ver ADM-37): la familia pide una cita y tú le propones un hueco libre.",
+        "Una forma de **avisar tú a la familia** por teléfono si hace falta: no hay chat."
+      ],
+      "pasos": [
+        { "texto": "En **Citas con la familia**, pulsa **Ver las solicitudes de cita**. Las pestañas «Abiertas» y «Todas» filtran la lista; cada solicitud dice el residente, el equipo, la modalidad, el motivo, la disponibilidad de la familia y su comentario.", "botones": ["Ver las solicitudes de cita", "Abiertas", "Todas"] },
+        { "texto": "Para atenderla, pulsa **Proponer un horario**. Elige el hueco en «Hueco que propones» (los que encajan con la disponibilidad de la familia llevan una marca ✓), apunta si quieres el «Profesional (solo para el centro, opcional)» y pulsa **Enviar la propuesta**.", "botones": ["Proponer un horario", "Enviar la propuesta"], "campos": ["Hueco que propones", "Profesional (solo para el centro, opcional)"] },
+        { "texto": "Para no atenderla, pulsa **Cerrar la solicitud**, escribe el «Motivo» y pulsa **Cerrar la solicitud**.", "botones": ["Cerrar la solicitud"], "campos": ["Motivo"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Recibe la propuesta y la acepta o pide otro horario (ver FAM-06). **La cita solo se confirma si la acepta**; mientras tanto el hueco queda reservado, y si no responde, la propuesta caduca. Si cierras la solicitud, ve que el centro la ha cerrado, sin el motivo." },
+        { "para": "Administración", "texto": "Si había una propuesta al cerrar, el hueco queda libre. Las solicitudes por gestionar y las propuestas esperando respuesta salen en «Requiere atención» (ver ADM-01)." }
+      ],
+      "dudas": [
+        { "p": "«Ese hueco ya no está libre o la solicitud ya no está pendiente. Elige otro hueco; lo que has escrito sigue aquí.»", "r": "Otra persona lo ocupó o ya atendió la solicitud: elige otro." },
+        { "p": "«La solicitud ya no está abierta. Vuelve a la bandeja para ver su estado.»", "r": "Ya se cerró o se aceptó." },
+        { "p": "«No hay solicitudes abiertas.»", "r": "No hay nada que atender: prueba con «Todas»." }
+      ],
+      "rutas": ["Administracion/Citas", "Administracion/SolicitudesCitas", "Administracion/ProponerCita", "Administracion/CerrarSolicitudCita"],
+      "mensajes": [
+        "Propuesta enviada. El hueco queda reservado hasta que la familia responda; la cita solo se confirma si la acepta.",
+        "Solicitud cerrada. La familia verá que el centro la ha cerrado, sin el motivo. Queda en la auditoría.",
+        "Ese hueco ya no está libre o la solicitud ya no está pendiente.",
+        "La solicitud ya no está abierta. Vuelve a la bandeja para ver su estado.",
+        "No hay solicitudes abiertas."
+      ],
+      "manual": { "id": "citas-administracion", "titulo": "Citas con la familia" }
+    },
+    {
+      "codigo": "ADM-41",
+      "pregunta": "¿Cómo creo, renombro o inactivo un turno del centro?",
+      "palabras": ["turnos", "nuevo turno", "mañana", "tarde", "noche", "horas del turno"],
+      "permisos": [],
+      "antes": [
+        "El **nombre** del turno y sus **horas de inicio y de fin**. Las horas **no se pueden cambiar** una vez creado el turno, para no alterar lo ya planificado: si hacen falta otras, se crea otro turno y se inactiva el anterior.",
+        "Si la hora de fin es igual o anterior a la de inicio (por ejemplo, de 22:00 a 06:00), el turno termina al día siguiente."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Turnos**. Los turnos son del centro.", "botones": ["Turnos"] },
+        { "texto": "Pulsa **Nuevo turno**, escribe el «Nombre», la «Hora de inicio» y la «Hora de fin» y pulsa **Crear turno**.", "botones": ["Nuevo turno", "Crear turno"], "campos": ["Nombre", "Hora de inicio", "Hora de fin"] },
+        { "texto": "Para renombrarlo, **Cambiar nombre**, escribe el nombre y **Guardar nombre**. Para retirarlo de uso, **Inactivar** (o **Reactivar**).", "botones": ["Cambiar nombre", "Guardar nombre", "Inactivar", "Reactivar"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "El turno queda disponible para planificar (ver ADM-43). Planificar un turno no da acceso a nada." }
+      ],
+      "dudas": [
+        { "p": "«Ya existe un turno con ese nombre en el centro.»", "r": "Usa otro nombre; al renombrar, «Ya existe otro turno con ese nombre en el centro.»" },
+        { "p": "«Revisa los datos: el nombre es obligatorio y hacen falta las dos horas.»", "r": "Completa el nombre y las dos horas." }
+      ],
+      "rutas": ["Administracion/Turnos", "Administracion/NuevoTurno", "Administracion/NombreTurno"],
+      "mensajes": [
+        "Turno creado. Sus horas no se pueden cambiar después: si hacen falta otras, crea otro turno.",
+        "Nombre guardado.",
+        "Ya existe un turno con ese nombre en el centro.",
+        "Revisa los datos: el nombre es obligatorio y hacen falta las dos horas."
+      ],
+      "manual": { "id": "turnos-equipos-administracion", "titulo": "Turnos, equipos y planificación" }
+    },
+    {
+      "codigo": "ADM-42",
+      "pregunta": "¿Cómo creo un equipo y le añado o doy de baja a sus miembros?",
+      "palabras": ["equipos", "nuevo equipo", "miembros", "dar de baja del equipo"],
+      "permisos": [],
+      "antes": [
+        "Un equipo es un grupo con nombre dentro de **una sola unidad** de tu ámbito, que no se puede cambiar después.",
+        "Los miembros son **cuentas activas con un perfil de Auxiliar, Enfermería o Medicina que tenga la unidad del equipo** (ver ADM-13). Una persona puede estar en varios equipos. Pertenecer a un equipo no da acceso a nada."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Equipos** y pulsa **Nuevo equipo**.", "botones": ["Equipos", "Nuevo equipo"] },
+        { "texto": "Elige la «Unidad», escribe el «Nombre» y pulsa **Crear equipo**.", "botones": ["Crear equipo"], "campos": ["Unidad", "Nombre"] },
+        { "texto": "Para ponerle gente, pulsa **Miembros** en el equipo, elige la «Cuenta» y pulsa **Añadir**. Para quitar a alguien, **Dar de baja**.", "botones": ["Miembros", "Añadir", "Dar de baja"], "campos": ["Cuenta"] },
+        { "texto": "Para renombrarlo, **Cambiar nombre** y **Guardar nombre**; para retirarlo de uso, **Inactivar** (o **Reactivar**: un equipo inactivo no admite miembros nuevos).", "botones": ["Cambiar nombre", "Guardar nombre", "Inactivar", "Reactivar"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Los equipos activos se planifican en los turnos (ver ADM-43). Verás «Equipo creado. Añade a sus miembros desde «Miembros».», «Miembro añadido al equipo.» o «Miembro dado de baja del equipo.»." }
+      ],
+      "dudas": [
+        { "p": "«Ya existe un equipo con ese nombre en la unidad.»", "r": "Usa otro nombre dentro de esa unidad." },
+        { "p": "No hay más cuentas que se puedan añadir.", "r": "Tienen que estar activas y tener el perfil con la unidad del equipo: se concede en Usuarios (ver ADM-12 y ADM-13)." },
+        { "p": "Un miembro sale con «Ya no tiene un perfil de equipo en esta unidad».", "r": "Se le quitó el perfil o la unidad: puedes darlo de baja del equipo." },
+        { "p": "«Tu ámbito no tiene ninguna unidad activa: no se puede crear un equipo.»", "r": "Crea una unidad o pide que te añadan unidades (ver ADM-03 y ADM-07)." }
+      ],
+      "rutas": ["Administracion/Equipos", "Administracion/NuevoEquipo", "Administracion/MiembrosEquipo", "Administracion/NombreEquipo"],
+      "mensajes": [
+        "Equipo creado. Añade a sus miembros desde «Miembros».",
+        "Miembro añadido al equipo.",
+        "Miembro dado de baja del equipo.",
+        "Ya existe un equipo con ese nombre en la unidad."
+      ],
+      "manual": { "id": "turnos-equipos-administracion", "titulo": "Turnos, equipos y planificación" }
+    },
+    {
+      "codigo": "ADM-43",
+      "pregunta": "¿Cómo planifico qué equipo hace qué turno cada día?",
+      "palabras": ["planificación", "planificar un turno", "calendario de turnos", "solapamientos", "festivos"],
+      "permisos": [],
+      "antes": [
+        "Al menos un **equipo activo** (ver ADM-42) y un **turno activo** (ver ADM-41).",
+        "El rango de fechas, entre hoy y un año vista, y los días de la semana en que se repite: hasta 367 fechas por envío (una **serie**)."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Planificación de turnos** y pulsa **Planificar un turno**.", "botones": ["Planificación de turnos", "Planificar un turno"] },
+        { "texto": "Elige el «Equipo» y el «Turno», el rango «Desde» y «Hasta» y los «Días de la semana». Si hay fechas que no se planifican (festivos), escríbelas en «Fechas a saltar (festivos)», separadas por comas o una por línea (AAAA-MM-DD o DD/MM/AAAA).", "campos": ["Equipo", "Turno", "Desde", "Hasta", "Días de la semana", "Fechas a saltar (festivos)"] },
+        { "texto": "Pulsa el botón para continuar: antes de guardar, la pantalla dice en cuántas fechas se planificaría, cuántas se saltan y cuántas ya tenían ese equipo en ese turno (se omiten).", "botones": ["Planificar"] },
+        { "texto": "Si un equipo, o una persona que está en dos equipos, queda en turnos que se **solapan**, se te avisa en «Solapamientos»: puedes seguir adelante escribiendo la «Justificación» y pulsando **Confirmar y planificar con estos solapamientos**, o volver y cambiar equipo, turno o fechas.", "botones": ["Confirmar y planificar con estos solapamientos"], "campos": ["Justificación"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Verás «Planificado en N fechas.». Las fechas con solapamiento llevan la etiqueta «Solapamiento justificado» y tu justificación. Planificar no da acceso a nada: el acceso sigue dependiendo de los perfiles y las unidades." },
+        { "para": "Personal del centro", "texto": "Ven la planificación en la pantalla de Administración; no cambia lo que cada perfil puede hacer." }
+      ],
+      "dudas": [
+        { "p": "«Los solapamientos han cambiado. Revísalos de nuevo antes de confirmar.»", "r": "Mientras confirmabas, otra planificación cambió los solapamientos: vuelve a revisarlos." },
+        { "p": "Hacen falta al menos un equipo activo y un turno activo para planificar.", "r": "Crea o reactiva un equipo o un turno." }
+      ],
+      "rutas": ["Administracion/Planificacion", "Administracion/PlanificarTurno"],
+      "mensajes": [
+        "Planificado en",
+        "Los solapamientos han cambiado. Revísalos de nuevo antes de confirmar.",
+        "Hacen falta al menos un"
+      ],
+      "manual": { "id": "turnos-equipos-administracion", "titulo": "Turnos, equipos y planificación" }
+    },
+    {
+      "codigo": "ADM-44",
+      "pregunta": "¿Cómo veo la planificación de turnos y retiro una fecha o una serie?",
+      "palabras": ["planificación", "retirar fecha", "retirar serie", "ver serie", "dos semanas"],
+      "permisos": [],
+      "antes": [
+        "Solo se pueden retirar las fechas **de hoy en adelante**: lo pasado no se retira. Lo retirado no se borra: queda en la auditoría."
+      ],
+      "pasos": [
+        { "texto": "En **Planificación de turnos**, elige el «Desde (dos semanas)» y la «Unidad» (o «Todas las de mi ámbito») y pulsa **Ver**. Con los enlaces «Dos semanas antes» y «Dos semanas después» cambias de periodo.", "botones": ["Planificación de turnos", "Ver"], "campos": ["Desde (dos semanas)", "Unidad"] },
+        { "texto": "Cada día muestra el turno con sus horas, la unidad y el equipo con sus miembros. Para quitar una fecha suelta, pulsa **Retirar** en su fila.", "botones": ["Retirar"] },
+        { "texto": "Para quitar varias a la vez, pulsa **Ver serie** (las fechas guardadas en un mismo envío forman una serie), elige «Retirar desde» y pulsa **Retirar la serie desde esa fecha**.", "botones": ["Ver serie", "Retirar la serie desde esa fecha"], "campos": ["Retirar desde"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Verás «Planificación retirada.» o «Serie retirada: N fechas desde esa fecha.»; la serie conserva las fechas anteriores." }
+      ],
+      "dudas": [
+        { "p": "«Solo se pueden retirar las fechas de hoy en adelante.»", "r": "Esa fecha ya pasó." },
+        { "p": "«Esa planificación ya estaba retirada.»", "r": "Otra persona la retiró antes." },
+        { "p": "«La serie no tiene fechas planificadas desde esa fecha (hoy o después).»", "r": "Elige una fecha anterior o comprueba la serie." }
+      ],
+      "rutas": ["Administracion/Planificacion", "Administracion/SeriePlanificacion"],
+      "mensajes": [
+        "Planificación retirada.",
+        "Solo se pueden retirar las fechas de hoy en adelante.",
+        "Esa planificación ya estaba retirada.",
+        "La serie no tiene fechas planificadas desde esa fecha (hoy o después)."
+      ],
+      "manual": { "id": "turnos-equipos-administracion", "titulo": "Turnos, equipos y planificación" }
+    },
+    {
+      "codigo": "ADM-45",
+      "pregunta": "¿Cómo creo y organizo los cargos del organigrama del centro?",
+      "palabras": ["organigrama", "cargos", "plantilla de cargos", "depende de", "una persona", "varias personas"],
+      "permisos": [],
+      "antes": [
+        "Qué cargos hay y de cuál depende cada uno (**uno solo**), y si lo ocupa **una persona o varias**. Un cargo puede ligarse a una o varias unidades de tu ámbito. **Ocupar un cargo no da permisos**: los perfiles y permisos se gestionan aparte. Los equipos de turnos no tienen relación con el organigrama."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Organigrama y cargos**.", "botones": ["Organigrama y cargos"] },
+        { "texto": "Si el centro no tiene cargos, puedes pulsar **Cargar la plantilla**: crea los ocho sugeridos (Dirección del centro, Dirección médica, Coordinación de Enfermería, Responsable de unidad o planta, Medicina, Enfermería, Auxiliares y Responsable de Administración). Solo se puede hacer mientras no haya ninguno.", "botones": ["Cargar la plantilla"] },
+        { "texto": "Para uno nuevo, pulsa **Nuevo cargo**, escribe el «Nombre del cargo», elige «¿Cuántas personas lo ocupan?» y «Depende de» (o «Ninguno: es un cargo de mayor nivel»), una «Nota de coordinación funcional» opcional y las «Unidades a las que se liga». Pulsa **Crear el cargo**.", "botones": ["Nuevo cargo", "Crear el cargo"], "campos": ["Nombre del cargo", "¿Cuántas personas lo ocupan?", "Depende de", "Nota de coordinación funcional", "Unidades a las que se liga"] },
+        { "texto": "Para cambiarlo, pulsa **Cambiar** en su fila y **Guardar**. Para retirarlo de uso, **Inactivar** (o **Reactivar**).", "botones": ["Cambiar", "Guardar", "Inactivar", "Reactivar"] }
+      ],
+      "despues": [
+        { "para": "Personal del centro", "texto": "Todos los profesionales ven el organigrama en solo lectura (ver DIR-09); la familia, nunca. Solo se guarda lo actual: quién cambió qué cargo y cuándo queda en la auditoría, sin los nombres." }
+      ],
+      "dudas": [
+        { "p": "«Cargo creado. Ahora puedes ponerle personas desde la lista de cargos.»", "r": "Es la confirmación; sigue con ADM-46." },
+        { "p": "Un cargo no sale en «Depende de».", "r": "Un cargo no puede depender de sí mismo ni de uno de sus subordinados." },
+        { "p": "Quiero ver cómo lo ve el personal.", "r": "Pulsa **Ver como lo ve el personal**." }
+      ],
+      "rutas": ["Administracion/Cargos", "Administracion/NuevoCargo", "Administracion/EditarCargo", "Administracion/EstadoCargo"],
+      "mensajes": [
+        "Cargo creado. Ahora puedes ponerle personas desde la lista de cargos.",
+        "Cargo guardado.",
+        "Plantilla cargada: cambia, quita o añade los cargos que haga falta."
+      ],
+      "manual": { "id": "organigrama-cargos", "titulo": "Organigrama y cargos" }
+    },
+    {
+      "codigo": "ADM-46",
+      "pregunta": "¿Cómo pongo o quito a una persona en un cargo?",
+      "palabras": ["ocupar un cargo", "poner una persona", "quitar", "persona sin cuenta", "gerencia"],
+      "permisos": [],
+      "antes": [
+        "El cargo ya creado y activo (ver ADM-45).",
+        "La persona: una **cuenta de la aplicación** o, si no tiene cuenta (por ejemplo, la gerencia o el personal administrativo), **solo su nombre**: no se guarda ningún contacto ni otro dato. Una persona puede ocupar varios cargos."
+      ],
+      "pasos": [
+        { "texto": "En **Organigrama y cargos**, pulsa **Poner una persona** en el cargo.", "botones": ["Poner una persona"] },
+        { "texto": "Elige la «Cuenta de la aplicación» **o** escribe la «Persona sin cuenta (solo el nombre)»: una de las dos, no las dos.", "campos": ["Cuenta de la aplicación", "Persona sin cuenta (solo el nombre)"] },
+        { "texto": "Pulsa **Poner en el cargo**. Para quitar a alguien, pulsa **Quitar** junto a su nombre.", "botones": ["Poner en el cargo", "Quitar"] }
+      ],
+      "despues": [
+        { "para": "Personal del centro", "texto": "Ven en el organigrama quién ocupa cada cargo. Ocupar un cargo no da permisos ni acceso." },
+        { "para": "Administración", "texto": "Verás «Persona puesta en el cargo.» o «Persona quitada del cargo. El organigrama solo guarda lo actual.»." }
+      ],
+      "dudas": [
+        { "p": "El cargo ya lo ocupa alguien y es de una sola persona.", "r": "Para poner a otra, quita antes a esa persona desde la lista de cargos." }
+      ],
+      "rutas": ["Administracion/Cargos", "Administracion/OcuparCargo"],
+      "mensajes": [
+        "Persona puesta en el cargo.",
+        "Persona quitada del cargo. El organigrama solo guarda lo actual."
+      ],
+      "manual": { "id": "organigrama-cargos", "titulo": "Organigrama y cargos" }
     }
   ]
 }
