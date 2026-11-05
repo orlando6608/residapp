@@ -392,7 +392,7 @@
         "Saber que los plazos se escriben en **minutos** (1 hora = 60; 8 horas = 480), con un plazo para el evento normal y otro para el prioritario. Un campo vacío significa que ese plazo no se mide."
       ],
       "pasos": [
-        { "texto": "En el Inicio, abre **Plazos de los hitos del proceso** (o, en «Calidad de proceso», el botón **Cambiar los plazos del centro**).", "botones": ["Plazos de los hitos del proceso", "Cambiar los plazos del centro"] },
+        { "texto": "Pulsa **Inicio** (en las migas de pan, arriba) y abre **Plazos de los hitos del proceso** (o, en «Calidad de proceso», el botón **Cambiar los plazos del centro**).", "botones": ["Inicio", "Plazos de los hitos del proceso", "Cambiar los plazos del centro"] },
         { "texto": "En cada hito, escribe el «Plazo (minutos)» y el «Plazo si es prioritario (minutos)». Un plazo va de 1 a 10080 minutos (una semana).", "campos": ["Plazo (minutos)", "Plazo si es prioritario (minutos)"] },
         { "texto": "Si quieres volver a los plazos de partida, pulsa **Ver los plazos sugeridos**: los trae al formulario y no guarda nada hasta que pulses **Guardar**.", "botones": ["Ver los plazos sugeridos"] },
         { "texto": "Pulsa **Guardar**.", "botones": ["Guardar"] }
@@ -428,7 +428,7 @@
         "Saber que los rangos se aplican a **todo el centro** y que solo sirven de aviso informativo en las valoraciones: no impiden guardar ni cambian la clasificación o la prioridad del evento."
       ],
       "pasos": [
-        { "texto": "En el Inicio, abre **Rangos de referencia de constantes**.", "botones": ["Rangos de referencia de constantes"] },
+        { "texto": "Pulsa **Inicio** (en las migas de pan, arriba) y abre **Rangos de referencia de constantes**.", "botones": ["Inicio", "Rangos de referencia de constantes"] },
         { "texto": "Para cada constante (temperatura, presión arterial sistólica y diastólica, frecuencias cardíaca y respiratoria, saturación de oxígeno y glucemia), escribe el «Mínimo», el «Máximo» o ambos. Déjalos vacíos para que esa constante no tenga rango.", "campos": ["Mínimo", "Máximo"] },
         { "texto": "Si quieres partir de los valores que propone el equipo clínico del producto, pulsa **Cargar valores sugeridos**: rellena el formulario y no guarda nada. Revísalos.", "botones": ["Cargar valores sugeridos"] },
         { "texto": "Pulsa **Guardar rangos**.", "botones": ["Guardar rangos"] }
