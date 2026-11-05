@@ -18,6 +18,7 @@ using ResidApp.Infrastructure.Intercambio;
 using ResidApp.Infrastructure.Pdf;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.Web.Correo;
+using ResidApp.Web.Models;
 using ResidApp.Web.Security;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -208,6 +209,8 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 // La clave de los documentos de CJ (/pendientes-cj): un freno para el desarrollo, ver PendientesCjAccess.
 builder.Services.AddSingleton<PendientesCjAccess>();
+// Guía por perfil (/Guia): las fichas están en Guia/*.json, junto al resto de ficheros de la web (se publican con ella).
+builder.Services.AddSingleton(sp => GuiaCatalogo.Cargar(Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().ContentRootPath, "Guia")));
 
 builder.Services.AddScoped<CreateResident>();
 builder.Services.AddScoped<SignBaseline>();

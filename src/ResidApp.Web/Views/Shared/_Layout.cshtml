@@ -170,11 +170,16 @@
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
-        @if (brandingLayout is not null)
+        @if (brandingLayout is not null || IsSectionDefined("PieImpresion"))
         {
-            @* Con la marca del centro arriba, la de ResidApp queda al pie de cada página impresa (site.css). *@
+            @* Con la marca del centro arriba, la de ResidApp queda al pie de cada página impresa (site.css). Una página puede añadir su propio pie
+               con la sección «PieImpresion» (la Guía por perfil, con su sello de revisión): comparte el mismo grupo para que se repita en cada página. *@
             <div class="d-none impresion-pie">
-                <div class="border-top pt-2 mt-3 small text-muted">Generado con ResidApp · Plataforma Asistencial Geriátrica</div>
+                @if (brandingLayout is not null)
+                {
+                    <div class="border-top pt-2 mt-3 small text-muted">Generado con ResidApp · Plataforma Asistencial Geriátrica</div>
+                }
+                @await RenderSectionAsync("PieImpresion", required: false)
             </div>
         }
     </div>
@@ -188,6 +193,7 @@
             <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
             <a asp-area="" asp-controller="Home" asp-action="Manual">Manual de usuario</a>
             <a href="~/flujo-de-trabajo.html">Flujo de trabajo</a>
+            <a asp-area="" asp-controller="Guia" asp-action="Index">Guía por perfil</a>
             <a href="~/acceso-y-sesion.html">Acceso y sesión</a>
             <a href="~/pendientes-cj/index.html">Documentos de CJ</a>
         </div>

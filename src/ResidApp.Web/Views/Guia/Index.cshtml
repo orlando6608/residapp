@@ -1,0 +1,55 @@
+@using ResidApp.Web.Models
+@model GuiaCatalogo
+@{
+    ViewData["Title"] = "Guía por perfil";
+}
+
+<link rel="stylesheet" href="~/css/guia.css" asp-append-version="true" />
+
+<nav aria-label="breadcrumb" class="guia-no-imprimir">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Guía por perfil</li>
+    </ol>
+</nav>
+
+<h1 class="h2">Guía por perfil</h1>
+<p class="text-muted">
+    «Soy X, ¿qué puedo hacer y cómo lo hago?». Una guía para cada perfil, con una ficha por tarea. ResidApp no diagnostica ni sustituye
+    los protocolos de tu centro. Esta guía resume y remite: el detalle de cada pantalla está en el
+    <a asp-controller="Home" asp-action="Manual">Manual de usuario</a> y los procesos de principio a fin, en el
+    <a href="~/flujo-de-trabajo.html">Flujo de trabajo</a>.
+</p>
+
+<section class="mb-4" aria-labelledby="perfiles">
+    <h2 class="h4" id="perfiles">Elige tu perfil</h2>
+    <ul class="list-unstyled d-flex flex-wrap gap-2">
+        @foreach (var entrada in GuiaPerfiles.Todos)
+        {
+            var perfil = Model.Perfil(entrada.Slug);
+            <li class="perfil-@entrada.Slug">
+                @if (perfil is null)
+                {
+                    <span class="guia-chip guia-pendiente">@entrada.Titulo · en preparación</span>
+                }
+                else
+                {
+                    <a class="guia-chip text-decoration-none" asp-action="Perfil" asp-route-slug="@entrada.Slug">@entrada.Titulo</a>
+                }
+            </li>
+        }
+    </ul>
+</section>
+
+<section class="mb-4" aria-labelledby="preguntas">
+    <h2 class="h4" id="preguntas">Índice de preguntas</h2>
+    <ul class="guia-indice">
+        @foreach (var (perfil, ficha) in Model.Preguntas())
+        {
+            <li class="perfil-@perfil.Slug">
+                <a asp-action="Perfil" asp-route-slug="@perfil.Slug" asp-fragment="@ficha.Codigo"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a>
+                <span class="text-muted small">(@perfil.Titulo)</span>
+            </li>
+        }
+    </ul>
+</section>

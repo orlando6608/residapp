@@ -1,0 +1,126 @@
+@using System.Globalization
+@using ResidApp.Web.Models
+@model GuiaPerfil
+@{
+    ViewData["Title"] = "Guía de " + Model.Titulo;
+    var sello = Model.RevisadoPara is null ? "Pendiente de revisión de punta a punta" : "Revisado para ResidApp v" + Model.RevisadoPara;
+    var fecha = DateOnly.ParseExact(Model.Revisado, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+}
+
+<link rel="stylesheet" href="~/css/guia.css" asp-append-version="true" />
+
+<nav aria-label="breadcrumb" class="guia-no-imprimir">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Guía por perfil</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Titulo</li>
+    </ol>
+</nav>
+
+<div class="perfil-@Model.Slug">
+    <div class="guia-cabecera mb-3">
+        <h1 class="h2">Guía de @Model.Titulo</h1>
+        @if (Model.NombreEnPantalla is { } enPantalla)
+        {
+            <p class="mb-1">En pantalla, este perfil se llama «@enPantalla».</p>
+        }
+        <p class="text-muted mb-0">
+            Lo que puedes hacer en ResidApp con este perfil, tarea a tarea. ResidApp no diagnostica ni sustituye los protocolos de tu
+            centro. El detalle de cada pantalla está en el <a asp-controller="Home" asp-action="Manual">Manual de usuario</a>
+            (<span class="font-monospace">/Home/Manual</span>) y los procesos de principio a fin, en el
+            <a href="~/flujo-de-trabajo.html">Flujo de trabajo</a> (<span class="font-monospace">/flujo-de-trabajo.html</span>).
+        </p>
+    </div>
+
+    <section class="mb-4" aria-labelledby="para-que">
+        <h2 class="h4" id="para-que">Para qué existe este perfil</h2>
+        <p>@GuiaTexto.Html(Model.Proposito)</p>
+    </section>
+
+    @if (Model.Rutina is { Count: > 0 } rutina)
+    {
+        <section class="mb-4" aria-labelledby="rutina">
+            <h2 class="h4" id="rutina">Un día típico</h2>
+            <ul>
+                @foreach (var item in rutina)
+                {
+                    <li>@GuiaTexto.Html(item)</li>
+                }
+            </ul>
+        </section>
+    }
+
+    <section class="mb-4" aria-labelledby="depende">
+        <h2 class="h4" id="depende">De quién depende y a quién le entrega trabajo</h2>
+        <partial name="@("_Diagrama-" + Model.Slug)" />
+        <ul class="mt-3">
+            <li>@(Model.DependeDe.Count == 0 ? "No depende de ningún otro perfil." : "Depende de: " + string.Join(", ", Model.DependeDe) + ".")</li>
+            <li>@(Model.EntregaA.Count == 0 ? "No le entrega trabajo a ningún otro perfil." : "Le entrega trabajo a: " + string.Join(", ", Model.EntregaA) + ".")</li>
+        </ul>
+    </section>
+
+    <section class="mb-4" aria-labelledby="que-puedes">
+        <h2 class="h4" id="que-puedes">Lo que puedes hacer y lo que no</h2>
+        <div class="guia-permisos">
+            <section aria-labelledby="p-siempre">
+                <h3 id="p-siempre"><span class="etiqueta etiqueta-siempre">Siempre</span></h3>
+                <ul>
+                    @foreach (var item in Model.Siempre)
+                    {
+                        <li>@GuiaTexto.Html(item)</li>
+                    }
+                </ul>
+            </section>
+            <section aria-labelledby="p-permiso">
+                <h3 id="p-permiso"><span class="etiqueta etiqueta-permiso">Requiere permiso</span></h3>
+                @if (Model.ConPermiso.Count == 0)
+                {
+                    <p class="mb-0">Este perfil no tiene permisos configurables.</p>
+                }
+                else
+                {
+                    <ul>
+                        @foreach (var item in Model.ConPermiso)
+                        {
+                            <li>@GuiaTexto.Html(item)</li>
+                        }
+                    </ul>
+                }
+            </section>
+            <section aria-labelledby="p-nunca">
+                <h3 id="p-nunca"><span class="etiqueta etiqueta-nunca">Nunca</span></h3>
+                <ul>
+                    @foreach (var item in Model.Nunca)
+                    {
+                        <li>@GuiaTexto.Html(item)</li>
+                    }
+                </ul>
+            </section>
+        </div>
+    </section>
+
+    <section class="mb-4" aria-labelledby="indice-fichas">
+        <h2 class="h4" id="indice-fichas">Índice de tareas</h2>
+        <ul class="guia-indice">
+            @foreach (var ficha in Model.Fichas)
+            {
+                <li><a href="#@ficha.Codigo"><span class="ficha-codigo">@ficha.Codigo</span>@ficha.Pregunta</a></li>
+            }
+        </ul>
+    </section>
+
+    <section aria-labelledby="fichas">
+        <h2 class="h4" id="fichas">Tareas</h2>
+        @foreach (var ficha in Model.Fichas)
+        {
+            <partial name="_Ficha" model="(Model, ficha)" />
+        }
+    </section>
+
+    <p class="guia-sello guia-sello-pantalla">@sello · Estado a @fecha · Guía por perfil: @Model.Titulo</p>
+</div>
+
+@* En papel el sello va en el pie de cada página (grupo «impresion-pie» del _Layout), no solo al final. *@
+@section PieImpresion {
+    <p class="guia-sello mb-0">@sello · Estado a @fecha · Guía por perfil: @Model.Titulo</p>
+}

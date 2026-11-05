@@ -1,0 +1,67 @@
+{
+  "perfil": "Plataforma",
+  "proposito": "Plataforma es el perfil de quien opera ResidApp, no del personal de un centro. Su trabajo es dar de alta los centros nuevos, entregar su primer acceso a la Administración de cada uno y dar soporte de accesos. Este perfil no ve residentes ni contenido clínico.",
+  "dependeDe": [],
+  "entregaA": ["Administración"],
+  "siempre": [
+    "Ver la lista de centros.",
+    "Crear un centro nuevo con su primera unidad y su primer administrador.",
+    "Crear la invitación de acceso o de recuperación de una Administración.",
+    "Marcar o quitar la marca de Administración principal, y añadir una unidad al ámbito de una Administración."
+  ],
+  "conPermiso": [],
+  "nunca": [
+    "Ver residentes, familiares ni nada clínico."
+  ],
+  "revisadoPara": null,
+  "revisado": "2026-11-05",
+  "fichas": [
+    {
+      "codigo": "PLA-02",
+      "pregunta": "¿Cómo creo un centro nuevo y qué datos necesito?",
+      "palabras": ["alta de centro", "centro nuevo", "primer administrador", "primera unidad", "logo", "invitación"],
+      "permisos": [],
+      "concede": null,
+      "antes": [
+        "Estar dentro con el perfil **Plataforma** (se entra con passkey).",
+        "Del **centro**: un *código* (de 2 a 64 caracteres: letras sin acentos, dígitos, «-» o «_»; se guarda en mayúsculas y **no se puede cambiar después**; «PLATAFORMA» no vale) y un *nombre* (hasta 200 caracteres).",
+        "De su **primera unidad**: un código (mismas reglas) y un nombre.",
+        "Del **primer administrador**: un *identificador de acceso* (de 3 a 200 caracteres: letras, dígitos y `.` `_` `-` `@`, sin espacios; **no puede ser el de una cuenta que ya exista**) y su nombre.",
+        "Opcional, el **logo** del centro: una imagen PNG o JPEG de 512 KB y 1024 píxeles por lado como máximo. Después lo cambia la Administración del propio centro.",
+        "Una forma de **entregar la invitación en mano**: una impresora, o la pantalla para enseñar el código QR."
+      ],
+      "pasos": [
+        { "texto": "Abre **Centros** (es la tarjeta de tu inicio, o el enlace «Mi panel» de arriba) y pulsa **Nuevo centro**.", "botones": ["Centros", "Mi panel", "Nuevo centro"] },
+        { "texto": "En **Centro**, escribe «Código del centro» y «Nombre del centro». Si quieres, añade el «Logo del centro (opcional)».", "campos": ["Código del centro", "Nombre del centro", "Logo del centro (opcional)"] },
+        { "texto": "En **Primera unidad**, escribe «Código de la primera unidad» y «Nombre de la primera unidad».", "campos": ["Código de la primera unidad", "Nombre de la primera unidad"] },
+        { "texto": "En **Primer administrador**, escribe «Identificador de acceso del administrador» y «Nombre del administrador».", "campos": ["Identificador de acceso del administrador", "Nombre del administrador"] },
+        { "texto": "Pulsa **Crear centro**. Se crea todo a la vez o nada: el centro, la unidad y la cuenta del administrador, que nace activa con el perfil Administración y la unidad concedida.", "botones": ["Crear centro"] },
+        { "texto": "Sale el aviso verde «Centro creado…». En el centro nuevo, pulsa **Administraciones y unidades**.", "botones": ["Administraciones y unidades"] },
+        { "texto": "En la tarjeta del administrador, pulsa **Crear invitación de acceso o de recuperación**. Sale la hoja con su usuario, el centro, hasta cuándo vale (72 horas, una sola vez) y un código QR.", "botones": ["Crear invitación de acceso o de recuperación"] },
+        { "texto": "Pulsa **Imprimir** (o enséñale la pantalla) y **entrégale la hoja en mano**.", "botones": ["Imprimir"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "En cuanto use la invitación elige su contraseña (al menos 12 caracteres) y prepara el código del móvil. Entra en el **Inicio de Administración** de su centro, como **Administración principal** (la primera de un centro lo es) y con la unidad concedida. Lo encuentra vacío: todavía no hay residentes, usuarios ni estructura. Lo primero que le toca es dar nombre y logo al centro, montar su estructura (edificios, habitaciones y plazas) y dar de alta a su equipo con sus perfiles y permisos." },
+        { "para": "Plataforma", "texto": "Tu parte termina al entregar la hoja. No ves residentes ni contenido clínico. Todo queda en la auditoría." }
+      ],
+      "dudas": [
+        { "p": "«Ya existe un centro con ese código o una cuenta con ese identificador de acceso.»", "r": "No se ha creado nada. Cambia el código del centro o el identificador del administrador y vuelve a pulsar «Crear centro»." },
+        { "p": "«Revisa los datos: los códigos llevan de 2 a 64 caracteres…»", "r": "Corrige el campo que no cumpla: los códigos no admiten acentos ni espacios, y el identificador de acceso no admite espacios." },
+        { "p": "El logo no se acepta.", "r": "Tiene que ser una imagen PNG o JPEG de 512 KB y 1024 píxeles por lado como máximo. Si la eliges desde el ordenador o el móvil, la app la reduce sola." },
+        { "p": "Se perdió la hoja o pasaron las 72 horas.", "r": "Vuelve a «Administraciones y unidades» y crea otra invitación: la nueva anula la anterior." },
+        { "p": "«La cuenta está suspendida.»", "r": "A una cuenta suspendida no se le puede entregar una invitación mientras siga así. La tarjeta de su Administración lo indica con la etiqueta «Cuenta suspendida»." },
+        { "p": "«Esa cuenta tiene perfiles vigentes en otros centros: no se le entrega desde aquí.»", "r": "Si la persona trabaja en más de un centro, su invitación se crea desde «Cuentas de varios centros» (botón junto a «Nuevo centro»)." }
+      ],
+      "rutas": ["Plataforma/Index", "Plataforma/NuevoCentro", "Plataforma/Centro", "Plataforma/Invitacion"],
+      "mensajes": [
+        "Ya existe un centro con ese código o una cuenta con ese identificador de acceso.",
+        "Revisa los datos: los códigos llevan de 2 a 64 caracteres",
+        "La cuenta está suspendida.",
+        "Esa cuenta tiene perfiles vigentes en otros centros: no se le entrega desde aquí."
+      ],
+      "manual": { "id": "plataforma-centros", "titulo": "Centros nuevos" },
+      "flujo": { "id": "centro", "titulo": "Antes del primer residente: un centro nuevo" },
+      "acceso": { "id": "pedir", "titulo": "Cómo se pide el acceso" }
+    }
+  ]
+}

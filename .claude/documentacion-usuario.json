@@ -8,6 +8,7 @@
     { "ruta": "src/ResidApp.Web/Views/Home/Manual.cshtml", "que": "Manual de usuario (/Home/Manual)", "revisadoPara": "0.1.0" },
     { "ruta": "src/ResidApp.Web/wwwroot/flujo-de-trabajo.html", "que": "Flujo de trabajo", "revisadoPara": "0.1.0" },
     { "ruta": "src/ResidApp.Web/wwwroot/acceso-y-sesion.html", "que": "Acceso y sesión", "revisadoPara": null },
+    { "ruta": "src/ResidApp.Web/Guia/*.json", "que": "Guía por perfil (/Guia): una ficha «¿Cómo…?» por tarea; cada ficha declara rutas, botones, campos, mensajes, permisos, a quién le llega y su referencia al Manual, al Flujo y a Acceso", "revisadoPara": null },
     { "ruta": "docs/pendientes-cj/pruebas-*.html", "que": "Guías de pruebas de CJ (pruebas-1 a 8) y sus páginas de flujo (-flujo)", "revisadoPara": "0.1.0" },
     { "ruta": "docs/pendientes-cj/pruebas.html", "que": "Índice de las guías de pruebas de CJ", "revisadoPara": null }
   ],
