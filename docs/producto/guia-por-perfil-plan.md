@@ -370,6 +370,27 @@ Va en `FunctionalTests` porque es el único proyecto de pruebas que referencia `
 
 **Recomendación: la 2.** Una sola vez se escribe la tarea (la ficha) y se **enlaza** al Manual para el detalle. Como mejora barata y de bajo riesgo, más adelante se puede generar en el Manual **solo** la tabla del catálogo de permisos (Manual L654-662) desde `ProfilePermissions`, que es el dato que más se repite y más se desalinea. No generaría el resto del Manual.
 
+### 6.e Sellado de la Guía y repaso al cerrar una versión MENOR (decidido el 2026-11-06)
+
+**Decisión de Orlando (opción 1):** la Guía se sella con `revisadoPara` **al cerrar la versión 0.2.0**, no antes. No se sella en 0.1.0: lo revisado es `main`, que ya lleva cambios posteriores a ese tag, y el sello diría algo inexacto (además, el test 7b impide un sello posterior a la versión de `src/Directory.Build.props`).
+
+**Secuencia para sellar:**
+
+1. Orlando fusiona el PR de release de release-please (`chore(main): release 0.2.0`); la versión de `Directory.Build.props` pasa a 0.2.0.
+2. En un PR aparte, desde `main`: se hace el repaso incremental de abajo y, si sale bien, se pone `"revisadoPara": "0.2.0"` y la fecha en `revisado` en los nueve JSON de `src/ResidApp.Web/Guia/` (los ocho perfiles y capítulos más el glosario) y `"revisadoPara": "0.2.0"` en la entrada de la Guía de `.claude/documentacion-usuario.json`. `GuiaDerivaTests` (7b) exige que coincidan.
+3. Se anota en `docs/producto/guia-por-perfil-recorrido.md` qué se repasó y qué quedó sin recorrer.
+
+**Repaso incremental (el mismo en cada versión MENOR):** no se vuelve a recorrer la Guía entera, solo lo que ha podido cambiar desde el último sello.
+
+1. Qué pantallas han cambiado desde el tag anterior: `git diff vX.Y.Z..main --stat -- src/ResidApp.Web/Views src/ResidApp.Web/Controllers src/ResidApp.Web/Models src/ResidApp.Domain/Accounts/ProfilePermissions.cs src/ResidApp.Shared/SystemProfile.cs`.
+2. Pasar el agente `doc-usuario-residapp` por esa lista: qué fichas de la Guía la tocan (las `rutas` y los `botones` de cada ficha lo dicen) y si el Manual, el Flujo y Acceso y sesión también han de cambiar.
+3. Ejecutar `dotnet test tests/FunctionalTests --filter Guia`: avisa de lo mecánico (rutas, botones, campos, mensajes, permisos, referencias).
+4. Recorrer con la skill `probar-en-navegador` solo las fichas afectadas: los pasos, su orden y los avisos reales. Es lo que el test no ve.
+5. Fichas nuevas para tareas nuevas; fichas retiradas con su código en la lista de códigos retirados.
+6. Reglas de siempre: nada de cuentas de prueba ni notas internas en la Guía (es pública), y los cambios del Manual, el Flujo o Acceso y sesión, con el visto bueno de Orlando.
+
+Un sello no dice que la Guía sea perfecta, sino que se ha repasado para esa versión; lo que quede sin recorrer se anota en el registro. Las versiones de PARCHE no obligan a repasar. Una versión MENOR con mucha interfaz nueva puede obligar a recorrer varios perfiles a fondo, como en el recorrido de noviembre de 2026.
+
 ---
 
 ## 7. Cambios sugeridos en el Manual, el Flujo y Acceso (NO se aplican)
