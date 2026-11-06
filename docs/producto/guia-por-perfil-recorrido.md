@@ -28,4 +28,24 @@ textos exactos de pantalla. Se anota lo que no coincide y se corrige la ficha. L
 Incidencias del propio recorrido: sin errores de consola ni desplazamiento lateral en las pantallas recorridas. Quedaron en la base local tres
 centros de prueba («Residencia guía …», dos de ellos de intentos que se interrumpieron) con sus administradores.
 
-Pendiente en las demás guías: Auxiliar, Familia, Medicina, Enfermería, Dirección, Administración y «Para todos».
+## Auxiliar (2026-11-06, cuenta `almendros-orlando-auxiliar` y una cuenta nueva sin residentes)
+
+| Ficha | Estado | Qué se vio |
+|---|---|---|
+| AUX-01 Ver mis residentes y las etiquetas | Recorrida | «Mi panel» abre «Mis residentes»; cada tarjeta trae foto o iniciales, nombre y «unidad · habitación · plaza» (o «Sin habitación asignada»), «Basal vigente»/«Basal pendiente» y «Cierre cotidiano: Pendiente»/«Cerrado hoy». «Cerrado hoy» sale tras un «Sin cambios», un «No valorable» y un cambio (ordinario o prioritario). Un residente sin basal se abre y se cierra igual. Con una cuenta sin residentes sale «No tienes residentes asignados. Los asigna Administración: pídeselo si deberías tenerlos.» **Sin recorrer:** «solo ves a los asignados que están en tus unidades» y el aviso del residente suspendido por ingreso hospitalario (hace falta Administración; se verá en su recorrido). |
+| AUX-02 Consultar el basal y la foto | Recorrida | «Estado basal vigente» trae «Barthel total: 100 / 100» y «Firmado el …»; «Consultar estado basal» abre «Índice de Barthel» y las nueve áreas de la ficha, sin ningún botón. La foto sale en la cabecera. Sin basal: «Sin basal vigente registrado para este residente.» |
+| AUX-03 Cerrar el turno sin cambios | Recorrida | Tres tarjetas («Sin cambios», «Registrar cambio», «No valorable») más la de «Estado basal vigente»; «Confirmar sin cambios» guarda sin confirmación y avisa «Cierre registrado: sin cambios.» |
+| AUX-04 Marcar como no valorable | Recorrida | Sin motivo, el navegador no deja enviar (campo obligatorio, máximo 500 caracteres); con motivo, «Cierre registrado: día marcado como no valorable.» |
+| AUX-05 Registrar un cambio ordinario | Recorrida | Las diez áreas, las opciones rápidas y «Añadir nota», la temperatura (el navegador rechaza lo que sale de 34,0 a 42,0), «Ordinario» marcado por defecto, barra «Continuar» fija abajo, «Resumen» con «Volver a editar» (conserva casillas, notas y temperatura) y «Confirmar y enviar». Solo con temperatura sale «Solo has anotado la temperatura…». Aviso final «Cambio registrado: enviado a la bandeja ordinaria de Enfermería.» y el cambio aparece en la «Bandeja de cambios ordinarios» de Enfermería. |
+| AUX-06 Registrar un cambio prioritario | Recorrida | Sin motivo: «Elige el motivo prioritario.»; los seis motivos coinciden; la confirmación avisa «Evento prioritario: recuerda aplicar el protocolo del centro. Antes de confirmar, documenta el aviso directo.»; «Aviso directo documentado» es obligatorio; «Confirmar y enviar» es rojo. Aviso final «Cambio registrado: enviado a la bandeja prioritaria de Enfermería.» y el evento aparece en la «Bandeja prioritaria» de Enfermería con el motivo y el aviso escritos. |
+| AUX-07 Dictar el cambio por voz | No automatizable | En la base local el dictado no está activado y el guion no tiene micrófono ni servicio de transcripción. Sí se vio que, sin él, «Registrar cambio» no muestra el bloque «Dictar el cambio» y se rellena a mano, como dice la ficha. |
+| AUX-08 Corregir o deshacer lo registrado | Recorrida | Tras confirmar, la ficha del residente solo ofrece «Confirmar sin cambios», «Registrar cambio» y «Marcar no valorable»: no hay botón para editar ni anular. «Volver a editar» antes de confirmar sí conserva lo escrito. |
+
+Ninguna ficha de Auxiliar necesitó cambios. Sin errores de consola. Nota para quien repita el recorrido con un guion: al rellenar un campo con
+`fill()` después de un intento de envío inválido, la validación del navegador puede dejar el botón sin enviar; una persona que teclea no
+tiene el problema (se comprobó con teclado real).
+
+Datos que quedaron en la base local: en Los Almendros (cuentas `*-orlando`), un «Sin cambios» (Carmen), un «No valorable» (Lucía), un cambio
+ordinario (Manuel) y uno prioritario (Rosa); y un centro nuevo «Residencia de prueba (navegador …)» con su cuenta de Auxiliar sin residentes.
+
+Pendiente en las demás guías: Familia, Medicina, Enfermería, Dirección, Administración y «Para todos».
