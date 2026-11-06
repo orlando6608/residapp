@@ -25,7 +25,8 @@
       ],
       "dudas": [
         { "p": "«Esta invitación ya no vale: se ha usado, se ha anulado o ha caducado. Pide otra a la Administración de tu centro.»", "r": "Pasaron las 72 horas, ya la usaste, o te dieron otra más nueva (la nueva anula la anterior). Pide otra hoja." },
-        { "p": "«Las dos contraseñas no coinciden.» o «La contraseña tiene que tener al menos»", "r": "Vuelve a escribirla en los dos campos; no hay más reglas que la longitud." },
+        { "p": "«Las dos contraseñas no coinciden.» o «La contraseña tiene que tener al menos»", "r": "Vuelve a escribirla en los dos campos; no hay más reglas que la longitud. Con menos de 12 caracteres, el navegador ni siquiera deja enviar el formulario." },
+        { "p": "«El código no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya.»", "r": "Es el aviso de «Activar el segundo factor»: escribe el código que muestra ahora la aplicación para la cuenta «ResidApp · tu usuario»; cambia cada 30 segundos." },
         { "p": "Dejé a medias el código del móvil.", "r": "Al volver a entrar con la contraseña, la app te dice que necesitas una invitación: «Tu cuenta necesita preparar el código del móvil, y eso solo se hace con una invitación: pídela a la Administración de tu centro.»" },
         { "p": "Perdí los 10 códigos de recuperación.", "r": "Mientras te funcione el móvil, genera otros nuevos (ver TOD-06)." }
       ],
@@ -33,6 +34,7 @@
       "mensajes": [
         "Esta invitación ya no vale: se ha usado, se ha anulado o ha caducado. Pide otra a la Administración de tu centro.",
         "Las dos contraseñas no coinciden.",
+        "El código no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya.",
         "La contraseña tiene que tener al menos",
         "Tu cuenta necesita preparar el código del móvil, y eso solo se hace con una invitación: pídela a la Administración de tu centro."
       ],
@@ -56,10 +58,11 @@
         { "texto": "Si tu cuenta puede trabajar con varios centros o perfiles, la app te pide elegir uno (ver TOD-04); si solo tiene uno, entras directamente a tu inicio." }
       ],
       "despues": [
-        { "para": "Tú", "texto": "La sesión se cierra sola tras **30 minutos sin usarla** y, en cualquier caso, a las **12 horas** de abrirla. Si la sesión terminó justo al guardar un formulario, lo que escribías **no se guarda**: la app te lo avisa y te devuelve a esa pantalla para volver a escribirlo." }
+        { "para": "Tú", "texto": "La sesión se cierra sola tras **30 minutos sin usarla** y, en cualquier caso, a las **12 horas** de abrirla. Si la sesión terminó justo al guardar un formulario, lo que escribías **no se guarda**: la app te lleva a Iniciar sesión con el aviso «Tu sesión había terminado…» y tendrás que volver a escribirlo." }
       ],
       "dudas": [
         { "p": "«Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.»", "r": "El aviso es el mismo si el usuario no existe, la contraseña es otra, la cuenta está suspendida o no tiene perfiles: así no se dan pistas. Tras 5 fallos seguidos, la cuenta se bloquea 15 minutos aunque después la escribas bien. Si no recuerdas la contraseña, ver TOD-09." },
+        { "p": "«El código no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya.»", "r": "Sale igual con el código de la aplicación y con uno de recuperación. El de la aplicación cambia cada 30 segundos; cada código de recuperación sirve una sola vez." },
         { "p": "Pasé más de 10 minutos entre la contraseña y el código.", "r": "Hay que volver a escribir la contraseña. Los códigos de 6 cifras equivocados también cuentan para el bloqueo." },
         { "p": "«Tu sesión había terminado: lo que estabas guardando no se ha guardado.»", "r": "Entra de nuevo y vuelve a escribirlo." },
         { "p": "No tengo cuenta.", "r": "Nadie se crea la suya: pídela a la Administración de tu centro («Cómo pedir el acceso», un enlace al pie de Iniciar sesión)." }
@@ -68,7 +71,8 @@
       "mensajes": [
         "Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.",
         "Tu sesión había terminado",
-        "no se ha guardado"
+        "no se ha guardado",
+        "El código no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya."
       ],
       "manual": { "id": "entrar-ambito", "titulo": "Entrar y elegir tu ámbito de trabajo" },
       "acceso": { "id": "entrar", "titulo": "Entrar" }
@@ -87,14 +91,15 @@
         { "texto": "Abre el menú con el nombre de tu perfil (en el móvil, tras el botón de menú de la esquina superior derecha) y pulsa **Mi cuenta**.", "botones": ["Mi cuenta"] },
         { "texto": "Baja a la ficha **Passkeys**. Escribe un «Nombre de la passkey» que la reconozca (por ejemplo «Móvil de trabajo»), tu «Contraseña» y el «Código del móvil».", "campos": ["Passkeys", "Nombre de la passkey", "Contraseña", "Código del móvil"] },
         { "texto": "Pulsa **Añadir una passkey**. Se abre una ventana de tu dispositivo, no de ResidApp, que te pide la huella, la cara o el PIN.", "botones": ["Añadir una passkey"] },
-        { "texto": "Sale un aviso de que se ha añadido. Pulsa **Entendido**. Para probarla, pulsa **Salir** y, en Iniciar sesión, **Entrar con passkey**.", "botones": ["Entendido", "Salir", "Entrar con passkey"] }
+        { "texto": "Sale el aviso «Passkey «…» añadida. Ya puedes entrar con ella desde «Entrar con passkey».». Pulsa **Entendido**. Para probarla, pulsa **Salir** y, en Iniciar sesión, **Entrar con passkey**.", "botones": ["Entendido", "Salir", "Entrar con passkey"] }
       ],
       "despues": [
-        { "para": "Tú", "texto": "Con **Entrar con passkey** no escribes usuario, contraseña ni código del móvil. Si no tienes a mano el dispositivo donde la registraste, sigues pudiendo entrar con contraseña y código. Puedes tener hasta 10 y quitar cualquiera con **Quitar** (una cuenta de Plataforma no puede quitar la última)." }
+        { "para": "Tú", "texto": "Con **Entrar con passkey** no escribes usuario, contraseña ni código del móvil. Si no tienes a mano el dispositivo donde la registraste, sigues pudiendo entrar con contraseña y código. Puedes tener hasta 10 y quitar cualquiera con **Quitar** (una cuenta de Plataforma no puede quitar la última). Al quitarla ves «Passkey «…» quitada.»." }
       ],
       "dudas": [
         { "p": "«Ya tienes 10 passkeys, que es el máximo. Quita alguna antes de añadir otra.»", "r": "Quita una que ya no uses con «Quitar» y vuelve a intentarlo." },
         { "p": "«El registro ha caducado o no es el que pediste. Vuelve a empezar.»", "r": "Pulsa otra vez «Añadir una passkey» y confirma en el dispositivo sin tardar." },
+        { "p": "Pulsé «Añadir una passkey» y no pasa nada.", "r": "Falta el nombre, la contraseña o el código del móvil: el navegador los pide antes de enviar el formulario." },
         { "p": "Me dieron una invitación de recuperación.", "r": "Al usarla se borran todas tus passkeys: tienes que añadirlas de nuevo." }
       ],
       "rutas": ["Cuenta/Index", "Cuenta/PasskeyOpciones", "Cuenta/PasskeyAlta", "Cuenta/QuitarPasskey", "Acceso/Entrar"],
@@ -116,13 +121,13 @@
       "pasos": [
         { "texto": "Al entrar, si tu cuenta tiene varios ámbitos, se abre **Seleccionar ámbito**. Cada botón lleva el centro y, a la derecha, el perfil: pulsa el que quieras usar.", "campos": ["Seleccionar ámbito"] },
         { "texto": "Para cambiar más tarde, abre el menú con el nombre de tu perfil (en el móvil, el botón de menú de la esquina superior derecha) y pulsa **Cambiar ámbito**. Verás de nuevo la lista.", "botones": ["Cambiar ámbito"] },
-        { "texto": "Pulsa el nuevo ámbito. Vas al **Inicio** general de ese centro, con una tarjeta por cada perfil que tengas; **Mi panel** te lleva siempre al inicio del perfil activo.", "botones": ["Mi panel"] }
+        { "texto": "Pulsa el nuevo ámbito. Vas al inicio de ese centro con las tarjetas del perfil que has elegido (con Familiar, al Portal Familiar); **Mi panel** te lleva siempre al inicio del perfil activo.", "botones": ["Mi panel"] }
       ],
       "despues": [
         { "para": "Tú", "texto": "Trabajas con los accesos del perfil elegido: con Enfermería no ves los de Medicina. El menú muestra con qué cuenta has entrado y tu ámbito activo («Ámbito: perfil · centro»). Cada centro solo ve lo suyo." }
       ],
       "dudas": [
-        { "p": "«Solo tienes un ámbito activo: … No hay otro al que cambiar.»", "r": "Tu cuenta solo tiene ese perfil en ese centro. Si necesitas otro, pídeselo a la Administración de tu centro." },
+        { "p": "«Solo tienes un ámbito activo: … No hay otro al que cambiar.»", "r": "«Cambiar ámbito» sale siempre en el menú, aunque solo tengas uno. Tu cuenta solo tiene ese perfil en ese centro: si necesitas otro, pídeselo a la Administración de tu centro." },
         { "p": "«Tu cuenta no tiene ningún ámbito activo en este momento. Contacta con Administración.»", "r": "Pulsa **Entrar con otra cuenta** o **Salir** y pide a la Administración que te devuelva un ámbito." },
         { "p": "Sale un error y un botón **Reintentar**.", "r": "La pantalla no pudo cargar tus ámbitos (por ejemplo, por un fallo de conexión). Reintenta; no significa que no los tengas." },
         { "p": "«Ese ámbito ya no está disponible para tu cuenta.»", "r": "Ya no está disponible (por ejemplo, porque Administración lo ha quitado): elige otro de la lista." },
@@ -213,7 +218,7 @@
       "pasos": [
         { "texto": "Abre el menú con el nombre de tu perfil y pulsa **Mi cuenta**. En el Portal Familiar, pulsa **Mi cuenta** en la cabecera (en el móvil, tras el botón de menú de la esquina superior derecha).", "botones": ["Mi cuenta"] },
         { "texto": "En **Sesiones abiertas** ves las que tienes ahora: cuándo empezó cada una, su última actividad y la dirección IP desde la que se abrió. La tuya lleva la etiqueta «Esta sesión».", "campos": ["Sesiones abiertas", "Esta sesión"] },
-        { "texto": "Pulsa **Cerrar** en la que no sea tuya, o **Cerrar todas las demás** para dejar solo la actual.", "botones": ["Cerrar", "Cerrar todas las demás"] },
+        { "texto": "Pulsa **Cerrar** en la que no sea tuya, o **Cerrar todas las demás** para dejar solo la actual. Sale el aviso «Sesión cerrada.» o «Se han cerrado las demás sesiones abiertas de tu cuenta.».", "botones": ["Cerrar", "Cerrar todas las demás"] },
         { "texto": "En **Últimos accesos a tu cuenta** revisa las entradas, los fallos y los cambios recientes: los fallos llevan la etiqueta «Fallo».", "campos": ["Últimos accesos a tu cuenta", "Fallo"] },
         { "texto": "Si ves algo que no reconoces, cambia la contraseña (ver TOD-05) y avisa a la Administración de tu centro." }
       ],
