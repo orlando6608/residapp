@@ -125,7 +125,7 @@
       "pasos": [
         { "texto": "En el Inicio, abre **Bandeja prioritaria** o **Cambios ordinarios**.", "botones": ["Bandeja prioritaria", "Cambios ordinarios"] },
         { "texto": "Cada fila muestra el residente, la unidad, el área observada (en la prioritaria, el motivo inicial y el aviso directo), quién lo registró, cuándo, su antigüedad y su estado: «Pendiente» o «En valoración». Van del más antiguo al más reciente.", "campos": ["Pendiente", "En valoración"] },
-        { "texto": "En la de cambios ordinarios puedes filtrar por «Residente», «Unidad» y «Estado», y pulsar **Buscar**. **Limpiar** quita el filtro.", "botones": ["Buscar", "Limpiar"], "campos": ["Residente", "Unidad", "Estado"] },
+        { "texto": "En la de cambios ordinarios puedes filtrar por «Residente», «Unidad» (solo sale si tu ámbito tiene más de una unidad) y «Estado», y pulsar **Buscar**. **Limpiar** quita el filtro.", "botones": ["Buscar", "Limpiar"], "campos": ["Residente", "Unidad", "Estado"] },
         { "texto": "Pulsa **Ver detalle** para abrir un evento: ves la observación original (inmutable), la temperatura si se registró y el basal vigente resumido.", "botones": ["Ver detalle"] }
       ],
       "despues": [
@@ -150,7 +150,7 @@
         "Saber que no eres responsable exclusivo del evento: cualquier profesional de Enfermería de la unidad puede continuar tu valoración."
       ],
       "pasos": [
-        { "texto": "En el detalle del evento, pulsa **Empezar valoración**: queda registrado quién y a qué hora. Después, **Completar valoración** (o **Continuar valoración** si ya hay un borrador).", "botones": ["Empezar valoración", "Completar valoración", "Continuar valoración"] },
+        { "texto": "En el detalle del evento, pulsa **Empezar valoración**: queda registrado quién y a qué hora, y se abre el formulario de la valoración. Si sales sin guardar, al volver al detalle verás **Completar valoración** (o **Continuar valoración** si ya hay un borrador).", "botones": ["Empezar valoración", "Completar valoración", "Continuar valoración"] },
         { "texto": "Escribe «Hallazgos», «Valoración», «Actuaciones», «Comunicaciones» y «Resultado».", "campos": ["Hallazgos", "Valoración", "Actuaciones", "Comunicaciones", "Resultado"] },
         { "texto": "Anota las constantes que quieras: «Temperatura (°C)», presión arterial (las dos cifras), «Frecuencia cardíaca (lpm)», «Frecuencia respiratoria (rpm)», «Saturación de O₂ (%)», «Aire ambiente u oxigenoterapia» (con su flujo), «Glucemia (mg/dL)» u otra constante con nombre y valor.", "campos": ["Temperatura (°C)", "PA sistólica (mmHg)", "PA diastólica (mmHg)", "Frecuencia cardíaca (lpm)", "Frecuencia respiratoria (rpm)", "Saturación de O₂ (%)", "Aire ambiente u oxigenoterapia", "Flujo de O₂ (L/min)", "Glucemia (mg/dL)"] },
         { "texto": "Pulsa **Guardar borrador**. Cada guardado queda como una versión que no se puede modificar.", "botones": ["Guardar borrador"] }
@@ -374,7 +374,7 @@
       "pasos": [
         { "texto": "En la decisión asistencial, pulsa **Activar protocolo urgente**.", "botones": ["Activar protocolo urgente"] },
         { "texto": "Si quieres, escribe la «Nota de activación (opcional)» y pulsa de nuevo **Activar protocolo urgente**.", "campos": ["Nota de activación (opcional)"] },
-        { "texto": "En el protocolo, cuando puedas, documenta con **Registrar actuación**, **Registrar evolución** o **Registrar contacto con un servicio** (con el «Servicio contactado» y la «Hora del contacto», que no puede ser futura).", "botones": ["Registrar actuación", "Registrar evolución", "Registrar contacto"], "campos": ["Servicio contactado", "Hora del contacto"] },
+        { "texto": "En el protocolo, cuando puedas, documenta con **Registrar actuación**, **Registrar evolución** o **Registrar contacto** (en «Registrar contacto con un servicio», con el «Servicio contactado» y la «Hora del contacto», que no puede ser futura).", "botones": ["Registrar actuación", "Registrar evolución", "Registrar contacto"], "campos": ["Servicio contactado", "Hora del contacto"] },
         { "texto": "Desde el protocolo puedes **Derivar a Urgencias** (ver ENF-13) o **Cerrar el evento** (ver ENF-07).", "botones": ["Derivar a Urgencias", "Cerrar el evento"] }
       ],
       "despues": [
@@ -409,10 +409,10 @@
         { "texto": "Escribe el «Motivo de la derivación» (obligatorio) y, si quieres, «Información adicional para Urgencias (opcional)» y «Comunicaciones (opcional)» (los contactos de esta derivación; viajan con el informe).", "campos": ["Motivo de la derivación", "Información adicional para Urgencias (opcional)", "Comunicaciones (opcional)"] },
         { "texto": "Pulsa **Ver la vista previa**, que es obligatoria: cada sección sale como «Dato automático» o «Escrito por ti», con su huella.", "botones": ["Ver la vista previa"], "campos": ["Dato automático", "Escrito por ti"] },
         { "texto": "Revisa y pulsa **Firmar y generar PDF** (o **Volver a editar**). La firma registra tu cuenta, la fecha y la hora, sin certificado. Descarga el PDF con **Descargar el informe en PDF**.", "botones": ["Firmar y generar PDF", "Volver a editar", "Descargar el informe en PDF"] },
-        { "texto": "Registra la llamada a la familia: en «Registrar un intento de llamada a la familia» elige «A quién se llama», «Hora de la llamada» y «Resultado» (Contactado, No contesta o Número erróneo), y pulsa **Registrar la llamada**.", "botones": ["Registrar la llamada"], "campos": ["Registrar un intento de llamada a la familia", "A quién se llama", "Hora de la llamada", "Resultado", "No contesta", "Número erróneo"] }
+        { "texto": "Registra la llamada a la familia: en «Registrar un intento de llamada a la familia» escribe «A quién se llama», elige la «Hora de la llamada» y el «Resultado» (Contactado, No contesta o Número erróneo), y pulsa **Registrar la llamada**.", "botones": ["Registrar la llamada"], "campos": ["Registrar un intento de llamada a la familia", "A quién se llama", "Hora de la llamada", "Resultado", "No contesta", "Número erróneo"] }
       ],
       "despues": [
-        { "para": "Enfermería", "texto": "El PDF firmado no se puede modificar. El evento sigue en el protocolo. Para cerrarlo hace falta al menos un intento de llamada (salvo que el residente no tenga contacto urgente) y preparar la comunicación a la familia (ver ENF-07)." },
+        { "para": "Enfermería", "texto": "El PDF firmado no se puede modificar. El evento sigue en el protocolo. Para cerrarlo hace falta al menos un intento de llamada (salvo que Administración haya anotado que el residente no tiene contacto urgente) y preparar la comunicación a la familia (ver ENF-07)." },
         { "para": "Medicina", "texto": "Ve el informe y puede descargar el PDF desde el protocolo o el detalle del evento." }
       ],
       "dudas": [
