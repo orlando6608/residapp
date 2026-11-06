@@ -430,7 +430,7 @@
       "pasos": [
         { "texto": "Pulsa **Inicio** (en las migas de pan, arriba) y abre **Rangos de referencia de constantes**.", "botones": ["Inicio", "Rangos de referencia de constantes"] },
         { "texto": "Para cada constante (temperatura, presión arterial sistólica y diastólica, frecuencias cardíaca y respiratoria, saturación de oxígeno y glucemia), escribe el «Mínimo», el «Máximo» o ambos. Déjalos vacíos para que esa constante no tenga rango.", "campos": ["Mínimo", "Máximo"] },
-        { "texto": "Si quieres partir de los valores que propone el equipo clínico del producto, pulsa **Cargar valores sugeridos**: rellena el formulario y no guarda nada. Revísalos.", "botones": ["Cargar valores sugeridos"] },
+        { "texto": "Si quieres partir de los valores sugeridos por ResidApp, pulsa **Cargar valores sugeridos**: rellena el formulario y no guarda nada. Revísalos.", "botones": ["Cargar valores sugeridos"] },
         { "texto": "Pulsa **Guardar rangos**.", "botones": ["Guardar rangos"] }
       ],
       "despues": [

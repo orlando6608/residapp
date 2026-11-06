@@ -1020,7 +1020,7 @@
         "Ser la **Administración principal** del centro: no se puede deshacer y afecta a todos los residentes de ese familiar. Si te lo piden y no lo eres, pásale la petición a quien lo sea (ver ADM-07).",
         "Haber **comprobado la identidad** de quien lo pide. Tu centro debe contestar por escrito en el plazo de un mes (ampliable) y anotar la petición en su registro de derechos.",
         "Que el familiar no sea contacto urgente ni tutor legal de un residente que sigue en el centro: si lo es, la pantalla dice de cuáles y hay que cambiarlo antes (ver ADM-31 y ADM-28).",
-        "**Todavía no se usa con familias reales:** antes, una persona experta en protección de datos tiene que decidir si basta con borrar o si hay que guardar aparte los datos suprimidos."
+        "**Consulta antes con quien responda de la protección de datos en tu centro:** hay que decidir si basta con borrar los datos del familiar o si hay que guardar aparte los suprimidos, y ResidApp no lo decide por ti."
       ],
       "pasos": [
         { "texto": "En la ficha del residente, pulsa **Editar** en la fila del familiar y, al final, **Anonimizar a este familiar…**.", "botones": ["Editar", "Anonimizar a este familiar…"] },
