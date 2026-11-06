@@ -436,7 +436,7 @@
       "despues": [
         { "para": "Dirección / Coordinación Clínica", "texto": "Verás «Rangos de referencia guardados.». Cada cambio queda en el «Historial de cambios» de la pantalla (fecha, constante, valor anterior y nuevo, y perfil), que no se puede modificar." },
         { "para": "Enfermería", "texto": "En sus valoraciones ve el rango bajo cada campo y un aviso amarillo cuando un valor queda fuera." },
-        { "para": "Medicina", "texto": "Igual en la valoración médica." }
+        { "para": "Medicina", "texto": "En su valoración ve el rango bajo cada campo de las constantes, solo como orientación: el aviso amarillo sale únicamente en las pantallas de Enfermería." }
       ],
       "dudas": [
         { "p": "«Otra persona ha cambiado los rangos mientras tenías la pantalla abierta. Recarga…»", "r": "Recarga para ver los valores actuales; lo que escribiste sigue en el formulario por si quieres copiarlo." },
