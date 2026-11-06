@@ -1,0 +1,14 @@
+{
+  "name": "guia-pdf",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Genera los PDF de la Guía por perfil (/Guia) con Chrome: «Página X de Y» y un índice con números de página.",
+  "type": "module",
+  "scripts": {
+    "generar": "node generar.mjs"
+  },
+  "dependencies": {
+    "pdfjs-dist": "4.10.38",
+    "playwright-core": "1.52.0"
+  }
+}

@@ -50,3 +50,7 @@ Thumbs.db
 .fake
 # Audios generados para la prueba de dictado (se regeneran con `PruebaDictado generar`)
 tools/PruebaDictado/audios/
+
+# Generador de PDF de la Guía: dependencias y PDF generados (se regeneran con `node generar.mjs`)
+tools/GuiaPdf/node_modules/
+tools/GuiaPdf/salida/
