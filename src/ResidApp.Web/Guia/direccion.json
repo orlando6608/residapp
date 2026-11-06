@@ -77,7 +77,7 @@
       ],
       "dudas": [
         { "p": "«No hay episodios abiertos.»", "r": "No hay ninguno abierto en las unidades de tu ámbito (con ese filtro, si lo hay)." },
-        { "p": "«No se puede acceder a esta operación.»", "r": "El episodio no está en tu ámbito o no existe: el mensaje no distingue entre ambos casos." }
+        { "p": "Abro un episodio y vuelvo a la lista de pendientes sin ningún aviso.", "r": "El episodio ya no está abierto, no existe o no es de tu ámbito: la pantalla no distingue el motivo ni lo explica." }
       ],
       "rutas": ["Direccion/Pendientes", "Direccion/Episodio"],
       "mensajes": ["No hay episodios abiertos."],
@@ -105,15 +105,14 @@
         { "para": "Enfermería", "texto": "El episodio sale de sus bandejas. Las indicaciones siguen sin resolver hasta que alguien registre su resultado." }
       ],
       "dudas": [
-        { "p": "No sale el formulario de cierre.", "r": "El episodio no tiene indicaciones médicas abiertas, o viene de una derivación a Urgencias, o ya no está en tu ámbito." },
+        { "p": "No sale el formulario de cierre.", "r": "El episodio no tiene indicaciones médicas abiertas (por ejemplo, todas están leídas y con su resultado, aunque alguna sea «no realizada»), o ya no está en tu ámbito. Si viene de una derivación a Urgencias, en su lugar la pantalla explica que no se puede cerrar desde aquí." },
         { "p": "«Marca la casilla para confirmar que las indicaciones se quedan sin resolver y escribe el motivo.»", "r": "Faltan el motivo o la casilla de confirmación: los dos son obligatorios." },
-        { "p": "«No se puede cerrar ese episodio: no está abierto o no es de tu ámbito.»", "r": "Otra persona lo cerró antes, o el episodio no está en tu ámbito." }
+        { "p": "Pulso «Cerrar el episodio» y vuelvo a la lista de pendientes sin el aviso «Episodio cerrado…».", "r": "Otra persona cerró el episodio antes, o ya no está en tu ámbito: ya no sale en la lista y la pantalla no lo avisa. Comprueba en la trazabilidad clínica (ver DIR-10) quién lo cerró." }
       ],
       "rutas": ["Direccion/Episodio", "Direccion/CerrarEpisodio"],
       "mensajes": [
         "Episodio cerrado. Las indicaciones médicas se quedan sin resolver y el cierre queda en la auditoría con tu motivo.",
         "Marca la casilla para confirmar que las indicaciones se quedan sin resolver y escribe el motivo.",
-        "No se puede cerrar ese episodio: no está abierto o no es de tu ámbito.",
         "Este episodio no tiene indicaciones médicas abiertas, viene de una derivación a Urgencias"
       ],
       "manual": { "id": "supervision-direccion", "titulo": "Supervisión operativa por unidad" },
@@ -129,12 +128,12 @@
       ],
       "pasos": [
         { "texto": "En el Inicio, abre **Derivaciones a Urgencias**: los episodios abiertos con protocolo urgente, del más reciente al más antiguo.", "botones": ["Derivaciones a Urgencias"] },
-        { "texto": "Arriba ves el resumen (cuántas están en curso, con informe firmado, sin firmar y con alguna llamada). En cada fila: cuándo y quién activó el protocolo, el «Informe de derivación» (firmado o no, cuándo y por qué perfil) y las «Llamadas a la familia».", "campos": ["Protocolo urgente", "Informe de derivación", "Llamadas a la familia"] },
+        { "texto": "Arriba ves el resumen (cuántas están en curso, con informe firmado, sin firmar y con alguna llamada). En cada fila: cuándo y quién activó el protocolo, el «Informe de derivación» (firmado o no, cuándo y por qué perfil) y las «Llamadas a la familia». En un informe firmado, **Consultar el informe (con registro en la auditoría)** te lleva a la consulta auditada del residente (ver DIR-10).", "campos": ["Protocolo urgente", "Informe de derivación", "Llamadas a la familia"] },
         { "texto": "Para incluir las de episodios ya cerrados, marca «Incluir también las de episodios ya cerrados, con el protocolo activado en este periodo», elige «Desde» y «Hasta» (por defecto, los últimos 30 días) y pulsa **Aplicar**.", "botones": ["Aplicar"], "campos": ["Incluir también las de episodios ya cerrados, con el protocolo activado en este periodo", "Desde", "Hasta"] },
         { "texto": "Pulsa **Ver detalle operativo** para abrir un episodio abierto (ver DIR-02).", "botones": ["Ver detalle operativo"] }
       ],
       "despues": [
-        { "para": "Dirección / Coordinación Clínica", "texto": "Consultar esta pantalla no queda en la auditoría. Las derivaciones de episodios cerrados salen marcadas como «Cerrado» y sin detalle operativo. Leer un informe firmado se hace en la consulta clínica auditada (ver DIR-10)." }
+        { "para": "Dirección / Coordinación Clínica", "texto": "Consultar esta pantalla no queda en la auditoría. Las derivaciones de episodios cerrados salen con «Episodio cerrado el…» y sin detalle operativo. Leer un informe firmado se hace en la consulta clínica auditada (ver DIR-10), donde hay que declarar para qué." }
       ],
       "dudas": [
         { "p": "«No hay derivaciones en curso.»", "r": "Ningún episodio abierto de tu ámbito tiene protocolo urgente. Marca la casilla de cerrados para ver las de un periodo." },
@@ -193,10 +192,12 @@
       ],
       "despues": [
         { "para": "Dirección / Coordinación Clínica", "texto": "Verás «Corrección publicada…» o «Comunicado retirado…». Las dos acciones quedan en la auditoría con tu perfil (la retirada, con tu motivo)." },
-        { "para": "Familia", "texto": "Una corrección se ve como una publicación nueva, junto al comunicado original y mientras siga viéndolo. Un comunicado retirado se ve como «Esta novedad ya no está disponible.», sin su texto." }
+        { "para": "Familia", "texto": "Una corrección se ve como una publicación nueva, junto al comunicado original y mientras siga viéndolo. Un comunicado retirado se ve como «Esta novedad ya no está disponible.», sin su texto, y con él dejan de verse también sus correcciones." }
       ],
       "dudas": [
         { "p": "«Ese comunicado no admite una corrección: no está publicado, está retirado, la familia ya no lo ve o no es de tu ámbito.»", "r": "Solo se corrige un comunicado publicado, no retirado y que la familia aún vea. Antes de su hora, lo corrige Enfermería o Medicina." },
+        { "p": "«No se ha publicado: el comunicado aún no está publicado, se ha retirado o la familia ya no lo ve…»", "r": "Entre que abriste la corrección y la enviaste, otra persona retiró el comunicado o la familia dejó de verlo. Vuelve a la lista para ver su estado." },
+        { "p": "«Indica el tipo de la corrección.»", "r": "Elige «Ordinaria» o «Relevante» antes de pulsar «Publicar la corrección»." },
         { "p": "«Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.»", "r": "Solo se retira un comunicado publicado y todavía no retirado." },
         { "p": "«Revisa los datos: escribe el motivo de la retirada, de hasta 500 caracteres.»", "r": "El motivo es obligatorio y no puede pasar de 500 caracteres." }
       ],
@@ -206,7 +207,9 @@
         "Comunicado retirado. La familia ve que ya no está disponible. Queda en la auditoría con tu motivo.",
         "Ese comunicado no admite una corrección: no está publicado, está retirado, la familia ya no lo ve o no es de tu ámbito.",
         "Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.",
-        "Revisa los datos: escribe el motivo de la retirada, de hasta 500 caracteres."
+        "Revisa los datos: escribe el motivo de la retirada, de hasta 500 caracteres.",
+        "No se ha publicado: el comunicado aún no está publicado, se ha retirado o la familia ya no lo ve",
+        "Indica el tipo de la corrección."
       ],
       "manual": { "id": "supervision-direccion", "titulo": "Supervisión operativa por unidad" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }
@@ -247,12 +250,13 @@
       "pasos": [
         { "texto": "En el Inicio, abre **Mi ámbito de supervisión**.", "botones": ["Mi ámbito de supervisión"] },
         { "texto": "Lee el «Centro», las «Unidades» (con la nota si tu ámbito está limitado a determinados residentes) y los «Permisos vigentes».", "campos": ["Centro", "Unidades", "Permisos vigentes"] },
-        { "texto": "Para trabajar con otro perfil o centro, abre el menú con el nombre de tu perfil y pulsa **Cambiar ámbito**.", "botones": ["Cambiar ámbito"] }
+        { "texto": "Para trabajar con otro perfil o centro, abre el menú con el nombre de tu perfil y pulsa **Cambiar ámbito**. Si solo tienes un ámbito, la pantalla te dice «Solo tienes un ámbito activo…» y puedes volver al inicio.", "botones": ["Cambiar ámbito"] }
       ],
       "despues": [
         { "para": "Dirección / Coordinación Clínica", "texto": "Mirar no cambia nada. Si cambias de ámbito, termina cualquier consulta clínica declarada y vuelves a elegir con qué perfil y centro trabajas." }
       ],
       "dudas": [
+        { "p": "«Solo tienes un ámbito activo: Dirección Clínica en…»", "r": "No tienes otro perfil ni otro centro al que cambiar. Si lo necesitas, pídeselo a Administración." },
         { "p": "«Ninguno: solo la supervisión operativa, sin contenido clínico.»", "r": "No tienes ningún permiso concedido. Pídeselos a Administración si los necesitas." },
         { "p": "«Ninguna.» en Unidades.", "r": "Tu ámbito no tiene unidades concedidas: pídeselas a Administración." }
       ],
@@ -310,6 +314,7 @@
       "dudas": [
         { "p": "«Elige la finalidad del acceso.» / «Escribe una justificación breve del acceso.»", "r": "Falta la finalidad o la justificación: son obligatorias (salvo que ya hayas declarado la finalidad para ese residente en la última hora)." },
         { "p": "«La declaración de acceso de este residente ya no está vigente. Indica de nuevo la finalidad y la justificación.»", "r": "Pasó la hora o cambiaste de residente, perfil o ámbito. Declárala de nuevo." },
+        { "p": "«No se puede acceder a esta operación.» al pulsar **Consultar**.", "r": "Tu cuenta no tiene el permiso de lectura clínica en este ámbito: pídeselo a Administración." },
         { "p": "El residente no tiene basal.", "r": "El resultado te lo indica: todavía no hay ningún basal firmado." }
       ],
       "rutas": ["Direccion/Index", "Baseline/Direction", "Baseline/InformeDerivacion"],
@@ -342,11 +347,12 @@
       ],
       "dudas": [
         { "p": "«No puedes abrir esa pantalla: hace falta el permiso para ver los indicadores y la calidad de proceso, que concede Administración.»", "r": "Pídele a Administración el permiso." },
-        { "p": "Una fecha no es válida o «Desde» es posterior a «Hasta».", "r": "Si una fecha no es válida, se usa la de por defecto; si «Desde» es posterior a «Hasta», la pantalla te lo indica." }
+        { "p": "«La fecha «desde» no puede ser posterior a la fecha «hasta».»", "r": "Corrige las fechas. Si una fecha no es válida, se usa la de por defecto." }
       ],
       "rutas": ["Direccion/Index", "Direccion/Indicadores"],
       "mensajes": [
         "No puedes abrir esa pantalla: hace falta el permiso para ver los indicadores y la calidad de proceso, que concede Administración.",
+        "La fecha «desde» no puede ser posterior a la fecha «hasta».",
         "Imprimir / guardar como PDF"
       ],
       "manual": { "id": "indicadores-direccion", "titulo": "Indicadores e informe de actividad" },
@@ -360,15 +366,15 @@
       "concede": "Administración",
       "antes": [
         "Tener el permiso **Ver los indicadores y la calidad de proceso** (ver DIR-11).",
-        "Saber que solo da cifras por unidad y periodo: nunca por profesional ni por residente, y sin contenido clínico."
+        "Saber que solo da cifras por unidad y periodo: nunca por profesional ni por residente, ni lista de episodios, y sin contenido clínico."
       ],
       "pasos": [
         { "texto": "En el Inicio, abre **Calidad de proceso**.", "botones": ["Calidad de proceso"] },
         { "texto": "Elige «Desde» y «Hasta» y pulsa **Aplicar**. Cada hito cuenta en el periodo en que empezó.", "botones": ["Aplicar"], "campos": ["Desde", "Hasta"] },
-        { "texto": "En «Plazos y cumplimiento del ámbito» ves, por hito, cuántos de los medidos están fuera de plazo y cuántos a punto de vencer. Debajo, lo mismo «Por unidad», y al final los episodios con algún hito fuera de plazo o a punto de vencer, con un enlace a su detalle operativo.", "campos": ["Plazos y cumplimiento del ámbito", "Por unidad"] }
+        { "texto": "En «Plazos y cumplimiento del ámbito» ves, por hito, su plazo (normal y prioritario) y cuántos de los medidos están fuera de plazo y cuántos a punto de vencer. Debajo, «Por unidad», cuántos hitos están fuera de plazo sobre los medidos.", "campos": ["Plazos y cumplimiento del ámbito", "Por unidad"] }
       ],
       "despues": [
-        { "para": "Dirección / Coordinación Clínica", "texto": "Consultar esta pantalla no queda en la auditoría. Los avisos de «a punto de vencer» de cada caso les llegan a Enfermería y a Medicina, no a Dirección." },
+        { "para": "Dirección / Coordinación Clínica", "texto": "Abrir esta pantalla queda en la auditoría (quién y cuándo, sin ningún residente); cambiar el periodo con «Aplicar» no añade otra anotación. No hay lista de episodios: los casos concretos los ven Enfermería y Medicina, que reciben los avisos de «a punto de vencer»; Dirección no los recibe." },
         { "para": "Enfermería", "texto": "En su Inicio, arriba, ve la lista de los hitos de su perfil a punto de pasar de plazo o ya vencidos." },
         { "para": "Medicina", "texto": "Lo mismo en el suyo, con sus hitos." }
       ],
@@ -394,7 +400,7 @@
       "pasos": [
         { "texto": "Pulsa **Inicio** (en las migas de pan, arriba) y abre **Plazos de los hitos del proceso** (o, en «Calidad de proceso», el botón **Cambiar los plazos del centro**).", "botones": ["Inicio", "Plazos de los hitos del proceso", "Cambiar los plazos del centro"] },
         { "texto": "En cada hito, escribe el «Plazo (minutos)» y el «Plazo si es prioritario (minutos)». Un plazo va de 1 a 10080 minutos (una semana).", "campos": ["Plazo (minutos)", "Plazo si es prioritario (minutos)"] },
-        { "texto": "Si quieres volver a los plazos de partida, pulsa **Ver los plazos sugeridos**: los trae al formulario y no guarda nada hasta que pulses **Guardar**.", "botones": ["Ver los plazos sugeridos"] },
+        { "texto": "Si quieres volver a los plazos de partida, pulsa **Ver los plazos sugeridos**: los trae al formulario («Aquí tienes los plazos sugeridos. No se guardan hasta que pulses «Guardar».») y no guarda nada hasta que pulses **Guardar**.", "botones": ["Ver los plazos sugeridos"] },
         { "texto": "Pulsa **Guardar**.", "botones": ["Guardar"] }
       ],
       "despues": [
@@ -404,7 +410,7 @@
       ],
       "dudas": [
         { "p": "«Otra persona ha cambiado los plazos mientras tenías la pantalla abierta. Recarga…»", "r": "Para guardar, nadie más puede haber cambiado los plazos entre tanto. Recarga: lo que escribiste sigue en el formulario por si quieres copiarlo." },
-        { "p": "«Revisa los plazos: van de 1 minuto a 10080 (una semana), o vacíos si el hito no se mide.»", "r": "Corrige el valor que se sale de ese rango." },
+        { "p": "«El plazo va de 1 minuto a 10080 (una semana).» (el navegador suele avisarlo antes) o «Revisa los plazos: van de 1 minuto a 10080 (una semana), o vacíos si el hito no se mide.»", "r": "Corrige el valor que se sale de ese rango." },
         { "p": "¿Cambiar un plazo cambia algún umbral clínico?", "r": "No. Los plazos solo sirven para medir y avisar: no cambian ninguna categoría ni umbral clínico." }
       ],
       "rutas": ["Home/Index", "Direccion/Calidad", "PlazosProceso/Index"],
@@ -412,6 +418,7 @@
         "Plazos de los hitos guardados.",
         "Otra persona ha cambiado los plazos mientras tenías la pantalla abierta.",
         "Revisa los plazos: van de 1 minuto a 10080 (una semana), o vacíos si el hito no se mide.",
+        "El plazo va de 1 minuto a 10080 (una semana).",
         "No se pueden mostrar los plazos: tu perfil no tiene el permiso para gestionarlos."
       ],
       "manual": { "id": "calidad-direccion", "titulo": "Calidad de proceso" },
@@ -441,13 +448,15 @@
       "dudas": [
         { "p": "«Otra persona ha cambiado los rangos mientras tenías la pantalla abierta. Recarga…»", "r": "Recarga para ver los valores actuales; lo que escribiste sigue en el formulario por si quieres copiarlo." },
         { "p": "«Revisa los rangos: cada uno necesita al menos un límite, el mínimo debe ser menor que el máximo y la saturación no puede superar el 100 %.»", "r": "Corrige el rango que no cumpla alguna de esas reglas." },
+        { "p": "«No se puede acceder a esta operación. Fijar los rangos requiere un perfil clínico…»", "r": "Tu cuenta no tiene el permiso «Gestionar los rangos de referencia de constantes» en este centro: pídeselo a Administración." },
         { "p": "La pantalla dice que el permiso es de «Medicina o Dirección/Coordinación Clínica».", "r": "Ese texto de la pantalla no es exacto: hoy el permiso de rangos solo lo puede tener Dirección / Coordinación Clínica." }
       ],
       "rutas": ["Home/Index", "RangosReferencia/Index"],
       "mensajes": [
         "Rangos de referencia guardados.",
         "Otra persona ha cambiado los rangos mientras tenías la pantalla abierta.",
-        "Revisa los rangos: cada uno necesita al menos un límite, el mínimo debe ser menor que el máximo y la saturación no puede superar el 100 %."
+        "Revisa los rangos: cada uno necesita al menos un límite, el mínimo debe ser menor que el máximo y la saturación no puede superar el 100 %.",
+        "No se puede acceder a esta operación. Fijar los rangos requiere un perfil clínico"
       ],
       "manual": { "id": "rangos-referencia", "titulo": "Rangos de referencia de constantes" },
       "flujo": { "id": "direccion", "titulo": "Dirección Clínica mira el conjunto" }
