@@ -1,6 +1,6 @@
 # Supervisión clínica de Dirección/Coordinación Clínica
 
-Dirección/Coordinación Clínica es un perfil de supervisión pura: observa el proceso asistencial de forma agregada y, solo con permiso específico, finalidad válida y auditoría previa, puede consultar contenido clínico detallado en modo de solo lectura. Nunca valora, indica, ejecuta, escala, corrige ni cierra nada desde este perfil.
+Dirección/Coordinación Clínica es un perfil de supervisión pura: observa el proceso asistencial de forma agregada y, solo con permiso específico, finalidad válida y auditoría previa, puede consultar contenido clínico detallado en modo de solo lectura. Nunca valora, indica, ejecuta, escala ni corrige nada asistencial desde este perfil. Solo tiene dos excepciones de escritura, aprobadas por CJ: cerrar de forma excepcional un episodio con indicaciones que nadie va a cumplir y gestionar la publicación de los comunicados a la familia (publicar antes de hora, publicar una corrección y retirar).
 
 ## Alcance y exclusiones
 
@@ -10,6 +10,7 @@ Este fichero documenta la parte clínica de la supervisión: el acceso condicion
 
 - **Permiso + finalidad + auditoría previa**: condición que debe cumplirse, y quedar registrada, antes de que el sistema entregue cualquier contenido clínico detallado a Dirección.
 - **Solo lectura**: todo lo que Dirección consulta en el ámbito clínico es de consulta exclusivamente; no puede modificarlo. **Única excepción de escritura sobre un episodio (CJ, tercera tanda 5.1; 2026-10-26):** cerrar un episodio con indicaciones médicas que nadie va a cumplir, solo Dirección Clínica, indicando un motivo (hasta 300 caracteres) que queda en la auditoría con su nombre. Las indicaciones no se tocan (siguen sin resolver y se cuentan así en los indicadores), el cierre no prepara comunicado a la familia y solo existe si el episodio tiene indicaciones abiertas; no es un cierre libre.
+- **Segunda excepción de escritura: los comunicados a la familia (CJ, segunda tanda 5.3; 2026-10-10):** Dirección Clínica puede publicar un comunicado antes de su hora, publicar una corrección de uno ya publicado y retirarlo, además de Administración, en los eventos de sus unidades y residentes. No lee contenido clínico, solo el texto aprobado del comunicado, sin el nombre de quien lo preparó, así que no hace falta permiso ni declaración de acceso clínico. Queda en la auditoría con el perfil `DIRECCION_CLINICA`. Una corrección la escribe quien la publica (tipo y texto de la corrección); preparar un comunicado nuevo sigue siendo de Enfermería y Medicina.
 - **Cambio explícito de perfil**: acción obligatoria para que una cuenta con varios perfiles pueda actuar clínicamente; mientras actúa como Dirección, no puede hacerlo.
 
 ## Flujo paso a paso
@@ -20,14 +21,14 @@ Este fichero documenta la parte clínica de la supervisión: el acceso condicion
 4. Si necesita el detalle clínico de un caso, el sistema exige que Dirección disponga de un permiso clínico específico, declare una finalidad válida y esté dentro de su ámbito; el acceso se registra en auditoría **antes** de entregar el contenido, nunca después. Solo entonces se muestra el detalle, que puede incluir el basal vigente si está autorizado, pero nunca la escala CFS (que no existe en el producto).
 5. Desde ese detalle, puede desplegar la línea temporal completa del residente (plegada por defecto) y el historial de eventos cerrados, siempre en solo lectura.
 6. Consulta paneles de indicadores agregados por ámbito y periodo, con su denominador cuando corresponde: continuidad, seguimientos vencidos, indicaciones pendientes, evolución temporal comparable y calidad de proceso. Estos paneles nunca generan predicción clínica ni juicio automático.
-7. Puede consultar derivaciones (el informe firmado, si tiene permiso, nunca generarlo ni firmarlo) y el estado de la comunicación familiar (frecuencia, publicaciones pendientes, errores), siempre en solo lectura.
+7. Puede consultar derivaciones (el informe firmado, si tiene permiso, nunca generarlo ni firmarlo) y el estado de la comunicación familiar (frecuencia, publicaciones pendientes, errores), en solo lectura salvo la excepción de publicar antes de hora, corregir y retirar comunicados.
 8. Puede consultar la trazabilidad clínica auditada de los hitos autorizados, y el historial de correcciones y rectificaciones (original, motivo, autor y fechas), sin que ello permita alterar ningún registro.
 9. Puede generar informes de actividad agregados por ámbito y periodo, sin que estos incluyan exportación masiva de historias individuales ni rankings nominativos de productividad.
 10. Si Dirección necesita actuar clínicamente sobre un caso (valorar, indicar, ejecutar, escalar, corregir o cerrar), debe cambiar explícitamente a otro perfil autorizado: esa acción ya no pertenece a Dirección.
 
 ## Reglas de negocio
 
-- Ninguna pantalla de Dirección incluye un control de escritura asistencial.
+- Ninguna pantalla de Dirección incluye un control de escritura asistencial. Las únicas acciones de escritura son las dos excepciones de arriba: el cierre excepcional de un episodio y la publicación, corrección y retirada de comunicados a la familia; ninguna toca el contenido clínico.
 - Toda lectura clínica detallada exige permiso específico, finalidad declarada, ámbito correspondiente y auditoría registrada antes de servir el contenido, nunca después.
 - Consultar el basal (vigente o histórico) desde Dirección es siempre de solo lectura y nunca incluye la escala CFS.
 - Los indicadores, paneles e informes agregados de Dirección nunca generan rankings nominativos de productividad individual ni evaluaciones automáticas de desempeño.
