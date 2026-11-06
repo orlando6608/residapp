@@ -48,4 +48,36 @@ tiene el problema (se comprobó con teclado real).
 Datos que quedaron en la base local: en Los Almendros (cuentas `*-orlando`), un «Sin cambios» (Carmen), un «No valorable» (Lucía), un cambio
 ordinario (Manuel) y uno prioritario (Rosa); y un centro nuevo «Residencia de prueba (navegador …)» con su cuenta de Auxiliar sin residentes.
 
-Pendiente en las demás guías: Familia, Medicina, Enfermería, Dirección, Administración y «Para todos».
+## Familia (2026-11-06, cuentas `almendros-orlando-pablo` y una cuenta nueva de familiar con tres residentes)
+
+Para recorrerlas hizo falta preparar el lado de Administración y de Enfermería por la pantalla, como lo haría el centro: se dio de alta un
+familiar y se vinculó a tres residentes (ADM-27), se abrieron y activaron sus autorizaciones (ADM-29), se le dio acceso al portal y se
+entregó su invitación (ADM-30); Enfermería valoró y cerró un evento preparando una comunicación (ENF-05 a ENF-07) y Administración la publicó
+antes de su hora (ADM-34) y publicó una corrección (ADM-35); y se cambió el modo del servicio de citas (ADM-37) y la hora de corte (ADM-36),
+restaurando después los dos.
+
+| Ficha | Estado | Qué se vio |
+|---|---|---|
+| FAM-01 Entrar al portal y cambiar de residente | Recorrida | La invitación abre «Elige tu contraseña» (solo contraseña, sin código del móvil) y «Guardar y continuar» lleva al portal. Con un residente se entra directo a su pantalla; con varios sale «Mis residentes» con una tarjeta por residente (y «Propuesta de cita pendiente» o «N novedades nuevas» cuando toca). «Cambiar de residente» vuelve a esa lista, «Salir» cierra la sesión y «Iniciar sesión» (Usuario, Contraseña, «Entrar») vuelve a entrar; con clave equivocada sale «Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.» En el móvil (375 px) «Cambiar de residente» y «Salir» están tras el botón de menú. Con las autorizaciones suspendidas sale «Ahora no tienes acceso a ningún residente» y, al reactivarlas, vuelve todo. |
+| FAM-02 Leer las novedades | Recorrida | «Hay N novedades nuevas desde tu última visita» y la etiqueta «Nueva» en la primera visita; los filtros «Todas», «Relevantes» y «Ordinarias»; la novedad abierta con su tipo, fecha, texto y firma «Equipo asistencial del centro»; «Tiene una corrección» → «Ver la corrección» → «Ver la novedad original»; «Volver a las novedades». |
+| FAM-03 Resumen diario o semanal | Recorrida | Con el corte pasado, sale la tarjeta «Resumen diario», con «Lo que el equipo ha publicado entre el … y el …, todo junto», las novedades (original y corrección) y «Son las mismas novedades de más abajo.»; la etiqueta «Nuevo» sale solo en la primera visita tras el corte. Para verlo hizo falta adelantar la hora de corte (ADM-36); hoy, con el horario normal, saldría tras las 19:00. |
+| FAM-04 Reservar una cita | Recorrida | «Citas con el equipo asistencial» → «Reservar una cita» → huecos por día bajo cada equipo y modalidad → «Revisa tu reserva» (residente, con quién, cómo, cuándo) → «Confirmar la reserva» → «Cita confirmada.» con estado «Confirmada». |
+| FAM-05 Solicitar una cita | Recorrida | «Solicitar una cita» con los campos de la ficha (con quién, cómo, motivo, comentario, días, parte del día); enviada vacía sale «Elige con quién quieres la cita.», «Elige cómo quieres la cita.» y «Elige el motivo de la cita.»; bien rellena, «Solicitud enviada.» y estado «Pendiente de gestión». |
+| FAM-06 Responder a la propuesta | Recorrida | «Propuesta de cita pendiente» en «Mis residentes» y «Tienes una propuesta de cita esperando tu respuesta» con «Ver la propuesta»; «El centro te propone…» con el plazo; «Pedir otro horario» avisa «Hemos avisado al centro de que necesitas otro horario. Te propondrá uno nuevo.» y Administración lo ve; «Aceptar y confirmar la cita» da «Cita confirmada.»; «Cancelar la solicitud» pide confirmar («Sí, cancelar la solicitud» / «No, mantenerla») y da «Solicitud cancelada.» Sin recorrer: la propuesta que caduca sin respuesta. |
+| FAM-07 Cambiar o cancelar una cita | Recorrida | «Reprogramar» → hueco nuevo → «Revisa el cambio» con «Hueco nuevo» y «Hueco actual (se libera al confirmar)» → «Confirmar el cambio» → «Cita reprogramada.»; «Cancelar la cita» → «¿Cancelar esta cita?» → «No, mantenerla» la deja y «Sí, cancelar la cita» da «Cita cancelada. El hueco queda libre.»; el «Historial» anota cada cambio. Sin recorrer: el límite de antelación mínima (no hay cita a menos de 24 horas) y el aviso por correo. |
+| FAM-08 Qué información me corresponde y qué hacer si es urgente | Recorrida | Ninguna pantalla muestra valoraciones, constantes, basal, medicación, historial, indicaciones ni derivaciones; no hay imágenes ni con un residente que tiene foto (Manuel); cada pantalla recuerda «Este portal no es un canal urgente.» |
+
+Ninguna ficha de Familia necesitó cambios. Sin errores de consola ni desplazamiento lateral.
+
+De paso se observó en otras guías, para confirmarlo cuando les toque: **ENF-05** dice que, tras «Empezar valoración», se pulsa
+«Completar valoración» (o «Continuar valoración»); en la pantalla, «Empezar valoración» abre directamente el formulario de la valoración
+(«Guardar borrador», «Volver sin guardar»), y «Completar valoración» solo aparece al volver al detalle sin haber guardado. ADM-27, ADM-29,
+ADM-30, ADM-34, ADM-35, ADM-36, ADM-37 y ADM-40 funcionaron como dicen sus fichas en lo que se usó; ENF-05 a ENF-07 y ENF-14 también (queda ENF-14
+sin pulsar «Corregir»).
+
+Datos que quedaron en la base local, en Los Almendros: el familiar «Familiar guía 222147» (cuenta `guia-fam-222147`, clave solo en la carpeta
+temporal de la sesión) vinculado a Antonio, Manuel y Rosa con autorización Activa; una cita confirmada de Antonio (lunes 09/11, 11:00) y otra
+cancelada; solicitudes de cita resueltas o canceladas; el evento de Manuel valorado y cerrado, con su comunicado publicado y una corrección.
+El servicio de citas volvió a «Reserva directa» y el horario de comunicados a 19:00, 60 minutos y resumen semanal.
+
+Pendiente en las demás guías: Medicina, Enfermería, Dirección, Administración y «Para todos».
