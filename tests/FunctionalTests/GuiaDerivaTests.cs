@@ -507,6 +507,21 @@ public class GuiaPageTests(ResidentsFlowTests.WebAppFactory factory) : IClassFix
     }
 
     [Fact]
+    public async Task ElFlujoDeTrabajoEnlazaALaGuiaDeCadaPerfil_YElPieALaGuia()
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var flujo = await client.GetStringAsync("/flujo-de-trabajo.html");
+
+        Assert.Contains("href=\"/Guia\">Guía por perfil</a>", flujo);
+        foreach (var perfil in GuiaPerfiles.Todos)
+        {
+            // Cada tarjeta de «Quién interviene» lleva a la guía de su perfil, y esa página existe.
+            Assert.Contains($"href=\"/Guia/{perfil.Slug}\">Guía de este perfil</a>", flujo);
+            Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"/Guia/{perfil.Slug}")).StatusCode);
+        }
+    }
+
+    [Fact]
     public async Task ElPieDeLaWebEnlazaALaGuia_YElManualYAccesoLaNombranComoPaginaSinSesion()
     {
         var client = factory.CreateClient();
