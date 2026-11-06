@@ -166,6 +166,7 @@
   .perfiles > li { background: var(--surface); border: 1px solid var(--rule); border-top: 5px solid var(--rule); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
   .perfiles h3 { font-size: 1.08rem; font-weight: 600; }
   .perfiles .nunca { color: var(--muted); font-size: 0.93rem; }
+  .perfiles .guia { font-size: 0.93rem; margin-top: auto; }
 
   /* Leyenda */
   .leyenda { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 0.93rem; list-style: none; padding: 0; }
@@ -433,13 +434,13 @@
     <h2 id="perfiles-t">Quién interviene</h2>
     <p class="prose">Cada persona entra con un perfil, en un centro y con unas unidades. Lo que ve y lo que puede hacer depende de ese perfil. El color de cada perfil es el mismo en todos los diagramas.</p>
     <ul class="perfiles">
-      <li class="plat"><h3>Plataforma</h3><p>Quien opera ResidApp, no el personal del centro. Da de alta los centros nuevos con su primera unidad y su primer administrador, y da soporte a sus Administraciones.</p><p class="nunca"><strong>Nunca</strong> ve residentes ni nada clínico.</p></li>
-      <li class="adm"><h3>Administración</h3><p>Monta el centro: lugares, personal, turnos y equipos, y el organigrama de cargos (que todos los profesionales consultan; un cargo no da permisos). Da de alta a los residentes, gestiona a sus familias, las citas y los comunicados ya publicados, y revisa la auditoría.</p><p class="nunca"><strong>Nunca</strong> ve observaciones, valoraciones ni el basal.</p></li>
-      <li class="aux"><h3>Auxiliar</h3><p>Atiende a los residentes que tiene asignados y cierra cada turno: sin cambios, no valorable o registrar un cambio, ordinario o prioritario.</p><p class="nunca"><strong>Nunca</strong> valora ni escala; del basal solo ve el resumen.</p></li>
-      <li class="enf"><h3>Enfermería</h3><p>Con permiso, firma el basal; valora los cambios y decide: cerrar, seguir, escalar a Medicina o activar la urgencia. Cumple las indicaciones médicas, deriva a Urgencias y prepara los comunicados.</p><p class="nunca"><strong>Nunca</strong> edita lo que observó otro ni firma un basal que no creó.</p></li>
-      <li class="med"><h3>Medicina</h3><p>Valora lo que le escalan y lo que observa, da indicaciones a Enfermería, hace seguimiento médico, deriva y cierra. Con permiso, también firma el basal.</p><p class="nunca"><strong>Nunca</strong> cambia la observación ni la valoración de Enfermería.</p></li>
-      <li class="dir"><h3>Dirección Clínica</h3><p>Supervisa por unidad con cifras: pendientes, plazos, indicadores y derivaciones. Puede adelantar, corregir o retirar comunicados, y cerrar con un motivo un episodio con indicaciones que nadie va a cumplir. Con permiso, fija los rangos de referencia y los plazos, y ve los indicadores y la calidad de proceso.</p><p class="nunca"><strong>Nunca</strong> valora ni indica (su única acción sobre un episodio es ese cierre excepcional); lo clínico solo lo lee declarando para qué, y queda auditado.</p></li>
-      <li class="fam"><h3>Familia</h3><p>Lee en el Portal Familiar las novedades que el equipo publica de su residente, con un resumen diario o semanal de lo publicado (según el centro), y reserva o solicita citas con el equipo asistencial.</p><p class="nunca"><strong>Nunca</strong> ve observaciones, valoraciones, constantes, el basal, la foto del residente ni nombres de profesionales.</p></li>
+      <li class="plat"><h3>Plataforma</h3><p>Quien opera ResidApp, no el personal del centro. Da de alta los centros nuevos con su primera unidad y su primer administrador, y da soporte a sus Administraciones.</p><p class="nunca"><strong>Nunca</strong> ve residentes ni nada clínico.</p><p class="guia"><a href="/Guia/plataforma">Guía de este perfil</a></p></li>
+      <li class="adm"><h3>Administración</h3><p>Monta el centro: lugares, personal, turnos y equipos, y el organigrama de cargos (que todos los profesionales consultan; un cargo no da permisos). Da de alta a los residentes, gestiona a sus familias, las citas y los comunicados ya publicados, y revisa la auditoría.</p><p class="nunca"><strong>Nunca</strong> ve observaciones, valoraciones ni el basal.</p><p class="guia"><a href="/Guia/administracion">Guía de este perfil</a></p></li>
+      <li class="aux"><h3>Auxiliar</h3><p>Atiende a los residentes que tiene asignados y cierra cada turno: sin cambios, no valorable o registrar un cambio, ordinario o prioritario.</p><p class="nunca"><strong>Nunca</strong> valora ni escala; del basal solo ve el resumen.</p><p class="guia"><a href="/Guia/auxiliar">Guía de este perfil</a></p></li>
+      <li class="enf"><h3>Enfermería</h3><p>Con permiso, firma el basal; valora los cambios y decide: cerrar, seguir, escalar a Medicina o activar la urgencia. Cumple las indicaciones médicas, deriva a Urgencias y prepara los comunicados.</p><p class="nunca"><strong>Nunca</strong> edita lo que observó otro ni firma un basal que no creó.</p><p class="guia"><a href="/Guia/enfermeria">Guía de este perfil</a></p></li>
+      <li class="med"><h3>Medicina</h3><p>Valora lo que le escalan y lo que observa, da indicaciones a Enfermería, hace seguimiento médico, deriva y cierra. Con permiso, también firma el basal.</p><p class="nunca"><strong>Nunca</strong> cambia la observación ni la valoración de Enfermería.</p><p class="guia"><a href="/Guia/medicina">Guía de este perfil</a></p></li>
+      <li class="dir"><h3>Dirección Clínica</h3><p>Supervisa por unidad con cifras: pendientes, plazos, indicadores y derivaciones. Puede adelantar, corregir o retirar comunicados, y cerrar con un motivo un episodio con indicaciones que nadie va a cumplir. Con permiso, fija los rangos de referencia y los plazos, y ve los indicadores y la calidad de proceso.</p><p class="nunca"><strong>Nunca</strong> valora ni indica (su única acción sobre un episodio es ese cierre excepcional); lo clínico solo lo lee declarando para qué, y queda auditado.</p><p class="guia"><a href="/Guia/direccion">Guía de este perfil</a></p></li>
+      <li class="fam"><h3>Familia</h3><p>Lee en el Portal Familiar las novedades que el equipo publica de su residente, con un resumen diario o semanal de lo publicado (según el centro), y reserva o solicita citas con el equipo asistencial.</p><p class="nunca"><strong>Nunca</strong> ve observaciones, valoraciones, constantes, el basal, la foto del residente ni nombres de profesionales.</p><p class="guia"><a href="/Guia/familia">Guía de este perfil</a></p></li>
     </ul>
   </section>
 
@@ -1834,7 +1835,7 @@
   </section>
 
   <footer>
-    <p>ResidApp · Flujo de trabajo. Resume lo que hace hoy la aplicación con un ejemplo inventado; el detalle de cada pantalla está en el <a href="/Home/Manual">Manual de usuario</a>.</p>
+    <p>ResidApp · Flujo de trabajo. Resume lo que hace hoy la aplicación con un ejemplo inventado; el detalle de cada pantalla está en el <a href="/Home/Manual">Manual de usuario</a> y las tareas paso a paso de cada perfil, en la <a href="/Guia">Guía por perfil</a>.</p>
   </footer>
 </div>
 
