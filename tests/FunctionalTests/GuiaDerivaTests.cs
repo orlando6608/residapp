@@ -34,7 +34,9 @@ public partial class GuiaDerivaTests
     private static readonly HashSet<string> CodigosRetirados = [];
 
     // Palabras que no deben salir en una página pública de usuario real (decisiones D5 y D9 del plan).
-    private static readonly string[] PalabrasInternas = ["Orlando", "almendros", "olmos", "entorno de pruebas", "cuenta de prueba", "plataforma-cj"];
+    private static readonly string[] PalabrasInternas = ["Orlando", "almendros", "olmos", "entorno de pruebas", "cuenta de prueba", "plataforma-cj",
+        // Estado interno del producto: en una guía de usuario se explica qué hacer, no en qué punto está ResidApp (decisión de Orlando, 2026-11-06).
+        "política provisional", "pendiente de validar", "familias reales", "equipo clínico del producto"];
 
     internal static string Raiz()
     {
@@ -297,7 +299,8 @@ public partial class GuiaDerivaTests
     [Fact]
     public void LaGuiaNoLlevaContenidoInterno()
     {
-        foreach (var file in Directory.EnumerateFiles(Web("Guia"), "*.json"))
+        // Los datos de las fichas y también las vistas que las dibujan.
+        foreach (var file in Directory.EnumerateFiles(Web("Guia"), "*.json").Concat(Directory.EnumerateFiles(Web("Views", "Guia"), "*.cshtml")))
         {
             var texto = File.ReadAllText(file);
             foreach (var palabra in PalabrasInternas)

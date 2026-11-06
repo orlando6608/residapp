@@ -328,7 +328,7 @@
       "permisos": [],
       "antes": [
         "Haber sido **tú** quien guardó la valoración por última vez, y que el evento ya haya avanzado (mientras esté en valoración, se sigue editando con normalidad).",
-        "Dentro de las **6 horas** siguientes a ese último guardado se **corrige**; pasadas, se **rectifica**. Es una política provisional, pendiente de validar con el centro."
+        "Dentro de las **6 horas** siguientes a ese último guardado se **corrige**; pasadas, se **rectifica**. Este plazo de 6 horas es el que trae ResidApp y puede cambiar: consulta el protocolo de tu centro."
       ],
       "pasos": [
         { "texto": "Abre el detalle del evento: desde la ficha del residente, en «Eventos abiertos», pulsa **Ver detalle**.", "botones": ["Ver detalle"] },
