@@ -414,6 +414,7 @@ Va en `FunctionalTests` porque es el único proyecto de pruebas que referencia `
 | D8 | Orden | **El de §5** | Fase 0 → Plataforma y Auxiliar → Familia, Medicina, Enfermería, Dirección → Administración en 3 entregas → anexos y cierre. |
 | D9 | Visibilidad | **Pública, sin sesión** | `GuiaController` con `[AllowAnonymous]`; el test #8 de palabras prohibidas pasa a ser obligatorio. |
 | D10 | Idioma | **Solo español** | Catalán para Familia, si CJ lo pide, en una segunda fase. |
+| D11 | Qué significan «Depende de», «Le entrega trabajo a» y la matriz (2026-11-06) | **Dos criterios distintos** | «Le entrega trabajo a» (`entregaA`) es solo trabajo que se pasa a otro perfil para que actúe; «Depende de» (`dependeDe`) es de quién se necesita algo (datos, accesos o trabajo previo) y **no** es el inverso exacto de `entregaA`. La matriz «Quién entrega qué a quién» sale de «Qué pasa después» de cada ficha y es más amplia: incluye lo que otro perfil solo ve (p. ej. el basal en solo lectura para Auxiliar). La prueba exige que cada `entregaA` tenga al menos una ficha que lo haga; no exige lo contrario. Una frase negativa («no lo ve hasta que…») no es una entrega: va en `dudas` o `antes`. Se explica en cada guía, bajo el diagrama. |
 
 ### 8.2 Riesgos
 

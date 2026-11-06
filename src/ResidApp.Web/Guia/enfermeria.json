@@ -544,10 +544,10 @@
         { "texto": "Pulsa **Dar de alta**.", "botones": ["Dar de alta"] }
       ],
       "despues": [
-        { "para": "Enfermería", "texto": "Verás «Residente dado de alta». Su estado basal queda **pendiente** hasta que Enfermería o Medicina lo completen y firmen (ver ENF-18)." },
-        { "para": "Auxiliar", "texto": "No lo ve hasta que Administración se lo asigne (ver AUX-01)." }
+        { "para": "Enfermería", "texto": "Verás «Residente dado de alta». Su estado basal queda **pendiente** hasta que Enfermería o Medicina lo completen y firmen (ver ENF-18)." }
       ],
       "dudas": [
+        { "p": "He dado de alta a un residente y el Auxiliar no lo ve.", "r": "No lo ve hasta que Administración se lo asigne (ver ADM-15)." },
         { "p": "«Tu ámbito activo no tiene permiso para dar de alta residentes. Si lo necesitas, pídeselo a Administración.»", "r": "Es quien concede el permiso." },
         { "p": "«Revisa los familiares: marca al menos un contacto prioritario o, si el residente no tiene contacto urgente, escribe el motivo…»", "r": "Marca un contacto prioritario o escribe el motivo; y cada familiar necesita nombre, relación y un teléfono válido." },
         { "p": "«Esa cama ya está ocupada por otro residente. Elige otra o «Pendiente de asignar».»", "r": "Otra persona la ocupó mientras rellenabas el formulario. Elige otra cama. Para cambiarla después, el traslado lo hace Administración." }
