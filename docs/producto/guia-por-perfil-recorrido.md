@@ -187,4 +187,43 @@ Datos que quedaron en la base local, en Los Almendros: eventos cerrados de Lucí
 abierto para Pilar con protocolo urgente activado y una indicación sin leer; comunicados de Rosa (publicado, corregido y retirado) y de Lucía
 (publicado y retirado); una petición más de historial de Pilar (Enfermería de Planta 1); los cuatro permisos de Dirección con la fecha «desde» de hoy.
 
-Pendiente en las demás guías: Administración y «Para todos».
+## Administración, entrega 1 de 3: ADM-01 a ADM-18 (2026-11-06, cuenta `almendros-orlando-administracion`)
+
+Para recorrerlas se crearon por pantalla: una unidad nueva con edificio, planta, habitaciones y plazas; una cuenta de Auxiliar (`guia-aux-…`) a la que se dio y
+quitó un perfil, unidades y residentes; ficheros CSV de prueba para importar y exportar; y, en el centro de prueba que creó Plataforma («Residencia guía …»), una
+Administración principal, una segunda y una tercera. Para ADM-07 hizo falta ese segundo centro: la cuenta `almendros-orlando-administracion` no es principal.
+
+**Base local al día.** Al probar ADM-17 la hoja se rechazaba con «Ese código no vale»: a la base local le faltaban los scripts 0088 a 0091 (le faltaba un
+procedimiento del 0090; no era un fallo de la Guía ni de la aplicación). Con tu visto bueno se aplicaron con `database/aplicar-scripts.sh` y ADM-17 funcionó.
+Los recorridos de Plataforma, Auxiliar, Familia, Medicina, Enfermería y Dirección se hicieron antes; tras aplicarlos, Dirección, Enfermería y las pantallas de
+Administración abren igual y sin errores de consola.
+
+| Ficha | Estado | Qué se vio |
+|---|---|---|
+| ADM-01 Inicio y «Requiere atención» | Recorrida | Las líneas de «Requiere atención» son enlaces a la lista ya filtrada (por ejemplo, «Residentes» con «Con una autorización…»); aparecen según haya casos (residentes sin contacto urgente, autorización pendiente, ubicación pendiente, cuenta suspendida); debajo, las citas confirmadas y los comunicados; las dieciséis tarjetas de la ficha. |
+| ADM-02 Nombre y logo del centro | Recorrida | Mismo nombre: «Escribe un nombre distinto del actual…»; nombre nuevo: «Nombre del centro guardado.» y cambia la cabecera; «Guardar logo» sin elegir: «Elige un logo.»; con una imagen: «Logo guardado.» y aparece «Quitar logo» → «Logo quitado.». Sin recorrer: centrar con las flechas y el zoom, y los ficheros que no se aceptan (tipo, peso, tamaño). |
+| ADM-03 Unidades | Recorrida | «Nueva unidad» con «Código» y «Nombre»; código o nombre repetido: «Ya existe una unidad con ese código o con ese nombre…»; renombrar a un nombre repetido: «Ya existe otra unidad con ese nombre…»; «Inactivar» una con residentes: «No se puede inactivar una unidad con residentes ubicados en ella.»; una vacía se inactiva y se reactiva. |
+| ADM-04 Edificios y plantas | Recorrida con cambios | Creación y renombrado como dice la ficha; inactivar y reactivar una planta. **Cambio:** al crear, el aviso de nombre repetido es «Ya existe un edificio…» / «Ya existe una planta…»; «otro» y «otra» salen solo al renombrar (ahora salen los dos). |
+| ADM-05 Habitaciones y plazas | Recorrida con cambios | «Nueva habitación» y «Nueva plaza en…» con «Libre» u «Ocupada». **Cambio:** igual que en ADM-04 (crear: «Ya existe una habitación… / una plaza…»; renombrar: «otra»). |
+| ADM-06 Edificio y planta de una unidad | Recorrida | El desplegable ofrece «Sin edificio», los edificios «(sin planta)» y cada «Edificio · Planta»; «Ubicación de la unidad guardada.»; repetir: «La unidad ya está en esa ubicación.». |
+| ADM-07 Unidades del centro y Administración principal | Recorrida con cambios | La principal ve «Fuera de tu ámbito» + «Añadir a mi ámbito» → «Unidad añadida a tu ámbito. Queda en la auditoría.»; la que no lo es solo ve una explicación, sin lista ni botones. «Marcar como Administración principal» → «Marcada como Administración principal.» y «Quitar la marca…» → «Ya no es Administración principal.». **Cambio:** los avisos «Solo la principal puede añadirse unidades» y «El centro tiene que conservar al menos una principal» no se llegan a ver (solo la principal ve los botones y nunca en su propia ficha); la ficha lo explica así. |
+| ADM-08 Importar | Recorrida con cambios | Plantillas de estructura y de residentes (CSV, separadas por «;»); estructura: dos filas → «Importar 2 filas»; residentes: «Se importará» y «Error» («La unidad … no está en tu ámbito…»); aviso de fechas ambiguas; resultado fila a fila con la fila del fichero; «Ya existe» con la referencia interna repetida. **Cambio:** dos dudas nuevas (fechas y «Ya existe»). Sin recorrer: «Posible duplicado» con «Importar de todos modos», y ficheros XLS/XLSX. |
+| ADM-09 Exportar | Recorrida con cambios | «Descargar la estructura» y «Descargar el censo de residentes» dan los CSV con las columnas de la importación; plantilla de otra aplicación: «Analizar el fichero» → «Guardar la plantilla» → «Plantilla … guardada.» → «Descargar» con sus columnas. **Cambio:** la ficha nombra los dos botones. |
+| ADM-10 Alta de una persona del personal | Recorrida | Identificador, nombre, perfil y unidades; sin unidad: «Elige al menos una unidad.»; identificador repetido: «Ya existe una cuenta con ese identificador de acceso.»; «Usuario dado de alta. Para que pueda entrar, entrégale su invitación de acceso (abajo).». |
+| ADM-11 Invitación de acceso o de recuperación | Recorrida | La hoja trae usuario, centro, «Vale hasta» (72 h, una sola vez) y QR; la nueva anula la anterior («Esta invitación ya no vale…»); con contraseña la ficha ofrece «Crear invitación de recuperación»; «Anular la invitación» → «Invitación anulada: ya no sirve para entrar.»; la propia cuenta se ve sin botones. |
+| ADM-12 Conceder otro perfil | Recorrida con cambios | «Conceder perfil» → «Perfil concedido. Vale desde la siguiente pantalla que abra la persona.». **Cambio:** el desplegable solo ofrece los perfiles que la cuenta aún no tiene, así que «La cuenta ya tiene ese perfil vigente» no se ve; la duda se reescribió. |
+| ADM-13 Unidades de un perfil y revocarlo | Recorrida con cambios | «Conceder unidad» → «Unidad concedida.»; «Revocar unidad» → «Unidad revocada.»; «Revocar perfil» → «Perfil revocado. Si hace falta otra vez, hay que concederlo de nuevo.». **Cambio:** en la última unidad no hay botón «Revocar unidad» (el aviso de la ficha no se ve). |
+| ADM-14 Permisos configurables | Recorrida | En los recorridos de Enfermería y Dirección: «Conceder» / «Revocar», «no concedido» / «desde el…», «Permiso concedido.» / «Permiso revocado.», y lo que cambia en cada perfil. |
+| ADM-15 Residentes de un Auxiliar | Recorrida | «Asignar residente» solo ofrece los aún no asignados → «Residente asignado.»; «Retirar» → «Residente retirado.». |
+| ADM-16 Suspender, reactivar y nombre | Recorrida | «Cuenta suspendida: no podrá entrar con ningún perfil hasta que la reactives.» y el botón pasa a «Reactivar cuenta» («Cuenta reactivada.»); «Cambiar nombre» → «Nombre guardado.»; la cuenta suspendida sale en «Requiere atención». |
+| ADM-17 Acceso de alguien de otro centro | Recorrida | «Crear la hoja» (perfil y unidades; se ve una sola vez, con código y dirección); la persona la abre desde «Mi cuenta» y acepta; «Pendientes de confirmar» con «Confirmar» («Vinculación confirmada…») y «Rechazar» («Vinculación rechazada: no se ha concedido ningún perfil.»); «Anular» una hoja sin usar («Vinculación anulada…»). Con la base sin los scripts 0088–0091 no funcionaba (ver arriba). |
+| ADM-18 Auditoría administrativa | Recorrida | «Desde», «Hasta», «Tipo de acción» (más de 40 tipos), «Cuenta afectada», «Buscar» y «Limpiar»; cada fila con fecha, acción, quién la hizo, cuenta, unidad y residente; sin eventos: «Ningún evento coincide con la búsqueda.». |
+
+Retoques de redacción en `administracion.json` (ADM-04, 05, 07, 08, 09, 12 y 13); las pruebas de la Guía siguen en verde. Sin errores de consola.
+
+Datos que quedaron en la base local: la unidad «Unidad de la guía (renombrada)» (GUIA-01, con una habitación y una plaza), la unidad «Unidad importada» con dos residentes
+importados («Residente Importado (ficticio)» y una segunda «Lucía Fernández (ficticia)» que no es la de siempre: conviene darla de baja en ADM-24), «Otra unidad de prueba»
+(inactiva), un edificio y una planta de prueba, las cuentas `guia-aux-…` (con el perfil de Enfermería revocado) y las cuentas `guia-adm3-…`/`guia-adm4-…` del centro de
+Plataforma, hojas de acceso a otro centro anuladas o sin usar, una plantilla de exportación «Otra aplicación (prueba)» y los scripts 0088 a 0091 aplicados.
+
+Pendiente en las demás guías: Administración, entregas 2 y 3 (ADM-19 a ADM-46) y «Para todos».

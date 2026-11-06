@@ -144,12 +144,14 @@
       ],
       "dudas": [
         { "p": "«Edificio creado.» o «Planta creada.»", "r": "Es la confirmación; los verás en la lista, con su estado «Activo» o «Activa»." },
-        { "p": "«Ya existe otro edificio con ese nombre en el centro.» o «Ya existe otra planta con ese nombre en el edificio.»", "r": "Usa un nombre distinto." }
+        { "p": "«Ya existe un edificio con ese nombre en el centro.» o «Ya existe una planta con ese nombre en el edificio.»", "r": "Usa un nombre distinto. Al renombrar, el aviso dice «Ya existe otro edificio…» o «Ya existe otra planta…»: también hay que usar otro nombre." }
       ],
       "rutas": ["Administracion/Edificios", "Administracion/NuevoEdificio", "Administracion/NuevaPlanta", "Administracion/NombreEdificio", "Administracion/NombrePlanta", "Administracion/EstadoEdificio", "Administracion/EstadoPlanta"],
       "mensajes": [
         "Edificio creado.",
         "Planta creada.",
+        "Ya existe un edificio con ese nombre en el centro.",
+        "Ya existe una planta con ese nombre en el edificio.",
         "Ya existe otro edificio con ese nombre en el centro.",
         "Ya existe otra planta con ese nombre en el edificio."
       ],
@@ -175,12 +177,14 @@
       ],
       "dudas": [
         { "p": "Quiero cambiar a un residente de habitación.", "r": "Crear o renombrar una habitación o una plaza no cambia dónde está ningún residente. Para moverlo, usa **Trasladar** en su ficha (ver ADM-22)." },
-        { "p": "«Ya existe otra habitación con ese nombre en la unidad.»", "r": "Usa un nombre distinto; con las plazas ocurre igual dentro de su habitación." }
+        { "p": "«Ya existe una habitación con ese nombre en la unidad.»", "r": "Usa un nombre distinto; con las plazas ocurre igual dentro de su habitación («Ya existe una plaza con ese nombre en la habitación.»). Al renombrar, el aviso dice «Ya existe otra habitación…» u «otra plaza…»." }
       ],
       "rutas": ["Administracion/Habitaciones", "Administracion/NuevaHabitacion", "Administracion/NuevaPlaza", "Administracion/NombreHabitacion", "Administracion/NombrePlaza", "Administracion/EstadoHabitacion", "Administracion/EstadoPlaza"],
       "mensajes": [
         "Habitación creada.",
         "Plaza creada.",
+        "Ya existe una habitación con ese nombre en la unidad.",
+        "Ya existe una plaza con ese nombre en la habitación.",
         "Ya existe otra habitación con ese nombre en la unidad.",
         "Ya existe otra plaza con ese nombre en la habitación."
       ],
@@ -231,17 +235,15 @@
         { "para": "Administración", "texto": "Cada ampliación queda en la auditoría con quién y cuándo. El centro tiene que conservar al menos una Administración principal. Si tu centro no tiene ninguna o necesitas recuperar una unidad, lo hace Plataforma (ver PLA-04 y PLA-05)." }
       ],
       "dudas": [
-        { "p": "«Solo la Administración principal del centro puede añadirse unidades.»", "r": "Tu cuenta no tiene la marca de principal: pídelo a quien la tenga." },
+        { "p": "En «Unidades del centro» no veo la lista ni «Añadir a mi ámbito».", "r": "Tu cuenta no es la Administración principal: la pantalla solo te lo explica. Pídele a quien lo sea que te añada la unidad." },
         { "p": "«Esa unidad ya está en tu ámbito.»", "r": "No hace falta añadirla." },
-        { "p": "«El centro tiene que conservar al menos una Administración principal: marca antes a otra.»", "r": "No se puede quitar la última marca: marca primero a otra cuenta." }
+        { "p": "No veo «Marcar como Administración principal» ni «Quitar la marca de principal».", "r": "Solo la Administración principal los ve, y nunca en su propia cuenta: tu ficha se ve pero no se cambia. El centro conserva siempre al menos una principal." }
       ],
       "rutas": ["Administracion/AmbitoCentro", "Administracion/AnadirUnidadAlAmbito", "Administracion/MarcarPrincipal", "Administracion/PerfilUsuario"],
       "mensajes": [
         "Unidad añadida a tu ámbito. Queda en la auditoría.",
-        "Solo la Administración principal del centro puede añadirse unidades.",
         "Esa unidad ya está en tu ámbito.",
-        "Marcada como Administración principal.",
-        "El centro tiene que conservar al menos una Administración principal: marca antes a otra."
+        "Marcada como Administración principal."
       ],
       "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" }
     },
@@ -268,6 +270,8 @@
       ],
       "dudas": [
         { "p": "Una columna no se empareja sola.", "r": "Elígela a mano en su lista; ResidApp no enseña los valores del fichero, solo qué parecen contener y cuántos distintos hay." },
+        { "p": "«Las fechas se pueden leer como día/mes/año y como mes/día/año…»", "r": "Mira en la vista previa que las fechas salen bien; si no, vuelve atrás y cambia el «Formato de las fechas»." },
+        { "p": "Una fila sale «Ya existe».", "r": "Ya hay un residente activo con esos datos o con esa referencia interna: no se vuelve a importar. El botón de importar solo cuenta las filas que sí se importarán." },
         { "p": "Importé los residentes antes que la estructura.", "r": "Importa primero la estructura y después los residentes. Si una fila sale con error, la vista previa dice el motivo." }
       ],
       "rutas": ["Administracion/Importar", "Administracion/ImportarAnalizar", "Administracion/ImportarVistaPrevia", "Administracion/ImportarEjecutar", "Administracion/PlantillaImportacion"],
@@ -285,7 +289,7 @@
       ],
       "pasos": [
         { "texto": "En el inicio, abre **Exportar datos**.", "botones": ["Exportar datos"] },
-        { "texto": "**Con las columnas de ResidApp:** pulsa el botón de la estructura o del censo y se descarga un CSV (se abre con Excel); son las mismas columnas que la importación, así que sirve para pasar datos de un centro a otro.", "campos": ["Con las columnas de ResidApp"] },
+        { "texto": "**Con las columnas de ResidApp:** pulsa **Descargar la estructura** o **Descargar el censo de residentes** y se descarga un CSV (se abre con Excel); son las mismas columnas que la importación, así que sirve para pasar datos de un centro a otro.", "botones": ["Descargar la estructura", "Descargar el censo de residentes"], "campos": ["Con las columnas de ResidApp"] },
         { "texto": "**Con las columnas de otra aplicación:** si ya hay plantillas, pulsa **Descargar** en la que quieras. Si no, en «Nueva plantilla de exportación» elige «Qué exporta», sube el «Fichero de ejemplo», pulsa **Analizar el fichero**, elige qué dato de ResidApp va en cada columna y guarda la plantilla.", "botones": ["Descargar", "Analizar el fichero"], "campos": ["Con las columnas de otra aplicación", "Nueva plantilla de exportación", "Qué exporta", "Fichero de ejemplo"] }
       ],
       "despues": [
@@ -384,13 +388,12 @@
         { "para": "Personal del centro", "texto": "El perfil vale desde la siguiente pantalla que abra la persona. Para usarlo tendrá que elegirlo al entrar (ver TOD-04): **los permisos de sus perfiles no se suman**." }
       ],
       "dudas": [
-        { "p": "«La cuenta ya tiene ese perfil vigente en este centro.»", "r": "No hace falta concederlo: revisa sus unidades (ver ADM-13)." },
+        { "p": "No me sale en «Perfil» el que quiero conceder.", "r": "Solo salen los perfiles que la cuenta aún no tiene vigentes: si falta el que buscas, ya lo tiene (revisa sus unidades, ver ADM-13)." },
         { "p": "«La cuenta ya tiene vigentes todos los perfiles que se conceden desde aquí.»", "r": "No queda ningún perfil por conceder." }
       ],
       "rutas": ["Administracion/Usuario", "Administracion/ConcederPerfil"],
       "mensajes": [
         "Perfil concedido. Vale desde la siguiente pantalla que abra la persona.",
-        "La cuenta ya tiene ese perfil vigente en este centro.",
         "La cuenta ya tiene vigentes todos los perfiles que se conceden desde aquí."
       ],
       "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" }
@@ -413,14 +416,13 @@
         { "para": "Personal del centro", "texto": "Los cambios valen desde la siguiente pantalla que abra la persona. Los perfiles y unidades revocados se conservan como historial." }
       ],
       "dudas": [
-        { "p": "«No se puede revocar: es la última unidad del perfil (revoca el perfil) o no es de tu ámbito.»", "r": "La última unidad no se revoca: si ya no hace falta, revoca el perfil." },
+        { "p": "En la última unidad del perfil no hay «Revocar unidad».", "r": "La última unidad no se revoca: si ya no hace falta, revoca el perfil." },
         { "p": "«Perfil revocado. Si hace falta otra vez, hay que concederlo de nuevo.»", "r": "Es la confirmación de «Revocar perfil»." }
       ],
       "rutas": ["Administracion/Usuario", "Administracion/PerfilUsuario", "Administracion/UnidadPerfil", "Administracion/RevocarPerfil"],
       "mensajes": [
         "Unidad concedida.",
         "Unidad revocada.",
-        "No se puede revocar: es la última unidad del perfil (revoca el perfil) o no es de tu ámbito.",
         "Perfil revocado. Si hace falta otra vez, hay que concederlo de nuevo."
       ],
       "manual": { "id": "usuarios-administracion", "titulo": "Usuarios, perfiles y unidades" }
