@@ -80,7 +80,7 @@
         { "texto": "Pulsa **Imprimir** (o enséñale la pantalla) y **entrégale la hoja en mano**.", "botones": ["Imprimir"] }
       ],
       "despues": [
-        { "para": "Administración", "texto": "Con la hoja elige su contraseña (12 caracteres como mínimo) y prepara el código del móvil. Entra en el **Inicio de Administración** como **Administración principal** y lo encuentra vacío: sin residentes, usuarios ni estructura. Lo primero: nombre y logo del centro, su estructura (edificios, habitaciones y plazas) y el alta de su equipo." },
+        { "para": "Administración", "texto": "Con la hoja elige su contraseña (12 caracteres como mínimo) y prepara el código del móvil. Entra en el **Inicio** y, con **Mi panel**, llega al **Inicio de Administración**, como **Administración principal**. Lo encuentra casi vacío: 0 residentes, solo su propia cuenta y la unidad que le creaste con el centro, sin edificios, habitaciones ni plazas, y «No hay nada pendiente». Lo primero: nombre y logo del centro, su estructura (edificios, habitaciones y plazas) y el alta de su equipo." },
         { "para": "Plataforma", "texto": "Tu parte termina al entregar la hoja. No ves residentes ni contenido clínico. Todo queda en la auditoría." }
       ],
       "dudas": [
