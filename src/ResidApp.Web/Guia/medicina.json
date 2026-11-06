@@ -123,7 +123,7 @@
       "pasos": [
         { "texto": "Abre la tarjeta **Escalados y eventos propios** y pulsa el evento. Cada uno muestra el motivo (o la observación), las constantes y las actuaciones.", "botones": ["Escalados y eventos propios"] },
         { "texto": "En el detalle lee el «Motivo del escalado» y la información reunida (solo lectura).", "campos": ["Motivo del escalado"] },
-        { "texto": "Pulsa **Iniciar valoración médica**: queda registrado quién y a qué hora. Después, **Completar valoración médica** (o **Continuar valoración médica** si ya hay un borrador).", "botones": ["Iniciar valoración médica", "Completar valoración médica", "Continuar valoración médica"] },
+        { "texto": "Pulsa **Iniciar valoración médica**: queda registrado quién y a qué hora, y se abre el formulario de la valoración. Si sales sin guardar, al volver al detalle verás **Completar valoración médica** (o **Continuar valoración médica** si ya hay un borrador).", "botones": ["Iniciar valoración médica", "Completar valoración médica", "Continuar valoración médica"] },
         { "texto": "Escribe «Hallazgos y exploración», «Valoración» y «Actuaciones», y las constantes que quieras: bajo cada campo ves el rango de referencia del centro, si Dirección lo ha fijado, solo como orientación.", "campos": ["Hallazgos y exploración", "Valoración", "Actuaciones"] },
         { "texto": "Pulsa **Guardar borrador**. Cada guardado queda como una versión que no se puede modificar.", "botones": ["Guardar borrador"] }
       ],
@@ -228,7 +228,7 @@
       "pasos": [
         { "texto": "En **Conducta médica**, pulsa **Activar protocolo urgente**.", "botones": ["Activar protocolo urgente"] },
         { "texto": "Si quieres, escribe la «Nota de activación (opcional)» y pulsa de nuevo **Activar protocolo urgente**.", "campos": ["Nota de activación (opcional)"] },
-        { "texto": "En el protocolo, cuando puedas, documenta con **Registrar actuación**, **Registrar evolución** o **Registrar contacto con un servicio** (con el «Servicio contactado» y la «Hora del contacto», que no puede ser futura).", "botones": ["Registrar actuación", "Registrar evolución", "Registrar contacto"], "campos": ["Servicio contactado", "Hora del contacto"] },
+        { "texto": "En el protocolo, cuando puedas, documenta con **Registrar actuación**, **Registrar evolución** o **Registrar contacto** (en «Registrar contacto con un servicio», con el «Servicio contactado» y la «Hora del contacto», que no puede ser futura).", "botones": ["Registrar actuación", "Registrar evolución", "Registrar contacto"], "campos": ["Servicio contactado", "Hora del contacto"] },
         { "texto": "Desde el protocolo puedes **Derivar a Urgencias** (ver MED-08) o **Cerrar el evento** (ver MED-09).", "botones": ["Derivar a Urgencias", "Cerrar el evento"] }
       ],
       "despues": [
@@ -263,7 +263,7 @@
         { "texto": "Escribe el «Motivo de la derivación» (obligatorio) y, si quieres, «Información adicional para Urgencias (opcional)» y «Comunicaciones (opcional)» (los contactos de esta derivación; viajan con el informe).", "campos": ["Motivo de la derivación", "Información adicional para Urgencias (opcional)", "Comunicaciones (opcional)"] },
         { "texto": "Pulsa **Ver la vista previa**, que es obligatoria: cada sección sale como «Dato automático» o «Escrito por ti», con su huella.", "botones": ["Ver la vista previa"], "campos": ["Dato automático", "Escrito por ti"] },
         { "texto": "Revisa y pulsa **Firmar y generar PDF** (o **Volver a editar**). La firma registra tu cuenta, la fecha y la hora, sin certificado. Descarga el PDF con **Descargar el informe en PDF**.", "botones": ["Firmar y generar PDF", "Volver a editar", "Descargar el informe en PDF"] },
-        { "texto": "Registra la llamada a la familia: en «Registrar un intento de llamada a la familia» elige «A quién se llama», «Hora de la llamada» y «Resultado» (Contactado, No contesta o Número erróneo), y pulsa **Registrar la llamada**.", "botones": ["Registrar la llamada"], "campos": ["Registrar un intento de llamada a la familia", "A quién se llama", "Hora de la llamada", "Resultado", "No contesta", "Número erróneo"] }
+        { "texto": "Registra la llamada a la familia: en «Registrar un intento de llamada a la familia» escribe «A quién se llama», elige la «Hora de la llamada» y el «Resultado» (Contactado, No contesta o Número erróneo), y pulsa **Registrar la llamada**.", "botones": ["Registrar la llamada"], "campos": ["Registrar un intento de llamada a la familia", "A quién se llama", "Hora de la llamada", "Resultado", "No contesta", "Número erróneo"] }
       ],
       "despues": [
         { "para": "Medicina", "texto": "El PDF firmado no se puede modificar. El evento sigue en el protocolo, donde puedes seguir documentando. Para cerrarlo hace falta al menos un intento de llamada (salvo que el residente no tenga contacto urgente) y preparar la comunicación a la familia (ver MED-09)." },
@@ -298,7 +298,7 @@
       "pasos": [
         { "texto": "En **Conducta médica** (o en el protocolo), pulsa **Cerrar el evento**.", "botones": ["Cerrar el evento"] },
         { "texto": "Revisa el «Resumen de la valoración médica» y los «Pendientes»: las indicaciones sin cumplir y las no realizadas, con su incidencia.", "campos": ["Resumen de la valoración médica", "Pendientes"] },
-        { "texto": "En «¿Se comunica a la familia?» elige **No comunicar** o **Preparar comunicación**. Es obligatorio decidirlo; tras una derivación ya viene «Sí: Preparar comunicación».", "campos": ["¿Se comunica a la familia?", "No comunicar", "Preparar comunicación"] },
+        { "texto": "En «¿Se comunica a la familia?» elige **No comunicar** o **Preparar comunicación**. Es obligatorio decidirlo; tras una derivación ya viene «Sí: Preparar comunicación» y el tipo solo puede ser Relevante.", "campos": ["¿Se comunica a la familia?", "No comunicar", "Preparar comunicación"] },
         { "texto": "Si preparas la comunicación, elige el «Tipo de comunicación» (Ordinaria o Relevante) y escribe el «Texto para la familia»: comprensible, sin datos internos ni escalas.", "campos": ["Tipo de comunicación", "Texto para la familia"] },
         { "texto": "Pulsa **Cerrar evento**.", "botones": ["Cerrar evento"] }
       ],
