@@ -107,12 +107,13 @@
       "dudas": [
         { "p": "No sale el formulario de cierre.", "r": "El episodio no tiene indicaciones médicas abiertas (por ejemplo, todas están leídas y con su resultado, aunque alguna sea «no realizada»), o ya no está en tu ámbito. Si viene de una derivación a Urgencias, en su lugar la pantalla explica que no se puede cerrar desde aquí." },
         { "p": "«Marca la casilla para confirmar que las indicaciones se quedan sin resolver y escribe el motivo.»", "r": "Faltan el motivo o la casilla de confirmación: los dos son obligatorios." },
-        { "p": "Pulso «Cerrar el episodio» y vuelvo a la lista de pendientes sin el aviso «Episodio cerrado…».", "r": "Otra persona cerró el episodio antes, o ya no está en tu ámbito: ya no sale en la lista y la pantalla no lo avisa. Comprueba en la trazabilidad clínica (ver DIR-10) quién lo cerró." }
+        { "p": "«No se puede cerrar ese episodio: no está abierto o no es de tu ámbito.»", "r": "Otra persona cerró el episodio antes, o ya no está en tu ámbito. Vuelves a la lista de pendientes, donde ya no sale. Puedes comprobar en la trazabilidad clínica (ver DIR-10) quién lo cerró." }
       ],
       "rutas": ["Direccion/Episodio", "Direccion/CerrarEpisodio"],
       "mensajes": [
         "Episodio cerrado. Las indicaciones médicas se quedan sin resolver y el cierre queda en la auditoría con tu motivo.",
         "Marca la casilla para confirmar que las indicaciones se quedan sin resolver y escribe el motivo.",
+        "No se puede cerrar ese episodio: no está abierto o no es de tu ámbito.",
         "Este episodio no tiene indicaciones médicas abiertas, viene de una derivación a Urgencias"
       ],
       "manual": { "id": "supervision-direccion", "titulo": "Supervisión operativa por unidad" },

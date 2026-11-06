@@ -347,8 +347,8 @@ public sealed class DireccionController(
         return View(new SupervisionIndicatorsViewModel(from, to, result.Value, DateTime.Now));
     }
 
-    /// <summary>DIR-11: revisión de calidad de proceso del periodo, solo lectura: hitos medidos y fuera de plazo por unidad y la lista de
-    /// episodios con algún hito fuera de plazo o a punto de vencer, sin contenido clínico.</summary>
+    /// <summary>DIR-11: revisión de calidad de proceso del periodo, solo lectura: hitos medidos y fuera de plazo por unidad, sin lista de
+    /// episodios ni de residentes y sin contenido clínico.</summary>
     public async Task<IActionResult> Calidad(IndicatorPeriodFilter filtro, CancellationToken ct)
     {
         // Una fecha mal formada en la URL se ignora (toma el valor por defecto), no se muestra como error.
