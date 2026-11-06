@@ -55,6 +55,11 @@
             <li>@(perfil.DependeDe.Count == 0 ? "No depende de ningún otro perfil." : "Depende de: " + string.Join(", ", perfil.DependeDe) + ".")</li>
             <li>@(perfil.EntregaA.Count == 0 ? "No le entrega trabajo a ningún otro perfil." : "Le entrega trabajo a: " + string.Join(", ", perfil.EntregaA) + ".")</li>
         </ul>
+        <p class="small text-muted">
+            «Le entrega trabajo a» son los perfiles que reciben lo que haces aquí para actuar. «Depende de» son los perfiles de los que necesitas algo:
+            datos, accesos o trabajo previo. No son el inverso uno del otro. La matriz de
+            <a href="@(enTodo ? "#capitulo-matriz" : Url.Action("Matriz"))">«Quién entrega qué a quién»</a> es más amplia: incluye también lo que otro perfil solo ve.
+        </p>
     </section>
 
     <section class="mb-4" aria-labelledby="que-puedes-@perfil.Slug">
