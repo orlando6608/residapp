@@ -744,7 +744,7 @@
       "pasos": [
         { "texto": "En la ficha del residente, pulsa **Dar de baja**. La pantalla dice cuántas citas futuras y solicitudes de cita abiertas se cancelarán o cerrarán solas.", "botones": ["Dar de baja"] },
         { "texto": "Elige el «Motivo de la baja» y, si es «Otro motivo», escribe el «Detalle del motivo (obligatorio con «Otro motivo»)».", "campos": ["Motivo de la baja", "Detalle del motivo (obligatorio con «Otro motivo»)"] },
-        { "texto": "Pulsa **Dar de baja**. Vuelves a «Residentes dados de baja», con el aviso «… se ha dado de baja. Sus datos se conservan 15 años.».", "botones": ["Dar de baja"] }
+        { "texto": "Pulsa **Dar de baja**. Vuelves a «Residentes dados de baja», con el aviso «… se ha dado de baja. Sus datos se conservan 15 años.» (y, si había citas, «Se canceló 1 cita futura. La familia no recibe aviso: avísala tú.»).", "botones": ["Dar de baja"] }
       ],
       "despues": [
         { "para": "Familia", "texto": "**No recibe ningún aviso: avísala tú** (por teléfono o por el canal habitual del centro). Sus citas futuras se cancelan y sus solicitudes abiertas se cierran, y quedan en el historial como «Sistema, a causa de la baja»; si reactivas al residente, no se restauran." },
@@ -1106,13 +1106,14 @@
         { "texto": "Para retirarlo, pulsa **Retirar**, escribe el «Motivo de la retirada» y pulsa **Retirar el comunicado**.", "botones": ["Retirar", "Retirar el comunicado"], "campos": ["Motivo de la retirada"] }
       ],
       "despues": [
-        { "para": "Familia", "texto": "Una corrección se ve como una publicación nueva, junto al comunicado original. Un comunicado retirado se ve como «Esta novedad ya no está disponible.», sin su texto." },
+        { "para": "Familia", "texto": "Una corrección se ve como una publicación nueva, junto al comunicado original. Un comunicado retirado se ve como «Esta novedad ya no está disponible.», sin su texto, y dejan de verse también sus correcciones." },
         { "para": "Administración", "texto": "Las dos acciones quedan en la auditoría con tu perfil (la retirada, con tu motivo). La corrección de un comunicado aún no publicado la hace Enfermería o Medicina, no Administración." }
       ],
       "dudas": [
+        { "p": "«Indica el tipo de la corrección.» o «Escribe el texto de la corrección.»", "r": "Elige «Ordinaria» o «Relevante» y escribe el texto: los dos son obligatorios." },
         { "p": "«Ese comunicado no admite una corrección: no está publicado, está retirado, la familia ya no lo ve o no es de tu ámbito.»", "r": "Solo se corrige un comunicado publicado, no retirado y que la familia aún vea." },
         { "p": "«Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.»", "r": "Solo se retira un comunicado publicado y todavía no retirado." },
-        { "p": "«Revisa los datos: escribe el motivo de la retirada, de hasta 500 caracteres.»", "r": "El motivo es obligatorio y no puede pasar de 500 caracteres." }
+        { "p": "«Escribe el motivo de la retirada.»", "r": "El motivo es obligatorio (hasta 500 caracteres)." }
       ],
       "rutas": ["Administracion/Comunicados", "Administracion/PublicarCorreccion", "Administracion/RetirarComunicado"],
       "mensajes": [
@@ -1120,7 +1121,7 @@
         "Comunicado retirado. La familia ve que ya no está disponible. Queda en la auditoría con tu motivo.",
         "Ese comunicado no admite una corrección: no está publicado, está retirado, la familia ya no lo ve o no es de tu ámbito.",
         "Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.",
-        "Revisa los datos: escribe el motivo de la retirada, de hasta 500 caracteres."
+        "Escribe el motivo de la retirada."
       ],
       "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }
@@ -1136,7 +1137,7 @@
       "pasos": [
         { "texto": "En **Comunicados a la familia**, pulsa «Cambiar la hora de publicación y el margen del centro».", "botones": ["Comunicados a la familia"] },
         { "texto": "Escribe la «Hora de publicación» y el «Margen (minutos)» y elige la «Frecuencia del resumen».", "campos": ["Hora de publicación", "Margen (minutos)", "Frecuencia del resumen"] },
-        { "texto": "Pulsa **Guardar**. Para volver a empezar desde los valores de partida, pulsa **Ver el horario sugerido**: los trae al formulario y no guarda nada hasta que pulses Guardar.", "botones": ["Guardar", "Ver el horario sugerido"] }
+        { "texto": "Pulsa **Guardar**. Para volver a empezar desde los valores de partida, pulsa **Ver el horario sugerido**: los trae al formulario (con el aviso «Aquí tienes el horario sugerido. No se guarda hasta que pulses «Guardar».») y no guarda nada hasta que pulses Guardar. Abajo queda el **Historial de cambios**, con el horario anterior, el nuevo y quién lo cambió.", "botones": ["Guardar", "Ver el horario sugerido"] }
       ],
       "despues": [
         { "para": "Enfermería", "texto": "Un comunicado se publica a la hora fijada si al guardarlo faltaba al menos el margen; si no, a esa hora del día siguiente. El cambio de hora o de margen vale solo para los comunicados que se guarden a partir de entonces: los ya guardados conservan su hora." },
@@ -1144,7 +1145,7 @@
       ],
       "dudas": [
         { "p": "«Otra persona ha cambiado el horario desde que abriste la pantalla. Recarga para ver el vigente; lo que has escrito sigue aquí.»", "r": "Recarga y vuelve a guardar si sigue siendo lo que quieres." },
-        { "p": "«Revisa la hora, el margen (de 0 a 1440 minutos) y la frecuencia del resumen.»", "r": "Falta la hora, el margen se pasa del rango o no has elegido la frecuencia." },
+        { "p": "«Revisa la hora, el margen (de 0 a 1440 minutos) y la frecuencia del resumen.»", "r": "Falta la hora, el margen se pasa del rango o no has elegido la frecuencia. Normalmente el navegador lo avisa antes de enviar el formulario." },
         { "p": "«Este centro sigue con el horario sugerido.»", "r": "Aún no se ha cambiado nunca; abajo aparece el historial de cambios cuando los haya." }
       ],
       "rutas": ["Administracion/Comunicados", "Administracion/HorarioComunicados"],
@@ -1164,7 +1165,7 @@
       "antes": [
         "Decidir el **modo**: con **reserva directa**, la familia ve los huecos libres de cada equipo y modalidad y reserva uno sin que nadie se lo confirme; con **solicitud previa**, la familia envía una solicitud y tú le propones un hueco. Solo hay un modo vigente por centro.",
         "Cuánta **antelación mínima** (de 0 a 720 horas) y cuántos días de **horizonte** (de 1 a 180) quieres ofrecer.",
-        "Qué modalidades admite cada equipo: Presencial, Telefónica o Videoconferencia, para el equipo médico y el de Enfermería."
+        "Qué modalidades admite cada equipo: Presencial, Telefónica o Videoconferencia, para el equipo médico y el de Enfermería (son los dos equipos de las citas, fijos; no tienen relación con los equipos de turnos de ADM-42)."
       ],
       "pasos": [
         { "texto": "En el inicio, abre **Citas con la familia**.", "botones": ["Citas con la familia"] },
@@ -1178,6 +1179,7 @@
       "dudas": [
         { "p": "«Revisa los datos: elige el modo de reserva, la antelación va de 0 a 720 horas y el horizonte de 1 a 180 días.»", "r": "Corrige el campo que se sale del rango." },
         { "p": "«Otra persona ha cambiado la configuración desde que abriste la pantalla. Recarga para ver la vigente; lo que has escrito sigue aquí.»", "r": "Recarga y vuelve a guardar." },
+        { "p": "Guardé el servicio sin marcar ninguna modalidad y no me avisó.", "r": "Se guarda sin aviso, y la familia solo ve «El centro todavía no ha habilitado ninguna modalidad de cita. Llama por teléfono al centro.». Marca al menos una modalidad por equipo." },
         { "p": "«No se puede mostrar la configuración.»", "r": "Es un fallo momentáneo: vuelve a abrir la pantalla." }
       ],
       "rutas": ["Administracion/Citas"],
@@ -1208,6 +1210,7 @@
       "dudas": [
         { "p": "«La franja se solapa con otra del mismo equipo y día.»", "r": "Cambia las horas o retira la otra franja." },
         { "p": "«Revisa la franja: la hora de fin debe ser posterior a la de inicio, la duración de 5 a 240 minutos y debe caber al menos una cita.»", "r": "Corrige las horas o la duración." },
+        { "p": "«Revisa el bloqueo: Indica cuándo empieza el bloqueo. Indica cuándo termina el bloqueo. Escribe el motivo del bloqueo.»", "r": "Faltan el «Desde», el «Hasta» o el «Motivo» del bloqueo." },
         { "p": "«No hay franjas. Sin franjas, la familia no ve ningún hueco.»", "r": "Añade al menos una franja." }
       ],
       "rutas": ["Administracion/Citas", "Administracion/CitasFranja", "Administracion/CitasBloqueo", "Administracion/CitasFranjaRetirar", "Administracion/CitasBloqueoRetirar"],
@@ -1216,7 +1219,8 @@
         "Franja retirada. Las citas ya confirmadas se conservan.",
         "Bloqueo añadido. Los huecos de ese rato dejan de ofrecerse; las citas ya confirmadas no se tocan.",
         "Bloqueo retirado. Los huecos vuelven a ofrecerse.",
-        "La franja se solapa con otra del mismo equipo y día."
+        "La franja se solapa con otra del mismo equipo y día.",
+        "Escribe el motivo del bloqueo."
       ],
       "manual": { "id": "citas-administracion", "titulo": "Citas con la familia" }
     },
@@ -1240,6 +1244,7 @@
         { "para": "Administración", "texto": "Cada cambio queda con quién y cuándo. Las citas pasadas sin cerrar salen en «Requiere atención» del inicio (ver ADM-01)." }
       ],
       "dudas": [
+        { "p": "«Elige el nuevo hueco.», «Escribe el motivo del cambio.» o «Escribe el motivo de la cancelación.»", "r": "Falta marcar el hueco nuevo (son botones de opción, agrupados por día) o escribir el motivo, que es obligatorio." },
         { "p": "«Ese hueco ya no está libre o la cita ya no está confirmada. Elige otro hueco; lo que has escrito sigue aquí.»", "r": "Otra persona lo ocupó o cambió la cita: elige otro." },
         { "p": "«La cita ya no está confirmada. Vuelve a la agenda para ver su estado.»", "r": "Ya se canceló o se finalizó." },
         { "p": "«Solo se puede finalizar una cita confirmada cuya hora de inicio ya ha pasado.»", "r": "Espera a que llegue su hora." },
@@ -1252,7 +1257,8 @@
         "Cita finalizada.",
         "Ese hueco ya no está libre o la cita ya no está confirmada.",
         "La cita ya no está confirmada. Vuelve a la agenda para ver su estado.",
-        "Solo se puede finalizar una cita confirmada cuya hora de inicio ya ha pasado."
+        "Solo se puede finalizar una cita confirmada cuya hora de inicio ya ha pasado.",
+        "Escribe el motivo de la cancelación."
       ],
       "manual": { "id": "citas-administracion", "titulo": "Citas con la familia" }
     },
@@ -1267,7 +1273,7 @@
       ],
       "pasos": [
         { "texto": "En **Citas con la familia**, pulsa **Ver las solicitudes de cita**. Las pestañas «Abiertas» y «Todas» filtran la lista; cada solicitud dice el residente, el equipo, la modalidad, el motivo, la disponibilidad de la familia y su comentario.", "botones": ["Ver las solicitudes de cita", "Abiertas", "Todas"] },
-        { "texto": "Para atenderla, pulsa **Proponer un horario**. Elige el hueco en «Hueco que propones» (los que encajan con la disponibilidad de la familia llevan una marca ✓), apunta si quieres el «Profesional (solo para el centro, opcional)» y pulsa **Enviar la propuesta**.", "botones": ["Proponer un horario", "Enviar la propuesta"], "campos": ["Hueco que propones", "Profesional (solo para el centro, opcional)"] },
+        { "texto": "Para atenderla, pulsa **Proponer un horario**. Elige el hueco en «Hueco que propones» (los que encajan con la disponibilidad de la familia llevan una marca ✓), apunta si quieres el «Profesional (solo para el centro, opcional)» y pulsa **Enviar la propuesta**. La solicitud pasa a «Propuesta del centro», con la fecha en que caduca si la familia no responde, y ya solo admite **Cerrar la solicitud**.", "botones": ["Proponer un horario", "Enviar la propuesta"], "campos": ["Hueco que propones", "Profesional (solo para el centro, opcional)"] },
         { "texto": "Para no atenderla, pulsa **Cerrar la solicitud**, escribe el «Motivo» y pulsa **Cerrar la solicitud**.", "botones": ["Cerrar la solicitud"], "campos": ["Motivo"] }
       ],
       "despues": [
@@ -1275,6 +1281,7 @@
         { "para": "Administración", "texto": "Si había una propuesta al cerrar, el hueco queda libre. Las solicitudes por gestionar y las propuestas esperando respuesta salen en «Requiere atención» (ver ADM-01)." }
       ],
       "dudas": [
+        { "p": "«Elige el hueco que propones.» o «Escribe el motivo del cierre.»", "r": "Falta marcar el hueco (son botones de opción, agrupados por día) o escribir el motivo, que es obligatorio." },
         { "p": "«Ese hueco ya no está libre o la solicitud ya no está pendiente. Elige otro hueco; lo que has escrito sigue aquí.»", "r": "Otra persona lo ocupó o ya atendió la solicitud: elige otro." },
         { "p": "«La solicitud ya no está abierta. Vuelve a la bandeja para ver su estado.»", "r": "Ya se cerró o se aceptó." },
         { "p": "«No hay solicitudes abiertas.»", "r": "No hay nada que atender: prueba con «Todas»." }
@@ -1304,18 +1311,18 @@
         { "texto": "Para renombrarlo, **Cambiar nombre**, escribe el nombre y **Guardar nombre**. Para retirarlo de uso, **Inactivar** (o **Reactivar**).", "botones": ["Cambiar nombre", "Guardar nombre", "Inactivar", "Reactivar"] }
       ],
       "despues": [
-        { "para": "Administración", "texto": "El turno queda disponible para planificar (ver ADM-43). Planificar un turno no da acceso a nada." }
+        { "para": "Administración", "texto": "El turno queda disponible para planificar (ver ADM-43). Planificar un turno no da acceso a nada. Al inactivarlo verás «Turno inactivado: ya no se podrá planificar.» y, al reactivarlo, «Turno reactivado.»." }
       ],
       "dudas": [
         { "p": "«Ya existe un turno con ese nombre en el centro.»", "r": "Usa otro nombre; al renombrar, «Ya existe otro turno con ese nombre en el centro.»" },
-        { "p": "«Revisa los datos: el nombre es obligatorio y hacen falta las dos horas.»", "r": "Completa el nombre y las dos horas." }
+        { "p": "«Escribe el nombre del turno.», «Indica la hora de inicio.» o «Indica la hora de fin.»", "r": "Completa el nombre y las dos horas." }
       ],
       "rutas": ["Administracion/Turnos", "Administracion/NuevoTurno", "Administracion/NombreTurno", "Administracion/EstadoTurno"],
       "mensajes": [
         "Turno creado. Sus horas no se pueden cambiar después: si hacen falta otras, crea otro turno.",
         "Nombre guardado.",
         "Ya existe un turno con ese nombre en el centro.",
-        "Revisa los datos: el nombre es obligatorio y hacen falta las dos horas."
+        "Escribe el nombre del turno."
       ],
       "manual": { "id": "turnos-equipos-administracion", "titulo": "Turnos, equipos y planificación" }
     },
@@ -1338,6 +1345,7 @@
         { "para": "Administración", "texto": "Los equipos activos se planifican en los turnos (ver ADM-43). Verás «Equipo creado. Añade a sus miembros desde «Miembros».», «Miembro añadido al equipo.» o «Miembro dado de baja del equipo.»." }
       ],
       "dudas": [
+        { "p": "«Elige la unidad.» o «Escribe el nombre del equipo.»", "r": "Faltan la unidad o el nombre al crear el equipo." },
         { "p": "«Ya existe un equipo con ese nombre en la unidad.»", "r": "Usa otro nombre dentro de esa unidad." },
         { "p": "No hay más cuentas que se puedan añadir.", "r": "Tienen que estar activas y tener el perfil con la unidad del equipo: se concede en Usuarios (ver ADM-12 y ADM-13)." },
         { "p": "Un miembro sale con «Ya no tiene un perfil de equipo en esta unidad».", "r": "Se le quitó el perfil o la unidad: puedes darlo de baja del equipo." },
@@ -1363,21 +1371,26 @@
       ],
       "pasos": [
         { "texto": "En el inicio, abre **Planificación de turnos** y pulsa **Planificar un turno**.", "botones": ["Planificación de turnos", "Planificar un turno"] },
-        { "texto": "Elige el «Equipo» y el «Turno», el rango «Desde» y «Hasta» y los «Días de la semana». Si hay fechas que no se planifican (festivos), escríbelas en «Fechas a saltar (festivos)», separadas por comas o una por línea (AAAA-MM-DD o DD/MM/AAAA).", "campos": ["Equipo", "Turno", "Desde", "Hasta", "Días de la semana", "Fechas a saltar (festivos)"] },
-        { "texto": "Pulsa el botón para continuar: antes de guardar, la pantalla dice en cuántas fechas se planificaría, cuántas se saltan y cuántas ya tenían ese equipo en ese turno (se omiten).", "botones": ["Planificar"] },
-        { "texto": "Si un equipo, o una persona que está en dos equipos, queda en turnos que se **solapan**, se te avisa en «Solapamientos»: puedes seguir adelante escribiendo la «Justificación» y pulsando **Confirmar y planificar con estos solapamientos**, o volver y cambiar equipo, turno o fechas.", "botones": ["Confirmar y planificar con estos solapamientos"], "campos": ["Justificación"] }
+        { "texto": "Elige el «Equipo» y el «Turno», el rango «Desde» y «Hasta» y los «Días de la semana» (vienen todos marcados: quita los que no quieras). Si hay fechas que no se planifican (festivos), escríbelas en «Fechas a saltar (festivos)», separadas por comas o una por línea (AAAA-MM-DD o DD/MM/AAAA).", "campos": ["Equipo", "Turno", "Desde", "Hasta", "Días de la semana", "Fechas a saltar (festivos)"] },
+        { "texto": "Pulsa **Planificar**. Si no hay nada que avisar, se guarda al momento y ves «Planificado en N fechas.». Si todas las fechas ya tenían ese equipo en ese turno, no se guarda nada y la pantalla explica en cuántas se planificaría, cuántas se saltan y cuántas ya estaban (se omiten).", "botones": ["Planificar"] },
+        { "texto": "Si un equipo, o una persona que está en dos equipos, queda en turnos que se **solapan**, no se guarda todavía: la pantalla dice en cuántas fechas se planificaría y lista los «Solapamientos»: puedes seguir adelante escribiendo la «Justificación» y pulsando **Confirmar y planificar con estos solapamientos**, o volver y cambiar equipo, turno o fechas.", "botones": ["Confirmar y planificar con estos solapamientos"], "campos": ["Justificación"] }
       ],
       "despues": [
-        { "para": "Administración", "texto": "Verás «Planificado en N fechas.». Las fechas con solapamiento llevan la etiqueta «Solapamiento justificado» y tu justificación. Planificar no da acceso a nada: el acceso sigue dependiendo de los perfiles y las unidades." },
+        { "para": "Administración", "texto": "Verás «Planificado en N fechas.» (con solapamientos, además, «Queda anotada tu justificación del solapamiento.»). Las fechas con solapamiento llevan la etiqueta «Solapamiento justificado» y tu justificación. Planificar no da acceso a nada: el acceso sigue dependiendo de los perfiles y las unidades." },
         { "para": "Personal del centro", "texto": "Ven la planificación en la pantalla de Administración; no cambia lo que cada perfil puede hacer." }
       ],
       "dudas": [
+        { "p": "«No queda ninguna fecha: revisa el rango, los días de la semana y las fechas a saltar.»", "r": "El rango, los días marcados y las fechas a saltar no dejan ninguna fecha. Cambia alguno." },
+        { "p": "«Todas esas fechas ya tienen planificado ese equipo en ese turno.»", "r": "No se guarda nada: ya estaba planificado. La pantalla dice cuántas fechas se planificarían, cuántas se saltan y cuántas se omiten." },
+        { "p": "«Escribe por qué sigues adelante a pesar de los solapamientos.»", "r": "Con solapamientos, la «Justificación» es obligatoria." },
         { "p": "«Los solapamientos han cambiado. Revísalos de nuevo antes de confirmar.»", "r": "Mientras confirmabas, otra planificación cambió los solapamientos: vuelve a revisarlos." },
         { "p": "Hacen falta al menos un equipo activo y un turno activo para planificar.", "r": "Crea o reactiva un equipo o un turno." }
       ],
       "rutas": ["Administracion/Planificacion", "Administracion/PlanificarTurno"],
       "mensajes": [
         "Planificado en",
+        "No queda ninguna fecha: revisa el rango, los días de la semana y las fechas a saltar.",
+        "Escribe por qué sigues adelante a pesar de los solapamientos.",
         "Los solapamientos han cambiado. Revísalos de nuevo antes de confirmar.",
         "Hacen falta al menos un"
       ],
@@ -1394,7 +1407,7 @@
       "pasos": [
         { "texto": "En **Planificación de turnos**, elige el «Desde (dos semanas)» y la «Unidad» (o «Todas las de mi ámbito») y pulsa **Ver**. Con los enlaces «Dos semanas antes» y «Dos semanas después» cambias de periodo.", "botones": ["Planificación de turnos", "Ver"], "campos": ["Desde (dos semanas)", "Unidad"] },
         { "texto": "Cada día muestra el turno con sus horas, la unidad y el equipo con sus miembros. Para quitar una fecha suelta, pulsa **Retirar** en su fila.", "botones": ["Retirar"] },
-        { "texto": "Para quitar varias a la vez, pulsa **Ver serie** (las fechas guardadas en un mismo envío forman una serie), elige «Retirar desde» y pulsa **Retirar la serie desde esa fecha**.", "botones": ["Ver serie", "Retirar la serie desde esa fecha"], "campos": ["Retirar desde"] }
+        { "texto": "Para quitar varias a la vez, pulsa **Ver serie** (las fechas guardadas en un mismo envío forman una serie), elige «Retirar desde» (viene con la fecha de hoy: si no la cambias, se retira toda la serie de hoy en adelante) y pulsa **Retirar la serie desde esa fecha**; para quitar una sola, **Retirar esta fecha**.", "botones": ["Ver serie", "Retirar la serie desde esa fecha"], "campos": ["Retirar desde"] }
       ],
       "despues": [
         { "para": "Administración", "texto": "Verás «Planificación retirada.» o «Serie retirada: N fechas desde esa fecha.»; la serie conserva las fechas anteriores." }
@@ -1423,15 +1436,16 @@
       ],
       "pasos": [
         { "texto": "En el inicio, abre **Organigrama y cargos**.", "botones": ["Organigrama y cargos"] },
-        { "texto": "Si el centro no tiene cargos, puedes pulsar **Cargar la plantilla**: crea los ocho sugeridos (Dirección del centro, Dirección médica, Coordinación de Enfermería, Responsable de unidad o planta, Medicina, Enfermería, Auxiliares y Responsable de Administración). Solo se puede hacer mientras no haya ninguno.", "botones": ["Cargar la plantilla"] },
-        { "texto": "Para uno nuevo, pulsa **Nuevo cargo**, escribe el «Nombre del cargo», elige «¿Cuántas personas lo ocupan?» y «Depende de» (o «Ninguno: es un cargo de mayor nivel»), una «Nota de coordinación funcional» opcional y las «Unidades a las que se liga». Pulsa **Crear el cargo**.", "botones": ["Nuevo cargo", "Crear el cargo"], "campos": ["Nombre del cargo", "¿Cuántas personas lo ocupan?", "Depende de", "Nota de coordinación funcional", "Unidades a las que se liga"] },
-        { "texto": "Para cambiarlo, pulsa **Cambiar** en su fila y **Guardar**. Para retirarlo de uso, **Inactivar** (o **Reactivar**).", "botones": ["Cambiar", "Guardar", "Inactivar", "Reactivar"] }
+        { "texto": "Si el centro no tiene cargos, puedes pulsar **Cargar la plantilla**: crea los ocho sugeridos (Dirección del centro, Coordinación / Supervisión de Enfermería, Enfermería, Responsable de unidad o planta, Auxiliares / Gerocultores, Dirección médica / Coordinación médica, Medicina y Responsable de Administración). Solo se puede hacer mientras no haya ninguno.", "botones": ["Cargar la plantilla"] },
+        { "texto": "Para uno nuevo, pulsa **Nuevo cargo**, escribe el «Nombre del cargo», elige «¿Cuántas personas lo ocupan?» («Una sola persona» o «Varias personas») y «Depende de» (o «Ninguno: es un cargo de mayor nivel»), una «Nota de coordinación funcional» opcional y las «Unidades a las que se liga». Pulsa **Crear el cargo**.", "botones": ["Nuevo cargo", "Crear el cargo"], "campos": ["Nombre del cargo", "¿Cuántas personas lo ocupan?", "Depende de", "Nota de coordinación funcional", "Unidades a las que se liga"] },
+        { "texto": "Para cambiarlo, pulsa **Cambiar** en su fila y **Guardar**. Para retirarlo de uso, **Inactivar** (o **Reactivar**): al inactivarlo verás «Cargo inactivado: ya no sale en el organigrama que ve el personal.».", "botones": ["Cambiar", "Guardar", "Inactivar", "Reactivar"] }
       ],
       "despues": [
         { "para": "Personal del centro", "texto": "Todos los profesionales ven el organigrama en solo lectura (ver DIR-09); la familia, nunca. Solo se guarda lo actual: quién cambió qué cargo y cuándo queda en la auditoría, sin los nombres." }
       ],
       "dudas": [
         { "p": "«Cargo creado. Ahora puedes ponerle personas desde la lista de cargos.»", "r": "Es la confirmación; sigue con ADM-46." },
+        { "p": "«Escribe el nombre del cargo.»", "r": "El nombre es obligatorio." },
         { "p": "Un cargo no sale en «Depende de».", "r": "Un cargo no puede depender de sí mismo ni de uno de sus subordinados." },
         { "p": "Quiero ver cómo lo ve el personal.", "r": "Pulsa **Ver como lo ve el personal**." }
       ],
@@ -1462,11 +1476,13 @@
         { "para": "Administración", "texto": "Verás «Persona puesta en el cargo.» o «Persona quitada del cargo. El organigrama solo guarda lo actual.»." }
       ],
       "dudas": [
-        { "p": "El cargo ya lo ocupa alguien y es de una sola persona.", "r": "Para poner a otra, quita antes a esa persona desde la lista de cargos." }
+        { "p": "«Elige una cuenta del centro o escribe un nombre (hasta 200 caracteres), pero no las dos cosas.»", "r": "Rellena una sola de las dos: la «Cuenta de la aplicación» o la «Persona sin cuenta (solo el nombre)»." },
+        { "p": "«Es un cargo de una sola persona y ya lo ocupa …: para poner a otra, quita antes a esa persona desde la lista de cargos.»", "r": "«Poner una persona» sigue saliendo aunque el cargo esté lleno. Quita antes a la persona actual con **Quitar** y vuelve a intentarlo." }
       ],
       "rutas": ["Administracion/Cargos", "Administracion/OcuparCargo", "Administracion/QuitarOcupante"],
       "mensajes": [
         "Persona puesta en el cargo.",
+        "Elige una cuenta del centro o escribe un nombre",
         "Persona quitada del cargo. El organigrama solo guarda lo actual."
       ],
       "manual": { "id": "organigrama-cargos", "titulo": "Organigrama y cargos" }
