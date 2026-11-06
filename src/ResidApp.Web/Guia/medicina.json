@@ -266,7 +266,7 @@
         { "texto": "Registra la llamada a la familia: en «Registrar un intento de llamada a la familia» escribe «A quién se llama», elige la «Hora de la llamada» y el «Resultado» (Contactado, No contesta o Número erróneo), y pulsa **Registrar la llamada**.", "botones": ["Registrar la llamada"], "campos": ["Registrar un intento de llamada a la familia", "A quién se llama", "Hora de la llamada", "Resultado", "No contesta", "Número erróneo"] }
       ],
       "despues": [
-        { "para": "Medicina", "texto": "El PDF firmado no se puede modificar. El evento sigue en el protocolo, donde puedes seguir documentando. Para cerrarlo hace falta al menos un intento de llamada (salvo que el residente no tenga contacto urgente) y preparar la comunicación a la familia (ver MED-09)." },
+        { "para": "Medicina", "texto": "El PDF firmado no se puede modificar. El evento sigue en el protocolo, donde puedes seguir documentando. Para cerrarlo hace falta al menos un intento de llamada (salvo que Administración haya anotado que el residente no tiene contacto urgente) y preparar la comunicación a la familia (ver MED-09)." },
         { "para": "Enfermería", "texto": "Ve el informe y puede descargar el PDF desde el protocolo o el detalle del evento." }
       ],
       "dudas": [
@@ -293,7 +293,7 @@
       "antes": [
         "Tener guardada la valoración médica.",
         "Que las indicaciones estén cumplidas: **no se puede cerrar** con indicaciones sin leer o sin resolver (el botón sale desactivado). La única excepción es el protocolo urgente, tras derivar a Urgencias.",
-        "Si derivaste a Urgencias: al menos un intento de llamada a la familia (salvo que el residente no tenga contacto urgente)."
+        "Si derivaste a Urgencias: al menos un intento de llamada a la familia (salvo que Administración haya anotado que el residente no tiene contacto urgente)."
       ],
       "pasos": [
         { "texto": "En **Conducta médica** (o en el protocolo), pulsa **Cerrar el evento**.", "botones": ["Cerrar el evento"] },
