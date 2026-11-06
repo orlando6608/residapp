@@ -90,7 +90,7 @@
         { "texto": "Sale un aviso de que se ha añadido. Pulsa **Entendido**. Para probarla, pulsa **Salir** y, en Iniciar sesión, **Entrar con passkey**.", "botones": ["Entendido", "Salir", "Entrar con passkey"] }
       ],
       "despues": [
-        { "para": "Tú", "texto": "Con **Entrar con passkey** no escribes usuario, contraseña ni código del móvil. Si no tienes a mano el dispositivo donde la registraste, sigues pudiendo entrar con contraseña y código. Puedes tener hasta 10 y quitar cualquiera con **Quitar**." }
+        { "para": "Tú", "texto": "Con **Entrar con passkey** no escribes usuario, contraseña ni código del móvil. Si no tienes a mano el dispositivo donde la registraste, sigues pudiendo entrar con contraseña y código. Puedes tener hasta 10 y quitar cualquiera con **Quitar** (una cuenta de Plataforma no puede quitar la última)." }
       ],
       "dudas": [
         { "p": "«Ya tienes 10 passkeys, que es el máximo. Quita alguna antes de añadir otra.»", "r": "Quita una que ya no uses con «Quitar» y vuelve a intentarlo." },

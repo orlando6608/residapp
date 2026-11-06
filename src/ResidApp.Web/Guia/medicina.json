@@ -41,6 +41,7 @@
       ],
       "pasos": [
         { "texto": "Pulsa **Mi panel** (arriba): se abre el **Inicio de Medicina**.", "botones": ["Mi panel"], "campos": ["Inicio de Medicina"] },
+        { "texto": "Si algún hito de tu perfil está a punto de vencer o ya ha pasado de plazo, arriba, antes de las tarjetas, ves un aviso **Hitos fuera de plazo o a punto de vencer** (o «Hitos a punto de vencer»): cada línea trae el residente, la unidad y el hito, con «Vence a las…» o «Plazo pasado desde las…». Pulsa el nombre del residente para abrir su ficha." },
         { "texto": "Lee las tarjetas, de lo más urgente a lo menos: **Escalados y eventos propios** (por valorar), **Protocolos urgentes**, **Seguimientos** (los vencidos salen como «pendientes»), **Indicaciones** (con las que están «sin leer» o «con incidencia»), **Residentes** y **Comunicaciones** (familiares aún por publicar).", "campos": ["Escalados y eventos propios", "Protocolos urgentes", "Seguimientos", "Indicaciones", "Residentes", "Comunicaciones", "sin leer", "con incidencia"] },
         { "texto": "Pulsa una tarjeta para abrir su bandeja." }
       ],
@@ -52,7 +53,7 @@
         { "p": "No veo un escalado que debería ver.", "r": "Solo ves lo de las unidades de tu ámbito, y solo los eventos que se te escalaron o que registraste tú. Si crees que falta una unidad, pídeselo a Administración." }
       ],
       "rutas": ["Medicina/Index", "Medicina/Escalados"],
-      "mensajes": ["No hay escalados ni eventos propios pendientes."],
+      "mensajes": ["No hay escalados ni eventos propios pendientes.", "Hitos fuera de plazo o a punto de vencer", "Hitos a punto de vencer"],
       "manual": { "id": "escalado-medicina", "titulo": "Escalar a Medicina y escalados recibidos" },
       "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
     },
@@ -123,7 +124,7 @@
         { "texto": "Abre la tarjeta **Escalados y eventos propios** y pulsa el evento. Cada uno muestra el motivo (o la observación), las constantes y las actuaciones.", "botones": ["Escalados y eventos propios"] },
         { "texto": "En el detalle lee el «Motivo del escalado» y la información reunida (solo lectura).", "campos": ["Motivo del escalado"] },
         { "texto": "Pulsa **Iniciar valoración médica**: queda registrado quién y a qué hora. Después, **Completar valoración médica** (o **Continuar valoración médica** si ya hay un borrador).", "botones": ["Iniciar valoración médica", "Completar valoración médica", "Continuar valoración médica"] },
-        { "texto": "Escribe «Hallazgos y exploración», «Valoración» y «Actuaciones», y las constantes que quieras.", "campos": ["Hallazgos y exploración", "Valoración", "Actuaciones"] },
+        { "texto": "Escribe «Hallazgos y exploración», «Valoración» y «Actuaciones», y las constantes que quieras: bajo cada campo ves el rango de referencia del centro, si Dirección lo ha fijado, solo como orientación.", "campos": ["Hallazgos y exploración", "Valoración", "Actuaciones"] },
         { "texto": "Pulsa **Guardar borrador**. Cada guardado queda como una versión que no se puede modificar.", "botones": ["Guardar borrador"] }
       ],
       "despues": [
@@ -448,7 +449,7 @@
         { "p": "«No tienes un borrador activo para este residente.»", "r": "No hay borrador o ya se firmó o se canceló. Vuelve a la ficha y créalo de nuevo." },
         { "p": "No puedo firmar un borrador creado por otra persona.", "r": "Solo firma la cuenta que lo creó, con el mismo perfil: si lo empezó otra persona, que lo firme ella." }
       ],
-      "rutas": ["Medicina/Residente", "EnfermeriaBasal/Draft", "EnfermeriaBasal/Area", "EnfermeriaBasal/Barthel", "EnfermeriaBasal/Confirmar", "Baseline/Sign"],
+      "rutas": ["Medicina/Residente", "EnfermeriaBasal/Draft", "EnfermeriaBasal/Area", "EnfermeriaBasal/Barthel", "EnfermeriaBasal/Confirmar", "Baseline/Sign", "EnfermeriaBasal/CrearBorrador", "EnfermeriaBasal/CancelarBorrador"],
       "mensajes": [
         "Borrador creado. Completa ahora las nueve áreas y el índice de Barthel.",
         "Índice de Barthel guardado.",

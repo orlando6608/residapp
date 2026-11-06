@@ -45,6 +45,7 @@
       ],
       "pasos": [
         { "texto": "Pulsa **Mi panel** (arriba): se abre el **Inicio de Enfermería**.", "botones": ["Mi panel"], "campos": ["Inicio de Enfermería"] },
+        { "texto": "Si algún hito de tu perfil está a punto de vencer o ya ha pasado de plazo, arriba, antes de las tarjetas, ves un aviso **Hitos fuera de plazo o a punto de vencer** (o «Hitos a punto de vencer»): cada línea trae el residente, la unidad y el hito, con «Vence a las…» o «Plazo pasado desde las…». Pulsa el nombre del residente para abrir su ficha." },
         { "texto": "Lee las tarjetas, de lo más urgente a lo menos: **Bandeja prioritaria**, **Protocolos urgentes**, **Seguimientos**, **Indicaciones** (con las «sin leer»), **Para cerrar**, **Cambios ordinarios**, **Escalados a Medicina**, **Comunicaciones** (por publicar) y **Residentes**.", "campos": ["Bandeja prioritaria", "Protocolos urgentes", "Seguimientos", "Indicaciones", "Para cerrar", "Cambios ordinarios", "Escalados a Medicina", "Comunicaciones", "Residentes"] },
         { "texto": "Pulsa una tarjeta para abrir su bandeja." }
       ],
@@ -56,7 +57,7 @@
         { "p": "No veo un evento que debería ver.", "r": "Solo ves lo de las unidades de tu ámbito. Si crees que falta una unidad, pídeselo a Administración." }
       ],
       "rutas": ["Enfermeria/Index"],
-      "mensajes": [],
+      "mensajes": ["Hitos fuera de plazo o a punto de vencer", "Hitos a punto de vencer"],
       "manual": { "id": "bandejas-enfermeria", "titulo": "Bandejas, valoración y cierre de eventos" },
       "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
     },
@@ -590,7 +591,7 @@
         { "p": "«No tienes un borrador activo para este residente.»", "r": "No hay borrador, o ya se firmó o se canceló. Vuelve a la ficha y créalo de nuevo." },
         { "p": "No puedo firmar un borrador creado por otra persona.", "r": "Solo firma la cuenta que lo creó, con el mismo perfil: si lo empezó otra persona, que lo firme ella." }
       ],
-      "rutas": ["Enfermeria/Residente", "EnfermeriaBasal/Draft", "EnfermeriaBasal/Area", "EnfermeriaBasal/Barthel", "EnfermeriaBasal/Confirmar", "Baseline/Sign"],
+      "rutas": ["Enfermeria/Residente", "EnfermeriaBasal/Draft", "EnfermeriaBasal/Area", "EnfermeriaBasal/Barthel", "EnfermeriaBasal/Confirmar", "Baseline/Sign", "EnfermeriaBasal/CrearBorrador", "EnfermeriaBasal/CancelarBorrador"],
       "mensajes": [
         "Borrador creado. Completa ahora las nueve áreas y el índice de Barthel.",
         "Índice de Barthel guardado.",
@@ -616,7 +617,7 @@
         { "texto": "Elige o haz una foto (la app te deja encuadrarla: arrástrala o usa las flechas, y «Acercar» para ajustarla).", "campos": ["Elige o haz una foto", "Acercar"] },
         { "texto": "Marca quién firmó el consentimiento y escribe la «Fecha de la firma».", "campos": ["Fecha de la firma"] },
         { "texto": "Pulsa **Guardar foto**. Para quitarla, pulsa **Quitar foto**.", "botones": ["Guardar foto", "Quitar foto"] },
-        { "texto": "Si el residente o su representante no quieren foto, pulsa **No quiere foto**: se borra la actual y no se podrá poner otra hasta quitar la marca con **Quitar la marca** (solo si ha firmado un consentimiento nuevo).", "botones": ["No quiere foto", "Quitar la marca"] }
+        { "texto": "Si el residente o su representante no quieren foto, pulsa **No quiere foto** (si ya hay foto, marca antes «Entiendo que se borra la foto actual y que no se podrá poner otra hasta quitar la marca»): se borra la actual y no se podrá poner otra hasta quitar la marca con **Quitar la marca** (solo si ha firmado un consentimiento nuevo).", "campos": ["Entiendo que se borra la foto actual y que no se podrá poner otra hasta quitar la marca"], "botones": ["No quiere foto", "Quitar la marca"] }
       ],
       "despues": [
         { "para": "Enfermería", "texto": "Verás «Foto guardada.», «Foto quitada.» o «Anotado que no quiere foto.». La foto sirve para reconocer al residente en las listas y en su ficha." },
