@@ -335,6 +335,14 @@ public partial class GuiaDerivaTests
     }
 
     [Fact]
+    public void NingunPerfilTieneElNombreDeUnaPaginaDeLaGuia()
+    {
+        // «Guia/{slug}» no puede tapar a las páginas con ruta propia (preguntas, matriz, glosario, todo, para-todos).
+        string[] reservados = ["preguntas", "matriz", "glosario", "todo", GuiaComun.Slug];
+        Assert.Empty(GuiaPerfiles.Todos.Select(e => e.Slug).Intersect(reservados, StringComparer.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void ElGlosarioNoRepiteTerminos_YSusFichasExisten()
     {
         var glosario = Catalogo().Glosario;
@@ -451,6 +459,12 @@ public class GuiaPageTests(ResidentsFlowTests.WebAppFactory factory) : IClassFix
         Assert.Contains("Ya los he guardado, continuar", html);
 
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/Guia/no-existe")).StatusCode);
+
+        // La dirección vale escrita con mayúsculas (decisión de Orlando, 2026-11-06), pero «comun» no es el nombre de «Para todos».
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/Guia/Plataforma")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/Guia/Para-Todos")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/Guia/MATRIZ")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/Guia/comun")).StatusCode);
     }
 
     [Fact]
