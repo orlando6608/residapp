@@ -194,7 +194,7 @@ public sealed class GuiaCatalogo
         }
     }
 
-    public GuiaPerfil? Perfil(string slug) => Perfiles.FirstOrDefault(p => p.Slug == slug);
+    public GuiaPerfil? Perfil(string slug) => Perfiles.FirstOrDefault(p => string.Equals(p.Slug, slug, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Todas las fichas con el título y el «slug» de su guía («Para todos» incluido), por orden alfabético de la pregunta (índice de preguntas).</summary>
     public IEnumerable<(string Slug, string Titulo, GuiaFicha Ficha)> Preguntas() =>
