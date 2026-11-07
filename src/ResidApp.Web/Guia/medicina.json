@@ -157,7 +157,7 @@
         { "texto": "En el detalle del evento, pulsa **Pasar a conducta médica**.", "botones": ["Pasar a conducta médica"] },
         { "texto": "Elige **Registrar indicaciones a Enfermería** (si ya hay alguna, será «Registrar otra indicación»).", "botones": ["Registrar indicaciones a Enfermería", "Registrar otra indicación"] },
         { "texto": "Escribe la «Indicación», una «Fecha prevista», un «Criterio» o ambos, y, si hace falta, «Información adicional».", "campos": ["Indicación", "Fecha prevista", "Criterio", "Información adicional"] },
-        { "texto": "Pulsa **Registrar indicación**.", "botones": ["Registrar indicación"] },
+        { "texto": "Pulsa **Registrar indicación** para guardarla e ir al detalle del evento, o **Registrar y añadir otra** para guardarla y seguir con otra indicación en un formulario en blanco.", "botones": ["Registrar indicación", "Registrar y añadir otra"] },
         { "texto": "Para ver cómo van, abre la tarjeta **Indicaciones**: cada una está «Pendiente de lectura», «Leída, pendiente de realizar», «Realizada» o «No realizada (con incidencia)», y marca «Vencida» si pasó su fecha sin realizarse.", "botones": ["Indicaciones"], "campos": ["Pendiente de lectura", "Leída, pendiente de realizar", "Realizada", "No realizada (con incidencia)", "Vencida"] }
       ],
       "despues": [
@@ -174,6 +174,7 @@
       "mensajes": [
         "Escribe la indicación.",
         "Indicación registrada. Enfermería de la unidad la verá en su bandeja de indicaciones.",
+        "Puedes añadir otra.",
         "Revisa los datos: escribe la indicación e indica una fecha prevista o un criterio. Hace falta una valoración médica guardada."
       ],
       "manual": { "id": "valoracion-medica", "titulo": "Valoración médica, indicaciones y cierre médico" },

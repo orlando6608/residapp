@@ -829,7 +829,7 @@ public sealed class MedicinaController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Indicacion([Bind(Prefix = "Form")] IndicacionFormModel form, CancellationToken ct)
+    public async Task<IActionResult> Indicacion([Bind(Prefix = "Form")] IndicacionFormModel form, bool otra, CancellationToken ct)
     {
         var detail = await FindEventAsync(form.EventoId, ct);
         if (detail is null)
@@ -850,7 +850,9 @@ public sealed class MedicinaController(
             TempData["Mensaje"] = detail.Status == ClinicalEventStatus.EnSeguimientoMedico
                 ? "Indicación registrada y seguimiento médico terminado. Enfermería de la unidad la verá en su bandeja de indicaciones."
                 : "Indicación registrada. Enfermería de la unidad la verá en su bandeja de indicaciones.";
-            return RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
+            return otra
+                ? RedirectToAction(nameof(Indicacion), new { eventoId = form.EventoId })
+                : RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
         }
 
         ModelState.AddModelError(string.Empty, result.Error!.Code switch

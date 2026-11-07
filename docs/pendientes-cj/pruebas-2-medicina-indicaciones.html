@@ -272,7 +272,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="pruebas-2-medicina-indicaciones" data-version="2026-10-14">
+<body data-doc="pruebas-2-medicina-indicaciones" data-version="2026-11-07">
 
 <div class="page">
   <header>
@@ -471,10 +471,10 @@
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
           <li>En la conducta médica elige «Registrar indicaciones a Enfermería».</li>
-          <li>Escribe el texto (por ejemplo, «Control de temperatura cada 4 horas; avisar si pasa de 37,8»), una fecha prevista o un criterio (o ambos) e información adicional si hace falta. Guarda.</li>
-          <li>Añade dos indicaciones más al mismo evento: las tres se usan en las pruebas 6, 7 y 8.</li>
+          <li>Escribe el texto (por ejemplo, «Control de temperatura cada 4 horas; avisar si pasa de 37,8»), una fecha prevista o un criterio (o ambos) e información adicional si hace falta. Pulsa «Registrar y añadir otra».</li>
+          <li>La pantalla vuelve en blanco con un aviso verde. Añade así otras dos indicaciones al mismo evento: las tres se usan en las pruebas 6, 7 y 8. En la última puedes pulsar «Registrar indicación» para ir al detalle del evento.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>No hay prioridad automática. Arriba, junto al nombre del residente, la etiqueta del evento pasa a «Con indicación pendiente» y el evento sale de la bandeja de escalados. Cada indicación lleva además su propia etiqueta en la lista («Pendiente de lectura» hasta que Enfermería la lee). Enfermería la verá en «Indicaciones» (prueba 7). Puedes añadir más indicaciones o cerrar el evento.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>No hay prioridad automática. Arriba, junto al nombre del residente, la etiqueta del evento pasa a «Con indicación pendiente» y el evento sale de la bandeja de escalados. Cada indicación lleva además su propia etiqueta en la lista («Pendiente de lectura» hasta que Enfermería la lee). Enfermería la verá en «Indicaciones» (prueba 7). Puedes añadir más indicaciones o cerrar el evento. «Registrar y añadir otra» guarda la indicación y deja el formulario vacío con el aviso «Indicación registrada. … Puedes añadir otra.», sin pasar por el detalle. «Registrar indicación» guarda y te lleva al detalle del evento.</div>
         <fieldset class="choices" aria-labelledby="t-5">
           <label class="choice"><input type="radio" name="r-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>

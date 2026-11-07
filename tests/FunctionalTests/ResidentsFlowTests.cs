@@ -511,6 +511,79 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Indicaciones_MedicinaRegistraVariasSeguidasSinSalirDelFormulario_ConLaAppEntera()
+    {
+        // Guía de pruebas 2, prueba 5 (CJ): «Registrar y añadir otra» guarda y devuelve el formulario en blanco, sin pasar por el detalle.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Varias Indicaciones Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Disnea progresiva (prueba funcional).",
+            ["Clasificacion"] = "Ordinario",
+        }))).Content.ReadAsStringAsync();
+        var eventId = await connection.ExecuteScalarAsync<Guid>(
+            "SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        Task<int> RevisionAsync() => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+        Task<string> PostAsync(HttpClient client, string url, string page, Dictionary<string, string> fields)
+        {
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            return client.PostAsync(url, new FormUrlEncodedContent(fields)).ContinueWith(async r => WebUtility.HtmlDecode(await r.Result.Content.ReadAsStringAsync())).Unwrap();
+        }
+
+        await PostAsync(nurse, "/Enfermeria/EmpezarValoracion", detailPage, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        var assessmentPage = await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}");
+        await PostAsync(nurse, "/Enfermeria/Valoracion", assessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Hallazgos"] = "Crepitantes en base derecha.",
+        });
+        var escalatePage = await nurse.GetStringAsync($"/Enfermeria/Escalar?eventoId={eventId}");
+        await PostAsync(nurse, "/Enfermeria/Escalar", escalatePage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Motivo"] = "Disnea progresiva pese a oxigenoterapia.",
+        });
+        var medicalDetail = await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/EmpezarValoracion", medicalDetail, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        var medicalAssessmentPage = await doctor.GetStringAsync($"/Medicina/Valoracion?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/Valoracion", medicalAssessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.HallazgosExploracion"] = "Crepitantes bibasales.",
+            ["Form.Valoracion"] = "Posible infección respiratoria.", ["Form.Actuaciones"] = "Se solicita radiografía.",
+        });
+
+        var indicationPage = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Indicacion?eventoId={eventId}"));
+        Assert.Contains("Registrar y añadir otra", indicationPage);
+        var afterFirst = await PostAsync(doctor, "/Medicina/Indicacion", indicationPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Texto"] = "Control de SpO2 cada 4 horas.",
+            ["Form.Criterio"] = "Si baja de 90 %, avisar.", ["otra"] = "true",
+        });
+        // Vuelve al formulario en blanco, con el aviso, y la indicación ya guardada.
+        Assert.Contains("Indicación registrada.", afterFirst);
+        Assert.Contains("Puedes añadir otra.", afterFirst);
+        Assert.Contains("Registrar y añadir otra", afterFirst);
+        Assert.DoesNotContain("Control de SpO2 cada 4 horas.", afterFirst);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId }));
+
+        // La segunda, con el botón normal, vuelve al detalle.
+        var afterSecond = await PostAsync(doctor, "/Medicina/Indicacion", afterFirst, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Texto"] = "Vigilar la ingesta de líquidos.",
+            ["Form.Criterio"] = "Cada turno.",
+        });
+        Assert.DoesNotContain("Puedes añadir otra.", afterSecond);
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId }));
+    }
+
+    [Fact]
     public async Task Direccion_CierraUnEpisodioConIndicacionesSinCumplir_ConMotivo_ConLaAppEntera()
     {
         // CJ, tercera 5.1 (script 0075): con una indicación sin cumplir nadie más cierra el episodio; Dirección Clínica sí, con motivo y confirmación.
