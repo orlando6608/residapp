@@ -464,7 +464,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
 
         // Medicina ve el bloqueo y, si fuerza el envío, el mensaje.
         var blockedPage = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Cerrar?eventoId={eventId}"));
-        Assert.Contains("No se puede cerrar el evento hasta que Enfermería las haya leído", blockedPage);
+        Assert.Contains("No se puede cerrar el evento hasta que Enfermería haya leído las indicaciones", blockedPage);
         Assert.Matches("<button[^>]*disabled[^>]*>Cerrar evento</button>", blockedPage);
         var forced = await PostAsync(doctor, "/Medicina/Cerrar", blockedPage, new()
         {
