@@ -30,8 +30,8 @@
     "Ver el nombre de quien preparó un comunicado, ni generar o firmar informes de derivación.",
     "Deshacer el cierre excepcional de un episodio, ni la retirada de un comunicado."
   ],
-  "revisadoPara": null,
-  "revisado": "2026-11-05",
+  "revisadoPara": "0.2.0",
+  "revisado": "2026-11-07",
   "fichas": [
     {
       "codigo": "DIR-01",

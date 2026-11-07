@@ -319,3 +319,15 @@ la cuenta de Portal Familiar `guia-fam-…`, y varias sesiones y entradas en «�
 Con esto están recorridas todas las guías (Plataforma, Auxiliar, Familia, Medicina, Enfermería, Dirección, Administración y «Para todos»). Lo que queda sin recorrer, junto al registro de cada ficha:
 rectificaciones tras 6 horas (MED-10, ENF-15), MED-12 «unidad anterior» desde Medicina, DIR-07 y DIR-11 (límites e impresión en papel), DIR-08 con varios ámbitos, ADM-02 (ajuste del logo y ficheros rechazados),
 ADM-08 («Posible duplicado» y XLS), «Finalizar» de ADM-39, PLA-01, PLA-08 y AUX-07 (no automatizables) y la prueba de impresión real en papel y en blanco y negro.
+
+## Sellado a la versión 0.2.0 (2026-11-07)
+
+Tras fusionar el release `0.2.0`, se hizo el repaso incremental del §6.e del plan (`guia-por-perfil-plan.md`) y se selló con `revisadoPara: "0.2.0"` y `revisado: 2026-11-07`
+la Guía por perfil (los nueve ficheros de `src/ResidApp.Web/Guia/`), además del Manual, el Flujo de trabajo, las ocho guías de pruebas de CJ con sus páginas de flujo y el índice `pruebas.html` (que no tenía línea de sello).
+No se tocó ningún `data-version`.
+
+- **Pantallas cambiadas desde `v0.1.0`** (fuera de la propia Guía): «sugerido(s)» en lugar de «de CJ» (horario de comunicados, plazos, cargos, rangos), el texto de «Iniciar sesión», la nota de Habitaciones que remite a «Trasladar», el aviso rojo de `Direccion/Pendientes`, «Mi cuenta» con la cabecera del Portal Familiar y el enlace «Guía por perfil» del pie. Todas estaban ya recogidas en las fichas, en el Manual y en las guías de CJ durante el recorrido y en el PR #184.
+- **Comprobaciones:** el agente `doc-usuario-residapp` no encontró textos antiguos ni descripciones erróneas en el Manual, el Flujo, las guías de CJ ni `pruebas.html` (revisión dirigida, no lectura de punta a punta); `GuiaDerivaTests` en verde.
+- **Sin sello:** Acceso y sesión, a la espera de dos decisiones de Orlando: el dominio de las passkeys y la redacción del segundo factor de las familias (además de «Mi cuenta, en el menú de tu perfil» y las fechas «Estado a…»).
+- **Sigue sin recorrer** lo listado al final de «Para todos» (rectificaciones tras 6 horas, MED-12, DIR-07, DIR-08, DIR-11, ADM-02, ADM-08, «Finalizar» de ADM-39, PLA-01, PLA-08, AUX-07 e impresión real en papel y en blanco y negro).
+- **Nota técnica:** `DireccionController` no rellena `TempData["Error"]` en ninguna redirección a `Pendientes`, así que el aviso rojo de `Pendientes.cshtml` hoy parece inalcanzable (código, fuera de alcance).

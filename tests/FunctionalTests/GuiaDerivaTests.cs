@@ -450,7 +450,7 @@ public class GuiaPageTests(ResidentsFlowTests.WebAppFactory factory) : IClassFix
         html = WebUtility.HtmlDecode(await plataforma.Content.ReadAsStringAsync());
         Assert.Contains("id=\"PLA-02\"", html);
         Assert.Contains("Crear invitación de acceso o de recuperación", html);
-        Assert.Contains("Pendiente de revisión de punta a punta", html);
+        Assert.Contains("Revisado para ResidApp v", html);
 
         var comun = await client.GetAsync("/Guia/para-todos");
         Assert.Equal(HttpStatusCode.OK, comun.StatusCode);
@@ -503,7 +503,7 @@ public class GuiaPageTests(ResidentsFlowTests.WebAppFactory factory) : IClassFix
         var ids = Regex.Matches(todo, @"\sid=""([^""]+)""").Select(m => m.Groups[1].Value).ToList();
         Assert.True(ids.Count > 127, "No se han leído los id de la página.");
         Assert.Empty(ids.GroupBy(id => id).Where(g => g.Count() > 1).Select(g => g.Key));
-        Assert.Contains("Pendiente de revisión de punta a punta", todo);
+        Assert.Contains("Revisado para ResidApp v", todo);
     }
 
     [Fact]

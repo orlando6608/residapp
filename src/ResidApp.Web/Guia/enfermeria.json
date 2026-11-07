@@ -32,8 +32,8 @@
     "Firmar un basal que no creaste tú.",
     "Cambiar los rangos de referencia de las constantes: los fija Dirección Clínica. Tú los ves en la valoración, como aviso."
   ],
-  "revisadoPara": null,
-  "revisado": "2026-11-05",
+  "revisadoPara": "0.2.0",
+  "revisado": "2026-11-07",
   "fichas": [
     {
       "codigo": "ENF-01",
