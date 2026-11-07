@@ -1,0 +1,11 @@
+Copyright (c) 2026 ResidApp. Todos los derechos reservados.
+
+Este repositorio y su contenido (código fuente, documentación, textos, imágenes y datos de ejemplo) son propiedad de sus titulares y se publican solo para
+su consulta. No se concede ninguna licencia de uso, copia, modificación, distribución,
+sublicencia ni venta, ni total ni parcial, sin permiso previo y por escrito de los titulares.
+
+Que el repositorio sea visible no equivale a una licencia de código abierto. Los componentes de terceros que incluye (por ejemplo, bibliotecas en
+`src/ResidApp.Web/wwwroot/lib/`) conservan sus propias licencias.
+
+All rights reserved. No license is granted to use, copy, modify, distribute, sublicense or sell this software or its documentation, in whole or in
+part, without the prior written permission of the copyright holders. Third-party components keep their own licenses.
