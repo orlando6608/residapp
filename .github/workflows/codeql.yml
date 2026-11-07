@@ -12,6 +12,12 @@ on:
 permissions:
   contents: read
 
+# Un PR que recibe otro commit cancela la ejecución anterior (gasta menos minutos si el repositorio pasa a privado). Las de main no se cancelan nunca:
+# cada ejecución de push tiene su propio grupo.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   analyze:
     runs-on: ubuntu-26.04

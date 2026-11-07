@@ -15,7 +15,7 @@
       "Bash(git rev-list *)",
       "Bash(git fetch *)",
       "Bash(git remote *)",
-      "Bash(curl -s \"https://api.github.com/repos/orlando6608/residapp/actions/runs?branch=main&per_page=3\")",
+      "Bash(gh run list *)",
       "Bash(dotnet run *)",
       "Bash(powershell -NoProfile -Command 'Get-CimInstance Win32_Process -Filter \"Name='\\\\''dotnet.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*ResidApp.Web*'\\\\'' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }')",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 3 http://localhost:5299/)",
