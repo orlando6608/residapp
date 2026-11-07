@@ -20,6 +20,10 @@
     La verá la Enfermería de @(evento.UnitName ?? "la unidad"), que confirmará la lectura y después registrará si la realizó.
     No hay prioridad automática.
 </p>
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje Puedes añadir otra.</div>
+}
 <div asp-validation-summary="All" class="text-danger"></div>
 
 <form asp-action="Indicacion" method="post">
@@ -53,9 +57,11 @@
         </div>
     </div>
 
-    <div class="d-grid d-md-flex justify-content-md-end gap-2">
-        <a asp-action="Conducta" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin registrar</a>
+    @* «Registrar indicación» va primero en el código para que sea el envío por defecto (Intro); en pantalla se invierte el orden en ancho. *@
+    <div class="d-grid d-md-flex flex-md-row-reverse justify-content-md-start gap-2">
         <button type="submit" class="btn btn-primary btn-lg">Registrar indicación</button>
+        <button type="submit" name="otra" value="true" class="btn btn-outline-primary btn-lg">Registrar y añadir otra</button>
+        <a asp-action="Conducta" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin registrar</a>
     </div>
 </form>
 
