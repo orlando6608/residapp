@@ -21,8 +21,8 @@
     "Ver las valoraciones, las indicaciones médicas ni las bandejas de Enfermería y Medicina.",
     "Corregir o anular un cierre o un cambio ya registrado, ni ver qué ha pasado después con él."
   ],
-  "revisadoPara": null,
-  "revisado": "2026-11-05",
+  "revisadoPara": "0.2.0",
+  "revisado": "2026-11-07",
   "fichas": [
     {
       "codigo": "AUX-01",

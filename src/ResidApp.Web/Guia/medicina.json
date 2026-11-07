@@ -28,8 +28,8 @@
     "Corregir lo que no sea tu valoración médica: ni la observación original, ni el basal, las indicaciones, el protocolo o el informe de derivación firmado.",
     "Dar de alta residentes: es un permiso aparte, que Medicina no tiene."
   ],
-  "revisadoPara": null,
-  "revisado": "2026-11-05",
+  "revisadoPara": "0.2.0",
+  "revisado": "2026-11-07",
   "fichas": [
     {
       "codigo": "MED-01",
