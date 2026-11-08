@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0](https://github.com/orlando6608/residapp/compare/v0.2.0...v0.3.0) (2026-11-08)
+
+
+### Features
+
+* registrar y añadir otra indicación sin salir del formulario ([03a9414](https://github.com/orlando6608/residapp/commit/03a9414d6b2613a1ef97434358f7e5f127b25a8f))
+* registrar y añadir otra indicación sin salir del formulario ([ef2a13e](https://github.com/orlando6608/residapp/commit/ef2a13e8a5b4d21ec0b7cf444fbd2f87aab59a7f))
+
+
+### Bug Fixes
+
+* aviso visible al cerrar con indicaciones sin cumplir ([b95bcc5](https://github.com/orlando6608/residapp/commit/b95bcc5b87202c858ea897f0f3997056b0a721c1))
+* aviso visible al cerrar con indicaciones sin cumplir y respuestas de CJ a pruebas 2 ([5e85519](https://github.com/orlando6608/residapp/commit/5e855193b8c0301a57e35de58f26f1ce70c696f2))
+
 ## [0.2.0](https://github.com/orlando6608/residapp/compare/v0.1.0...v0.2.0) (2026-11-07)
 
 
