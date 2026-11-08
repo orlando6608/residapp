@@ -28,8 +28,8 @@
     "Corregir lo que no sea tu valoración médica: ni la observación original, ni el basal, las indicaciones, el protocolo o el informe de derivación firmado.",
     "Dar de alta residentes: es un permiso aparte, que Medicina no tiene."
   ],
-  "revisadoPara": "0.2.0",
-  "revisado": "2026-11-07",
+  "revisadoPara": "0.3.0",
+  "revisado": "2026-11-08",
   "fichas": [
     {
       "codigo": "MED-01",
@@ -162,7 +162,7 @@
       ],
       "despues": [
         { "para": "Enfermería", "texto": "La ve en su bandeja de indicaciones: primero confirma la lectura y después registra si la realizó o describe la incidencia." },
-        { "para": "Medicina", "texto": "El evento pasa a «Con indicación pendiente» y sale de la bandeja de escalados. Puedes añadir más indicaciones o cerrarlo (ver MED-09). La valoración ya no se modifica, salvo con MED-10." }
+        { "para": "Medicina", "texto": "El evento pasa a «Con indicación pendiente» y sale de la bandeja de escalados. Puedes añadir más indicaciones o cerrarlo (ver MED-09). La valoración ya no se modifica, salvo con MED-10. Con **Registrar y añadir otra** vuelves a un formulario en blanco con el aviso «Indicación registrada. Enfermería de la unidad la verá en su bandeja de indicaciones. Puedes añadir otra.»" }
       ],
       "dudas": [
         { "p": "«Escribe la indicación.»", "r": "El texto de la indicación es obligatorio." },
@@ -293,7 +293,7 @@
       "permisos": [],
       "antes": [
         "Tener guardada la valoración médica.",
-        "Que las indicaciones estén cumplidas: **no se puede cerrar** con indicaciones sin leer o sin resolver (el botón sale desactivado). La única excepción es el protocolo urgente, tras derivar a Urgencias.",
+        "Que las indicaciones estén cumplidas: **no se puede cerrar** con indicaciones sin leer o sin resolver. Si las hay, la pantalla de cierre lo explica en una alerta amarilla bajo el título y el botón «Cerrar evento» sale desactivado. La única excepción es el protocolo urgente, tras derivar a Urgencias.",
         "Si derivaste a Urgencias: al menos un intento de llamada a la familia (salvo que Administración haya anotado que el residente no tiene contacto urgente)."
       ],
       "pasos": [
@@ -309,13 +309,15 @@
         { "para": "Enfermería", "texto": "En el detalle del evento verá «Cerrado por Medicina»." }
       ],
       "dudas": [
-        { "p": "«No se puede cerrar el evento mientras queden indicaciones sin cumplir: Enfermería tiene que leerlas y registrar si se realizaron.»", "r": "Espera a que Enfermería las lea y registre el resultado: sigue su estado en la tarjeta «Indicaciones». Cuando estén cumplidas, el evento lo puedes cerrar tú o Enfermería." },
+        { "p": "«No se puede cerrar el evento hasta que Enfermería haya leído las indicaciones y registrado si se realizaron.»", "r": "Es la alerta amarilla de la pantalla de cierre; mientras salga, el botón «Cerrar evento» no se puede pulsar. Espera a que Enfermería las lea y registre el resultado: sigue su estado con el enlace «tus indicaciones emitidas» de la propia alerta o en la tarjeta «Indicaciones». Cuando estén cumplidas, el evento lo puedes cerrar tú o Enfermería." },
+        { "p": "«No se puede cerrar el evento mientras queden indicaciones sin cumplir: Enfermería tiene que leerlas y registrar si se realizaron.»", "r": "Es el mismo motivo. Sale si, al enviar el formulario, siguen quedando indicaciones sin cumplir; sigue su estado en la tarjeta «Indicaciones»." },
         { "p": "«Decide si se comunica a la familia.»", "r": "Elige «No comunicar» o «Preparar comunicación» antes de pulsar «Cerrar evento»." },
         { "p": "«Con una derivación a Urgencias, al cerrar hay que preparar la actualización relevante…»", "r": "Registra un intento de llamada (MED-08) y prepara la comunicación a la familia, que aquí es obligatoria y de tipo relevante." }
       ],
       "rutas": ["Medicina/Conducta", "Medicina/Protocolo", "Medicina/Cerrar"],
       "mensajes": [
         "Evento cerrado. Enfermería no tiene que cerrarlo.",
+        "No se puede cerrar el evento hasta que Enfermería haya leído las indicaciones y registrado si se realizaron.",
         "No se puede cerrar el evento mientras queden indicaciones sin cumplir: Enfermería tiene que leerlas y registrar si se realizaron.",
         "Decide si se comunica a la familia.",
         "Con una derivación a Urgencias, al cerrar hay que preparar la actualización relevante para la familia"
