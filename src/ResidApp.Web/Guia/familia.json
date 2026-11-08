@@ -23,8 +23,8 @@
     "Escribir al equipo (no hay chat) ni elegir un profesional concreto para una cita.",
     "Usar el portal para algo urgente: para eso, el teléfono del centro."
   ],
-  "revisadoPara": "0.2.0",
-  "revisado": "2026-11-07",
+  "revisadoPara": "0.3.0",
+  "revisado": "2026-11-08",
   "fichas": [
     {
       "codigo": "FAM-01",

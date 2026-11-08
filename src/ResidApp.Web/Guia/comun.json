@@ -1,7 +1,7 @@
 {
   "proposito": "Esto vale para cualquier persona con una cuenta de ResidApp, sea cual sea su perfil: entrar la primera vez y cada día, cambiar de centro o de perfil, cuidar tu cuenta (contraseña, códigos de recuperación, sesiones), recuperar el acceso si lo pierdes, elegir el modo claro u oscuro e imprimir. Se cuenta una sola vez aquí; las guías de cada perfil remiten a estas fichas. Nadie se crea su propia cuenta: la da de alta la Administración de tu centro, que es también a quien hay que acudir si no puedes entrar.",
-  "revisadoPara": "0.2.0",
-  "revisado": "2026-11-07",
+  "revisadoPara": "0.3.0",
+  "revisado": "2026-11-08",
   "fichas": [
     {
       "codigo": "TOD-01",

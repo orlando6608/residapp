@@ -1,6 +1,6 @@
 {
-  "revisadoPara": "0.2.0",
-  "revisado": "2026-11-07",
+  "revisadoPara": "0.3.0",
+  "revisado": "2026-11-08",
   "terminos": [
     { "termino": "Administración principal", "significa": "La cuenta de Administración que ve todas las unidades del centro y puede añadírselas a otras Administraciones o marcar a otra como principal.", "ver": ["ADM-07", "PLA-04"] },
     { "termino": "Ámbito", "significa": "La combinación de centro y perfil con la que trabajas en cada momento. Si tu cuenta tiene varios, eliges uno al entrar y puedes cambiarlo después.", "ver": ["TOD-04"] },
