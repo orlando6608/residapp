@@ -272,7 +272,7 @@
   ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 </style>
 </head>
-<body data-doc="pruebas-2-medicina-indicaciones" data-version="2026-11-07">
+<body data-doc="pruebas-2-medicina-indicaciones" data-version="2026-11-08">
 
 <div class="page">
   <header>
@@ -504,7 +504,7 @@
         <ol class="pasos">
           <li>Como Medicina, justo después de la prueba 5 (con las indicaciones aún sin leer por Enfermería), abre «Cerrar el evento» de ese evento.</li>
           <li>Comprueba el aviso y el botón. Después, en la prueba 8, cuando Enfermería haya registrado todas las indicaciones y antes de que cierre el episodio, vuelve como Medicina a «Cerrar el evento» (no hace falta cerrarlo). Marca esta prueba al terminar la 8.</li>
-          <li>Prueba también el protocolo urgente: con una indicación sin cumplir, activa el protocolo urgente, firma la derivación y registra la llamada, y cierra.</li>
+          <li>Prueba también el protocolo urgente, pero con otro escalado distinto del de las pruebas 5 a 8 (escala otro evento como en la prueba 1 y valóralo como en la prueba 4), porque si cierras el de esas pruebas ya no podrás hacer la 7 ni la 8: con una indicación sin cumplir, activa el protocolo urgente, firma la derivación y registra la llamada, y cierra.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>Con una indicación sin leer o sin resolver, el botón «Cerrar evento» está desactivado y un aviso explica que Enfermería debe leerla y registrar si se realizó. Cumplidas todas, puedes cerrar tú o puede cerrar Enfermería. La excepción es el protocolo urgente: tras derivar a Urgencias puedes cerrar con indicaciones sin cumplir, que siguen en la bandeja de Enfermería.</div>
         <fieldset class="choices" aria-labelledby="t-6">
