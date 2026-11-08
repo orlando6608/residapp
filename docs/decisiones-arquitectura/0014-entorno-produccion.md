@@ -2,7 +2,9 @@
 
 Estado: **propuesta** (2026-11-08, solo documentación; no se ha creado nada en Azure ni en GitHub). **Decidido por Orlando el 2026-11-08:** producción en una **suscripción de Azure nueva
 y propia de ResidApp**; **privatizar el repositorio antes** (adelanta el disparador del PR #185) y **transferir la propiedad del repositorio a una organización de GitHub** (nombre y
-titular por decidir). Todo lo demás está sin decidir salvo lo marcado como **[Hecho]**. Lectura de protección de datos previa, que este ADR recoge: `docs/privacidad/entorno-produccion-lectura-dpo.md` (borrador
+titular por decidir). **Aplazado por Orlando (2026-11-08): este plan queda en pausa** hasta que (1) se decida pasar el repositorio a privado y, más adelante, (2) exista el **nombre de la
+organización y la sociedad titular**, que será la dueña del repositorio y de la cuenta y la suscripción de Azure como activos intangibles de la sociedad. Hasta entonces el ADR es la
+referencia de diseño y no se ejecuta ningún paso. Todo lo demás está sin decidir salvo lo marcado como **[Hecho]**. Lectura de protección de datos previa, que este ADR recoge: `docs/privacidad/entorno-produccion-lectura-dpo.md` (borrador
 del agente `dpo-residapp`; lo valida una persona antes de usarlo con datos reales). Sin ADR previo de entornos, de copias de seguridad ni de escalado: lo más cercano es
 `docs/producto/roadmap.md` (línea 48: «SLA, RPO, RTO y copias de seguridad: pendiente de definir antes de producción»).
 
@@ -52,7 +54,8 @@ El ADR separa dos momentos, porque lo que se puede hacer con un entorno **vacío
 
 ### 1. Aislamiento y recursos
 
-- **Suscripción de Azure nueva y propia de ResidApp** (decidido el 2026-11-08; cierra B9). **[Decidir]** si cuelga del mismo inquilino de Entra que dev y otros proyectos: los
+- **Suscripción de Azure nueva y propia de ResidApp** (decidido el 2026-11-08; cierra B9), **a nombre de la sociedad titular** (facturación, propiedad y propietarios de la suscripción), no de
+  una persona, como activo intangible de la sociedad que también será dueña del repositorio. Por eso no se crea hasta que exista la sociedad (ver Estado). **[Decidir]** si cuelga del mismo inquilino de Entra que dev y otros proyectos: los
   administradores globales de ese inquilino alcanzarían producción, de modo que B9 cambiaría de sitio y no desaparecería del todo.
 - **`rg-residapp-prod`** en la región elegida. **[A verificar]** la disponibilidad de zonas de disponibilidad y de región emparejada antes de crear nada: una búsqueda indica que
   Spain Central no tiene región par, lo que haría que la copia geográfica por defecto no valga allí (apartado 5).
@@ -279,7 +282,8 @@ si hace falta WAF, uno **regional** (Application Gateway) **[A verificar]** prec
 5. Segunda persona para operaciones irreversibles; PIM o equivalente; inquilino de Entra de la suscripción nueva (**Orlando**).
 6. **Nombre de la organización de GitHub, plan de pago y límite de gasto de Actions** (**Orlando**). Decididos ya: privatizar antes, transferir a una organización y que CJ entre con rol de lectura.
 7. Dominio de envío de producción y de dev; si se usa un WAF regional o ninguno (**Orlando**).
-8. Titular de ResidApp y de la organización (persona física o sociedad), que condiciona los contratos con los centros (**Orlando**); es previo a crear la organización.
+8. Titular de ResidApp: **la sociedad** propietaria del repositorio, de la organización de GitHub y de la cuenta y suscripción de Azure como activos intangibles (**Orlando**). Condiciona los
+   contratos con los centros y es **previo a todo lo demás**: sin ella no se crea la organización, ni la suscripción, ni se transfiere el repositorio.
 9. Defender para SQL y para la nube (**Orlando**, coste).
 10. Cuándo y cada cuánto se hace el simulacro de restauración (**Orlando y el DPO**).
 
@@ -289,8 +293,8 @@ si hace falta WAF, uno **regional** (Application Gateway) **[A verificar]** prec
 |---|---|---|
 | 0 | Decidir este ADR, la lectura del DPO y el titular de ResidApp | Propuesta, sin decidir |
 | 1 | Preparar en dev: prueba de salud, Data Protection con claves compartidas, registros filtrados (A4 y B10), paquete sin documentos de CJ y prueba de 404, parametrizar el workflow, entorno `dev` | Sin empezar |
-| 2 | Crear la suscripción y `rg-residapp-prod` con Bicep (`what-if` en PR), identidades separadas, rol a medida y bloqueos; **Puerta 1** | Sin empezar |
+| 2 | Crear la suscripción (a nombre de la sociedad) y `rg-residapp-prod` con Bicep (`what-if` en PR), identidades separadas, rol a medida y bloqueos; **Puerta 1** | Aplazado hasta que exista la sociedad |
 | 3 | Ensayos: restauración de una copia, prueba de carga, simulacro de swap y de reversión, simulacro de brecha | Sin empezar |
-| 4 | **Crear la organización, transferir el repositorio y privatizarlo** (apartado 8, punto 4, pasos 0 a 9). Va **antes** de fusionar el despliegue de producción y de firmar con un centro, y antes de crear la credencial de producción (fila 2) | Decidido el 2026-11-08; sin empezar; falta nombre y titular |
+| 4 | **Crear la organización, transferir el repositorio y privatizarlo** (apartado 8, punto 4, pasos 0 a 9). Va **antes** de fusionar el despliegue de producción y de firmar con un centro, y antes de crear la credencial de producción (fila 2) | Decidido el 2026-11-08; **aplazado hasta que se decida privatizar y exista la sociedad titular**; falta nombre y titular |
 | 5 | Cargar datos reales: **Puerta 2** y lista de `antes-de-datos-reales.md` | Sin empezar |
 | 6 | DNS `app.residapp.es`, certificado, correo de producción y primer centro | Sin empezar; DNS solo después del recurso |
