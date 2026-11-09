@@ -2,7 +2,7 @@
 
 Estado: **propuesta** (2026-11-09, solo documentación; no hay código ni SQL). **Decidido por Orlando el 2026-11-09:** habrá **varios módulos opcionales** que se ofrecen aparte y
 influyen en el precio; la **exportación pasa a ser base**; el **dashboard de Plataforma no es un módulo** (es una funcionalidad de Plataforma); si un centro deja de tener un módulo, lo ya
-registrado queda en **solo lectura**; en el entorno de desarrollo se podrán activar todos los módulos. Todo lo demás está sin decidir salvo lo marcado como **[Hecho]**.
+registrado queda en **solo lectura**; en el entorno de desarrollo se podrán activar todos los módulos. **Cada módulo es una decisión de compra de la Residencia: se define en el contrato (en un anexo de módulos) y supone un pago diferenciado.** Todo lo demás está sin decidir salvo lo marcado como **[Hecho]**.
 Lectura de protección de datos previa, que este ADR recoge: `docs/privacidad/modulos-opcionales-lectura-dpo.md` (borrador del agente `dpo-residapp`; lo valida una persona antes de usarlo con datos reales). Su conclusión es
 que el diseño es **admisible con condiciones**: activar un módulo es una decisión sobre el tratamiento de datos del **centro** (el responsable), y ResidApp, como encargada, solo la ejecuta (RGPD art. 28.3.a y 28.10).
 
@@ -68,8 +68,11 @@ interruptor, sin que alguien tenga que acordarse de ponerlo en cada pantalla.
      de crear o editar por URL directa se rechazan en el servidor con un mensaje claro, no solo se ocultan en pantalla. Cuidado (DPO): «exportar» solo es cierto si la exportación cubre los
      datos del módulo, y hoy solo cubre estructura y censo. Por eso **un módulo no guarda datos reales de residentes hasta que tenga definida su salida** (consulta y copia), y el fin de
      contrato (RGPD art. 28.3.g) exigirá una exportación completa que hoy no existe.
-4. **Quién enciende, quién apaga y con qué respaldo.** Plataforma ejecuta la activación, pero la **decisión es del centro**: hace falta una **instrucción documentada del centro** antes de
-   encender un módulo con residentes reales (una prueba gratuita o una activación comercial sin ella sería un tratamiento sin instrucción). Cada cambio queda en la auditoría sin datos (por
+4. **Quién enciende, quién apaga y con qué respaldo.** El módulo nace de una **compra recogida en el contrato con la Residencia** (anexo de módulos, con pago diferenciado). Ese anexo es,
+   en principio, la **instrucción documentada del centro** (el responsable de los datos) que pide el DPO, y Plataforma solo la ejecuta: **no se enciende un módulo con residentes reales
+   sin contrato firmado que lo incluya** (una prueba gratuita o una activación comercial sin él sería un tratamiento sin instrucción). Cada fila de `modulos_centro` guarda la **referencia del
+   anexo y su versión** y una **vigencia** (`vigente_desde`, `vigente_hasta`); **pasada la vigencia, el módulo pasa solo a solo lectura**, sin que nadie tenga que acordarse. **[Decidir]** que
+   un abogado o el DPO real confirme que el anexo vale como instrucción. Cada cambio queda en la auditoría sin datos (por
    ejemplo `CENTER_MODULE_ENABLE` y `CENTER_MODULE_DISABLE`, con el centro y el código del módulo). Activar un módulo **no concede permisos a ningún perfil**: eso sigue siendo de la Administración
    del centro. Además:
    - **[Decidir]** El DPO propone que el **centro pueda apagar él mismo** un módulo y que Plataforma solo pueda encenderlo, más un **apagado de emergencia global** para Plataforma. Va
@@ -114,15 +117,18 @@ interruptor, sin que alguien tenga que acordarse de ponerlo en cada pantalla.
 ## Puertas abiertas
 
 1. **[Decidir]** Reparto entre Indicadores y Calidad (base) y el Dashboard de Dirección (módulo).
-2. **[Decidir]** Si el centro puede apagar él solo un módulo y Plataforma solo encenderlo, y si Plataforma tiene un apagado de emergencia global (propuesta del DPO).
-3. **[Decidir]** Qué documento es la «instrucción documentada del centro» que respalda cada activación, y quién lo valida (DPO real o abogado).
+2. **[Decidir]** Si el centro puede apagar él solo un módulo y Plataforma solo encenderlo, y si Plataforma tiene un apagado de emergencia global (propuesta del DPO). Con la compra por contrato,
+   la baja comercial de un módulo seguiría el contrato (aviso y fin del periodo pagado), pero el responsable de los datos no puede quedar sin poder dejar de tratarlos cuando quiera: cómo se concilian
+   ambas cosas lo decide un abogado o el DPO real.
+3. **[Decidir]** Que el anexo de módulos del contrato valga como «instrucción documentada del centro», qué debe decir (módulo, versión de la ficha de privacidad, vigencia) y quién lo valida (DPO real o abogado).
 4. **[Decidir]** Qué ocurre con las dependencias al apagar un módulo requerido por otro.
 5. **[Decidir]** Plazos de conservación del histórico de activaciones (prueba contractual, no los 15 años clínicos) y de las fichas aceptadas.
 6. **[Decidir]** Retención cero por escrito con Mistral, condición para activar el dictado en un centro real.
 7. **[Decidir]** Cláusula del contrato con los centros sobre el solo lectura al apagar un módulo y sobre la exportación completa al terminar el contrato (art. 28.3.g), que hoy no existe:
    la exportación actual es solo de estructura y censo.
 8. **[Decidir]** Corregir ya las frases «solo si el centro lo activa» de la política de privacidad, o construir primero el interruptor por centro.
-9. **[Decidir]** Planes, precios y topes por censo, cómo se cuenta el censo para facturar y cuándo se anuncian en la landing.
+9. **[Decidir]** Planes, precios y topes por censo, cómo se cuenta el censo para facturar y cuándo se anuncian en la landing. La facturación de cada módulo vive fuera de la aplicación (en el
+   contrato); la aplicación solo guarda la referencia del anexo y la vigencia.
 10. **[A verificar]** Encaje de `modulos_centro` con la seguridad por filas y con la escritura de Plataforma (cambia el ADR 0008 y la matriz del script 0091).
 11. **[A verificar]** Artículos que el DPO no pudo confirmar en fuente oficial (art. 28.2, 25.2, 15.3 y 9.2.h del RGPD, lista del art. 35.4 de la AEPD, efecto de la Llei 2/2024 sobre la Llei 21/2000,
     ámbito de la APDCAT frente a la AEPD para el centro piloto).
