@@ -1,6 +1,6 @@
 # Pendientes de la landing (`residapp.es` y `residapp.cat`)
 
-Estado al 2026-11-02. Sale del análisis [`analisis-landing-page.html`](../../pendientes-cj/archivados/analisis-landing-page.html) (archivado el mismo día: lo decidido por Orlando el 29/10 está en él y lo que falta para construirla está aquí). **No hay nada construido**: no existe landing publicada ni alojamiento elegido. La maqueta de partida es [`maqueta_residapp_landingPage.html`](../../bocetos-pantallas/maqueta_residapp_landingPage.html); no se publica tal cual.
+Estado al 2026-11-02. Sale del análisis [`analisis-landing-page.html`](../../pendientes-cj/archivados/analisis-landing-page.html) (archivado el mismo día: lo decidido por Orlando el 29/10 está en él y lo que falta para construirla está aquí). **No hay nada construido**: no existe landing publicada ni alojamiento elegido. La maqueta de partida es [`maqueta_residapp_landingPage.html`](../../bocetos-pantallas/maqueta_residapp_landingPage.html); no se publica tal cual. Contrastado de nuevo con la versión 0.3.0 el 2026-11-09: ver «Correcciones al análisis» al final.
 
 Una *landing* es la página pública de presentación del producto, la que ve quien aún no tiene cuenta. Una *página estática* es una página fija, sin base de datos ni inicio de sesión.
 
@@ -40,3 +40,30 @@ Una *landing* es la página pública de presentación del producto, la que ve qu
 - `app.residapp.es` y Microsoft 365: antes de hablar con un centro real.
 - Versión catalana de la landing: coherente con el [ADR 0013](../../decisiones-arquitectura/0013-portal-familiar-dos-idiomas.md); la aplicación sigue solo en castellano, así que la página catalana no puede prometer catalán en la plataforma.
 - Lo que puede decirse ya, antes del piloto real: «en fase de pilotos», «diseñada pensando en la privacidad desde el principio», «el centro sigue siendo el responsable de los datos de sus residentes», «sin datos reales hasta cerrar el contrato y la evaluación de impacto». Las demostraciones, con datos ficticios.
+
+## Correcciones al análisis (2026-11-09, contrastado con la versión 0.3.0)
+
+El análisis del 29/10 se escribió con la versión 0.1. Al volver a compararlo con el código y los ADR, esto cambia en los textos de la landing. Mientras no se diga lo contrario, lo demás del análisis sigue valiendo.
+
+- **Segundo factor.** La frase prudente «segundo factor» solo es cierta para el **personal** (código del móvil, TOTP). Los familiares entran solo con contraseña: su segundo factor no está construido (`AccesoController.cs`). Decirlo siempre como «segundo factor para el personal».
+- **Aislamiento entre centros.** Ya existe seguridad por filas en la propia base de datos (scripts `0030`, `0088`, `0090`): se puede decir «aislamiento por centro reforzado en la base de datos». Pero quien sea dueño de la base (`db_owner`) la salta, así que «infranqueable» y «jamás» siguen fuera.
+- **Auditoría.** Comprobado: el disparador `TR_audit_immutable` impide modificar o borrar el registro. Vale «registro de acciones con protección contra modificaciones»; no vale «inmutable» (quien administra la base podría quitar el disparador).
+- **«Registro de accesos».** `eventos_acceso` guarda inicios de sesión y fallos; las acciones sensibles van a la auditoría; no se registra cada lectura. Decir «registro de inicios de sesión y de acciones relevantes».
+- **Región de Azure.** Ya consta: Spain Central, pero solo en dev (ADR 0014). La región de producción no está decidida, así que sigue valiendo «región a confirmar con cada centro». Spain Central no tiene región par (afecta a la copia geográfica).
+- **Correo.** ADR 0012 aceptado y avisos de cita construidos, pero **apagados por defecto**: no anunciarlos como activos.
+- **Portal en catalán.** ADR 0013 aceptado, nada construido: la landing catalana no puede prometer portal ni plataforma en catalán.
+- **Turnos.** Corrección al análisis: Administración sí tiene catálogo de turnos y equipos y planificación puntual (planificar no da acceso a nada). El titular «conecta tus turnos médicos» sigue siendo impreciso, pero por otro motivo: no hay «turnos médicos».
+- **Dictado por voz.** Servidor y pantalla hechos, pero falta el rango de temperatura que fija CJ: no anunciarlo como disponible.
+
+### Frases de la maqueta que el análisis no recogía
+
+- «Solicitar Demostración **Gratis**» y «Agendar Demo con **un Especialista**»: ni la gratuidad ni el especialista están decididos.
+- «Usuarios y perfiles ilimitados», «Popular», «Perfecto para la mayoría de centros del país»: sin base.
+- Pie de imagen «…escala de estado de ánimo **en Azure**»: nombra al proveedor y una escala que, según el análisis, no existe.
+- «Las familias **nunca** tienen acceso…»: absoluto. Mejor «no ven constantes, tratamientos ni nombres de profesionales; solo lo que el equipo aprueba».
+- Formulario: el `alert` dice «Solicitud enviada a info@residapp.es» y no envía nada; ese buzón no existe (ya está decidido `mailto:`).
+- Catalán de la maqueta: usa «rangos» (castellano); hace falta que lo revise una persona catalanohablante.
+
+### Sin volver a comprobar hoy
+
+Se dan por buenas las filas del análisis sobre «un solo toque», rangos de referencia con alertas visuales, firma «Equipo asistencial del centro», ausencia de una escala de ánimo y lo que exporta la app (solo estructura y censo, ADR 0010). Antes de publicar, repasarlas en el navegador (skill `probar-en-navegador`).
