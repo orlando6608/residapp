@@ -1,6 +1,6 @@
 # Retomar la construcción en una sesión nueva
 
-Estado a 2026-11-04, tras M2 (script 0091, permisos por tabla de la app; primera entrada de «Dónde estamos»), el punto 2a (script 0089, desplegado en dev) y M1 (eventos_auditoria); antes, 2026-11-03, cierre de la tarde (lo último, en la primera entrada de «Dónde estamos»: «RELEVO»). Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
+Estado a 2026-11-10: lo último es la propuesta de dispositivos autorizados por centro (ADR 0016, solo documentación; primera entrada de «Dónde estamos»: «RELEVO»); antes, el 2026-11-09, la de módulos opcionales (ADR 0015) y, el 2026-11-08, la release 0.3.0 y el entorno de producción aplazado (ADR 0014). Actualízalo al cerrar cada bloque de trabajo, para que la siguiente sesión (con
 Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
 
 ## Prompt para empezar
