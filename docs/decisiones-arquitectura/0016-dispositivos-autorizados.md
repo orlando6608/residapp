@@ -1,0 +1,79 @@
+# ADR 0016 — Dispositivos autorizados por centro: solo se entra desde aparatos que la Administración conoce
+
+Estado: **propuesta** (2026-11-10, solo documentación; no hay código ni SQL). **Decidido por Orlando el 2026-11-10**, de una en una: ver «Decisión». Lo demás está sin decidir salvo lo marcado como **[Hecho]**.
+Lectura de protección de datos previa, que este ADR recoge: `docs/privacidad/dispositivos-autorizados-lectura-dpo.md` (borrador del agente `dpo-residapp`; lo valida una persona antes de usarlo con datos reales). Su conclusión es que el diseño es **admisible con condiciones**: es una medida de seguridad del tratamiento (RGPD art. 32) que añade datos **de los trabajadores**, y el riesgo principal es que derive en control laboral a través de su aparato personal.
+
+Etiquetas: **[Hecho]** verificado en el repositorio; **[Propuesta]** lo que recomienda este ADR; **[Decidir]** lo fija Orlando, CJ, el DPO real o un abogado; **[A verificar]** no se ha comprobado.
+
+## Contexto
+
+Se quiere poder limitar desde qué aparatos se inicia sesión en un centro, por si alguien con credenciales robadas intenta entrar desde un aparato ajeno. Filtrar por dirección MAC **no es posible**: la MAC solo viaja dentro de la red local, la web solo recibe la IP pública del router de la residencia, y un navegador no puede leer la MAC del aparato (además, iOS y Android la aleatorizan por Wi-Fi). Lo que sí puede hacer una web es comprobar que el aparato **conserva una clave** que la Administración aprobó antes.
+
+Lo que existe hoy **[Hecho]**:
+
+- Se entra con contraseña y código del móvil (`AccesoController`) o con passkey (`PasskeyController`); las dos abren la sesión en `SessionSignIn.OpenAsync` (ADR 0007, I1 e I4).
+- La sesión se abre con el **primer ámbito** de la cuenta (`scopes[0]`, `AccesoController.cs` líneas 102, 205 y 323; `PasskeyController.cs` línea 87) y el centro activo se elige después. Una comprobación de aparato en el login miraría el centro equivocado en una cuenta de varios centros.
+- Del aparato solo se guarda la IP, en `eventos_acceso` y en las sesiones (`0062`). `eventos_acceso` es inmutable (disparadores `INSTEAD OF`), guarda IP y **no tiene plazo de conservación** (ADR 0007, apartado «Lo que I1 e I2 dejan»; `0062:32-55`).
+- Las passkeys **no sirven como identidad del aparato**: las de iCloud o Google se sincronizan entre aparatos de la misma persona y ResidApp no pide atestación (ADR 0007, I4).
+- Plataforma vive en el centro reservado `PLATAFORMA` (ADR 0006): es un centro más para la autorización, sin unidades ni residentes. Se recupera por SQL (`database/operaciones/invitar_cuenta.sql`).
+- Hay tablets de planta compartidas por varios profesionales (ADR 0007, apartado «Contexto»), y la pulsera NFC con PIN (I5) está pendiente.
+- La sesión se valida contra `dbo.sesiones` en cada petición (`SessionCookieEvents.ValidatePrincipal`), por lo que cerrar una sesión en SQL la invalida en la petición siguiente. `dbo.sesiones` y `eventos_acceso` son **inmutables** (disparadores que impiden borrar) y la lista de motivos de cierre es cerrada (`CK_sesiones_cierre`, `NVARCHAR(20)`, script `0061`).
+- La cookie del ámbito activo (`ActiveProfileScopeCookie`) es solo `HttpOnly`, no va cifrada ni firmada, y el ADR 0008 (punto 5) dice que su centro no es de fiar: cada operación revalida el par elegido contra SQL en `SqlAuthorizationEvidenceProvider`, que hoy **no recibe la sesión**. **[A verificar]** cuánto código toca pasársela.
+
+## Decisión
+
+Decididas por Orlando el 2026-11-10:
+
+1. **Restricción por centro, activable desde Plataforma** («solo dispositivos autorizados»). Para el centro reservado `PLATAFORMA` está **siempre activa**: Plataforma es la cuenta más sensible del sistema y se protege con el mismo mecanismo que los demás, sin caso especial.
+2. **Quedan fuera los familiares.** Entran desde su móvil personal y gestionar sus aparatos sería una carga desproporcionada. Es un riesgo residual aceptado.
+3. **Dos tipos de aparato.** **Compartido**: vale para cualquier cuenta del centro (tablets, ordenadores o móviles de la residencia). **Personal**: el dispositivo privado de un trabajador, **vinculado a una sola cuenta**; deja de servir si la cuenta se suspende o pierde el ámbito en el centro.
+4. **Identificación del aparato por clave, sin cookie.** Al registrarse, el navegador crea un par de claves (WebCrypto) cuya parte privada **no se puede extraer** y queda en el almacén del navegador (IndexedDB); el servidor guarda la parte pública y, en cada entrada, el aparato **firma un reto** que el servidor manda. Así la identidad del aparato no se puede copiar a otro navegador, a diferencia de una cookie. **Una clave por registro y por centro.** La caducidad la fija el servidor, no el navegador.
+5. **Dos formas de registro:**
+   - **Pedir y aprobar:** la persona entra con credenciales correctas desde un aparato desconocido; la sesión se abre pero **sin acceso al centro restringido** (ver el flujo en el punto 8), queda una **petición pendiente** (cuenta, etiqueta corta del aparato como «Android, Chrome», fecha) y la pantalla informa a la persona y le muestra un **código**. La Administración aprueba la petición (como compartido o personal) **después de recibir ese código de la persona**; es obligatorio. Las peticiones caducan y se borran a los **7 días**; una caducada no se muestra ni se aprueba aunque la limpieza no haya corrido.
+   - **QR o enlace de un solo uso** que genera la Administración y abre en el aparato, para dejar aparatos preparados (mismo patrón que las invitaciones de I2: token aleatorio, solo su resumen SHA-256 en la base).
+6. **Caducidad por no uso:** aparato compartido, **1 año**; personal, **90 días**. Cada uso renueva el plazo.
+7. **Plataforma:** sus aparatos los aprueba **otra cuenta de Plataforma** (nadie aprueba el suyo). El primero, y la recuperación si se pierden todos, se hacen **por SQL** con un script nuevo en `database/operaciones/`, junto a `invitar_cuenta.sql`.
+8. **Varios centros y flujo:** el aparato se comprueba **al elegir el centro activo**, no al abrir la sesión, y la petición va a la Administración de ese centro. Flujo: credenciales correctas, sesión abierta (como hoy, `SessionSignIn.OpenAsync`) sin acceso a un centro restringido, elección de centro, **prueba de aparato** (el aparato firma el reto con la clave de ese centro). Si es conocido, la sesión queda vinculada a ese aparato en ese centro; si no, nace la petición pendiente. **La restricción se hace cumplir donde se revalida cada operación** (`SqlAuthorizationEvidenceProvider`), no solo al elegir el centro, porque la cookie del ámbito no es de fiar.
+9. **Mínimo para activar:** **dos** aparatos de Administración aprobados. Con la restricción activa **no se puede revocar el último** aparato de Administración, y **tampoco caduca por no uso** un aparato de Administración mientras haga falta para mantener el mínimo de dos; caduca en cuanto haya otro que lo sustituya. Si un centro lo pierde todo, Plataforma puede desactivar la restricción o entregar un QR a la Administración, solo con instrucción escrita del centro.
+10. **Sesión abierta al revocar un aparato** (decidido el 2026-11-10): una **tabla aparte** vincula cada sesión con el aparato que demostró en cada centro (`sesión`, `centro`, `aparato`, `verificado_en`). Al revocar, se cierran exactamente las sesiones vinculadas, y la petición siguiente ya no entra porque `SessionCookieEvents` rechaza las sesiones cerradas. **El aparato no se guarda en `dbo.sesiones` ni en `eventos_acceso`**: son inmutables y dejarían un historial permanente de qué móvil privado usó cada persona (garantía G5). La tabla de vínculos se purga al cerrarse o caducar la sesión. Requiere un método nuevo en `ISessionStore` para cerrar por aparato y un motivo de cierre nuevo (más corto que 20 caracteres, p. ej. `APARATO_REVOCADO`) en `CK_sesiones_cierre` y en el disparador de guarda.
+11. **Urgencias** (decidido el 2026-11-10): la aprobación de peticiones es **delegable**. Un permiso configurable que la Administración concede a otro perfil del centro (Dirección Clínica, jefe de turno); quien lo tiene ve y aprueba **solo las peticiones pendientes**, no la lista de aparatos, desde un aparato ya autorizado, y queda en la auditoría. Se exige además al activar la restricción **al menos un aparato compartido por unidad**. No hay acceso de emergencia sin aprobación ni clave de emergencia compartida: recrearían el hueco que la medida cierra. **[Decidir]** DPO sobre quién ve las peticiones.
+12. **Pulsera NFC con PIN (I5)** (decidido el 2026-11-10): la restricción de aparato es **independiente de cómo se identifique la persona**. En un centro con la restricción activa, la entrada con pulsera y PIN se ofrece **solo en aparatos compartidos ya autorizados** y **no crea peticiones pendientes** (un PIN es más débil que contraseña y código). En un aparato desconocido hay que entrar con contraseña o passkey. En un centro sin restricción, I5 funciona como esté diseñado en el ADR 0007.
+
+Propuestas de este ADR, derivadas de la lectura del DPO, sin decidir **[Propuesta]**:
+
+- **Datos mínimos.** Se guarda: la clave pública, el tipo, el nombre del aparato («del aparato, no de la persona»), el centro, la cuenta (solo si es personal), quién lo aprobó y cuándo, la fecha de alta, **el día** del último uso (no la hora) y la revocación. **No** se guarda la IP en la tabla de aparatos, ni el modelo, ni la cadena completa del navegador, ni los retos ni las firmas. Al revocar se vacían el nombre y la clave pública y se borra la fila a los 12 meses.
+- **Garantías para el aparato personal (G1 a G13 de la lectura del DPO).** Entre ellas: voluntario y con alternativa real de aparatos compartidos; finalidad cerrada (nunca horarios, productividad ni ubicación); la Administración ve cuenta, nombre, tipo, etiqueta, alta y día del último uso, y nada más; la persona ve y quita sus aparatos personales en «Mi cuenta»; los aparatos personales se revocan al salir la persona o al recuperar su cuenta por sospecha de robo.
+- **Las entradas normales no llevan el identificador del aparato personal** en `eventos_acceso`, para que la tabla no se convierta en un historial de uso de móviles privados. **[Decidir]** DPO.
+- **Plataforma sobre un centro ajeno**: solo con instrucción documentada del centro, mejor entregando un QR de un solo uso que registrando ella el aparato, con aviso a la Administración principal y anotación en la auditoría del centro. Necesita un salto de seguridad por filas de solo INSERT que **modifica el ADR 0008**; para saber si un centro se ha quedado sin aparatos de Administración basta un recuento, no leer nombres ni cuentas.
+- **Es una medida base de seguridad, no un módulo** del ADR 0015. **[Decidir]** Orlando.
+- **Primeros aparatos de Administración.** Con la restricción apagada, la Administración registra los suyos con el QR; al activar deben ser dos. Una vez activa, aprueba solo quien tenga la sesión en un aparato ya autorizado.
+- **Indicador de peticiones pendientes** en la portada de Administración (y del perfil con el permiso delegado): el código no sirve si nadie mira la bandeja, y la garantía G10 prohíbe avisar fuera de la aplicación.
+- **El reto de firma** puede guardarse en el servidor (tabla con caducidad de minutos) en vez de en una cookie de estado como la de las passkeys (`PasskeyStateCookie`): evita una cookie más. Se decide al construir.
+
+## Lo que no protege
+
+Es una capa más, no una garantía. No sustituye a la contraseña, al segundo factor ni a la passkey. No impide que quien controla un aparato ya registrado (o un script malicioso dentro de la página abierta en él) pida firmas mientras está abierta. Si se borran los datos del sitio, o se usa el modo privado, el aparato vuelve a ser desconocido y hay que pedir la autorización de nuevo. Cada navegador de un mismo móvil cuenta como un aparato distinto. Tampoco cubre el robo de la cookie de sesión: la prueba de aparato se hace al elegir el centro, no en cada petición, así que una sesión robada y reutilizada desde otro aparato no queda detectada. Lo mitigan `HttpOnly`, `Secure`, las sesiones cortas y el cierre de sesión al revocar el aparato.
+
+## Abierto antes de construir
+
+- **Bloqueo para datos reales:** el plazo y la vía de borrado de `eventos_acceso` (IP incluida). Cada aparato nuevo añade filas con cuenta e IP que hoy no se pueden borrar (`docs/privacidad/antes-de-datos-reales.md`).
+- **El DPO real o un abogado** valida la lectura: base jurídica, compatibilidad con el convenio y con la representación de los trabajadores (aparato personal), plazos y la exención del art. 22.2 LSSI para la clave en IndexedDB (la excepción de «estrictamente necesario» no está verificada en la guía de la AEPD ni en las directrices del CEPD).
+- **Urgencias, parte sin resolver:** pregunta a CJ: qué necesita una persona de guardia en ResidApp durante una urgencia y qué sigue en papel. Fija cuánto riesgo de disponibilidad es aceptable y cómo se redacta el procedimiento del centro.
+- **Pulsera NFC (I5):** cuando se construya, el ADR 0007 (fila I5) y `docs/seguridad/acceso-por-dispositivo.md` deben recoger la decisión 12.
+- **Revocación:** cuánto cuesta pasar la sesión al punto de autorización (decisión 10) y comprobar en las pruebas que una sesión cerrada por revocación se rechaza en la petición siguiente.
+- **iPhone:** por lo que se sabe, Safari borra el almacenamiento de las webs no instaladas tras unos 7 días sin visitarlas. Si es así, un iPhone personal pediría aprobación casi cada semana, salvo con la PWA instalada. **[A verificar]** con un iPhone real antes de prometer los 90 días.
+- **Seguridad por filas:** la lectura del aparato ocurre antes de que haya ámbito; si la tabla va bajo seguridad por filas, la comprobación inicial se hace con un procedimiento acotado. **[A verificar]** al construir.
+- **Documentos que dejan de ser ciertos al construirlo:** `Privacy.cshtml`, `docs/privacidad/politica-privacidad-portal.md` (líneas 226 y 349, que dicen que no hay IndexedDB), el Manual, la guía «Acceso y sesión» y `docs/seguridad/acceso-por-dispositivo.md`.
+- **Navegadores:** probar con aparatos reales (Android e iPhone) cuánto tiempo conservan la clave en el almacén. **[A verificar]**
+
+## Alternativas descartadas
+
+| Opción | Por qué no |
+| --- | --- |
+| Filtrar por dirección MAC | La MAC no llega al servidor ni la ve el navegador, es falsificable y los móviles actuales la aleatorizan. |
+| Lista de IP por centro | Solo vale desde la red de la residencia, se rompe con IP dinámica y deja fuera al personal que trabaja desde fuera. |
+| Cookie de aparato sola | Es un secreto «al portador»: quien copia la cookie a otro navegador se hace pasar por el aparato. Además es un segundo almacenamiento que justificar ante la LSSI. |
+| Cookie y clave a la vez | Dos mecanismos para lo mismo: más datos y más texto que explicar (DPO). |
+| Certificado de cliente (mTLS) o gestión de móviles (MDM) | Obliga a instalar y gestionar certificados o software en cada aparato; excesivo para este producto. |
+| Passkey como identidad del aparato | Las passkeys de iCloud y Google se sincronizan entre aparatos y no hay atestación (ADR 0007, I4). |
+| Excluir a Plataforma | Es la cuenta más sensible y vive en un centro más; dejarla fuera la haría la más débil. |
