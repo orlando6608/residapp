@@ -2178,8 +2178,13 @@ usuario cuando encajen:
   - `actions/checkout@v4` y `actions/setup-dotnet@v4` usan Node.js 20, que está obsoleto (hoy se fuerzan a
     Node 24);
   - `ubuntu-latest` pasa a Ubuntu 26 el 19 de octubre de 2026. Hecho el 2026-10-07 (PR #14): los dos jobs están fijados a
-    `ubuntu-26.04` y «Instalar sqlcmd» usa el repositorio de Microsoft de Ubuntu 26.04 (`.../config/ubuntu/26.04/prod.list`).
-    El CI de `main` pasó entero, incluido el despliegue. Si falla «Instalar sqlcmd», mira primero ese repositorio.
+    `ubuntu-26.04`. El CI de `main` pasó entero, incluido el despliegue.
+  - **sqlcmd sin apt (2026-11-11).** «Instalar sqlcmd» (apt, con el repositorio de Microsoft de Ubuntu 26.04) cayó en los tres intentos de ese día
+    porque el runner no resolvía los servidores de Ubuntu (`Temporary failure resolving 'azure.archive.ubuntu.com'`; cada intento tardaba 9 minutos
+    en rendirse), con la misma imagen de runner que había pasado una hora antes. Ahora el paso «Preparar sqlcmd»
+    (`.github/scripts/preparar-sqlcmd.sh`, en los dos jobs) usa el `sqlcmd` de la imagen de SQL Server en un contenedor auxiliar, sin apt. Si falla,
+    mira ese script y si `mcr.microsoft.com` responde. El envoltorio se probó en local contra un SQL Server de prueba (`-P`, `SQLCMDPASSWORD`,
+    `-i` relativo, UTF-8 con y sin BOM, `-v`, códigos de salida); el job de despliegue solo se puede ejercitar en `main`.
 - **Hora y zona horaria: pendientes (2026-10-12).** Hoy funciona porque `app-residapp-dev` tiene `WEBSITE_TIME_ZONE=Europe/Madrid` (ver
   «Zona horaria (hecho)» más arriba), pero hay límites que no estaban anotados. **Primer punto resuelto el 2026-10-12** (rama `zona-horaria-en-despliegue`): el despliegue (`ci-cd.yml`, paso «Fijar la zona horaria de la Web App») pone `WEBSITE_TIME_ZONE=Europe/Madrid` si no lo está (no escribe, y no reinicia la app, si ya lo está; la lectura se comprobó contra `app-residapp-dev`, la escritura no se ha ejercitado porque el valor ya era el correcto), y `ServerTimeZone.Verify` (en `Program.cs`) comprueba al arrancar que el servidor da en invierno y en verano el mismo desfase que Europe/Madrid: en producción no arranca y en desarrollo y pruebas avisa en el registro (`ServerTimeZoneTests`, 4 pruebas; fallan con la comprobación anulada). El resto sigue sin cambiar:
   - **La zona solo está puesta a mano en Azure.** `WEBSITE_TIME_ZONE` no está en `.github/workflows/ci-cd.yml` ni en ningún otro fichero del
