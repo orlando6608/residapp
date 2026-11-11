@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using Dapper;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -581,6 +582,149 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         });
         Assert.DoesNotContain("Puedes añadir otra.", afterSecond);
         Assert.Equal(2, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId }));
+    }
+
+    private static Task<int> EventRevisionAsync(SqlConnection connection, Guid eventId) =>
+        connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+
+    private static async Task<string> PostFormPageAsync(HttpClient client, string url, string page, Dictionary<string, string> fields)
+    {
+        fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+        return WebUtility.HtmlDecode(await (await client.PostAsync(url, new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+    }
+
+    /// <summary>Un escalado de Enfermería con la valoración médica ya empezada (estado «En valoración médica») y sin ninguna indicación: el punto de partida de las pruebas
+    /// del botón «Guardar e indicar a Enfermería». El llamador cierra la conexión.</summary>
+    private async Task<(HttpClient Doctor, Guid EventId, SqlConnection Connection)> EventInMedicalValuationAsync(string residentName)
+    {
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, residentName);
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Disnea progresiva (prueba funcional).",
+            ["Clasificacion"] = "Ordinario",
+        }))).Content.ReadAsStringAsync();
+        var eventId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+
+        await PostFormPageAsync(nurse, "/Enfermeria/EmpezarValoracion", detailPage, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await EventRevisionAsync(connection, eventId)).ToString() });
+        var assessmentPage = await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}");
+        await PostFormPageAsync(nurse, "/Enfermeria/Valoracion", assessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await EventRevisionAsync(connection, eventId)).ToString(), ["Form.Hallazgos"] = "Crepitantes en base derecha.",
+        });
+        var escalatePage = await nurse.GetStringAsync($"/Enfermeria/Escalar?eventoId={eventId}");
+        await PostFormPageAsync(nurse, "/Enfermeria/Escalar", escalatePage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await EventRevisionAsync(connection, eventId)).ToString(), ["Form.Motivo"] = "Disnea progresiva pese a oxigenoterapia.",
+        });
+        var medicalDetail = await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}");
+        await PostFormPageAsync(doctor, "/Medicina/EmpezarValoracion", medicalDetail, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await EventRevisionAsync(connection, eventId)).ToString() });
+        return (doctor, eventId, connection);
+    }
+
+    [Fact]
+    public async Task Valoracion_GuardarEIndicar_GuardaYSaltaAlFormularioDeIndicaciones_ConLaAppEntera()
+    {
+        // Guía de pruebas 2, prueba 9 (CJ): desde la valoración, «Guardar e indicar a Enfermería» guarda y abre el formulario de indicaciones, sin pasar por el
+        // detalle ni la conducta. «Guardar borrador» sigue yendo al detalle (y es el envío por defecto: va antes en el código).
+        var (doctor, eventId, connection) = await EventInMedicalValuationAsync("Residente Guardar E Indicar Funcional");
+        using var _ = connection;
+        Task<int> VersionsAsync() => connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.valoraciones_medicas_versiones WHERE evento_id = @eventId", new { eventId });
+
+        var medicalAssessmentPage = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Valoracion?eventoId={eventId}"));
+        Assert.Contains("Guardar e indicar a Enfermería", medicalAssessmentPage);
+        Assert.True(medicalAssessmentPage.IndexOf("Guardar borrador", StringComparison.Ordinal) < medicalAssessmentPage.IndexOf("Guardar e indicar a Enfermería", StringComparison.Ordinal),
+            "«Guardar borrador» debe ir antes en el código para ser el envío por defecto.");
+
+        // Sin «indicar» no cambia nada: vuelve al detalle del escalado.
+        var afterDraft = await PostFormPageAsync(doctor, "/Medicina/Valoracion", medicalAssessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await EventRevisionAsync(connection, eventId)).ToString(), ["Form.HallazgosExploracion"] = "Crepitantes bibasales.",
+            ["Form.Valoracion"] = "Posible infección respiratoria.", ["Form.Actuaciones"] = "Se solicita radiografía.",
+        });
+        Assert.Contains("Valoración médica guardada.", afterDraft);
+        Assert.DoesNotContain("Escribe ahora la indicación", afterDraft);
+        Assert.Contains("Pasar a conducta médica", afterDraft);
+        var versionsAfterDraft = await VersionsAsync();
+
+        // Con «indicar» guarda (otra versión, con el contenido nuevo) y salta al formulario de indicaciones, con el aviso de la valoración y sin el «Puedes añadir otra».
+        var indicationPage = await PostFormPageAsync(doctor, "/Medicina/Valoracion", medicalAssessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await EventRevisionAsync(connection, eventId)).ToString(), ["Form.HallazgosExploracion"] = "Crepitantes bibasales y sibilancias.",
+            ["Form.Valoracion"] = "Posible infección respiratoria.", ["Form.Actuaciones"] = "Se solicita radiografía.", ["indicar"] = "true",
+        });
+        Assert.Contains("Valoración médica guardada. Escribe ahora la indicación para Enfermería.", indicationPage);
+        Assert.Contains("Indicación a Enfermería —", indicationPage);
+        Assert.Contains("Registrar y añadir otra", indicationPage);
+        Assert.DoesNotContain("Puedes añadir otra.", indicationPage);
+        Assert.Equal(versionsAfterDraft + 1, await VersionsAsync());
+        Assert.Equal("EN_VALORACION_MEDICA", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId }));
+
+        // El aviso se muestra una sola vez: al recargar el formulario ya no está.
+        Assert.DoesNotContain("Escribe ahora la indicación para Enfermería.", WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Indicacion?eventoId={eventId}")));
+
+        // Desde ahí se registra la indicación como siempre y el evento pasa a «Con indicación pendiente».
+        var afterIndication = await PostFormPageAsync(doctor, "/Medicina/Indicacion", indicationPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await EventRevisionAsync(connection, eventId)).ToString(), ["Form.Texto"] = "Control de SpO2 cada 4 horas.",
+            ["Form.Criterio"] = "Si baja de 90 %, avisar.",
+        });
+        Assert.Contains("Con indicación pendiente", afterIndication);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId }));
+
+        // Con el evento ya con indicaciones la valoración no se abre (no se ofrece el botón) y un formulario viejo no puede guardar ni saltar.
+        Assert.DoesNotContain("Guardar e indicar a Enfermería", WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Valoracion?eventoId={eventId}")));
+        var versionsBeforeStale = await VersionsAsync();
+        var stale = await PostFormPageAsync(doctor, "/Medicina/Valoracion", medicalAssessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await EventRevisionAsync(connection, eventId)).ToString(), ["Form.HallazgosExploracion"] = "Un formulario viejo.",
+            ["Form.Valoracion"] = "Un formulario viejo.", ["indicar"] = "true",
+        });
+        Assert.DoesNotContain("Escribe ahora la indicación para Enfermería.", stale);
+        Assert.Equal(versionsBeforeStale, await VersionsAsync());
+    }
+
+    [Fact]
+    public async Task Valoracion_GuardarEIndicar_ConRevisionAntiguaOSinDatos_MuestraElErrorYNoSalta_ConLaAppEntera()
+    {
+        var (doctor, eventId, connection) = await EventInMedicalValuationAsync("Residente Indicar Con Error Funcional");
+        using var _ = connection;
+        Task<int> VersionsAsync() => connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.valoraciones_medicas_versiones WHERE evento_id = @eventId", new { eventId });
+        var page = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Valoracion?eventoId={eventId}"));
+        var revision = await EventRevisionAsync(connection, eventId);
+
+        // Sin ningún dato: «Revisa los datos…», se vuelve a pintar la valoración, no se salta y no se guarda nada.
+        var empty = await PostFormPageAsync(doctor, "/Medicina/Valoracion", page, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = revision.ToString(), ["indicar"] = "true",
+        });
+        Assert.Contains("Revisa los datos: la valoración necesita al menos un dato", empty);
+        Assert.DoesNotContain("Indicación a Enfermería —", empty);
+        Assert.DoesNotContain("Escribe ahora la indicación para Enfermería.", empty);
+        Assert.Equal(0, await VersionsAsync());
+
+        // Con una revisión antigua (otro profesional cambió el evento): se pide recargar, lo escrito sigue en el formulario y no se salta.
+        var stale = await PostFormPageAsync(doctor, "/Medicina/Valoracion", page, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (revision - 1).ToString(), ["Form.HallazgosExploracion"] = "Hallazgos que no se pierden.", ["indicar"] = "true",
+        });
+        Assert.Contains("Lo que has escrito sigue aquí para que puedas copiarlo.", stale);
+        Assert.Contains("Hallazgos que no se pierden.", stale);
+        Assert.DoesNotContain("Indicación a Enfermería —", stale);
+        Assert.Equal(0, await VersionsAsync());
+
+        // Y el aviso no queda guardado para otra pantalla: la indicación se abre sin él.
+        Assert.DoesNotContain("Escribe ahora la indicación para Enfermería.", WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Indicacion?eventoId={eventId}")));
     }
 
     [Fact]

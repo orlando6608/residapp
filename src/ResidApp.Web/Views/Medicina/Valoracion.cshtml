@@ -64,9 +64,12 @@
 
     <partial name="_ConstantesFormulario" for="Form" view-data="@(new ViewDataDictionary(ViewData) { ["Rangos"] = evento.ReferenceRanges })" />
 
-    <div class="d-grid d-md-flex justify-content-md-end gap-2">
-        <a asp-action="Escalado" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin guardar</a>
+    @* «Guardar borrador» va primero en el código para que sea el envío por defecto (Intro); en pantalla se invierte el orden en ancho. «Guardar e indicar a Enfermería»
+       guarda igual y salta directo al formulario de indicaciones, sin pasar por el detalle ni la conducta (guía de pruebas 2, prueba 9, CJ). *@
+    <div class="d-grid d-md-flex flex-md-row-reverse justify-content-md-start gap-2">
         <button type="submit" class="btn btn-primary btn-lg">Guardar borrador</button>
+        <button type="submit" name="indicar" value="true" class="btn btn-outline-primary btn-lg">Guardar e indicar a Enfermería</button>
+        <a asp-action="Escalado" asp-route-eventoId="@evento.EventId" class="btn btn-outline-secondary btn-lg">Volver sin guardar</a>
     </div>
 </form>
 

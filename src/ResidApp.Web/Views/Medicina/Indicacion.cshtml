@@ -20,6 +20,10 @@
     La verá la Enfermería de @(evento.UnitName ?? "la unidad"), que confirmará la lectura y después registrará si la realizó.
     No hay prioridad automática.
 </p>
+@if (TempData["MensajeValoracion"] is string mensajeValoracion)
+{
+    <div class="alert alert-success" role="status">@mensajeValoracion</div>
+}
 @if (TempData["Mensaje"] is string mensaje)
 {
     <div class="alert alert-success" role="status">@mensaje Puedes añadir otra.</div>
