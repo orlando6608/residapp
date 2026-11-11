@@ -218,6 +218,8 @@ builder.Services.AddSingleton<PendientesCjAccess>();
 builder.Services.AddSingleton<RespuestasCjStore>();
 // El aviso a Orlando de que CJ ha respondido: un correo cuando CJ deja de cambiar cosas (PendientesCj:AvisarA, ajuste de la Web App). Sin él no hace nada.
 builder.Services.AddHostedService<AvisoRespuestasCjWorker>();
+// El aviso a CJ de que ingeniería ha dejado notas nuevas en sus documentos: un correo por despliegue (PendientesCj:AvisarACj, ajuste de la Web App). Sin él no hace nada.
+builder.Services.AddHostedService<AvisoNotasCjWorker>();
 // Guía por perfil (/Guia): las fichas están en Guia/*.json, junto al resto de ficheros de la web (se publican con ella).
 builder.Services.AddSingleton(sp => GuiaCatalogo.Cargar(Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().ContentRootPath, "Guia")));
 

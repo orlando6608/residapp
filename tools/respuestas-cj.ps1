@@ -9,7 +9,13 @@
     - Subir: manda al servidor los .respuestas.json de la carpeta local. No pisa lo que ya haya en el servidor, salvo con -Forzar.
       Solo hace falta para cargar respuestas antiguas que no estén en el servidor.
     Los documentos son los que tienen un <documento>.notas.json en docs\pendientes-cj\.
-    Entra con la clave de los documentos de CJ: si no la pasas en -Clave ni en la variable RESIDAPP_CLAVE_CJ, te la pide (no se guarda).
+    Entra con la clave de los documentos de CJ. La toma, por este orden, de -Clave, de la variable de entorno RESIDAPP_CLAVE_CJ, del fichero
+    ~\.residapp\clave-cj.txt (fuera del repositorio; lo crea Orlando una vez, ver abajo) o, si no hay nada, te la pide por teclado (no se guarda).
+    Con el fichero, Claude puede ejecutar el script en una sesión de análisis sin ver ni pedir la clave.
+
+    Crear el fichero (una vez, en PowerShell; la clave se teclea sin mostrarse):
+        New-Item -ItemType Directory -Force "$HOME\.residapp" | Out-Null
+        Read-Host 'Clave de los documentos de CJ' -MaskInput | Set-Content "$HOME\.residapp\clave-cj.txt" -NoNewline
 
 .EXAMPLE
     .\tools\respuestas-cj.ps1
@@ -31,6 +37,13 @@ $documentos = Get-ChildItem (Join-Path $PSScriptRoot '..\docs\pendientes-cj') -F
     ForEach-Object { $_.Name -replace '\.notas\.json$', '' } | Sort-Object
 
 if (-not $Clave) {
+    $fichero = Join-Path $HOME '.residapp\clave-cj.txt'
+    if (Test-Path $fichero) { $contenido = Get-Content $fichero -Raw; if ($contenido) { $Clave = $contenido.Trim() } }
+}
+if (-not $Clave) {
+    if (-not [Environment]::UserInteractive -or [Console]::IsInputRedirected) {
+        throw 'No hay clave: crea ~\.residapp\clave-cj.txt (ver la ayuda del script) o define RESIDAPP_CLAVE_CJ.'
+    }
     $segura = Read-Host 'Clave de los documentos de CJ' -AsSecureString
     $Clave = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($segura))
 }
