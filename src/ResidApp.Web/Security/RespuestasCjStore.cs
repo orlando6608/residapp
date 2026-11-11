@@ -11,6 +11,10 @@ public sealed record CambioCj(int Respondidas, int Total);
 /// <summary>Los documentos que CJ ha cambiado desde el último aviso y cuándo fue el último cambio.</summary>
 public sealed record AvisoCjPendiente(DateTimeOffset UltimoCambio, Dictionary<string, CambioCj> Documentos);
 
+/// <summary>Lo que ya se avisó a CJ de las notas de ingeniería: la huella (SHA-256) del contenido de las notas de cada documento, nunca su texto ni la dirección de CJ, y, si el
+/// último envío falló, desde cuándo se puede reintentar.</summary>
+public sealed record AvisoNotasEstado(Dictionary<string, string> Huellas, DateTimeOffset? ReintentarDespues);
+
 /// <summary>
 /// Las respuestas que CJ da en los documentos de /pendientes-cj: un fichero JSON por documento en el disco del servidor, que cada guardado sustituye (sin historial;
 /// solo se conserva la versión anterior). No son datos de la aplicación, así que no pasan por la base de datos: es una herramienta de desarrollo para intercambiar con CJ.
@@ -23,6 +27,8 @@ public sealed partial class RespuestasCjStore(IConfiguration configuration)
     public const int MaxBytes = 256 * 1024;
 
     private const string PendingFile = "aviso-pendiente.json";
+
+    private const string NotesStateFile = "avisos-notas.json";
 
     private static readonly UTF8Encoding Utf8 = new(false);
     private static readonly JsonSerializerOptions PendingJson = new(JsonSerializerDefaults.Web);
@@ -165,6 +171,51 @@ public sealed partial class RespuestasCjStore(IConfiguration configuration)
             {
                 await WritePendingAsync(current with { UltimoCambio = now }, ct);
             }
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    /// <summary>Lo avisado a CJ de las notas. Null si no hay estado (primera vez, o carpeta nueva) o está ilegible: entonces se avisa de todas las notas que haya.</summary>
+    public async Task<AvisoNotasEstado?> ReadNotesStateAsync(CancellationToken ct)
+    {
+        await _lock.WaitAsync(ct);
+        try
+        {
+            var path = Path.Combine(Folder, NotesStateFile);
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            try
+            {
+                var state = JsonSerializer.Deserialize<AvisoNotasEstado>(await File.ReadAllTextAsync(path, Utf8, ct), PendingJson);
+                return state?.Huellas is null ? null : state;
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    public async Task WriteNotesStateAsync(AvisoNotasEstado state, CancellationToken ct)
+    {
+        await _lock.WaitAsync(ct);
+        try
+        {
+            Directory.CreateDirectory(Folder);
+            var path = Path.Combine(Folder, NotesStateFile);
+            var temp = path + ".tmp"; // aparte y encima, para no dejar nunca un JSON a medias
+            await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(state, PendingJson), Utf8, ct);
+            File.Move(temp, path, overwrite: true);
         }
         finally
         {

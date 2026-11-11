@@ -38,7 +38,7 @@ residentes de las guías no se subió su `data-version`: los pasos y lo que se c
 3. **No hay que guardar ni enviar nada.** Unos segundos después de cada cambio, la página guarda tus respuestas en el servidor y lo dice abajo («Guardado en el servidor» con la hora). Si no hay conexión, avisa y lo reintenta; lo marcado se conserva también en ese navegador.
 4. Para seguir en otro ordenador, abre el documento: recupera lo último que se guardó.
 
-Ingeniería recibe un aviso por correo cuando CJ deja de responder un rato (ver «Aviso a Orlando»). Debajo de una respuesta puede aparecer una **nota de ingeniería**; si no hay, es que no hace falta más comentario.
+Ingeniería recibe un aviso por correo cuando CJ deja de responder un rato (ver «Aviso a Orlando»). Debajo de una respuesta puede aparecer una **nota de ingeniería**; si no hay, es que no hace falta más comentario. Cuando se despliegan notas nuevas, CJ recibe un correo (ver «Aviso a CJ»).
 
 Los `.html` y los `.notas.json` de esta carpeta se publican con la aplicación en `/pendientes-cj/` (`ResidApp.Web.csproj` los incluye desde aquí, sin copiarlos), así que llegan a la web con el siguiente despliegue.
 
@@ -53,13 +53,22 @@ Los `.html` y los `.notas.json` de esta carpeta se publican con la aplicación e
 
 Cuando CJ guarda algo, la app lo anota; cuando lleva `PendientesCj:SilencioAvisoMinutos` (10 por defecto) sin cambiar nada, manda **un solo correo** con los documentos cambiados y «N de M completadas» (nunca las respuestas). Usa el correo de la aplicación (ACS, ADR 0012) y la tarea `AvisoRespuestasCjWorker` (la Web App debe estar «Siempre activo»). Se configura en la Web App (no en el repositorio, que es público): `PendientesCj__AvisarA` (la dirección de Orlando; sin ella no avisa), y `Correo__Activo`, `Correo__CadenaConexion`, `Correo__UrlBase` y `Correo__DireccionesPermitidas__0` (debe incluir esa dirección; es una lista) como el resto de avisos. Un fallo del envío se registra en el log y se reintenta tras otro silencio.
 
+## Aviso a CJ
+
+Cuando se despliega una nota nueva o cambiada (`<documento>.notas.json`), la app manda **un solo correo a CJ** (`AvisoNotasCjWorker`, `AvisoNotasCj`) con el título y el enlace de cada documento afectado; nunca el texto de las notas ni sus respuestas. Compara la huella del texto de cada nota con la última avisada (`avisos-notas.json`, en la carpeta de las respuestas: solo huellas, ni la dirección ni el texto); retirar una nota no avisa, aunque el documento conserve otras, y un fichero de notas que no se puede leer en ese momento no hace olvidar lo ya avisado. Si el envío falla, reintenta pasados 10 minutos.
+
+- Se configura en la Web App con `PendientesCj__AvisarACj` (la dirección de CJ; sin ella no avisa) y esa dirección debe estar también en `Correo__DireccionesPermitidas__N`. **No pongas su dirección sin que CJ haya aceptado por escrito** (un mensaje basta), y retírala cuando acabe su colaboración. Mejor una dirección personal o de proyecto que la del hospital (lectura del DPO: `docs/privacidad/aviso-cj-notas-lectura-dpo.md`).
+- El asunto y el cuerpo no nombran a CJ ni a Orlando (se ven en pantallas de bloqueo); solo el pie dice a quién decírselo para dejar de recibirlo (Orlando). El correo no pide la clave: dice que ResidApp nunca la pide por correo.
+- Si el paquete no lleva los documentos de CJ (como en producción, ADR 0014), el aviso no hace nada. Ojo: hoy `Program.cs` crea un `PhysicalFileProvider` sobre esa carpeta, que falla si no existe; al excluir `/pendientes-cj` de producción hay que protegerlo (parte del incremento del ADR 0014).
+- Con el estado vacío (carpeta nueva) avisa de todas las notas que haya: un correo de más, nunca uno de menos.
+
 ## Notas de ingeniería (retroalimentación)
 
-Cada documento tiene un `<documento>.notas.json` (`{"documento": "<documento>", "notas": {"<data-q>": "texto"}}`) que se despliega con la aplicación. La página pinta cada nota, de solo lectura y como texto plano, bajo su pregunta; sin nota, no se muestra nada. Se escriben en la sesión de análisis de las respuestas (Claude propone, Orlando revisa). Las notas **son públicas** (van en el repositorio): no citan datos personales ni copian los comentarios de CJ; analizan y preguntan. Un documento sin fichero de notas da un 404 en la consola del navegador: crea siempre el suyo (con `"notas": {}`). Tener `.html` y `.notas.json` en la raíz es lo que hace válido a un documento para la API de respuestas (los índices y las páginas de flujo no lo son).
+Cada documento tiene un `<documento>.notas.json` (`{"documento": "<documento>", "notas": {"<data-q>": "texto"}}`) que se despliega con la aplicación. La página pinta cada nota, de solo lectura y como texto plano, bajo su pregunta; sin nota, no se muestra nada. Se escriben en la sesión de análisis de las respuestas (Claude propone, Orlando revisa). Las notas **son públicas** (van en el repositorio): no citan datos personales ni copian los comentarios de CJ; analizan y preguntan. Un documento sin fichero de notas da un 404 en la consola del navegador: crea siempre el suyo (con `"notas": {}`). Al desplegar notas nuevas, CJ recibe el aviso por correo (ver «Aviso a CJ»). Tener `.html` y `.notas.json` en la raíz es lo que hace válido a un documento para la API de respuestas (los índices y las páginas de flujo no lo son).
 
 ## Cómo cerrar lo implementado (ingeniería)
 
-1. Baja las respuestas (`tools\respuestas-cj.ps1`), léelas y, donde haga falta, escribe la nota en el `.notas.json`.
+1. Baja las respuestas (`tools\respuestas-cj.ps1`; la ejecuta Claude cuando Orlando le avisa de que ha recibido el correo, con la clave del fichero local `~\.residapp\clave-cj.txt`, que el script lee y Claude nunca ve), léelas y, donde haga falta, escribe la nota en el `.notas.json`.
 2. Cuando lo que pedía una pregunta ya está implementado: **quita la pregunta** del HTML y su nota. Cambia lo que CJ contesta, así que sube el `data-version` del documento (**con el visto bueno de Orlando**). Las respuestas viejas siguen en el servidor.
 3. Si el documento se queda sin preguntas: quita el `.html` y su `.notas.json`, su entrada de `preguntas.html` o `pruebas.html` y de la tabla de abajo. Si `preguntas.html` se queda sin documentos, la ficha «Preguntas» de `index.html` lleva la clase `sin-pendientes` y el texto «Nada pendiente por ahora»; mientras haya documentos de Preguntas, la ficha es la normal.
 4. Actualiza las rutas que lo citan en `docs/` (`pendientes-*.md`, `docs/prompts-ia/continuar-construccion.md`).
