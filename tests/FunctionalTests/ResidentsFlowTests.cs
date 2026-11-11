@@ -584,6 +584,87 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Valoracion_GuardarEIndicar_GuardaYSaltaAlFormularioDeIndicaciones_ConLaAppEntera()
+    {
+        // Guía de pruebas 2, prueba 9 (CJ): desde la valoración, «Guardar e indicar a Enfermería» guarda y abre el formulario de indicaciones, sin pasar por el
+        // detalle ni la conducta. «Guardar borrador» sigue yendo al detalle (y es el envío por defecto: va antes en el código).
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Guardar E Indicar Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        var registerPage = await nurse.GetStringAsync($"/Enfermeria/RegistrarEvento?residenteId={residentId}");
+        var detailPage = await (await nurse.PostAsync("/Enfermeria/RegistrarEvento", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(registerPage, "__RequestVerificationToken"),
+            ["ResidenteId"] = residentId,
+            ["OperacionId"] = ExtractValue(registerPage, "OperacionId"),
+            ["Observacion"] = "Disnea progresiva (prueba funcional).",
+            ["Clasificacion"] = "Ordinario",
+        }))).Content.ReadAsStringAsync();
+        var eventId = await connection.ExecuteScalarAsync<Guid>(
+            "SELECT id FROM dbo.eventos_asistenciales WHERE residente_id = @residentId", new { residentId });
+        Task<int> RevisionAsync() => connection.ExecuteScalarAsync<int>("SELECT revision FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId });
+        Task<string> PostAsync(HttpClient client, string url, string page, Dictionary<string, string> fields)
+        {
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            return client.PostAsync(url, new FormUrlEncodedContent(fields)).ContinueWith(async r => WebUtility.HtmlDecode(await r.Result.Content.ReadAsStringAsync())).Unwrap();
+        }
+
+        await PostAsync(nurse, "/Enfermeria/EmpezarValoracion", detailPage, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+        var assessmentPage = await nurse.GetStringAsync($"/Enfermeria/Valoracion?eventoId={eventId}");
+        await PostAsync(nurse, "/Enfermeria/Valoracion", assessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Hallazgos"] = "Crepitantes en base derecha.",
+        });
+        var escalatePage = await nurse.GetStringAsync($"/Enfermeria/Escalar?eventoId={eventId}");
+        await PostAsync(nurse, "/Enfermeria/Escalar", escalatePage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Motivo"] = "Disnea progresiva pese a oxigenoterapia.",
+        });
+        var medicalDetail = await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}");
+        await PostAsync(doctor, "/Medicina/EmpezarValoracion", medicalDetail, new() { ["eventoId"] = eventId.ToString(), ["revision"] = (await RevisionAsync()).ToString() });
+
+        var medicalAssessmentPage = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Valoracion?eventoId={eventId}"));
+        Assert.Contains("Guardar e indicar a Enfermería", medicalAssessmentPage);
+        Assert.True(medicalAssessmentPage.IndexOf("Guardar borrador", StringComparison.Ordinal) < medicalAssessmentPage.IndexOf("Guardar e indicar a Enfermería", StringComparison.Ordinal),
+            "«Guardar borrador» debe ir antes en el código para ser el envío por defecto.");
+
+        // Sin «indicar» no cambia nada: vuelve al detalle del escalado.
+        var afterDraft = await PostAsync(doctor, "/Medicina/Valoracion", medicalAssessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.HallazgosExploracion"] = "Crepitantes bibasales.",
+            ["Form.Valoracion"] = "Posible infección respiratoria.", ["Form.Actuaciones"] = "Se solicita radiografía.",
+        });
+        Assert.Contains("Valoración médica guardada.", afterDraft);
+        Assert.DoesNotContain("Escribe ahora la indicación", afterDraft);
+        Assert.Contains("Pasar a conducta médica", afterDraft);
+
+        // Con «indicar» guarda y salta al formulario de indicaciones, con el aviso de la valoración (y sin el «Puedes añadir otra» de las indicaciones).
+        var indicationPage = await PostAsync(doctor, "/Medicina/Valoracion", medicalAssessmentPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.HallazgosExploracion"] = "Crepitantes bibasales y sibilancias.",
+            ["Form.Valoracion"] = "Posible infección respiratoria.", ["Form.Actuaciones"] = "Se solicita radiografía.", ["indicar"] = "true",
+        });
+        Assert.Contains("Valoración médica guardada. Escribe ahora la indicación para Enfermería.", indicationPage);
+        Assert.Contains("Indicación a Enfermería —", indicationPage);
+        Assert.Contains("Registrar y añadir otra", indicationPage);
+        Assert.DoesNotContain("Puedes añadir otra.", indicationPage);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId }));
+
+        // Desde ahí se registra la indicación como siempre y el evento pasa a «Con indicación pendiente».
+        var afterIndication = await PostAsync(doctor, "/Medicina/Indicacion", indicationPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Texto"] = "Control de SpO2 cada 4 horas.",
+            ["Form.Criterio"] = "Si baja de 90 %, avisar.",
+        });
+        Assert.Contains("Con indicación pendiente", afterIndication);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId }));
+    }
+
+    [Fact]
     public async Task Direccion_CierraUnEpisodioConIndicacionesSinCumplir_ConMotivo_ConLaAppEntera()
     {
         // CJ, tercera 5.1 (script 0075): con una indicación sin cumplir nadie más cierra el episodio; Dirección Clínica sí, con motivo y confirmación.

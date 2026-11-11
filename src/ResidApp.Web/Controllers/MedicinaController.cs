@@ -218,10 +218,11 @@ public sealed class MedicinaController(
     }
 
     /// <summary>MED-05 "guardar borrador". Ante un conflicto no se sobrescribe el trabajo ajeno: se vuelve a
-    /// mostrar lo escrito, con la revisión antigua, y se pide recargar.</summary>
+    /// mostrar lo escrito, con la revisión antigua, y se pide recargar. Con «indicar» (el botón «Guardar e indicar a Enfermería») guarda igual y salta al
+    /// formulario de indicaciones, sin pasar por el detalle ni la conducta.</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Valoracion([Bind(Prefix = "Form")] ValoracionMedicaFormModel form, CancellationToken ct)
+    public async Task<IActionResult> Valoracion([Bind(Prefix = "Form")] ValoracionMedicaFormModel form, bool indicar, CancellationToken ct)
     {
         var detail = await FindEventAsync(form.EventoId, ct);
         if (detail is null)
@@ -242,6 +243,12 @@ public sealed class MedicinaController(
             form.OtraConstanteNombre, form.OtraConstanteValor, form.OtraConstanteUnidad), ct);
         if (result.Ok)
         {
+            if (indicar)
+            {
+                TempData["MensajeValoracion"] = "Valoración médica guardada. Escribe ahora la indicación para Enfermería.";
+                return RedirectToAction(nameof(Indicacion), new { eventoId = form.EventoId });
+            }
+
             TempData["Mensaje"] = "Valoración médica guardada.";
             return RedirectToAction(nameof(Escalado), new { eventoId = form.EventoId });
         }

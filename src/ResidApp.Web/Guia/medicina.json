@@ -29,7 +29,7 @@
     "Dar de alta residentes: es un permiso aparte, que Medicina no tiene."
   ],
   "revisadoPara": "0.3.0",
-  "revisado": "2026-11-08",
+  "revisado": "2026-11-11",
   "fichas": [
     {
       "codigo": "MED-01",
@@ -125,19 +125,21 @@
         { "texto": "En el detalle lee el «Motivo del escalado» y la información reunida (solo lectura).", "campos": ["Motivo del escalado"] },
         { "texto": "Pulsa **Iniciar valoración médica**: queda registrado quién y a qué hora, y se abre el formulario de la valoración. Si sales sin guardar, al volver al detalle verás **Completar valoración médica** (o **Continuar valoración médica** si ya hay un borrador).", "botones": ["Iniciar valoración médica", "Completar valoración médica", "Continuar valoración médica"] },
         { "texto": "Escribe «Hallazgos y exploración», «Valoración» y «Actuaciones», y las constantes que quieras: bajo cada campo ves el rango de referencia del centro, si Dirección lo ha fijado, solo como orientación.", "campos": ["Hallazgos y exploración", "Valoración", "Actuaciones"] },
-        { "texto": "Pulsa **Guardar borrador**. Cada guardado queda como una versión que no se puede modificar.", "botones": ["Guardar borrador"] }
+        { "texto": "Pulsa **Guardar borrador**. Cada guardado queda como una versión que no se puede modificar.", "botones": ["Guardar borrador"] },
+        { "texto": "Si ya sabes qué quieres indicar a Enfermería, pulsa en su lugar **Guardar e indicar a Enfermería**: guarda igual y abre el formulario de la indicación, sin pasar por el detalle ni por la conducta médica (ver MED-05). Solo está mientras el evento sigue «En valoración médica», es decir, antes de registrar la primera indicación.", "botones": ["Guardar e indicar a Enfermería"] }
       ],
       "despues": [
-        { "para": "Medicina", "texto": "Verás «Valoración médica guardada.». El evento sigue «En valoración médica». Con la valoración guardada, **Pasar a conducta médica** te deja elegir cómo sigue (ver MED-05)." },
+        { "para": "Medicina", "texto": "Verás «Valoración médica guardada.». El evento sigue «En valoración médica». Con la valoración guardada, **Pasar a conducta médica** te deja elegir cómo sigue (ver MED-05). Con **Guardar e indicar a Enfermería** ves, en cambio, el formulario de la indicación con el aviso «Valoración médica guardada. Escribe ahora la indicación para Enfermería.»; si sales sin registrar la indicación, la valoración queda guardada y el evento sigue «En valoración médica»." },
         { "para": "Enfermería", "texto": "Ve tu valoración en solo lectura en el detalle del evento, con sus correcciones y rectificaciones." }
       ],
       "dudas": [
         { "p": "«Este evento ha cambiado desde que lo abriste…»", "r": "Otro profesional (u otra pestaña tuya) lo cambió. Recarga para ver la versión actual; lo que escribiste sigue en el formulario." },
         { "p": "«Revisa los datos: la valoración necesita al menos un dato, la PA con ambas cifras…»", "r": "Rellena al menos un campo; la presión arterial lleva las dos cifras; el flujo de O₂ solo con oxigenoterapia; y otra constante, con nombre y valor." }
       ],
-      "rutas": ["Medicina/Escalados", "Medicina/Escalado", "Medicina/EmpezarValoracion", "Medicina/Valoracion"],
+      "rutas": ["Medicina/Escalados", "Medicina/Escalado", "Medicina/EmpezarValoracion", "Medicina/Valoracion", "Medicina/Indicacion"],
       "mensajes": [
         "Valoración médica guardada.",
+        "Valoración médica guardada. Escribe ahora la indicación para Enfermería.",
         "Este evento ha cambiado desde que lo abriste",
         "Revisa los datos: la valoración necesita al menos un dato, la PA con ambas cifras, el flujo de O₂ solo con oxigenoterapia y la otra constante con nombre y valor."
       ],
@@ -154,7 +156,7 @@
         "Saber que la app no propone ninguna salida ni asigna prioridades: eliges tú."
       ],
       "pasos": [
-        { "texto": "En el detalle del evento, pulsa **Pasar a conducta médica**.", "botones": ["Pasar a conducta médica"] },
+        { "texto": "En el detalle del evento, pulsa **Pasar a conducta médica**. (Atajo: si todavía estás en la pantalla de la valoración y el evento sigue «En valoración médica», **Guardar e indicar a Enfermería** la guarda y abre directamente el formulario de la indicación: sigue en el paso 3.)", "botones": ["Pasar a conducta médica", "Guardar e indicar a Enfermería"] },
         { "texto": "Elige **Registrar indicaciones a Enfermería** (si ya hay alguna, será «Registrar otra indicación»).", "botones": ["Registrar indicaciones a Enfermería", "Registrar otra indicación"] },
         { "texto": "Escribe la «Indicación», una «Fecha prevista», un «Criterio» o ambos, y, si hace falta, «Información adicional».", "campos": ["Indicación", "Fecha prevista", "Criterio", "Información adicional"] },
         { "texto": "Pulsa **Registrar indicación** para guardarla e ir al detalle del evento, o **Registrar y añadir otra** para guardarla y seguir con otra indicación en un formulario en blanco.", "botones": ["Registrar indicación", "Registrar y añadir otra"] },
