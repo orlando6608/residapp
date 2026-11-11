@@ -45,6 +45,18 @@ public class ProcessMilestoneRulesTests
         Assert.Equal(expected, status);
     }
 
+    [Theory]
+    [InlineData(89, MilestoneStatus.Pendiente)]
+    [InlineData(90, MilestoneStatus.APuntoDeVencer)]   // guía de pruebas 2, prueba 13: con 2 minutos el aviso sale desde el minuto y medio
+    [InlineData(120, MilestoneStatus.APuntoDeVencer)]  // en el límite aún no ha vencido
+    [InlineData(121, MilestoneStatus.FueraDePlazo)]
+    public void Evaluate_ConUnPlazoDeDosMinutos_AvisaDesdeLosNoventaSegundos(int seconds, MilestoneStatus expected)
+    {
+        var term = ProcessMilestoneRules.ValidateMinutes(2, null).Normal!.Value;
+
+        Assert.Equal(expected, ProcessMilestoneRules.Evaluate(Start, null, term, Start.AddSeconds(seconds)));
+    }
+
     [Fact]
     public void IsOutOfTerm_SoloLosHechosTardeYLosSinHacerVencidos()
     {
