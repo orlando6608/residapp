@@ -16,7 +16,7 @@ public sealed class NotasAvisoMemoria
 }
 
 /// <summary>
-/// El aviso a CJ de que ingeniería ha dejado notas nuevas (o cambiadas) en sus documentos. Las notas viajan en el repositorio y llegan con un despliegue
+/// El aviso a CJ de que hay un documento nuevo con preguntas (un <c>.html</c> de la raíz con <c>data-doc</c>) o de que ingeniería ha dejado notas nuevas (o cambiadas) en sus documentos. Las notas viajan en el repositorio y llegan con un despliegue
 /// (<c>&lt;documento&gt;.notas.json</c>): esta tarea compara la huella de cada nota (SHA-256 de su texto) con la última que avisó (<see cref="AvisoNotasEstado"/>, en la carpeta de las
 /// respuestas) y manda UN correo con los documentos que tienen alguna nota nueva o cambiada. El correo lleva el título de cada documento y su enlace; nunca el texto de las notas
 /// ni sus respuestas. Retirar una nota no avisa a nadie, aunque el documento conserve otras. Un fichero de notas que no se puede leer en este momento (a medio copiar, roto) no hace
@@ -52,21 +52,36 @@ public sealed partial class AvisoNotasCj(
             return false;
         }
 
-        var told = state?.Huellas ?? [];
+        var told = new Dictionary<string, string>(state?.Huellas ?? []);
         var (current, unreadable) = CurrentFingerprints(documentsFolder);
+
+        // Los documentos de CJ con preguntas (los que llevan data-doc) se anotan con una marca «documento/#documento»: uno nuevo avisa como documento nuevo.
+        // Un estado anterior a este aviso no tiene marcas: los documentos que ya había se dan por conocidos, sin correo (si no, avisaría de todos a la vez).
+        var documents = CurrentDocuments(documentsFolder, unreadable);
+        var learn = documents.Count > 0 && !told.Keys.Any(IsDocumentKey);
+        foreach (var document in documents)
+        {
+            current[document + "/" + DocumentMarker] = "1";
+            if (learn)
+            {
+                told[document + "/" + DocumentMarker] = "1";
+            }
+        }
 
         // Lo ya avisado, menos las notas retiradas de documentos que se leen bien (esas se olvidan); de un documento que no se puede leer ahora se conserva todo.
         var kept = told.Where(t => unreadable.Contains(DocumentOf(t.Key)) || current.ContainsKey(t.Key)).ToDictionary(t => t.Key, t => t.Value);
-        var changed = current.Where(c => !kept.TryGetValue(c.Key, out var fingerprint) || fingerprint != c.Value).Select(c => DocumentOf(c.Key)).Distinct().Order(StringComparer.Ordinal).ToList();
+        var added = current.Where(c => !kept.TryGetValue(c.Key, out var fingerprint) || fingerprint != c.Value).Select(c => c.Key).ToList();
+        var newDocuments = added.Where(IsDocumentKey).Select(DocumentOf).Distinct().Order(StringComparer.Ordinal).ToList();
+        var changed = added.Where(key => !IsDocumentKey(key)).Select(DocumentOf).Distinct().Except(newDocuments).Order(StringComparer.Ordinal).ToList();
         var next = new Dictionary<string, string>(kept);
         foreach (var (key, value) in current)
         {
             next[key] = value;
         }
 
-        if (changed.Count == 0)
+        if (changed.Count == 0 && newDocuments.Count == 0)
         {
-            if (state is not null && (state.ReintentarDespues is not null || next.Count != told.Count))
+            if ((state is not null || learn) && (state?.ReintentarDespues is not null || next.Count != told.Count || learn))
             {
                 await TryWriteAsync(new AvisoNotasEstado(next, null), now, ct); // una nota retirada solo se olvida
             }
@@ -76,7 +91,8 @@ public sealed partial class AvisoNotasCj(
 
         try
         {
-            var result = await sender.SendAsync(Compose(changed.Select(name => (Title(documentsFolder, name), name)).ToList(), settings.BaseUrl, address), ct);
+            var result = await sender.SendAsync(Compose(changed.Select(name => (Title(documentsFolder, name), name)).ToList(),
+                newDocuments.Select(name => (Title(documentsFolder, name), name)).ToList(), settings.BaseUrl, address), ct);
             if (result.Accepted)
             {
                 // El correo ya salió: si el estado no se puede anotar, no se reenvía hasta pasados los 10 minutos.
@@ -108,7 +124,40 @@ public sealed partial class AvisoNotasCj(
         }
     }
 
+    private const string DocumentMarker = "#documento";
+
     private static string DocumentOf(string key) => key[..key.IndexOf('/')];
+
+    private static bool IsDocumentKey(string key) => key.EndsWith("/" + DocumentMarker, StringComparison.Ordinal);
+
+    /// <summary>Los documentos de CJ con preguntas: los <c>.html</c> de la raíz que llevan <c>data-doc</c> (no el índice, las secciones ni las páginas de flujo). Uno que no se puede leer
+    /// ahora se añade a <paramref name="unreadable"/>, para no olvidarlo ni darlo por nuevo.</summary>
+    public static List<string> CurrentDocuments(string folder, HashSet<string> unreadable)
+    {
+        var result = new List<string>();
+        if (!Directory.Exists(folder))
+        {
+            return result;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(folder, "*.html", SearchOption.TopDirectoryOnly))
+        {
+            var name = Path.GetFileNameWithoutExtension(file);
+            try
+            {
+                if (File.ReadAllText(file, Encoding.UTF8).Contains("data-doc=\"", StringComparison.Ordinal))
+                {
+                    result.Add(name);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                unreadable.Add(name);
+            }
+        }
+
+        return result;
+    }
 
     /// <summary>La huella de cada nota con texto (clave «documento/nota»; el texto se normaliza y se recorta, así que el formato del fichero no cuenta) y los documentos que no se han
     /// podido leer ahora. Un documento sin <c>.html</c> publicado no es un documento de CJ y no cuenta.</summary>
@@ -169,28 +218,45 @@ public sealed partial class AvisoNotasCj(
         }
     }
 
-    public static EmailMessage Compose(IReadOnlyList<(string Title, string Name)> documents, string baseUrl, string to)
+    public static EmailMessage Compose(IReadOnlyList<(string Title, string Name)> notes, IReadOnlyList<(string Title, string Name)> newDocuments, string baseUrl, string to)
     {
         var root = baseUrl.TrimEnd('/');
-        var subject = documents.Count == 1
-            ? "Ingeniería ha dejado notas en 1 documento de ResidApp"
-            : $"Ingeniería ha dejado notas en {documents.Count} documentos de ResidApp";
-        const string intro = "Ingeniería ha dejado notas debajo de tus respuestas en:";
-        const string outro = "Léelas y, si te pedimos repetir alguna prueba, vuelve a marcar tu respuesta.";
+        var subject = (newDocuments.Count, notes.Count) switch
+        {
+            (0, 1) => "Ingeniería ha dejado notas en 1 documento de ResidApp",
+            (0, _) => $"Ingeniería ha dejado notas en {notes.Count} documentos de ResidApp",
+            (1, 0) => "Hay 1 documento nuevo con preguntas para ti en ResidApp",
+            (_, 0) => $"Hay {newDocuments.Count} documentos nuevos con preguntas para ti en ResidApp",
+            _ => "Novedades en tus documentos de ResidApp",
+        };
         // El pie es lo único que nombra a alguien (a quién decírselo para dejar de recibirlo); el asunto y el cuerpo no, porque se ven en pantallas de bloqueo.
         const string footer = "Aviso del entorno de pruebas de ResidApp. No contiene datos de pacientes, ni el texto de las notas, ni tus respuestas. ResidApp nunca te pedirá tu clave por correo: si no esperabas este aviso, no entres. Para dejar de recibirlo, díselo a Orlando (este buzón no recibe respuestas).";
 
-        var text = new StringBuilder(intro + "\n\n");
-        var paragraphs = new List<(string Html, bool Highlighted)> { (WebUtility.HtmlEncode(intro), false) };
-        foreach (var (title, name) in documents)
+        var text = new StringBuilder();
+        var paragraphs = new List<(string Html, bool Highlighted)>();
+        void Section(string intro, IReadOnlyList<(string Title, string Name)> documents, string outro)
         {
-            var url = $"{root}/pendientes-cj/{name}.html";
-            text.Append($"- {title}\n  {url}\n");
-            paragraphs.Add(($"<strong>{WebUtility.HtmlEncode(title)}</strong><br><a href=\"{WebUtility.HtmlEncode(url)}\">{WebUtility.HtmlEncode(url)}</a>", true));
+            if (documents.Count == 0)
+            {
+                return;
+            }
+
+            text.Append(intro + "\n\n");
+            paragraphs.Add((WebUtility.HtmlEncode(intro), false));
+            foreach (var (title, name) in documents)
+            {
+                var url = $"{root}/pendientes-cj/{name}.html";
+                text.Append($"- {title}\n  {url}\n");
+                paragraphs.Add(($"<strong>{WebUtility.HtmlEncode(title)}</strong><br><a href=\"{WebUtility.HtmlEncode(url)}\">{WebUtility.HtmlEncode(url)}</a>", true));
+            }
+
+            text.Append("\n" + outro + "\n\n");
+            paragraphs.Add((WebUtility.HtmlEncode(outro), false));
         }
 
-        paragraphs.Add((WebUtility.HtmlEncode(outro), false));
-        text.Append("\n" + outro + "\n\n—\n" + footer + "\n");
+        Section("Ingeniería ha publicado documentos nuevos con preguntas para ti:", newDocuments, "Ábrelos y contesta cuando puedas: lo que marques se guarda solo.");
+        Section("Ingeniería ha dejado notas debajo de tus respuestas en:", notes, "Léelas y, si te pedimos repetir alguna prueba, vuelve a marcar tu respuesta.");
+        text.Append("—\n" + footer + "\n");
         return new EmailMessage(to, subject, text.ToString(), EmailLayout.Render("es", subject, paragraphs, WebUtility.HtmlEncode(footer)), [EmailLayout.Icon]);
     }
 }

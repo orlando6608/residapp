@@ -84,6 +84,130 @@ public sealed class AvisoNotasCjTests : IDisposable
     private AvisoNotasCj Notice(string? address = Address, bool active = true, bool anyRecipient = false, string[]? allowed = null, string? folder = null) =>
         new(_store, folder ?? _docs, _sender, new EmailSettings(active, "https://dev.example.test/", "es", anyRecipient, allowed ?? [Address]), address, _memory, _warnings.Add);
 
+    private void Questionnaire(string name, string title) =>
+        File.WriteAllText(Path.Combine(_docs, name + ".html"), $"<!doctype html><html><head><title>{title}</title></head><body data-doc=\"{name}\" data-version=\"2026-11-12\"></body></html>");
+
+    [Fact]
+    public async Task UnDocumentoNuevoConPreguntas_AvisaUnaVez_ConElTituloYElEnlace_YElPrimerArranqueNoAvisaDeLosQueYaHabia()
+    {
+        Questionnaire("pruebas-2-medicina-indicaciones", "Guía 2 de pruebas · Medicina e indicaciones");
+        Assert.False(await Notice().ProcessAsync(T0, CancellationToken.None)); // los que ya había se dan por conocidos
+        Assert.False(await Notice().ProcessAsync(T0.AddMinutes(1), CancellationToken.None));
+
+        Questionnaire("medicina-alergias-y-plazos-cj", "Medicina, alergias y plazos");
+        Assert.True(await Notice().ProcessAsync(T0.AddMinutes(2), CancellationToken.None));
+
+        var mail = Assert.Single(_sender.Sent);
+        Assert.Equal("Hay 1 documento nuevo con preguntas para ti en ResidApp", mail.Subject);
+        Assert.Contains("Medicina, alergias y plazos", mail.PlainText);
+        Assert.Contains("https://dev.example.test/pendientes-cj/medicina-alergias-y-plazos-cj.html", mail.PlainText);
+        Assert.DoesNotContain("Guía 2", mail.PlainText); // el que ya existía no se menciona
+        Assert.DoesNotContain("notas", mail.Subject, StringComparison.OrdinalIgnoreCase);
+        var body = System.Text.RegularExpressions.Regex.Replace(mail.Subject + "\n" + mail.PlainText.Split("—\n")[0], "https?://\\S+", "");
+        Assert.DoesNotContain("cj", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("orlando", body, StringComparison.OrdinalIgnoreCase);
+
+        Assert.False(await Notice().ProcessAsync(T0.AddMinutes(3), CancellationToken.None)); // no se avisa dos veces
+        Assert.False(await Notice().ProcessAsync(T0.AddDays(1), CancellationToken.None));
+        Assert.Single(_sender.Sent);
+    }
+
+    [Fact]
+    public async Task UnEstadoAnteriorSinMarcasDeDocumento_NoAvisaDeLosDocumentosQueYaHabia_PeroSiDelSiguiente()
+    {
+        // El estado de antes de este aviso solo tenía huellas de notas.
+        Notes("pruebas-3-basal-barthel", ("1", "a"));
+        await Notice().ProcessAsync(T0, CancellationToken.None);
+        Assert.Single(_sender.Sent);
+
+        Questionnaire("pruebas-2-medicina-indicaciones", "Guía 2 de pruebas · Medicina e indicaciones");
+        Questionnaire("pruebas-3-basal-barthel", "Guía 3 de pruebas · Basal &amp; Barthel");
+        Assert.False(await Notice().ProcessAsync(T0.AddHours(1), CancellationToken.None));
+        Assert.False(await Notice().ProcessAsync(T0.AddHours(2), CancellationToken.None));
+
+        Questionnaire("iconos-pantallas-cj", "Iconos");
+        Assert.True(await Notice().ProcessAsync(T0.AddHours(3), CancellationToken.None));
+        Assert.Equal(2, _sender.Sent.Count);
+    }
+
+    [Fact]
+    public async Task UnDocumentoNuevoConNotas_SaleUnSoloCorreo_Y_ElDocumentoSoloEnLaListaDeNuevos()
+    {
+        Questionnaire("pruebas-2-medicina-indicaciones", "Guía 2 de pruebas · Medicina e indicaciones");
+        await Notice().ProcessAsync(T0, CancellationToken.None);
+
+        Questionnaire("medicina-alergias-y-plazos-cj", "Medicina, alergias y plazos");
+        Notes("medicina-alergias-y-plazos-cj", ("1.1", "a"));
+        Notes("pruebas-2-medicina-indicaciones", ("5", "b"));
+        Assert.True(await Notice().ProcessAsync(T0.AddMinutes(5), CancellationToken.None));
+
+        var mail = Assert.Single(_sender.Sent);
+        Assert.Equal("Novedades en tus documentos de ResidApp", mail.Subject);
+        Assert.Contains("documentos nuevos con preguntas", mail.PlainText);
+        Assert.Contains("notas debajo de tus respuestas", mail.PlainText);
+        Assert.Equal(1, mail.PlainText.Split("medicina-alergias-y-plazos-cj.html").Length - 1);
+        Assert.Equal(1, mail.PlainText.Split("pruebas-2-medicina-indicaciones.html").Length - 1);
+    }
+
+    [Fact]
+    public async Task VariosDocumentosNuevos_SonUnSoloCorreo()
+    {
+        Questionnaire("pruebas-2-medicina-indicaciones", "Guía 2 de pruebas · Medicina e indicaciones");
+        await Notice().ProcessAsync(T0, CancellationToken.None);
+
+        Questionnaire("a-nuevo-cj", "Nuevo A");
+        Questionnaire("b-nuevo-cj", "Nuevo B");
+        Assert.True(await Notice().ProcessAsync(T0.AddMinutes(1), CancellationToken.None));
+
+        Assert.Equal("Hay 2 documentos nuevos con preguntas para ti en ResidApp", Assert.Single(_sender.Sent).Subject);
+    }
+
+    [Fact]
+    public async Task LasPaginasSinPreguntas_NoCuentanComoDocumentoNuevo()
+    {
+        Questionnaire("pruebas-2-medicina-indicaciones", "Guía 2 de pruebas · Medicina e indicaciones");
+        await Notice().ProcessAsync(T0, CancellationToken.None);
+
+        Document("preguntas", "Preguntas");                          // índice de una sección
+        Document("pruebas-2-medicina-indicaciones-flujo", "Flujo");  // página de flujo, sin data-doc
+        Directory.CreateDirectory(Path.Combine(_docs, "orlando"));
+        File.WriteAllText(Path.Combine(_docs, "orlando", "decision.html"), "<body data-doc=\"decision\"></body>"); // subcarpeta: no es de CJ
+
+        Assert.False(await Notice().ProcessAsync(T0.AddMinutes(1), CancellationToken.None));
+        Assert.Empty(_sender.Sent);
+    }
+
+    [Fact]
+    public async Task SiElEnvioDeUnDocumentoNuevoFalla_NoSePierdeElAviso()
+    {
+        Questionnaire("pruebas-2-medicina-indicaciones", "Guía 2 de pruebas · Medicina e indicaciones");
+        await Notice().ProcessAsync(T0, CancellationToken.None);
+
+        Questionnaire("medicina-alergias-y-plazos-cj", "Medicina, alergias y plazos");
+        _sender.Reject = true;
+        Assert.False(await Notice().ProcessAsync(T0.AddMinutes(1), CancellationToken.None));
+        _sender.Reject = false;
+        Assert.False(await Notice().ProcessAsync(T0.AddMinutes(2), CancellationToken.None)); // aún no han pasado los 10 minutos
+        Assert.True(await Notice().ProcessAsync(T0.AddMinutes(11), CancellationToken.None));
+
+        Assert.Equal("Hay 1 documento nuevo con preguntas para ti en ResidApp", Assert.Single(_sender.Sent).Subject);
+    }
+
+    [Fact]
+    public async Task UnDocumentoRetirado_NoAvisa_PeroSiSeVuelveAPublicarEsNuevo()
+    {
+        Questionnaire("pruebas-2-medicina-indicaciones", "Guía 2 de pruebas · Medicina e indicaciones");
+        Questionnaire("modulos-cj", "Módulos");
+        await Notice().ProcessAsync(T0, CancellationToken.None);
+
+        File.Delete(Path.Combine(_docs, "modulos-cj.html")); // se retira al implementarse
+        Assert.False(await Notice().ProcessAsync(T0.AddMinutes(1), CancellationToken.None));
+        Assert.Empty(_sender.Sent);
+
+        Questionnaire("modulos-cj", "Módulos");
+        Assert.True(await Notice().ProcessAsync(T0.AddMinutes(2), CancellationToken.None));
+    }
+
     [Fact]
     public async Task SinNotas_NoAvisaDeNada()
     {
