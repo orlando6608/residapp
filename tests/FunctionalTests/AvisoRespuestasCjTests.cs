@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using ResidApp.Application.Email;
 using ResidApp.Application.Ports;
 using ResidApp.Web.Correo;
 using ResidApp.Web.Security;
@@ -100,6 +101,23 @@ public sealed class AvisoRespuestasCjTests : IDisposable
         await Notice().ProcessAsync(T0.AddMinutes(10), CancellationToken.None);
 
         Assert.Equal("CJ ha respondido en 1 documento de ResidApp", Assert.Single(_sender.Sent).Subject);
+    }
+
+    [Fact]
+    public async Task ElCorreo_LlevaElMarcoVisualDeLosDemasAvisos_ConElEnlaceEnTextoVisible()
+    {
+        await SaveAsync("pruebas-2-medicina-indicaciones", 1, T0);
+
+        await Notice().ProcessAsync(T0.AddMinutes(10), CancellationToken.None);
+
+        var mail = Assert.Single(_sender.Sent);
+        Assert.Contains("background:#0A58CA", mail.Html); // la banda azul de marca
+        Assert.Contains("cid:" + EmailLayout.IconContentId, mail.Html);
+        var icon = Assert.Single(mail.InlineImages!);
+        Assert.Equal(EmailLayout.IconContentId, icon.ContentId);
+        Assert.Contains("prefers-color-scheme: dark", mail.Html);
+        Assert.Contains(">https://dev.example.test/pendientes-cj/pruebas-2-medicina-indicaciones.html</a>", mail.Html);
+        Assert.DoesNotContain("<script", mail.Html);
     }
 
     [Fact]

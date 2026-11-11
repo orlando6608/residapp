@@ -1,4 +1,6 @@
+using System.Net;
 using System.Text;
+using ResidApp.Application.Email;
 using ResidApp.Application.Ports;
 using ResidApp.Web.Security;
 
@@ -73,17 +75,21 @@ public sealed class AvisoRespuestasCj(
             ? "CJ ha respondido en 1 documento de ResidApp"
             : $"CJ ha respondido en {documents.Count} documentos de ResidApp";
 
-        var text = new StringBuilder("CJ ha guardado cambios en sus respuestas:\n\n");
-        var html = new StringBuilder("<p>CJ ha guardado cambios en sus respuestas:</p><ul>");
+        const string intro = "CJ ha guardado cambios en sus respuestas:";
+        const string outro = "El correo no incluye lo que ha contestado: míralo en el propio documento o con tools/respuestas-cj.ps1.";
+        var text = new StringBuilder(intro + "\n\n");
+        // El mismo marco visual que los demás avisos (banda con el icono, tarjeta, modo oscuro); el enlace va en texto visible, en un recuadro por documento.
+        var paragraphs = new List<(string Html, bool Highlighted)> { (WebUtility.HtmlEncode(intro), false) };
         foreach (var (name, change) in documents)
         {
             var url = $"{root}/pendientes-cj/{name}.html";
-            text.Append($"- {name}: {change.Respondidas} de {change.Total} completadas\n  {url}\n");
-            html.Append($"<li><a href=\"{url}\">{name}</a>: {change.Respondidas} de {change.Total} completadas</li>");
+            var summary = $"{name}: {change.Respondidas} de {change.Total} completadas";
+            text.Append($"- {summary}\n  {url}\n");
+            paragraphs.Add(($"<strong>{WebUtility.HtmlEncode(name)}</strong>: {change.Respondidas} de {change.Total} completadas<br><a href=\"{WebUtility.HtmlEncode(url)}\">{WebUtility.HtmlEncode(url)}</a>", true));
         }
 
-        text.Append("\nEl correo no incluye lo que ha contestado: míralo en el propio documento o con tools/respuestas-cj.ps1.\n");
-        html.Append("</ul><p>El correo no incluye lo que ha contestado: míralo en el propio documento o con <code>tools/respuestas-cj.ps1</code>.</p>");
-        return new EmailMessage(to, subject, text.ToString(), html.ToString());
+        text.Append("\n" + outro + "\n");
+        var html = EmailLayout.Render("es", subject, paragraphs, WebUtility.HtmlEncode(outro));
+        return new EmailMessage(to, subject, text.ToString(), html, [EmailLayout.Icon]);
     }
 }
