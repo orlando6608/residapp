@@ -178,7 +178,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Ayuda de la guía 2 de pruebas</p>
     <h1>Cómo fluye la guía 2 · Medicina e indicaciones</h1>
-    <p class="meta">Revisado para ResidApp v0.3.0 · Estado a 08/11/2026 · Para quien hace las pruebas</p>
+    <p class="meta">Revisado para ResidApp v0.3.0 · Estado a 11/11/2026 · Para quien hace las pruebas</p>
     <p class="lead prose">
       En esta guía vas y vienes entre Enfermería y Medicina. Mira aquí qué perfil hace cada prueba y qué le llega al otro. Las
       respuestas se marcan en la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a>; esta página solo orienta.
@@ -204,7 +204,7 @@
     <div class="diagrama">
       <svg viewBox="0 0 1150 570" role="img" aria-labelledby="svg-t svg-d">
         <title id="svg-t">Flujo de la guía 2: Enfermería escala, Medicina valora e indica, Enfermería cumple y cierra</title>
-        <desc id="svg-d">Tres franjas. Enfermería escala un evento (prueba 1), que llega a la bandeja de escalados de Medicina (prueba 3); la prueba 2 corrige la valoración de ese mismo evento. Medicina valora (4) y registra tres indicaciones (5), que llegan a la tarjeta Indicaciones de Enfermería (7); Enfermería las lee y realiza y cierra el episodio (8). La prueba 6 comprueba como Medicina que no se puede cerrar con indicaciones sin cumplir, antes y después de la 8. Con otro escalado, Medicina hace un seguimiento médico (9) y cierra con comunicación a la familia (10). Un evento propio de Medicina (11) sigue en protocolo urgente y derivación (12). Las pruebas 10 y 12 dejan un comunicado para la familia, que se ve en la guía 6. La prueba 13 mira los avisos de plazos en el inicio de los dos perfiles.</desc>
+        <desc id="svg-d">Tres franjas. Enfermería escala un evento (prueba 1), que llega a la bandeja de escalados de Medicina (prueba 3); la prueba 2 corrige la valoración de ese mismo evento. Medicina valora (4) y registra tres indicaciones (5), por la conducta médica o con el atajo «Guardar e indicar a Enfermería» de la valoración, que llegan a la tarjeta Indicaciones de Enfermería (7); Enfermería las lee y realiza y cierra el episodio (8). La prueba 6 comprueba como Medicina que no se puede cerrar con indicaciones sin cumplir, antes y después de la 8. Con otro escalado, Medicina hace un seguimiento médico (9) y cierra con comunicación a la familia (10). Un evento propio de Medicina (11) sigue en protocolo urgente y derivación (12). Las pruebas 10 y 12 dejan un comunicado para la familia, que se ve en la guía 6. La prueba 13 empieza con Dirección poniendo un plazo de 2 minutos; Enfermería escala un evento nuevo y Medicina ve el aviso en su inicio hasta que empieza la valoración (después, Dirección devuelve los plazos).</desc>
         <defs>
           <marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
           <marker id="pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -241,8 +241,8 @@
         <path class="flecha" d="M790,90 H808" marker-end="url(#p)"/>
 
         <rect class="box enf" x="985" y="62" width="150" height="56" rx="8"/>
-        <text class="bt" x="1060" y="86" text-anchor="middle"><tspan class="n">13</tspan> · Avisos de</text>
-        <text class="bt" x="1060" y="104" text-anchor="middle">plazos (Inicio)</text>
+        <text class="bt" x="1060" y="86" text-anchor="middle"><tspan class="n">13</tspan> · Escalar con un</text>
+        <text class="bt" x="1060" y="104" text-anchor="middle">plazo de 2 minutos</text>
 
         <!-- Medicina, primera fila: 3, 4, 5, 6, 13 -->
         <rect class="box med" x="130" y="222" width="150" height="56" rx="8"/>
@@ -273,8 +273,8 @@
         <text class="et" x="875" y="150" text-anchor="end">antes y después de la 8</text>
 
         <rect class="box med" x="985" y="222" width="150" height="56" rx="8"/>
-        <text class="bt" x="1060" y="246" text-anchor="middle"><tspan class="n">13</tspan> · Avisos de</text>
-        <text class="bt" x="1060" y="264" text-anchor="middle">plazos (Inicio)</text>
+        <text class="bt" x="1060" y="246" text-anchor="middle"><tspan class="n">13</tspan> · Aviso de plazos</text>
+        <text class="bt" x="1060" y="264" text-anchor="middle">en Inicio</text>
         <path class="flecha rel" d="M1060,120 V220"/>
 
         <!-- Medicina, segunda fila: 9, 10, 11, 12 -->
@@ -331,11 +331,11 @@
       </li>
       <li class="med">
         <div class="paso-cab"><span class="n">4</span><strong>Valoración médica</strong> <span class="estrella">★</span><span class="perfil med">Medicina</span></div>
-        <span>«Iniciar valoración médica», escribe y «Guardar borrador». Solo después de guardar aparece «Pasar a conducta médica», la pantalla con las cuatro salidas.</span>
+        <span>«Iniciar valoración médica», escribe y «Guardar borrador». Solo después de guardar aparece «Pasar a conducta médica», la pantalla con las cuatro salidas. Si ya sabes qué indicar, «Guardar e indicar a Enfermería» guarda lo mismo y salta al formulario de la indicación (paso 5), sin pasar por el detalle ni por la conducta; solo está antes de registrar la primera indicación.</span>
       </li>
       <li class="med">
         <div class="paso-cab"><span class="n">5</span><strong>Tres indicaciones a Enfermería</strong> <span class="estrella">★</span><span class="perfil med">Medicina</span></div>
-        <span>En la conducta médica, «Registrar indicaciones a Enfermería», con fecha prevista o criterio. Pulsa «Registrar y añadir otra» hasta tener tres indicaciones; en la última puedes usar «Registrar indicación».</span>
+        <span>En la conducta médica (o, con el atajo del paso 4, directamente desde la valoración), «Registrar indicaciones a Enfermería», con fecha prevista o criterio. Pulsa «Registrar y añadir otra» hasta tener tres indicaciones; en la última puedes usar «Registrar indicación».</span>
         <span class="pasa">Le llegan a <strong>Enfermería</strong>, en la tarjeta «Indicaciones» de su Inicio (prueba 7). En el detalle del evento, arriba y junto al nombre del residente, el evento pasa a «Con indicación pendiente».</span>
       </li>
       <li class="med">
@@ -373,8 +373,8 @@
         <span class="pasa"><strong>Enfermería</strong> ve el protocolo en solo lectura; a la <strong>familia</strong> le llega el comunicado obligatorio.</span>
       </li>
       <li class="med">
-        <div class="paso-cab"><span class="n">13</span><strong>Avisos de plazos</strong><span class="perfil med">Enfermería y Medicina</span></div>
-        <span>En Inicio de cada perfil, arriba: la lista de hitos a punto de vencer o vencidos (lo vencido, primero y en rojo).</span>
+        <div class="paso-cab"><span class="n">13</span><strong>Avisos de plazos</strong><span class="perfil med">Dirección, Enfermería y Medicina</span></div>
+        <span>Con <code>almendros-direccion</code>, pon 2 minutos al plazo de «Valoración médica» («Plazos de los hitos del proceso»). Con Enfermería, escala un evento nuevo a Medicina. Con Medicina, sin valorarlo, espera unos 2 minutos y mira arriba de Inicio: el aviso de ese residente (lo vencido, primero y en rojo). «Iniciar valoración médica» lo quita. Al terminar, con Dirección, «Ver los plazos sugeridos» y «Guardar».</span>
       </li>
     </ol>
   </section>
@@ -383,7 +383,7 @@
     <h2 id="mirar">Dónde mirar si no encuentras algo</h2>
     <ul class="lista prose">
       <li><strong>Estado del evento y estado de cada indicación.</strong> El del evento («Con indicación pendiente») es la etiqueta de arriba, junto al nombre del residente. Cada indicación de la lista lleva la suya («Pendiente de lectura», «Leída, pendiente de realizar», «Realizada»…).</li>
-      <li><strong>Las cuatro salidas de Medicina</strong> (indicar, seguimiento médico, cerrar y protocolo urgente) están en «Conducta médica». A esa pantalla se llega con «Pasar a conducta médica», que aparece en el detalle del escalado después de guardar la valoración médica.</li>
+      <li><strong>Las cuatro salidas de Medicina</strong> (indicar, seguimiento médico, cerrar y protocolo urgente) están en «Conducta médica». A esa pantalla se llega con «Pasar a conducta médica», que aparece en el detalle del escalado después de guardar la valoración médica. Para indicar sin pasar por ella, «Guardar e indicar a Enfermería» en la propia valoración.</li>
       <li><strong>La prueba 6 va y vuelve:</strong> se mira justo después de la 5 y otra vez durante la 8. Márcala al terminar la 8.</li>
       <li><strong>Lo escalado no está en las bandejas de Enfermería:</strong> está en la tarjeta «Escalados a Medicina» de su Inicio.</li>
       <li><strong>«Corregir valoración»</strong> solo la ve quien guardó la valoración la última vez, y solo durante 6 horas.</li>
