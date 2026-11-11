@@ -15,6 +15,8 @@ La web (`/pendientes-cj/index.html`) tiene dos secciones para CJ y una de trabaj
 
 **Regla de cierre (sin archivo):** cuando CJ ha contestado **y** lo que pedía ya está implementado, la pregunta se **quita** del documento (y, si no queda ninguna, el documento entero). Ya no hay sección Archivo ni carpeta `archivados/`: se retiraron el 2026-11-11 porque el repositorio es público y llevaban las respuestas de CJ. Lo que quede sin hacer se pregunta en otro documento. Lo anterior queda en el historial de git. Las respuestas de CJ no se tocan: siguen en el servidor.
 
+**Citas a `archivados/…` en otros documentos.** Los ADR, `docs/tareas/`, `docs/privacidad/` y `tools/PruebaDictado/README.md` siguen citando rutas `docs/pendientes-cj/archivados/<documento>.html` o `.respuestas.json`: son citas históricas (qué se preguntó a CJ y cuándo) y esos ficheros ya no existen. Para ver uno, tal como estaba al retirarlos: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>.html` (o `.respuestas.json`), o el zip privado de Orlando. Los valores que decidió CJ ya están recogidos en `docs/flujos-clinicos/` y en el código (por ejemplo, los rangos de las constantes en `src/ResidApp.Domain/Enfermeria/VitalSignReferenceRanges.cs`); no se reescriben esas citas para no tocar texto ya cerrado.
+
 ## La clave
 
 Toda la carpeta `/pendientes-cj` (índice, secciones, documentos y respuestas) está detrás de una clave: sin ella, las páginas
