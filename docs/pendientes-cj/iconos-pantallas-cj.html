@@ -1,8 +1,7 @@
 <!doctype html>
 <!--
   Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
-  Las respuestas se guardan en «iconos-pantallas-cj.respuestas.json», en esta misma carpeta;
-  ingeniería las lee de ese fichero. Cómo funciona: docs/pendientes-cj/README.md.
+  Las respuestas se guardan solas en el servidor (api/respuestas/); ingeniería las lee de allí. Cómo funciona: docs/pendientes-cj/README.md.
 -->
 <html lang="es">
 <head>
@@ -255,6 +254,10 @@
     .page { padding-bottom: 24px; }
     .q { break-inside: avoid; }
   }
+  /* Nota de ingeniería: lo que ingeniería responde a una pregunta (fichero .notas.json del documento); solo lectura. */
+  .nota-ing { background: var(--surface); border: 1px solid var(--accent); border-left-width: 4px; padding: 8px 12px; border-radius: 4px; margin: 10px 0 0; font-size: 0.95rem; }
+  .nota-ing strong { display: block; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .nota-ing p { margin: 0; white-space: pre-line; }
 </style>
 <body data-doc="iconos-pantallas-cj" data-version="2026-10-30">
 
@@ -282,14 +285,12 @@
     <h2 id="como">Cómo responder</h2>
     <ol class="steps">
       <li><span class="step-n">1</span><strong>Mira la aplicación y responde aquí</strong>
-        <span>Cada tema te dice con qué cuenta entrar. Pulsa la opción que elijas; si quieres matizar, escribe en el comentario. Lo que marcas se queda en este navegador: puedes cerrar y seguir otro día.</span></li>
-      <li><span class="step-n">2</span><strong>Guarda</strong>
-        <span>Pulsa «Guardar respuestas», abajo. Se descarga el fichero <code>iconos-pantallas-cj.respuestas.json</code>. No hace falta haberlo respondido todo.</span></li>
-      <li><span class="step-n">3</span><strong>Envíaselo a Orlando</strong>
-        <span>Mándale el fichero descargado por correo o por WhatsApp. Si lo cambias y lo vuelves a guardar, envía el nuevo.</span></li>
+        <span>Cada tema te dice con qué cuenta entrar. Pulsa la opción que elijas; si quieres matizar, escribe en el comentario. Lo que marcas se guarda solo en el servidor: puedes cerrar y seguir otro día, también desde otro ordenador.</span></li>
+      <li><span class="step-n">2</span><strong>No hay que enviar nada</strong>
+        <span>No hay botón de guardar ni fichero que mandar: abajo verás «Guardado en el servidor» con la hora. Si cambias una respuesta, se guarda la nueva. Ingeniería recibe un aviso cuando dejas de responder un rato. No hace falta haberlo respondido todo.</span></li>
     </ol>
     <p class="prose meta">
-      ¿Desde otro ordenador? Abre este documento y pulsa «Abrir respuestas guardadas» con tu fichero para seguir donde lo dejaste.
+      ¿Desde otro ordenador? Abre este documento y verás lo que ya has contestado. No escribas datos personales reales en los comentarios.
     </p>
   </section>
 
@@ -442,36 +443,36 @@
 
   <footer>
     ResidApp · Documento de trabajo para producto. Ingeniería no ha elegido ninguna opción: todas las decisiones son
-    de CJ. Cuando subas tus respuestas, ingeniería las revisa, te consulta lo que no quede claro y lo incorpora a la
-    aplicación. La aplicación no lee este fichero ni sus respuestas.
+    de CJ. Cuando respondas, ingeniería las revisa, te consulta lo que no quede claro y lo incorpora a la
+    aplicación. Tus respuestas se guardan en el servidor de desarrollo, detrás de la clave de estos documentos.
   </footer>
 </div>
 
 
-<div class="bar" role="region" aria-label="Guardar respuestas">
+<div class="bar" role="region" aria-label="Estado de las respuestas">
   <div class="bar-in">
     <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
     <p class="estado" id="estado" role="status" aria-live="polite"></p>
-    <div class="actions">
-      <button type="button" class="btn" id="btn-abrir">Abrir respuestas guardadas</button>
-      <button type="button" class="btn primary" id="btn-guardar">Guardar respuestas</button>
-      <input type="file" id="fichero" accept=".json,application/json" hidden>
-    </div>
   </div>
 </div>
 
 <script>
-/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). */
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). Las respuestas se guardan solas en el servidor. */
 (function () {
   "use strict";
   var DOC = document.body.dataset.doc;
   var VERSION = document.body.dataset.version;
-  var FILE = DOC + ".respuestas.json";
+  var API = "api/respuestas/" + DOC;
   var KEY = "residapp-pendientes-cj:" + DOC;
   var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
   var estado = document.getElementById("estado");
-  var dirty = false;
-  var savedAt = null;
+  var dirty = false;      // hay cambios que aún no están en el servidor
+  var savedAt = null;     // cuándo se guardó por última vez en el servidor
+  var ready = false;      // ya se ha leído lo que hay en el servidor: hasta entonces no se guarda nada (no se pisa lo guardado con una página vacía)
+  var failed = "";        // por qué falló el último guardado ("" si no falló)
+  var rev = 0;            // número de cambio: si cambia mientras se guarda, queda algo por guardar
+  var timer = null;
+  var saving = false;
 
   function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
   function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
@@ -524,9 +525,11 @@
   }
 
   function status() {
-    if (dirty) say("", "Tienes cambios que aún no están en el fichero. Pulsa «Guardar respuestas» cuando quieras.");
-    else if (savedAt) say("ok", "Fichero al día (" + when(savedAt) + ").");
-    else say("", "Lo que marques se guarda en este navegador.");
+    if (failed) say("error", failed);
+    else if (!ready) say("", "Comprobando lo que ya tienes guardado…");
+    else if (dirty) say("", "Guardando…");
+    else if (savedAt) say("ok", "Guardado en el servidor (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda solo.");
   }
 
   function store(data) {
@@ -561,73 +564,100 @@
     return data;
   }
 
-  function loaded(data, origin) {
-    apply(data);
-    dirty = false;
-    savedAt = data.guardado || null;
-    store(refresh());
-    var msg = "Respuestas cargadas " + origin + " (guardadas el " + when(data.guardado) + ").";
-    if (data.cuestionario !== VERSION) {
-      say("error", msg + " Son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
-    } else {
-      say("ok", msg);
-    }
-  }
-
-  function download(json) {
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
-    a.download = FILE;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  }
-
-  async function save() {
+  // Guarda en el servidor lo que hay en pantalla. Si falla, lo marcado sigue en este navegador y se reintenta solo.
+  function save() {
+    clearTimeout(timer);
+    if (!ready) return;
+    if (saving) { timer = setTimeout(save, 1000); return; }
+    var sent = rev;
     var data = collect();
     var json = JSON.stringify(data, null, 2) + "\n";
-    try {
-      if (!window.showSaveFilePicker) throw new Error("sin selector");
-      var handle = await window.showSaveFilePicker({ suggestedName: FILE,
-        types: [{ description: "Respuestas (JSON)", accept: { "application/json": [".json"] } }] });
-      var w = await handle.createWritable();
-      await w.write(json);
-      await w.close();
-    } catch (e) {
-      if (e && e.name === "AbortError") return;
-      download(json);
-    }
-    dirty = false;
-    savedAt = data.guardado;
-    store(data);
-    say("ok", "Guardado como «" + FILE + "». Ahora envíaselo a Orlando por correo o por WhatsApp.");
+    saving = true;
+    fetch(API, { method: "PUT", headers: { "Content-Type": "application/json" }, body: json, credentials: "same-origin", keepalive: json.length < 60000 })
+      .then(function (r) {
+        if (!r.ok) throw r.status;
+        failed = "";
+        savedAt = data.guardado;
+        if (rev === sent) dirty = false; else timer = setTimeout(save, 1000);
+      })
+      .catch(function (e) {
+        failed = e === 401
+          ? "Se ha cerrado el acceso a estos documentos. Vuelve a abrirlos con la clave; lo que has marcado sigue en este navegador."
+          : "No se ha podido guardar en el servidor. Lo que marcas sigue en este navegador y se reintentará.";
+        timer = setTimeout(save, 15000);
+      })
+      .finally(function () { saving = false; store(collect()); status(); });
   }
 
-  document.addEventListener("input", onChange);
-  document.addEventListener("change", onChange);
   function onChange(e) {
     if (!e.target.closest || !e.target.closest("[data-q]")) return;
     dirty = true;
+    rev++;
     store(refresh());
     status();
+    clearTimeout(timer);
+    timer = setTimeout(save, 2000);
+  }
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  // Si se cierra o se cambia de pestaña con algo sin guardar, se guarda ya.
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden" && dirty) save(); });
+
+  // Recupera lo último que se guardó en el servidor. Hasta que lo consigue (200 o 404) no se guarda nada.
+  function load() {
+    fetch(API, { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) {
+        if (r.status === 204) return null;
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
+      .then(function (data) {
+        ready = true;
+        failed = "";
+        if (data && data.documento === DOC && !dirty) {
+          apply(data);
+          savedAt = data.guardado || null;
+          store(refresh());
+          if (data.cuestionario !== VERSION) {
+            say("error", "Tus respuestas son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+            return;
+          }
+        } else if (!data && !dirty && refresh().respondidas > 0) {
+          dirty = true; // respuestas de este navegador que el servidor todavía no tiene: se suben
+        }
+        if (dirty) save();
+        status();
+      })
+      .catch(function () {
+        failed = "No se han podido leer las respuestas guardadas en el servidor. No se guarda nada hasta conseguirlo; se reintenta solo.";
+        status();
+        setTimeout(load, 10000);
+      });
   }
 
-  document.getElementById("btn-guardar").addEventListener("click", save);
-  document.getElementById("btn-abrir").addEventListener("click", function () { document.getElementById("fichero").click(); });
-  document.getElementById("fichero").addEventListener("change", function (e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    file.text().then(function (t) {
-      var data = JSON.parse(t);
-      if (data.documento !== DOC) {
-        say("error", "Ese fichero es de otro documento («" + data.documento + "»). Elige «" + FILE + "».");
-        return;
-      }
-      loaded(data, "del fichero");
-    }).catch(function () {
-      say("error", "No se ha podido leer ese fichero. Elige «" + FILE + "».");
-    }).finally(function () { e.target.value = ""; });
-  });
+  // Notas de ingeniería: lo que ingeniería responde a cada pregunta (<documento>.notas.json, se despliega con la aplicación). Solo lectura; sin nota, no se muestra nada.
+  function notes() {
+    fetch(DOC + ".notas.json", { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var ns = (data && data.documento === DOC && data.notas) || {};
+        questions.forEach(function (q) {
+          var t = ns[q.dataset.q];
+          if (typeof t !== "string" || !t.trim()) return;
+          var box = document.createElement("aside");
+          box.className = "nota-ing";
+          box.setAttribute("aria-label", "Nota de ingeniería");
+          var h = document.createElement("strong");
+          h.textContent = "Nota de ingeniería";
+          var p = document.createElement("p");
+          p.textContent = t.trim(); // texto plano, nunca HTML
+          box.appendChild(h);
+          box.appendChild(p);
+          q.appendChild(box);
+        });
+      })
+      .catch(function () { /* sin notas */ });
+  }
 
   var local = null;
   try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
@@ -638,22 +668,8 @@
   }
   refresh();
   status();
-
-  // Si la página se sirve por http (no desde disco), carga las respuestas ya subidas al repositorio.
-  if (location.protocol.indexOf("http") === 0) {
-    fetch(FILE, { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) {
-        if (!data || data.documento !== DOC) return;
-        if (dirty) {
-          say("", "Hay respuestas en el repositorio (guardadas el " + when(data.guardado) +
-            "), pero mantienes los cambios de este navegador, que aún no están en el fichero.");
-          return;
-        }
-        loaded(data, "del repositorio");
-      })
-      .catch(function () { /* sin fichero de respuestas */ });
-  }
+  if (location.protocol.indexOf("http") === 0) { load(); notes(); }
+  else say("error", "Abre este documento desde la web de ResidApp para que se guarden las respuestas.");
 })();
 </script>
 </body>

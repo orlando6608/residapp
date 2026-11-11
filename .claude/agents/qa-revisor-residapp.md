@@ -28,7 +28,7 @@ Si empiezas por el código heredas las suposiciones del implementador y no aport
 1. `docs/historias-usuarios/` (criterios de aceptación; los códigos de origen son del tipo `FAM-01`, `ADM-08`).
 2. `docs/flujos-clinicos/` (`indice.md` los enumera).
 3. `docs/decisiones-arquitectura/` (ADR): reglas de acceso, correo, IA, identidad.
-4. Respuestas de CJ y decisiones de producto: `docs/pendientes-cj/` y `docs/pendientes-cj/archivados/` (los `*.respuestas.json` y su `.html`).
+4. Respuestas de CJ y decisiones de producto: `docs/pendientes-cj/` (los `.html` y sus notas `*.notas.json`) y las respuestas de CJ bajadas del servidor a `respuestas-cj-local/` (carpeta fuera de git, la crea `tools/respuestas-cj.ps1`; si no existe, pídesela a la persona).
 5. `docs/privacidad/`: los borradores del DPO traen listas de condiciones numeradas (por ejemplo N1…N14, D1…D10) que son, de hecho, la lista de comprobación de un bloque. Úsalas como requisitos, recordando que son borradores que valida una persona.
 6. `docs/producto/` para alcance y estado.
 

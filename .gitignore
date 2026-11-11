@@ -54,3 +54,6 @@ tools/PruebaDictado/audios/
 # Generador de PDF de la Guía: dependencias y PDF generados (se regeneran con `node generar.mjs`)
 tools/GuiaPdf/node_modules/
 tools/GuiaPdf/salida/
+
+# Respuestas de CJ bajadas del servidor con tools/respuestas-cj.ps1: privadas, nunca al repositorio
+/respuestas-cj-local/
