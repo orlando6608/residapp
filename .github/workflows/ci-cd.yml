@@ -38,13 +38,9 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Instalar sqlcmd
-        run: |
-          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
-          curl -sSL https://packages.microsoft.com/config/ubuntu/26.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-          sudo apt-get update
-          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
-          echo "/opt/mssql-tools18/bin" >> "$GITHUB_PATH"
+      # Sin apt: sus dependencias salen de los servidores de Ubuntu y, cuando el runner no los resolvía, el job caía aquí tras 9 minutos (2026-11-11).
+      - name: Preparar sqlcmd
+        run: bash .github/scripts/preparar-sqlcmd.sh
 
       - name: Crear base de datos de pruebas
         env:
@@ -134,13 +130,8 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Instalar sqlcmd
-        run: |
-          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
-          curl -sSL https://packages.microsoft.com/config/ubuntu/26.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-          sudo apt-get update
-          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
-          echo "/opt/mssql-tools18/bin" >> "$GITHUB_PATH"
+      - name: Preparar sqlcmd
+        run: bash .github/scripts/preparar-sqlcmd.sh
 
       # Hallazgo A3: la base ya no acepta «todos los servicios de Azure». Este paso (1) abre una regla con la IP de este runner solo mientras se aplican los
       # scripts (el paso «Cerrar…» la quita, falle o no) y (2) deja las reglas «webapp-salida-…» iguales a las direcciones de salida posibles de la Web App:
