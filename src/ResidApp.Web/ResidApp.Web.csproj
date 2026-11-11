@@ -8,9 +8,11 @@
 
   <ItemGroup>
     <!-- Documentos que CJ responde en el navegador: se sirven en /pendientes-cj (Program.cs) desde la misma carpeta de docs, detrás de la clave
-         (PendientesCjAccess). Incluye las subcarpetas (archivados/) y los .respuestas.json, que cada documento carga junto a sí mismo. -->
+         (PendientesCjAccess). Incluye las subcarpetas y las notas de ingeniería (.notas.json), que cada documento carga junto a sí mismo. Las respuestas de CJ
+         no van aquí: se guardan en el servidor (RespuestasCjStore). Solo los formularios de Para Orlando (orlando/) siguen con su .respuestas.json en el repositorio. -->
     <Content Include="..\..\docs\pendientes-cj\**\*.html" Link="pendientes-cj\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="..\..\docs\pendientes-cj\**\*.respuestas.json" Link="pendientes-cj\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\docs\pendientes-cj\**\*.notas.json" Link="pendientes-cj\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\docs\pendientes-cj\orlando\**\*.respuestas.json" Link="pendientes-cj\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>

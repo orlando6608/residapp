@@ -17,6 +17,7 @@ using ResidApp.Infrastructure.Identity;
 using ResidApp.Infrastructure.Intercambio;
 using ResidApp.Infrastructure.Pdf;
 using ResidApp.Infrastructure.Persistence;
+using ResidApp.Web.Controllers;
 using ResidApp.Web.Correo;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
@@ -182,6 +183,10 @@ builder.Services.AddRateLimiter(options =>
             PermitLimit = context.RequestServices.GetRequiredService<IOptions<AccesoOptions>>().Value.IntentosPorMinuto,
             Window = TimeSpan.FromMinutes(1),
         }));
+    // Las respuestas de CJ se guardan solas unos segundos después de cada cambio: holgura de sobra para una persona, pero no para un bucle.
+    options.AddPolicy(RespuestasCjController.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 120, Window = TimeSpan.FromMinutes(1) }));
     // El dictado cuesta dinero y envía audio fuera: se limita por cuenta (la sesión), no por IP, que en una residencia es la misma para todas.
     options.AddPolicy(IaOptions.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
         context.User.FindFirst(SessionAuthentication.SubjectClaim)?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "sin-cuenta",
@@ -209,6 +214,10 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 // La clave de los documentos de CJ (/pendientes-cj): un freno para el desarrollo, ver PendientesCjAccess.
 builder.Services.AddSingleton<PendientesCjAccess>();
+// Las respuestas que CJ da en esos documentos: un JSON por documento en el disco del servidor (ver RespuestasCjStore).
+builder.Services.AddSingleton<RespuestasCjStore>();
+// El aviso a Orlando de que CJ ha respondido: un correo cuando CJ deja de cambiar cosas (PendientesCj:AvisarA, ajuste de la Web App). Sin él no hace nada.
+builder.Services.AddHostedService<AvisoRespuestasCjWorker>();
 // Guía por perfil (/Guia): las fichas están en Guia/*.json, junto al resto de ficheros de la web (se publican con ella).
 builder.Services.AddSingleton(sp => GuiaCatalogo.Cargar(Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().ContentRootPath, "Guia")));
 
@@ -438,7 +447,8 @@ app.UseWhen(context => context.Request.Path.StartsWithSegments(PendientesCjAcces
     {
         await next(context);
     }
-    else if (context.Request.Path.Value!.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+    else if (context.Request.Path.Value!.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+        || context.Request.Path.StartsWithSegments(PendientesCjAccess.Prefix + "/api"))
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
     }

@@ -7,7 +7,7 @@ namespace ResidApp.FunctionalTests;
 
 /// <summary>Los documentos de docs/pendientes-cj se publican con la aplicación en /pendientes-cj, detrás de una clave
 /// (PendientesCj:Clave; es un freno para el desarrollo, no autenticación real), para que CJ los responda desde la web. Tres secciones:
-/// Preguntas, Pruebas y Archivo (documentos contestados e implementados, en archivados/).</summary>
+/// Preguntas y Pruebas (lo ya implementado se quita del documento; no hay archivo).</summary>
 public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFactory>
 {
     private readonly ResidentsFlowTests.WebAppFactory _factory;
@@ -41,22 +41,15 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
 
     public static readonly TheoryData<string> Pages =
     [
-        "index", "preguntas", "pruebas", "archivo",
+        "index", "preguntas", "pruebas",
 
         "pruebas-1-auxiliar-enfermeria", "pruebas-2-medicina-indicaciones", "pruebas-3-basal-barthel", "pruebas-4-direccion",
         "pruebas-5-administracion", "pruebas-6-comunicados-portal", "pruebas-7-citas", "pruebas-8-aislamiento",
         "pruebas-1-auxiliar-enfermeria-flujo", "pruebas-2-medicina-indicaciones-flujo", "pruebas-3-basal-barthel-flujo",
         "pruebas-4-direccion-flujo", "pruebas-5-administracion-flujo", "pruebas-6-comunicados-portal-flujo", "pruebas-7-citas-flujo",
         "pruebas-8-aislamiento-flujo",
-        "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj", "archivados/portal-familiar-cuarta-tanda-cj", "archivados/direccion-y-traslados-confirmaciones-cj",
-        "archivados/rangos-referencia-constantes", "archivados/decisiones-direccion-basal-derivacion",
-        "archivados/aclaraciones-respuestas-cj", "archivados/traslado-y-baja-residente",
-        "archivados/administracion-ambito-familiares-cargos", "archivados/continuidad-supervision-comunicacion",
-        "archivados/confirmaciones-segunda-tanda-cj", "archivados/foto-residente-confirmaciones-cj", "archivados/importacion-exportacion-confirmaciones-cj", "archivados/organigrama-y-cargos-cj",
-        "archivados/dictado-por-voz-confirmaciones-cj",
-        "archivados/aviso-citas-por-correo-cj", "archivados/adr-0007-passkeys-por-entorno", "portal-familiar-dos-idiomas-cj", "modulos-base-y-opcionales-cj",
-        "orlando", "orlando/dominio-y-correo", "archivados/analisis-landing-page", "orlando/aviso-correo-decisiones",
-        "archivados/costes-azure-y-nivel-de-la-base",
+        "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj", "portal-familiar-dos-idiomas-cj", "modulos-base-y-opcionales-cj",
+        "orlando", "orlando/dominio-y-correo", "orlando/aviso-correo-decisiones",
     ];
 
     [Theory]
@@ -70,21 +63,6 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     }
 
     [Theory]
-    [InlineData("/pendientes-cj/archivados/rangos-referencia-constantes.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/decisiones-direccion-basal-derivacion.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/aclaraciones-respuestas-cj.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/traslado-y-baja-residente.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/administracion-ambito-familiares-cargos.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/continuidad-supervision-comunicacion.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/foto-residente-confirmaciones-cj.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/importacion-exportacion-confirmaciones-cj.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/organigrama-y-cargos-cj.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/portal-familiar-cuarta-tanda-cj.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/direccion-y-traslados-confirmaciones-cj.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/confirmaciones-segunda-tanda-cj.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/dictado-por-voz-confirmaciones-cj.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/aviso-citas-por-correo-cj.respuestas.json")]
-    [InlineData("/pendientes-cj/archivados/adr-0007-passkeys-por-entorno.respuestas.json")]
     [InlineData("/pendientes-cj/otro-documento.respuestas.json")]
     public async Task SinClave_LasRespuestasDan401(string path)
     {
@@ -154,7 +132,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         client.DefaultRequestHeaders.Add("Cookie", cookie);
 
         Assert.Equal(HttpStatusCode.Redirect, (await client.GetAsync("/pendientes-cj/index.html")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/pendientes-cj/archivados/rangos-referencia-constantes.respuestas.json")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/pendientes-cj/pruebas-2-medicina-indicaciones.notas.json")).StatusCode);
     }
 
     [Fact]
@@ -181,18 +159,17 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     }
 
     [Fact]
-    public async Task ElIndice_ExplicaLasTresSeccionesYEnlazaCadaUna()
+    public async Task ElIndice_ExplicaLasSeccionesYEnlazaCadaUna()
     {
         var html = await (await LoggedInAsync()).GetStringAsync("/pendientes-cj/index.html");
 
-        Assert.Contains("tres secciones para ti", html);
+        Assert.Contains("dos secciones para ti", html);
+        Assert.DoesNotContain("archivo.html", html);
         Assert.Contains("href=\"preguntas.html\"", html);
         Assert.Contains("href=\"pruebas.html\"", html);
-        Assert.Contains("href=\"archivo.html\"", html);
         Assert.Contains("href=\"orlando.html\"", html);
         Assert.Contains("<h2>Preguntas</h2>", html);
         Assert.Contains("<h2>Pruebas</h2>", html);
-        Assert.Contains("<h2>Archivo</h2>", html);
         Assert.Contains("<h2>Para Orlando</h2>", html);
     }
 
@@ -218,7 +195,6 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [Theory]
     [InlineData("preguntas")]
     [InlineData("pruebas")]
-    [InlineData("archivo")]
     public async Task CadaSeccion_TieneSuTitulo_YTodosSusEnlacesExisten(string section)
     {
         var client = await LoggedInAsync();
@@ -229,7 +205,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         Assert.Contains($"<h1>{char.ToUpper(section[0])}{section[1..]}</h1>", html);
         if (section != "preguntas")
         {
-            // Preguntas puede estar vacía cuando CJ lo ha contestado todo (y está archivado).
+            // Preguntas puede estar vacía cuando CJ lo ha contestado todo y ya está hecho (se quita del documento).
             Assert.NotEmpty(links);
         }
         foreach (var link in links)
@@ -237,91 +213,6 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
             var response = await client.GetAsync($"/pendientes-cj/{link}");
             Assert.True(response.IsSuccessStatusCode, $"{section}.html enlaza {link}: {(int)response.StatusCode}");
         }
-    }
-
-    [Fact]
-    public async Task Preguntas_NoIncluyeLosArchivados_YArchivoSi()
-    {
-        var client = await LoggedInAsync();
-
-        var questions = await client.GetStringAsync("/pendientes-cj/preguntas.html");
-        var archive = await client.GetStringAsync("/pendientes-cj/archivo.html");
-
-        Assert.DoesNotContain("confirmaciones-segunda-tanda-cj", questions);
-        Assert.Contains("archivados/confirmaciones-segunda-tanda-cj.html", archive);
-        Assert.DoesNotContain("administracion-ambito-familiares-cargos", questions);
-        Assert.DoesNotContain("continuidad-supervision-comunicacion", questions);
-        Assert.DoesNotContain("aclaraciones-respuestas-cj", questions);
-        Assert.DoesNotContain("traslado-y-baja-residente", questions);
-        Assert.DoesNotContain("rangos-referencia-constantes", questions);
-        Assert.DoesNotContain("decisiones-direccion-basal-derivacion", questions);
-        Assert.Contains("archivados/rangos-referencia-constantes.html", archive);
-        Assert.Contains("archivados/decisiones-direccion-basal-derivacion.html", archive);
-        Assert.Contains("archivados/aclaraciones-respuestas-cj.html", archive);
-        Assert.Contains("archivados/traslado-y-baja-residente.html", archive);
-        Assert.Contains("archivados/administracion-ambito-familiares-cargos.html", archive);
-        Assert.Contains("archivados/continuidad-supervision-comunicacion.html", archive);
-        foreach (var document in new[]
-                 {
-                     "foto-residente-confirmaciones-cj", "dictado-por-voz-confirmaciones-cj", "importacion-exportacion-confirmaciones-cj",
-                     "organigrama-y-cargos-cj", "portal-familiar-cuarta-tanda-cj", "direccion-y-traslados-confirmaciones-cj",
-                 })
-        {
-            Assert.DoesNotContain(document, questions);
-            Assert.Contains($"archivados/{document}.html", archive);
-        }
-    }
-
-    [Theory]
-    [InlineData("rangos-referencia-constantes", 12)]
-    [InlineData("decisiones-direccion-basal-derivacion", 7)]
-    [InlineData("aclaraciones-respuestas-cj", 11)]
-    [InlineData("traslado-y-baja-residente", 6)]
-    [InlineData("administracion-ambito-familiares-cargos", 7)]
-    [InlineData("continuidad-supervision-comunicacion", 16)]
-    [InlineData("confirmaciones-segunda-tanda-cj", 12)]
-    [InlineData("foto-residente-confirmaciones-cj", 8)]
-    [InlineData("dictado-por-voz-confirmaciones-cj", 15)]
-    [InlineData("importacion-exportacion-confirmaciones-cj", 8)]
-    [InlineData("organigrama-y-cargos-cj", 8)]
-    [InlineData("portal-familiar-cuarta-tanda-cj", 3)]
-    [InlineData("direccion-y-traslados-confirmaciones-cj", 9)]
-    public async Task LosArchivados_TienenSusRespuestasAlLadoParaQueSeAbranContestados(string document, int answered)
-    {
-        var client = await LoggedInAsync();
-
-        var json = await client.GetStringAsync($"/pendientes-cj/archivados/{document}.respuestas.json");
-        var page = await client.GetStringAsync($"/pendientes-cj/archivados/{document}.html");
-
-        Assert.Contains($"\"documento\": \"{document}\"", json);
-        Assert.Contains($"\"respondidas\": {answered}", json);
-        Assert.Contains($"data-doc=\"{document}\"", page);
-        Assert.Matches("Archivado el \\d{2}/10/2026", page);
-    }
-
-    [Theory]
-    [InlineData("rangos-referencia-constantes")]
-    [InlineData("decisiones-direccion-basal-derivacion")]
-    [InlineData("aclaraciones-respuestas-cj")]
-    [InlineData("traslado-y-baja-residente")]
-    [InlineData("administracion-ambito-familiares-cargos")]
-    [InlineData("continuidad-supervision-comunicacion")]
-    [InlineData("confirmaciones-segunda-tanda-cj")]
-    [InlineData("foto-residente-confirmaciones-cj")]
-    [InlineData("dictado-por-voz-confirmaciones-cj")]
-    [InlineData("importacion-exportacion-confirmaciones-cj")]
-    [InlineData("organigrama-y-cargos-cj")]
-    [InlineData("portal-familiar-cuarta-tanda-cj")]
-    [InlineData("direccion-y-traslados-confirmaciones-cj")]
-    public async Task LosArchivados_LlevanArribaLosEnlacesAlIndiceYALaAplicacion(string document)
-    {
-        var page = await (await LoggedInAsync()).GetStringAsync($"/pendientes-cj/archivados/{document}.html");
-
-        var nav = Regex.Match(page, "<nav class=\"back\"[^>]*>(.*?)</nav>", RegexOptions.Singleline);
-        Assert.True(nav.Success, "Falta el bloque de enlaces.");
-        Assert.Contains("<a href=\"../index.html\">← Documentos para CJ</a>", nav.Groups[1].Value);
-        Assert.Contains("<a href=\"/\">Volver a ResidApp</a>", nav.Groups[1].Value);
-        Assert.True(nav.Index < page.IndexOf("<h1>", StringComparison.Ordinal), "Los enlaces van arriba, antes del título.");
     }
 
     [Theory]

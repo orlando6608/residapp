@@ -13,8 +13,7 @@
     { "ruta": "docs/pendientes-cj/pruebas.html", "que": "Índice de las guías de pruebas de CJ", "revisadoPara": "0.3.0" }
   ],
   "excluidos": [
-    "docs/pendientes-cj/archivados/",
     "docs/pendientes-cj/orlando/",
-    "*.respuestas.json"
+    "*.notas.json"
   ]
 }
