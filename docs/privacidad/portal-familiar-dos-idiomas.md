@@ -13,7 +13,7 @@ cosas que más pesan son: (1) la sugerencia al personal con «N de M» **no es a
 - **Probablemente sí, con una condición [Suposición + fuente secundaria].** La actualización de la guía de cookies de la AEPD (julio de 2023, plazo de adaptación hasta el
   2024-01-11) trata como técnicas, y exentas, las cookies de personalización **que el usuario elige** (el ejemplo clásico es pulsar el idioma). Si es el sitio quien decide a
   partir de información previa del usuario, hay que informar y ofrecer aceptar o rechazar. Fuente consultada hoy: nota de prensa de la AEPD y comentarios de despachos
-  (Cuatrecasas, ECIJA); **no pude abrir el texto de la guía ni el art. 22.2 consolidado en fuente oficial: a verificar con abogado.**
+  (Cuatrecasas, ECIJA); el texto del art. 22.2 LSSI y la guía de cookies de la AEPD (mayo de 2024) están comprobados el 2026-11-12 en la base normativa local (consolidado del BOE y PDF, no versión oficial): quedan exentas las cookies de «autenticación o identificación de usuario (únicamente de sesión)», de seguridad y de personalización de la interfaz, y la guía recomienda reducir al mínimo necesario la duración de las persistentes. **La aplicación a este caso, a verificar con abogado.**
 - **Dónde está el matiz:** el parámetro `?idioma=ca` viene de pulsar «Acceso clientes» en la landing catalana. Es una elección real, pero **implícita** y hecha en otro sitio.
   Para quedar del lado seguro: guardar la cookie solo cuando la persona pulse el selector de idioma **en la pantalla de la aplicación**; el parámetro del enlace vale para esa
   visita (sin cookie) y la pantalla muestra el selector con el idioma activo bien visible. **[Decidir]** Orlando; si prefiere guardar la cookie desde el parámetro, es un caso para el abogado.
@@ -110,7 +110,7 @@ cosas que más pesan son: (1) la sugerencia al personal con «N de M» **no es a
 
 ## A verificar o decidir
 
-1. **A verificar (abogado):** art. 22.2 LSSI vigente y la guía de cookies de la AEPD en fuente oficial; tope de caducidad aceptable para una cookie de idioma exenta.
+1. **A verificar (abogado):** tope de caducidad aceptable para una cookie de idioma exenta. Ni la guía de la AEPD ni el art. 22.2 LSSI (textos comprobados el 2026-11-12) dan una cifra para las exentas; los 6 a 12 meses son una propuesta, no una norma, y conviene elegir la duración mínima que cumpla la finalidad y justificarla.
 2. **A verificar:** C-184/20 (TJUE) y su alcance sobre datos por inferencia.
 3. **A verificar:** si el registro HTTP de Azure o la telemetría guardan la URL completa con IP y cuánto tiempo.
 4. **A verificar (abogado):** si los derechos lingüísticos de las personas usuarias de servicios sociales en Cataluña obligan a la residencia a atender en catalán (ADR 0012, línea 81).

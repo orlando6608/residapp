@@ -43,9 +43,9 @@ Etiquetas: **[Hecho]** verificado en el repositorio, **[Suposición]** mía, **[
 
 **6. Qué se hace ante un uso indebido.**
 1. **Contener:** Administración **revoca o suspende** el perfil o el ámbito de la cuenta mientras se investiga. **[Hecho]** Las concesiones y revocaciones de permisos quedan auditadas (`SqlProfessionalAccountRepository.cs`, líneas 369 y 393).
-2. **Evaluar si es una brecha de datos:** un acceso de un profesional sin necesidad es una pérdida de confidencialidad (art. 33 RGPD). **[Decidir] DPO:** decide si hay que **notificar a la autoridad de control** y, en su caso, a los afectados. El plazo de notificación (72 horas desde que se tiene constancia) **a verificar** en el texto del art. 33.1 y en la guía de la autoridad; conviene dejar escrito en qué momento la residencia «tuvo constancia».
+2. **Evaluar si es una brecha de datos:** un acceso de un profesional sin necesidad es una pérdida de confidencialidad (art. 33 RGPD). **[Decidir] DPO:** decide si hay que **notificar a la autoridad de control** y, en su caso, a los afectados. El plazo de notificación es de 72 horas desde que el responsable tiene constancia, salvo que sea improbable que la violación constituya un riesgo para los derechos y libertades de las personas (art. 33.1 RGPD, texto comprobado el 2026-11-12; la guía de brechas de la AEPD en la base normativa local lo confirma); conviene dejar escrito en qué momento la residencia «tuvo constancia».
 3. **Consecuencias laborales o disciplinarias:** **[Decidir]** la residencia, con asesoría laboral. No es decisión de ResidApp.
-4. **Informar al residente o a su representante** si el DPO lo considera necesario (art. 34, **a verificar**).
+4. **Informar al residente o a su representante** si el DPO lo considera necesario (art. 34.1 RGPD, comprobado el 2026-11-12: se comunica al interesado cuando la violación entrañe un alto riesgo para sus derechos y libertades).
 5. **Medidas para que no se repita:** formación, y revisión de si el motivo o la pantalla favorecen el abuso.
 6. **Conservar la prueba:** las anotaciones son inmutables, y no hay que pedir ninguna purga mientras haya una investigación abierta (ver fichero 05).
 
@@ -57,5 +57,5 @@ Etiquetas: **[Hecho]** verificado en el repositorio, **[Suposición]** mía, **[
 
 1. **[Decidir] Residencia:** revisor principal y segundo revisor; frecuencia; consecuencias; dónde se guardan las actas.
 2. **[Decidir] Orlando/CJ:** vista de revisión de todas las peticiones; registro de revisiones; registro de intentos rechazados; si «las revisa» en pantalla pasa a «puede revisarlas» hasta entonces.
-3. **A verificar:** plazo de notificación de brechas y en qué casos hay que notificar a la autoridad (AEPD o APDCAT, según el centro).
+3. **Plazo comprobado, autoridad abierta:** el plazo de notificación de brechas es el del art. 33.1 RGPD (72 horas, salvo riesgo improbable); **a verificar** qué autoridad recibe la notificación (AEPD o APDCAT, según el centro).
 4. **Pregunta para el DPO real:** ¿es lícito que la propia revisión exija una lectura declarada de Dirección sobre el residente (punto 3 de «Lo que el sistema permite hoy») o conviene una vista de supervisión de accesos sin lectura clínica?
