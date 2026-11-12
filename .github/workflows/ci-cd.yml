@@ -102,6 +102,22 @@ jobs:
           SA_PASSWORD: ${{ secrets.CI_SQL_SA_PASSWORD }}
         run: sqlcmd -C -S localhost -d ResidAppTest -U sa -P "$SA_PASSWORD" -b -W -i database/seguridad/comprobar_aislamiento.sql
 
+      # Solo en main y solo si todo lo anterior ha pasado: se publica lo ya compilado y probado, sin recompilar, y el job deploy lo descarga tal cual. Así se
+      # despliega exactamente lo que pasó las pruebas y el despliegue se ahorra otra compilación completa (~1 min). El paquete no lleva secretos (la configuración
+      # y las cadenas de conexión viven en Azure) y el artefacto se borra al día siguiente.
+      - name: Publicar la aplicación (sin recompilar)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: dotnet publish src/ResidApp.Web/ResidApp.Web.csproj --configuration Release --no-build --output ./publish
+
+      - name: Guardar el paquete publicado
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-artifact@v7
+        with:
+          name: publish
+          path: ./publish
+          if-no-files-found: error
+          retention-days: 1
+
   deploy:
     needs: build-and-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -116,12 +132,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v5
+      # El paquete lo publicó el job build-and-test justo después de las pruebas, del mismo commit: aquí ya no se compila (ni hace falta .NET).
+      - uses: actions/download-artifact@v8
         with:
-          dotnet-version: "10.0.x"
-
-      - name: Publish
-        run: dotnet publish src/ResidApp.Web/ResidApp.Web.csproj --configuration Release --output ./publish
+          name: publish
+          path: ./publish
 
       - name: Azure login (OIDC federado, sin secretos de larga duración)
         uses: azure/login@v3
