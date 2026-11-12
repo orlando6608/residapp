@@ -23,7 +23,26 @@
       "Bash(pkill -f \"dotnet.*ResidApp.Web\")",
       "Bash(command -v sqlcmd)",
       "Bash(pkill -f \"ResidApp.Web.dll\")",
-      "Bash(tasklist //FI \"IMAGENAME eq ResidApp.Web.exe\")"
+      "Bash(tasklist //FI \"IMAGENAME eq ResidApp.Web.exe\")",
+      "WebSearch",
+      "WebFetch(domain:www.boe.es)",
+      "WebFetch(domain:boe.es)",
+      "WebFetch(domain:publications.europa.eu)",
+      "WebFetch(domain:eur-lex.europa.eu)",
+      "WebFetch(domain:www.aepd.es)",
+      "WebFetch(domain:aepd.es)",
+      "WebFetch(domain:www.apdcat.cat)",
+      "WebFetch(domain:apdcat.cat)",
+      "WebFetch(domain:apdcat.gencat.cat)",
+      "WebFetch(domain:seu.apdcat.cat)",
+      "WebFetch(domain:canalsalut.gencat.cat)",
+      "WebFetch(domain:portaldogc.gencat.cat)",
+      "WebFetch(domain:portaljuridic.gencat.cat)",
+      "WebFetch(domain:www.edpb.europa.eu)",
+      "WebFetch(domain:edpb.europa.eu)",
+      "WebFetch(domain:health.ec.europa.eu)",
+      "Bash(pwsh -NoProfile -File tools/normativa.ps1)",
+      "Bash(pwsh -NoProfile -File tools/normativa.ps1 *)"
     ],
     "additionalDirectories": [
       "\\tmp"
