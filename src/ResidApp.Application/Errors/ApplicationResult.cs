@@ -118,7 +118,26 @@ public static class ApplicationResultRunner
         }
         catch (Exception error)
         {
-            return ApplicationResult<T>.Failed(Normalize(error));
+            var failure = Normalize(error);
+            Observe(error, failure);
+            return ApplicationResult<T>.Failed(failure);
+        }
+    }
+
+    /// <summary>Quien deja constancia técnica de los fallos (hallazgo A4 de seguridad). El runner convierte toda excepción en un mensaje genérico para el
+    /// usuario; sin esto no quedaría ningún rastro. Recibe la excepción original y el fallo ya normalizado, y decide qué se escribe (ver
+    /// <c>TechnicalFailureLog</c> en Infrastructure): nunca el mensaje de la excepción tal cual, que puede llevar datos personales.</summary>
+    public static Action<Exception, ApplicationFailure>? FailureObserver { get; set; }
+
+    private static void Observe(Exception error, ApplicationFailure failure)
+    {
+        try
+        {
+            FailureObserver?.Invoke(error, failure);
+        }
+        catch (Exception)
+        {
+            // Registrar un fallo nunca debe tumbar la operación ni cambiar su resultado.
         }
     }
 
