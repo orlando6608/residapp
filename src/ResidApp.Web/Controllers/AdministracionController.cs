@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
@@ -28,6 +29,19 @@ public sealed partial class AdministracionController(
     AdministracionCentroApplicationService centro, ResidentPhotoApplicationService photos,
     AdministracionOrganigramaApplicationService organigrama) : Controller
 {
+    /// <summary>Quien no tiene activo el perfil de Administración no ve estas pantallas: se le lleva a su inicio, en vez de enseñarle una pantalla
+    /// vacía con un aviso. Solo orienta (la cookie del ámbito no está firmada): cada caso de uso vuelve a autorizar. Los envíos (POST) pasan,
+    /// para que respondan con su propio mensaje.</summary>
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        if (HttpMethods.IsGet(Request.Method) && ActiveProfileScopeCookie.Read(Request) is { } scope && scope.Profile != SystemProfile.Administracion)
+        {
+            context.Result = RedirectToAction("Index", "Home");
+        }
+
+        base.OnActionExecuting(context);
+    }
+
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);

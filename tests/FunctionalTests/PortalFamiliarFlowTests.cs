@@ -275,7 +275,7 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
 
         Assert.Contains("Publicar una corrección", staffList);
         Assert.Contains("Retirar", staffList);
-        Assert.Contains("No se puede acceder", WebUtility.HtmlDecode(await nurseForm.Content.ReadAsStringAsync()) + nurseForm.StatusCode);
+        Assert.Contains(">Inicio</h1>", await BodyAsync(nurseForm));
         Assert.Contains("Escribe el texto de la corrección.", invalid);
         Assert.Contains("Corrección publicada.", corrected);
         Assert.Contains("Corrección publicada", staffAfterCorrection);
@@ -736,7 +736,7 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.Contains(pastAppointment.ToString(), unclosed);
         Assert.DoesNotContain("Citas pasadas sin cerrar", finished);
         Assert.Equal("FINALIZADA", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.citas WHERE id = @pastAppointment", new { pastAppointment }));
-        Assert.Contains("No se puede acceder", await BodyAsync(nurseHome) + nurseHome.StatusCode);
+        Assert.Contains(">Inicio</h1>", await BodyAsync(nurseHome));
         Assert.DoesNotContain("Requiere atención", await BodyAsync(nurseHome));
     }
 
