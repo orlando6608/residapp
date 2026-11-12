@@ -235,7 +235,7 @@ Fuentes consultadas hoy (2026-10-30), páginas de Microsoft Learn: `learn.micros
 5. **[Decidir]** Conservación del registro de envíos (propuesta de ingeniería: 12 meses como tope) y la vía de purga.
 6. **[Decidir CJ]** Escribir que FAM-10 queda modificado; confirmar la frase de la propuesta («cita» frente a «novedad»); revisar el catalán.
 7. **A comprobar en el primer envío real con el SDK:** que no sale `Reply-To` y que `To` lleva un solo destinatario.
-8. **A verificar:** autoridad de control (AEPD o APDCAT) y, si el centro es público o concertado, el Esquema Nacional de Seguridad.
+8. **A verificar:** autoridad de control (AEPD o APDCAT) y el Esquema Nacional de Seguridad (obligatorio si el centro es del sector público, RD 311/2022 art. 2.1; si es privado concertado, depende del art. 2.3 y lo decide el abogado).
 9. **[Decidir Orlando]** Quién firma como titular de ResidApp en el pie (nombre o razón social, NIF, domicilio).
 10. **Fuera de alcance, para más adelante:** el recordatorio (sin tarea programada hoy; exige «Siempre activo») y el código de acceso (correo obligatorio y verificado) necesitan su propia lectura; este documento no los cubre.
 

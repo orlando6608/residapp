@@ -377,7 +377,7 @@ La persona deja el centro, cambia de funciones, o pide la limitación o supresi�
 - Su **nombre y su identificador de acceso** seguirán constando en los informes de derivación que firmó y en los registros de actividad (solo se pueden bloquear, no borrar) mientras dure la documentación clínica a la que están asociados.
 - Su **IP de entrada** queda en los registros de seguridad hasta que se fije su plazo (apartado 2.8).
 - Quién puede **ver** esos registros es el personal con permiso de auditoría: no hay un bloqueo en el sentido del art. 32 LOPDGDD.
-- Tiene derecho a acceso y a reclamar ante la autoridad de control (AEPD o APDCAT, **[A verificar]** según el tipo de centro). Los derechos digitales laborales y la información a la plantilla los revisa la asesoría laboral (**[A verificar]** artículos).
+- Tiene derecho a acceso y a reclamar ante la autoridad de control (AEPD o APDCAT, **[A verificar]** según el tipo de centro). Los derechos digitales laborales y la información a la plantilla los revisa la asesoría laboral (LOPDGDD, arts. 87 a 91: dispositivos digitales, desconexión digital, videovigilancia y sonido, geolocalización y negociación colectiva).
 
 ---
 

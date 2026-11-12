@@ -196,7 +196,7 @@ Parte A (residencia), fila «Datos»: añadir «Confirmación de la dirección: 
 1. **[Decidir DPO]** Que «de palabra» con marca interna basta para el aviso genérico; si admite la confirmación por una persona designada presente; si exige canal.
 2. **[Decidir DPO]** Sin caducidad automática (propuesta) o lista de pendientes de reconfirmar.
 3. **[Decidir DPO]** Conservación del estado y del historial (propuesta: estado mientras exista la dirección; historial en auditoría; si hay tabla, 12 meses desde que deja de ser vigente; **no es un plazo legal**) y la vía de purga.
-4. **[Decidir DPO]** Información a la plantilla sobre la marca y base del tratamiento de sus datos; artículos de derechos digitales laborales de la LOPDGDD **a verificar**.
+4. **[Decidir DPO]** Información a la plantilla sobre la marca y base del tratamiento de sus datos; derechos digitales laborales de la LOPDGDD, arts. 87 (intimidad y dispositivos digitales; el 87.3 pide criterios de uso con participación de los representantes de los trabajadores), 88 (desconexión digital), 89 (videovigilancia y grabación de sonidos), 90 (geolocalización) y 91 (negociación colectiva); su aplicación a este caso la valida la asesoría laboral.
 5. **[Decidir DPO]** Aviso a un desconocido: incidente documentado (art. 33.5) y cuándo se notifica; autoridad de control (AEPD o APDCAT) según el tipo de centro, **a verificar**.
 6. **[Decidir Orlando]** D6 (confirmar no dispara envíos atrasados), si se enseña el nombre de la cuenta en la ficha, y si la casilla va en el alta del residente.
 7. **[Decidir residencia]** Persona de referencia y suplente, procedimiento escrito, comprobación ante una petición de cambio por teléfono, y cómo se avisa a las familias que ya tenían correo.
