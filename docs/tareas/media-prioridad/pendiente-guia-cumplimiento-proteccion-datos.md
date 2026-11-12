@@ -2,6 +2,8 @@
 
 **Estado: pendiente** (anotada el 2026-11-12, a petición de Orlando). No está empezada.
 
+**Prioridad media, pero bloqueante antes de tener centros reales** (Orlando, 2026-11-12). Está en prioridad media solo porque la plataforma aún está en desarrollo y no hay centros reales; no es una tarea menor. Hay que resolverla **antes del primer centro real**, y conviene empezar antes la búsqueda de la persona experta (DPO o abogado), que puede llevar semanas. En cuanto haya un centro interesado, sube a alta prioridad.
+
 ## Qué se pide
 
 Un documento guía, **en lenguaje llano y dirigido a los propietarios de la plataforma (Orlando y CJ)**, que explique los pasos a seguir para cumplir con la protección de datos en todos sus aspectos. No es un texto jurídico: es la hoja de ruta que permite a dos personas que no son juristas saber qué hay que hacer, en qué orden, quién lo hace y cuándo hace falta una persona experta. Cada término técnico se explica con una frase corriente (regla del proyecto).
