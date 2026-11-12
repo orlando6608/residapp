@@ -15,12 +15,12 @@ public sealed class RegistroFallosTecnicosTests
 {
     private const string Personal = "Ana-Lopez-87654321X";
 
-    private static (CapturingLogger Log, ApplicationFailure Failure) Write(Exception error)
+    private static (CapturingLogger Log, ApplicationFailure Failure) Write(Exception error, Func<TechnicalFailureLog.RequestContext?>? context = null)
     {
         var log = new CapturingLogger();
         try { throw error; } catch (Exception thrown) { error = thrown; } // una excepción sin lanzar no tiene pila de llamadas
         var failure = ApplicationResultRunner.Normalize(error);
-        TechnicalFailureLog.Write(log, error, failure);
+        TechnicalFailureLog.Write(log, error, failure, context);
         return (log, failure);
     }
 
@@ -34,6 +34,44 @@ public sealed class RegistroFallosTecnicosTests
         Assert.Equal(LogLevel.Warning, line.Level);
         Assert.Contains("CLINICAL_DETAIL_READ_NOT_AUTHORIZED", line.Text);
         Assert.Contains(nameof(RegistroFallosTecnicosTests), line.Text);
+    }
+
+    [Fact]
+    public void AccesoDenegado_ConContexto_LlevaLaSesionYElCentro()
+    {
+        var session = Guid.NewGuid();
+        var center = Guid.NewGuid();
+
+        var (log, _) = Write(new InvalidOperationException("CLINICAL_DETAIL_READ_NOT_AUTHORIZED"), () => new TechnicalFailureLog.RequestContext(session, center));
+
+        var line = Assert.Single(log.Lines);
+        Assert.Contains(session.ToString("D"), line.Text);
+        Assert.Contains(center.ToString("D"), line.Text);
+    }
+
+    [Fact]
+    public void AccesoDenegado_SinContextoOSiObtenerloFalla_EscribeElAvisoIgual()
+    {
+        var (withoutContext, _) = Write(new InvalidOperationException("CLINICAL_DETAIL_READ_NOT_AUTHORIZED"));
+        var (failingContext, _) = Write(new InvalidOperationException("CLINICAL_DETAIL_READ_NOT_AUTHORIZED"), () => throw new InvalidOperationException("sin petición"));
+
+        foreach (var log in new[] { withoutContext, failingContext })
+        {
+            var line = Assert.Single(log.Lines);
+            Assert.Contains("CLINICAL_DETAIL_READ_NOT_AUTHORIZED", line.Text);
+            Assert.Contains("sesión -, centro declarado -", line.Text);
+        }
+    }
+
+    [Fact]
+    public void FalloInesperado_NoLlevaLaSesionNiElCentro()
+    {
+        var session = Guid.NewGuid();
+
+        var (log, failure) = Write(new InvalidOperationException("paciente"), () => new TechnicalFailureLog.RequestContext(session, Guid.NewGuid()));
+
+        Assert.Equal(ApplicationFailureCode.Unavailable, failure.Code);
+        Assert.DoesNotContain(session.ToString("D"), Assert.Single(log.Lines).Text);
     }
 
     [Fact]

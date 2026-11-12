@@ -12,31 +12,52 @@ namespace ResidApp.Infrastructure.Registro;
 /// Qué se escribe: un acceso denegado (aviso) con su código; un fallo inesperado (error) con el tipo de excepción, el número y el estado de SQL Server,
 /// el código si lo hay y el método de ResidApp donde ocurrió. Los conflictos y los datos no válidos son errores funcionales esperados y no se registran.
 /// Qué NO se escribe nunca: el mensaje de una excepción salvo que sea, entero, un código en mayúsculas (el mensaje de un error de SQL puede llevar el
-/// valor duplicado de una clave, con datos personales), la excepción completa, parámetros, cuenta, residente ni centro (lo dice la auditoría y el TraceId).
+/// valor duplicado de una clave, con datos personales), la excepción completa, parámetros, cuenta ni residente. Un acceso denegado lleva además el
+/// identificador de la sesión (un número aleatorio, seudónimo: solo la base lo une a una cuenta) y el centro que declara la cookie del ámbito activo
+/// (no firmada: es lo que dice la petición, no lo verificado), para atribuir un pico de denegados y saber a qué responsable avisar (RGPD art. 33.2).
 /// Lectura del DPO: docs/privacidad/registros-tecnicos-lectura-dpo.md.
 /// </summary>
 public static class TechnicalFailureLog
 {
+    /// <summary>Lo que se sabe de la petición en curso. Ninguno de los dos datos identifica a una persona por sí solo.</summary>
+    public sealed record RequestContext(Guid? SessionId, Guid? DeclaredCenterId);
+
     public const string OmittedMessage = "(mensaje omitido)";
 
     private static readonly Regex CodePattern = new("^[A-Z][A-Z0-9_]{2,80}$", RegexOptions.Compiled);
 
-    /// <summary>Conecta el registro con el runner. Se llama una vez al arrancar.</summary>
-    public static void Register(ILogger logger) =>
-        ApplicationResultRunner.FailureObserver = (error, failure) => Write(logger, error, failure);
+    /// <summary>Conecta el registro con el runner. Se llama una vez al arrancar. <paramref name="context"/> da la sesión y el centro de la petición en curso
+    /// (null fuera de una petición, por ejemplo en una tarea en segundo plano).</summary>
+    public static void Register(ILogger logger, Func<RequestContext?>? context = null) =>
+        ApplicationResultRunner.FailureObserver = (error, failure) => Write(logger, error, failure, context);
 
-    public static void Write(ILogger logger, Exception error, ApplicationFailure failure)
+    public static void Write(ILogger logger, Exception error, ApplicationFailure failure, Func<RequestContext?>? context = null)
     {
         switch (failure.Code)
         {
             case ApplicationFailureCode.AccessDenied:
-                logger.LogWarning("Acceso denegado: {Codigo} en {Origen}.", SafeCode(error), Origin(error));
+                var request = Context(context);
+                logger.LogWarning("Acceso denegado: {Codigo} en {Origen} (sesión {Sesion}, centro declarado {Centro}).",
+                    SafeCode(error), Origin(error), request?.SessionId?.ToString("D") ?? "-", request?.DeclaredCenterId?.ToString("D") ?? "-");
                 break;
             case ApplicationFailureCode.Unavailable:
                 var sql = Find<SqlException>(error);
                 logger.LogError("Fallo inesperado: {Tipo}, SQL {SqlNumero}/{SqlEstado}, código {Codigo}, en {Origen}.",
                     error.GetType().Name, sql?.Number ?? 0, sql?.State ?? 0, SafeCode(error), Origin(error));
                 break;
+        }
+    }
+
+    /// <summary>Si obtener el contexto falla, el aviso se escribe igual, sin él.</summary>
+    private static RequestContext? Context(Func<RequestContext?>? context)
+    {
+        try
+        {
+            return context?.Invoke();
+        }
+        catch (Exception)
+        {
+            return null;
         }
     }
 
