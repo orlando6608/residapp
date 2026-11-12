@@ -196,6 +196,26 @@ si hace falta WAF, uno **regional** (Application Gateway) **[A verificar]** prec
    con un centro** (propuesta de la lectura del DPO: este ADR y su flujo pondrían en un repositorio público los nombres y la estructura de producción), y además **la propiedad se
    transfiere a una organización de GitHub** (nombre y titular por decidir: el titular persona física o sociedad sigue abierto, ver Puertas abiertas). Una organización resuelve también el
    acceso de CJ: en un repositorio personal GitHub no admite los roles Read ni Triage (por eso CJ salió el 2026-11-03); en una organización sí.
+   - **Nota del 2026-11-12: CI/CD de dev (no cambia lo decidido aquí).**
+     - **El entorno `production` de GitHub que existe hoy** (el que despliega a Azure dev, con datos ficticios) **no tiene revisor**: Orlando lo quitó el 2026-11-11 por lento y lo
+       confirmó el 2026-11-12. Donde este ADR habla del entorno `production` «con su revisor» (transferencia, pasos 4 y 8) se refiere a lo que se propone para el producción real, no a lo
+       que hay hoy. **La ausencia de revisor se acepta solo mientras el entorno despliegue a dev con datos ficticios y no se hereda en producción: decidir su vuelta (por defecto, sí)
+       es condición de la Puerta 2** (cargar datos reales), no solo de la transferencia. Hoy el despliegue a dev se apoya en las pruebas, en el ruleset «Proteger main» y en que el
+       entorno solo admite `main`. Al transferir hay que verificar además que sobreviven el entorno, su política de ramas y los secretos.
+     - **Los PR #220 a #223 son compatibles con repositorio privado:** un solo despliegue a la vez (`concurrency`), lectura única de los scripts ya aplicados, paquete publicado compartido
+       entre jobs como artefacto de 1 día y filtro de rutas en el `push` a `main` (los PR no llevan filtro). No añaden referencias al propietario ni dependen de que el repositorio sea
+       público. Reducen los minutos de Actions: ≈5 min por fusión con código en vez de ≈8, y ninguno en `ci-cd.yml` si solo cambia documentación no publicada (CodeQL y Release no llevan
+       filtro). La estimación de ~3.300 min/mes sigue **sin medir en privado**.
+     - **Contenido del artefacto [Hecho, comprobado el 2026-11-12 sobre el paquete publicado]:** no lleva cadenas de conexión, claves ni contraseñas (`appsettings*.json` y `web.config`
+       sin ellas; la configuración vive en Azure). Sí lleva lo que el repositorio ya contiene y la aplicación sirve: los `.html`, `.notas.json` y `.respuestas.json` de
+       `docs/pendientes-cj/` (las respuestas de CJ no están en el repositorio desde el 2026-11-11, así que tampoco en el paquete). Un artefacto de Actions lo puede descargar quien tenga
+       acceso de lectura: con el repositorio público, cualquier cuenta de GitHub; en privado, solo las personas con acceso. Dura 1 día. Si el paquete llegara a incorporar algo que no deba
+       verse, hay que repetir esta comprobación.
+     - **Filtro de rutas del `push` [A verificar al privatizar]:** solo deja fuera `docs/` (salvo `docs/pendientes-cj/`), `CLAUDE.md` y `README.md`; los scripts SQL (`database/`), los
+       workflows (`.github/`), el código y `.claude/` siguen desplegando (probado con un workflow desechable; `database/` por el patrón `**`, sin caso propio). Revisarlo si cambia qué se
+       publica desde `docs/`.
+     - **Al añadir el análisis estático que sustituye a CodeQL (paso 1)**, su check no debe llevar filtro de rutas en `pull_request`: un check exigido por el ruleset que no se ejecuta
+       deja el PR sin poder fusionarse.
    - **Lo que se rompe al transferir** (el sujeto de OIDC es **[Hecho]**, comprobado con `gh api …/actions/oidc/customization/sub`; el resto **[A verificar]** y sin probar):
      - **Las dos credenciales federadas de Azure** (`residapp-main-branch` y `residapp-env-production`, en la aplicación de Entra `residapp-github-actions`): el sujeto pasa a ser
        `repo:<org>@<idOrg>/residapp@1366636161:…`, así que dejan de coincidir y fallan `azure/login` en `ci-cd.yml` (despliegue) y en `sql-dev-nivel.yml` (cada noche a la 01:00 UTC). El
