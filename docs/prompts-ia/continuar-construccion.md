@@ -2137,7 +2137,7 @@ Claude, ChatGPT o una persona) arranque sin reconstruir el contexto.
    - `docs/pendientes-cj/archivados/aclaraciones-respuestas-cj.html` (preparado el 2026-10-07, 11 respuestas): según lo que responda, las aportaciones a un borrador de basal ajeno (tema 1), la
      finalidad de calidad asistencial y qué es Coordinación Clínica (tema 3), las temperaturas seguidas (tema 2) o un cambio en «Comunicaciones» del informe (tema 4).
    - ~~Siguen sin respuesta~~: `docs/pendientes-cj/archivados/traslado-y-baja-residente.html` (6 respuestas): respondido el 2026-10-07 y archivado; hecho salvo el traslado por Enfermería con permiso.
-   - **Dirección, bloque 2:** solo falta la 4ª finalidad (calidad asistencial), pendiente de la respuesta de CJ (ver `pendientes-direccion.md`).
+   - **Dirección, bloque 2:** completo. No habrá 4ª finalidad: la calidad asistencial se resolvió con el permiso `QUALITY_REVIEW` (script `0076`, 2026-10-26; ver `pendientes-direccion.md`).
 2. **Administración, bloques siguientes** (ver `pendientes-administracion.md`): el organigrama y los cargos (ADM-07) está hecho (2026-10-26); queda el panel completo.
 3. **Dirección, bloque 3** (derivaciones y comunicación familiar en solo lectura): necesita la publicación familiar
    (Administración y Familia). La revisión de calidad de proceso (DIR-11) necesita que CJ defina los hitos y plazos.

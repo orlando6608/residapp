@@ -18,7 +18,7 @@ El orden se hereda de `roadmap.md` (heredado a su vez del prototipo legado, úni
 | Auxiliar | Auxiliar | Completado (pendiente de validación por CJ) |
 | Enfermería | Enfermería | En curso |
 | Medicina | Medicina | En curso (escalados, evento propio, valoración médica, indicaciones, seguimiento médico, protocolo urgente, derivación a Urgencias y cierre médico) |
-| Familia / Portal Familiar | Familiar | No iniciado |
+| Familia / Portal Familiar | Familiar | En curso (construido: inicio, residentes autorizados, comunicados, citas y solicitudes; ver `pendientes-administracion.md`. Falta el segundo factor de los familiares y parte de los avisos por correo, ADR 0012) |
 | Administración | Administración | En curso (residentes, ficha administrativa, corrección de identidad, familiares, autorizaciones y contacto urgente; ver `pendientes-administracion.md`) |
 | Dirección / Coordinación Clínica | Dirección/Coordinación Clínica | En curso (supervisión operativa en solo lectura e indicadores agregados con informe imprimible; ver `pendientes-direccion.md`) |
 
@@ -73,7 +73,7 @@ Cubre el módulo *Portal Familiar* de `alcance.md`.
 - No tiene flujo clínico propio: el circuito familiar (aprobación, publicación, consulta) se documenta como historia de usuario, no como flujo asistencial (ver [`docs/flujos-clinicos/indice.md`](../../flujos-clinicos/indice.md)).
 - Wireframe funcional: [`docs/bocetos-pantallas/wireframes-funcionales/portal-familiar.md`](../../bocetos-pantallas/wireframes-funcionales/portal-familiar.md).
 
-Tareas de construcción pendientes:
+Construido en lo esencial (el detalle y lo que queda está en `pendientes-administracion.md`, «Portal Familiar», y en el ADR 0012). Las tareas de abajo son el alcance completo del vertical:
 - Dominio: sesión familiar, selección de residente autorizado, consulta de publicaciones, citas (reserva directa y solicitud previa según modalidad del centro).
 - Aplicación e infraestructura: casos de uso y repositorios Dapper/SQL Server para publicaciones y citas, ligados a las autorizaciones familiares que gestiona Administración.
 - `ResidApp.Web`: pantallas del portal (inicio, historial de publicaciones, citas, estados excepcionales).

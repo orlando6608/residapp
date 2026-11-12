@@ -292,8 +292,8 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
 
 En el orden propuesto de construcción:
 
-1. **Historia 11, bloques siguientes** (común con Medicina):
-   - **Línea temporal para Dirección Clínica:** lectura condicional y auditada, que queda para su vertical.
+1. **Historia 11 (común con Medicina): no queda ningún bloque pendiente.**
+   - ~~Línea temporal para Dirección Clínica~~ — **hecha el 2026-10-07** (DIR-06 y DIR-07, sin script, en `/Baseline/Direction`): lectura condicional y auditada, con finalidad y declaración; ver `pendientes-direccion.md`, bloque 2.
 
 Huecos de lo ya construido:
 
@@ -321,8 +321,8 @@ Huecos de lo ya construido:
   del evento (los crea Administración) y se guarda su vínculo y su nombre; ya no es texto libre, y sin equipos activos no se puede transferir. Las
   transferencias anteriores conservan su texto. El equipo responsable sigue siendo la Enfermería de la unidad del evento. La fecha prevista es solo
   fecha (sin hora) y vence al día siguiente. Desde el 2026-10-02 la recepción solo la confirman los miembros vigentes del equipo entrante; si el equipo no
-  tiene miembros (o la transferencia es anterior a `0028`), la confirma cualquiera del ámbito. Sigue sin mirar el turno planificado. Las dos cosas
-  están preguntadas a CJ en `docs/pendientes-cj/archivados/continuidad-supervision-comunicacion.html` (tema 1).
+  tiene miembros (o la transferencia es anterior a `0028`), la confirma cualquiera del ámbito. Sigue sin mirar el turno planificado: **CJ respondió el 2026-10-07
+  (`continuidad-supervision-comunicacion`, tema 1) que el equipo entrante **no** se propone según los turnos: se elige a mano entre los equipos de la unidad, como ahora (1.2, opción B). Sobre quién confirma la recepción (1.1) CJ no eligió opción: pidió una **bandeja de seguimientos común por unidad** para Enfermería y otra para Medicina, con bandejas personales para un futuro (calendario de turnos con personas; ver `pendientes-administracion.md`, «Guardado para el futuro»). **Sigue sin confirmar** si le vale la regla actual (solo miembros del equipo entrante).
 - **Comunicación familiar (historia 3)**: solo se guarda la comunicación preparada, pendiente de
   aprobación. Quedan para Portal Familiar / Administración: aprobarla o volver a editarla (ENF-15), la
   audiencia autorizada (ENF-14), el momento de publicación y la publicación. `comunicaciones_familiares`
@@ -357,7 +357,7 @@ Huecos de lo ya construido:
   estado basal, cambian con el tiempo, los podría fijar Enfermería pero preferiblemente Medicina, y depende del centro (en algunos, Medicina no tendrá tiempo).
   Sin construir.
 - Historia 9: la aportación de otro profesional autorizado a un borrador ajeno (permiso
-  `BASELINE_DRAFT_CONTRIBUTE`) no está construida; hoy solo el autor del borrador puede editarlo. Pendiente de CJ en `docs/pendientes-cj/archivados/decisiones-direccion-basal-derivacion.html` (tema 2): qué es una aportación, sobre qué y quién.
+  `BASELINE_DRAFT_CONTRIBUTE`) no está construida; hoy solo el autor del borrador puede editarlo. **CJ respondió el 2026-10-06** (`decisiones-direccion-basal-derivacion`, tema 2): una aportación es un cambio directo en una respuesta del borrador, con registro de quién cambió qué y visible para el autor antes de firmar (2.1, A); se puede aportar sobre las nueve áreas y el Barthel (2.2, A); pueden aportar Enfermería y Medicina (2.3, texto libre); y una aportación a un basal ya firmado no debería firmarla quien la creó. **Se puede construir; falta aclarar con CJ esa última frase** (a qué firma se refiere).
 
 Al construir cada historia, actualizar el Manual de usuario (`src/ResidApp.Web/Views/Home/Manual.cshtml`),
 sección "Próximamente".
