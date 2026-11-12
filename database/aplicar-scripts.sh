@@ -42,10 +42,14 @@ run_sql -Q "IF OBJECT_ID(N'dbo.scripts_aplicados', N'U') IS NULL
     aplicado_en DATETIME2(3)  NOT NULL CONSTRAINT DF_scripts_aplicados_aplicado_en DEFAULT (SYSUTCDATETIME())
   );"
 
+# Los scripts ya aplicados se leen de una sola vez: cada llamada a sqlcmd abre una conexión nueva (~1,6 s contra Azure SQL) y, con una consulta por script,
+# el despliegue gastaba más de 2 minutos solo en comprobar. El «tr» quita el retorno de carro que añade el sqlcmd de Windows.
+# La lista se lee al principio: no se admiten dos ejecuciones a la vez contra la misma base.
+aplicados="$(run_sql -h -1 -W -Q "SET NOCOUNT ON; SELECT nombre FROM dbo.scripts_aplicados;" | tr -d '\r')"
+
 for fichero in scripts/*.sql; do
   nombre="$(basename "$fichero")"
-  ya_aplicado="$(run_sql -h -1 -W -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM dbo.scripts_aplicados WHERE nombre = N'$nombre';" | tr -d '[:space:]')"
-  if [ "$ya_aplicado" = "1" ]; then
+  if grep -qxF "$nombre" <<< "$aplicados"; then
     echo "Ya aplicado: $nombre"
     continue
   fi
