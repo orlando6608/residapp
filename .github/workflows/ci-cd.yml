@@ -3,6 +3,16 @@ name: CI/CD
 on:
   push:
     branches: [main]
+    # Tras fusionar no se prueba ni se despliega si el cambio es solo de documentación que la aplicación no publica (docs/, CLAUDE.md, README.md): no hay nada que
+    # desplegar, y antes de fusionar el PR ya ha pasado todas las pruebas. Siguen desplegando el código, los scripts de base de datos, los workflows, .claude/ (una
+    # prueba lee su registro) y todo docs/pendientes-cj/ (la aplicación sirve esos .html y .json). La última regla que casa con un fichero decide; en un push basta
+    # que un fichero case para que se ejecute. Comprobado con un workflow desechable (docs sola no lanza nada; docs + código, sí). Los PR no llevan filtro: sus checks son obligatorios.
+    paths:
+      - "**"
+      - "!docs/**"
+      - "docs/pendientes-cj/**"
+      - "!CLAUDE.md"
+      - "!README.md"
   pull_request:
     branches: [main]
 
@@ -10,7 +20,7 @@ permissions:
   contents: read
 
 # Un PR que recibe otro commit cancela la ejecución anterior (gasta menos minutos si el repositorio pasa a privado). Las de main no se cancelan nunca
-# (llevan el despliegue, que espera la aprobación): cada ejecución de push tiene su propio grupo.
+# (llevan el despliegue): cada ejecución de push tiene su propio grupo. Que no se solapen dos despliegues lo garantiza el «concurrency» del job deploy.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -121,7 +131,8 @@ jobs:
   deploy:
     needs: build-and-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    # Hallazgo A1: el despliegue pasa por el entorno «production», que exige la aprobación de su revisor y solo se puede usar desde main. Azure acepta el
+    # Hallazgo A1: el despliegue pasa por el entorno «production», que solo se puede usar desde main. No pide aprobación manual (decisión consciente de Orlando, 2026-11-11:
+    # lo que protege son las pruebas y las reglas de main; reconsiderar antes de datos reales). Azure acepta el
     # token de este job por su credencial federada «residapp-env-production» (sujeto ...:environment:production). Los secretos AZURE_SQL_ADMIN_* viven en ese
     # entorno, no en el repositorio. El permiso de pedir el token (id-token) es solo de este job: el de pruebas no lo necesita.
     environment: production
