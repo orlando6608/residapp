@@ -130,8 +130,8 @@ interruptor, sin que alguien tenga que acordarse de ponerlo en cada pantalla.
 9. **[Decidir]** Planes, precios y topes por censo, cómo se cuenta el censo para facturar y cuándo se anuncian en la landing. La facturación de cada módulo vive fuera de la aplicación (en el
    contrato); la aplicación solo guarda la referencia del anexo y la vigencia.
 10. **[A verificar]** Encaje de `modulos_centro` con la seguridad por filas y con la escritura de Plataforma (cambia el ADR 0008 y la matriz del script 0091).
-11. **[A verificar]** Artículos que el DPO no pudo confirmar en fuente oficial (art. 28.2, 25.2, 15.3 y 9.2.h del RGPD, lista del art. 35.4 de la AEPD, efecto de la Llei 2/2024 sobre la Llei 21/2000,
-    ámbito de la APDCAT frente a la AEPD para el centro piloto).
+11. **Comprobado el 2026-11-12 contra el texto literal de la base normativa local** (consolidados, no versión oficial): art. 28.2, 25.2, 15.3 y 9.2.h (con el 9.3 y el 6.4) del RGPD; lista del art. 35.4 de la AEPD (los puntos 4, 7 y 9 se cumplen para ResidApp, y bastan dos criterios para presumir EIPD; la APDCAT adopta los mismos criterios, guía de AIPD de 2025); la Llei 2/2024 y la Ley 10/2025 solo tocan el art. 8.2 (voluntades anticipadas) de la Llei 21/2000, el art. 12 (conservación) sigue en la redacción de la Ley 16/2010 (consolidado del BOE actualizado el 2026-02-16).
+    **Sigue abierto, y lo decide el DPO o un abogado:** ámbito de la APDCAT frente a la AEPD para el centro piloto. Depende de la titularidad (pública, concertada o privada), del concierto con el Departament y de si todas las plazas lo están (Llei 32/2010, art. 3; Llei 12/2007, art. 2.2).
 
 ### Cautelas anotadas para los módulos futuros
 

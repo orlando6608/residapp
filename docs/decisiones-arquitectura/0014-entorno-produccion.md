@@ -223,7 +223,7 @@ si hace falta WAF, uno **regional** (Application Gateway) **[A verificar]** prec
        organización: 4 USD por usuario y mes**; GitHub Pro personal dejaría de servir al transferir. **No se privatiza ni se transfiere antes de tener activo el plan de la organización y
        probado el despliegue**: con Free, el despliegue falla o queda sin la protección prevista. **[A verificar]** dos puntos en que la documentación se contradice: si CodeQL está
        incluido en Team y si Team permite revisores obligatorios en entornos de repositorios privados (la página de precios lo da solo para Enterprise, 21 USD; importa si producción real
-       vuelve a llevar revisor, por la separación de funciones del art. 32 RGPD).
+       vuelve a llevar revisor, como medida técnica y organizativa apropiada del art. 32.1 RGPD; la separación de funciones es buena práctica, el artículo no la nombra).
    - **Lo que se rompe al transferir** (el sujeto de OIDC es **[Hecho]**, comprobado con `gh api …/actions/oidc/customization/sub`; el resto **[A verificar]** y sin probar):
      - **Las dos credenciales federadas de Azure** (`residapp-main-branch` y `residapp-env-production`, en la aplicación de Entra `residapp-github-actions`): el sujeto pasa a ser
        `repo:<org>@<idOrg>/residapp@1366636161:…`, así que dejan de coincidir y fallan `azure/login` en `ci-cd.yml` (despliegue) y en `sql-dev-nivel.yml` (cada noche a la 01:00 UTC). El

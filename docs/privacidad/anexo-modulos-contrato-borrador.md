@@ -387,7 +387,7 @@ Mi opinión va marcada como tal.
 10. **Base jurídica del dictado** (arts. 6 y 9), EIPD obligatoria o no, y compatibilidad con la normativa laboral y de derechos digitales por el uso de voz del personal y de móviles personales. ¿La voz es dato biométrico aquí?
 11. **Plazos que faltan:** aviso de cambios, aviso de incidente, respuesta a petición de apagado, aviso de vencimiento, conservación del histórico de activaciones y de la auditoría (esta última sin decidir: `antes-de-datos-reales.md:129-131`).
 12. **Cambios sustanciales de ficha (7.2):** lista cerrada y qué ocurre mientras el centro no acepta.
-13. **Autoridad de control (AEPD o APDCAT)** para el centro piloto y qué cambia en el contrato; régimen del Esquema Nacional de Seguridad si el centro es público o concertado (RD 311/2022, **[A verificar]** si aplica).
+13. **Autoridad de control (AEPD o APDCAT)** para el centro piloto y qué cambia en el contrato; régimen del Esquema Nacional de Seguridad (RD 311/2022, art. 2.1: «todo el sector público»; si el centro es privado concertado, solo aplica si presta el servicio a la Administración para el ejercicio de sus competencias, art. 2.3, y lo decide el abogado; ResidApp, como proveedora de un centro público, queda alcanzada por ese art. 2.3).
 14. **Corregir ya la política de privacidad** (frases «solo si el centro lo activa») o construir primero el interruptor (ADR 0015, puerta 8).
 15. **Cuestiones de redacción contractual** que quedan fuera de mi lectura: límites de responsabilidad, seguro, jurisdicción, confidencialidad, propiedad intelectual, nivel de servicio.
 

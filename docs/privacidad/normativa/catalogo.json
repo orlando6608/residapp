@@ -7,6 +7,8 @@
     { "id": "ens-rd-311-2022", "grupo": "España", "tipo": "boe", "boe": "BOE-A-2022-7191", "titulo": "Real Decreto 311/2022 por el que se regula el Esquema Nacional de Seguridad" },
     { "id": "ley-8-2021", "grupo": "España", "tipo": "boe", "boe": "BOE-A-2021-9233", "titulo": "Ley 8/2021 de apoyo a las personas con discapacidad en el ejercicio de su capacidad jurídica" },
     { "id": "ley-39-2006", "grupo": "España", "tipo": "boe", "boe": "BOE-A-2006-21990", "titulo": "Ley 39/2006 de Promoción de la Autonomía Personal y Atención a las personas en situación de dependencia" },
+    { "id": "ley-40-2015", "grupo": "España", "tipo": "boe", "boe": "BOE-A-2015-10566", "titulo": "Ley 40/2015 de Régimen Jurídico del Sector Público (su art. 2 define el sector público a efectos del ENS)" },
+    { "id": "estatuto-trabajadores", "grupo": "España", "tipo": "boe", "boe": "BOE-A-2015-11430", "titulo": "Real Decreto Legislativo 2/2015, texto refundido de la Ley del Estatuto de los Trabajadores (su art. 20 bis regula los derechos digitales laborales)" },
 
     { "id": "llei-21-2000", "grupo": "Cataluña", "tipo": "boe", "boe": "BOE-A-2001-2353", "titulo": "Llei 21/2000 sobre los derechos de información concernientes a la salud, la autonomía del paciente y la documentación clínica", "nota": "Texto consolidado del BOE en castellano; el original catalán está en el DOGC (no se puede bajar con una descarga simple)." },
     { "id": "llei-12-2007", "grupo": "Cataluña", "tipo": "boe", "boe": "BOE-A-2007-19189", "titulo": "Llei 12/2007 de servicios sociales", "nota": "Texto consolidado del BOE en castellano; el original catalán está en el DOGC." },
