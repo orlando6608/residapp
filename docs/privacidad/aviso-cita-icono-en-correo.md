@@ -156,7 +156,7 @@ No automatizable, y necesaria porque cada programa de correo hace lo suyo con el
 
 1. **[Decidido por Orlando, que lo dejó a la sesión de código, 2026-10-31]** `ProposalNoticeTemplate.Version` sube a «2».
 2. **[Decidir Orlando / sesión de código]** Pasar las condiciones del apartado 4 a pruebas, empezando por A3 a A7 y B1 a B3, y arreglar la prueba vacía del apartado 5, hallazgo 1.
-3. **A verificar (abogado):** que el icono incrustado no entra en el art. 22 LSSI; no cito más artículos de memoria.
+3. **A verificar (abogado):** que el icono incrustado no entra en el art. 22 LSSI. El texto del art. 22.2 está comprobado el 2026-11-12 en la base normativa local (consentimiento para «dispositivos de almacenamiento y recuperación de datos en equipos terminales»), y las directrices 2/2023 del CEPD tratan los píxeles de seguimiento en correo; que una imagen `cid:` incrustada no haga petición remota es un hecho técnico, no de la base.
 4. **A verificar:** metadatos del PNG (B3) con una herramienta que lea los bloques; no he podido comprobarlo con lo que tengo.
 5. **A comprobar en el primer envío real:** apartado 4D (clientes de correo, clip de adjunto, ninguna petición de red al abrir).
 6. **A verificar con Microsoft (ya abierto en el borrador existente, 2.6, punto 4):** cuánto retiene ACS el contenido de los mensajes, ahora con un adjunto; el icono no es dato personal, pero el mensaje sí lo es por la dirección.

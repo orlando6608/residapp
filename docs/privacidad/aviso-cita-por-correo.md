@@ -229,7 +229,7 @@ Fuentes consultadas hoy (2026-10-30), páginas de Microsoft Learn: `learn.micros
 ## A verificar o decidir
 
 1. **[Decidir DPO]** Base jurídica por tipo de familiar y si basta el procedimiento humano de confirmar la dirección o se exige `correo_confirmado_en`.
-2. **A verificar (abogado):** si la LSSI trata este aviso de servicio fuera de las comunicaciones comerciales y qué alcance tiene el art. 22 sobre el seguimiento de aperturas; no cito artículos de memoria.
+2. **Texto comprobado el 2026-11-12, aplicación al abogado:** la LSSI prohíbe las «comunicaciones publicitarias o promocionales» no solicitadas (art. 21.1) y define la comunicación comercial como la dirigida a la promoción, directa o indirecta, de la imagen o de los bienes o servicios de una empresa (anexo, letra f); un aviso operativo de cita no promociona nada. El seguimiento de aperturas con un píxel entra en el art. 5.3 de la Directiva 2002/58 según las directrices 2/2023 del CEPD (apartado 3.1), y por eso está apagado.
 3. **A verificar:** que el Anexo de Protección de Datos de Microsoft vigente cubre ACS Email; la garantía de transferencias; cuánto retiene ACS las direcciones de rebotes y si guarda el contenido (no consta en la página oficial de privacidad de ACS).
 4. **[Decidir Orlando + DPO]** B10: retención de los registros de entrega (propuesta 30 días), espacio propio en la UE, y apagado del seguimiento de aperturas.
 5. **[Decidir]** Conservación del registro de envíos (propuesta de ingeniería: 12 meses como tope) y la vía de purga.

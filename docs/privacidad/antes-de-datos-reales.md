@@ -94,7 +94,7 @@ Informes del agente `dpo-residapp` del 2026-10-29: `landings-y-passkeys-por-subd
 - la decisión del DPO real sobre la sugerencia al personal (sin cifras, o la alternativa de ofrecer siempre «redactar también en catalán») y sobre la base jurídica del campo (art. 6.1.b o 6.1.f);
 - las plantillas de correo (ADR 0012) en catalán revisadas por una persona que sepa catalán, con el aviso contra fraude en los dos idiomas;
 - el registro de actividades con el idioma preferido del familiar, el idioma por defecto del centro y la cookie técnica, y la misma conservación para el idioma anotado en el registro de envíos de correo;
-- **a verificar con un abogado:** el art. 22.2 de la LSSI y la guía de cookies de la AEPD en fuente oficial (el agente solo vio una nota de prensa y comentarios de despachos), el tope de caducidad de una cookie de idioma exenta, si el art. 128-1 del Codi de consum exige la información legal en catalán en una web B2B, si los derechos lingüísticos en Cataluña obligan a la residencia a atender en catalán, y si la autoridad de control es la AEPD o la APDCAT según el centro piloto.
+- **a verificar con un abogado:** el tope de caducidad (el art. 22.2 de la LSSI y la guía de cookies de la AEPD ya están leídos en texto literal el 2026-11-12; ninguno da una cifra para las exentas) de una cookie de idioma exenta, si el art. 128-1 del Codi de consum exige la información legal en catalán en una web B2B, si los derechos lingüísticos en Cataluña obligan a la residencia a atender en catalán, y si la autoridad de control es la AEPD o la APDCAT según el centro piloto.
 
 ## 7. Aviso de cita por correo (ADR 0012, pieza 1; `0081`; apagado por defecto)
 
@@ -112,7 +112,7 @@ Construido el 2026-10-30 con datos de prueba y el envío apagado. **Antes de la 
 
 ## 8. Plazo de 15 años, expurgo y supresión de un familiar (`0086` y `0087`; decisiones de Orlando del 2026-11-03)
 
-Informe del agente `dpo-residapp` del 2026-11-03: `expurgo-y-supresion.md` (borrador; lo valida una persona). El texto literal del art. 12 de la Llei 21/2000 (Ley 16/2010, BOE-A-2010-10215) se leyó en el BOE:
+Informe del agente `dpo-residapp` del 2026-11-03: `expurgo-y-supresion.md` (borrador; lo valida una persona). El texto literal del art. 12 de la Llei 21/2000 (Ley 16/2010, BOE-A-2010-10215) se leyó en el BOE y se volvió a comprobar el 2026-11-12 contra la base normativa local:
 15 años desde el alta de cada proceso asistencial para consentimientos, informes de alta y de pruebas, entre otros; el resto «puede destruirse» a los 5 años; y la Comissió Tècnica de Documentació Clínica
 recomienda 15 años para el curso clínico (cuadro de 07-04-2017). ResidApp fija **15 años desde la baja** para todo lo clínico y **no borra nada sola**: la pantalla de bajas avisa de lo vencido y de lo que vence en 12 meses.
 
