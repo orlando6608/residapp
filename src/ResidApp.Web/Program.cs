@@ -424,8 +424,13 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 
 var app = builder.Build();
 
-// A4 de seguridad: el runner convierte toda excepción en un mensaje genérico; esto deja constancia técnica (sin datos personales).
-TechnicalFailureLog.Register(app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ResidApp.Fallos"));
+// A4 de seguridad: el runner convierte toda excepción en un mensaje genérico; esto deja constancia técnica (sin datos personales; un acceso denegado
+// lleva la sesión, que es un número aleatorio, y el centro que declara la cookie del ámbito activo).
+var requestAccessor = app.Services.GetRequiredService<IHttpContextAccessor>();
+TechnicalFailureLog.Register(app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ResidApp.Fallos"), () =>
+    requestAccessor.HttpContext is { } http
+        ? new TechnicalFailureLog.RequestContext(SessionAuthentication.SessionId(http.User), ActiveProfileScopeCookie.Read(http.Request)?.CenterId)
+        : null);
 
 // Las horas se calculan con la zona del servidor: si no es Europe/Madrid, en producción no arranca y en desarrollo avisa.
 ServerTimeZone.Verify(app.Environment, app.Logger);

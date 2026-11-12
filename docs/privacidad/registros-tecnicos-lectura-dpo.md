@@ -76,6 +76,16 @@ Los registros **no abren el plazo**: corre desde que el responsable «tuvo const
 - [ ] Registro de actividades, anexo de EIPD, información al personal y a la política, y anexo de subencargados al día.
 - [ ] **Datos reales solo después** de la decisión escrita del DPO sobre las dos clases de plazo y de los puntos de abajo.
 
+## Decisiones de Orlando (2026-11-12, para Azure dev)
+
+Tomadas de una en una tras esta lectura. No sustituyen la decisión escrita de una persona experta antes de usar datos reales.
+
+- **Qué se guarda:** solo la salida de la aplicación (`AppServiceConsoleLogs` y `AppServicePlatformLogs`), sin los registros de peticiones HTTP.
+- **Dónde:** una cuenta de almacenamiento nueva en Spain Central, separada de la de la auditoría de SQL.
+- **Retención:** 90 días para estos registros, que no llevan IP ni ruta con identificadores.
+- **Sesión y centro:** sí. El aviso de acceso denegado lleva el identificador de la sesión (aleatorio, validado contra la base) y el centro **que declara la cookie del ámbito activo**. Esa cookie no está firmada: es lo que dice la petición, no lo verificado, y se llama «centro declarado» en el registro. Sin cuenta, residente ni nombre en el texto.
+- **Alertas:** por métricas de la plataforma (errores 5xx, respuestas 403 y conexiones fallidas a SQL), con un titular y un suplente designados. Las direcciones no se anotan en el repositorio, que es público.
+
 ## A verificar o decidir
 
 **[Decidir] Orlando / DPO / abogado:** fase 1 sin registros HTTP (sí o no); token de invitación fuera de la ruta (no lo pido, lo señalo); plazos de las dos clases y alineación de la auditoría SQL; si el log lleva sesión y centro; base jurídica según sea la residencia pública, concertada o privada; titular y suplente de las alertas.

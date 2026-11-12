@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Auxiliar;
@@ -19,9 +20,19 @@ using static ResidApp.FunctionalTests.ResidentsFlowTests;
 
 namespace ResidApp.FunctionalTests;
 
+/// <summary>El registro técnico de fallos (hallazgo A4) se conecta al runner con un único observador estático: cada servidor de pruebas que arranca lo
+/// sustituye por el suyo, y xUnit arranca varios a la vez. En producción hay un solo servidor y no pasa. Una prueba que mira lo que ese registro escribe
+/// necesita que ningún otro servidor se cree mientras corre, así que su clase va en una colección que no se ejecuta en paralelo con las demás.</summary>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class RegistroTecnicoSinParalelismo
+{
+    public const string Name = "RegistroTecnicoSinParalelismo";
+}
+
 /// <summary>El dictado de «Registrar cambio» (ADR 0009 y 0011) por HTTP, con un proveedor de IA falso: solo el servidor, sin pantalla. Sin clave de
 /// proveedor responde 404; con ella, exige sesión, token antiforgery, perfil Auxiliar y residente asignado, limita por cuenta, audita y nunca
 /// filtra lo que falle en el proveedor.</summary>
+[Collection(RegistroTecnicoSinParalelismo.Name)]
 public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFactory>
 {
     private const string Token = "__RequestVerificationToken";
@@ -123,6 +134,29 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
             request.Headers.Add("RequestVerificationToken", token);
         }
         return await client.SendAsync(request);
+    }
+
+    private sealed class CapturingLoggerProvider : ILoggerProvider
+    {
+        private readonly System.Collections.Concurrent.ConcurrentQueue<(string Category, LogLevel Level, string Text)> _lines = new();
+
+        public IReadOnlyCollection<(string Category, LogLevel Level, string Text)> Lines => [.. _lines];
+
+        public ILogger CreateLogger(string categoryName) => new CapturingLogger(categoryName, _lines);
+
+        public void Dispose()
+        {
+        }
+
+        private sealed class CapturingLogger(string category, System.Collections.Concurrent.ConcurrentQueue<(string, LogLevel, string)> lines) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+                lines.Enqueue((category, logLevel, formatter(state, exception)));
+        }
     }
 
     private static FakeVoice Voice() => new()
@@ -246,6 +280,24 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
         Assert.Equal(HttpStatusCode.Forbidden, notAssigned.StatusCode);
         Assert.Empty(voice.Calls);
         Assert.Equal(0, await AuditRowsAsync(seed.AuxiliarAccount));
+    }
+
+    [Fact]
+    public async Task UnAccesoDenegado_DejaEnElRegistroSuCodigo_LaSesionYElCentro_ConLaAppEntera()
+    {
+        // Hallazgo A4: el runner convierte la denegación en un 403 sin más; el registro técnico es lo único que deja rastro.
+        var seed = await SeedAsync();
+        var capture = new CapturingLoggerProvider();
+        using var app = AppWith(Voice()).WithWebHostBuilder(builder => builder.ConfigureLogging(logging => logging.AddProvider(capture)));
+        var other = await LoginAsync(app, seed.OtroAuxiliar);
+
+        var response = await DictarAsync(other, seed.Resident, await TokenAsync(other, "/"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var line = Assert.Single(capture.Lines, l => l.Category == "ResidApp.Fallos" && l.Level == LogLevel.Warning).Text;
+        Assert.Matches("Acceso denegado: [A-Z][A-Z0-9_]+ en .+ \\(sesión [0-9a-f-]{36}, centro declarado [0-9a-f-]{36}\\)\\.", line);
+        Assert.DoesNotContain(seed.Resident.ToString(), line);
+        Assert.DoesNotContain(seed.OtroAuxiliar, line);
     }
 
     [Fact]
