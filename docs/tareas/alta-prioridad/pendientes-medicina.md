@@ -161,8 +161,8 @@ Flujo: [`valoracion-conducta-medicina.md`](../../flujos-clinicos/valoracion-cond
 
 En el orden propuesto:
 
-1. **Lo que queda de la historia 9** (común con la historia 11 de Enfermería; ver `pendientes-enfermeria.md`):
-   la línea temporal para Dirección Clínica, que queda para su vertical.
+1. **Historia 9 (común con la historia 11 de Enfermería; ver `pendientes-enfermeria.md`): no queda ningún bloque pendiente.**
+   la línea temporal para Dirección Clínica está **hecha desde el 2026-10-07** (DIR-06, sin script, en `/Baseline/Direction`; ver `pendientes-direccion.md`, bloque 2).
 
 Huecos de lo ya construido:
 
@@ -173,5 +173,5 @@ Huecos de lo ya construido:
 - **Seguimiento médico (historia 5)**: desde el 2026-10-01 (script `0028`) el equipo entrante de una transferencia se elige entre los equipos activos de
   la unidad del evento, como en Enfermería (sin equipos activos no se puede transferir; las transferencias anteriores conservan su texto). La fecha
   prevista es solo fecha, sin hora, como en Enfermería. Desde el 2026-10-02 la recepción (opcional) solo la confirman los miembros vigentes del equipo
-  entrante, con la misma excepción que en Enfermería (equipo sin miembros o transferencia anterior a `0028`). Pendiente de que CJ lo confirme, y de
-  si el equipo entrante debe salir del turno planificado: `docs/pendientes-cj/archivados/continuidad-supervision-comunicacion.html` (tema 1).
+  entrante, con la misma excepción que en Enfermería (equipo sin miembros o transferencia anterior a `0028`). CJ respondió el 2026-10-07 que el equipo
+  entrante no se propone según el turno planificado, sino que se elige a mano (tema 1, 1.2 B). Sigue sin confirmar si le vale la regla de quién confirma la recepción: ver `pendientes-enfermeria.md`, «Seguimiento (historia 4)».
