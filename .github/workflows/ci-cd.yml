@@ -18,6 +18,8 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-26.04
+    outputs:
+      paquete: ${{ steps.huella.outputs.paquete }}
     services:
       sqlserver:
         image: mcr.microsoft.com/mssql/server:2022-latest
@@ -106,11 +108,13 @@ jobs:
       # despliega exactamente lo que pasó las pruebas y el despliegue se ahorra otra compilación completa (~1 min). El paquete no lleva secretos (la configuración
       # y las cadenas de conexión viven en Azure) y el artefacto se borra al día siguiente.
       - name: Publicar la aplicación (sin recompilar)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: dotnet publish src/ResidApp.Web/ResidApp.Web.csproj --configuration Release --no-build --output ./publish
 
+      - name: TEMP huella del paquete
+        id: huella
+        run: echo "paquete=$(cd publish && find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
       - name: Guardar el paquete publicado
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/upload-artifact@v7
         with:
           name: publish
@@ -235,3 +239,24 @@ jobs:
           app-name: app-residapp-dev
           package: ./publish
           clean: true
+
+  # TEMPORAL (solo en la rama de prueba, se descarta): comprueba el traspaso entre jobs igual que lo hará deploy, sin .NET y en otro runner.
+  tmp-verificar-descarga:
+    needs: build-and-test
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: publish
+          path: ./publish
+
+      - name: Comparar con lo publicado
+        env:
+          ESPERADA: ${{ needs.build-and-test.outputs.paquete }}
+        run: |
+          test -f publish/ResidApp.Web.dll
+          obtenida="$(cd publish && find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)"
+          echo "ficheros descargados: $(find publish -type f | wc -l)"
+          echo "huella publicada:  $ESPERADA"
+          echo "huella descargada: $obtenida"
+          [ -n "$ESPERADA" ] && [ "$ESPERADA" = "$obtenida" ]
