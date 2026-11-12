@@ -1725,7 +1725,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             await connection.ExecuteScalarAsync<string>("SELECT CONVERT(VARCHAR(8), hora_publicacion) FROM dbo.comunicados_horario_centro WHERE centro_id = @c", new { c = seed.CenterId }),
             await connection.ExecuteScalarAsync<int>("SELECT margen_minutos FROM dbo.comunicados_horario_centro WHERE centro_id = @c", new { c = seed.CenterId })));
         var deniedPage = WebUtility.HtmlDecode(await nurseDenied.Content.ReadAsStringAsync());
-        Assert.Contains("No se puede mostrar el horario.", deniedPage);
+        Assert.Contains(">Inicio</h1>", deniedPage);
         Assert.DoesNotContain("Form.HoraPublicacion", deniedPage);
     }
 

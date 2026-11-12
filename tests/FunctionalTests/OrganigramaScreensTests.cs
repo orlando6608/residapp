@@ -94,7 +94,7 @@ public class OrganigramaScreensTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.DoesNotContain("Poner una persona", read);
         Assert.DoesNotContain("gestionar los cargos", read);
         Assert.Contains("href=\"/Organigrama\"", read);
-        Assert.Contains("No se puede acceder a esta operación.", manage);
+        Assert.Contains(">Inicio</h1>", manage);
         Assert.DoesNotContain("Terapia ocupacional", manage);
         Assert.DoesNotContain("Nuevo cargo", manage);
     }

@@ -121,7 +121,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("Inactiva", inactivated);
         Assert.Contains("Reactivar", inactivated);
         Assert.Contains("La unidad ya estaba en ese estado.", again);
-        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.Contains(">Inicio</h1>", nursePage);
         Assert.DoesNotContain("Nueva unidad", nursePage);
     }
 
@@ -177,9 +177,9 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("Ubicación de la unidad guardada.", located);
         Assert.Contains($"Edificio {suffix} (ficticio) · Planta baja", located);
         Assert.Contains("No se puede inactivar un edificio con plantas o unidades activas.", blocked);
-        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.Contains(">Inicio</h1>", nursePage);
         Assert.DoesNotContain("Crear edificio", nursePage);
-        Assert.Contains("No se puede acceder a esta operación", nurseLocation);
+        Assert.Contains(">Inicio</h1>", nurseLocation);
     }
 
     [Fact]
@@ -260,7 +260,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains($"value=\"r:{roomId}\"", offeredAfter);
         Assert.Contains("Ocupada", await client.GetStringAsync(roomsUrl));
         Assert.DoesNotContain("Id del residente", occupied);
-        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.Contains(">Inicio</h1>", nursePage);
         Assert.DoesNotContain("Crear habitación", nursePage);
     }
 
@@ -379,7 +379,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.DoesNotContain("The ", malformed);
         Assert.Contains("Ningún evento coincide con la búsqueda.", filtered);
         Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", reversed);
-        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.Contains(">Inicio</h1>", nursePage);
         Assert.DoesNotContain("<table", nursePage);
     }
 
@@ -455,7 +455,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("Equipo A (ficticio)", teams);
         Assert.Contains("El equipo todavía no tiene miembros.", membersPage);
         Assert.Contains("Miembro añadido al equipo.", memberAdded);
-        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.Contains(">Inicio</h1>", nursePage);
         Assert.DoesNotContain("Nuevo turno", nursePage);
     }
 
@@ -542,9 +542,9 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("Retirar la serie desde esa fecha", seriesPage);
         Assert.Contains("Serie retirada: 1 fecha desde esa fecha.", retiredSeries);
         Assert.Contains("La serie no tiene fechas planificadas desde esa fecha", retiredAgain);
-        Assert.Contains("No se puede acceder a esta operación", nursePage);
+        Assert.Contains(">Inicio</h1>", nursePage);
         Assert.DoesNotContain("Planificar un turno", nursePage);
-        Assert.Contains("No se puede acceder a esta operación", nurseSeries);
+        Assert.Contains(">Inicio</h1>", nurseSeries);
         Assert.DoesNotContain("Retirar la serie", nurseSeries);
     }
 
