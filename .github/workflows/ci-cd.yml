@@ -112,6 +112,12 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    # Un solo despliegue a la vez: dos fusiones seguidas aplicarían los scripts de esquema sobre la misma base al mismo tiempo. Si hay uno en marcha, el siguiente
+    # espera; si mientras tanto llega otro más, el que esperaba se cancela (el nuevo parte de main y lleva también sus cambios y sus scripts). El que ya está
+    # en marcha no se cancela nunca: cortaría los scripts a medias.
+    concurrency:
+      group: deploy-azure-dev
+      cancel-in-progress: false
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
