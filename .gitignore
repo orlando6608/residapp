@@ -57,3 +57,6 @@ tools/GuiaPdf/salida/
 
 # Respuestas de CJ bajadas del servidor con tools/respuestas-cj.ps1: privadas, nunca al repositorio
 /respuestas-cj-local/
+
+# Base normativa local (textos literales de leyes y guías) que baja tools/normativa.ps1: se regenera, no se versiona
+/normativa-local/
