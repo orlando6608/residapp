@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.4.0](https://github.com/orlando6608/residapp/compare/v0.3.0...v0.4.0) (2026-11-13)
+
+
+### Features
+
+* «Guardar e indicar a Enfermería» en la valoración médica y análisis de la guía 2 de CJ ([7ac77f2](https://github.com/orlando6608/residapp/commit/7ac77f2c9e612348eec1d646942d2e17bf6f677a))
+* avisar a CJ por correo cuando se despliega un documento nuevo con preguntas ([5f547ce](https://github.com/orlando6608/residapp/commit/5f547ce949cbabcb1cbe5cbaded669a4aab9b35d))
+* aviso por correo a CJ cuando hay notas de ingeniería nuevas ([04d319f](https://github.com/orlando6608/residapp/commit/04d319f89c798336238f8597717efbf2744f57b0))
+* aviso por correo a CJ cuando hay notas de ingeniería nuevas ([4544edd](https://github.com/orlando6608/residapp/commit/4544edd5b68b3cc1396395d3ea981b376bb517e9))
+* aviso por correo a CJ cuando se despliega un documento nuevo con preguntas ([3e8f4c1](https://github.com/orlando6608/residapp/commit/3e8f4c10d80b7561a3c858d827d22c66167d398f))
+* ayuda sobre medicación, enfermedades y alergias en la derivación a Urgencias ([244a565](https://github.com/orlando6608/residapp/commit/244a565f0fef3e05d7cf172a6de8082dab461d15))
+* ayuda sobre medicación, enfermedades y alergias en la derivación a Urgencias ([b58d144](https://github.com/orlando6608/residapp/commit/b58d144c2698223ba9e137560e15deee477c2f70))
+* botón «Guardar e indicar a Enfermería» en la valoración médica ([a3ed1d4](https://github.com/orlando6608/residapp/commit/a3ed1d4e4975ed72ffa74ed61118cef6417a1219))
+* el aviso de acceso denegado lleva la sesión y el centro declarado (A4) ([b03ffc6](https://github.com/orlando6608/residapp/commit/b03ffc6319cd5eafd31c9c1187d79f34607530e2))
+* el aviso de acceso denegado lleva la sesión y el centro declarado (A4) ([547ec39](https://github.com/orlando6608/residapp/commit/547ec39625d77b67b9eb3012337d57e148107d21))
+* registro técnico de accesos denegados y fallos inesperados (A4 de seguridad) ([58d0855](https://github.com/orlando6608/residapp/commit/58d08555d762bc222b9190a55c4fd65233f2fd51))
+* registro técnico de accesos denegados y fallos inesperados (A4 de seguridad) ([1c1d7ce](https://github.com/orlando6608/residapp/commit/1c1d7ce31a3f2b88259d6a802017b1da6fc946a7))
+* respuestas de CJ en el servidor, aviso a Orlando y notas de retroalimentación ([041ad29](https://github.com/orlando6608/residapp/commit/041ad294cc802b75c61f3a50db4c93d2b68dc6c9))
+* respuestas de CJ en el servidor, aviso a Orlando y notas de retroalimentación ([e3eb3b7](https://github.com/orlando6608/residapp/commit/e3eb3b7cdcb5e6c4065e0da6063ef832ab9ad6a0))
+
+
+### Bug Fixes
+
+* correo de aviso de respuestas de CJ con el marco visual de los demás avisos ([08bfb1f](https://github.com/orlando6608/residapp/commit/08bfb1f0b2dc731d9a983a63e3823d91f99e861c))
+* correo de aviso de respuestas de CJ con estilo, y rutas de CLAUDE.md ([202d831](https://github.com/orlando6608/residapp/commit/202d831af316e164c1d9c1445d851de23b43287a))
+* el CI instala sqlcmd sin apt (cae si el runner no resuelve los servidores de Ubuntu) ([16e5aa9](https://github.com/orlando6608/residapp/commit/16e5aa993f9d11c3d151d6f4e10d330d6fadc5a1))
+* el CI instala sqlcmd sin apt (cae si el runner no resuelve los servidores de Ubuntu) ([1750166](https://github.com/orlando6608/residapp/commit/1750166728d825030061c8f3da51bda08a5ee758))
+* quien no tiene el perfil de Administración vuelve al inicio al abrir sus pantallas ([deb1f04](https://github.com/orlando6608/residapp/commit/deb1f04bf706fb472c2ed6fd17d25b404cc2991e))
+* quien no tiene el perfil de Administración vuelve al inicio al abrir sus pantallas ([e71add6](https://github.com/orlando6608/residapp/commit/e71add614aa1a75bc92696eaaa88758c8bc29787))
+* un solo despliegue a la vez (concurrency en el job deploy) ([8b842bb](https://github.com/orlando6608/residapp/commit/8b842bbfaf1a3e2d7261ad010306b24491944740))
+* un solo despliegue a la vez (concurrency en el job deploy) ([2c873dd](https://github.com/orlando6608/residapp/commit/2c873dd39030ac5a47650c2f5ca6ccf38d8e6a71))
+
+
+### Performance Improvements
+
+* comprobar los scripts de esquema ya aplicados con una sola consulta ([5027de3](https://github.com/orlando6608/residapp/commit/5027de345f5b43383a0211006779da4099caa981))
+* comprobar los scripts de esquema ya aplicados con una sola consulta ([0c087f9](https://github.com/orlando6608/residapp/commit/0c087f99754fd33abbc67f51ef296b86869652f6))
+* el despliegue usa el paquete ya compilado y probado en vez de recompilar ([a0adb21](https://github.com/orlando6608/residapp/commit/a0adb21804dfa64be73bdf6c776df21b003627be))
+* el despliegue usa el paquete ya compilado y probado en vez de recompilar ([370861f](https://github.com/orlando6608/residapp/commit/370861f9b69f38e69bdde5234f96c408c5c5051c))
+* no probar ni desplegar tras fusionar un cambio solo de documentación no publicada ([21dcb55](https://github.com/orlando6608/residapp/commit/21dcb553f53b83361c820f8f588efbe453b665fc))
+* no probar ni desplegar tras fusionar un cambio solo de documentación no publicada ([36b23a8](https://github.com/orlando6608/residapp/commit/36b23a8f599cf67ca35c0e76875597437aeb0816))
+
 ## [0.3.0](https://github.com/orlando6608/residapp/compare/v0.2.0...v0.3.0) (2026-11-08)
 
 
