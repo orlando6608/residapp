@@ -31,3 +31,12 @@ updates:
     groups:
       paquetes-menores:
         update-types: [minor, patch]
+    ignore:
+      # PDFsharp-MigraDoc 6.5.0 cambia la licencia de MIT a AGPL dual (AGPL o licencia comercial de pago) y obliga al código a elegir una (sin ella lanza
+      # PdfSharpLicenseException). La AGPL obligaría a ofrecer el código fuente a quien use el servicio: decisión de Orlando (2026-11-13), nos quedamos en la 6.2.4 (MIT).
+      # Revisar antes de usar el producto en un centro real o de privatizar el repositorio (docs/prompts-ia/continuar-construccion.md).
+      - dependency-name: "PDFsharp-MigraDoc"
+        versions: [">=6.5.0"]
+      # Fijado a mano en Infrastructure para esquivar avisos de seguridad; la serie 11 es para .NET 11 y no aporta nada sobre la 10.x. Las 10.x siguen llegando.
+      - dependency-name: "System.Security.Cryptography.Pkcs"
+        update-types: ["version-update:semver-major"]
