@@ -40,3 +40,8 @@ updates:
       # Fijado a mano en Infrastructure para esquivar avisos de seguridad; la serie 11 es para .NET 11 y no aporta nada sobre la 10.x. Las 10.x siguen llegando.
       - dependency-name: "System.Security.Cryptography.Pkcs"
         update-types: ["version-update:semver-major"]
+      # Los paquetes que siguen la versión de .NET (la 11 es para .NET 11; ResidApp está en .NET 10): sus mayores se ignoran hasta migrar. Las 10.x siguen llegando.
+      - dependency-name: "Microsoft.Extensions.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.AspNetCore.*"
+        update-types: ["version-update:semver-major"]
