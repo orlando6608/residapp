@@ -42,9 +42,9 @@ jobs:
           --health-timeout=5s
           --health-retries=10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
         with:
           dotnet-version: "10.0.x"
 
@@ -121,7 +121,7 @@ jobs:
 
       - name: Guardar el paquete publicado
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: publish
           path: ./publish
@@ -147,16 +147,16 @@ jobs:
       cancel-in-progress: false
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       # El paquete lo publicó el job build-and-test justo después de las pruebas, del mismo commit: aquí ya no se compila (ni hace falta .NET).
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: publish
           path: ./publish
 
       - name: Azure login (OIDC federado, sin secretos de larga duración)
-        uses: azure/login@v3
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -247,7 +247,7 @@ jobs:
       # sirviéndose desde el servidor. Deja un corte de segundos con wwwroot a medias, aceptable en desarrollo con datos ficticios;
       # con usuarios reales, repensar el despliegue (WEBSITE_RUN_FROM_PACKAGE o slots de staging en un plan Standard).
       - name: Desplegar en Azure Web App
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3.0.8
         with:
           app-name: app-residapp-dev
           package: ./publish
