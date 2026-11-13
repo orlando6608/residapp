@@ -89,7 +89,7 @@
     <ol class="preguntas">
       <li>
         <h3>¿Qué camino, junto con CJ?</h3>
-        <p>Cuatro opciones: dejarlo como está; una ayuda escrita en «Información adicional para Urgencias» (solo cambia un texto); esa ayuda más una ficha solo con las alergias a medicamentos; o una ficha con las tres cosas.</p>
+        <p>Tres opciones, sabiendo que la ayuda escrita en «Información adicional para Urgencias» ya está puesta y se queda en todos los casos: quedarse solo con esa ayuda, sin ficha; añadirle una ficha solo con las alergias a medicamentos; o una ficha con las tres cosas.</p>
         <p class="rec"><strong>Mi recomendación:</strong> la ayuda escrita y la ficha de alergias, que es también lo que recomienda la lectura de protección de datos; la ficha con las tres cosas solo más adelante y por fases. La razón: las alergias son lo más crítico en una urgencia y cambian poco; la medicación cambia mucho, es lo que más daño hace desactualizada y es el germen del módulo «Medicamentos», que el proyecto tiene bloqueado.</p>
         <p class="nota">Ampliar el alcance del producto lo reserva el ADR 0011 al Product Owner (CJ). Tu decisión es si lo aceptas y con qué calendario.</p>
       </li>
@@ -99,9 +99,8 @@
         <p class="rec"><strong>Mi recomendación:</strong> en la base, solo como lista informativa de seguridad (no es administración de medicación, y sin alertas ni cruces con las indicaciones), y que «Medicamentos» quede para la medicación pautada y su administración. Es opinión mía, no del DPO: tú fijas el producto.</p>
       </li>
       <li>
-        <h3>¿Hacemos ya la ayuda escrita en «Información adicional para Urgencias»?</h3>
-        <p>Es un cambio de un texto en <code>Views/Shared/_Derivacion.cshtml</code>, con su prueba y la revisión de la documentación de usuario. No toca datos ni base de datos. Hoy se puede escribir ahí lo que CJ pide, pero sin ninguna indicación de qué poner.</p>
-        <p class="rec"><strong>Mi recomendación:</strong> sí, sin esperar a las respuestas de CJ, porque vale tanto si la ficha se hace como si no.</p>
+        <h3>La ayuda escrita en «Información adicional para Urgencias» (decidido y hecho)</h3>
+        <p>Decidiste hacerla sin esperar a CJ, porque vale tanto si la ficha se hace como si no. Es un cambio de un texto en <code>Views/Shared/_Derivacion.cshtml</code>, con su prueba y una frase en el Manual. No toca datos ni base de datos. Ya está en la aplicación.</p>
       </li>
       <li>
         <h3>¿Cuándo se hace la revisión jurídica de protección de datos?</h3>
