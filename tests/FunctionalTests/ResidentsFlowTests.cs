@@ -875,6 +875,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
 
         const string communications = "Contacto telefónico con SEM a las 18 h. Avisamos a la familia del traslado a Urgencias.";
         var referralPage = await nurse.GetStringAsync($"/Enfermeria/Derivar?eventoId={eventId}");
+        Assert.Contains("la medicación habitual, las", WebUtility.HtmlDecode(referralPage));
+        Assert.Contains("aria-describedby=\"derivar-informacion-ayuda\"", referralPage);
         var preview = WebUtility.HtmlDecode(await (await nurse.PostAsync("/Enfermeria/Derivar", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = ExtractValue(referralPage, "__RequestVerificationToken"),

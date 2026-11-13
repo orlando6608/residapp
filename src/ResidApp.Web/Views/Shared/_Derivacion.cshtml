@@ -36,7 +36,13 @@
                 </div>
                 <div class="mb-3">
                     <label for="derivar-informacion" class="form-label">Información adicional para Urgencias (opcional)</label>
-                    <textarea id="derivar-informacion" name="Form.InformacionAdicional" class="form-control" rows="4"
+                    <div id="derivar-informacion-ayuda" class="form-text mb-1">
+                        Aquí puedes anotar lo que Urgencias deba saber y el informe no recoge solo: la medicación habitual, las
+                        enfermedades y las alergias conocidas. Escribe solo lo necesario para la atención urgente, sin nombres de
+                        familiares, y «no consta» cuando no lo sepas. ResidApp no guarda estos datos en otro sitio: hay que
+                        escribirlos en cada derivación.
+                    </div>
+                    <textarea id="derivar-informacion" name="Form.InformacionAdicional" class="form-control" rows="4" aria-describedby="derivar-informacion-ayuda"
                               maxlength="@ResidApp.Domain.Enfermeria.ReferralReportInput.MaxAdditionalInformationLength">@form.InformacionAdicional</textarea>
                 </div>
                 <div>

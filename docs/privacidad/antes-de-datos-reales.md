@@ -163,6 +163,13 @@ no cambia ningún tratamiento, finalidad ni dato.
 - **Pendiente de CJ:** que los rangos de referencia (`rangos_referencia_constantes`) y los borradores de basal se puedan borrar sin perder historial clínico (los valores ya registrados se copian en el registro; a confirmar).
 - **Cargos (`cargos_ocupantes`, `cargos_unidades`):** se borran filas al cambiar de ocupante; el historial de quién ocupó un cargo lo conserva la auditoría (`0073`: quién cambió qué cargo y cuándo, no los nombres de quienes lo ocuparon). Aceptado así en el organigrama.
 
+## 11. Medicación, enfermedades y alergias en el informe de derivación (decisiones de Orlando del 2026-11-13)
+
+Lectura de `dpo-residapp`: `antecedentes-medicacion-alergias-lectura-dpo.md` (borrador). Orlando decidió: ayuda escrita en «Información adicional para Urgencias» (hecha, sin datos nuevos) y, después, una **ficha de alergias a medicamentos en la base** (no en «Medicamentos»), solo como lista informativa, sin alertas ni cruces con las indicaciones; la ficha con las tres cosas, más adelante y por fases. La ficha de alergias **no está construida**: espera las respuestas de CJ (`medicina-alergias-y-plazos-cj.html`, 2.1 a 2.9).
+
+- **A validar por una persona (abogado o DPO real) antes de usar la función con residentes reales, y solo cuando haya una residencia piloto concreta:** base legal para datos de salud, si la residencia cuenta como centro sanitario, si hace falta DPO designado, la información a residentes y familias con los servicios de urgencias como destinatarios (hoy no figuran en la política de privacidad) y el registro de actividades.
+- Al construir la ficha, corregir en `Privacy.cshtml` y en `politica-privacidad-portal.md` lo que enumera el apartado de la lectura del DPO; la frase «no guarda la medicación» sigue siendo cierta con alergias solas.
+
 ## Cómo se marca como hecho
 
 Cuando una persona valide los borradores y se decidan las mejoras, anótalo aquí con la fecha y quién lo hizo, y quita el recordatorio del traspaso (`docs/prompts-ia/continuar-construccion.md`)
