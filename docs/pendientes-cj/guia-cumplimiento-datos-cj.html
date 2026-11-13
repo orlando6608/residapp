@@ -1,0 +1,770 @@
+<!doctype html>
+<!--
+  Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan solas en el servidor (api/respuestas/); ingeniería las lee de allí. Cómo funciona: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de cumplimiento de protección de datos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .bar, .howto, .toc, .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+  /* Nota de ingeniería: lo que ingeniería responde a una pregunta (fichero .notas.json del documento); solo lectura. */
+  .nota-ing { background: var(--surface); border: 1px solid var(--accent); border-left-width: 4px; padding: 8px 12px; border-radius: 4px; margin: 10px 0 0; font-size: 0.95rem; }
+  .nota-ing strong { display: block; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .nota-ing p { margin: 0; white-space: pre-line; }
+</style>
+<body data-doc="guia-cumplimiento-datos-cj" data-version="2026-11-13">
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="index.html">← Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Privacidad · Pendiente de CJ</p>
+    <h1>Guía de cumplimiento de protección de datos</h1>
+    <p class="lead prose">
+      Una hoja de ruta, con palabras corrientes, para que Orlando y tú (las dos personas propietarias de ResidApp) sepáis qué hay que hacer para cumplir la ley de protección de datos antes de usar la aplicación con residentes y familias reales: qué documentos hacen falta, en qué orden, quién hace cada cosa y cuándo hay que llamar a una persona experta.
+      Primero la lees (unos 15 minutos) y luego contestas diez preguntas cortas al final.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué es</span><span>Un borrador de hoja de ruta, hecho por ingeniería con ayuda de una herramienta de privacidad. Las citas de la ley salen del texto oficial consolidado.</span></div>
+    <div role="listitem"><span class="k">Qué no es</span><span><strong>No sustituye a un abogado ni a un delegado de protección de datos (DPO).</strong> Una persona experta tiene que leerla y darla por buena antes de fiarse de ella.</span></div>
+    <div role="listitem"><span class="k">Preguntas</span><span>10 preguntas en 3 temas. Sin datos personales reales.</span></div>
+  </div>
+
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Lee y responde aquí</strong>
+        <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se guarda solo en el servidor: puedes cerrar y seguir otro día, también desde otro ordenador.</span></li>
+      <li><span class="step-n">2</span><strong>No hay que enviar nada</strong>
+        <span>Abajo verás «Guardado en el servidor» con la hora. Ingeniería recibe un aviso cuando dejas de responder un rato. No hace falta haberlo respondido todo.</span></li>
+    </ol>
+    <p class="prose meta">
+      No escribas datos personales reales en los comentarios (nombres de pacientes, de familias ni de profesionales concretos).
+    </p>
+  </section>
+
+  <section id="esencial" aria-labelledby="h-esencial">
+    <h2 id="h-esencial">Lo esencial en un minuto</h2>
+    <ol class="prose">
+      <li><strong>Los datos de los residentes no son de ResidApp: son de cada residencia.</strong> La residencia decide para qué se usan (es la «responsable del tratamiento»). ResidApp los trata por encargo suyo y solo según sus instrucciones (es la «encargada»). Si ResidApp los usara para sus propios fines, pasaría a ser responsable de ese uso.</li>
+      <li><strong>Sin contrato de encargado firmado no se carga ningún dato real</strong>, ni siquiera en un piloto. Es el contrato obligatorio entre la residencia y ResidApp (artículo 28 del RGPD, el reglamento europeo de protección de datos). Hoy no hay plantilla.</li>
+      <li><strong>Lo más lento es encontrar a la persona experta</strong>: puede llevar semanas.</li>
+      <li>Hoy hay <strong>24 borradores</strong> sobre protección de datos en el repositorio. Ninguno lo ha validado todavía una persona.</li>
+      <li>Hay cuatro documentos que <strong>aún no tienen ni borrador</strong>: el contrato de servicio, el aviso legal, el protocolo de brechas y el procedimiento de derechos.</li>
+      <li>Hoy <strong>no existe la sociedad titular</strong> de ResidApp, ni un abogado ni un DPO reales. La aplicación solo se usa con datos inventados.</li>
+    </ol>
+  </section>
+
+  <section id="quien" aria-labelledby="h-quien">
+    <h2 id="h-quien">Quién es quién</h2>
+    <div class="stack prose">
+      <ul>
+        <li><strong>Responsable del tratamiento:</strong> quien decide para qué y cómo se usan los datos. Aquí, la <strong>residencia</strong>. Informa a residentes y familias, atiende sus derechos y avisa de las brechas a la autoridad.</li>
+        <li><strong>Encargado del tratamiento:</strong> quien trata los datos por cuenta del responsable. Aquí, <strong>ResidApp</strong>: aplica la seguridad, ayuda a la residencia en lo técnico y la avisa si pasa algo.</li>
+        <li><strong>Subencargado:</strong> un proveedor al que ResidApp recurre para parte del trabajo (Microsoft Azure, el envío de correo, Mistral para el dictado). La residencia debe autorizarlo.</li>
+        <li><strong>DPO (delegado de protección de datos):</strong> persona o empresa independiente que vigila que se cumpla la ley y es el contacto ante la autoridad. <strong>Ni Orlando ni tú deberíais serlo</strong> de ResidApp: sois quienes deciden el producto, y la ley pide que no haya conflicto de intereses.</li>
+        <li><strong>EIPD (evaluación de impacto):</strong> análisis escrito de riesgos que hay que hacer antes de empezar cuando se tratan datos de salud a gran escala. La hace la residencia; ResidApp aporta un anexo.</li>
+        <li><strong>Brecha de seguridad:</strong> un incidente que expone, pierde o altera datos personales (un acceso indebido, un correo enviado a quien no debía).</li>
+      </ul>
+      <p>
+        <strong>Lo que ResidApp trata por su cuenta</strong> (aquí ResidApp sí es responsable): las cuentas del personal de Plataforma y sus aparatos autorizados, los contactos que lleguen por las páginas web, los correos de contacto o soporte, los datos de quienes trabajan en el proyecto en GitHub y los registros de seguridad. Necesita su propia información al usuario y su propia anotación en el registro de actividades.
+      </p>
+      <p>
+        <strong>Importante para ti:</strong> quien opere ResidApp (Orlando, tú y cualquier persona futura con acceso) tiene que haberse comprometido <strong>por escrito a la confidencialidad</strong> antes de tener acceso (artículo 28.3.b del RGPD). Hoy ese compromiso no consta.
+      </p>
+    </div>
+  </section>
+
+  <section id="documentos" aria-labelledby="h-documentos">
+    <h2 id="h-documentos">Los documentos que hacen falta</h2>
+    <div class="stack prose">
+      <p>Para cada uno: qué es y en qué estado está hoy. Los redacta ingeniería con la herramienta de privacidad o, cuando es un contrato, un abogado; los valida siempre una persona experta.</p>
+      <ol>
+        <li><strong>Política de privacidad</strong> de la aplicación: cuenta qué datos se tratan, quién los ve y cuánto se guardan. Borrador <strong>publicado en la app</strong> con el aviso «Texto en revisión»; faltan datos por completar y la versión para profesionales.</li>
+        <li><strong>Declaración de cookies</strong> (qué se guarda en el móvil o el navegador): va dentro de la política. Faltan decisiones de una persona experta.</li>
+        <li><strong>Hojas de información</strong> para residentes y representantes, familias y personal: texto corto que entrega cada centro. Hay piezas sueltas; <strong>falta el conjunto</strong>.</li>
+        <li><strong>Registro de actividades de tratamiento</strong>: la lista escrita de qué datos se tratan, para qué y quién los ve. Hacen falta dos (el del centro y el de ResidApp). <strong>Solo hay entradas sueltas.</strong></li>
+        <li><strong>EIPD:</strong> <strong>solo hay piezas</strong>; no hay una general.</li>
+        <li><strong>Contrato de encargado</strong> con cada residencia, con la lista de subencargados: <strong>no existe plantilla</strong>.</li>
+        <li><strong>Anexo de módulos</strong> del contrato (qué módulos opcionales compra el centro): hay borrador.</li>
+        <li><strong>Contrato de servicio</strong> (términos y condiciones): el contrato mercantil con cada centro (precio, soporte, responsabilidades). Es distinto del contrato de encargado. <strong>Sin borrador.</strong></li>
+        <li><strong>Aviso legal:</strong> identifica al titular del sitio web (nombre o denominación social, domicilio, correo y registro mercantil si lo hay; artículo 10 de la LSSI, la ley de servicios de la sociedad de la información). <strong>Sin borrador</strong> y depende de que exista la sociedad.</li>
+        <li><strong>Protocolo de brechas</strong>: pasos escritos para detectar, avisar y documentar un incidente. <strong>Sin borrador.</strong></li>
+        <li><strong>Procedimiento de derechos</strong>: qué hacer cuando alguien pide acceder a sus datos, corregirlos o borrarlos. <strong>Sin documento único.</strong></li>
+        <li><strong>Plazos de conservación y copias de seguridad</strong>: cuánto se guarda cada cosa. Hay propuestas; varios plazos siguen sin decidir.</li>
+        <li><strong>Contratos con vuestros proveedores</strong> (Microsoft, correo, Mistral, GitHub): <strong>no hechos.</strong></li>
+        <li><strong>Documentación del Esquema Nacional de Seguridad (ENS)</strong>: solo si aplica (si un centro es público o concertado). Sin borrador.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="experta" aria-labelledby="h-experta">
+    <h2 id="h-experta">Cuándo hace falta una persona experta</h2>
+    <div class="stack prose">
+      <p><strong>Antes de cargar el primer dato real.</strong> Tres cosas que nadie más puede hacer: firmar o adoptar los contratos, decidir los puntos legales que siguen abiertos y responder de lo que aconseja.</p>
+      <ul>
+        <li><strong>A quién buscar:</strong> un especialista en <strong>Derecho Digital y en el sector sanitario</strong> (protección de datos, programas como servicio y asistencia sanitaria y social), no un abogado generalista. Si es posible, con experiencia en Cataluña y, si algún centro es público, en el ENS.</li>
+        <li><strong>Abogado y DPO son dos figuras distintas</strong>, aunque pueden ser un mismo despacho. Si es uno o son dos lo recomienda la propia persona experta: es su primera pregunta.</li>
+        <li><strong>Qué se le pide:</strong> validar los borradores, preparar las plantillas del contrato de encargado y del contrato de servicio antes de las primeras ventas, decidir los puntos abiertos, ser el contacto ante la autoridad si se designa DPO y revisar la EIPD y el protocolo de brechas.</li>
+        <li><strong>Puntos que solo decide una persona experta:</strong> si una residencia cuenta como «centro sanitario» (arrastra tener DPO obligatorio y el plazo de 15 años de la historia clínica); qué autoridad corresponde (AEPD o la autoridad catalana, la APDCAT); si aplica el ENS; si se bloquean o se borran los datos de un familiar al suprimirlos; y dos cuestiones de cookies.</li>
+        <li>Hay <strong>19 preguntas ya preparadas</strong> para el primer contacto; las 8 primeras bloquean el uso de datos reales.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="derechos" aria-labelledby="h-derechos">
+    <h2 id="h-derechos">Derechos, reclamaciones y brechas</h2>
+    <div class="stack prose">
+      <ul>
+        <li><strong>Derechos (acceso, rectificación, supresión…):</strong> responde <strong>la residencia</strong>, en un mes (prorrogable dos más si es complejo). Si la petición llega a ResidApp, se reenvía al centro el mismo día laborable. ResidApp ayuda en lo técnico. Hoy no existe una exportación completa de la historia clínica: es una carencia a cerrar antes de datos reales.</li>
+        <li><strong>Si alguien reclama ante la autoridad:</strong> la reclamación va contra la residencia. ResidApp coopera si se lo piden, avisa a la persona experta y al centro el mismo día y no contesta de fondo sin consultar.</li>
+        <li><strong>Si hay una brecha:</strong> la residencia debe avisar a la autoridad en un máximo de 72 horas desde que tiene constancia. Por eso ResidApp tiene que avisar a la residencia <strong>mucho antes</strong>: la propuesta es un tope de <strong>24 horas</strong>. Hoy no hay protocolo escrito ni lista de contactos por centro.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="pasos" aria-labelledby="h-pasos">
+    <h2 id="h-pasos">Los pasos, en tres momentos</h2>
+    <div class="stack prose">
+      <h3>1. Antes de usar datos reales (también en un piloto)</h3>
+      <ul>
+        <li>Buscar a la persona experta (empezar ya, lleva semanas).</li>
+        <li>Saber qué tipo de centro es el piloto.</li>
+        <li>Que la persona experta valide los borradores y decida los puntos abiertos.</li>
+        <li>Contrato de encargado firmado con el centro piloto.</li>
+        <li>Rellenar los datos que faltan en la política de privacidad.</li>
+        <li>Registro de actividades mínimo y EIPD del piloto.</li>
+        <li>Hoja de información para residentes, familias y personal.</li>
+        <li>Protocolo de brechas y procedimiento de derechos.</li>
+        <li>Decidir los plazos de conservación que faltan.</li>
+        <li>Compromiso de confidencialidad por escrito de quien opere ResidApp.</li>
+        <li>Definir cómo se devuelve la historia clínica al terminar el contrato.</li>
+        <li>Mantener apagado lo que no está cerrado (dictado, aviso de citas por correo, etc.).</li>
+      </ul>
+      <h3>2. Antes del primer centro real</h3>
+      <ul>
+        <li>Que exista la sociedad titular y completar el aviso legal.</li>
+        <li>Plantillas del contrato de encargado y del contrato de servicio preparadas por el abogado.</li>
+        <li>EIPD y registro de actividades al día; DPO del centro designado si procede.</li>
+        <li>Política y hojas de información validadas y entregadas por el centro.</li>
+        <li>Páginas web (<code>residapp.es</code> y <code>residapp.cat</code>) con política, aviso legal y cookies validados.</li>
+        <li>Simulacro de brecha y de restauración de copias de seguridad.</li>
+        <li>Contratos de vuestros proveedores revisados por el abogado.</li>
+        <li><strong>Repaso técnico con quien programa</strong>, antes de firmar con el primer cliente: dónde se alojan los datos, cómo se hacen y se guardan las copias de seguridad y cómo se gestionan las contraseñas y los accesos.</li>
+      </ul>
+      <h3>3. De forma continua</h3>
+      <ul>
+        <li>Revisión periódica de política, contratos y plazos, y vigilar cambios de ley.</li>
+        <li>Consultar a la herramienta de privacidad antes de crear algo que toque datos, y pasar lo relevante a la persona experta.</li>
+        <li>Ficha de privacidad y autorización del centro antes de activar un módulo nuevo; autorización previa antes de cambiar de proveedor.</li>
+        <li>Documentar cada brecha, atender los derechos y llevar un registro simple de cómo se resolvieron.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="decidido" aria-labelledby="h-decidido">
+    <h2 id="h-decidido">Lo que ya ha decidido Orlando (el 13/11/2026)</h2>
+    <div class="stack prose">
+      <ul>
+        <li>La búsqueda de la persona experta <strong>empieza ya</strong>, sin esperar a que haya un centro interesado.</li>
+        <li>Si es un solo despacho o dos figuras (abogado y DPO) <strong>lo recomienda la persona experta</strong>.</li>
+        <li><strong>No se firma con ningún centro real hasta que exista la sociedad</strong>; no hay titular provisional como persona física. El piloto sigue con datos inventados.</li>
+        <li>La persona de contacto de privacidad de ResidApp es <strong>Orlando, con CJ de suplente</strong>.</li>
+        <li>ResidApp propone avisar a un centro de una brecha en un máximo de <strong>24 horas</strong> (la persona experta revisa la redacción).</li>
+        <li>ResidApp ofrecerá a los centros una <strong>plantilla de información al ingreso</strong>; cada centro la adapta y la entrega.</li>
+        <li><strong>Aún no se sabe qué tipo de centro</strong> (público, concertado o privado) será el piloto.</li>
+      </ul>
+      <p>Las preguntas de abajo te piden que lo confirmes, que digas si aceptas tu parte y que aportes lo que sabes tú.</p>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-1">
+    <h2>Tema 1 · ¿Estás de acuerdo con lo decidido?</h2>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Estás de acuerdo en empezar ya a buscar a la persona experta (abogado o DPO)?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Puede llevar semanas y es lo que más retrasaría el primer centro real. La alternativa es esperar a que haya un centro interesado.</p>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Sí, empezar ya.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">No, esperar a que haya un centro interesado.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">Otra cosa (explícala en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Estás de acuerdo en no firmar con ningún centro real hasta que exista la sociedad titular?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Mientras tanto el piloto sigue con datos inventados. La alternativa sería que Orlando firmara como persona física, con su patrimonio personal en juego y con la obligación de cambiar los contratos cuando se cree la sociedad.</p>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Sí, esperar a la sociedad.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">No, firmar antes con un titular provisional.</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">No lo sé / que lo decida la persona experta.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.3">
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">¿Estás de acuerdo en que ResidApp avise a un centro de una brecha en un máximo de 24 horas?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">La ley da 72 horas a la residencia desde que tiene constancia; cuanto antes avise ResidApp, más margen le queda. Con dos personas al frente, 24 horas incluye noches y fines de semana: dilo si crees que no es realista.</p>
+        <fieldset class="choices" aria-labelledby="t-1-3">
+          <label class="choice"><input type="radio" name="r-1-3" value="A"><span class="letter">A</span><span class="txt">Sí, 24 horas.</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="B"><span class="letter">B</span><span class="txt">Mejor 48 horas.</span></label>
+          <label class="choice"><input type="radio" name="r-1-3" value="C"><span class="letter">C</span><span class="txt">Que lo fije la persona experta.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.4">
+        <div class="q-head"><span class="n">1.4</span><h3 class="q-title" id="t-1-4">¿Estás de acuerdo en que ResidApp ofrezca a los centros una plantilla de información al ingreso?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es una hoja corta que explica a residentes y familias qué se hace con sus datos. Ayuda al centro a cumplir su deber de informar y es un argumento comercial. La redacta la persona experta; cada centro la adapta y la entrega. La alternativa es dar solo la política de privacidad completa.</p>
+        <fieldset class="choices" aria-labelledby="t-1-4">
+          <label class="choice"><input type="radio" name="r-1-4" value="A"><span class="letter">A</span><span class="txt">Sí, ofrecer la plantilla.</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="B"><span class="letter">B</span><span class="txt">No, solo la política de privacidad.</span></label>
+          <label class="choice"><input type="radio" name="r-1-4" value="C"><span class="letter">C</span><span class="txt">No lo sé.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2">
+    <h2>Tema 2 · Tu parte</h2>
+    <div class="qs">
+      <article class="q" data-q="2.1">
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">¿Aceptas ser el suplente de la persona de contacto de privacidad de ResidApp (Orlando es la titular)?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">No es un DPO. Es la persona a la que se avisa de una brecha o de una petición de derechos cuando Orlando no está, y cuyo nombre y contacto se publicarían en el aviso legal y en la política. Tu respuesta aquí es tu aceptación por escrito.</p>
+        <fieldset class="choices" aria-labelledby="t-2-1">
+          <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">Sí, acepto.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">Sí, pero con condiciones (escríbelas en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="C"><span class="letter">C</span><span class="txt">No.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.2">
+        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">¿Qué disponibilidad real tendrías para cubrir un aviso de brecha si Orlando no puede (noches, fines de semana, vacaciones)?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Mientras ResidApp la operen dos personas, la cobertura de las 24 horas depende de esto. Cuéntalo con tus palabras, en general y sin datos personales.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="3"></textarea></label>
+      </article>
+      <article class="q" data-q="2.3">
+        <div class="q-head"><span class="n">2.3</span><h3 class="q-title" id="t-2-3">¿Estás de acuerdo en firmar un compromiso de confidencialidad por escrito, como exige la ley a quien opera ResidApp?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es obligatorio antes de tener acceso a datos reales (artículo 28.3.b del RGPD). Hoy no existe el documento; lo prepararía la persona experta.</p>
+        <fieldset class="choices" aria-labelledby="t-2-3">
+          <label class="choice"><input type="radio" name="r-2-3" value="A"><span class="letter">A</span><span class="txt">Sí.</span></label>
+          <label class="choice"><input type="radio" name="r-2-3" value="B"><span class="letter">B</span><span class="txt">Quiero ver el texto antes.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Lo que sabes tú y ayuda a la persona experta</h2>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">¿Qué tipo de centro sería el piloto?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">De eso depende qué autoridad lo vigila (AEPD o la autoridad catalana) y si le aplica el Esquema Nacional de Seguridad. No hace falta decir cuál es el centro.</p>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Público.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Concertado (privado con plazas públicas).</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">Privado.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="D"><span class="letter">D</span><span class="txt">Todavía no se sabe.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">¿Conoces a algún abogado o DPO con experiencia en Derecho Digital y en el sector sanitario?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por tu entorno profesional puede que alguien te venga a la cabeza. No escribas ningún nombre aquí: si dices que sí, Orlando te lo pregunta aparte.</p>
+        <fieldset class="choices" aria-labelledby="t-3-2">
+          <label class="choice"><input type="radio" name="r-3-2" value="A"><span class="letter">A</span><span class="txt">Sí, conozco a alguien (se lo digo a Orlando aparte).</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="B"><span class="letter">B</span><span class="txt">No conozco a nadie.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.3">
+        <div class="q-head"><span class="n">3.3</span><h3 class="q-title" id="t-3-3">¿Hay algo de la guía que no entiendas o que te parezca que falta?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">La guía tiene que poder leerse sin ayuda. Si algún párrafo te ha dejado dudas, dinos cuál y qué no se entiende.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. Este es un borrador: no es asesoramiento jurídico y lo debe validar una persona experta
+    antes de darlo por bueno. Cuando respondas, ingeniería revisa tus respuestas, te consulta lo que no quede claro y lo incorpora a la guía.
+    Tus respuestas se guardan en el servidor de desarrollo, detrás de la clave de estos documentos.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Estado de las respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). Las respuestas se guardan solas en el servidor. */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var API = "api/respuestas/" + DOC;
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;      // hay cambios que aún no están en el servidor
+  var savedAt = null;     // cuándo se guardó por última vez en el servidor
+  var ready = false;      // ya se ha leído lo que hay en el servidor: hasta entonces no se guarda nada (no se pisa lo guardado con una página vacía)
+  var failed = "";        // por qué falló el último guardado ("" si no falló)
+  var rev = 0;            // número de cambio: si cambia mientras se guarda, queda algo por guardar
+  var timer = null;
+  var saving = false;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (failed) say("error", failed);
+    else if (!ready) say("", "Comprobando lo que ya tienes guardado…");
+    else if (dirty) say("", "Guardando…");
+    else if (savedAt) say("ok", "Guardado en el servidor (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda solo.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? "Respondida" : "Pendiente";
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  // Guarda en el servidor lo que hay en pantalla. Si falla, lo marcado sigue en este navegador y se reintenta solo.
+  function save() {
+    clearTimeout(timer);
+    if (!ready) return;
+    if (saving) { timer = setTimeout(save, 1000); return; }
+    var sent = rev;
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    saving = true;
+    fetch(API, { method: "PUT", headers: { "Content-Type": "application/json" }, body: json, credentials: "same-origin", keepalive: json.length < 60000 })
+      .then(function (r) {
+        if (!r.ok) throw r.status;
+        failed = "";
+        savedAt = data.guardado;
+        if (rev === sent) dirty = false; else timer = setTimeout(save, 1000);
+      })
+      .catch(function (e) {
+        failed = e === 401
+          ? "Se ha cerrado el acceso a estos documentos. Vuelve a abrirlos con la clave; lo que has marcado sigue en este navegador."
+          : "No se ha podido guardar en el servidor. Lo que marcas sigue en este navegador y se reintentará.";
+        timer = setTimeout(save, 15000);
+      })
+      .finally(function () { saving = false; store(collect()); status(); });
+  }
+
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    rev++;
+    store(refresh());
+    status();
+    clearTimeout(timer);
+    timer = setTimeout(save, 2000);
+  }
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  // Si se cierra o se cambia de pestaña con algo sin guardar, se guarda ya.
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden" && dirty) save(); });
+
+  // Recupera lo último que se guardó en el servidor. Hasta que lo consigue (200 o 404) no se guarda nada.
+  function load() {
+    fetch(API, { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) {
+        if (r.status === 204) return null;
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
+      .then(function (data) {
+        ready = true;
+        failed = "";
+        if (data && data.documento === DOC && !dirty) {
+          apply(data);
+          savedAt = data.guardado || null;
+          store(refresh());
+          if (data.cuestionario !== VERSION) {
+            say("error", "Tus respuestas son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+            return;
+          }
+        } else if (!data && !dirty && refresh().respondidas > 0) {
+          dirty = true; // respuestas de este navegador que el servidor todavía no tiene: se suben
+        }
+        if (dirty) save();
+        status();
+      })
+      .catch(function () {
+        failed = "No se han podido leer las respuestas guardadas en el servidor. No se guarda nada hasta conseguirlo; se reintenta solo.";
+        status();
+        setTimeout(load, 10000);
+      });
+  }
+
+  // Notas de ingeniería: lo que ingeniería responde a cada pregunta (<documento>.notas.json, se despliega con la aplicación). Solo lectura; sin nota, no se muestra nada.
+  function notes() {
+    fetch(DOC + ".notas.json", { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var ns = (data && data.documento === DOC && data.notas) || {};
+        questions.forEach(function (q) {
+          var t = ns[q.dataset.q];
+          if (typeof t !== "string" || !t.trim()) return;
+          var box = document.createElement("aside");
+          box.className = "nota-ing";
+          box.setAttribute("aria-label", "Nota de ingeniería");
+          var h = document.createElement("strong");
+          h.textContent = "Nota de ingeniería";
+          var p = document.createElement("p");
+          p.textContent = t.trim(); // texto plano, nunca HTML
+          box.appendChild(h);
+          box.appendChild(p);
+          q.appendChild(box);
+        });
+      })
+      .catch(function () { /* sin notas */ });
+  }
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+  if (location.protocol.indexOf("http") === 0) { load(); notes(); }
+  else say("error", "Abre este documento desde la web de ResidApp para que se guarden las respuestas.");
+})();
+</script>
+</body>
+</html>
