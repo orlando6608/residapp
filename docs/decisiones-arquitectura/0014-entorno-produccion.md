@@ -1,5 +1,7 @@
 # ADR 0014 — Entorno de producción de ResidApp: recursos, despliegue, seguridad, copias de seguridad, rendimiento y repositorio privado
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 Estado: **propuesta** (2026-11-08, solo documentación; no se ha creado nada en Azure ni en GitHub). **Decidido por Orlando el 2026-11-08:** producción en una **suscripción de Azure nueva
 y propia de ResidApp**; **privatizar el repositorio antes** (adelanta el disparador del PR #185) y **transferir la propiedad del repositorio a una organización de GitHub** (nombre y
 titular por decidir). **Aplazado por Orlando (2026-11-08): este plan queda en pausa** hasta que (1) se decida pasar el repositorio a privado y, más adelante, (2) exista el **nombre de la

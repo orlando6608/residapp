@@ -1,5 +1,7 @@
 # Pendientes del vertical Administración
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 Estado al 2026-10-01 (tras el bloque 5, el perfil de plataforma, la auditoría y los turnos y equipos). Historias de referencia: [`docs/historias-usuarios/administracion.md`](../../historias-usuarios/administracion.md).
 No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pantallas/wireframes-funcionales/administracion.md).
 

@@ -1,8 +1,10 @@
 # Landing: borrador de textos (castellano y catalán)
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 **BORRADOR — no se publica tal cual.** Fecha: 2026-11-09. Lo valida una persona experta (DPO real o abogado) antes de publicar, sobre todo las filas de seguridad y privacidad, y el catalán lo revisa una persona catalanohablante (lo he escrito yo y puede tener errores).
 
-Parte de [`pendientes-landing.md`](pendientes-landing.md) (decisiones de Orlando del 29/10 y correcciones del 09/11) y de las frases prudentes de la sección 8 del [análisis](../../pendientes-cj/archivados/analisis-landing-page.html). Cada fila indica **dónde se ha comprobado** lo que dice. Si algo cambia en la app, cambia la fila en los dos idiomas.
+Parte de [`pendientes-landing.md`](pendientes-landing.md) (decisiones de Orlando del 29/10 y correcciones del 09/11) y de las frases prudentes de la sección 8 del análisis (`analisis-landing-page.html`, archivado). Cada fila indica **dónde se ha comprobado** lo que dice. Si algo cambia en la app, cambia la fila en los dos idiomas.
 
 Marcas: **[PENDIENTE]** lo decide una persona (no lo he inventado); **[VERIFICAR]** lo he leído en documentación pero no lo he visto funcionando.
 

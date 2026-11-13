@@ -1,5 +1,7 @@
 # Landings (es y cat) y passkeys por subdominio: lectura de privacidad y seguridad
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 **BORRADOR — lo valida una persona (DPO real o abogado) antes de usarlo.** Fecha: 2026-10-29. Segunda lectura experta del agente `dpo-residapp`, no un dictamen.
 
 Etiquetas: **[Hecho]** verificado en el repositorio, **[Suposición]** mía, **[Decidir]** lo fija Orlando, CJ, el DPO real o un abogado.

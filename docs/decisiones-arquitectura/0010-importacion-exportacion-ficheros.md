@@ -1,5 +1,7 @@
 # ADR 0010 — Importación y exportación por ficheros, con emparejamiento de columnas sin IA
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 Estado: aceptada el 2026-10-21 (decisión del usuario). Implementada el 2026-10-21 (script `0060`).
 
 ## Contexto

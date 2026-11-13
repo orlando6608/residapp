@@ -1,5 +1,7 @@
 # Prueba de precisión del dictado (ADR 0009)
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 Herramienta de desarrollo, **fuera de la solución y de la aplicación**. Comprueba si Voxtral (voz a texto) y un modelo Mistral Small (texto
 a campos) rellenan bien «Registrar cambio» del Auxiliar. **No uses audios ni nombres de residentes reales**: todavía no hay contrato de
 encargado con Mistral ni evaluación de impacto.

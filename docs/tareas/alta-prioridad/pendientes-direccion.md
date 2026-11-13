@@ -1,5 +1,7 @@
 # Pendientes del vertical Dirección / Coordinación Clínica
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 Estado al 2026-10-01 (tras los bloques 1 y 4). Historias de referencia: [`docs/historias-usuarios/direccion-coordinacion-clinica.md`](../../historias-usuarios/direccion-coordinacion-clinica.md).
 Flujo: [`supervision-clinica-direccion.md`](../../flujos-clinicos/supervision-clinica-direccion.md); wireframe
 [`direccion-coordinacion-clinica.md`](../../bocetos-pantallas/wireframes-funcionales/direccion-coordinacion-clinica.md).
