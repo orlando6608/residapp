@@ -10,7 +10,7 @@ Al probar la guía 2 de pruebas (prueba 12, protocolo urgente y derivación inic
 
 - **No existe ningún dato de medicación habitual, enfermedades ni alergias**: ni en el esquema SQL ni en el dominio ni en el basal. El basal sí recoge deterioro cognitivo (con su causa y su estadio), y esa información ya viaja en el informe.
 - `docs/producto/alcance.md` deja fuera la «administración de medicación», y la política de privacidad (`Views/Home/Privacy.cshtml`, línea 54) dice a las familias y al personal que ResidApp **no guarda la medicación** de los residentes.
-- El informe reúne solo, de forma automática, la identificación, el basal, la observación, las valoraciones, las constantes, las actuaciones y la evolución. El profesional escribe a mano el motivo y, opcionalmente, «Información adicional para Urgencias» (hasta 4.000 caracteres, sin ayuda en el campo): **hoy ya puede escribir ahí** la medicación, las enfermedades y las alergias, una derivación cada vez.
+- El informe reúne solo, de forma automática, la identificación, el basal, la observación, las valoraciones, las constantes, las actuaciones y la evolución. El profesional escribe a mano el motivo y, opcionalmente, «Información adicional para Urgencias» (hasta 4.000 caracteres; desde el 2026-11-13 el campo lleva una ayuda que lo pide, hecha por decisión de Orlando): **hoy ya puede escribir ahí** la medicación, las enfermedades y las alergias, una derivación cada vez.
 - El informe firmado no se puede corregir (un informe por evento): un dato equivocado queda impreso.
 
 ## Opciones
