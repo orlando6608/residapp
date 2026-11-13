@@ -1,0 +1,33 @@
+# Vigilancia de dependencias (hallazgo M6). Dependabot abre un PR cuando hay una versión nueva de una acción de GitHub o de un paquete NuGet.
+# Cada PR pasa el CI completo, así que se limita a una vez por semana, con las actualizaciones menores y de parche agrupadas y un tope de PR abiertos.
+# Antes de fusionar uno, se consulta al agente `revisor-dependencias-residapp` (.claude/agents/): nunca se fusionan a ciegas ni de forma automática.
+# Las librerías de JavaScript de src/ResidApp.Web/wwwroot/lib están copiadas a mano y Dependabot no las ve: se revisan a mano (docs/seguridad/hallazgos.md, M6).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      acciones-menores:
+        update-types: [minor, patch]
+    # Una versión mayor de una acción llega siempre en un PR propio, para mirarla sola.
+
+  - package-ecosystem: nuget
+    directories:
+      - /src/*
+      - /tests/*
+      - /tools/PruebaDictado
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      paquetes-menores:
+        update-types: [minor, patch]
