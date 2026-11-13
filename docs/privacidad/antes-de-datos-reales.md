@@ -1,5 +1,7 @@
 # Antes de usar con residentes reales: lo que hay que hacer primero
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 **Para quién es:** Orlando, CJ y cualquier sesión de Claude que retome el trabajo. Es una lista de cosas por cerrar, no un dictamen.
 Hoy estas funciones solo se usan con datos de prueba (la base de Azure es de desarrollo). Esta lista dice qué falta para que se puedan usar con residentes de verdad.
 

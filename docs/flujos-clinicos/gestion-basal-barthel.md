@@ -1,5 +1,7 @@
 # Gestión del estado basal y la escala Barthel
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 El estado basal es la referencia habitual de cada residente: nueve áreas asistenciales más la escala Barthel de diez ítems. Enfermería y Medicina comparten el mismo módulo para crearlo, completarlo y firmarlo; el resto de perfiles solo lo consultan, con distintos niveles de detalle.
 
 ## Alcance y exclusiones

@@ -1,5 +1,7 @@
 # Historias de usuario — Portal Familiar
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 El Portal Familiar da acceso al familiar autorizado a las publicaciones aprobadas sobre "su" residente, y le permite gestionar citas con el equipo asistencial. No expone ningún contenido clínico interno.
 
 ## Estado de la construcción

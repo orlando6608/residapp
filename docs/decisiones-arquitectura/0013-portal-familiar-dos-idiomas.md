@@ -1,5 +1,7 @@
 # ADR 0013 — Portal Familiar y pantallas de entrada en castellano y catalán
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 Estado: **aceptada** el 2026-10-30 (decisión de Orlando, tal cual estaba propuesta el 2026-10-29). Nada de lo que describe está construido. CJ contestó el 2026-10-30
 (`docs/pendientes-cj/portal-familiar-dos-idiomas-cj.respuestas.json`, 7/7): sí hay familias que lo pedirían en catalán («muchas»), hace falta **antes del primer centro con familias
 reales**, el idioma por defecto del centro piloto es el castellano, la sugerencia al personal vale como mera sugerencia, solo algunas personas del personal escriben en catalán,

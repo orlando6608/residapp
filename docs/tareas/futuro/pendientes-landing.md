@@ -1,6 +1,8 @@
 # Pendientes de la landing (`residapp.es` y `residapp.cat`)
 
-Estado al 2026-11-02. Sale del análisis [`analisis-landing-page.html`](../../pendientes-cj/archivados/analisis-landing-page.html) (archivado el mismo día: lo decidido por Orlando el 29/10 está en él y lo que falta para construirla está aquí). **No hay nada construido**: no existe landing publicada ni alojamiento elegido. La maqueta de partida es [`maqueta_residapp_landingPage.html`](../../bocetos-pantallas/maqueta_residapp_landingPage.html); no se publica tal cual. Contrastado de nuevo con la versión 0.3.0 el 2026-11-09: ver «Correcciones al análisis» al final.
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
+Estado al 2026-11-02. Sale del análisis `analisis-landing-page.html` (archivado el mismo día: lo decidido por Orlando el 29/10 está en él y lo que falta para construirla está aquí). **No hay nada construido**: no existe landing publicada ni alojamiento elegido. La maqueta de partida es [`maqueta_residapp_landingPage.html`](../../bocetos-pantallas/maqueta_residapp_landingPage.html); no se publica tal cual. Contrastado de nuevo con la versión 0.3.0 el 2026-11-09: ver «Correcciones al análisis» al final.
 
 Una *landing* es la página pública de presentación del producto, la que ve quien aún no tiene cuenta. Una *página estática* es una página fija, sin base de datos ni inicio de sesión.
 

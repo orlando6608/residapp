@@ -1,5 +1,7 @@
 # Pendientes del vertical Enfermería
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 Estado al 2026-09-29 (tras la historia 6 completa). Historias de referencia: [`docs/historias-usuarios/enfermeria.md`](../../historias-usuarios/enfermeria.md).
 Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-escalado-enfermeria.md),
 [`gestion-basal-barthel.md`](../../flujos-clinicos/gestion-basal-barthel.md),
@@ -347,7 +349,7 @@ Huecos de lo ya construido:
   (nunca Administración, ADM-29); historial inmutable de cada cambio; rangos por residente en una segunda
   fase. Script `0008`. En desarrollo tiene el permiso `dev-integrado-direccion` (seed del escenario
   integrado). Pendiente de CJ (lo recoge
-  [`docs/pendientes-cj/archivados/rangos-referencia-constantes.html`](../../pendientes-cj/archivados/rangos-referencia-constantes.html),
+  `docs/pendientes-cj/archivados/rangos-referencia-constantes.html`,
   que CJ completa con los valores y las respuestas a las preguntas abiertas):
   - Fijar los valores en la pantalla en cada centro real (CJ: «una vez concretado el uso en un centro»); sin ellos no se muestra ningún aviso.
   - Decidir a quién se concede el permiso en cada centro real. Desde el 2026-10-01 lo concede Administración en

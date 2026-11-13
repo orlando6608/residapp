@@ -1,5 +1,7 @@
 # ADR 0007 — Proveedor de identidad productivo
 
+> **Citas a `archivados/…`:** esos documentos de CJ se retiraron del repositorio el 2026-11-11 (son citas históricas). Para leer uno tal como estaba: `git show 571c6cb:docs/pendientes-cj/archivados/<documento>` (ver `docs/pendientes-cj/README.md`, «Citas a `archivados/…` en otros documentos»).
+
 Estado: **aceptada en lo técnico** el 2026-10-21 (decisión de Orlando, que hace de responsable de Seguridad). Las puertas del responsable de
 protección de datos (DPO) quedan abiertas hasta tener residencia piloto: la residencia es la responsable del tratamiento y ResidApp, la
 encargada. Sustituye a la propuesta del 2026-10-04, que elegía Microsoft Entra External ID.
