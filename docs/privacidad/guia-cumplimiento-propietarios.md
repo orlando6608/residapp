@@ -160,7 +160,7 @@ Son **dos figuras distintas**, aunque pueden ser un mismo despacho:
 
 | Momento | Qué se le pide |
 |---|---|
-| **Ya** (búsqueda) | Encontrar y presupuestar. Cuanto antes, porque lleva semanas |
+| **Ya** (búsqueda) | Encontrar y presupuestar. Cuanto antes, porque lleva semanas. Para el primer contacto: [`dossier-persona-experta.md`](dossier-persona-experta.md) (documento para enviar al despacho, con marcadores de contacto por rellenar) |
 | **Antes de datos reales** (aunque sea piloto) | Validar los borradores del apartado 7, momento 1; resolver las preguntas 1 a 8; contrato de encargado para el piloto |
 | **Antes de las primeras ventas** | Plantillas del contrato de encargado y del contrato de servicio; aviso legal; textos de las landings |
 | **Antes del primer centro real** | Preguntas restantes; EIPD y registro; protocolo de brechas; DPO si procede |
