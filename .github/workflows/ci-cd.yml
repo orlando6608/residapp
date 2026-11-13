@@ -244,8 +244,9 @@ jobs:
           fi
 
       # clean: sin él, el despliegue añade ficheros pero no borra los de antes: un documento movido o borrado del repo seguía
-      # sirviéndose desde el servidor. Deja un corte de segundos con wwwroot a medias, aceptable en desarrollo con datos ficticios;
-      # con usuarios reales, repensar el despliegue (WEBSITE_RUN_FROM_PACKAGE o slots de staging en un plan Standard).
+      # sirviéndose desde el servidor. La Web App de dev tiene WEBSITE_RUN_FROM_PACKAGE=1 (ajuste solo de Azure, 2026-11-13: sin él, el despliegue sobrescribía los DLL con el proceso
+      # en marcha y daba ~1 min de 500 y a veces abortaba el proceso); con él queda un corte limpio de ~80 s mientras arranca el contenedor nuevo, aceptable en desarrollo con datos ficticios;
+      # con usuarios reales, repensar el despliegue (slots de staging en un plan Standard: ADR 0014).
       - name: Desplegar en Azure Web App
         uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3.0.8
         with:
