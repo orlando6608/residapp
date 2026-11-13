@@ -172,6 +172,14 @@ Lectura de `dpo-residapp`: `antecedentes-medicacion-alergias-lectura-dpo.md` (bo
 - **A validar por una persona (abogado o DPO real) antes de usar la función con residentes reales, y solo cuando haya una residencia piloto concreta:** base legal para datos de salud, si la residencia cuenta como centro sanitario, si hace falta DPO designado, la información a residentes y familias con los servicios de urgencias como destinatarios (hoy no figuran en la política de privacidad) y el registro de actividades.
 - Al construir la ficha, corregir en `Privacy.cshtml` y en `politica-privacidad-portal.md` lo que enumera el apartado de la lectura del DPO; la frase «no guarda la medicación» sigue siendo cierta con alergias solas.
 
+## 12. Licencia de la librería de PDF (decisión de Orlando del 2026-11-13)
+
+ResidApp genera el informe de derivación con PDFsharp-MigraDoc **6.2.4 (licencia MIT)**. Desde la 6.5.0 la librería tiene doble licencia (AGPL o comercial de pago; comprobado en el `LICENSE` oficial de empira), por lo que Dependabot ignora esas versiones. Orlando decidió **quedarse en la 6.2.4 por ahora y pasar después a QuestPDF**. Antes del primer centro real o de privatizar el repositorio:
+
+- **Hacer el cambio a QuestPDF** (solo afecta a `Pdf/ReferralReportPdfRenderer.cs` y `Pdf/PdfBranding.cs`) o, si no se hace, volver a decidir entre seguir en la 6.2.4 (MIT, sin arreglos nuevos de la librería) y comprar la licencia comercial.
+- **Comprobar la licencia de QuestPDF para la entidad titular de ResidApp** (la sociedad que aún no existe): es gratuita por debajo de 1 millón de dólares de facturación anual y no lo es para empresas que cotizan en bolsa ni para el sector público; se autocertifica según su guía de selección de licencia (https://www.questpdf.com/license/guide.html). Si algún cliente fuera un centro público, comprobar también cómo le afecta.
+- Al migrar, comparar el PDF nuevo con el actual (fuente Liberation Sans incrustada, icono en color en la cabecera, pie con huella SHA-256) y mantener la prueba de que el informe firmado no cambia.
+
 ## Cómo se marca como hecho
 
 Cuando una persona valide los borradores y se decidan las mejoras, anótalo aquí con la fecha y quién lo hizo, y quita el recordatorio del traspaso (`docs/prompts-ia/continuar-construccion.md`)
