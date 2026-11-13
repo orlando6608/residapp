@@ -194,18 +194,18 @@ jobs:
         env:
           # Administrador de la base de datos, solo para los scripts y los seeds. La aplicación se conecta con un usuario limitado
           # (database/seguridad/crear_usuario_aplicacion_azure.sql, ADR 0008) para que la seguridad por filas le aplique: estas
-          # credenciales NO deben estar en la configuración de la Web App. Si faltan, se usa el usuario de la cadena de la app.
+          # credenciales NO deben estar en la configuración de la Web App. La Web App entra con su identidad gestionada y sin contraseña (M4), así que ya no hay
+          # usuario de reserva: sin estos secretos el paso falla. Servidor y base son variables del entorno (no se leen de la Web App).
           SQL_ADMIN_USER: ${{ secrets.AZURE_SQL_ADMIN_USER }}
           SQL_ADMIN_PASSWORD: ${{ secrets.AZURE_SQL_ADMIN_PASSWORD }}
+          SQL_SERVER: ${{ vars.AZURE_SQL_SERVER }}
+          SQL_DATABASE: ${{ vars.AZURE_SQL_DB }}
         run: |
-          cadena="$(az webapp config connection-string list --name app-residapp-dev --resource-group rg-residapp-dev \
-            --query "[?name=='ResidApp'].value | [0]" -o tsv)"
-          valor() { tr ';' '\n' <<< "$cadena" | awk -F= -v k="$1" 'tolower($1)==tolower(k) { sub(/^[^=]*=/, ""); print; exit }'; }
-          server="$(valor Server)"; server="${server#tcp:}"
-          export SQL_SERVER="$server"
-          export SQL_DATABASE="$(valor 'Initial Catalog')"
-          export SQL_USER="${SQL_ADMIN_USER:-$(valor 'User ID')}"
-          export SQL_PASSWORD="${SQL_ADMIN_PASSWORD:-$(valor Password)}"
+          for faltante in SQL_ADMIN_USER SQL_ADMIN_PASSWORD SQL_SERVER SQL_DATABASE; do
+            [ -n "${!faltante}" ] || { echo "::error::Falta $faltante: secretos AZURE_SQL_ADMIN_USER y AZURE_SQL_ADMIN_PASSWORD y variables AZURE_SQL_SERVER y AZURE_SQL_DB del entorno production."; exit 1; }
+          done
+          export SQL_USER="$SQL_ADMIN_USER"
+          export SQL_PASSWORD="$SQL_ADMIN_PASSWORD"
           echo "::add-mask::$SQL_PASSWORD"
           # Una regla nueva del firewall puede tardar en aplicarse: se espera a poder entrar (hasta unos 3 minutos) antes de lanzar los scripts.
           for intento in $(seq 1 18); do
