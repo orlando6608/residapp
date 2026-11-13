@@ -10,8 +10,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ResidApp.Domain\ResidApp.Domain.csproj" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.15" />
   </ItemGroup>
 
   <!-- El prompt vive en un fichero versionado (ADR 0011), igual que en la aplicación. -->

@@ -18,17 +18,17 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Communication.Email" Version="1.1.0" />
-    <PackageReference Include="Dapper" Version="2.1.79" />
+    <PackageReference Include="Dapper" Version="2.1.89" />
     <!-- Lectura de los ficheros de importación (CSV, XLS y XLSX; ADR 0010). Licencia MIT. -->
     <PackageReference Include="ExcelDataReader" Version="3.9.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.3" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.2" />
     <!-- Desde SqlClient 7 los métodos de autenticación de Entra (Active Directory Managed Identity, M4) viven en este paquete aparte; sin él la conexión falla
          con «No se encuentra un proveedor de autenticación». Misma versión que SqlClient. -->
-    <PackageReference Include="Microsoft.Data.SqlClient.Extensions.Azure" Version="7.0.3" />
-    <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
+    <PackageReference Include="Microsoft.Data.SqlClient.Extensions.Azure" Version="7.1.2" />
+    <PackageReference Include="PDFsharp-MigraDoc" Version="6.5.0" />
     <!-- Dependencia transitiva de SqlClient y PDFsharp fijada en una versión corregida (GHSA-846f-f764-76mx y GHSA-2fmv-rv2c-59x7:
          ellos piden 9.0.13, vulnerable). Se puede quitar cuando ambos pidan una versión corregida. -->
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
   </ItemGroup>
 
   <!-- Fuente del PDF de derivación (SIL OFL 1.1, ver Pdf/Fonts/OFL.txt): PDFsharp no encuentra fuentes del
