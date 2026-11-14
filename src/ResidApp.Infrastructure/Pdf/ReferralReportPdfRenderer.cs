@@ -1,6 +1,7 @@
-using MigraDoc.DocumentObjectModel;
-using MigraDoc.Rendering;
-using PdfSharp.Fonts;
+using QuestPDF.Drawing;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Shared;
@@ -8,8 +9,8 @@ using ResidApp.Shared;
 namespace ResidApp.Infrastructure.Pdf;
 
 /// <summary>
-/// DER-05: PDF del informe de derivación, generado al firmar con MigraDoc (PDFsharp-MigraDoc, MIT). Muestra
-/// las secciones tal como se firmaron, marcando cuáles son datos automáticos y cuáles escribió el
+/// DER-05: PDF del informe de derivación, generado al firmar con QuestPDF (licencia Community: ver docs/privacidad/antes-de-datos-reales.md,
+/// apartado 12). Muestra las secciones tal como se firmaron, marcando cuáles son datos automáticos y cuáles escribió el
 /// profesional, y cierra con la firma electrónica simple: quién, cuándo (hora local del servidor, la misma
 /// con la que se muestran las horas en la aplicación) y la huella SHA-256 del contenido.
 /// </summary>
@@ -17,94 +18,78 @@ public sealed class ReferralReportPdfRenderer : IReferralReportPdfRenderer
 {
     private const string FontFamily = "Liberation Sans";
 
-    /// <summary>PDFsharp/MigraDoc comparten estado de fuentes entre documentos: dos PDF generados a la vez pueden salir
-    /// con palabras de un título en la fuente que no toca (visto en las pruebas en paralelo). Se generan de uno en uno.</summary>
-    private static readonly Lock RenderLock = new();
-
-    static ReferralReportPdfRenderer() => GlobalFontSettings.FontResolver = new EmbeddedFontResolver();
+    /// <summary>Licencia Community de QuestPDF: gratuita por debajo de 1 millón de dólares de facturación anual y no para empresas que cotizan en
+    /// bolsa ni para el sector público. Fijarla es una declaración de quien explota ResidApp: la sociedad titular debe comprobarla antes del primer
+    /// centro real (apartado 12 de docs/privacidad/antes-de-datos-reales.md). QuestPDF solo usa las fuentes registradas (no las del sistema), así que el PDF sale igual en
+    /// Windows y en Linux (Azure y CI): Liberation Sans, incrustada.</summary>
+    static ReferralReportPdfRenderer()
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+        FontManager.RegisterFontFromBinaryData(PdfBranding.EmbeddedResource("ResidApp.Fonts.LiberationSans-Regular.ttf"));
+        FontManager.RegisterFontFromBinaryData(PdfBranding.EmbeddedResource("ResidApp.Fonts.LiberationSans-Bold.ttf"));
+    }
 
     public byte[] Render(
         string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature, ReferralReportBranding? branding = null)
     {
-        lock (RenderLock)
+        var document = Document.Create(container => container.Page(page =>
         {
-            return RenderDocument(residentDisplayName, content, signature, branding);
-        }
-    }
+            page.Size(PageSizes.A4);
+            page.MarginHorizontal(2, Unit.Centimetre);
+            page.MarginTop(1, Unit.Centimetre);
+            page.MarginBottom(1.5f, Unit.Centimetre);
+            page.DefaultTextStyle(style => style.FontFamily(FontFamily).FontSize(10));
 
-    private static byte[] RenderDocument(
-        string residentDisplayName, ReferralReportContent content, ReferralReportSignature signature, ReferralReportBranding? branding)
-    {
-        var document = new Document();
-        document.Info.Title = "Informe de derivación a Urgencias";
-        document.Info.Author = branding?.CenterName ?? "ResidApp";
-        var normal = document.Styles[StyleNames.Normal]!;
-        normal.Font.Name = FontFamily;
-        normal.Font.Size = 10;
+            page.Header().PaddingBottom(0.6f, Unit.Centimetre).Element(header => PdfBranding.ComposeHeader(header, branding));
 
-        var section = document.AddSection();
-        section.PageSetup = document.DefaultPageSetup.Clone();
-        PdfBranding.AddHeader(section, branding);
-
-        var footer = section.Footers.Primary.AddParagraph();
-        footer.Format.Font.Size = 8;
-        footer.AddText($"Informe de derivación a Urgencias · {residentDisplayName} · página ");
-        footer.AddPageField();
-        footer.AddText(" de ");
-        footer.AddNumPagesField();
-        PdfBranding.AddGeneratedBy(footer, branding);
-
-        var title = section.AddParagraph("Informe de derivación a Urgencias");
-        title.Format.Font.Size = 16;
-        title.Format.Font.Bold = true;
-        title.Format.SpaceAfter = Unit.FromPoint(12);
-
-        foreach (var block in content.Sections)
-        {
-            var heading = section.AddParagraph();
-            heading.Format.SpaceBefore = Unit.FromPoint(8);
-            heading.Format.KeepWithNext = true;
-            heading.AddFormattedText(block.Title, TextFormat.Bold);
-            heading.AddText(block.Automatic ? " · dato automático" : " · escrito por el profesional");
-            foreach (var line in block.Lines)
+            page.Footer().DefaultTextStyle(style => style.FontSize(8)).Column(footer =>
             {
-                section.AddParagraph(line);
-            }
-        }
+                footer.Item().Text(text =>
+                {
+                    text.Span($"Informe de derivación a Urgencias · {residentDisplayName} · página ");
+                    text.CurrentPageNumber();
+                    text.Span(" de ");
+                    text.TotalPages();
+                });
+                PdfBranding.ComposeGeneratedBy(footer, branding);
+            });
 
-        var signed = section.AddParagraph();
-        signed.Format.SpaceBefore = Unit.FromPoint(16);
-        signed.Format.Borders.Top.Width = 0.5;
-        signed.Format.Borders.Top.Color = Colors.Gray;
-        signed.AddFormattedText("Firma electrónica simple", TextFormat.Bold);
-        // Sin nombre visible (cuentas anteriores a 0023 a las que nadie se lo ha puesto), solo perfil e identificador.
-        var signer = signature.SignerName is { } name
-            ? $"{name} ({Profile(signature.Profile)}, cuenta {signature.SignerSubject})"
-            : $"{Profile(signature.Profile)} (cuenta {signature.SignerSubject})";
-        section.AddParagraph(
-            $"Firmado por {signer} " +
-            $"el {signature.SignedAt.ToLocalTime():dd'/'MM'/'yyyy} a las {signature.SignedAt.ToLocalTime():HH':'mm}.");
-        section.AddParagraph($"Huella SHA-256 del contenido: {signature.ContentHash}");
+            page.Content().Column(column =>
+            {
+                column.Item().PaddingBottom(12).Text("Informe de derivación a Urgencias").FontSize(16).Bold();
 
-        var renderer = new PdfDocumentRenderer { Document = document };
-        renderer.RenderDocument();
-        using var stream = new MemoryStream();
-        renderer.PdfDocument.Save(stream, false);
-        return stream.ToArray();
+                foreach (var block in content.Sections)
+                {
+                    column.Item().PaddingTop(8).EnsureSpace(60).Text(text =>
+                    {
+                        text.Span(block.Title).Bold();
+                        text.Span(block.Automatic ? " · dato automático" : " · escrito por el profesional");
+                    });
+                    foreach (var line in block.Lines)
+                    {
+                        column.Item().Text(line);
+                    }
+                }
+
+                column.Item().PaddingTop(16).BorderTop(0.5f).BorderColor(Colors.Grey.Medium).Text("Firma electrónica simple").Bold();
+                // Sin nombre visible (cuentas anteriores a 0023 a las que nadie se lo ha puesto), solo perfil e identificador.
+                var signer = signature.SignerName is { } name
+                    ? $"{name} ({Profile(signature.Profile)}, cuenta {signature.SignerSubject})"
+                    : $"{Profile(signature.Profile)} (cuenta {signature.SignerSubject})";
+                column.Item().Text(
+                    $"Firmado por {signer} " +
+                    $"el {signature.SignedAt.ToLocalTime():dd'/'MM'/'yyyy} a las {signature.SignedAt.ToLocalTime():HH':'mm}.");
+                column.Item().Text($"Huella SHA-256 del contenido: {signature.ContentHash}");
+            });
+        }))
+        .WithMetadata(new DocumentMetadata
+        {
+            Title = "Informe de derivación a Urgencias",
+            Author = branding?.CenterName ?? "ResidApp",
+        });
+
+        return document.GeneratePdf();
     }
 
     private static string Profile(SystemProfile profile) => profile == SystemProfile.Medicina ? "Medicina" : "Enfermería";
-
-    /// <summary>Toda familia se resuelve a Liberation Sans incrustada (normal o negrita; la cursiva se simula),
-    /// para que el PDF salga igual en Windows y en Linux, donde PDFsharp no lee fuentes del sistema.</summary>
-    private sealed class EmbeddedFontResolver : IFontResolver
-    {
-        private const string Regular = "LiberationSans-Regular";
-        private const string Bold = "LiberationSans-Bold";
-
-        public FontResolverInfo ResolveTypeface(string familyName, bool isBold, bool isItalic) =>
-            new(isBold ? Bold : Regular, false, isItalic);
-
-        public byte[] GetFont(string faceName) => PdfBranding.EmbeddedResource($"ResidApp.Fonts.{faceName}.ttf");
-    }
 }
