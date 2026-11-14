@@ -27,7 +27,7 @@ public sealed partial class AdministracionController(
     AppointmentServiceApplicationService appointmentService, AppointmentRequestsApplicationService appointmentRequests,
     AdministrationOverviewApplicationService overview, AdministracionIntercambioApplicationService intercambio,
     AdministracionCentroApplicationService centro, ResidentPhotoApplicationService photos,
-    AdministracionOrganigramaApplicationService organigrama) : Controller
+    AdministracionOrganigramaApplicationService organigrama, Microsoft.Extensions.Options.IOptions<PrivacidadOptions> privacidad) : Controller
 {
     /// <summary>Quien no tiene activo el perfil de Administración no ve estas pantallas: se le lleva a su inicio, en vez de enseñarle una pantalla
     /// vacía con un aviso. Solo orienta (la cookie del ámbito no está firmada): cada caso de uso vuelve a autorizar. Los envíos (POST) pasan,

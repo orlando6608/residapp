@@ -12,6 +12,11 @@ public sealed partial class AdministracionController
 {
     public async Task<IActionResult> AnonimizarFamiliar(Guid residenteId, Guid vinculoId, CancellationToken ct)
     {
+        if (!privacidad.Value.AnonimizarFamiliarActivo)
+        {
+            return NotFound();
+        }
+
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
         {
@@ -26,6 +31,11 @@ public sealed partial class AdministracionController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AnonimizarFamiliar([Bind(Prefix = "Form")] AnonymizeFamilyFormModel form, CancellationToken ct)
     {
+        if (!privacidad.Value.AnonimizarFamiliarActivo)
+        {
+            return NotFound();
+        }
+
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
         {

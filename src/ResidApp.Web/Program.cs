@@ -126,6 +126,7 @@ builder.Services.AddScoped<AccessInvitationsApplicationService>();
 builder.Services.AddScoped<IAccountLinkRepository, SqlAccountLinkRepository>();
 builder.Services.AddScoped<AccountLinksApplicationService>();
 builder.Services.Configure<AccesoOptions>(builder.Configuration.GetSection(AccesoOptions.Section));
+builder.Services.Configure<PrivacidadOptions>(builder.Configuration.GetSection(PrivacidadOptions.Section));
 // ADR 0007, incremento I1: ASP.NET Core Identity solo para las credenciales (contraseña, bloqueo, TOTP y códigos de recuperación) sobre
 // dbo.credenciales; el usuario es la cuenta y su nombre, sujeto_externo. No se usa SignInManager ni su cookie: la sesión es la de I0.
 builder.Services.AddIdentityCore<CredentialAccount>(options =>

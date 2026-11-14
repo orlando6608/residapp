@@ -1031,6 +1031,7 @@
       "palabras": ["anonimizar", "borrar datos", "derecho de supresión", "persona anonimizada", "Administración principal"],
       "permisos": [],
       "antes": [
+        "Que la función esté **activada** en tu centro: si no ves «Anonimizar a este familiar…» al final de «Editar», no lo está; pídelo a quien gestiona ResidApp.",
         "Ser la **Administración principal** del centro: no se puede deshacer y afecta a todos los residentes de ese familiar. Si te lo piden y no lo eres, pásale la petición a quien lo sea (ver ADM-07).",
         "Haber **comprobado la identidad** de quien lo pide. Tu centro debe contestar por escrito en el plazo de un mes (ampliable) y anotar la petición en su registro de derechos.",
         "Que el familiar no sea contacto urgente ni tutor legal de un residente que sigue en el centro: si lo es, la pantalla dice de cuáles y hay que cambiarlo antes (ver ADM-31 y ADM-28).",
@@ -1049,7 +1050,7 @@
       "dudas": [
         { "p": "«Elige quién lo pide.» o «Elige quién lo pide y marca la casilla de confirmación…»", "r": "Falta elegir en «¿Quién lo pide?» o marcar que has comprobado la identidad: sin las dos cosas no se anonimiza." },
         { "p": "«Este familiar ya está anonimizado: no se puede cambiar.»", "r": "En su fila ya solo queda «Desvincular»; si abres su edición o su autorización desde una pantalla antigua, vuelves a la ficha con este aviso." },
-        { "p": "«Solo la Administración principal del centro puede anonimizar a un familiar.»", "r": "El enlace «Anonimizar a este familiar…» lo ven todas las Administraciones, pero solo la principal puede seguir. Tu cuenta no tiene la marca de principal: pasa la petición a quien la tenga." }
+        { "p": "«Solo la Administración principal del centro puede anonimizar a un familiar.»", "r": "Con la función activada, el enlace «Anonimizar a este familiar…» lo ven todas las Administraciones, pero solo la principal puede seguir. Tu cuenta no tiene la marca de principal: pasa la petición a quien la tenga." }
       ],
       "rutas": ["Administracion/Residente", "Administracion/EditarFamiliar", "Administracion/AnonimizarFamiliar"],
       "mensajes": [

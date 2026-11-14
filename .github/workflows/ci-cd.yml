@@ -234,6 +234,15 @@ jobs:
             az webapp config appsettings set --name app-residapp-dev --resource-group rg-residapp-dev --settings WEBSITE_TIME_ZONE=Europe/Madrid > /dev/null
           fi
 
+      # «Anonimizar a este familiar…» borra sin copia bloqueada y no se usa con datos reales hasta que una persona experta decida (docs/privacidad/antes-de-datos-reales.md,
+      # apartado 8). appsettings.json la deja apagada; en dev, con datos ficticios, se enciende aquí para poder probarla. Solo se escribe si difiere: cambiar un ajuste reinicia la app.
+      - name: Encender «Anonimizar a este familiar» en dev
+        run: |
+          actual="$(az webapp config appsettings list --name app-residapp-dev --resource-group rg-residapp-dev --query "[?name=='Privacidad__AnonimizarFamiliarActivo'].value | [0]" -o tsv)"
+          if [ "$actual" != "true" ]; then
+            az webapp config appsettings set --name app-residapp-dev --resource-group rg-residapp-dev --settings Privacidad__AnonimizarFamiliarActivo=true > /dev/null
+          fi
+
       # Hallazgo A2: App Service redirige HTTP a HTTPS (la app no lo hace, para no entrar en bucle detrás del balanceador; sí manda HSTS).
       # Solo se escribe si hace falta, como la zona horaria.
       - name: Exigir HTTPS en la Web App
