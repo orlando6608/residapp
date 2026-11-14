@@ -38,7 +38,10 @@ public sealed class SqlChangeNoticeStore(SqlConnectionFactory connections) : ICh
          WHERE c.id = @appointmentId AND c.centro_id = @center
         """;
 
-    internal const string RecipientSql = $"SELECT fam.correo AS Address, fam.correo_confirmado_en AS ConfirmedAt {SqlFamilyPortalReader.AccessibleLinks} AND link.id = @LinkId";
+    /// <summary>A quién se escribe, para los tres avisos (propuesta, cambio y recordatorio): el vínculo con el acceso del portal más que la CUENTA siga activa. La sesión del familiar ya
+    /// exige cuenta activa (seguridad por filas, 0030) pero <see cref="SqlFamilyPortalReader.AccessibleLinks"/> no la mira, y una cuenta suspendida (script 0093: la tarea puede leer id y estado
+    /// de <c>cuentas</c>, nada más) con la autorización aún Activa seguiría recibiendo avisos de algo que ya no puede ver.</summary>
+    internal const string RecipientSql = $"SELECT fam.correo AS Address, fam.correo_confirmado_en AS ConfirmedAt {SqlFamilyPortalReader.AccessibleLinks} AND link.id = @LinkId AND EXISTS (SELECT 1 FROM dbo.cuentas account WHERE account.id = fam.cuenta_id AND account.estado = 'ACTIVE')";
 
     internal const string IdentitySql = "SELECT CASE WHEN IS_MEMBER(N'residapp_tareas') = 1 OR IS_MEMBER(N'db_owner') = 1 THEN 1 ELSE 0 END";
 

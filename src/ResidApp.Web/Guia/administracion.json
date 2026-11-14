@@ -866,7 +866,7 @@
       "palabras": ["editar familiar", "correo", "avisos", "confirmar dirección", "referente", "tutor legal"],
       "permisos": [],
       "antes": [
-        "Para el correo: hablar con la persona, **leerle la dirección despacio** y esperar a que diga que es correcta. El correo es voluntario y solo sirve para avisarle de que tiene una propuesta de cita pendiente o de que el centro ha cambiado o cancelado una cita: los avisos no dicen el nombre del residente, ni el centro, ni la fecha ni el motivo.",
+        "Para el correo: hablar con la persona, **leerle la dirección despacio** y esperar a que diga que es correcta. El correo es voluntario y solo sirve para avisarle de que tiene una propuesta de cita pendiente, de que el centro ha cambiado o cancelado una cita, o de que tiene una cita mañana (recordatorio del día antes): los avisos no dicen el nombre del residente, ni el centro, ni la hora ni el motivo; el recordatorio solo dice que tiene una cita mañana.",
         "Si el familiar está vinculado a más residentes, los cambios de nombre, teléfono y correo valen para todos; la relación es solo de este residente."
       ],
       "pasos": [
@@ -877,7 +877,7 @@
         { "texto": "Si la persona pide que no le manden más avisos, pulsa **Quitar la confirmación de la dirección** (está en la pantalla de edición, solo si la dirección está confirmada) o borra el correo.", "botones": ["Quitar la confirmación de la dirección"] }
       ],
       "despues": [
-        { "para": "Familia", "texto": "Si el correo está confirmado, recibe los avisos de ResidApp, que le dicen solo que entre en la aplicación. El correo no sustituye al teléfono: si algo es urgente, se llama. Cambiar o borrar la dirección quita la confirmación y hay que volver a confirmarla." }
+        { "para": "Familia", "texto": "Si el correo está confirmado, recibe los avisos de ResidApp, que le dicen solo que entre en la aplicación (el recordatorio, además, que tiene una cita mañana). El correo no sustituye al teléfono: si algo es urgente, se llama. Cambiar o borrar la dirección quita la confirmación y hay que volver a confirmarla." }
       ],
       "dudas": [
         { "p": "«Escribe un correo válido.»", "r": "La dirección no tiene forma de correo (falta la @ o el dominio): corrígela o bórrala." },

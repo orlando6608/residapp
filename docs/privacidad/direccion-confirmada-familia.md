@@ -127,7 +127,7 @@ Sin jerga. Los corchetes se quitan hasta que exista lo que nombran. Si se pide, 
 «Dirección confirmada con la familia: se la he leído a la persona a quien pertenece y me ha dicho que es correcta»
 
 **Ayuda bajo el campo:**
-«Este correo solo sirve para mandar a esa persona avisos de ResidApp: que tiene una propuesta de cita pendiente[, que el centro ha cambiado o cancelado una cita que reservó, o un recordatorio]. Los avisos no dicen el nombre del residente, ni el centro, ni la fecha, ni el motivo: solo que entre en ResidApp. Es voluntario: puede pedir que se quite cuando quiera y entonces lo verá todo al entrar en ResidApp.
+«Este correo solo sirve para mandar a esa persona avisos de ResidApp: que tiene una propuesta de cita pendiente, que el centro ha cambiado o cancelado una cita que reservó, o un recordatorio el día antes de una cita. Los avisos no dicen el nombre del residente, ni el centro, ni la hora, ni el motivo: solo que entre en ResidApp; el recordatorio, además, dice que tiene una cita mañana. Es voluntario: puede pedir que se quite cuando quiera y entonces lo verá todo al entrar en ResidApp.
 Antes de marcar la casilla, cuéntele esto, léale la dirección despacio (letra a letra si hace falta) y espere a que le diga que es correcta. Si no ha podido hacerlo, deje la casilla sin marcar: es correcto y no pasa nada, simplemente no se enviará ningún aviso a esa dirección. Si cambia o borra la dirección, la confirmación se quita y hay que volver a confirmarla. Si alguien le pide que no le manden más avisos, borre la dirección. El correo no sustituye al teléfono: si algo es urgente, llame.»
 
 **Mensaje en la ficha cuando hay correo y no hay marca:**
@@ -137,7 +137,7 @@ Antes de marcar la casilla, cuéntele esto, léale la dirección despacio (letra
 «Dirección confirmada el [fecha] por [nombre de la cuenta].» [Decidir Orlando si se enseña el nombre o solo «Administración»; para el propio personal es información suya, pero ver apartado 7, riesgo 2.]
 
 **Guion para decir a la persona (es la forma práctica de cumplir el art. 13 RGPD en el momento de recoger el dato; la residencia lo adopta o lo cambia, y lo imprime con el procedimiento):**
-«Si nos da su correo, le mandaremos avisos de ResidApp cuando haya algo que mirar sobre sus citas. Los avisos no dicen el nombre de su familiar, ni la fecha, ni el motivo: solo que entre en ResidApp. Es voluntario y puede pedir que se lo quitemos cuando quiera; si lo quitamos, lo verá todo al entrar en ResidApp. Para estar seguros, voy a leerle la dirección: [letra a letra]. ¿Es correcta?»
+«Si nos da su correo, le mandaremos avisos de ResidApp cuando haya algo que mirar sobre sus citas. Los avisos no dicen el nombre de su familiar, ni la hora, ni el motivo: solo que entre en ResidApp; el recordatorio, además, dice que tiene una cita mañana. Es voluntario y puede pedir que se lo quitemos cuando quiera; si lo quitamos, lo verá todo al entrar en ResidApp. Para estar seguros, voy a leerle la dirección: [letra a letra]. ¿Es correcta?»
 
 **Línea para la hoja de procedimiento sobre el correo equivocado (CJ 3.1):** «Si una persona dice que ha recibido un aviso que no esperaba: pida disculpas, borre o corrija la dirección, anote fecha y motivo, y avise a [persona de referencia] para dejar constancia como incidente.»
 

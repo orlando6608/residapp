@@ -300,6 +300,15 @@ builder.Services.AddKeyedScoped<ChangeNoticeService>(ChangeNoticeWorker.ServiceK
     services.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(),
     message => services.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
 builder.Services.AddHostedService<ChangeNoticeWorker>();
+// Recordatorio de cita del día antes (ADR 0012): lo dispara el reloj, no una persona. Apagado por defecto (Correo:Activo y Correo:RecordatorioCita). Usa la misma conexión propia de la
+// tarea: la base reserva las filas con un procedimiento (script 0092) porque el rol no puede insertar en el registro.
+builder.Services.AddKeyedScoped<IReminderStore>(
+    ChangeNoticeWorker.ServiceKey, (_, _) => new SqlReminderStore(new SqlConnectionFactory(tasksConnectionString ?? connectionString)));
+builder.Services.AddKeyedScoped<ReminderService>(ChangeNoticeWorker.ServiceKey, (services, _) => new ReminderService(
+    services.GetRequiredKeyedService<IReminderStore>(ChangeNoticeWorker.ServiceKey), services.GetRequiredService<IEmailSender>(),
+    services.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(),
+    message => services.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
+builder.Services.AddHostedService<ReminderWorker>();
 // La purga del registro de envíos (script 0085) usa la misma conexión propia de la tarea: el rol solo puede ejecutar el procedimiento que borra lo de más de 12 meses.
 builder.Services.AddScoped<IEmailLogPurge>(_ => new SqlEmailLogPurge(new SqlConnectionFactory(tasksConnectionString ?? connectionString)));
 builder.Services.AddHostedService<EmailLogPurgeWorker>();

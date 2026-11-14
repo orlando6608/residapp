@@ -255,6 +255,25 @@ public class AvisoCambioCitaTests
     }
 
     [Fact]
+    public async Task SiLaCuentaDeLaFamiliaSeSuspendeAntesDeEnviar_NoSeEnvia_AunqueLaAutorizacionSigaActiva()
+    {
+        var (setup, appointments) = await WithAppointmentsAsync("Residente Aviso Cambio Cuenta Suspendida");
+        var sender = new FakeEmailSender();
+        var notice = Notice(sender, Active());
+        Assert.True((await CancelAsync(setup, appointments[0], notice)).Ok);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("UPDATE dbo.cuentas SET estado = 'SUSPENDED' WHERE sujeto_externo = @subject", new { subject = setup.Subject });
+        }
+
+        await ProcessAsync(notice);
+
+        Assert.Empty(sender.Sent);
+        var row = Assert.Single(await RowsAsync(appointments[0]));
+        Assert.Equal(("OMITIDO", "SIN_ACCESO"), (row.Estado, row.Motivo));
+    }
+
+    [Fact]
     public async Task SiElResidenteSeDaDeBajaAntesDeEnviar_NoSeEnvia()
     {
         var (setup, appointments) = await WithAppointmentsAsync("Residente Aviso Cambio Siete");

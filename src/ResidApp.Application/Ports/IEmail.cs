@@ -25,18 +25,20 @@ public interface IEmailSender
 
 /// <summary>Cómo está el envío en este entorno. <see cref="Active"/> exige interruptor, cadena de conexión, remitente y dirección base; sin ella no se reserva ni se
 /// envía nada. Con <see cref="AllowedRecipients"/> vacío solo se envía si <see cref="AnyRecipient"/> está encendido (producción): los datos de prueba pueden
-/// llevar direcciones de personas reales. <see cref="ChangeNotice"/> es el interruptor propio del aviso de cambio de cita (apagado por defecto): además de <see cref="Active"/>.</summary>
+/// llevar direcciones de personas reales. <see cref="ChangeNotice"/> es el interruptor propio del aviso de cambio de cita y <see cref="Reminder"/> el del recordatorio del día antes
+/// (los dos apagados por defecto): además de <see cref="Active"/>.</summary>
 public sealed record EmailSettings(
-    bool Active, string BaseUrl, string Language, bool AnyRecipient, IReadOnlyList<string> AllowedRecipients, bool ChangeNotice = false)
+    bool Active, string BaseUrl, string Language, bool AnyRecipient, IReadOnlyList<string> AllowedRecipients, bool ChangeNotice = false, bool Reminder = false)
 {
     public static EmailSettings Off { get; } = new(false, "", "es", false, []);
 }
 
-/// <summary>Códigos cerrados del registro de envíos (scripts 0081 y 0082).</summary>
+/// <summary>Códigos cerrados del registro de envíos (scripts 0081, 0082 y 0092).</summary>
 public static class EmailLog
 {
     public const string ProposalTemplate = "AVISO_PROPUESTA_CITA";
     public const string ChangeTemplate = "AVISO_CAMBIO_CITA";
+    public const string ReminderTemplate = "RECORDATORIO_CITA";
 
     public const string Pending = "PENDIENTE";
     public const string Sent = "ENVIADO";
@@ -49,6 +51,8 @@ public static class EmailLog
     public const string ProposalNotCurrent = "PROPUESTA_NO_VIGENTE";
     public const string AppointmentNotCurrent = "CITA_NO_VIGENTE";
     public const string AppointmentPassed = "CITA_PASADA";
+    public const string AppointmentRecent = "CITA_RECIENTE";
+    public const string OutOfWindow = "FUERA_DE_PLAZO";
     public const string RecipientNotAllowed = "DESTINO_NO_PERMITIDO";
     public const string ProviderRejected = "ACS_RECHAZADO";
     public const string ProviderUnavailable = "ACS_NO_DISPONIBLE";
@@ -116,5 +120,33 @@ public interface IChangeNoticeStore
 
     /// <summary>Si la conexión de la tarea tiene la identidad que ve todos los centros (miembro del rol residapp_tareas, o db_owner en local y en las pruebas). Con el usuario limitado
     /// de la aplicación no ve ninguna fila y no lo avisa: así la tarea lo comprueba y lo dice como error en vez de quedarse callada.</summary>
+    Task<bool> HasTaskIdentityAsync(CancellationToken ct = default);
+}
+
+/// <summary>Un recordatorio reservado y todavía sin enviar. Solo lo necesario para comprobarlo y mandarlo: <paramref name="DateKey"/> es la fecha local de la cita (aaaa-mm-dd) con la
+/// que se reservó; ni dirección, ni hora, ni motivo.</summary>
+public sealed record PendingReminder(Guid Id, CenterId CenterId, Guid AppointmentId, string DateKey, string Language);
+
+/// <summary>El registro de envíos del recordatorio de cita (script 0092). A diferencia de los otros avisos, nadie lo desencadena: la tarea programada pide al procedimiento
+/// <see cref="ReserveAsync"/> que reserve una fila por cada cita confirmada de mañana (el rol de la tarea no puede insertar en la tabla) y luego reclama, comprueba, envía y resuelve
+/// cada una. La clave única (plantilla, cita, fecha) impide reservarlo dos veces. El motivo del cambio y el detalle de las solicitudes no se leen nunca.</summary>
+public interface IReminderStore
+{
+    /// <summary>Llama al procedimiento de la base de datos, que calcula «mañana» con la hora de Madrid, solo actúa en la franja de envío y devuelve cuántas filas creó.</summary>
+    Task<int> ReserveAsync(string language, string templateVersion, CancellationToken ct = default);
+
+    /// <summary>Los recordatorios PENDIENTES sin reclamar, los más antiguos primero.</summary>
+    Task<IReadOnlyList<PendingReminder>> ListPendingAsync(int limit, CancellationToken ct = default);
+
+    /// <summary>Lo reclama para esta ejecución. False si otra ejecución ya lo reclamó: así no sale dos veces aunque haya dos copias de la aplicación.</summary>
+    Task<bool> ClaimAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Vuelve a leer la cita y el vínculo (la misma consulta que el portal) y dice a quién escribir o por qué no, en el orden de docs/privacidad/recordatorio-cita-por-correo.md, apartado 3.</summary>
+    Task<ChangeNoticePreparation> PrepareAsync(PendingReminder reminder, DateTimeOffset now, CancellationToken ct = default);
+
+    /// <summary>Cierra una fila PENDIENTE: ENVIADO, FALLIDO u OMITIDO.</summary>
+    Task ResolveAsync(Guid id, string state, string? reason, string? operationId, int attempts, DateTimeOffset now, CancellationToken ct = default);
+
+    /// <summary>Si la conexión de la tarea tiene la identidad que ve todos los centros (miembro del rol residapp_tareas, o db_owner en local y en las pruebas).</summary>
     Task<bool> HasTaskIdentityAsync(CancellationToken ct = default);
 }
