@@ -1,5 +1,6 @@
 @using ResidApp.Web.Models
 @model FamilyMemberViewModel
+@inject Microsoft.Extensions.Options.IOptions<ResidApp.Web.Security.PrivacidadOptions> Privacidad
 @{
     var resident = Model.Resident;
     var editing = Model.Form.VinculoId is not null;
@@ -117,7 +118,7 @@
                 <button type="submit" class="btn btn-primary btn-lg">@(editing ? "Guardar cambios" : "Añadir familiar")</button>
             </div>
         </form>
-        @if (editing)
+        @if (editing && Privacidad.Value.AnonimizarFamiliarActivo)
         {
             <hr />
             <div class="d-grid d-md-flex justify-content-md-end">

@@ -1383,6 +1383,55 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Administracion_ConElInterruptorDeAnonimizarApagado_NoOfreceElBoton_YLaRutaResponde404_SinTocarAlFamiliar()
+    {
+        // Docs/privacidad/antes-de-datos-reales.md, apartado 8: apagado por defecto y en todo entorno con centros reales; solo se enciende en Development y en Azure dev.
+        var seed = await SeedAsync();
+        var off = _factory.WithWebHostBuilder(builder => builder.UseSetting("Privacidad:AnonimizarFamiliarActivo", "false"));
+        var admin = off.CreateClient();
+        (await SesionTests.PostLoginAsync(admin, seed.ExternalSubject)).EnsureSuccessStatusCode();
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Anonimizar Apagado");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var addPage = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/AnadirFamiliar?residenteId={residentId}"));
+        await admin.PostAsync("/Administracion/AnadirFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(addPage, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = residentId,
+            ["Form.OperacionId"] = ExtractValue(addPage, "Form.OperacionId"),
+            ["Form.NombreVisible"] = "Familiar Anonimizar Apagado",
+            ["Form.Relacion"] = "Hija",
+            ["Form.Telefono"] = "600000002",
+        }));
+        var linkId = await connection.ExecuteScalarAsync<Guid>(
+            """
+            SELECT l.id FROM dbo.residentes_familiares l JOIN dbo.familiares f ON f.id = l.familiar_id
+             WHERE l.residente_id = @residentId AND f.nombre_visible = 'Familiar Anonimizar Apagado'
+            """, new { residentId });
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.administraciones_principales_cambios (id, centro_id, ambito_perfil_id, numero, principal, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            SELECT NEWID(), centro_id, id, 1, 1, cuenta_id, 'ADMINISTRACION', SYSUTCDATETIME()
+              FROM dbo.ambitos_perfil WHERE id = @scope
+            """, new { scope = seed.ProfileScopeId });
+
+        var editPage = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/EditarFamiliar?residenteId={residentId}&vinculoId={linkId}"));
+        Assert.DoesNotContain("Anonimizar a este familiar", editPage);
+
+        var url = $"/Administracion/AnonimizarFamiliar?residenteId={residentId}&vinculoId={linkId}";
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.GetAsync(url)).StatusCode);
+        var post = await admin.PostAsync("/Administracion/AnonimizarFamiliar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(editPage, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = residentId,
+            ["Form.VinculoId"] = linkId.ToString(),
+            ["Form.Motivo"] = "PeticionDelInteresado",
+            ["Form.Confirmado"] = "true",
+        }));
+        Assert.Equal(HttpStatusCode.NotFound, post.StatusCode);
+        Assert.Equal("Familiar Anonimizar Apagado", await connection.ExecuteScalarAsync<string>(
+            "SELECT f.nombre_visible FROM dbo.familiares f JOIN dbo.residentes_familiares l ON l.familiar_id = f.id WHERE l.id = @linkId", new { linkId }));
+    }
+
+    [Fact]
     public async Task Administracion_VeElPlazoDeConservacionDeLasBajas_Con15Anos_YAvisaDeLosVencidosYLosProximos_ConLaAppEntera()
     {
         // Art. 12 de la Llei 21/2000 (Ley 16/2010): 15 años desde la baja. La lista de bajas avisa de lo vencido y de lo que vence en 12 meses, y dice que no se borra nada.
