@@ -6,8 +6,8 @@ using ResidApp.Shared;
 
 namespace ResidApp.IntegrationTests;
 
-/// <summary>DER-05: el PDF de derivación sale igual aunque se generen varios a la vez. Sin serializar, PDFsharp/MigraDoc
-/// mezclaban fuentes entre documentos y una palabra de un título salía sin negrita.</summary>
+/// <summary>DER-05: el PDF de derivación sale igual aunque se generen varios a la vez (con la librería anterior, PDFsharp/MigraDoc, había que
+/// serializarlos porque mezclaba fuentes entre documentos). PDFsharp 6.2.4 (MIT) solo está aquí para leer el PDF generado con QuestPDF.</summary>
 public class ReferralReportPdfRendererTests
 {
     [Fact]
@@ -73,7 +73,8 @@ public class ReferralReportPdfRendererTests
 
         Assert.Equal(1, ImageWidth(own));
         Assert.Equal("Residencia Los Almendros", AuthorOf(own));
-        Assert.Equal(256, ImageWidth(withoutLogo));
+        // QuestPDF reduce el icono (256 píxeles) al tamaño con que se dibuja (1,4 cm a 288 ppp): lo que importa es que no es el logo de 1 píxel del centro.
+        Assert.InRange(ImageWidth(withoutLogo), 100, 256);
         Assert.Equal("Residencia Sin Logo", AuthorOf(withoutLogo));
     }
 

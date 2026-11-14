@@ -79,7 +79,7 @@ Flujos: [`valoracion-escalado-enfermeria.md`](../../flujos-clinicos/valoracion-e
   - **Vista previa y firma:** la vista previa es obligatoria y muestra la huella SHA-256 del contenido. Firmar
     exige la misma huella: si el protocolo cambió, se enseña la vista previa nueva. La firma es idempotente
     (`REFERRAL_REPORT_SIGN`) y electrónica simple (cuenta, fecha y hora, y huella).
-  - **PDF:** se genera con PDFsharp-MigraDoc 6.2.4 y la fuente Liberation Sans incrustada (OFL). Se guarda
+  - **PDF:** se genera con QuestPDF (licencia Community) y la fuente Liberation Sans incrustada (OFL). Se guarda
     inmutable en `informes_derivacion` con su huella, y se descarga desde los dos perfiles con auditoría
     `REFERRAL_REPORT_DOWNLOAD`.
   - **Tras firmar:** el evento sigue en el protocolo y se registran los intentos de llamada a la familia

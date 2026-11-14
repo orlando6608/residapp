@@ -49,7 +49,7 @@ Lo que **no** he podido comprobar leyendo: lo que depende de JavaScript, de la s
   Plataforma, Administración, Auxiliar y Familiar no tienen permisos configurables. (Existe `BASELINE_DRAFT_CONTRIBUTE` en base de datos pero no se ofrece.)
 - **No hay menú por perfil:** un único enlace «Mi panel» lleva al inicio de cada perfil (`_Layout.cshtml:29-39`); el resto son las tarjetas del inicio. La Guía se organiza igual (inicio → tarjeta → pantalla).
 - **Versión de la app (actualizado 2026-11-05, PR #146):** ya hay versionado semántico. La versión vive solo en `src/Directory.Build.props` (hoy `0.1.0`, release-please la sube al cerrar un hito; no se edita a mano sin tu visto bueno). Cada documento registrado lleva el sello **«Revisado para ResidApp vX.Y.Z»** y el campo `revisadoPara` en `.claude/documentacion-usuario.json`. El pie de `_Layout` muestra la versión **solo con sesión iniciada**. Ver D4.
-- **PDF en servidor:** solo el informe de derivación (MigraDoc/PDFsharp, `PdfBranding.AddHeader`). **Impresión en navegador:** `site.css:29-56` (cabecera de marca repetida) y `tema.js` (fuerza modo claro al imprimir). Ni el Manual ni el Flujo usan `@page`.
+- **PDF en servidor:** solo el informe de derivación (QuestPDF, `PdfBranding.ComposeHeader`). **Impresión en navegador:** `site.css:29-56` (cabecera de marca repetida) y `tema.js` (fuerza modo claro al imprimir). Ni el Manual ni el Flujo usan `@page`.
 
 ### 1.3 Incoherencias y huecos (clasificados)
 
