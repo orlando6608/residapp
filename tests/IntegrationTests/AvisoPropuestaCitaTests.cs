@@ -246,6 +246,7 @@ public class AvisoPropuestaCitaTests
     [InlineData("suspension", "SIN_ACCESO")]
     [InlineData("desvinculado", "SIN_ACCESO")]
     [InlineData("revocada", "SIN_ACCESO")]
+    [InlineData("cuentaSuspendida", "SIN_ACCESO")]
     public async Task ElAviso_VuelveAComprobarLaVigenciaYElAcceso_EnElMomentoDeEnviar(string change, string reason)
     {
         var (setup, request) = await WithRequestAsync("Residente Aviso Correo Vigencia " + change);
@@ -291,6 +292,14 @@ public class AvisoPropuestaCitaTests
                 break;
             case "revocada":
                 await ChangeAsync(setup.Admin, setup.ResidentId, setup.LinkId, FamilyAuthorizationChange.Revocar, 2, "Deja de estar autorizado.");
+                break;
+            case "cuentaSuspendida":
+                // La autorización sigue Activa: solo la cuenta de la familia queda suspendida (p. ej. por Plataforma). La sesión ya no entraría; el aviso tampoco debe salir.
+                using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+                {
+                    await connection.ExecuteAsync("UPDATE dbo.cuentas SET estado = 'SUSPENDED' WHERE sujeto_externo = @subject", new { subject = setup.Subject });
+                }
+
                 break;
         }
 

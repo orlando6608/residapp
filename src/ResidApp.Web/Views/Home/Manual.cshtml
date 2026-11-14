@@ -579,7 +579,14 @@
         correo con la dirección confirmada con la familia y aún tiene acceso al Portal Familiar. Si no estaba confirmada, el aviso se omite y no se manda después aunque se confirme más tarde. Si la cita vuelve a cambiar en esos minutos, solo se avisa del último cambio; si el residente se da de baja o ya pasó la hora de la
         cita, no se envía. No se manda al reservar ni al finalizar, ni cuando la familia cambia o cancela su propia cita, ni por la baja del residente, ni al cerrar una solicitud o
         retirar una propuesta. Está apagado por defecto (tiene su propio interruptor, además del general del correo, y se enciende para todo el entorno, no por centro) y, en las pruebas,
-        solo llega a las direcciones autorizadas. La pantalla no dice si el correo salió ni si el aviso está activado: avísala tú en todo caso: el correo es un complemento y puede acabar en el correo no deseado de la familia (por eso, al confirmar la dirección, se le pide que añada <code>no-responder@avisos.residapp.es</code> a sus contactos). Tampoco hay recordatorios de citas. Una cita confirmada cuya hora ya pasó se puede
+        solo llega a las direcciones autorizadas. La pantalla no dice si el correo salió ni si el aviso está activado: avísala tú en todo caso: el correo es un complemento y puede acabar en el correo no deseado de la familia (por eso, al confirmar la dirección, se le pide que añada <code>no-responder@avisos.residapp.es</code> a sus contactos). 
+        <strong>Recordatorio del día antes.</strong> Si está activado en la aplicación (tiene otro interruptor propio, apagado por defecto), el día anterior a una cita confirmada, entre las 10:00 y las 18:59 (hora de Madrid),
+        la persona de la familia que la reservó recibe un único correo genérico («Tienes una cita mañana en ResidApp») con un enlace a ResidApp. Dice que tiene una cita mañana, pero no la hora,
+        el equipo, la modalidad, el motivo, el residente ni el centro, y no se puede responder. Solo le llega a quien reservó la cita y solo si su ficha tiene correo con la dirección confirmada
+        con la familia, aún tiene acceso al Portal Familiar, el residente sigue activo y sin suspender y su autorización sigue vigente; si no, se omite y no se manda después. Es uno por cita y por
+        fecha y no se reintenta. No se manda si la cita se reservó, se aceptó o se movió ese mismo día (para eso está el aviso de cambio) ni si ya no está confirmada. Si después reprogramas o
+        cancelas la cita, la familia puede recibir además el aviso de cambio: dos correos el mismo día. Registra las bajas y las suspensiones a primera hora: el recordatorio sale a las 10:00 aunque
+        la baja se anote por la tarde. Una cita confirmada cuya hora ya pasó se puede
         <strong>finalizar</strong>; no se finaliza sola, porque que pasara la hora no dice si se celebró. Arriba de la agenda, <strong>«Citas pasadas sin cerrar»</strong> reúne
         las confirmadas cuya hora ya llegó y que nadie ha finalizado, de cualquier semana, con su botón «Finalizar», y el inicio de Administración las cuenta para que no se
         olviden. Cada paso queda en la auditoría, en la categoría «Citas».
@@ -594,7 +601,7 @@
         <strong>Aviso por correo.</strong> Al proponer un horario, si el aviso está activado en la aplicación y el familiar que hizo la solicitud tiene correo en su ficha con la dirección confirmada con la familia (si no, no se envía y tampoco se manda después aunque se confirme más tarde), le llega
         un único correo genérico con un enlace a ResidApp: no dice el residente, el centro, el motivo, el día ni la hora, y no se puede responder. Está apagado por defecto y, en las
         pruebas, solo llega a las direcciones autorizadas. La pantalla no dice si el correo salió, y la propuesta vale igual que se envíe o no. Este correo no se manda al cerrar
-        una solicitud ni por la baja del residente. Cuando el centro reprograma o cancela una cita ya confirmada hay otro aviso distinto (ver «Agenda»). La cita solo se confirma cuando la familia <strong>acepta</strong>; también
+        una solicitud ni por la baja del residente. Cuando el centro reprograma o cancela una cita ya confirmada hay otro aviso distinto, y el día antes de una cita confirmada puede haber un recordatorio (ver «Agenda»). La cita solo se confirma cuando la familia <strong>acepta</strong>; también
         puede pedir otro horario (la solicitud vuelve a pendiente) o cancelarla. Puedes <strong>cerrar</strong> una solicitud abierta con un motivo obligatorio que la familia no ve:
         verá que el centro la cerró. No hay chat: si hace falta hablar, llámala por teléfono. Cada paso queda en la auditoría, en la categoría «Citas».
         Al <strong>dar de baja al residente</strong> las citas futuras se cancelan y las solicitudes abiertas se cierran solas; en el historial dicen «sistema, a causa de la baja del residente».
@@ -1766,7 +1773,8 @@
         confirmada al momento. Si el hueco se ocupa justo antes de confirmar, no se crea la cita y se le ofrecen los que quedan. Pulsar dos veces el botón no duplica la cita.
         Con el mismo equipo solo puede tener una cita próxima. Puede <strong>reprogramar</strong> o <strong>cancelar</strong> sus citas (con confirmación) hasta la antelación mínima
         del centro; después, por teléfono. Solo ve las citas que reservó ella misma. Si el centro reprograma o cancela una cita que reservó ella y el aviso por correo está activado y su dirección está confirmada, puede recibir un correo genérico
-        («Tienes un cambio en una cita en ResidApp») sin detalles: los ve al entrar en el portal. Ese correo sale de <code>no-responder@avisos.residapp.es</code>; si no lo ve, que mire el correo no deseado y añada esa dirección a sus contactos. No le llega si fue ella quien cambió o canceló la cita. Todas las pantallas recuerdan que las citas no son un canal urgente. Si el centro
+        («Tienes un cambio en una cita en ResidApp») sin detalles: los ve al entrar en el portal. Ese correo sale de <code>no-responder@avisos.residapp.es</code>; si no lo ve, que mire el correo no deseado y añada esa dirección a sus contactos. No le llega si fue ella quien cambió o canceló la cita. Si el recordatorio está activado, el día antes de una cita confirmada que reservó ella (entre las 10:00 y las 18:59) puede recibir otro correo genérico
+        («Tienes una cita mañana en ResidApp»), sin hora ni detalles, con las mismas condiciones de dirección confirmada y acceso al portal; no le llega si reservó o movió esa cita ese mismo día. Todas las pantallas recuerdan que las citas no son un canal urgente. Si el centro
         desactiva el servicio, no se ofrece reservar, pero las citas ya confirmadas se siguen viendo y se pueden cancelar.
     </p>
     <p>

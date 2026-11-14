@@ -49,7 +49,7 @@ public sealed class SqlProposalNoticeStore(SqlConnectionFactory connections) : I
         else
         {
             var recipient = await connection.QuerySingleOrDefaultAsync<Recipient>(new CommandDefinition(
-                $"SELECT fam.correo AS Address, fam.correo_confirmado_en AS ConfirmedAt {SqlFamilyPortalReader.AccessibleLinks} AND link.id = @LinkId",
+                SqlChangeNoticeStore.RecipientSql,
                 new
                 {
                     AccountId = request.AccountId, CenterId = centerId.Value, Today = DateOnly.FromDateTime(now.LocalDateTime).ToDateTime(TimeOnly.MinValue), request.LinkId,

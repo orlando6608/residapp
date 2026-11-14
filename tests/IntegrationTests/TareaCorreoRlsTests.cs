@@ -131,6 +131,51 @@ public sealed class TareaCorreoRlsTests
         }
     }
 
+    [Fact]
+    public async Task ElRolDeLaTarea_EjecutaElProcedimientoQueReservaRecordatorios_PeroNoSuVarianteConHora_NiInsertaNiLeeLoQueNoDebe()
+    {
+        // Condición R8 de docs/privacidad/recordatorio-cita-por-correo.md: el procedimiento no abre permisos de más.
+        using var task = await OpenAsAsync(TaskUser);
+
+        // El procedimiento real (fuera de la franja devuelve 0; dentro, las filas que reserva): un recuento y nada más.
+        Assert.True(await task.ExecuteScalarAsync<int>(SqlReminderStore.ReserveSql, new { language = "es", version = "1" }) >= 0);
+
+        foreach (var sql in new[]
+        {
+            // la variante con la hora como parámetro es solo del propietario: con ella la tarea podría elegir el día que reserva
+            "EXEC dbo.reservar_recordatorios_cita_en @ahora_utc = '2026-11-15T10:00:00', @idioma = N'es', @version = N'1'",
+            // no fabrica filas ni lee lo que solo el procedimiento necesita
+            "INSERT INTO dbo.envios_correo (id, centro_id, plantilla_codigo, plantilla_version, idioma, familiar_id, referencia_id, referencia_clave, estado_codigo, intentos, creado_en) VALUES (NEWID(), NEWID(), 'RECORDATORIO_CITA', '1', 'es', NEWID(), NEWID(), '2099-01-01', 'PENDIENTE', 0, SYSUTCDATETIME())",
+            "DELETE FROM dbo.envios_correo",
+            "SELECT creada_en FROM dbo.citas",
+            "SELECT ocurrido_en FROM dbo.citas_cambios",
+        })
+        {
+            await AssertDeniedAsync(task, sql);
+        }
+    }
+
+    [Fact]
+    public async Task ElRolDeLaTarea_LeeDeLasCuentasSoloElIdentificadorYElEstado()
+    {
+        // Script 0093: los avisos comprueban que la cuenta del familiar siga activa (una cuenta suspendida no recibe avisos), y nada más de la cuenta.
+        await SeedAsync("Residente Tarea Correo Cuentas");
+        using var task = await OpenAsAsync(TaskUser);
+
+        Assert.NotEmpty(await task.QueryAsync("SELECT TOP (5) id, estado FROM dbo.cuentas"));
+        foreach (var sql in new[]
+        {
+            "SELECT sujeto_externo FROM dbo.cuentas",
+            "SELECT nombre_visible FROM dbo.cuentas",
+            "SELECT * FROM dbo.cuentas",
+            "UPDATE dbo.cuentas SET estado = 'ACTIVE'",
+            "SELECT * FROM dbo.ambitos_perfil",
+        })
+        {
+            await AssertDeniedAsync(task, sql);
+        }
+    }
+
     /// <summary>Copia la fila del aviso con otra clave y otras fechas (para probar la purga): devuelve su id.</summary>
     private static async Task<Guid> CopyRowAsync(SqlConnection admin, Guid templateRowId, string key, int createdMonthsAgo, int? resolvedMonthsAgo)
     {

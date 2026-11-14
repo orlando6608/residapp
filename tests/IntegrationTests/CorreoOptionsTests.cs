@@ -90,4 +90,25 @@ public class CorreoOptionsTests
         correoApagado.Activo = false;
         Assert.False(correoApagado.ToSettings().ChangeNotice);
     }
+
+    [Fact]
+    public void ElRecordatorioDeCita_PorDefectoEstaApagado_YTieneSuInterruptorPropio()
+    {
+        Assert.False(new CorreoOptions().RecordatorioCita);
+        Assert.False(Complete().ToSettings().Reminder);
+
+        var soloRecordatorio = Complete();
+        soloRecordatorio.RecordatorioCita = true;
+        Assert.True(soloRecordatorio.ToSettings().Reminder);
+        Assert.False(soloRecordatorio.ToSettings().ChangeNotice);
+
+        var soloCambio = Complete();
+        soloCambio.AvisoCambioCita = true;
+        Assert.False(soloCambio.ToSettings().Reminder);
+
+        var correoApagado = Complete();
+        correoApagado.RecordatorioCita = true;
+        correoApagado.Activo = false;
+        Assert.False(correoApagado.ToSettings().Reminder);
+    }
 }

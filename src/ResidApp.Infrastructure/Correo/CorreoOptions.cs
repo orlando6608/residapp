@@ -33,6 +33,10 @@ public sealed class CorreoOptions
     /// el aviso de propuesta sin él mientras espera su validación.</summary>
     public bool AvisoCambioCita { get; set; }
 
+    /// <summary>Interruptor propio del recordatorio de cita del día antes (de las 10:00 a las 18:59, hora de Madrid), además de <see cref="Activo"/>: apagado por defecto. Exige
+    /// «Siempre activo» en la Web App.</summary>
+    public bool RecordatorioCita { get; set; }
+
     public List<string> DireccionesPermitidas { get; set; } = [];
 
     public bool Operativo =>
@@ -45,6 +49,6 @@ public sealed class CorreoOptions
     private bool ProposalNoticeIdiomaValido => Application.Email.ProposalNoticeTemplate.Languages.Contains(Idioma);
 
     public EmailSettings ToSettings() => Operativo
-        ? new EmailSettings(true, UrlBase!, Idioma, TodosLosDestinos, [.. DireccionesPermitidas], AvisoCambioCita)
+        ? new EmailSettings(true, UrlBase!, Idioma, TodosLosDestinos, [.. DireccionesPermitidas], AvisoCambioCita, RecordatorioCita)
         : EmailSettings.Off;
 }

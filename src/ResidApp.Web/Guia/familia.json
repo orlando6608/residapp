@@ -257,6 +257,7 @@
       "dudas": [
         { "p": "«Esta cita ya no se puede cancelar desde el portal. Llama por teléfono al centro.»", "r": "Ya ha pasado la antelación mínima, o la cita ya no está confirmada. Llama por teléfono al centro. Si no puedes reprogramarla, verás «Esa cita ya no se puede reprogramar.»" },
         { "p": "El centro ha cambiado o cancelado mi cita y me llega un correo.", "r": "Puede llegarte un correo genérico, «Tienes un cambio en una cita en ResidApp», sin día ni hora: los ves al entrar en el portal. Sale de no-responder@avisos.residapp.es; si no lo ves, mira el correo no deseado. No sustituye a la llamada del centro." },
+        { "p": "Me llega un correo «Tienes una cita mañana en ResidApp».", "r": "Es el recordatorio del día antes de una cita confirmada que reservaste. No dice la hora ni ningún detalle: los ves al entrar en el portal. Sale de no-responder@avisos.residapp.es; si no lo ves, mira el correo no deseado. No sustituye a la llamada del centro." },
         { "p": "«Ahora mismo el centro no ofrece reservar citas desde el portal.» al pulsar «Reprogramar».", "r": "Reprogramar solo funciona si el centro tiene la reserva directa activa. Cancelar sí puedes, y para cambiarla, llama por teléfono al centro." },
         { "p": "El centro ha desactivado las citas del portal.", "r": "Ya no puedes reservar, pero las citas que ya tenías confirmadas se siguen viendo y se pueden cancelar." }
       ],
@@ -267,6 +268,7 @@
         "Esta cita ya no se puede cancelar desde el portal. Llama por teléfono al centro.",
         "Esa cita ya no se puede reprogramar.",
         "Tienes un cambio en una cita en ResidApp",
+        "Tienes una cita mañana en ResidApp",
         "no-responder@avisos.residapp.es",
         "Ahora mismo el centro no ofrece reservar citas desde el portal."
       ],
