@@ -73,8 +73,8 @@ proyecto propio si llega un segundo caso de uso.
   Un sistema que detecta riesgos clínicos podría además ser producto sanitario y, con ello, IA de alto riesgo en el Reglamento de IA. Está
   sin verificar: habría que consultarlo antes de plantearlo.
 - **Tool calling sobre el residente** (`ObtenerResidente`, `ObtenerMedicacionActual`, `ObtenerUltimasEscalas`). *Tool calling* es dejar que el
-  modelo pida datos a la aplicación. Enviaría datos identificativos y clínicos al proveedor. Además, ResidApp no guarda medicación (su
-  administración está fuera de alcance).
+  modelo pida datos a la aplicación. Enviaría datos identificativos y clínicos al proveedor. Además, ResidApp no guarda la administración de medicación (fuera de alcance); la ficha informativa de medicación habitual,
+  enfermedades y alergias (decisión de CJ y de Orlando, 2026-11-15) no la lee ninguna función de IA.
 - **«AI-First».** Sigue vigente el criterio del ADR 0010: la IA solo se usa donde las reglas deterministas no bastan.
 - **Caché de respuestas.** Guardaría datos de salud, y en el dictado no hay dos peticiones iguales.
 - **Anonimizar antes de enviar como garantía principal.** La voz ya es un dato personal y no se puede anonimizar. Lo que la protege es el
