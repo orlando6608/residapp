@@ -875,7 +875,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
 
         const string communications = "Contacto telefónico con SEM a las 18 h. Avisamos a la familia del traslado a Urgencias.";
         var referralPage = await nurse.GetStringAsync($"/Enfermeria/Derivar?eventoId={eventId}");
-        Assert.Contains("la medicación habitual, las", WebUtility.HtmlDecode(referralPage));
+        Assert.Contains("la medicación habitual y las", WebUtility.HtmlDecode(referralPage));
         Assert.Contains("aria-describedby=\"derivar-informacion-ayuda\"", referralPage);
         var preview = WebUtility.HtmlDecode(await (await nurse.PostAsync("/Enfermeria/Derivar", new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -902,6 +902,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
 
         Assert.Contains("Comunicaciones (opcional)", WebUtility.HtmlDecode(referralPage));
         Assert.Contains("Vista previa del informe", preview);
+        Assert.Contains("Alergias e intolerancias a medicamentos", preview);
+        Assert.Contains("Ficha pendiente de rellenar en este centro", preview);
         Assert.Contains(communications, preview);
         Assert.Contains("Informe de derivación firmado.", signed);
         Assert.Contains(communications, signed);
@@ -1711,6 +1713,97 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Foto de identificación", nurseRecord);
         Assert.Contains("Foto quitada.", removed);
         Assert.Equal(HttpStatusCode.NotFound, (await nurse.GetAsync(photoUrl)).StatusCode);
+    }
+
+    [Fact]
+    public async Task FichaDeAntecedentes_EnfermeriaLaRellenaConPermiso_MedicinaLaVe_AuxiliarNo_ConLaAppEntera()
+    {
+        // Ficha de antecedentes de salud, fase 1 (script 0094): sin el permiso HEALTH_BACKGROUND_EDIT que da Administración, Enfermería la ve «pendiente» pero no la
+        // cambia; con él, la guarda; otra pantalla abierta antes no la pisa; Medicina la ve; una Auxiliar no llega al formulario. Los nombres de fármacos son inventados.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Ficha Funcional");
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, residentId));
+        var recordUrl = $"/Enfermeria/Residente?residenteId={residentId}";
+        var formUrl = $"/FichaAntecedentes/Alergias?residenteId={residentId}";
+
+        var pending = WebUtility.HtmlDecode(await nurse.GetStringAsync(recordUrl));
+        var withoutPermission = WebUtility.HtmlDecode(await nurse.GetStringAsync(formUrl));
+
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var (nurseAccount, nurseScope) = await connection.QuerySingleAsync<(Guid, Guid)>(
+            "SELECT c.id, a.id FROM dbo.cuentas c JOIN dbo.ambitos_perfil a ON a.cuenta_id = c.id WHERE c.sujeto_externo = @nurseSubject", new { nurseSubject });
+        var profilePage = await admin.GetStringAsync($"/Administracion/PerfilUsuario?cuentaId={nurseAccount}&ambitoId={nurseScope}");
+        var granted = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/PermisoPerfil", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(profilePage, "__RequestVerificationToken"), ["cuentaId"] = nurseAccount.ToString(),
+            ["ambitoId"] = nurseScope.ToString(), ["permiso"] = "HEALTH_BACKGROUND_EDIT", ["conceder"] = "true",
+        }))).Content.ReadAsStringAsync());
+        var form = WebUtility.HtmlDecode(await nurse.GetStringAsync(formUrl));
+        var token = ExtractValue(form, "__RequestVerificationToken");
+
+        Task<string> PostAsync(Dictionary<string, string> fields) => PostFichaAsync(nurse, token, residentId, fields);
+        var withoutChoice = await PostAsync(new() { ["Form.VersionVista"] = "0" });
+        var saved = await PostAsync(new()
+        {
+            ["Form.VersionVista"] = "0", ["Form.Estado"] = "NO_REFIERE", ["Form.Fuente"] = "RESIDENTE",
+            ["Form.Filas[0].Tipo"] = "INTOLERANCIA", ["Form.Filas[0].Nombre"] = "Fármaco Alfa", ["Form.Filas[0].Reaccion"] = "náuseas",
+        });
+        var stale = await PostAsync(new()
+        {
+            ["Form.VersionVista"] = "0", ["Form.Estado"] = "NO_CONSTA",
+        });
+        var changed = await PostAsync(new()
+        {
+            ["Form.VersionVista"] = "1", ["Form.Estado"] = "CON_ENTRADAS", ["Form.Motivo"] = "ACTUALIZACION",
+            ["Form.Filas[0].Tipo"] = "ALERGIA", ["Form.Filas[0].Nombre"] = "Fármaco Beta", ["Form.Filas[0].Reaccion"] = "",
+        });
+        var byDoctor = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Residente?residenteId={residentId}"));
+        var byDoctorWithoutPermission = WebUtility.HtmlDecode(await doctor.GetStringAsync(formUrl));
+        var byAuxiliar = WebUtility.HtmlDecode(await auxiliar.GetStringAsync(formUrl));
+
+        Assert.Contains("Antecedentes de salud", pending);
+        Assert.Contains("Ficha pendiente de rellenar en este centro", pending);
+        Assert.Contains("pídeselo a Administración", pending);
+        Assert.DoesNotContain("Rellenar las alergias", pending);
+        Assert.Contains("hace falta el permiso «Rellenar y cambiar la ficha de antecedentes de salud»", withoutPermission);
+        Assert.Contains("Rellenar y cambiar la ficha de antecedentes de salud", WebUtility.HtmlDecode(profilePage));
+        Assert.Contains("Permiso concedido.", granted);
+        Assert.Contains("Revisa que sea la persona correcta.", form);
+        Assert.Contains("Residente Ficha Funcional", form);
+        Assert.Contains("autocomplete=\"off\"", form);
+        var stateRadios = Regex.Matches(form, "<input[^>]*name=\"Form.Estado\"[^>]*>").Select(m => m.Value).ToList();
+        Assert.Equal(3, stateRadios.Count);
+        Assert.All(stateRadios, radio => Assert.DoesNotContain("checked", radio));
+        Assert.Contains("Revisa la ficha:", withoutChoice);
+        Assert.Contains("Ficha de alergias guardada.", saved);
+        Assert.Contains("No refiere alergias a medicamentos.", saved);
+        Assert.Contains("Intolerancia o efecto adverso: Fármaco Alfa (náuseas)", saved);
+        Assert.Contains("Fuente: el propio residente.", saved);
+        Assert.Contains("Esta ficha no se revisa de forma periódica", saved);
+        Assert.DoesNotContain("revisad", saved, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Cambiar las alergias", saved);
+        Assert.Contains("Otra persona ha guardado esta ficha mientras la editabas", stale);
+        Assert.Contains("Ficha de alergias guardada.", changed);
+        Assert.Contains("Alergia a: Fármaco Beta", changed);
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.fichas_antecedentes_versiones WHERE residente_id = @residentId", new { residentId }));
+        Assert.Contains("Alergia a: Fármaco Beta", byDoctor);
+        Assert.Contains("por Enfermería", byDoctor);
+        Assert.Contains("pídeselo a Administración", byDoctor);
+        Assert.DoesNotContain("Revisa que sea la persona correcta.", byDoctorWithoutPermission);
+        Assert.DoesNotContain("Revisa que sea la persona correcta.", byAuxiliar);
+        Assert.DoesNotContain("Fármaco Beta", byAuxiliar);
+    }
+
+    private async Task<string> PostFichaAsync(HttpClient client, string token, string residentId, Dictionary<string, string> fields)
+    {
+        fields["__RequestVerificationToken"] = token;
+        fields["Form.ResidenteId"] = residentId;
+        return WebUtility.HtmlDecode(await (await client.PostAsync("/FichaAntecedentes/Alergias", new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
     }
 
     private async Task<string> CreateResidentAsync(

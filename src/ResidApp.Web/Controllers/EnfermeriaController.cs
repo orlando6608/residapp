@@ -25,6 +25,7 @@ namespace ResidApp.Web.Controllers;
 public sealed class EnfermeriaController(
     EnfermeriaApplicationService service, FindEmergencyContact findEmergencyContact, ListMilestoneWarnings milestoneWarnings,
     CorrectFamilyCommunication correctFamilyCommunication, ListEventsReadyToClose readyToClose, ResidentPhotoApplicationService photos,
+    HealthBackgroundApplicationService healthBackground,
     TransferHistoryAccess transferHistory) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
@@ -774,7 +775,7 @@ public sealed class EnfermeriaController(
         var identification = await service.FindResidentIdentificationAsync(
             new FindResidentIdentificationCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), detail.EventId), ct);
         return identification.Ok
-            ? ReferralReportBuilder.Build(detail, await ReadBaselineAsync(detail, ct), identification.Value!)
+            ? ReferralReportBuilder.Build(detail, await ReadBaselineAsync(detail, ct), identification.Value!, await ReadHealthBackgroundAsync(detail, ct))
             : null;
     }
 
@@ -941,6 +942,14 @@ public sealed class EnfermeriaController(
         var activeScope = ActiveProfileScopeCookie.Read(Request)!;
         var result = await service.ReadCurrentBaselineAsync(
             new ReadCurrentBaselineCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), detail.ResidentId), ct);
+        return result.Ok ? result.Value : null;
+    }
+
+    /// <summary>La ficha de alergias del residente para el informe de derivación; null si no se pudo leer (el informe lo dice y no la imprime como válida).</summary>
+    private async Task<HealthBackgroundView?> ReadHealthBackgroundAsync(PendingChangeDetail detail, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request)!;
+        var result = await healthBackground.ReadAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), detail.ResidentId, ct);
         return result.Ok ? result.Value : null;
     }
 
@@ -1137,8 +1146,10 @@ public sealed class EnfermeriaController(
         var contact = await findEmergencyContact.ExecuteAsync(
             new FindScopeResidentCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId), ct);
         var photo = await photos.ReadEditorAsync(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, ct);
+        var health = await healthBackground.ReadAsync(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, ct);
         return View(new EnfermeriaResidentDetailViewModel(findResult.Value, baselineResult.Ok ? baselineResult.Value : null,
-            OpenEvents: openEvents.Ok ? openEvents.Value : null, EmergencyContacts: contact.Ok ? contact.Value : null, Photo: photo.Value));
+            OpenEvents: openEvents.Ok ? openEvents.Value : null, EmergencyContacts: contact.Ok ? contact.Value : null, Photo: photo.Value,
+            HealthBackground: health.Ok ? health.Value : null));
     }
 
     /// <summary>ENF-23/ENF-24 (historia 11): eventos cerrados del residente, con el basal y la ubicación de su

@@ -247,3 +247,27 @@ document.addEventListener("click", (evento) => {
     location.reload();
   }
 });
+
+// «Añadir otra fila» de las listas de la ficha de antecedentes (alergias): copia la plantilla con el número de fila siguiente. Sin JavaScript, el formulario ya trae filas de sobra.
+document.addEventListener("click", (evento) => {
+  const boton = evento.target.closest("[data-anadir-fila]");
+  if (!boton) {
+    return;
+  }
+  const lista = document.getElementById(boton.getAttribute("data-anadir-fila"));
+  const plantilla = document.getElementById(boton.getAttribute("data-plantilla"));
+  const maximo = Number(boton.getAttribute("data-maximo") || "50");
+  if (!lista || !plantilla) {
+    return;
+  }
+  const indice = lista.querySelectorAll("[data-fila]").length;
+  if (indice >= maximo) {
+    boton.disabled = true;
+    return;
+  }
+  lista.insertAdjacentHTML("beforeend", plantilla.innerHTML.replaceAll("__i__", String(indice)));
+  lista.querySelectorAll("[data-fila]")[indice].querySelector("input")?.focus();
+  if (indice + 1 >= maximo) {
+    boton.disabled = true;
+  }
+});

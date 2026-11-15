@@ -1,4 +1,5 @@
 using ResidApp.Application.Ports;
+using ResidApp.Application.UseCases;
 using ResidApp.Domain.Auxiliar;
 using ResidApp.Domain.Baseline;
 using ResidApp.Domain.Baseline.Answers;
@@ -51,12 +52,15 @@ public class ReferralReportBuilderTests
         ], 65);
         var identification = new ResidentIdentification("Residente Informe", new DateOnly(1938, 2, 20), DocumentedSexCode.Mujer, "Centro Norte", "Unidad 2");
 
-        var sections = ReferralReportBuilder.Build(detail, baseline, identification);
+        var health = new HealthBackgroundView(new AllergyRecord(2,
+            new AllergyRecordContent(HealthBackgroundState.NoRefiere, [new AllergyItem(AllergyItemType.Intolerancia, "Fármaco Alfa", "náuseas")], HealthBackgroundSource.Residente),
+            SystemProfile.Medicina, At.AddDays(-3)), true);
+        var sections = ReferralReportBuilder.Build(detail, baseline, identification, health);
         var text = string.Join("\n", sections.SelectMany(s => s.Lines.Prepend(s.Title)));
 
         Assert.All(sections, s => Assert.True(s.Automatic));
         Assert.Equal(
-            new[] { "Identificación del residente y del centro", "Basal vigente", "Observación de origen", "Valoraciones",
+            new[] { "Identificación del residente y del centro", "Alergias e intolerancias a medicamentos", "Basal vigente", "Observación de origen", "Valoraciones",
                 "Constantes y oxigenoterapia", "Actuaciones", "Evolución" },
             sections.Select(s => s.Title));
         foreach (var expected in new[]
@@ -66,17 +70,65 @@ public class ReferralReportBuilderTests
             "Disnea brusca al levantarse.", "Datos clínicos pertinentes: Tiraje intercostal.",
             "Enfermería, valoración: Insuficiencia respiratoria.", "oxigenoterapia a 3 L/min",
             "Enfermería: Oxigenoterapia a 3 L/min.", "Vía periférica.", "Satura 88 %.",
+            "No refiere alergias a medicamentos.", "Intolerancia o efecto adverso: Fármaco Alfa (náuseas)",
+            "Fuente: el propio residente.", "(versión 2)", "última modificación el 26/09/2026", "por Medicina", "Esta ficha no se revisa de forma periódica.",
         })
         {
             Assert.Contains(expected, text);
         }
         foreach (var excluded in new[]
         {
-            "112 Emergencias", "Piden traslado.", "Aviso a la hija", "CFS", "System.Collections", "Lucía Contacto", "600 999 888", "Buzón de voz.",
+            "112 Emergencias", "Piden traslado.", "Aviso a la hija", "CFS", "System.Collections", "Lucía Contacto", "600 999 888", "Buzón de voz.", "revisado",
         })
         {
             Assert.DoesNotContain(excluded, text);
         }
+    }
+
+    private static HealthBackgroundView Health(AllergyRecordContent content, int version = 1) =>
+        new(new AllergyRecord(version, content, SystemProfile.Enfermeria, At), true);
+
+    [Fact]
+    public void AlergiasDelInforme_NoRefiereNoConstaPendienteYConEntradasSalenDistintos_YNingunoDiceRevisado()
+    {
+        var noRefiere = HealthBackgroundDisplay.ReportLines(Health(new AllergyRecordContent(HealthBackgroundState.NoRefiere, null, null)));
+        var noConsta = HealthBackgroundDisplay.ReportLines(Health(new AllergyRecordContent(HealthBackgroundState.NoConsta, null, null)));
+        var pendiente = HealthBackgroundDisplay.ReportLines(new HealthBackgroundView(null, true));
+        var conEntradas = HealthBackgroundDisplay.ReportLines(Health(new AllergyRecordContent(
+            HealthBackgroundState.ConEntradas, [new AllergyItem(AllergyItemType.Alergia, "Fármaco Beta", "urticaria")], HealthBackgroundSource.InformeMedico)));
+        var ilegible = HealthBackgroundDisplay.ReportLines(new HealthBackgroundView(null, true, UnreliableVersion: 3));
+        var sinLeer = HealthBackgroundDisplay.ReportLines(null);
+
+        Assert.Equal("No refiere alergias a medicamentos.", noRefiere[0]);
+        Assert.StartsWith("No consta: información no fiable o sin confirmar. No equivale a «sin alergias».", noConsta[0]);
+        Assert.NotEqual(noRefiere[0], noConsta[0]);
+        Assert.Equal(HealthBackgroundDisplay.Pending, Assert.Single(pendiente));
+        Assert.Contains("No equivale a «sin alergias»", pendiente[0]);
+        Assert.Equal("Tiene alergias a medicamentos:", conEntradas[0]);
+        Assert.Contains("Alergia a: Fármaco Beta (urticaria)", conEntradas);
+        Assert.Contains("Fuente: informe médico.", conEntradas);
+        // Una ficha ilegible o sin leer nunca se imprime como válida, y no se confunde con «No refiere».
+        Assert.Equal(sinLeer, ilegible);
+        Assert.Contains("no es fiable", Assert.Single(ilegible));
+        foreach (var lines in new[] { noRefiere, noConsta, pendiente, conEntradas, ilegible })
+        {
+            Assert.DoesNotContain(lines, line => line.Contains("revisad", StringComparison.OrdinalIgnoreCase));
+            Assert.DoesNotContain(lines, line => line.Contains("sin alergias conocidas", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    [Fact]
+    public void AlergiasDelInforme_SiLaFichaCambia_LaHuellaDelInformeCambia_ParaQueNoSeFirmeLoQueNoSeVio()
+    {
+        ReferralReportContent Compose(HealthBackgroundView health) => ReferralReportContent.Compose(
+            [new ReferralReportSection(HealthBackgroundDisplay.AllergiesTitle, true, HealthBackgroundDisplay.ReportLines(health))], new ReferralReportInput("Motivo.", null));
+        var before = Compose(Health(new AllergyRecordContent(HealthBackgroundState.NoRefiere, null, null)));
+        var after = Compose(Health(new AllergyRecordContent(
+            HealthBackgroundState.ConEntradas, [new AllergyItem(AllergyItemType.Alergia, "Fármaco Beta", null)], null), version: 2));
+        var same = Compose(Health(new AllergyRecordContent(HealthBackgroundState.NoRefiere, null, null)));
+
+        Assert.NotEqual(before.Hash(), after.Hash());
+        Assert.Equal(before.Hash(), same.Hash());
     }
 
     [Fact]
@@ -89,9 +141,15 @@ public class ReferralReportBuilderTests
             new MedicalDetail(null, null, null, [], null), null, null);
 
         var sections = ReferralReportBuilder.Build(detail, null, new ResidentIdentification("Residente", new DateOnly(1940, 1, 1),
-            DocumentedSexCode.NoConsta, "Centro", null));
+            DocumentedSexCode.NoConsta, "Centro", null), null);
 
         Assert.Equal("Sin basal vigente registrado.", sections.Single(s => s.Title == "Basal vigente").Lines.Single());
+        // Ficha ilegible o incoherente: el informe lo dice y no la imprime como válida; ficha sin rellenar: «pendiente», que no equivale a «sin alergias».
+        Assert.Contains("no es fiable", sections.Single(s => s.Title == "Alergias e intolerancias a medicamentos").Lines.Single());
+        var pending = ReferralReportBuilder.Build(detail, null, new ResidentIdentification("Residente", new DateOnly(1940, 1, 1), DocumentedSexCode.NoConsta, "Centro", null),
+            new HealthBackgroundView(null, true));
+        Assert.Equal(HealthBackgroundDisplay.Pending, pending.Single(s => s.Title == "Alergias e intolerancias a medicamentos").Lines.Single());
+        Assert.Contains("No equivale a «sin alergias»", HealthBackgroundDisplay.Pending);
         Assert.Equal("Sin datos registrados.", sections.Single(s => s.Title == "Evolución").Lines.Single());
         Assert.All(sections, s => Assert.NotEmpty(s.Lines));
     }
@@ -106,7 +164,7 @@ public class ReferralReportBuilderTests
             new MedicalDetail(true, At, null, [], null), null, null);
 
         var sections = ReferralReportBuilder.Build(detail, null, new ResidentIdentification("Residente", new DateOnly(1940, 1, 1),
-            DocumentedSexCode.NoConsta, "Centro", null));
+            DocumentedSexCode.NoConsta, "Centro", null), null);
         var origin = sections.Single(s => s.Title == "Observación de origen").Lines;
 
         Assert.StartsWith("Observada por Medicina el ", origin[0]);

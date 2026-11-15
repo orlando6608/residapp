@@ -138,6 +138,7 @@ public static class SupervisionDisplay
         "PROCESS_DEADLINES_MANAGE" => "Gestionar los plazos de los hitos del proceso",
         "RESIDENT_PHOTO_MANAGE" => "Poner, cambiar y quitar la foto del residente",
         "QUALITY_REVIEW" => "Ver los indicadores y la calidad de proceso",
+        "HEALTH_BACKGROUND_EDIT" => "Rellenar y cambiar la ficha de antecedentes de salud",
         _ => code,
     };
 }

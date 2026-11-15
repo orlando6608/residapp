@@ -22,7 +22,7 @@ namespace ResidApp.Web.Controllers;
 public sealed class MedicinaController(
     MedicinaApplicationService service, ResidentBaselineApplicationService baselineService, FindEmergencyContact findEmergencyContact,
     ListMilestoneWarnings milestoneWarnings, ListPendingFamilyCommunications listFamilyCommunications,
-    CorrectFamilyCommunication correctFamilyCommunication, TransferHistoryAccess transferHistory) : Controller
+    CorrectFamilyCommunication correctFamilyCommunication, TransferHistoryAccess transferHistory, HealthBackgroundApplicationService healthBackground) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -618,7 +618,9 @@ public sealed class MedicinaController(
         }
         var baseline = await service.ReadCurrentBaselineAsync(
             new ReadCurrentBaselineCommand(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), detail.ResidentId), ct);
-        return ReferralReportBuilder.Build(detail, baseline.Ok ? baseline.Value : null, identification.Value!);
+        // Si no se puede leer la ficha de alergias, el informe lo dice (no la imprime como válida).
+        var health = await healthBackground.ReadAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), detail.ResidentId, ct);
+        return ReferralReportBuilder.Build(detail, baseline.Ok ? baseline.Value : null, identification.Value!, health.Ok ? health.Value : null);
     }
 
     /// <summary>MED-16/DER-06: registrar un intento de llamada al contacto familiar tras firmar el informe.</summary>
@@ -992,9 +994,10 @@ public sealed class MedicinaController(
             new ListOpenEventsCommand(scope.ProfileScopeId, centroId, resident.ResidentId, SystemProfile.Medicina), ct);
         var contact = await findEmergencyContact.ExecuteAsync(
             new FindScopeResidentCommand(scope.ProfileScopeId, centroId, resident.ResidentId, SystemProfile.Medicina), ct);
+        var health = await healthBackground.ReadAsync(scope.ProfileScopeId, centroId, resident.ResidentId, ct);
         return View(new EnfermeriaResidentDetailViewModel(
             resident, baselineResult.Ok ? baselineResult.Value : null, canManage.Ok && canManage.Value, openEvents.Ok ? openEvents.Value : null,
-            contact.Ok ? contact.Value : null));
+            contact.Ok ? contact.Value : null, HealthBackground: health.Ok ? health.Value : null));
     }
 
     /// <summary>MED-22 (historia 9): eventos cerrados del residente que ve Medicina (escalados y propios), con el

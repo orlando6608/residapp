@@ -68,6 +68,7 @@
             <a class="list-group-item list-group-item-action" href="#calidad-direccion">Calidad de proceso (Dirección Clínica)</a>
             <a class="list-group-item list-group-item-action" href="#mis-residentes-auxiliar">Mis residentes (Auxiliar)</a>
             <a class="list-group-item list-group-item-action" href="#residentes-enfermeria">Residentes (Enfermería)</a>
+            <a class="list-group-item list-group-item-action" href="#ficha-antecedentes">Ficha de antecedentes de salud (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#registrar-evento-enfermeria">Registrar evento (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#bandejas-enfermeria">Bandejas, valoración y cierre de eventos (Enfermería)</a>
             <a class="list-group-item list-group-item-action" href="#seguimientos-enfermeria">Seguimientos y transferencia de turno (Enfermería)</a>
@@ -663,8 +664,8 @@
         <strong>Revocar</strong>. Cada perfil tiene sus permisos:
     </p>
     <ul>
-        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta), reevaluar el basal y poner, cambiar y quitar la foto del residente.</li>
-        <li><strong>Medicina:</strong> basal inicial y reevaluar el basal.</li>
+        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta), reevaluar el basal, poner, cambiar y quitar la foto del residente y rellenar y cambiar la ficha de antecedentes de salud.</li>
+        <li><strong>Medicina:</strong> basal inicial, reevaluar el basal y rellenar y cambiar la ficha de antecedentes de salud.</li>
         <li><strong>Dirección Clínica:</strong> lectura clínica detallada y auditada, gestionar los rangos de referencia, gestionar los plazos de los hitos del proceso y ver los indicadores y la calidad de proceso (las Direcciones que ya existían no lo tienen hasta que se lo concedas).</li>
         <li>Auxiliar y Administración no tienen permisos configurables.</li>
     </ul>
@@ -1208,6 +1209,52 @@
         Administración: funciona igual), <strong>si Administración te ha dado el permiso</strong> «Poner, cambiar y quitar la foto del
         residente»; sin él, la ves pero la ficha te dice que se lo pidas. Medicina y Auxiliar la ven pero no la cambian.
     </p>
+    <p class="mb-0">
+        Debajo del basal está el bloque <strong>Antecedentes de salud</strong>, con las alergias e intolerancias a medicamentos del
+        residente (ver "Ficha de antecedentes de salud").
+    </p>
+</section>
+
+<section id="ficha-antecedentes" class="mb-4">
+    <h2 class="h5">
+        Ficha de antecedentes de salud
+        <span class="badge text-bg-secondary align-middle">Perfiles: Enfermería y Medicina</span>
+    </h2>
+    <p>
+        En la ficha del residente, el bloque <strong>Antecedentes de salud</strong> recoge sus <strong>alergias e intolerancias a
+        medicamentos</strong>. Es una lista informativa: ResidApp no registra qué se administra ni cuándo, no avisa de alergias ni de
+        interacciones y no decide nada por el personal. Hoy solo están las alergias; la medicación habitual y las enfermedades llegarán
+        por fases (mientras tanto se escriben en «Información adicional para Urgencias» de cada derivación). El bloque dice una de estas
+        cosas: <strong>Pendiente</strong> (nadie la ha rellenado: no equivale a «sin alergias»), <strong>No refiere alergias a
+        medicamentos</strong> (lo dice el residente o su familia), <strong>No se sabe o no consta</strong> (su información no es fiable y
+        no consta en ningún informe médico: tampoco equivale a «sin alergias») o la lista de alergias e intolerancias o efectos adversos
+        con su reacción. Siempre dice la <strong>última modificación</strong> (fecha y perfil), la fuente si se indicó, y que la ficha no
+        se revisa de forma periódica: se actualiza cuando ocurre algo. La ficha no dice «revisada» porque nadie la revisa por turnos.
+    </p>
+    <p>
+        <strong>Rellenarla o cambiarla.</strong> Enfermería y Medicina pueden hacerlo, <strong>si Administración les ha dado el permiso</strong>
+        «Rellenar y cambiar la ficha de antecedentes de salud» (verla no lo necesita; sin él, la ficha te dice que se lo pidas). Pulsa
+        <strong>Rellenar las alergias</strong> (o <strong>Cambiar las alergias</strong>), comprueba el nombre y la foto del residente y elige
+        una opción: «Tiene alergias a medicamentos», «No refiere alergias a medicamentos» o «No se sabe o no consta» (ninguna viene
+        marcada). En la lista, cada fila lleva un «Tipo» (alergia, o intolerancia o efecto adverso), el «Medicamento o grupo» y la
+        «Reacción o motivo»; el motivo es obligatorio en una intolerancia. Las intolerancias se pueden anotar aunque marques «No refiere» o
+        «No se sabe o no consta». <strong>Añadir otra fila</strong> añade filas. Opcionalmente indica de dónde sale el dato (informe médico,
+        receta electrónica, el propio residente, familia o cuidadores; nunca el nombre de quien te lo dijo). Escribe solo el nombre del
+        medicamento y la reacción en pocas palabras, una sola línea, sin nombres de familiares ni opiniones. Pulsa
+        <strong>Guardar la ficha de alergias</strong>.
+    </p>
+    <p>
+        <strong>Lo guardado no se borra.</strong> Cada guardado es una versión nueva y la anterior se conserva (no se muestra en ninguna
+        pantalla). Si ya había ficha, indicas si guardas «Ha cambiado algo» o «Corrijo un error». Si otra persona guarda la ficha mientras
+        tú la editas, ResidApp no pisa su cambio: te enseña la versión actual para que revises y repitas el tuyo. Si la última versión
+        guardada está incompleta, el bloque dice <strong>Ficha con error: este dato no es fiable</strong>: no se enseña ni se imprime en
+        el informe (que lo dice), y quien tenga el permiso puede volver a rellenarla, y se guarda como una versión nueva que la corrige.
+    </p>
+    <p class="mb-0">
+        <strong>Quién la ve.</strong> Enfermería y Medicina, en su ámbito. No la ven Auxiliar, Administración, Dirección Clínica (por ahora), Plataforma
+        ni la familia. Las alergias salen solas en el <strong>informe de derivación a Urgencias</strong> (sección «Alergias e intolerancias a
+        medicamentos»); si la ficha está pendiente, el informe lo dice. La ficha nunca bloquea nada: ni el alta, ni el basal, ni una derivación.
+    </p>
 </section>
 
 <section id="registrar-evento-enfermeria" class="mb-4">
@@ -1396,6 +1443,7 @@
         o <strong>Iniciar reevaluación</strong> (ver "Crear, completar y firmar el estado basal"). La cuenta de
         prueba <code>almendros-medicina</code> tiene ese permiso. La ficha muestra también sus
         <strong>eventos abiertos</strong> que ve Medicina: los escalados y los propios de Medicina, con su estado.
+        También ves el bloque <strong>Antecedentes de salud</strong> con las alergias del residente (ver "Ficha de antecedentes de salud").
     </p>
     <p class="mb-0">
         Indicas la observación, una clasificación (ordinario o prioritario) y, si procede, datos clínicos
@@ -1547,8 +1595,10 @@
         ha sucedido y por qué se deriva) y, si quieres, <strong>información adicional para Urgencias</strong> y
         <strong>comunicaciones</strong>, un apartado propio del informe para anotar los contactos de esta derivación
         (por ejemplo, «Contacto telefónico con SEM a las 18 h. Avisamos a la familia del traslado a Urgencias»).
-        En «Información adicional para Urgencias» puedes anotar la medicación habitual, las enfermedades y las
-        alergias conocidas: ResidApp no las guarda en otro sitio, así que se escriben en cada derivación.
+        Las alergias e intolerancias a medicamentos salen solas en el informe, de la ficha de antecedentes del residente
+        (sección «Alergias e intolerancias a medicamentos»; si la ficha está pendiente, el informe lo dice). En «Información
+        adicional para Urgencias» puedes anotar la medicación habitual y las enfermedades: ResidApp todavía no las guarda en
+        otro sitio, así que se escriben en cada derivación.
         Lo que escribas en «Comunicaciones» viaja con el informe. El informe nunca añade por su cuenta los contactos
         del protocolo ni el campo "Comunicaciones" de la valoración, que quedan en la trazabilidad interna.
     </p>
@@ -1801,6 +1851,7 @@
         <li>Más gestión administrativa: un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
+        <li>La medicación habitual y las enfermedades e intervenciones en la ficha de antecedentes del residente, por fases (hoy se escriben en cada derivación).</li>
         <li>Dictado por voz en otros formularios (hoy solo «Registrar cambio»).</li>
     </ul>
 </section>
