@@ -284,6 +284,26 @@ public class PlataformaCentrosTests
     }
 
     [Fact]
+    public async Task BaseDeDatos_NoDejaCambiarElCodigoDeUnCentro_PeroSiSuNombre()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var parameters = new { Id = admin.CenterId.Value };
+
+        var code = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.centros SET codigo = codigo + N'X' WHERE id = @Id", parameters));
+        var onlyCase = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.centros SET codigo = LOWER(codigo) WHERE id = @Id", parameters));
+        var rename = await connection.ExecuteAsync("UPDATE dbo.centros SET nombre_visible = nombre_visible + N' bis' WHERE id = @Id", parameters);
+        var sameCode = await connection.ExecuteAsync("UPDATE dbo.centros SET codigo = codigo WHERE id = @Id", parameters);
+
+        Assert.Contains("CENTER_IMMUTABLE_FIELD", code.Message);
+        Assert.Contains("CENTER_IMMUTABLE_FIELD", onlyCase.Message);
+        Assert.Equal(1, rename);
+        Assert.Equal(1, sameCode);
+    }
+
+    [Fact]
     public async Task BaseDeDatos_ElPerfilSoloValeEnElCentroReservado_YElCentroReservadoSoloAdmiteEsePerfil()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
