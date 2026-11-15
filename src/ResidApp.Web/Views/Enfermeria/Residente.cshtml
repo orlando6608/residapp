@@ -30,8 +30,7 @@
     <div class="alert alert-danger" role="alert">@error</div>
 }
 
-@* Acciones arriba; en escritorio, lo clínico (eventos abiertos) a la izquierda y el basal y el contacto urgente en una
-   columna lateral (guia-diseno-sistema-visual.md, 2.B). En móvil, una sola columna en ese orden. *@
+@* Acciones arriba y, debajo, una sola columna (en móvil y en escritorio): eventos abiertos, basal, contacto urgente y foto. *@
 <div class="d-grid d-sm-flex flex-wrap gap-2 mb-3">
     <a asp-action="RegistrarEvento" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-primary btn-lg">
         Registrar evento
@@ -41,24 +40,18 @@
     </a>
 </div>
 
-<div class="row g-3">
-    <div class="col-12 col-lg-8">
-        <partial name="_EventosAbiertos" model="Model" />
-    </div>
-    <div class="col-12 col-lg-4">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"basal"' />Estado basal vigente</h2>
-                <partial name="_ResumenBasal" model="Model.Baseline" />
-                <a asp-controller="EnfermeriaBasal" asp-action="Draft" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-primary btn-lg w-100 mt-3">
-                    @(Model.Baseline is null ? "Crear borrador de basal" : "Iniciar reevaluación")
-                </a>
-            </div>
-        </div>
-        <partial name="_ContactoUrgente" model="new EmergencyContactCardModel(Model.EmergencyContacts)" />
-        @if (Model.Photo is { } photo)
-        {
-            <partial name="_FotoResidenteEditar" model="new ResidentPhotoEditorViewModel(Model.Resident.ResidentId.Value, photo, DateOnly.FromDateTime(DateTime.Today), DateTimeOffset.UtcNow)" />
-        }
+<partial name="_EventosAbiertos" model="Model" />
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"basal"' />Estado basal vigente</h2>
+        <partial name="_ResumenBasal" model="Model.Baseline" />
+        <a asp-controller="EnfermeriaBasal" asp-action="Draft" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-primary btn-lg w-100 mt-3">
+            @(Model.Baseline is null ? "Crear borrador de basal" : "Iniciar reevaluación")
+        </a>
     </div>
 </div>
+<partial name="_ContactoUrgente" model="new EmergencyContactCardModel(Model.EmergencyContacts)" />
+@if (Model.Photo is { } photo)
+{
+    <partial name="_FotoResidenteEditar" model="new ResidentPhotoEditorViewModel(Model.Resident.ResidentId.Value, photo, DateOnly.FromDateTime(DateTime.Today), DateTimeOffset.UtcNow)" />
+}
