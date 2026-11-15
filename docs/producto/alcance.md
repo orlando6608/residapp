@@ -7,11 +7,11 @@
 | Acceso | Cuentas individuales, sesión, recuperación, bloqueo y segundo factor según política |
 | Organización | Provisionamiento de centros; edificios y plantas opcionales; unidades, habitaciones y plazas/camas configurables |
 | Identidades | Usuarios multirol, cargos separados, asignaciones y estados de cuenta |
-| Residentes | Identidad, historial de ubicación, basal vigente/versionado, Barthel común y cognición documentada |
+| Residentes | Identidad, historial de ubicación, basal vigente/versionado, Barthel común, cognición documentada y ficha informativa de alergias, enfermedades y medicación habitual (lista que el profesional documenta, sin administración ni alertas) |
 | Registro cotidiano | Sin cambios, no valorable y cambio observado |
 | Eventos | Ordinarios/prioritarios, bandejas, valoración, seguimiento, continuidad y cierre |
 | Medicina | Escalados, conducta, indicaciones, seguimiento médico y continuidad |
-| Derivación | Módulo común, vista previa, firma y PDF vinculado al evento |
+| Derivación | Módulo común, vista previa, firma y PDF vinculado al evento, con la ficha de antecedentes de salud del residente |
 | Publicaciones | Texto separado, aprobación humana, programación, corrección y retirada excepcional |
 | Portal Familiar | Publicaciones publicadas, autorizaciones activas y citas según modalidad del centro |
 | Administración | Familias, autorizaciones, contacto urgente, publicaciones, turnos, citas y auditoría |
@@ -42,7 +42,7 @@ Una cuenta puede tener uno o varios perfiles autorizados, pero debe seleccionar 
 - Notificaciones push en el piloto.
 - App móvil nativa; la primera versión es web adaptable/PWA.
 - Modo clínico offline con sincronización posterior.
-- Administración de medicación, facturación, nóminas, fichaje o gestión laboral avanzada.
+- Administración de medicación (registro de lo dado, horarios con aviso, prescripción, alertas y cruces; la ficha informativa de medicación habitual no lo es), facturación, nóminas, fichaje o gestión laboral avanzada.
 - Videollamada propia; solo puede ofrecerse como modalidad si el centro dispone del medio externo adecuado.
 - Rankings nominativos de productividad o evaluaciones automáticas de mala praxis.
 - Exportación masiva de historias clínicas individuales.

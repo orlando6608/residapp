@@ -31,7 +31,7 @@ Lo que existe hoy **[Hecho]**:
 - **La política de privacidad ya promete lo que aún no existe:** `Privacy.cshtml` (apartado 6 y la lista de proveedores) dice que el dictado y el correo funcionan «solo si el centro lo activa», y hoy
   se encienden por entorno, no por centro.
 - **La exportación actual es solo de estructura y censo**, con límites de 5 MB y 2.000 filas (ADR 0010). No devuelve datos asistenciales.
-- **El alcance excluye hoy la administración de medicación** (`docs/producto/alcance.md`, línea 45): un módulo de Medicamentos lo contradice y solo CJ puede reabrirlo.
+- **El alcance excluye hoy la administración de medicación** (`docs/producto/alcance.md`, línea 45): un módulo de Medicamentos que la gestione lo contradice y solo CJ puede reabrirlo. La ficha informativa de alergias, enfermedades y medicación habitual **no** es ese módulo: va en la base (decisión de Orlando, 2026-11-15; lectura del DPO en `docs/privacidad/ficha-alergias-enfermedades-medicacion-lectura-dpo.md`).
 
 Lo que se quiere poder hacer: ofrecer una función a un centro y no a otro, cobrarla, activarla sin tocar el código ni los ajustes de la Web App, y que un módulo nuevo nazca ya con su
 interruptor, sin que alguien tenga que acordarse de ponerlo en cada pantalla.
@@ -138,9 +138,9 @@ interruptor, sin que alguien tenga que acordarse de ponerlo en cada pantalla.
 - **Dashboard de Dirección** (se diseñará aparte, orientación del DPO): cifra mínima con supresión complementaria para que no se pueda deducir una celda restando (la cifra N la fijan el DPO y CJ);
   sin salto del gráfico a la persona; sin desglose por trabajador; los mínimos se aplican también en el servidor al exportar y no hay copias derivadas. El DPO observa que los indicadores de Dirección
   que ya son base (`ISupervisionDirectory`) no muestran ninguna regla de cifras pequeñas en el código que leyó; conviene revisarlo aparte.
-- **Medicamentos** (se diseñará aparte): **no se activa mientras no se cumpla todo esto.** Contradice hoy el alcance y la política de privacidad, y solo CJ puede reabrirlo; puede ser un producto
+- **Medicamentos** (se diseñará aparte): **no se activa mientras no se cumpla todo esto.** Más allá de la ficha informativa de medicación habitual (que va en la base), contradice hoy el alcance y la política de privacidad, y solo CJ puede reabrirlo; puede ser un producto
   sanitario si ayuda a decidir tratamientos (reglamento europeo 2017/745, **a verificar**); hay que fijar la fuente única de verdad frente a las indicaciones de Medicina y los sistemas oficiales; es
-  incompatible con el dictado hasta que exista un ADR nuevo; la lista de fármacos revela diagnósticos y no debe verse en el Portal Familiar; y un listado desactualizado en solo lectura es un riesgo clínico.
+  incompatible con el dictado hasta que exista un ADR nuevo; la lista de fármacos revela diagnósticos y no debe verse en el Portal Familiar; y un listado desactualizado en solo lectura es un riesgo clínico (estas cautelas ya aplican a la ficha de medicación de la base).
 
 ## Incrementos **[Propuesta]**
 

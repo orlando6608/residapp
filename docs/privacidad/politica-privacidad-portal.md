@@ -57,6 +57,7 @@ Los datos los introduce el personal del centro. Son:
 
 - **Identificación:** nombre, fecha de nacimiento, sexo documentado, unidad y habitación o plaza, y estado (en el centro, de baja, suspendido).
 - **Datos de salud y de cuidados:** valoración inicial (llamada «basal»: cómo está la persona al ingresar, con escalas de autonomía y cognición), registro diario de los cuidados (cómo ha comido, cómo duerme, cambios que se observan), incidencias, valoraciones de Enfermería y Medicina, indicaciones y su seguimiento, y los informes de derivación a otros servicios sanitarios.
+- **Antecedentes de salud:** una ficha con las alergias a medicamentos y las intolerancias, las enfermedades e intervenciones quirúrgicas con su año y la medicación habitual (nombre, dosis y cuándo se toma). La anota el personal sanitario del centro y no se revisa de forma periódica: se actualiza cuando ocurre algo. No se muestra en el Portal Familiar. **[PENDIENTE: la ficha aún no está construida; este texto entra en vigor cuando lo esté.]**
 - **Comunicaciones a la familia:** los textos que el centro decide publicar para la familia.
 - **Contactos:** qué familiares tiene la persona, cuál es su contacto urgente y quién la representa.
 - **Foto de identificación:** solo si hay consentimiento (apartado 7).
@@ -64,7 +65,7 @@ Los datos los introduce el personal del centro. Son:
 
 **Para qué:** prestar la atención y los cuidados, coordinar al equipo, informar a la familia y dejar constancia de lo que se hace (continuidad asistencial y seguridad).
 
-ResidApp **no** guarda la medicación de las personas residentes ni su administración.
+ResidApp **no** guarda la administración de la medicación (qué se da y cuándo), **no** avisa de alergias ni de interacciones y no decide nada por el personal.
 
 ### 2.2 Familiares y representantes
 
@@ -112,6 +113,7 @@ La base legal exacta la fija **cada centro** y te la explica en su información 
 
 - **Dentro del centro:** solo el personal con permiso para ello, y solo los residentes y las unidades de su ámbito. Cada perfil ve cosas distintas: por ejemplo, Auxiliar no ve lo mismo que Medicina, y el Portal Familiar no ve el historial clínico.
 - **Las familias:** solo lo que el centro publica para ellas y solo sobre la persona residente con la que tienen autorización.
+- **Servicios de urgencias:** si el centro deriva a la persona a un servicio de urgencias o de emergencias, ese servicio recibe el informe de derivación, que incluye la ficha de antecedentes de salud. Desde ese momento, el servicio es responsable de su copia.
 - **ResidApp (el personal de operaciones):** el perfil de «Plataforma» crea los centros y su primer administrador y **no ve residentes ni contenido clínico**. Quienes mantienen la base de datos de ResidApp pueden tener acceso técnico por razón de su función, sometido a deber de confidencialidad. **[PENDIENTE: ResidApp confirma quién, con qué controles y registro de esos accesos.]**
 - **Otras entidades:** las empresas del apartado 9, solo en la medida necesaria para prestar el servicio. Los datos no se venden ni se ceden para publicidad.
 - **Autoridades:** si una ley o una resolución lo exige (por ejemplo, la inspección o un juzgado), el centro les facilitará lo que corresponda.
@@ -459,7 +461,7 @@ Cada punto con su responsable.
 
 | N.º | Qué |
 |---|---|
-| C1 | Que lo que dice la política de las funciones clínicas coincide con el producto: no se guarda medicación (alcance.md, línea 45; ADR 0011, líneas 76 y 77), la familia no ve el historial clínico, el dictado es solo una sugerencia |
+| C1 | Que lo que dice la política de las funciones clínicas coincide con el producto: no se guarda la administración de la medicación (alcance.md, línea 45; ADR 0011, líneas 76 y 77), la ficha de antecedentes de salud no se muestra a la familia, la familia no ve el historial clínico, el dictado es solo una sugerencia |
 | C2 | Si la foto debe borrarse tras un plazo y no solo avisar de renovar a los 12 meses |
 
 ### Pendiente técnico antes de publicar
