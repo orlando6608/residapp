@@ -326,6 +326,24 @@ SELECT NEWID(), profile.id, profile.centro_id, 'QUALITY_REVIEW', SYSUTCDATETIME(
                     WHERE existing.ambito_perfil_id = profile.id AND existing.permiso_codigo = 'QUALITY_REVIEW');
 GO
 
+-- Ficha de antecedentes de salud (0094): las Enfermerías y Medicinas de los centros de prueba tienen el permiso HEALTH_BACKGROUND_EDIT, concedido por la
+-- Administración de CJ de su centro, para que CJ pueda probar la ficha de alergias. Mismo criterio que la foto: se da una vez y, si después se revoca a
+-- mano, no se vuelve a dar.
+INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+SELECT NEWID(), profile.id, profile.centro_id, 'HEALTH_BACKGROUND_EDIT', SYSUTCDATETIME(), grantor.cuenta_id
+  FROM dbo.ambitos_perfil profile
+  JOIN dbo.cuentas account ON account.id = profile.cuenta_id
+ CROSS APPLY (SELECT TOP (1) admin_scope.cuenta_id
+                FROM dbo.ambitos_perfil admin_scope
+                JOIN dbo.cuentas admin_account ON admin_account.id = admin_scope.cuenta_id
+               WHERE admin_scope.centro_id = profile.centro_id AND admin_scope.perfil_codigo = 'ADMINISTRACION'
+                 AND admin_account.sujeto_externo IN ('almendros-administracion', 'olmos-administracion')) AS grantor
+ WHERE profile.perfil_codigo IN ('ENFERMERIA', 'MEDICINA') AND profile.estado = 'ACTIVE'
+   AND (account.sujeto_externo LIKE 'almendros-%' OR account.sujeto_externo LIKE 'olmos-%' OR account.sujeto_externo LIKE 'varios-centros%')
+   AND NOT EXISTS (SELECT 1 FROM dbo.permisos_perfil existing
+                    WHERE existing.ambito_perfil_id = profile.id AND existing.permiso_codigo = 'HEALTH_BACKGROUND_EDIT');
+GO
+
 -- Enfermería solo de la Planta 1 (una cuenta más por juego): para probar la petición del historial tras un traslado (0077, guía 5, prueba 18), que solo
 -- se ofrece a quien no ve la unidad anterior del residente (las Enfermerías de las dos plantas la ven siempre). Mismos permisos que la Enfermería de
 -- las dos plantas y miembro del equipo de la Planta 1. Va fuera del bloque de arriba porque las bases creadas antes ya tienen sus cuentas; sin

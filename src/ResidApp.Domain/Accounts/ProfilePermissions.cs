@@ -23,10 +23,13 @@ public static class ProfilePermissions
     /// <summary>Dirección Clínica abre Indicadores y Calidad de proceso solo con este permiso (CJ, 2.1 de la tercera tanda; script 0076).</summary>
     public const string QualityReview = "QUALITY_REVIEW";
 
+    /// <summary>Enfermería y Medicina cambian la ficha de antecedentes de salud (alergias; script 0094) solo con este permiso; verla no lo necesita.</summary>
+    public const string HealthBackgroundEdit = "HEALTH_BACKGROUND_EDIT";
+
     public static IReadOnlyList<string> For(SystemProfile profile) => profile switch
     {
-        SystemProfile.Enfermeria => [ResidentIdentityCreate, BaselineInitialComplete, BaselineReevaluate, ResidentPhotoManage],
-        SystemProfile.Medicina => [BaselineInitialComplete, BaselineReevaluate],
+        SystemProfile.Enfermeria => [ResidentIdentityCreate, BaselineInitialComplete, BaselineReevaluate, ResidentPhotoManage, HealthBackgroundEdit],
+        SystemProfile.Medicina => [BaselineInitialComplete, BaselineReevaluate, HealthBackgroundEdit],
         SystemProfile.DireccionClinica => [ClinicalDetailRead, ReferenceRangesManage, ProcessDeadlinesManage, QualityReview],
         _ => [],
     };

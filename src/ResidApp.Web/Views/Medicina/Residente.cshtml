@@ -54,4 +54,8 @@
         }
     </div>
 </div>
+@if (Model.HealthBackground is { } healthBackground)
+{
+    <partial name="_FichaAntecedentes" model="new HealthBackgroundCardModel(Model.Resident.ResidentId.Value, healthBackground)" />
+}
 <partial name="_ContactoUrgente" model="new EmergencyContactCardModel(Model.EmergencyContacts)" />

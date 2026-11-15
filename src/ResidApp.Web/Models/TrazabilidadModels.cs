@@ -52,6 +52,8 @@ public static class ClinicalTraceabilityDisplay
         ["BASELINE_DRAFT_CREATE"] = "Borrador de basal creado",
         ["BASELINE_SIGN"] = "Basal firmado",
         ["CLINICAL_DETAIL_READ"] = "Lectura clínica de Dirección Clínica",
+        ["HEALTH_BACKGROUND_SAVE"] = "Ficha de antecedentes de salud guardada",
+        ["HEALTH_BACKGROUND_CORRECT"] = "Ficha de antecedentes de salud corregida",
     };
 
     private static readonly Dictionary<string, string> Resources = new()
@@ -67,6 +69,7 @@ public static class ClinicalTraceabilityDisplay
         ["BASELINE_VERSION"] = "Versión del basal",
         ["BASELINE"] = "Basal",
         ["RESIDENT_TRANSFER_HISTORY"] = "Petición del historial anterior",
+        ["HEALTH_BACKGROUND"] = "Ficha de antecedentes de salud",
     };
 
     public static string Action(string code) => Actions.TryGetValue(code, out var label) ? label : "Acción clínica";

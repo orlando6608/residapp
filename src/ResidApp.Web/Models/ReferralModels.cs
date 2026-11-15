@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using ResidApp.Application.Ports;
+using ResidApp.Application.UseCases;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Residents;
 using ResidApp.Shared;
@@ -126,7 +127,7 @@ public static class ReferralDisplay
 
 /// <summary>
 /// DER-03: reúne los datos automáticos del informe de derivación a partir de los registros de origen, en el
-/// orden del flujo: identificación y centro, basal (Barthel, cognición, comunicación y el resto de áreas),
+/// orden del flujo: identificación y centro, alergias e intolerancias a medicamentos de la ficha de antecedentes (script 0094), basal (Barthel, cognición, comunicación y el resto de áreas),
 /// observación de origen, valoraciones, constantes y oxigenoterapia, actuaciones y evolución. Nunca incluye
 /// CFS (no existe en el producto) ni, de forma automática, los contactos: ni los servicios contactados del
 /// protocolo ni el campo "Comunicaciones" de la valoración de Enfermería, que son trazabilidad interna (DER-04).
@@ -139,7 +140,7 @@ public static class ReferralReportBuilder
     private const string NoData = "Sin datos registrados.";
 
     public static IReadOnlyList<ReferralReportSection> Build(
-        PendingChangeDetail detail, CurrentBaselineSummary? baseline, ResidentIdentification identification) =>
+        PendingChangeDetail detail, CurrentBaselineSummary? baseline, ResidentIdentification identification, HealthBackgroundView? health) =>
     [
         Section("Identificación del residente y del centro",
         [
@@ -149,6 +150,7 @@ public static class ReferralReportBuilder
             $"Centro: {identification.CenterName}",
             $"Unidad: {identification.UnitName ?? "Sin unidad"}",
         ]),
+        Section(HealthBackgroundDisplay.AllergiesTitle, HealthBackgroundDisplay.ReportLines(health)),
         Section("Basal vigente", BaselineLines(baseline)),
         Section("Observación de origen", ObservationLines(detail)),
         Section("Valoraciones", AssessmentLines(detail)),

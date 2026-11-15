@@ -1,0 +1,53 @@
+@using ResidApp.Domain.Residents
+@using ResidApp.Web.Models
+@model HealthBackgroundCardModel
+@* Ficha de antecedentes de salud, fase 1: alergias e intolerancias a medicamentos (script 0094). La ven Enfermería y Medicina; la cambian con el permiso que da
+   Administración. «Pendiente», «No refiere» y «No consta» se dicen distinto, y la ficha no dice «revisado»: dice cuándo y quién la modificó por última vez. *@
+@{
+    var record = Model.View.Allergies;
+}
+<section class="card mb-3" aria-labelledby="antecedentes-titulo">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="antecedentes-titulo">Antecedentes de salud</h2>
+        <h3 class="h6">@HealthBackgroundDisplay.AllergiesTitle</h3>
+        @if (Model.View.UnreliableVersion is not null)
+        {
+            <div class="alert alert-danger" role="alert">
+                <strong>Ficha con error: este dato no es fiable.</strong> La última versión guardada de las alergias está incompleta, así que no se enseña
+                ni se imprime en el informe de derivación. Contrasta con el residente o su familia y con la hoja de tratamiento oficial del centro@(Model.View.CanEdit ? ", y vuelve a rellenar las alergias: se guardará como una versión nueva que la corrige." : ". Avisa a quien pueda rellenarla.")
+            </div>
+        }
+        else if (record is null)
+        {
+            <p><span class="badge text-bg-warning">Pendiente</span> @HealthBackgroundDisplay.Pending</p>
+        }
+        else
+        {
+            <p class="mb-2">@HealthBackgroundDisplay.State(record.Content.State)</p>
+            @if (record.Content.Items.Count > 0)
+            {
+                <ul class="mb-2">
+                    @foreach (var item in record.Content.Items)
+                    {
+                        <li>@HealthBackgroundDisplay.Item(item)</li>
+                    }
+                </ul>
+            }
+            @if (HealthBackgroundDisplay.Source(record.Content.Source) is { } source)
+            {
+                <p class="mb-1">@source</p>
+            }
+            <p class="text-muted small mb-2">@HealthBackgroundDisplay.LastModified(record)</p>
+        }
+        @if (Model.View.CanEdit)
+        {
+            <a asp-controller="FichaAntecedentes" asp-action="Alergias" asp-route-residenteId="@Model.ResidentId" class="btn btn-outline-primary btn-lg w-100 mt-2">
+                @(record is null && Model.View.UnreliableVersion is null ? "Rellenar las alergias" : "Cambiar las alergias")
+            </a>
+        }
+        else
+        {
+            <p class="text-muted small mb-0">Para rellenar o cambiar la ficha hace falta el permiso «Rellenar y cambiar la ficha de antecedentes de salud»: pídeselo a Administración.</p>
+        }
+    </div>
+</section>
