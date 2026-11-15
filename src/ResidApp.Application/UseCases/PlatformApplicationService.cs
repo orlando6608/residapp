@@ -1,4 +1,5 @@
 using ResidApp.Application.Errors;
+using ResidApp.Application.Intercambio;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Platform;
@@ -79,9 +80,12 @@ public sealed class PlatformApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var access = await AccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            // Sin código escrito, se deriva del nombre (los códigos no se ven en ninguna dirección ni inicio de sesión).
+            var centerCodeGenerated = string.IsNullOrWhiteSpace(command.CodigoCentro);
             var data = NewCenter.Validate(
-                command.CodigoCentro, command.NombreCentro, command.CodigoUnidad, command.NombreUnidad,
-                command.IdentificadorAdministrador, command.NombreAdministrador, command.Logo);
+                centerCodeGenerated ? ExchangeText.UnitCode(command.NombreCentro ?? "") : command.CodigoCentro, command.NombreCentro,
+                string.IsNullOrWhiteSpace(command.CodigoUnidad) ? ExchangeText.UnitCode(command.NombreUnidad ?? "") : command.CodigoUnidad,
+                command.NombreUnidad, command.IdentificadorAdministrador, command.NombreAdministrador, command.Logo, centerCodeGenerated);
             return await centers.CreateCenterAsync(access, command.OperacionId, data, ct);
         });
 

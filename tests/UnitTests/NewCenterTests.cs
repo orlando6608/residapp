@@ -35,6 +35,17 @@ public class NewCenterTests
             () => NewCenter.Validate(centerCode, centerName, unitCode, unitName, subject, adminName)).Message);
 
     [Fact]
+    public void ElCodigoDerivadoDelNombre_AdmiteElReservado_PeroElEscritoNo()
+    {
+        var generated = NewCenter.Validate("PLATAFORMA", "Plataforma", "u1", "Unidad", "admin-1", "Ana", null, true);
+
+        Assert.True(generated.CenterCodeGenerated);
+        Assert.Equal("PLATAFORMA", generated.CenterCode);
+        Assert.False(NewCenter.Validate("cen-1", "Centro", "u1", "Unidad", "admin-1", "Ana").CenterCodeGenerated);
+        Assert.Throws<DomainValidationException>(() => NewCenter.Validate("PLATAFORMA", "Plataforma", "u1", "Unidad", "admin-1", "Ana"));
+    }
+
+    [Fact]
     public void ElCentroReservado_TieneUnIdFijo() =>
         Assert.Equal(new Guid("5F3A1C00-0000-4000-8000-000000000001"), PlatformCenter.Id);
 }

@@ -1,4 +1,5 @@
 using ResidApp.Application.Errors;
+using ResidApp.Application.Intercambio;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Audit;
@@ -76,7 +77,12 @@ public sealed class AdministracionEstructuraApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            var data = CenterUnit.Validate(command.Codigo, command.Nombre);
+            // Sin código escrito, se deriva del nombre; el repositorio le busca un sufijo libre si el código ya existe en el centro.
+            var generated = string.IsNullOrWhiteSpace(command.Codigo);
+            var data = CenterUnit.Validate(generated ? ExchangeText.UnitCode(command.Nombre ?? "") : command.Codigo, command.Nombre) with
+            {
+                CodeGenerated = generated,
+            };
             return await structureWriter.CreateUnitAsync(grant, command.OperacionId, data, ct);
         });
 

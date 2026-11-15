@@ -88,12 +88,10 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
             {
                 ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
             }))).Content.ReadAsStringAsync());
-        var code = $"func-{Guid.NewGuid():N}"[..16];
         var empty = await PostAsync("/Administracion/NuevaUnidad", newPage, new() { ["Form.OperacionId"] = ExtractValue(newPage, "Form.OperacionId") });
         var created = await PostAsync("/Administracion/NuevaUnidad", newPage, new()
         {
             ["Form.OperacionId"] = ExtractValue(newPage, "Form.OperacionId"),
-            ["Form.Codigo"] = code,
             ["Form.Nombre"] = "Planta Norte (ficticia)",
         });
         var listPage = await client.GetStringAsync("/Administracion/Estructura");
@@ -108,12 +106,11 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         var again = await PostAsync("/Administracion/EstadoUnidad", inactivated, new() { ["unidadId"] = unitId, ["activa"] = "false" });
         var nursePage = await PageAsync("ENFERMERIA", null, "/Administracion/Estructura");
 
-        Assert.Contains("Escribe el código.", empty);
         Assert.Contains("Escribe el nombre.", empty);
         Assert.DoesNotContain("The ", empty);
         Assert.Contains("Unidad creada.", created);
         Assert.Contains("Planta Norte (ficticia)", created);
-        Assert.Contains(code.ToUpperInvariant(), created);
+        Assert.Contains("PLANTA-NORTE-FICTICIA", created);
         Assert.Contains("Activa", created);
         Assert.Contains("Nombre guardado.", renamed);
         Assert.Contains("Planta Norte renombrada (ficticia)", renamed);
@@ -283,18 +280,14 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         var suffix = Guid.NewGuid().ToString("N")[..10];
         var created = await PostAsync(new()
         {
-            ["Form.CodigoCentro"] = $"func-{suffix}",
-            ["Form.NombreCentro"] = "Residencia Funcional (ficticia)",
-            ["Form.CodigoUnidad"] = "planta-1",
+            ["Form.NombreCentro"] = $"Residencia Funcional {suffix} (ficticia)",
             ["Form.NombreUnidad"] = "Planta 1",
             ["Form.IdentificadorAdministrador"] = $"func-admin-{suffix}",
             ["Form.NombreAdministrador"] = "Admin Funcional (ficticio)",
         });
         var repeated = await PostAsync(new()
         {
-            ["Form.CodigoCentro"] = $"func2-{suffix}",
             ["Form.NombreCentro"] = "Otra residencia",
-            ["Form.CodigoUnidad"] = "planta-1",
             ["Form.NombreUnidad"] = "Planta 1",
             ["Form.IdentificadorAdministrador"] = $"func-admin-{suffix}",
             ["Form.NombreAdministrador"] = "Admin Funcional (ficticio)",
@@ -303,19 +296,19 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         var adminPlatform = await PageAsync("ADMINISTRACION", null, "/Plataforma");
 
         Assert.Contains("Dar de alta un centro con su primera unidad y su administrador.", home);
-        Assert.Contains("Escribe el código del centro.", empty);
+        Assert.Contains("Escribe el nombre del centro.", empty);
         Assert.Contains("Escribe el identificador de acceso del administrador.", empty);
         Assert.DoesNotContain("The ", empty);
         Assert.Contains("Centro creado.", created);
-        Assert.Contains("Residencia Funcional (ficticia)", created);
-        Assert.Contains($"FUNC-{suffix}".ToUpperInvariant(), created);
-        Assert.Contains("Ya existe un centro con ese código o una cuenta con ese identificador de acceso.", repeated);
+        Assert.Contains($"Residencia Funcional {suffix} (ficticia)", created);
+        Assert.Contains($"RESIDENCIA-FUNCIONAL-{suffix}-FICTICIA".ToUpperInvariant(), created);
+        Assert.Contains("Ya existe una cuenta con ese identificador de acceso.", repeated);
         Assert.DoesNotContain("Dar de alta un centro con su primera unidad", adminHome);
         Assert.Contains("No se puede acceder a esta operación", adminPlatform);
         Assert.DoesNotContain("Nuevo centro", adminPlatform);
         // El soporte ve las Administraciones del centro nuevo (la primera es la principal) y puede quitarle la marca.
         using var platformConnection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
-        var newCenterId = await platformConnection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.centros WHERE codigo = @code", new { code = $"FUNC-{suffix}".ToUpperInvariant() });
+        var newCenterId = await platformConnection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.centros WHERE codigo = @code", new { code = $"RESIDENCIA-FUNCIONAL-{suffix}-FICTICIA".ToUpperInvariant() });
         var centerPage = WebUtility.HtmlDecode(await client.GetStringAsync($"/Plataforma/Centro?centroId={newCenterId}"));
         var scopeId = await platformConnection.ExecuteScalarAsync<Guid>(
             "SELECT id FROM dbo.ambitos_perfil WHERE centro_id = @newCenterId AND perfil_codigo = 'ADMINISTRACION'", new { newCenterId });
@@ -359,7 +352,6 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         {
             ["__RequestVerificationToken"] = ExtractValue(newPage, "__RequestVerificationToken"),
             ["Form.OperacionId"] = ExtractValue(newPage, "Form.OperacionId"),
-            ["Form.Codigo"] = $"aud-{Guid.NewGuid():N}"[..14],
             ["Form.Nombre"] = "Unidad de la auditoría (ficticia)",
         }))).EnsureSuccessStatusCode();
 

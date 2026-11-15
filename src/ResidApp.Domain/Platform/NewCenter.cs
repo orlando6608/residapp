@@ -12,14 +12,17 @@ public static class PlatformCenter
     public const string Code = "PLATAFORMA";
 }
 
-/// <summary>Un centro nuevo con su primera unidad y la cuenta de su primer administrador, y su logo si se sube al darlo de alta.</summary>
+/// <summary>Un centro nuevo con su primera unidad y la cuenta de su primer administrador, y su logo si se sube al darlo de alta.
+/// CenterCodeGenerated es que la aplicación derivó el código del nombre: si ya existe (o es el reservado), el repositorio busca
+/// el primero libre con -2, -3… y, en un reenvío, el código no forma parte de lo que se compara.</summary>
 public sealed record NewCenterData(
-    string CenterCode, string CenterName, CenterUnitData Unit, ProfessionalAccountData Administrator, CenterLogoImage? Logo = null);
+    string CenterCode, string CenterName, CenterUnitData Unit, ProfessionalAccountData Administrator, CenterLogoImage? Logo = null,
+    bool CenterCodeGenerated = false);
 
 /// <summary>
 /// Reglas del alta de un centro por el operador de plataforma. El código del centro sigue las del código de una unidad (de 2 a
 /// 64 caracteres: letras sin acentos, dígitos, «-» y «_», en mayúsculas); el nombre, de 1 a 200. El código reservado no se
-/// puede usar. La unidad y el administrador siguen las reglas de CenterUnit y ProfessionalAccount; el logo, las de CenterLogo.
+/// puede escribir (uno derivado del nombre sí se admite: el repositorio le busca un sufijo libre). La unidad y el administrador siguen las reglas de CenterUnit y ProfessionalAccount; el logo, las de CenterLogo.
 /// </summary>
 public static class NewCenter
 {
@@ -27,19 +30,19 @@ public static class NewCenter
 
     public static NewCenterData Validate(
         string? centerCode, string? centerName, string? unitCode, string? unitName, string? adminSubject, string? adminName,
-        byte[]? logo = null)
+        byte[]? logo = null, bool centerCodeGenerated = false)
     {
         try
         {
             var center = CenterUnit.Validate(centerCode, centerName);
-            if (center.Code == PlatformCenter.Code)
+            if (center.Code == PlatformCenter.Code && !centerCodeGenerated)
             {
                 throw new DomainValidationException(InvalidCode);
             }
 
             return new NewCenterData(
                 center.Code, center.Name, CenterUnit.Validate(unitCode, unitName), ProfessionalAccount.Validate(adminSubject, adminName),
-                logo is null ? null : CenterLogo.Normalize(logo));
+                logo is null ? null : CenterLogo.Normalize(logo), centerCodeGenerated);
         }
         catch (DomainValidationException error) when (error.Message is CenterUnit.InvalidCode or ProfessionalAccount.InvalidCode)
         {

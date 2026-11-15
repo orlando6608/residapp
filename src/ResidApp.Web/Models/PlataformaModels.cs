@@ -4,15 +4,11 @@ using ResidApp.Domain.Structure;
 
 namespace ResidApp.Web.Models;
 
-/// <summary>Alta de un centro por el operador de plataforma. OperacionId es el id del centro nuevo, así que reenviar no lo duplica.</summary>
+/// <summary>Alta de un centro por el operador de plataforma. OperacionId es el id del centro nuevo, así que reenviar no lo duplica.
+/// Los códigos del centro y de la unidad no se piden: la aplicación los deriva de los nombres.</summary>
 public sealed class NewCenterFormModel
 {
     public Guid OperacionId { get; set; }
-
-    [Required(ErrorMessage = "Escribe el código del centro.")]
-    [StringLength(CenterUnit.MaxCodeLength, MinimumLength = CenterUnit.MinCodeLength, ErrorMessage = "El código del centro lleva entre {2} y {1} caracteres.")]
-    [Display(Name = "Código del centro")]
-    public string? CodigoCentro { get; set; }
 
     [Required(ErrorMessage = "Escribe el nombre del centro.")]
     [StringLength(CenterUnit.MaxNameLength, ErrorMessage = "El nombre del centro no puede pasar de {1} caracteres.")]
@@ -21,11 +17,6 @@ public sealed class NewCenterFormModel
 
     /// <summary>El logo del centro, opcional: después lo cambia su Administración.</summary>
     public IFormFile? Logo { get; set; }
-
-    [Required(ErrorMessage = "Escribe el código de la primera unidad.")]
-    [StringLength(CenterUnit.MaxCodeLength, MinimumLength = CenterUnit.MinCodeLength, ErrorMessage = "El código de la unidad lleva entre {2} y {1} caracteres.")]
-    [Display(Name = "Código de la primera unidad")]
-    public string? CodigoUnidad { get; set; }
 
     [Required(ErrorMessage = "Escribe el nombre de la primera unidad.")]
     [StringLength(CenterUnit.MaxNameLength, ErrorMessage = "El nombre de la unidad no puede pasar de {1} caracteres.")]

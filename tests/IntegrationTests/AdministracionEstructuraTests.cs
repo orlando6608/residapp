@@ -79,6 +79,47 @@ public class AdministracionEstructuraTests
     }
 
     [Fact]
+    public async Task Crear_SinCodigo_LoDerivaDelNombre_ConSufijoSiYaExiste_YElNombreRepetidoSigueSiendoConflicto()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var service = BuildEstructura(admin.ExternalSubject);
+        CreateUnitCommand WithoutCode(string name, Guid? operationId = null) =>
+            new(admin.ProfileScopeId, admin.CenterId, operationId ?? Guid.NewGuid(), null, name);
+
+        var first = await service.CreateUnitAsync(WithoutCode("Planta Más Allá 1"));
+        var sameCode = await service.CreateUnitAsync(WithoutCode("Planta-Mas-Alla-1"));
+        var third = await service.CreateUnitAsync(WithoutCode("Planta  más allá 1."));
+        var sameName = await service.CreateUnitAsync(WithoutCode("PLANTA MÁS ALLÁ 1"));
+
+        Assert.True(first.Ok, first.Error?.Message);
+        Assert.True(sameCode.Ok, sameCode.Error?.Message);
+        Assert.True(third.Ok, third.Error?.Message);
+        Assert.Equal(ApplicationFailureCode.Conflict, sameName.Error!.Code);
+        var codes = (await ListAsync(admin)).ToDictionary(u => u.Name, u => u.Code);
+        Assert.Equal("PLANTA-MAS-ALLA-1", codes["Planta Más Allá 1"]);
+        Assert.Equal("PLANTA-MAS-ALLA-1-2", codes["Planta-Mas-Alla-1"]);
+        Assert.Equal("PLANTA-MAS-ALLA-1-3", codes["Planta  más allá 1."]);
+    }
+
+    [Fact]
+    public async Task Crear_SinCodigo_ElReenvioNoDuplicaNiFalla()
+    {
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var service = BuildEstructura(admin.ExternalSubject);
+        var command = new CreateUnitCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), null, "Unidad de reenvío");
+
+        var first = await service.CreateUnitAsync(command);
+        var again = await service.CreateUnitAsync(command);
+        var different = await service.CreateUnitAsync(command with { Nombre = "Otro nombre" });
+
+        Assert.True(first.Ok, first.Error?.Message);
+        Assert.True(again.Ok, again.Error?.Message);
+        Assert.Equal(first.Value, again.Value);
+        Assert.Equal(1, (await ListAsync(admin)).Count(u => u.Name == "Unidad de reenvío"));
+        Assert.Equal(ApplicationFailureCode.Conflict, different.Error!.Code);
+    }
+
+    [Fact]
     public async Task Renombrar_CambiaSoloElNombre_ConAuditoria_YRechazaRepetidoOIgual()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);

@@ -378,15 +378,11 @@ public static class ProfessionalAccountDisplay
 /// <summary>ADM-13: las casillas de unidades (Form.Unidades) del alta y de «Conceder perfil».</summary>
 public sealed record ProfileUnitsFieldModel(IReadOnlyList<ScopeUnit> Units, IReadOnlyList<Guid> Selected);
 
-/// <summary>ADM-05: alta de una unidad. OperacionId es el id de la unidad nueva, así que reenviar no la duplica.</summary>
+/// <summary>ADM-05: alta de una unidad. OperacionId es el id de la unidad nueva, así que reenviar no la duplica. El código no se
+/// pide: la aplicación lo deriva del nombre.</summary>
 public sealed class NewUnitFormModel
 {
     public Guid OperacionId { get; set; }
-
-    [Required(ErrorMessage = "Escribe el código.")]
-    [StringLength(CenterUnit.MaxCodeLength, MinimumLength = CenterUnit.MinCodeLength, ErrorMessage = "El código lleva entre {2} y {1} caracteres.")]
-    [Display(Name = "Código")]
-    public string? Codigo { get; set; }
 
     [Required(ErrorMessage = "Escribe el nombre.")]
     [StringLength(CenterUnit.MaxNameLength, ErrorMessage = "El nombre no puede pasar de {1} caracteres.")]

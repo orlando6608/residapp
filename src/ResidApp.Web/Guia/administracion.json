@@ -94,12 +94,12 @@
       "palabras": ["unidad", "nueva unidad", "código de unidad", "inactivar", "reactivar", "estructura"],
       "permisos": [],
       "antes": [
-        "Para una unidad nueva: un **código** de 2 a 64 caracteres (letras sin acentos, dígitos, «-» o «_»; se guarda en mayúsculas; **no se puede cambiar después**) y un **nombre**.",
+        "Para una unidad nueva: un **nombre**. De él se genera solo el código de la unidad (si ya existe, se añade -2, -3…), que **no se puede cambiar después**; el nombre sí.",
         "Para inactivarla: que **no tenga residentes ubicados** en ella."
       ],
       "pasos": [
         { "texto": "En el inicio, abre **Estructura del centro**. Ves las unidades de tu ámbito, con su estado («Activa» o «Inactiva»), su edificio y planta y cuántos residentes tienen ubicados.", "botones": ["Estructura del centro"] },
-        { "texto": "Nueva: pulsa **Nueva unidad**, escribe el «Código» y el «Nombre» y pulsa **Crear unidad**.", "botones": ["Nueva unidad", "Crear unidad"], "campos": ["Código", "Nombre"] },
+        { "texto": "Nueva: pulsa **Nueva unidad**, escribe el «Nombre» y pulsa **Crear unidad**.", "botones": ["Nueva unidad", "Crear unidad"], "campos": ["Nombre"] },
         { "texto": "Renombrar: en su fila, pulsa **Cambiar nombre**, escribe el nombre nuevo y pulsa **Guardar nombre**. El código no cambia.", "botones": ["Cambiar nombre", "Guardar nombre"] },
         { "texto": "Inactivar o volver a activar: pulsa **Inactivar** (o **Reactivar**) en su fila.", "botones": ["Inactivar", "Reactivar"] }
       ],
@@ -108,14 +108,15 @@
         { "para": "Personal del centro", "texto": "Una unidad inactiva deja de ofrecerse en el alta de residentes y en la gestión de usuarios." }
       ],
       "dudas": [
-        { "p": "«Ya existe una unidad con ese código o con ese nombre en el centro.»", "r": "Cambia el código o el nombre; el código identifica la unidad en todo el centro." },
+        { "p": "«Ya existe una unidad con ese nombre en el centro.»", "r": "Cambia el nombre: el nombre no puede repetirse en el centro." },
         { "p": "«No se puede inactivar una unidad con residentes ubicados en ella.»", "r": "Primero hay que cambiar de unidad a sus residentes (un traslado) o darlos de baja." },
         { "p": "«Ya existe otra unidad con ese nombre en el centro.»", "r": "Al renombrar, el nombre tampoco puede repetirse." }
       ],
       "rutas": ["Administracion/Estructura", "Administracion/NuevaUnidad", "Administracion/NombreUnidad", "Administracion/EstadoUnidad"],
       "mensajes": [
         "Unidad creada. Ya la ofrecen el alta de residentes y la gestión de usuarios de tu ámbito.",
-        "Ya existe una unidad con ese código o con ese nombre en el centro.",
+        "Ya existe una unidad con ese nombre en el centro.",
+        "Revisa los datos: el nombre es obligatorio y lleva como mucho 200 caracteres.",
         "Nombre guardado.",
         "Unidad reactivada.",
         "No se puede inactivar una unidad con residentes ubicados en ella.",
