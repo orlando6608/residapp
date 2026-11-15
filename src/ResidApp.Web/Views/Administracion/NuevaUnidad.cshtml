@@ -14,8 +14,8 @@
 
 <h1 class="h3">Nueva unidad</h1>
 <p class="text-muted">
-    El código identifica la unidad en el centro y no se puede cambiar después; el nombre sí. La unidad nace activa y concedida
-    a tu ámbito.
+    El código de la unidad se genera solo a partir del nombre y no se puede cambiar después; el nombre sí. La unidad nace activa
+    y concedida a tu ámbito.
 </p>
 
 <div class="card">
@@ -23,12 +23,6 @@
         <div asp-validation-summary="All" class="text-danger"></div>
         <form asp-action="NuevaUnidad" method="post">
             <input type="hidden" name="Form.OperacionId" value="@Model.Form.OperacionId" />
-            <div class="mb-3">
-                <label asp-for="Form.Codigo" class="form-label"></label>
-                <input asp-for="Form.Codigo" class="form-control form-control-lg" autocomplete="off" aria-describedby="ayuda-codigo" />
-                <div id="ayuda-codigo" class="form-text">De 2 a 64 caracteres: letras sin acentos, dígitos, «-» o «_». Se guarda en mayúsculas.</div>
-                <span asp-validation-for="Form.Codigo" class="text-danger"></span>
-            </div>
             <div class="mb-3">
                 <label asp-for="Form.Nombre" class="form-label"></label>
                 <input asp-for="Form.Nombre" class="form-control form-control-lg" autocomplete="off" />

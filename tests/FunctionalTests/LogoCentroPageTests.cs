@@ -176,9 +176,7 @@ public class LogoCentroPageTests(WebAppFactory factory) : IClassFixture<WebAppFa
         {
             { new StringContent(ExtractValue(form, "__RequestVerificationToken")), "__RequestVerificationToken" },
             { new StringContent(operationId.ToString()), "Form.OperacionId" },
-            { new StringContent($"logo-{suffix}"), "Form.CodigoCentro" },
             { new StringContent("Residencia Con Logo (ficticia)"), "Form.NombreCentro" },
-            { new StringContent($"u-{suffix}"), "Form.CodigoUnidad" },
             { new StringContent("Primera unidad"), "Form.NombreUnidad" },
             { new StringContent($"logo-adm-{suffix}"), "Form.IdentificadorAdministrador" },
             { new StringContent("Admin Nuevo"), "Form.NombreAdministrador" },

@@ -211,6 +211,78 @@ public class PlataformaCentrosTests
         }
     }
 
+    private static CreateCenterCommand CreateWithoutCodes(Operator op, string centerName, string adminSubject, Guid? operationId = null) =>
+        new(op.ProfileScopeId, op.CenterId, operationId ?? Guid.NewGuid(), null, centerName, null, "Primera unidad", adminSubject, "Admin Nuevo");
+
+    private static async Task<string> CenterCodeAsync(Guid centerId)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        return await connection.QuerySingleAsync<string>("SELECT codigo FROM dbo.centros WHERE id = @centerId", new { centerId });
+    }
+
+    [Fact]
+    public async Task AltaSinCodigos_LosDerivaDeLosNombres_YUnCentroConElMismoNombreRecibeSufijo()
+    {
+        var op = await CreateOperatorAsync();
+        var service = BuildPlatform(op.ExternalSubject);
+        var tag = Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
+        var name = $"Residencia Más Allá {tag} (ficticia)";
+        var baseCode = $"RESIDENCIA-MAS-ALLA-{tag}-FICTICIA";
+        var firstId = Guid.NewGuid();
+        var secondId = Guid.NewGuid();
+        var thirdId = Guid.NewGuid();
+
+        var first = await service.CreateCenterAsync(CreateWithoutCodes(op, name, NewSubject(), firstId));
+        var second = await service.CreateCenterAsync(CreateWithoutCodes(op, name, NewSubject(), secondId));
+        var third = await service.CreateCenterAsync(CreateWithoutCodes(op, name, NewSubject(), thirdId));
+
+        Assert.True(first.Ok, first.Error?.Message);
+        Assert.True(second.Ok, second.Error?.Message);
+        Assert.True(third.Ok, third.Error?.Message);
+        Assert.Equal(baseCode, await CenterCodeAsync(firstId));
+        Assert.Equal($"{baseCode}-2", await CenterCodeAsync(secondId));
+        Assert.Equal($"{baseCode}-3", await CenterCodeAsync(thirdId));
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal("PRIMERA-UNIDAD", await connection.QuerySingleAsync<string>(
+            "SELECT codigo FROM dbo.unidades WHERE centro_id = @firstId", new { firstId }));
+    }
+
+    [Fact]
+    public async Task AltaSinCodigos_ElReenvioNoDuplicaNiFalla_AunqueElCodigoBaseYaEsteOcupadoPorElPropioCentro()
+    {
+        var op = await CreateOperatorAsync();
+        var service = BuildPlatform(op.ExternalSubject);
+        var name = $"Residencia Reenvío {Guid.NewGuid():N}"[..40];
+        var centerId = Guid.NewGuid();
+        var subject = NewSubject();
+        var command = CreateWithoutCodes(op, name, subject, centerId);
+
+        var first = await service.CreateCenterAsync(command);
+        var code = await CenterCodeAsync(centerId);
+        var again = await service.CreateCenterAsync(command);
+        var different = await service.CreateCenterAsync(command with { NombreCentro = name + " distinto" });
+
+        Assert.True(first.Ok, first.Error?.Message);
+        Assert.True(again.Ok, again.Error?.Message);
+        Assert.Equal(centerId, again.Value.Value);
+        Assert.Equal(code, await CenterCodeAsync(centerId));
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.centros WHERE id = @centerId", new { centerId }));
+        Assert.Equal(ApplicationFailureCode.Conflict, different.Error!.Code);
+    }
+
+    [Fact]
+    public async Task AltaSinCodigos_ConElNombreDeLaPlataforma_NoUsaElCodigoReservado()
+    {
+        var op = await CreateOperatorAsync();
+        var centerId = Guid.NewGuid();
+
+        var created = await BuildPlatform(op.ExternalSubject).CreateCenterAsync(CreateWithoutCodes(op, "Plataforma", NewSubject(), centerId));
+
+        Assert.True(created.Ok, created.Error?.Message);
+        var code = await CenterCodeAsync(centerId);
+        Assert.StartsWith("PLATAFORMA-", code);
+    }
+
     [Fact]
     public async Task BaseDeDatos_ElPerfilSoloValeEnElCentroReservado_YElCentroReservadoSoloAdmiteEsePerfil()
     {

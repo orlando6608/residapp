@@ -34,15 +34,21 @@ public sealed class SqlCenterStructureRepository(SqlConnectionFactory connection
         if (previous is not null)
         {
             return previous.CenterId == access.CenterId.Value
-                   && string.Equals(previous.Code, data.Code, StringComparison.OrdinalIgnoreCase)
+                   && (data.CodeGenerated || string.Equals(previous.Code, data.Code, StringComparison.OrdinalIgnoreCase))
                    && string.Equals(previous.Name, data.Name, StringComparison.Ordinal)
                 ? UnitId.From(operationId)
                 : throw new DomainValidationException("IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST");
         }
 
-        if (await connection.ExecuteScalarAsync<int>(new CommandDefinition(
-                "SELECT COUNT(*) FROM dbo.unidades WHERE centro_id = @CenterId AND codigo = @Code",
-                new { CenterId = access.CenterId.Value, data.Code }, transaction, cancellationToken: ct)) > 0)
+        // Un código escrito que ya existe en el centro es un conflicto; uno derivado del nombre recibe -2, -3… («Planta 1» y
+        // «Planta-1» dan el mismo código con nombres distintos). El nombre repetido lo rechaza EnsureNameFreeAsync, no el sufijo.
+        var taken = (await connection.QueryAsync<string>(new CommandDefinition(
+            "SELECT codigo FROM dbo.unidades WHERE centro_id = @CenterId AND (codigo = @Code OR codigo LIKE @Code + N'-%')",
+            new { CenterId = access.CenterId.Value, data.Code }, transaction, cancellationToken: ct))).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var code = data.CodeGenerated
+            ? CenterUnit.CodeCandidates(data.Code).FirstOrDefault(candidate => !taken.Contains(candidate))
+            : taken.Contains(data.Code) ? null : data.Code;
+        if (code is null)
         {
             throw new DomainValidationException("UNIT_CODE_TAKEN");
         }
@@ -58,7 +64,7 @@ public sealed class SqlCenterStructureRepository(SqlConnectionFactory connection
             VALUES (NEWID(), @ProfileScopeId, @CenterId, @UnitId, @OccurredAt, @ActorId);
             """, new
         {
-            UnitId = operationId, CenterId = access.CenterId.Value, data.Code, data.Name, OccurredAt = occurredAt,
+            UnitId = operationId, CenterId = access.CenterId.Value, Code = code, data.Name, OccurredAt = occurredAt,
             access.ProfileScopeId, ActorId = access.AccountId.Value,
         }, transaction, cancellationToken: ct));
         await SqlProfessionalAccountRepository.AuditAsync(connection, transaction, access, "UNIT", operationId, "UNIT_CREATE", occurredAt, operationId, ct: ct);

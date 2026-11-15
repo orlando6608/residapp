@@ -31,4 +31,26 @@ public class CenterUnitTests
         Assert.Equal(CenterUnit.MaxNameLength, CenterUnit.ValidateName(new string('n', CenterUnit.MaxNameLength)).Length);
         Assert.Throws<DomainValidationException>(() => CenterUnit.ValidateName(new string('n', CenterUnit.MaxNameLength + 1)));
     }
+
+    [Fact]
+    public void CodigosCandidatos_SonLaBaseYLuegoSufijosDel2Al99_ConLaLongitudMaximaDeLaBase_CabenEnElCodigo()
+    {
+        var candidates = CenterUnit.CodeCandidates("PLANTA-1").ToList();
+        var longest = CenterUnit.CodeCandidates(new string('A', 60)).Last();
+
+        Assert.Equal("PLANTA-1", candidates[0]);
+        Assert.Equal("PLANTA-1-2", candidates[1]);
+        Assert.Equal("PLANTA-1-99", candidates[^1]);
+        Assert.Equal(99, candidates.Count);
+        Assert.True(longest.Length <= CenterUnit.MaxCodeLength);
+        Assert.All(CenterUnit.CodeCandidates(new string('A', 60)), c => CenterUnit.Validate(c, "x"));
+    }
+
+    [Fact]
+    public void CodigoDerivadoDelNombre_CumpleLasReglasDelCodigo()
+    {
+        var data = CenterUnit.Validate(ResidApp.Application.Intercambio.ExchangeText.UnitCode("Residencia Nuestra Señora de la Paz"), "x");
+
+        Assert.Equal("RESIDENCIA-NUESTRA-SENORA-DE-LA-PAZ", data.Code);
+    }
 }

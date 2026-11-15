@@ -1051,7 +1051,7 @@ public sealed partial class AdministracionController(
         if (ModelState.IsValid)
         {
             var result = await estructura.CreateUnitAsync(new CreateUnitCommand(
-                activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.OperacionId, form.Codigo, form.Nombre), ct);
+                activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.OperacionId, null, form.Nombre), ct);
             if (result.Ok)
             {
                 TempData["Mensaje"] = "Unidad creada. Ya la ofrecen el alta de residentes y la gestión de usuarios de tu ámbito.";
@@ -1060,9 +1060,8 @@ public sealed partial class AdministracionController(
 
             ModelState.AddModelError(string.Empty, result.Error!.Code switch
             {
-                ApplicationFailureCode.Conflict => "Ya existe una unidad con ese código o con ese nombre en el centro.",
-                ApplicationFailureCode.InvalidInput =>
-                    "Revisa los datos: el código lleva de 2 a 64 caracteres (letras sin acentos, dígitos, «-» o «_») y el nombre es obligatorio.",
+                ApplicationFailureCode.Conflict => "Ya existe una unidad con ese nombre en el centro.",
+                ApplicationFailureCode.InvalidInput => "Revisa los datos: el nombre es obligatorio y lleva como mucho 200 caracteres.",
                 _ => result.Error.Message,
             });
         }

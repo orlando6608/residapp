@@ -5,6 +5,7 @@ using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Platform;
+using ResidApp.Domain.Structure;
 using ResidApp.Shared;
 
 namespace ResidApp.Infrastructure.Persistence;
@@ -44,7 +45,8 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
             """, new { Id = operationId }, transaction, cancellationToken: ct));
         if (previous is not null)
         {
-            return string.Equals(previous.Code, data.CenterCode, StringComparison.OrdinalIgnoreCase)
+            // Un código generado no forma parte de lo que se compara: el primero libre puede haber cambiado desde el primer envío.
+            return (data.CenterCodeGenerated || string.Equals(previous.Code, data.CenterCode, StringComparison.OrdinalIgnoreCase))
                    && string.Equals(previous.Name, data.CenterName, StringComparison.Ordinal)
                    && string.Equals(previous.UnitCode, data.Unit.Code, StringComparison.OrdinalIgnoreCase)
                    && string.Equals(previous.AdminSubject, data.Administrator.Subject, StringComparison.OrdinalIgnoreCase)
@@ -52,8 +54,16 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
                 : throw new DomainValidationException("IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST");
         }
 
-        if (await connection.ExecuteScalarAsync<int>(new CommandDefinition(
-                "SELECT COUNT(*) FROM dbo.centros WHERE codigo = @Code", new { Code = data.CenterCode }, transaction, cancellationToken: ct)) > 0)
+        // Las altas van en fila (UPDLOCK sobre el centro reservado), así que el código libre que se elige aquí no se lo quita nadie.
+        // Un código escrito que ya existe es un conflicto; uno derivado del nombre recibe -2, -3… (el reservado cuenta como ocupado).
+        var taken = (await connection.QueryAsync<string>(new CommandDefinition(
+            "SELECT codigo FROM dbo.centros WHERE codigo = @Code OR codigo LIKE @Code + N'-%'",
+            new { Code = data.CenterCode }, transaction, cancellationToken: ct))).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        taken.Add(PlatformCenter.Code);
+        var centerCode = data.CenterCodeGenerated
+            ? CenterUnit.CodeCandidates(data.CenterCode).FirstOrDefault(candidate => !taken.Contains(candidate))
+            : taken.Contains(data.CenterCode) ? null : data.CenterCode;
+        if (centerCode is null)
         {
             throw new DomainValidationException("CENTER_CODE_TAKEN");
         }
@@ -71,7 +81,7 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
         var parameters = new
         {
             CenterId = operationId, UnitId = unitId, AdminId = adminId, ProfileScopeId = profileScopeId, ActorId = access.AccountId.Value,
-            CenterCode = data.CenterCode, CenterName = data.CenterName, UnitCode = data.Unit.Code, UnitName = data.Unit.Name,
+            CenterCode = centerCode, CenterName = data.CenterName, UnitCode = data.Unit.Code, UnitName = data.Unit.Name,
             data.Administrator.Subject, AdminName = data.Administrator.DisplayName, OccurredAt = occurredAt,
         };
         try
