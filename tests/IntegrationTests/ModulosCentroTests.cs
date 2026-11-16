@@ -25,7 +25,7 @@ public class ModulosCentroTests
         public bool IsThirdPartyConfigured(string moduleCode) => thirdPartyConfigured;
     }
 
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+    private static readonly DateOnly Today = CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow);
 
     private static async Task<Operator> CreateOperatorAsync()
     {
@@ -328,6 +328,148 @@ public class ModulosCentroTests
         Assert.Equal(2, await CountAsync("SELECT COUNT(*) FROM dbo.modulos_centro WHERE centro_id = @center", new { center = admin.CenterId.Value }));
         Assert.Equal(2, await CountAsync(
             "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @center AND tipo_recurso = 'CENTER_MODULE'", new { center = admin.CenterId.Value }));
+    }
+
+    [Fact]
+    public async Task Una_referencia_de_solicitud_no_se_repite_para_el_mismo_centro_y_modulo_pero_si_en_otro_centro()
+    {
+        var op = await CreateOperatorAsync();
+        var a = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var b = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var service = BuildPlatform(op.ExternalSubject);
+
+        Assert.True((await service.ChangeCenterModuleAsync(Enable(op, a.CenterId, reference: "SOL-DUP"))).Ok);
+        var again = await service.ChangeCenterModuleAsync(Enable(op, a.CenterId, reference: "SOL-DUP"));
+        var asDisable = await service.ChangeCenterModuleAsync(Disable(op, a.CenterId) with { ReferenciaSolicitud = "SOL-DUP" });
+
+        Assert.Equal(ApplicationFailureCode.Conflict, again.Error?.Code);
+        Assert.Contains("referencia de solicitud ya se usó", again.Error!.Message);
+        Assert.Equal(ApplicationFailureCode.Conflict, asDisable.Error?.Code);
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.modulos_centro WHERE centro_id = @center", new { center = a.CenterId.Value }));
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @center AND tipo_recurso = 'CENTER_MODULE'", new { center = a.CenterId.Value }));
+        Assert.True((await service.ChangeCenterModuleAsync(Enable(op, b.CenterId, reference: "SOL-DUP"))).Ok);
+    }
+
+    [Fact]
+    public async Task Plataforma_lee_el_historial_sin_la_cuenta_y_los_vencimientos_de_todos_los_centros_y_otro_perfil_no()
+    {
+        var op = await CreateOperatorAsync();
+        var a = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        var service = BuildPlatform(op.ExternalSubject);
+        var platformCenter = CenterId.From(PlatformCenter.Id);
+        Assert.True((await service.ChangeCenterModuleAsync(Enable(op, a.CenterId, until: Today.AddDays(5), reference: "SOL-H-1"))).Ok);
+        Assert.True((await service.ChangeCenterModuleAsync(Disable(op, a.CenterId))).Ok);
+        Assert.True((await service.ChangeCenterModuleAsync(Enable(op, a.CenterId, until: Today.AddDays(8), reference: "SOL-H-2"))).Ok);
+
+        var modules = (await service.ListCenterModulesAsync(new PlatformCenterQuery(op.ProfileScopeId, platformCenter, a.CenterId))).Value!;
+        var expiring = (await service.ListExpiringModulesAsync(new PlatformQuery(op.ProfileScopeId, platformCenter))).Value!;
+        var denied = await BuildPlatform(a.ExternalSubject).ListCenterModulesAsync(new PlatformCenterQuery(a.ProfileScopeId, a.CenterId, a.CenterId));
+
+        var dictado = Assert.Single(modules);
+        Assert.Equal(ModuleState.Active, dictado.State);
+        Assert.Equal([3, 2, 1], dictado.History.Select(h => h.Number));
+        Assert.Equal(["SOL-H-2", "SOL-2026-002", "SOL-H-1"], dictado.History.Select(h => h.RequestReference));
+        Assert.Equal(Today.AddDays(8), dictado.Last!.ValidUntil);
+        Assert.Contains(expiring, e => e.CenterId == a.CenterId && e.ValidUntil == Today.AddDays(8));
+        Assert.DoesNotContain(expiring, e => e.CenterId == a.CenterId && e.ValidUntil == Today.AddDays(5));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, denied.Error?.Code);
+    }
+
+    private static async Task InsertActiveRowAsync(CenterId center, Guid actor, int number, DateOnly until, string reference)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.modulos_centro
+                (id, centro_id, modulo_codigo, numero, estado_codigo, vigente_desde, vigente_hasta, referencia_anexo, version_anexo, version_ficha, condiciones_codigos,
+                 solicitud_recibida_en, canal_codigo, referencia_solicitud, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (NEWID(), @center, 'DICTADO_VOZ', @number, 'ACTIVE', DATEADD(DAY, -200, @until), @until, 'ANX-DIRECTO', '1', '1', 'A', SYSUTCDATETIME(), 'CORREO', @reference, @actor, 'PLATAFORMA', SYSUTCDATETIME())
+            """, new { center = center.Value, number, until = until.ToDateTime(TimeOnly.MinValue), reference, actor });
+    }
+
+    [Fact]
+    public async Task Los_vencimientos_incluyen_los_limites_de_30_y_90_dias_y_excluyen_lo_de_fuera_las_bajas_y_los_centros_inactivos()
+    {
+        var op = await CreateOperatorAsync();
+        var service = BuildPlatform(op.ExternalSubject);
+        var platformCenter = CenterId.From(PlatformCenter.Id);
+        var cases = new Dictionary<string, (CenterId Center, int Offset)>();
+        foreach (var offset in new[] { 30, 31, -90, -91, 0 })
+        {
+            var profile = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+            await InsertActiveRowAsync(profile.CenterId, op.AccountId.Value, 1, Today.AddDays(offset), "SOL-LIM");
+            cases[$"{offset}"] = (profile.CenterId, offset);
+        }
+
+        // Un módulo cuyo último cambio es una baja no aparece aunque una alta anterior esté en la ventana; ni uno de un centro inactivo.
+        var disabled = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        await InsertActiveRowAsync(disabled.CenterId, op.AccountId.Value, 1, Today.AddDays(5), "SOL-BAJA-1");
+        Assert.True((await service.ChangeCenterModuleAsync(Disable(op, disabled.CenterId))).Ok);
+        var inactive = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        await InsertActiveRowAsync(inactive.CenterId, op.AccountId.Value, 1, Today.AddDays(5), "SOL-INACT");
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("UPDATE dbo.centros SET estado = 'INACTIVE' WHERE id = @id", new { id = inactive.CenterId.Value });
+        }
+
+        var listed = (await service.ListExpiringModulesAsync(new PlatformQuery(op.ProfileScopeId, platformCenter))).Value!.Select(e => e.CenterId).ToHashSet();
+
+        foreach (var offset in new[] { 30, -90, 0 })
+        {
+            Assert.Contains(cases[$"{offset}"].Center, listed);
+        }
+
+        foreach (var offset in new[] { 31, -91 })
+        {
+            Assert.DoesNotContain(cases[$"{offset}"].Center, listed);
+        }
+
+        Assert.DoesNotContain(disabled.CenterId, listed);
+        Assert.DoesNotContain(inactive.CenterId, listed);
+    }
+
+    [Fact]
+    public async Task El_indice_unico_de_la_referencia_rechaza_un_duplicado_insertado_sin_pasar_por_la_aplicacion()
+    {
+        var op = await CreateOperatorAsync();
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        await InsertActiveRowAsync(admin.CenterId, op.AccountId.Value, 1, Today.AddDays(30), "SOL-IDX");
+
+        var error = await Assert.ThrowsAsync<Microsoft.Data.SqlClient.SqlException>(() => InsertActiveRowAsync(admin.CenterId, op.AccountId.Value, 2, Today.AddDays(60), "SOL-IDX"));
+
+        Assert.Contains("UX_mc_referencia", error.Message);
+    }
+
+    [Fact]
+    public async Task Dos_altas_simultaneas_con_la_misma_referencia_dejan_una_fila_y_un_conflicto()
+    {
+        var op = await CreateOperatorAsync();
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+
+        var results = await Task.WhenAll(
+            BuildPlatform(op.ExternalSubject).ChangeCenterModuleAsync(Enable(op, admin.CenterId, reference: "SOL-RACE")),
+            BuildPlatform(op.ExternalSubject).ChangeCenterModuleAsync(Enable(op, admin.CenterId, reference: "SOL-RACE")));
+
+        Assert.Equal(1, results.Count(r => r.Ok));
+        Assert.Equal(ApplicationFailureCode.Conflict, results.Single(r => !r.Ok).Error!.Code);
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.modulos_centro WHERE centro_id = @center", new { center = admin.CenterId.Value }));
+    }
+
+    [Fact]
+    public async Task Activar_en_un_centro_inactivo_o_inexistente_da_un_mensaje_que_lo_dice()
+    {
+        var op = await CreateOperatorAsync();
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("UPDATE dbo.centros SET estado = 'INACTIVE' WHERE id = @id", new { id = admin.CenterId.Value });
+        }
+
+        var inactive = await BuildPlatform(op.ExternalSubject).ChangeCenterModuleAsync(Enable(op, admin.CenterId));
+        var missing = await BuildPlatform(op.ExternalSubject).ChangeCenterModuleAsync(Enable(op, CenterId.From(Guid.NewGuid())));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, inactive.Error?.Code);
+        Assert.Contains("no existe o no está activo", inactive.Error!.Message);
+        Assert.Contains("no existe o no está activo", missing.Error!.Message);
     }
 
     [Fact]

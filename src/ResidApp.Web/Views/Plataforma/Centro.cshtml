@@ -14,7 +14,7 @@
 
 <h1 class="h3">@Model.Name <small class="text-body-secondary"><code>@Model.Code</code></small></h1>
 <p class="text-muted">
-    Las Administraciones del centro. La <strong>principal</strong> ve todas las unidades del centro y se añade las que no tiene; aquí puedes marcarla o
+    Las Administraciones y los módulos opcionales del centro. La <strong>principal</strong> ve todas las unidades del centro y se añade las que no tiene; aquí puedes marcarla o
     quitar la marca, y añadir una unidad al ámbito de cualquier Administración (por ejemplo, para recuperar una unidad sin Administración). Cada cambio
     queda en la auditoría. No se muestran residentes ni contenido clínico.
 </p>
@@ -90,4 +90,9 @@ else
             </div>
         </section>
     }
+}
+
+@if (ViewData["Modulos"] is ResidApp.Web.Models.PlatformCenterModulesViewModel modulos)
+{
+    <partial name="_ModulosCentro" model="modulos" />
 }

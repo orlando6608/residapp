@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using ResidApp.Application.Errors;
+using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Modules;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
@@ -12,7 +14,7 @@ namespace ResidApp.Web.Controllers;
 /// Perfil de plataforma (script 0026): lista de centros y alta de un centro con su primera unidad y su primer administrador.
 /// Ninguna pantalla muestra residentes ni contenido clínico. Traduce a PlatformApplicationService; la autorización no vive aquí.
 /// </summary>
-public sealed class PlataformaController(PlatformApplicationService service) : Controller
+public sealed class PlataformaController(PlatformApplicationService service, IModuleSettings moduleSettings, TimeProvider clock) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -27,6 +29,10 @@ public sealed class PlataformaController(PlatformApplicationService service) : C
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
         }
+
+        // ADR 0015: los módulos que vencen pronto (o vencieron sin renovar) de todos los centros, para que nadie se quede sin el servicio por olvido.
+        var expiring = await service.ListExpiringModulesAsync(Query(activeScope), ct);
+        ViewData["Vencimientos"] = new PlatformExpiringModulesViewModel(expiring.Value ?? [], CenterModuleRules.TodayInMadrid(clock.GetUtcNow()));
 
         return View(result.Value ?? []);
     }
@@ -102,7 +108,17 @@ public sealed class PlataformaController(PlatformApplicationService service) : C
 
         var result = await service.FindCenterAsync(new PlatformCenterQuery(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(centroId)), ct);
-        return result.Ok ? View(result.Value) : RedirectToAction(nameof(Index));
+        if (!result.Ok)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        var modules = await service.ListCenterModulesAsync(new PlatformCenterQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(centroId)), ct);
+        ViewData["Modulos"] = new PlatformCenterModulesViewModel(
+            centroId, modules.Value ?? [], CenterModules.All.Where(m => m.UsesThirdParty && !moduleSettings.IsThirdPartyConfigured(m.Code)).Select(m => m.Code).ToHashSet(),
+            CenterModuleRules.TodayInMadrid(clock.GetUtcNow()));
+        return View(result.Value);
     }
 
     [HttpPost]
@@ -121,6 +137,54 @@ public sealed class PlataformaController(PlatformApplicationService service) : C
             ? (principal ? "Marcada como Administración principal." : "Ya no es Administración principal.")
             : (result.Error!.Code == ApplicationFailureCode.Conflict ? "Ese perfil ya estaba así. Revisa el centro." : result.Error.Message);
         return RedirectToAction(nameof(Centro), new { centroId });
+    }
+
+    /// <summary>ADR 0015: activa o renueva un módulo en un centro, a petición del centro. Las condiciones de la ficha se marcan una a una y han de estar todas.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> ActivarModulo(ModuleChangeFormModel form, CancellationToken ct) => ChangeModuleAsync(form, enable: true, ct);
+
+    /// <summary>ADR 0015: apaga un módulo en un centro, a petición del centro y con efecto inmediato; el motivo es de una lista cerrada.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> ApagarModulo(ModuleChangeFormModel form, CancellationToken ct) => ChangeModuleAsync(form, enable: false, ct);
+
+    private async Task<IActionResult> ChangeModuleAsync(ModuleChangeFormModel form, bool enable, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var module = CenterModules.Find(form.ModuloCodigo);
+        var allConditions = module is not null && module.PrivacyConditions.All(code => form.Condiciones.Contains(code));
+        var result = await service.ChangeCenterModuleAsync(new ChangeCenterModuleCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(form.CentroId), form.ModuloCodigo, enable, form.VigenteDesde, form.VigenteHasta,
+            form.ReferenciaAnexo, form.VersionAnexo, allConditions, form.MotivoBaja, MadridInstant(form.SolicitudRecibidaEn), form.Canal, form.ReferenciaSolicitud), ct);
+        TempData[result.Ok ? "Mensaje" : "Error"] = result.Ok
+            ? (enable ? "Módulo activado. Queda en la auditoría del centro; avisa por escrito a su persona autorizada." : "Módulo apagado. Queda en la auditoría del centro; avisa por escrito a su persona autorizada.")
+            : result.Error!.Message;
+        return RedirectToAction(nameof(Centro), new { centroId = form.CentroId });
+    }
+
+    /// <summary>La hora local de Madrid de un campo datetime-local, como instante.</summary>
+    private static DateTimeOffset? MadridInstant(DateTime? local)
+    {
+        if (local is null)
+        {
+            return null;
+        }
+
+        // Una hora de otro siglo (año 0001) no cabe en un instante con desfase: se entrega como una fecha antigua, que el dominio rechaza con su mensaje, en vez de un 500.
+        if (local.Value.Year < 2000)
+        {
+            return DateTimeOffset.UnixEpoch;
+        }
+
+        var madrid = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+        var unspecified = DateTime.SpecifyKind(local.Value, DateTimeKind.Unspecified);
+        return new DateTimeOffset(unspecified, madrid.GetUtcOffset(unspecified));
     }
 
     /// <summary>ADR 0007, I2: la invitación de acceso (o de recuperación, si ya tiene contraseña) de una cuenta de Administración del

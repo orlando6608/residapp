@@ -35,10 +35,18 @@ public sealed class SqlCenterModuleRepository(SqlConnectionFactory connections) 
             """, new { CenterId = change.CenterId.Value, PlatformCode = PlatformCenter.Code }, transaction, cancellationToken: ct));
         if (centerState is null || (change.Enable && centerState != "ACTIVE"))
         {
-            throw new DomainValidationException(NewCenterModuleChangeRules.Invalid);
+            throw new DomainValidationException("MODULE_CENTER_INVALID");
         }
 
         var last = await FindLastAsync(connection, transaction, change.CenterId, module.Code, ct);
+        var repeated = await connection.ExecuteScalarAsync<int>(new CommandDefinition(
+            "SELECT COUNT(*) FROM dbo.modulos_centro WHERE centro_id = @CenterId AND modulo_codigo = @ModuleCode AND referencia_solicitud = @Reference",
+            new { CenterId = change.CenterId.Value, ModuleCode = module.Code, Reference = change.RequestReference }, transaction, cancellationToken: ct));
+        if (repeated > 0)
+        {
+            throw new DomainStateException("MODULE_REFERENCE_REPEATED");
+        }
+
         if (!change.Enable && (last is null || !last.Enabled))
         {
             throw new DomainStateException("MODULE_CHANGE_CONFLICT");
@@ -81,6 +89,43 @@ public sealed class SqlCenterModuleRepository(SqlConnectionFactory connections) 
         transaction.Commit();
     }
 
+    public async Task<IReadOnlyList<PlatformModuleChange>> ListChangesAsync(PlatformAccess access, CenterId centerId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        await SqlPlatformCenterRepository.EnsureOperatorAsync(connection, null, access, ct);
+        // Sin cambiado_por_cuenta_id: Plataforma ve qué se cambió y qué pidió el centro, no una cuenta.
+        var rows = await connection.QueryAsync<ChangeRow>(new CommandDefinition("""
+            SELECT modulo_codigo AS ModuleCode, numero AS Number, estado_codigo AS State, CAST(vigente_desde AS DATETIME2(0)) AS ValidFrom, CAST(vigente_hasta AS DATETIME2(0)) AS ValidUntil,
+                   referencia_anexo AS AnnexReference, version_anexo AS AnnexVersion, version_ficha AS SheetVersion, motivo_baja_codigo AS DisableReason,
+                   solicitud_recibida_en AS RequestReceivedAt, canal_codigo AS Channel, referencia_solicitud AS RequestReference, cambiado_en AS ChangedAt
+              FROM dbo.modulos_centro
+             WHERE centro_id = @CenterId
+             ORDER BY cambiado_en DESC, numero DESC
+            """, new { CenterId = centerId.Value }, cancellationToken: ct));
+        return rows.Select(row => new PlatformModuleChange(
+            row.ModuleCode, row.Number, row.State == "ACTIVE", row.ValidFrom is { } from ? DateOnly.FromDateTime(from) : null,
+            row.ValidUntil is { } until ? DateOnly.FromDateTime(until) : null, row.AnnexReference, row.AnnexVersion, row.SheetVersion,
+            row.DisableReason is null ? null : EnumCode.ParseCode<ModuleDisableReason>(row.DisableReason), UtcOffset(row.RequestReceivedAt),
+            EnumCode.ParseCode<ModuleRequestChannel>(row.Channel), row.RequestReference, UtcOffset(row.ChangedAt))).ToList();
+    }
+
+    public async Task<IReadOnlyList<PlatformExpiringModule>> ListExpiringAsync(PlatformAccess access, DateOnly from, DateOnly until, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        await SqlPlatformCenterRepository.EnsureOperatorAsync(connection, null, access, ct);
+        var rows = await connection.QueryAsync<ExpiringRow>(new CommandDefinition("""
+            SELECT center.id AS CenterId, center.nombre_visible AS CenterName, change.modulo_codigo AS ModuleCode, CAST(change.vigente_hasta AS DATETIME2(0)) AS ValidUntil
+              FROM dbo.modulos_centro change
+              JOIN dbo.centros center ON center.id = change.centro_id AND center.estado = 'ACTIVE'
+             WHERE change.estado_codigo = 'ACTIVE' AND change.vigente_hasta BETWEEN @From AND @Until
+               AND change.numero = (SELECT MAX(other.numero) FROM dbo.modulos_centro other WHERE other.centro_id = change.centro_id AND other.modulo_codigo = change.modulo_codigo)
+             ORDER BY change.vigente_hasta, center.nombre_visible, change.modulo_codigo
+            """, new { From = from.ToDateTime(TimeOnly.MinValue), Until = until.ToDateTime(TimeOnly.MinValue) }, cancellationToken: ct));
+        return rows.Select(row => new PlatformExpiringModule(CenterId.From(row.CenterId), row.CenterName, row.ModuleCode, DateOnly.FromDateTime(row.ValidUntil))).ToList();
+    }
+
+    private static DateTimeOffset UtcOffset(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
+
     private static async Task<CenterModuleChange?> FindLastAsync(
         SqlConnection connection, SqlTransaction? transaction, CenterId centerId, string moduleCode, CancellationToken ct)
     {
@@ -95,6 +140,46 @@ public sealed class SqlCenterModuleRepository(SqlConnectionFactory connections) 
             : new CenterModuleChange(
                 row.Number, row.State == "ACTIVE", row.ValidFrom is { } from ? DateOnly.FromDateTime(from) : null,
                 row.ValidUntil is { } until ? DateOnly.FromDateTime(until) : null);
+    }
+
+    private sealed class ChangeRow
+    {
+        public string ModuleCode { get; set; } = "";
+
+        public int Number { get; set; }
+
+        public string State { get; set; } = "";
+
+        public DateTime? ValidFrom { get; set; }
+
+        public DateTime? ValidUntil { get; set; }
+
+        public string? AnnexReference { get; set; }
+
+        public string? AnnexVersion { get; set; }
+
+        public string? SheetVersion { get; set; }
+
+        public string? DisableReason { get; set; }
+
+        public DateTime RequestReceivedAt { get; set; }
+
+        public string Channel { get; set; } = "";
+
+        public string RequestReference { get; set; } = "";
+
+        public DateTime ChangedAt { get; set; }
+    }
+
+    private sealed class ExpiringRow
+    {
+        public Guid CenterId { get; set; }
+
+        public string CenterName { get; set; } = "";
+
+        public string ModuleCode { get; set; } = "";
+
+        public DateTime ValidUntil { get; set; }
     }
 
     private sealed class Row

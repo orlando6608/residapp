@@ -1,0 +1,160 @@
+@using ResidApp.Domain.Modules
+@using ResidApp.Web.Models
+@model PlatformCenterModulesViewModel
+@* ADR 0015: módulos opcionales de un centro. Solo Plataforma enciende y apaga, a petición del centro. Sin residentes, sin contenido clínico y sin nombres de personas. *@
+<section aria-labelledby="modulos-titulo" class="mt-5">
+    <h2 class="h4" id="modulos-titulo">Módulos opcionales</h2>
+    <p class="text-muted">
+        Un módulo se activa a petición del centro y según su contrato (el anexo de módulos), con una vigencia. <strong>Se apaga a petición del centro, en el plazo que fije el anexo:</strong>
+        el efecto es inmediato. Cada cambio guarda cuándo llegó la petición, por qué canal y con qué referencia, y queda en la auditoría del centro; <strong>avisa por escrito a la persona
+        autorizada del centro</strong> en cada alta, baja y vencimiento. Usa solo códigos de referencia (letras sin acentos, números y <code>. _ / # -</code>, hasta 40 caracteres): ningún nombre de persona.
+    </p>
+
+    @foreach (var view in Model.Modules)
+    {
+        var code = view.Module.Code;
+        var tone = view.State == ModuleState.Active ? "text-bg-success" : view.Last is null ? "text-bg-secondary" : "text-bg-warning";
+        <article class="card mb-3" aria-labelledby="modulo-@code">
+            <div class="card-body">
+                <h3 class="h5 card-title" id="modulo-@code">
+                    @view.Module.Name
+                    <span class="badge @tone align-middle" data-estado-modulo="@code">@ModuleDisplay.Status(view, Model.Today)</span>
+                </h3>
+                @if (Model.ProviderKeyMissing.Contains(code))
+                {
+                    <div class="alert alert-warning" role="alert">
+                        Falta la clave global del proveedor de este módulo: <strong>no funciona en ningún centro</strong>, aunque aquí figure activo. Es el corte para todos los centros a la vez.
+                    </div>
+                }
+                @if (view.Last is { Enabled: true } last)
+                {
+                    <p class="small text-body-secondary mb-2">
+                        Anexo <code>@last.AnnexReference</code> (versión <code>@last.AnnexVersion</code>) · ficha de privacidad versión <code>@last.SheetVersion</code> ·
+                        vigencia @last.ValidFrom?.ToString("dd/MM/yyyy") – @last.ValidUntil?.ToString("dd/MM/yyyy")
+                    </p>
+                }
+
+                <details class="mb-3" open="@(view.Last is null || !view.Last.Enabled)">
+                    <summary class="fw-semibold">@(view.Last is null ? "Activar" : "Activar de nuevo o renovar")</summary>
+                    <form asp-action="ActivarModulo" method="post" class="mt-3">
+                        <input type="hidden" name="CentroId" value="@Model.CenterId" />
+                        <input type="hidden" name="ModuloCodigo" value="@code" />
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="desde-@code">Vigente desde</label>
+                                <input class="form-control form-control-lg" type="date" id="desde-@code" name="VigenteDesde" required />
+                                <div class="form-text">Una renovación se registra el día en que empieza (o antes): no puede empezar en el futuro.</div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="hasta-@code">Vigente hasta (incluido)</label>
+                                <input class="form-control form-control-lg" type="date" id="hasta-@code" name="VigenteHasta" required />
+                                <div class="form-text">El contrato fija la duración. Vale hasta el final de ese día, hora de Madrid.</div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="anexo-@code">Referencia del anexo</label>
+                                <input class="form-control form-control-lg" id="anexo-@code" name="ReferenciaAnexo" maxlength="40" required autocomplete="off" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="version-@code">Versión del anexo</label>
+                                <input class="form-control form-control-lg" id="version-@code" name="VersionAnexo" maxlength="16" required autocomplete="off" />
+                            </div>
+                        </div>
+                        <fieldset class="mt-3">
+                            <legend class="h6">Condiciones de la ficha de privacidad (versión @view.Module.PrivacySheetVersion), comprobadas</legend>
+                            <p class="form-text">Antes de usarlo con un centro real, una persona experta (DPO o abogado) tiene que haber validado cada una. Marca solo las que se cumplen; hacen falta todas.</p>
+                            @foreach (var condition in view.Module.PrivacyConditions)
+                            {
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="cond-@code-@condition" name="Condiciones" value="@condition" />
+                                    <label class="form-check-label" for="cond-@code-@condition">@ModuleDisplay.Condition(condition)</label>
+                                </div>
+                            }
+                        </fieldset>
+                        <partial name="_SolicitudModulo" model="code" />
+                        <button type="submit" class="btn btn-primary btn-lg mt-3">@(view.Last is null ? "Activar el módulo" : "Registrar la activación o renovación")</button>
+                    </form>
+                </details>
+
+                @if (view.Last is { Enabled: true })
+                {
+                    <details class="mb-3">
+                        <summary class="fw-semibold">Apagar</summary>
+                        <form asp-action="ApagarModulo" method="post" class="mt-3">
+                            <input type="hidden" name="CentroId" value="@Model.CenterId" />
+                            <input type="hidden" name="ModuloCodigo" value="@code" />
+                            <div class="mb-3">
+                                <label class="form-label" for="motivo-@code">Motivo</label>
+                                <select class="form-select form-select-lg" id="motivo-@code" name="MotivoBaja" required>
+                                    <option value="">Elige…</option>
+                                    @foreach (var reason in Enum.GetValues<ModuleDisableReason>())
+                                    {
+                                        <option value="@reason">@ModuleDisplay.Reason(reason)</option>
+                                    }
+                                </select>
+                            </div>
+                            <partial name="_SolicitudModulo" model='"baja-" + code' />
+                            <button type="submit" class="btn btn-outline-danger btn-lg mt-3">Apagar el módulo ahora</button>
+                        </form>
+                    </details>
+                }
+
+                <h4 class="h6">Historial</h4>
+                @if (view.History.Count == 0)
+                {
+                    <p class="estado-vacio mb-0">Todavía no se ha registrado ningún cambio.</p>
+                }
+                else
+                {
+                    @* En pantallas estrechas, una entrada por cambio en lugar de la tabla (directrices-pwa-movil.md, sección 2). *@
+                    <ul class="list-group d-md-none">
+                        @foreach (var change in view.History)
+                        {
+                            <li class="list-group-item">
+                                <div class="fw-semibold">@(change.Enabled ? "Activado" : "Apagado: " + ModuleDisplay.Reason(change.DisableReason!.Value))</div>
+                                <div class="small text-body-secondary">Registrado el @change.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                @if (change.Enabled)
+                                {
+                                    <div class="small">Vigencia @change.ValidFrom?.ToString("dd/MM/yyyy") – @change.ValidUntil?.ToString("dd/MM/yyyy") · anexo <code>@change.AnnexReference</code> v<code>@change.AnnexVersion</code></div>
+                                }
+                                <div class="small">Petición del centro: @change.RequestReceivedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @ModuleDisplay.Channel(change.Channel) · <code>@change.RequestReference</code></div>
+                            </li>
+                        }
+                    </ul>
+                    <div class="table-responsive d-none d-md-block">
+                        <table class="table table-sm align-middle mb-0">
+                            <caption class="visually-hidden">Historial de cambios de @view.Module.Name</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Registrado</th>
+                                    <th scope="col">Cambio</th>
+                                    <th scope="col">Vigencia y anexo</th>
+                                    <th scope="col">Petición del centro</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var change in view.History)
+                                {
+                                    <tr>
+                                        <td>@change.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@(change.Enabled ? "Activado" : "Apagado: " + ModuleDisplay.Reason(change.DisableReason!.Value))</td>
+                                        <td>
+                                            @if (change.Enabled)
+                                            {
+                                                @:@change.ValidFrom?.ToString("dd/MM/yyyy") – @change.ValidUntil?.ToString("dd/MM/yyyy"), <code>@change.AnnexReference</code> v<code>@change.AnnexVersion</code>
+                                            }
+                                            else
+                                            {
+                                                @:—
+                                            }
+                                        </td>
+                                        <td>Recibida el @change.RequestReceivedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @ModuleDisplay.Channel(change.Channel) · <code>@change.RequestReference</code></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </article>
+    }
+</section>

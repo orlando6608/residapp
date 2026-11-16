@@ -243,14 +243,14 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
     private static async Task InsertModuleAsync(Seed seed, int number, bool enable, int fromDays = -1, int untilDays = 30)
     {
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
-        var today = DateTime.UtcNow.Date;
+        var today = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).ToDateTime(TimeOnly.MinValue);
         await connection.ExecuteAsync("""
             INSERT INTO dbo.modulos_centro
                 (id, centro_id, modulo_codigo, numero, estado_codigo, vigente_desde, vigente_hasta, referencia_anexo, version_anexo, version_ficha, condiciones_codigos,
                  motivo_baja_codigo, solicitud_recibida_en, canal_codigo, referencia_solicitud, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
             VALUES (NEWID(), @center, 'DICTADO_VOZ', @number, @state, @from, @until, CASE WHEN @enable = 1 THEN 'ANX-1' END, CASE WHEN @enable = 1 THEN '1' END,
                     CASE WHEN @enable = 1 THEN '1' END, CASE WHEN @enable = 1 THEN 'A' END, CASE WHEN @enable = 0 THEN 'PETICION_CENTRO' END,
-                    SYSUTCDATETIME(), 'CORREO', 'SOL-1', @actor, 'PLATAFORMA', SYSUTCDATETIME())
+                    SYSUTCDATETIME(), 'CORREO', 'SOL-' + CAST(@number AS NVARCHAR(5)), @actor, 'PLATAFORMA', SYSUTCDATETIME())
             """, new
         {
             center = seed.Center, number, enable, state = enable ? "ACTIVE" : "DISABLED", actor = seed.AuxiliarAccount,

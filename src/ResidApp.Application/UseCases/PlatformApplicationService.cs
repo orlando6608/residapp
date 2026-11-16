@@ -57,8 +57,41 @@ public sealed class PlatformApplicationService(
             var change = NewCenterModuleChangeRules.Validate(
                 command.CentroDestinoId, PlatformCenter.Id, command.ModuloCodigo, command.Activar, command.VigenteDesde, command.VigenteHasta, command.ReferenciaAnexo,
                 command.VersionAnexo, command.CondicionesComprobadas, command.MotivoBaja, command.SolicitudRecibidaEn, command.Canal, command.ReferenciaSolicitud, now);
-            await modules.AppendAsync(access, change, DateOnly.FromDateTime(now.UtcDateTime), ct);
+            await modules.AppendAsync(access, change, CenterModuleRules.TodayInMadrid(now), ct);
             return true;
+        });
+
+    /// <summary>Un módulo del catálogo en un centro, tal como lo ve Plataforma: su estado contractual hoy (día de Madrid, sin contar la clave global ni el ajuste de desarrollo) y su historial, el más reciente primero.</summary>
+    public sealed record CenterModuleView(CenterModule Module, ModuleState State, PlatformModuleChange? Last, IReadOnlyList<PlatformModuleChange> History);
+
+    /// <summary>ADR 0015: los módulos del catálogo de un centro, con su estado y su historial. Sin la cuenta de quien los cambió y sin datos de residentes.</summary>
+    public Task<ApplicationResult<IReadOnlyList<CenterModuleView>>> ListCenterModulesAsync(PlatformCenterQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync<IReadOnlyList<CenterModuleView>>(async () =>
+        {
+            var access = await AccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            var changes = await modules.ListChangesAsync(access, query.CentroDestinoId, ct);
+            var today = CenterModuleRules.TodayInMadrid(clock.GetUtcNow());
+            return CenterModules.All.Select(module =>
+            {
+                var history = changes.Where(c => c.ModuleCode == module.Code).OrderByDescending(c => c.Number).ToList();
+                var last = history.FirstOrDefault();
+                var state = CenterModuleRules.Resolve(module, last is null ? null : new CenterModuleChange(last.Number, last.Enabled, last.ValidFrom, last.ValidUntil), today);
+                return new CenterModuleView(module, state, last, history);
+            }).ToList();
+        });
+
+    /// <summary>Días hacia adelante y hacia atrás de los vencimientos que enseña Plataforma: los de los próximos 30 días y los vencidos sin renovar en los últimos 90.</summary>
+    public const int ExpiringDaysAhead = 30;
+
+    public const int ExpiredDaysBack = 90;
+
+    /// <summary>ADR 0015 (decisión de Orlando, 2026-11-16): la pantalla de Plataforma enseña los vencimientos próximos y los vencidos sin renovar, de todos los centros.</summary>
+    public Task<ApplicationResult<IReadOnlyList<PlatformExpiringModule>>> ListExpiringModulesAsync(PlatformQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var access = await AccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            var today = CenterModuleRules.TodayInMadrid(clock.GetUtcNow());
+            return await modules.ListExpiringAsync(access, today.AddDays(-ExpiredDaysBack), today.AddDays(ExpiringDaysAhead), ct);
         });
 
     /// <summary>ADR 0007, I2: el soporte de la plataforma entrega la invitación de acceso (o de recuperación) de una cuenta de

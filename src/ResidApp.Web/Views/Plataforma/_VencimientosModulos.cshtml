@@ -1,0 +1,40 @@
+@using ResidApp.Domain.Modules
+@using ResidApp.Web.Models
+@model PlatformExpiringModulesViewModel
+@* ADR 0015 (decisión de Orlando, 2026-11-16): los vencimientos próximos, para avisar al centro por escrito y renovar a tiempo; y los vencidos sin renovar, que ya no funcionan. *@
+@{
+    var upcoming = Model.Modules.Where(m => m.ValidUntil >= Model.Today).ToList();
+    var expired = Model.Modules.Where(m => m.ValidUntil < Model.Today).ToList();
+}
+@if (upcoming.Count > 0 || expired.Count > 0)
+{
+    <section class="mb-4" aria-labelledby="vencimientos-titulo" id="vencimientos-modulos">
+        <h2 class="h5" id="vencimientos-titulo">Módulos que vencen</h2>
+        @if (upcoming.Count > 0)
+        {
+            <p class="mb-1">Vencen en los próximos 30 días: avisa por escrito a la persona autorizada del centro y renueva a tiempo.</p>
+            <ul class="list-group mb-3">
+                @foreach (var item in upcoming)
+                {
+                    <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
+                        <span><a asp-action="Centro" asp-route-centroId="@item.CenterId.Value">@item.CenterName</a> · @CenterModules.Find(item.ModuleCode)?.Name</span>
+                        <span class="text-body-secondary">hasta el @item.ValidUntil.ToString("dd/MM/yyyy")</span>
+                    </li>
+                }
+            </ul>
+        }
+        @if (expired.Count > 0)
+        {
+            <p class="mb-1">Vencieron en los últimos 90 días y no se han renovado: <strong>ya no funcionan</strong>.</p>
+            <ul class="list-group mb-3">
+                @foreach (var item in expired)
+                {
+                    <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
+                        <span><a asp-action="Centro" asp-route-centroId="@item.CenterId.Value">@item.CenterName</a> · @CenterModules.Find(item.ModuleCode)?.Name</span>
+                        <span class="text-body-secondary">vencido el @item.ValidUntil.ToString("dd/MM/yyyy")</span>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+}
