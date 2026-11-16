@@ -1,6 +1,6 @@
 {
   "perfil": "Enfermeria",
-  "proposito": "Enfermería recibe lo que registra el Auxiliar y lo que observa ella misma, lo valora y decide qué hacer: cerrar el evento, hacer seguimiento, escalarlo a Medicina o activar el protocolo urgente. Cumple las indicaciones de Medicina, deriva a Urgencias y prepara los comunicados a la familia. Con permiso, también da de alta residentes, gestiona la foto y firma el estado basal. ResidApp no diagnostica ni decide nada clínico: registra lo que decides tú.",
+  "proposito": "Enfermería recibe lo que registra el Auxiliar y lo que observa ella misma, lo valora y decide qué hacer: cerrar el evento, hacer seguimiento, escalarlo a Medicina o activar el protocolo urgente. Cumple las indicaciones de Medicina, deriva a Urgencias y prepara los comunicados a la familia. Con permiso, también da de alta residentes, gestiona la foto, firma el estado basal y rellena la ficha de antecedentes de salud. ResidApp no diagnostica ni decide nada clínico: registra lo que decides tú.",
   "rutina": [
     "Entras en el **Inicio de Enfermería**: las tarjetas te dicen cuántos eventos prioritarios hay, cuántos protocolos urgentes y seguimientos abiertos, cuántas indicaciones de Medicina esperan y cuántos episodios hay para cerrar.",
     "Abres primero la bandeja prioritaria y después la de cambios ordinarios: cada evento se valora y se decide.",
@@ -23,7 +23,7 @@
     "Crear, completar y firmar el **estado basal**: **Basal inicial (al alta)** para el basal del alta y **Reevaluar el basal** para cualquier otro motivo (ver ENF-18).",
     "**Poner, cambiar y quitar la foto del residente** (ver ENF-19).",
     "**Rellenar y cambiar la ficha de antecedentes de salud** (alergias e intolerancias a medicamentos, ver ENF-20; enfermedades e intervenciones, ver ENF-21; medicación habitual, ver ENF-22).",
-    "Los cuatro permisos los concede Administración."
+    "Estos permisos los concede Administración."
   ],
   "nunca": [
     "Editar lo que observó otra persona ni la valoración médica.",
@@ -33,8 +33,8 @@
     "Firmar un basal que no creaste tú.",
     "Cambiar los rangos de referencia de las constantes: los fija Dirección Clínica. Tú los ves en la valoración, como aviso."
   ],
-  "revisadoPara": "0.3.0",
-  "revisado": "2026-11-15",
+  "revisadoPara": "0.4.0",
+  "revisado": "2026-11-16",
   "fichas": [
     {
       "codigo": "ENF-01",
