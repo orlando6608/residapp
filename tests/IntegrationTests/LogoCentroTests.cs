@@ -158,7 +158,7 @@ public class LogoCentroTests
         var platform = new PlatformApplicationService(
             new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedBrandingSessionIdentityProvider(subject),
             new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory),
-            new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), TimeProvider.System);
+            new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System);
         string Code() => $"cen-{Guid.NewGuid():N}"[..20];
         string Admin() => $"test-adm-{Guid.NewGuid():N}"[..28];
         var withLogoId = Guid.NewGuid();

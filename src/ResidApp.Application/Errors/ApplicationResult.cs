@@ -97,6 +97,18 @@ public static class ApplicationResultRunner
             "El cargo ya estaba así, o alguien lo ha cambiado mientras tanto: vuelve a cargar la pantalla."),
     };
 
+    /// <summary>Módulos opcionales por centro (ADR 0015, script 0098): cada fallo dice qué pasa. Los triggers de la base de datos lanzan CENTER_MODULE_*.</summary>
+    private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> ModuleFailures = new()
+    {
+        ["MODULE_NOT_AVAILABLE"] = (ApplicationFailureCode.AccessDenied, "Este módulo no está disponible en tu centro."),
+        ["MODULE_READ_ONLY"] = (ApplicationFailureCode.Conflict,
+            "Este módulo está en solo lectura: puedes consultar lo registrado, pero no crear ni cambiar nada."),
+        ["MODULE_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "Revisa los datos del módulo: referencias sin nombres de personas, fechas de vigencia, canal y condiciones comprobadas."),
+        ["MODULE_CHANGE_CONFLICT"] = (ApplicationFailureCode.Conflict, "El módulo ya estaba así en ese centro, o alguien lo ha cambiado mientras tanto: vuelve a cargar la pantalla."),
+        ["MODULE_DEPENDENCY_MISSING"] = (ApplicationFailureCode.Conflict, "Falta activar antes un módulo del que este depende."),
+    };
+
     /// <summary>Anonimizar a un familiar (script 0087): cada fallo dice qué pasa y qué hacer. Los triggers de la base de datos lanzan los mismos códigos.</summary>
     private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> FamilyAnonymizationFailures = new()
     {
@@ -164,6 +176,11 @@ public static class ApplicationResultRunner
         if (FamilyAnonymizationFailures.TryGetValue(message, out var anonymization))
         {
             return new ApplicationFailure(anonymization.Code, anonymization.Text);
+        }
+
+        if (ModuleFailures.TryGetValue(message, out var module))
+        {
+            return new ApplicationFailure(module.Code, module.Text);
         }
 
         if (PositionFailures.TryGetValue(message, out var position))

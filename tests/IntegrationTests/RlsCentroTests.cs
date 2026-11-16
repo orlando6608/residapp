@@ -440,6 +440,81 @@ public sealed class RlsCentroTests
         return center;
     }
 
+    // ---- Módulos opcionales por centro (script 0098) ----
+
+    private static Task InsertModuleAsync(SqlConnection connection, Guid centerId, int number, bool enable, Guid changedBy, string profile) =>
+        connection.ExecuteAsync("""
+            INSERT INTO dbo.modulos_centro
+                (id, centro_id, modulo_codigo, numero, estado_codigo, vigente_desde, vigente_hasta, referencia_anexo, version_anexo, version_ficha, condiciones_codigos,
+                 motivo_baja_codigo, solicitud_recibida_en, canal_codigo, referencia_solicitud, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (NEWID(), @centerId, 'DICTADO_VOZ', @number, @state,
+                    CASE WHEN @enable = 1 THEN '2026-01-01' END, CASE WHEN @enable = 1 THEN '2026-12-31' END, CASE WHEN @enable = 1 THEN 'ANX-1' END,
+                    CASE WHEN @enable = 1 THEN '1' END, CASE WHEN @enable = 1 THEN '1' END, CASE WHEN @enable = 1 THEN 'A,B' END,
+                    CASE WHEN @enable = 0 THEN 'PETICION_CENTRO' END, SYSUTCDATETIME(), 'CORREO', 'REQ-1', @changedBy, @profile, SYSUTCDATETIME())
+            """, new { centerId, number, enable, state = enable ? "ACTIVE" : "DISABLED", changedBy, profile });
+
+    [Fact]
+    public async Task Los_modulos_los_ve_cada_centro_los_suyos_y_Plataforma_todos_pero_solo_Plataforma_los_escribe_y_nunca_los_cambia()
+    {
+        var a = await SeedCenterWithResidentAsync();
+        var b = await SeedCenterWithResidentAsync();
+        var operatorScope = await SeedPlatformOperatorAsync();
+        var centerA = a.Profile.CenterId.Value;
+        var centerB = b.Profile.CenterId.Value;
+
+        using var asOperator = await OpenLimitedAsync(operatorScope.Scope);
+        await InsertModuleAsync(asOperator, centerA, 1, true, operatorScope.AccountId, "PLATAFORMA");
+        await InsertModuleAsync(asOperator, centerB, 1, true, operatorScope.AccountId, "PLATAFORMA");
+        await InsertModuleAsync(asOperator, centerA, 2, false, operatorScope.AccountId, "PLATAFORMA");
+
+        using var asAdminA = await OpenLimitedAsync(ScopeOf(a.Profile));
+        Assert.Equal(2, await CountAsync(asAdminA, "modulos_centro", centerA));
+        Assert.Equal(0, await CountAsync(asAdminA, "modulos_centro", centerB));
+        Assert.Equal(1, await CountAsync(asOperator, "modulos_centro", centerB));
+        using var withoutScope = await OpenLimitedAsync(null);
+        Assert.Equal(0, await CountAsync(withoutScope, "modulos_centro", centerA));
+
+        // La Administración del centro no se da un módulo, ni firmando como ella misma ni como Plataforma. Plataforma no firma con la cuenta de otra persona.
+        var ownProfile = await Assert.ThrowsAsync<SqlException>(() => InsertModuleAsync(asAdminA, centerA, 3, true, a.Profile.AccountId.Value, "ADMINISTRACION"));
+        var asPlatform = await Assert.ThrowsAsync<SqlException>(() => InsertModuleAsync(asAdminA, centerA, 3, true, a.Profile.AccountId.Value, "PLATAFORMA"));
+        var otherAccount = await Assert.ThrowsAsync<SqlException>(() => InsertModuleAsync(asOperator, centerA, 3, true, a.Profile.AccountId.Value, "PLATAFORMA"));
+        Assert.Equal(547, ownProfile.Number);
+        Assert.Equal(BlockPredicateViolation, asPlatform.Number);
+        Assert.Equal(BlockPredicateViolation, otherAccount.Number);
+
+        // Nadie cambia ni borra un cambio, ni siquiera quien es dueño de la base de datos (el trigger lo impide).
+        using var owner = await TestDatabase.ConnectionFactory.OpenAsync();
+        var update = await Assert.ThrowsAsync<SqlException>(() => owner.ExecuteAsync("UPDATE dbo.modulos_centro SET estado_codigo = 'DISABLED' WHERE centro_id = @centerB", new { centerB }));
+        var delete = await Assert.ThrowsAsync<SqlException>(() => owner.ExecuteAsync("DELETE FROM dbo.modulos_centro WHERE centro_id = @centerB", new { centerB }));
+        Assert.All([update, delete], error => Assert.Contains("CENTER_MODULE_IMMUTABLE", error.Message));
+    }
+
+    [Fact]
+    public async Task Los_modulos_exigen_una_secuencia_sin_huecos_que_empiece_en_alta_y_no_admiten_el_centro_reservado()
+    {
+        var center = await SeedCenterWithResidentAsync();
+        var operatorScope = await SeedPlatformOperatorAsync();
+        var centerId = center.Profile.CenterId.Value;
+        using var owner = await TestDatabase.ConnectionFactory.OpenAsync();
+
+        var startsWithDisable = await Assert.ThrowsAsync<SqlException>(() => InsertModuleAsync(owner, centerId, 1, false, operatorScope.AccountId, "PLATAFORMA"));
+        var gap = await Assert.ThrowsAsync<SqlException>(() => InsertModuleAsync(owner, centerId, 2, true, operatorScope.AccountId, "PLATAFORMA"));
+        var reserved = await Assert.ThrowsAsync<SqlException>(() =>
+            InsertModuleAsync(owner, ResidApp.Domain.Platform.PlatformCenter.Id, 1, true, operatorScope.AccountId, "PLATAFORMA"));
+        await InsertModuleAsync(owner, centerId, 1, true, operatorScope.AccountId, "PLATAFORMA");
+        var twoDisables = await InsertThenDisableTwiceAsync(owner, centerId, operatorScope.AccountId);
+        Assert.Contains("CENTER_MODULE_SEQUENCE_INVALID", startsWithDisable.Message);
+        Assert.Contains("CENTER_MODULE_SEQUENCE_INVALID", gap.Message);
+        Assert.Contains("CENTER_MODULE_CENTER_INVALID", reserved.Message);
+        Assert.Contains("CENTER_MODULE_SEQUENCE_INVALID", twoDisables.Message);
+    }
+
+    private static async Task<SqlException> InsertThenDisableTwiceAsync(SqlConnection owner, Guid centerId, Guid operatorAccountId)
+    {
+        await InsertModuleAsync(owner, centerId, 2, false, operatorAccountId, "PLATAFORMA");
+        return await Assert.ThrowsAsync<SqlException>(() => InsertModuleAsync(owner, centerId, 3, false, operatorAccountId, "PLATAFORMA"));
+    }
+
     private static readonly string[] StructureTables = ["unidades", "ambitos_perfil_unidad", "administraciones_principales_cambios", "logos_centro"];
 
     [Fact]

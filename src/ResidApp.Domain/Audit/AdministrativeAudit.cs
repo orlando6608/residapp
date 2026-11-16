@@ -49,6 +49,8 @@ public static class AdministrativeAudit
         ("CENTER_RENAME", AuditCategory.Estructura),
         ("CENTER_LOGO_SET", AuditCategory.Estructura),
         ("CENTER_LOGO_REMOVE", AuditCategory.Estructura),
+        ("CENTER_MODULE_ENABLE", AuditCategory.Estructura),
+        ("CENTER_MODULE_DISABLE", AuditCategory.Estructura),
         ("UNIT_CREATE", AuditCategory.Estructura),
         ("UNIT_RENAME", AuditCategory.Estructura),
         ("UNIT_ACTIVATE", AuditCategory.Estructura),

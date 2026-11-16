@@ -102,6 +102,10 @@ public sealed class CoberturaRlsTests
             ["logos_centro|FILTER|"] = "fn_centro_del_ambito",
             ["logos_centro|BLOCK|AFTER INSERT"] = "fn_estructura_escribe",
             ["logos_centro|BLOCK|AFTER UPDATE"] = "fn_centro_del_ambito",
+            // Script 0098: Plataforma lee e inserta módulos de cualquier centro (nunca UPDATE ni DELETE); el centro solo ve los suyos.
+            ["modulos_centro|FILTER|"] = "fn_centro_o_plataforma",
+            ["modulos_centro|BLOCK|AFTER INSERT"] = "fn_estructura_escribe",
+            ["modulos_centro|BLOCK|AFTER UPDATE"] = "fn_centro_del_ambito",
         };
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var rows = (await connection.QueryAsync<(string Table, string Type, string Operation, string Definition)>("""

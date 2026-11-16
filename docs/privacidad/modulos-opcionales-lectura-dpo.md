@@ -1,5 +1,7 @@
 # Módulos opcionales por centro (futuro ADR 0015): lectura de protección de datos
 
+> **Nota (2026-11-16):** el apartado 3 conserva la opinión de entonces (que el centro apague él solo y Plataforma tenga un apagado de emergencia). Orlando decidió lo contrario (solo Plataforma apaga, a petición del centro, sin apagado global) y la segunda lectura del DPO para el PR 1 lo da por superado, con condiciones: ADR 0015 y `antes-de-datos-reales.md`, apartado 13.
+
 **BORRADOR. Lo valida una persona (DPO real o abogado) antes de usarlo.** Fecha: 2026-11-09. Segunda lectura experta del agente `dpo-residapp`, no un dictamen. Es una lectura previa al ADR 0015: no modifica código, ADR ni otros documentos.
 
 Etiquetas: **[Hecho]** verificado en el repositorio o en una fuente oficial (con archivo y línea o URL); **[Suposición]** mía; **[Opinión]** mi criterio, discutible; **[Decidir]** lo fija Orlando, CJ, el DPO real o un abogado; **[A verificar]** no lo he podido confirmar en fuente oficial. No incluyo datos reales, secretos ni claves.

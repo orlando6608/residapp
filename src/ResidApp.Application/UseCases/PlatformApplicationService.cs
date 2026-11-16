@@ -2,6 +2,7 @@ using ResidApp.Application.Errors;
 using ResidApp.Application.Intercambio;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Modules;
 using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
@@ -25,6 +26,15 @@ public sealed record PlatformAccountCommand(Guid AmbitoPerfilId, CenterId Centro
 public sealed record AddUnitToAdministrationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, Guid AmbitoDestinoId, UnitId UnidadId);
 
+/// <summary>
+/// Alta, renovación o baja de un módulo opcional en un centro (ADR 0015). Siempre lleva cuándo, cómo y con qué referencia pidió el centro el cambio (lo que prueba el plazo de apagado
+/// del anexo). Al activar: vigencia, referencia y versión del anexo y condiciones de privacidad comprobadas; al apagar: el motivo.
+/// </summary>
+public sealed record ChangeCenterModuleCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, string? ModuloCodigo, bool Activar, DateOnly? VigenteDesde, DateOnly? VigenteHasta,
+    string? ReferenciaAnexo, string? VersionAnexo, bool CondicionesComprobadas, ModuleDisableReason? MotivoBaja, DateTimeOffset? SolicitudRecibidaEn,
+    ModuleRequestChannel? Canal, string? ReferenciaSolicitud);
+
 public sealed record CreateCenterCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? CodigoCentro, string? NombreCentro, string? CodigoUnidad,
     string? NombreUnidad, string? IdentificadorAdministrador, string? NombreAdministrador, byte[]? Logo = null);
@@ -36,8 +46,21 @@ public sealed record CreateCenterCommand(
 /// </summary>
 public sealed class PlatformApplicationService(
     IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, IPlatformCenterDirectory directory,
-    IPlatformCenterRepository centers, IAccessInvitationRepository invitations, TimeProvider clock)
+    IPlatformCenterRepository centers, IAccessInvitationRepository invitations, ICenterModuleRepository modules, TimeProvider clock)
 {
+    /// <summary>ADR 0015: solo Plataforma enciende y apaga un módulo de un centro, a petición del centro. La fila y su auditoría (sin datos) se escriben en una transacción.</summary>
+    public Task<ApplicationResult<bool>> ChangeCenterModuleAsync(ChangeCenterModuleCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var access = await AccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            var now = clock.GetUtcNow();
+            var change = NewCenterModuleChangeRules.Validate(
+                command.CentroDestinoId, PlatformCenter.Id, command.ModuloCodigo, command.Activar, command.VigenteDesde, command.VigenteHasta, command.ReferenciaAnexo,
+                command.VersionAnexo, command.CondicionesComprobadas, command.MotivoBaja, command.SolicitudRecibidaEn, command.Canal, command.ReferenciaSolicitud, now);
+            await modules.AppendAsync(access, change, DateOnly.FromDateTime(now.UtcDateTime), ct);
+            return true;
+        });
+
     /// <summary>ADR 0007, I2: el soporte de la plataforma entrega la invitación de acceso (o de recuperación) de una cuenta de
     /// Administración del centro: la del primer administrador, o la de uno que no tiene otra Administración que se la dé.</summary>
     public Task<ApplicationResult<IssuedInvitation>> IssueAdministratorInvitationAsync(
