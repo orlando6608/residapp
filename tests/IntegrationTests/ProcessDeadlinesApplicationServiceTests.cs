@@ -69,6 +69,37 @@ public class ProcessDeadlinesApplicationServiceTests
         Assert.Equal(new MilestoneDeadline(TimeSpan.FromHours(12), TimeSpan.FromMinutes(30)), latest.Previous);
     }
 
+    /// <summary>CJ, 3.1 de medicina-alergias-y-plazos-cj: Calidad de proceso lee del historial el plazo que valía en cada momento, del más antiguo al
+    /// más reciente y sin decir quién lo cambió; y cada centro lee solo el suyo.</summary>
+    [Fact]
+    public async Task ListChanges_DaLosCambiosDelCentroEnOrden_SinDecirQuienLosHizo_YSoloLosDelCentro()
+    {
+        var direccion = await DireccionAsync();
+        var other = await DireccionAsync();
+        var service = BuildService(direccion.ExternalSubject);
+        var repository = new SqlProcessDeadlineRepository(TestDatabase.ConnectionFactory);
+        Assert.Empty(await repository.ListChangesAsync(direccion.CenterId));
+
+        Assert.True((await service.SaveAsync(Save(direccion, 0, new ProcessDeadlineCommandItem(ProcessMilestone.ValoracionMedica, 720, 30)))).Ok);
+        await Task.Delay(20);
+        Assert.True((await service.SaveAsync(Save(direccion, 1, new ProcessDeadlineCommandItem(ProcessMilestone.ValoracionMedica, 360, null)))).Ok);
+
+        var changes = await repository.ListChangesAsync(direccion.CenterId);
+
+        Assert.Equal(2, changes.Count);
+        Assert.True(changes[0].ChangedAt < changes[1].ChangedAt);
+        Assert.Equal(new MilestoneDeadline(TimeSpan.FromHours(24), TimeSpan.FromMinutes(30)), changes[0].Previous);
+        Assert.Equal(new MilestoneDeadline(TimeSpan.FromHours(12), TimeSpan.FromMinutes(30)), changes[0].New);
+        Assert.Equal(new MilestoneDeadline(TimeSpan.FromHours(6), null), changes[1].New);
+        Assert.All(changes, c => Assert.Equal(TimeSpan.Zero, c.ChangedAt.Offset));
+        Assert.Empty(await repository.ListChangesAsync(other.CenterId));
+        // Con esos cambios, un caso de hace una hora valía 24 h y uno de dentro de un rato valdrá 6 h.
+        var now = DateTimeOffset.UtcNow;
+        var current = (await repository.GetEffectiveAsync(direccion.CenterId))[ProcessMilestone.ValoracionMedica];
+        Assert.Equal(TimeSpan.FromHours(24), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, now.AddHours(-1), current, changes).Normal);
+        Assert.Equal(TimeSpan.FromHours(6), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, now.AddHours(1), current, changes).Normal);
+    }
+
     [Fact]
     public async Task UnaVersionAntigua_EsConflicto_YUnPlazoImposible_EsEntradaInvalida()
     {

@@ -108,6 +108,186 @@ public class ProcessMilestoneRulesTests
     }
 }
 
+/// <summary>CJ, 3.1 de medicina-alergias-y-plazos-cj: cada caso se mide con el plazo que valía cuando empezó.</summary>
+public class ProcessMilestoneDeadlineAtTests
+{
+    private static readonly DateTimeOffset T0 = new(2026, 11, 1, 8, 0, 0, TimeSpan.Zero);
+    private static MilestoneDeadline D(int normalMinutes, int? priorityMinutes = 30) =>
+        new(TimeSpan.FromMinutes(normalMinutes), priorityMinutes is { } p ? TimeSpan.FromMinutes(p) : null);
+
+    private static MilestoneDeadlineChange Change(ProcessMilestone milestone, DateTimeOffset at, MilestoneDeadline previous, MilestoneDeadline @new) =>
+        new(milestone, previous, @new, at);
+
+    [Fact]
+    public void SinCambios_ValeElPlazoDeHoy()
+    {
+        Assert.Equal(D(60), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0, D(60), []));
+    }
+
+    [Fact]
+    public void UnCaso_ConUnCambioDespues_UsaElPlazoDeAntesDelCambio_YUnoPosterior_ElNuevo()
+    {
+        var changes = new[] { Change(ProcessMilestone.ValoracionMedica, T0, D(1440), D(720)) };
+
+        Assert.Equal(D(1440), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0.AddMinutes(-1), D(720), changes));
+        Assert.Equal(D(720), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0.AddMinutes(1), D(720), changes));
+    }
+
+    [Fact]
+    public void UnCambioHechoJustoCuandoEmpezoElCaso_YaValeParaEseCaso()
+    {
+        var changes = new[] { Change(ProcessMilestone.ValoracionMedica, T0, D(1440), D(720)) };
+
+        Assert.Equal(D(720), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0, D(720), changes));
+    }
+
+    [Fact]
+    public void ConVariosCambios_MandaElUltimoAnteriorAlCaso_AunqueElDeHoyEsteMasAdelante()
+    {
+        var changes = new[]
+        {
+            Change(ProcessMilestone.ValoracionMedica, T0, D(1440), D(720)),
+            Change(ProcessMilestone.ValoracionMedica, T0.AddDays(10), D(720), D(360)),
+            Change(ProcessMilestone.ValoracionMedica, T0.AddDays(20), D(360), D(120)),
+        };
+
+        Assert.Equal(D(1440), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0.AddDays(-5), D(120), changes));
+        Assert.Equal(D(720), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0.AddDays(5), D(120), changes));
+        Assert.Equal(D(360), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0.AddDays(15), D(120), changes));
+        Assert.Equal(D(120), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0.AddDays(25), D(120), changes));
+    }
+
+    [Fact]
+    public void LosCambiosDeOtroHito_NoCuentan()
+    {
+        var changes = new[] { Change(ProcessMilestone.LlamadaFamilia, T0, D(60), D(10)) };
+
+        Assert.Equal(D(1440), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0.AddDays(-1), D(1440), changes));
+        Assert.Equal(D(1440), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0.AddDays(1), D(1440), changes));
+    }
+
+    [Fact]
+    public void ConDosCambiosEnElMismoInstante_MandaElUltimoDeLaLista()
+    {
+        var changes = new[]
+        {
+            Change(ProcessMilestone.ValoracionMedica, T0, D(1440), D(720)),
+            Change(ProcessMilestone.ValoracionMedica, T0, D(720), D(360)),
+        };
+
+        Assert.Equal(D(360), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0.AddMinutes(1), D(360), changes));
+        Assert.Equal(D(1440), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.ValoracionMedica, T0.AddMinutes(-1), D(360), changes));
+    }
+
+    [Fact]
+    public void UnPlazoQueDejaDeMedirseYVuelve_NoMideLosCasosDeEntremedias_YSiLosDeAntesYDespues()
+    {
+        var off = new MilestoneDeadline(null, null);
+        var changes = new[]
+        {
+            Change(ProcessMilestone.LlamadaFamilia, T0.AddDays(1), D(60), off),
+            Change(ProcessMilestone.LlamadaFamilia, T0.AddDays(3), off, D(45)),
+        };
+
+        Assert.Equal(D(60), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.LlamadaFamilia, T0, D(45), changes));
+        Assert.Equal(off, ProcessMilestoneRules.DeadlineAt(ProcessMilestone.LlamadaFamilia, T0.AddDays(2), D(45), changes));
+        Assert.Equal(D(45), ProcessMilestoneRules.DeadlineAt(ProcessMilestone.LlamadaFamilia, T0.AddDays(4), D(45), changes));
+    }
+
+    [Fact]
+    public void Build_UnHitoSinHacerSeMideConElPlazoDeCuandoEmpezo_AunqueHoyValgaOtro()
+    {
+        var unit = UnitId.From(Guid.NewGuid());
+        var start = T0.UtcDateTime;
+        var now = start.AddHours(3);
+        MilestoneFact Pending(ProcessMilestone milestone, bool priority = false) =>
+            new(milestone, Guid.NewGuid(), ResidentId.From(Guid.NewGuid()), "", unit, "Uno", priority, start, null, false, SystemProfile.Enfermeria);
+        // Valoración de Enfermería: de 8 h a 1 h (hoy ya vencería) y Recepción de la transferencia: de 1 h a 8 h (hoy no vencería), ambas
+        // cambiadas un día después de empezar el caso.
+        var changes = new[]
+        {
+            Change(ProcessMilestone.ValoracionEnfermeria, T0.AddDays(1), D(480), D(60)),
+            Change(ProcessMilestone.RecepcionTransferencia, T0.AddDays(1), D(60), D(480)),
+        };
+        var today = new Dictionary<ProcessMilestone, MilestoneDeadline>(ProcessMilestoneRules.Defaults)
+        {
+            [ProcessMilestone.ValoracionEnfermeria] = D(60),
+            [ProcessMilestone.RecepcionTransferencia] = D(480),
+        };
+        var facts = new[] { Pending(ProcessMilestone.ValoracionEnfermeria), Pending(ProcessMilestone.RecepcionTransferencia) };
+
+        var perCase = ProcessQualityRules.Build(facts, today, [(unit, "Uno")], new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 1), now, changes);
+        var todayOnly = ProcessQualityRules.Build(facts, today, [(unit, "Uno")], new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 1), now);
+
+        Assert.Equal(new MilestoneCount(1, 0, 0), perCase.Total[ProcessMilestone.ValoracionEnfermeria]);          // con 8 h, a las 3 h aún en plazo
+        Assert.Equal(new MilestoneCount(1, 1, 0), todayOnly.Total[ProcessMilestone.ValoracionEnfermeria]);
+        Assert.Equal(new MilestoneCount(1, 1, 0), perCase.Total[ProcessMilestone.RecepcionTransferencia]);        // con 1 h, a las 3 h vencido
+        Assert.Equal(new MilestoneCount(1, 0, 0), todayOnly.Total[ProcessMilestone.RecepcionTransferencia]);
+    }
+
+    [Fact]
+    public void Build_ElPlazoPrioritarioTambienSeMideConElDeCuandoEmpezo()
+    {
+        var unit = UnitId.From(Guid.NewGuid());
+        var start = T0.UtcDateTime;
+        // El plazo prioritario de la valoración médica pasó de 30 min a 10 h un día después; el normal no cambió.
+        var changes = new[] { Change(ProcessMilestone.ValoracionMedica, T0.AddDays(1), D(1440, 30), D(1440, 600)) };
+        var today = new Dictionary<ProcessMilestone, MilestoneDeadline>(ProcessMilestoneRules.Defaults) { [ProcessMilestone.ValoracionMedica] = D(1440, 600) };
+        var facts = new[]
+        {
+            new MilestoneFact(ProcessMilestone.ValoracionMedica, Guid.NewGuid(), ResidentId.From(Guid.NewGuid()), "", unit, "Uno", true,
+                start, start.AddHours(2), false, SystemProfile.Medicina),
+        };
+
+        var perCase = ProcessQualityRules.Build(facts, today, [(unit, "Uno")], new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 1), start.AddDays(2), changes);
+
+        Assert.Equal(new MilestoneCount(1, 1, 0), perCase.Total[ProcessMilestone.ValoracionMedica]);   // hecho a las 2 h con 30 min: tarde
+    }
+
+    [Fact]
+    public void Build_MideCadaCasoConSuPlazo_YUnPlazoQueDejoDeMedirseNoQuitaLosCasosAnteriores()
+    {
+        var unit = UnitId.From(Guid.NewGuid());
+        var start = T0.UtcDateTime;
+        // El plazo de la valoración médica baja de 24 h a 1 h dos días después; el de la llamada a la familia deja de medirse ese mismo día.
+        var changes = new[]
+        {
+            Change(ProcessMilestone.ValoracionMedica, T0.AddDays(2), ProcessMilestoneRules.Defaults[ProcessMilestone.ValoracionMedica], D(60)),
+            Change(ProcessMilestone.LlamadaFamilia, T0.AddDays(2), ProcessMilestoneRules.Defaults[ProcessMilestone.LlamadaFamilia], new MilestoneDeadline(null, null)),
+        };
+        var today = new Dictionary<ProcessMilestone, MilestoneDeadline>(ProcessMilestoneRules.Defaults)
+        {
+            [ProcessMilestone.ValoracionMedica] = D(60),
+            [ProcessMilestone.LlamadaFamilia] = new(null, null),
+        };
+        MilestoneFact Fact(ProcessMilestone milestone, DateTime at, DateTime? end) =>
+            new(milestone, Guid.NewGuid(), ResidentId.From(Guid.NewGuid()), "", unit, "Uno", false, at, end, false, SystemProfile.Medicina);
+        var facts = new[]
+        {
+            // Empezó antes del cambio y se hizo a las 5 h: con 24 h estaba en plazo (con el de hoy, 1 h, saldría fuera).
+            Fact(ProcessMilestone.ValoracionMedica, start, start.AddHours(5)),
+            // Empezó después del cambio y se hizo a las 5 h: con 1 h, fuera de plazo.
+            Fact(ProcessMilestone.ValoracionMedica, start.AddDays(3), start.AddDays(3).AddHours(5)),
+            // Llamada anterior al cambio: sigue midiéndose; la posterior ya no.
+            Fact(ProcessMilestone.LlamadaFamilia, start, start.AddMinutes(10)),
+            Fact(ProcessMilestone.LlamadaFamilia, start.AddDays(3), start.AddDays(3).AddMinutes(10)),
+        };
+        var now = start.AddDays(5);
+        var units = new[] { (unit, "Uno") };
+        var from = new DateOnly(2026, 11, 1);
+        var to = new DateOnly(2026, 11, 8);
+
+        var perCase = ProcessQualityRules.Build(facts, today, units, from, to, now, changes);
+        var todayOnly = ProcessQualityRules.Build(facts, today, units, from, to, now);
+
+        Assert.Equal(new MilestoneCount(2, 1, 0), perCase.Total[ProcessMilestone.ValoracionMedica]);
+        Assert.Equal(new MilestoneCount(2, 2, 0), todayOnly.Total[ProcessMilestone.ValoracionMedica]);
+        Assert.Equal(new MilestoneCount(1, 0, 0), perCase.Total[ProcessMilestone.LlamadaFamilia]);
+        Assert.Equal(new MilestoneCount(0, 0, 0), todayOnly.Total[ProcessMilestone.LlamadaFamilia]);
+        Assert.Equal(today, perCase.Deadlines);   // la tabla enseña los plazos de hoy
+    }
+}
+
 public class ProcessMilestoneDeadlineValidationTests
 {
     [Fact]

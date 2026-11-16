@@ -1107,12 +1107,15 @@
         minutos (1 h = 60, 8 h = 480), con un plazo para el evento normal y otro para el prioritario; vacío significa que ese plazo no se mide.
         «Ver los plazos sugeridos» trae los de partida sin guardarlos. Guardar exige que nadie más haya cambiado los plazos mientras tanto, y cada
         cambio queda en el historial de la pantalla y en la auditoría. Los plazos solo sirven para medir y avisar: no cambian ninguna categoría ni
-        umbral clínico.
+        umbral clínico. Un cambio vale para los hitos que empiecen después: los que ya habían empezado se siguen midiendo con el plazo que tenían.
     </p>
     <p>
         Arriba ves, por hito, cuántos de los medidos están <strong>fuera de plazo</strong> (hechos tarde, o sin hacer con el plazo ya pasado) y cuántos
         <strong>a punto de vencer</strong> (sin hacer, en el último cuarto del plazo); debajo, lo mismo por unidad. No hay lista de episodios ni de residentes: los casos concretos los ven Enfermería y Medicina en su Inicio.
-        Un hito cuenta en el periodo en que empezó. No se mide un hito sin
+        Un hito cuenta en el periodo en que empezó y se mide con el plazo que valía cuando empezó; las columnas de plazo enseñan los de hoy. Si los
+        plazos cambiaron dentro del periodo, arriba sale la nota <strong>Los plazos cambiaron en este periodo.</strong> con una línea por cambio (fecha,
+        hito y plazo de tanto a tanto, sin decir quién lo cambió): avisa de que las cifras de antes y de después del cambio no son del todo comparables.
+        No se mide un hito sin
         hacer de un episodio ya cerrado, ni la recepción de transferencias de Medicina (allí es opcional). Abrir esta pantalla queda en la auditoría (quién y cuándo, sin ningún residente); cambiar el periodo no añade otra anotación.
     </p>
     <p class="mb-0">
@@ -1120,7 +1123,7 @@
         están a punto de pasar de plazo o ya lo han pasado sin hacerse, con el residente (enlazado a su ficha), la unidad, el hito y la hora de
         vencimiento; lo vencido sale primero y en rojo. A Enfermería le corresponden la valoración tras un cambio de Auxiliar, la recepción de una
         transferencia, y la lectura y realización de las indicaciones; a Medicina, la valoración médica; el informe de derivación y la llamada a la
-        familia, al perfil que activó el protocolo urgente. El aviso mira los últimos 30 días y desaparece al cumplir el hito.
+        familia, al perfil que activó el protocolo urgente. El aviso mira los últimos 30 días, usa siempre los plazos de hoy y desaparece al cumplir el hito.
     </p>
 </section>
 

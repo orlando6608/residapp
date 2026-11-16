@@ -34,4 +34,8 @@ public interface IProcessDeadlineRepository
     /// <summary>Los plazos que rigen hoy en el centro, para medir los hitos y avisar. Sin permiso: los usan Dirección, Enfermería y Medicina
     /// al medir y avisar; quien llama ya ha comprobado su ámbito.</summary>
     Task<IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline>> GetEffectiveAsync(CenterId centerId, CancellationToken ct = default);
+
+    /// <summary>Todos los cambios de plazos del centro, del más antiguo al más reciente y sin decir quién los hizo, para medir cada caso con el
+    /// plazo que valía cuando empezó (Calidad de proceso). Sin permiso, como GetEffectiveAsync: quien llama ya ha comprobado su ámbito.</summary>
+    Task<IReadOnlyList<MilestoneDeadlineChange>> ListChangesAsync(CenterId centerId, CancellationToken ct = default);
 }

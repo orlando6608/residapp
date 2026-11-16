@@ -689,6 +689,41 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", WebUtility.HtmlDecode(invalid));
     }
 
+    /// <summary>CJ, 3.1 de medicina-alergias-y-plazos-cj: al cambiar un plazo, Calidad de proceso avisa en una nota (fecha, hito y plazo antes y después,
+    /// sin decir quién) mientras el cambio cae dentro del periodo que se mira; sin cambios, no hay nota.</summary>
+    [Fact]
+    public async Task Calidad_AvisaDeUnCambioDePlazosDentroDelPeriodo_SinDecirQuienLoHizo_ConLaAppEntera()
+    {
+        var direccion = await SeedAdministratorAsync("DIRECCION_CLINICA", "PROCESS_DEADLINES_MANAGE,QUALITY_REVIEW");
+        var client = _factory.CreateClient();
+        (await SesionTests.PostLoginAsync(client, direccion.ExternalSubject)).EnsureSuccessStatusCode();
+
+        var before = WebUtility.HtmlDecode(await client.GetStringAsync("/Direccion/Calidad"));
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync("/PlazosProceso"));
+        (await client.PostAsync("/PlazosProceso", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["Form.Version"] = ExtractValue(page, "Form.Version"),
+            ["Form.Plazos[0].Hito"] = "ValoracionEnfermeria",
+            ["Form.Plazos[0].PlazoMinutos"] = "240",
+            ["Form.Plazos[0].PlazoPrioritarioMinutos"] = "20",
+        }))).EnsureSuccessStatusCode();
+        var inPeriod = WebUtility.HtmlDecode(await client.GetStringAsync("/Direccion/Calidad"));
+        var otherPeriod = WebUtility.HtmlDecode(await client.GetStringAsync("/Direccion/Calidad?desde=2020-01-01&hasta=2020-01-31&aplicado=true"));
+
+        Assert.DoesNotContain("Los plazos cambiaron en este periodo", before);
+        Assert.Contains("Los plazos cambiaron en este periodo", inPeriod);
+        Assert.Matches(@"\d{2}/\d{2}/\d{4}: Valoración de Enfermería, plazo de 8 h a 4 h; plazo prioritario de 30 min a 20 min\.", inPeriod);
+        Assert.Contains("Cada hito se mide con el plazo que valía cuando empezó", inPeriod);
+        var noteStart = inPeriod.IndexOf("id=\"aviso-cambio-plazos\"", StringComparison.Ordinal);
+        var note = inPeriod[noteStart..inPeriod.IndexOf("</div>", noteStart, StringComparison.Ordinal)];
+        Assert.DoesNotContain("Dirección Clínica", note);
+        Assert.DoesNotContain(" · ", note);   // la línea del historial lleva «fecha · perfil»; esta nota no dice quién
+        Assert.DoesNotContain("Los plazos cambiaron en este periodo", otherPeriod);
+        // Aunque no haya nota (periodo sin cambios), la pantalla dice siempre que las columnas de plazo son las de hoy.
+        Assert.Contains("las columnas de plazo enseñan los plazos de hoy", otherPeriod);
+    }
+
     [Fact]
     public async Task IndicadoresYCalidad_SinElPermisoNoSeAbrenNiSeEnlazan_ConElPermisoSi_ConLaAppEntera()
     {

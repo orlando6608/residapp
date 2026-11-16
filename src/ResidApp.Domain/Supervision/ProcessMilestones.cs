@@ -56,8 +56,44 @@ public sealed record MilestoneDeadline(TimeSpan? Normal, TimeSpan? Priority)
     public TimeSpan? For(bool priority) => priority ? Priority : Normal;
 }
 
+/// <summary>Un cambio de los plazos de un hito del centro: el plazo antes y después y cuándo se cambió (UTC). No dice quién lo hizo: lo usa Calidad
+/// de proceso, que nunca muestra personas.</summary>
+public sealed record MilestoneDeadlineChange(
+    ProcessMilestone Milestone, MilestoneDeadline Previous, MilestoneDeadline New, DateTimeOffset ChangedAt);
+
 public static class ProcessMilestoneRules
 {
+    /// <summary>El plazo que valía para un hito en el instante at (CJ, 3.1 de medicina-alergias-y-plazos-cj): el que dejó el último cambio
+    /// hasta entonces; si todavía no había cambiado, el de antes del primer cambio posterior; si nunca cambió, el vigente (current). Un cambio
+    /// hecho justo en at ya vale. Con varios cambios en el mismo instante manda el último de la lista, que llega ordenada por fecha.</summary>
+    public static MilestoneDeadline DeadlineAt(
+        ProcessMilestone milestone, DateTimeOffset at, MilestoneDeadline current, IReadOnlyList<MilestoneDeadlineChange> changes)
+    {
+        MilestoneDeadlineChange? before = null;
+        MilestoneDeadlineChange? after = null;
+        foreach (var change in changes)
+        {
+            if (change.Milestone != milestone)
+            {
+                continue;
+            }
+
+            if (change.ChangedAt <= at)
+            {
+                if (before is null || change.ChangedAt >= before.ChangedAt)
+                {
+                    before = change;
+                }
+            }
+            else if (after is null || change.ChangedAt < after.ChangedAt)
+            {
+                after = change;
+            }
+        }
+
+        return before?.New ?? after?.Previous ?? current;
+    }
+
     /// <summary>Un hito pendiente pasa a «a punto de vencer» cuando le queda esta parte del plazo o menos.</summary>
     public const double WarningFraction = 0.25;
 

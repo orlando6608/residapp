@@ -407,6 +407,41 @@ public class DireccionSupervisionTests
         Assert.Equal(1, after[ProcessMilestone.InformeDerivacion].Measured);
     }
 
+    /// <summary>CJ, 3.1 de medicina-alergias-y-plazos-cj: un hito que empezó antes de un cambio de plazos se sigue midiendo con el plazo de entonces
+    /// (aquí, el informe de derivación deja de medirse después de empezar y su caso no desaparece de Calidad), y el informe lleva los cambios
+    /// del periodo, sin decir quién los hizo.</summary>
+    [Fact]
+    public async Task Calidad_MideCadaCasoConElPlazoDeCuandoEmpezo_YLlevaLosCambiosDelPeriodo()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var manager = await SeedFixture.AddProfileToCenterAsync(
+            SystemProfile.DireccionClinica, direccion.CenterId, direccion.UnitId, [ProfilePermissions.ProcessDeadlinesManage]);
+        var service = BuildService(enfermera.ExternalSubject);
+        var urgent = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
+        Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, urgent, await StartAndSaveAsync(enfermera, urgent)))).Ok);
+        var dir = BuildDireccion(direccion.ExternalSubject);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var query = new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today);
+
+        var before = (await dir.ReadProcessQualityAsync(query)).Value!;
+        await Task.Delay(50);
+        var saved = await new SqlProcessDeadlineRepository(TestDatabase.ConnectionFactory).SaveAsync(new SaveProcessDeadlinesInput(
+            new ProcessDeadlinesAccess(manager.ProfileScopeId, manager.AccountId, SystemProfile.DireccionClinica, manager.CenterId), 0,
+            new Dictionary<ProcessMilestone, MilestoneDeadline> { [ProcessMilestone.InformeDerivacion] = new(null, null) }));
+        var after = (await dir.ReadProcessQualityAsync(query)).Value!;
+
+        Assert.Equal(1, saved);
+        Assert.Empty(before.Changes!);
+        Assert.True(before.Total[ProcessMilestone.InformeDerivacion].Measured > 0);
+        // El caso empezó antes del cambio: con el plazo de hoy («no se mide») desaparecería; con el de entonces (30 min) sigue contando.
+        Assert.Equal(before.Total[ProcessMilestone.InformeDerivacion], after.Total[ProcessMilestone.InformeDerivacion]);
+        Assert.Equal(new MilestoneDeadline(null, null), after.Deadlines[ProcessMilestone.InformeDerivacion]);
+        var change = Assert.Single(after.Changes!);
+        Assert.Equal(ProcessMilestone.InformeDerivacion, change.Milestone);
+        Assert.Equal(TimeSpan.FromMinutes(30), change.Previous.Normal);
+        Assert.Null(change.New.Normal);
+    }
+
     /// <summary>CJ, 2.1 de la tercera tanda (0076): Indicadores y Calidad de proceso piden el permiso QUALITY_REVIEW, en la aplicación y en la
     /// propia consulta de SQL; revocarlo los corta; y la base solo lo admite en Dirección Clínica.</summary>
     [Fact]

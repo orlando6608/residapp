@@ -195,6 +195,26 @@ public static class ProcessMilestoneDisplay
         var minutes = value.Minutes;
         return hours == 0 ? $"{minutes} min" : minutes == 0 ? $"{hours} h" : $"{hours} h {minutes} min";
     }
+
+    /// <summary>Lo que cambió en un hito, en una frase: «plazo de 24 h a 12 h» y, si también cambió, «plazo prioritario de 30 min a 15 min».
+    /// Un plazo sin medir se dice «no se mide». No dice quién lo cambió.</summary>
+    public static string ChangeSummary(ResidApp.Domain.Supervision.MilestoneDeadlineChange change)
+    {
+        static string Plain(TimeSpan? term) => term is null ? "«no se mide»" : Term(term);
+
+        var parts = new List<string>();
+        if (change.Previous.Normal != change.New.Normal)
+        {
+            parts.Add($"plazo de {Plain(change.Previous.Normal)} a {Plain(change.New.Normal)}");
+        }
+
+        if (change.Previous.Priority != change.New.Priority)
+        {
+            parts.Add($"plazo prioritario de {Plain(change.Previous.Priority)} a {Plain(change.New.Priority)}");
+        }
+
+        return string.Join("; ", parts);
+    }
 }
 
 /// <summary>DIR-11: los avisos de hitos a punto de vencer o vencidos que ve Enfermería o Medicina en su inicio. Controller es el de su ficha

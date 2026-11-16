@@ -276,7 +276,7 @@
   .nota-ing p { margin: 0; white-space: pre-line; }
 </style>
 </head>
-<body data-doc="pruebas-4-direccion" data-version="2026-11-08">
+<body data-doc="pruebas-4-direccion" data-version="2026-11-16">
 
 <div class="page">
   <header>
@@ -508,8 +508,9 @@
         <ol class="pasos">
           <li>En Inicio de Dirección abre «Calidad de proceso». Cambia las fechas «Desde» y «Hasta» y pulsa «Aplicar».</li>
           <li>Mira por hito y por unidad cuántos están fuera de plazo y a punto de vencer. Fíjate en que no hay lista de episodios ni nombres de residentes.</li>
+          <li>Si arriba sale la nota «Los plazos cambiaron en este periodo.», léela: es lo esperado cuando en esas fechas se cambió un plazo (por ejemplo, en la prueba 9 de esta guía o en la 13 de la guía 2), no un fallo.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Mide siete hitos con los plazos vigentes (valoración de Enfermería, valoración médica, recepción de la transferencia, informe de derivación, primera llamada a la familia, lectura y realización de la indicación), por unidad y periodo, solo cifras: nunca por profesional ni por residente, y sin contenido clínico. Abrir la pantalla queda registrado (quién y cuándo, sin ningún residente). «Fuera de plazo» son los hechos tarde y los que siguen sin hacer con el plazo ya pasado; «a punto de vencer», los que están en el último cuarto del plazo. No se mide un hito sin hacer de un episodio ya cerrado. Por ejemplo, una valoración de Enfermería con plazo de 8 h, hecha a las 9 h, cuenta como fuera de plazo; si a las 9 h sigue sin hacer, también.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Mide siete hitos, cada uno con el plazo que valía cuando empezó (las columnas de plazo enseñan los de hoy): valoración de Enfermería, valoración médica, recepción de la transferencia, informe de derivación, primera llamada a la familia, lectura y realización de la indicación; por unidad y periodo, solo cifras: nunca por profesional ni por residente, y sin contenido clínico. Abrir la pantalla queda registrado (quién y cuándo, sin ningún residente). «Fuera de plazo» son los hechos tarde y los que siguen sin hacer con el plazo ya pasado; «a punto de vencer», los que están en el último cuarto del plazo. No se mide un hito sin hacer de un episodio ya cerrado. Por ejemplo, una valoración de Enfermería con plazo de 8 h, hecha a las 9 h, cuenta como fuera de plazo; si a las 9 h sigue sin hacer, también. Si dentro del periodo se cambió algún plazo, arriba sale la nota «Los plazos cambiaron en este periodo.» con una línea por cambio (fecha, hito y plazo de tanto a tanto) y sin decir quién lo cambió; avisa de que las cifras de antes y de después no son del todo comparables. Sin cambios en el periodo, no sale.</div>
         <fieldset class="choices" aria-labelledby="t-8">
           <label class="choice"><input type="radio" name="r-8" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-8" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -525,7 +526,7 @@
           <li>Abre «Plazos de los hitos del proceso» desde la pantalla de Inicio, o pulsa «Cambiar los plazos del centro» en «Calidad de proceso». Cambia el plazo de la valoración de Enfermería (por ejemplo, 240 minutos) y pulsa «Guardar».</li>
           <li>Pulsa «Ver los plazos sugeridos» y «Guardar» para volver a los de partida. Mira el historial de cambios.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Se escriben en minutos (1 h = 60, 8 h = 480), con un plazo para el evento normal y otro para el prioritario; vacío significa que ese plazo no se mide. Los valores de partida son los sugeridos. Cada cambio queda en el historial de la pantalla y en la auditoría; los plazos solo miden y avisan, no cambian ninguna categoría clínica. Solo la Dirección con el permiso puede hacerlo (almendros-direccion lo tiene).</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Se escriben en minutos (1 h = 60, 8 h = 480), con un plazo para el evento normal y otro para el prioritario; vacío significa que ese plazo no se mide. Los valores de partida son los sugeridos. Cada cambio queda en el historial de la pantalla y en la auditoría; los plazos solo miden y avisan, no cambian ninguna categoría clínica. Un plazo nuevo vale para los hitos que empiecen después; los anteriores conservan el que tenían, y Calidad de proceso lo avisa con una nota si el cambio cae dentro del periodo que se mira. Solo la Dirección con el permiso puede hacerlo (almendros-direccion lo tiene).</div>
         <fieldset class="choices" aria-labelledby="t-9">
           <label class="choice"><input type="radio" name="r-9" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-9" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
