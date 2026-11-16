@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Auxiliar;
@@ -16,7 +15,7 @@ namespace ResidApp.Web.Controllers;
 /// AUX-06 a AUX-12 (Registrar cambio) de los grupos A3+A4. Traduce a AuxiliarApplicationService; la
 /// autorización y las reglas de negocio no viven aquí.
 /// </summary>
-public sealed partial class AuxiliarController(AuxiliarApplicationService service, IOptions<IaOptions> ia) : Controller
+public sealed partial class AuxiliarController(AuxiliarApplicationService service) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {

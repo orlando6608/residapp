@@ -1,6 +1,6 @@
 # ADR 0015 — Módulos opcionales por centro: catálogo, activación por Plataforma y qué pasa al apagar uno
 
-Estado: **aceptada en lo técnico para los incrementos 1 a 4 y 6** (2026-11-16, tras la segunda lectura de `dpo-residapp`; el uso con un centro real queda condicionado a la lista de `docs/privacidad/antes-de-datos-reales.md`, apartado 13, como en el ADR 0016). Propuesta del 2026-11-09. El incremento 1 y el 2 están construidos (script `0098`); el resto, no.
+Estado: **aceptada en lo técnico para los incrementos 1 a 4 y 6** (2026-11-16, tras la segunda lectura de `dpo-residapp`; el uso con un centro real queda condicionado a la lista de `docs/privacidad/antes-de-datos-reales.md`, apartado 13, como en el ADR 0016). Propuesta del 2026-11-09. Los incrementos 1 y 2 (script `0098`) y el 3 (el dictado como módulo `DICTADO_VOZ`) están construidos; el 4 y el 6, no.
 **Decidido por Orlando el 2026-11-16:** (1) alcance: incrementos 1 a 4 y 6, **sin el 5** (pantalla de solo lectura de Administración); (2) **solo Plataforma enciende y apaga, a petición del centro** (el anexo fija en cuánto tiempo se atiende), sin apagado de emergencia global (para el dictado, quitar la clave `IA__Mistral__ApiKey` ya lo corta); (3) al vencer la vigencia el módulo **pasa solo a solo lectura**, calculado al consultar y sin tarea programada, y la pantalla de Plataforma enseñará los vencimientos próximos; (4) la **política de privacidad** se corrige con el incremento 6, no antes.
 **Decidido por Orlando el 2026-11-09:** habrá **varios módulos opcionales** que se ofrecen aparte y
 influyen en el precio; la **exportación pasa a ser base**; el **dashboard de Plataforma no es un módulo** (es una funcionalidad de Plataforma); si un centro deja de tener un módulo, lo ya
@@ -160,13 +160,13 @@ interruptor, sin que alguien tenga que acordarse de ponerlo en cada pantalla.
   sanitario si ayuda a decidir tratamientos (reglamento europeo 2017/745, **a verificar**); hay que fijar la fuente única de verdad frente a las indicaciones de Medicina y los sistemas oficiales; es
   incompatible con el dictado hasta que exista un ADR nuevo; la lista de fármacos revela diagnósticos y no debe verse en el Portal Familiar; y un listado desactualizado en solo lectura es un riesgo clínico (estas cautelas ya aplican a la ficha de medicación de la base).
 
-## Incrementos (1 y 2 hechos el 2026-11-16; 3, 4 y 6 aceptados, sin construir; 5 descartado)
+## Incrementos (1, 2 y 3 hechos el 2026-11-16; 4 y 6 aceptados, sin construir; 5 descartado)
 
 | # | Qué | Depende de |
 |---|-----|------------|
 | 1 | Catálogo en código con la ficha de privacidad versionada, tabla `modulos_centro` (0098, de solo añadir), consulta única y ajuste de desarrollo con todo activo. Sin pantalla: la activación es un caso de uso de Plataforma con su auditoría en la misma transacción, no SQL suelto (los módulos con tercero no se activan por SQL). El visto bueno del DPO real es condición para **usarlo con un centro real**, no para construirlo | — |
 | 2 | Atributo `[RequiereModulo]`, comprobación en servidor y en pantalla, estado de solo lectura y prueba guardia | 1 |
-| 3 | Mover el dictado al módulo `DICTADO_VOZ` (la clave de Mistral sigue como interruptor maestro) | 2 |
+| 3 | **Hecho (2026-11-16).** Mover el dictado al módulo `DICTADO_VOZ` (la clave de Mistral sigue como interruptor maestro) | 2 |
 | 4 | Pantalla de Plataforma para activar y desactivar módulos por centro, con auditoría sin datos | 2 |
 | 5 | ~~Pantalla de solo lectura para Administración~~ **descartado (Orlando, 2026-11-16)** | — |
 | 6 | Documentación de usuario y de Plataforma (manual, guía por perfil) y corrección de la política de privacidad | 3 y 4 |

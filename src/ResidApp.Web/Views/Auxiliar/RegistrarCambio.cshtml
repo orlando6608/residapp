@@ -2,10 +2,14 @@
 @using ResidApp.Shared
 @using ResidApp.Web.Models
 @model RegistrarCambioFormModel
-@inject Microsoft.Extensions.Options.IOptions<ResidApp.Infrastructure.IA.IaOptions> Ia
+@inject ResidApp.Application.UseCases.CenterModuleAccess Modulos
 @{
     ViewData["Title"] = "Registrar cambio";
     var resident = (ResidApp.Application.Ports.AssignedResidentSummary)ViewBag.Resident;
+    // Dictado por voz = módulo opcional DICTADO_VOZ (ADR 0015): se ofrece solo si el centro del ámbito lo tiene activo y la clave global del proveedor está puesta.
+    var activeScope = ResidApp.Web.Security.ActiveProfileScopeCookie.Read(Context.Request);
+    var dictadoActivo = activeScope is not null
+        && await Modulos.StateForScopeAsync(activeScope.ProfileScopeId, ResidApp.Domain.Modules.CenterModules.DictadoVoz) == ResidApp.Domain.Modules.ModuleState.Active;
 }
 
 <nav aria-label="breadcrumb">
@@ -31,7 +35,7 @@
     @* El aviso directo se escribe en la confirmación; viaja aquí para no perderlo al «Volver a editar». *@
     <input type="hidden" asp-for="AvisoDirecto" />
 
-    @if (Ia.Value.Activa)
+    @if (dictadoActivo)
     {
         @* Dictado por voz (ADR 0009 y 0011). Oculto hasta que dictado.js comprueba que el navegador puede grabar: sin micrófono o sin
            JavaScript, el formulario se rellena a mano como siempre. Lo dictado es una sugerencia que se revisa una a una antes de continuar. *@
@@ -181,7 +185,7 @@
     @* Barra fija abajo: el formulario es largo y «Continuar» tiene que estar siempre a mano. *@
     <div class="barra-accion">
         <div class="d-grid d-md-flex align-items-md-center justify-content-md-end gap-md-3">
-            @if (Ia.Value.Activa)
+            @if (dictadoActivo)
             {
                 <span class="text-body-secondary small mb-2 mb-md-0" id="dictado-bloqueo" hidden>Revisa lo sugerido por voz para poder continuar.</span>
             }
@@ -192,7 +196,7 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    @if (Ia.Value.Activa)
+    @if (dictadoActivo)
     {
         <script src="~/js/dictado.js" asp-append-version="true"></script>
     }

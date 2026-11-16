@@ -1,6 +1,7 @@
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Auxiliar;
+using ResidApp.Domain.Modules;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
@@ -24,10 +25,11 @@ public sealed record VoiceModelOutput(List<VoiceModelArea>? Areas, decimal? Temp
 /// Dictado de «Registrar cambio» (ADR 0009 y 0011): de un audio del Auxiliar saca una sugerencia de áreas y opciones del formulario. Repite la
 /// comprobación de ámbito Auxiliar y residente asignado de <see cref="RegisterDailyChange"/>. El uso se audita <b>antes</b> de que el audio salga
 /// de la aplicación, y ni el audio ni el texto se guardan. Lo que el modelo devuelve no se da por bueno: se valida contra el catálogo cerrado.
+/// Es el módulo opcional <c>DICTADO_VOZ</c> (ADR 0015): se comprueba aquí, con el centro del ámbito ya verificado y antes de auditar y de llamar a Mistral.
 /// </summary>
 public sealed class SuggestDailyChangeFromVoice(
     IProfileScopeDirectoryProvider scopes, IAssignedResidentDirectory directory, ISessionIdentityProvider session,
-    IVoiceDictationAudit audit, ISpeechTranscriber transcriber, IStructuredGenerator generator)
+    IVoiceDictationAudit audit, ISpeechTranscriber transcriber, IStructuredGenerator generator, CenterModuleAccess modules)
 {
     public const long MaxAudioBytes = 5 * 1024 * 1024;
 
@@ -71,6 +73,9 @@ public sealed class SuggestDailyChangeFromVoice(
             {
                 throw new AccessDeniedException();
             }
+
+            // El módulo, con el centro del ámbito verificado (no el que dice la cookie), antes de auditar y de que el audio salga: apagado, vencido o sin clave, no sale nada.
+            await modules.RequireWritableAsync(scope.CenterId, CenterModules.DictadoVoz, ct);
 
             // Primero la constancia y después el envío: si la auditoría falla, el audio no sale de la aplicación.
             await audit.RecordAsync(

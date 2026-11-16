@@ -21,10 +21,6 @@ namespace ResidApp.FunctionalTests;
 /// </summary>
 public class ModulosGuardiaTests
 {
-    /// <summary>Módulos del catálogo cuyas acciones aún no llevan <c>[RequiereModulo]</c>. El dictado se marca en el incremento 3 (mover la comprobación de <c>AuxiliarController.DictarCambio</c> al módulo);
-    /// entonces se quita de aquí, y la prueba falla si se queda (una lista de pendientes no puede quedarse vieja).</summary>
-    private static readonly HashSet<string> PendientesDeMarcar = [CenterModules.DictadoVoz];
-
     private static IEnumerable<(MethodInfo Action, RequiereModuloAttribute Mark)> MarkedActions() =>
         typeof(Program).Assembly.GetTypes()
             .Where(t => typeof(ControllerBase).IsAssignableFrom(t) && !t.IsAbstract)
@@ -40,9 +36,7 @@ public class ModulosGuardiaTests
         Assert.All(marked, x => Assert.NotNull(CenterModules.Find(x.Mark.ModuloCodigo)));
 
         var withoutAction = CenterModules.All.Select(m => m.Code).Where(code => marked.All(x => x.Mark.ModuloCodigo != code)).ToHashSet();
-        Assert.True(withoutAction.SetEquals(PendientesDeMarcar),
-            "Módulos del catálogo sin ninguna acción con [RequiereModulo] (y fuera de PendientesDeMarcar): " + string.Join(", ", withoutAction.Except(PendientesDeMarcar)) +
-            ". En PendientesDeMarcar y ya marcados (quítalos de la lista): " + string.Join(", ", PendientesDeMarcar.Except(withoutAction)));
+        Assert.True(withoutAction.Count == 0, "Módulos del catálogo sin ninguna acción con [RequiereModulo]: " + string.Join(", ", withoutAction));
     }
 
     [Fact]

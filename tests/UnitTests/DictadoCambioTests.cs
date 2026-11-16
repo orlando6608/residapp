@@ -128,12 +128,14 @@ public class DictadoCambioTests
     }
 
     private static (SuggestDailyChangeFromVoice UseCase, Fakes Fakes) Build(
-        SystemProfile profile = SystemProfile.Auxiliar, bool assigned = true, bool signedIn = true, bool auditFails = false)
+        SystemProfile profile = SystemProfile.Auxiliar, bool assigned = true, bool signedIn = true, bool auditFails = false,
+        bool moduleOn = true, bool providerKey = true, ResidApp.Domain.Modules.CenterModuleChange? lastChange = null)
     {
         var fakes = new Fakes { AuditFails = auditFails };
+        var modules = new CenterModuleAccess(new FakeModules(lastChange), new FakeModuleSettings(moduleOn, providerKey), null!, null!, TimeProvider.System);
         var scopes = new FakeScopes(signedIn ? [new ActiveProfileScope(ScopeId, AccountId.New(), Center, "Centro", profile)] : []);
         var residents = new FakeResidents(assigned ? [new AssignedResidentSummary(Resident, "Residente", UnitId.New(), "Unidad", false, false)] : []);
-        return (new SuggestDailyChangeFromVoice(scopes, residents, new FakeSession(signedIn), fakes, fakes, fakes), fakes);
+        return (new SuggestDailyChangeFromVoice(scopes, residents, new FakeSession(signedIn), fakes, fakes, fakes, modules), fakes);
     }
 
     [Fact]
@@ -150,6 +152,44 @@ public class DictadoCambioTests
         Assert.Equal("no quiere comer nada", result.Value!.Transcript);
         Assert.Equal([DailyChangeAreaOptionCode.NulaIngesta], Assert.Single(result.Value.Areas).Options);
         Assert.Equal("registrar-cambio", fakes.PromptName);
+    }
+
+    /// <summary>ADR 0015: sin el módulo en el centro (apagado, vencido, nunca activado) o sin la clave global, no se audita ni sale audio hacia Mistral.</summary>
+    [Fact]
+    public async Task Sugerir_ConElModuloApagadoSinFilaOVencido_OSinLaClaveGlobal_NoAuditaNiLlamaAlProveedor()
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var cases = new (bool ModuleOn, bool Key, ResidApp.Domain.Modules.CenterModuleChange? Last)[]
+        {
+            (false, true, null),
+            (false, true, new ResidApp.Domain.Modules.CenterModuleChange(2, false, null, null)),
+            (false, true, new ResidApp.Domain.Modules.CenterModuleChange(1, true, today.AddDays(-30), today.AddDays(-1))),
+            (false, false, new ResidApp.Domain.Modules.CenterModuleChange(1, true, today.AddDays(-1), today.AddDays(30))),
+            (true, false, null),
+        };
+        foreach (var (moduleOn, key, last) in cases)
+        {
+            var (useCase, fakes) = Build(moduleOn: moduleOn, providerKey: key, lastChange: last);
+
+            var result = await useCase.ExecuteAsync(Command());
+
+            Assert.False(result.Ok);
+            Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
+            Assert.Empty(fakes.Calls);
+        }
+    }
+
+    [Fact]
+    public async Task Sugerir_ConElModuloActivoPorFilaYLaClave_Funciona()
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var (useCase, fakes) = Build(moduleOn: false, lastChange: new ResidApp.Domain.Modules.CenterModuleChange(1, true, today.AddDays(-1), today.AddDays(30)));
+        fakes.Output = Output(new VoiceModelArea(Area(DailyChangeAreaCode.AlimentacionHidratacion), null, [Option(DailyChangeAreaOptionCode.NulaIngesta)]));
+
+        var result = await useCase.ExecuteAsync(Command());
+
+        Assert.True(result.Ok);
+        Assert.Equal(["auditar", "transcribir:audio/webm", "estructurar"], fakes.Calls);
     }
 
     [Fact]
@@ -239,6 +279,21 @@ public class DictadoCambioTests
             PromptName = promptName;
             return Task.FromResult(Output as T);
         }
+    }
+
+    private sealed class FakeModules(ResidApp.Domain.Modules.CenterModuleChange? last) : ICenterModuleRepository
+    {
+        public Task<ResidApp.Domain.Modules.CenterModuleChange?> FindLastAsync(CenterId centerId, string moduleCode, CancellationToken ct = default) => Task.FromResult(last);
+
+        public Task AppendAsync(PlatformAccess access, ResidApp.Domain.Modules.NewCenterModuleChange change, DateOnly today, CancellationToken ct = default) => throw new NotSupportedException();
+    }
+
+    /// <summary>moduleOn = el ajuste de desarrollo (todo activo); providerKey = la clave global de Mistral.</summary>
+    private sealed class FakeModuleSettings(bool moduleOn, bool providerKey) : IModuleSettings
+    {
+        public bool ActivateAll => moduleOn;
+
+        public bool IsThirdPartyConfigured(string moduleCode) => providerKey;
     }
 
     private sealed class FakeSession(bool signedIn) : ISessionIdentityProvider
