@@ -51,6 +51,8 @@ public static class AuditActionDisplay
         ["PROFILE_PERMISSION_REVOKE"] = "Permiso revocado",
         ["CENTER_CREATE"] = "Centro creado",
         ["CENTER_RENAME"] = "Centro renombrado",
+        ["CENTER_MODULE_ENABLE"] = "Módulo activado",
+        ["CENTER_MODULE_DISABLE"] = "Módulo desactivado",
         ["CENTER_LOGO_SET"] = "Logo del centro cambiado",
         ["CENTER_LOGO_REMOVE"] = "Logo del centro quitado",
         ["UNIT_CREATE"] = "Unidad creada",

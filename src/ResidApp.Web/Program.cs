@@ -15,6 +15,7 @@ using ResidApp.Infrastructure.Correo;
 using ResidApp.Infrastructure.IA;
 using ResidApp.Infrastructure.Identity;
 using ResidApp.Infrastructure.Intercambio;
+using ResidApp.Infrastructure.Modules;
 using ResidApp.Infrastructure.Pdf;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.Infrastructure.Registro;
@@ -83,6 +84,11 @@ builder.Services.AddScoped<ICenterBrandingDirectory, SqlCenterBrandingDirectory>
 builder.Services.AddScoped<ICenterBrandingRepository, SqlCenterBrandingRepository>();
 builder.Services.AddScoped<IPlatformCenterDirectory, SqlPlatformCenterDirectory>();
 builder.Services.AddScoped<IPlatformCenterRepository, SqlPlatformCenterRepository>();
+// Módulos opcionales por centro (ADR 0015, script 0098). Modulos:ActivarTodos solo se admite en desarrollo (ver ModuleOptions.Validate).
+builder.Services.Configure<ModuleOptions>(builder.Configuration.GetSection(ModuleOptions.Section));
+builder.Services.AddScoped<ICenterModuleRepository, SqlCenterModuleRepository>();
+builder.Services.AddScoped<IModuleSettings, ModuleSettings>();
+builder.Services.AddScoped<CenterModuleAccess>();
 builder.Services.AddScoped<IAdministrativeAuditDirectory, SqlAdministrativeAuditDirectory>();
 builder.Services.AddScoped<ISchedulingDirectory, SqlSchedulingDirectory>();
 builder.Services.AddScoped<ISchedulingRepository, SqlSchedulingRepository>();
@@ -448,6 +454,9 @@ TechnicalFailureLog.Register(app.Services.GetRequiredService<ILoggerFactory>().C
 ServerTimeZone.Verify(app.Environment, app.Logger);
 // Un proveedor de IA que no esté en la lista autorizada (ADR 0011) impide arrancar.
 IaOptions.Validate(app.Services.GetRequiredService<IOptions<IaOptions>>().Value);
+// Módulos con todo activo solo en un entorno que declara ser de desarrollo; un entorno desconocido cuenta como producción y no arranca (ADR 0015).
+ModuleOptions.Validate(
+    app.Services.GetRequiredService<IOptions<ModuleOptions>>().Value, app.Environment.IsDevelopment(), builder.Configuration[ModuleOptions.EnvironmentTypeKey]);
 
 // Configure the HTTP request pipeline.
 app.UseForwardedHeaders();
