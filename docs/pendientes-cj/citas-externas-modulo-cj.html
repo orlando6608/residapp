@@ -1,0 +1,1038 @@
+<!doctype html>
+<!--
+  Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan solas en el servidor (api/respuestas/); ingeniería las lee de allí. Cómo funciona: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Citas de los residentes fuera del centro: qué hay hoy y una propuesta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .bar, .howto, .toc, .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+  /* Nota de ingeniería: lo que ingeniería responde a una pregunta (fichero .notas.json del documento); solo lectura. */
+  .nota-ing { background: var(--surface); border: 1px solid var(--accent); border-left-width: 4px; padding: 8px 12px; border-radius: 4px; margin: 10px 0 0; font-size: 0.95rem; }
+  .nota-ing strong { display: block; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .nota-ing p { margin: 0; white-space: pre-line; }
+
+  /* Bocetos de pantallas: solo ilustran la idea; no son la pantalla real. Nombres inventados. */
+  .mock { border: 1px dashed var(--blank-rule); border-radius: 8px; padding: 14px; background: var(--surface); display: flex; flex-direction: column; gap: 10px; }
+  .mock-tag { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .mock-bar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 0.9rem; }
+  .mock-bar .grow { flex: 1 1 auto; }
+  .fake-btn { display: inline-block; border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 3px 10px; font-weight: 600; font-size: 0.88rem; background: var(--surface); }
+  .fake-btn.on, .fake-btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .scroll { overflow-x: auto; }
+  .cap { color: var(--muted); font-size: 0.9rem; }
+
+  table.cal-month { border-collapse: collapse; width: 100%; min-width: 680px; table-layout: fixed; }
+  .cal-month th { font-size: 0.8rem; color: var(--muted); padding: 4px; border-bottom: 1px solid var(--rule); text-align: left; }
+  .cal-month td { border: 1px solid var(--rule); vertical-align: top; height: 88px; padding: 3px; }
+  .cal-month td.fuera { background: var(--bg); color: var(--muted); }
+  .cal-month td.hoy { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .cal-month .d { font-size: 0.78rem; font-weight: 600; display: block; }
+
+  .ev { font-size: 0.74rem; line-height: 1.3; border-left: 4px solid var(--rule); background: var(--bg); padding: 2px 5px; margin-top: 3px; border-radius: 2px; }
+  .ev .st { display: block; font-weight: 600; }
+  .ev.ok { border-left-color: var(--ok-rule); }
+  .ev.falta { border-left-color: var(--danger); }
+  .ev.por { border-left: 4px dashed var(--blank-rule); }
+
+  .cal-week { display: grid; grid-template-columns: repeat(7, minmax(112px, 1fr)); gap: 6px; min-width: 820px; }
+  .cal-week .day { border: 1px solid var(--rule); border-radius: 6px; padding: 6px; background: var(--bg); display: flex; flex-direction: column; gap: 6px; min-height: 150px; }
+  .cal-week .day.hoy { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .cal-week h4 { margin: 0; font-size: 0.82rem; font-family: var(--sans); font-weight: 600; }
+  .cal-week .ev { font-size: 0.8rem; background: var(--surface); margin-top: 0; }
+  .cal-week .vacio { color: var(--muted); font-size: 0.8rem; }
+
+  .detalle { display: flex; flex-direction: column; gap: 8px; }
+  .detalle dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-size: 0.95rem; }
+  .detalle dt { color: var(--muted); }
+  .detalle dd { margin: 0; }
+  .detalle .acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  table.t { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+  table.t th, table.t td { border: 1px solid var(--rule); padding: 8px 10px; text-align: left; vertical-align: top; }
+  table.t th { background: var(--accent-soft); font-weight: 600; }
+  h3.sub { font-family: var(--serif); font-size: 1.1rem; font-weight: 600; margin-top: 8px; }
+</style>
+</head>
+<body data-doc="citas-externas-modulo-cj" data-version="2026-11-16">
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="index.html">← Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Producto · Pendiente de CJ</p>
+    <h1>Citas de los residentes fuera del centro: qué hay hoy y una propuesta</h1>
+    <p class="lead prose">
+      Hoy ResidApp solo gestiona las citas de la <strong>familia con el centro</strong>. No sabe nada de las citas del residente <strong>fuera</strong> del centro: el especialista, una prueba en el hospital, la revisión de un marcapasos. Este documento resume lo que hay y propone cómo podría ser un módulo para registrarlas, avisar al personal y a la familia, y verlas en un calendario mensual y semanal. Todo está por construir: lo decides tú.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué cambia ya</span><span>Nada. Es una propuesta; no se ha construido nada.</span></div>
+    <div role="listitem"><span class="k">Cuánto lleva</span><span>Leer unos 10 minutos y contestar unos 20.</span></div>
+    <div role="listitem"><span class="k">Preguntas</span><span>14 preguntas en 5 temas. Cada una trae nuestra propuesta.</span></div>
+  </div>
+
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Lee las dos primeras partes</strong>
+        <span>Primero lo que hay hoy y después la propuesta, con los bocetos de las pantallas. Los bocetos son dibujos de la idea, con nombres inventados.</span></li>
+      <li><span class="step-n">2</span><strong>Responde abajo</strong>
+        <span>Pulsa la opción que elijas. Si quieres matizar o proponer otra cosa, escribe en el comentario. Se guarda solo en el servidor y puedes seguir otro día.</span></li>
+    </ol>
+    <p class="prose meta">
+      No escribas datos personales reales de residentes ni de familiares en los comentarios: usa «un residente» o iniciales inventadas.
+    </p>
+  </section>
+
+  <section id="hoy" aria-labelledby="h-hoy">
+    <h2 id="h-hoy">1. Lo que tiene hoy ResidApp sobre citas</h2>
+    <div class="stack prose">
+      <p class="context"><strong>En una frase:</strong> son las citas que la <em>familia</em> pide o reserva con el <em>equipo del propio centro</em> (médico o de Enfermería) para hablar de su familiar, en persona, por teléfono o por videollamada. No son las citas del residente en el hospital o con un especialista.</p>
+      <ul>
+        <li><strong>El centro elige un modo.</strong> Desactivado; <em>reserva directa</em> (la familia elige un hueco libre y la cita queda confirmada al momento); o <em>solicitud previa</em> (la familia pide una cita, Administración le propone día y hora y la cita solo existe cuando la familia acepta).</li>
+        <li><strong>Administración lo configura.</strong> Las franjas semanales de cada equipo, las modalidades (presencial, telefónica, videollamada), la antelación mínima, el máximo de días por delante y los bloqueos (una sesión clínica, unas vacaciones). Ve una agenda semanal de todas las citas del centro y puede reprogramar, cancelar (con un motivo que la familia no ve) y dar por finalizada una cita pasada.</li>
+        <li><strong>La familia</strong> reserva o solicita, ve sus citas en el Portal Familiar y puede cambiarlas o cancelarlas hasta la antelación mínima. Solo ve las que reservó ella. Nunca elige un profesional concreto, y todas las pantallas recuerdan que las citas no son un canal urgente.</li>
+        <li><strong>Avisos por correo</strong> a quien reservó, genéricos y sin datos de salud (no dicen el residente, el centro, la hora ni el motivo; solo que entre en ResidApp): cuando el centro propone una cita, cuando cambia o cancela una cita confirmada y la víspera de una cita. Están apagados por defecto y solo salen si la dirección de correo está confirmada con la familia.</li>
+        <li><strong>Si el residente causa baja,</strong> sus citas futuras se cancelan solas.</li>
+      </ul>
+      <p><strong>Lo que no hay:</strong></p>
+      <ul>
+        <li>Ningún sitio donde anotar una cita del residente fuera del centro.</li>
+        <li>Ningún calendario mensual ni semanal con esas citas, ni para el personal ni para la familia.</li>
+        <li>Ningún aviso previo al personal («dentro de una semana tiene cita y nadie ha pedido el transporte»).</li>
+        <li>Lo más parecido son los <strong>seguimientos</strong> de Enfermería y de Medicina, que tienen una «próxima revisión». Pero cuelgan de un evento clínico, solo los ve el personal y no avisan por adelantado.</li>
+      </ul>
+      <p class="context"><strong>Ejemplo.</strong> Si un residente tiene la revisión de su marcapasos dentro de 2 meses, hoy esa cita no aparece en ningún sitio de ResidApp, y nadie la verá hasta que alguien se acuerde.</p>
+    </div>
+  </section>
+
+  <section id="propuesta" aria-labelledby="h-propuesta">
+    <h2 id="h-propuesta">2. La propuesta: un módulo de «citas externas»</h2>
+    <div class="stack prose">
+      <p><strong>La idea.</strong> Una <em>cita externa</em> es cualquier cita de un residente con alguien de fuera del centro. Se registra una vez, el personal y la familia la ven en un calendario, y ResidApp avisa cuando se acerca y <strong>falta algo por cubrir</strong>, que casi siempre es el transporte o quien acompaña. Muchas veces los pone la familia, y por eso la familia entra en el módulo, no solo el personal.</p>
+      <p><strong>Cómo lo pensamos (principios):</strong></p>
+      <ul>
+        <li><strong>Es un registro y un recordatorio, no una gestión.</strong> ResidApp anota <em>quién se encarga</em> del transporte y del acompañamiento; no organiza turnos, rutas ni conductores. Eso lo organiza el centro como hoy.</li>
+        <li><strong>Lo mínimo posible de datos de salud.</strong> No se adjuntan informes ni fotos, y la especialidad solo se muestra a la familia si se decide.</li>
+        <li><strong>Los avisos a la familia son genéricos,</strong> como los de las citas de ahora: dicen que entre en ResidApp, sin residente, centro, hora ni especialidad.</li>
+        <li><strong>No sustituye a la historia clínica ni al informe del especialista.</strong> Es una agenda.</li>
+        <li><strong>Antes de usarlo con datos reales,</strong> lo revisará el asesor de protección de datos, porque una cita con una especialidad es un dato de salud.</li>
+      </ul>
+
+      <h3 class="sub">2.1 La ficha de una cita externa</h3>
+      <div class="scroll"><table class="t">
+        <thead><tr><th scope="col">Qué se anota</th><th scope="col">Cómo</th></tr></thead>
+        <tbody>
+          <tr><td>Residente</td><td>El de la ficha donde se registra.</td></tr>
+          <tr><td>Día y hora</td><td>La hora puede quedar «por confirmar» (a veces el hospital solo da el día).</td></tr>
+          <tr><td>Tipo</td><td>Lista cerrada: consulta de especialista · prueba (analítica, radiografía…) · revisión de un aparato (marcapasos…) · rehabilitación u hospital de día · otra.</td></tr>
+          <tr><td>Especialidad o motivo</td><td>Lista corta de especialidades, nunca un diagnóstico. Se ve en el personal; a la familia, según la pregunta 4.2.</td></tr>
+          <tr><td>Lugar</td><td>Texto corto (por ejemplo, «Hospital de ejemplo, consultas externas»).</td></tr>
+          <tr><td>Transporte</td><td>Familia · centro · ambulancia o transporte sanitario · sin determinar. Con un estado: <em>pendiente</em> o <em>confirmado</em>.</td></tr>
+          <tr><td>Acompañante</td><td>Familiar · personal del centro · lo lleva el transporte · no necesita · sin determinar. También con su estado.</td></tr>
+          <tr><td>Qué hay que preparar</td><td>Texto corto: ayuno, llevar el último informe, la tarjeta sanitaria, la medicación…</td></tr>
+          <tr><td>Estado de la cita</td><td>Programada · confirmada por el hospital · realizada · cancelada · reprogramada · no se acudió.</td></tr>
+          <tr><td>Al terminar</td><td>Nota breve de lo que indicaron y, si procede, la siguiente cita (por ejemplo, la revisión del año que viene).</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="sub">2.2 Quién la ve y quién la cambia</h3>
+      <div class="scroll"><table class="t">
+        <thead><tr><th scope="col">Perfil</th><th scope="col">Propuesta</th></tr></thead>
+        <tbody>
+          <tr><td>Administración</td><td>Registra, cambia y cancela. Ve el calendario de todo el centro.</td></tr>
+          <tr><td>Enfermería</td><td>Ve el calendario de sus unidades y anota la preparación y lo que se indicó al volver. Puede registrar y cambiar (pregunta 3.1).</td></tr>
+          <tr><td>Medicina</td><td>Ve el calendario de sus unidades.</td></tr>
+          <tr><td>Auxiliar</td><td>Solo «hoy y mañana»: quién sale, a qué hora y qué hay que preparar. Sin la especialidad (pregunta 3.2).</td></tr>
+          <tr><td>Dirección Clínica</td><td>No.</td></tr>
+          <tr><td>Familia</td><td>Solo las citas de su residente (preguntas 4.1 a 4.3).</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 class="sub">2.3 Los avisos</h3>
+      <p>El aviso al personal es una marca en la pantalla de inicio, como las que ya existen; no hay correo. El de la familia es un correo genérico, con las mismas condiciones que los de las citas de ahora: apagado por defecto, solo con la dirección confirmada con la familia y solo a quien tiene acceso al Portal Familiar.</p>
+      <div class="scroll"><table class="t">
+        <thead><tr><th scope="col">Cuándo</th><th scope="col">A quién y cómo</th></tr></thead>
+        <tbody>
+          <tr><td>Se registra o cambia una cita</td><td>Se ve en el calendario del personal. A la familia, un aviso genérico si la cita le pide algo o cambia (preguntas 4.4 y 4.5).</td></tr>
+          <tr><td>7 días antes y sigue sin transporte o acompañante</td><td>Personal: aviso en el inicio («Cita en 7 días sin transporte confirmado»). Familia: correo genérico.</td></tr>
+          <tr><td>2 días antes y sigue sin cubrir</td><td>Personal: aviso destacado. Familia: un segundo correo si CJ lo ve bien (pregunta 4.5).</td></tr>
+          <tr><td>La víspera</td><td>Personal de la unidad: lista «Mañana» con quién sale, hora y qué preparar. Familia: correo genérico.</td></tr>
+        </tbody>
+      </table></div>
+      <p>El correo diría algo como «Tienes un aviso sobre una cita en ResidApp», con un enlace, y nada más. Una cita lejana, como la revisión del marcapasos a 2 meses, no genera avisos hasta que se acerca; se ve en el calendario y en la lista «Próximas».</p>
+    </div>
+
+    <h3 class="sub">2.4 Las pantallas (bocetos)</h3>
+    <div class="stack prose">
+      <p>El <strong>borde de color y la palabra</strong> de cada cita dicen si falta algo: «Cubierta» (transporte y acompañante confirmados), «Falta transporte», «Falta acompañante» o «Por confirmar» (el hospital aún no ha dado la hora). En el móvil, el calendario mensual se verá como una lista por días, porque una cuadrícula de 7 columnas no cabe.</p>
+    </div>
+
+    <div class="mock" role="group" aria-label="Boceto del calendario mensual del personal">
+      <span class="mock-tag">Boceto A · Personal · Calendario mensual</span>
+      <div class="mock-bar">
+        <span class="fake-btn">‹ Octubre</span><strong>Noviembre 2026</strong><span class="fake-btn">Diciembre ›</span>
+        <span class="grow"></span>
+        <span class="fake-btn on">Mes</span><span class="fake-btn">Semana</span><span class="fake-btn">Próximas</span>
+      </div>
+      <div class="mock-bar cap">Unidad: Todas ▾ · Mostrar: todas / solo las que tienen algo sin cubrir</div>
+      <div class="scroll"><table class="cal-month"><caption class="cap">Noviembre de 2026 (boceto)</caption><thead><tr>
+<th scope="col">Lun</th>
+<th scope="col">Mar</th>
+<th scope="col">Mié</th>
+<th scope="col">Jue</th>
+<th scope="col">Vie</th>
+<th scope="col">Sáb</th>
+<th scope="col">Dom</th>
+</tr></thead><tbody>
+<tr>
+<td class="fuera"><span class="d">26</span></td>
+<td class="fuera"><span class="d">27</span></td>
+<td class="fuera"><span class="d">28</span></td>
+<td class="fuera"><span class="d">29</span></td>
+<td class="fuera"><span class="d">30</span></td>
+<td class="fuera"><span class="d">31</span></td>
+<td><span class="d">1</span></td>
+</tr>
+<tr>
+<td><span class="d">2</span></td>
+<td><span class="d">3</span></td>
+<td><span class="d">4</span></td>
+<td><span class="d">5</span></td>
+<td><span class="d">6</span></td>
+<td><span class="d">7</span></td>
+<td><span class="d">8</span></td>
+</tr>
+<tr>
+<td><span class="d">9</span></td>
+<td><span class="d">10</span></td>
+<td><span class="d">11</span></td>
+<td><span class="d">12</span></td>
+<td><span class="d">13</span></td>
+<td><span class="d">14</span></td>
+<td><span class="d">15</span></td>
+</tr>
+<tr>
+<td class="hoy" aria-current="date"><span class="d">16</span></td>
+<td><span class="d">17</span><div class="ev ok"><b>09:30</b> Analítica · A. M.<span class="st">Cubierta</span></div></td>
+<td><span class="d">18</span><div class="ev falta"><b>11:00</b> Cardiología · J. R.<span class="st">Falta transporte</span></div></td>
+<td><span class="d">19</span></td>
+<td><span class="d">20</span><div class="ev ok"><b>10:15</b> Revisión de marcapasos · L. G.<span class="st">Cubierta</span></div><div class="ev ok"><b>16:00</b> Rehabilitación · P. S.<span class="st">Cubierta</span></div></td>
+<td><span class="d">21</span></td>
+<td><span class="d">22</span></td>
+</tr>
+<tr>
+<td><span class="d">23</span></td>
+<td><span class="d">24</span><div class="ev por"><b>Hora por confirmar</b> Radiografía · M. T.<span class="st">Por confirmar</span></div></td>
+<td><span class="d">25</span><div class="ev falta"><b>12:00</b> Oftalmología · A. M.<span class="st">Falta acompañante</span></div></td>
+<td><span class="d">26</span></td>
+<td><span class="d">27</span><div class="ev ok"><b>10:00</b> Dermatología · R. V.<span class="st">Cubierta</span></div></td>
+<td><span class="d">28</span></td>
+<td><span class="d">29</span></td>
+</tr>
+<tr>
+<td><span class="d">30</span></td>
+<td class="fuera"><span class="d">1</span></td>
+<td class="fuera"><span class="d">2</span></td>
+<td class="fuera"><span class="d">3</span></td>
+<td class="fuera"><span class="d">4</span></td>
+<td class="fuera"><span class="d">5</span></td>
+<td class="fuera"><span class="d">6</span></td>
+</tr>
+</tbody></table>
+</div>
+    </div>
+
+    <div class="mock" role="group" aria-label="Boceto del calendario semanal del personal">
+      <span class="mock-tag">Boceto B · Personal · Calendario semanal</span>
+      <div class="mock-bar">
+        <span class="fake-btn">‹ Semana anterior</span><strong>16 – 22 de noviembre de 2026</strong><span class="fake-btn">Semana siguiente ›</span>
+        <span class="grow"></span>
+        <span class="fake-btn">Mes</span><span class="fake-btn on">Semana</span><span class="fake-btn">Próximas</span>
+      </div>
+      <div class="scroll"><div class="cal-week">
+        <div class="day hoy"><h4>Lun 16 (hoy)</h4><span class="vacio">Sin citas</span></div>
+        <div class="day"><h4>Mar 17</h4>
+          <div class="ev ok"><b>09:30</b> Analítica · A. M.<br>Transporte: familia · Acompaña: familiar<span class="st">Cubierta</span></div></div>
+        <div class="day"><h4>Mié 18</h4>
+          <div class="ev falta"><b>11:00</b> Cardiología · J. R.<br>Transporte: ambulancia, sin pedir · Acompaña: personal<span class="st">Falta transporte</span></div></div>
+        <div class="day"><h4>Jue 19</h4><span class="vacio">Sin citas</span></div>
+        <div class="day"><h4>Vie 20</h4>
+          <div class="ev ok"><b>10:15</b> Revisión de marcapasos · L. G.<br>Transporte: ambulancia confirmada · Acompaña: personal<span class="st">Cubierta</span></div>
+          <div class="ev ok"><b>16:00</b> Rehabilitación · P. S.<br>Transporte: centro · No necesita acompañante<span class="st">Cubierta</span></div></div>
+        <div class="day"><h4>Sáb 21</h4><span class="vacio">Sin citas</span></div>
+        <div class="day"><h4>Dom 22</h4><span class="vacio">Sin citas</span></div>
+      </div></div>
+    </div>
+
+    <div class="mock" role="group" aria-label="Boceto del calendario mensual de la familia">
+      <span class="mock-tag">Boceto C · Familia · Calendario mensual (un residente)</span>
+      <div class="mock-bar">
+        <strong>Citas fuera del centro de A. M.</strong><span class="cap">Cambiar de residente ▾ (si la familia tiene varios)</span>
+        <span class="grow"></span>
+        <span class="fake-btn on">Mes</span><span class="fake-btn">Semana</span><span class="fake-btn">Lista</span>
+      </div>
+      <div class="mock-bar"><span class="fake-btn">‹ Octubre</span><strong>Noviembre 2026</strong><span class="fake-btn">Diciembre ›</span></div>
+      <div class="scroll"><table class="cal-month"><caption class="cap">Noviembre de 2026 (boceto)</caption><thead><tr>
+<th scope="col">Lun</th>
+<th scope="col">Mar</th>
+<th scope="col">Mié</th>
+<th scope="col">Jue</th>
+<th scope="col">Vie</th>
+<th scope="col">Sáb</th>
+<th scope="col">Dom</th>
+</tr></thead><tbody>
+<tr>
+<td class="fuera"><span class="d">26</span></td>
+<td class="fuera"><span class="d">27</span></td>
+<td class="fuera"><span class="d">28</span></td>
+<td class="fuera"><span class="d">29</span></td>
+<td class="fuera"><span class="d">30</span></td>
+<td class="fuera"><span class="d">31</span></td>
+<td><span class="d">1</span></td>
+</tr>
+<tr>
+<td><span class="d">2</span></td>
+<td><span class="d">3</span></td>
+<td><span class="d">4</span></td>
+<td><span class="d">5</span></td>
+<td><span class="d">6</span></td>
+<td><span class="d">7</span></td>
+<td><span class="d">8</span></td>
+</tr>
+<tr>
+<td><span class="d">9</span></td>
+<td><span class="d">10</span></td>
+<td><span class="d">11</span></td>
+<td><span class="d">12</span></td>
+<td><span class="d">13</span></td>
+<td><span class="d">14</span></td>
+<td><span class="d">15</span></td>
+</tr>
+<tr>
+<td class="hoy" aria-current="date"><span class="d">16</span></td>
+<td><span class="d">17</span><div class="ev ok"><b>09:30</b> Prueba fuera del centro<span class="st">Transporte: lo haces tú</span></div></td>
+<td><span class="d">18</span></td>
+<td><span class="d">19</span></td>
+<td><span class="d">20</span></td>
+<td><span class="d">21</span></td>
+<td><span class="d">22</span></td>
+</tr>
+<tr>
+<td><span class="d">23</span></td>
+<td><span class="d">24</span></td>
+<td><span class="d">25</span><div class="ev falta"><b>12:00</b> Consulta fuera del centro<span class="st">Falta acompañante: te necesitamos</span></div></td>
+<td><span class="d">26</span></td>
+<td><span class="d">27</span></td>
+<td><span class="d">28</span></td>
+<td><span class="d">29</span></td>
+</tr>
+<tr>
+<td><span class="d">30</span></td>
+<td class="fuera"><span class="d">1</span></td>
+<td class="fuera"><span class="d">2</span></td>
+<td class="fuera"><span class="d">3</span></td>
+<td class="fuera"><span class="d">4</span></td>
+<td class="fuera"><span class="d">5</span></td>
+<td class="fuera"><span class="d">6</span></td>
+</tr>
+</tbody></table>
+</div>
+      <p class="cap">La familia ve solo las citas de su residente. No ve nombres de otros residentes ni de otros familiares.</p>
+    </div>
+
+    <div class="mock" role="group" aria-label="Boceto del calendario semanal de la familia">
+      <span class="mock-tag">Boceto D · Familia · Calendario semanal</span>
+      <div class="mock-bar">
+        <span class="fake-btn">‹ Semana anterior</span><strong>23 – 29 de noviembre de 2026</strong><span class="fake-btn">Semana siguiente ›</span>
+        <span class="grow"></span>
+        <span class="fake-btn">Mes</span><span class="fake-btn on">Semana</span><span class="fake-btn">Lista</span>
+      </div>
+      <div class="scroll"><div class="cal-week">
+        <div class="day"><h4>Lun 23</h4><span class="vacio">Sin citas</span></div>
+        <div class="day"><h4>Mar 24</h4><span class="vacio">Sin citas</span></div>
+        <div class="day"><h4>Mié 25</h4>
+          <div class="ev falta"><b>12:00</b> Consulta fuera del centro<br>Transporte: lo organiza el centro<span class="st">Falta acompañante: te necesitamos</span></div></div>
+        <div class="day"><h4>Jue 26</h4><span class="vacio">Sin citas</span></div>
+        <div class="day"><h4>Vie 27</h4><span class="vacio">Sin citas</span></div>
+        <div class="day"><h4>Sáb 28</h4><span class="vacio">Sin citas</span></div>
+        <div class="day"><h4>Dom 29</h4><span class="vacio">Sin citas</span></div>
+      </div></div>
+    </div>
+
+    <div class="mock" role="group" aria-label="Boceto del detalle de una cita para la familia">
+      <span class="mock-tag">Boceto E · Familia · Al pulsar una cita</span>
+      <div class="detalle">
+        <h3>Consulta fuera del centro · miércoles 25 de noviembre, 12:00</h3>
+        <dl>
+          <dt>Lugar</dt><dd>Hospital de ejemplo, consultas externas</dd>
+          <dt>Transporte</dt><dd>Lo organiza el centro (ambulancia)</dd>
+          <dt>Acompañante</dt><dd><strong>Falta alguien que acompañe.</strong></dd>
+          <dt>Qué hay que preparar</dt><dd>Llevar la tarjeta sanitaria y el último informe.</dd>
+        </dl>
+        <div class="acciones"><span class="fake-btn primary">Me encargo yo de acompañar</span><span class="fake-btn">No puedo acompañar</span></div>
+        <p class="cap">Si pulsas «No puedo», el centro lo ve y se pondrá en contacto contigo por teléfono. Las citas no son un canal urgente: si necesitas algo urgente, llama al centro. No hay chat.</p>
+      </div>
+    </div>
+
+    <div class="stack prose">
+      <p><strong>Lo que dejaríamos fuera</strong> (lo confirmas en la pregunta 5.1): adjuntar informes o fotos, organizar el transporte o los turnos de acompañantes, un chat, sincronizar con Google, Outlook o con el hospital, y enviar nada al hospital.</p>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-1">
+    <h2>Tema 1 · ¿Hace falta?</h2>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Te parece útil que ResidApp registre y avise de las citas de los residentes fuera del centro?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">En las residencias las citas externas son frecuentes y casi siempre implican transporte y acompañante, que es lo que suele fallar. Hoy se llevan en papel, hoja de cálculo o por teléfono. Nuestra opinión es la B: es útil, pero no hace falta para que ResidApp funcione en el centro piloto.</p>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Sí, es imprescindible: sin esto el centro sigue con el papel o con otra herramienta.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Sí, es útil, pero puede esperar.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">No lo necesitamos: hoy se resuelve bien de otra manera.</span></label>
+        </fieldset>
+        <label class="field">Comentario: ¿cómo lo resolvéis hoy y qué es lo que más falla? (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Qué tipos de cita externa se registrarían?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Proponemos cuatro tipos más «otra»: consulta de especialista, prueba (analítica, radiografía…), revisión de un aparato (marcapasos…) y rehabilitación u hospital de día. Una lista cerrada ayuda a rellenar rápido y a que el calendario sea claro. Las urgencias no son citas y no entran.</p>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Esos cuatro tipos y «otra».</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Solo consultas y pruebas; lo demás, como «otra».</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">Otra lista (escríbela en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2">
+    <h2>Tema 2 · La ficha de la cita</h2>
+    <div class="qs">
+      <article class="q" data-q="2.1">
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">La ficha de la cita (tabla 2.1): ¿falta o sobra algo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">La ficha es lo mínimo para que el calendario sirva: cuándo, qué, dónde, transporte, acompañante y qué preparar. Cuantos más campos, menos se rellena. Nuestra propuesta es la A.</p>
+        <fieldset class="choices" aria-labelledby="t-2-1">
+          <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">Esa ficha vale.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">Falta algo importante (escríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="C"><span class="letter">C</span><span class="txt">Sobra algo (escríbelo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.2">
+        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">¿Qué se anota cuando el residente vuelve de la cita?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Lo importante es que lo que indicó el especialista llegue a quien lo tiene que aplicar. Pero una nota libre puede acabar siendo una segunda historia clínica, y para eso ya están el informe del especialista y la valoración de Medicina. Nuestra propuesta es la B: una nota breve y, si procede, crear la siguiente cita.</p>
+        <fieldset class="choices" aria-labelledby="t-2-2">
+          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">Solo si se realizó o no.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">Se realizó o no, una nota breve de lo indicado («pendiente de informe», «cambio de pauta», «revisión en 6 meses») y la opción de crear la siguiente cita.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="C"><span class="letter">C</span><span class="txt">Otra cosa (escríbela en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · El personal</h2>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">¿Quién registra y cambia las citas externas?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Administración se ocupa de las llamadas y de la familia; Enfermería recibe los informes y sabe qué hay que preparar. Nuestra propuesta es la C, con el permiso concedido por perfil (como el del estado basal), para que cada centro lo ajuste.</p>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Solo Administración.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Solo Enfermería.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">Los dos; Medicina solo la ve.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="D"><span class="letter">D</span><span class="txt">Otro reparto (escríbelo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">¿Qué ve el Auxiliar?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">El Auxiliar es quien prepara al residente (aseo, ropa, ayuno). Necesita saber quién sale hoy y mañana, a qué hora y qué preparar, pero no necesita la especialidad. Nuestra propuesta es la A.</p>
+        <fieldset class="choices" aria-labelledby="t-3-2">
+          <label class="choice"><input type="radio" name="r-3-2" value="A"><span class="letter">A</span><span class="txt">Solo hoy y mañana, con hora y qué preparar, sin la especialidad.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="B"><span class="letter">B</span><span class="txt">El calendario completo, como Enfermería.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="C"><span class="letter">C</span><span class="txt">Nada: el Auxiliar se entera por Enfermería.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.3">
+        <div class="q-head"><span class="n">3.3</span><h3 class="q-title" id="t-3-3">¿Cuándo avisa ResidApp al personal de que a una cita le falta transporte o acompañante?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">El aviso aparece en la pantalla de inicio, no por correo. Nuestra propuesta es la A: a los 7 días y, más destacado, a los 2 días. Para una ambulancia que se pide con mucha antelación puede hacer falta más.</p>
+        <fieldset class="choices" aria-labelledby="t-3-3">
+          <label class="choice"><input type="radio" name="r-3-3" value="A"><span class="letter">A</span><span class="txt">A los 7 días y a los 2 días.</span></label>
+          <label class="choice"><input type="radio" name="r-3-3" value="B"><span class="letter">B</span><span class="txt">A los 14 días, a los 7 y a los 2.</span></label>
+          <label class="choice"><input type="radio" name="r-3-3" value="C"><span class="letter">C</span><span class="txt">Otros plazos (escríbelos en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario: ¿con cuánta antelación se pide el transporte sanitario? (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-4">
+    <h2>Tema 4 · La familia</h2>
+    <div class="stack prose">
+      <p>Aquí es donde más cambia respecto a las citas de ahora, porque la familia pasa de reservar una cita a <em>ayudar a cubrirla</em>. Los avisos a la familia seguirían siendo genéricos, sin residente, centro, hora ni especialidad.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="4.1">
+        <div class="q-head"><span class="n">4.1</span><h3 class="q-title" id="t-4-1">¿Qué citas ve la familia en su calendario?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Una cita externa puede ser algo que la familia no deba ver (por ejemplo, por deseo expreso del residente). Nuestra propuesta es la B: se ven por defecto y el personal puede ocultar una concreta.</p>
+        <fieldset class="choices" aria-labelledby="t-4-1">
+          <label class="choice"><input type="radio" name="r-4-1" value="A"><span class="letter">A</span><span class="txt">Todas las de su residente, siempre.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="B"><span class="letter">B</span><span class="txt">Todas por defecto, y el personal puede ocultar una concreta.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="C"><span class="letter">C</span><span class="txt">Solo las que piden ayuda a la familia (transporte o acompañante).</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="D"><span class="letter">D</span><span class="txt">Ninguna: la familia solo recibe avisos.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.2">
+        <div class="q-head"><span class="n">4.2</span><h3 class="q-title" id="t-4-2">¿La familia ve la especialidad («Cardiología»…) o solo «consulta fuera del centro»?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">La especialidad ayuda a preparar la cita, pero revela algo de la salud del residente (y hay especialidades más delicadas que otras). Nuestra propuesta es la C: por defecto solo el tipo general, y el personal añade la especialidad cuando ayuda a la familia.</p>
+        <fieldset class="choices" aria-labelledby="t-4-2">
+          <label class="choice"><input type="radio" name="r-4-2" value="A"><span class="letter">A</span><span class="txt">Siempre la especialidad.</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="B"><span class="letter">B</span><span class="txt">Nunca: solo «consulta», «prueba» o «revisión de aparato».</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="C"><span class="letter">C</span><span class="txt">Por defecto solo el tipo general; el personal puede mostrar la especialidad en una cita concreta.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.3">
+        <div class="q-head"><span class="n">4.3</span><h3 class="q-title" id="t-4-3">¿Qué puede hacer la familia en la pantalla de la cita?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Si el transporte o el acompañante los pone la familia, lo útil es que pueda decir «me encargo yo» o «no puedo», y que el centro lo vea sin llamar. Nuestra propuesta es la A. No habría chat.</p>
+        <fieldset class="choices" aria-labelledby="t-4-3">
+          <label class="choice"><input type="radio" name="r-4-3" value="A"><span class="letter">A</span><span class="txt">Puede pulsar «Me encargo yo» o «No puedo» para el transporte y para el acompañamiento.</span></label>
+          <label class="choice"><input type="radio" name="r-4-3" value="B"><span class="letter">B</span><span class="txt">Solo ver la cita; lo confirma por teléfono y lo anota el personal.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.4">
+        <div class="q-head"><span class="n">4.4</span><h3 class="q-title" id="t-4-4">Si hay varios familiares autorizados, ¿quién aparece y a quién se avisa?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">El primero que pulsa «Me encargo yo» se queda con la tarea. Los demás ven «Lo hará un familiar», sin nombre; el nombre solo lo ve el personal. Para los correos, nuestra propuesta es la A: se avisa solo a quien se ha encargado y, si nadie, a todos los autorizados con correo confirmado, para no mandar más correos de los necesarios.</p>
+        <fieldset class="choices" aria-labelledby="t-4-4">
+          <label class="choice"><input type="radio" name="r-4-4" value="A"><span class="letter">A</span><span class="txt">Aviso a quien se encarga; si nadie, a todos los autorizados con correo confirmado.</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="B"><span class="letter">B</span><span class="txt">Aviso siempre a todos los autorizados con correo confirmado.</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="C"><span class="letter">C</span><span class="txt">Otra regla (escríbela en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.5">
+        <div class="q-head"><span class="n">4.5</span><h3 class="q-title" id="t-4-5">¿Cuándo se avisa por correo a la familia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Las citas de ahora avisan solo la víspera. Para una cita externa, que a veces hay que organizar con días, proponemos la B: 7 días antes, la víspera y, solo si sigue sin transporte o acompañante, un aviso a los 2 días. Además, un aviso al registrar la cita si le pide algo a la familia y otro si cambia o se cancela.</p>
+        <fieldset class="choices" aria-labelledby="t-4-5">
+          <label class="choice"><input type="radio" name="r-4-5" value="A"><span class="letter">A</span><span class="txt">7 días antes y la víspera.</span></label>
+          <label class="choice"><input type="radio" name="r-4-5" value="B"><span class="letter">B</span><span class="txt">7 días antes y la víspera, y un aviso a los 2 días solo si sigue sin cubrir.</span></label>
+          <label class="choice"><input type="radio" name="r-4-5" value="C"><span class="letter">C</span><span class="txt">Solo la víspera.</span></label>
+          <label class="choice"><input type="radio" name="r-4-5" value="D"><span class="letter">D</span><span class="txt">Otros plazos (escríbelos en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-5">
+    <h2>Tema 5 · Alcance y prioridad</h2>
+    <div class="qs">
+      <article class="q" data-q="5.1">
+        <div class="q-head"><span class="n">5.1</span><h3 class="q-title" id="t-5-1">¿Confirmas lo que queda fuera?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Quedaría fuera: adjuntar informes o fotos; organizar el transporte o los turnos de acompañantes (la aplicación solo anota quién se encarga); un chat; sincronizar con Google, Outlook o el hospital; y mandar nada al hospital. Es lo que mantiene el módulo pequeño y fácil de rellenar.</p>
+        <fieldset class="choices" aria-labelledby="t-5-1">
+          <label class="choice"><input type="radio" name="r-5-1" value="A"><span class="letter">A</span><span class="txt">Sí, de acuerdo.</span></label>
+          <label class="choice"><input type="radio" name="r-5-1" value="B"><span class="letter">B</span><span class="txt">Falta algo importante que debería entrar (escríbelo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="5.2">
+        <div class="q-head"><span class="n">5.2</span><h3 class="q-title" id="t-5-2">¿Cuándo debería estar?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Ahora mismo se está construyendo la ficha de alergias, enfermedades y medicación. Nuestra propuesta es la B: después de ella y, si es posible, antes de que un centro use ResidApp con familias reales.</p>
+        <fieldset class="choices" aria-labelledby="t-5-2">
+          <label class="choice"><input type="radio" name="r-5-2" value="A"><span class="letter">A</span><span class="txt">Antes que la ficha de antecedentes: es más urgente.</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="B"><span class="letter">B</span><span class="txt">Después de la ficha y antes de que un centro use ResidApp con familias reales.</span></label>
+          <label class="choice"><input type="radio" name="r-5-2" value="C"><span class="letter">C</span><span class="txt">Más adelante, cuando el centro lo pida.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. Ingeniería no ha construido nada de esto: las decisiones son de CJ.
+    Cuando respondas, ingeniería las revisa y lo incorpora a la aplicación. Tus respuestas se guardan en el servidor de desarrollo, detrás de la clave de estos documentos.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Estado de las respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). Las respuestas se guardan solas en el servidor. */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var API = "api/respuestas/" + DOC;
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;      // hay cambios que aún no están en el servidor
+  var savedAt = null;     // cuándo se guardó por última vez en el servidor
+  var ready = false;      // ya se ha leído lo que hay en el servidor: hasta entonces no se guarda nada (no se pisa lo guardado con una página vacía)
+  var failed = "";        // por qué falló el último guardado ("" si no falló)
+  var rev = 0;            // número de cambio: si cambia mientras se guarda, queda algo por guardar
+  var timer = null;
+  var saving = false;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (failed) say("error", failed);
+    else if (!ready) say("", "Comprobando lo que ya tienes guardado…");
+    else if (dirty) say("", "Guardando…");
+    else if (savedAt) say("ok", "Guardado en el servidor (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda solo.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? "Respondida" : "Pendiente";
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  // Guarda en el servidor lo que hay en pantalla. Si falla, lo marcado sigue en este navegador y se reintenta solo.
+  function save() {
+    clearTimeout(timer);
+    if (!ready) return;
+    if (saving) { timer = setTimeout(save, 1000); return; }
+    var sent = rev;
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    saving = true;
+    fetch(API, { method: "PUT", headers: { "Content-Type": "application/json" }, body: json, credentials: "same-origin", keepalive: json.length < 60000 })
+      .then(function (r) {
+        if (!r.ok) throw r.status;
+        failed = "";
+        savedAt = data.guardado;
+        if (rev === sent) dirty = false; else timer = setTimeout(save, 1000);
+      })
+      .catch(function (e) {
+        failed = e === 401
+          ? "Se ha cerrado el acceso a estos documentos. Vuelve a abrirlos con la clave; lo que has marcado sigue en este navegador."
+          : "No se ha podido guardar en el servidor. Lo que marcas sigue en este navegador y se reintentará.";
+        timer = setTimeout(save, 15000);
+      })
+      .finally(function () { saving = false; store(collect()); status(); });
+  }
+
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    rev++;
+    store(refresh());
+    status();
+    clearTimeout(timer);
+    timer = setTimeout(save, 2000);
+  }
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  // Si se cierra o se cambia de pestaña con algo sin guardar, se guarda ya.
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden" && dirty) save(); });
+
+  // Recupera lo último que se guardó en el servidor. Hasta que lo consigue (200 o 404) no se guarda nada.
+  function load() {
+    fetch(API, { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) {
+        if (r.status === 204) return null;
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
+      .then(function (data) {
+        ready = true;
+        failed = "";
+        if (data && data.documento === DOC && !dirty) {
+          apply(data);
+          savedAt = data.guardado || null;
+          store(refresh());
+          if (data.cuestionario !== VERSION) {
+            say("error", "Tus respuestas son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+            return;
+          }
+        } else if (!data && !dirty && refresh().respondidas > 0) {
+          dirty = true; // respuestas de este navegador que el servidor todavía no tiene: se suben
+        }
+        if (dirty) save();
+        status();
+      })
+      .catch(function () {
+        failed = "No se han podido leer las respuestas guardadas en el servidor. No se guarda nada hasta conseguirlo; se reintenta solo.";
+        status();
+        setTimeout(load, 10000);
+      });
+  }
+
+  // Notas de ingeniería: lo que ingeniería responde a cada pregunta (<documento>.notas.json, se despliega con la aplicación). Solo lectura; sin nota, no se muestra nada.
+  function notes() {
+    fetch(DOC + ".notas.json", { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var ns = (data && data.documento === DOC && data.notas) || {};
+        questions.forEach(function (q) {
+          var t = ns[q.dataset.q];
+          if (typeof t !== "string" || !t.trim()) return;
+          var box = document.createElement("aside");
+          box.className = "nota-ing";
+          box.setAttribute("aria-label", "Nota de ingeniería");
+          var h = document.createElement("strong");
+          h.textContent = "Nota de ingeniería";
+          var p = document.createElement("p");
+          p.textContent = t.trim(); // texto plano, nunca HTML
+          box.appendChild(h);
+          box.appendChild(p);
+          q.appendChild(box);
+        });
+      })
+      .catch(function () { /* sin notas */ });
+  }
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+  if (location.protocol.indexOf("http") === 0) { load(); notes(); }
+  else say("error", "Abre este documento desde la web de ResidApp para que se guarden las respuestas.");
+})();
+</script>
+</body>
+</html>
