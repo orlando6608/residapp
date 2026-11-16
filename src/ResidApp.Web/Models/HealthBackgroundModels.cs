@@ -61,6 +61,66 @@ public sealed class AllergyFormModel
 /// <summary>La pantalla del formulario: quién es el residente (nombre y foto, para comprobar que es la persona correcta antes de guardar) y el formulario.</summary>
 public sealed record AllergyEditViewModel(ScopeResidentSummary Resident, AllergyFormModel Form, string? Error, string RecordController);
 
+/// <summary>Una fila del formulario de enfermedades e intervenciones. El año va en su casilla, no dentro del nombre. Una fila con el nombre y el año en blanco se ignora.</summary>
+public sealed class ConditionRowModel
+{
+    public string? Tipo { get; set; }
+    public string? Nombre { get; set; }
+    public string? Anio { get; set; }
+}
+
+/// <summary>El formulario de enfermedades e intervenciones (ficha de antecedentes de salud, fase 2; script 0096). Igual que el de alergias: VersionVista es la versión vigente
+/// cuando se abrió la pantalla (0 si estaba pendiente); Estado, Fuente y Motivo son códigos de lista cerrada.</summary>
+public sealed class ConditionFormModel
+{
+    public Guid ResidenteId { get; set; }
+    public int VersionVista { get; set; }
+    public string? Estado { get; set; }
+    public string? Fuente { get; set; }
+    public string? Motivo { get; set; }
+    public List<ConditionRowModel> Filas { get; set; } = [];
+
+    /// <summary>Convierte lo escrito en el contenido de la versión, o lanza DomainValidationException si no es válido (incluido un año que no es un número).</summary>
+    public ConditionRecordContent ToContent()
+    {
+        if (!EnumCode.TryParseCode<HealthBackgroundState>(Estado ?? "", out var state))
+        {
+            throw new DomainValidationException(HealthBackground.InvalidCode);
+        }
+        HealthBackgroundSource? source = null;
+        if (!string.IsNullOrWhiteSpace(Fuente))
+        {
+            source = EnumCode.TryParseCode<HealthBackgroundSource>(Fuente, out var parsed) ? parsed : throw new DomainValidationException(HealthBackground.InvalidCode);
+        }
+        var items = Filas
+            .Where(row => !string.IsNullOrWhiteSpace(row.Nombre) || !string.IsNullOrWhiteSpace(row.Anio))
+            .Select(row => new ConditionItem(
+                EnumCode.TryParseCode<ConditionItemType>(row.Tipo ?? "", out var type) ? type : throw new DomainValidationException(HealthBackground.InvalidCode),
+                row.Nombre, ParseYear(row.Anio)))
+            .ToList();
+        return new ConditionRecordContent(state, items, source);
+    }
+
+    private static int? ParseYear(string? text) =>
+        string.IsNullOrWhiteSpace(text) ? null
+        : int.TryParse(text.Trim(), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var year) ? year
+        : throw new DomainValidationException(HealthBackground.InvalidCode);
+
+    public HealthBackgroundReason? ReasonOrNull() =>
+        EnumCode.TryParseCode<HealthBackgroundReason>(Motivo ?? "", out var reason) ? reason : null;
+
+    public static ConditionFormModel From(Guid residentId, ConditionRecord? record) => new()
+    {
+        ResidenteId = residentId,
+        VersionVista = record?.Version ?? 0,
+        Estado = record?.Content.State.ToCode(),
+        Fuente = record?.Content.Source?.ToCode(),
+        Filas = record?.Content.Items.Select(i => new ConditionRowModel { Tipo = i.Type.ToCode(), Nombre = i.Name, Anio = i.Year?.ToString(System.Globalization.CultureInfo.InvariantCulture) }).ToList() ?? [],
+    };
+}
+
+public sealed record ConditionEditViewModel(ScopeResidentSummary Resident, ConditionFormModel Form, string? Error, string RecordController);
+
 /// <summary>El bloque «Antecedentes de salud» de la ficha del residente. View es null si no se pudo leer (el bloque entonces no se enseña).</summary>
 public sealed record HealthBackgroundCardModel(Guid ResidentId, HealthBackgroundView View);
 
@@ -122,4 +182,47 @@ public static class HealthBackgroundDisplay
         "Esta ficha no se revisa de forma periódica: se actualiza cuando ocurre algo.";
 
     public static string? Source(HealthBackgroundSource? source) => source is { } value ? $"Fuente: {EnumDisplay.Label(value).ToLowerInvariant()}." : null;
+
+    public const string ConditionsTitle = "Enfermedades e intervenciones";
+
+    public const string ConditionsPending =
+        "Ficha pendiente de rellenar en este centro: no hay datos registrados. No equivale a «sin enfermedades».";
+
+    public static string ConditionsState(HealthBackgroundState state) => state switch
+    {
+        HealthBackgroundState.NoRefiere => "Sin enfermedades ni intervenciones conocidas.",
+        HealthBackgroundState.NoConsta => "No se sabe o no consta: información no fiable o sin confirmar. No equivale a «sin enfermedades».",
+        _ => "Enfermedades e intervenciones:",
+    };
+
+    public static string ConditionLine(ConditionItem item) =>
+        $"{(item.Type == ConditionItemType.Enfermedad ? "Enfermedad" : "Intervención")}: {item.Name}{(item.Year is { } year ? $" ({year})" : "")}";
+
+    public static string ConditionsLastModified(ConditionRecord record) =>
+        $"Última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
+        "Esta ficha no se revisa de forma periódica: se actualiza cuando ocurre algo.";
+
+    /// <summary>Lo que dice el informe de derivación sobre las enfermedades e intervenciones: la lista completa (CJ: «no importa que crezca»), con la misma cautela que las
+    /// alergias: no dice «revisado», dice cuándo y quién la modificó por última vez, y una ficha ilegible se dice, no se imprime como válida.</summary>
+    public static IReadOnlyList<string> ConditionsReportLines(HealthBackgroundView? view)
+    {
+        if (view is null || view.UnreliableConditionsVersion is not null)
+        {
+            return ["No se ha podido leer la ficha de enfermedades e intervenciones: este dato no es fiable. Contrasta con el residente o su familia y con la documentación clínica del centro."];
+        }
+        if (view.Conditions is not { } record)
+        {
+            return [ConditionsPending];
+        }
+
+        var lines = new List<string> { ConditionsState(record.Content.State) };
+        lines.AddRange(record.Content.Items.Select(ConditionLine));
+        if (Source(record.Content.Source) is { } source)
+        {
+            lines.Add(source);
+        }
+        lines.Add($"Registrado en la ficha del residente (versión {record.Version}); última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
+            "Esta ficha no se revisa de forma periódica. Contrastar con la documentación clínica del centro y con el residente o su familia.");
+        return lines;
+    }
 }

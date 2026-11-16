@@ -10,9 +10,14 @@ namespace ResidApp.Application.UseCases;
 public sealed record SaveAllergiesCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, int VersionVista, HealthBackgroundReason? Motivo, AllergyRecordContent Contenido);
 
-/// <summary>Lo que necesita el bloque de antecedentes de una ficha: el apartado de alergias vigente (null si está pendiente) y si quien mira puede cambiarlo. UnreliableVersion es el
-/// número de la versión vigente cuando no se puede dar por fiable (Allergies es entonces null): la pantalla lo avisa y el informe lo dice, y se puede guardar otra que la corrija.</summary>
-public sealed record HealthBackgroundView(AllergyRecord? Allergies, bool CanEdit, int? UnreliableVersion = null);
+public sealed record SaveConditionsCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, int VersionVista, HealthBackgroundReason? Motivo, ConditionRecordContent Contenido);
+
+/// <summary>Lo que necesita el bloque de antecedentes de una ficha: cada apartado vigente (null si está pendiente) y si quien mira puede cambiarlos. UnreliableVersion es el
+/// número de la versión vigente de las alergias cuando no se puede dar por fiable (Allergies es entonces null): la pantalla lo avisa y el informe lo dice, y se puede guardar otra
+/// que la corrija. UnreliableConditionsVersion es lo mismo para enfermedades e intervenciones; un apartado ilegible no oculta al otro.</summary>
+public sealed record HealthBackgroundView(
+    AllergyRecord? Allergies, bool CanEdit, int? UnreliableVersion = null, ConditionRecord? Conditions = null, int? UnreliableConditionsVersion = null);
 
 /// <summary>
 /// Ficha de antecedentes de salud, fase 1 (docs/producto/ficha-antecedentes-salud-diseno.md, decisiones 9 y 10): la ven Enfermería y Medicina en su ámbito y
@@ -29,36 +34,61 @@ public sealed class HealthBackgroundApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var (target, canEdit) = await RequireAsync(profileScopeId, centerId, residentId, ct);
+            AllergyRecord? allergies = null;
+            int? unreliableAllergies = null;
             try
             {
-                return new HealthBackgroundView(await repository.ReadAllergiesAsync(target.CenterId, target.ResidentId, ct), canEdit);
+                allergies = await repository.ReadAllergiesAsync(target.CenterId, target.ResidentId, ct);
             }
             catch (HealthBackgroundInconsistentException inconsistent)
             {
-                return new HealthBackgroundView(null, canEdit, inconsistent.Version);
+                unreliableAllergies = inconsistent.Version;
             }
+
+            ConditionRecord? conditions = null;
+            int? unreliableConditions = null;
+            try
+            {
+                conditions = await repository.ReadConditionsAsync(target.CenterId, target.ResidentId, ct);
+            }
+            catch (HealthBackgroundInconsistentException inconsistent)
+            {
+                unreliableConditions = inconsistent.Version;
+            }
+            return new HealthBackgroundView(allergies, canEdit, unreliableAllergies, conditions, unreliableConditions);
         });
 
     /// <summary>Guarda una versión nueva y devuelve su número. Sin versión vista (0) es el registro inicial; con ella, el motivo es obligatorio y distinto.</summary>
     public Task<ApplicationResult<int>> SaveAllergiesAsync(SaveAllergiesCommand command, CancellationToken ct = default) =>
+        SaveAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, command.VersionVista, command.Motivo,
+            (target, reason, token) => repository.SaveAllergiesAsync(target, command.VersionVista, reason, command.Contenido, token), ct);
+
+    /// <summary>Lo mismo para el apartado de enfermedades e intervenciones.</summary>
+    public Task<ApplicationResult<int>> SaveConditionsAsync(SaveConditionsCommand command, CancellationToken ct = default) =>
+        SaveAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, command.VersionVista, command.Motivo,
+            (target, reason, token) => repository.SaveConditionsAsync(target, command.VersionVista, reason, command.Contenido, token), ct);
+
+    private Task<ApplicationResult<int>> SaveAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId residentId, int seenVersion, HealthBackgroundReason? chosenReason,
+        Func<HealthBackgroundTarget, HealthBackgroundReason, CancellationToken, Task<int>> save, CancellationToken ct) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
-            var reason = command.VersionVista == 0
+            var reason = seenVersion == 0
                 ? HealthBackgroundReason.RegistroInicial
-                : command.Motivo is { } chosen && chosen != HealthBackgroundReason.RegistroInicial && Enum.IsDefined(chosen)
+                : chosenReason is { } chosen && chosen != HealthBackgroundReason.RegistroInicial && Enum.IsDefined(chosen)
                     ? chosen
                     : throw new DomainValidationException(HealthBackground.InvalidCode);
-            if (command.VersionVista < 0)
+            if (seenVersion < 0)
             {
                 throw new DomainValidationException(HealthBackground.InvalidCode);
             }
 
-            var (target, canEdit) = await RequireAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
+            var (target, canEdit) = await RequireAsync(profileScopeId, centerId, residentId, ct);
             if (!canEdit)
             {
                 throw new AccessDeniedException();
             }
-            return await repository.SaveAllergiesAsync(target, command.VersionVista, reason, command.Contenido, ct);
+            return await save(target, reason, ct);
         });
 
     private async Task<(HealthBackgroundTarget Target, bool CanEdit)> RequireAsync(

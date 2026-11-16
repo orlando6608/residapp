@@ -49,16 +49,12 @@ public sealed record AllergyItem
     public string Name { get; }
     public string? Reaction { get; }
 
-    /// <summary>Un carácter de control o un separador de línea o de párrafo Unicode (U+2028, U+2029), que char.IsControl no cubre: el texto es de una sola línea.</summary>
-    private static bool IsLineBreakOrControl(char c) =>
-        char.IsControl(c) || char.GetUnicodeCategory(c) is System.Globalization.UnicodeCategory.LineSeparator or System.Globalization.UnicodeCategory.ParagraphSeparator;
-
     public AllergyItem(AllergyItemType type, string? name, string? reaction)
     {
         name = VitalSigns.Normalize(name);
         reaction = VitalSigns.Normalize(reaction);
         if (!Enum.IsDefined(type) || name is null || name.Length > MaxNameLength || reaction is { Length: > MaxReactionLength }
-            || name.Any(IsLineBreakOrControl) || (reaction?.Any(IsLineBreakOrControl) ?? false)
+            || name.Any(HealthBackground.IsLineBreakOrControl) || (reaction?.Any(HealthBackground.IsLineBreakOrControl) ?? false)
             || (type == AllergyItemType.Intolerancia && reaction is null))
         {
             throw new DomainValidationException(HealthBackground.InvalidCode);
@@ -97,9 +93,72 @@ public sealed record AllergyRecordContent
     }
 }
 
+public enum ConditionItemType
+{
+    [Code("ENFERMEDAD")] [Display(Name = "Enfermedad")] Enfermedad,
+    [Code("INTERVENCION")] [Display(Name = "Intervención quirúrgica")] Intervencion,
+}
+
+/// <summary>Un elemento de la lista de enfermedades e intervenciones (script 0096): un nombre corto de una sola línea y, si se sabe, el año (CJ, medicina-alergias-y-plazos:
+/// «HTA, DM2, IAM en 2015, IQ apendicectomía en 1999»). El año es opcional: «año desconocido» es una respuesta válida (DPO, apartado 1.3); no puede ser futuro.</summary>
+public sealed record ConditionItem
+{
+    public const int MaxNameLength = 100;
+    public const int MinYear = 1900;
+
+    public ConditionItemType Type { get; }
+    public string Name { get; }
+    public int? Year { get; }
+
+    public ConditionItem(ConditionItemType type, string? name, int? year)
+    {
+        name = VitalSigns.Normalize(name);
+        if (!Enum.IsDefined(type) || name is null || name.Length > MaxNameLength || name.Any(HealthBackground.IsLineBreakOrControl)
+            || (year is { } y && (y < MinYear || y > DateTime.Now.Year)))
+        {
+            throw new DomainValidationException(HealthBackground.InvalidCode);
+        }
+
+        Type = type;
+        Name = name;
+        Year = year;
+    }
+}
+
+/// <summary>El contenido de cada versión del apartado de enfermedades e intervenciones: el estado, la lista y la fuente opcional. «Con entradas» exige al menos un elemento;
+/// «Refiere que no hay» y «No consta» no admiten ninguno (a diferencia de las alergias, que admiten intolerancias).</summary>
+public sealed record ConditionRecordContent
+{
+    public const int MaxItems = 100;
+
+    public HealthBackgroundState State { get; }
+    public IReadOnlyList<ConditionItem> Items { get; }
+    public HealthBackgroundSource? Source { get; }
+
+    public ConditionRecordContent(HealthBackgroundState state, IReadOnlyList<ConditionItem>? items, HealthBackgroundSource? source)
+    {
+        items ??= [];
+        if (!Enum.IsDefined(state) || items.Count > MaxItems || (source is { } s && !Enum.IsDefined(s))
+            || (state == HealthBackgroundState.ConEntradas ? items.Count == 0 : items.Count > 0)
+            || items.GroupBy(i => (i.Type, Key: i.Name.ToUpperInvariant(), i.Year)).Any(g => g.Count() > 1))
+        {
+            throw new DomainValidationException(HealthBackground.InvalidCode);
+        }
+
+        State = state;
+        Items = items;
+        Source = source;
+    }
+}
+
 public static class HealthBackground
 {
     public const string InvalidCode = "HEALTH_BACKGROUND_INVALID";
     public const string RevisionConflictCode = "HEALTH_BACKGROUND_REVISION_CONFLICT";
     public const string AllergiesSection = "ALERGIAS";
+    public const string ConditionsSection = "ENFERMEDADES";
+
+    /// <summary>Un carácter de control o un separador de línea o de párrafo Unicode (U+2028, U+2029), que char.IsControl no cubre: el texto es de una sola línea.</summary>
+    internal static bool IsLineBreakOrControl(char c) =>
+        char.IsControl(c) || char.GetUnicodeCategory(c) is System.Globalization.UnicodeCategory.LineSeparator or System.Globalization.UnicodeCategory.ParagraphSeparator;
 }
