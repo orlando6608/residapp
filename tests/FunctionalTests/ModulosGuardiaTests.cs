@@ -189,8 +189,23 @@ public class ModulosGuardiaTests
         }
     }
 
+    /// <summary>En «Production» no se arranca el host: en CI (servidor en UTC) cae antes por la zona horaria (ServerTimeZone.Verify) y la prueba no llegaría a la regla de módulos. Se prueba la regla tal como la llama Program.cs.</summary>
     [Theory]
-    [InlineData("Production")]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("desarrollo")]
+    [InlineData("Produccion")]
+    public void En_produccion_ActivarTodos_no_pasa_la_validacion_de_arranque(string? declared)
+    {
+        var error = Assert.Throws<InvalidOperationException>(() =>
+            ResidApp.Infrastructure.Modules.ModuleOptions.Validate(new ResidApp.Infrastructure.Modules.ModuleOptions { ActivarTodos = true }, isDevelopmentEnvironment: false, declared));
+
+        Assert.Contains("Modulos:ActivarTodos", error.Message);
+        ResidApp.Infrastructure.Modules.ModuleOptions.Validate(new ResidApp.Infrastructure.Modules.ModuleOptions { ActivarTodos = false }, isDevelopmentEnvironment: false, declared);
+        ResidApp.Infrastructure.Modules.ModuleOptions.Validate(new ResidApp.Infrastructure.Modules.ModuleOptions { ActivarTodos = true }, isDevelopmentEnvironment: true, declared);
+    }
+
+    [Theory]
     [InlineData("Staging")]
     [InlineData("Otro")]
     public void Con_ActivarTodos_un_entorno_que_no_declara_ser_de_desarrollo_no_arranca(string environment)
