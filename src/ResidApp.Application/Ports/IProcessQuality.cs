@@ -24,20 +24,23 @@ public sealed record MilestoneUnitCounts(UnitId UnitId, string UnitName, IReadOn
 
 /// <summary>
 /// DIR-11: la revisión de calidad de proceso de un periodo (From y To incluidos): por hito y unidad, nunca por profesional, y la lista de
-/// episodios con algún hito fuera de plazo o a punto de vencer. Los plazos son los del centro (Deadlines).
+/// episodios con algún hito fuera de plazo o a punto de vencer. Deadlines son los plazos de hoy; cada hito se mide con el plazo que valía cuando
+/// empezó (CJ, 3.1 de medicina-alergias-y-plazos-cj) y Changes son los cambios de plazos que cayeron dentro del periodo (null: no se calcularon).
 /// </summary>
 public sealed record ProcessQualityReport(
     DateOnly From, DateOnly To, IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline> Deadlines,
     IReadOnlyList<MilestoneUnitCounts> Units, IReadOnlyDictionary<ProcessMilestone, MilestoneCount> Total,
-    IReadOnlyList<MilestoneEntry> Exceptions);
+    IReadOnlyList<MilestoneEntry> Exceptions, IReadOnlyList<MilestoneDeadlineChange>? Changes = null);
 
 public static class ProcessQualityRules
 {
     /// <summary>Mide cada hecho con el plazo de su hito. Un hito sin plazo (no se mide) no cuenta, y tampoco uno sin hacer de un episodio ya
-    /// cerrado: ya no se puede actuar sobre él. Las unidades salen aunque no tengan nada.</summary>
+    /// cerrado: ya no se puede actuar sobre él. Las unidades salen aunque no tengan nada. Con changes (el historial de plazos del centro), cada
+    /// hecho se mide con el plazo que valía cuando empezó; sin él, con deadlines (los de hoy), como hacen los avisos en vivo.</summary>
     public static ProcessQualityReport Build(
         IReadOnlyList<MilestoneFact> facts, IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline> deadlines,
-        IReadOnlyList<(UnitId Id, string Name)> units, DateOnly from, DateOnly to, DateTime now)
+        IReadOnlyList<(UnitId Id, string Name)> units, DateOnly from, DateOnly to, DateTime now,
+        IReadOnlyList<MilestoneDeadlineChange>? changes = null)
     {
         var entries = new List<MilestoneEntry>();
         foreach (var fact in facts)
@@ -47,7 +50,17 @@ public static class ProcessQualityRules
                 continue;
             }
 
-            if (!deadlines.TryGetValue(fact.Milestone, out var deadline) || deadline.For(fact.Priority) is not { } term)
+            if (!deadlines.TryGetValue(fact.Milestone, out var deadline))
+            {
+                continue;
+            }
+
+            if (changes is { Count: > 0 })
+            {
+                deadline = ProcessMilestoneRules.DeadlineAt(fact.Milestone, new DateTimeOffset(fact.Start, TimeSpan.Zero), deadline, changes);
+            }
+
+            if (deadline.For(fact.Priority) is not { } term)
             {
                 continue;
             }

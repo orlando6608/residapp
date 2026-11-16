@@ -1,4 +1,6 @@
 {
   "documento": "medicina-alergias-y-plazos-cj",
-  "notas": {}
+  "notas": {
+    "3.1": "Ya está hecho en la aplicación (pendiente de que lo pruebes). Hemos leído tu respuesta así: el cálculo \"como hoy\" no era lo que querías en el fondo, sino que al cambiar un plazo el pasado no se tocara y quedara un aviso a Calidad. Por eso Calidad de proceso mide ahora cada hito con el plazo que valía cuando empezó, y si Dirección cambia un plazo dentro del periodo que se mira, arriba sale la nota «Los plazos cambiaron en este periodo.» con la fecha, el hito y el plazo de antes y de después (sin decir quién lo cambió). Los avisos de «a punto de vencer» de Enfermería y Medicina siguen con el plazo de hoy. Lo puedes ver en la prueba 8 de la guía 4. Si no era lo que querías, cambia tu respuesta y dínoslo en el comentario."
+  }
 }

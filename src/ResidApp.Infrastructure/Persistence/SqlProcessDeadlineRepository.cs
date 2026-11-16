@@ -112,6 +112,22 @@ public sealed class SqlProcessDeadlineRepository(SqlConnectionFactory connection
         return await ReadEffectiveAsync(connection, null, centerId, ct);
     }
 
+    public async Task<IReadOnlyList<MilestoneDeadlineChange>> ListChangesAsync(CenterId centerId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return (await connection.QueryAsync<ChangeRow>(new CommandDefinition("""
+            SELECT hito_codigo AS Code, plazo_anterior_minutos AS PreviousNormal, prioritario_anterior_minutos AS PreviousPriority,
+                   plazo_nuevo_minutos AS NewNormal, prioritario_nuevo_minutos AS NewPriority, cambiado_en AS ChangedAt
+              FROM dbo.plazos_hitos_centro_historial
+             WHERE centro_id = @CenterId
+             ORDER BY cambiado_en, hito_codigo
+            """, new { CenterId = centerId.Value }, cancellationToken: ct)))
+            .Select(h => new MilestoneDeadlineChange(
+                EnumCode.ParseCode<ProcessMilestone>(h.Code), Deadline(h.PreviousNormal, h.PreviousPriority), Deadline(h.NewNormal, h.NewPriority),
+                new DateTimeOffset(DateTime.SpecifyKind(h.ChangedAt, DateTimeKind.Utc))))
+            .ToList();
+    }
+
     private static async Task EnsurePermissionAsync(
         SqlConnection connection, SqlTransaction? transaction, ProcessDeadlinesAccess access, CancellationToken ct)
     {
@@ -153,6 +169,8 @@ public sealed class SqlProcessDeadlineRepository(SqlConnectionFactory connection
         new(normal is { } n ? TimeSpan.FromMinutes(n) : null, priority is { } p ? TimeSpan.FromMinutes(p) : null);
 
     private sealed record DeadlineRow(string Code, int? Normal, int? Priority);
+
+    private sealed record ChangeRow(string Code, int? PreviousNormal, int? PreviousPriority, int? NewNormal, int? NewPriority, DateTime ChangedAt);
 
     private sealed record HistoryRow(
         string Code, int? PreviousNormal, int? PreviousPriority, int? NewNormal, int? NewPriority, string ProfileCode,

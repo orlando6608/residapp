@@ -175,8 +175,13 @@ public sealed class DireccionApplicationService(
             var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
             var facts = await directory.ListMilestoneFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
             var effective = await deadlines.GetEffectiveAsync(query.CentroId, ct);
+            // CJ (3.1 de medicina-alergias-y-plazos-cj): cada hito se mide con el plazo que valía cuando empezó, y los cambios de plazos que caen
+            // dentro del periodo se avisan en pantalla (los posteriores no cambian sus cifras; los anteriores, tampoco).
+            var changes = await deadlines.ListChangesAsync(query.CentroId, ct);
+            var inPeriod = changes.Where(c => c.ChangedAt.UtcDateTime >= fromUtc && c.ChangedAt.UtcDateTime < toExclusiveUtc).ToList();
             // CJ (2026-10-28, 2.2): solo cifras por unidad y periodo, sin episodios ni residentes; la lista de excepciones es de Enfermería y Medicina.
-            return ProcessQualityRules.Build(facts, effective, info.Units, query.From, query.To, DateTime.UtcNow) with { Exceptions = [] };
+            return ProcessQualityRules.Build(facts, effective, info.Units, query.From, query.To, DateTime.UtcNow, changes)
+                with { Exceptions = [], Changes = inPeriod };
         });
 
     /// <summary>Las peticiones de historial tras un traslado del periodo (CJ, 2026-10-28, 3.3), sin contenido clínico y sin permiso aparte: basta el ámbito de Dirección Clínica. Al abrir

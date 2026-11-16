@@ -52,9 +52,25 @@
 @if (report is not null)
 {
     <h2 class="h5">Plazos y cumplimiento del ámbito</h2>
+    @if (report.Changes is { Count: > 0 } changes)
+    {
+        <div class="alert alert-info" role="note" id="aviso-cambio-plazos">
+            <p class="fw-semibold mb-1">Los plazos cambiaron en este periodo.</p>
+            <ul class="mb-2">
+                @foreach (var change in changes.OrderBy(c => c.ChangedAt))
+                {
+                    <li>@change.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy"): @ProcessMilestoneDisplay.Label(change.Milestone), @ProcessMilestoneDisplay.ChangeSummary(change).</li>
+                }
+            </ul>
+            <p class="mb-0">
+                Cada hito se mide con el plazo que valía cuando empezó, así que las cifras de antes y de después del cambio no son del todo
+                comparables.
+            </p>
+        </div>
+    }
     <p class="text-muted">
-        «Fuera de plazo» son los hitos hechos tarde y los que siguen sin hacer con el plazo ya pasado, de los medidos. Un hito sin hacer de un
-        episodio ya cerrado no se mide.
+        «Fuera de plazo» son los hitos hechos tarde y los que siguen sin hacer con el plazo ya pasado, de los medidos; cada uno se mide con el
+        plazo que valía cuando empezó, y las columnas de plazo enseñan los plazos de hoy. Un hito sin hacer de un episodio ya cerrado no se mide.
     </p>
     <div class="table-responsive mb-4">
         <table class="table align-middle">

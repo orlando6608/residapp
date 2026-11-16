@@ -372,7 +372,7 @@
       "pasos": [
         { "texto": "En el Inicio, abre **Calidad de proceso**.", "botones": ["Calidad de proceso"] },
         { "texto": "Elige «Desde» y «Hasta» y pulsa **Aplicar**. Cada hito cuenta en el periodo en que empezó.", "botones": ["Aplicar"], "campos": ["Desde", "Hasta"] },
-        { "texto": "En «Plazos y cumplimiento del ámbito» ves, por hito, su plazo (normal y prioritario) y cuántos de los medidos están fuera de plazo y cuántos a punto de vencer. Debajo, «Por unidad», cuántos hitos están fuera de plazo sobre los medidos.", "campos": ["Plazos y cumplimiento del ámbito", "Por unidad"] }
+        { "texto": "En «Plazos y cumplimiento del ámbito» ves, por hito, su plazo de hoy (normal y prioritario) y cuántos de los medidos están fuera de plazo y cuántos a punto de vencer. Cada hito se mide con el plazo que valía cuando empezó. Debajo, «Por unidad», cuántos hitos están fuera de plazo sobre los medidos.", "campos": ["Plazos y cumplimiento del ámbito", "Por unidad"] }
       ],
       "despues": [
         { "para": "Dirección / Coordinación Clínica", "texto": "Abrir esta pantalla queda en la auditoría (quién y cuándo, sin ningún residente); cambiar el periodo con «Aplicar» no añade otra anotación. No hay lista de episodios: los casos concretos los ven Enfermería y Medicina, que reciben los avisos de «a punto de vencer»; Dirección no los recibe." },
@@ -381,10 +381,11 @@
       ],
       "dudas": [
         { "p": "Quiero cambiar los plazos.", "r": "Hace falta otro permiso, **Gestionar los plazos de los hitos del proceso** (ver DIR-13). Con él, la pantalla muestra «Cambiar los plazos del centro»." },
+        { "p": "«Los plazos cambiaron en este periodo.»", "r": "Es una nota informativa, no un fallo: dentro del periodo que miras se cambió algún plazo y debajo de la nota va una línea por cambio (fecha, hito y plazo de tanto a tanto, sin decir quién). Cada hito se mide con el plazo que valía cuando empezó, así que las cifras de antes y de después del cambio no son del todo comparables. Sin cambios en el periodo, la nota no sale." },
         { "p": "«Tu ámbito no tiene unidades.»", "r": "Pídeselas a Administración." }
       ],
       "rutas": ["Direccion/Index", "Direccion/Calidad"],
-      "mensajes": ["Tu ámbito no tiene unidades."],
+      "mensajes": ["Tu ámbito no tiene unidades.", "Los plazos cambiaron en este periodo."],
       "manual": { "id": "calidad-direccion", "titulo": "Calidad de proceso" },
       "flujo": { "id": "direccion", "titulo": "Dirección Clínica mira el conjunto" }
     },
@@ -405,7 +406,7 @@
         { "texto": "Pulsa **Guardar**.", "botones": ["Guardar"] }
       ],
       "despues": [
-        { "para": "Dirección / Coordinación Clínica", "texto": "Verás «Plazos de los hitos guardados.». Cada cambio queda en el «Historial de cambios» de la pantalla y en la auditoría." },
+        { "para": "Dirección / Coordinación Clínica", "texto": "Verás «Plazos de los hitos guardados.». Cada cambio queda en el «Historial de cambios» de la pantalla y en la auditoría. Calidad de proceso mide los hitos que empiecen después con el plazo nuevo y sigue midiendo los anteriores con el que tenían; si el cambio cae dentro del periodo que se mira, lo avisa con una nota." },
         { "para": "Enfermería", "texto": "Sus avisos de plazo usan los plazos nuevos." },
         { "para": "Medicina", "texto": "Igual: sus avisos de plazo usan los plazos nuevos." }
       ],

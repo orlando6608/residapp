@@ -25,11 +25,15 @@ public class ListMilestoneWarningsTests
             Task.FromResult<IReadOnlyList<string>>([]);
     }
 
-    private sealed class Deadlines(IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline>? map = null) : IProcessDeadlineRepository
+    private sealed class Deadlines(
+        IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline>? map = null, IReadOnlyList<MilestoneDeadlineChange>? changes = null) : IProcessDeadlineRepository
     {
         public Task<ProcessDeadlinesView> ReadAsync(ProcessDeadlinesAccess access, CancellationToken ct = default) => throw new NotSupportedException();
 
         public Task<int> SaveAsync(SaveProcessDeadlinesInput input, CancellationToken ct = default) => throw new NotSupportedException();
+
+        public Task<IReadOnlyList<MilestoneDeadlineChange>> ListChangesAsync(CenterId centerId, CancellationToken ct = default) =>
+            Task.FromResult(changes ?? []);
 
         public Task<IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline>> GetEffectiveAsync(CenterId centerId, CancellationToken ct = default) =>
             Task.FromResult(map ?? ProcessMilestoneRules.Defaults);
@@ -99,6 +103,29 @@ public class ListMilestoneWarningsTests
 
         Assert.Empty(byDefault.Value!);
         Assert.Equal(MilestoneStatus.FueraDePlazo, Assert.Single(byCenter.Value!).Status);
+    }
+
+    /// <summary>CJ, 3.1 de medicina-alergias-y-plazos-cj: Calidad de proceso mide cada caso con el plazo de cuando empezó, pero los avisos en vivo de
+    /// Enfermería y Medicina siguen con el plazo de hoy (a propósito: actúan sobre lo que rige ahora), aunque el historial diga otra cosa.</summary>
+    [Fact]
+    public async Task LosAvisosEnVivo_SiguenConElPlazoDeHoy_AunqueElHistorialDigaQueAntesValiaOtro()
+    {
+        var fact = Fact(ProcessMilestone.LecturaIndicacion, TimeSpan.FromHours(2));   // empezó hace 2 h
+        var today = new Dictionary<ProcessMilestone, MilestoneDeadline>(ProcessMilestoneRules.Defaults)
+        {
+            [ProcessMilestone.LecturaIndicacion] = new(TimeSpan.FromHours(1), TimeSpan.FromMinutes(15)),
+        };
+        // El plazo bajó de 8 h a 1 h hace una hora, cuando el caso ya había empezado: Calidad lo mediría con 8 h; el aviso, no.
+        var changes = new[]
+        {
+            new MilestoneDeadlineChange(ProcessMilestone.LecturaIndicacion, ProcessMilestoneRules.Defaults[ProcessMilestone.LecturaIndicacion],
+                today[ProcessMilestone.LecturaIndicacion], DateTimeOffset.UtcNow.AddHours(-1)),
+        };
+
+        var result = await new ListMilestoneWarnings(new Scopes(SystemProfile.Enfermeria), new Facts(fact), new Session(), new Deadlines(today, changes))
+            .ExecuteAsync(new ListMilestoneWarningsCommand(ScopeId, Center));
+
+        Assert.Equal(MilestoneStatus.FueraDePlazo, Assert.Single(result.Value!).Status);
     }
 
     [Theory]
