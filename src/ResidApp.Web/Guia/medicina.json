@@ -10,7 +10,7 @@
   "dependeDe": ["Enfermería", "Administración"],
   "entregaA": ["Enfermería", "Familia"],
   "siempre": [
-    "Ver los residentes de tu ámbito, con su foto, su ubicación, el resumen del basal vigente y sus alergias e intolerancias (ficha de antecedentes de salud).",
+    "Ver los residentes de tu ámbito, con su foto, su ubicación, el resumen del basal vigente, sus alergias e intolerancias y sus enfermedades e intervenciones (ficha de antecedentes de salud).",
     "Registrar un evento que observas directamente y valorar los escalados que te llegan de Enfermería.",
     "Dar indicaciones a Enfermería y hacer seguimiento médico.",
     "Activar el protocolo urgente, derivar a Urgencias y firmar el informe de derivación.",
@@ -20,7 +20,7 @@
   ],
   "conPermiso": [
     "Crear, completar y firmar el **estado basal** de un residente (ver MED-13). Hace falta **Basal inicial (al alta)** para el basal del alta y **Reevaluar el basal** para cualquier otro motivo; los concede Administración.",
-    "**Rellenar y cambiar la ficha de antecedentes de salud** (alergias e intolerancias a medicamentos; ver MED-14). También lo concede Administración."
+    "**Rellenar y cambiar la ficha de antecedentes de salud** (alergias e intolerancias a medicamentos, ver MED-14; enfermedades e intervenciones, ver MED-15). También lo concede Administración."
   ],
   "nunca": [
     "Modificar la observación de origen ni la valoración de Enfermería.",
@@ -498,6 +498,43 @@
       "rutas": ["Medicina/Residente", "FichaAntecedentes/Alergias"],
       "mensajes": [
         "Ficha de alergias guardada.",
+        "Revisa la ficha: elige una opción",
+        "Otra persona ha guardado esta ficha mientras la editabas"
+      ],
+      "manual": { "id": "ficha-antecedentes", "titulo": "Ficha de antecedentes de salud" },
+      "flujo": { "id": "llegada", "titulo": "Llega un residente: alta, familia y basal" }
+    },
+    {
+      "codigo": "MED-15",
+      "pregunta": "¿Cómo anoto o corrijo las enfermedades e intervenciones de un residente desde Medicina?",
+      "palabras": ["enfermedades", "enfermedad", "intervenciones", "intervención quirúrgica", "antecedentes", "ficha de antecedentes", "año", "permiso"],
+      "permisos": ["HEALTH_BACKGROUND_EDIT"],
+      "concede": "Administración",
+      "antes": [
+        "Tener el permiso **Rellenar y cambiar la ficha de antecedentes de salud** (el mismo que para las alergias, ver MED-14). Sin él, ves la ficha pero no puedes cambiarla: te dice que se lo pidas a Administración.",
+        "Tener a mano lo que consta: lo que dice el residente o su familia o el informe médico. Solo enfermedades e intervenciones de esa persona: nada de antecedentes de familiares ni de otras personas.",
+        "Saber que lo que guardes no se puede borrar (se guarda una versión nueva) y que se imprime en el informe de derivación a Urgencias."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, busca el bloque «Antecedentes de salud» y pulsa **Rellenar las enfermedades e intervenciones** (o **Cambiar las enfermedades e intervenciones** si ya hay datos).", "botones": ["Rellenar las enfermedades e intervenciones", "Cambiar las enfermedades e intervenciones"], "campos": ["Antecedentes de salud"] },
+        { "texto": "Comprueba el nombre y la foto del residente y elige una opción (ninguna viene marcada): «Tiene enfermedades o intervenciones», «Sin enfermedades ni intervenciones conocidas» o «No se sabe o no consta».", "campos": ["Tiene enfermedades o intervenciones", "Sin enfermedades ni intervenciones conocidas", "No se sabe o no consta"] },
+        { "texto": "Si tiene, rellena en la lista el «Tipo» (enfermedad o intervención quirúrgica), el «Nombre» (corto, en una sola línea) y el «Año (si se sabe)», que es opcional y va en su casilla, no dentro del nombre. Pulsa **Añadir otra fila** si necesitas más filas. Con las otras dos opciones, la lista va vacía.", "botones": ["Añadir otra fila"], "campos": ["Tipo", "Nombre", "Año (si se sabe)"] },
+        { "texto": "Si quieres, indica «¿De dónde sale el dato? (opcional)». Si ya había ficha, indica «¿Por qué guardas una versión nueva?»: «Ha cambiado algo» o «Corrijo un error».", "campos": ["¿De dónde sale el dato? (opcional)", "¿Por qué guardas una versión nueva?"] },
+        { "texto": "Pulsa **Guardar enfermedades e intervenciones**.", "botones": ["Guardar enfermedades e intervenciones"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «Ficha de enfermedades e intervenciones guardada.» y, en el bloque, el estado, la lista y la «Última modificación» (fecha y perfil). La ficha no se revisa de forma periódica: se actualiza cuando ocurre algo." },
+        { "para": "Enfermería", "texto": "Ve el mismo bloque y, con el permiso, también puede cambiarlo. El informe de derivación a Urgencias lleva la lista solo, en la sección «Enfermedades e intervenciones»; si está pendiente, lo dice." }
+      ],
+      "dudas": [
+        { "p": "El bloque dice «Pendiente».", "r": "Nadie ha rellenado las enfermedades de este residente. No equivale a «sin enfermedades»: rellénalas con lo que conste." },
+        { "p": "«Revisa la ficha: elige una opción…»", "r": "Falta elegir una de las tres opciones, o hay filas con «Sin enfermedades…» o «No se sabe o no consta», o un año que no es de cuatro cifras o es futuro, o un texto con saltos de línea o repetido." },
+        { "p": "Me equivoqué al guardar.", "r": "No se borra: vuelve a pulsar «Cambiar las enfermedades e intervenciones», corrige y elige «Corrijo un error». La versión anterior se conserva." },
+        { "p": "El bloque dice «Ficha con error: este dato no es fiable».", "r": "La última versión guardada está incompleta: no se enseña ni se imprime. Contrasta con el residente o su familia y vuelve a rellenarla: se guarda como una versión nueva que la corrige." }
+      ],
+      "rutas": ["Medicina/Residente", "FichaAntecedentes/Enfermedades"],
+      "mensajes": [
+        "Ficha de enfermedades e intervenciones guardada.",
         "Revisa la ficha: elige una opción",
         "Otra persona ha guardado esta ficha mientras la editabas"
       ],

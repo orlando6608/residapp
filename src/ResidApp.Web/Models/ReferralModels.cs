@@ -151,6 +151,7 @@ public static class ReferralReportBuilder
             $"Unidad: {identification.UnitName ?? "Sin unidad"}",
         ]),
         Section(HealthBackgroundDisplay.AllergiesTitle, HealthBackgroundDisplay.ReportLines(health)),
+        Section(HealthBackgroundDisplay.ConditionsTitle, HealthBackgroundDisplay.ConditionsReportLines(health)),
         Section("Basal vigente", BaselineLines(baseline)),
         Section("Observación de origen", ObservationLines(detail)),
         Section("Valoraciones", AssessmentLines(detail)),

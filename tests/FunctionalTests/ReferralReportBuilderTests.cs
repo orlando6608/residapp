@@ -60,7 +60,7 @@ public class ReferralReportBuilderTests
 
         Assert.All(sections, s => Assert.True(s.Automatic));
         Assert.Equal(
-            new[] { "Identificación del residente y del centro", "Alergias e intolerancias a medicamentos", "Basal vigente", "Observación de origen", "Valoraciones",
+            new[] { "Identificación del residente y del centro", "Alergias e intolerancias a medicamentos", "Enfermedades e intervenciones", "Basal vigente", "Observación de origen", "Valoraciones",
                 "Constantes y oxigenoterapia", "Actuaciones", "Evolución" },
             sections.Select(s => s.Title));
         foreach (var expected in new[]
@@ -131,6 +131,55 @@ public class ReferralReportBuilderTests
         Assert.Equal(before.Hash(), same.Hash());
     }
 
+    private static HealthBackgroundView ConditionsHealth(ConditionRecordContent content, int version = 1) =>
+        new(null, true, Conditions: new ConditionRecord(version, content, SystemProfile.Medicina, At));
+
+    [Fact]
+    public void EnfermedadesDelInforme_ConEntradasSinEnfermedadesNoConstaPendienteEIlegibleSalenDistintos_YNingunoDiceRevisado()
+    {
+        var conEntradas = HealthBackgroundDisplay.ConditionsReportLines(ConditionsHealth(new ConditionRecordContent(HealthBackgroundState.ConEntradas,
+            [new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", null), new ConditionItem(ConditionItemType.Intervencion, "Intervención Beta", 1999)],
+            HealthBackgroundSource.InformeMedico), version: 3));
+        var sinEnfermedades = HealthBackgroundDisplay.ConditionsReportLines(ConditionsHealth(new ConditionRecordContent(HealthBackgroundState.NoRefiere, null, null)));
+        var noConsta = HealthBackgroundDisplay.ConditionsReportLines(ConditionsHealth(new ConditionRecordContent(HealthBackgroundState.NoConsta, null, null)));
+        var pendiente = HealthBackgroundDisplay.ConditionsReportLines(new HealthBackgroundView(null, true));
+        var ilegible = HealthBackgroundDisplay.ConditionsReportLines(new HealthBackgroundView(null, true, UnreliableConditionsVersion: 2));
+        var sinLeer = HealthBackgroundDisplay.ConditionsReportLines(null);
+
+        Assert.Equal("Enfermedades e intervenciones:", conEntradas[0]);
+        // La lista completa, con el año solo si se sabe; la versión y la última modificación, sin «revisado».
+        Assert.Contains("Enfermedad: Enfermedad Alfa", conEntradas);
+        Assert.Contains("Intervención: Intervención Beta (1999)", conEntradas);
+        Assert.Contains("Fuente: informe médico.", conEntradas);
+        Assert.Contains(conEntradas, line => line.Contains("(versión 3)") && line.Contains("última modificación el 29/09/2026") && line.Contains("por Medicina"));
+        Assert.Contains(conEntradas, line => line.Contains("Esta ficha no se revisa de forma periódica.") && line.Contains("Contrastar con la documentación clínica del centro y con el residente o su familia."));
+        Assert.Equal("Sin enfermedades ni intervenciones conocidas.", sinEnfermedades[0]);
+        Assert.StartsWith("No se sabe o no consta", noConsta[0]);
+        Assert.NotEqual(sinEnfermedades[0], noConsta[0]);
+        Assert.Equal(HealthBackgroundDisplay.ConditionsPending, Assert.Single(pendiente));
+        Assert.Contains("No equivale a «sin enfermedades»", pendiente[0]);
+        Assert.Equal(sinLeer, ilegible);
+        Assert.Contains("no es fiable", Assert.Single(ilegible));
+        foreach (var lines in new[] { conEntradas, sinEnfermedades, noConsta, pendiente, ilegible })
+        {
+            Assert.DoesNotContain(lines, line => line.Contains("revisad", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    [Fact]
+    public void EnfermedadesDelInforme_SiLaFichaCambia_LaHuellaDelInformeCambia_ParaQueNoSeFirmeLoQueNoSeVio()
+    {
+        ReferralReportContent Compose(HealthBackgroundView health) => ReferralReportContent.Compose(
+            [new ReferralReportSection(HealthBackgroundDisplay.ConditionsTitle, true, HealthBackgroundDisplay.ConditionsReportLines(health))], new ReferralReportInput("Motivo.", null));
+        var before = Compose(ConditionsHealth(new ConditionRecordContent(HealthBackgroundState.NoRefiere, null, null)));
+        var after = Compose(ConditionsHealth(new ConditionRecordContent(
+            HealthBackgroundState.ConEntradas, [new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", 2010)], null), version: 2));
+        var same = Compose(ConditionsHealth(new ConditionRecordContent(HealthBackgroundState.NoRefiere, null, null)));
+
+        Assert.NotEqual(before.Hash(), after.Hash());
+        Assert.Equal(before.Hash(), same.Hash());
+    }
+
     [Fact]
     public void Build_SinBasalNiEvolucion_LoDiceEnVezDeDejarLaSeccionVacia()
     {
@@ -150,6 +199,8 @@ public class ReferralReportBuilderTests
             new HealthBackgroundView(null, true));
         Assert.Equal(HealthBackgroundDisplay.Pending, pending.Single(s => s.Title == "Alergias e intolerancias a medicamentos").Lines.Single());
         Assert.Contains("No equivale a «sin alergias»", HealthBackgroundDisplay.Pending);
+        Assert.Contains("no es fiable", sections.Single(s => s.Title == "Enfermedades e intervenciones").Lines.Single());
+        Assert.Equal(HealthBackgroundDisplay.ConditionsPending, pending.Single(s => s.Title == "Enfermedades e intervenciones").Lines.Single());
         Assert.Equal("Sin datos registrados.", sections.Single(s => s.Title == "Evolución").Lines.Single());
         Assert.All(sections, s => Assert.NotEmpty(s.Lines));
     }

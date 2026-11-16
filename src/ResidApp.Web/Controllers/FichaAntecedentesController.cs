@@ -98,6 +98,93 @@ public sealed class FichaAntecedentesController(
         }
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Enfermedades(Guid residenteId, CancellationToken ct)
+    {
+        var loaded = await LoadAsync(residenteId, ct);
+        if (loaded is null)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        var (activeScope, resident, view) = loaded.Value;
+        if (!view.CanEdit)
+        {
+            TempData["Error"] = NoPermissionMessage;
+            return BackToRecord(activeScope, residenteId);
+        }
+
+        var form = ConditionFormModel.From(residenteId, view.Conditions);
+        if (view.UnreliableConditionsVersion is { } unreliable)
+        {
+            form.VersionVista = unreliable;
+            return View(new ConditionEditViewModel(resident, form,
+                "La última versión guardada de esta ficha está incompleta y no es fiable. Vuelve a rellenar las enfermedades e intervenciones con lo que conste y guarda: se guardará como una versión nueva que la corrige.",
+                RecordController(activeScope)));
+        }
+        if (TempData["FichaConflicto"] is string)
+        {
+            return View(new ConditionEditViewModel(resident, form,
+                "Otra persona ha guardado esta ficha mientras la editabas. Aquí tienes la versión actual: revísala y, si hace falta, vuelve a hacer tu cambio.", RecordController(activeScope)));
+        }
+        return View(new ConditionEditViewModel(resident, form, null, RecordController(activeScope)));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Enfermedades([Bind(Prefix = "Form")] ConditionFormModel form, CancellationToken ct)
+    {
+        var loaded = await LoadAsync(form.ResidenteId, ct);
+        if (loaded is null)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        var (activeScope, resident, view) = loaded.Value;
+        if (!view.CanEdit)
+        {
+            TempData["Error"] = NoPermissionMessage;
+            return BackToRecord(activeScope, form.ResidenteId);
+        }
+
+        ConditionRecordContent content;
+        try
+        {
+            content = form.ToContent();
+        }
+        catch (DomainValidationException)
+        {
+            return View(new ConditionEditViewModel(resident, form, ConditionsInvalidMessage, RecordController(activeScope)));
+        }
+
+        var result = await health.SaveConditionsAsync(new SaveConditionsCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.VersionVista, form.ReasonOrNull(), content), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Ficha de enfermedades e intervenciones guardada.";
+            return BackToRecord(activeScope, form.ResidenteId);
+        }
+
+        switch (result.Error!.Code)
+        {
+            case ApplicationFailureCode.Conflict:
+                TempData["FichaConflicto"] = "1";
+                return RedirectToAction(nameof(Enfermedades), new { residenteId = form.ResidenteId });
+            case ApplicationFailureCode.InvalidInput:
+                return View(new ConditionEditViewModel(resident, form, ConditionsInvalidMessage, RecordController(activeScope)));
+            default:
+                TempData["Error"] = result.Error.Message;
+                return BackToRecord(activeScope, form.ResidenteId);
+        }
+    }
+
+    private const string NoPermissionMessage =
+        "Para rellenar o cambiar la ficha hace falta el permiso «Rellenar y cambiar la ficha de antecedentes de salud»: pídeselo a Administración.";
+
+    private const string ConditionsInvalidMessage =
+        "Revisa la ficha: elige una opción; si tiene enfermedades o intervenciones, escribe al menos una y no marques «sin enfermedades»; el año, si lo pones, es un número de cuatro cifras que no sea futuro; " +
+        "si no es el primer registro, indica si ha cambiado algo o corriges un error; y cada texto tiene que ser corto, de una sola línea y sin repetirse.";
+
     private const string InvalidMessage =
         "Revisa la ficha: elige una opción; si tiene alergias, escribe al menos una; la intolerancia necesita su motivo; si no es el primer registro, indica si ha cambiado algo o corriges un error; " +
         "y cada texto tiene que ser corto, de una sola línea y sin repetirse.";
