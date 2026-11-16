@@ -90,7 +90,7 @@ Los datos los introduce la Administración del centro. Son:
 - **Registro de entradas:** cuándo entras, sales, o fallas la contraseña o el código, con la **dirección IP** desde la que lo haces.
 - **Registro de actividad (auditoría):** cuenta, perfil, centro, fecha y hora de las acciones que cambian datos o que consultan datos sensibles. En algunas consultas también se guarda el motivo que escribes.
 - **Tu firma** en los documentos que firmas dentro de la aplicación (por ejemplo, un informe de derivación).
-- Si usas el dictado por voz: tu voz (apartado 6).
+- Si tu centro tiene el dictado por voz y lo usas: tu voz (apartado 6).
 
 **Para qué:** que solo entren las personas autorizadas, que cada una vea solo lo que le corresponde y poder demostrar quién consultó o cambió qué dato de salud. **Este registro sirve para la seguridad y para detectar accesos indebidos. ResidApp no incluye listas ni clasificaciones de personal por rendimiento.**
 
@@ -114,13 +114,13 @@ La base legal exacta la fija **cada centro** y te la explica en su información 
 - **Dentro del centro:** solo el personal con permiso para ello, y solo los residentes y las unidades de su ámbito. Cada perfil ve cosas distintas: por ejemplo, Auxiliar no ve lo mismo que Medicina, y el Portal Familiar no ve el historial clínico.
 - **Las familias:** solo lo que el centro publica para ellas y solo sobre la persona residente con la que tienen autorización.
 - **Servicios de urgencias:** si el centro deriva a la persona a un servicio de urgencias o de emergencias, ese servicio recibe el informe de derivación, que incluye la ficha de antecedentes de salud. Desde ese momento, el servicio es responsable de su copia.
-- **ResidApp (el personal de operaciones):** el perfil de «Plataforma» crea los centros y su primer administrador y **no ve residentes ni contenido clínico**. Quienes mantienen la base de datos de ResidApp pueden tener acceso técnico por razón de su función, sometido a deber de confidencialidad. **[PENDIENTE: ResidApp confirma quién, con qué controles y registro de esos accesos.]**
+- **ResidApp (el personal de operaciones):** el perfil de «Plataforma» crea los centros y su primer administrador, y activa o apaga los módulos opcionales de cada centro (apartado 6). **No ve residentes ni contenido clínico.** Cuando alguien de Plataforma activa o apaga un módulo, queda anotado con su cuenta, la fecha y la hora, y esa anotación no incluye datos de residentes (apartado 8). El centro ve en su registro de actividad que se activó o se apagó un módulo. Quienes mantienen la base de datos de ResidApp pueden tener acceso técnico por razón de su función, sometido a deber de confidencialidad. **[PENDIENTE: ResidApp confirma quién, con qué controles y registro de esos accesos.]**
 - **Otras entidades:** las empresas del apartado 9, solo en la medida necesaria para prestar el servicio. Los datos no se venden ni se ceden para publicidad.
 - **Autoridades:** si una ley o una resolución lo exige (por ejemplo, la inspección o un juzgado), el centro les facilitará lo que corresponda.
 
 ## 5. Avisos por correo
 
-El centro **puede** tener activados avisos genéricos por correo para las familias que le hayan dado su dirección. Hoy hay dos:
+ResidApp puede enviar avisos genéricos por correo a las familias cuya dirección el centro haya anotado y **confirmado con ellas**. Es una función general del servicio, no un módulo opcional: no se contrata aparte ni se enciende centro por centro. **[PENDIENTE: confirmar si está encendida al publicar; viene apagada de fábrica y cada aviso tiene su propio interruptor.]** En la práctica, en tu centro solo se envían si el centro ha anotado tu dirección y la ha confirmado contigo. Hoy hay dos:
 
 - «Tienes una propuesta de cita pendiente»: cuando el centro propone una cita.
 - «Tienes un cambio en una cita»: cuando el centro cambia o cancela una cita que reservaste (se envía a quien la reservó).
@@ -133,11 +133,17 @@ Estos avisos **no dicen** el nombre de la persona residente, ni el centro, ni la
 - **Por tu seguridad:** ResidApp nunca te pedirá tu contraseña por correo, por teléfono ni por mensaje. Si recibes un aviso que no esperabas, ignóralo y cuéntaselo al centro.
 - Para enviarlos usamos el servicio de correo de Microsoft (apartado 9). Guardamos un registro de cada envío **sin el contenido ni la dirección**: solo qué aviso, a qué familiar (por su identificador interno), cuándo y si salió.
 
-## 6. Dictado por voz (solo si el centro lo activa)
+## 6. Dictado por voz (módulo opcional)
 
 En la pantalla «Registrar cambio», una auxiliar puede **contar hablando** lo que ha observado en una persona residente, en lugar de marcar casillas.
 
-Esta función **solo está disponible si ResidApp y el centro la han activado**. **[PENDIENTE: confirmar su estado antes de publicar; hoy está apagada y solo se ha probado con audios y datos inventados.]**
+Es un **módulo opcional**: no lo tienen todos los centros. **[PENDIENTE: confirmar su estado al publicar: hoy ningún centro real lo tiene activado y solo se ha probado con audios y datos inventados.]**
+
+- **Quién lo enciende y lo apaga.** Solo ResidApp (el perfil de Plataforma), cuando el centro lo pide y lo tiene contratado. Ni el personal ni la Administración del centro pueden activarlo o apagarlo desde la aplicación: se lo piden a ResidApp, que lo hace en el plazo que fije el contrato con el centro. **[PENDIENTE: plazo fijado en el contrato con cada centro.]**
+- **Cuánto dura.** Se activa por un periodo concreto, el del contrato. Al terminar ese periodo deja de estar disponible por sí solo; si el centro quiere seguir usándolo, se renueva.
+- **Qué cambia cuando se apaga o vence.** La pantalla deja de ofrecerlo y la aplicación deja de enviar audios al proveedor. ResidApp no tiene nada propio del dictado que conservar, porque no guarda el audio ni el texto. Lo que la auxiliar confirmó y guardó en el registro es parte de la historia de cuidados y se conserva como el resto (apartado 8).
+- **Para todos a la vez.** ResidApp también puede dejar de enviar audios al proveedor en todos los centros a la vez, por ejemplo si hay un problema con él. **[PENDIENTE: procedimiento escrito: quién lo hace y cuánto tarda.]**
+- **Información.** Si tu centro lo usa, debe informar de ello al personal y a los residentes o sus representantes. Si no te lo han dicho, pregúntales.
 
 Cómo funciona:
 
@@ -180,6 +186,7 @@ El plazo lo fija el centro (como responsable) y la ley. ResidApp aplica lo que e
 | Registros de entrega del servicio de correo de Microsoft | **[PENDIENTE: previsto 30 días en un espacio propio en la UE]** | Sin configurar |
 | Foto | Hasta que se cambia, se quita o se da de baja a la persona | Según lo descrito en el apartado 7 |
 | Audio y texto del dictado | ResidApp no los guarda | **[PENDIENTE: lo que conserva Mistral]** |
+| Historial de módulos de cada centro (cuándo se activó, renovó o apagó un módulo, con la fecha y el canal de la petición del centro, un código de referencia y la cuenta de la persona de ResidApp que hizo el cambio; sin datos de residentes, no se puede modificar ni borrar desde la aplicación) | **[PENDIENTE]** | Sin decidir |
 | Copias de seguridad | **[PENDIENTE]** | Sin decidir |
 
 ## 9. Empresas que intervienen y transferencias fuera de la UE
@@ -189,8 +196,8 @@ Estas empresas son **subencargadas**: trabajan para ResidApp, que trabaja para e
 | Empresa | Para qué | Cuándo interviene |
 |---|---|---|
 | **Microsoft Azure** | Alojar la aplicación (servidor web) y la base de datos donde se guardan todos los datos | Siempre. Región: **[PENDIENTE: región de Azure del servicio; se prefiere la Unión Europea]** |
-| **Microsoft Azure Communication Services** | Enviar los avisos por correo del apartado 5 | Solo si el centro tiene activados los avisos |
-| **Mistral AI** | Pasar a texto el dictado y proponer la sugerencia del apartado 6 | Solo si el centro tiene activado el dictado |
+| **Microsoft Azure Communication Services** | Enviar los avisos por correo del apartado 5 | Solo si el servicio de avisos está encendido y solo para las familias cuya dirección el centro ha anotado y confirmado |
+| **Mistral AI** | Pasar a texto el dictado y proponer la sugerencia del apartado 6 | Solo en los centros que tienen activo el módulo de dictado por voz y mientras esté vigente; en los demás no recibe nada |
 
 **Transferencias fuera de la Unión Europea.** ResidApp no tiene previsto enviar datos fuera de la UE. **[PENDIENTE: confirmar región real de Azure y de Mistral.]** Microsoft indica, para su servicio de correo, que los datos pueden transitar o procesarse en otras zonas geográficas. En nuestros avisos solo viajaría una dirección de correo y la hora de envío. **[PENDIENTE: garantía aplicable a esas transferencias, por ejemplo cláusulas contractuales tipo o certificación del proveedor.]**
 

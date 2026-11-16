@@ -20,6 +20,7 @@
     <li><strong>El responsable de tus datos es el centro (la residencia) que te dio acceso o que cuida de ti o de tu familiar.</strong> ResidApp trabaja por cuenta del centro y solo según sus instrucciones.</li>
     <li>Se tratan datos de salud de las personas residentes. Son datos especialmente protegidos y solo los ve el personal que los necesita para su trabajo.</li>
     <li>Si tienes cuenta, guardamos los datos mínimos para que puedas entrar y para dejar constancia de quién hace qué.</li>
+    <li>Algunas funciones son <strong>opcionales</strong> (hoy, el dictado por voz): solo funcionan en los centros que las han contratado y solo mientras dure lo contratado. Pregunta a tu centro si usa alguna.</li>
     <li>No hay publicidad, ni analítica, ni cookies de terceros. Las cookies que usamos son las necesarias para que la aplicación funcione (apartado 10).</li>
     <li>Para ejercer tus derechos (acceder a tus datos, corregirlos, pedir que se borren, etc.), <strong>escribe a tu centro</strong> (apartado 12).</li>
     <li>Si no estás conforme, puedes reclamar ante la autoridad de protección de datos (apartado 13).</li>
@@ -74,7 +75,7 @@
     <li><strong>Sesiones:</strong> cada sesión que abres guarda cuándo empezó y cuándo terminó, y la dirección IP desde la que se abrió. Puedes verlas y cerrarlas desde «Mi cuenta».</li>
     <li><strong>Registro de actividad (auditoría):</strong> cuenta, perfil, centro, fecha y hora de las acciones que cambian datos o consultan datos sensibles. En algunas consultas se guarda también el motivo que escribes.</li>
     <li><strong>Tu firma</strong> en los documentos que firmas dentro de la aplicación (por ejemplo, un informe de derivación).</li>
-    <li>Si usas el dictado por voz: tu voz (apartado 6).</li>
+    <li>Si tu centro tiene el dictado por voz y lo usas: tu voz (apartado 6).</li>
 </ul>
 <p><strong>Para qué:</strong> que solo entren las personas autorizadas, que cada una vea solo lo que le corresponde y poder demostrar quién consultó o cambió un dato de salud. Este registro sirve para la seguridad y para detectar accesos indebidos. <strong>ResidApp no incluye listas ni clasificaciones de personal por rendimiento.</strong></p>
 
@@ -96,13 +97,13 @@
     <li><strong>Dentro del centro:</strong> solo el personal con permiso, y solo los residentes y unidades de su ámbito. Cada perfil ve cosas distintas: por ejemplo, Auxiliar no ve lo mismo que Medicina, y el Portal Familiar no ve el historial clínico.</li>
     <li><strong>Las familias:</strong> solo lo que el centro publica para ellas y solo sobre la persona residente con la que tienen autorización.</li>
     <li><strong>Servicios de urgencias:</strong> si el centro deriva a la persona a un servicio de urgencias o de emergencias, ese servicio recibe el informe de derivación, que incluye la ficha de antecedentes de salud. Desde ese momento, el servicio es responsable de su copia.</li>
-    <li><strong>ResidApp:</strong> el perfil de «Plataforma» crea los centros y su primer administrador y <strong>no ve residentes ni contenido clínico</strong>. Quienes mantienen la base de datos pueden tener acceso técnico por razón de su función, con deber de confidencialidad. @Pend("quién, con qué controles y con qué registro de esos accesos")</li>
+    <li><strong>ResidApp:</strong> el perfil de «Plataforma» crea los centros y su primer administrador, y activa o apaga los módulos opcionales de cada centro (apartado 6). <strong>No ve residentes ni contenido clínico.</strong> Cuando alguien de Plataforma activa o apaga un módulo, queda anotado con su cuenta, la fecha y la hora, y esa anotación no incluye datos de residentes (apartado 8). El centro ve en su registro de actividad que se activó o se apagó un módulo. Quienes mantienen la base de datos pueden tener acceso técnico por razón de su función, con deber de confidencialidad. @Pend("quién, con qué controles y con qué registro de esos accesos")</li>
     <li><strong>Otras empresas:</strong> las del apartado 9, solo en la medida necesaria para prestar el servicio. Los datos no se venden ni se ceden para publicidad.</li>
     <li><strong>Autoridades:</strong> si una ley o una resolución lo exige, el centro les facilitará lo que corresponda.</li>
 </ul>
 
 <h2 class="h5 mt-4" id="avisos-correo">5. Avisos por correo</h2>
-<p>El centro <strong>puede</strong> tener activados avisos genéricos por correo para las familias que le hayan dado su dirección. Hoy hay tres: «Tienes una propuesta de cita pendiente» (cuando el centro propone una cita), «Tienes un cambio en una cita» (cuando el centro cambia o cancela una cita que reservaste; se envía a quien la reservó) y «Tienes una cita mañana» (el día antes de una cita confirmada, entre las 10:00 y las 19:00; se envía a quien la reservó y solo si la cita sigue confirmada).</p>
+<p>ResidApp puede enviar avisos genéricos por correo a las familias cuya dirección el centro haya anotado y <strong>confirmado con ellas</strong>. Es una función general del servicio, no un módulo opcional: no se contrata aparte ni se enciende centro por centro. @Pend("confirmar si está encendida al publicar; viene apagada de fábrica y cada aviso tiene su propio interruptor") En la práctica, en tu centro solo se envían si el centro ha anotado tu dirección y la ha confirmado contigo. Hoy hay tres: «Tienes una propuesta de cita pendiente» (cuando el centro propone una cita), «Tienes un cambio en una cita» (cuando el centro cambia o cancela una cita que reservaste; se envía a quien la reservó) y «Tienes una cita mañana» (el día antes de una cita confirmada, entre las 10:00 y las 19:00; se envía a quien la reservó y solo si la cita sigue confirmada).</p>
 <p>Estos avisos <strong>no dicen</strong> el nombre de la persona residente, ni el centro, ni la hora, ni el motivo, ni nada de salud. Solo te piden que entres en ResidApp. El recordatorio solo dice que tienes una cita mañana. El remitente es «ResidApp» y no se puede responder al correo: si necesitas algo, llama al centro.</p>
 <ul>
     <li>Solo se envían a una dirección que el centro <strong>ha confirmado contigo</strong> y mientras tengas acceso al Portal Familiar.</li>
@@ -111,8 +112,16 @@
     <li>Para enviarlos usamos el servicio de correo de Microsoft (apartado 9). Guardamos un registro de cada envío <strong>sin el contenido ni la dirección</strong>: solo qué aviso, a qué familiar (por su identificador interno), cuándo y si salió y, en el recordatorio, el día de la cita.</li>
 </ul>
 
-<h2 class="h5 mt-4" id="dictado">6. Dictado por voz (solo si el centro lo activa)</h2>
-<p>En la pantalla «Registrar cambio», una auxiliar puede <strong>contar hablando</strong> lo que ha observado en una persona residente, en lugar de marcar casillas. Esta función <strong>solo está disponible si ResidApp y el centro la han activado</strong>. @Pend("confirmar su estado antes de publicar; hoy está apagada y solo se ha probado con audios y datos inventados")</p>
+<h2 class="h5 mt-4" id="dictado">6. Dictado por voz (módulo opcional)</h2>
+<p>En la pantalla «Registrar cambio», una auxiliar puede <strong>contar hablando</strong> lo que ha observado en una persona residente, en lugar de marcar casillas. Es un <strong>módulo opcional</strong>: no lo tienen todos los centros. @Pend("confirmar su estado al publicar: hoy ningún centro real lo tiene activado y solo se ha probado con audios y datos inventados")</p>
+<ul>
+    <li><strong>Quién lo enciende y lo apaga.</strong> Solo ResidApp (el perfil de Plataforma), cuando el centro lo pide y lo tiene contratado. Ni el personal ni la Administración del centro pueden activarlo o apagarlo desde la aplicación: se lo piden a ResidApp, que lo hace en el plazo que fije el contrato con el centro. @Pend("plazo fijado en el contrato con cada centro")</li>
+    <li><strong>Cuánto dura.</strong> Se activa por un periodo concreto, el del contrato. Al terminar ese periodo deja de estar disponible por sí solo; si el centro quiere seguir usándolo, se renueva.</li>
+    <li><strong>Qué cambia cuando se apaga o vence.</strong> La pantalla deja de ofrecerlo y la aplicación deja de enviar audios al proveedor. ResidApp no tiene nada propio del dictado que conservar, porque no guarda el audio ni el texto. Lo que la auxiliar confirmó y guardó en el registro es parte de la historia de cuidados y se conserva como el resto (apartado 8).</li>
+    <li><strong>Para todos a la vez.</strong> ResidApp también puede dejar de enviar audios al proveedor en todos los centros a la vez, por ejemplo si hay un problema con él. @Pend("procedimiento escrito: quién lo hace y cuánto tarda")</li>
+    <li><strong>Información.</strong> Si tu centro lo usa, debe informar de ello al personal y a los residentes o sus representantes. Si no te lo han dicho, pregúntales.</li>
+</ul>
+<p>Cómo funciona:</p>
 <ol>
     <li>La auxiliar graba un audio corto.</li>
     <li>El audio se envía a un proveedor externo, <strong>Mistral AI</strong>, que lo pasa a texto. Un segundo servicio de Mistral propone, con ese texto, qué casillas y notas rellenar.</li>
@@ -148,6 +157,7 @@
     <li class="list-group-item"><strong>Registros de entrega del servicio de correo de Microsoft.</strong> @Pend("plazo sin configurar")</li>
     <li class="list-group-item"><strong>Foto.</strong> Hasta que se cambia, se quita o se da de baja a la persona (apartado 7).</li>
     <li class="list-group-item"><strong>Audio y texto del dictado.</strong> ResidApp no los guarda. @Pend("lo que conserva Mistral")</li>
+    <li class="list-group-item"><strong>Historial de módulos de cada centro</strong> (cuándo se activó, renovó o apagó un módulo, con la fecha y el canal de la petición del centro, un código de referencia y la cuenta de la persona de ResidApp que hizo el cambio). No contiene datos de residentes y no se puede modificar ni borrar desde la aplicación. @Pend("plazo de conservación sin decidir")</li>
     <li class="list-group-item"><strong>Copias de seguridad.</strong> @Pend("plazo sin decidir")</li>
 </ul>
 
@@ -155,8 +165,8 @@
 <p>Estas empresas son <strong>subencargadas</strong>: trabajan para ResidApp, que trabaja para el centro. Tratan los datos solo para dar el servicio y están obligadas por contrato.</p>
 <ul class="list-group mb-3">
     <li class="list-group-item"><strong>Microsoft Azure.</strong> Aloja la aplicación y la base de datos donde se guardan todos los datos. Interviene siempre. Región: @Pend("región de Azure; se prefiere la Unión Europea")</li>
-    <li class="list-group-item"><strong>Microsoft Azure Communication Services.</strong> Envía los avisos por correo del apartado 5. Solo interviene si el centro los tiene activados.</li>
-    <li class="list-group-item"><strong>Mistral AI.</strong> Pasa a texto el dictado y propone la sugerencia del apartado 6. Solo interviene si el centro tiene activado el dictado.</li>
+    <li class="list-group-item"><strong>Microsoft Azure Communication Services.</strong> Envía los avisos por correo del apartado 5. Interviene solo si el servicio de avisos está encendido y solo para las familias cuya dirección el centro ha anotado y confirmado.</li>
+    <li class="list-group-item"><strong>Mistral AI.</strong> Pasa a texto el dictado y propone la sugerencia del apartado 6. Interviene solo en los centros que tienen activo el módulo de dictado por voz y mientras esté vigente; en los demás no recibe nada.</li>
 </ul>
 <p><strong>Transferencias fuera de la Unión Europea.</strong> ResidApp no tiene previsto enviar datos fuera de la UE. @Pend("confirmar la región real de Azure y de Mistral y la garantía aplicable") Microsoft indica, para su servicio de correo, que los datos pueden transitar o procesarse en otras zonas geográficas; en nuestros avisos solo viajaría una dirección de correo y la hora de envío.</p>
 <p><strong>Letras de Google en dos páginas de ayuda.</strong> Las páginas «Flujo de trabajo» y «Acceso y sesión» cargan los tipos de letra desde Google. Al abrirlas, tu navegador se conecta con Google y le llega tu dirección IP. @Pend("ResidApp va a servir esas letras desde su propio servidor; quitar este párrafo cuando esté hecho") Los documentos de trabajo del equipo del proyecto (guías de pruebas) también cargan esas letras. El resto de la aplicación no carga nada de terceros.</p>

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Reflection;
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -93,6 +94,18 @@ public partial class GuiaDerivaTests
                     && tipo.GetMethods().Any(m => m.Name == partes[1] && m.IsPublic), $"{ficha.Codigo}: la ruta «{ruta}» ya no existe.");
             }
         }
+    }
+
+    [Fact]
+    public void CadaAccionPostDePlataformaEstaEnAlgunaFicha()
+    {
+        // Plataforma no tiene permisos que obliguen a una ficha por función: sin esta prueba, una acción nueva (activar un módulo, por ejemplo) se pasaba sin explicar.
+        var enFichas = Fichas().Where(f => f.Guia == "Plataforma").SelectMany(f => f.Ficha.Rutas).ToHashSet();
+        var acciones = typeof(PlataformaController).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .Where(m => m.GetCustomAttributes<HttpPostAttribute>().Any()).Select(m => m.Name).ToList();
+        Assert.NotEmpty(acciones);
+        var sinFicha = acciones.Where(a => !enFichas.Contains($"Plataforma/{a}")).ToList();
+        Assert.True(sinFicha.Count == 0, $"Acciones POST de Plataforma que ninguna ficha de la Guía cita en «rutas»: {string.Join(", ", sinFicha)}.");
     }
 
     [Fact]

@@ -170,6 +170,6 @@ interruptor, sin que alguien tenga que acordarse de ponerlo en cada pantalla.
 | 3 | **Hecho (2026-11-16).** Mover el dictado al módulo `DICTADO_VOZ` (la clave de Mistral sigue como interruptor maestro) | 2 |
 | 4 | **Hecho (2026-11-16).** Pantalla de Plataforma para activar y desactivar módulos por centro, con auditoría sin datos | 2 |
 | 5 | ~~Pantalla de solo lectura para Administración~~ **descartado (Orlando, 2026-11-16)** | — |
-| 6 | Documentación de usuario y de Plataforma (manual, guía por perfil) y corrección de la política de privacidad | 3 y 4 |
+| 6 | Documentación de usuario y de Plataforma (manual, guía por perfil) y corrección de la política de privacidad | 3 y 4 | **[Hecho 2026-11-16]** (PR 4)
 
 El dashboard de Plataforma, el Dashboard de Dirección y Medicamentos tienen cada uno su propia propuesta y no forman parte de estos incrementos.
