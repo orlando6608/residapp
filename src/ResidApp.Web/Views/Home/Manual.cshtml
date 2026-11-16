@@ -24,7 +24,7 @@
         <li><strong>Dirección Clínica:</strong> supervisión operativa por unidad, calidad de proceso y sus plazos, indicadores e informe de actividad, y la consulta
             auditada del basal.</li>
         <li><strong>Familiar:</strong> el Portal Familiar, con las novedades de su residente y las citas con el centro.</li>
-        <li><strong>Plataforma:</strong> alta de centros nuevos, Administración principal de cada centro y cuentas que trabajan en varios centros.</li>
+        <li><strong>Plataforma:</strong> alta de centros nuevos, Administración principal de cada centro, módulos opcionales de cada centro y cuentas que trabajan en varios centros.</li>
     </ul>
     Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, el personal, además
     con un código de su móvil, o con una <strong>passkey</strong> («llave de acceso» guardada en tu móvil o portátil, que se desbloquea con la
@@ -61,6 +61,7 @@
             <a class="list-group-item list-group-item-action" href="#turnos-equipos-administracion">Turnos, equipos y planificación (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#organigrama-cargos">Organigrama y cargos (todos los profesionales; gestiona Administración)</a>
             <a class="list-group-item list-group-item-action" href="#plataforma-centros">Centros nuevos (Plataforma)</a>
+            <a class="list-group-item list-group-item-action" href="#plataforma-modulos">Módulos opcionales de un centro (Plataforma)</a>
             <a class="list-group-item list-group-item-action" href="#firmar-basal">Crear, completar y firmar el estado basal</a>
             <a class="list-group-item list-group-item-action" href="#consulta-direccion">Consultar el histórico de basal</a>
             <a class="list-group-item list-group-item-action" href="#supervision-direccion">Supervisión operativa por unidad (Dirección Clínica)</a>
@@ -318,7 +319,7 @@
                 <tr>
                     <td><code>plataforma-cj</code></td>
                     <td>Plataforma</td>
-                    <td>Centros nuevos y, en cada centro, las Administraciones y su marca de principal. No ve residentes.</td>
+                    <td>Centros nuevos y, en cada centro, las Administraciones y su marca de principal y los módulos opcionales. No ve residentes.</td>
                 </tr>
             </tbody>
         </table>
@@ -931,6 +932,38 @@
         soporte puede <strong>marcar o quitar la marca de Administración principal</strong> y <strong>añadir una unidad al ámbito</strong> de cualquier
         Administración del centro (por ejemplo, para recuperar una unidad que se quedó sin nadie). Cada cambio queda en la auditoría. No se ven residentes
         ni contenido clínico.
+    </p>
+</section>
+
+<section id="plataforma-modulos" class="mb-4">
+    <h2 class="h5">
+        Módulos opcionales de un centro
+        <span class="badge text-bg-secondary align-middle">Perfil: Plataforma</span>
+    </h2>
+    <p>
+        Algunas funciones no vienen con todos los centros: son <strong>módulos opcionales</strong> que el centro contrata en el anexo de módulos de su contrato.
+        Hoy hay uno, el <strong>dictado por voz</strong> del Auxiliar. <strong>Solo Plataforma</strong> lo enciende y lo apaga, y siempre <strong>a petición del centro</strong>:
+        ninguna Administración puede hacerlo por su cuenta. Se gestiona desde el detalle del centro (<strong>Administraciones y unidades</strong>), en la sección
+        <strong>Módulos opcionales</strong>.
+    </p>
+    <p>
+        <strong>Activar o renovar.</strong> En «Activar» (o «Activar de nuevo o renovar») indicas las fechas de vigencia (el último día está incluido y se cuenta con el día de Madrid), la
+        referencia y la versión del anexo, y marcas las <strong>cuatro condiciones de la ficha de privacidad</strong>: el anexo firmado, la retención cero del proveedor,
+        la evaluación de impacto (EIPD) del centro y la información al personal y a los residentes. Hacen falta todas: si falta una, no se activa. También registras la
+        <strong>petición del centro</strong>: cuándo llegó (hora de Madrid), por qué canal y con qué referencia. La referencia no se repite para el mismo módulo y centro. Una renovación se
+        registra el día en que empieza o antes, nunca en el futuro, y solo se puede activar en un centro activo.
+    </p>
+    <p>
+        <strong>Apagar.</strong> En «Apagar» eliges el motivo de una lista y registras también la petición del centro. El efecto es inmediato. Apagar siempre es posible, aunque el centro esté inactivo.
+    </p>
+    <p>
+        <strong>Al vencer la vigencia</strong> el módulo <strong>deja de funcionar</strong> en ese centro, igual que si se apagara: el dictado no guarda ni audio ni texto, así que no queda nada que consultar. En el Auxiliar, el bloque «Dictar el cambio» desaparece y se rellena el formulario a mano.
+        No hace falta hacer nada para que ocurra. En la lista de centros, el panel <strong>Módulos que vencen</strong> muestra los que vencen en los próximos 30 días (para avisar por escrito a la persona autorizada del centro y
+        renovar a tiempo) y los vencidos sin renovar de los últimos 90. Debajo de cada módulo, el <strong>Historial</strong> lista cada cambio con su petición; no muestra la cuenta de quien lo hizo,
+        pero la acción queda en la auditoría del centro.
+    </p>
+    <p>
+        Si falta la clave global del proveedor, la pantalla lo avisa: el módulo <strong>no funciona en ningún centro</strong> aunque figure activo. Es el corte para todos los centros a la vez.
     </p>
 </section>
 

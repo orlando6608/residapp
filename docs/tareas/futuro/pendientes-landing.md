@@ -32,7 +32,7 @@ Una *landing* es la página pública de presentación del producto, la que ve qu
 ### Precios (etapa 3: comercial)
 
 10. **Importes de los planes**: los fijan Orlando y CJ (los de la maqueta no tienen base). Una sola fuente de precios para las dos landings.
-11. **Qué es base y qué es módulo**: depende de [`modulos-base-y-opcionales-cj`](../../pendientes-cj/modulos-base-y-opcionales-cj.html) (contestado por CJ el 2026-10-30: todo es base salvo exportar la estructura/censo y el dictado por voz).
+11. **Qué es base y qué es módulo**: depende de [`modulos-base-y-opcionales-cj`](../../pendientes-cj/modulos-base-y-opcionales-cj.html) (contestado por CJ el 2026-10-30: todo es base salvo exportar la estructura/censo y el dictado por voz). El interruptor de módulos por centro ya existe (ADR 0015, 2026-11-16); falta la sección de precios.
 12. **Interruptor de módulos por centro** en la aplicación (hoy no existe, ni topes por residentes ni facturación); encaja con el ADR 0008 (multicentro). Mientras no exista, lo no construido se anuncia como «próximamente» o no se anuncia.
 13. Antes de publicar un precio: titular, condiciones de contratación, IVA y contrato de encargado con cada centro; qué obligaciones tiene publicar precios en una web B2B, **a validar con un abogado**.
 
