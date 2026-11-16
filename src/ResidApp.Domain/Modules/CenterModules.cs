@@ -98,7 +98,7 @@ public enum ModuleDisableReason
 public sealed record NewCenterModuleChange(
     CenterId CenterId, string ModuleCode, bool Enable, DateOnly? ValidFrom, DateOnly? ValidUntil, string? AnnexReference, string? AnnexVersion,
     string? PrivacySheetVersion, string? ConditionCodes, ModuleDisableReason? DisableReason, DateTimeOffset RequestReceivedAt,
-    ModuleRequestChannel Channel, string RequestReference);
+    ModuleRequestChannel Channel);
 
 /// <summary>
 /// Reglas de entrada de un cambio de módulo (ADR 0015; lectura del DPO del 2026-11-16). Las referencias son códigos opacos (nunca nombres): letras sin acentos, dígitos y
@@ -109,18 +109,19 @@ public static partial class NewCenterModuleChangeRules
 {
     public const string Invalid = "MODULE_INVALID";
 
+    /// <summary>La referencia de la petición del centro la asigna ResidApp al guardar el cambio (decisión de Orlando, 2026-11-16): nadie la teclea, así que no puede colarse un nombre en un registro inmutable. Es el código del módulo y el número del cambio, único por centro y módulo.</summary>
+    public static string RequestReferenceFor(string moduleCode, int number) => $"{moduleCode}-{number:D4}";
+
     /// <summary>La hora de la solicitud prueba el plazo de apagado en un registro inmutable: una fecha absurda (año 0001) no se admite. Una petición más antigua que esto no es una petición vigente.</summary>
     public const int MaxRequestAgeDays = 366;
 
     public static NewCenterModuleChange Validate(
         CenterId centerId, Guid platformCenterId, string? moduleCode, bool enable, DateOnly? validFrom, DateOnly? validUntil, string? annexReference, string? annexVersion,
-        bool conditionsChecked, ModuleDisableReason? disableReason, DateTimeOffset? requestReceivedAt, ModuleRequestChannel? channel, string? requestReference,
-        DateTimeOffset now)
+        bool conditionsChecked, ModuleDisableReason? disableReason, DateTimeOffset? requestReceivedAt, ModuleRequestChannel? channel, DateTimeOffset now)
     {
         var module = CenterModules.Find(moduleCode);
-        var reference = requestReference?.Trim();
         if (module is null || centerId.Value == Guid.Empty || centerId.Value == platformCenterId || channel is null || requestReceivedAt is null
-            || requestReceivedAt > now || requestReceivedAt < now.AddDays(-MaxRequestAgeDays) || !IsOpaque(reference))
+            || requestReceivedAt > now || requestReceivedAt < now.AddDays(-MaxRequestAgeDays))
         {
             throw new DomainValidationException(Invalid);
         }
@@ -129,7 +130,7 @@ public static partial class NewCenterModuleChangeRules
         {
             return disableReason is null
                 ? throw new DomainValidationException(Invalid)
-                : new NewCenterModuleChange(centerId, module.Code, false, null, null, null, null, null, null, disableReason, requestReceivedAt.Value, channel.Value, reference!);
+                : new NewCenterModuleChange(centerId, module.Code, false, null, null, null, null, null, null, disableReason, requestReceivedAt.Value, channel.Value);
         }
 
         var annex = annexReference?.Trim();
@@ -145,7 +146,7 @@ public static partial class NewCenterModuleChangeRules
 
         return new NewCenterModuleChange(
             centerId, module.Code, true, validFrom, validUntil, annex, version, module.PrivacySheetVersion, string.Join(',', module.PrivacyConditions), null,
-            requestReceivedAt.Value, channel.Value, reference!);
+            requestReceivedAt.Value, channel.Value);
     }
 
     private static bool IsOpaque(string? value, int maxLength = 40) =>

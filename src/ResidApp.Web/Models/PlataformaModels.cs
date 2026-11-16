@@ -63,8 +63,6 @@ public sealed class ModuleChangeFormModel
     public DateTime? SolicitudRecibidaEn { get; set; }
 
     public ResidApp.Domain.Modules.ModuleRequestChannel? Canal { get; set; }
-
-    public string? ReferenciaSolicitud { get; set; }
 }
 
 /// <summary>Los módulos de un centro para la sección de Plataforma, con si la clave global del proveedor de cada uno está puesta.</summary>

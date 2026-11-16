@@ -27,13 +27,13 @@ public sealed record AddUnitToAdministrationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, Guid AmbitoDestinoId, UnitId UnidadId);
 
 /// <summary>
-/// Alta, renovación o baja de un módulo opcional en un centro (ADR 0015). Siempre lleva cuándo, cómo y con qué referencia pidió el centro el cambio (lo que prueba el plazo de apagado
+/// Alta, renovación o baja de un módulo opcional en un centro (ADR 0015). Siempre lleva cuándo y cómo pidió el centro el cambio (lo que prueba el plazo de apagado
 /// del anexo). Al activar: vigencia, referencia y versión del anexo y condiciones de privacidad comprobadas; al apagar: el motivo.
 /// </summary>
 public sealed record ChangeCenterModuleCommand(
     Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, string? ModuloCodigo, bool Activar, DateOnly? VigenteDesde, DateOnly? VigenteHasta,
     string? ReferenciaAnexo, string? VersionAnexo, bool CondicionesComprobadas, ModuleDisableReason? MotivoBaja, DateTimeOffset? SolicitudRecibidaEn,
-    ModuleRequestChannel? Canal, string? ReferenciaSolicitud);
+    ModuleRequestChannel? Canal);
 
 public sealed record CreateCenterCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? CodigoCentro, string? NombreCentro, string? CodigoUnidad,
@@ -49,16 +49,15 @@ public sealed class PlatformApplicationService(
     IPlatformCenterRepository centers, IAccessInvitationRepository invitations, ICenterModuleRepository modules, TimeProvider clock)
 {
     /// <summary>ADR 0015: solo Plataforma enciende y apaga un módulo de un centro, a petición del centro. La fila y su auditoría (sin datos) se escriben en una transacción.</summary>
-    public Task<ApplicationResult<bool>> ChangeCenterModuleAsync(ChangeCenterModuleCommand command, CancellationToken ct = default) =>
+    public Task<ApplicationResult<string>> ChangeCenterModuleAsync(ChangeCenterModuleCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
             var access = await AccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
             var now = clock.GetUtcNow();
             var change = NewCenterModuleChangeRules.Validate(
                 command.CentroDestinoId, PlatformCenter.Id, command.ModuloCodigo, command.Activar, command.VigenteDesde, command.VigenteHasta, command.ReferenciaAnexo,
-                command.VersionAnexo, command.CondicionesComprobadas, command.MotivoBaja, command.SolicitudRecibidaEn, command.Canal, command.ReferenciaSolicitud, now);
-            await modules.AppendAsync(access, change, CenterModuleRules.TodayInMadrid(now), ct);
-            return true;
+                command.VersionAnexo, command.CondicionesComprobadas, command.MotivoBaja, command.SolicitudRecibidaEn, command.Canal, now);
+            return await modules.AppendAsync(access, change, CenterModuleRules.TodayInMadrid(now), ct);
         });
 
     /// <summary>Un módulo del catálogo en un centro, tal como lo ve Plataforma: su estado contractual hoy (día de Madrid, sin contar la clave global ni el ajuste de desarrollo) y su historial, el más reciente primero.</summary>

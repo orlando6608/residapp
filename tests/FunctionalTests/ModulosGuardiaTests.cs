@@ -79,7 +79,7 @@ public class ModulosGuardiaTests
         public Task<IReadOnlyList<ResidApp.Application.Ports.PlatformExpiringModule>> ListExpiringAsync(ResidApp.Application.Ports.PlatformAccess access, DateOnly from, DateOnly until, CancellationToken ct = default) => throw new NotSupportedException();
 
 
-        public Task AppendAsync(PlatformAccess access, NewCenterModuleChange change, DateOnly today, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task<string> AppendAsync(PlatformAccess access, NewCenterModuleChange change, DateOnly today, CancellationToken ct = default) => throw new NotSupportedException();
     }
 
     private sealed class Scopes(Guid scopeId, CenterId centerId) : IProfileScopeDirectoryProvider

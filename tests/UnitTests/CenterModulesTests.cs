@@ -50,18 +50,17 @@ public class CenterModulesTests
     }
 
     private static NewCenterModuleChange Enable(
-        string? module = CenterModules.DictadoVoz, string? annex = "ANX-2026-A", string? version = "1", string? reference = "SOL-1", bool conditions = true,
+        string? module = CenterModules.DictadoVoz, string? annex = "ANX-2026-A", string? version = "1", bool conditions = true,
         DateOnly? from = null, DateOnly? until = null, DateTimeOffset? received = null, ModuleRequestChannel? channel = ModuleRequestChannel.Correo, CenterId? center = null) =>
         NewCenterModuleChangeRules.Validate(
-            center ?? Center, PlatformId, module, true, from ?? Today, until ?? Today.AddDays(30), annex, version, conditions, null, received ?? Now.AddHours(-1), channel, reference, Now);
+            center ?? Center, PlatformId, module, true, from ?? Today, until ?? Today.AddDays(30), annex, version, conditions, null, received ?? Now.AddHours(-1), channel, Now);
 
     [Fact]
     public void ActivarGuardaLaFichaYLasCondicionesDelCatalogo_NoLasQueDiceQuienOpera()
     {
-        var change = Enable(reference: "  SOL-1  ");
+        var change = Enable();
 
         Assert.True(change.Enable);
-        Assert.Equal("SOL-1", change.RequestReference);
         Assert.Equal(CenterModules.All[0].PrivacySheetVersion, change.PrivacySheetVersion);
         Assert.Equal(string.Join(',', CenterModules.All[0].PrivacyConditions), change.ConditionCodes);
     }
@@ -72,9 +71,8 @@ public class CenterModulesTests
     [InlineData("")]
     [InlineData(null)]
     [InlineData("0123456789012345678901234567890123456789X")]
-    public void LasReferenciasSonCodigosOpacos_NuncaNombresNiTextoLibre(string? reference)
+    public void LasReferenciasDelAnexoSonCodigosOpacos_NuncaNombresNiTextoLibre(string? reference)
     {
-        Assert.Throws<DomainValidationException>(() => Enable(reference: reference));
         Assert.Throws<DomainValidationException>(() => Enable(annex: reference));
     }
 
@@ -97,18 +95,26 @@ public class CenterModulesTests
     }
 
     [Fact]
-    public void LaReferenciaAdmiteComoMaximo40Caracteres_YNingunSaltoDeLinea()
+    public void LaReferenciaDelAnexoAdmiteComoMaximo40Caracteres_YNingunSaltoDeLinea()
     {
-        Assert.Equal(new string('A', 40), Enable(reference: new string('A', 40)).RequestReference);
-        Assert.Throws<DomainValidationException>(() => Enable(reference: new string('A', 41)));
-        Assert.Throws<DomainValidationException>(() => Enable(reference: "SOL\n1"));
+        Assert.Equal(new string('A', 40), Enable(annex: new string('A', 40)).AnnexReference);
+        Assert.Throws<DomainValidationException>(() => Enable(annex: new string('A', 41)));
+        Assert.Throws<DomainValidationException>(() => Enable(annex: "ANX\n1"));
+    }
+
+    [Fact]
+    public void LaReferenciaDeLaPeticionLaAsignaResidApp_ModuloYNumeroDelCambio_SinTexto()
+    {
+        Assert.Equal("DICTADO_VOZ-0001", NewCenterModuleChangeRules.RequestReferenceFor(CenterModules.DictadoVoz, 1));
+        Assert.Equal("DICTADO_VOZ-0123", NewCenterModuleChangeRules.RequestReferenceFor(CenterModules.DictadoVoz, 123));
+        Assert.True(NewCenterModuleChangeRules.RequestReferenceFor(CenterModules.DictadoVoz, 99999).Length <= 40);
     }
 
     [Fact]
     public void ApagarExigeMotivoDeLaListaCerrada_YNoLlevaNadaContractual()
     {
         var change = NewCenterModuleChangeRules.Validate(
-            Center, PlatformId, CenterModules.DictadoVoz, false, Today, Today, "ANX", "1", true, ModuleDisableReason.PeticionCentro, Now.AddHours(-1), ModuleRequestChannel.Telefono, "SOL-2", Now);
+            Center, PlatformId, CenterModules.DictadoVoz, false, Today, Today, "ANX", "1", true, ModuleDisableReason.PeticionCentro, Now.AddHours(-1), ModuleRequestChannel.Telefono, Now);
 
         Assert.False(change.Enable);
         Assert.Null(change.ValidFrom);
@@ -116,7 +122,7 @@ public class CenterModulesTests
         Assert.Null(change.ConditionCodes);
         Assert.Equal(ModuleDisableReason.PeticionCentro, change.DisableReason);
         Assert.Throws<DomainValidationException>(() => NewCenterModuleChangeRules.Validate(
-            Center, PlatformId, CenterModules.DictadoVoz, false, null, null, null, null, false, null, Now.AddHours(-1), ModuleRequestChannel.Telefono, "SOL-2", Now));
+            Center, PlatformId, CenterModules.DictadoVoz, false, null, null, null, null, false, null, Now.AddHours(-1), ModuleRequestChannel.Telefono, Now));
     }
 
     [Fact]
@@ -145,7 +151,7 @@ public class CenterModuleAccessTests
         public Task<IReadOnlyList<ResidApp.Application.Ports.PlatformExpiringModule>> ListExpiringAsync(ResidApp.Application.Ports.PlatformAccess access, DateOnly from, DateOnly until, CancellationToken ct = default) => throw new NotSupportedException();
 
 
-        public Task AppendAsync(ResidApp.Application.Ports.PlatformAccess access, ResidApp.Domain.Modules.NewCenterModuleChange change, DateOnly today, CancellationToken ct = default) =>
+        public Task<string> AppendAsync(ResidApp.Application.Ports.PlatformAccess access, ResidApp.Domain.Modules.NewCenterModuleChange change, DateOnly today, CancellationToken ct = default) =>
             throw new NotSupportedException();
     }
 
@@ -220,12 +226,12 @@ public class MadridDayTests
         var now = DateTimeOffset.Parse("2026-07-15T22:30:00Z");
         var change = ResidApp.Domain.Modules.NewCenterModuleChangeRules.Validate(
             CenterId.From(Guid.NewGuid()), Guid.NewGuid(), ResidApp.Domain.Modules.CenterModules.DictadoVoz, true, new DateOnly(2026, 7, 16), new DateOnly(2026, 8, 16), "ANX", "1", true, null,
-            now.AddHours(-1), ResidApp.Domain.Modules.ModuleRequestChannel.Correo, "SOL-1", now);
+            now.AddHours(-1), ResidApp.Domain.Modules.ModuleRequestChannel.Correo, now);
 
         Assert.Equal(new DateOnly(2026, 7, 16), change.ValidFrom);
         Assert.Throws<DomainValidationException>(() => ResidApp.Domain.Modules.NewCenterModuleChangeRules.Validate(
             CenterId.From(Guid.NewGuid()), Guid.NewGuid(), ResidApp.Domain.Modules.CenterModules.DictadoVoz, true, new DateOnly(2026, 7, 10), new DateOnly(2026, 7, 15), "ANX", "1", true, null,
-            now.AddHours(-1), ResidApp.Domain.Modules.ModuleRequestChannel.Correo, "SOL-2", now));
+            now.AddHours(-1), ResidApp.Domain.Modules.ModuleRequestChannel.Correo, now));
     }
 
     [Fact]
@@ -234,7 +240,7 @@ public class MadridDayTests
         var now = DateTimeOffset.Parse("2026-11-16T10:00:00Z");
         ResidApp.Domain.Modules.NewCenterModuleChange Build(DateTimeOffset received) => ResidApp.Domain.Modules.NewCenterModuleChangeRules.Validate(
             CenterId.From(Guid.NewGuid()), Guid.NewGuid(), ResidApp.Domain.Modules.CenterModules.DictadoVoz, false, null, null, null, null, false,
-            ResidApp.Domain.Modules.ModuleDisableReason.Otro, received, ResidApp.Domain.Modules.ModuleRequestChannel.Ticket, "SOL-1", now);
+            ResidApp.Domain.Modules.ModuleDisableReason.Otro, received, ResidApp.Domain.Modules.ModuleRequestChannel.Ticket, now);
 
         Assert.Equal(now, Build(now).RequestReceivedAt);
         Assert.Equal(now.AddDays(-366), Build(now.AddDays(-366)).RequestReceivedAt);
